@@ -1,0 +1,108 @@
+site	résolveur	valeur servie	clé dérivée	fr (octet)	en	état au back HEAD	signal atelier
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:920	TextePrix	UP	appro.bloc.le_prix_monte	le prix monte	the price is rising	non servie	
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:921	TextePrix	STABLE	appro.bloc.le_prix_ne_bouge_pas	le prix ne bouge pas	the price is holding	non servie	
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:922	TextePrix	DOWN	appro.bloc.le_prix_baisse	le prix baisse	the price is dropping	non servie	
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:943	TexteStock	NONE	appro.bloc.il_n_y_a_plus_rien	il n’y a plus rien	nothing left	SERVIE, fr DIFFÉRENT « il n’y a plus rien »	le fr servi fait foi : « il n’y a plus rien » (’)
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:731	NomFamille	coil	conflit.bloc.la_coil	La Coil	The Coil	non servie	
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:732	NomFamille	tarcum	conflit.bloc.tarcum	Tarcum	Tarcum	non servie	
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:733	NomFamille	iron_throat	conflit.bloc.gorge_de_fer	Gorge-de-Fer	Iron Throat	non servie	
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:734	NomFamille	saltline	conflit.bloc.saltline	Saltline	Saltline	non servie	
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:746	SousTitreFamille	coil	conflit.bloc.les_ferrailleurs_de_spine	les ferrailleurs de Spine	the scrap dealers of Spine	non servie	
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:747	SousTitreFamille	tarcum	conflit.bloc.le_port_et_ce_qui_y_entre	le port, et ce qui y entre	the port, and what comes in	non servie	
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:748	SousTitreFamille	iron_throat	conflit.bloc.les_docks_du_nord	les docks du nord	the north docks	non servie	
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:749	SousTitreFamille	saltline	conflit.bloc.la_ligne_de_sel_a_l_est	la ligne de sel, à l’est	the salt line, to the east	non servie	
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1733	NomDeType	front_shop	demolition.ecran.une_facade	Une façade	A shopfront	non servie	heurte `building.type.front_shop` « Commerce-écran »
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1734	NomDeType	cash_safehouse	demolition.ecran.une_planque	Une planque	A safehouse	non servie	
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1735	NomDeType	stash	demolition.ecran.une_cache	Une cache	A stash	non servie	« Cache » = ① (`district.type_batiment.cache`) ; ② sert « Réserve » — un mot par type, ouvert (`22-…` §3.4)
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1736	NomDeType	lab	demolition.ecran.un_labo	Un labo	A lab	non servie	
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1737	NomDeType	grow_house	demolition.ecran.une_serre	une serre	a grow house	non servie	minuscule, seul de la série (les 11 autres commencent par une capitale)
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1738	NomDeType	refinery	demolition.ecran.une_raffinerie	Une raffinerie	A refinery	non servie	
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1739	NomDeType	press_house	demolition.ecran.une_presse	Une presse	A press	non servie	heurte `building.type.press_house` « Imprimerie » (servi depuis `debee641`) ; « presse » = les journaux
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1740	NomDeType	distribution_hub	demolition.ecran.un_point_de_distribution	Un point de distribution	A distribution point	non servie	heurte `building.type.distribution_hub` « Relais »
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1741	NomDeType	office	demolition.ecran.un_bureau	Un bureau	An office	non servie	heurte `building.type.office` « Agence » (servi) ; « Bureau » est l’écran ⑫
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1742	NomDeType	dealer_spot_front	demolition.ecran.un_point_de_vente	Un point de vente	A dealer spot	non servie	« Point de vente » = ① ; ② sert « Coin de vente »
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1743	NomDeType	money_holding	demolition.ecran.une_societe_ecran	Une société-écran	A shell company	non servie	⚠️ heurte d4 : `money_holding` = « la banque » (`e3e007cc`, servi « Banque ») ; « société-écran » n’est ce type nulle part
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1744	NomDeType	specialized_lab	demolition.ecran.un_labo_specialise	Un labo spécialisé	A specialized lab	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:228	NomTypeBatiment	distribution_hub	distribution.bloc.l_entrepot_de_distribution	l’entrepôt de distribution	the distribution depot	non servie	heurte `building.type.distribution_hub` « Relais » (servi, et ① « Relais »)
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:230	NomTypeBatiment	lab	distribution.bloc.le_labo	le labo	the lab	non servie	« le labo » sert aussi `specialized_lab` (même mot pour deux types, `DistributionScreenController.cs:229-230`)
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:231	NomTypeBatiment	refinery	distribution.bloc.la_raffinerie	la raffinerie	the refinery	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:232	NomTypeBatiment	money_holding	distribution.bloc.la_banque	la banque	the vault	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:233	NomTypeBatiment	stash	distribution.bloc.la_planque	la planque	the safehouse	non servie	⚠️ « la planque » pour `stash`, alors que « Planque » est servi pour `cash_safehouse` (`building.type`) : deux types, un mot ; servi pour stash : « Réserve » (②) / « Cache » (①)
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:234	NomTypeBatiment	front_shop	distribution.bloc.la_boutique	la boutique	the shop	non servie	heurte `building.type.front_shop` « Commerce-écran » (servi)
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:235	NomTypeBatiment	dealer_spot_front	distribution.bloc.le_comptoir	le comptoir	the counter	non servie	⚠️ heurte `building.type.dealer_spot_front` « Coin de vente » ; et « le comptoir » est déjà le comptoir de ⑨ (`exceptions.bloc.le_comptoir_n_a_pas_repondu`)
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:236	NomTypeBatiment	cash_safehouse	distribution.bloc.la_planque_coffre	la planque-coffre	the cash safehouse	non servie	heurte `building.type.cash_safehouse` « Planque » (servi) ; « la planque-coffre » n’existe nulle part ailleurs
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:237	NomTypeBatiment	grow_house	distribution.bloc.la_ferme	la ferme	the farm	non servie	heurte `building.type.grow_house` « Serre » (servi)
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1053	TexteChemin	direct	distribution.bloc.droit_le_plus_court	droit — le plus court	straight — the shortest	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1054	TexteChemin	meandering	distribution.bloc.ca_serpente_plus_long_plus_discret	ça serpente — plus long, plus discret	it winds — longer, quieter	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1055	TexteChemin	gnarled	distribution.bloc.tordu_beaucoup_de_detours	tordu — beaucoup de détours	twisted — lots of detours	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1067	TexteTraverser	none	distribution.bloc.aucune_riviere	aucune rivière	no river	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1068	TexteTraverser	single	distribution.bloc.un_pont	un pont	one bridge	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1069	TexteTraverser	multiple	distribution.bloc.trois_ponts	trois ponts	three bridges	non servie	⚠️ « trois ponts » pour `multiple` : un NOMBRE que la donnée ne dit pas (plusieurs ≠ trois) — « plusieurs ponts »
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1083	TexteRouteState	active	distribution.bloc.tient	tient	holding	SERVIE, fr identique	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1142	TexteTransitBand	ARRIVED	distribution.bloc.arrive	arrivé	arrived	non servie	accord au masculin (le coursier) — un genre présumé ; « arrivé » / « prêt » : à dire sans accord si la règle vaut pour les coursiers
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1143	TexteTransitBand	IDLE	distribution.bloc.pret	prêt	ready	non servie	idem « prêt »
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1144	TexteTransitBand	IN_TRANSIT	distribution.bloc.en_chemin	en chemin	on the way	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1158	TexteVehicule	FOOT	distribution.bloc.a_pied	à pied	on foot	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1159	TexteVehicule	BIKE	distribution.bloc.a_velo	à vélo	by bike	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1160	TexteVehicule	CAR	distribution.bloc.en_voiture	en voiture	by car	non servie	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1161	TexteVehicule	REFRIGERATED_VAN	distribution.bloc.en_camion_refrigere	en camion réfrigéré	by refrigerated van	non servie	
+Assets/Scripts/Operational/Lieutenant/FamilleLabels.cs:132	Anciennete	FRESH	famille.anciennete.recent	Récent	New	non servie	mon `26-…` (⑦) proposait « nouveau venu » : je m’aligne sur « Récent », le mot déjà écrit par le client
+Assets/Scripts/Operational/Lieutenant/FamilleLabels.cs:133	Anciennete	ACCLIMATED	famille.anciennete.acclimate	Acclimaté	Settled in	non servie	⚠️ « Acclimaté », « Aguerri », « Ancien », « Enraciné » s’accordent au masculin avec LE LIEUTENANT — un genre présumé (règle : aucun). Sans accord : l’accord avec « Ancienneté » (« récente · établie · solide · ancienne · enracinée ») ou des noms
+Assets/Scripts/Operational/Lieutenant/FamilleLabels.cs:134	Anciennete	SEASONED	famille.anciennete.aguerri	Aguerri	Seasoned	non servie	idem (genre présumé)
+Assets/Scripts/Operational/Lieutenant/FamilleLabels.cs:135	Anciennete	SENIOR	famille.anciennete.ancien	Ancien	Veteran	non servie	idem (genre présumé)
+Assets/Scripts/Operational/Lieutenant/FamilleLabels.cs:136	Anciennete	ENTRENCHED	famille.anciennete.enracine	Enraciné	Entrenched	non servie	idem (genre présumé)
+Assets/Scripts/Operational/Lieutenant/LieutenantScreenController.cs:3554	ActionLabelFor	EXECUTE_DEFAULT	famille.regle.comme_d_habitude	Comme d’habitude	Run default	non servie	
+Assets/Scripts/Operational/Lieutenant/LieutenantScreenController.cs:3554	ActionLabelFor	PAUSE_OPS	famille.regle.suspendre	Suspendre	Pause ops	non servie	
+Assets/Scripts/Operational/Lieutenant/RuleModel.cs:401	ConditionClause	same_building	famille.regle.dans_mon_batiment	dans mon bâtiment	in my building	non servie	
+Assets/Scripts/Operational/Lieutenant/RuleModel.cs:430	ActionWord	EXECUTE_DEFAULT	famille.regle.faire_comme_d_habitude	faire comme d’habitude	run the default behavior	non servie	
+Assets/Scripts/Operational/Lieutenant/RuleModel.cs:431	ActionWord	PAUSE_OPS	famille.regle.suspendre_les_operations	suspendre les opérations	pause operations	non servie	
+Assets/Scripts/Operational/Loi/LoiScreenController.cs:727	TierLabelCourt	boutique	loi.bloc.cabinet	cabinet	boutique counsel	non servie	
+Assets/Scripts/Operational/Loi/LoiScreenController.cs:728	TierLabelCourt	corruption_pipeline	loi.bloc.filiere	filière	corruption pipeline	non servie	
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:410	Caisse	NONE	vente.bloc.vide	VIDE	EMPTY	non servie	
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:410	Caisse	LOW	vente.bloc.peu	PEU	LOW	non servie	
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:410	Caisse	MODERATE	vente.bloc.moyenne	MOYENNE	PARTLY FULL	non servie	
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:411	Caisse	HIGH	vente.bloc.pleine	PLEINE	FULL	non servie	
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:411	Caisse	FULL	vente.bloc.deborde	DÉBORDE	OVERFLOWING	non servie	
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:422	Marge	STANDARD	vente.bloc.au_tarif	AU TARIF	AT THE RATE	non servie	
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:422	Marge	ELEVATED	vente.bloc.au_dessus	AU-DESSUS	ABOVE	non servie	
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:423	Marge	PREMIUM	vente.bloc.cher	CHER	PRICEY	non servie	
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:423	Marge	HIGH_PREMIUM	vente.bloc.tres_cher	TRÈS CHER	VERY PRICEY	non servie	
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:426	Activite	WORKING	vente.bloc.au_poste	AU POSTE	ON SHIFT	non servie	la maquette ㉟ (série 6, cadres 107-112) dit « au travail »
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:426	Activite	IDLE	vente.bloc.inactif	INACTIF	IDLE	non servie	la maquette ㉟ dit « au repos » ; et « INACTIF » s’accorde au masculin (le dealer)
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:427	Activite	ABSENT	vente.bloc.absent	ABSENT	AWAY	non servie	« ABSENT » s’accorde au masculin (le dealer)
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:427	Activite	COMPROMISED	vente.bloc.compromis	COMPROMIS	BURNED	non servie	la maquette ㉟ dit « grillé(s) » ; « COMPROMIS » s’accorde au masculin
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:245	CroyanceMot	HUNTING	commissariat.bloc.ils_vous_cherchent	Ils vous cherchent	They’re hunting you	non servie	la maquette ⑰ (série 6, cadre 31) dit « EN CHASSE »
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:245	CroyanceMot	SUSPICIOUS	commissariat.bloc.ils_se_mefient	Ils se méfient	They’re suspicious	non servie	la maquette ⑰ dit « SOUPÇON »
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:246	CroyanceMot	WATCHFUL	commissariat.bloc.ils_regardent	Ils regardent	They’re watching	non servie	la maquette ⑰ dit « EN VEILLE »
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:246	CroyanceMot	DORMANT	commissariat.bloc.ils_dorment	Ils dorment	They’re asleep	non servie	
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:252	PatrouilleMot	HIGH	commissariat.bloc.partout	Partout	Everywhere	non servie	
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:252	PatrouilleMot	MEDIUM	commissariat.bloc.presente	Présente	Present	non servie	
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:253	PatrouilleMot	LOW	commissariat.bloc.clairsemee	Clairsemée	Sparse	non servie	
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:253	PatrouilleMot	QUIET	commissariat.bloc.rien_dans_les_rues	Rien dans les rues	Nothing on the streets	non servie	
+Assets/Scripts/CityMap/CityMapController.cs:1054	?	north	carte.bloc.nord	nord	north	non servie	
+Assets/Scripts/CityMap/CityMapController.cs:1054	?	south	carte.bloc.sud	sud	south	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:33	EnLigne	tidewater	carte.tissu.le_port	le port	the port	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:34	EnLigne	spine	carte.tissu.l_avenue	l’avenue	the avenue	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:35	EnLigne	lattice	carte.tissu.le_damier	le damier	the grid	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:36	EnLigne	stack	carte.tissu.les_cheminees	les cheminées	the chimneys	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:37	EnLigne	glass	carte.tissu.les_tours	les tours	the towers	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:38	EnLigne	verge	carte.tissu.les_faubourgs	les faubourgs	the outskirts	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:49	Valeur	tidewater	carte.tissu.port	Port	Port	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:50	Valeur	spine	carte.tissu.avenue	Avenue	Avenue	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:51	Valeur	lattice	carte.tissu.damier	Damier	Grid	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:52	Valeur	stack	carte.tissu.cheminees	Cheminées	Chimneys	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:53	Valeur	glass	carte.tissu.tours	Tours	Towers	non servie	
+Assets/Scripts/CityMap/TissuDeDistrict.cs:54	Valeur	verge	carte.tissu.faubourgs	Faubourgs	Outskirts	non servie	
+Assets/Scripts/Shell/DailyReviewScreenController.cs:912	ReserveLibelle	high	revue.reserve.elevee	ÉLEVÉE	HIGH	non servie	
+Assets/Scripts/Shell/DailyReviewScreenController.cs:913	ReserveLibelle	standard	revue.reserve.normale	NORMALE	NORMAL	non servie	
+Assets/Scripts/Shell/DailyReviewScreenController.cs:914	ReserveLibelle	low	revue.reserve.faible	FAIBLE	LOW	non servie	
+Assets/Scripts/Shell/LibellesDecision.cs:55	Portee	minor	decision.portee.mineure	mineure	minor	non servie	
+Assets/Scripts/Shell/LibellesDecision.cs:56	Portee	moderate	decision.portee.moderee	modérée	moderate	non servie	
+Assets/Scripts/Shell/LibellesDecision.cs:57	Portee	major	decision.portee.majeure	majeure	major	non servie	
+Assets/Scripts/Shell/LibellesDecision.cs:68	Urgence	low	decision.urgence.faible	faible	low	non servie	
+Assets/Scripts/Shell/LibellesDecision.cs:69	Urgence	elevated	decision.urgence.elevee	élevée	high	non servie	
+Assets/Scripts/Shell/LibellesDecision.cs:70	Urgence	pressing	decision.urgence.pressante	pressante	pressing	non servie	
+Assets/Scripts/ShellContracts/DayPhaseResolver.cs:51	Label	DAWN	chrome.phase.aube	Aube	Dawn	non servie	⚠️ la série 6 écrit « Matin » dans la barre (114 cadres) : aucune phase servie ne se dit « Matin » (DAWN « Aube », DAY « Plein jour ») — la maquette est en retard, ou il manque un mot
+Assets/Scripts/ShellContracts/DayPhaseResolver.cs:52	Label	DAY	chrome.phase.plein_jour	Plein jour	Day	non servie	
+Assets/Scripts/ShellContracts/DayPhaseResolver.cs:53	Label	DUSK	chrome.phase.soiree	Soirée	Evening	non servie	
+Assets/Scripts/ShellContracts/DayPhaseResolver.cs:54	Label	NIGHT	chrome.phase.nuit	Nuit	Night	non servie	
