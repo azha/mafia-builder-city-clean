@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """40 — ㉙ le conflit : les 88 mots sans clé servie de ses cadres série 6 (59-66 ; balayage `34-…`), même format que la 37 (commande f2 du 23/09).
-Classes : servie · servie · D14 (la maquette ratifiée l'emporte, la clé reste) · proposée · note. D12 à D17 appliquées ; gestes classés avec ou sans route.
-Ratification : ㉙ est « ratifié par délégation » le 02/09 (`front.md` l.22). Les cadres 65-66 sont la **v1**, remplacée par la v2 (59-64) : un mot
-qui n'est QUE dans la v1 est une note.
+Classes : servie · proposée · note (v3 : plus de « servie · D14 », ㉙ n'étant pas ratifiée). D12 à D17 appliquées ; gestes classés avec ou sans route.
+Ratification — v3 (décision f2 du 23/09) : ㉙ n'est PAS ratifiée. `front.md` l.22 liste les maquettes ratifiées par délégation le 02/09
+(㊲ ⑯ ② ⑨ ⑩ ㊱ ㉟ ㉓ ⑭ ⑮ ⑰ ㉒ ㉕) et ㉙ n'y est pas ; l.1328 dit « ratification user ✗ ». ⇒ ses cadres (59-66) sont une MAQUETTE À RATIFIER ;
+aucun de ses mots n'est protégé par D14 (plus de classe « servie · D14 ») ; ses mots GENRÉS relèvent de D13 : formes ÉPICÈNES proposées
+(`REECRITURES`), et ils sortent de la liste de l'user. Une clé déjà SERVIE garde son slug (contrat additif) et seule sa valeur change ;
+une clé non servie suit la dérivation du nouveau fr ; les continuations suivent leur clé. La valeur RATIFIÉE du 409 (`ERROR_TEXT_RATIFIED`)
+reste telle quelle : c'est un autre registre. Les cadres 65-66 sont la **v1**, remplacée par la v2 (59-64) : un mot qui n'est QUE dans la v1
+est une note.
 Données servies (back, lu) :
   `GET /v1/me/engagements` → `engagements[]` : `target_rival_key`, `target_rival_name_i18n`, `status` ∈ scheduled|resolved,
       `outcome_bucket` ∈ retreat|hold|contested|advance|breakthrough (ou null), `friction_consumed_bucket` ∈ low|medium|high,
@@ -13,7 +18,7 @@ Données servies (back, lu) :
   `engagements.controller.ts:166-183`) — famille neuve `conflit.axe.*` (mesure du back transmise par f2 le 23/09).
 Clés : `conflit.<rôle>.<slug>` — les rôles du client (`titre`, `sous_titre`, `bloc`, `Libelle.De("conflit", …)`) ; les bandes en familles neuves
 `conflit.issue.*`, `conflit.cout.*`, `conflit.chaleur.*`.
-⚠️ D14 — mots GENRÉS de la maquette ratifiée, NON corrigés, à la liste de l'user : voir `GENRES` (imprimés en fin de script).
+D13 — mots GENRÉS : formes épicènes proposées dans `REECRITURES` (imprimées en fin de script) ; rien ne va plus à la liste de l'user pour ㉙.
 Sortie : `40-conflit-mots-2026-09-23.tsv`. Usage : python3 Tools/atelier-2026-09-22/generer-40-conflit-mots.py"""
 import collections, os, re, subprocess, sys, unicodedata
 ICI = os.path.dirname(os.path.abspath(__file__)); NB = ' '
@@ -44,8 +49,8 @@ T = {
  'l’entrepôt de Dépôt-Est': (N, '', '', '', CIBLE), 'leur entrepôt du quai 4': (N, '', '', '', CIBLE), 'leur dépôt de Verrier': (N, '', '', '', CIBLE),
  'ce qu’on prend si ça marche': (N, '', '', '', 'aperçu du butin : aucune donnée servie ne le dit avant l’envoi (R2.2) — pas un libellé'),
  'la ferraille de leur dépôt': (N, '', '', '', 'idem (glose du butin)'),
- 'Les quatre familles de Brennar': (A, 'conflit.bloc.les_quatre_familles', 'Les quatre familles de Brennar', 'The four families of Brennar',
-   'servi « LES QUATRE FAMILLES » ; D14 : le mot ratifié ; la clé reste (exception à la dérivation, contrat additif)'),
+ 'Les quatre familles de Brennar': (P, 'conflit.bloc.les_quatre_familles', 'Les quatre familles de Brennar', 'The four families of Brennar',
+   'servi « LES QUATRE FAMILLES » ; la maquette NON ratifiée propose « Les quatre familles de Brennar » (v3 : plus de D14) ; la clé reste (exception à la dérivation, contrat additif)'),
  'C': (N, '', '', '', GLYPHE), 'T': (N, '', '', '', GLYPHE), 'G': (N, '', '', '', GLYPHE), 'S': (N, '', '', '', GLYPHE),
  'jamais': (P, 'conflit.bloc.fois_chez_eux', '{n, plural, =0 {jamais} one {# fois} other {# fois}}', '{n, plural, =0 {never} one {once} other {# times}}',
    'le compte des envois chez une famille, DÉRIVÉ de la liste servie (`engagements[]` par `target_rival_key`) ; une clé ICU couvre « jamais », « 1 fois », « 2 fois », « 7 fois »'),
@@ -54,11 +59,11 @@ T = {
  'on ne les a pas croisés': (P, 'conflit.bloc.on_ne_les_a_pas_croises', 'on ne les a pas croisés', 'we’ve never crossed paths', 'la ligne d’une famille à 0 envoi'),
  'on est allés chez eux': (P, 'conflit.bloc.on_est_alles_chez_eux', 'on est allés chez eux', 'we’ve been to them', 'la ligne du compte (suivie de `fois_chez_eux`)'),
  'CE SOIR': (P, 'conflit.bloc.ce_soir', 'Ce soir', 'Tonight', 'la marque de la famille choisie pour l’envoi'),
- '« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »': (A, 'conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain',
+ '« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »': (P, 'conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain',
    q('Dites-moi seulement chez qui. Je pars ce soir, on saura demain.'), '“Just tell me where. I’ll leave tonight, we’ll know tomorrow.”',
-   'servi : le texte de la v1 (« Dites-moi qui j’envoie et sur quoi… ») ; D14 : la v2 ratifiée l’emporte ; la clé reste (exception à la dérivation)'),
+   'servi : le texte de la v1 (« Dites-moi qui j’envoie et sur quoi… ») ; la v2 (NON ratifiée) est proposée ; la clé reste (exception à la dérivation)'),
  'L’ENVOYER CE SOIR': (P, 'conflit.bloc.l_envoyer_ce_soir', 'L’envoyer ce soir', 'Send them tonight',
-   'geste À ROUTE : `POST /v1/me/engagements` ; ⚠️ D14 : « l’ » renvoie au lieutenant (genre non marqué à l’écrit, rien à signaler)'),
+   'geste À ROUTE : `POST /v1/me/engagements` ; D13 : « l’ » élidé, aucun genre marqué à l’écrit'),
  'on ne pourra plus le rappeler': (P, 'conflit.bloc.on_ne_pourra_plus_le_rappeler', 'on ne pourra plus le rappeler', 'there’s no calling them back',
    'aucune route d’annulation (mesuré) ; ⚠️ D14 : « le » genré → liste de l’user'),
  'La dernière fois chez eux :': (P, 'conflit.bloc.la_derniere_fois_chez_eux', f'La dernière fois chez eux{NB}:', 'Last time at theirs:',
@@ -117,7 +122,7 @@ T = {
  'à l’aveugle et à sens unique': (N, '', '', '', MANQUE), ': on frappe, on ne parle pas, on ne voit pas venir.': (N, '', '', '', MANQUE),
  'Ce qu’on fait ce soir': (N, '', '', '', V1), 'qui part': (N, '', '', '', V1), 'sur quoi': (N, '', '', '', V1), 'ce qu’on prend': (N, '', '', '', V1),
  'elle a tout brûlé': (N, '', '', '', V1), 'le muscle · J7': (N, '', '', '', V1 + ' ; « J7 » : exemple (point 19)'),
- '« Dites-moi qui j’envoie et sur quoi. Je pars ce soir, on saura demain. »': (N, '', '', '', V1 + ' ; c’est le texte servi de `conflit.bloc.dites_moi_qui_j_envoie…` (remplacé, D14)'),
+ '« Dites-moi qui j’envoie et sur quoi. Je pars ce soir, on saura demain. »': (N, '', '', '', V1 + ' ; c’est le texte servi de `conflit.bloc.dites_moi_qui_j_envoie…` (la v2 est proposée)'),
  'on saura demain, pas avant': (N, '', '', '', V1),
  '« Il est rentré. Regardez l’allumette : ce qu’il en reste vous dit ce que ça a donné. »': (N, '', '', '', V1),
  'l’allumette': (N, '', '', '', V1), 'ça s’est disputé': (N, '', '', '', V1 + ' ; la v2 dit « Disputé » (servi ailleurs)'), 'EN RENVOYER UN': (N, '', '', '', V1),
@@ -128,14 +133,32 @@ COMPLEMENTS = [
  ('conflit.axe.intel', 'leurs informateurs', 'their informants', 'PROPOSÉ'),
  ('conflit.axe.infrastructure', 'leurs installations', 'their premises', 'PROPOSÉ'),
  ('conflit.axe.leadership', 'leur tête', 'their leadership', 'PROPOSÉ'),
- ('conflit.issue.contested', 'Disputé', 'Contested', 'ratifié (63), déjà mot servi ailleurs'),
+ ('conflit.issue.contested', 'Disputé', 'Contested', 'PROPOSÉ (63, maquette non ratifiée) ; déjà mot servi ailleurs'),
  ('conflit.issue.retreat', 'On a reculé', 'We fell back', 'PROPOSÉ : la maquette ne dessine pas `retreat`'),
  ('conflit.cout.high', 'beaucoup', 'a lot', 'PROPOSÉ'), ('conflit.chaleur.low', 'un peu', 'a little', 'même mot que le coût'),
  ('conflit.chaleur.medium', 'pas mal', 'quite a bit', 'même mot'), ('conflit.chaleur.high', 'beaucoup', 'a lot', 'PROPOSÉ'),
 ]
-GENRES = ['« un homme » (59-61 : « on choisit un homme » ; 63 : « un homme envoyé »)', '« le rappeler », « on ne pourra plus le rappeler » (59-62)',
-          '« Lt. Marr … il ne cogne pas » (61)', '« Les hommes qu’on a envoyés », « Deux hommes dehors » (62)', '« parti chez … », « Déjà rentrés » (62)',
-          '« Ce que chaque homme a rapporté » (63)', '« Il est rentré » (63)', '« En envoyer un autre » (62)']
+# D13 (v3) : mot de la maquette → (fr épicène, en). La clé : gardée si SERVIE (contrat additif), sinon dérivée du nouveau fr (ou nommée).
+REECRITURES = {
+ 'On choisit une famille, on choisit un homme, et on l’envoie. On saura demain.': ('On choisit une famille, on choisit qui y envoyer. On saura demain.', 'Pick a family, pick who to send. We’ll know tomorrow.'),
+ 'on est allés chez eux': ('on leur a rendu visite', 'we’ve paid them a visit'),
+ 'on ne les a pas croisés': ('on n’a jamais croisé leur route', 'we’ve never crossed paths'),
+ 'on ne pourra plus le rappeler': ('pas de rappel possible', 'no calling back'),
+ '« Lt. Marr tient les comptes, il ne cogne pas. Et Saltline, on ne l’a jamais croisée — je ne saurais pas où frapper. »':
+   (q('{nom}, c’est les comptes, pas les coups. Et {famille}, on ne l’a jamais croisée — je ne saurais pas où frapper.'),
+    '“{nom} is about the books, not the punches. And {famille}, we’ve never crossed them — I wouldn’t know where to hit.”'),
+ 'Les hommes qu’on a envoyés et qui ne sont pas encore rentrés.': ('Ce qu’on a envoyé et qui n’est pas encore rentré.', 'What we sent that isn’t back yet.'),
+ 'Partis, pas encore rentrés': ('En route, pas encore de retour', 'Out, not back yet'),
+ 'parti chez Tarcum': ('en route vers {famille}', 'on the way to {famille}'),
+ 'on ne peut plus': ('plus de rappel possible', 'no calling back now'),
+ 'Déjà rentrés': ('Déjà de retour', 'Already back'),
+ 'Deux hommes dehors.': ('{n, plural, one {Une personne dehors.} other {# personnes dehors.}}', '{n, plural, one {One out.} other {# out.}}'),
+ 'EN ENVOYER UN AUTRE': ('Envoyer quelqu’un d’autre', 'Send someone else'),
+ 'Ce que chaque homme a rapporté, et ce que ça nous a coûté.': ('Ce que chaque envoi a rapporté, et ce que ça nous a coûté.', 'What each run brought back, and what it cost us.'),
+ 'Il est rentré': ('De retour', 'Back'),
+ 'un homme envoyé': ('un envoi', 'one sent'),
+}
+NOMMEES = {'Deux hommes dehors.': 'conflit.bloc.personnes_dehors'}   # clé à paramètre ICU, nommée
 
 def main():
     tsv = open(os.path.join(ICI, '34-balayage-mots-serie6-2026-09-23.tsv'), encoding='utf-8').read().split('\n')[1:]
@@ -149,6 +172,20 @@ def main():
     FRV = {m.group(1): m.group(2).replace("\\'", "'") for m in re.finditer(r"^\s*'([^'\s]+)':\s*\n?\s*'((?:[^'\\]|\\.)*)'", st[d0:st.index('\n};', d0)], re.M)}
     d, ecarts, out, comptes = [], [], ['\t'.join(['mot', 'cadres', 'classe', 'clé', 'fr', 'en', 'note'])], collections.Counter()
     if set(mots) != set(T): d.append(f'non couverts : {sorted(set(mots) - set(T))} · en trop : {sorted(set(T) - set(mots))}')
+    renomme, exceptions = {}, set()
+    for m, (fr2, en2) in REECRITURES.items():
+        cl, cle, fr, en, note = T[m]
+        if cle in FRV:
+            nouvelle = cle; exceptions.add(cle); quoi = f'clé SERVIE gardée (contrat additif), valeur changée'
+        else:
+            nouvelle = NOMMEES.get(m) or cle.rsplit('.', 1)[0] + '.' + slug(re.sub(r'\{(\w+)\}', r'\1', re.sub(r'[«» ]', '', fr2)))
+            quoi = f'clé dérivée du nouveau fr (ancienne, non servie : `{cle}`)' if nouvelle != cle else 'clé inchangée'
+            if m in NOMMEES: exceptions.add(nouvelle)
+        renomme[cle] = nouvelle
+        T[m] = (P, nouvelle, fr2, en2, f'D13 (v3, ㉙ non ratifiée) : la maquette dit « {fr} » ; forme épicène proposée ; {quoi}')
+    for m, (cl, cle, fr, en, note) in list(T.items()):
+        if cle in renomme and not fr: T[m] = (cl, renomme[cle], fr, en, note)
+    exceptions |= {'conflit.bloc.les_quatre_familles', 'conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain'}
     for m, cadres in mots.items():
         cl, cle, fr, en, note = T[m]; comptes[cl] += 1
         if cl in (S, A) and cle not in FRV: d.append(f'{m} : {cle} annoncée servie, absente')
@@ -158,13 +195,15 @@ def main():
         role = cle.split('.')[1] if cle else ''
         if cl == P and fr and role in ('bloc', 'titre', 'sous_titre') and 'plural' not in fr:
             base = re.sub(r'[«» ]', '', fr); base = re.sub(r'\{(\w+)\}', r'\1', base)
-            if cle.split('.', 2)[2] != slug(base): d.append(f'{m} : {cle} ≠ slug « {slug(base)} »')
+            if cle not in exceptions and cle.split('.', 2)[2] != slug(base): d.append(f'{m} : {cle} ≠ slug « {slug(base)} »')
+        if re.search(r'\b(homme|hommes|[Ii]l est|partis?|rentrés|allés|croisés)\b', fr): d.append(f'{m} : forme genrée restante (D13)')
         out.append('\t'.join([m, ','.join(sorted(set(cadres), key=int)), cl, cle, fr, en, note]))
     for cle, fr, en, note in COMPLEMENTS:
         out.append('\t'.join(['(complément de famille)', '', P, cle, fr, en, note]))
     open(os.path.join(ICI, '40-conflit-mots-2026-09-23.tsv'), 'w', encoding='utf-8').write('\n'.join(out) + '\n')
     print(f'{len(mots)} mots de ㉙ · ' + ' · '.join(f'{c} {comptes[c]}' for c in (S, A, P, N)) + f' · + {len(COMPLEMENTS)} compléments')
-    print('mots genrés ratifiés → liste de l’user (D14) :'); [print('   ', g) for g in GENRES]
+    print(f'D13 (v3) : {len(REECRITURES)} mots réécrits en formes épicènes ; clés servies gardées : {sorted(k for k in renomme if renomme[k] == k and k in FRV)} ; '
+          f'clés renommées (non servies) : {len([k for k in renomme if renomme[k] != k])} ; liste de l’user pour ㉙ : vide')
     [print('  ≠', x) for x in ecarts]; [print('  ⛔', x) for x in d]; print(f'{len(d)} défaut(s)'); sys.exit(1 if d else 0)
 
 if __name__ == '__main__':

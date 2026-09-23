@@ -4,8 +4,9 @@
 (b) la PHRASE « La dernière fois chez eux : {issue}, et la ville a chauffé {chaleur}. » et sa famille de formes minuscules.
 
 Mesuré au back HEAD (`operational/conflict/combat/engagements.controller.ts`, `protocol/error-codes.ts`, `common/param-pipes.ts`) :
-- 409 `MUSCLE_LIEUTENANT_REQUIRED` → clé SERVIE `error.engagements.muscle_lieutenant_required` (TD-553) : on propose une VALEUR
-  dans la voix de la maison, la clé reste (contrat additif) ; pas de `conflit.refus.*` en double (D12 : un mot par chose) ;
+- 409 `MUSCLE_LIEUTENANT_REQUIRED` → clé SERVIE `error.engagements.muscle_lieutenant_required` (TD-553), valeur RATIFIÉE
+  (`ERROR_TEXT_RATIFIED`) : v3, elle reste telle quelle (f2, 23/09 — un autre registre que la maquette ㉙, qui n'est pas ratifiée) ;
+  pas de `conflit.refus.*` en double (D12 : un mot par chose) ;
 - 404 `RESOURCE_NOT_FOUND` : UN SEUL code pour TROIS cas (lieutenant pas au joueur ou inexistant — décision D7 du CONTRÔLEUR back `engagements.controller.ts` (pas le D7 du registre ARBITRAGES, le gyrophare) « l'existence est un
   renseignement » ; clé de rival hors domaine ; rival sans `rival_state`) — ni code ni `details` ne les distinguent ⇒ UN mot ;
 - 422 `VALIDATION_FAILED` (`rejected()` → `details.param`) : champ inconnu, `lieutenant_id` pas un uuid, `target_holding_id` hors
@@ -37,11 +38,10 @@ CAD = '㉙ L4'
 def refus(mot, fr, en, note): return [mot, CAD, P, 'conflit.refus.' + slug(fr), fr, en, note]   # Libelle.De : slug du fr ENTIER
 
 LIGNES = [
-    ['409 MUSCLE_LIEUTENANT_REQUIRED', CAD, P, 'error.engagements.muscle_lieutenant_required',
-     f'Ce lieutenant ne cogne pas. Il faut un gros bras{NB}: envoyez-en un, ou recrutez-en un.', 'This lieutenant doesn’t do the rough stuff. It takes a Muscle: send one, or recruit one.',
-     'clé SERVIE (TD-553) : la VALEUR change, la clé reste (contrat additif) ; servi aujourd’hui « Seul un lieutenant du genre Gros bras peut partir '
-     'sur ce coup. Envoyez-en un, ou recrutez-en un. » ; « cet homme ne cogne pas » (f2) est GENRÉ (D13) → liste de l’user ; « Ce lieutenant » est un NOM, '
-     'aucune forme accordée à la personne (un pronom « celui-ci » le serait)'],
+    ['409 MUSCLE_LIEUTENANT_REQUIRED', CAD, S, 'error.engagements.muscle_lieutenant_required', '', '',
+     'v3 (décision f2 du 23/09) : la valeur RATIFIÉE de `ERROR_TEXT_RATIFIED` reste telle quelle (« Seul un lieutenant du genre Gros bras peut partir '
+     'sur ce coup. Envoyez-en un, ou recrutez-en un. ») — c’est un autre registre que la maquette ㉙ ; notre proposition « Ce lieutenant ne cogne '
+     'pas… » est RETIRÉE ; la ligne renvoie à la valeur servie. « cet homme ne cogne pas » : écarté (D13), rien à la liste de l’user'],
     refus('404 RESOURCE_NOT_FOUND', f'Ce coup ne tient plus. Reprenez depuis la liste.', 'This job no longer holds. Start again from the list.',
           'UN mot : le 404 couvre lieutenant pas au joueur, clé de rival hors domaine, rival sans état — ni code ni `details` ne les distinguent '
           '(décision D7 du contrôleur back `engagements.controller.ts`, pas le D7 du registre) ; servi générique `error.resource.not_found` « Ce n’est plus là. »'),
@@ -81,7 +81,7 @@ def main():
     d = []
     for l in LIGNES:
         m, _, cl, k, fr, en, note = l
-        if not fr: continue
+        if not fr: continue   # une ligne « servie » sans fr RENVOIE à la valeur servie
         if re.search(r' [:;!?»]|« ', fr): d.append(f'{m} : D17 (espace ordinaire)')
         if re.search(r'[^ ][:]', fr.replace('{', '').replace('}', '')) : d.append(f'{m} : D17 (« : » sans U+00A0)')
         if "'" in fr or "'" in en: d.append(f'{m} : apostrophe droite')
@@ -98,7 +98,7 @@ def main():
         for l in LIGNES: f.write('\t'.join(l) + '\n')
     comp = sum(1 for l in LIGNES if l[0].startswith('('))
     print(f'addendum 40 : somme = {len(LIGNES)} lignes = {len(LIGNES) - comp} mots + {comp} compléments · clés {len(cles)} '
-          f'(1 servie à valeur neuve, {len(cles) - 1} proposées) · issues {issues40} · chaleurs {chaleurs40}')
+          f'(1 servie en renvoi, {len(cles) - 1} proposées) · issues {issues40} · chaleurs {chaleurs40}')
     rc = subprocess.run([sys.executable, os.path.join(ICI, 'somme-table.py'), out]).returncode
     if rc: d.append(f'somme-table code {rc}')
     for x in d: print('⛔', x)

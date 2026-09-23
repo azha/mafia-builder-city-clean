@@ -1,52 +1,52 @@
 mot	cadres	classe	clé	fr	en	note
 Le coup de ce soir	59,60,61	proposée	conflit.bloc.le_coup_de_ce_soir	Le coup de ce soir	Tonight’s strike	titre du panneau d’envoi (59-61)
-On choisit une famille, on choisit un homme, et on l’envoie. On saura demain.	59,60,61	proposée	conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain	On choisit une famille, on choisit un homme, et on l’envoie. On saura demain.	Pick a family, pick someone, and send them. We’ll know tomorrow.	⚠️ D14 : « un homme » est genré (ratifié) → liste de l’user
+On choisit une famille, on choisit un homme, et on l’envoie. On saura demain.	59,60,61	proposée	conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain	On choisit une famille, on choisit qui y envoyer. On saura demain.	Pick a family, pick who to send. We’ll know tomorrow.	D13 (v3, ㉙ non ratifiée) : la maquette dit « On choisit une famille, on choisit un homme, et on l’envoie. On saura demain. » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
 On envoie	59,60,61	proposée	conflit.bloc.on_envoie_nom_chez_famille_sur_axe	On envoie {nom} chez {famille}, sur {axe}.	We send {nom} to {famille}, at {axe}.	la phrase d’envoi, une clé à paramètres ; `{axe}` = `conflit.axe.*` (le back vise un AXE, pas un bâtiment : mesure transmise par f2)
 chez	59,60,61	proposée	conflit.bloc.on_envoie_nom_chez_famille_sur_axe			morceau de la phrase d’envoi : même clé
 sur	59,60,61	proposée	conflit.bloc.on_envoie_nom_chez_famille_sur_axe			idem
 l’entrepôt de Dépôt-Est	59,60	note				DETTE DE MAQUETTE (point 19, mesure du back transmise par f2 le 23/09) : la maquette vise un BÂTIMENT, le back vise un AXE — `target_holding_id` est un des 5 axes d’érosion (`engagements.controller.ts:166-183`, `conflict_rival.ts:104-110`) ; aucune route joueur ne liste les tenues d’un rival, `rival_holding` n’a aucun écrivain de production (forme A, lot back futur)
 ce qu’on prend si ça marche	59,60,61	note				aperçu du butin : aucune donnée servie ne le dit avant l’envoi (R2.2) — pas un libellé
 la ferraille de leur dépôt	59	note				idem (glose du butin)
-Les quatre familles de Brennar	59,60,61	servie · D14	conflit.bloc.les_quatre_familles	Les quatre familles de Brennar	The four families of Brennar	servi « LES QUATRE FAMILLES » ; D14 : le mot ratifié ; la clé reste (exception à la dérivation, contrat additif)
+Les quatre familles de Brennar	59,60,61	proposée	conflit.bloc.les_quatre_familles	Les quatre familles de Brennar	The four families of Brennar	servi « LES QUATRE FAMILLES » ; la maquette NON ratifiée propose « Les quatre familles de Brennar » (v3 : plus de D14) ; la clé reste (exception à la dérivation, contrat additif)
 C	59,60,61	note				initiale de famille dans un médaillon : D11 — le nom servi l’accompagne (`conflit.bloc.<famille>`)
 jamais	59,60,61	proposée	conflit.bloc.fois_chez_eux	{n, plural, =0 {jamais} one {# fois} other {# fois}}	{n, plural, =0 {never} one {once} other {# times}}	le compte des envois chez une famille, DÉRIVÉ de la liste servie (`engagements[]` par `target_rival_key`) ; une clé ICU couvre « jamais », « 1 fois », « 2 fois », « 7 fois »
-on ne les a pas croisés	59,60,61	proposée	conflit.bloc.on_ne_les_a_pas_croises	on ne les a pas croisés	we’ve never crossed paths	la ligne d’une famille à 0 envoi
+on ne les a pas croisés	59,60,61	proposée	conflit.bloc.on_ne_les_a_pas_croises	on n’a jamais croisé leur route	we’ve never crossed paths	D13 (v3, ㉙ non ratifiée) : la maquette dit « on ne les a pas croisés » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
 CE SOIR	59,60,61	proposée	conflit.bloc.ce_soir	Ce soir	Tonight	la marque de la famille choisie pour l’envoi
 T	59,60,61	note				initiale de famille dans un médaillon : D11 — le nom servi l’accompagne (`conflit.bloc.<famille>`)
 G	59,60,61	note				initiale de famille dans un médaillon : D11 — le nom servi l’accompagne (`conflit.bloc.<famille>`)
 S	59,60,61	note				initiale de famille dans un médaillon : D11 — le nom servi l’accompagne (`conflit.bloc.<famille>`)
-« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »	59,60	servie · D14	conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain	« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »	“Just tell me where. I’ll leave tonight, we’ll know tomorrow.”	servi : le texte de la v1 (« Dites-moi qui j’envoie et sur quoi… ») ; D14 : la v2 ratifiée l’emporte ; la clé reste (exception à la dérivation)
-L’ENVOYER CE SOIR	59,60,61,65	proposée	conflit.bloc.l_envoyer_ce_soir	L’envoyer ce soir	Send them tonight	geste À ROUTE : `POST /v1/me/engagements` ; ⚠️ D14 : « l’ » renvoie au lieutenant (genre non marqué à l’écrit, rien à signaler)
-on ne pourra plus le rappeler	59,60	proposée	conflit.bloc.on_ne_pourra_plus_le_rappeler	on ne pourra plus le rappeler	there’s no calling them back	aucune route d’annulation (mesuré) ; ⚠️ D14 : « le » genré → liste de l’user
+« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »	59,60	proposée	conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain	« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »	“Just tell me where. I’ll leave tonight, we’ll know tomorrow.”	servi : le texte de la v1 (« Dites-moi qui j’envoie et sur quoi… ») ; la v2 (NON ratifiée) est proposée ; la clé reste (exception à la dérivation)
+L’ENVOYER CE SOIR	59,60,61,65	proposée	conflit.bloc.l_envoyer_ce_soir	L’envoyer ce soir	Send them tonight	geste À ROUTE : `POST /v1/me/engagements` ; D13 : « l’ » élidé, aucun genre marqué à l’écrit
+on ne pourra plus le rappeler	59,60	proposée	conflit.bloc.on_ne_pourra_plus_le_rappeler	pas de rappel possible	no calling back	D13 (v3, ㉙ non ratifiée) : la maquette dit « on ne pourra plus le rappeler » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
 leur entrepôt du quai 4	60,61,65	note				DETTE DE MAQUETTE (point 19, mesure du back transmise par f2 le 23/09) : la maquette vise un BÂTIMENT, le back vise un AXE — `target_holding_id` est un des 5 axes d’érosion (`engagements.controller.ts:166-183`, `conflict_rival.ts:104-110`) ; aucune route joueur ne liste les tenues d’un rival, `rival_holding` n’a aucun écrivain de production (forme A, lot back futur)
 La dernière fois chez eux :	60,65	proposée	conflit.bloc.la_derniere_fois_chez_eux	La dernière fois chez eux :	Last time at theirs:	suivie de l’issue du dernier envoi résolu (`outcome_bucket`) ; D17 : insécable avant « : »
 percée	60	proposée	conflit.issue.breakthrough	Percée	Breakthrough	même mot que « Percée » (63)
 , et la ville a chauffé	60,65	proposée	conflit.bloc.et_la_ville_a_chauffe	, et la ville a chauffé	, and the city heated up	suite de « La dernière fois… » quand `heat_increment_bucket` n’est pas nul
 1 fois	60,61	proposée	conflit.bloc.fois_chez_eux			même clé ICU
-on est allés chez eux	60,61,65	proposée	conflit.bloc.on_est_alles_chez_eux	on est allés chez eux	we’ve been to them	la ligne du compte (suivie de `fois_chez_eux`)
+on est allés chez eux	60,61,65	proposée	conflit.bloc.on_est_alles_chez_eux	on leur a rendu visite	we’ve paid them a visit	D13 (v3, ㉙ non ratifiée) : la maquette dit « on est allés chez eux » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
 7 fois	60,61,65	proposée	conflit.bloc.fois_chez_eux			même clé ICU
 2 fois	60,61	proposée	conflit.bloc.fois_chez_eux			même clé ICU
 leur dépôt de Verrier	61	note				DETTE DE MAQUETTE (point 19, mesure du back transmise par f2 le 23/09) : la maquette vise un BÂTIMENT, le back vise un AXE — `target_holding_id` est un des 5 axes d’érosion (`engagements.controller.ts:166-183`, `conflict_rival.ts:104-110`) ; aucune route joueur ne liste les tenues d’un rival, `rival_holding` n’a aucun écrivain de production (forme A, lot back futur)
-« Lt. Marr tient les comptes, il ne cogne pas. Et Saltline, on ne l’a jamais croisée — je ne saurais pas où frapper. »	61	proposée	conflit.bloc.nom_tient_les_comptes_il_ne_cogne_pas_et_famille_on_ne_l_a_jamais_croisee_je_ne_saurais_pas_ou_frapper	« {nom} tient les comptes, il ne cogne pas. Et {famille}, on ne l’a jamais croisée — je ne saurais pas où frapper. »	“{nom} keeps the books, doesn’t throw punches. And {famille}, we’ve never crossed them — I wouldn’t know where to hit.”	le refus « deux choses ne collent pas » (61) : un lieutenant qui n’est pas du genre Gros bras (servi : `conflit.bloc.aucun_de_vos_lieutenants_n_est_du_genre_gros_bras`) ET une famille jamais croisée ; noms → `{nom}`, `{famille}` ; ⚠️ D14 : « il » genré → liste de l’user
+« Lt. Marr tient les comptes, il ne cogne pas. Et Saltline, on ne l’a jamais croisée — je ne saurais pas où frapper. »	61	proposée	conflit.bloc.nom_tient_les_comptes_il_ne_cogne_pas_et_famille_on_ne_l_a_jamais_croisee_je_ne_saurais_pas_ou_frapper	« {nom}, c’est les comptes, pas les coups. Et {famille}, on ne l’a jamais croisée — je ne saurais pas où frapper. »	“{nom} is about the books, not the punches. And {famille}, we’ve never crossed them — I wouldn’t know where to hit.”	D13 (v3, ㉙ non ratifiée) : la maquette dit « « {nom} tient les comptes, il ne cogne pas. Et {famille}, on ne l’a jamais croisée — je ne saurais pas où frapper. » » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
 deux choses ne collent pas	61	proposée	conflit.bloc.deux_choses_ne_collent_pas	deux choses ne collent pas	two things don’t add up	
 Ce qui est en cours	62	proposée	conflit.bloc.ce_qui_est_en_cours	Ce qui est en cours	What’s under way	les envois `status` = scheduled (62)
-Les hommes qu’on a envoyés et qui ne sont pas encore rentrés.	62	proposée	conflit.bloc.les_hommes_qu_on_a_envoyes_et_qui_ne_sont_pas_encore_rentres	Les hommes qu’on a envoyés et qui ne sont pas encore rentrés.	The ones we sent who aren’t back yet.	⚠️ D14 : « les hommes » genré → liste de l’user
-Partis, pas encore rentrés	62	proposée	conflit.bloc.partis_pas_encore_rentres	Partis, pas encore rentrés	Out, not back yet	section `scheduled`
-parti chez Tarcum	62	proposée	conflit.bloc.parti_chez_famille	parti chez {famille}	gone to {famille}	⚠️ D14 : « parti » genré → liste de l’user ; ⚠️ l’article : « chez la Coil » contre le servi « La Coil »
-on ne peut plus	62	proposée	conflit.bloc.on_ne_peut_plus_le_rappeler	on ne peut plus le rappeler	there’s no calling them back	une phrase en deux nœuds ; ⚠️ D14 : « le » genré
+Les hommes qu’on a envoyés et qui ne sont pas encore rentrés.	62	proposée	conflit.bloc.les_hommes_qu_on_a_envoyes_et_qui_ne_sont_pas_encore_rentres	Ce qu’on a envoyé et qui n’est pas encore rentré.	What we sent that isn’t back yet.	D13 (v3, ㉙ non ratifiée) : la maquette dit « Les hommes qu’on a envoyés et qui ne sont pas encore rentrés. » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
+Partis, pas encore rentrés	62	proposée	conflit.bloc.partis_pas_encore_rentres	En route, pas encore de retour	Out, not back yet	D13 (v3, ㉙ non ratifiée) : la maquette dit « Partis, pas encore rentrés » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
+parti chez Tarcum	62	proposée	conflit.bloc.parti_chez_famille	en route vers {famille}	on the way to {famille}	D13 (v3, ㉙ non ratifiée) : la maquette dit « parti chez {famille} » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
+on ne peut plus	62	proposée	conflit.bloc.on_ne_peut_plus_le_rappeler	plus de rappel possible	no calling back now	D13 (v3, ㉙ non ratifiée) : la maquette dit « on ne peut plus le rappeler » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
 le rappeler	62	proposée	conflit.bloc.on_ne_peut_plus_le_rappeler			fin de la phrase précédente
 parti chez Gorge-de-Fer	62	proposée	conflit.bloc.parti_chez_famille			même clé
-Déjà rentrés	62	proposée	conflit.bloc.deja_rentres	Déjà rentrés	Already back	section `resolved` ; ⚠️ D14 : « rentrés » accordé
+Déjà rentrés	62	proposée	conflit.bloc.deja_rentres	Déjà de retour	Already back	D13 (v3, ㉙ non ratifiée) : la maquette dit « Déjà rentrés » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
 était chez la Coil	62	proposée	conflit.bloc.etait_chez_famille	était chez {famille}	was at {famille}	
 Rien obtenu	62	proposée	conflit.issue.hold	Rien obtenu	Nothing gained	`outcome_bucket` = hold
-Deux hommes dehors.	62	proposée	conflit.bloc.hommes_dehors	{n, plural, one {Un homme dehors.} other {# hommes dehors.}}	{n, plural, one {One out.} other {# out.}}	le compte des `scheduled` ; D15 : le nombre vient de la liste ; ⚠️ D14 : « hommes » genré → liste de l’user
+Deux hommes dehors.	62	proposée	conflit.bloc.hommes_dehors	{n, plural, one {Une personne dehors.} other {# personnes dehors.}}	{n, plural, one {One out.} other {# out.}}	D13 (v3, ㉙ non ratifiée) : la maquette dit « {n, plural, one {Un homme dehors.} other {# hommes dehors.}} » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
 On ne les rappelle pas	62	proposée	conflit.bloc.on_ne_les_rappelle_pas_on_saura_demain_matin	On ne les rappelle pas — on saura demain matin.	No calling them back — we’ll know tomorrow morning.	une phrase en deux nœuds
 — on saura demain matin.	62	proposée	conflit.bloc.on_ne_les_rappelle_pas_on_saura_demain_matin			fin de la phrase précédente (« matin » est de la prose, pas une phase : D16 hors champ)
-EN ENVOYER UN AUTRE	62	proposée	conflit.bloc.en_envoyer_un_autre	En envoyer un autre	Send another one	geste À ROUTE (`POST /v1/me/engagements`) ; ⚠️ D14 : « un autre » genré
+EN ENVOYER UN AUTRE	62	proposée	conflit.bloc.en_envoyer_un_autre	Envoyer quelqu’un d’autre	Send someone else	D13 (v3, ㉙ non ratifiée) : la maquette dit « En envoyer un autre » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
 autre famille, autre bâtiment	62	proposée	conflit.bloc.autre_famille_autre_cible	autre famille, autre cible	another family, another target	maquette en retard (point 19) : le back vise un axe, pas un bâtiment → « autre cible »
 Ce qui est rentré	63	proposée	conflit.bloc.ce_qui_est_rentre	Ce qui est rentré	What came back	les envois `resolved` (63)
-Ce que chaque homme a rapporté, et ce que ça nous a coûté.	63	proposée	conflit.bloc.ce_que_chaque_homme_a_rapporte_et_ce_que_ca_nous_a_coute	Ce que chaque homme a rapporté, et ce que ça nous a coûté.	What each one brought back, and what it cost us.	⚠️ D14 : « chaque homme » genré
-Il est rentré	63	proposée	conflit.bloc.il_est_rentre	Il est rentré	They’re back	⚠️ D14 : « Il », « rentré » genrés → liste de l’user
+Ce que chaque homme a rapporté, et ce que ça nous a coûté.	63	proposée	conflit.bloc.ce_que_chaque_homme_a_rapporte_et_ce_que_ca_nous_a_coute	Ce que chaque envoi a rapporté, et ce que ça nous a coûté.	What each run brought back, and what it cost us.	D13 (v3, ㉙ non ratifiée) : la maquette dit « Ce que chaque homme a rapporté, et ce que ça nous a coûté. » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
+Il est rentré	63	proposée	conflit.bloc.il_est_rentre	De retour	Back	D13 (v3, ㉙ non ratifiée) : la maquette dit « Il est rentré » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
 était chez Tarcum	63	proposée	conflit.bloc.etait_chez_famille			même clé
 ça nous a coûté	63,66	proposée	conflit.bloc.ca_nous_a_coute	ça nous a coûté	it cost us	la ligne de `friction_consumed_bucket`
 un peu	63,66	proposée	conflit.cout.low	un peu	a little	`friction_consumed_bucket` = low ; même mot pour `conflit.chaleur.low`
@@ -54,7 +54,7 @@ la ville a chauffé	63,66	proposée	conflit.bloc.la_ville_a_chauffe	la ville a c
 pas mal	63,66	proposée	conflit.cout.medium	pas mal	quite a bit	= medium ; même mot pour `conflit.chaleur.medium`
 Depuis le début, chez Tarcum	63	proposée	conflit.bloc.depuis_le_debut_chez_famille	Depuis le début, chez {famille}	From the start, at {famille}	l’historique par famille (liste servie)
 Coup n°4	63	proposée	conflit.bloc.coup_n_n	Coup n°{n}	Strike #{n}	le rang de l’envoi dans l’historique (dérivé de la liste) ; D15 : le nombre vient de la liste
-un homme envoyé	63	proposée	conflit.bloc.un_homme_envoye	un homme envoyé	one sent	⚠️ D14 : « un homme » genré
+un homme envoyé	63	proposée	conflit.bloc.un_homme_envoye	un envoi	one sent	D13 (v3, ㉙ non ratifiée) : la maquette dit « un homme envoyé » ; forme épicène proposée ; clé SERVIE gardée (contrat additif), valeur changée
 Percée	63	proposée	conflit.issue.breakthrough	Percée	Breakthrough	`outcome_bucket` = breakthrough
 Coup n°5	63	proposée	conflit.bloc.coup_n_n			même clé
 Terrain gagné	63	proposée	conflit.issue.advance	Terrain gagné	Ground gained	= advance
@@ -81,7 +81,7 @@ sur quoi	65	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas u
 ce qu’on prend	65	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir
 elle a tout brûlé	65	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir
 le muscle · J7	65,66	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir ; « J7 » : exemple (point 19)
-« Dites-moi qui j’envoie et sur quoi. Je pars ce soir, on saura demain. »	65	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir ; c’est le texte servi de `conflit.bloc.dites_moi_qui_j_envoie…` (remplacé, D14)
+« Dites-moi qui j’envoie et sur quoi. Je pars ce soir, on saura demain. »	65	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir ; c’est le texte servi de `conflit.bloc.dites_moi_qui_j_envoie…` (la v2 est proposée)
 on saura demain, pas avant	65	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir
 « Il est rentré. Regardez l’allumette : ce qu’il en reste vous dit ce que ça a donné. »	66	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir
 l’allumette	66	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir
@@ -92,7 +92,7 @@ EN RENVOYER UN	66	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) :
 (complément de famille)		proposée	conflit.axe.intel	leurs informateurs	their informants	PROPOSÉ
 (complément de famille)		proposée	conflit.axe.infrastructure	leurs installations	their premises	PROPOSÉ
 (complément de famille)		proposée	conflit.axe.leadership	leur tête	their leadership	PROPOSÉ
-(complément de famille)		proposée	conflit.issue.contested	Disputé	Contested	ratifié (63), déjà mot servi ailleurs
+(complément de famille)		proposée	conflit.issue.contested	Disputé	Contested	PROPOSÉ (63, maquette non ratifiée) ; déjà mot servi ailleurs
 (complément de famille)		proposée	conflit.issue.retreat	On a reculé	We fell back	PROPOSÉ : la maquette ne dessine pas `retreat`
 (complément de famille)		proposée	conflit.cout.high	beaucoup	a lot	PROPOSÉ
 (complément de famille)		proposée	conflit.chaleur.low	un peu	a little	même mot que le coût
