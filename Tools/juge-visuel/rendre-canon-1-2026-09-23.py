@@ -17,6 +17,9 @@ CONTRÔLE DE GÉOMÉTRIE, avant le vrai rendu : la page ISOLÉE SEULE (sans les 
 Usage : python3 Tools/juge-visuel/rendre-canon-1-2026-09-23.py [--page-seule]
 """
 import os, re, subprocess, sys
+import importlib.util as _iu
+_sp = _iu.spec_from_file_location('apos', os.path.join(os.path.dirname(os.path.abspath(__file__)), '../atelier-2026-09-22/apostrophes-maquettes-2026-09-23.py'))
+_ap = _iu.module_from_spec(_sp); _sp.loader.exec_module(_ap)          # D10 : l'élision visible en ’ (apostrophes-maquettes-2026-09-23.py)
 from PIL import Image, ImageChops
 
 ATELIER = os.path.expanduser('~/project/atelier3d-mafia')
@@ -58,6 +61,7 @@ def deriver(html, maj=True):
         for avant, apres in TEXTES:
             if html.count(avant) != 1: sys.exit(f'⛔ « {avant[:60]} » × {html.count(avant)}, 1 attendu : rien rendu')
             html = html.replace(avant, apres)
+    html = _ap.normaliser(html)[0] if maj else html                    # D10 — l'isolation seule (contrôle de géométrie) garde la source telle quelle
     return html + f'\n<style id="canon-1">{ISOLATION}{MISES_A_JOUR if maj else ""}</style>\n'
 
 def rendre(html, sortie, polices_systeme=False):

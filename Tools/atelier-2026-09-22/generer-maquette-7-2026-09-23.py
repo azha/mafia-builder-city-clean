@@ -14,6 +14,9 @@ pointillé) et sourcé dans `26-…`. Trois cadres :
 Non dessinés (aucune décision du joueur sur ⑦) : `trust_budget_bucket`, `flag_frequency_band` — listés dans `26-…`.
 Usage : python3 Tools/atelier-2026-09-22/generer-maquette-7-2026-09-23.py   (écrit la page ; aucun rendu)"""
 import os, re, sys
+import importlib.util as _iu
+_sp = _iu.spec_from_file_location('apos', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'apostrophes-maquettes-2026-09-23.py'))
+_ap = _iu.module_from_spec(_sp); _sp.loader.exec_module(_ap)          # D10 : l'élision visible en ’ (apostrophes-maquettes-2026-09-23.py)
 ATELIER = os.path.expanduser('~/project/atelier3d-mafia')
 S6 = open(os.path.join(ATELIER, 'ecrans-brennar-6.html'), encoding='utf-8').read()
 SORTIE = os.path.join(ATELIER, 'ecrans-brennar-7-lieutenant.html')
@@ -117,7 +120,7 @@ CADRES = [
           '<div class="g"><span class="prop">Renouveler</span></div><div class="g"><span class="prop">Retirer</span></div></div>'),
 ]
 
-page = tete + CSS + ''.join(CADRES) + '</div>\n</div>\n'
+page = _ap.normaliser(tete + CSS + ''.join(CADRES) + '</div>\n</div>\n')[0]
 open(SORTIE, 'w', encoding='utf-8').write(page)
 n = page.count('<div class="cadre">')
 assert n == 3 and page.count('#buste-lieutenant') >= 3 + 1, (n, page.count('#buste-lieutenant'))
