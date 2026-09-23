@@ -6,7 +6,7 @@
 Mesuré au back HEAD (`operational/conflict/combat/engagements.controller.ts`, `protocol/error-codes.ts`, `common/param-pipes.ts`) :
 - 409 `MUSCLE_LIEUTENANT_REQUIRED` → clé SERVIE `error.engagements.muscle_lieutenant_required` (TD-553) : on propose une VALEUR
   dans la voix de la maison, la clé reste (contrat additif) ; pas de `conflit.refus.*` en double (D12 : un mot par chose) ;
-- 404 `RESOURCE_NOT_FOUND` : UN SEUL code pour TROIS cas (lieutenant pas au joueur ou inexistant — D7 « l'existence est un
+- 404 `RESOURCE_NOT_FOUND` : UN SEUL code pour TROIS cas (lieutenant pas au joueur ou inexistant — décision D7 du CONTRÔLEUR back `engagements.controller.ts` (pas le D7 du registre ARBITRAGES, le gyrophare) « l'existence est un
   renseignement » ; clé de rival hors domaine ; rival sans `rival_state`) — ni code ni `details` ne les distinguent ⇒ UN mot ;
 - 422 `VALIDATION_FAILED` (`rejected()` → `details.param`) : champ inconnu, `lieutenant_id` pas un uuid, `target_holding_id` hors
   des 5 axes. Le joueur ne SAISIT rien sur ㉙ (il touche) : un 422 est un défaut du client, dit sans jargon ⇒ UN mot ;
@@ -44,7 +44,7 @@ LIGNES = [
      'aucune forme accordée à la personne (un pronom « celui-ci » le serait)'],
     refus('404 RESOURCE_NOT_FOUND', f'Ce coup ne tient plus. Reprenez depuis la liste.', 'This job no longer holds. Start again from the list.',
           'UN mot : le 404 couvre lieutenant pas au joueur, clé de rival hors domaine, rival sans état — ni code ni `details` ne les distinguent '
-          '(D7) ; servi générique `error.resource.not_found` « Ce n’est plus là. »'),
+          '(décision D7 du contrôleur back `engagements.controller.ts`, pas le D7 du registre) ; servi générique `error.resource.not_found` « Ce n’est plus là. »'),
     refus('422 VALIDATION_FAILED', f'L’ordre n’est pas parti{NB}: il était mal formé. Réessayez.', 'The order didn’t go out: it was malformed. Try again.',
           'UN mot : `details.param` nomme le champ (lieutenant_id, target_holding_id, champ inconnu) mais le joueur ne saisit rien sur ㉙ ; '
           'servi générique `error.validation.failed` parle de « ce que vous avez saisi » — faux ici'),
