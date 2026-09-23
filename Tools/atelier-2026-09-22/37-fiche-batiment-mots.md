@@ -21,18 +21,23 @@
 | proposée | 42 | clés neuves, sous la forme que le client dérive (`building.row|bloc|replique|action.<slug>`, familles `building.cook_stage.*`, `building.stock.*`), avec fr (D10, D17) et en ; + 6 compléments de famille (valeurs que la maquette ne dessine pas) |
 | note | 24 | pas un libellé : 8 noms de plant d'exemple, 3 noms de lieu d'exemple, 2 scalaires en degrés (R2.2), 4 gestes du fourneau sans route, 3 états de scène de la descente, 1 glyphe (D11), 3 gloses « prix » sans donnée |
 
-## À trancher (f2)
+## Tranché par f2 (23/09)
 
-1. **« pyralin »** : le labo le commande, et le servi le nomme (`appro.bloc.nestor_…`). Mais le catalogue des précurseurs, `building.precursor.*`,
-   ne le porte pas : il n'a que Racine verdoyante, Résine de lull et Lys de verre. Un mot par précurseur (D12) : ajouter pyralin au catalogue,
-   ou le renommer ?
-2. **« Nestor : » en dur** dans `appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas`. C'est le même cas que « Lt. Hara »
-   (33 §5) : le labo du joueur a SON lieutenant, et il faudrait un `{nom}`.
-3. **« L’atelier »** (la ligne du palier dans l'écrin d'Ash) contre « Taille du labo », servi pour la même ligne sur la fiche du labo : aligner
-   la valeur partout, ou une clé à part pour l'écrin ?
-4. **Les 11 valeurs D14** (stades, santé, palier) : le back change les VALEURS, les clés restent. Les en proposés sont dans la table.
-5. **Passé à côté ?** « J14 » (depuis quand le cuisinier tient le labo) et « J11 » (depuis quand l'approvisionnement est délégué) : aucun
-   champ servi ne dit ces jours.
+- **« L’atelier » l’emporte** sur « Taille du labo » (D14) : la valeur de `building.row.taille_du_labo` devient « L’atelier » PARTOUT, dans
+  l'écrin d'Ash et sur la fiche du labo. La clé reste.
+- **J14 et J11** : ce sont des EXEMPLES de maquette (point 19). Ils ne s'affichent pas tant qu'aucun champ ne les porte. Classés en note, et
+  pas en question pour l'user.
+- **Les 11 valeurs D14** et les clés proposées partent au back, et la table part à CLIENT-2 pour son lot sur ②.
+
+## À trancher, en attente de la mesure du back (f2)
+
+1. **« pyralin »** : le labo le commande, et le servi le nomme (`appro.bloc.nestor_…`), mais le catalogue `building.precursor.*` ne le porte
+   pas (Racine verdoyante, Résine de lull, Lys de verre). Deux cas possibles :
+   - c'est un type de précurseur RÉEL du domaine, et il entre au catalogue (D12) ;
+   - c'est un mot de réplique, et il doit venir d'un `{param}`.
+2. **« Nestor : » en dur** dans `appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas`. Deux cas possibles :
+   - un personnage FIXE du canon (un fournisseur ?) : le nom en dur est alors de la fiction légitime ;
+   - un `{nom}` manquant, comme « Lt. Hara » (33 §5).
 
 ## Ce qui ne devient PAS un libellé
 
