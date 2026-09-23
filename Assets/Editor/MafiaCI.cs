@@ -97,6 +97,7 @@ public static class MafiaCI
     //   elle n'entrera ici qu'après un run vert, parce que sa 4e suite (`TopBarDoctrineV31`, 7
     //   tests) n'a JAMAIS tourné : le crash est arrivé avant elle. *Douze verts ne disent rien des
     //   sept qui n'ont pas démarré.*
+    // ✅ `HUDv31` INSCRITE le 2026-09-23 — voir la note des six inscriptions du créneau 05:18-05:58, plus bas.
     // ⛔ LES `Photo*` SONT DEHORS — TOUTES, depuis le 2026-09-03. Elles écrivent des PNG dans
     // `Assets/Screenshots` à chaque exécution : les faire tourner sous le juge salit l'arbre à
     // chaque run, et un `git add` distrait embarque alors des captures que personne n'a regardées.
@@ -118,6 +119,25 @@ public static class MafiaCI
     //   `categories-hors-filtre.md`) : c'est `Capture_Detail_ApresTampon_SousChrome_MUTE`, qui RÉSOUT une exception pour de bon sur le
     //   compte de capture — sa catégorie a été choisie pour n'être le préfixe de rien, parce qu'un lancement de `CaptureDetail` l'avait un
     //   jour emportée et consommé la carte. Elle se lance SEULE, à dessein, avec la paire, après avoir prévenu. Jamais au filtre par défaut.
+    // ✅ SIX INSCRIPTIONS DU CRÉNEAU 2026-09-23 05:18-05:58 (tête 8d689a75 = merge CLIENT-2 ada52db4 + `MAFIA_CI_TESTS`), sans la paire,
+    //   aucun test n'en exige (0 appel d'identité de capture), déclarés == comptés partout, VERDICT code=0 :
+    //   `HUDv31` 32/32 · `CarteActions` 3/3 · `PoliceGras` 1/1 · `VideChezLeNouveau` 1/1 (passage 2, 05:51, `passed=37 failed=0
+    //   declares=37 comptes=37`) ; `IconesDispatcher` 1/1 · `EcranDistrict` 10/10 (passage 1, dans le même lot que Charpente ;
+    //   `EcranDistrict` = ⑬ de CLIENT-2, 4 tests à 218e2829 + 6 de ①-0/①-1/①-2). Préfixes : `EcranDistrict` emporte
+    //   `EcranDistribution`, déjà inscrite ; aucune autre entrée neuve n'emporte une catégorie non inscrite (compteur : 591 → 639 = +48).
+    //   Toutes en PARTIE 1 du gate client. Rapport : `Tools/juge-donnees/creneau-2026-09-22/categories-hors-filtre.md`.
+    // ⛔ `ManometreOracle` (5 tests) RESTE DEHORS — GEL reproduit SEUL le 2026-09-23 : `Oracle1_Ring_UniqueLaitonFamily_On360_…`, filtre
+    //   par nom, 1 déclaré : journal muet 245 s après son `RUN`, CPU ≈ 378 %, le délai de test d'Unity ne mord pas (fil principal
+    //   gelé) ; tué par le chien de garde du lanceur, puis SIGSEGV au démontage de mono (effet du kill, pas une preuve de crash
+    //   autonome). Même signature que le 03/09 (en-tête du fichier de test). Rien ne boucle côté C# avant son premier `yield` ;
+    //   `TopBarDoctrineV31` porte le même motif (`WaitForEndOfFrame` + `CaptureScreenshotAsTexture`) et passe 19/19 : le motif
+    //   seul n'explique pas le gel. Les 4 autres tests de la classe n'ont JAMAIS tourné : à mesurer PAR NOM (`MAFIA_CI_TESTS`),
+    //   Oracle1 exclu.
+    // ⛔ `Screenshot` RESTE DEHORS (TD-625) — et `DashboardPlayModeTests.CaptureDashboardScreenshot` le confirme (passage 3, par nom) :
+    //   il SUPPRIME la planche commitée (`File.Delete`, DashboardPlayModeTests.cs:345) AVANT `ScreenCapture.CaptureScreenshot`, qui
+    //   n'écrit rien en 10 s en batchmode ⇒ échec = planche détruite. Défaut d'INSTRUMENT, dette datée dans `dette-captures.md`.
+    //   Les 2 autres tests de la classe (`LoadsDashboard_…`, `Wallet_WithoutToken_…`) sont SANS catégorie : verts par nom (2/2),
+    //   injoignables par tout filtre de catégories tant qu'ils n'en portent pas.
     // ✅ `EcranRevue` (⑯, 32 tests) et `EcranFile` (⑨, 18 tests) INSCRITES (2026-09-23) — écrans de CLIENT-2, entrés au cumul
     //   par le merge de `ecrans/2026-09-23` (8d632ebd, 34aab08c). Sans elles, ⑯ et ⑨ n'étaient dans AUCUN gate. Vertes chez
     //   CLIENT-2 : `passed=70 failed=0 declares=70 comptes=70`, [Ecran10, EcranExceptions, EcranFile, EcranRevue] (a3134d5f,
@@ -195,6 +215,13 @@ public static class MafiaCI
         // Inscrites le 2026-09-23 au regroupement — ⑯ et ⑨ de CLIENT-2, voir la note au-dessus du tableau.
         "EcranRevue",
         "EcranFile",
+        // Inscrites le 2026-09-23 après le créneau 05:18-05:58 — vertes avant inscription, voir la note au-dessus du tableau.
+        "HUDv31",
+        "CarteActions",
+        "PoliceGras",
+        "VideChezLeNouveau",
+        "IconesDispatcher",
+        "EcranDistrict",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

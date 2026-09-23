@@ -39,3 +39,20 @@ Screenshot | 11 | l'ajouter — les catégories réellement portées par la suit
 SondeFuiteCatalogue | 3 | (aucune raison écrite dans MafiaCI.cs) | 2026-09-22 — Tools/CRENEAU-2026-09-22.md · journal local sonde3.log (2026-09-23 03:58, passed=3 failed=0)
 VideChezLeNouveau | 1 | (aucune raison écrite dans MafiaCI.cs) | aucune trace versionnée
 ```
+
+## Créneau du 2026-09-23 05:18-05:58 — le verdict des candidates (tête 8d689a75, sans la paire)
+Journaux locaux : `creneau-hf{,2,3,4}.log` (passages 1 à 4). Déclarés == comptés partout.
+| catégorie | décl. | résultat | passage | décision |
+|---|---|---|---|---|
+| HUDv31 | 32 | 32/32 | 2 (05:51, VERDICT 0) | **inscrite** |
+| CarteActions | 3 | 3/3 | 2 | **inscrite** |
+| PoliceGras | 1 | 1/1 | 2 | **inscrite** |
+| VideChezLeNouveau | 1 | 1/1 | 2 | **inscrite** |
+| IconesDispatcher | 1 | 1/1 | 1 | **inscrite** |
+| EcranDistrict (non listée plus haut : ⑬ de CLIENT-2, entrée au merge de ada52db4) | 10 | 10/10 | 1 | **inscrite** |
+| ManometreOracle | 5 | `Oracle1` GÈLE, reproduit SEUL (passage 4, par nom) ; les 4 autres jamais exécutés | 1 et 4 | dehors, raison écrite dans MafiaCI ; les 4 autres à mesurer par nom |
+| MutationDeCarte | 1 | non lancée (elle mute le compte de capture) | — | dehors par construction, raison écrite (5248e117) |
+| Screenshot (DashboardPlayModeTests, par nom) | 1 | ROUGE : détruit la planche commitée avant une capture qui n'écrit rien | 3 | dehors (TD-625), dette dans `dette-captures.md` |
+| CaptureNuit | 1 | non lancée (capture, exige la paire) | — | inchangée |
+Filtre par défaut : 55 catégories / 591 tests → **61 / 639**.
+
