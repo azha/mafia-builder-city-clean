@@ -14,7 +14,7 @@ Les CORPS RÉELS sont listés au moment de l'exécution (provenance lue dans cha
 `verifier-fraicheur-corps.py` contre `main` du back — jamais une phrase datée écrite ici. Aucune valeur d'identifiant n'est écrite.
 Les faits de la nuit viennent des notes de l'atelier (`Tools/atelier-2026-09-22/`), du registre `ARBITRAGES-user-2026-09-07.md` et des
 commits ; chaque ligne porte sa source. ⛔ Aucun rendu, aucune capture, Unity non touché ; un dossier existant n'est pas écrasé.
-Usage : python3 Tools/juge-visuel/preparer-dossiers-2026-09-23.py [--controle]"""
+Usage : python3 Tools/juge-visuel/preparer-dossiers-2026-09-23.py [--controle] [--refaire <sym>[,<sym>…]]"""
 import importlib.util, json, os, re, subprocess, sys, glob
 
 ICI = os.path.dirname(os.path.abspath(__file__))
@@ -30,6 +30,8 @@ SHA_CUMUL = sh('git', '-C', CUMUL, 'rev-parse', '--short', 'HEAD')
 SHA_BACK = sh('git', '-C', BACK, 'rev-parse', '--short', 'HEAD')
 SHA_ATELIER = cd.sha_atelier()
 A = 'Tools/atelier-2026-09-22/'
+# `--refaire <sym>` : régénère le dossier de CE symbole (une décision est tombée après la préparation) — les autres ne sont jamais écrasés
+REFAIRE = set(sys.argv[sys.argv.index('--refaire') + 1].split(',')) if '--refaire' in sys.argv else set()
 F = 'CLIENT-2 `mafia-unity-F` (branche `ecrans/2026-09-23`)'
 
 # ------------------------------------------------------------------------------------------------------------------------------------
@@ -188,8 +190,8 @@ E = [
       front='refonte NON fusionnée au cumul (voir « connus »)', front_fichiers=['Assets/Scripts/Onboarding/TutorialScreenController.cs']),
  dict(sym='㉙', dossier='ecran_conflit', tour='r3', jd='cloture', nom='Le conflit', ctl='ConflitScreenController',
       travail='les mots (table 40), le geste vers un AXE, les erreurs du POST (addendum 40)',
-      refs=[('ecran_conflit/reference-1080x2102.png', 300, 'statut CONTRADICTOIRE — voir « ouverts »', 'série 6 cadre 59, nominal : « Le premier coup — on n\'a jamais croisé personne »'),
-            ('ecran_conflit/reference-manque-1080x2102.png', 300, 'idem', 'série 6 cadre 64 : « Ce qu\'on ne peut pas faire »')],
+      refs=[('ecran_conflit/reference-1080x2102.png', 300, '**MAQUETTE À RATIFIER** — ㉙ n\'est PAS ratifiée (décision f2 du 23/09 : front.md l.22 ne la liste pas, l.1328 « ratification user ✗ »)', 'série 6 cadre 59, nominal : « Le premier coup — on n\'a jamais croisé personne »'),
+            ('ecran_conflit/reference-manque-1080x2102.png', 300, '**MAQUETTE À RATIFIER** (idem)', 'série 6 cadre 64 : « Ce qu\'on ne peut pas faire »')],
       refs_notes=['Cadres 60-63 : source seule (le septième coup, deux choses ne collent pas, en cours, rentré) ; 65-66 = la v1, REMPLACÉE. '
                   'Les deux PNG sont re-rendus en DejaVu et « Plein jour » (`e20fe648`, `cb86e772`, `c833d204`). '
                   '`ecran_conflit/dossier.md` (à la racine) est un gabarit non rempli : ce dossier-ci et `r2-2026-09-22` font foi.'],
@@ -205,14 +207,13 @@ E = [
         ('les erreurs du POST dites en mots : 409 (clé servie `error.engagements.muscle_lieutenant_required`, RATIFIÉE et gardée par le back `f82a140b`), 404 et 422 en un mot chacun, l\'échec réseau', A + '40-addendum-engagements (`24897b48`)', 'un code affiché'),
       ],
       pas_noter=[
-        ('les mots GENRÉS ratifiés (« un homme », « il ne cogne pas », « Il est rentré »…)', 'D14 : ils vont à la liste de l\'user, sans correction'),
         ('la ponctuation haute du servi', 'D17'), ('« Lt. Kest », la famille visée, le chrome', 'exemples (point 19)'),
         ('le « C » de CHALEUR rogné', 'hérité (`7d00782d`)'), ('les cadres 65-66', 'la v1, remplacée'),
         ('« demain matin »', 'prose, pas une phase (D16 ne s\'applique pas)'),
         ('pas de dock sur la référence', 'la série 6 n\'en dessine pas ; le chrome se juge contre le canon du HUD (dossier r2)'),
       ],
-      ouverts=[('le STATUT de ratification de ㉙ : front.md l.22 ne le liste pas et l.1328 dit « ratification user ✗ », alors que `generer-40-conflit-mots.py` l.5 et ' + A + '34 disent « ratifié par délégation »', 'contradiction — à trancher'),
-               ('la valeur du 409 : l\'addendum en propose une neuve, le back garde la ratifiée (`f82a140b`)', A + '40-addendum ; back `f82a140b`'),
+      ouverts=[('la maquette ㉙ elle-même (cadres 59-66) : à ratifier ; ses mots genrés ont reçu des formes ÉPICÈNES (D13, table 40 v3 `df041316`) — un mot genré à l\'écran est un écart, pas un mot ratifié', 'décision f2 du 23/09'),
+               ('la valeur du 409 : RATIFIÉE (`ERROR_TEXT_RATIFIED`), gardée telle quelle (f2 ; addendum v3 `df041316`) — à juger comme ratifiée', A + '40-addendum'),
                ('« Coup n°{n} » : dérivé de la liste (table 40) ou `strike_index` (client)', A + '40 tsv ; `ConflitDtos.cs`'),
                ('le mot « réseau » ne tient que si le client réémet la même `Idempotency-Key`', A + '40-addendum'),
                ('un glyphe coupé au bord haut-droit des deux références (x≈1065, y≈37 px)', 'observé à l\'image, sans source — à constater, pas à imputer au client')],
@@ -325,7 +326,7 @@ def table(lignes, tete):
 
 def dossier_jv(e, rc_frais, perimes, controle):
     R = os.path.join(JV, e['dossier'], f"{e['tour']}-{DATE}")
-    if os.path.exists(R) and not controle: return f"{os.path.relpath(R, cd.CLIENT)} existe déjà — non touché"
+    if os.path.exists(R) and not controle and e['sym'] not in REFAIRE: return f"{os.path.relpath(R, cd.CLIENT)} existe déjà — non touché"
     rows = []
     for rel, css, statut, etat in e['refs']:
         t = taille(rel)
@@ -413,7 +414,7 @@ def dossier_jv(e, rc_frais, perimes, controle):
 Préparé sur le client `{SHA_CLIENT}` (branche `da/2026-09-22`), cumul `{SHA_CUMUL}`, back `{SHA_BACK}`, atelier `{SHA_ATELIER}`.
 """
     if controle: return f"{e['sym']} : {len(txt)} car., {len(rows)} référence(s), {len(e['assumes'])} assumés, {len(crow)} corps ({sum(1 for c in crow if c[4] != 'opposable')} périmés)"
-    os.makedirs(R)
+    os.makedirs(R, exist_ok=True)
     for rel, *_ in e['refs']:
         if os.path.exists(os.path.join(JV, rel)): lien(os.path.relpath(os.path.join(JV, rel), R), os.path.join(R, os.path.basename(rel)))
     open(os.path.join(R, 'dossier.md'), 'w', encoding='utf-8').write(txt)
@@ -422,7 +423,7 @@ Préparé sur le client `{SHA_CLIENT}` (branche `da/2026-09-22`), cumul `{SHA_CU
 
 def dossier_jd(e, controle):
     R = os.path.join(JD, e['dossier'], f"{e['jd']}-{DATE}")
-    if os.path.exists(R) and not controle: return f"{os.path.relpath(R, cd.CLIENT)} existe déjà — non touché"
+    if os.path.exists(R) and not controle and e['sym'] not in REFAIRE: return f"{os.path.relpath(R, cd.CLIENT)} existe déjà — non touché"
     jv = f"Tools/juge-visuel/{e['dossier']}/{e['tour']}-{DATE}/dossier.md"
     ff = []
     for f in e['front_fichiers']:
@@ -470,7 +471,7 @@ def dossier_jd(e, controle):
 - les « choix » non sourcés : s'ils ne sont pas dans la table ci-dessus ou dans le dossier jumeau, ils n'existent pas.
 """
     if controle: return f"{e['sym']} (données) : {len(txt)} car., {len(ff)} fichiers front"
-    os.makedirs(R); open(os.path.join(R, 'dossier.md'), 'w', encoding='utf-8').write(txt)
+    os.makedirs(R, exist_ok=True); open(os.path.join(R, 'dossier.md'), 'w', encoding='utf-8').write(txt)
     return os.path.relpath(R, cd.CLIENT)
 
 def main():

@@ -20,7 +20,7 @@
 ## Back (B)
 
 - **Stack locale** : NON FOURNIE — `docker ps` se colle au créneau (la pile se monte après le gate ; jamais pendant un gate E2E).
-- **Back de référence** : `main` du dépôt back `30360c8d` au moment de la préparation ; corps réels datés et leur fraîcheur : dossier jumeau.
+- **Back de référence** : `main` du dépôt back `e76f6ffa` au moment de la préparation ; corps réels datés et leur fraîcheur : dossier jumeau.
 - **Compte** : le compte de capture (paire sous `MAFIA_CAPTURE_*`), ou un compte frais par `POST /v1/auth/signup` + `POST /v1/session/open`.
 
 ## Front (F)
@@ -30,7 +30,7 @@
 | `Assets/Scripts/Operational/Conflit/ConflitScreenController.cs` | présent au cumul |
 | `Assets/Scripts/Operational/Conflit/ConflitDtos.cs` | présent au cumul |
 
-- **Cumul** : `mafia-builder-city-clean` `fc3033ec`. rien de non fusionné relevé pour cet écran.
+- **Cumul** : `mafia-builder-city-clean` `c3d0df4b`. rien de non fusionné relevé pour cet écran.
 - **Rapport `juge-visuel` APPROUVÉ** : NON FOURNI (à venir : `Tools/juge-visuel/ecran_conflit/r3-2026-09-23/rapport.md`).
 - **Suite PlayMode** : NON FOURNIE.
 

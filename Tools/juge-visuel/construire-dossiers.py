@@ -224,8 +224,8 @@ def _maj_2026_09_23():
     par["⑲"]["note"] += (" — MISE À JOUR 23/09 : la porte « ce que le back sert aujourd'hui » (dérivée du 97 ratifié), MAQUETTE À RATIFIER. "
                          + D.format("compte/r1-⑲-2026-09-23/") + " ⛔ le branchement du client (CLIENT-2 `19ddc253`, `9e298c64`) n'est pas fusionné au cumul.")
     par["⑲"].setdefault("extras", []).append(("compte/porte-2026-09-23/cadre-0-1080x2102.png", "MAQUETTE À RATIFIER, pas une référence — la porte mise à jour (`7d00782d`)"))
-    par["㉙"]["note"] += (" — 23/09 : le geste vise un AXE (atelier 40, `997d6ab4`) ; STATUT de ratification contradictoire (front.md l.22 et l.1328 contre "
-                         "atelier 34 / generer-40) → ARBITRAGE. " + D.format("ecran_conflit/r3-2026-09-23/"))
+    par["㉙"]["note"] += (" — 23/09 : le geste vise un AXE (atelier 40, `997d6ab4`) ; ㉙ n'est PAS ratifiée (décision f2 : front.md l.22, l.1328) — "
+                         "ses références sont des MAQUETTES À RATIFIER ; mots genrés en formes épicènes (D13, table 40 v3). " + D.format("ecran_conflit/r3-2026-09-23/"))
     par["①"]["note"] += (" — 23/09 : la référence est `ecran-canon-propre.png`, **1176×2091 à ×3,0** (392 CSS) — le r10 annonçait ×3,6 à tort. "
                          + D.format("ecran-principal/r11-2026-09-23/"))
     par["②"]["note"] += (" — 23/09 : ⛔ AUCUNE référence à jour rendue (v6/m-36…94 = 900×1752 du 03/09, avant DejaVu et le chrome ratifié) : à rendre au "

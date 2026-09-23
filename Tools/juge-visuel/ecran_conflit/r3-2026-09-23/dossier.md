@@ -14,8 +14,8 @@
 
 | fichier (dans ce dossier) | état montré | statut | taille px | facteur | largeur CSS ↔ px |
 |---|---|---|---|---|---|
-| `reference-1080x2102.png` (lien vers `ecran_conflit/reference-1080x2102.png`) | série 6 cadre 59, nominal : « Le premier coup — on n'a jamais croisé personne » | statut CONTRADICTOIRE — voir « ouverts » | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
-| `reference-manque-1080x2102.png` (lien vers `ecran_conflit/reference-manque-1080x2102.png`) | série 6 cadre 64 : « Ce qu'on ne peut pas faire » | idem | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `reference-1080x2102.png` (lien vers `ecran_conflit/reference-1080x2102.png`) | série 6 cadre 59, nominal : « Le premier coup — on n'a jamais croisé personne » | **MAQUETTE À RATIFIER** — ㉙ n'est PAS ratifiée (décision f2 du 23/09 : front.md l.22 ne la liste pas, l.1328 « ratification user ✗ ») | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `reference-manque-1080x2102.png` (lien vers `ecran_conflit/reference-manque-1080x2102.png`) | série 6 cadre 64 : « Ce qu'on ne peut pas faire » | **MAQUETTE À RATIFIER** (idem) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
 
 - Cadres 60-63 : source seule (le septième coup, deux choses ne collent pas, en cours, rentré) ; 65-66 = la v1, REMPLACÉE. Les deux PNG sont re-rendus en DejaVu et « Plein jour » (`e20fe648`, `cb86e772`, `c833d204`). `ecran_conflit/dossier.md` (à la racine) est un gabarit non rempli : ce dossier-ci et `r2-2026-09-22` font foi.
 - ⛔ Une **maquette à ratifier** n'est PAS une référence ratifiée : un écart entre la capture et elle se classe **ARBITRAGE** (à ratifier),
@@ -42,7 +42,6 @@
 
 | tentation | pourquoi |
 |---|---|
-| les mots GENRÉS ratifiés (« un homme », « il ne cogne pas », « Il est rentré »…) | D14 : ils vont à la liste de l'user, sans correction |
 | la ponctuation haute du servi | D17 |
 | « Lt. Kest », la famille visée, le chrome | exemples (point 19) |
 | le « C » de CHALEUR rogné | hérité (`7d00782d`) |
@@ -54,8 +53,8 @@
 
 | point | source |
 |---|---|
-| le STATUT de ratification de ㉙ : front.md l.22 ne le liste pas et l.1328 dit « ratification user ✗ », alors que `generer-40-conflit-mots.py` l.5 et Tools/atelier-2026-09-22/34 disent « ratifié par délégation » | contradiction — à trancher |
-| la valeur du 409 : l'addendum en propose une neuve, le back garde la ratifiée (`f82a140b`) | Tools/atelier-2026-09-22/40-addendum ; back `f82a140b` |
+| la maquette ㉙ elle-même (cadres 59-66) : à ratifier ; ses mots genrés ont reçu des formes ÉPICÈNES (D13, table 40 v3 `df041316`) — un mot genré à l'écran est un écart, pas un mot ratifié | décision f2 du 23/09 |
+| la valeur du 409 : RATIFIÉE (`ERROR_TEXT_RATIFIED`), gardée telle quelle (f2 ; addendum v3 `df041316`) — à juger comme ratifiée | Tools/atelier-2026-09-22/40-addendum |
 | « Coup n°{n} » : dérivé de la liste (table 40) ou `strike_index` (client) | Tools/atelier-2026-09-22/40 tsv ; `ConflitDtos.cs` |
 | le mot « réseau » ne tient que si le client réémet la même `Idempotency-Key` | Tools/atelier-2026-09-22/40-addendum |
 | un glyphe coupé au bord haut-droit des deux références (x≈1065, y≈37 px) | observé à l'image, sans source — à constater, pas à imputer au client |
@@ -69,7 +68,7 @@
 - **Routes** : `/v1/lieutenants`, `GET` et `POST /v1/me/engagements`
 - **Corps réels** (`ecran_conflit/corps-reels/`, provenance lue dans chaque fichier ; comptes masqués, aucune valeur d'identifiant ici) :
 
-| fichier | date | back servi | nature | fraîcheur (`verifier-fraicheur-corps.py` contre `main` du back `30360c8d`) |
+| fichier | date | back servi | nature | fraîcheur (`verifier-fraicheur-corps.py` contre `main` du back `e76f6ffa`) |
 |---|---|---|---|---|
 | `GET_city_district_id_interior.json` | 2026-09-22T13:23:16 | `03cf564c` | réponse réelle | opposable |
 | `GET_lieutenants.json` | 2026-09-22T13:23:16 | `03cf564c` | réponse réelle | **PÉRIMÉ** (operational/lieutenant/lieutenant.repository.ts) |
@@ -84,7 +83,7 @@
 
 - Protocole : `RECAPTURE-2026-09-22.md` §2 (conteneur recréé, horodatage de l'image lu pendant le run, un run = une paire, exportée sous
   `MAFIA_CAPTURE_*` SEULEMENT — `MAFIA_DEMO_*` posé = faute —, sha256 + preuve d'identité jointe). Captures prises sur le cumul
-  (`mafia-builder-city-clean`, aujourd'hui `fc3033ec`) ; leur SHA s'écrit ici.
+  (`mafia-builder-city-clean`, aujourd'hui `c3d0df4b`) ; leur SHA s'écrit ici.
 - Paire T / T+1 s si une animation est en cause (doctrine : aucune animation, sauf ce que ce dossier assume).
 
 ## Échelle et doctrine
@@ -107,4 +106,4 @@
 - le code du client et ses tests ; les notes d'implémentation ; les rapports des juges précédents ;
 - pour l'instant : toute capture.
 
-Préparé sur le client `052b13a6` (branche `da/2026-09-22`), cumul `fc3033ec`, back `30360c8d`, atelier `ffb6f67`.
+Préparé sur le client `df041316` (branche `da/2026-09-22`), cumul `c3d0df4b`, back `e76f6ffa`, atelier `ffb6f67`.
