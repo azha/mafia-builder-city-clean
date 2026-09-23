@@ -1206,6 +1206,7 @@ namespace MafiaCleanCity.Shell
             HomeChromeController homeChrome = NouveauPanneauAccueil<HomeChromeController>("AccueilHomeChrome", 0.00f, 0.25f);
             homeChrome.SetCompressionGlance(dto?.compression_glance);
             homeChrome.SetPressureBand(dto?.queue_pressure_band);
+            homeChrome.SetBacklogBadge(dto?.backlog_badge == true);   // ④ (2026-09-23) : backlog_badge sur l'Accueil, plus seulement au TopBar
             // Le générique "5 états" (design §2, I6 — la revue ⊥ v4) : `hasAnyData` reflète ce que
             // CE MVP surface réellement sur l'Accueil (une carte à haut levier OU une file
             // d'exceptions) — jamais un flag inventé. ⚠️ MESURÉ (I6) : quand une session/open RÉELLE
