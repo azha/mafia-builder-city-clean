@@ -51,14 +51,20 @@ TABLE = [
       nominal_note="cadre 22, Brennar la nuit",
       extras=[("carte/reference-chez-vous-1080x2102.png", "cadre 24 « approcher : chez vous », rendu le 2026-09-22 (atelier 868ab87) — la bande de La Lisière liste les quatre bâtiments du joueur : « le labo, la planque, la façade, la banque » (money_holding = « la banque », ④ d4)")]),
  dict(sym="④", ctl="DashboardController", dossier="accueil", chemin="surimpression à l'ouverture de session (acquisition), puis Accueil",
-      cadres=[], nominal=None, planche="planche_l_accueil_1080x2400.png",
-      confiance="aucune", note="AUCUNE maquette (front.md:1609 « [ ] maquetté ») — les cadres 20-21 « Le Bureau du patron » sont ⑱ le menu Plus (front.md:1567), corrigé par l'orchestrateur le 03/09"),
+      cadres=[("ecrans-brennar-accueil.html", [0, 1, 2, 3])], nominal=None, planche="planche_l_accueil_1080x2400.png",
+      confiance="mesurée", note="MAQUETTE À RATIFIER depuis le 23/09 (atelier 25 §2.2, table 45 : la carte de tête en forme honnête) — aucune référence RATIFIÉE (front.md:1609) ; "
+      "les cadres 20-21 « Le Bureau du patron » sont ⑱ le menu Plus (front.md:1567). dossier du `accueil/r1-2026-09-23/` (preparer-dossiers-2026-09-23.py, commande f2 du 23/09) : référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps",
+      extras=[(f"accueil/maquette-2026-09-23/cadre-{i}-1080x2102.png", f"MAQUETTE À RATIFIER, pas une référence — {e}") for i, e in
+              enumerate(["rien à trancher", "la carte de tête, forme honnête", "des rapports à lire", "la file sous pression"])]),
  dict(sym="⑤", ctl="DecisionDetailScreenController", dossier="decision-du-jour", chemin="surimpression depuis la carte de tête (hl_card) de l'Accueil",
       cadres=[(S4, list(range(4, 9))), (S6, list(range(4, 9)))], nominal=(S4, 4), planche="decision_du_jour_1080x2400.png",
       confiance="mesurée", note="série 4 cadres 4-8 RATIFIÉS par l'user (« ok top on garde comme ça », 2026-08-26)"),
  dict(sym="⑥", ctl="LieutenantScreenController", dossier="famille", chemin="onglet FAMILLE",
       cadres=[(S1, ["organigramme (rangée « La Famille »)"])], nominal=None, planche="famille_1080x2400.png",
-      confiance="mesurée", note="référence = Tools/family-organigramme-reference-1120.png (1120×1850) et famille/ecran-canon.png ; ⑦ ⑧ sont des sections du même contrôleur"),
+      confiance="mesurée", note="référence = Tools/family-organigramme-reference-1120.png (1120×1850) et famille/ecran-canon.png ; ⑦ ⑧ sont des sections du même contrôleur. "
+      "⑦ (la fiche du lieutenant, la mécanique) : MAQUETTE À RATIFIER du 23/09 (`ecrans-brennar-7-lieutenant.html`, 4 cadres ; atelier 26, 41, 42) — dossier du `famille/r1-⑦-2026-09-23/` (preparer-dossiers-2026-09-23.py, commande f2 du 23/09) : référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps",
+      extras=[(f"famille/maquette-7-2026-09-23/cadre-{i}-1080x2102.png", f"⑦ MAQUETTE À RATIFIER — {e}") for i, e in
+              enumerate(["la fiche nominale", "le signal dérive", "l'ordre expire bientôt", "« Donner un ordre » : l'éditeur de ⑧ en ordre permanent"])]),
  dict(sym="⑯", ctl="DailyReviewScreenController", dossier="revue-du-jour", chemin="Plus → LA REVUE DU JOUR",
       cadres=[(S4, list(range(0, 4))), (S6, list(range(0, 4)))], nominal=(S4, 0), planche="revue_du_jour_seuil-force-0.1_1080x2400.png",
       confiance="mesurée", note="série 4 cadres 0-3 = le canon ratifié (revue-du-jour/v4-0..3.png)"),
@@ -199,6 +205,35 @@ HORS_APPSHELL = [
       cadres=[(S6, [20, 21])], nominal=(S6, 20), planche="", confiance="mesurée",
       note="cadres 20-21 « Le Bureau du patron » = le menu Plus (front.md:1567, série 6 v3.3) ; canon plus/ecran-canon.png ; le menu, pas un locataire"),
 ]
+
+
+# ---------------------------------------------------------------------------------------------
+# MISE À JOUR du 2026-09-23 (commande f2 : dossiers de juge des écrans travaillés la nuit) — ajoutée ICI, par symbole, pour que la
+# donnée vive dans le générateur (une régénération ne l'efface pas) sans réécrire des notes longues. Les dossiers datés sont produits
+# par `preparer-dossiers-2026-09-23.py` ; les maquettes « à ratifier » sont des EXTRAS, jamais des nominaux (ce ne sont pas des références).
+# ---------------------------------------------------------------------------------------------
+def _maj_2026_09_23():
+    par = {r["sym"]: r for r in TABLE + HORS_APPSHELL}
+    D = "dossier daté du 23/09 : `{}` (référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps et leur fraîcheur)"
+    par["㉕"].update(cadres=[("ecrans-brennar-25-tutoriel.html", [0, 1, 2, 3])], confiance="mesurée",
+                     note="canon RATIFIÉ par délégation (02/09, front.md l.22, l.1803) : compte/tutoriel-canon.png et tutoriel-vide.png (série 2, cadres 31-32, 900×1752) ; "
+                          "MAQUETTE À RATIFIER du 23/09 autour des données servies (atelier 33, `ad616c56`). " + D.format("compte/r1-㉕-2026-09-23/")
+                          + " ⛔ la refonte du client (CLIENT-2 `049a863e`) n'est pas fusionnée au cumul : capture jugeable après fusion.")
+    par["㉕"]["extras"] = [(f"compte/maquette-25-2026-09-23/cadre-{i}-1080x2102.png", f"MAQUETTE À RATIFIER — {e}") for i, e in
+                          enumerate(["1ʳᵉ session, bulle sur la carte pré-semée", "1ʳᵉ session, file vidée", "2ᵉ session, page sous Plus", "le refus"])]
+    par["⑲"]["note"] += (" — MISE À JOUR 23/09 : la porte « ce que le back sert aujourd'hui » (dérivée du 97 ratifié), MAQUETTE À RATIFIER. "
+                         + D.format("compte/r1-⑲-2026-09-23/") + " ⛔ le branchement du client (CLIENT-2 `19ddc253`, `9e298c64`) n'est pas fusionné au cumul.")
+    par["⑲"].setdefault("extras", []).append(("compte/porte-2026-09-23/cadre-0-1080x2102.png", "MAQUETTE À RATIFIER, pas une référence — la porte mise à jour (`7d00782d`)"))
+    par["㉙"]["note"] += (" — 23/09 : le geste vise un AXE (atelier 40, `997d6ab4`) ; STATUT de ratification contradictoire (front.md l.22 et l.1328 contre "
+                         "atelier 34 / generer-40) → ARBITRAGE. " + D.format("ecran_conflit/r3-2026-09-23/"))
+    par["①"]["note"] += (" — 23/09 : la référence est `ecran-canon-propre.png`, **1176×2091 à ×3,0** (392 CSS) — le r10 annonçait ×3,6 à tort. "
+                         + D.format("ecran-principal/r11-2026-09-23/"))
+    par["②"]["note"] += (" — 23/09 : ⛔ AUCUNE référence à jour rendue (v6/m-36…94 = 900×1752 du 03/09, avant DejaVu et le chrome ratifié) : à rendre au "
+                         "prochain signal avant de juger ; lots 1, 4, 6 de CLIENT-2 non fusionnés au cumul. " + D.format("fiche-batiment/r1-2026-09-23/"))
+    par["④"]["note"] = par["④"]["note"].replace("`accueil/r1-2026-09-23/`", "`accueil/r1-2026-09-23/`")
+
+
+_maj_2026_09_23()
 
 
 def montages_appshell():
@@ -343,6 +378,17 @@ def main(argv):
                     corps = "index illisible"
                 break
         lignes.append(f"| {r['sym']} | {f.get('nom', '?')} `{f.get('id', '')}` | `{r['ctl']}` | `{r['dossier']}` | {cad} | {ref} | `{planche}` ({pe}) | {f.get('reste', '') or '—'} | {r['confiance']} | {corps} |")
+    # les dossiers DATÉS les plus récents (lus sur le disque, jamais écrits à la main) — le juge part de l'INDEX et doit les trouver
+    import glob as _g
+    dates = sorted({m.group(1) for d in _g.glob(os.path.join(JV, "*", "r*-20*")) for m in [re.search(r"(20\d\d-\d\d-\d\d)$", d)] if m})
+    if dates:
+        der = dates[-1]
+        lignes += ["", f"**Dossiers de juge datés du {der}** (préparés, captures à poser au créneau) — à lire AVANT le mandat de l'écran :", ""]
+        for d in sorted(_g.glob(os.path.join(JV, "*", f"r*-{der}"))):
+            jd = [x for x in _g.glob(os.path.join(CLIENT, "Tools", "juge-donnees", os.path.basename(os.path.dirname(d)), f"*{der}")) if os.path.isdir(x)]
+            sym = re.search(r"-([①-㊿])-", os.path.basename(d))   # dossier partagé (compte : ⑲, ㉕) : le jumeau du MÊME symbole
+            if sym: jd = [x for x in jd if sym.group(1) in os.path.basename(x)]
+            lignes.append(f"- `{os.path.relpath(d, JV)}/dossier.md`" + (" · juge-données : " + ", ".join(f"`{os.path.relpath(x, CLIENT)}/`" for x in sorted(jd)) if jd else ""))
     lignes += ["", f"Montés par `AppShell.cs` : {len(montes)} contrôleurs distincts ({', '.join(montes)}) — tous indexés (garde du script). "
                f"Lignes hors AppShell : {len(HORS_APPSHELL)}."]
     index = "\n".join(lignes) + "\n"

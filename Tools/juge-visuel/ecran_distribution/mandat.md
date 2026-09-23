@@ -16,7 +16,7 @@
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `ecran_distribution/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #54 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 54, 55, 56, 57, 58 — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 54, 55, 56, 57, 58 — atelier `ffb6f67`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. le contrôleur cite m-54 (repos) .. m-58
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

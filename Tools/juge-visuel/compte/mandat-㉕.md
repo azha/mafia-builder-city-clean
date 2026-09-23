@@ -19,8 +19,8 @@
 | `compte/profil-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `compte/reglages-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `compte/tutoriel-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : aucune — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
-- **Attribution cadre ↔ écran** : aucune. canon compte/tutoriel-canon.png ; aucun cadre de série 4/6 identifié
+- **Cadres de la maquette** : `ecrans-brennar-25-tutoriel.html` 0, 1, 2, 3 — atelier `ffb6f67`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Attribution cadre ↔ écran** : mesurée. canon RATIFIÉ par délégation (02/09, front.md l.22, l.1803) : compte/tutoriel-canon.png et tutoriel-vide.png (série 2, cadres 31-32, 900×1752) ; MAQUETTE À RATIFIER du 23/09 autour des données servies (atelier 33, `ad616c56`). dossier daté du 23/09 : `compte/r1-㉕-2026-09-23/` (référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps et leur fraîcheur) ⛔ la refonte du client (CLIENT-2 `049a863e`) n'est pas fusionnée au cumul : capture jugeable après fusion.
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.
 - Polices : le rendu passe par Chrome sur cette machine (`fc-match Georgia` → Noto Serif, `fc-match
