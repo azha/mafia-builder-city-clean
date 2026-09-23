@@ -130,6 +130,9 @@ namespace MafiaCleanCity.Shell
         /// <summary>Le texte affiché, sans balise ; null quand rien n'est affiché.</summary>
         public string TexteAffiche => Visible && Courante != null ? Courante.Phrase : null;
         public TextMeshProUGUI Texte { get; private set; }
+        /// <summary>L'opacité RÉELLE du bandeau : 1 affiché, 0 absent, entre les deux pendant le fondu. Pour la garde d'une
+        /// planche : elle doit asserter l'état qu'elle a CHOISI (1 ou 0), sinon une prise en plein fondu passerait.</summary>
+        public float Opacite => Visible && groupe != null ? groupe.alpha : 0f;
         /// <summary>Levé à chaque apparition et à chaque effacement — ① y cède la place de son titre (r9 M11).</summary>
         public event Action<bool> VisibiliteChangee;
 

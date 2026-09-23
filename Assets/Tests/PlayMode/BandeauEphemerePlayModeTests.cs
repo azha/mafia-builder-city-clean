@@ -129,6 +129,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsTrue(bandeau.gameObject.activeInHierarchy);
             Assert.AreEqual(a.Phrase, bandeau.TexteAffiche);
             Assert.AreEqual(a.PhraseRiche, bandeau.Texte.text);
+            Assert.AreEqual(1f, bandeau.Opacite, "affiché : opacité pleine (la garde d'une planche le lit)");
             Assert.IsFalse(bandeau.Annoncer(AnnonceDuBandeau.Choisir(false, null, "HOT", null, null), null, 0.2f),
                 "la même annonce ne se répète pas dans la session");
 
@@ -137,6 +138,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsFalse(bandeau.Visible, "il s'efface seul");
             Assert.IsFalse(bandeau.gameObject.activeSelf);
             Assert.IsNull(bandeau.TexteAffiche);
+            Assert.AreEqual(0f, bandeau.Opacite, "effacé : zéro");
             CollectionAssert.AreEqual(new[] { true, false }, vus, "apparition puis effacement, annoncés une fois chacun");
 
             Assert.IsTrue(bandeau.Annoncer(AnnonceDuBandeau.Choisir(false, null, "BURNING", null, null), null, 5f),
