@@ -21,14 +21,14 @@ Le contrôle négatif a servi. Au premier passage, cinq chaînes inventées sort
 ```
 3448 mots (ponctuation exclue) — sans source 2065 · servi 620 · nombre 383 · nom de fiction 242 · fragment servi 58 · proposé 43 · identifiant brut 37
 par écran (classé par « sans source » distincts) :
-  (aucun écran)  sans source  152 distincts ( 203) · servi   31 · fragment   6 · fiction   6 · proposé   0 · brut   6 · nombre   12
+  ㊳              sans source   89 distincts ( 103) · servi   39 · fragment   4 · fiction   1 · proposé   0 · brut   3 · nombre   21
+  ㊴              sans source   89 distincts ( 129) · servi   12 · fragment  13 · fiction   0 · proposé   0 · brut  11 · nombre   27
   ㉙              sans source   88 distincts ( 154) · servi   53 · fragment   1 · fiction  14 · proposé   0 · brut   0 · nombre    0
-  ㊲              sans source   79 distincts ( 102) · servi   39 · fragment   0 · fiction   0 · proposé   0 · brut   3 · nombre   19
+  ㊲              sans source   85 distincts ( 117) · servi   48 · fragment   0 · fiction   0 · proposé   0 · brut   3 · nombre   23
+  ②              sans source   83 distincts ( 129) · servi   12 · fragment   3 · fiction   6 · proposé   0 · brut   0 · nombre    2
   ㉜              sans source   73 distincts ( 133) · servi    9 · fragment   4 · fiction   7 · proposé   0 · brut   0 · nombre    0
   ㉞              sans source   73 distincts ( 102) · servi   20 · fragment   4 · fiction   4 · proposé   0 · brut   0 · nombre   24
-  ㊴              sans source   70 distincts (  99) · servi    8 · fragment  10 · fiction   0 · proposé   0 · brut   8 · nombre   24
   ㊵              sans source   68 distincts (  82) · servi   26 · fragment   3 · fiction   0 · proposé   4 · brut   2 · nombre   23
-  ㊳              sans source   65 distincts (  74) · servi   33 · fragment   4 · fiction   1 · proposé   0 · brut   0 · nombre   18
   ⑮·⑰            sans source   64 distincts ( 100) · servi   20 · fragment   0 · fiction  18 · proposé   0 · brut   0 · nombre   21
   ㉛              sans source   56 distincts (  95) · servi   11 · fragment   2 · fiction  11 · proposé   0 · brut   0 · nombre    5
   ㉝              sans source   55 distincts (  82) · servi   16 · fragment   1 · fiction   4 · proposé   0 · brut   0 · nombre    8
@@ -60,17 +60,16 @@ par écran (classé par « sans source » distincts) :
     « Portée », « Urgence »…
   - Le reste est de la prose de maquette : titres de cadre dans le téléphone, phrases de personnages, panneaux d'explication.
     Le balayage ne sait pas distinguer une note de DA posée DANS le téléphone d'un libellé.
-- **Le classement** : le nombre de mots distincts sans clé servie, par écran.
-  - Les plus chargés : ㉙ (88), ㊲ (79), ㉜ et ㉞ (73), ㊴ (70), ㊵ (68), ㊳ (65), ⑮·⑰ (64).
+- **Le classement** : le nombre de mots distincts sans clé servie, par écran (voir le tableau).
+  - En tête : ㉙, ②, ㊲, ㉜, ㉞, ㊴, ㊵, ㊳, ⑮·⑰.
   - Ce sont les écrans neufs du 27/08, dessinés avant que le catalogue n'existe.
 - **Les pages neuves** ont 0 à 3 mots sans clé : ⑦ 0 ; ④ 2, qui sont des mots ratifiés (« Portée », « Urgence ») ; ㉕ 3 distincts, tous ratifiés.
 - **« proposé » est presque vide dans la série** (0 hors ⑦ ④ ㉕ ㊵) : la série 6 n'a aucun `class="prop"`, et les brouillons du back sont
   presque tous servis.
-- **18 cadres n'ont pas d'écran à l'INDEX** :
-  - 36-47 : la chambre de pousse, le labo, le fourneau, la descente ;
-  - 92-94 : Ash, le rendez-vous ;
-  - 143-145 : les crans.
-  - Leurs mots sont comptés sous « (aucun écran) ». Rattachement à faire.
+- **Les 18 cadres qui n'avaient pas d'écran à l'INDEX sont RATTACHÉS** (commande f2, `construire-dossiers.py`) :
+  - 36-47 et 92-94 → ② : les matières par type, le fourneau et Ash, dont les routes sont dans `BuildingCardController` ;
+  - 143 → ㊴, 144 → ㊲, 145 → ㊳ : les cadres de vocabulaire, déjà références « extras ».
+  - « (aucun écran) » a disparu du tableau. ② passe à 83 mots distincts sans clé servie.
 - **Retards connus retrouvés** :
   - ㉘ cadre 57 « trois ponts » (D15 : plusieurs ponts) ;
   - ㉟ « au travail » et les autres, servis depuis D14, sortent « servi ».

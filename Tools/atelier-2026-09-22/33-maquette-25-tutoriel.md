@@ -83,14 +83,11 @@
    - Si `{nom}` : au back, sur ces deux clés exactes. Tant que le grant nomme « Lieutenant », la carte dira « Lieutenant — cuisson du soir
      bloquée… ».
    - L'autre voie : que le grant nomme Hara l'un des deux cuisiniers.
-2. **« Il décide seul »** (`tutorial.graduation`) vient des arbitrages de fiction du 02/09 (`propositions-fiction.md:164`, commit `4a922bc9`),
-   écrits par le back après le choix 6A, **pas d'une maquette ratifiée** : D13 s'applique, forme épicène. (Si f2 tient ce document pour
-   ratifié, les deux mots vont à la liste de l'user.)
-   - Proposé : « Un lieutenant a fini son apprentissage. **Désormais, la décision lui revient**, dans le cadre que vous fixez. »
-   - L'EN (« They decide alone ») est déjà épicène.
-3. **« Un lieutenant est prêt à passer. »** (`tutorial.graduation_eligibility_intro`) : « prêt » s'accorde au masculin. D13 en a retiré
-   « prêt » pour le coursier.
-   - Proposé : « Un lieutenant **peut passer au grade suivant**. Sa promotion se prépare ici. »
+2. **« Il décide seul »** (`tutorial.graduation`) : **tranché par f2 le 23/09.** Les arbitrages de fiction du 02/09 ont été pris par
+   l'user (« on prend toutes tes reco »). La phrase est donc RATIFIÉE et **va à la liste des mots genrés pour l'user** (D14) ; rien n'est
+   corrigé.
+3. **« Un lieutenant est prêt à passer. »** (`tutorial.graduation_eligibility_intro`) : « prêt » s'accorde au masculin → D13 (tranché par
+   f2), **proposé** : « Un lieutenant **peut passer au grade suivant**. Sa promotion se prépare ici. »
 4. **Apostrophes droites** (D10) dans 5 des 11 valeurs FR `tutorial.*` : la maquette les rend en `’` (`normaliser`), le servi reste à passer.
 
 ## 6. Les mots proposés (non ratifiés)

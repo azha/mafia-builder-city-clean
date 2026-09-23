@@ -75,7 +75,7 @@ TABLE = [
       cadres=[(S4, list(range(0, 4))), (S6, list(range(0, 4)))], nominal=(S4, 0), planche="revue_du_jour_seuil-force-0.1_1080x2400.png",
       confiance="mesurée", note="série 4 cadres 0-3 = le canon ratifié (revue-du-jour/v4-0..3.png)"),
  dict(sym="㊲", ctl="ReputationScreenController", dossier="reputation", chemin="Plus → LA RÉPUTATION",
-      cadres=[(S6, list(range(119, 125)))], nominal=(S6, 120), planche="screen_b3_reputation_sous_chrome_1080x2400.png",
+      cadres=[(S6, list(range(119, 125)) + [144])], nominal=(S6, 120), planche="screen_b3_reputation_sous_chrome_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite m-120.png",
       # ⛔ Le nominal est le cadre 120 — MESURÉ le 2026-09-22 (PNG commité ↔ rendu de 120 : 2,4 % ; ↔ 119 : 24,6 %) ;
       #    l'INDEX écrit à la main disait « cadre 119 ». Re-rendu le 2026-09-22 (atelier 20d006d : « personne ne jugera »).
@@ -100,12 +100,12 @@ TABLE = [
       cadres=[(S4, list(range(25, 31))), (S6, list(range(14, 20)))], nominal=(S4, 25), planche="planche_la_semaine_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite série 4 cadres 25-30 (non ratifiée au 02/09)"),
  dict(sym="㊴", ctl="ForensicScreenController", dossier="screen_b7", chemin="Plus → LE DOSSIER",
-      cadres=[(S6, list(range(131, 137)))], nominal=(S6, 131), planche="screen_b7_dossier_sous_chrome_1080x2400.png",
+      cadres=[(S6, list(range(131, 137)) + [143])], nominal=(S6, 131), planche="screen_b7_dossier_sous_chrome_1080x2400.png",
       confiance="déduite", note="cadres 131-136 « Le dossier » par le titre",
       nominal_note="cadre 131, RE-RENDUE le 2026-09-06 : E1 — le palier de train de vie est celui d'UN LIEUTENANT, pas du joueur",
       extras=[("screen_b7/reference-vocabulaire-1080x2102.png", "cadre 143, LES 12 CRANS — les cadres d'état n'en montrent que 6 ; c'est le témoin que le juge réclamait en classant « l'échelle de chaque piste a disparu »")]),
  dict(sym="㊳", ctl="JournalScreenController", dossier="screen_c1", chemin="Plus → LE JOURNAL & LA RUE",
-      cadres=[(S6, list(range(125, 131)))], nominal=(S6, 125), planche="screen_c1_journal_sous_chrome_1080x2400.png",
+      cadres=[(S6, list(range(125, 131)) + [145])], nominal=(S6, 125), planche="screen_c1_journal_sous_chrome_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite les cadres 125 et 129",
       nominal_note="cadre 125",
       extras=[("screen_c1/reference-vocabulaire-1080x2102.png", "cadre 145, LES 11 CRANS — `fading` et `lingering` sont servis et n'avaient aucun dessin")]),
@@ -182,8 +182,11 @@ HORS_APPSHELL = [
       cadres=[("hud-brennar.html", ["le HUD de Brennar"])], nominal=None, planche="screen_1_district_sous_chrome_1080x2400.png",
       confiance="mesurée", note="ÉCART ASSUMÉ (2026-09-23, tranché par l'orchestrateur) : la bande du nom de district sous la barre est ABSENTE du canon (hud-brennar.html : aucun nom de district dans .tel ; la place l.82/l.176 est celle du bandeau éphémère QUAND IL PARLE) — elle reste, et CÈDE la place au bandeau ; sources : front.md §4 L (25/08, « le lieu en bandeau sous la barre ») et cette mesure. Ne pas la re-noter. — ÉCART ASSUMÉ (2026-09-23, décision f2) : l'anneau CRÈME autour du badge du bâtiment dont la fiche est ouverte (CLIENT-2 e9db74eb) — le canon n'a pas d'état de sélection, et le joueur doit voir quel bâtiment sa fiche décrit (r9 M6) ; crème, pas or, un seul à la fois. Ne pas le re-noter. — hors canon (front.md ①) ; canon ecran-principal/ecran-canon.png + mesure-canon.txt"),
  dict(sym="②", ctl="BuildingCardController", dossier="fiche-batiment", chemin="depuis l'intérieur de district : toucher un bâtiment",
-      cadres=[], nominal=None, planche="screen_2a_fiche_sous_chrome_1080x2400.png",
-      confiance="aucune", note="dossier juge-donnees existant, aucun dossier juge-visuel ; cadres labo/serre/ash (S6 36-47, 92-94) = variantes par type, non rattachées"),
+      cadres=[(S6, list(range(36, 48)) + [92, 93, 94])], nominal=None, planche="screen_2a_fiche_sous_chrome_1080x2400.png",
+      confiance="mesurée", note="dossier juge-donnees existant, aucun dossier juge-visuel. Cadres rattachés le 2026-09-23 (atelier, commande f2) : "
+      "les matières de ② par type — la serre 36-38, le labo 39-44, le fourneau et l'affinage 45-46, la descente 47 (son panneau dit « ② Le fourneau »), "
+      "Ash 92-94 (le rendez-vous : les routes /v1/operational/appointment sont dans BuildingCardController/Client) ; front.md ② (l.801-950 : serre, "
+      "fourneau, « le labo devenu un écran », « Ash sort de la chimie », numérotation d'alors). Pas de nominal : la .fiche de ② est dessinée par ① (22 §5)"),
  dict(sym="⑨", ctl="ExceptionQueueController", dossier="exceptions", chemin="Accueil → la file d'exceptions",
       cadres=[(S4, [14, 16, 17, 18]), (S6, [9, 11, 12, 13])], nominal=(S4, 14), planche="screen_5_exceptions_sous_chrome_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite série 4 cadre 14, ratifié (« ok c'est bien », 2026-08-26)"),
