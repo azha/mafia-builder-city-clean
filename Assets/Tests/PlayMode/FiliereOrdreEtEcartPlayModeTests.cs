@@ -142,8 +142,10 @@ namespace MafiaCleanCity.Operational.Tests
                 Assert.AreEqual(0f, largeur.preferredWidth, 0.001f, $"Compteur{i} n'hérite pas de la largeur de son libellé");
                 Assert.AreEqual(1f, largeur.flexibleWidth, 0.001f, $"Compteur{i} prend exactement un tiers disponible");
             }
-            StringAssert.Contains("/4", compteurs.Find("Compteur1/Nombre").GetComponent<TMPro.TextMeshProUGUI>().text,
-                "le dénominateur vient du nombre d'étapes servi");
+            string comptePropres = compteurs.Find("Compteur1/Nombre").GetComponent<TMPro.TextMeshProUGUI>().text;
+            StringAssert.StartsWith("02", comptePropres, "les deux étapes CLEAN sont comptées, pas seulement la sortie terminale");
+            StringAssert.Contains("/4", comptePropres, "le dénominateur vient du nombre d'étapes servi");
+            Assert.AreEqual("PROPRES", compteurs.Find("Compteur1/Libelle").GetComponent<TMPro.TextMeshProUGUI>().text);
             Assert.IsNotNull(tous.First(t => t.name == "Enseigne").Find("FiletOr"), "le filet or ferme l'enseigne");
             Assert.AreEqual(9, racine.GetComponentsInChildren<UnityEngine.UI.Outline>(true).Length,
                 "enseigne + 3 compteurs + 4 étapes + panneau portent leur liseré");

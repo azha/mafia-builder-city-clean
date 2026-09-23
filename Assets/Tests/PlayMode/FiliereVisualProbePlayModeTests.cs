@@ -47,6 +47,9 @@ namespace MafiaCleanCity.Operational.Tests
 
             GameObject racine = GameObject.Find("FiliereRoot");
             Assert.IsNotNull(racine);
+            Assert.AreEqual("OÙ EN EST CHAQUE ÉTAPE",
+                racine.transform.Find("Enseigne/SousTitre").GetComponent<TMPro.TextMeshProUGUI>().text,
+                "l'état nominal porte le sous-titre du cadre 137");
             Canvas canvas = racine.GetComponentInParent<Canvas>();
             RenderMode modeAvant = canvas.renderMode;
             Camera cameraAvant = canvas.worldCamera;

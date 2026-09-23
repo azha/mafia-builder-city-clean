@@ -373,7 +373,7 @@ namespace MafiaCleanCity.Operational
             foreach (LaunderingStageDto e in etapes)
             {
                 if (e == null) continue;
-                if (e.terminal && e.cleanliness_band == "CLEAN") propres++;
+                if (e.cleanliness_band == "CLEAN") propres++;
                 if (enEcart(e)) ecarts++;
             }
 
@@ -381,10 +381,10 @@ namespace MafiaCleanCity.Operational
             //    MÊME clé — le slug ignore la casse — et le back ne pourrait servir qu'une casse pour les deux.
             sousTitre.text = ecarts > 0
                 ? MafiaCleanCity.I18n.Libelle.De("filiere", "sous_titre", "la filière s’écarte de son profil")
-                : Lib("LA CHAÎNE, DE LA TÊTE À LA SORTIE");
+                : MafiaCleanCity.I18n.Libelle.De("filiere", "sous_titre", "OÙ EN EST CHAQUE ÉTAPE");
 
             MajCompteur(0, etapes.Length, Lib("ÉTAPES"));
-            MajCompteur(1, propres, Lib("PROPRE AU BOUT"));
+            MajCompteur(1, propres, Lib("PROPRES"));
             compteurNombre[1].text = propres.ToString("00") + "<size=55%>/" + etapes.Length + "</size>";
             MajCompteur(2, ecarts, Lib("ÉCARTS"));
             EcartsAffiches = ecarts;
@@ -519,7 +519,7 @@ namespace MafiaCleanCity.Operational
             ViderListe();
             sousTitre.text = Lib("LA FILIÈRE N'A PAS RÉPONDU");
             MajCompteur(0, 0, Lib("ÉTAPES"));
-            MajCompteur(1, 0, Lib("PROPRE AU BOUT"));
+            MajCompteur(1, 0, Lib("PROPRES"));
             MajCompteur(2, 0, Lib("ÉCARTS"));
             MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"), Lib("Pas de réponse"),
                 Lib("on n'a pas eu de réponse. Ce n'est pas « la filière est vide » : c'est « on "
@@ -568,7 +568,7 @@ namespace MafiaCleanCity.Operational
             ViderListe();
             sousTitre.text = Lib("AUCUN NŒUD POUR VOUS");
             MajCompteur(0, 0, Lib("ÉTAPES"));
-            MajCompteur(1, 0, Lib("PROPRE AU BOUT"));
+            MajCompteur(1, 0, Lib("PROPRES"));
             MajCompteur(2, 0, Lib("ÉCARTS"));
 
             Maillon("1", Lib("Obtenir une planque"),
@@ -609,7 +609,7 @@ namespace MafiaCleanCity.Operational
         {
             sousTitre.text = Lib("EN ATTENTE");
             MajCompteur(0, 0, Lib("ÉTAPES"));
-            MajCompteur(1, 0, Lib("PROPRE AU BOUT"));
+            MajCompteur(1, 0, Lib("PROPRES"));
             MajCompteur(2, 0, Lib("ÉCARTS"));
             MajPanneau(Lib("CE QU'ON SAIT POUR L'INSTANT"),
                 Lib("La filière n'a pas encore été interrogée"),
