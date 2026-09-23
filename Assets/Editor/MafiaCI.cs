@@ -263,6 +263,12 @@ public static class MafiaCI
         // vraie sortie : sur un compte NEUF depuis 81dc18b5 (jamais le compte de démo partagé). Aucune relation de préfixe (vérifié).
         // Validé par l'orchestrateur.
         "Reglages",
+        // ② AshLuxury (2026-09-23, CLIENT UNITY) — trois tests réels SANS catégorie (même classe que TD-490 : aucun filtre ne les lançait),
+        // catégorie posée sur la MÉTHODE (la classe emporterait sa capture `Screenshot`). Verts AVANT inscription, par nom (MAFIA_CI_TESTS),
+        // au créneau de la partie 1 du gate (pile e7f52351, tête 5d7c8678) : 3/3, après l'exemption partagée de l'échéance en jours
+        // (ab7059d8). Ils sèment operational_demo (seeder), jamais le compte gelé : PARTIE 1. Aucune relation de préfixe (vérifié).
+        // Validé par l'orchestrateur.
+        "AshLuxury",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

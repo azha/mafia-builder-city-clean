@@ -98,6 +98,7 @@ namespace MafiaCleanCity.Operational.Tests
         // The Ash specialized_lab card renders the luxury surface: substance=ASH (storage), lab_tier_band=REFINED, the
         // purity_band=CRYSTALLINE row, and the Upgrade-tier affordance (the seeded wallet is FLUSH → affordable).
         [UnityTest]
+        [Category("AshLuxury")]   // 2026-09-23 : sans catégorie, aucun filtre ne le lançait (même classe que TD-490) — sur la MÉTHODE (la classe emporterait la capture Screenshot)
         public IEnumerator SpecializedLabCard_RendersAshSurface_LabTier_AndPurityBand()
         {
             var controller = NewLocalController();
@@ -155,6 +156,7 @@ namespace MafiaCleanCity.Operational.Tests
         // realized purity premium of the CRYSTALLINE batch). The appointment panel reflects each state. This is the ONLY
         // Ash sale path (no lek/dealer selling — the luxuryChannel trait).
         [UnityTest]
+        [Category("AshLuxury")]   // 2026-09-23 : sans catégorie, aucun filtre ne le lançait (même classe que TD-490) — sur la MÉTHODE (la classe emporterait la capture Screenshot)
         public IEnumerator Appointment_Lifecycle_ScheduledThenHonored_RendersStatusAndPayoutBands()
         {
             var controller = NewLocalController();
@@ -208,6 +210,7 @@ namespace MafiaCleanCity.Operational.Tests
 
         // A focused guard: the appointment endpoint is JWT-gated (unauth → not OK).
         [UnityTest]
+        [Category("AshLuxury")]   // 2026-09-23 : sans catégorie, aucun filtre ne le lançait (même classe que TD-490) — sur la MÉTHODE (la classe emporterait la capture Screenshot)
         public IEnumerator Appointment_WithoutToken_DoesNotLoad()
         {
             var client = new BuildingCardClient { BaseUrl = LocalStack };
