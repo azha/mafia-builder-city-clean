@@ -236,6 +236,7 @@ Le 3ᵉ titre suit les points 11 et 19 du 07/09 : « Heat » devient « Chaleur 
 | `heat.bucket.warm` | Tiède | Warm | |
 | `heat.bucket.hot` | Chaud | Hot | |
 | `heat.bucket.burning` | Brûlant | Burning | |
+| `chrome.medaillon.descente` | Descente | Raid | le libellé du médaillon PENDANT une descente (`TopBarController.cs:725`, CLIENT-2 `881c17f6`) — le mot du canon (`hud-brennar.html:255`), jusqu'ici sans clé ; en : le mot déjà servi pour la descente (`building.row.risque_de_descente` → « Raid risk »). **Proposé, non ratifié** pour l'en |
 
 - `district.revenue.*` plutôt que `building.yield.*` : même énum (IDLE | EARNING), mais « ça rapporte » est écrit pour une ligne de ②, en
   minuscule. Dans une case, à côté de « Prêt » et « Tiède », il faut la capitale. Si l'user veut un seul mot pour les deux écrans, c'est

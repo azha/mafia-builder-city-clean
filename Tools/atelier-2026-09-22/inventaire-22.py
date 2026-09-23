@@ -121,7 +121,9 @@ if '--cles-22' in sys.argv:
     d = []
     assert familles['district.harvest'] == ['NOTHING', 'AVAILABLE', 'FULL'], f"lecteur d'énum : {familles['district.harvest']}"
     for k, (fr, en) in rows.items():
-        if k in FR or k in EN: d.append(f'{k} : déjà servie à {REV_B}')
+        # servie depuis (le back a repris la proposition) : conforme si elle sert EXACTEMENT nos mots, défaut sinon
+        if (k in FR or k in EN) and (FR.get(k, '').replace("\\'", "'"), EN.get(k, '').replace("\\'", "'")) != (fr, en):
+            d.append(f'{k} : servie à {REV_B} avec d\'autres mots — fr {FR.get(k)!r} / en {EN.get(k)!r}')
         if "'" in fr: d.append(f'{k} : apostrophe droite dans le fr')
         ph = lambda t: sorted(re.findall(r'\{(\w+)\}', t))
         if ph(fr) != ph(en): d.append(f'{k} : placeholders {ph(fr)} ≠ {ph(en)}')
