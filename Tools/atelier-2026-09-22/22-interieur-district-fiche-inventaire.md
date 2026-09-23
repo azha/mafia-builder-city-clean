@@ -337,8 +337,9 @@ Le 3ᵉ titre suit les points 11 et 19 du 07/09 : « Heat » devient « Chaleur 
   le fond de jour, même caméra la nuit). Reporter le décalage du canon tomberait sur un **toit** dans D.
 - **Proposition** : la lueur **centrée sur le gyrophare de la voiture de D**, à la taille du canon : centre **(410, 975)** dans l'art
   1920, **(410, 1455)** dans l'art 2400 ; 165 × 99 px dans l'art ; visible **seulement** si `heat.escalated`.
-- Le jour : le canon cache la lueur (`:75`), ce qui laisse une descente de jour sans signe dans le monde (§1). Garder le canon, ou
-  l'allumer aussi le jour : à trancher avec le rendu.
+- Le jour : **tranché, le canon tient** (orchestrateur, 2026-09-23) — la lueur reste cachée le jour (`:75`). La question de l'allumer aussi
+  le jour est close : sans signe dans le monde, la descente de jour est portée par le chrome (« DESCENTE » au médaillon, cerclage et filet
+  qui battent, aiguille qui tremble — CLIENT-2 `881c17f6`) ; le joueur est informé.
 
 ### 7.3 Le point or de Famille (M21) : son sens **n'est écrit nulle part**
 
