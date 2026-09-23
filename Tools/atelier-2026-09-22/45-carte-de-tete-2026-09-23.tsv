@@ -1,0 +1,5 @@
+clé	fr	en	statut	pour
+accueil.carte.ce_qu_on_peut_faire	Ce qu’on peut faire	What can be done	PROPOSÉ	le surtitre des options servies `hl.option.*`, montrées en TEXTE (pas en boutons)
+accueil.carte.prendre_acte	Prendre acte	Noted	PROPOSÉ	`POST /v1/session/hl-card/:id/commit` : enregistre la décision de session ; n’agit pas sur le monde
+accueil.carte.pas_maintenant	Pas maintenant	Not now	PROPOSÉ	`POST /v1/session/hl-card/:id/skip`
+accueil.carte.prendre_acte_n_agit_pas_a_votre_place	prendre acte n’agit pas à votre place	noting it doesn’t act for you	PROPOSÉ (facultatif)	la ligne d’honnêteté sous « Prendre acte » : l’effet est nul aujourd’hui

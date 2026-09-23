@@ -78,7 +78,12 @@ CADRES = [
     cadre('④ L\'ouverture — une carte de tête',
           '<div class="verre"><div class="titre">Un local à remettre en état</div>'
           '<div class="niveaux"><span>Portée<b>modérée</b></span><span>Urgence<b>faible</b></span></div>'
-          '<div class="gestes"><div class="g or">Mettre en réparation</div><div class="g">Laisser en l\'état</div></div></div>' + SUIVANT),
+          # 45 (f2, 23/09) : les options servies (`hl.option.damaged_building.*`) sont DESCRIPTIVES — en TEXTE, jamais en boutons d'action ;
+          # les deux seuls gestes réels sont commit (« Prendre acte », enregistre la décision de session) et skip (« Pas maintenant »)
+          '<div class="sur prop" style="margin-top:10px">Ce qu’on peut faire</div>'
+          '<div class="sous">Mettre en réparation · Laisser en l\'état</div>'
+          '<div class="gestes"><div class="g or"><span class="prop">Prendre acte</span></div><div class="g"><span class="prop">Pas maintenant</span></div></div>'
+          '<div class="sous prop" style="font-size:8px">prendre acte n’agit pas à votre place</div></div>' + SUIVANT),
     cadre('④ L\'ouverture — des rapports à lire (l\'entrée du rapport)',
           '<div class="verre"><div class="titre">Des rapports à lire</div>'
           '<div class="sous">Lt. Quist a un rapport pour vous</div>'
