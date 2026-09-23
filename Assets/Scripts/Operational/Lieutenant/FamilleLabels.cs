@@ -109,14 +109,13 @@ namespace MafiaCleanCity.Operational
             {
                 case "delegated": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Délégué");
                 case "tasked": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Missionné");
-                // ⛔ PAS DE CLÉ SUR LE REPLI, et c'est la garde de catalogue qui me l'a appris.
-                // J'avais écrit `Libelle.De("famille","mode","Mode inconnu")` — une clé que le
-                // back NE SERT PAS. `BundleReel_…_ZeroRepli` a rougi aussitôt : « 2 clés sur 46
-                // sont retombées sur leur littéral ». *Inventer une clé de repli, c'est ajouter
-                // du français non traduisible en croyant bien faire* — et le seul endroit où ça
-                // se voit est cette garde. Les deux résolveurs supprimés rendaient la valeur
-                // BRUTE sur ce chemin ; on garde leur comportement.
-                default: return CasseDeTitre(mode);
+                // Le repli NOMME une valeur présente hors domaine, il ne l'affiche plus BRUTE (23/09, atelier 27, `8c7a75a4` :
+                // « Mode inconnu » / « Unknown mode », même forme que `famille.category.categorie_inconnue` et
+                // `famille.archetype.inconnu`, déjà servis). Une valeur ABSENTE reste « — » (TD-644 : un tiret n'a pas de langue).
+                // ⚠️ Historique : une première clé de repli INVENTÉE (sans mots écrits) avait fait rougir
+                // `BundleReel_…_ZeroRepli` ; celle-ci a ses mots, et se sert avant le créneau (orchestrateur).
+                default:
+                    return string.IsNullOrWhiteSpace(mode) ? "—" : MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Mode inconnu");
             }
         }
 

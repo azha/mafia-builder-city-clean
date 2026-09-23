@@ -918,15 +918,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
             //    l'archétype, le rôle, le mode, l'état, les règles et l'ancienneté d'un lieutenant
             //    — et ne le nommait jamais. `name` est servi par les DEUX routes de cette
             //    projection ; D-1 ne l'avait déclaré que sur la liste.
-            // ⚠️ Le libellé est un LITTÉRAL, pas `Lib("Nom")` : la clé que `Libelle.De` dériverait
-            //    (`famille.ecran.nom`) n'est PAS servie — mesuré sur le bundle `fr` réel, 56 clés
-            //    `famille.ecran`, celle-là absente. L'employer ajouterait un repli et ferait rougir
-            //    `BundleReel_…_ZeroRepli`, la garde qui existe pour ça. La clé part en dette.
+            // ⚠️ Le libellé passe par `Lib("Nom")` (clé `famille.ecran.nom`) depuis le 23/09 : les mots existent (atelier 27,
+            //    `8c7a75a4` : Nom / Name). Il était un LITTÉRAL tant qu'aucun mot n'était écrit, pour ne pas faire rougir
+            //    `BundleReel_…_ZeroRepli` sur une clé inventée ; la clé se sert maintenant avant le créneau (orchestrateur).
             // ⚠️ Repli « — » quand le nom manque : l'état NOMMÉ vide, la même convention que la
             //    phase du jour du bandeau. Jamais l'archétype, qui est la ligne d'en dessous : le
             //    défaut de D-1 était exactement de laisser une grandeur prendre la place d'une
             //    autre, et le repli est l'endroit le plus discret où le refaire.
-            AddStatusRow("nom", "Nom", string.IsNullOrWhiteSpace(b.name) ? "—" : b.name, "[*]", AccentMild);
+            AddStatusRow("nom", Lib("Nom"), string.IsNullOrWhiteSpace(b.name) ? "—" : b.name, "[*]", AccentMild);
             // archetype (COOK | SECURITY | LOGISTICS | BOOKKEEPER | LAUNDERING | DISTRIBUTION | UNKNOWN).
             AddStatusRow("archetype", Lib("Archétype"), FamilleLabels.Archetype(b.archetype), "[*]", AccentMild);
             // granted_role (advisory | executor | delegated_owner | cohort_overseer).

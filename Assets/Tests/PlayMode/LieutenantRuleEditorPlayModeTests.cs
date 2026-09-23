@@ -476,6 +476,28 @@ namespace MafiaCleanCity.Operational.Tests
                 "une demande que le back ne sert pas");
         }
 
+        /// <summary>23/09 (atelier 27, `8c7a75a4`) — le repli de `FamilleLabels.Mode` NOMME une valeur présente hors domaine
+        /// (« Mode inconnu », clé `famille.mode.mode_inconnu`) au lieu de l'afficher BRUTE ; une valeur ABSENTE reste « — »
+        /// (TD-644). Même raison d'être que le test d'`Etat` ci-dessus : le parcours E2E ne sert que des modes NOMMÉS.</summary>
+        [Test]
+        public void Mode_UneValeurHorsDomaineEstNommee_LAbsenceResteUnTiret()
+        {
+            try
+            {
+                MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
+                Assert.AreEqual("Mode inconnu", FamilleLabels.Mode("SUSPENDED"),
+                    "une valeur hors domaine se NOMME : plus jamais la valeur brute en casse de titre");
+                Assert.AreEqual("famille.mode.mode_inconnu", MafiaCleanCity.I18n.Libelle.DernierRepli,
+                    "la clé demandée est celle des mots de l'atelier 27");
+                Assert.AreEqual("—", FamilleLabels.Mode(null), "l'absence est « — »");
+                Assert.AreEqual("—", FamilleLabels.Mode(" "), "l'absence est « — »");
+                MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("en",
+                    new System.Collections.Generic.Dictionary<string, string> { { "famille.mode.mode_inconnu", "Unknown mode" } });
+                Assert.AreEqual("Unknown mode", FamilleLabels.Mode("SUSPENDED"), "la clé servie l'emporte");
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
+        }
+
         // (2) DELEGATED STATUS (the proof): the delegated op_state_band tracks the ATTACHED rules — ACTIVE (the COOK
         //     auto-cooks), PAUSED (the heat≥0.5 PAUSE_OPS rule wins), ACTIVE again (PAUSE rule removed → resume).
         //     The transitions are driven by WHICH rules are attached (deterministic, test-controlled), NOT by suppressing
