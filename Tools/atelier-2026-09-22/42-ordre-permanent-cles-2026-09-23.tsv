@@ -1,0 +1,23 @@
+clé	fr	en	statut	pour
+famille.ecran.donner_un_ordre	Donner un ordre	Give an order	PROPOSÉ	le geste sur la ligne « Ordre permanent · aucun ordre » (freshness = NONE)
+famille.instruction.collecte	Collecte	Collection	RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285)	l’instruction (produit le `rule_source`)
+famille.instruction.blanchir	Blanchir	Launder	RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285)	idem
+famille.instruction.surveiller	Surveiller	Watch	RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285)	idem
+famille.ecran.cible	Cible	Target	RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285)	la condition du `rule_source`
+famille.ecran.et_quand_il_expire	Et quand il expire	And when it expires	PROPOSÉ	le titre des 3 `lapse_action` (« il » = l’ordre)
+famille.lapse.retour_a_la_routine	retour à la routine	back to routine	PROPOSÉ, épicène (D13)	`lapse_action` = REVERT_DEFAULT
+famille.lapse.l_ordre_continue	l’ordre continue	the order keeps running	PROPOSÉ, épicène	= HOLD_LAST
+famille.lapse.on_vous_demande	on vous demande	you get asked	PROPOSÉ, épicène	= ESCALATE_TO_PLAYER
+famille.ecran.pour_une_duree_fixe	pour une durée fixe	for a fixed term	PROPOSÉ	la durée est FIXE au back (`duration_class` ignoré en M2) : pas de glissière
+famille.ecran.signer_l_ordre	Signer l’ordre	Sign the order	RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285) (« SIGNER L’ORDRE »)	`POST /v1/lieutenants/:id/standing-order {rule_source, lapse_action}`
+famille.ordre.en_cours	en cours	in force	PROPOSÉ	freshness = FRESH (NONE « aucun ordre » et EXPIRES_SOON « expire bientôt » sont déjà au client)
+famille.ordre.echu	échu	lapsed	PROPOSÉ	freshness = EXPIRED (ne se voit qu’avec HOLD_LAST)
+famille.refus.trop_tot_pour_refaire_ce_geste	trop tôt pour refaire ce geste	too soon to do that again	PROPOSÉ	409 cooldown (par geste+repère pour le signal, par décision pour l’ordre)
+famille.refus.aucun_ordre_en_cours	aucun ordre en cours	no order in force	mot de f2 (23/09), déjà au client (`MotDuRefus`)	409 « has no standing order to {kind} »
+famille.refus.cet_ordre_n_a_pas_encore_fait_ses_preuves	cet ordre n’a pas encore fait ses preuves	this order hasn’t proven itself yet	PROPOSÉ	409 PROMOTE refusé (pas `promotion_suggested` ; client : « not flagged for promotion »)
+famille.refus.un_ordre_est_deja_en_cours_renouvelez_le	un ordre est déjà en cours : renouvelez-le	an order is already in force: renew it	PROPOSÉ	409 à l’émission, ordre actif (« RENEW it instead »)
+famille.refus.ce_geste_n_est_pas_reconnu	ce geste n’est pas reconnu	that move isn’t recognised	PROPOSÉ	422 geste ou repère invalide
+famille.fiabilite.en_sommeil	en sommeil	dormant	PROPOSÉ (même locution que ⑰ DORMANT)	`cue_bands` = dormant
+famille.fiabilite.a_moitie_fiable	à moitié fiable	partly reliable	PROPOSÉ	= partial
+famille.fiabilite.fiable	fiable	reliable	PROPOSÉ	= reliable
+famille.fiabilite.decisif	décisif	decisive	PROPOSÉ	= dominant
