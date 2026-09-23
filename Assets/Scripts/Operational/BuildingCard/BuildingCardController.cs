@@ -77,6 +77,10 @@ namespace MafiaCleanCity.Operational
         /// hors pupitre ou sur erreur : l'approvisionnement est alors lu comme tenu par le joueur (le 409 CATEGORY_DELEGATED dirait le
         /// reste, en mots, par `LigneDAction`).</summary>
         public GetMetaTaskCategoriesResponseDto CurrentTaskCategories { get; private set; }
+        /// <summary>② bulle (B1) — le lieutenant qui parle au pupitre : le premier des `lieutenant_ids` de CE bâtiment (GET
+        /// /v1/me/buildings) présent au roster (GET /v1/lieutenants, `archetype`). Null : pas de lieutenant, ou non lu — et alors
+        /// AUCUNE réplique n'est posée (une réplique sans locuteur est une voix de nulle part).</summary>
+        public LieutenantRowDto CurrentLieutenant { get; private set; }
 
         // ---- Phase-2b raid/repair test hooks -------------------------------
         /// <summary>The player's qualitative wallet band (GET /v1/economy/wallet) used ONLY to gate Repair
@@ -367,10 +371,13 @@ namespace MafiaCleanCity.Operational
         /// chargement, mêmes hooks. Les données absentes (null) le sont comme après une erreur de route.</summary>
         public void RendrePourTest(BuildingCardDto card, StorageDto storage = null, LabCookDto lab = null,
                                    GetOperationalPrecursorsResponseDto precursors = null, GrowSessionDto grow = null,
-                                   GetMetaTaskCategoriesResponseDto charges = null)
+                                   GetMetaTaskCategoriesResponseDto charges = null, AppointmentDto rendezVous = null,
+                                   LieutenantRowDto lieutenant = null)
         {
             EnsureInitialized();
+            CurrentLieutenant = lieutenant;
             CurrentTaskCategories = charges;
+            CurrentAppointment = rendezVous;
             CurrentCard = card;
             CurrentStorage = storage;
             CurrentLab = lab;
@@ -387,6 +394,7 @@ namespace MafiaCleanCity.Operational
             CurrentLab = null;
             CurrentPrecursors = null;
             CurrentTaskCategories = null;
+            CurrentLieutenant = null;
             if (!APupitre(operationalType)) yield break;
             LabCookDto lab = null;
             yield return client.GetLab(id, Token, l => lab = l, (code, msg) => lab = null);
@@ -397,6 +405,13 @@ namespace MafiaCleanCity.Operational
             GetMetaTaskCategoriesResponseDto charges = null;
             yield return delegation.GetMetaTaskCategories(Token, c => charges = c, refus => charges = null);
             CurrentTaskCategories = charges;
+            // ② bulle : la jointure lieutenant → bâtiment, faite ICI (mesure du back 23/09 : `me/buildings` sert `lieutenant_ids`,
+            // `/v1/lieutenants` sert l'archétype) — deux routes déjà déclarées, clients RÉUTILISÉS.
+            MafiaCleanCity.Shell.BatimentPossedeDto[] mes = null;
+            yield return new MafiaCleanCity.Shell.MesBatimentsClient { BaseUrl = client.BaseUrl }.Lire(Token, b => mes = b, (code, msg) => mes = null);
+            GetLieutenantsResponseDto roster = null;
+            if (mes != null) yield return delegation.GetLieutenants(Token, r => roster = r, refus => roster = null);
+            CurrentLieutenant = LieutenantDuBatiment(mes, id, roster?.lieutenants);
         }
 
         /// <summary>Fetch the qualitative wallet band (REUSE the economy projection). Conservative on failure.</summary>
@@ -789,7 +804,10 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.lab_tier_band) && card.lab_tier_band != "NONE")
                 {
                     LabTierShown = true;
-                    AddStatusRow("taille_du_labo", "Taille du labo", LabTierLabel(card.lab_tier_band), LabTierAccent(card.lab_tier_band));
+                    // ② lot 5 : « L’atelier » l'emporte sur « Taille du labo » (D14, tranché par f2) — la VALEUR change, la CLÉ reste
+                    // `building.row.taille_du_labo` : elle est donc nommée, pas dérivée du mot (le mot neuf dériverait `l_atelier`).
+                    AddStatusRow("taille_du_labo", "L’atelier", LabTierLabel(card.lab_tier_band), LabTierAccent(card.lab_tier_band),
+                        cleDuLibelle: "building.row.taille_du_labo");
                 }
 
                 // Purity-band row — the cooked Ash batch's quality grade (from the storage projection). Shown only when a
@@ -807,8 +825,17 @@ namespace MafiaCleanCity.Operational
             // band + the payout band only (never raw ticks/cents); F2: a distinct glyph per status alongside colour.
             if (CurrentAppointment != null && !string.IsNullOrEmpty(CurrentAppointment.status))
             {
+                // ② lot 5 (écrin d'Ash, cadres 92-94, bloc E1) : le titre et la phrase de l'état servi, avant le tampon.
+                (string titre, string phrase) = TitresDuRendezVous(CurrentAppointment.status);
+                if (titre != null)
+                {
+                    AddLigneDEtat("TitreDuRendezVous", titre, 16, TextPrimary, FontStyles.Bold);
+                    AddLigneDEtat("PhraseDuRendezVous", phrase, 13, DesignTokens.Current.onSurfaceSecondaryAlt, FontStyles.Normal);
+                }
                 AddStatusRow("rendez_vous", "Rendez-vous", AppointmentStatusLabel(CurrentAppointment.status), AppointmentStatusAccent(CurrentAppointment.status));
-                AddStatusRow("gain", "Gain", PayoutLabel(CurrentAppointment.payout_band), PayoutAccent(CurrentAppointment.payout_band));
+                // ② lot 5 (bloc E3 « GAIN ») : 5 pastilles et le MOT servi (tranché (e) ; lecture dans PastillesDuGain).
+                AddEchelle("gain", "Gain", PastillesDuGain(CurrentAppointment.payout_band), PastillesGain,
+                    PayoutLabel(CurrentAppointment.payout_band), PayoutAccent(CurrentAppointment.payout_band));
             }
 
             // ----- Phase-3 vector #3 (grow_house cultivation) surface — ONLY for a grow_house with an active grow tracked.
@@ -1291,9 +1318,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "BASIC": return Bande("lab_tier", "BASIC", "Simple");
-                case "REFINED": return Bande("lab_tier", "REFINED", "Affiné");
-                case "MASTER": return Bande("lab_tier", "MASTER", "Maître");
+                // ② lot 5 : replis = les mots D14 servis (ST `building.lab_tier.*`, table 37 : « s'accorde à l'atelier ») — « Simple /
+                // Affiné / Maître » étaient périmés (écart ② cadres 92-94).
+                case "BASIC": return Bande("lab_tier", "BASIC", "de base");
+                case "REFINED": return Bande("lab_tier", "REFINED", "amélioré");
+                case "MASTER": return Bande("lab_tier", "MASTER", "au meilleur niveau");
                 case "NONE": return Bande("lab_tier", "NONE", "Pas de labo");   // atelier 29 (7746e0bb), servi (NONE = la bande ne s'applique pas à ce bâtiment)
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
@@ -1358,6 +1387,41 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
+        // ----- ② lot 5 (2026-09-23) : l'écrin d'Ash (cadres 92-94) -----
+        public const int PastillesGain = 5;
+
+        /// <summary>Les pastilles allumées du GAIN, sur 5 (tranché (e) : 6 valeurs servies, 5 pastilles ; « si la 6ᵉ est NONE ou absente,
+        /// 5 pastilles plus rien »). Lecture retenue, déclarée : les 5 pastilles portent les 5 valeurs d'une vente JOUÉE, NONE (perdue)
+        /// → 1 … PREMIUM → 5, premier cran allumé comme au pupitre — c'est ce que dessinent les cadres 94 (passé, 1/5) et 93 (honoré,
+        /// cristalline, 5/5) ; la 6ᵉ, PENDING, n'a pas encore de valeur (« absente ») : 5 pastilles, RIEN d'allumé. Le 4/5 du cadre 92
+        /// (réservé) est un exemple de maquette (point 19). Six valeurs, six comptes distincts ; hors domaine : rien d'allumé, le mot
+        /// du repli dit le reste.</summary>
+        public static int PastillesDuGain(string b)
+        {
+            switch (b)
+            {
+                case "NONE": return 1;
+                case "MODEST": return 2;
+                case "FAIR": return 3;
+                case "STRONG": return 4;
+                case "PREMIUM": return 5;
+                default: return 0;   // PENDING (pas encore vendu), et le hors-domaine
+            }
+        }
+
+        /// <summary>Le titre et la phrase de l'écrin selon le statut servi (bloc E1 ; clés servies de la table 37). Hors domaine :
+        /// (null, null) — pas de titre plutôt qu'un titre faux.</summary>
+        public static (string titre, string phrase) TitresDuRendezVous(string status)
+        {
+            switch (status)
+            {
+                case "SCHEDULED": return (Cle("bloc", "Un rendez-vous est pris"), Cle("bloc", "Un client du district du Verre vous attend."));
+                case "HONORED": return (Cle("bloc", "Le rendez-vous est honoré"), Cle("bloc", "La marchandise est partie, le client a payé."));
+                case "EXPIRED": return (Cle("bloc", "Le rendez-vous est passé"), Cle("bloc", "Personne n’y est allé. Il faudra en reprendre un."));
+                default: return (null, null);
+            }
+        }
+
         private static Color PayoutAccent(string b)
         {
             switch (b)
@@ -1483,6 +1547,22 @@ namespace MafiaCleanCity.Operational
                     return approvisionnementDelegue ? GesteDuPupitre.ApprovisionnementDelegue : GesteDuPupitre.Commander;
                 default: return GesteDuPupitre.Aucun;
             }
+        }
+
+        /// <summary>② bulle — le lieutenant de CE bâtiment : le premier de ses `lieutenant_ids`, dans l'ordre servi, présent au roster.
+        /// Un id sans ligne au roster est sauté (jamais un UUID à l'écran) ; aucun ⇒ null.</summary>
+        public static LieutenantRowDto LieutenantDuBatiment(MafiaCleanCity.Shell.BatimentPossedeDto[] mesBatiments, string buildingId, LieutenantRowDto[] roster)
+        {
+            if (mesBatiments == null || roster == null || string.IsNullOrEmpty(buildingId)) return null;
+            foreach (MafiaCleanCity.Shell.BatimentPossedeDto b in mesBatiments)
+            {
+                if (b == null || b.building != buildingId || b.lieutenant_ids == null) continue;
+                foreach (string lid in b.lieutenant_ids)
+                    foreach (LieutenantRowDto l in roster)
+                        if (l != null && !string.IsNullOrEmpty(lid) && l.lieutenant_id == lid) return l;
+                return null;
+            }
+            return null;
         }
 
         /// <summary>② lot 3 — la charge SUPPLY_SOURCING est-elle retirée au joueur ? Le garde serveur refuse dès que `delegation_state`
@@ -1949,7 +2029,7 @@ namespace MafiaCleanCity.Operational
         /// mesure. Un glyphe plus long ajouté ailleurs doit venir ici, sinon il sera coupé —
         /// c'est le seul endroit du fichier qui doit bouger dans ce cas.</summary>
 
-        private void AddStatusRow(string idStable, string label, string value, Color accent)
+        private void AddStatusRow(string idStable, string label, string value, Color accent, string cleDuLibelle = null)
         {
             GameObject row = NewUI("Row_" + idStable, statusRows);
             row.AddComponent<Image>().color = RowBg;
@@ -1967,7 +2047,9 @@ namespace MafiaCleanCity.Operational
             // raison écrite — a11y C5-F1, « la couleur n'est jamais seule à porter l'information » — est satisfaite par la VALEUR : elle porte
             // un MOT, dans la même couleur. Garde : `GlyphesPlayModeTests` (toute valeur en couleur porte un mot ; plus aucun glyphe).
 
-            string libelle = Cle("row", label);
+            // `cleDuLibelle` (② lot 5) : une clé NOMMÉE quand le mot a changé et que la clé reste (D14 : « L’atelier » sous
+            // `building.row.taille_du_labo`) ; sinon la clé se dérive du libellé, comme partout.
+            string libelle = cleDuLibelle != null ? MafiaCleanCity.I18n.Libelle.Gabarit(cleDuLibelle, label) : Cle("row", label);
             TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);
             l.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
@@ -1978,6 +2060,16 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
             TrackText(l, libelle);
             TrackText(v, value);
+        }
+
+        /// <summary>② lot 5 — une ligne de texte dans la zone d'état (titre et phrase de l'écrin).</summary>
+        private void AddLigneDEtat(string nom, string texte, int taille, Color couleur, FontStyles style)
+        {
+            TextMeshProUGUI t = NewText(nom, statusRows, texte, taille, TextAlignmentOptions.Left);
+            t.color = couleur;
+            t.fontStyle = style;
+            AddLayoutElement(t.gameObject, minHeight: taille + 6, flexibleHeight: 0);
+            TrackText(t, texte);
         }
 
         /// <summary>② lot 1 — une échelle du pupitre : le libellé, `total` crans dont `allumes` en couleur, puis le MOT dans la même
@@ -2126,11 +2218,13 @@ namespace MafiaCleanCity.Operational
         ///              pas une deuxième cuve… » : le refus 409 DIT avant, pas un bouton qui échoue (cadre 41) ;
         ///   FaireSortir « Faire sortir la marchandise » GRISÉ + « vers les coursiers » + la réplique « C'est tiré… » (cadre 43) — le geste
         ///              attend sa destination et sa quantité (manque du back n°5) : dessiné, pas vivant.
-        /// ⚠️ Les répliques sont posées ici SANS nom de locuteur : la bulle du lieutenant (B1, jointure lieutenant → bâtiment) est un
-        /// lot à part. La réplique du cadre 39 (« Nestor : … », appro.bloc.nestor_…) attend la décision de l'user sur Nestor.</summary>
+        /// Les répliques passent par la BULLE du lieutenant (B1, `AddReplique`) : l'archétype servi en tête, SANS article (D13) et sans
+        /// nom (les noms attendent la décision de l'user) ; sans lieutenant, aucune réplique. La réplique du cadre 39 (« Nestor : … »,
+        /// appro.bloc.nestor_…) attend la décision de l'user sur Nestor.</summary>
         private void AddGesteDuPupitre(BuildingCardDto card)
         {
             bool ash = card.operational_type == "specialized_lab";
+            locuteurPose = false;
             GesteDuPupitre geste = GesteSelonLEtat(CurrentLab?.cook_stage_band, CurrentPrecursors?.stock_band,
                 ApprovisionnementDelegue(CurrentTaskCategories));
             GesteDuPupitreAffiche = geste;
@@ -2146,7 +2240,7 @@ namespace MafiaCleanCity.Operational
                 case GesteDuPupitre.ApprovisionnementDelegue:
                     // ② lot 3 (cadre 44) : AUCUN bouton — la commande est au lieutenant ; le joueur sait où reprendre la main. La ligne
                     // « l'approvisionnement · J11 » de la maquette attend la bulle du lieutenant (et « J11 » n'est porté par aucun champ).
-                    AddLigneDuGeste("Replique", Cle("replique",
+                    AddReplique(Cle("replique",
                         "«\u00A0L’approvisionnement, c’est moi maintenant — vous me l’avez confié. Je commande quand il faut.\u00A0»"));
                     AddLigneDuGeste("Bloc", Cle("bloc", "Vous ne passez plus les commandes vous-même."));
                     AddLigneDuGeste("Bloc", Cle("bloc", "Reprendre la main se fait depuis la Famille, pas depuis le labo."));
@@ -2154,7 +2248,7 @@ namespace MafiaCleanCity.Operational
                 case GesteDuPupitre.Allumer:
                     if (ash)
                     {
-                        AddLigneDuGeste("Replique", Cle("replique", "«\u00A0L’étagère est refaite. Dites-moi combien de passes, et j’allume.\u00A0»"));
+                        AddReplique(Cle("replique", "«\u00A0L’étagère est refaite. Dites-moi combien de passes, et j’allume.\u00A0»"));
                         AddRefiningPassesSelector(actionBar);
                     }
                     AddActionButton(actionBar, "allumer_le_feu", Cle("action", "Allumer le feu"),
@@ -2162,14 +2256,14 @@ namespace MafiaCleanCity.Operational
                     if (ash) AddLigneDuGeste("Bloc", Cle("bloc", "ça consomme un lot de lys de verre"));
                     break;
                 case GesteDuPupitre.EnCuisson:
-                    AddLigneDuGeste("Replique", Cle("replique", "«\u00A0Ça monte comme il faut. Si j’ouvre maintenant, je perds tout.\u00A0»"));
-                    AddLigneDuGeste("Replique", Cle("replique", "— et ne me lancez pas une deuxième cuve tant que celle-là tourne."));
+                    AddReplique(Cle("replique", "«\u00A0Ça monte comme il faut. Si j’ouvre maintenant, je perds tout.\u00A0»"));
+                    AddReplique(Cle("replique", "— et ne me lancez pas une deuxième cuve tant que celle-là tourne."));
                     AddLigneDuGeste("Bloc", Cle("bloc", "Rien à faire ici."));
                     AddLigneDuGeste("Bloc", Cle("bloc", "Repassez quand ce sera tiré"));
                     break;
                 case GesteDuPupitre.FaireSortir:
                 {
-                    AddLigneDuGeste("Replique", Cle("replique",
+                    AddReplique(Cle("replique",
                         "«\u00A0C’est tiré. Ça ne peut pas dormir ici — chaque nuit que ça reste, c’est une nuit de trop.\u00A0»"));
                     Button sortir = AddActionButton(actionBar, "faire_sortir_la_marchandise", Cle("action", "Faire sortir la marchandise"), () => { });
                     SetButtonInteractable(sortir, false);
@@ -2177,6 +2271,25 @@ namespace MafiaCleanCity.Operational
                     break;
                 }
             }
+        }
+
+        private bool locuteurPose;
+
+        /// <summary>② bulle — une réplique du lieutenant : l'archétype du locuteur en tête (une fois par rendu), puis la réplique. Sans
+        /// lieutenant connu, RIEN : on ne fait pas parler quelqu'un qui n'est pas là.</summary>
+        private void AddReplique(string texte)
+        {
+            if (CurrentLieutenant == null) return;
+            if (!locuteurPose)
+            {
+                locuteurPose = true;
+                TextMeshProUGUI qui = NewText("Locuteur", actionBar, FamilleLabels.Archetype(CurrentLieutenant.archetype), 12, TextAlignmentOptions.Left);
+                qui.color = DesignTokens.Current.onSurfaceMuted;
+                qui.fontStyle = FontStyles.Bold;
+                AddLayoutElement(qui.gameObject, minHeight: 16, flexibleHeight: 0);
+                TrackText(qui, qui.text);
+            }
+            AddLigneDuGeste("Replique", texte);
         }
 
         /// <summary>Une ligne de texte du geste (bloc ou réplique) sous la barre d'actions.</summary>

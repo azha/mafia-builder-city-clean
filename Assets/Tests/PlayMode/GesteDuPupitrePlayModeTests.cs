@@ -50,7 +50,7 @@ namespace MafiaCleanCity.CityMap.Tests
         };
 
         private (BuildingCardController fiche, Transform racine) Rendre(string type, string feu, string etagere, string precurseur,
-                                                                       int passes = 0, string etatAppro = null)
+                                                                       int passes = 0, string etatAppro = null, bool avecLieutenant = true)
         {
             var host = new GameObject("FicheHost", typeof(RectTransform), typeof(Canvas));   // un Canvas À NOUS : aucun ne fuit
             montes.Add(host);
@@ -61,7 +61,9 @@ namespace MafiaCleanCity.CityMap.Tests
             fiche.RendrePourTest(Carte(type), null,
                 feu == null ? null : new LabCookDto { building = "b-lab", cook_stage_band = feu },
                 etagere == null ? null : new GetOperationalPrecursorsResponseDto { building = "b-lab", stock_band = etagere, precursor_type = precurseur },
-                charges: etatAppro == null ? null : Charges(("SUPPLY_SOURCING", etatAppro), ("ROUTE_ASSIGNMENT", "SELF")));
+                charges: etatAppro == null ? null : Charges(("SUPPLY_SOURCING", etatAppro), ("ROUTE_ASSIGNMENT", "SELF")),
+                // ② bulle : un lieutenant au pupitre par défaut — sans lui, aucune réplique n'est posée (BulleDuLieutenantPlayModeTests)
+                lieutenant: avecLieutenant ? new LieutenantRowDto { lieutenant_id = "lt-1", name = "Lt. Vesk", archetype = "COOK" } : null);
             return (fiche, host.transform);
         }
 
@@ -197,12 +199,13 @@ namespace MafiaCleanCity.CityMap.Tests
                 [("lab", "IDLE", "NONE")] = new[] { "building.commande.pyralin", "building.bloc.il_en_faut_avant_de_rallumer" },
                 [("specialized_lab", "IDLE", "NONE")] = new[] { "building.commande.glass_lily", "building.bloc.il_en_faut_avant_de_rallumer" },
                 [("lab", "IDLE", "LOW")] = new[] { "building.action.allumer_le_feu" },
-                [("specialized_lab", "IDLE", "LOW")] = new[] { "building.action.allumer_le_feu", "building.replique.l_etagere_est_refaite_dites_moi_combien_de_passes_et_j_allume",
+                [("specialized_lab", "IDLE", "LOW")] = new[] { "building.action.allumer_le_feu", "famille.archetype.cuisinier",
+                    "building.replique.l_etagere_est_refaite_dites_moi_combien_de_passes_et_j_allume",
                     "building.row.passes", "building.bloc.passes_compte", "building.bloc.ca_consomme_un_lot_de_lys_de_verre" },
-                [("lab", "MID", "LOW")] = new[] { "building.bloc.rien_a_faire_ici", "building.bloc.repassez_quand_ce_sera_tire",
+                [("lab", "MID", "LOW")] = new[] { "building.bloc.rien_a_faire_ici", "building.bloc.repassez_quand_ce_sera_tire", "famille.archetype.cuisinier",
                     "building.replique.ca_monte_comme_il_faut_si_j_ouvre_maintenant_je_perds_tout",
                     "building.replique.et_ne_me_lancez_pas_une_deuxieme_cuve_tant_que_celle_la_tourne" },
-                [("lab", "DONE", "LOW")] = new[] { "building.action.faire_sortir_la_marchandise", "building.bloc.vers_les_coursiers",
+                [("lab", "DONE", "LOW")] = new[] { "building.action.faire_sortir_la_marchandise", "building.bloc.vers_les_coursiers", "famille.archetype.cuisinier",
                     "building.replique.c_est_tire_ca_ne_peut_pas_dormir_ici_chaque_nuit_que_ca_reste_c_est_une_nuit_de_trop" },
             };
             // Le FOND : les clés du reste de la fiche, mesurées sur la MÊME fiche sans cuisson lue (aucun geste), puis retirées ; seule
@@ -228,6 +231,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Rendre("lab", "IDLE", "NONE", "PYRALIN", etatAppro: "DELEGATED");
             CollectionAssert.AreEquivalent(new[]
             {
+                "famille.archetype.cuisinier",
                 "building.replique.l_approvisionnement_c_est_moi_maintenant_vous_me_l_avez_confie_je_commande_quand_il_faut",
                 "building.bloc.vous_ne_passez_plus_les_commandes_vous_meme",
                 "building.bloc.reprendre_la_main_se_fait_depuis_la_famille_pas_depuis_le_labo",
