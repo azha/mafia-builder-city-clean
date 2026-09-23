@@ -57,53 +57,6 @@ namespace MafiaCleanCity.CityMap
             }
         }
 
-        public static string Conversion(string b)
-        {
-            switch (b)
-            {
-                case "NOT_CONVERTED": return "NON CONVERTI";
-                case "IN_SETUP": return "EN INSTALLATION";
-                case "OPERATIONAL": return "OPÉRATIONNEL";
-                default: return CasseDeTitre(b).ToUpperInvariant();
-            }
-        }
-
-        /// <summary>`revenue_band` — IDLE | EARNING.</summary>
-        public static string Revenu(string b)
-        {
-            switch (b)
-            {
-                case "EARNING": return "Rapporte";
-                case "IDLE": return "Au repos";
-                default: return CasseDeTitre(b);
-            }
-        }
-
-        /// <summary>`revenue_chain` — WIRED | UNWIRED. Un bâtiment qui gagne sans chaîne ne verse
-        /// rien : c'est l'information utile, pas un débit inventé.</summary>
-        public static string Chaine(string b)
-        {
-            switch (b)
-            {
-                case "WIRED": return "Raccordée";
-                case "UNWIRED": return "Coupée";
-                default: return CasseDeTitre(b);
-            }
-        }
-
-        /// <summary>`condition_band` — SOUND | DAMAGED | REPAIRING | FAILED.</summary>
-        public static string Etat(string b)
-        {
-            switch (b)
-            {
-                case "SOUND": return "Sain";
-                case "DAMAGED": return "Endommagé";
-                case "REPAIRING": return "En réparation";
-                case "FAILED": return "Hors service";
-                default: return CasseDeTitre(b);
-            }
-        }
-
         private static string CasseDeTitre(string v)
         {
             if (string.IsNullOrEmpty(v)) return "—";

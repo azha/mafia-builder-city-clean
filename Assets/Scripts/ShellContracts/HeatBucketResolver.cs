@@ -62,16 +62,19 @@ namespace MafiaCleanCity.Shell
         // valeur ne change pas, seul le LIEU où elle vit change (repointage, pas réécriture).
         public static string Label(string bucket)
         {
+            string repli;
             switch (bucket)
             {
                 // « i18n partout » (ruling user). Le RÉSOLVEUR est le seul endroit où cette
                 // correspondance existe : c'est ce qui rend la traduction possible en un point, et
                 // c'est la forme que le socle exige (une fonction nommée prenant la valeur du
                 // domaine — un commentaire ou un index de tableau ne s'asserte pas).
-                case "COLD": return "Froid";
-                case "WARM": return "Tiède";
-                case "HOT": return "Chaud";
-                case "BURNING": return "Brûlant";
+                // ①-1 (2026-09-23) : la clé `heat.bucket.<valeur>` (atelier `22-…` §7.1 A), UNE famille pour le médaillon et la
+                // case « CHALEUR LOCALE » de la fiche ; ces mots sont les replis.
+                case "COLD": repli = "Froid"; break;
+                case "WARM": repli = "Tiède"; break;
+                case "HOT": repli = "Chaud"; break;
+                case "BURNING": repli = "Brûlant"; break;
                 // ⛔ « Unknown » ÉTAIT ÉCRIT ICI, EN ANGLAIS, SUR LE CHROME PARTAGÉ — donc sur les
                 //    dix écrans. Mesuré sur la planche de ⑱ du 2026-09-06 : le manomètre affiche
                 //    « Unknown » sous « CHALEUR » tant que la session n'est pas acquise, à côté de
@@ -86,7 +89,9 @@ namespace MafiaCleanCity.Shell
                 //      deux mondes différents et ils gardent deux réponses différentes.
                 default: return string.IsNullOrEmpty(bucket) ? "—" : bucket;
             }
+            return MafiaCleanCity.I18n.Libelle.ParValeur("heat", "bucket", bucket, repli);
         }
+
 
         public static string Glyph(string bucket)
         {

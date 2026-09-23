@@ -239,7 +239,19 @@ namespace MafiaCleanCity.CityMap
             yield return projections.Interior(districtId, bearer,
                 dto => { LastFetch = dto; LastFetchSucceeded = true; },
                 code => LastErrorCode = code);
+
+            // ①-1 (2026-09-23) : la chaleur de CE district (`GET …/district/:id/heat`, `district_bucket`) pour la case « CHALEUR
+            // LOCALE » de la fiche — point 7 des arbitrages du 07/09, ratifié : le bucket du DISTRICT, le médaillon restant la
+            // ville. Non bloquante : en échec, la case dit « — ».
+            LastHeat = null;
+            yield return world.GetDistrictHeat(districtId, bearer, h => LastHeat = h, e => { });
         }
+
+        /// <summary>①-1 — la chaleur du district courant, null tant qu'elle n'est pas revenue (ou en échec).</summary>
+        public DistrictHeatDto LastHeat { get; private set; }
+
+        /// <summary>Couture de test : pose la chaleur sans réseau (même effet que le fetch de `SetSession`).</summary>
+        public void PoserChaleurPourTest(DistrictHeatDto heat) => LastHeat = heat;
 
         // ============================================================== C8 : le rendu
 
@@ -2201,6 +2213,40 @@ namespace MafiaCleanCity.CityMap
         /// sur `LibellesBatiment.Type` — déjà établi ICI, plus informatif qu'un libellé générique —
         /// tant que le back ne sert encore aucune clé pour ce bâtiment (environnement plus ancien,
         /// ou bâtiment que le lot fiction n'a pas encore couvert).</summary>
+        /// <summary>①-1 — « À COLLECTER » : `district.harvest.<valeur>` (Rien / Prêt / Plein), hors domaine « — ».</summary>
+        public static string ValeurACollecter(string harvestBand)
+        {
+            string repli;
+            switch (harvestBand)
+            {
+                case "NOTHING": repli = "Rien"; break;
+                case "AVAILABLE": repli = "Prêt"; break;
+                case "FULL": repli = "Plein"; break;
+                default: return "—";
+            }
+            return MafiaCleanCity.I18n.Libelle.ParValeur("district", "harvest", harvestBand, repli);
+        }
+
+        /// <summary>①-1 — or-vif quand il y a de quoi ramasser (l'argent), braise quand c'est plein (quelque chose s'est arrêté,
+        /// `capacity-guard.service.ts:70-78`), crème-2 sinon.</summary>
+        public static Color TeinteACollecter(string harvestBand) =>
+            harvestBand == "AVAILABLE" ? DesignTokens.Current.hudMoneyGold
+            : harvestBand == "FULL" ? DesignTokens.Current.hudGaugeArcHot
+            : DesignTokens.Current.hudCremeSecondary;
+
+        /// <summary>①-1 — « REVENUS » : `district.revenue.<valeur>` (Au repos / Rapporte), hors domaine « — ».</summary>
+        public static string ValeurRevenus(string revenueBand)
+        {
+            string repli;
+            switch (revenueBand)
+            {
+                case "IDLE": repli = "Au repos"; break;
+                case "EARNING": repli = "Rapporte"; break;
+                default: return "—";
+            }
+            return MafiaCleanCity.I18n.Libelle.ParValeur("district", "revenue", revenueBand, repli);
+        }
+
         /// <summary>①-2 (2026-09-23, écart ① `e2bd7681` §2 M12, décision de l'orchestrateur) — le titre de la fiche est
         /// l'ENSEIGNE seule (`name_i18n.params.enseigne`, « Transit Marrek »), comme « LE VERGE D'OR » de la maquette : le nom
         /// COMPLET (« Mécanique Skeld — La Lisière, îlot 1501, n° 2 ») occupait 90 % de la plaque (juge ⊥ r9 m5, r3 F2) et
@@ -2264,27 +2310,25 @@ namespace MafiaCleanCity.CityMap
             ficheType.text = SousTitreDeFiche(b);
             if (ficheBoutonAmeliorer != null) ficheBoutonAmeliorer.SetActive(AmeliorableDepuisLaFiche(b.operational_type));
 
-            // `$ 2 400 / À COLLECTER` ⇒ la bande de revenu : le bâtiment rapporte-t-il ?
-            // ⛔ LES TROIS VALEURS ÉTAIENT DE LA MÊME COULEUR, et le juge l'a classé MAJEUR : le
-            // canon CODE l'information par la teinte — or = argent, crème = neutre, braise =
-            // danger. Rendues toutes crème, les trois cases ne portent plus aucun signal de
-            // gravité, et l'or quitte la fiche (il n'y restait que le titre et le CTA).
-            //   *Le remplacement des chiffres par des bandes est un écart ASSUMÉ ; la perte du
-            //   codage couleur ne l'est pas — elle ne découle pas de lui.*
-            ficheStatValeurs[0].color = DesignTokens.Current.hudMoneyGold;   // --or-vif : l'argent
-            ficheStatValeurs[1].color = DesignTokens.Current.hudCreme;       // neutre : la chaîne
-            ficheStatValeurs[0].text = LibellesBatiment.Revenu(b.revenue_band);
-            ficheStatLibelles[0].text = "REVENU";
-            // `$ 180/h / REVENUS` ⇒ la chaîne est-elle raccordée ? (un bâtiment qui gagne sans
-            // chaîne ne verse rien — c'est l'information utile, pas un débit inventé)
-            ficheStatValeurs[1].text = LibellesBatiment.Chaine(b.revenue_chain);
-            ficheStatLibelles[1].text = "CHAÎNE";
-            // `12% / HEAT LOCAL` ⇒ ce DTO ne porte AUCUNE chaleur par bâtiment (mesuré : 13 champs,
-            // aucun heat). L'état de l'ouvrage est la bande qui décide vraiment de son sort.
-            ficheStatValeurs[2].text = LibellesBatiment.Etat(b.condition_band);
-            ficheStatLibelles[2].text = "ÉTAT";
-            ficheStatValeurs[2].color = b.condition_band == "SOUND"
-                ? DesignTokens.Current.hudCreme : DesignTokens.Current.accentDanger;
+            // ①-1 (2026-09-23, écart ① `e2bd7681` §2 M14-M16 ; mots de l'atelier `22-…` §7.1 A) — les trois cases avaient GLISSÉ d'un
+            // cran (REVENU · CHAÎNE · ÉTAT au lieu de À COLLECTER · REVENUS · HEAT LOCAL). Elles reprennent les titres du canon, et
+            // chacune la bande SERVIE qui lui répond (R2.2 : jamais un montant, un débit ni un pourcentage) :
+            //   1 « À COLLECTER »    = `harvest_band` (Rien / Prêt / Plein) — or-vif quand il y a de quoi ramasser, braise quand
+            //                         quelque chose s'est ARRÊTÉ faute de collecte, crème-2 sinon ;
+            //   2 « REVENUS »        = `revenue_band` (Au repos / Rapporte) ;
+            //   3 « CHALEUR LOCALE » = le bucket du DISTRICT (point 7 du 07/09, ratifié), braise quand il est chaud ou brûlant.
+            // `revenue_chain` et `condition_band` quittent la fiche : la carte porte déjà leur signal (néon, pastilles d'état).
+            ficheStatLibelles[0].text = MafiaCleanCity.I18n.Libelle.De("district", "fiche", "À COLLECTER");
+            ficheStatLibelles[1].text = MafiaCleanCity.I18n.Libelle.De("district", "fiche", "REVENUS");
+            ficheStatLibelles[2].text = MafiaCleanCity.I18n.Libelle.De("district", "fiche", "CHALEUR LOCALE");
+            ficheStatValeurs[0].text = ValeurACollecter(b.harvest_band);
+            ficheStatValeurs[0].color = TeinteACollecter(b.harvest_band);
+            ficheStatValeurs[1].text = ValeurRevenus(b.revenue_band);
+            ficheStatValeurs[1].color = DesignTokens.Current.hudCreme;
+            string chaleur = LastHeat != null ? LastHeat.district_bucket : null;
+            ficheStatValeurs[2].text = MafiaCleanCity.Shell.HeatBucketResolver.Label(chaleur);
+            ficheStatValeurs[2].color = chaleur == "HOT" || chaleur == "BURNING"
+                ? DesignTokens.Current.hudGaugeArcHot : DesignTokens.Current.hudCreme;
 
             ficheSortie.text = "";
             ficheRoot.gameObject.SetActive(true);
