@@ -84,9 +84,13 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("Commerce-écran\nLabo", libelles[0].text, "chaque type nommé une fois, un par ligne");
             Assert.IsNull(libelles[0].transform.parent.Find("TypeIcon"), "plusieurs types : aucun glyphe ne les dirait tous");
 
-            // Centré sur l'ANCRE : l'étalement est symétrique autour d'elle, donc l'ancre est la moyenne des deux cellules.
-            float ancre = partage.Average(c => c.anchoredPosition.x);
+            // Centré sur l'ANCRE. ⚠️ Pas la moyenne des deux cellules : chaque cellule s'étale sur SA largeur (un front_shop et un lab n'ont
+            // pas le même sprite) — mesuré au créneau du 23/09 (moyenne 45, libellé à 0,17). L'ancre se reconstruit depuis la cellule de
+            // rang 0 et son propre étalement (échelle 1 : pas de Canvas dans ce test).
             var lrt = (RectTransform)libelles[0].transform;
+            var rang0 = (RectTransform)lrt.parent;
+            float ancre = rang0.anchoredPosition.x
+                          - DistrictBackgroundAnchor.EtalementDansParcelle(null, 0, 2, rang0.sizeDelta.x);
             float centre = ((RectTransform)lrt.parent).anchoredPosition.x + lrt.anchoredPosition.x;
             Assert.AreEqual(ancre, centre, 1f, "le libellé est sur l'ancre, pas sur une des deux cellules étalées");
 

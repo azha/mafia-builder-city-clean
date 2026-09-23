@@ -2440,7 +2440,10 @@ namespace MafiaCleanCity.CityMap
             ficheStatValeurs[1].color = DesignTokens.Current.hudCreme;
             string chaleur = LastHeat != null ? LastHeat.district_bucket : null;
             ficheStatValeurs[2].text = MafiaCleanCity.Shell.HeatBucketResolver.Label(chaleur);
-            ficheStatValeurs[2].color = chaleur == "HOT" || chaleur == "BURNING"
+            // La bande → teinte passe PAR LE RÉSOLVEUR (garde F2 : aucune correspondance bucket→apparence aliasée hors de lui).
+            MafiaCleanCity.Shell.HeatBucketResolver.Rank rangChaleur = MafiaCleanCity.Shell.HeatBucketResolver.ResolveRank(chaleur);
+            ficheStatValeurs[2].color = rangChaleur == MafiaCleanCity.Shell.HeatBucketResolver.Rank.Hot
+                                        || rangChaleur == MafiaCleanCity.Shell.HeatBucketResolver.Rank.Burning
                 ? DesignTokens.Current.hudGaugeArcHot : DesignTokens.Current.hudCreme;
 
             ficheSortie.text = "";

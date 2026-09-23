@@ -112,9 +112,13 @@ namespace MafiaCleanCity.CityMap.Tests
             ecran.Render(Verge());
             if (ecran.ScreenRoot != null) montes.Add(ecran.ScreenRoot.gameObject);
             Assert.IsTrue(ecran.GyrophareAllume, "la descente se voit dans la ville");
-            Transform scene = ecran.ScreenRoot.Find("DistrictScene");
+            // ⚠️ La scène se lit DEPUIS la lueur : `Render` détruit la scène précédente par `Destroy`, DIFFÉRÉ à la fin de l'image, et
+            // `Find("DistrictScene")` rendait l'ANCIENNE (sans lueur) — mesuré au créneau du 23/09.
+            Transform gyro = ecran.GyrophareRect;
+            Assert.IsNotNull(gyro);
+            Transform scene = gyro.parent;
+            Assert.AreEqual("DistrictScene", scene.name);
             Transform fond = scene.Find("DistrictBackgroundImage");
-            Transform gyro = scene.Find("Gyrophare");
             Transform cellules = scene.Find("DistrictCells");
             Assert.IsNotNull(fond, "le fond réel de `verge`, la nuit");
             Assert.IsNotNull(gyro);

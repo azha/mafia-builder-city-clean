@@ -662,7 +662,11 @@ namespace MafiaCleanCity.Shell.Tests
         // token), et c'est écrit au site. Vu rouge par la partie 1 du cumul regroupé (23/09, 41 contre 40) — mesuré par
         // `git grep -c` entre l'arbre vert c0790484 et HEAD, puis `git log -S` sur ce fichier.
         // ★ Troisième fois : l'occurrence a été ajoutée par MOI, dans un lot dont la garde n'était pas au créneau.
-        private const int ExpectedSeverityTokenTotal = 41;
+        // RE-AMENDÉ NOMMÉMENT 41 → 40 (2026-09-23, créneau CLIENT-2) : `CityMap/DistrictInteriorScreenController.cs` (reste sur
+        // l'allowlist : 2 accès, l'ENSEMBLE ne change pas) PERD un accès à `accentDanger` — la 3ᵉ case de la fiche de ①, « ÉTAT »
+        // en `accentDanger`, est devenue « CHALEUR LOCALE » en braise (`hudGaugeArcHot`, `--braise` du canon) au lot ①-1
+        // (9b6625ba). Retrait LÉGITIME. Mesuré par comptage d'occurrences (la méthode de ce test) à f88d3240 (41) et 9b6625ba (40).
+        private const int ExpectedSeverityTokenTotal = 40;
 
         // ── motif 2 — littéraux de bucket (ferme l'angle mort du motif 1, IMPORTANT-2) ──────
         private static readonly string[] BucketLiterals = { "\"COLD\"", "\"WARM\"", "\"HOT\"", "\"BURNING\"" };
