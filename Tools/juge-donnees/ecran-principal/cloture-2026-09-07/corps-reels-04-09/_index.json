@@ -4,7 +4,7 @@
  "controleur": "DistrictInteriorScreenController",
  "date": "2026-09-04T10:15:48",
  "back_main": "6ff684db",
- "compte": "operational_demo@example.test",
+ "compte": "défini (empreinte sha256:58cbfd59)",
  "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client (parfois plus larges que l'écran) ; le juge-donnees filtre",
  "comptes": {
   "appelées": 4,

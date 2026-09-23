@@ -13,7 +13,7 @@
   "date": "2026-09-06T06:46:03",
   "back_main": "b357e7a4",
   "game_back": "mafia-clean-city-game-back 2026-09-04T08:41:42.667221302Z",
-  "compte": "demo_capture@example.test",
+  "compte": "défini (empreinte sha256:801126eb)",
   "jour_de_jeu": 50,
   "horloge_game_minute": 72013,
   "horloge_source": "city_sim_clock.game_minute scopée sur player_id (lecture en base : aucune route joueur ne la projette — forme F)",
