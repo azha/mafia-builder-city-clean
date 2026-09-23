@@ -30,3 +30,18 @@ qu'un témoin de structure : la v2 est servie depuis `58d2eaaa`.
 
 - `revue.phrase.*` (×3) dit « **la façade** » pour le commerce-écran : « J’ai rapproché les comptes de la façade »…
 - `random_world.coupling.pair.erlang_stash__deal_lek` dit « **votre planque** » pour un couplage sur le *stash*, qui est la Réserve (D12).
+
+## Addendum (f2, 23/09) : les heurts FR tranchés par D12 — `31-addendum-fr-d12-2026-09-23.tsv`
+
+Les colonnes : clé → fr → en, puis la clé et le fr servis. L'en ne change pas : il disait déjà « front » et « stash ».
+
+| clé | fr |
+|---|---|
+| `revue.phrase.j_ai_rapproche_les_comptes_du_commerce_ecran` | J’ai rapproché les comptes du commerce-écran |
+| `revue.phrase.il_passe_plus_d_argent_par_la_caisse_que_le_commerce_ecran_ne_peut_en_justifier` | — il passe plus d’argent par la caisse que le commerce-écran ne peut en justifier. |
+| `revue.phrase.le_commerce_ecran_est_epingle_pour_un_controle` | — le commerce-écran est épinglé pour un contrôle. |
+| `random_world.coupling.pair.erlang_stash__deal_lek` (clé inchangée) | ce que tient votre réserve et ce que la rue vient disputer |
+
+- Les trois `revue.phrase.*` sont **renommées**, puisque la clé suit le slug du fr. Leurs émetteurs, au back ou au client, doivent suivre.
+- La clé du couplage est nommée par le couplage lui-même, pas par son texte : elle ne change pas.
+- La table principale est servie depuis le back `73ca76df` : ses 36 lignes y sont désormais toutes « inchangé ».

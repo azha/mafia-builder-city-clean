@@ -40,7 +40,7 @@ for b in ajouts:
     sb = b.split('\t'); cle, fr, en = sb[3], sb[4], sb[5]
     if cle != '.'.join(cle.split('.')[:2]) + '.' + slug(fr): d.append(f'ajout {cle} : clé ≠ slug(fr)')
     if "'" in fr or not en or fr == en: d.append(f'ajout {cle} : fr/en')
-    if cle in FR and (FR[cle], EN.get(cle)) != (fr, en): d.append(f'ajout {cle} servie avec d’autres mots')
+    if cle in FR and (FR[cle], EN.get(cle)) not in ((fr, en), (fr, EN31.get(cle))): d.append(f'ajout {cle} servie avec d’autres mots')
 for a, b in zip(src, base):
     sa, sb = a.split('\t'), b.split('\t'); cle, fr, en = sb[3], sb[4], sb[5]
     dom = '.'.join((sa[3] if '<' not in sa[3] else 'famille.regle.x').split('.')[:2]); dom = DOMAINE.get(dom, dom)

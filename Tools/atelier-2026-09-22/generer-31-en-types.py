@@ -59,3 +59,29 @@ dest = os.path.join(ICI, '31-en-types-batiment-2026-09-23.tsv')
 open(dest, 'w', encoding='utf-8').write('\n'.join(lignes) + '\n')
 n = sum(1 for l in lignes[1:] if '\tPROPOSÉ\t' in l)
 print(f'écrit : {dest} — {len(lignes) - 1} clés, {n} PROPOSÉ(S)')
+
+# ── ADDENDUM (f2, 23/09) : les heurts FR de D12 vus au §« Côté FR » de 31 — même tête (clé → fr → en), puis la clé et le fr servis ──────
+import unicodedata
+def slug(s):
+    o = ''
+    for c in unicodedata.normalize('NFD', s):
+        if unicodedata.category(c) == 'Mn': continue
+        if c.isalnum(): o += c.lower()
+        elif o and o[-1] != '_': o += '_'
+    return o.strip('_')
+ADD = [  # (clé servie, fr proposé, clé dérivée du fr ? , raison)
+ ('revue.phrase.j_ai_rapproche_les_comptes_de_la_facade', 'J’ai rapproché les comptes du commerce-écran', True, 'D12 : « la façade » → le mot du commerce-écran'),
+ ('revue.phrase.il_passe_plus_d_argent_par_la_caisse_que_la_facade_ne_peut_en_justifier',
+  '— il passe plus d’argent par la caisse que le commerce-écran ne peut en justifier.', True, 'D12 : « la façade » → le mot du commerce-écran'),
+ ('revue.phrase.la_facade_est_epinglee_pour_un_controle', '— le commerce-écran est épinglé pour un contrôle.', True,
+  'D12 : « la façade » → le mot du commerce-écran (l’accord suit : épinglé)'),
+ ('random_world.coupling.pair.erlang_stash__deal_lek', 'ce que tient votre réserve et ce que la rue vient disputer', False,
+  'D12 : `stash` = la réserve (« votre planque » = `cash_safehouse`) ; clé nommée par le couplage, pas par le texte : inchangée'),
+]
+add = ['\t'.join(['clé', 'fr', 'en', 'clé servie', 'fr servi', 'raison'])]
+for cle_s, fr, derivee, raison in ADD:
+    cle = '.'.join(cle_s.split('.')[:2]) + '.' + slug(fr) if derivee else cle_s
+    add.append('\t'.join([cle, fr, EN[cle_s], cle_s, FR[cle_s], raison + ('' if cle == cle_s else ' ; clé RENOMMÉE (slug du fr)')]))
+dest_a = os.path.join(ICI, '31-addendum-fr-d12-2026-09-23.tsv')
+open(dest_a, 'w', encoding='utf-8').write('\n'.join(add) + '\n')
+print(f'écrit : {dest_a} — {len(add) - 1} clés (en inchangé : il disait déjà « front », « stash »)')

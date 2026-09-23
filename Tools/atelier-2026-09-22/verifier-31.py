@@ -26,6 +26,11 @@ for cle, fr, en, prop, etat, raison in L:
         w = T[f'building.type.{m.group(1)}'][3]; w = w[0].lower() + w[1:]
         att = ('the ' + w) if cle.startswith('distribution.') else (('An ' if w[0] in 'aeiou' else 'A ') + w)
         if prop != att: d.append(f'{cle} : {prop!r} ≠ dérivé {att!r}')
+A = [l.split('\t') for l in open(os.path.join(ICI, '31-addendum-fr-d12-2026-09-23.tsv'), encoding='utf-8').read().rstrip('\n').split('\n')[1:]]
+for cle, fr, en, cle_s, fr_s, raison in A:   # addendum : le fr servi est bien celui du back, l'en ne bouge pas, plus aucun mot heurté
+    if (FR.get(cle_s), EN.get(cle_s)) != (fr_s, en) and (FR.get(cle), EN.get(cle)) != (fr, en): d.append(f'addendum {cle_s} : servi périmé')
+    if re.search(r'façade|planque', fr): d.append(f'addendum {cle} : mot heurté encore là')
+    if "'" in fr: d.append(f'addendum {cle} : apostrophe droite')
 n_der = sum(1 for c in L if not c[0].startswith('building.type.'))
 if n_der != 2 * len(types): d.append(f'{n_der} dérivés pour {len(types)} types')
 print(f'{len(L)} clés · {len(types)} types · {sum(c[4] == "PROPOSÉ" for c in L)} PROPOSÉ(S)'); [print('  ⛔', x) for x in d]
