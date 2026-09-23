@@ -925,29 +925,29 @@ namespace MafiaCleanCity.Operational.Lieutenant
             //    phase du jour du bandeau. Jamais l'archétype, qui est la ligne d'en dessous : le
             //    défaut de D-1 était exactement de laisser une grandeur prendre la place d'une
             //    autre, et le repli est l'endroit le plus discret où le refaire.
-            AddStatusRow("nom", Lib("Nom"), string.IsNullOrWhiteSpace(b.name) ? "—" : b.name, "[*]", AccentMild);
+            AddStatusRow("nom", Lib("Nom"), string.IsNullOrWhiteSpace(b.name) ? "—" : b.name, AccentMild);
             // archetype (COOK | SECURITY | LOGISTICS | BOOKKEEPER | LAUNDERING | DISTRIBUTION | UNKNOWN).
-            AddStatusRow("archetype", Lib("Archétype"), FamilleLabels.Archetype(b.archetype), "[*]", AccentMild);
+            AddStatusRow("archetype", Lib("Archétype"), FamilleLabels.Archetype(b.archetype), AccentMild);
             // granted_role (advisory | executor | delegated_owner | cohort_overseer).
-            AddStatusRow("role", Lib("Rôle"), GrantedRoleLabel(b.granted_role), GrantedRoleGlyph(b.granted_role), AccentMild);
+            AddStatusRow("role", Lib("Rôle"), GrantedRoleLabel(b.granted_role), AccentMild);
             // mode (tasked | delegated).
-            AddStatusRow("mode", Lib("Mode"), FamilleLabels.Mode(b.mode), ModeGlyph(b.mode), AccentMild);
+            AddStatusRow("mode", Lib("Mode"), FamilleLabels.Mode(b.mode), AccentMild);
             // op_state_band (SETTLING | ACTIVE | PAUSED | IDLE) — the delegated operational state (Phase-11 adds SETTLING).
-            AddStatusRow("etat", Lib("État"), FamilleLabels.Etat(b.op_state_band), OpStateGlyph(b.op_state_band), OpStateAccent(b.op_state_band));
+            AddStatusRow("etat", Lib("État"), FamilleLabels.Etat(b.op_state_band), OpStateAccent(b.op_state_band));
             // rule_count_band (NONE | FEW | MANY) — the behavior-script rule count as a band (never the raw count).
-            AddStatusRow("regles", Lib("Règles"), RuleCountLabel(b.rule_count_band), RuleCountGlyph(b.rule_count_band), RuleCountAccent(b.rule_count_band));
+            AddStatusRow("regles", Lib("Règles"), RuleCountLabel(b.rule_count_band), RuleCountAccent(b.rule_count_band));
 
             // ===== Phase-11 tenure-inertia chips (B1) — the tenure_bucket chip + the 3 effect chips. Each is a worded BAND
             // (NO digit leaks — R2.2): the bucket is DERIVED from the BO-only streak; the 3 effects are DERIVED from the bucket.
             // tenure_bucket (FRESH | ACCLIMATED | SEASONED | SENIOR | ENTRENCHED) — the tenure band.
-            AddStatusRow("anciennete", Lib("Ancienneté"), TenureBucketLabel(b.tenure_bucket), TenureBucketGlyph(b.tenure_bucket), TenureBucketAccent(b.tenure_bucket));
+            AddStatusRow("anciennete", Lib("Ancienneté"), TenureBucketLabel(b.tenure_bucket), TenureBucketAccent(b.tenure_bucket));
             TenureBucketShown = TenureBucketLabel(b.tenure_bucket); // B3 hook — the rendered bucket label.
             // script_revision_cost (COST_1..COST_MAX) — how costly re-scripting this lieutenant is (the inertia COST).
-            AddStatusRow("cout_de_reecriture", Lib("Coût de réécriture"), RevisionCostLabel(b.script_revision_cost), RevisionCostGlyph(b.script_revision_cost), RevisionCostAccent(b.script_revision_cost));
+            AddStatusRow("cout_de_reecriture", Lib("Coût de réécriture"), RevisionCostLabel(b.script_revision_cost), RevisionCostAccent(b.script_revision_cost));
             // reassignment_disruption (DISRUPT_SHORT..DISRUPT_MAX) — the settling-window drag a move would incur (the inertia DRAG).
-            AddStatusRow("stabilisation_apres_transfert", Lib("Stabilisation après transfert"), DisruptionLabel(b.reassignment_disruption), DisruptionGlyph(b.reassignment_disruption), DisruptionAccent(b.reassignment_disruption));
+            AddStatusRow("stabilisation_apres_transfert", Lib("Stabilisation après transfert"), DisruptionLabel(b.reassignment_disruption), DisruptionAccent(b.reassignment_disruption));
             // role_efficiency_bonus (BONUS_NONE..BONUS_CAP) — the tenure yield REWARD (lost on a reassignment).
-            AddStatusRow("gain_de_rendement", Lib("Gain de rendement"), EfficiencyBonusLabel(b.role_efficiency_bonus), EfficiencyBonusGlyph(b.role_efficiency_bonus), EfficiencyBonusAccent(b.role_efficiency_bonus));
+            AddStatusRow("gain_de_rendement", Lib("Gain de rendement"), EfficiencyBonusLabel(b.role_efficiency_bonus), EfficiencyBonusAccent(b.role_efficiency_bonus));
 
             RenderScriptSource(b.script_source);
 
@@ -1089,14 +1089,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 default: return MafiaCleanCity.I18n.Repli.Type(r);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
-        // A distinct shape per role (a11y F2 — shape carries meaning alongside colour).
-        private static string GrantedRoleGlyph(string r) =>
-            r == "advisory" ? "[?]" : r == "executor" ? "[>]" : r == "delegated_owner" ? "[@]" : r == "cohort_overseer" ? "[#]" : "[-]";
-
-        private static string ModeGlyph(string m) => m == "delegated" ? "[>>]" : m == "tasked" ? "[>]" : "[-]";
-
-        private static string OpStateGlyph(string s) =>
-            s == "SETTLING" ? "[~]" : s == "ACTIVE" ? "[>]" : s == "PAUSED" ? "[||]" : s == "IDLE" ? "[..]" : "[-]";
         private static Color OpStateAccent(string s) =>
             s == "SETTLING" ? AccentModerate : s == "ACTIVE" ? AccentMild : s == "PAUSED" ? AccentSevere : AccentModerate;
 
@@ -1112,8 +1104,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
-        private static string RuleCountGlyph(string b) =>
-            b == "MANY" ? "[##]" : b == "FEW" ? "[#.]" : b == "NONE" ? "[..]" : "[-]";
         private static Color RuleCountAccent(string b) =>
             b == "MANY" ? AccentMild : b == "FEW" ? AccentMild : b == "NONE" ? AccentModerate : AccentSevere;
 
@@ -1128,10 +1118,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // avec l'organigramme. Les libellés anglais vivaient ici en dur.
             return string.IsNullOrEmpty(b) ? "—" : FamilleLabels.Anciennete(b);
         }
-        // A growing-fill gauge (shape encodes the tenure level — a11y F2, never colour-only).
-        private static string TenureBucketGlyph(string b) =>
-            b == "ENTRENCHED" ? "[####]" : b == "SENIOR" ? "[###.]" : b == "SEASONED" ? "[##..]" :
-            b == "ACCLIMATED" ? "[#...]" : b == "FRESH" ? "[....]" : "[-]";
         // FRESH is neutral (just recruited/moved — moderate); the more tenured, the more “invested” (mild/positive).
         private static Color TenureBucketAccent(string b) =>
             b == "FRESH" ? AccentModerate : AccentMild;
@@ -1149,8 +1135,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 default: return MafiaCleanCity.I18n.Repli.Etat(c);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
-        private static string RevisionCostGlyph(string c) =>
-            c == "COST_MAX" ? "[$$$]" : c == "COST_3" ? "[$$.]" : c == "COST_2" ? "[$..]" : c == "COST_1" ? "[...]" : "[-]";
         private static Color RevisionCostAccent(string c) =>
             c == "COST_MAX" ? AccentSevere : c == "COST_3" ? AccentModerate : c == "COST_2" ? AccentModerate : AccentMild;
 
@@ -1167,8 +1151,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 default: return MafiaCleanCity.I18n.Repli.Etat(d);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
-        private static string DisruptionGlyph(string d) =>
-            d == "DISRUPT_MAX" ? "[~~~]" : d == "DISRUPT_LONG" ? "[~~.]" : d == "DISRUPT_MED" ? "[~..]" : d == "DISRUPT_SHORT" ? "[...]" : "[-]";
         private static Color DisruptionAccent(string d) =>
             d == "DISRUPT_MAX" ? AccentSevere : d == "DISRUPT_LONG" ? AccentModerate : d == "DISRUPT_MED" ? AccentModerate : AccentMild;
 
@@ -1185,8 +1167,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 default: return MafiaCleanCity.I18n.Repli.Etat(e);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
-        private static string EfficiencyBonusGlyph(string e) =>
-            e == "BONUS_CAP" ? "[+++]" : e == "BONUS_MID" ? "[++.]" : e == "BONUS_LOW" ? "[+..]" : e == "BONUS_NONE" ? "[...]" : "[-]";
         private static Color EfficiencyBonusAccent(string e) =>
             e == "BONUS_NONE" ? AccentModerate : AccentMild;
 
@@ -2770,16 +2750,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             hlg.childForceExpandHeight = true;
             AddLayoutElement(go, minHeight: 30, flexibleHeight: 0);
 
-            // Archetype glyph (shape — a11y F2, never colour-only) + worded label.
-            TextMeshProUGUI g = NewText("Glyph", go.transform, ArchetypeGlyph(row.archetype), 16, TextAlignmentOptions.Center);
-            g.color = AccentMild;
-            g.fontStyle = FontStyles.Bold;
-            // ⛔ La colonne était figée et COUPAIT les glyphes longs — même défaut que ②,
-            // mesuré rouge le 2026-09-02 (« [####] » posé à 4 caractères sur 6 à 46 px/corps 16/gras).
-            // La mesure vit dans `LargeurDeGlyphe` : un producteur, cinq citations.
-            float largeurGlyphe = LargeurDeGlyphe.PourLesPlusLarges(g, "[####]");
-            AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
-                preferredWidth: largeurGlyphe, flexibleWidth: 0);
+            // ⛔ PLUS DE GLYPHE (23/09, décision f2) : aucune maquette n'en porte, et C5-F1 (« jamais la couleur seule ») est satisfaite par le MOT voisin, même couleur.
 
             TextMeshProUGUI label = NewText("Archetype", go.transform, FamilleLabels.Archetype(row.archetype), 15, TextAlignmentOptions.Left);
             label.color = DesignTokens.Current.onSurfaceMuted;
@@ -2796,26 +2767,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             string capturedId = row.lieutenant_id;
             AddActionButton(go.transform, "ouvrir", Lib("Ouvrir"), () => OpenLieutenant(capturedId));
 
-            TrackText(g, ArchetypeGlyph(row.archetype));
             TrackText(label, FamilleLabels.Archetype(row.archetype));
             TrackText(state, FamilleLabels.Etat(row.op_state_band));
         }
 
-        // A distinct shape per archetype (a11y F2 — shape carries meaning alongside colour). EXHAUSTIVE over the roster's
-        // ArchetypeBand domain (the 6 recruitable archetypes + UNKNOWN); an unknown value falls back to a neutral glyph.
-        private static string ArchetypeGlyph(string a)
-        {
-            switch (a)
-            {
-                case "COOK": return "[C]";
-                case "SECURITY": return "[S]";
-                case "BOOKKEEPER": return "[B]";
-                case "LOGISTICS": return "[L]";
-                case "LAUNDERING": return "[W]";
-                case "DISTRIBUTION": return "[D]";
-                default: return "[-]";
-            }
-        }
         // ----------------------------------------------------------- reassign UI (B2 / Phase-11 tenure inertia)
 
         // The Reassign section: a section label + a NEW-building caption row + a CONDITIONAL new-target row (shown only when
@@ -3683,7 +3638,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // A status row: glyph (shape — a11y: colour is never the sole differentiator) + label + value. Used by T2 to
         // render the bands; kept here so the shell shares the BuildingCard row vocabulary 1:1.
-        private void AddStatusRow(string idStable, string label, string value, string glyph, Color accent)
+        private void AddStatusRow(string idStable, string label, string value, Color accent)
         {
             GameObject row = NewUI("Row_" + idStable, statusRows);
             row.AddComponent<Image>().color = RowBg;
@@ -3697,15 +3652,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             hlg.childForceExpandHeight = true;
             AddLayoutElement(row, minHeight: 30, flexibleHeight: 0);
 
-            TextMeshProUGUI g = NewText("Glyph", row.transform, glyph, 16, TextAlignmentOptions.Center);
-            g.color = accent;
-            g.fontStyle = FontStyles.Bold;
-            // ⛔ La colonne était figée et COUPAIT les glyphes longs — même défaut que ②,
-            // mesuré rouge le 2026-09-02 (« [####] » posé à 4 caractères sur 6 à 46 px/corps 16/gras).
-            // La mesure vit dans `LargeurDeGlyphe` : un producteur, cinq citations.
-            float largeurGlyphe = LargeurDeGlyphe.PourLesPlusLarges(g, "[####]");
-            AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
-                preferredWidth: largeurGlyphe, flexibleWidth: 0);
+            // ⛔ PLUS DE COLONNE DE GLYPHE (23/09, décision f2) : les « [##.] », « [o..] », « [C] »… n'existent dans AUCUNE maquette, et leur
+            // raison écrite — a11y C5-F1, « la couleur n'est jamais seule à porter l'information » — est satisfaite par la VALEUR : elle porte
+            // un MOT, dans la même couleur. Garde : `GlyphesPlayModeTests` (toute valeur en couleur porte un mot ; plus aucun glyphe).
 
             TextMeshProUGUI l = NewText("Label", row.transform, label, 15, TextAlignmentOptions.Left);
             l.color = DesignTokens.Current.onSurfaceMuted;
@@ -3715,8 +3664,6 @@ namespace MafiaCleanCity.Operational.Lieutenant
             v.color = accent;
             v.fontStyle = FontStyles.Bold;
             AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
-
-            TrackText(g, glyph);
             TrackText(l, label);
             TrackText(v, value);
         }

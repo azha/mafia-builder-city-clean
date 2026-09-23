@@ -233,17 +233,7 @@ namespace MafiaCleanCity.Operational
 
             Color accent = CleanlinessAccent(stage.cleanliness_band);
 
-            // Glyph (shape — a11y: colour is never the sole differentiator).
-            TextMeshProUGUI g = NewText("Glyph", row.transform, CleanlinessGlyph(stage.cleanliness_band), 15, TextAlignmentOptions.Center);
-            g.color = accent;
-            g.fontStyle = FontStyles.Bold;
-            // ⛔ La colonne était figée et COUPAIT les glyphes longs — même défaut que ②,
-            // mesuré rouge le 2026-09-02 (« [####] » posé à 4 caractères sur 6 à 46 px/corps 16/gras).
-            // La mesure vit dans `LargeurDeGlyphe` : un producteur, cinq citations.
-            float largeurGlyphe = LargeurDeGlyphe.PourLesPlusLarges(g, "[####]");
-            AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
-                preferredWidth: largeurGlyphe, flexibleWidth: 0);
-            TrackText(CleanlinessGlyph(stage.cleanliness_band));
+            // ⛔ PLUS DE GLYPHE (23/09, décision f2) : aucune maquette n'en porte, et C5-F1 (« jamais la couleur seule ») est satisfaite par le MOT voisin, même couleur.
 
             TextMeshProUGUI band = NewText("BandValue", row.transform, CleanlinessLabel(stage.cleanliness_band), 15, TextAlignmentOptions.Left);
             band.color = accent;
@@ -268,17 +258,6 @@ namespace MafiaCleanCity.Operational
         // partageaient : `PARTIAL` ne passait pas par `Libelle`, et `default` rendait
         // l'identifiant brut du serveur à l'écran.
         private static string CleanlinessLabel(string b) => PureteResolvers.Libelle(b);
-        private static string CleanlinessGlyph(string b)
-        {
-            switch (b)
-            {
-                case "CLEAN": return "[####]";
-                case "MOSTLY_CLEAN": return "[###.]";
-                case "PARTIAL": return "[##..]";
-                case "DIRTY": return "[#...]";
-                default: return "[....]";
-            }
-        }
         private static Color CleanlinessAccent(string b)
         {
             switch (b)

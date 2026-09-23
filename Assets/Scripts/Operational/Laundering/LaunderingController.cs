@@ -215,12 +215,10 @@ namespace MafiaCleanCity.Operational
             // The Stage-1 node, rendered as a pipeline node card.
             // Cleanliness band — SemanticBar row: glyph (shape) + label + qualitative band value.
             // F2: shape glyph is present alongside colour (colour is never the sole carrier).
-            AddStatusRow("proprete", "Propreté", CleanlinessLabel(node.cleanliness_band),
-                CleanlinessGlyph(node.cleanliness_band), CleanlinessAccent(node.cleanliness_band));
+            AddStatusRow("proprete", "Propreté", CleanlinessLabel(node.cleanliness_band), CleanlinessAccent(node.cleanliness_band));
 
             // Deviation flag — the host front-shop's audit pin. Active = an audit/unconformity badge.
             AddStatusRow("ecart", "Écart", node.deviation_active ? "épingle d'audit posée" : "dans les clous",
-                node.deviation_active ? "[!]" : "[ok]",
                 node.deviation_active ? AccentSevere : AccentMild);
 
             BuildActions();
@@ -272,17 +270,6 @@ namespace MafiaCleanCity.Operational
         // partageaient : `PARTIAL` ne passait pas par `Libelle`, et `default` rendait
         // l'identifiant brut du serveur à l'écran.
         private static string CleanlinessLabel(string b) => PureteResolvers.Libelle(b);
-        private static string CleanlinessGlyph(string b)
-        {
-            switch (b)
-            {
-                case "CLEAN": return "[####]";
-                case "MOSTLY_CLEAN": return "[###.]";
-                case "PARTIAL": return "[##..]";
-                case "DIRTY": return "[#...]";
-                default: return "[....]";
-            }
-        }
         private static Color CleanlinessAccent(string b)
         {
             switch (b)
@@ -368,7 +355,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(actions, flexibleHeight: 1);
         }
 
-        private void AddStatusRow(string idStable, string label, string value, string glyph, Color accent)
+        private void AddStatusRow(string idStable, string label, string value, Color accent)
         {
             GameObject row = NewUI("Row_" + idStable, statusRows);
             row.AddComponent<Image>().color = RowBg;
@@ -382,16 +369,9 @@ namespace MafiaCleanCity.Operational
             hlg.childForceExpandHeight = true;
             AddLayoutElement(row, minHeight: 34, flexibleHeight: 0);
 
-            // Glyph (shape — a11y: colour is never the sole differentiator).
-            TextMeshProUGUI g = NewText("Glyph", row.transform, glyph, 16, TextAlignmentOptions.Center);
-            g.color = accent;
-            g.fontStyle = FontStyles.Bold;
-            // ⛔ La colonne était figée et COUPAIT les glyphes longs — même défaut que ②,
-            // mesuré rouge le 2026-09-02 (« [####] » posé à 4 caractères sur 6 à 46 px/corps 16/gras).
-            // La mesure vit dans `LargeurDeGlyphe` : un producteur, cinq citations.
-            float largeurGlyphe = LargeurDeGlyphe.PourLesPlusLarges(g, "[####]");
-            AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
-                preferredWidth: largeurGlyphe, flexibleWidth: 0);
+            // ⛔ PLUS DE COLONNE DE GLYPHE (23/09, décision f2) : les « [##.] », « [o..] », « [C] »… n'existent dans AUCUNE maquette, et leur
+            // raison écrite — a11y C5-F1, « la couleur n'est jamais seule à porter l'information » — est satisfaite par la VALEUR : elle porte
+            // un MOT, dans la même couleur. Garde : `GlyphesPlayModeTests` (toute valeur en couleur porte un mot ; plus aucun glyphe).
 
             TextMeshProUGUI l = NewText("Label", row.transform, label, 15, TextAlignmentOptions.Left);
             l.color = DesignTokens.Current.onSurfaceMuted;
@@ -401,8 +381,6 @@ namespace MafiaCleanCity.Operational
             v.color = accent;
             v.fontStyle = FontStyles.Bold;
             AddLayoutElement(v.gameObject, minWidth: 160, flexibleWidth: 0);
-
-            TrackText(g, glyph);
             TrackText(l, label);
             TrackText(v, value);
         }

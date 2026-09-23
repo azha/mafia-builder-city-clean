@@ -639,10 +639,9 @@ namespace MafiaCleanCity.Operational
 
             // Status rows — each line: glyph (shape) + label + qualitative band value.
             // F2: shape glyph is present alongside colour (colour is never the sole carrier).
-            AddStatusRow("mise_en_place", "Mise en place", SetupLabel(card.setup_state), SetupGlyph(card.setup_state), SetupAccent(card.setup_state));
-            AddStatusRow("en_service", "En service", card.operational ? "oui" : "non",
-                card.operational ? "[#]" : "[ ]", card.operational ? AccentMild : AccentSevere);
-            AddStatusRow("couverture", "Couverture", CoverLabel(card.cover_band), CoverGlyph(card.cover_band), CoverAccent(card.cover_band));
+            AddStatusRow("mise_en_place", "Mise en place", SetupLabel(card.setup_state), SetupAccent(card.setup_state));
+            AddStatusRow("en_service", "En service", card.operational ? "oui" : "non", card.operational ? AccentMild : AccentSevere);
+            AddStatusRow("couverture", "Couverture", CoverLabel(card.cover_band), CoverAccent(card.cover_band));
 
             // ⛔ L'ENTRETIEN — donnée REÇUE et JETÉE jusqu'ici. `lapse_phase_bucket` et
             // `days_until_maintenance_due` sont dans le DTO depuis qu'il existe, et aucune ligne
@@ -655,22 +654,19 @@ namespace MafiaCleanCity.Operational
             // autres nombres que la maquette dessine (montant à collecter, pourcentage de heat)
             // sont bucketés puis JETÉS par le back, avec la consigne écrite « jamais les valeurs
             // brutes » — les afficher reviendrait à les inventer.
-            AddStatusRow("entretien", "Entretien", EcheanceLabel(card.lapse_phase_bucket, card.days_until_maintenance_due),
-                         LapseGlyph(card.lapse_phase_bucket), LapseAccent(card.lapse_phase_bucket));
+            AddStatusRow("entretien", "Entretien", EcheanceLabel(card.lapse_phase_bucket, card.days_until_maintenance_due), LapseAccent(card.lapse_phase_bucket));
 
             // ----- Phase-2b raid / repair / risk surface (a11y F2: glyph + text, never colour-only; R2.2: bands only) -----
-            AddStatusRow("structure", "Structure", StructuralLabel(card.structural_state),
-                StructuralGlyph(card.structural_state), StructuralAccent(card.structural_state));
+            AddStatusRow("structure", "Structure", StructuralLabel(card.structural_state), StructuralAccent(card.structural_state));
             // Raid-risk band gauge (LOW → IMMINENT) — a filled-bar glyph + worded band label.
-            AddStatusRow("risque_de_descente", "Risque de descente", RaidRiskLabel(card.raid_risk),
-                RaidRiskGlyph(card.raid_risk), RaidRiskAccent(card.raid_risk));
+            AddStatusRow("risque_de_descente", "Risque de descente", RaidRiskLabel(card.raid_risk), RaidRiskAccent(card.raid_risk));
 
             // Raid notification/flag — shown only when this building was recently raided. The seized amount is a
             // qualitative band (NEVER raw grams; R2.2). A warning glyph carries the alert alongside colour (F2).
             if (card.recently_raided)
             {
                 string notif = $"Descente — saisi : {SeizedLabel(card.seized_amount)}";
-                AddStatusRow("alerte", "Alerte", notif, "[!]", AccentSevere);
+                AddStatusRow("alerte", "Alerte", notif, AccentSevere);
             }
 
             // ----- Phase-2b vector #2 (Crick) cold-chain surface — ONLY when the storage projection carries a
@@ -683,13 +679,11 @@ namespace MafiaCleanCity.Operational
             {
                 ColdChainShown = true;
                 // Substance row — surfaces which substance this cold chain protects (Crick).
-                AddStatusRow("substance", "Substance", SubstanceLabel(storage.substance_type), "[*]", AccentMild);
+                AddStatusRow("substance", "Substance", SubstanceLabel(storage.substance_type), AccentMild);
                 // Temperature band row — the qualitative cold-chain status (OPTIMAL_COLD / MODERATE / HOT).
-                AddStatusRow("temperature", "Température", TemperatureLabel(storage.temperature_status),
-                    TemperatureGlyph(storage.temperature_status), TemperatureAccent(storage.temperature_status));
+                AddStatusRow("temperature", "Température", TemperatureLabel(storage.temperature_status), TemperatureAccent(storage.temperature_status));
                 // Degrading indicator row — Stable vs Degrading (a boolean, never a raw rate).
-                AddStatusRow("chaine_du_froid", "Chaîne du froid", storage.degrading ? "se dégrade" : "stable",
-                    storage.degrading ? "[v]" : "[=]", storage.degrading ? AccentSevere : AccentMild);
+                AddStatusRow("chaine_du_froid", "Chaîne du froid", storage.degrading ? "se dégrade" : "stable", storage.degrading ? AccentSevere : AccentMild);
             }
 
             // ----- Phase-2c vector #2c (Ash luxury channel) surface — ONLY for a specialized_lab (substance=ASH). The
@@ -707,15 +701,14 @@ namespace MafiaCleanCity.Operational
                 string labSubstance = (labStorage != null && !string.IsNullOrEmpty(labStorage.substance_type))
                     ? labStorage.substance_type
                     : "ASH";
-                AddStatusRow("substance", "Substance", SubstanceLabel(labSubstance), "[*]", AccentMild);
+                AddStatusRow("substance", "Substance", SubstanceLabel(labSubstance), AccentMild);
 
                 // Lab-tier band row — the specialized_lab's standing (a higher band → purer Ash). Always shown for a
                 // specialized_lab (lab_tier_band is BASIC/REFINED/MASTER; NONE would only be a non-specialized_lab).
                 if (!string.IsNullOrEmpty(card.lab_tier_band) && card.lab_tier_band != "NONE")
                 {
                     LabTierShown = true;
-                    AddStatusRow("taille_du_labo", "Taille du labo", LabTierLabel(card.lab_tier_band),
-                        LabTierGlyph(card.lab_tier_band), LabTierAccent(card.lab_tier_band));
+                    AddStatusRow("taille_du_labo", "Taille du labo", LabTierLabel(card.lab_tier_band), LabTierAccent(card.lab_tier_band));
                 }
 
                 // Purity-band row — the cooked Ash batch's quality grade (from the storage projection). Shown only when a
@@ -724,8 +717,7 @@ namespace MafiaCleanCity.Operational
                 if (st != null && !string.IsNullOrEmpty(st.purity_band))
                 {
                     PurityBandShown = true;
-                    AddStatusRow("purete", "Pureté", PurityLabel(st.purity_band),
-                        PurityGlyph(st.purity_band), PurityAccent(st.purity_band));
+                    AddStatusRow("purete", "Pureté", PurityLabel(st.purity_band), PurityAccent(st.purity_band));
                 }
             }
 
@@ -734,10 +726,8 @@ namespace MafiaCleanCity.Operational
             // band + the payout band only (never raw ticks/cents); F2: a distinct glyph per status alongside colour.
             if (CurrentAppointment != null && !string.IsNullOrEmpty(CurrentAppointment.status))
             {
-                AddStatusRow("rendez_vous", "Rendez-vous", AppointmentStatusLabel(CurrentAppointment.status),
-                    AppointmentStatusGlyph(CurrentAppointment.status), AppointmentStatusAccent(CurrentAppointment.status));
-                AddStatusRow("gain", "Gain", PayoutLabel(CurrentAppointment.payout_band),
-                    PayoutGlyph(CurrentAppointment.payout_band), PayoutAccent(CurrentAppointment.payout_band));
+                AddStatusRow("rendez_vous", "Rendez-vous", AppointmentStatusLabel(CurrentAppointment.status), AppointmentStatusAccent(CurrentAppointment.status));
+                AddStatusRow("gain", "Gain", PayoutLabel(CurrentAppointment.payout_band), PayoutAccent(CurrentAppointment.payout_band));
             }
 
             // ----- Phase-3 vector #3 (grow_house cultivation) surface — ONLY for a grow_house with an active grow tracked.
@@ -753,15 +743,13 @@ namespace MafiaCleanCity.Operational
                 && !string.IsNullOrEmpty(CurrentGrow.grow_stage_band))
             {
                 // Crop row — surfaces which growable precursor this grow_house is cultivating (the planted substance).
-                AddStatusRow("culture", "Culture", GrowablePrecursorLabel(SelectedPrecursor), "[*]", AccentMild);
+                AddStatusRow("culture", "Culture", GrowablePrecursorLabel(SelectedPrecursor), AccentMild);
                 // Grow-stage band row — the qualitative growth phase (EARLY → DONE) with a rising filled-bar glyph.
                 GrowStageShown = true;
-                AddStatusRow("pousse", "Pousse", GrowStageLabel(CurrentGrow.grow_stage_band),
-                    GrowStageGlyph(CurrentGrow.grow_stage_band), GrowStageAccent(CurrentGrow.grow_stage_band));
+                AddStatusRow("pousse", "Pousse", GrowStageLabel(CurrentGrow.grow_stage_band), GrowStageAccent(CurrentGrow.grow_stage_band));
                 // Husbandry band row — the qualitative tend trajectory (WITHERED → THRIVING) — the husbandry payoff signal.
                 HusbandryShown = true;
-                AddStatusRow("soin", "Soin", HusbandryLabel(CurrentGrow.husbandry_band),
-                    HusbandryGlyph(CurrentGrow.husbandry_band), HusbandryAccent(CurrentGrow.husbandry_band));
+                AddStatusRow("soin", "Soin", HusbandryLabel(CurrentGrow.husbandry_band), HusbandryAccent(CurrentGrow.husbandry_band));
             }
 
             // ----- Phase-4 vector #4 (distribution_hub courier-dispatch logistics) surface — ONLY for a distribution_hub.
@@ -780,21 +768,19 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.hub_tier_band) && card.hub_tier_band != "NONE")
                 {
                     HubTierShown = true;
-                    AddStatusRow("taille_du_relais", "Taille du relais", HubTierLabel(card.hub_tier_band),
-                        HubTierGlyph(card.hub_tier_band), HubTierAccent(card.hub_tier_band));
+                    AddStatusRow("taille_du_relais", "Taille du relais", HubTierLabel(card.hub_tier_band), HubTierAccent(card.hub_tier_band));
                 }
                 // Roster-occupancy band row — how much of the player's concurrent-shipment capacity is in use (OPEN / BUSY /
                 // FULL — never the raw count/cap). FULL telegraphs that a further dispatch is refused (409 OVER_CAPACITY).
                 if (!string.IsNullOrEmpty(card.roster_band) && card.roster_band != "NONE")
                 {
                     RosterShown = true;
-                    AddStatusRow("equipe", "Équipe", RosterLabel(card.roster_band),
-                        RosterGlyph(card.roster_band), RosterAccent(card.roster_band));
+                    AddStatusRow("equipe", "Équipe", RosterLabel(card.roster_band), RosterAccent(card.roster_band));
                 }
                 // Unlocked-vehicles row — the categorical vehicle modes the hub unlocks (FOOT always; +BIKE/CAR on an
                 // operational hub). A worded list (never speeds; R2.2). The "[~]" glyph reads as "fleet/modes available".
                 VehiclesShown = true;
-                AddStatusRow("vehicules", "Véhicules", AvailableVehiclesLabel(card.available_vehicles), "[~]", AccentMild);
+                AddStatusRow("vehicules", "Véhicules", AvailableVehiclesLabel(card.available_vehicles), AccentMild);
             }
 
             // ----- Phase-5 vector #5a (money_holding clean-cash vault) surface — ONLY for a money_holding. The tier row reads
@@ -815,29 +801,27 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.money_holding_tier_band) && card.money_holding_tier_band != "NONE")
                 {
                     MoneyHoldingTierShown = true;
-                    AddStatusRow("taille_de_la_banque", "Taille de la banque", MoneyHoldingTierLabel(card.money_holding_tier_band),
-                        MoneyHoldingTierGlyph(card.money_holding_tier_band), MoneyHoldingTierAccent(card.money_holding_tier_band));
+                    AddStatusRow("taille_de_la_banque", "Taille de la banque", MoneyHoldingTierLabel(card.money_holding_tier_band), MoneyHoldingTierAccent(card.money_holding_tier_band));
                 }
                 // Held-magnitude band row — how much clean cash is held (NONE → MASSIVE; never raw cents). A higher hold earns
                 // more passive yield but draws the audit-forfeiture eye (the MASSIVE band is the forfeiture-threshold territory).
                 if (!string.IsNullOrEmpty(card.held_band))
                 {
                     HeldBandShown = true;
-                    AddStatusRow("en_depot", "En dépôt", HeldLabel(card.held_band), HeldGlyph(card.held_band), HeldAccent(card.held_band));
+                    AddStatusRow("en_depot", "En dépôt", HeldLabel(card.held_band), HeldAccent(card.held_band));
                 }
                 // Capacity-fill band row — how full the vault is (OPEN / BUSY / FULL — never the raw held/cap). FULL telegraphs
                 // that a further deposit is refused (409 OVER_CAPACITY) — upgrade the tier or withdraw to make room.
                 if (!string.IsNullOrEmpty(card.capacity_band) && card.capacity_band != "NONE")
                 {
                     CapacityBandShown = true;
-                    AddStatusRow("capacite", "Capacité", CapacityLabel(card.capacity_band),
-                        CapacityGlyph(card.capacity_band), CapacityAccent(card.capacity_band));
+                    AddStatusRow("capacite", "Capacité", CapacityLabel(card.capacity_band), CapacityAccent(card.capacity_band));
                 }
                 // Yield band row — IDLE (nothing held) / EARNING (the passive yield accrues each tick; never the raw rate).
                 if (!string.IsNullOrEmpty(card.yield_band) && card.yield_band != "NONE")
                 {
                     YieldBandShown = true;
-                    AddStatusRow("rendement", "Rendement", YieldLabel(card.yield_band), YieldGlyph(card.yield_band), YieldAccent(card.yield_band));
+                    AddStatusRow("rendement", "Rendement", YieldLabel(card.yield_band), YieldAccent(card.yield_band));
                 }
                 // Forfeiture WARNING alert — telegraphed so the player can react BEFORE the seizure. PENDING (the audit is armed,
                 // the deadline is comfortably ahead) / IMMINENT (the deadline is near/at — react NOW). A distinct warning glyph
@@ -849,7 +833,7 @@ namespace MafiaCleanCity.Operational
                     string warn = imminent
                         ? "Audit imminent — retirez ou répartissez maintenant"
                         : "Audit en vue — retirez ou répartissez pour réagir";
-                    AddStatusRow("saisie", "Saisie", warn, imminent ? "[!!]" : "[!]",
+                    AddStatusRow("saisie", "Saisie", warn,
                         imminent ? AccentSevere : AccentModerate);
                 }
             }
@@ -1121,8 +1105,6 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Etat(s);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
-        private static string SetupGlyph(string s) =>
-            s == "OPERATIONAL" ? "[#]" : s == "IN_SETUP" ? "[~]" : "[ ]";
         private static Color SetupAccent(string s) =>
             s == "OPERATIONAL" ? AccentMild : s == "IN_SETUP" ? AccentModerate : AccentSevere;
 
@@ -1135,16 +1117,6 @@ namespace MafiaCleanCity.Operational
                 case "WEAK": return Cle("cover", "Weak");
                 case "NONE": return Cle("cover", "None");
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
-            }
-        }
-        private static string CoverGlyph(string b)
-        {
-            switch (b)
-            {
-                case "STRONG": return "[###]";
-                case "STANDARD": return "[##.]";
-                case "WEAK": return "[#..]";
-                default: return "[...]";
             }
         }
         private static Color CoverAccent(string b) =>
@@ -1162,9 +1134,6 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Etat(s);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
-        // Distinct shape per state (a11y F2 — shape carries the meaning alongside colour).
-        private static string StructuralGlyph(string s) =>
-            s == "OPERATIONAL" ? "[#]" : s == "REPAIRING" ? "[~]" : "[x]";
         private static Color StructuralAccent(string s) =>
             s == "OPERATIONAL" ? AccentMild : s == "REPAIRING" ? AccentModerate : AccentSevere;
 
@@ -1178,18 +1147,6 @@ namespace MafiaCleanCity.Operational
                 case "HIGH": return Cle("raid_risk", "High");
                 case "IMMINENT": return Cle("raid_risk", "Imminent");
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
-            }
-        }
-        // A 4-segment filled-bar gauge (shape encodes the level — a11y F2, mirrors the cover/cleanliness gauges).
-        private static string RaidRiskGlyph(string b)
-        {
-            switch (b)
-            {
-                case "LOW": return "[#...]";
-                case "ELEVATED": return "[##..]";
-                case "HIGH": return "[###.]";
-                case "IMMINENT": return "[####]";
-                default: return "[....]";
             }
         }
         private static Color RaidRiskAccent(string b) =>
@@ -1247,17 +1204,6 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
-        // Distinct shape per band (a11y F2 — shape carries the meaning alongside colour; mirrors the cover/risk gauges).
-        private static string TemperatureGlyph(string b)
-        {
-            switch (b)
-            {
-                case "OPTIMAL_COLD": return "[*]";  // a snowflake-ish mark — cold/good
-                case "MODERATE": return "[~]";       // wavy — warming
-                case "HOT": return "[!]";            // alert — hot/at risk
-                default: return "[?]";
-            }
-        }
         private static Color TemperatureAccent(string b) =>
             b == "OPTIMAL_COLD" ? AccentMild : b == "MODERATE" ? AccentModerate : AccentSevere;
 
@@ -1271,17 +1217,6 @@ namespace MafiaCleanCity.Operational
                 case "MASTER": return Bande("lab_tier", "MASTER", "Maître");
                 case "NONE": return Bande("lab_tier", "NONE", "Pas de labo");   // atelier 29 (7746e0bb), servi (NONE = la bande ne s'applique pas à ce bâtiment)
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
-            }
-        }
-        // A rising filled-pip gauge (shape carries the tier alongside colour — a11y F2, mirrors the cover/risk gauges).
-        private static string LabTierGlyph(string b)
-        {
-            switch (b)
-            {
-                case "BASIC": return "[#..]";
-                case "REFINED": return "[##.]";
-                case "MASTER": return "[###]";
-                default: return "[...]";
             }
         }
         // BASIC = amber (the entry tier, room to grow), REFINED = cyan (a solid lab), MASTER = premium violet (the top tier).
@@ -1299,18 +1234,6 @@ namespace MafiaCleanCity.Operational
                 case "PURE": return Bande("purity", "PURE", "Pure");
                 case "CRYSTALLINE": return Bande("purity", "CRYSTALLINE", "Cristalline");
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
-            }
-        }
-        // A 4-segment crystal-fill gauge (shape encodes the grade — a11y F2: shape carries the level alongside colour).
-        private static string PurityGlyph(string b)
-        {
-            switch (b)
-            {
-                case "CUT": return "[*...]";
-                case "STANDARD": return "[**..]";
-                case "PURE": return "[***.]";
-                case "CRYSTALLINE": return "[****]";
-                default: return "[....]";
             }
         }
         // The 4-band palette: CUT = severe (cut/low), STANDARD = amber, PURE = cyan, CRYSTALLINE = premium violet (the best).
@@ -1336,9 +1259,6 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Etat(s);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
-        // Distinct shape per status (a11y F2 — shape carries the meaning alongside colour).
-        private static string AppointmentStatusGlyph(string s) =>
-            s == "HONORED" ? "[#]" : s == "SCHEDULED" ? "[~]" : "[x]";
         // SCHEDULED = amber (pending/awaiting), HONORED = cyan (a completed sale), EXPIRED = severe (lost).
         private static Color AppointmentStatusAccent(string s) =>
             s == "HONORED" ? AccentMild : s == "SCHEDULED" ? AccentModerate : AccentSevere;
@@ -1357,19 +1277,6 @@ namespace MafiaCleanCity.Operational
                 case "STRONG": return Bande("payout", "STRONG", "Fort");
                 case "PREMIUM": return Bande("payout", "PREMIUM", "Exceptionnel");
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
-            }
-        }
-        private static string PayoutGlyph(string b)
-        {
-            switch (b)
-            {
-                case "PENDING": return "[~]";
-                case "NONE": return "[ ]";
-                case "MODEST": return "[$...]";
-                case "FAIR": return "[$$..]";
-                case "STRONG": return "[$$$.]";
-                case "PREMIUM": return "[$$$$]";
-                default: return "[?]";
             }
         }
         private static Color PayoutAccent(string b)
@@ -1399,18 +1306,6 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
-        // A 3-segment rising filled-bar gauge → a full bar at DONE (shape encodes the phase — a11y F2, mirrors the cover/risk gauges).
-        private static string GrowStageGlyph(string b)
-        {
-            switch (b)
-            {
-                case "EARLY": return "[#..]";
-                case "MID": return "[##.]";
-                case "LATE": return "[###]";
-                case "DONE": return "[***]";
-                default: return "[...]";
-            }
-        }
         // EARLY/MID = amber (still growing), LATE = cyan (nearly there), DONE = premium violet (a finished crop).
         private static Color GrowStageAccent(string b) =>
             b == "DONE" ? AccentPremium : b == "LATE" ? AccentMild : AccentModerate;
@@ -1427,17 +1322,6 @@ namespace MafiaCleanCity.Operational
                 case "ON_TRACK": return Bande("husbandry", "ON_TRACK", "En bonne voie");
                 case "THRIVING": return Bande("husbandry", "THRIVING", "Florissante");
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
-            }
-        }
-        // A 3-segment fill gauge (shape encodes the trajectory — a11y F2: shape carries the level alongside colour).
-        private static string HusbandryGlyph(string b)
-        {
-            switch (b)
-            {
-                case "WITHERED": return "[v..]";
-                case "ON_TRACK": return "[^^.]";
-                case "THRIVING": return "[^^^]";
-                default: return "[...]";
             }
         }
         private static Color HusbandryAccent(string b)
@@ -1480,19 +1364,6 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
-        // A 5-segment rising filled-bar gauge (shape encodes the tier alongside colour — a11y F2, mirrors the lab-tier/risk gauges).
-        private static string HubTierGlyph(string b)
-        {
-            switch (b)
-            {
-                case "SMALL": return "[#....]";
-                case "MEDIUM": return "[##...]";
-                case "LARGE": return "[###..]";
-                case "MAJOR": return "[####.]";
-                case "MAX": return "[#####]";
-                default: return "[.....]";
-            }
-        }
         // SMALL/MEDIUM = amber (room to grow), LARGE/MAJOR = cyan (a solid hub), MAX = premium violet (the top tier, capped).
         private static Color HubTierAccent(string b) =>
             b == "MAX" ? AccentPremium : (b == "LARGE" || b == "MAJOR") ? AccentMild : AccentModerate;
@@ -1510,17 +1381,6 @@ namespace MafiaCleanCity.Operational
                 case "FULL": return Bande("roster", "FULL", "Pleine");
                 case "NONE": return Bande("roster", "NONE", "Pas d’équipe");   // atelier 29 (7746e0bb), servi
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
-            }
-        }
-        // Distinct shape per band (a11y F2 — shape carries the meaning alongside colour).
-        private static string RosterGlyph(string b)
-        {
-            switch (b)
-            {
-                case "OPEN": return "[o..]";   // open slots
-                case "BUSY": return "[oo.]";   // filling
-                case "FULL": return "[ooo]";   // at the cap
-                default: return "[...]";
             }
         }
         private static Color RosterAccent(string b) =>
@@ -1564,19 +1424,6 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
-        // A 5-segment rising filled-bar gauge (shape encodes the tier alongside colour — a11y F2, mirrors the hub/lab gauges).
-        private static string MoneyHoldingTierGlyph(string b)
-        {
-            switch (b)
-            {
-                case "SMALL": return "[$....]";
-                case "MEDIUM": return "[$$...]";
-                case "LARGE": return "[$$$..]";
-                case "MAJOR": return "[$$$$.]";
-                case "MAX": return "[$$$$$]";
-                default: return "[.....]";
-            }
-        }
         // SMALL/MEDIUM = amber (room to grow), LARGE/MAJOR = cyan (a serious vault), MAX = premium violet (the top tier, capped).
         private static Color MoneyHoldingTierAccent(string b) =>
             b == "MAX" ? AccentPremium : (b == "LARGE" || b == "MAJOR") ? AccentMild : AccentModerate;
@@ -1594,19 +1441,6 @@ namespace MafiaCleanCity.Operational
                 case "HIGH": return Bande("held", "HIGH", "Beaucoup");
                 case "MASSIVE": return Bande("held", "MASSIVE", "Énorme");
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
-            }
-        }
-        // A rising 4-segment stack glyph (NONE = empty brackets) — shape carries the magnitude alongside colour (a11y F2).
-        private static string HeldGlyph(string b)
-        {
-            switch (b)
-            {
-                case "NONE": return "[    ]";
-                case "LOW": return "[=   ]";
-                case "MODERATE": return "[==  ]";
-                case "HIGH": return "[=== ]";
-                case "MASSIVE": return "[====]";
-                default: return "[    ]";
             }
         }
         // NONE/LOW = cyan (safe), MODERATE/HIGH = amber (building up), MASSIVE = severe (forfeiture-threshold territory).
@@ -1627,16 +1461,6 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
-        private static string CapacityGlyph(string b)
-        {
-            switch (b)
-            {
-                case "OPEN": return "[o..]";   // room to deposit
-                case "BUSY": return "[oo.]";   // filling
-                case "FULL": return "[ooo]";   // at the cap — a further deposit 409s
-                default: return "[...]";
-            }
-        }
         private static Color CapacityAccent(string b) =>
             b == "OPEN" ? AccentMild : b == "BUSY" ? AccentModerate : AccentSevere;
 
@@ -1653,7 +1477,6 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
-        private static string YieldGlyph(string b) => b == "EARNING" ? "[+]" : "[ ]";
         private static Color YieldAccent(string b) => b == "EARNING" ? AccentMild : DesignTokens.Current.onSurfaceSecondaryAlt;
 
         // ----- Phase-5 vector #5a (money_holding): the player-entered transfer amount worded into a qualitative size band -----
@@ -1840,17 +1663,6 @@ namespace MafiaCleanCity.Operational
             return jours == 0 ? "Dû aujourd'hui" : $"Dans {jours} j";
         }
 
-        private static string LapseGlyph(string bucket)
-        {
-            switch (bucket)
-            {
-                case "CRITICAL": return "[!!!]";
-                case "HARD":     return "[!!.]";
-                case "SOFT":     return "[!..]";
-                default:          return "[...]";
-            }
-        }
-
         private static Color LapseAccent(string bucket)
         {
             switch (bucket)
@@ -1917,9 +1729,8 @@ namespace MafiaCleanCity.Operational
         /// ⚠️ Ce n'est PAS la liste des glyphes : c'est la liste de ceux qui peuvent gagner la
         /// mesure. Un glyphe plus long ajouté ailleurs doit venir ici, sinon il sera coupé —
         /// c'est le seul endroit du fichier qui doit bouger dans ce cas.</summary>
-        private static readonly string[] GlyphesLesPlusLarges = { "[#####]", "[$$$$$]" };
 
-        private void AddStatusRow(string idStable, string label, string value, string glyph, Color accent)
+        private void AddStatusRow(string idStable, string label, string value, Color accent)
         {
             GameObject row = NewUI("Row_" + idStable, statusRows);
             row.AddComponent<Image>().color = RowBg;
@@ -1933,25 +1744,9 @@ namespace MafiaCleanCity.Operational
             hlg.childForceExpandHeight = true;
             AddLayoutElement(row, minHeight: 30, flexibleHeight: 0);
 
-            // Glyph (shape — a11y: colour is never the sole differentiator).
-            TextMeshProUGUI g = NewText("Glyph", row.transform, glyph, 16, TextAlignmentOptions.Center);
-            g.color = accent;
-            g.fontStyle = FontStyles.Bold;
-            // ⛔ MESURÉ le 2026-09-02 par la garde de lisibilité : cette colonne était figée à
-            // 46 px et COUPAIT les glyphes longs — « [####] » posait 4 caractères sur 6. Sur la
-            // capture ça donnait « [## », qui ressemble à un glyphe court et non à un glyphe
-            // coupé. J'avais photographié cet écran deux fois sans le voir.
-            // ★ Le vocabulaire va de 3 caractères (« [#] ») à 7 (« [#####] », « [$$$$$] ») ; une
-            //   largeur choisie pour le plus court coupe forcément le plus long. Et la colonne
-            //   existe pour ALIGNER les libellés : la laisser se dimensionner par ligne
-            //   supprimerait la troncature en détruisant ce à quoi elle sert.
-            // ⇒ Largeur MESURÉE PAR TMP sur le glyphe le plus large, jamais un nombre posé à la
-            //   main : ajouter demain un glyphe plus long élargira la colonne tout seul.
-            // ⇒ La mesure vit dans `LargeurDeGlyphe`, pas ici : le même défaut était recopié sur
-            //   cinq écrans, et une hypothèse fausse recopiée se corrige là où elle est PRODUITE.
-            float largeurGlyphe = LargeurDeGlyphe.PourLesPlusLarges(g, GlyphesLesPlusLarges);
-            AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
-                preferredWidth: largeurGlyphe, flexibleWidth: 0);
+            // ⛔ PLUS DE COLONNE DE GLYPHE (23/09, décision f2) : les « [##.] », « [o..] », « [C] »… n'existent dans AUCUNE maquette, et leur
+            // raison écrite — a11y C5-F1, « la couleur n'est jamais seule à porter l'information » — est satisfaite par la VALEUR : elle porte
+            // un MOT, dans la même couleur. Garde : `GlyphesPlayModeTests` (toute valeur en couleur porte un mot ; plus aucun glyphe).
 
             string libelle = Cle("row", label);
             TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);
@@ -1962,8 +1757,6 @@ namespace MafiaCleanCity.Operational
             v.color = accent;
             v.fontStyle = FontStyles.Bold;
             AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
-
-            TrackText(g, glyph);
             TrackText(l, libelle);
             TrackText(v, value);
         }
