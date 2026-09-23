@@ -279,51 +279,30 @@ namespace MafiaCleanCity.Shell.Tests
         // descendant de `ContentSlot`. Design §3 : une garde sur l'APPEL de SetMountParent/SetToken
         // resterait VERTE sur un locataire dont le corps de SetToken est vide.
         // ─────────────────────────────────────────────────────────────────────────────────────────
-        /// <summary>⛔ F13 (juge r1 de ⑯) — LES RONDS DU DOCK PORTENT LEUR ICÔNE, sur la scène de démarrage du BUILD.
-        /// Empire, Famille, Plus : l'art de l'atelier (f9e939af), sprite NOMMÉ ; Filière : AUCUN enfant `Icone` — l'user
-        /// choisit la variante. Et jamais de sprite PAR DÉFAUT : une `Image` sans sprite dessine un carré blanc plein,
-        /// pire qu'un rond vide. La table attendue est ÉCRITE ICI, pas lue dans `AppShell.IconeDuDock` (anti-tautologie).
-        /// Rouge si : une icône manque, Filière en reçoit une, un chemin se casse (sprite null), la teinte du canon change.</summary>
+        /// <summary>⛔ ARBITRAGE DE L'USER (ARBITRAGES-user-2026-09-07, point 15 : « j'aime pas les icônes ») — LES RONDS DU DOCK SONT
+        /// SANS ICÔNE, sur la scène de démarrage du BUILD. Les icônes montées le 23/09 (d8b7ae62) contredisaient cette décision et sont
+        /// retirées ; ce test est l'inverse de celui qui les exigeait. Rouge si : un rond reçoit un enfant `Icone`, ou si une `Image` sous
+        /// un rond n'a pas de sprite (le carré blanc « par défaut »). Anti-vacuité : les 4 boutons ratifiés sont trouvés.</summary>
         [UnityTest]
-        public IEnumerator F13_LesRondsDuDock_PortentLeurIcone_FiliereAucune_JamaisDeSpriteParDefaut()
+        public IEnumerator F13_LesRondsDuDock_NePortentAucuneIcone_JamaisDeSpriteParDefaut()
         {
             yield return ChargerLaSceneDeDemarrageDuBuild();
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
             Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
             Assert.IsNotNull(shell.TabBarRoot, "le dock n'est pas bâti");
-
-            var attendu = new Dictionary<AppShell.Tab, string>
+            int ronds = 0;
+            foreach (AppShell.Tab tab in new[] { AppShell.Tab.Empire, AppShell.Tab.Org, AppShell.Tab.Pipeline, AppShell.Tab.More })
             {
-                { AppShell.Tab.Empire,   "dock_empire_64" },
-                { AppShell.Tab.Org,      "dock_famille_64" },
-                { AppShell.Tab.Pipeline, null },            // Filière : en attente du choix de l'user
-                { AppShell.Tab.More,     "dock_plus_64" },
-            };
-            int iconesVues = 0;
-            foreach (KeyValuePair<AppShell.Tab, string> e in attendu)
-            {
-                Transform bouton = shell.TabBarRoot.Find($"Tab_{e.Key}");
-                Assert.IsNotNull(bouton, $"bouton Tab_{e.Key} introuvable dans le dock");
+                Transform bouton = shell.TabBarRoot.Find($"Tab_{tab}");
+                Assert.IsNotNull(bouton, $"bouton Tab_{tab} introuvable dans le dock");
                 Transform rond = bouton.Find("Rond");
-                Assert.IsNotNull(rond, $"Tab_{e.Key} n'a pas de rond");
-                Transform icone = rond.Find("Icone");
-                if (e.Value == null)
-                {
-                    Assert.IsNull(icone, $"Tab_{e.Key} porte une icône alors que la variante n'est pas choisie");
-                    continue;
-                }
-                Assert.IsNotNull(icone, $"Tab_{e.Key} : le rond est VIDE (F13)");
-                Image img = icone.GetComponent<Image>();
-                Assert.IsNotNull(img.sprite, $"Tab_{e.Key} : Image SANS sprite — un carré blanc par défaut");
-                Assert.AreEqual(e.Value, img.sprite.name, $"Tab_{e.Key} porte la mauvaise icône");
-                Assert.AreEqual(0.78f, img.color.r, 0.002f, "la teinte du canon (`invert(.78)`) a changé");
-                iconesVues++;
+                Assert.IsNotNull(rond, $"Tab_{tab} n'a pas de rond");
+                Assert.IsNull(rond.Find("Icone"), $"Tab_{tab} porte une icône — l'user les a refusées (arbitrage du 07/09, point 15)");
+                foreach (Image img in rond.GetComponentsInChildren<Image>(true))
+                    Assert.IsNotNull(img.sprite, $"« {img.name} » sous le rond de Tab_{tab} n'a PAS de sprite : carré blanc par défaut");
+                ronds++;
             }
-            Assert.AreEqual(3, iconesVues, "anti-vacuité : trois icônes attendues, trois lues");
-            // ⛔ Aucune Image du dock sans sprite, où qu'elle soit sous un rond (le « sprite par défaut » de la consigne).
-            foreach (Image img in shell.TabBarRoot.GetComponentsInChildren<Image>(true))
-                if (img.transform.parent != null && img.transform.parent.name == "Rond")
-                    Assert.IsNotNull(img.sprite, $"« {img.name} » sous un rond du dock n'a PAS de sprite : carré blanc par défaut");
+            Assert.AreEqual(4, ronds, "anti-vacuité : les quatre ronds ratifiés du dock");
         }
 
         [UnityTest]
