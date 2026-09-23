@@ -139,7 +139,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNotNull(passes, "l'Ash choisit ses passes avant d'allumer");
             Assert.AreEqual("Passes", passes.Find("Label").GetComponent<TextMeshProUGUI>().text);
             Assert.AreEqual(4, passes.Find("Crans").childCount, "tranché (e) : 4 crans = le domaine 0..3");
-            CollectionAssert.AreEqual(new[] { "« L’étagère est refaite. Dites-moi combien de passes, et j’allume. »" }, Lignes(ra, "Replique"));
+            CollectionAssert.AreEqual(new[] { "«\u00A0L’étagère est refaite. Dites-moi combien de passes, et j’allume.\u00A0»" }, Lignes(ra, "Replique"));
             CollectionAssert.Contains(Lignes(ra, "Bloc"), "ça consomme un lot de lys de verre");
             Assert.IsFalse(ra.GetComponentsInChildren<TextMeshProUGUI>(true).Any(t => t.text.Contains("Refine") || t.text.Contains("PASSES DE")),
                 "plus de « - Refine » / « PASSES DE RAFFINAGE » (anglais et FAUX à l'écart)");
@@ -152,7 +152,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(Geste.EnCuisson, fiche.GesteDuPupitreAffiche);
             Assert.IsEmpty(Boutons(r), "une cuve qui tourne : ni commande ni allumage — le 409 est dit, pas provoqué");
             CollectionAssert.AreEqual(new[] { "Rien à faire ici.", "Repassez quand ce sera tiré" }, Lignes(r, "Bloc"));
-            CollectionAssert.AreEqual(new[] { "« Ça monte comme il faut. Si j’ouvre maintenant, je perds tout. »",
+            CollectionAssert.AreEqual(new[] { "«\u00A0Ça monte comme il faut. Si j’ouvre maintenant, je perds tout.\u00A0»",
                                               "— et ne me lancez pas une deuxième cuve tant que celle-là tourne." }, Lignes(r, "Replique"));
         }
 
@@ -255,7 +255,7 @@ namespace MafiaCleanCity.CityMap.Tests
             var (fiche, r) = Rendre("lab", "IDLE", "NONE", "PYRALIN", etatAppro: "DELEGATED");
             Assert.AreEqual(Geste.ApprovisionnementDelegue, fiche.GesteDuPupitreAffiche);
             Assert.IsEmpty(Boutons(r), "la commande est au lieutenant : aucun bouton qui finirait en 409 CATEGORY_DELEGATED");
-            CollectionAssert.AreEqual(new[] { "« L’approvisionnement, c’est moi maintenant — vous me l’avez confié. Je commande quand il faut. »" },
+            CollectionAssert.AreEqual(new[] { "«\u00A0L’approvisionnement, c’est moi maintenant — vous me l’avez confié. Je commande quand il faut.\u00A0»" },
                 Lignes(r, "Replique"));
             CollectionAssert.AreEqual(new[] { "Vous ne passez plus les commandes vous-même.",
                                               "Reprendre la main se fait depuis la Famille, pas depuis le labo." }, Lignes(r, "Bloc"));
