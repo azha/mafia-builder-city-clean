@@ -414,10 +414,11 @@ namespace MafiaCleanCity.Operational.Tests
         [Test]
         public void EcranLoiR2_TierLabelCourt_ReplyGracieuxSurValeurNonObservee()
         {
-            Assert.AreEqual("bogus_5e_valeur", LoiResolvers.TierLabelCourt("bogus_5e_valeur"),
-                "la valeur SERVIE de tier n'est confirmée fermée que sur le corps de CRÉATION " +
-                "(422 sœur) — jamais de throw sur une valeur reçue, patron " +
-                "DistributionResolvers.TexteVehicule");
+            // 23/09 (règle f2, atelier 28) : l'épingle « la valeur sort BRUTE » est REMPLACÉE par la propriété que le nouveau
+            // dispositif garantit — hors domaine, le mot de la famille (« type inconnu »), jamais de throw, jamais la valeur brute.
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.TypeInconnu, LoiResolvers.TierLabelCourt("bogus_5e_valeur"),
+                "hors domaine : « type inconnu » (plus « tier inconnu », ni la valeur brute) ; jamais de throw sur une valeur reçue");
+            Assert.AreEqual("—", LoiResolvers.TierLabelCourt(null), "absente : un tiret (TD-644)");
         }
 
         [Test]
