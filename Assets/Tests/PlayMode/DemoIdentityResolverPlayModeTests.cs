@@ -692,7 +692,9 @@ namespace MafiaCleanCity.CityMap.Tests
         //       par un second éditeur) : NavigationPlayModeTests.cs (1, MountShellAtCityTab, fan-out
         //       5 [UnityTest]), AppShellPlayModeTests.cs (2, shells A et B du même test).
         //   C — compte FRAIS créé par le test lui-même (signup, jetable, zéro risque de collision) :
-        //       HudPlayModeTests.cs (1).
+        //       HudPlayModeTests.cs (1), CoffrePlayModeTests.cs (1, K2 — ajouté le 2026-09-23 : ce test fait une VRAIE
+        //       sortie, qu'il ne doit jamais faire au compte de démo partagé).
+        //   ⇒ 7 appels sur 5 fichiers.
         // Les 4 appels de VuePrincipaleCapturePlayModeTests ont été retirés volontairement : les
         // captures doivent photographier le compte servi, pas quatre comptes frais et vides. La
         // garde n'avait pas été rebasée sur ce retrait pourtant explicite (146e5198).
@@ -706,9 +708,10 @@ namespace MafiaCleanCity.CityMap.Tests
             "PlayMode/AppShellPlayModeTests.cs",
             "PlayMode/CharpenteOuvertureSessionOverlayPlayModeTests.cs",
             "PlayMode/HudPlayModeTests.cs",
+            "PlayMode/CoffrePlayModeTests.cs",
         };
 
-        private const int ExpectedExplicitIdentityOverrideCount = 6;
+        private const int ExpectedExplicitIdentityOverrideCount = 7;
 
         // Chemin, relatif à Assets/Tests, du fichier hébergeant CE scanner et ses `[TestCase]`
         // fabriqués — voir ScanDirectoryExcludingFile ci-dessus.

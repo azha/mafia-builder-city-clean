@@ -26,6 +26,7 @@ namespace MafiaCleanCity.CityMap.Tests
     {
         private GameObject shellGo;
         private AppShell shell;
+        private static int callsignSeq;
         private readonly List<GameObject> montes = new List<GameObject>();
 
         [TearDown]
@@ -73,8 +74,20 @@ namespace MafiaCleanCity.CityMap.Tests
         [UnityTest]
         public IEnumerator K2_SortieReelle_PuisRouvrir_UnJetonNeuf()
         {
+            // ⛔ UN COMPTE NEUF, JAMAIS LE COMPTE DE DÉMO (orchestrateur, créneau de 08:00) : ce test fait une VRAIE sortie
+            // (`POST /v1/auth/signout`). Sur `operational_demo`, partagé par les suites qui tournent EN SÉRIE dans le même
+            // processus, il changerait le régime d'un autre lot par un compte partagé. Compte jetable (classe C de la garde
+            // `DemoIdentityResolverGuardPlayModeTests`), posé AVANT `Start()` ; le lancement rejoué le re-signe.
+            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
+            string callsign = MafiaCleanCity.Tests.SeederSupport.SafeCallsign("coffre", ref callsignSeq);
+            const string password = "coffre-k2-pw";
+            string err = null;
+            yield return auth.SignUp(callsign, password, t => { }, e => err = e);
+            Assert.IsNull(err, $"signup du compte jetable : {err}");
+
             shellGo = new GameObject("AppShell");
             shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, password);   // AVANT Start() — même frame que AddComponent
             float fin = Time.realtimeSinceStartup + 45f;
             while ((string.IsNullOrEmpty(shell.Token) || shell.MountedTenantGameObject == null) && Time.realtimeSinceStartup < fin)
                 yield return null;
