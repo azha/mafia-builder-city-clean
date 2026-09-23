@@ -38,7 +38,8 @@ namespace MafiaCleanCity.Operational.Tests
         /// 0, et les 53 inscrites toutes servies (y compris les 2 que seule la garde voyait). Histoire : 24 → 26 → 42 → 48 → 53 → 0.
         /// Vide, la garde est un ZÉRO STRICT : tout repli observé rougit, nommé avec son écran. Elle ne se rallonge que par décision
         /// nommée, datée, avec la table qui la mesure.</summary>
-        private static readonly HashSet<string> DetteDatee = new HashSet<string>
+        // `internal` : la garde de l'écran lieutenant (`BundleReelZeroRepliPlayModeTests`) applique la MÊME dette — une source.
+        internal static readonly HashSet<string> DetteDatee = new HashSet<string>
         {
             // ⚠️ COUPE du 2026-09-23 contre la pile e7f52351 (X-Server-Build, bundle fr 1659 clés, `rtk proxy curl`) : 30 clés
             // SERVIES retirées (18 de ⑦, 12 de ㉙) ; restent les 22 de ⑦ ci-dessous, non servies à e7f52351.

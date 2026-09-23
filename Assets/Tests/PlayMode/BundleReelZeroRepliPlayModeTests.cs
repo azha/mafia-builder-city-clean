@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -117,10 +118,13 @@ namespace MafiaCleanCity.Operational.Tests
                 $"seulement {Libelle.NbAppels - appelsConstruction} clés demandées par le REJEU — l'écran n'a pas rejoué ses résolveurs, " +
                 "et l'assertion de zéro qui suit serait vraie À VIDE");
 
-            Assert.AreEqual(0, Libelle.NbReplis,
-                $"{Libelle.NbReplis} clé(s) sur {Libelle.NbAppels} sont retombées sur leur littéral — " +
-                $"dernière : « {Libelle.DernierRepli} ». Le back ne les sert pas, et l'écran l'affiche " +
-                "en français sans que rien ne rougisse.");
+            // ⛔ ZÉRO repli HORS DE LA DETTE DATÉE — la MÊME que `ZeroRepliDesLocatairesPlayModeTests.DetteDatee` (une seule source) :
+            //    les clés de ⑦ encore non servies (mesurées contre e7f52351, 23/09) y sont inscrites et datées ; toute AUTRE clé en
+            //    repli rougit, nommée. Avant ⑦, cet écran ne demandait que des clés servies, d'où le zéro strict d'origine.
+            var horsDette = Libelle.ClesEnRepli.Where(k => !ZeroRepliDesLocatairesPlayModeTests.DetteDatee.Contains(k)).OrderBy(k => k).ToList();
+            Assert.IsEmpty(horsDette,
+                $"{horsDette.Count} clé(s) hors de la dette datée sont retombées sur leur littéral (sur {Libelle.NbAppels} demandées) : " +
+                string.Join(" · ", horsDette) + ". Le back ne les sert pas, et l'écran l'affiche en français sans que rien ne rougisse.");
         }
 
         /// <summary>⛔ SANS CE TEST, LE PRÉCÉDENT NE PROUVE RIEN. Une assertion « zéro repli » est
@@ -140,6 +144,8 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("Cette clé n'existe pas et ne doit jamais exister", rendu,
                 "le repli doit rendre le littéral — c'est le contrat de `Libelle`");
             Assert.IsNotNull(Libelle.DernierRepli, "le rouge doit NOMMER la clé, pas seulement les compter");
+            Assert.IsFalse(ZeroRepliDesLocatairesPlayModeTests.DetteDatee.Contains(Libelle.DernierRepli),
+                "la clé inventée n'est pas dans la dette : la garde « hors dette » la verrait rougir");
             yield return null;
         }
     }
