@@ -1,6 +1,6 @@
 # Mandat pré-rempli — ㊱ L'horizon des possibles — dossier `screen_c6`
 
-> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-22 (§DA-3). Le juge lit ceci, puis
+> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-23 (§DA-3). Le juge lit ceci, puis
 > `.claude/skills/juge-visuel/mandat-juge.md` (dépôt back) qui est LA méthode. Tout ce qui est marqué
 > « pré-rempli » vient d'une lecture mécanique (front.md, AppShell.cs, le contrôleur) : à confronter
 > à l'image, jamais à croire sur parole.
@@ -16,7 +16,7 @@
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `screen_c6/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #113 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 113, 114, 115, 116, 117, 118 — atelier `ec4c09a`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 113, 114, 115, 116, 117, 118 — atelier `64f678a`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : déduite. cadres 113-118 « L'horizon » par le titre ; liste vide par construction sur le compte de démo
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

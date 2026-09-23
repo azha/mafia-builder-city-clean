@@ -1,6 +1,6 @@
-# INDEX — écran → dossier de juge → cadres (généré, `construire-dossiers.py`, 2026-09-22)
+# INDEX — écran → dossier de juge → cadres (généré, `construire-dossiers.py`, 2026-09-23)
 
-Un juge à contexte vierge part d'ici. `dossier` est sous `Tools/juge-visuel/` ; `référence` = le cadre nominal rendu à ×3,6 (1080×2102, anti-crop vérifié) ; `cadres` = page de l'atelier + numéros (index 0-based = numéro du cadre) au SHA atelier `ec4c09a`. `confiance` dit comment le rattachement cadre ↔ écran a été établi : **mesurée** (le contrôleur ou un dossier cite le cadre), **déduite** (par le titre du cadre), **aucune** (pas de maquette de série 4/6 — une ligne est une ligne, pas une absence).
+Un juge à contexte vierge part d'ici. `dossier` est sous `Tools/juge-visuel/` ; `référence` = le cadre nominal rendu à ×3,6 (1080×2102, anti-crop vérifié) ; `cadres` = page de l'atelier + numéros (index 0-based = numéro du cadre) au SHA atelier `64f678a`. `confiance` dit comment le rattachement cadre ↔ écran a été établi : **mesurée** (le contrôleur ou un dossier cite le cadre), **déduite** (par le titre du cadre), **aucune** (pas de maquette de série 4/6 — une ligne est une ligne, pas une absence).
 
 `corps` = `<dossier>/corps-reels/` (§DA-4, `capturer-corps-reels.py`) : réponses RÉELLES des routes du dossier de code du contrôleur sur la pile dev, compte de démo — « a/s/m/e » = appelées (2xx) / sans instance sur ce compte / mutations non appelées / erreurs HTTP réelles du back (404, 409, 403 : des faits, pas des trous).
 

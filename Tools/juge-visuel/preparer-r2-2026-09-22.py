@@ -73,7 +73,9 @@ def cadres_lignes(page):
     return out
 
 def fc(fam):
-    r = subprocess.run(['fc-match', fam], capture_output=True, text=True).stdout.strip()
+    # 2026-09-23 : `fc-match` SOUS LE RÉGLAGE DU RENDU (point 18) — sans lui, il décrivait une police que Chrome n'employait même pas.
+    env = dict(os.environ, FONTCONFIG_FILE=os.path.join(ICI, '..', 'polices', 'fonts-dejavu.conf'))
+    r = subprocess.run(['fc-match', fam], capture_output=True, text=True, env=env).stdout.strip()
     return r.split(':', 1)[1].strip() if ':' in r else r
 
 POLICES = {f: fc(f) for f in ['Georgia', 'DejaVu Sans', 'Courier New', 'sans-serif', 'serif', 'Times New Roman', 'Segoe UI']}
@@ -155,13 +157,14 @@ def preparer(r, sym, tour, captures, susp, fm, controle):
   {('⚠️ ' + r['note']) if r.get('note') else ''}
 - **Rendu** : `Tools/rendre-tel.py <page> <index> <sortie> 3.6` — Chrome sans tête, recadrage à 300×584 CSS × 3,6 = 1080×2102,
   assertion de taille en sortie. Références nominales re-vérifiées le 2026-09-22 (⑮ ⑰ ㊲ re-rendues ; voir l'INDEX).
-- **Polices — ce qui a RÉELLEMENT rendu la référence** (`fc-match` sur cette machine, exécuté à la génération de ce dossier le {DATE}) :
+- **Polices — ce qui a RÉELLEMENT rendu la référence** : **DejaVu**, depuis le 2026-09-23 (ARBITRAGES du 07/09, point 18) — `Tools/rendre-maquette.py`
+  passe `Tools/polices/fonts-dejavu.conf` à Chrome, prouvé par `Tools/polices/controle-polices.py` (chasse à l'encre = DejaVu à 1 px). `fc-match` sous ce réglage :
 
 {polices}
 
-  Le client embarque **DejaVu Sans** / **DejaVu Serif**. La série 6 demande `'DejaVu Sans'` (même police des deux côtés) et
-  `Georgia,serif` (→ Noto Serif à la référence, DejaVu Serif au client) ⇒ un écart de FAMILLE ou de chasse sur le sérif est un
-  **ARBITRAGE** ; la hauteur de capitale, elle, se compare.
+  Le client embarque **DejaVu Sans** / **DejaVu Serif** : la référence est rendue dans la **même** famille ⇒ un écart de famille, de graisse
+  ou de chasse **se compare** (ce n'est plus un arbitrage). ⚠️ Une référence d'avant le 2026-09-23 ne l'était pas : Chrome rendait Georgia en
+  **Liberation Serif** (et non en Noto Serif, comme `fc-match` le disait alors) et Segoe UI en Noto Sans.
 
 ## Captures en jeu (Play Mode réel, compte de capture, SOUS le chrome du shell) — À POSER AU CRÉNEAU
 

@@ -1,6 +1,6 @@
 # Mandat pré-rempli — ② Building Card — dossier `fiche-batiment`
 
-> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-22 (§DA-3). Le juge lit ceci, puis
+> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-23 (§DA-3). Le juge lit ceci, puis
 > `.claude/skills/juge-visuel/mandat-juge.md` (dépôt back) qui est LA méthode. Tout ce qui est marqué
 > « pré-rempli » vient d'une lecture mécanique (front.md, AppShell.cs, le contrôleur) : à confronter
 > à l'image, jamais à croire sur parole.
@@ -16,7 +16,7 @@
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | — | aucune référence rendue (aucune maquette de série 4/6) | — | — | — |
-- **Cadres de la maquette** : aucune — atelier `ec4c09a`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : aucune — atelier `64f678a`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : aucune. dossier juge-donnees existant, aucun dossier juge-visuel ; cadres labo/serre/ash (S6 36-47, 92-94) = variantes par type, non rattachées
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

@@ -1,6 +1,6 @@
 # Mandat pré-rempli — ⑯ Daily Review — dossier `revue-du-jour`
 
-> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-22 (§DA-3). Le juge lit ceci, puis
+> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-23 (§DA-3). Le juge lit ceci, puis
 > `.claude/skills/juge-visuel/mandat-juge.md` (dépôt back) qui est LA méthode. Tout ce qui est marqué
 > « pré-rempli » vient d'une lecture mécanique (front.md, AppShell.cs, le contrôleur) : à confronter
 > à l'image, jamais à croire sur parole.
@@ -18,7 +18,7 @@
 | `revue-du-jour/reference-1080x2102.png` | cadre nominal `ecrans-brennar-4.html` #0 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
 | `revue-du-jour/ecran-canon-vide.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `revue-du-jour/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar-4.html` 0, 1, 2, 3 · `ecrans-brennar-6.html` 0, 1, 2, 3 — atelier `ec4c09a`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-4.html` 0, 1, 2, 3 · `ecrans-brennar-6.html` 0, 1, 2, 3 — atelier `64f678a`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. série 4 cadres 0-3 = le canon ratifié (revue-du-jour/v4-0..3.png)
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

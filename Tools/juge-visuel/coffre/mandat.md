@@ -1,6 +1,6 @@
 # Mandat pré-rempli — ⑪ Pipeline (Laundering) — dossier `coffre`
 
-> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-22 (§DA-3). Le juge lit ceci, puis
+> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-23 (§DA-3). Le juge lit ceci, puis
 > `.claude/skills/juge-visuel/mandat-juge.md` (dépôt back) qui est LA méthode. Tout ce qui est marqué
 > « pré-rempli » vient d'une lecture mécanique (front.md, AppShell.cs, le contrôleur) : à confronter
 > à l'image, jamais à croire sur parole.
@@ -16,7 +16,7 @@
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `coffre/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : aucune — atelier `ec4c09a`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : aucune — atelier `64f678a`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : aucune. aucun cadre de série 4/6 ne dessine le pipeline ; coffre/ecran-canon.png est le seul canon. ✅ PLANCHE RÉTABLIE le 2026-09-07, par MESURE cette fois : la suite écrit CapturerLocataire<LaunderingController>(shell, "la_filiere", …) (PlancheEcransManquantsCapturePlayModeTests.cs:128) et le fichier existe. ⇒ La planche de ⑪ est planche_la_filiere, jamais planche_le_coffre — cette dernière est écrite en montant ProfileScreenController, c'est celle de ㉒. Le doublon ne se tranchait donc pas au NOM mais au LOCATAIRE MONTÉ par la suite. ⛔ PLANCHE RETIRÉE le 2026-09-07 : cette ligne portait planche_le_coffre_1080x2400.png, que ㉒ porte AUSSI — un seul fichier, deux écrans, deux contrôleurs. Mon attribution ici reposait sur le seul NOM (dossier « coffre » ≈ nom du fichier), celle de ㉒ sur une note explicite. Un rattachement par ressemblance de mot est exactement le critère qui a produit un faux positif sur icon_sandpile ici. Ce que cette planche MONTRE se lit sur l'image : à re-remplir par mesure, jamais par le nom.
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

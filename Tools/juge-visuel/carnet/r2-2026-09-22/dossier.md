@@ -44,19 +44,20 @@
   ⚠️ cadres 85-91 (ordres du soir, rejouer, ce qui arrive) par le titre. ⛔ PLANCHE RETIRÉE le 2026-09-07 : planche_signer_l_ordre_1080x2400.png NE PHOTOGRAPHIE PAS cet écran. Elle montre une fiche de LIEUTENANT (Lt. Halde, Cuisinier, Au repos, AUTONOMIE / RÉAFFECTER / ÉDITEUR DE RÈGLES, 23 lignes de Diagnostics). Mesuré par le juge du r1, non uniforme donc discriminant : l'aplat crème #efe7d6, élément héros du carnet, couvre 34,361 % de la référence, 0,144 % de la capture — et 0,436 % du canon HUD, un écran SANS carnet, soit 3x plus que la capture. Luminance de contenu 143,0 -> 28,8. Ni doublon d'assemblage (écart minimal 40,2 % avec les 22 autres planches) ni fichier corrompu (sha256 identique au dépôt). ⚠️ ET CE CHAMP PORTAIT DÉJÀ SON PROPRE AVERTISSEMENT — « nom de planche à confirmer » — et un juge a été routé dessus quand même : la mise en garde vivait dans une PROSE que le générateur ne lit pas, et il a émis la planche comme les autres. ⇒ Un champ qui porte son doute dans un commentaire est consommé comme un fait. Le doute doit vivre dans la DONNÉE (ici : chaîne vide), jamais dans la note. ⇒ Deuxième attribution fausse de cette table après planche_le_coffre — et la première invisible à la garde des doublons, puisqu'elle ne concerne qu'UNE ligne : une planche attribuée à un seul écran peut aussi être la mauvaise. À re-remplir par MESURE.
 - **Rendu** : `Tools/rendre-tel.py <page> <index> <sortie> 3.6` — Chrome sans tête, recadrage à 300×584 CSS × 3,6 = 1080×2102,
   assertion de taille en sortie. Références nominales re-vérifiées le 2026-09-22 (⑮ ⑰ ㊲ re-rendues ; voir l'INDEX).
-- **Polices — ce qui a RÉELLEMENT rendu la référence** (`fc-match` sur cette machine, exécuté à la génération de ce dossier le 2026-09-22) :
+- **Polices — ce qui a RÉELLEMENT rendu la référence** : **DejaVu**, depuis le 2026-09-23 (ARBITRAGES du 07/09, point 18) — `Tools/rendre-maquette.py`
+  passe `Tools/polices/fonts-dejavu.conf` à Chrome, prouvé par `Tools/polices/controle-polices.py` (chasse à l'encre = DejaVu à 1 px). `fc-match` sous ce réglage :
 
-      Georgia            →  "Noto Serif" "Regular"
+      Georgia            →  "DejaVu Serif" "Book"
       DejaVu Sans        →  "DejaVu Sans" "Book"
       Courier New        →  "Liberation Mono" "Regular"
-      sans-serif         →  "Noto Sans" "Regular"
-      serif              →  "Noto Serif" "Regular"
-      Times New Roman    →  "Liberation Serif" "Regular"
-      Segoe UI           →  "Noto Sans" "Regular"
+      sans-serif         →  "DejaVu Sans" "Book"
+      serif              →  "DejaVu Serif" "Book"
+      Times New Roman    →  "DejaVu Serif" "Book"
+      Segoe UI           →  "DejaVu Sans" "Book"
 
-  Le client embarque **DejaVu Sans** / **DejaVu Serif**. La série 6 demande `'DejaVu Sans'` (même police des deux côtés) et
-  `Georgia,serif` (→ Noto Serif à la référence, DejaVu Serif au client) ⇒ un écart de FAMILLE ou de chasse sur le sérif est un
-  **ARBITRAGE** ; la hauteur de capitale, elle, se compare.
+  Le client embarque **DejaVu Sans** / **DejaVu Serif** : la référence est rendue dans la **même** famille ⇒ un écart de famille, de graisse
+  ou de chasse **se compare** (ce n'est plus un arbitrage). ⚠️ Une référence d'avant le 2026-09-23 ne l'était pas : Chrome rendait Georgia en
+  **Liberation Serif** (et non en Noto Serif, comme `fc-match` le disait alors) et Segoe UI en Noto Sans.
 
 ## Captures en jeu (Play Mode réel, compte de capture, SOUS le chrome du shell) — À POSER AU CRÉNEAU
 
