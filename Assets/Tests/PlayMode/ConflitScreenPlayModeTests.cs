@@ -988,4 +988,123 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("7c1e0a52-0000-4000-8000-000000000004", r.engagement_id);
         }
     }
+    /// <summary>㉙ DE BOUT EN BOUT sur la pile (L8, 23/09) — catégorie À PART (`ConflitReel`, pas un préfixe d'`EcranConflit` :
+    /// le filtre d'Unity prend par préfixe), pour le lancer seul. Un compte NEUF (jamais un compte gelé) :
+    /// signup → session/open (l'octroi d'accueil sème les 4 familles) → GET /v1/me/buildings → recrutement d'un gros bras
+    /// (AVANT tout autre geste structurel : il consomme la décision structurelle de la session) → l'écran charge, on choisit
+    /// famille, homme et axe, « L’envoyer ce soir » part → « parti chez La Coil ». Puis la PROMESSE de la phrase réseau :
+    /// le MÊME corps réémis avec la MÊME Idempotency-Key rend le MÊME engagement, et la liste en compte UN. Contrôle
+    /// négatif : une clé NEUVE crée bien un second envoi (le compte sait voir une différence).</summary>
+    [Category("ConflitReel")]
+    public class ConflitReelPlayModeTests
+    {
+        private const string BaseUrl = "http://localhost";
+        private static int callsignSeq;
+        private string token;
+        private GameObject hostGo;
+
+        /// <summary>La session du compte neuf se ferme TOUJOURS, même sur un rouge (patron `OuvrirJoueurFrais`).</summary>
+        [UnityTearDown]
+        public IEnumerator FermerLaSession()
+        {
+            if (!string.IsNullOrEmpty(token)) yield return FermerSession();
+            token = null;
+        }
+
+        [TearDown]
+        public void Fermer()
+        {
+            if (hostGo != null) Object.DestroyImmediate(hostGo);
+            GameObject reste = GameObject.Find("ConflitRoot");
+            while (reste != null) { Object.DestroyImmediate(reste); reste = GameObject.Find("ConflitRoot"); }
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+        }
+
+        private IEnumerator FermerSession()
+        {
+            using (var req = new UnityEngine.Networking.UnityWebRequest(BaseUrl + "/v1/session/close", "POST"))
+            {
+                req.uploadHandler = new UnityEngine.Networking.UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes("{}"));
+                req.downloadHandler = new UnityEngine.Networking.DownloadHandlerBuffer();
+                req.SetRequestHeader("Content-Type", "application/json");
+                req.SetRequestHeader("Authorization", "Bearer " + token);
+                req.SetRequestHeader("Idempotency-Key", System.Guid.NewGuid().ToString());
+                yield return req.SendWebRequest();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator ConflitReel_UnGrosBrasRecrute_LEnvoiPart_EtLaMemeCleNeLeFaitPasPartirDeuxFois()
+        {
+            // 1. Un compte neuf, sa session (l'octroi d'accueil), ses bâtiments.
+            string err = null;
+            yield return new AuthClient { BaseUrl = BaseUrl }.SignUp(SeederSupport.SafeCallsign("conflitreel", ref callsignSeq),
+                "screen-conflit-pw", t => token = t, e => err = e);
+            Assert.IsNull(err, "signup refusé (code et message dans le journal du back ; l'identité ne s'écrit pas ici)");
+            Assert.IsNotNull(token);
+            bool ouverte = false;
+            yield return new MafiaCleanCity.Shell.SessionClient { BaseUrl = BaseUrl }.OpenSession(token, "conflit-reel-1.0.0",
+                _ => ouverte = true, (c, m) => err = $"session/open {c} {m}");
+            Assert.IsTrue(ouverte, err);
+
+            MafiaCleanCity.Shell.BatimentPossedeDto[] batiments = null;
+            yield return new MafiaCleanCity.Shell.MesBatimentsClient { BaseUrl = BaseUrl }.Lire(token, b => batiments = b,
+                (c, m) => err = $"me/buildings {c} {m}");
+            Assert.IsNotNull(batiments, err);
+            string batiment = null;
+            foreach (var b in batiments) if (!string.IsNullOrEmpty(b.operational_type)) { batiment = b.building; break; }
+            Assert.IsNotNull(batiment, "l'octroi d'accueil n'a posé aucun bâtiment opérationnel");
+
+            // 2. Le gros bras, AVANT tout autre geste structurel.
+            string grosBras = null;
+            yield return new MafiaCleanCity.Operational.Lieutenant.LieutenantClient { BaseUrl = BaseUrl }.Recruit(
+                "MUSCLE", batiment, null, token, id => grosBras = id, (c, m) => err = $"recrutement {c} {m}");
+            Assert.IsNotNull(grosBras, err);
+
+            // 3. L'écran : il voit le gros bras, on choisit, « L’envoyer ce soir » part.
+            hostGo = new GameObject("ConflitScreen", typeof(RectTransform));
+            var ecran = hostGo.AddComponent<ConflitScreenController>();
+            ecran.SetToken(token);
+            yield return ecran.Charger();
+            Assert.AreEqual(1, ecran.MuscleLieutenants.Count, "le gros bras recruté est choisissable");
+            ecran.ChoisirFamille("coil");
+            ecran.ChoisirLieutenant(grosBras);
+            ecran.ChoisirAxe("finance");
+            Assert.IsTrue(ecran.EnvoiPossible);
+            string cle = null;
+            ecran.EnvoyerLeCoup();   // le geste du bouton
+            float fin = Time.realtimeSinceStartup + 20f;
+            while (!ecran.DernierEnvoiOk && ecran.DerniereClasseDeRefus == null && Time.realtimeSinceStartup < fin) yield return null;
+            Assert.IsTrue(ecran.DernierEnvoiOk, $"l'envoi n'est pas parti : classe {ecran.DerniereClasseDeRefus}, {ecran.DerniereErreur}");
+            cle = ecran.DerniereCleDIdempotence;
+            string engagement = ecran.DernierEngagementId;
+            Assert.IsFalse(string.IsNullOrEmpty(engagement), "`engagement_id` rendu par le POST");
+            // Le rechargement suit le succès : attendre que la liste RELUE porte l'envoi (l'ancienne, vide, reste lisible avant).
+            fin = Time.realtimeSinceStartup + 20f;
+            while ((ecran.DernierChargementEngagements?.engagements?.Length ?? 0) == 0 && Time.realtimeSinceStartup < fin) yield return null;
+            Assert.AreEqual(1, ecran.DernierChargementEngagements?.engagements?.Length, "un envoi dans la liste");
+            Assert.AreEqual("scheduled", ecran.DernierChargementEngagements.engagements[0].status);
+            CollectionAssert.Contains(ecran.RenderedTexts, "Ce qui est en cours");
+
+            // 4. La promesse : même corps + même clé ⇒ le MÊME engagement, et toujours UN dans la liste.
+            var client = new ConflitClient { BaseUrl = BaseUrl };
+            var corps = new PostEngagementsBody { lieutenant_id = grosBras, target_rival_key = "coil", target_holding_id = "finance" };
+            PostEngagementsResponseDto rejeu = null;
+            yield return client.PostEngagements(token, corps, r => rejeu = r, (c, a, m) => err = $"rejeu {c} {a}", cle);
+            Assert.IsNotNull(rejeu, err);
+            Assert.AreEqual(engagement, rejeu.engagement_id, "la même clé REJOUE la réponse, elle ne réexécute pas");
+            GetEngagementsResponseDto liste = null;
+            yield return client.GetEngagements(token, l => liste = l, (c, m) => err = $"GET {c}");
+            Assert.AreEqual(1, liste?.engagements?.Length, "« il ne partira pas deux fois » : un seul engagement");
+
+            // 5. Contrôle négatif : une clé NEUVE, le même corps ⇒ un second envoi, que le compte voit.
+            PostEngagementsResponseDto second = null;
+            yield return client.PostEngagements(token, corps, r => second = r, (c, a, m) => err = $"second {c} {a}", null);
+            Assert.IsNotNull(second, err);
+            Assert.AreNotEqual(engagement, second.engagement_id);
+            liste = null;
+            yield return client.GetEngagements(token, l => liste = l, (c, m) => err = $"GET {c}");
+            Assert.AreEqual(2, liste?.engagements?.Length, "une clé neuve fait partir un second envoi : le compte sait le voir");
+        }
+    }
 }

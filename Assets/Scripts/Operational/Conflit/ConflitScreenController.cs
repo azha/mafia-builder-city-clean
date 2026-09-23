@@ -92,6 +92,8 @@ namespace MafiaCleanCity.Operational
         /// <summary>La classe du dernier refus du POST (`ConflitResolvers.ClasserRefusDEnvoi`), ou null. Crochet de test ; le joueur
         /// en lit le MOT (`ConflitResolvers.MotDuRefusDEnvoi`) sous le bouton.</summary>
         public string DerniereClasseDeRefus { get; private set; }
+        /// <summary>L'`engagement_id` rendu par le dernier envoi RÉUSSI — crochet de test.</summary>
+        public string DernierEngagementId { get; private set; }
         /// <summary>L'Idempotency-Key émise au dernier envoi — crochet de test (elle ne s'affiche jamais).</summary>
         public string DerniereCleDIdempotence { get; private set; }
         // La clé d'un envoi dont on ne sait pas s'il est parti (réseau, ou encore en vol côté back), et le corps qu'elle couvre :
@@ -354,6 +356,7 @@ namespace MafiaCleanCity.Operational
                 yield break;
             }
             cleEnSuspens = null; envoiEnSuspens = null;
+            DernierEngagementId = rep?.engagement_id;
             DernierEnvoiOk = true;
             DerniereErreur = null;
             DerniereClasseDeRefus = null;
