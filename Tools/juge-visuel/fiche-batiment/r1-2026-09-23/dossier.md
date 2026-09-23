@@ -12,9 +12,25 @@
 
 ## Référence (fait autorité : l'IMAGE) — taille et facteur MESURÉS sur le fichier
 
-**Aucune référence à jour.** Voir ci-dessous.
+| fichier (dans ce dossier) | état montré | statut | taille px | facteur | largeur CSS ↔ px |
+|---|---|---|---|---|---|
+| `cadre-36-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-36-1080x2102.png`) | serre | RATIFIÉE user (27/08, front.md l.818-819, l.856) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-37-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-37-1080x2102.png`) | serre | RATIFIÉE user (27/08, front.md l.818-819, l.856) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-38-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-38-1080x2102.png`) | serre | RATIFIÉE user (27/08, front.md l.818-819, l.856) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-39-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-39-1080x2102.png`) | labo : l’étagère vide | ratifiée PAR DÉLÉGATION (front.md l.22) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-40-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-40-1080x2102.png`) | labo : l’étagère refaite | ratifiée PAR DÉLÉGATION (front.md l.22) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-41-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-41-1080x2102.png`) | labo : ça monte | ratifiée PAR DÉLÉGATION (front.md l.22) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-42-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-42-1080x2102.png`) | labo : trois passes | ratifiée PAR DÉLÉGATION (front.md l.22) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-43-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-43-1080x2102.png`) | labo : c’est tiré | ratifiée PAR DÉLÉGATION (front.md l.22) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-44-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-44-1080x2102.png`) | labo délégué | ratifiée PAR DÉLÉGATION (front.md l.22) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-45-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-45-1080x2102.png`) | fourneau : montée | « EN JUGEMENT » (front.md l.877) → ARBITRAGE | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-46-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-46-1080x2102.png`) | fourneau : affinage | « EN JUGEMENT » (front.md l.877) → ARBITRAGE | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-47-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-47-1080x2102.png`) | fourneau : scellé, la descente | « EN JUGEMENT » (front.md l.877) → ARBITRAGE | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-92-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-92-1080x2102.png`) | Ash : rendez-vous pris | « en jugement » (front.md l.946) → ARBITRAGE | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-93-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-93-1080x2102.png`) | Ash : honoré | « en jugement » (front.md l.946) → ARBITRAGE | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-94-1080x2102.png` (lien vers `fiche-batiment/serie6-2026-09-23/cadre-94-1080x2102.png`) | Ash : passé | « en jugement » (front.md l.946) → ARBITRAGE | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
 
-- ⛔ **AUCUNE référence à jour n'est rendue pour ②.** Les seuls rendus des cadres rattachés (série 6, 36-47 et 92-94, `ec7ad853`) sont `v6/m-36…m-47.png` et `v6/m-92…m-94.png` (900×1752, ×3, du 03/09) — ANTÉRIEURS à DejaVu, au chrome ratifié et à « Plein jour ». La page `ecrans-brennar-6.html` les porte déjà à jour : **la référence est à rendre au prochain signal de rendu, avant de juger** (`rendre-tel.py ecrans-brennar-6.html <n> … 3.6`). Aucun rendu n'est fait par ce dossier.
+- Rendues le 23/09 au tour de f2 (08:29:53-08:30:14, `rendre-tour-2026-09-23b.py`, atelier `9f38a24`) : DejaVu, chrome ratifié, « Plein jour ». Avant ce tour : ⛔ **AUCUNE référence à jour n'était rendue pour ②.** Les seuls rendus des cadres rattachés (série 6, 36-47 et 92-94, `ec7ad853`) sont `v6/m-36…m-47.png` et `v6/m-92…m-94.png` (900×1752, ×3, du 03/09) — ANTÉRIEURS à DejaVu, au chrome ratifié et à « Plein jour ». Ce sont désormais des TÉMOINS d'état, pas des références.
 - Statut cadre par cadre : serre 36-38 RATIFIÉE user (27/08, front.md l.818-819, l.856) ; labo 39-44 ratifié PAR DÉLÉGATION (front.md l.22) ; fourneau 45-47 « EN JUGEMENT » (front.md l.877) ; Ash 92-94 « en jugement » (front.md l.946) — la contradiction délégation / « en jugement » est OUVERTE (→ ARBITRAGE).
 - ⛔ Une **maquette à ratifier** n'est PAS une référence ratifiée : un écart entre la capture et elle se classe **ARBITRAGE** (à ratifier),
   jamais BLOQUANT contre le client — sauf s'il contredit une donnée servie ou une décision du registre.
@@ -70,7 +86,7 @@
 - **Routes** : `/v1/operational/building/:id` (+ convert, repair, deposit-cash, withdraw-cash, upgrade-*), `/storage/:id`, `/lab/:id/cook`, `/precursors/order`, `/grow-house/:id/plant`, `/grow-session/:id` et `/tend`, `/appointment`, `/appointment/:id` et `/honor`, `/distribution/dispatch`, `/laundering/inject`, `/v1/economy/wallet` ; en plus sur F : `GET /lab/:id`, `GET /precursors?building_id`
 - **Corps réels** (`fiche-batiment/corps-reels/`, provenance lue dans chaque fichier ; comptes masqués, aucune valeur d'identifiant ici) :
 
-| fichier | date | back servi | nature | fraîcheur (`verifier-fraicheur-corps.py` contre `main` du back `30360c8d`) |
+| fichier | date | back servi | nature | fraîcheur (`verifier-fraicheur-corps.py` contre `main` du back `d62ee1f1`) |
 |---|---|---|---|---|
 | `GET_city_district_id_interior.json` | 2026-09-22T13:23:16 | `03cf564c` | réponse réelle | opposable |
 | `GET_economy_wallet.json` | 2026-09-22T13:23:16 | `03cf564c` | réponse réelle | opposable |
@@ -104,7 +120,7 @@
 
 - Protocole : `RECAPTURE-2026-09-22.md` §2 (conteneur recréé, horodatage de l'image lu pendant le run, un run = une paire, exportée sous
   `MAFIA_CAPTURE_*` SEULEMENT — `MAFIA_DEMO_*` posé = faute —, sha256 + preuve d'identité jointe). Captures prises sur le cumul
-  (`mafia-builder-city-clean`, aujourd'hui `fc3033ec`) ; leur SHA s'écrit ici.
+  (`mafia-builder-city-clean`, aujourd'hui `c0a9092a`) ; leur SHA s'écrit ici.
 - Paire T / T+1 s si une animation est en cause (doctrine : aucune animation, sauf ce que ce dossier assume).
 
 ## Échelle et doctrine
@@ -127,4 +143,4 @@
 - le code du client et ses tests ; les notes d'implémentation ; les rapports des juges précédents ;
 - pour l'instant : toute capture.
 
-Préparé sur le client `052b13a6` (branche `da/2026-09-22`), cumul `fc3033ec`, back `30360c8d`, atelier `ffb6f67`.
+Préparé sur le client `766289c0` (branche `da/2026-09-22`), cumul `c0a9092a`, back `d62ee1f1`, atelier `9f38a24`.

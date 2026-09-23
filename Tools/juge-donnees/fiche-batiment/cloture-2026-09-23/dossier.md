@@ -20,7 +20,7 @@
 ## Back (B)
 
 - **Stack locale** : NON FOURNIE — `docker ps` se colle au créneau (la pile se monte après le gate ; jamais pendant un gate E2E).
-- **Back de référence** : `main` du dépôt back `30360c8d` au moment de la préparation ; corps réels datés et leur fraîcheur : dossier jumeau.
+- **Back de référence** : `main` du dépôt back `d62ee1f1` au moment de la préparation ; corps réels datés et leur fraîcheur : dossier jumeau.
 - **Compte** : le compte de capture (paire sous `MAFIA_CAPTURE_*`), ou un compte frais par `POST /v1/auth/signup` + `POST /v1/session/open`.
 
 ## Front (F)
@@ -29,7 +29,7 @@
 |---|---|
 | `Assets/Scripts/Operational/BuildingCard/BuildingCardController.cs` | présent au cumul |
 
-- **Cumul** : `mafia-builder-city-clean` `fc3033ec`. lots 1, 4, 6 NON fusionnés au cumul (voir « connus »)
+- **Cumul** : `mafia-builder-city-clean` `c0a9092a`. lots 1, 4, 6 NON fusionnés au cumul (voir « connus »)
 - **Rapport `juge-visuel` APPROUVÉ** : NON FOURNI (à venir : `Tools/juge-visuel/fiche-batiment/r1-2026-09-23/rapport.md`).
 - **Suite PlayMode** : NON FOURNIE.
 

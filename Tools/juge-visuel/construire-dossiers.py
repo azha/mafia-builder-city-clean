@@ -229,8 +229,12 @@ def _maj_2026_09_23():
     par["①"]["note"] += (" — 23/09 : la référence est `ecran-canon-propre.png`, **1176×2091 à ×3,0** (392 CSS) — le r10 annonçait ×3,6 à tort. "
                          + D.format("ecran-principal/r11-2026-09-23/"))
     par["②"]["note"] += (" — 23/09 : ⛔ AUCUNE référence à jour rendue (v6/m-36…94 = 900×1752 du 03/09, avant DejaVu et le chrome ratifié) : à rendre au "
-                         "prochain signal avant de juger ; lots 1, 4, 6 de CLIENT-2 non fusionnés au cumul. " + D.format("fiche-batiment/r1-2026-09-23/"))
-    par["④"]["note"] = par["④"]["note"].replace("`accueil/r1-2026-09-23/`", "`accueil/r1-2026-09-23/`")
+                         "prochain signal avant de juger — FAIT au tour du 23/09 08:29 (15 cadres en extras) ; lots 1, 4, 6 de CLIENT-2 non fusionnés au cumul. " + D.format("fiche-batiment/r1-2026-09-23/"))
+    # rendus du tour de 08:29:53 (rendre-tour-2026-09-23b.py) : ② ses 15 cadres, ㉙ sa maquette à jour
+    par["②"].setdefault("extras", []).extend((f"fiche-batiment/serie6-2026-09-23/cadre-{n}-1080x2102.png", f"cadre {n}, rendu le 23/09 (DejaVu, chrome ratifié)")
+                                             for n in list(range(36, 48)) + [92, 93, 94])
+    par["㉙"]["extras"].extend((f"ecran_conflit/maquette-2026-09-23/cadre-{n}-1080x2102.png", f"cadre {n}, MAQUETTE À RATIFIER, texte à jour (atelier 9f38a24)")
+                              for n in range(60, 64))
 
 
 _maj_2026_09_23()

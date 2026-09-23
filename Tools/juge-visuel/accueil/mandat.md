@@ -16,7 +16,7 @@
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | — | aucune référence rendue (aucune maquette de série 4/6) | — | — | — |
-- **Cadres de la maquette** : `ecrans-brennar-accueil.html` 0, 1, 2, 3 — atelier `ffb6f67`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-accueil.html` 0, 1, 2, 3 — atelier `9f38a24`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. MAQUETTE À RATIFIER depuis le 23/09 (atelier 25 §2.2, table 45 : la carte de tête en forme honnête) — aucune référence RATIFIÉE (front.md:1609) ; les cadres 20-21 « Le Bureau du patron » sont ⑱ le menu Plus (front.md:1567). dossier du `accueil/r1-2026-09-23/` (preparer-dossiers-2026-09-23.py, commande f2 du 23/09) : référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

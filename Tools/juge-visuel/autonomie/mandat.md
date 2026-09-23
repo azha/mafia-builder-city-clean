@@ -18,7 +18,7 @@
 | `autonomie/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #25 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
 | `autonomie/ecran-canon-vide.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `autonomie/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 25, 26, 27, 28, 29, 30 — atelier `ffb6f67`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 25, 26, 27, 28, 29, 30 — atelier `9f38a24`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : déduite. cadres 25-30 « Autonomie » (le burner) par le titre
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

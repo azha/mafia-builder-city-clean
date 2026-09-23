@@ -18,7 +18,7 @@
 | `compression/reference-1080x2102.png` | cadre nominal `ecrans-brennar-4.html` #25 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
 | `compression/ecran-canon-vide.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `compression/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar-4.html` 25, 26, 27, 28, 29, 30 · `ecrans-brennar-6.html` 14, 15, 16, 17, 18, 19 — atelier `ffb6f67`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-4.html` 25, 26, 27, 28, 29, 30 · `ecrans-brennar-6.html` 14, 15, 16, 17, 18, 19 — atelier `9f38a24`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. le contrôleur cite série 4 cadres 25-30 (non ratifiée au 02/09)
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

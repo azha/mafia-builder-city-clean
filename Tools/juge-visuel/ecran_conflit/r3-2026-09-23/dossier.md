@@ -16,8 +16,12 @@
 |---|---|---|---|---|---|
 | `reference-1080x2102.png` (lien vers `ecran_conflit/reference-1080x2102.png`) | série 6 cadre 59, nominal : « Le premier coup — on n'a jamais croisé personne » | **MAQUETTE À RATIFIER** — ㉙ n'est PAS ratifiée (décision f2 du 23/09 : front.md l.22 ne la liste pas, l.1328 « ratification user ✗ ») | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
 | `reference-manque-1080x2102.png` (lien vers `ecran_conflit/reference-manque-1080x2102.png`) | série 6 cadre 64 : « Ce qu'on ne peut pas faire » | **MAQUETTE À RATIFIER** (idem) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-60-1080x2102.png` (lien vers `ecran_conflit/maquette-2026-09-23/cadre-60-1080x2102.png`) | le septième coup | **MAQUETTE À RATIFIER** — texte à jour (atelier `9f38a24`) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-61-1080x2102.png` (lien vers `ecran_conflit/maquette-2026-09-23/cadre-61-1080x2102.png`) | deux choses ne collent pas | **MAQUETTE À RATIFIER** — texte à jour (atelier `9f38a24`) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-62-1080x2102.png` (lien vers `ecran_conflit/maquette-2026-09-23/cadre-62-1080x2102.png`) | ce qui est en cours | **MAQUETTE À RATIFIER** — texte à jour (atelier `9f38a24`) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `cadre-63-1080x2102.png` (lien vers `ecran_conflit/maquette-2026-09-23/cadre-63-1080x2102.png`) | ce qui est rentré | **MAQUETTE À RATIFIER** — texte à jour (atelier `9f38a24`) | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
 
-- Cadres 60-63 : source seule (le septième coup, deux choses ne collent pas, en cours, rentré) ; 65-66 = la v1, REMPLACÉE. Les deux PNG sont re-rendus en DejaVu et « Plein jour » (`e20fe648`, `cb86e772`, `c833d204`). `ecran_conflit/dossier.md` (à la racine) est un gabarit non rempli : ce dossier-ci et `r2-2026-09-22` font foi.
+- Texte des cadres 59-64 mis à jour le 23/09 (atelier `9f38a24`, `texte-conflit-59-64-2026-09-23.py`) : formes épicènes (40 v3), les 5 axes, sans butin ni « Coup n°N » ; rendus au tour de 08:29:53-08:30:14. 65-66 = la v1, REMPLACÉE. Les deux PNG sont re-rendus en DejaVu et « Plein jour » (`e20fe648`, `cb86e772`, `c833d204`). `ecran_conflit/dossier.md` (à la racine) est un gabarit non rempli : ce dossier-ci et `r2-2026-09-22` font foi.
 - ⛔ Une **maquette à ratifier** n'est PAS une référence ratifiée : un écart entre la capture et elle se classe **ARBITRAGE** (à ratifier),
   jamais BLOQUANT contre le client — sauf s'il contredit une donnée servie ou une décision du registre.
 - Polices : références rendues en **DejaVu** depuis le 23/09 (point 18) ; le client embarque DejaVu : un écart de famille se compare.
@@ -68,7 +72,7 @@
 - **Routes** : `/v1/lieutenants`, `GET` et `POST /v1/me/engagements`
 - **Corps réels** (`ecran_conflit/corps-reels/`, provenance lue dans chaque fichier ; comptes masqués, aucune valeur d'identifiant ici) :
 
-| fichier | date | back servi | nature | fraîcheur (`verifier-fraicheur-corps.py` contre `main` du back `e76f6ffa`) |
+| fichier | date | back servi | nature | fraîcheur (`verifier-fraicheur-corps.py` contre `main` du back `d62ee1f1`) |
 |---|---|---|---|---|
 | `GET_city_district_id_interior.json` | 2026-09-22T13:23:16 | `03cf564c` | réponse réelle | opposable |
 | `GET_lieutenants.json` | 2026-09-22T13:23:16 | `03cf564c` | réponse réelle | **PÉRIMÉ** (operational/lieutenant/lieutenant.repository.ts) |
@@ -83,7 +87,7 @@
 
 - Protocole : `RECAPTURE-2026-09-22.md` §2 (conteneur recréé, horodatage de l'image lu pendant le run, un run = une paire, exportée sous
   `MAFIA_CAPTURE_*` SEULEMENT — `MAFIA_DEMO_*` posé = faute —, sha256 + preuve d'identité jointe). Captures prises sur le cumul
-  (`mafia-builder-city-clean`, aujourd'hui `c3d0df4b`) ; leur SHA s'écrit ici.
+  (`mafia-builder-city-clean`, aujourd'hui `c0a9092a`) ; leur SHA s'écrit ici.
 - Paire T / T+1 s si une animation est en cause (doctrine : aucune animation, sauf ce que ce dossier assume).
 
 ## Échelle et doctrine
@@ -106,4 +110,4 @@
 - le code du client et ses tests ; les notes d'implémentation ; les rapports des juges précédents ;
 - pour l'instant : toute capture.
 
-Préparé sur le client `df041316` (branche `da/2026-09-22`), cumul `c3d0df4b`, back `e76f6ffa`, atelier `ffb6f67`.
+Préparé sur le client `766289c0` (branche `da/2026-09-22`), cumul `c0a9092a`, back `d62ee1f1`, atelier `9f38a24`.

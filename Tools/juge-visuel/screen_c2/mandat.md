@@ -16,7 +16,7 @@
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `screen_c2/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #137 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 137, 138, 139, 140, 141, 142 — atelier `ffb6f67`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 137, 138, 139, 140, 141, 142 — atelier `9f38a24`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. ★ PORTE LA FILIÈRE (2026-09-23, tranché) — ⑪ (LaunderingController) et ⑫ (PipelineOverviewController) sont RETIRÉS du client (cumul 9be2fe9d, code mort depuis D6 : 0 chemin joueur, 0 GUID en scène) ; leur entrée et le dossier « coffre » quittent cette table ; ㊵ lit deviation_active et l'ordre stage_index depuis a7b6b920 (les deux conditions ci-dessous sont TENUES). l'onglet Filière du dock monte ㊵ ; ⑪ (LaunderingController) et ⑫ (PipelineOverviewController) sortent du chemin joueur et ne sont PLUS À JUGER (atelier 25-… §1). Deux conditions à vérifier au jugement : ㊵ lit `deviation_active` (seul ⑪ le lisait), et l'ordre des étapes vient de `stage_index` (0 lecteur au 23/09 : l'ordre affiché était DÉDUIT). — le contrôleur cite le cadre 142 (« ce qui manque encore »)
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

@@ -86,11 +86,16 @@ E = [
       front_fichiers=['Assets/Scripts/CityMap/DistrictInteriorScreenController.cs', 'Assets/Scripts/Shell/TopBarController.cs', 'Assets/Scripts/Shell/AppShell.cs']),
  dict(sym='②', dossier='fiche-batiment', tour='r1', jd='cloture', nom='Fiche bâtiment', ctl='BuildingCardController',
       travail='le pupitre (labo), la serre, la saisie',
-      refs=[],
-      refs_notes=['⛔ **AUCUNE référence à jour n\'est rendue pour ②.** Les seuls rendus des cadres rattachés (série 6, 36-47 et 92-94, `ec7ad853`) sont '
+      refs=[(f'fiche-batiment/serie6-2026-09-23/cadre-{n}-1080x2102.png', 300,
+             {'s': 'RATIFIÉE user (27/08, front.md l.818-819, l.856)', 'l': 'ratifiée PAR DÉLÉGATION (front.md l.22)', 'f': '« EN JUGEMENT » (front.md l.877) → ARBITRAGE', 'a': '« en jugement » (front.md l.946) → ARBITRAGE'}[g],
+             e) for n, g, e in [(36, 's', 'serre'), (37, 's', 'serre'), (38, 's', 'serre'), (39, 'l', 'labo : l’étagère vide'), (40, 'l', 'labo : l’étagère refaite'),
+                                (41, 'l', 'labo : ça monte'), (42, 'l', 'labo : trois passes'), (43, 'l', 'labo : c’est tiré'), (44, 'l', 'labo délégué'),
+                                (45, 'f', 'fourneau : montée'), (46, 'f', 'fourneau : affinage'), (47, 'f', 'fourneau : scellé, la descente'),
+                                (92, 'a', 'Ash : rendez-vous pris'), (93, 'a', 'Ash : honoré'), (94, 'a', 'Ash : passé')]],
+      refs_notes=['Rendues le 23/09 au tour de f2 (08:29:53-08:30:14, `rendre-tour-2026-09-23b.py`, atelier `9f38a24`) : DejaVu, chrome ratifié, « Plein jour ». '
+                  'Avant ce tour : ⛔ **AUCUNE référence à jour n\'était rendue pour ②.** Les seuls rendus des cadres rattachés (série 6, 36-47 et 92-94, `ec7ad853`) sont '
                   '`v6/m-36…m-47.png` et `v6/m-92…m-94.png` (900×1752, ×3, du 03/09) — ANTÉRIEURS à DejaVu, au chrome ratifié et à « Plein jour ». '
-                  'La page `ecrans-brennar-6.html` les porte déjà à jour : **la référence est à rendre au prochain signal de rendu, avant de juger** '
-                  '(`rendre-tel.py ecrans-brennar-6.html <n> … 3.6`). Aucun rendu n\'est fait par ce dossier.',
+                  'Ce sont désormais des TÉMOINS d\'état, pas des références.',
                   'Statut cadre par cadre : serre 36-38 RATIFIÉE user (27/08, front.md l.818-819, l.856) ; labo 39-44 ratifié PAR DÉLÉGATION (front.md l.22) ; '
                   'fourneau 45-47 « EN JUGEMENT » (front.md l.877) ; Ash 92-94 « en jugement » (front.md l.946) — la contradiction délégation / '
                   '« en jugement » est OUVERTE (→ ARBITRAGE).'],
@@ -191,8 +196,11 @@ E = [
  dict(sym='㉙', dossier='ecran_conflit', tour='r3', jd='cloture', nom='Le conflit', ctl='ConflitScreenController',
       travail='les mots (table 40), le geste vers un AXE, les erreurs du POST (addendum 40)',
       refs=[('ecran_conflit/reference-1080x2102.png', 300, '**MAQUETTE À RATIFIER** — ㉙ n\'est PAS ratifiée (décision f2 du 23/09 : front.md l.22 ne la liste pas, l.1328 « ratification user ✗ »)', 'série 6 cadre 59, nominal : « Le premier coup — on n\'a jamais croisé personne »'),
-            ('ecran_conflit/reference-manque-1080x2102.png', 300, '**MAQUETTE À RATIFIER** (idem)', 'série 6 cadre 64 : « Ce qu\'on ne peut pas faire »')],
-      refs_notes=['Cadres 60-63 : source seule (le septième coup, deux choses ne collent pas, en cours, rentré) ; 65-66 = la v1, REMPLACÉE. '
+            ('ecran_conflit/reference-manque-1080x2102.png', 300, '**MAQUETTE À RATIFIER** (idem)', 'série 6 cadre 64 : « Ce qu\'on ne peut pas faire »')]
+          + [(f'ecran_conflit/maquette-2026-09-23/cadre-{n}-1080x2102.png', 300, '**MAQUETTE À RATIFIER** — texte à jour (atelier `9f38a24`)', e)
+             for n, e in [(60, 'le septième coup'), (61, 'deux choses ne collent pas'), (62, 'ce qui est en cours'), (63, 'ce qui est rentré')]],
+      refs_notes=['Texte des cadres 59-64 mis à jour le 23/09 (atelier `9f38a24`, `texte-conflit-59-64-2026-09-23.py`) : formes épicènes (40 v3), les 5 axes, '
+                  'sans butin ni « Coup n°N » ; rendus au tour de 08:29:53-08:30:14. 65-66 = la v1, REMPLACÉE. '
                   'Les deux PNG sont re-rendus en DejaVu et « Plein jour » (`e20fe648`, `cb86e772`, `c833d204`). '
                   '`ecran_conflit/dossier.md` (à la racine) est un gabarit non rempli : ce dossier-ci et `r2-2026-09-22` font foi.'],
       assumes=[

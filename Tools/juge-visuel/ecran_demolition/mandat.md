@@ -16,7 +16,7 @@
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `ecran_demolition/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #79 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 79, 80, 81, 82, 83, 84 — atelier `ffb6f67`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 79, 80, 81, 82, 83, 84 — atelier `9f38a24`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. le contrôleur cite m-79..84. ⛔ NOMINAL CORRIGÉ le 2026-09-07, 80 → 79 : le juge du r1 a mesuré que la CAPTURE montre 79 (« L'organisation frotte ») et non 80 (« Ce bâtiment vous coûte »), prouvé par 4 marqueurs de source dont VOIR CE QUI COÛTE LE PLUS, 1 seule occurrence dans toute la page, en 79. Le dossier faisait donc rendre la mauvaise référence, et la couche globale devenait incomparable (luminance ×8 : la fiche crème de 80, 29,2 % de l'image, absente de 79 — cet écart n'accusait rien). ⇒ Un nominal est l'état que la CAPTURE montre, jamais l'état le plus représentatif du groupe : il se mesure sur la planche, pas se choisit sur la maquette.
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.
