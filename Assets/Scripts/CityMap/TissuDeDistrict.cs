@@ -12,9 +12,9 @@ namespace MafiaCleanCity.CityMap
     // ⛔ LE MOT EST À CÔTÉ DU NOM, JAMAIS DESSUS : La Colonne (Spine-A), Le Verre (Glass-1) et
     //    La Lisière (Verge-A) sont déjà des NOMS de quartier — d'où « l'avenue », « les tours »,
     //    « les faubourgs », et jamais « la colonne », « le verre », « la lisière ».
-    // ⛔ UN PROFIL INCONNU SE MONTRE BRUT : comme `DistrictTintResolver.UnknownProfileFallback`
-    //    rend le neutre sans lever, un 7ᵉ code se montre tel quel — un mot inventé pour une valeur
-    //    inconnue masquerait le cran neuf. Les 18 noms de district ne sont pas traduits.
+    // ⛔ UN PROFIL INCONNU NE SE MONTRE PLUS BRUT (23/09, règle f2 : un joueur ne voit jamais une valeur machine) : il se
+    //    dit « type inconnu » (`Repli.Type`, atelier 28 — un profil est une SORTE). Le cran neuf se voit par le test de
+    //    couverture de domaine, plus à l'écran. Toujours sans lever. Les 18 noms de district ne sont pas traduits.
     public static class TissuDeDistrict
     {
         /// <summary>Le libellé de la ligne du panneau de détail — le mot de la légende, pas « Profile ».</summary>
@@ -37,7 +37,7 @@ namespace MafiaCleanCity.CityMap
                 case "glass":     return "les tours";
                 case "verge":     return "les faubourgs";
                 case "":          return Inconnu;
-                default:          return profile.Trim();      // brut, déclaré — jamais inventé
+                default:          return MafiaCleanCity.I18n.Repli.Type(profile);   // 23/09 (règle f2) : un profil hors domaine est une SORTE ⇒ « type inconnu », plus la brute
             }
         }
 
@@ -53,7 +53,7 @@ namespace MafiaCleanCity.CityMap
                 case "glass":     return "Tours";
                 case "verge":     return "Faubourgs";
                 case "":          return Inconnu;
-                default:          return profile.Trim();
+                default:          return MafiaCleanCity.I18n.Repli.Type(profile);
             }
         }
 

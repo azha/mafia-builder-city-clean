@@ -1078,7 +1078,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
 
         // ----- granted_role band (advisory | executor | delegated_owner | cohort_overseer) — EXHAUSTIVE over GrantedRoleBand -----
-        private static string GrantedRoleLabel(string r)
+        public static string GrantedRoleLabel(string r)
         {
             switch (r)
             {
@@ -1086,7 +1086,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 case "executor": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Exécutant");
                 case "delegated_owner": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Responsable délégué");
                 case "cohort_overseer": return MafiaCleanCity.I18n.Libelle.De("famille", "grantedrole", "Chef de groupe");
-                default: return string.IsNullOrEmpty(r) ? "—" : r;
+                default: return MafiaCleanCity.I18n.Repli.Type(r);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
         // A distinct shape per role (a11y F2 — shape carries meaning alongside colour).
@@ -1102,14 +1102,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // ----- rule_count_band (NONE | FEW | MANY) — EXHAUSTIVE over RuleCountBand. R2.2: the raw rule count NEVER -----
         // surfaces; the player sees the band. A 2-segment fill gauge (shape encodes the level — a11y F2).
-        private static string RuleCountLabel(string b)
+        public static string RuleCountLabel(string b)
         {
             switch (b)
             {
                 case "NONE": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "Aucune règle");
                 case "FEW": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "Quelques règles");
                 case "MANY": return MafiaCleanCity.I18n.Libelle.De("famille", "rulecount", "Beaucoup de règles");
-                default: return string.IsNullOrEmpty(b) ? "—" : b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
         private static string RuleCountGlyph(string b) =>
@@ -1138,7 +1138,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // ----- script_revision_cost (COST_1 | COST_2 | COST_3 | COST_MAX) — the inertia COST of re-scripting. EXHAUSTIVE. -----
         // Worded as an effort label (NO tick number leaks). Higher cost on a tenured lieutenant reads as a warning (amber/red).
-        private static string RevisionCostLabel(string c)
+        public static string RevisionCostLabel(string c)
         {
             switch (c)
             {
@@ -1146,7 +1146,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 case "COST_2": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Réécrire coûte cher");
                 case "COST_3": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Réécrire coûte très cher");
                 case "COST_MAX": return MafiaCleanCity.I18n.Libelle.De("famille", "revisioncost", "Réécrire coûte énormément");
-                default: return string.IsNullOrEmpty(c) ? "—" : c;
+                default: return MafiaCleanCity.I18n.Repli.Etat(c);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
         private static string RevisionCostGlyph(string c) =>
@@ -1156,7 +1156,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // ----- reassignment_disruption (DISRUPT_SHORT | DISRUPT_MED | DISRUPT_LONG | DISRUPT_MAX) — the settling DRAG. EXHAUSTIVE. -----
         // Worded as a settling-length label (NO tick number leaks). Longer settling on a move reads as a heavier penalty.
-        private static string DisruptionLabel(string d)
+        public static string DisruptionLabel(string d)
         {
             switch (d)
             {
@@ -1164,7 +1164,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 case "DISRUPT_MED": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "S'installe normalement");
                 case "DISRUPT_LONG": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "S'installe lentement");
                 case "DISRUPT_MAX": return MafiaCleanCity.I18n.Libelle.De("famille", "disruption", "S'installe très lentement");
-                default: return string.IsNullOrEmpty(d) ? "—" : d;
+                default: return MafiaCleanCity.I18n.Repli.Etat(d);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
         private static string DisruptionGlyph(string d) =>
@@ -1174,7 +1174,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         // ----- role_efficiency_bonus (BONUS_NONE | BONUS_LOW | BONUS_MID | BONUS_CAP) — the tenure REWARD. EXHAUSTIVE. -----
         // Worded as a yield label (NO multiplier number leaks). BONUS_NONE = no change (a FRESH one); higher = a better reward.
-        private static string EfficiencyBonusLabel(string e)
+        public static string EfficiencyBonusLabel(string e)
         {
             switch (e)
             {
@@ -1182,7 +1182,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 case "BONUS_LOW": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Petit gain de rendement");
                 case "BONUS_MID": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Bon gain de rendement");
                 case "BONUS_CAP": return MafiaCleanCity.I18n.Libelle.De("famille", "efficiencybonus", "Gain de rendement maximal");
-                default: return string.IsNullOrEmpty(e) ? "—" : e;
+                default: return MafiaCleanCity.I18n.Repli.Etat(e);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
         private static string EfficiencyBonusGlyph(string e) =>
