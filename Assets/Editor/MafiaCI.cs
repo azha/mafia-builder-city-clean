@@ -228,6 +228,8 @@ public static class MafiaCI
         // ㊵ porte la filière (2026-09-23) — 3/3 vert AVANT inscription, par nom (MAFIA_CI_TESTS), créneau 06:20-06:29, tête
         // e21e0c55 : l'ordre par stage_index et l'écart de TÊTE sur le compte semé (4 étapes, 0 écart), + 2 états fabriqués.
         // Sans la paire, aucune relation de préfixe (vérifié) : PARTIE 1. Validé par l'orchestrateur.
+        // RECOMPTÉ 5 (2026-09-23, 2c3af6bf : + la propreté de la table 48 — couverture du domaine et corps RÉEL du 07/09) : 5/5 vert au
+        // créneau de CLIENT UNITY (pile e7f52351, tête 25bcb0b1, run court 132/133, le seul rouge hors de cette catégorie).
         "EcranFiliere",
         // Les gardes de CLASSE du texte affiché (2026-09-23, CLIENT-2) — 7/7 vert AVANT inscription au créneau 06:39 (tête 3f9ecad3,
         // pile d8e41362, 418/420 : le seul rouge était un test du Tissu resté à l'apostrophe ASCII, vert au ciblé de 06:45 par nom). Portent
@@ -242,6 +244,12 @@ public static class MafiaCI
         // seeder) : PARTIE 1. Validé par l'orchestrateur.
         "FicheOperationnelle",
         "BoucleOperationnelle",
+        // ④ l'Accueil (a02aa2fb, baab41ab, 4c3de5f0, 37f518ac) et ⑦ les deux décisions (fac52423, 140a13f6) — verts AVANT inscription
+        // au créneau de CLIENT UNITY du 2026-09-23 (pile e7f52351, tête 25bcb0b1, sans la paire) : EcranAccueil 5/5,
+        // EcranLieutenantDecisions 4/4 (run court 132/133 ; le seul rouge, BundleReel, corrigé en fc3033ec puis 4/4 seul). Aucune
+        // relation de préfixe avec une autre catégorie (vérifié). Validé par l'orchestrateur.
+        "EcranAccueil",
+        "EcranLieutenantDecisions",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
