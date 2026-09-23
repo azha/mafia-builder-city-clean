@@ -1,10 +1,13 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
+using UnityEngine.TestTools;
 using MafiaCleanCity.I18n;
 using MafiaCleanCity.Operational;
+using MafiaCleanCity.Shell;
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.CityMap.Tests
@@ -17,6 +20,9 @@ namespace MafiaCleanCity.CityMap.Tests
     //   P3  le pupitre suit le TYPE (tranché (a)) : `specialized_lab` l'a aussi, un `front_shop` jamais ; une donnée absente (route en
     //       erreur) ne dessine PAS son échelle — un cran allumé affirmerait un état qu'on n'a pas reçu
     //   P4  les libellés prennent les clés servies de la table 37 : `building.row.le_feu`, `.l_etagere`, `.les_caisses`
+    //   P5  RÉEL, LECTURE SEULE (demande de l'orchestrateur, 23/09) : sur un vrai labo du compte `operational_demo`, `LoadBuilding`
+    //       remplit les trois échelles depuis `lab/:id`, `precursors?building_id` et `storage/:id`, et chaque échelle dit la VALEUR
+    //       que le back sert (vérité terrain lue À PART, par une connexion et trois GET indépendants). Aucune mutation, aucune semence.
     [Category("FicheBatiment")]
     public class PupitrePlayModeTests
     {
@@ -66,6 +72,74 @@ namespace MafiaCleanCity.CityMap.Tests
             int total = crans.childCount;
             return (allumes, total, ligne.Find("Label").GetComponent<TextMeshProUGUI>().text,
                     ligne.Find("Value").GetComponent<TextMeshProUGUI>().text);
+        }
+
+        // ----- P5 : réel, lecture seule -----
+        private const string BaseUrl = "http://localhost";
+        private const string DemoEmail = "operational_demo@example.test";   // le compte SERVI, jamais le compte gelé de capture
+        private const string DemoPassword = "operational-demo-pw";
+        private static readonly string[] DomaineFeu = { "IDLE", "EARLY", "MID", "LATE", "DONE" };
+        private static readonly string[] DomaineStock = { "NONE", "LOW", "MEDIUM", "HIGH" };
+
+        [UnityTest]
+        public IEnumerator P5_Reel_LeVraiLabo_RemplitSesTroisEchelles_AvecLaValeurServie()
+        {
+            // Vérité terrain INDÉPENDANTE : sa propre connexion (sans surcharge d'environnement : le compte est NOMMÉ), ses propres GET.
+            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = BaseUrl };
+            string jeton = null, errAuth = null;
+            yield return MafiaCleanCity.CityMap.DemoIdentityResolver.ResolveAndSignIn(auth,
+                MafiaCleanCity.CityMap.DemoIdentityResolver.OperationalIdentifierEnvVar,
+                MafiaCleanCity.CityMap.DemoIdentityResolver.OperationalPasswordEnvVar,
+                DemoEmail, DemoPassword, t => jeton = t, e => errAuth = e, allowEnvironmentOverride: false);
+            Assert.IsNull(errAuth, $"connexion operational_demo : {errAuth}");
+            Assert.IsFalse(string.IsNullOrEmpty(jeton));
+
+            BatimentPossedeDto[] possedes = null; string errMes = null;
+            yield return new MesBatimentsClient { BaseUrl = BaseUrl }.Lire(jeton, b => possedes = b, (c, m) => errMes = $"{c}: {m}");
+            Assert.IsNull(errMes, $"GET /v1/me/buildings : {errMes}");
+            BatimentPossedeDto labo = possedes.FirstOrDefault(b => b != null && BuildingCardController.APupitre(b.operational_type));
+            Assert.IsNotNull(labo, "PRÉCONDITION DU MONDE : operational_demo ne tient aucun lab ni specialized_lab — ce test ne sème rien, "
+                + "types tenus : " + string.Join(", ", possedes.Select(b => b?.operational_type)));
+
+            var carte = new BuildingCardClient { BaseUrl = BaseUrl };
+            LabCookDto feu = null; StorageDto caisses = null; GetOperationalPrecursorsResponseDto etagere = null;
+            string e1 = null, e2 = null, e3 = null;
+            yield return carte.GetLab(labo.building, jeton, d => feu = d, (c, m) => e1 = $"{c}: {m}");
+            yield return new ChaineDApproClient { BaseUrl = BaseUrl }.GetOperationalPrecursors(jeton, labo.building,
+                d => etagere = d, (c, m) => e2 = $"{c}: {m}");
+            yield return carte.GetStorage(labo.building, jeton, d => caisses = d, (c, m) => e3 = $"{c}: {m}");
+            Assert.IsNull(e1, $"GET lab/{labo.building} ({labo.operational_type}) : {e1}");
+            Assert.IsNull(e2, $"GET precursors?building_id={labo.building} : {e2}");
+            Assert.IsNull(e3, $"GET storage/{labo.building} : {e3}");
+            CollectionAssert.Contains(DomaineFeu, feu.cook_stage_band, "la forme G déclarée : cook_stage_band dans son domaine");
+            CollectionAssert.Contains(DomaineStock, etagere.stock_band);
+            CollectionAssert.Contains(DomaineStock, caisses.product_band);
+
+            // L'écran, par SON chemin de chargement. Désactivé : pas de `Start` → pas de `Boot` qui signerait un autre compte en parallèle.
+            var host = new GameObject("FicheHost", typeof(RectTransform), typeof(Canvas));
+            montes.Add(host);
+            var fiche = host.AddComponent<BuildingCardController>();
+            fiche.enabled = false;
+            fiche.SetBaseUrl(BaseUrl);
+            fiche.SetMountParent(host.transform);
+            fiche.SetToken(jeton);
+            yield return fiche.LoadBuilding(labo.building);
+            Assert.IsTrue(fiche.CardLoaded, $"la fiche s'est chargée : {fiche.CardError}");
+
+            Assert.AreEqual(feu.cook_stage_band, fiche.CurrentLab?.cook_stage_band, "l'écran a lu `lab/:id`");
+            Assert.AreEqual(etagere.stock_band, fiche.CurrentPrecursors?.stock_band, "l'écran a lu `precursors`");
+            Assert.AreEqual(caisses.product_band, fiche.CurrentStorage?.product_band);
+
+            Transform r = host.transform;
+            Assert.AreEqual((BuildingCardController.CransDuFeu(feu.cook_stage_band), 5, "le feu",
+                             BuildingCardController.CookStageLabel(feu.cook_stage_band)), Lire(Ligne(r, "le_feu")),
+                $"le feu dit {feu.cook_stage_band}");
+            Assert.AreEqual((BuildingCardController.CransDuStock(etagere.stock_band), 4, "l’étagère",
+                             BuildingCardController.StockLabel(etagere.stock_band)), Lire(Ligne(r, "l_etagere")),
+                $"l'étagère dit {etagere.stock_band}");
+            Assert.AreEqual((BuildingCardController.CransDuStock(caisses.product_band), 4, "les caisses",
+                             BuildingCardController.StockLabel(caisses.product_band)), Lire(Ligne(r, "les_caisses")),
+                $"les caisses disent {caisses.product_band}");
         }
 
         [Test]
