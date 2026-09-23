@@ -133,6 +133,9 @@ public static class MafiaCI
     //   `TopBarDoctrineV31` porte le même motif (`WaitForEndOfFrame` + `CaptureScreenshotAsTexture`) et passe 19/19 : le motif
     //   seul n'explique pas le gel. Les 4 autres tests de la classe n'ont JAMAIS tourné : à mesurer PAR NOM (`MAFIA_CI_TESTS`),
     //   Oracle1 exclu.
+    // ⛔ `SondeGelVolontaire` (1 test) HORS DU FILTRE, PAR CONSTRUCTION (2026-09-23) : c'est le contrôle positif du chien de garde de
+    //   GEL de `run-unity-check.sh` — il gèle le fil principal quand `MAFIA_SONDE_GEL=1` est posée, et sort Inconclusive sinon. Il se
+    //   lance SEUL, par nom (`MAFIA_CI_TESTS`), et doit rendre RC=5 avec le test nommé. Au filtre par défaut il ne prouverait rien.
     // ⛔ `Screenshot` RESTE DEHORS (TD-625) — et `DashboardPlayModeTests.CaptureDashboardScreenshot` le confirme (passage 3, par nom) :
     //   il SUPPRIME la planche commitée (`File.Delete`, DashboardPlayModeTests.cs:345) AVANT `ScreenCapture.CaptureScreenshot`, qui
     //   n'écrit rien en 10 s en batchmode ⇒ échec = planche détruite. Défaut d'INSTRUMENT, dette datée dans `dette-captures.md`.
