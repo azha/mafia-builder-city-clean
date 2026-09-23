@@ -25,15 +25,32 @@ L = [
  ('Pas maintenant', 'Not now', 'PROPOSÉ', '`POST /v1/session/hl-card/:id/skip`'),
  ('prendre acte n’agit pas à votre place', 'noting it doesn’t act for you', 'PROPOSÉ (facultatif)', 'la ligne d’honnêteté sous « Prendre acte » : l’effet est nul aujourd’hui'),
 ]
+# ADDENDUM (f2, 23/09) — ④ cadre 3, « la file sous pression » : le client câblait « Plusieurs attendent encore » sur `exceptions.file.attendent_encore`,
+# un pluriel ICU qui EXIGE un compte ; le back ne sert que des BANDES (`queue_pressure_band`, `backlog_badge` booléen) et le client ne voit que 3
+# cartes au plus : un nombre serait faux. Deux phrases SANS compte, domaine `accueil`, rôle `file` (celui du servi `accueil.file.aucune_exception_en_attente`).
+ADD = [
+ ('Plusieurs attendent encore', 'Several are still waiting', 'PROPOSÉ (addendum)', '`queue_pressure_band` = saturated — sans compte (remplace le ICU `exceptions.file.attendent_encore` sur ④)'),
+ ('d’autres attendent au-delà de ce que la file montre', 'others are waiting beyond what the queue shows', 'PROPOSÉ (addendum)',
+  '`backlog_badge` = vrai — la file ne montre que 3 cartes (mot de la maquette ④ cadre 3, déjà dessiné)'),
+]
 st = subprocess.run(['git', '-C', os.path.expanduser('~/project/mafia-back-suite'), 'show', 'HEAD:services/game-back/src/i18n/string_table.ts'], capture_output=True, text=True).stdout
-FR = set(re.findall(r"^\s*'(accueil\.carte\.[a-z_]+)':", st, re.M))
+_d = st.index('export const FR_MESSAGES')
+FRV = {m.group(1): m.group(2).replace("\\'", "'") for m in re.finditer(r"^\s*'(accueil\.(?:carte|file)\.[a-z_]+)':\s*\n?\s*'((?:[^'\\]|\\.)*)'", st[_d:st.index('\n};', _d)], re.M)}
+FR = set(FRV)   # une clé servie DEPUIS la table est conforme si ses mots sont les nôtres (règle de 28, 30, 31, 37)
 d, out = [], ['\t'.join(['clé', 'fr', 'en', 'statut', 'pour'])]
 for fr, en, statut, pour in L:
     cle = 'accueil.carte.' + slug(fr)
-    if cle in FR: d.append(f'{cle} : déjà servie')
+    if cle in FR and FRV[cle] != fr: d.append(f'{cle} : servie avec d’autres mots ({FRV[cle]!r})')
     if "'" in fr + en: d.append(f'{cle} : apostrophe droite')
     if re.search(r' [:;!?»]|« ', fr): d.append(f'{cle} : D17')
     if re.search(r'\b(prêt|seul|sûr)\b', fr): d.append(f'{cle} : D13')
     out.append('\t'.join([cle, fr, en, statut, pour]))
+for fr, en, statut, pour in ADD:
+    cle = 'accueil.file.' + slug(fr)
+    if cle in FR and FRV[cle] != fr: d.append(f'{cle} : servie avec d’autres mots')
+    if "'" in fr + en: d.append(f'{cle} : apostrophe droite')
+    if re.search(r'\{|plural', fr): d.append(f'{cle} : un compte (ICU) — interdit ici')
+    out.append('\t'.join([cle, fr, en, statut, pour]))
 open(os.path.join(ICI, '45-carte-de-tete-2026-09-23.tsv'), 'w', encoding='utf-8').write('\n'.join(out) + '\n')
+print(f'somme : {len(out) - 1} lignes = {len(L)} (carte) + {len(ADD)} (addendum) ; clés distinctes {len(set(l.split(chr(9))[0] for l in out[1:]))}')
 print(f'{len(L)} clés'); [print('  ⛔', x) for x in d]; print(f'{len(d)} défaut(s)'); sys.exit(1 if d else 0)

@@ -3,3 +3,5 @@ accueil.carte.ce_qu_on_peut_faire	Ce qu’on peut faire	What can be done	PROPOS�
 accueil.carte.prendre_acte	Prendre acte	Noted	PROPOSÉ	`POST /v1/session/hl-card/:id/commit` : enregistre la décision de session ; n’agit pas sur le monde
 accueil.carte.pas_maintenant	Pas maintenant	Not now	PROPOSÉ	`POST /v1/session/hl-card/:id/skip`
 accueil.carte.prendre_acte_n_agit_pas_a_votre_place	prendre acte n’agit pas à votre place	noting it doesn’t act for you	PROPOSÉ (facultatif)	la ligne d’honnêteté sous « Prendre acte » : l’effet est nul aujourd’hui
+accueil.file.plusieurs_attendent_encore	Plusieurs attendent encore	Several are still waiting	PROPOSÉ (addendum)	`queue_pressure_band` = saturated — sans compte (remplace le ICU `exceptions.file.attendent_encore` sur ④)
+accueil.file.d_autres_attendent_au_dela_de_ce_que_la_file_montre	d’autres attendent au-delà de ce que la file montre	others are waiting beyond what the queue shows	PROPOSÉ (addendum)	`backlog_badge` = vrai — la file ne montre que 3 cartes (mot de la maquette ④ cadre 3, déjà dessiné)
