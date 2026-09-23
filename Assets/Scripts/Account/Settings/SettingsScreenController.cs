@@ -196,8 +196,10 @@ namespace MafiaCleanCity.Account.Settings
 
             // Ce que le back NE sert PAS : dessiné par la porte ratifiée, éteint, avec sa raison — le client dit vrai.
             Section(Lib("Ce qui ne s’ouvre pas encore"));
-            Manque(Lib("Fermer partout"), Lib("pas encore : toutes les sessions ouvertes n’ont pas encore de guichet"));
-            Manque(Lib("Tout effacer"), Lib("pas encore : « et ne plus jamais revenir » n’a pas encore de guichet"));
+            // D17 (atelier 38, `d75bb64e`) : l'espace INSÉCABLE U+00A0 avant « : » et à l'intérieur des « », comme le fr servi — un repli
+            // à espace ordinaire réintroduirait la coupure de ligne que D17 corrige. Écrit en `\u00A0`, visible dans la source.
+            Manque(Lib("Fermer partout"), Lib("pas encore\u00A0: toutes les sessions ouvertes n’ont pas encore de guichet"));
+            Manque(Lib("Tout effacer"), Lib("pas encore\u00A0: «\u00A0et ne plus jamais revenir\u00A0» n’a pas encore de guichet"));
             RendusEffectues++;
         }
 
@@ -283,15 +285,20 @@ namespace MafiaCleanCity.Account.Settings
             yield return Charger(token);
         }
 
-        /// <summary>`POST /v1/auth/signout` : la session courante est RÉVOQUÉE. Le jeton du shell ne vaut plus rien ensuite — l'écran le
-        /// dit (« Le coffre est fermé. ») et ne relit rien : toute lecture échouerait. ⚠️ Rouvrir une session n'a pas de chemin dans
-        /// le shell d'aujourd'hui (il signe au lancement) : signalé.</summary>
+        /// <summary>`POST /v1/auth/signout` : la session courante est RÉVOQUÉE. Le jeton du shell ne vaut plus rien ensuite. Le SHELL
+        /// ferme le coffre (`IFermetureDuCoffre`) : il démonte ses locataires et n'offre qu'un geste, « Rouvrir le coffre », qui rejoue
+        /// le lancement. Monté seul, l'écran dit « Le coffre est fermé. » et ne relit rien.</summary>
         private IEnumerator FermerLeCoffre()
         {
             DeconnexionDemandee = true;
             if (string.IsNullOrEmpty(token)) yield break;
             yield return client.Deconnecter(token, () => CoffreFerme = true, (c, m) => DerniereErreur = $"sortie {c}: {m}");
-            if (CoffreFerme) Rendre();
+            if (!CoffreFerme) yield break;
+            // Le SHELL ferme le coffre (décision f2 du 23/09) : il démonte tout — cet écran compris — et n'offre plus que « Rouvrir le
+            // coffre ». Monté seul (un test), l'écran le dit lui-même.
+            IFermetureDuCoffre shell = FermetureDuCoffreLocator.Find();
+            if (shell != null) shell.CoffreFerme();
+            else Rendre();
         }
 
         /// <summary>Un choix de langue. ⚠️ Les libellés sont écrits en DUR et c'est assumé : il
