@@ -79,7 +79,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(2, Textes(r, "Replique").Length, "en cuisson : les deux répliques du cadre 41");
             Transform locuteur = r.GetComponentsInChildren<Transform>(true).First(t => t.name == "Locuteur");
             Transform premiere = r.GetComponentsInChildren<Transform>(true).First(t => t.name == "Replique");
-            Assert.Less(locuteur.GetSiblingIndex(), premiere.GetSiblingIndex(), "l'en-tête AVANT la réplique");
+            Assert.Less(locuteur.parent.GetSiblingIndex(), premiere.GetSiblingIndex(), "l'en-tête AVANT la réplique");
             Assert.IsFalse(r.GetComponentsInChildren<TextMeshProUGUI>(true).Any(t => t.text.Contains("Lt. ")),
                 "aucun nom : ils attendent la décision de l'user (Nestor / Hara)");
             Assert.IsTrue(Libelle.ClesEnRepli.Contains("famille.archetype.cuisinier"), "le mot servi de la Famille, pas un mot du client");
@@ -101,7 +101,10 @@ namespace MafiaCleanCity.CityMap.Tests
             Transform r = Rendre(Lt("lt-b", "COOK"));
             Transform bulle = r.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "BulleLieutenant");
             Assert.IsNotNull(bulle, "le lieutenant parle dans un composant visuel dédié");
-            Assert.AreEqual(bulle, r.GetComponentsInChildren<Transform>(true).First(t => t.name == "Locuteur").parent);
+            Transform entete = bulle.Find("EnTeteLieutenant");
+            Assert.IsNotNull(entete);
+            Assert.AreEqual(entete, r.GetComponentsInChildren<Transform>(true).First(t => t.name == "Locuteur").parent);
+            Assert.IsNotNull(entete.Find("GlyphArchetype"), "l'icône COOK ratifiée accompagne le mot Cuisinier");
             Assert.IsTrue(r.GetComponentsInChildren<Transform>(true).Where(t => t.name == "Replique").All(t => t.parent == bulle),
                 "toutes les phrases du même locuteur restent dans la même bulle");
             Assert.IsTrue(r.GetComponentsInChildren<Transform>(true).Where(t => t.name == "Bloc").All(t => t.parent != bulle),

@@ -2518,12 +2518,34 @@ namespace MafiaCleanCity.Operational
                 AddLayoutElement(bulle, flexibleHeight: 0);
                 bulleLieutenant = bulle.transform;
 
-                TextMeshProUGUI qui = NewText("Locuteur", bulleLieutenant,
+                GameObject entete = NewUI("EnTeteLieutenant", bulleLieutenant);
+                var ligne = entete.AddComponent<HorizontalLayoutGroup>();
+                ligne.spacing = 9;
+                ligne.childAlignment = TextAnchor.MiddleLeft;
+                ligne.childControlWidth = true;
+                ligne.childControlHeight = true;
+                ligne.childForceExpandWidth = false;
+                ligne.childForceExpandHeight = false;
+                AddLayoutElement(entete, minHeight: 30, flexibleHeight: 0);
+
+                Sprite dessinArchetype = MafiaCleanCity.Operational.Lieutenant.ArchetypeIcons.Pour(CurrentLieutenant.archetype);
+                if (dessinArchetype != null)
+                {
+                    GameObject glyphe = NewUI("GlyphArchetype", entete.transform);
+                    Image image = glyphe.AddComponent<Image>();
+                    image.sprite = dessinArchetype;
+                    image.preserveAspect = true;
+                    image.color = new Color32(218, 183, 112, 255);
+                    image.raycastTarget = false;
+                    AddLayoutElement(glyphe, minWidth: 26, preferredWidth: 26, minHeight: 26, preferredHeight: 26, flexibleWidth: 0);
+                }
+
+                TextMeshProUGUI qui = NewText("Locuteur", entete.transform,
                     FamilleLabels.Archetype(CurrentLieutenant.archetype), 13, TextAlignmentOptions.Left);
                 qui.color = new Color32(218, 183, 112, 255);
                 qui.fontStyle = FontStyles.Bold;
                 qui.characterSpacing = 4f;
-                AddLayoutElement(qui.gameObject, minHeight: 18, flexibleHeight: 0);
+                AddLayoutElement(qui.gameObject, minHeight: 26, flexibleHeight: 0, flexibleWidth: 1);
                 TrackText(qui, qui.text);
             }
             AddLigneDuGeste("Replique", texte, bulleLieutenant);
