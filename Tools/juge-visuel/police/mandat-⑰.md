@@ -18,7 +18,7 @@
 | `police/reference-⑰-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #31 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
 | `police/commissariat-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `police/inspections-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 31, 32, 33, 34, 35 — atelier `75b3b55`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 31, 32, 33, 34, 35 — atelier `f67ca63`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : déduite. partage les cadres 31-35 avec ⑮ ; canon police/commissariat-canon.png. ⛔ NOMINAUX ÉCHANGÉS le 2026-09-07 : ⑮ portait 31 et ⑰ portait 32, c'était l'INVERSE. Établi à la source par le juge du r1 puis re-vérifié dans ecrans-brennar-6.html : le cadre 31 parle de « précinct » et porte belief + patrol_heat PAR PRÉCINCT (⑰), le cadre 32 de « dispatch / registre » (⑮) ; 34 et 35 « précinct » aussi. Confirmé par la luminance : contenu 15,5 capture / 22,7 canon série 2 / 141,2 cadre 31 — l'écart vers le canon est 17x plus petit. ⇒ Les DEUX dossiers faisaient rendre la référence de l'autre. ⇒ 3e attribution fausse de cette table (coffre, carnet, police) et TROIS MÉCANISMES DIFFÉRENTS : doublon, planche d'un autre écran, cadres croisés. Une table écrite à la main depuis des preuves n'a jamais été confrontée à sa source ligne par ligne. 
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.
