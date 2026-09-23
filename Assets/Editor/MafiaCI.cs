@@ -235,6 +235,13 @@ public static class MafiaCI
         // en texte ; toute valeur en couleur porte un mot) et N1-N2 (aucun littéral nommé hors Libelle, allowlist EXACTE). Hors paire :
         // aucune relation de préfixe (tests statiques + résolveurs purs). Validé par l'orchestrateur.
         "Replis",
+        // TD-490 (2026-09-23) — deux tests E2E SANS catégorie, donc jamais lancés par un filtre, dont les épingles avaient pourri
+        // derrière les traductions : réparés EN ENTIER (épingles déléguées aux résolveurs, bc658b2c / 4ae0dfa0 / 881a0ed4), catégorie
+        // posée sur la MÉTHODE (la classe emporterait sa capture `Screenshot`). Verts AVANT inscription : créneau 06:48-06:57, tête
+        // 881a0ed4, `FicheOperationnelle,BoucleOperationnelle` → passed=3 failed=0, VERDICT 0, 0 catalogue. Sans la paire (compte du
+        // seeder) : PARTIE 1. Validé par l'orchestrateur.
+        "FicheOperationnelle",
+        "BoucleOperationnelle",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
