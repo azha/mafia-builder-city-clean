@@ -469,11 +469,8 @@ namespace MafiaCleanCity.Operational.Exceptions
 
         /// <summary>« Escalader » — la clé SERVIE de l'ancien bouton (`exception_detail.bloc.escalate`, fr « Escalader »), repli
         /// en français : le littéral anglais « Escalate » de l'ancien bouton ne doit pas atteindre l'écran hors catalogue.</summary>
-        private static string TexteEscalader()
-        {
-            const string cle = "exception_detail.bloc.escalate";
-            return MafiaCleanCity.I18n.I18nCatalog.Connait(cle) ? MafiaCleanCity.I18n.I18nCatalog.Traduire(cle) : "Escalader";
-        }
+        public static string TexteEscalader() =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("exception_detail.bloc.escalate", "Escalader");   // repli COMPTÉ
 
         /// <summary>Une carte de la main. `l` (le rôle) est un libellé FERMÉ — il est suivi ;
         /// `t` (le titre) et `c` (la conséquence) sont du texte producteur — chrome, non suivi.

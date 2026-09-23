@@ -102,6 +102,37 @@ namespace MafiaCleanCity.I18n
             return repli;
         }
 
+        /// <summary>UN GABARIT à clé EXPLICITE : la valeur servie de `cle` (paramètres remplis par le catalogue), sinon le `repli`
+        /// du client, paramètres remplis de la même façon. Le repli se COMPTE exactement comme dans `De` (`NbReplis`,
+        /// `DernierRepli`, `ClesEnRepli`).
+        /// ⛔ POURQUOI ICI (2026-09-23, trou trouvé par la garde « zéro repli » de CLIENT-1) : quatre sites lisaient `I18nCatalog`
+        /// directement, avec une clé ou un repli écrits par le client — leur repli n'était JAMAIS compté, donc invisible à la garde.
+        /// Une clé du client passe par `Libelle`, toujours ; hors de `Libelle`, le catalogue ne se lit qu'avec une référence SERVIE
+        /// (`….key`) — garde de classe `I18nHorsLibellePlayModeTests`.
+        /// `repli` null ⇒ rend null quand la clé n'est pas servie (l'appelant compose). `cle` vide ⇒ ni lecture ni compte.</summary>
+        public static string Gabarit(string cle, string repli, IDictionary<string, string> parametres = null)
+        {
+            if (string.IsNullOrEmpty(cle)) return Remplir(repli, parametres);
+            NbAppels++;
+            if (I18nCatalog.Connait(cle))
+            {
+                string t = I18nCatalog.Traduire(cle, parametres);
+                if (!string.IsNullOrWhiteSpace(t)) return t;
+            }
+            NbReplis++;
+            DernierRepli = cle;
+            clesEnRepli.Add(cle);
+            return Remplir(repli, parametres);
+        }
+
+        private static string Remplir(string gabarit, IDictionary<string, string> parametres)
+        {
+            if (gabarit == null || parametres == null) return gabarit;
+            foreach (KeyValuePair<string, string> kv in parametres)
+                gabarit = gabarit.Replace("{" + kv.Key + "}", kv.Value ?? string.Empty);
+            return gabarit;
+        }
+
         public static string CleDe(string domaine, string role, string litteral) =>
             domaine + "." + role + "." + Slug(litteral);
 

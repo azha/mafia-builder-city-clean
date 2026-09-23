@@ -297,15 +297,9 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// <summary>UN GABARIT à un paramètre : la valeur servie de `cle` avec `{param}` remplacé, sinon le repli fr (même
         /// remplacement). ⛔ L'ORDRE DES MOTS VIENT DU GABARIT, jamais du code : une concaténation « nom + " " + mot » fige l'ordre
         /// du français et le traducteur ne peut plus le changer.</summary>
-        public static string Gabarit(string cle, string repli, string param, string valeur)
-        {
-            if (MafiaCleanCity.I18n.I18nCatalog.Connait(cle))
-            {
-                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle, new Dictionary<string, string> { { param, valeur } });
-                if (!string.IsNullOrWhiteSpace(t)) return t.Trim();
-            }
-            return repli.Replace("{" + param + "}", valeur);
-        }
+        public static string Gabarit(string cle, string repli, string param, string valeur) =>
+            // par `Libelle` : le repli se COMPTE (garde « zéro repli ») ; même rendu qu'avant
+            MafiaCleanCity.I18n.Libelle.Gabarit(cle, repli, new Dictionary<string, string> { { param, valeur } }).Trim();
 
         /// <summary>La clé du SEUL libellé servi qui dit « le bâtiment » (« Réparer le bâtiment ») : c'est lui que le nom remplace.
         /// « Réparer tout de suite », « Réparer lentement » ne nomment rien et restent tels quels (atelier §3.11 §2).</summary>
@@ -357,16 +351,15 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// chiffre isolé (R2.2). Clé absente ou refusée ⇒ le repli du client (le nombre en lettres, composé).</summary>
         public static string CompteEnLettres(string cle, int n, string repli)
         {
-            if (MafiaCleanCity.I18n.I18nCatalog.Connait(cle))
+            // par `Libelle` (repli null ⇒ null si la clé n'est pas servie, et le repli est COMPTÉ). ⚠️ Une valeur SERVIE refusée pour
+            // son chiffre n'est pas un repli au sens de `Libelle` (la clé est servie) : elle n'est pas comptée, et c'est voulu.
+            string t = MafiaCleanCity.I18n.Libelle.Gabarit(cle, null,
+                new Dictionary<string, string> { { "count", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
+            if (!string.IsNullOrWhiteSpace(t))
             {
-                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle,
-                    new Dictionary<string, string> { { "count", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
-                if (!string.IsNullOrWhiteSpace(t))
-                {
-                    bool chiffre = false;
-                    foreach (char ch in t) if (char.IsDigit(ch)) { chiffre = true; break; }
-                    if (!chiffre) return t.Trim();
-                }
+                bool chiffre = false;
+                foreach (char ch in t) if (char.IsDigit(ch)) { chiffre = true; break; }
+                if (!chiffre) return t.Trim();
             }
             return repli;
         }

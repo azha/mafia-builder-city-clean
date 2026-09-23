@@ -596,10 +596,10 @@ namespace MafiaCleanCity.Operational
         public static string LigneDAction(ActionOutcome outcome, string succes, string echec)
         {
             if (outcome != null && outcome.Ok) return succes;
-            string cle = outcome?.CleI18n;
-            return MafiaCleanCity.I18n.I18nCatalog.Connait(cle)
-                ? $"{echec} — {MafiaCleanCity.I18n.I18nCatalog.Traduire(cle)}"
-                : $"{echec}.";
+            // par `Libelle` (2026-09-23) : une clé servie mais absente du bundle retombe sur « {échec}. » — ce repli est désormais
+            // COMPTÉ (garde « zéro repli »). Même rendu qu'avant ; clé vide ⇒ ni lecture ni compte.
+            string raison = MafiaCleanCity.I18n.Libelle.Gabarit(outcome?.CleI18n, null);
+            return raison != null ? $"{echec} — {raison}" : $"{echec}.";
         }
 
         private IEnumerator RunAction(System.Func<System.Action<ActionOutcome>, IEnumerator> call,
