@@ -14,7 +14,7 @@ Rendu : `Tools/rendre-maquette.py` (DejaVu, point 18), 392 × 697 CSS × 3 → r
 
 CONTRÔLE DE GÉOMÉTRIE, avant le vrai rendu : la page ISOLÉE SEULE (sans les trois mises à jour), en polices SYSTÈME, doit reproduire
 `ecran-canon.png` (le canon du 02/09, qui est bien le téléphone seul) : si elle ne le fait pas, l'isolation est fausse — rien n'est livré.
-Usage : python3 Tools/juge-visuel/rendre-canon-1-2026-09-23.py
+Usage : python3 Tools/juge-visuel/rendre-canon-1-2026-09-23.py [--page-seule]
 """
 import os, re, subprocess, sys
 from PIL import Image, ImageChops
@@ -36,6 +36,18 @@ MISES_A_JOUR = ('.co,.floater,#bascule,#chaudb{display:none!important}'         
                 '.dockb .rond img{display:none!important}')                      # 15
 AILE_AVANT = '<span class="lib">Jour 12 · Soirée</span><span class="val serif" id="heure" style="font-size:15px">21:40</span>'
 AILE_APRES = '<span class="lib">Jour 12</span><span class="val serif" id="heure" style="font-size:15px">Soirée</span>'   # 16
+F = '\u202f'
+# 2026-09-23 (second passage) — les autres décisions ratifiées du chrome, les mêmes que `maj-chrome-canon-2026-09-23.py` pour les séries :
+TEXTES = [
+    ('<span class="val">$ 24 850</span>', f'<span class="val">24{F}850{F}€</span>'),                                   # 10, 19
+    ('<span class="heatpct" id="heatval">37%</span>', '<span class="heatpct" id="heatval">Tiède</span>'),                # 11 : le mot
+    ('<span class="heatlib" id="heatlib">Heat</span>', '<span class="heatlib" id="heatlib">Chaleur</span>'),            # 19 (capitales par le CSS)
+    ('<span class="pointe"></span></span>Marché</div>', '<span class="pointe"></span></span>Filière</div>'),               # front.md §4 A
+    # 8 : les trois cases en BANDES (ratifié) ; les MOTS des bandes sont PROPOSÉS, non ratifiés (`22-…` §7.1 A) ; 19 : « Heat » → « Chaleur »
+    ('<b style="color:var(--or-vif)">$ 2 400</b><span>À collecter</span>', '<b style="color:var(--or-vif)">Prêt</b><span>À collecter</span>'),
+    ('<b>$ 180/h</b><span>Revenus</span>', '<b>Rapporte</b><span>Revenus</span>'),
+    ('<b style="color:var(--braise)">12%</b><span>Heat local</span>', '<b style="color:var(--braise)">Tiède</b><span>Chaleur locale</span>'),
+]
 
 def deriver(html, maj=True):
     for sel, n in (('class="co"', 6), ('class="floater"', 1), ('id="bascule"', 1), ('id="chaudb"', 1), ('class="rond"><img', 4)):
@@ -43,6 +55,9 @@ def deriver(html, maj=True):
     if maj:
         if html.count(AILE_AVANT) != 1: sys.exit("⛔ l'aile droite n'a pas la forme attendue : rien rendu")
         html = html.replace(AILE_AVANT, AILE_APRES)
+        for avant, apres in TEXTES:
+            if html.count(avant) != 1: sys.exit(f'⛔ « {avant[:60]} » × {html.count(avant)}, 1 attendu : rien rendu')
+            html = html.replace(avant, apres)
     return html + f'\n<style id="canon-1">{ISOLATION}{MISES_A_JOUR if maj else ""}</style>\n'
 
 def rendre(html, sortie, polices_systeme=False):
@@ -64,6 +79,8 @@ def ecart(a, b):
 
 def main():
     src = open(SOURCE, encoding='utf-8').read()
+    if '--page-seule' in sys.argv:                          # la page de l'atelier, SANS rendu (le rendu passe par l'orchestrateur)
+        open(PAGE, 'w', encoding='utf-8').write(deriver(src, maj=True)); print('page écrite :', PAGE, '— aucun rendu'); return
     tmpdir = os.path.join(ICI, '..', '..', '.tmp-canon-1'); os.makedirs(tmpdir, exist_ok=True)
     # 1. contrôle de géométrie : isolation seule, polices système, contre le canon du 02/09
     g = rendre(deriver(src, maj=False), os.path.join(tmpdir, 'isolation-systeme.png'), polices_systeme=True)
