@@ -62,6 +62,26 @@ namespace MafiaCleanCity.Shell
         private TextMeshProUGUI impactText;
         private TextMeshProUGUI urgencyText;
         private TextMeshProUGUI stateText;
+        // ④ (2026-09-23, maquette atelier 25 §2.2, non ratifiée : la MÉCANIQUE, pas le pixel) — les deux options SERVIES de la carte,
+        // montrées comme une RECOMMANDATION (options[0], puis [1] en alternative) et JAMAIS sur un bouton : mesuré par le back, elles
+        // sont DESCRIPTIVES (`hl-card-types.ts:99-102`) — commit ne reçoit aucun indice d'option et ne produit aucun effet pour les 8
+        // fournisseurs (il enregistre une décision de session). « Réparer via la file » sur le bouton du tampon mentirait. Les boutons
+        // gardent leurs libellés jusqu'aux mots de l'atelier (demandés par f2). Et l'entrée du rapport quand la carte est celle des rapports.
+        private TextMeshProUGUI commitLabel, skipLabel, rapportText, recommandationText, alternativeText;
+        /// <summary>Crochet de test : les deux options RENDUES en recommandation ([0], puis [1]), vide sans carte.</summary>
+        public IReadOnlyList<string> OptionsRendues => optionsRendues;
+        /// <summary>Crochet de test : les libellés des DEUX BOUTONS (tampon, laisser) — la garde vérifie qu'aucun ne porte une option.</summary>
+        public IReadOnlyList<string> LibellesDesBoutons =>
+            new List<string> { commitLabel != null ? commitLabel.text : null, skipLabel != null ? skipLabel.text : null };
+        private readonly List<string> optionsRendues = new List<string>();
+        /// <summary>Crochet de test : « Lire maintenant » a-t-il ouvert les rapports ?</summary>
+        public bool RapportsOuverts { get; private set; }
+        /// <summary>Crochet de test : le nom du lieutenant du 1ᵉʳ rapport ouvert (lu par `AutonomyClient.GetReports`), null sinon.</summary>
+        public string NomDuRapport { get; private set; }
+        /// <summary>La carte est-elle celle des rapports à lire ?</summary>
+        public bool EstCarteDesRapports =>
+            CurrentCard != null && !string.IsNullOrEmpty(CurrentCard.decision_type_key)
+            && CurrentCard.decision_type_key.EndsWith("AUTONOMY_REPORTS_PENDING", StringComparison.Ordinal);
 
         private HlCardClient client;
         private string token;
@@ -98,6 +118,19 @@ namespace MafiaCleanCity.Shell
             {
                 RenderedState = CardState.Available;
             }
+            NomDuRapport = null;
+            Render();
+            // ④ l'entrée du rapport : le NOM vient de la route des rapports (lot F), par la MÊME fonction que le bandeau — jamais copié.
+            if (EstCarteDesRapports && !string.IsNullOrEmpty(token) && isActiveAndEnabled) StartCoroutine(ChargerLeNomDuRapport());
+        }
+
+        private IEnumerator ChargerLeNomDuRapport()
+        {
+            string id = null;
+            yield return new MafiaCleanCity.Operational.Autonomy.AutonomyClient { BaseUrl = baseUrl }.GetReports(token,
+                rapports => NomDuRapport = AnnonceDuBandeau.NomDuPremierRapport(rapports, out id),
+                (code, msg) => Debug.LogWarning($"[HlCard] rapports d'autonomie (best-effort) : {code} {msg}"));
+            if (this == null) yield break;
             Render();
         }
 
@@ -114,6 +147,13 @@ namespace MafiaCleanCity.Shell
             yield return client.Commit(token, CurrentCard.card_id,
                 dto => LastCommitCommitted = dto.committed,
                 (code, msg) => LastCommitError = $"{code}: {msg}");
+            // ④ la carte des rapports : suivre sa recommandation (« Lire maintenant »), c'est OUVRIR les rapports — un effet RÉEL, comme
+            // le « lire » du bandeau (2026-09-23) ; le tampon, lui, n'enregistre qu'une décision de session. Seulement si le tampon a pris.
+            if (LastCommitCommitted == true && EstCarteDesRapports)
+            {
+                IShellNavigator nav = ShellNavigatorLocator.Find();
+                if (nav != null) { nav.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Autonomy.AutonomyInboxController>(); RapportsOuverts = true; }
+            }
         }
 
         /// <summary>The accessible ALTERNATIVE to the long press (canon: "alternative typed-confirm
@@ -147,13 +187,19 @@ namespace MafiaCleanCity.Shell
         private void Render()
         {
             renderedTexts.Clear();
+            optionsRendues.Clear();
+            if (rapportText != null) rapportText.text = "";
+            if (recommandationText != null) recommandationText.text = "";
+            if (alternativeText != null) alternativeText.text = "";
             switch (RenderedState)
             {
                 case CardState.NoCard:
-                    titleText.text = Lib("carte", "Aucune décision en attente");
+                    // ④ état « rien à trancher » (maquette 25 §2.2, cadre 0) : « Rien à signaler » en titre, puis « Aucune décision en
+                    // attente » — l'ordre de la maquette (les deux clés sont servies, `accueil.carte.*`).
+                    titleText.text = Lib("carte", "Rien à signaler");
                     impactText.text = "";
                     urgencyText.text = "";
-                    stateText.text = Lib("carte", "Rien à signaler");
+                    stateText.text = Lib("carte", "Aucune décision en attente");
                     Track(titleText.text);
                     Track(stateText.text);
                     break;
@@ -168,6 +214,7 @@ namespace MafiaCleanCity.Shell
                     Track(stateText.text);
                     break;
                 case CardState.Available:
+                    RendreLesOptions();
                     titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key);
                     impactText.text = ImpactLabel(CurrentCard.impact_bucket);
                     urgencyText.text = UrgencyLabel(CurrentCard.urgency_bucket);
@@ -177,6 +224,30 @@ namespace MafiaCleanCity.Shell
                     Track(urgencyText.text);
                     Track(stateText.text);
                     break;
+            }
+        }
+
+        /// <summary>④ les deux options SERVIES (clés `hl.option.*`, traduites par le catalogue) en RECOMMANDATION, exactement deux, sinon
+        /// rien — jamais sur les boutons (options descriptives, voir les champs). L'entrée du rapport quand le nom est lu.</summary>
+        private void RendreLesOptions()
+        {
+            DecisionOptionDto[] o = CurrentCard != null ? CurrentCard.options : null;
+            if (o != null && o.Length == 2 && o[0] != null && o[1] != null)
+            {
+                string agir = MafiaCleanCity.I18n.Libelle.Gabarit(o[0].label, "—");
+                string laisser = MafiaCleanCity.I18n.Libelle.Gabarit(o[1].label, "—");
+                if (recommandationText != null) recommandationText.text = agir;
+                if (alternativeText != null) alternativeText.text = laisser;
+                optionsRendues.Add(agir);
+                optionsRendues.Add(laisser);
+                Track(agir);
+                Track(laisser);
+            }
+            if (EstCarteDesRapports && !string.IsNullOrWhiteSpace(NomDuRapport) && rapportText != null)
+            {
+                rapportText.text = MafiaCleanCity.I18n.Libelle.Gabarit("chrome.bandeau.rapport", "{nom} a un rapport pour vous",
+                    new Dictionary<string, string> { { "nom", NomDuRapport } });
+                Track(rapportText.text);
             }
         }
 
@@ -217,6 +288,9 @@ namespace MafiaCleanCity.Shell
             impactText = NewText("Impact", 14, FontStyles.Normal);
             urgencyText = NewText("Urgency", 14, FontStyles.Normal);
             stateText = NewText("State", 14, FontStyles.Italic);
+            rapportText = NewText("RapportEntree", 14, FontStyles.Normal);   // ④ l'entrée du rapport (vide hors carte des rapports)
+            recommandationText = NewText("Recommandation", 14, FontStyles.Normal);   // ④ options[0], texte (jamais un bouton)
+            alternativeText = NewText("Alternative", 13, FontStyles.Italic);          // ④ options[1], texte
 
             GameObject actions = new GameObject("Actions", typeof(RectTransform));
             actions.transform.SetParent(transform, false);
@@ -234,7 +308,7 @@ namespace MafiaCleanCity.Shell
             commitGo.AddComponent<Image>().color = DesignTokens.Current.accentGold;
             CommitButton = commitGo.AddComponent<LongPressButton>();
             CommitButton.OnLongPressCompleted += () => StartCoroutine(RequestCommit());
-            TextMeshProUGUI commitLabel = NewChildText(commitGo.transform, "Tamponner — appui long", 15);
+            commitLabel = NewChildText(commitGo.transform, "Tamponner — appui long", 15);
             commitLabel.color = DesignTokens.Current.surfaceBase;
 
             GameObject skipGo = new GameObject("SkipButton", typeof(RectTransform));
@@ -244,7 +318,7 @@ namespace MafiaCleanCity.Shell
             skipButton = skipGo.AddComponent<Button>();
             skipButton.targetGraphic = skipImg;
             skipButton.onClick.AddListener(() => StartCoroutine(RequestSkip()));
-            TextMeshProUGUI skipLabel = NewChildText(skipGo.transform, "Skip", 15);
+            skipLabel = NewChildText(skipGo.transform, "Skip", 15);
             skipLabel.color = DesignTokens.Current.onSurfacePrimary;
 
             // Accessible typed-confirm ALTERNATIVE to the long press (canon:129-138, F2 — obligatoire,

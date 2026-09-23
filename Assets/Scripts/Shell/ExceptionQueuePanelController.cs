@@ -41,6 +41,12 @@ namespace MafiaCleanCity.Shell
 
         private RectTransform rowsRoot;
         private TextMeshProUGUI emptyStateText;
+        // ④ (2026-09-23, maquette 25 §2.2) — la SUIVANTE sous la carte de tête (queue[0] : « {nom} attend vos ordres · grave · trancher »,
+        // les clés du bandeau, servies) et, file vide, l'ambiance « Personne ne fait la queue — la routine tient » (la phrase de ⑨,
+        // `ExceptionQueueController.AmbianceVide`, servie). Mécanique, pas pixel : la maquette n'est pas ratifiée.
+        private TextMeshProUGUI suivanteText, ambianceText;
+        public string TexteSuivante => suivanteText != null && suivanteText.gameObject.activeSelf ? suivanteText.text : null;
+        public string TexteAmbiance => ambianceText != null && ambianceText.gameObject.activeSelf ? ambianceText.text : null;
         private ExceptionsClient client;
         private string token;
         private ExceptionCardDto[] currentCards = Array.Empty<ExceptionCardDto>();
@@ -126,11 +132,17 @@ namespace MafiaCleanCity.Shell
                 RenderedCardCount = 0;
                 emptyStateText.gameObject.SetActive(true);
                 emptyStateText.text = Lib("file", "Aucune exception en attente");
+                ambianceText.gameObject.SetActive(true);
+                ambianceText.text = MafiaCleanCity.Operational.Exceptions.ExceptionQueueController.AmbianceVide();
+                suivanteText.gameObject.SetActive(false);
                 return;
             }
 
             RenderedEmptyState = false;
             emptyStateText.gameObject.SetActive(false);
+            ambianceText.gameObject.SetActive(false);
+            suivanteText.gameObject.SetActive(true);
+            suivanteText.text = Suivante(currentCards[0]);
 
             // R2.3 sensitivity (C5-F2): render EXACTLY as many rows as the array carries — never a
             // hard-coded count (3 is only the TUNABLE'S default, never a client-side constant).
@@ -189,6 +201,18 @@ namespace MafiaCleanCity.Shell
         //    (`HIGH|MEDIUM|LOW` contre `MILD|MODERATE|SEVERE`), donc en pratique elle recrachait
         //    la valeur BRUTE du serveur, et « Unknown » quand elle était vide. Trois mots anglais
         //    sur un chemin qui n'en tolère aucun. Le domaine vit dans `ExceptionBandes`.
+        /// <summary>La suivante : QUI attend (un lieutenant NOMMÉ par `ExceptionBandes.Locuteur`, ou la ville), sa gravité, et le geste
+        /// « trancher » — les clés du bandeau (`chrome.bandeau.attend_vos_ordres`, `…la_ville_attend_vos_ordres`, `…trancher`), servies.</summary>
+        public static string Suivante(ExceptionCardDto c)
+        {
+            if (c == null) return "";
+            string qui = MafiaCleanCity.Operational.Exceptions.ExceptionBandes.ParleUnLieutenant(c)
+                ? MafiaCleanCity.I18n.Libelle.Gabarit("chrome.bandeau.attend_vos_ordres", "{nom} attend vos ordres",
+                    new Dictionary<string, string> { { "nom", MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Locuteur(c) } })
+                : MafiaCleanCity.I18n.Libelle.Gabarit("chrome.bandeau.la_ville_attend_vos_ordres", "La ville attend vos ordres");
+            return qui + " · " + SeverityLabel(c.severity_band) + " · " + MafiaCleanCity.I18n.Libelle.De("chrome", "bandeau", "trancher");
+        }
+
         private static string SeverityLabel(string b) =>
             MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Gravite(b);
         private static Color SeverityAccent(string b)
@@ -227,8 +251,14 @@ namespace MafiaCleanCity.Shell
             rvlg.childForceExpandHeight = false;
             rowsRoot = (RectTransform)rowsGo.transform;
 
+            suivanteText = NewText(transform, "", 260);
+            suivanteText.gameObject.SetActive(false);
+            suivanteText.transform.SetSiblingIndex(0);   // SOUS la carte de tête : en tête de ce panneau
+
             emptyStateText = NewText(transform, Lib("file", "Aucune exception en attente"), 260);
             emptyStateText.gameObject.SetActive(false);
+            ambianceText = NewText(transform, "", 260);
+            ambianceText.gameObject.SetActive(false);
 
             GameObject viewAllGo = new GameObject("ViewAll", typeof(RectTransform));
             viewAllGo.transform.SetParent(transform, false);

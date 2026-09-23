@@ -32,6 +32,9 @@ namespace MafiaCleanCity.Shell
         public bool BannerActive { get; private set; }
         public string BannerWeekStateRendered { get; private set; }
         public string PressureBandRendered { get; private set; }
+        /// <summary>④ (2026-09-23) — `backlog_badge` : d'autres cartes attendent au-delà de celles que la file montre (servi par
+        /// session/open ; jusqu'ici au seul TopBar). Mot PROPOSÉ par l'atelier (25 §2.2), non ratifié.</summary>
+        public bool BacklogBadgeRendered { get; private set; }
 
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
         private readonly List<string> renderedTexts = new List<string>();
@@ -39,6 +42,7 @@ namespace MafiaCleanCity.Shell
         private TextMeshProUGUI bannerText;
         private TextMeshProUGUI stateText;
         private TextMeshProUGUI pressureText;
+        private TextMeshProUGUI backlogText;
         private Button shortcutDailyReview;
         private Button shortcutSecond;
         private bool initialized;
@@ -96,6 +100,14 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>`queue_pressure_band` rendu comme signal de pression (design C7-F3) — la valeur
         /// suit LES TROIS bandes.</summary>
+        public void SetBacklogBadge(bool badge)
+        {
+            EnsureInitialized();
+            BacklogBadgeRendered = badge;
+            backlogText.text = badge ? MafiaCleanCity.I18n.Libelle.De("accueil", "chrome", "d’autres attendent au-delà de ce que la file montre") : "";
+            RebuildTracked();
+        }
+
         public void SetPressureBand(string band)
         {
             EnsureInitialized();
@@ -154,6 +166,7 @@ namespace MafiaCleanCity.Shell
             if (!string.IsNullOrEmpty(stateText.text)) renderedTexts.Add(stateText.text);
             if (!string.IsNullOrEmpty(bannerText.text)) renderedTexts.Add(bannerText.text);
             if (!string.IsNullOrEmpty(pressureText.text)) renderedTexts.Add(pressureText.text);
+            if (backlogText != null && !string.IsNullOrEmpty(backlogText.text)) renderedTexts.Add(backlogText.text);
         }
 
         // --------------------------------------------------------------- UI build
@@ -173,6 +186,7 @@ namespace MafiaCleanCity.Shell
             stateText = NewText();
             bannerText = NewText();
             pressureText = NewText();
+            backlogText = NewText();
 
             GameObject shortcuts = new GameObject("ShortcutBar", typeof(RectTransform));
             shortcuts.transform.SetParent(transform, false);
