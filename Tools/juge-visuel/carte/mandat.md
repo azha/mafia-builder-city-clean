@@ -9,14 +9,14 @@
 - **Nom** : City Map (③, canon `screen_2`) — contrôleur `CityMapController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : la ville en 2.5D isométrique, les overlays (heat / cohesion / leks / routes /
 - **Chemin joueur pour y arriver** : onglet EMPIRE (défaut)
-- **Routes lues dans le contrôleur** : `/v1/auth/signin`, `/v1/auth/signup`, `/v1/city/district/`, `/v1/city/district/{districtId}/heat`, `/v1/world/districts` (`Assets/Scripts/CityMap/*.cs`)
+- **Routes lues dans le contrôleur** : `/v1/auth/signin`, `/v1/auth/signup`, `/v1/city/district/`, `/v1/city/district/{districtId}/heat`, `/v1/world/districts` (`../mafia-builder-city-clean/Assets/Scripts/CityMap/*.cs`)
 - **État `front.md`** (en-tête) : · « La Carte de Brennar »
 
 ## Référence (fait autorité : l'IMAGE)
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `carte/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #22 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 22, 23, 24 — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 22, 23, 24 — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. ville peinte livrée le 03/09 (TD-494) ; cadres 22-24 avec les noms de fiction (TD-492)
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

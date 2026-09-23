@@ -9,14 +9,14 @@
 - **Nom** : La loi (㉛, canon `sans id canon (écran neuf)`) — contrôleur `LoiScreenController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : non fourni (front.md ne porte pas de puce « Montre » pour cet écran)
 - **Chemin joueur pour y arriver** : Plus → LA LOI
-- **Routes lues dans le contrôleur** : `/v1/me/legal`, `/v1/me/legal/cases/`, `/v1/me/legal/lawyers`, `/v1/me/legal/lawyers/` (`Assets/Scripts/Operational/Loi/*.cs`)
+- **Routes lues dans le contrôleur** : `/v1/me/legal`, `/v1/me/legal/cases/`, `/v1/me/legal/lawyers`, `/v1/me/legal/lawyers/` (`../mafia-builder-city-clean/Assets/Scripts/Operational/Loi/*.cs`)
 - **État `front.md`** (en-tête) : — « le parloir » · **ÉCRAN NEUF** (2026-08-27)
 
 ## Référence (fait autorité : l'IMAGE)
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `ecran_loi/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #67 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 67, 68, 69, 70, 71, 72 — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 67, 68, 69, 70, 71, 72 — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : déduite. cadres 67-72 (le parloir, l'avocat) par le titre
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

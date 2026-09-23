@@ -9,14 +9,14 @@
 - **Nom** : L'horizon des possibles (㊱, canon `sans id canon (écran neuf)`) — contrôleur `HorizonScreenController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : non fourni (front.md ne porte pas de puce « Montre » pour cet écran)
 - **Chemin joueur pour y arriver** : Plus → L'HORIZON DES POSSIBLES
-- **Routes lues dans le contrôleur** : `/v1/meta/horizon-feed`, `/v1/meta/horizon-feed/`, `/v1/meta/horizon/adopt` (`Assets/Scripts/Operational/Horizon/*.cs`)
+- **Routes lues dans le contrôleur** : `/v1/meta/horizon-feed`, `/v1/meta/horizon-feed/`, `/v1/meta/horizon/adopt` (`../mafia-builder-city-clean/Assets/Scripts/Operational/Horizon/*.cs`)
 - **État `front.md`** (en-tête) : — `screen_c6` · **ÉCRAN NEUF** (2026-08-27 nuit)
 
 ## Référence (fait autorité : l'IMAGE)
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `screen_c6/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #113 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 113, 114, 115, 116, 117, 118 — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 113, 114, 115, 116, 117, 118 — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : déduite. cadres 113-118 « L'horizon » par le titre ; liste vide par construction sur le compte de démo
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

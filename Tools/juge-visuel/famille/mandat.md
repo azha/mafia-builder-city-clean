@@ -9,14 +9,14 @@
 - **Nom** : Org Chart (⑥, canon `screen_3`) — contrôleur `LieutenantScreenController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : l'organigramme Don → lieutenants → hommes, avec chips de résumé.
 - **Chemin joueur pour y arriver** : onglet FAMILLE
-- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`Assets/Scripts/Operational/Lieutenant/*.cs`)
+- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`../mafia-builder-city-clean/Assets/Scripts/Operational/Lieutenant/*.cs`)
 - **État `front.md`** (en-tête) : · « La Famille »  ★ *déclencheur de §S4*
 
 ## Référence (fait autorité : l'IMAGE)
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `famille/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar.html` organigramme (rangée « La Famille ») — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar.html` organigramme (rangée « La Famille ») — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. référence = Tools/family-organigramme-reference-1120.png (1120×1850) et famille/ecran-canon.png ; ⑦ ⑧ sont des sections du même contrôleur
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

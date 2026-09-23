@@ -9,14 +9,14 @@
 - **Nom** : Ce que vous avez confié (㉜, canon `sans id canon (écran neuf)`) — contrôleur `DelegationScreenController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : non fourni (front.md ne porte pas de puce « Montre » pour cet écran)
 - **Chemin joueur pour y arriver** : Plus → CE QUE VOUS AVEZ CONFIÉ
-- **Routes lues dans le contrôleur** : `/v1/lieutenants`, `/v1/meta/graduation`, `/v1/meta/recall`, `/v1/meta/recall-preview/`, `/v1/meta/task-categories` (`Assets/Scripts/Operational/Delegation/*.cs`)
+- **Routes lues dans le contrôleur** : `/v1/lieutenants`, `/v1/meta/graduation`, `/v1/meta/recall`, `/v1/meta/recall-preview/`, `/v1/meta/task-categories` (`../mafia-builder-city-clean/Assets/Scripts/Operational/Delegation/*.cs`)
 - **État `front.md`** (en-tête) : — « le tableau de service » · **ÉCRAN NEUF** (2026-08-27)
 
 ## Référence (fait autorité : l'IMAGE)
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `ecran_delegation/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #73 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 73, 74, 75, 76, 77, 78 — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 73, 74, 75, 76, 77, 78 — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. le contrôleur cite m-73..78
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

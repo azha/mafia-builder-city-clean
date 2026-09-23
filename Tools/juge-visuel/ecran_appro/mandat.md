@@ -9,14 +9,14 @@
 - **Nom** : La chaîne d'appro (㉚, canon `sans id canon (écran neuf)`) — contrôleur `ChaineDApproScreenController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : non fourni (front.md ne porte pas de puce « Montre » pour cet écran)
 - **Chemin joueur pour y arriver** : Plus → LA CHAÎNE D'APPRO
-- **Routes lues dans le contrôleur** : `/v1/operational/precursors/order`, `/v1/operational/precursors?building_id=`, `/v1/supply-chain/graph`, `/v1/supply-chain/legs/` (`Assets/Scripts/Operational/ChaineDAppro/*.cs`)
+- **Routes lues dans le contrôleur** : `/v1/operational/precursors/order`, `/v1/operational/precursors?building_id=`, `/v1/supply-chain/graph`, `/v1/supply-chain/legs/` (`../mafia-builder-city-clean/Assets/Scripts/Operational/ChaineDAppro/*.cs`)
 - **État `front.md`** (en-tête) : — « le bon de commande et la conduite qui refoule » · **ÉCRAN NEUF** (2026-08-27)
 
 ## Référence (fait autorité : l'IMAGE)
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `ecran_appro/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #48 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 48, 49, 50, 51, 52, 53 — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 48, 49, 50, 51, 52, 53 — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. le contrôleur cite m-48 (repos) .. m-53 (délégué)
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

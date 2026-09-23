@@ -9,7 +9,7 @@
 - **Nom** : Settings (⑲, canon `screen_14`) — contrôleur `SettingsScreenController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : préférences, langue, déconnexion, suppression de compte (RGPD).
 - **Chemin joueur pour y arriver** : Plus → LES RÉGLAGES
-- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`Assets/Scripts/Account/Settings/*.cs`)
+- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`../mafia-builder-city-clean/Assets/Scripts/Account/Settings/*.cs`)
 - **État `front.md`** (en-tête) : —
 
 ## Référence (fait autorité : l'IMAGE)
@@ -19,7 +19,7 @@
 | `compte/profil-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `compte/reglages-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `compte/tutoriel-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 95, 96, 97 — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 95, 96, 97 — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. front.md ⑲ (l.1847) : « fusionnée avec screen_c1 dans « LE PROFIL » … cadres 45-47 » (ancienne numérotation) = 95-97 « Le compte », tiroir « Le jeu » (la langue, « On vous explique encore ») ; ratifiée par délégation le 02/09 (front.md l.22). Référence : celle de ㉒ (même porte, cadre 95) — pas de rendu propre. Corrigé le 2026-09-23 (atelier, commande f2) : l'INDEX disait « aucune »
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

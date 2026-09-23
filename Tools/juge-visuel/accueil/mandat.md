@@ -9,14 +9,14 @@
 - **Nom** : Home Dashboard (④, canon `screen_1`) — contrôleur `DashboardController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : canon) : `HighestLeverageCard` · `ExceptionQueuePanel` top-3 inline ·
 - **Chemin joueur pour y arriver** : surimpression à l'ouverture de session (acquisition), puis Accueil
-- **Routes lues dans le contrôleur** : `/v1/economy/wallet`, `/v1/me` (`Assets/Scripts/Operational/Dashboard/*.cs`)
+- **Routes lues dans le contrôleur** : `/v1/economy/wallet`, `/v1/me` (`../mafia-builder-city-clean/Assets/Scripts/Operational/Dashboard/*.cs`)
 - **État `front.md`** (en-tête) : · l'ouverture de session (décision B)
 
 ## Référence (fait autorité : l'IMAGE)
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | — | aucune référence rendue (aucune maquette de série 4/6) | — | — | — |
-- **Cadres de la maquette** : aucune — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : aucune — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : aucune. AUCUNE maquette (front.md:1609 « [ ] maquetté ») — les cadres 20-21 « Le Bureau du patron » sont ⑱ le menu Plus (front.md:1567), corrigé par l'orchestrateur le 03/09
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

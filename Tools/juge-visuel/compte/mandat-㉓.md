@@ -9,7 +9,7 @@
 - **Nom** : IAP Shop (㉓, canon `screen_c2`) — contrôleur `ShopScreenController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : le catalogue, le solde, l'achat, les entitlements, la restauration.
 - **Chemin joueur pour y arriver** : Plus → LA VITRINE
-- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`Assets/Scripts/Economy/Shop/*.cs`)
+- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`../mafia-builder-city-clean/Assets/Scripts/Economy/Shop/*.cs`)
 - **État `front.md`** (en-tête) : — ✅ **le mieux servi du corpus**
 
 ## Référence (fait autorité : l'IMAGE)
@@ -20,7 +20,7 @@
 | `compte/profil-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `compte/reglages-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `compte/tutoriel-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 98, 99, 100 — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 98, 99, 100 — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : déduite. déduit par titre (98-100) — le contrôleur dit « cadres 48-50 », numérotation d'une autre série ; canon compte/boutique-canon.png
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

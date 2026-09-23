@@ -9,7 +9,7 @@
 - **Nom** : Compression Week Board (⑭, canon `screen_13`) — contrôleur `CompressionScreenController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : le tableau des problèmes de la semaine de compression, décisions, report.
 - **Chemin joueur pour y arriver** : Plus → LA SEMAINE
-- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`Assets/Scripts/CoreLoops/Compression/*.cs`)
+- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`../mafia-builder-city-clean/Assets/Scripts/CoreLoops/Compression/*.cs`)
 - **État `front.md`** (en-tête) : —
 
 ## Référence (fait autorité : l'IMAGE)
@@ -18,7 +18,7 @@
 | `compression/reference-1080x2102.png` | cadre nominal `ecrans-brennar-4.html` #25 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
 | `compression/ecran-canon-vide.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `compression/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar-4.html` 25, 26, 27, 28, 29, 30 · `ecrans-brennar-6.html` 14, 15, 16, 17, 18, 19 — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-4.html` 25, 26, 27, 28, 29, 30 · `ecrans-brennar-6.html` 14, 15, 16, 17, 18, 19 — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. le contrôleur cite série 4 cadres 25-30 (non ratifiée au 02/09)
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

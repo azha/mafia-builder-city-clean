@@ -9,7 +9,7 @@
 - **Nom** : Exception Queue (⑨, canon `screen_5`) — contrôleur `ExceptionQueueController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : la file des exceptions, tri, filtres, swipe, résolution par lot, états riches.
 - **Chemin joueur pour y arriver** : Accueil → la file d'exceptions
-- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`Assets/Scripts/Operational/Exceptions/*.cs`)
+- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`../mafia-builder-city-clean/Assets/Scripts/Operational/Exceptions/*.cs`)
 - **État `front.md`** (en-tête) : ★ *déclencheur de §S6*
 
 ## Référence (fait autorité : l'IMAGE)
@@ -18,7 +18,7 @@
 | `exceptions/reference-⑨-1080x2102.png` | cadre nominal `ecrans-brennar-4.html` #14 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
 | `exceptions/ecran-canon-vide.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `exceptions/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar-4.html` 14, 16, 17, 18 · `ecrans-brennar-6.html` 9, 11, 12, 13 — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-4.html` 14, 16, 17, 18 · `ecrans-brennar-6.html` 9, 11, 12, 13 — atelier `bd6c3be`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : mesurée. le contrôleur cite série 4 cadre 14, ratifié (« ok c'est bien », 2026-08-26)
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

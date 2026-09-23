@@ -28,6 +28,9 @@ Usage :  python3 Tools/juge-visuel/construire-dossiers.py [--controle] [--sans-r
 import json, os, re, subprocess, sys
 
 CLIENT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Le CODE (Assets : AppShell, contrôleurs, planches) peut être lu dans un AUTRE arbre que celui des outils : l'arbre DA part de main et
+# prend du retard sur le client (payé le 2026-09-23 : ⑪ retiré au cumul 9be2fe9d, encore monté dans l'arbre DA). `--client <arbre>`.
+ARBRE_CODE = os.path.abspath(os.path.expanduser(sys.argv[sys.argv.index("--client") + 1])) if "--client" in sys.argv else CLIENT
 ATELIER = os.path.expanduser("~/project/atelier3d-mafia")
 BACK = os.path.expanduser("~/project/mafia-clean-city")
 JV = os.path.join(CLIENT, "Tools", "juge-visuel")
@@ -56,21 +59,6 @@ TABLE = [
  dict(sym="⑥", ctl="LieutenantScreenController", dossier="famille", chemin="onglet FAMILLE",
       cadres=[(S1, ["organigramme (rangée « La Famille »)"])], nominal=None, planche="famille_1080x2400.png",
       confiance="mesurée", note="référence = Tools/family-organigramme-reference-1120.png (1120×1850) et famille/ecran-canon.png ; ⑦ ⑧ sont des sections du même contrôleur"),
- dict(sym="⑪", ctl="LaunderingController", dossier="coffre", chemin="onglet FILIÈRE",
-      cadres=[], nominal=None, planche="planche_la_filiere_1080x2400.png",
-      confiance="aucune", note="⛔ NE PLUS JUGER (2026-09-23, tranché par l'orchestrateur, atelier 25-… §1) : ⑪ SORT du chemin joueur — l'onglet Filière monte ㊵ (front.md §4 A, « le bouton ne ment pas ») ; ⑪ ⑫ ㊵ lisaient les mêmes 6 champs. Montage : CLIENT-1. — aucun cadre de série 4/6 ne dessine le pipeline ; coffre/ecran-canon.png est le seul canon. "
-                               "✅ PLANCHE RÉTABLIE le 2026-09-07, par MESURE cette fois : la suite écrit "
-                               "CapturerLocataire<LaunderingController>(shell, \"la_filiere\", …) "
-                               "(PlancheEcransManquantsCapturePlayModeTests.cs:128) et le fichier existe. "
-                               "⇒ La planche de ⑪ est planche_la_filiere, jamais planche_le_coffre — "
-                               "cette dernière est écrite en montant ProfileScreenController, c'est celle de ㉒. "
-                               "Le doublon ne se tranchait donc pas au NOM mais au LOCATAIRE MONTÉ par la suite. "
-                               "⛔ PLANCHE RETIRÉE le 2026-09-07 : cette ligne portait planche_le_coffre_1080x2400.png, "
-                               "que ㉒ porte AUSSI — un seul fichier, deux écrans, deux contrôleurs. Mon attribution ici "
-                               "reposait sur le seul NOM (dossier « coffre » ≈ nom du fichier), celle de ㉒ sur une note "
-                               "explicite. Un rattachement par ressemblance de mot est exactement le critère qui a produit "
-                               "un faux positif sur icon_sandpile ici. Ce que cette planche MONTRE se lit sur l'image : "
-                               "à re-remplir par mesure, jamais par le nom."),
  dict(sym="⑯", ctl="DailyReviewScreenController", dossier="revue-du-jour", chemin="Plus → LA REVUE DU JOUR",
       cadres=[(S4, list(range(0, 4))), (S6, list(range(0, 4)))], nominal=(S4, 0), planche="revue_du_jour_seuil-force-0.1_1080x2400.png",
       confiance="mesurée", note="série 4 cadres 0-3 = le canon ratifié (revue-du-jour/v4-0..3.png)"),
@@ -109,9 +97,9 @@ TABLE = [
       confiance="mesurée", note="le contrôleur cite les cadres 125 et 129",
       nominal_note="cadre 125",
       extras=[("screen_c1/reference-vocabulaire-1080x2102.png", "cadre 145, LES 11 CRANS — `fading` et `lingering` sont servis et n'avaient aucun dessin")]),
- dict(sym="㊵", ctl="FiliereScreenController", dossier="screen_c2", chemin="Plus → LA FILIÈRE",
+ dict(sym="㊵", ctl="FiliereScreenController", dossier="screen_c2", chemin="onglet FILIÈRE du dock (AppShell.cs:272) · la nav Filière de l'Accueil · Plus → LA FILIÈRE",
       cadres=[(S6, list(range(137, 143)))], nominal=(S6, 137), planche="screen_c2_filiere_sous_chrome_1080x2400.png",
-      confiance="mesurée", note="★ PORTE LA FILIÈRE (2026-09-23, tranché) : l'onglet Filière du dock monte ㊵ ; ⑪ (LaunderingController) et ⑫ (PipelineOverviewController) sortent du chemin joueur et ne sont PLUS À JUGER (atelier 25-… §1). Deux conditions à vérifier au jugement : ㊵ lit `deviation_active` (seul ⑪ le lisait), et l'ordre des étapes vient de `stage_index` (0 lecteur au 23/09 : l'ordre affiché était DÉDUIT). — le contrôleur cite le cadre 142 (« ce qui manque encore »)"),
+      confiance="mesurée", note="★ PORTE LA FILIÈRE (2026-09-23, tranché) — ⑪ (LaunderingController) et ⑫ (PipelineOverviewController) sont RETIRÉS du client (cumul 9be2fe9d, code mort depuis D6 : 0 chemin joueur, 0 GUID en scène) ; leur entrée et le dossier « coffre » quittent cette table ; ㊵ lit deviation_active et l'ordre stage_index depuis a7b6b920 (les deux conditions ci-dessous sont TENUES). l'onglet Filière du dock monte ㊵ ; ⑪ (LaunderingController) et ⑫ (PipelineOverviewController) sortent du chemin joueur et ne sont PLUS À JUGER (atelier 25-… §1). Deux conditions à vérifier au jugement : ㊵ lit `deviation_active` (seul ⑪ le lisait), et l'ordre des étapes vient de `stage_index` (0 lecteur au 23/09 : l'ordre affiché était DÉDUIT). — le contrôleur cite le cadre 142 (« ce qui manque encore »)"),
  dict(sym="㉕", ctl="TutorialScreenController", dossier="compte", chemin="Plus → LA PREMIÈRE FOIS",
       cadres=[], nominal=None, planche="planche_la_premiere_fois_1080x2400.png",
       confiance="aucune", note="canon compte/tutoriel-canon.png ; aucun cadre de série 4/6 identifié"),
@@ -214,7 +202,7 @@ HORS_APPSHELL = [
 
 
 def montages_appshell():
-    src = open(os.path.join(CLIENT, "Assets/Scripts/Shell/AppShell.cs"), encoding="utf-8").read()
+    src = open(os.path.join(ARBRE_CODE, "Assets/Scripts/Shell/AppShell.cs"), encoding="utf-8").read()
     return sorted(set(re.findall(r"(?:MountTenant|MonterLocataireEnSurimpression)<([A-Za-z]+Controller)>\(\)", src)))
 
 
@@ -238,7 +226,7 @@ def front_md():
 
 
 def routes_du_controleur(ctl):
-    chemin = subprocess.run(["grep", "-rl", f"class {ctl}\\b", os.path.join(CLIENT, "Assets/Scripts"), "--include=*.cs"],
+    chemin = subprocess.run(["grep", "-rl", f"class {ctl}\\b", os.path.join(ARBRE_CODE, "Assets/Scripts"), "--include=*.cs"],
                             capture_output=True, text=True).stdout.split()
     if not chemin:
         return [], ""
@@ -343,7 +331,7 @@ def main(argv):
         for fichier, pourquoi in r.get("extras", []):
             ref += f" + `{fichier}` ({pourquoi})"
         planche = r["planche"]
-        pe = ("existe" if planche and os.path.exists(os.path.join(CLIENT, "Assets/Screenshots", planche)) else ("ABSENTE" if planche else "—"))
+        pe = ("existe" if planche and os.path.exists(os.path.join(ARBRE_CODE, "Assets/Screenshots", planche)) else ("ABSENTE" if planche else "—"))
         corps = "—"
         for nom_idx in (f"_index-{r['sym']}.json", "_index.json"):
             chemin_idx = os.path.join(JV, r["dossier"], "corps-reels", nom_idx)
@@ -387,7 +375,7 @@ def main(argv):
             if canon.endswith("-canon.png") or canon.startswith("ecran-canon"):
                 ref_rows.append(f"| `{r['dossier']}/{canon}` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |")
         routes, fichier = routes_du_controleur(r["ctl"])
-        planche_etat = "existe" if r["planche"] and os.path.exists(os.path.join(CLIENT, "Assets/Screenshots", r["planche"])) else "ABSENTE — à capturer"
+        planche_etat = "existe" if r["planche"] and os.path.exists(os.path.join(ARBRE_CODE, "Assets/Screenshots", r["planche"])) else "ABSENTE — à capturer"
         mandat = MANDAT.format(sym=r["sym"], nom=f.get("nom", "?"), dossier=r["dossier"], date=date, id=f.get("id") or "sans id canon (écran neuf)", ctl=r["ctl"],
                                montre=f.get("montre") or "non fourni (front.md ne porte pas de puce « Montre » pour cet écran)",
                                chemin=r["chemin"], routes=(", ".join(f"`{x}`" for x in routes) or "aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees)") + (f" (`{fichier}`)" if fichier else ""),
