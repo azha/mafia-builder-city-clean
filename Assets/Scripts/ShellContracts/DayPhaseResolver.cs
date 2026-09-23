@@ -28,9 +28,8 @@ namespace MafiaCleanCity.Shell
         /// rien voir : il n'y a pas d'enum à rendre exhaustif.</summary>
         public static readonly string[] CanonicalPhases = { "DAWN", "DAY", "DUSK", "NIGHT" };
 
-        /// <summary>Le libellé lisible. Un quart inconnu est rendu TEL QUEL plutôt que masqué :
-        /// voir passer une valeur brute est un signal, la voir disparaître n'en est pas un — même
-        /// posture que `HeatBucketResolver.Label`.</summary>
+        /// <summary>Le libellé lisible. 23/09 (règle f2, atelier 28) : un quart inconnu ne sort plus BRUT — il se dit « état
+        /// inconnu » ; voir le cran neuf est le rôle du test de couverture de domaine, plus celui du joueur.</summary>
         public static string Label(string dayPhase)
         {
             if (string.IsNullOrEmpty(dayPhase)) return "—";
@@ -53,7 +52,7 @@ namespace MafiaCleanCity.Shell
                 case "DAY": return "Plein jour";
                 case "DUSK": return "Soirée";
                 case "NIGHT": return "Nuit";
-                default: return dayPhase;
+                default: return MafiaCleanCity.I18n.Repli.Etat(dayPhase);   // hors domaine : « état inconnu » (règle f2, atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
     }

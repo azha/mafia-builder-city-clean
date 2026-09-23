@@ -91,7 +91,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("Froid", HeatBucketResolver.Label("COLD"));
             Assert.AreEqual("Brûlant", HeatBucketResolver.Label("BURNING"));
             Assert.AreEqual("—", HeatBucketResolver.Label(null), "sans donnée : un tiret, jamais un mot");
-            Assert.AreEqual("MYSTERY", HeatBucketResolver.Label("MYSTERY"), "une valeur inattendue sort brute (voir le résolveur)");
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, HeatBucketResolver.Label("MYSTERY"), "une valeur inattendue se dit « état inconnu », jamais brute (règle f2)");
             I18nCatalog.ChargerPourTest("en", new Dictionary<string, string> { { "heat.bucket.hot", "Hot" } });
             Assert.AreEqual("Hot", HeatBucketResolver.Label("HOT"), "`heat.bucket.*` : la clé servie, pour le médaillon ET la case");
         }

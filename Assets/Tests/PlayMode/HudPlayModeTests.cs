@@ -781,10 +781,10 @@ namespace MafiaCleanCity.Shell.Tests
                     $"le libellé de « {brut} » est trop court pour être un mot ({libelle})");
             }
 
-            // Une valeur inconnue passe TELLE QUELLE, délibérément : voir passer un quart inattendu
-            // est un signal, le voir disparaître derrière un « — » n'en est pas un.
-            Assert.AreEqual("MIDNIGHT_SUN", DayPhaseResolver.Label("MIDNIGHT_SUN"),
-                "un quart inconnu reste visible plutôt que masqué");
+            // 23/09 — épingle REMPLACÉE (règle f2, atelier 28) : un quart inconnu ne passe plus BRUT, il se dit « état inconnu »
+            // (jamais « — », qui dirait l'absence). Le cran neuf se voit par le test de couverture de domaine.
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, DayPhaseResolver.Label("MIDNIGHT_SUN"),
+                "un quart inconnu se NOMME plutôt que de sortir brut ou d'être masqué");
             Assert.AreEqual("—", DayPhaseResolver.Label(null),
                 "hors district : l'état NOMMÉ « — », jamais la dernière valeur d'un district quitté");
         }
