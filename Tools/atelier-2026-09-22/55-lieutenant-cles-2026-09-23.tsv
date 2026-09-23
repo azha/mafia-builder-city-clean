@@ -1,0 +1,23 @@
+mot	cadres	classe	clé	fr	en	note
+Signal	⑦ cadre 0	proposée	famille.ecran.signal	Signal	Signal	titre de ligne ; 26 §3
+Ordre permanent	⑦ cadre 0	proposée	famille.ecran.ordre_permanent	Ordre permanent	Standing order	titre de ligne
+à l’écoute	⑦ cadre 0	proposée	famille.signal.a_l_ecoute	à l’écoute	listening	`drift_phase` DIRECT_ALIGNED ; 26 §3
+dérive	⑦ cadre 1	proposée	famille.signal.derive	dérive	drifting	DRIFTING ; 26 §3
+n’écoute que le terrain	⑦ cadre —	proposée	famille.signal.n_ecoute_que_le_terrain	n’écoute que le terrain	hears only the ground	INCIDENTAL_LOCKED ; ABSENT de la page — 12 l.86, 26 §3 ; sujet sous-entendu, aucun accord ; absent du texte de la page (vient des notes 12 / 26)
+se recale	⑦ cadre —	proposée	famille.signal.se_recale	se recale	resetting	RESETTING ; ABSENT de la page — 12 l.86, 26 §3 ; absent du texte de la page (vient des notes 12 / 26)
+aucun ordre	⑦ cadre 0, 2	proposée	famille.ordre.aucun_ordre	aucun ordre	no order	`freshness` NONE
+expire bientôt	⑦ cadre 2	proposée	famille.ordre.expire_bientot	expire bientôt	expires soon	EXPIRES_SOON
+l’état du terrain	⑦ cadre 1	proposée	famille.repere.l_etat_du_terrain	l’état du terrain	the state of the ground	TERRITORY_STATE
+ce qu’il reste	⑦ cadre 1	proposée	famille.repere.ce_qu_il_reste	ce qu’il reste	what is left	RESOURCE_AVAILABILITY ; « il » IMPERSONNEL (il reste) : épicène
+l’heure	⑦ cadre 1	proposée	famille.repere.l_heure	l’heure	the hour	TIME_SLOT
+ce que font les autres	⑦ cadre 1	proposée	famille.repere.ce_que_font_les_autres	ce que font les autres	what the others do	PEER_BEHAVIOR
+Il écoute autre chose que vos ordres	⑦ cadre 1	proposée	famille.ecran.nom_ecoute_autre_chose_que_vos_ordres	{nom} écoute autre chose que vos ordres	{nom} is listening to something other than your orders	D13 : le « Il » reprenait le lieutenant (26 §4.3) → le NOM servi, comme le bandeau servi « {nom} attend vos ordres » ; clé NOMMÉE (paramètre) ; DEMANDÉ : `famille.ecran.il_ecoute_autre_chose_que_vos_ordres` « Il écoute autre chose que vos ordres » — change : valeur, clé
+Rappeler l’ordre direct	⑦ cadre 1	proposée	famille.ecran.rappeler_l_ordre_direct	Rappeler l’ordre direct	Restore the direct order	geste (DIRECT_ORDER)
+Remettre l’écoute à zéro	⑦ cadre 1	proposée	famille.ecran.remettre_l_ecoute_a_zero	Remettre l’écoute à zéro	Reset the listening	geste (RESET)
+Brouiller un repère	⑦ cadre 1	proposée	famille.ecran.brouiller_un_repere	Brouiller un repère	Blur a cue	geste (BLUR)
+ce qu’il écoute à la place :	⑦ cadre 1	proposée	famille.ecran.ce_qui_est_ecoute_a_la_place	ce qui est écouté à la place :	what is heard instead:	D13 : le « il » reprenait le lieutenant → tournure sans pronom ; D17 : U+00A0 avant « : » (la page et le code portaient une espace ordinaire) ; DEMANDÉ : `famille.ecran.ce_qu_il_ecoute_a_la_place` « ce qu’il écoute à la place : » — change : valeur, clé
+En faire la règle ?	⑦ cadre 2	proposée	famille.question.en_faire_la_regle	En faire la règle ?	Make it the rule?	rôle « question », même slug que le n° 20, clé distincte voulue ; D17 : U+202F avant « ? » ; DEMANDÉ : `famille.question.en_faire_la_regle` « En faire la règle ? » — change : valeur
+Son ordre du moment a tenu. Vous pouvez le renouveler, le retirer, ou en faire sa règle par défaut.	⑦ cadre 2	proposée	famille.ecran.son_ordre_du_moment_a_tenu_vous_pouvez_le_renouveler_le_retirer_ou_en_faire_sa_regle_par_defaut	Son ordre du moment a tenu. Vous pouvez le renouveler, le retirer, ou en faire sa règle par défaut.	The current order held. You can renew it, withdraw it, or make it the default rule.	« son » / « sa » : possessifs épicènes (accord avec l’objet) ; « le » = l’ordre
+En faire la règle	⑦ cadre 2	proposée	famille.ecran.en_faire_la_regle	En faire la règle	Make it the rule	bouton (PROMOTE_TO_DEFAULT)
+Renouveler	⑦ cadre 2	proposée	famille.ecran.renouveler	Renouveler	Renew	bouton (RENEW)
+Retirer	⑦ cadre 2	proposée	famille.ecran.retirer	Retirer	Withdraw	bouton (REVOKE)
