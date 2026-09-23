@@ -33,7 +33,7 @@ namespace MafiaCleanCity.CityMap.Tests
 
         private static readonly string[] Payout6 = { "PENDING", "NONE", "MODEST", "FAIR", "STRONG", "PREMIUM" };   // ash-appointment.service.ts:53
 
-        private Transform Rendre(string statut, string gain, string palier = "REFINED")
+        private Transform Rendre(string statut, string gain, string palier = "REFINED", string purete = null)
         {
             var host = new GameObject("FicheHost", typeof(RectTransform), typeof(Canvas));   // un Canvas À NOUS : aucun ne fuit
             montes.Add(host);
@@ -44,7 +44,8 @@ namespace MafiaCleanCity.CityMap.Tests
             {
                 building = "b-ash", setup_state = "OPERATIONAL", cover_band = "WEAK", operational = true, operational_type = "specialized_lab",
                 structural_state = "OPERATIONAL", seized_amount = "NONE", repair_cost = "NONE", raid_risk = "LOW", lab_tier_band = palier,
-            }, rendezVous: statut == null ? null : new AppointmentDto { appointment_id = "a-1", status = statut, payout_band = gain });
+            }, storage: purete == null ? null : new StorageDto { substance_type = "ASH", purity_band = purete },
+               rendezVous: statut == null ? null : new AppointmentDto { appointment_id = "a-1", status = statut, payout_band = gain });
             return host.transform;
         }
 
@@ -93,7 +94,7 @@ namespace MafiaCleanCity.CityMap.Tests
         [Test]
         public void E4_LEcrinHonore_TitrePhraseTamponPastilles()
         {
-            Transform r = Rendre("HONORED", "PREMIUM", "MASTER");
+            Transform r = Rendre("HONORED", "PREMIUM", "MASTER", "CRYSTALLINE");
             Assert.AreEqual("Le rendez-vous est honoré", Texte(r, "TitreDuRendezVous"));
             Assert.AreEqual("La marchandise est partie, le client a payé.", Texte(r, "PhraseDuRendezVous"));
             Assert.AreEqual("Honoré", Trouver(r, "Row_rendez_vous").Find("Value").GetComponent<TextMeshProUGUI>().text, "le tampon");
@@ -110,6 +111,41 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("En attente", Trouver(reserve, "Row_gain").Find("Value").GetComponent<TextMeshProUGUI>().text);
 
             Assert.IsNull(Trouver(Rendre(null, null), "TitreDuRendezVous"), "sans rendez-vous suivi : pas d'écrin");
+        }
+
+        [Test]
+        public void E5_LaCompositionRegroupeVitrineMatiereEtBillet_SansInventerDeLieu()
+        {
+            Transform r = Rendre("HONORED", "PREMIUM", "MASTER", "CRYSTALLINE");
+            Transform ecrin = Trouver(r, "EcrinAsh");
+            Assert.IsNotNull(ecrin, "un rendez-vous Ash ouvre une composition dédiée");
+            Assert.IsNotNull(ecrin.Find("VitrineAsh"), "la vitrine est une primitive UI de la composition");
+            Transform billet = ecrin.Find("BilletRendezVous");
+            Assert.IsNotNull(billet, "tampon et gain vivent sur le même billet");
+            Assert.AreEqual(billet, Trouver(r, "Row_rendez_vous").parent);
+            Assert.AreEqual(billet, Trouver(r, "Row_gain").parent);
+            Assert.AreEqual(ecrin, Trouver(r, "Row_substance").parent);
+            Assert.AreEqual(ecrin, Trouver(r, "Row_taille_du_labo").parent);
+            Assert.AreEqual(ecrin, Trouver(r, "Row_purete").parent);
+            Assert.AreEqual("RENDEZ-VOUS · DISTRICT DU VERRE", Texte(r, "BilletTitre"));
+            Assert.IsNull(Trouver(r, "Row_mise_en_place"), "l'écrin ne répète pas la fiche technique pendant le rendez-vous");
+            Assert.IsNull(Trouver(r, "Row_risque_de_descente"));
+            Assert.IsNull(Trouver(r, "Action_agrandir_le_labo"), "aucun geste de gestion ne parasite l'état de vente");
+            Assert.IsNull(Trouver(r, "Action_ouvrir"));
+            Assert.IsFalse(r.GetComponentsInChildren<TextMeshProUGUI>(true).Any(t =>
+                t.text.Contains("Verrerie Kestrel") || t.text.Contains("Salon Aldrich") || t.text.Contains("Le Cintre")),
+                "les noms de lieux de la maquette restent des exemples tant que le back ne sert aucun lieu");
+
+            Transform sansRendezVous = Rendre(null, null);
+            Assert.IsNull(Trouver(sansRendezVous, "EcrinAsh"), "sans rendez-vous, la fiche technique ordinaire reste inchangée");
+            Assert.IsNull(Trouver(sansRendezVous, "VitrineAsh"));
+            Assert.IsNull(Trouver(sansRendezVous, "BilletRendezVous"));
+            Assert.IsNotNull(Trouver(sansRendezVous, "Row_mise_en_place"));
+            Assert.IsNotNull(Trouver(sansRendezVous, "Action_agrandir_le_labo"));
+            Assert.IsNotNull(Trouver(sansRendezVous, "Action_ouvrir"));
+
+            Transform reserve = Rendre("SCHEDULED", "PENDING", "REFINED", "PURE");
+            Assert.IsNotNull(Trouver(reserve, "Action_honorer_le_rendez_vous"), "réservé : le seul geste de l'écrin est vivant");
         }
     }
 }

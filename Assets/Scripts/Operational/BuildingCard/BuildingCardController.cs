@@ -714,11 +714,16 @@ namespace MafiaCleanCity.Operational
             TrackText(titleText, titleText.text);
             TrackText(typeText, typeText.text);
 
+            bool ecrinAshActif = card.operational_type == "specialized_lab"
+                && CurrentAppointment != null && !string.IsNullOrEmpty(CurrentAppointment.status);
+
             // Status rows — each line: glyph (shape) + label + qualitative band value.
             // F2: shape glyph is present alongside colour (colour is never the sole carrier).
-            AddStatusRow("mise_en_place", "Mise en place", SetupLabel(card.setup_state), SetupAccent(card.setup_state));
-            AddStatusRow("en_service", "En service", card.operational ? "oui" : "non", card.operational ? AccentMild : AccentSevere);
-            AddStatusRow("couverture", "Couverture", CoverLabel(card.cover_band), CoverAccent(card.cover_band));
+            if (!ecrinAshActif)
+            {
+                AddStatusRow("mise_en_place", "Mise en place", SetupLabel(card.setup_state), SetupAccent(card.setup_state));
+                AddStatusRow("en_service", "En service", card.operational ? "oui" : "non", card.operational ? AccentMild : AccentSevere);
+                AddStatusRow("couverture", "Couverture", CoverLabel(card.cover_band), CoverAccent(card.cover_band));
 
             // ⛔ L'ENTRETIEN — donnée REÇUE et JETÉE jusqu'ici. `lapse_phase_bucket` et
             // `days_until_maintenance_due` sont dans le DTO depuis qu'il existe, et aucune ligne
@@ -731,38 +736,39 @@ namespace MafiaCleanCity.Operational
             // autres nombres que la maquette dessine (montant à collecter, pourcentage de heat)
             // sont bucketés puis JETÉS par le back, avec la consigne écrite « jamais les valeurs
             // brutes » — les afficher reviendrait à les inventer.
-            AddStatusRow("entretien", "Entretien", EcheanceLabel(card.lapse_phase_bucket, card.days_until_maintenance_due), LapseAccent(card.lapse_phase_bucket));
+                AddStatusRow("entretien", "Entretien", EcheanceLabel(card.lapse_phase_bucket, card.days_until_maintenance_due), LapseAccent(card.lapse_phase_bucket));
 
             // ----- Phase-2b raid / repair / risk surface (a11y F2: glyph + text, never colour-only; R2.2: bands only) -----
-            AddStatusRow("structure", "Structure", StructuralLabel(card.structural_state), StructuralAccent(card.structural_state));
+                AddStatusRow("structure", "Structure", StructuralLabel(card.structural_state), StructuralAccent(card.structural_state));
             // Raid-risk band gauge (LOW → IMMINENT) — a filled-bar glyph + worded band label.
-            AddStatusRow("risque_de_descente", "Risque de descente", RaidRiskLabel(card.raid_risk), RaidRiskAccent(card.raid_risk));
+                AddStatusRow("risque_de_descente", "Risque de descente", RaidRiskLabel(card.raid_risk), RaidRiskAccent(card.raid_risk));
 
             // La SAISIE — seulement quand le bâtiment a subi une descente. La quantité saisie est une bande (jamais des grammes ; R2.2).
             // ② lot 6 (2026-09-23, écart ② `c4520078`, cadre 47 F3 « STOCK SAISI ») : la ligne est `building.row.saisie` suivie du mot
             // servi `building.seized_amount.*` (table 37 : « Saisie · {une petite prise …} »). Elle était « Alerte » avec un préfixe
             // « Descente — saisi : » écrit en dur, hors de toute clé. Une descente qui n'a RIEN pris dit « rien », en ambre : la descente
             // a eu lieu, la marchandise est restée (choix du client, déclaré).
-            if (card.recently_raided)
-                AddStatusRow("stock_saisi", "Saisie", SeizedLabel(card.seized_amount),
-                    card.seized_amount == "NONE" ? AccentModerate : AccentSevere);
+                if (card.recently_raided)
+                    AddStatusRow("stock_saisi", "Saisie", SeizedLabel(card.seized_amount),
+                        card.seized_amount == "NONE" ? AccentModerate : AccentSevere);
 
             // ----- ② lot 1 (2026-09-23) : LE PUPITRE — trois échelles de crans, « le feu » sur 5, « l'étagère » sur 4, « les caisses »
             // sur 4 ; le premier cran est TOUJOURS allumé (écart ② `c4520078`, cadres 39-44, bloc B2). Le pupitre suit le TYPE (tranché (a)
             // du 23/09) : `lab` et `specialized_lab`. Chaque échelle porte son MOT à côté des crans (la couleur n'est jamais seule). Une
             // échelle dont la donnée n'est pas arrivée n'est pas dessinée : un cran allumé affirmerait un état qu'on n'a pas reçu.
-            if (APupitre(card.operational_type))
-            {
-                if (CurrentLab != null)
-                    AddEchelle("le_feu", "le feu", CransDuFeu(CurrentLab.cook_stage_band), CransFeu,
-                        CookStageLabel(CurrentLab.cook_stage_band), CookStageAccent(CurrentLab.cook_stage_band));
-                if (CurrentPrecursors != null)
-                    AddEchelle("l_etagere", "l’étagère", CransDuStock(CurrentPrecursors.stock_band), CransStock,
-                        StockLabel(CurrentPrecursors.stock_band), EtagereAccent(CurrentPrecursors.stock_band));
-                // ⚠️ `product_band` ARRIVAIT déjà (RefreshStorage) et n'était jamais lu (écart ② cadre 39 B2).
-                if (CurrentStorage != null)
-                    AddEchelle("les_caisses", "les caisses", CransDuStock(CurrentStorage.product_band), CransStock,
-                        StockLabel(CurrentStorage.product_band), CaissesAccent(CurrentStorage.product_band));
+                if (APupitre(card.operational_type))
+                {
+                    if (CurrentLab != null)
+                        AddEchelle("le_feu", "le feu", CransDuFeu(CurrentLab.cook_stage_band), CransFeu,
+                            CookStageLabel(CurrentLab.cook_stage_band), CookStageAccent(CurrentLab.cook_stage_band));
+                    if (CurrentPrecursors != null)
+                        AddEchelle("l_etagere", "l’étagère", CransDuStock(CurrentPrecursors.stock_band), CransStock,
+                            StockLabel(CurrentPrecursors.stock_band), EtagereAccent(CurrentPrecursors.stock_band));
+                    // ⚠️ `product_band` ARRIVAIT déjà (RefreshStorage) et n'était jamais lu (écart ② cadre 39 B2).
+                    if (CurrentStorage != null)
+                        AddEchelle("les_caisses", "les caisses", CransDuStock(CurrentStorage.product_band), CransStock,
+                            StockLabel(CurrentStorage.product_band), CaissesAccent(CurrentStorage.product_band));
+                }
             }
 
             // ----- Phase-2b vector #2 (Crick) cold-chain surface — ONLY when the storage projection carries a
@@ -790,6 +796,20 @@ namespace MafiaCleanCity.Operational
             PurityBandShown = false;
             if (card.operational_type == "specialized_lab")
             {
+                bool rendezVousAsh = CurrentAppointment != null && !string.IsNullOrEmpty(CurrentAppointment.status);
+                Transform parentAsh = statusRows;
+                if (rendezVousAsh)
+                {
+                    parentAsh = AddEcrinAsh();
+                    (string titre, string phrase) = TitresDuRendezVous(CurrentAppointment.status);
+                    if (titre != null)
+                    {
+                        AddLigneDEtat("TitreDuRendezVous", titre, 24, TextPrimary, FontStyles.Bold, parentAsh);
+                        AddLigneDEtat("PhraseDuRendezVous", phrase, 14, DesignTokens.Current.onSurfaceSecondaryAlt, FontStyles.Normal, parentAsh);
+                    }
+                    AddVitrineAsh(parentAsh, CurrentStorage?.purity_band);
+                }
+
                 // Substance row — surfaces which substance this luxury lab produces (Ash). The specialized_lab is the Ash
                 // host (no cold-chain block runs for it — temperature_status is null), so the Ash surface shows its own
                 // substance row from the storage projection (substance_type=ASH). Defaults to "Ash" if storage is absent.
@@ -797,7 +817,7 @@ namespace MafiaCleanCity.Operational
                 string labSubstance = (labStorage != null && !string.IsNullOrEmpty(labStorage.substance_type))
                     ? labStorage.substance_type
                     : "ASH";
-                AddStatusRow("substance", "Substance", SubstanceLabel(labSubstance), AccentMild);
+                AddStatusRow("substance", "Substance", SubstanceLabel(labSubstance), AccentMild, parent: parentAsh);
 
                 // Lab-tier band row — the specialized_lab's standing (a higher band → purer Ash). Always shown for a
                 // specialized_lab (lab_tier_band is BASIC/REFINED/MASTER; NONE would only be a non-specialized_lab).
@@ -807,7 +827,7 @@ namespace MafiaCleanCity.Operational
                     // ② lot 5 : « L’atelier » l'emporte sur « Taille du labo » (D14, tranché par f2) — la VALEUR change, la CLÉ reste
                     // `building.row.taille_du_labo` : elle est donc nommée, pas dérivée du mot (le mot neuf dériverait `l_atelier`).
                     AddStatusRow("taille_du_labo", "L’atelier", LabTierLabel(card.lab_tier_band), LabTierAccent(card.lab_tier_band),
-                        cleDuLibelle: "building.row.taille_du_labo");
+                        cleDuLibelle: "building.row.taille_du_labo", parent: parentAsh);
                 }
 
                 // Purity-band row — the cooked Ash batch's quality grade (from the storage projection). Shown only when a
@@ -816,8 +836,11 @@ namespace MafiaCleanCity.Operational
                 if (st != null && !string.IsNullOrEmpty(st.purity_band))
                 {
                     PurityBandShown = true;
-                    AddStatusRow("purete", "Pureté", PurityLabel(st.purity_band), PurityAccent(st.purity_band));
+                    AddStatusRow("purete", "Pureté", PurityLabel(st.purity_band), PurityAccent(st.purity_band), parent: parentAsh);
                 }
+
+                if (rendezVousAsh)
+                    AddBilletRendezVous(parentAsh, CurrentAppointment);
             }
 
             // Appointment panel — the luxury-channel sale lifecycle (book → SCHEDULED → honor → HONORED, or EXPIRED). Shown
@@ -825,17 +848,20 @@ namespace MafiaCleanCity.Operational
             // band + the payout band only (never raw ticks/cents); F2: a distinct glyph per status alongside colour.
             if (CurrentAppointment != null && !string.IsNullOrEmpty(CurrentAppointment.status))
             {
-                // ② lot 5 (écrin d'Ash, cadres 92-94, bloc E1) : le titre et la phrase de l'état servi, avant le tampon.
-                (string titre, string phrase) = TitresDuRendezVous(CurrentAppointment.status);
-                if (titre != null)
+                // L'écrin Ash spécialisé porte déjà son billet illustré. La branche générique reste pour une projection
+                // future qui suivrait un rendez-vous depuis un autre type de bâtiment.
+                if (card.operational_type != "specialized_lab")
                 {
-                    AddLigneDEtat("TitreDuRendezVous", titre, 16, TextPrimary, FontStyles.Bold);
-                    AddLigneDEtat("PhraseDuRendezVous", phrase, 13, DesignTokens.Current.onSurfaceSecondaryAlt, FontStyles.Normal);
+                    (string titre, string phrase) = TitresDuRendezVous(CurrentAppointment.status);
+                    if (titre != null)
+                    {
+                        AddLigneDEtat("TitreDuRendezVous", titre, 16, TextPrimary, FontStyles.Bold);
+                        AddLigneDEtat("PhraseDuRendezVous", phrase, 13, DesignTokens.Current.onSurfaceSecondaryAlt, FontStyles.Normal);
+                    }
+                    AddStatusRow("rendez_vous", "Rendez-vous", AppointmentStatusLabel(CurrentAppointment.status), AppointmentStatusAccent(CurrentAppointment.status));
+                    AddEchelle("gain", "Gain", PastillesDuGain(CurrentAppointment.payout_band), PastillesGain,
+                        PayoutLabel(CurrentAppointment.payout_band), PayoutAccent(CurrentAppointment.payout_band));
                 }
-                AddStatusRow("rendez_vous", "Rendez-vous", AppointmentStatusLabel(CurrentAppointment.status), AppointmentStatusAccent(CurrentAppointment.status));
-                // ② lot 5 (bloc E3 « GAIN ») : 5 pastilles et le MOT servi (tranché (e) ; lecture dans PastillesDuGain).
-                AddEchelle("gain", "Gain", PastillesDuGain(CurrentAppointment.payout_band), PastillesGain,
-                    PayoutLabel(CurrentAppointment.payout_band), PayoutAccent(CurrentAppointment.payout_band));
             }
 
             // ----- Phase-3 vector #3 (grow_house cultivation) surface — ONLY for a grow_house with an active grow tracked.
@@ -983,6 +1009,21 @@ namespace MafiaCleanCity.Operational
             // Phase-5 vector #5a: reset the money_holding affordance flags (set only in the money_holding case below).
             DepositActionShown = false;
             WithdrawActionShown = false;
+
+            // L'écrin est un moment de vente, pas le pupitre du labo : on ne mélange pas agrandissement, cuisson et
+            // conversion avec le geste du rendez-vous. La fiche technique ordinaire revient dès qu'aucun rendez-vous
+            // n'est suivi. SCHEDULED porte son unique geste vivant ; HONORED / EXPIRED sont des états de lecture.
+            if (card.operational_type == "specialized_lab"
+                && CurrentAppointment != null && !string.IsNullOrEmpty(CurrentAppointment.status))
+            {
+                if (CurrentAppointment.status == "SCHEDULED")
+                    AddActionButton(actionBar, "honorer_le_rendez_vous", "Honorer le rendez-vous", () => StartCoroutine(HonorAppointment()));
+                actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAlignmentOptions.Left);
+                actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;
+                AddLayoutElement(actionStatusText.gameObject, minHeight: 10, flexibleHeight: 0);
+                return;
+            }
+
             if (card.structural_state == "DAMAGED")
             {
                 RepairButtonShown = true;
@@ -2029,9 +2070,11 @@ namespace MafiaCleanCity.Operational
         /// mesure. Un glyphe plus long ajouté ailleurs doit venir ici, sinon il sera coupé —
         /// c'est le seul endroit du fichier qui doit bouger dans ce cas.</summary>
 
-        private void AddStatusRow(string idStable, string label, string value, Color accent, string cleDuLibelle = null)
+        private GameObject AddStatusRow(string idStable, string label, string value, Color accent,
+                                        string cleDuLibelle = null, Transform parent = null)
         {
-            GameObject row = NewUI("Row_" + idStable, statusRows);
+            if (parent == null) parent = statusRows;
+            GameObject row = NewUI("Row_" + idStable, parent);
             row.AddComponent<Image>().color = RowBg;
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.padding = new RectOffset(10, 10, 6, 6);
@@ -2060,23 +2103,29 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
             TrackText(l, libelle);
             TrackText(v, value);
+            return row;
         }
 
         /// <summary>② lot 5 — une ligne de texte dans la zone d'état (titre et phrase de l'écrin).</summary>
-        private void AddLigneDEtat(string nom, string texte, int taille, Color couleur, FontStyles style)
+        private void AddLigneDEtat(string nom, string texte, int taille, Color couleur, FontStyles style, Transform parent = null)
         {
-            TextMeshProUGUI t = NewText(nom, statusRows, texte, taille, TextAlignmentOptions.Left);
+            if (parent == null) parent = statusRows;
+            TextMeshProUGUI t = NewText(nom, parent, texte, taille, TextAlignmentOptions.Left);
             t.color = couleur;
             t.fontStyle = style;
+            t.textWrappingMode = TextWrappingModes.Normal;
+            t.overflowMode = TextOverflowModes.Overflow;
             AddLayoutElement(t.gameObject, minHeight: taille + 6, flexibleHeight: 0);
             TrackText(t, texte);
         }
 
         /// <summary>② lot 1 — une échelle du pupitre : le libellé, `total` crans dont `allumes` en couleur, puis le MOT dans la même
         /// couleur (G2 : la valeur en couleur porte un mot). Les crans s'appellent `CranAllume` / `CranEteint` : la garde les compte.</summary>
-        private void AddEchelle(string idStable, string label, int allumes, int total, string value, Color accent)
+        private GameObject AddEchelle(string idStable, string label, int allumes, int total, string value, Color accent,
+                                      Transform parent = null)
         {
-            GameObject row = NewUI("Row_" + idStable, statusRows);
+            if (parent == null) parent = statusRows;
+            GameObject row = NewUI("Row_" + idStable, parent);
             row.AddComponent<Image>().color = RowBg;
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.padding = new RectOffset(10, 10, 6, 6);
@@ -2117,6 +2166,112 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
             TrackText(l, libelle);
             TrackText(v, value);
+            return row;
+        }
+
+        /// <summary>② écrin Ash — groupe visuel autonome : la composition suit les cadres 92–94 sans transformer
+        /// une donnée absente en fiction. Le lieu du rendez-vous n'est pas servi, donc aucun nom de salon n'est inventé.</summary>
+        private Transform AddEcrinAsh()
+        {
+            GameObject ecrin = NewUI("EcrinAsh", statusRows);
+            ecrin.AddComponent<Image>().color = new Color32(17, 19, 25, 255);
+            var disposition = ecrin.AddComponent<VerticalLayoutGroup>();
+            disposition.padding = new RectOffset(16, 16, 16, 16);
+            disposition.spacing = 8;
+            disposition.childControlWidth = true;
+            disposition.childControlHeight = true;
+            disposition.childForceExpandWidth = true;
+            disposition.childForceExpandHeight = false;
+            var ajusteur = ecrin.AddComponent<ContentSizeFitter>();
+            ajusteur.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            ajusteur.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            AddLayoutElement(ecrin, flexibleHeight: 0);
+            return ecrin.transform;
+        }
+
+        /// <summary>Vitrine dessinée en primitives UI : socle, cloche et éclats d'Ash. C'est une ambiance, jamais une
+        /// jauge supplémentaire ; la pureté reste dite par son mot dans la ligne dédiée.</summary>
+        private static void AddVitrineAsh(Transform parent, string purityBand)
+        {
+            GameObject vitrine = NewUI("VitrineAsh", parent);
+            vitrine.AddComponent<Image>().color = new Color32(13, 16, 22, 255);
+            AddLayoutElement(vitrine, minHeight: 150, preferredHeight: 150, flexibleHeight: 0);
+
+            GameObject halo = NewUI("Halo", vitrine.transform);
+            RectTransform haloRt = (RectTransform)halo.transform;
+            haloRt.anchorMin = haloRt.anchorMax = new Vector2(0.5f, 0.5f);
+            haloRt.sizeDelta = new Vector2(300, 112);
+            haloRt.anchoredPosition = new Vector2(0, 8);
+            halo.AddComponent<Image>().color = new Color(0.84f, 0.68f, 0.34f, 0.07f);
+
+            GameObject cloche = NewUI("Cloche", vitrine.transform);
+            RectTransform clocheRt = (RectTransform)cloche.transform;
+            clocheRt.anchorMin = clocheRt.anchorMax = new Vector2(0.5f, 0.5f);
+            clocheRt.sizeDelta = new Vector2(250, 104);
+            clocheRt.anchoredPosition = new Vector2(0, 5);
+            cloche.AddComponent<Image>().color = new Color(0.78f, 0.88f, 0.94f, 0.10f);
+
+            Color cristal = purityBand == "CRYSTALLINE"
+                ? new Color(0.82f, 0.87f, 0.96f, 0.92f)
+                : new Color(0.68f, 0.73f, 0.82f, 0.82f);
+            float[] angles = { -34f, -19f, -7f, 8f, 22f, 36f };
+            float[] hauteurs = { 48f, 68f, 88f, 76f, 61f, 44f };
+            for (int i = 0; i < angles.Length; i++)
+            {
+                GameObject eclat = NewUI("Cristal", vitrine.transform);
+                RectTransform rt = (RectTransform)eclat.transform;
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = new Vector2(20, hauteurs[i]);
+                rt.anchoredPosition = new Vector2((i - 2.5f) * 24f, -8f + hauteurs[i] * 0.20f);
+                rt.localRotation = Quaternion.Euler(0, 0, angles[i]);
+                eclat.AddComponent<Image>().color = cristal;
+            }
+
+            GameObject socle = NewUI("Socle", vitrine.transform);
+            RectTransform socleRt = (RectTransform)socle.transform;
+            socleRt.anchorMin = socleRt.anchorMax = new Vector2(0.5f, 0.5f);
+            socleRt.sizeDelta = new Vector2(286, 10);
+            socleRt.anchoredPosition = new Vector2(0, -55);
+            socle.AddComponent<Image>().color = new Color32(190, 143, 48, 255);
+        }
+
+        /// <summary>Le billet rassemble le tampon et le gain sur papier clair, comme les cadres 92–94. Les deux lignes
+        /// gardent leurs noms stables afin que l'accessibilité et les tests fonctionnels lisent exactement la même UI.</summary>
+        private void AddBilletRendezVous(Transform parent, AppointmentDto rendezVous)
+        {
+            GameObject billet = NewUI("BilletRendezVous", parent);
+            billet.AddComponent<Image>().color = new Color32(231, 222, 198, 255);
+            var disposition = billet.AddComponent<VerticalLayoutGroup>();
+            disposition.padding = new RectOffset(14, 14, 12, 12);
+            disposition.spacing = 6;
+            disposition.childControlWidth = true;
+            disposition.childControlHeight = true;
+            disposition.childForceExpandWidth = true;
+            disposition.childForceExpandHeight = false;
+            AddLayoutElement(billet, minHeight: 118, flexibleHeight: 0);
+
+            TextMeshProUGUI surtitre = NewText("BilletTitre", billet.transform,
+                "RENDEZ-VOUS · DISTRICT DU VERRE", 11, TextAlignmentOptions.Left);
+            surtitre.color = new Color32(75, 69, 58, 255);
+            surtitre.fontStyle = FontStyles.Bold;
+            surtitre.characterSpacing = 5f;
+            AddLayoutElement(surtitre.gameObject, minHeight: 18, flexibleHeight: 0);
+            TrackText(surtitre, surtitre.text);
+
+            GameObject tampon = AddStatusRow("rendez_vous", "Rendez-vous", AppointmentStatusLabel(rendezVous.status),
+                AppointmentStatusAccent(rendezVous.status), parent: billet.transform);
+            GameObject gain = AddEchelle("gain", "Gain", PastillesDuGain(rendezVous.payout_band), PastillesGain,
+                PayoutLabel(rendezVous.payout_band), PayoutAccent(rendezVous.payout_band), billet.transform);
+            StyliserLigneDuBillet(tampon);
+            StyliserLigneDuBillet(gain);
+        }
+
+        private static void StyliserLigneDuBillet(GameObject row)
+        {
+            Image fond = row.GetComponent<Image>();
+            if (fond != null) fond.color = new Color(0, 0, 0, 0.035f);
+            TextMeshProUGUI label = row.transform.Find("Label")?.GetComponent<TextMeshProUGUI>();
+            if (label != null) label.color = new Color32(92, 84, 70, 255);
         }
 
         private string NewSectionLabel(Transform parent, string text)
