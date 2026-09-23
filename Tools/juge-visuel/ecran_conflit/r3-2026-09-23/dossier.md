@@ -38,7 +38,7 @@
 | médaillons à initiale C / T / G / S avec le nom de la famille | D11 : le nom accompagne (Tools/atelier-2026-09-22/40 tsv) | une initiale seule |
 | « Les quatre familles de Brennar », « Dites-moi seulement chez qui… » | D14 (Tools/atelier-2026-09-22/40 tsv) | — |
 | « L'envoyer ce soir » actif seulement quand famille, homme et axe sont choisis ; aucune annulation | Tools/atelier-2026-09-22/40 tsv | — |
-| le refus « deux choses ne collent pas » (aucun gros bras) | le compte de démo n'a aucun MUSCLE (corps `GET_lieutenants.json`) | — |
+| le refus « deux choses ne collent pas » (cadre 61) : état INATTEIGNABLE côté client — seuls les gros bras sont proposés (décision L4) ; le 409 reste traduit, au cas où | remarque f2 du 23/09 ; étiquette du cadre 61 (atelier `05d05b1`) ; le compte de démo n'a d'ailleurs aucun MUSCLE (`GET_lieutenants.json`) | le client propose un non-gros-bras |
 | pas d'heure de départ (« il est parti ») | `created_at_minute` absent exprès (front.md ㉙) | — |
 | les erreurs du POST dites en mots : 409 (clé servie `error.engagements.muscle_lieutenant_required`, RATIFIÉE et gardée par le back `f82a140b`), 404 et 422 en un mot chacun, l'échec réseau | Tools/atelier-2026-09-22/40-addendum-engagements (`24897b48`) | un code affiché |
 
@@ -51,7 +51,8 @@
 | le « C » de CHALEUR rogné | hérité (`7d00782d`) |
 | les cadres 65-66 | la v1, remplacée |
 | « demain matin » | prose, pas une phase (D16 ne s'applique pas) |
-| pas de dock sur la référence | la série 6 n'en dessine pas ; le chrome se juge contre le canon du HUD (dossier r2) |
+| pas de dock sur les cadres 59-64 | convention de la série 6 (0 dock sur 146 cadres ; ④ et ⑦, qui sont des ONGLETS, l'ont reçu pour leur ratification) ; ㉙ s'ouvre par Plus → le chrome se juge contre le canon du HUD (dossier r2) |
+| l'absence de la capture du cadre 61 (le refus) | état inatteignable côté client (L4) : aucune planche ne peut le montrer |
 
 ## OUVERT — non tranché : à classer ARBITRAGE, jamais défaut
 
@@ -72,7 +73,7 @@
 - **Routes** : `/v1/lieutenants`, `GET` et `POST /v1/me/engagements`
 - **Corps réels** (`ecran_conflit/corps-reels/`, provenance lue dans chaque fichier ; comptes masqués, aucune valeur d'identifiant ici) :
 
-| fichier | date | back servi | nature | fraîcheur (`verifier-fraicheur-corps.py` contre `main` du back `d62ee1f1`) |
+| fichier | date | back servi | nature | fraîcheur (`verifier-fraicheur-corps.py` contre `main` du back `a053287e`) |
 |---|---|---|---|---|
 | `GET_city_district_id_interior.json` | 2026-09-22T13:23:16 | `03cf564c` | réponse réelle | opposable |
 | `GET_lieutenants.json` | 2026-09-22T13:23:16 | `03cf564c` | réponse réelle | **PÉRIMÉ** (operational/lieutenant/lieutenant.repository.ts) |
@@ -110,4 +111,4 @@
 - le code du client et ses tests ; les notes d'implémentation ; les rapports des juges précédents ;
 - pour l'instant : toute capture.
 
-Préparé sur le client `766289c0` (branche `da/2026-09-22`), cumul `c0a9092a`, back `d62ee1f1`, atelier `9f38a24`.
+Préparé sur le client `51d1c2bd` (branche `da/2026-09-22`), cumul `c0a9092a`, back `a053287e`, atelier `05d05b1`.

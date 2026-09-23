@@ -20,7 +20,7 @@
 ## Back (B)
 
 - **Stack locale** : NON FOURNIE — `docker ps` se colle au créneau (la pile se monte après le gate ; jamais pendant un gate E2E).
-- **Back de référence** : `main` du dépôt back `d62ee1f1` au moment de la préparation ; corps réels datés et leur fraîcheur : dossier jumeau.
+- **Back de référence** : `main` du dépôt back `a053287e` au moment de la préparation ; corps réels datés et leur fraîcheur : dossier jumeau.
 - **Compte** : le compte de capture (paire sous `MAFIA_CAPTURE_*`), ou un compte frais par `POST /v1/auth/signup` + `POST /v1/session/open`.
 
 ## Front (F)
@@ -45,7 +45,7 @@
 | médaillons à initiale C / T / G / S avec le nom de la famille | D11 : le nom accompagne (Tools/atelier-2026-09-22/40 tsv) |
 | « Les quatre familles de Brennar », « Dites-moi seulement chez qui… » | D14 (Tools/atelier-2026-09-22/40 tsv) |
 | « L'envoyer ce soir » actif seulement quand famille, homme et axe sont choisis ; aucune annulation | Tools/atelier-2026-09-22/40 tsv |
-| le refus « deux choses ne collent pas » (aucun gros bras) | le compte de démo n'a aucun MUSCLE (corps `GET_lieutenants.json`) |
+| le refus « deux choses ne collent pas » (cadre 61) : état INATTEIGNABLE côté client — seuls les gros bras sont proposés (décision L4) ; le 409 reste traduit, au cas où | remarque f2 du 23/09 ; étiquette du cadre 61 (atelier `05d05b1`) ; le compte de démo n'a d'ailleurs aucun MUSCLE (`GET_lieutenants.json`) |
 | pas d'heure de départ (« il est parti ») | `created_at_minute` absent exprès (front.md ㉙) |
 | les erreurs du POST dites en mots : 409 (clé servie `error.engagements.muscle_lieutenant_required`, RATIFIÉE et gardée par le back `f82a140b`), 404 et 422 en un mot chacun, l'échec réseau | Tools/atelier-2026-09-22/40-addendum-engagements (`24897b48`) |
 
