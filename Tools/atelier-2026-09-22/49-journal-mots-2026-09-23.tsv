@@ -1,0 +1,90 @@
+mot	cadres	classe	clé	fr	en	note
+LE CLAIRON DE BRENNAR	125	note				nom de journal d’EXEMPLE : les titres servis sont `press.outlet.*`
+ce matin	125,145	proposée	journal.fraicheur.fresh	ce matin	this morning	`recency_band` = fresh (ratifié 125, 145) ; prose, pas la phase de la barre (D16 hors champ)
+Un corps repêché sous le pont de Stack	125	note				titre d’EXEMPLE : le texte vient de la clé servie de l’événement (`random_world.template.*`, `ambient.micro_event.*`, `news_beat.*`) — pas un libellé
+news.beat.body_found · Dépôt-Est	125	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+fait divers	125	note				catégorie d’EXEMPLE d’une brève (le rubriquage servi est dans `news_beat.*`) — à vérifier
+Une file devant la pharmacie de La Lisière	125	note				titre d’EXEMPLE : le texte vient de la clé servie de l’événement (`random_world.template.*`, `ambient.micro_event.*`, `news_beat.*`) — pas un libellé
+ambient.queue_pharmacy · La Lisière	125	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+Deux camions la nuit derrière l’entrepôt	125	note				titre d’EXEMPLE : le texte vient de la clé servie de l’événement (`random_world.template.*`, `ambient.micro_event.*`, `news_beat.*`) — pas un libellé
+ambient.night_trucks · Les Entrepôts	125	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+Le curé de Marne-Basse a fermé sa porte	125	note				titre d’EXEMPLE : le texte vient de la clé servie de l’événement (`random_world.template.*`, `ambient.micro_event.*`, `news_beat.*`) — pas un libellé
+ambient.church_closed · Marne-Basse	125	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+hier	125,145	proposée	journal.fraicheur.settling	hier	yesterday	`recency_band` = settling (ratifié)
+Y PRÊTER ATTENTION	125	proposée	journal.bloc.y_preter_attention	Y prêter attention	Pay attention to it	geste À ROUTE (`POST /v1/ambient/attend/:id`)
+on peut	125	proposée	journal.bloc.on_peut_assister_a_ce_qui_se_passe_c_est_le_seul_geste_que_la_rue_accepte	on peut assister à ce qui se passe — c’est le seul geste que la rue accepte	you can witness what’s happening — it’s the only move the street accepts	une phrase en trois nœuds
+assister	125	proposée	journal.bloc.on_peut_assister_a_ce_qui_se_passe_c_est_le_seul_geste_que_la_rue_accepte			même phrase
+à ce qui se passe — c’est le seul geste que la rue accepte	125	proposée	journal.bloc.on_peut_assister_a_ce_qui_se_passe_c_est_le_seul_geste_que_la_rue_accepte			même phrase
+ce qui arrive à la ville	126	proposée	journal.bloc.ce_qui_arrive_a_la_ville	ce qui arrive à la ville	what’s happening to the city	sous-titre (126) : `random-world/active`
+définitif	126,127,128	note				doublon de la phase servie `permanent` (« ÇA NE PARTIRA PAS », `journal.bloc.ca_ne_partira_pas`) : une bande = un mot (D8) — garder le servi
+compris	126,127	proposée	journal.bloc.compris	compris	understood	la marque d’un événement dont le couplage est découvert (`known-couplings`)
+Le port est bloqué	126	note				titre d’EXEMPLE : le texte vient de la clé servie de l’événement (`random_world.template.*`, `ambient.micro_event.*`, `news_beat.*`) — pas un libellé
+rw.template.port_strike · Les Bassins	126	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+ça pèse	126,145	proposée	journal.gravite.heavy	ça pèse	it weighs	`severity_band` = heavy (ratifié)
+La rivière a débordé	126,127	note				titre d’EXEMPLE : le texte vient de la clé servie de l’événement (`random_world.template.*`, `ambient.micro_event.*`, `news_beat.*`) — pas un libellé
+rw.template.flood · Orsel	126,127	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+on en parle	126,127,145	proposée	journal.gravite.noticeable	on en parle	people talk	= noticeable (ratifié)
+Un vieux s’est éteint	126	note				titre d’EXEMPLE : le texte vient de la clé servie de l’événement (`random_world.template.*`, `ambient.micro_event.*`, `news_beat.*`) — pas un libellé
+rw.template.hollow_death · La Lisière	126	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+à peine	126,145	proposée	journal.gravite.faint	à peine	barely	= faint (ratifié)
+les phases	126	note				explication de DA dans le téléphone — pas un libellé (126)
+Quatre passent, une seule reste	126	note				explication de DA dans le téléphone — pas un libellé
+un événement commence, se déploie, retombe, ou	126	note				explication de DA dans le téléphone — pas un libellé
+traîne	126	note				explication de DA dans le téléphone — pas un libellé
+. La cinquième phase ne dit pas « longtemps » : elle dit	126	note				explication de DA dans le téléphone — pas un libellé
+ce qui ne partira pas	127	proposée	journal.bloc.ce_qui_ne_partira_pas	ce qui ne partira pas	what won’t go away	sous-titre (127) ; même sens que la phase servie `permanent`
+La rivière ne se retirera pas	127	note				titre d’EXEMPLE : le texte vient de la clé servie de l’événement (`random_world.template.*`, `ambient.micro_event.*`, `news_beat.*`) — pas un libellé
+les autres événements ont une phase qui les emmène vers la sortie. Celui-ci n’en a pas.	127	note				explication de DA dans le téléphone — pas un libellé (127)
+Le quartier a changé	127	proposée	journal.bloc.le_quartier_a_change_et_il_faudra_faire_avec_ce_n_est_plus_une_nouvelle_c_est_une_donnee	Le quartier a changé, et il faudra faire avec — ce n’est plus une nouvelle, c’est une donnée.	The district has changed, and you’ll have to live with it — it isn’t news any more, it’s a given.	une phrase en deux nœuds (permanent)
+, et il faudra faire avec — ce n’est plus une nouvelle, c’est une donnée.	127	proposée	journal.bloc.le_quartier_a_change_et_il_faudra_faire_avec_ce_n_est_plus_une_nouvelle_c_est_une_donnee			même phrase
+RIEN À FAIRE — C’EST ACQUIS	127	proposée	journal.bloc.rien_a_faire_c_est_acquis	Rien à faire — c’est acquis	Nothing to do — it’s settled	le geste éteint d’un événement `permanent`
+ce que vous avez compris	128	proposée	journal.bloc.ce_que_vous_avez_compris	ce que vous avez compris	what you’ve understood	sous-titre (128) : `known-couplings`
+couplages compris	128	proposée	journal.bloc.couplages_compris	couplages compris	links understood	le compte de `couplings[]`
+le port bloqué	128	note				couplage d’EXEMPLE : le texte vient de `random_world.coupling.pair.*` (servi) — pas un libellé
+le prix du pyralin	128	note				couplage d’EXEMPLE : le texte vient de `random_world.coupling.pair.*` (servi) — pas un libellé
+les patrouilles de nuit	128	note				couplage d’EXEMPLE : le texte vient de `random_world.coupling.pair.*` (servi) — pas un libellé
+la marge des dealers	128	note				couplage d’EXEMPLE : le texte vient de `random_world.coupling.pair.*` (servi) — pas un libellé
+et tout ce que vous n’avez pas encore compris —	128	proposée	journal.bloc.et_tout_ce_que_vous_n_avez_pas_encore_compris_la_maison_ne_dit_pas_combien_il_en_reste	et tout ce que vous n’avez pas encore compris — la maison ne dit pas combien il en reste	and everything you haven’t understood yet — the house doesn’t say how much is left	une phrase en deux nœuds
+la maison ne dit pas combien il en reste	128	proposée	journal.bloc.et_tout_ce_que_vous_n_avez_pas_encore_compris_la_maison_ne_dit_pas_combien_il_en_reste			même phrase
+La ville a des causes, et vous les apprenez	128	proposée	journal.bloc.la_ville_a_des_causes_et_vous_les_apprenez	La ville a des causes, et vous les apprenez	The city has causes, and you learn them	
+le serveur garde ce que vous avez	128	note				explication de DA dans le téléphone — pas un libellé (« le serveur »)
+découvert	128	note				explication de DA dans le téléphone — pas un libellé
+: que telle chose en pousse une autre, et	128	note				explication de DA dans le téléphone — pas un libellé
+dans quel sens	128	note				explication de DA dans le téléphone — pas un libellé
+. Ça se remplit en jouant, jamais en achetant.	128	note				explication de DA dans le téléphone — pas un libellé
+L1	130	note				panneau des lots (130) — pas un libellé
+Écrire les titres et les brèves	130	note				panneau des lots (130) — pas un libellé
+tout est en clés : titre, journal, angle, descripteur, gabarit — cinquième écran à buter dessus	130	note				panneau des lots (130) — pas un libellé
+L2	130	note				panneau des lots (130) — pas un libellé
+Les titres sont des gabarits à trous	130	note				panneau des lots (130) — pas un libellé
+`headline_params` est un objet libre ; sans le texte on ignore même combien de trous	130	note				panneau des lots (130) — pas un libellé
+L3	130	note				panneau des lots (130) — pas un libellé
+Aller à un enterrement	130	note				panneau des lots (130) — pas un libellé (le geste existe : `…/attend-funeral`, cf. 46)
+la route existe et c’est le seul geste non économique du domaine ; rien ne le relie à un événement affiché	130	note				panneau des lots (130) — pas un libellé
+L4	130	note				panneau des lots (130) — pas un libellé
+Le détail d’un article	130	note				panneau des lots (130) — pas un libellé
+une route rend le détail d’une brève de presse ; aucun écran ne l’ouvre	130	note				panneau des lots (130) — pas un libellé
+les onze crans, tous	145	note				sous-titre du cadre TÉMOIN (145)
+groupes	145	note				compteur du témoin
+crans	145	note				compteur du témoin
+moyennés	145	note				compteur du témoin
+la fraîcheur	145	proposée	journal.bloc.la_fraicheur	la fraîcheur	freshness	la ligne de `recency_band`
+fresh	145	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+settling	145	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+fading	145	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+la semaine passée	145	proposée	journal.fraicheur.fading	la semaine passée	last week	`recency_band` = fading (ratifié)
+la gravité	145	proposée	journal.bloc.la_gravite	la gravité	weight	la ligne de `severity_band`
+faint	145	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+noticeable	145	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+heavy	145	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+la phase	145	proposée	journal.bloc.la_phase	la phase	phase	la ligne de `phase_band`
+onset	145	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+unfolding	145	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+receding	145	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+lingering	145	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+permanent	145	note				identifiant brut montré EXPRÈS (clé et quartier) — pas un libellé
+pourquoi tous les crans	145	note				explication de DA dans le téléphone — pas un libellé
+Un témoin qui suit l’état du monde n’est pas un témoin	145	note				explication de DA dans le téléphone — pas un libellé
+ces cadres montrent des états ; celui-ci montre l’	145	note				explication de DA dans le téléphone — pas un libellé
+énumération	145	note				explication de DA dans le téléphone — pas un libellé
+. Le monde changera de valeur et ce dessin restera vrai — c’est ce qui évite au client d’inventer une forme pour une valeur jamais dessinée.	145	note				explication de DA dans le téléphone — pas un libellé
