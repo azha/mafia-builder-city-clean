@@ -30,12 +30,12 @@ namespace MafiaCleanCity.CityMap
         {
             switch (Cle(profile))
             {
-                case "tidewater": return "le port";
-                case "spine":     return "l'avenue";
-                case "lattice":   return "le damier";
-                case "stack":     return "les cheminées";
-                case "glass":     return "les tours";
-                case "verge":     return "les faubourgs";
+                case "tidewater": return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "le port");
+                case "spine":     return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "l’avenue");
+                case "lattice":   return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "le damier");
+                case "stack":     return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "les cheminées");
+                case "glass":     return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "les tours");
+                case "verge":     return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "les faubourgs");
                 case "":          return Inconnu;
                 default:          return MafiaCleanCity.I18n.Repli.Type(profile);   // 23/09 (règle f2) : un profil hors domaine est une SORTE ⇒ « type inconnu », plus la brute
             }
@@ -46,12 +46,12 @@ namespace MafiaCleanCity.CityMap
         {
             switch (Cle(profile))
             {
-                case "tidewater": return "Port";
-                case "spine":     return "Avenue";
-                case "lattice":   return "Damier";
-                case "stack":     return "Cheminées";
-                case "glass":     return "Tours";
-                case "verge":     return "Faubourgs";
+                case "tidewater": return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "Port");
+                case "spine":     return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "Avenue");
+                case "lattice":   return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "Damier");
+                case "stack":     return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "Cheminées");
+                case "glass":     return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "Tours");
+                case "verge":     return MafiaCleanCity.I18n.Libelle.De("carte", "tissu", "Faubourgs");
                 case "":          return Inconnu;
                 default:          return MafiaCleanCity.I18n.Repli.Type(profile);
             }

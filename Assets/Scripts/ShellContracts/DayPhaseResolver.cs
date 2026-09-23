@@ -48,10 +48,10 @@ namespace MafiaCleanCity.Shell
                 // ⇒ « Plein jour » et non « Jour » : le libellé voisin est « JOUR 1 » (le compteur
                 //   de jours), et deux « JOUR » côte à côte se lisent comme une répétition.
                 //   « Soirée » est le mot du canon lui-même (`JOUR 12 · SOIRÉE`).
-                case "DAWN": return "Aube";
-                case "DAY": return "Plein jour";
-                case "DUSK": return "Soirée";
-                case "NIGHT": return "Nuit";
+                case "DAWN": return MafiaCleanCity.I18n.Libelle.De("chrome", "phase", "Aube");
+                case "DAY": return MafiaCleanCity.I18n.Libelle.De("chrome", "phase", "Plein jour");
+                case "DUSK": return MafiaCleanCity.I18n.Libelle.De("chrome", "phase", "Soirée");
+                case "NIGHT": return MafiaCleanCity.I18n.Libelle.De("chrome", "phase", "Nuit");
                 default: return MafiaCleanCity.I18n.Repli.Etat(dayPhase);   // hors domaine : « état inconnu » (règle f2, atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }

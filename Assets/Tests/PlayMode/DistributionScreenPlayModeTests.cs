@@ -480,8 +480,9 @@ namespace MafiaCleanCity.Operational.Tests
         [Test]
         public void EcranDistributionR6_ResolveurTransitBand_CouvreLesDeuxValeursMesureesEtLHypothese()
         {
-            Assert.AreEqual("arrivé", DistributionResolvers.TexteTransitBand("ARRIVED"));
-            Assert.AreEqual("prêt", DistributionResolvers.TexteTransitBand("IDLE"));
+            // D13 (23/09, atelier 30 v2) : formes ÉPICÈNES — « arrivé » / « prêt » présumaient un coursier masculin.
+            Assert.AreEqual("à destination", DistributionResolvers.TexteTransitBand("ARRIVED"));
+            Assert.AreEqual("disponible", DistributionResolvers.TexteTransitBand("IDLE"));
             Assert.AreEqual("en chemin", DistributionResolvers.TexteTransitBand("IN_TRANSIT"));
         }
 

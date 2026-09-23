@@ -129,11 +129,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (bucket)
             {
-                case "FRESH": return "Récent";
-                case "ACCLIMATED": return "Acclimaté";
-                case "SEASONED": return "Aguerri";
-                case "SENIOR": return "Ancien";
-                case "ENTRENCHED": return "Enraciné";
+                case "FRESH": return MafiaCleanCity.I18n.Libelle.De("famille", "anciennete", "Depuis peu");
+                case "ACCLIMATED": return MafiaCleanCity.I18n.Libelle.De("famille", "anciennete", "Depuis un moment");
+                case "SEASONED": return MafiaCleanCity.I18n.Libelle.De("famille", "anciennete", "Du métier");
+                case "SENIOR": return MafiaCleanCity.I18n.Libelle.De("famille", "anciennete", "De la vieille garde");
+                case "ENTRENCHED": return MafiaCleanCity.I18n.Libelle.De("famille", "anciennete", "Fait partie des murs");
                 default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }

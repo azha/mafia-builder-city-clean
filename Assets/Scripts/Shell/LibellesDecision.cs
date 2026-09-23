@@ -52,9 +52,9 @@ namespace MafiaCleanCity.Shell
         {
             switch (bucket)
             {
-                case "minor": return "mineure";
-                case "moderate": return "modérée";
-                case "major": return "majeure";
+                case "minor": return MafiaCleanCity.I18n.Libelle.De("decision", "portee", "mineure");
+                case "moderate": return MafiaCleanCity.I18n.Libelle.De("decision", "portee", "modérée");
+                case "major": return MafiaCleanCity.I18n.Libelle.De("decision", "portee", "majeure");
                 // Une VALEUR INCONNUE sort brute, elle ne se fond pas dans un mot choisi : voir une
                 // valeur qu'on n'attendait pas est un signal. Le tiret est réservé à l'ABSENCE.
                 default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : « état inconnu » (règle f2, atelier 28) ; absent : « — » ; jamais la valeur brute
@@ -65,9 +65,9 @@ namespace MafiaCleanCity.Shell
         {
             switch (bucket)
             {
-                case "low": return "faible";
-                case "elevated": return "élevée";
-                case "pressing": return "pressante";
+                case "low": return MafiaCleanCity.I18n.Libelle.De("decision", "urgence", "faible");
+                case "elevated": return MafiaCleanCity.I18n.Libelle.De("decision", "urgence", "élevée");
+                case "pressing": return MafiaCleanCity.I18n.Libelle.De("decision", "urgence", "pressante");
                 default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : « état inconnu » (règle f2, atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }

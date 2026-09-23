@@ -724,8 +724,8 @@ namespace MafiaCleanCity.Operational
         {
             switch (tier)
             {
-                case "boutique": return "cabinet";
-                case "corruption_pipeline": return "filière";
+                case "boutique": return MafiaCleanCity.I18n.Libelle.De("loi", "bloc", "cabinet");
+                case "corruption_pipeline": return MafiaCleanCity.I18n.Libelle.De("loi", "bloc", "filière");
                 default: return MafiaCleanCity.I18n.Repli.Type(tier);   // plus « tier inconnu » (un mot anglais) ni le palier brut — atelier 28
             }
         }

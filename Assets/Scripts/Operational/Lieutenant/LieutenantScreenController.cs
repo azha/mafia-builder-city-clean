@@ -3551,7 +3551,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
 
         private static string ActionLabelFor(RuleRow rule) =>
-            rule.action == "EXECUTE_DEFAULT" ? "Run default" : rule.action == "PAUSE_OPS" ? "Pause ops" : (rule.action ?? "—");
+            rule.action == "EXECUTE_DEFAULT" ? MafiaCleanCity.I18n.Libelle.De("famille", "regle", "Comme d’habitude") : rule.action == "PAUSE_OPS" ? MafiaCleanCity.I18n.Libelle.De("famille", "regle", "Suspendre") : (rule.action ?? "—");
 
         private static string BoolValueLabel(RuleRow rule) => rule.value == "false" ? "false" : "true";
 

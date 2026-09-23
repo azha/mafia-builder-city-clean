@@ -407,8 +407,8 @@ namespace MafiaCleanCity.Operational.Selling
         /// ⚠️ Et le repli reste NOMMÉ (`—`) plutôt que dé-sluggé : une valeur neuve doit se voir
         /// comme inconnue, pas se déguiser en mot anglais plausible.</summary>
         private static string Caisse(string b) =>
-            b == "NONE" ? "VIDE" : b == "LOW" ? "PEU" : b == "MODERATE" ? "MOYENNE"
-            : b == "HIGH" ? "PLEINE" : b == "FULL" ? "DÉBORDE" : "—";
+            b == "NONE" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "VIDE") : b == "LOW" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "PEU") : b == "MODERATE" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "MOYENNE")
+            : b == "HIGH" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "PLEINE") : b == "FULL" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "DÉBORDE") : "—";
 
         /// <summary>La marge, en français. Domaine LU À L'ANCRE : `selling.projection.service.ts:59`
         /// — `DealerMarginBand = 'STANDARD' | 'ELEVATED' | 'PREMIUM' | 'HIGH_PREMIUM'`.
@@ -419,12 +419,12 @@ namespace MafiaCleanCity.Operational.Selling
         /// gradation, et il est à faire ratifier. *Inventer un mot de fiction en silence serait un
         /// choix de DA déguisé en montage* — celui-ci est déclaré, donc réfutable.</summary>
         private static string Marge(string b) =>
-            b == "STANDARD" ? "AU TARIF" : b == "ELEVATED" ? "AU-DESSUS"
-            : b == "PREMIUM" ? "CHER" : b == "HIGH_PREMIUM" ? "TRÈS CHER" : "—";
+            b == "STANDARD" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "AU TARIF") : b == "ELEVATED" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "AU-DESSUS")
+            : b == "PREMIUM" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "CHER") : b == "HIGH_PREMIUM" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "TRÈS CHER") : "—";
 
         private static string Activite(string b) =>
-            b == "WORKING" ? "AU POSTE" : b == "IDLE" ? "INACTIF"
-            : b == "ABSENT" ? "ABSENT" : b == "COMPROMISED" ? "COMPROMIS" : "—";
+            b == "WORKING" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "au travail") : b == "IDLE" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "au repos")
+            : b == "ABSENT" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "pas là") : b == "COMPROMISED" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "grillé") : "—";
 
         /// <summary>Pis-aller : aucune clé i18n n'est servie par ce back (178 référencées, 0
         /// servie). Ce n'est PAS une traduction.</summary>

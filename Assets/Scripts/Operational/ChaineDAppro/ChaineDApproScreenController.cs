@@ -917,9 +917,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (bucket)
             {
-                case "UP": return "le prix monte";              // m-48, MESURÉ
-                case "STABLE": return "le prix ne bouge pas";    // m-49 — hypothèse de clé
-                case "DOWN": return "le prix baisse";            // m-53 — hypothèse de clé
+                case "UP": return MafiaCleanCity.I18n.Libelle.De("appro", "bloc", "le prix monte");              // m-48, MESURÉ
+                case "STABLE": return MafiaCleanCity.I18n.Libelle.De("appro", "bloc", "le prix ne bouge pas");    // m-49 — hypothèse de clé
+                case "DOWN": return MafiaCleanCity.I18n.Libelle.De("appro", "bloc", "le prix baisse");            // m-53 — hypothèse de clé
                 default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
@@ -940,7 +940,7 @@ namespace MafiaCleanCity.Operational
         {
             switch (band)
             {
-                case "NONE": return "il n'y a plus rien";   // m-48, MESURÉ
+                case "NONE": return MafiaCleanCity.I18n.Libelle.De("appro", "bloc", "il n’y a plus rien");   // m-48, MESURÉ
                 default: return MafiaCleanCity.I18n.Repli.Etat(band);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
