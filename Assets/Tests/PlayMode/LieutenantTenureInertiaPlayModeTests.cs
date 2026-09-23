@@ -151,7 +151,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(IsUuid(secondHostId), $"discovered a 2nd operational building uuid for the reassign destination (got '{secondHostId}')");
             Assert.AreNotEqual(labId, secondHostId, "the reassign destination is a DISTINCT building from the lab");
 
-            Debug.Log($"[LieutenantTenureE2E] seeded — player={playerId} lab={labId} secondHost={secondHostId} email={demoEmail}");
+            Debug.Log($"[LieutenantTenureE2E] seeded — player={playerId} lab={labId} secondHost={secondHostId} email={MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(demoEmail)}");
             seeded = true;
         }
 

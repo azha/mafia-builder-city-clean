@@ -1288,18 +1288,9 @@ namespace MafiaCleanCity.Operational.Exceptions
         ///   conversion elle-même.</summary>
         // ⑨-4 — `Replique(c)` est retirée : la réplique du premier passe par `RepliqueDuPremier` (la même règle des guillemets,
         // `ExceptionBandes.Replique`, plus l'adresse « Patron — »), et `TexteServeur` reste le point de passage du texte serveur.
-        /// <summary>Le texte serveur d'une carte : la référence i18n si elle est SERVIE, la prose
-        /// sinon. `Connait` avant `Traduire` — une clé absente ne doit pas remplacer une prose
-        /// lisible par une clé nue.</summary>
-        private static string TexteServeur(ExceptionCardDto c)
-        {
-            if (c == null) return string.Empty;
-            if (c.event_descriptor_i18n != null
-                && !string.IsNullOrEmpty(c.event_descriptor_i18n.key)
-                && MafiaCleanCity.I18n.I18nCatalog.Connait(c.event_descriptor_i18n.key))
-                return MafiaCleanCity.I18n.I18nCatalog.Traduire(c.event_descriptor_i18n.key);
-            return c.event_descriptor ?? string.Empty;
-        }
+        /// <summary>Le texte serveur d'une carte — la règle vit dans `ExceptionBandes.TexteServeur`, partagée avec le panneau
+        /// de la file (2026-09-23).</summary>
+        private static string TexteServeur(ExceptionCardDto c) => ExceptionBandes.TexteServeur(c);
 
         private static string Lib(string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("exceptions", "bloc", litteral);

@@ -17,6 +17,36 @@ namespace MafiaCleanCity.Shell.Tests
     [Category("W3U1")]
     public class AppShellPlayModeTests
     {
+        /// <summary>⛔ GARDE STRUCTURELLE DES DEUX CHEMINS (2026-09-23, ruling de f2, reco (a) de l'atelier `25-donnees-servies` §1) :
+        /// AUCUN chemin joueur n'instancie ⑪ `LaunderingController` ni ⑫ `PipelineOverviewController`. Lecture des sources de
+        /// production, commentaires retirés : toute instanciation (`<T>` générique ou `typeof(T)`) hors du fichier de ⑪ lui-même
+        /// rougit, NOMMÉE. ⑪ ouvre ⑫ depuis son propre fichier, et ⑪ n'est plus joignable. Anti-vacuité : les deux instanciations de
+        /// ⑫ DANS ⑪ sont bien vues (sinon le motif ne mord sur rien), et ㊵ est bien instancié par l'onglet ET par la nav.</summary>
+        [Test]
+        public void AucunCheminJoueur_NInstancie_LaunderingController_NiPipelineOverviewController()
+        {
+            string racine = System.IO.Path.Combine(Application.dataPath, "Scripts");
+            var motif = new System.Text.RegularExpressions.Regex(
+                @"<\s*(LaunderingController|PipelineOverviewController)\s*>|typeof\(\s*(LaunderingController|PipelineOverviewController)\s*\)");
+            var fautes = new System.Collections.Generic.List<string>();
+            int dansOnze = 0, filiere = 0;
+            foreach (string f in System.IO.Directory.GetFiles(racine, "*.cs", System.IO.SearchOption.AllDirectories))
+            {
+                string src = MafiaCleanCity.Tests.IdentiteNonDeriveeDuTexteTests.SansCommentaires(System.IO.File.ReadAllText(f));
+                string nom = System.IO.Path.GetFileName(f);
+                filiere += System.Text.RegularExpressions.Regex.Matches(src, @"<\s*FiliereScreenController\s*>").Count;
+                foreach (System.Text.RegularExpressions.Match m in motif.Matches(src))
+                {
+                    if (nom == "LaunderingController.cs") { dansOnze++; continue; }
+                    int ligne = src.Substring(0, m.Index).Split('\n').Length;
+                    fautes.Add($"{f.Substring(Application.dataPath.Length - "Assets".Length)}:{ligne} « {m.Value} »");
+                }
+            }
+            Assert.AreEqual(2, dansOnze, "anti-vacuité : les 2 ouvertures de ⑫ depuis ⑪ (LaunderingController.cs) sont vues par le motif");
+            Assert.GreaterOrEqual(filiere, 3, "anti-vacuité : ㊵ est instancié par l'onglet, la nav du Dashboard (×2) et le menu Plus");
+            CollectionAssert.IsEmpty(fautes, "un chemin joueur instancie encore ⑪ ou ⑫ :\n" + string.Join("\n", fautes));
+        }
+
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un
         // écran / le shell / la scène du build qui l'amorce) et ne le rendait JAMAIS : global statique, il passait à la classe
         // suivante. Mesuré : le 1er cas d'`ArchetypeServi_…` a hérité d'un bundle réel laissé en amont. Rendu à chaque test ;
@@ -108,7 +138,8 @@ namespace MafiaCleanCity.Shell.Tests
 
             shell.ActivateTab(AppShell.Tab.Pipeline);
             yield return null;
-            Assert.AreEqual(typeof(LaunderingController), shell.MountedTenantType, "Pipeline mounts LaunderingController");
+            // ⛔ GARDE STRUCTURELLE (2026-09-23, ruling de f2) : l'onglet Filière instancie ㊵, plus ⑪.
+            Assert.AreEqual(typeof(FiliereScreenController), shell.MountedTenantType, "l'onglet Filière monte ㊵ FiliereScreenController");
             Assert.IsFalse(shell.OnEmptyMoreDestination);
 
             shell.ActivateTab(AppShell.Tab.More);

@@ -13,3 +13,9 @@ lancé avant et après le merge de CLIENT-2 (34aab08c) : sortie IDENTIQUE — ce
 ou un test FONCTIONNEL voisin dans le même fichier (alors l'instrument devrait classer par méthode, pas par fichier) ?
 Les deux captures de ces classes (`EcranDelegationC1`, `B3C1`) passent déjà par `IdentiteDeCaptureOuEchoue` + garde d'effet
 depuis 2a72662a : la lecture du corps dira si ces `SignUp` sont hors capture.
+
+## Dette d'INSTRUMENT, datée 2026-09-23 — une capture qui détruit sa planche avant de la refaire (famille TD-625)
+| site | forme | mesure | statut |
+|---|---|---|---|
+| `DashboardPlayModeTests.cs:345-347` (`CaptureDashboardScreenshot`, catégorie `Screenshot`) | `File.Delete(path)` sur la planche COMMITÉE `Assets/Screenshots/dashboard.png`, PUIS `ScreenCapture.CaptureScreenshot(path)` et une attente de 10 s | créneau du 23/09, passage 3 (par nom, `MAFIA_CI_TESTS`, tête 8d689a75) : « screenshot written to …/dashboard.png — Expected: True But was: False » ; `git status` : ` D Assets/Screenshots/dashboard.png` (restaurée par checkout) | **dette**, non corrigée. Tout échec de l'écriture détruit la planche ; `ScreenCapture.CaptureScreenshot` n'écrit rien en batchmode dans ce délai, là où les captures vertes du dépôt passent par un rendu de caméra. `Screenshot` reste hors filtre (MafiaCI) |
+

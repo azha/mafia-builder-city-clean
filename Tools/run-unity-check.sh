@@ -95,6 +95,14 @@ fi
 #    MÊME ligne. Le conflit était donc de COMMENTAIRE, pas de comportement — on garde la mesure
 #    (c'est elle qui rend l'avertissement opposable) et une seule occurrence de la ligne.
 : "${TIMEOUT_S:=900}"
+# ⛔⛔ CHIEN DE GARDE DE GEL (2026-09-23) — un test qui GÈLE le fil principal ne rend jamais la main à NUnit : son délai
+#    (`[Timeout]`, 180 s par défaut) ne mord PAS. Mesuré : `ManometreOracle.Oracle1` a tenu l'éditeur 30 min, journal muet,
+#    CPU ≈ 378 %, jusqu'à ce qu'on le tue à la main ; seul le plafond `TIMEOUT_S` l'aurait arrêté, sans nommer personne.
+# ⇒ Dès qu'un test a démarré (une ligne `MafiaCI: RUN`), un journal qui ne grandit plus pendant STALL_S secondes TUE l'éditeur,
+#   NOMME le test en cours (le dernier RUN) et rend RC_GEL. STALL_S dépasse le plus long silence LÉGITIME : le plus long
+#   `[Timeout]` du dépôt vaut 300 s. `STALL_S=0` désarme la garde.
+: "${STALL_S:=420}"
+RC_GEL=5
 SECONDS=0                              # bash : compteur d'écoulé, remis à 0 ici
 
 # ⛔⛔ CHIEN DE GARDE DE SORTIE (mesuré 2026-08-31, DEUX runs perdus) — Unity TERMINE SON TRAVAIL
@@ -119,11 +127,30 @@ SECONDS=0                              # bash : compteur d'écoulé, remis à 0 
 #    différence.
 CONSOLE="$LOG.console"
 : > "$CONSOLE"
+# ⛔ LE JOURNAL AUSSI EST VIDÉ AVANT LE LANCEMENT (2026-09-23) — un LOG_FILE réutilisé portait encore le marqueur de FIN du run
+#    précédent : le chien de garde de sortie le lisait avant qu'Unity ne réécrive le fichier, et tuait l'éditeur neuf à sa première
+#    itération (mesuré sur le contrôle `verdict-controle.sh` : « quit observé SANS marqueur de tests », RC=3, au lieu du vrai verdict).
+: > "$LOG"
 timeout "$TIMEOUT_S" "$UNITY" -batchmode "${EXTRA_ARGS[@]}" -projectPath "$WT" -logFile "$LOG" "$@" \
   > >(tee -a "$CONSOLE") 2>&1 &
 UNITY_WAITER=$!
 WATCHDOG_FIRED=0
+TEST_GELE=""
+LIGNE_GEL=""
 while kill -0 "$UNITY_WAITER" 2>/dev/null; do
+  if [[ "$STALL_S" -gt 0 && -f "$LOG" ]] && grep -q '^MafiaCI: RUN ' "$LOG" 2>/dev/null \
+     && ! grep -qE 'MafiaCI: RunPlayModeTests finished' "$LOG" 2>/dev/null; then
+    MUET_S=$(( $(date +%s) - $(stat -c %Y "$LOG") ))
+    if (( MUET_S >= STALL_S )); then
+      TEST_GELE=$(grep '^MafiaCI: RUN ' "$LOG" | tail -1 | sed 's/^MafiaCI: RUN //')
+      LIGNE_GEL="MafiaCI-harness: ⛔ TEST GELÉ — journal muet depuis ${MUET_S}s (STALL_S=${STALL_S}) pendant « ${TEST_GELE} » ⇒ éditeur tué"
+      echo "$LIGNE_GEL"   # au journal APRÈS la mort de l'éditeur (plus bas) : écrite maintenant, Unity l'écraserait à son propre décalage
+      pkill -TERM -u "$(id -u)" -f "logFile $LOG" 2>/dev/null || true
+      for _try in 1 2 3 4 5; do sleep 2; kill -0 "$UNITY_WAITER" 2>/dev/null || break; done
+      pkill -KILL -u "$(id -u)" -f "logFile $LOG" 2>/dev/null || true
+      break
+    fi
+  fi
   if [[ -f "$LOG" ]] && grep -qE 'MafiaCI: RunPlayModeTests finished|Internal_EditorApplicationQuit' "$LOG" 2>/dev/null; then
     sleep 3                            # laisser le marqueur et ses voisines s'écrire entièrement
     for _try in 1 2 3; do
@@ -144,12 +171,19 @@ ELAPSED_S=$SECONDS
 # par signal ne dit rien des tests. `failed=0` ⇒ 0, sinon 1. Absence de marqueur de test (phase de
 # compile) ⇒ on garde le RC, et la garde `error CS` plus bas reste seule juge.
 RC=$(verdict_log "$LOG" "$EXECUTE_METHOD" "$WATCHDOG_FIRED" "$RC" "$CONSOLE")
+# La ligne de gel entre au journal ICI, l'éditeur mort : mesuré le 23/09 (sonde de gel), écrite de son vivant elle était écrasée par
+# Unity, qui écrit à son propre décalage sans O_APPEND — elle ne survivait que sur la console.
+[[ -n "${LIGNE_GEL:-}" ]] && echo "$LIGNE_GEL" >> "$LOG"
+# Un gel tranche AVANT tout le reste : le RC d'un éditeur tué ne dit rien des tests, et le test gelé est nommé.
+[[ -n "$TEST_GELE" ]] && RC=$RC_GEL
 
 # Durée + issue, écrites dans le log préservé (si KEEP_LOG) ET sur stdout — jamais uniquement
 # déduites après coup. `timeout` rend 124 s'IL a dû tuer le process (délai dépassé) ; tout AUTRE
 # code >128 signale un signal reçu d'ailleurs (ex. 137 = SIGKILL externe, ce que la revue a mesuré
 # une fois) — distingué explicitement, jamais confondu avec un `EditorApplication.Exit()` propre.
-if [[ "$RC" == 124 ]]; then
+if [[ -n "$TEST_GELE" ]]; then
+  ISSUE="TEST GELÉ (RC=$RC_GEL) — « ${TEST_GELE} » : journal muet ${STALL_S}s ou plus, éditeur tué par le chien de garde de gel"
+elif [[ "$RC" == 124 ]]; then
   ISSUE="TIMEOUT (tué par 'timeout ${TIMEOUT_S}s' lui-même)"
 elif [[ "$RC" -gt 128 ]]; then
   ISSUE="SIGNAL $((RC - 128)) (tué de l'extérieur, jamais un EditorApplication.Exit propre)"

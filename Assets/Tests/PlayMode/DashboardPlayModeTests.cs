@@ -107,7 +107,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsFalse(string.IsNullOrEmpty(demoEmail), "discovered demo email");
             Assert.IsFalse(string.IsNullOrEmpty(demoPassword), "discovered demo password");
 
-            Debug.Log($"[DashboardE2E] seeded — email={demoEmail}");
+            Debug.Log($"[DashboardE2E] seeded — email={MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(demoEmail)}");
             seeded = true;
         }
 
@@ -298,8 +298,11 @@ namespace MafiaCleanCity.Operational.Tests
             controller.OpenPipeline();
             Assert.AreEqual(DashboardController.NavTarget.Pipeline, controller.LastNavTarget, "Pipeline nav fired");
             Assert.IsNotNull(controller.LastNavGameObject, "Pipeline nav opened a host GameObject");
-            Assert.IsNotNull(controller.LastNavGameObject.GetComponent<LaunderingController>(),
-                "Pipeline nav opened the LaunderingController");
+            // ㊵ depuis le 2026-09-23 (ruling de f2) : ⑪ est sorti du chemin joueur.
+            Assert.IsNotNull(controller.LastNavGameObject.GetComponent<FiliereScreenController>(),
+                "la nav Filière ouvre ㊵ FiliereScreenController");
+            Assert.IsNull(controller.LastNavGameObject.GetComponent<LaunderingController>(),
+                "la nav Filière n'ouvre plus ⑪ LaunderingController");
             // tidy up the opened controller so it doesn't keep running its own fetch loop.
             Object.Destroy(controller.LastNavGameObject);
 

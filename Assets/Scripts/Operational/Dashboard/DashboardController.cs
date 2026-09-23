@@ -297,7 +297,9 @@ namespace MafiaCleanCity.Operational
         /// <summary>Open the City Map screen (REUSE CityMapController — it self-builds its Canvas).</summary>
         public void OpenCityMap() => OpenNav(NavTarget.CityMap);
         /// <summary>Open the Building Card screen (REUSE BuildingCardController).</summary>
-        /// <summary>Open the Laundering Pipeline screen (REUSE LaunderingController).</summary>
+        /// <summary>Ouvre LA FILIÈRE — ㊵ `FiliereScreenController` depuis le 2026-09-23 (ruling de f2, reco (a) de l'atelier
+        /// `25-donnees-servies` §1) : ⑪ `LaunderingController` et ⑫ `PipelineOverviewController` sont sortis du chemin joueur.
+        /// Avant, cette nav montait ⑪ — l'Accueil gardait donc ⑪ joignable même si l'onglet Filière montait ㊵.</summary>
         public void OpenPipeline() => OpenNav(NavTarget.Pipeline);
         /// <summary>Open the Exception Queue screen (Phase-20 — ExceptionQueueController self-builds its Canvas).</summary>
         public void OpenExceptions() => OpenNav(NavTarget.Exceptions);
@@ -341,7 +343,7 @@ namespace MafiaCleanCity.Operational
                 switch (target)
                 {
                     case NavTarget.CityMap: LastNavGameObject = nav.MonterLocataireEnSurimpression<CityMapController>().gameObject; break;
-                    case NavTarget.Pipeline: LastNavGameObject = nav.MonterLocataireEnSurimpression<LaunderingController>().gameObject; break;
+                    case NavTarget.Pipeline: LastNavGameObject = nav.MonterLocataireEnSurimpression<FiliereScreenController>().gameObject; break;   // ㊵, plus ⑪ (23/09)
                     case NavTarget.Exceptions: LastNavGameObject = nav.MonterLocataireEnSurimpression<ExceptionQueueController>().gameObject; break;
                     case NavTarget.Autonomy: LastNavGameObject = nav.MonterLocataireEnSurimpression<AutonomyInboxController>().gameObject; break;
                 }
@@ -351,7 +353,7 @@ namespace MafiaCleanCity.Operational
             switch (target)
             {
                 case NavTarget.CityMap: host.AddComponent<CityMapController>(); break;
-                case NavTarget.Pipeline: host.AddComponent<LaunderingController>(); break;
+                case NavTarget.Pipeline: host.AddComponent<FiliereScreenController>(); break;   // ㊵, plus ⑪ (23/09)
                 case NavTarget.Exceptions: host.AddComponent<ExceptionQueueController>(); break;
                 case NavTarget.Autonomy: host.AddComponent<AutonomyInboxController>(); break;
             }

@@ -139,7 +139,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(IsUuid(playerId), $"discovered player uuid (got '{playerId}')");
             Assert.IsTrue(IsUuid(labId), $"discovered lab uuid (got '{labId}')");
 
-            Debug.Log($"[LieutenantE2E] seeded — player={playerId} lab={labId} email={demoEmail}");
+            Debug.Log($"[LieutenantE2E] seeded — player={playerId} lab={labId} email={MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(demoEmail)}");
             seeded = true;
         }
 

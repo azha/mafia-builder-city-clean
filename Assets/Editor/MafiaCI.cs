@@ -97,6 +97,7 @@ public static class MafiaCI
     //   elle n'entrera ici qu'après un run vert, parce que sa 4e suite (`TopBarDoctrineV31`, 7
     //   tests) n'a JAMAIS tourné : le crash est arrivé avant elle. *Douze verts ne disent rien des
     //   sept qui n'ont pas démarré.*
+    // ✅ `HUDv31` INSCRITE le 2026-09-23 — voir la note des six inscriptions du créneau 05:18-05:58, plus bas.
     // ⛔ LES `Photo*` SONT DEHORS — TOUTES, depuis le 2026-09-03. Elles écrivent des PNG dans
     // `Assets/Screenshots` à chaque exécution : les faire tourner sous le juge salit l'arbre à
     // chaque run, et un `git add` distrait embarque alors des captures que personne n'a regardées.
@@ -114,6 +115,32 @@ public static class MafiaCI
     //   `planche_la_distribution_1080x2400.png`, produite par `PhotoChantierC` sous la garde d'effet. Verte SEULE avant
     //   inscription : `passed=20 failed=0 declares=20 comptes=20`, catégories RÉELLEMENT exécutées = [EcranDistribution], sans
     //   paire d'identité (run du 22/09 23:29). Aucun test n'exige la paire : elle entre dans la PARTIE 1 du gate client.
+    // ⛔ `MutationDeCarte` (1 test) HORS DU FILTRE, PAR CONSTRUCTION, ET POUR TOUJOURS (raison écrite le 2026-09-23, table
+    //   `categories-hors-filtre.md`) : c'est `Capture_Detail_ApresTampon_SousChrome_MUTE`, qui RÉSOUT une exception pour de bon sur le
+    //   compte de capture — sa catégorie a été choisie pour n'être le préfixe de rien, parce qu'un lancement de `CaptureDetail` l'avait un
+    //   jour emportée et consommé la carte. Elle se lance SEULE, à dessein, avec la paire, après avoir prévenu. Jamais au filtre par défaut.
+    // ✅ SIX INSCRIPTIONS DU CRÉNEAU 2026-09-23 05:18-05:58 (tête 8d689a75 = merge CLIENT-2 ada52db4 + `MAFIA_CI_TESTS`), sans la paire,
+    //   aucun test n'en exige (0 appel d'identité de capture), déclarés == comptés partout, VERDICT code=0 :
+    //   `HUDv31` 32/32 · `CarteActions` 3/3 · `PoliceGras` 1/1 · `VideChezLeNouveau` 1/1 (passage 2, 05:51, `passed=37 failed=0
+    //   declares=37 comptes=37`) ; `IconesDispatcher` 1/1 · `EcranDistrict` 10/10 (passage 1, dans le même lot que Charpente ;
+    //   `EcranDistrict` = ⑬ de CLIENT-2, 4 tests à 218e2829 + 6 de ①-0/①-1/①-2). Préfixes : `EcranDistrict` emporte
+    //   `EcranDistribution`, déjà inscrite ; aucune autre entrée neuve n'emporte une catégorie non inscrite (compteur : 591 → 639 = +48).
+    //   Toutes en PARTIE 1 du gate client. Rapport : `Tools/juge-donnees/creneau-2026-09-22/categories-hors-filtre.md`.
+    // ⛔ `ManometreOracle` (5 tests) RESTE DEHORS — GEL reproduit SEUL le 2026-09-23 : `Oracle1_Ring_UniqueLaitonFamily_On360_…`, filtre
+    //   par nom, 1 déclaré : journal muet 245 s après son `RUN`, CPU ≈ 378 %, le délai de test d'Unity ne mord pas (fil principal
+    //   gelé) ; tué par le chien de garde du lanceur, puis SIGSEGV au démontage de mono (effet du kill, pas une preuve de crash
+    //   autonome). Même signature que le 03/09 (en-tête du fichier de test). Rien ne boucle côté C# avant son premier `yield` ;
+    //   `TopBarDoctrineV31` porte le même motif (`WaitForEndOfFrame` + `CaptureScreenshotAsTexture`) et passe 19/19 : le motif
+    //   seul n'explique pas le gel. Les 4 autres tests de la classe n'ont JAMAIS tourné : à mesurer PAR NOM (`MAFIA_CI_TESTS`),
+    //   Oracle1 exclu.
+    // ⛔ `SondeGelVolontaire` (1 test) HORS DU FILTRE, PAR CONSTRUCTION (2026-09-23) : c'est le contrôle positif du chien de garde de
+    //   GEL de `run-unity-check.sh` — il gèle le fil principal quand `MAFIA_SONDE_GEL=1` est posée, et sort Inconclusive sinon. Il se
+    //   lance SEUL, par nom (`MAFIA_CI_TESTS`), et doit rendre RC=5 avec le test nommé. Au filtre par défaut il ne prouverait rien.
+    // ⛔ `Screenshot` RESTE DEHORS (TD-625) — et `DashboardPlayModeTests.CaptureDashboardScreenshot` le confirme (passage 3, par nom) :
+    //   il SUPPRIME la planche commitée (`File.Delete`, DashboardPlayModeTests.cs:345) AVANT `ScreenCapture.CaptureScreenshot`, qui
+    //   n'écrit rien en 10 s en batchmode ⇒ échec = planche détruite. Défaut d'INSTRUMENT, dette datée dans `dette-captures.md`.
+    //   Les 2 autres tests de la classe (`LoadsDashboard_…`, `Wallet_WithoutToken_…`) sont SANS catégorie : verts par nom (2/2),
+    //   injoignables par tout filtre de catégories tant qu'ils n'en portent pas.
     // ✅ `EcranRevue` (⑯, 32 tests) et `EcranFile` (⑨, 18 tests) INSCRITES (2026-09-23) — écrans de CLIENT-2, entrés au cumul
     //   par le merge de `ecrans/2026-09-23` (8d632ebd, 34aab08c). Sans elles, ⑯ et ⑨ n'étaient dans AUCUN gate. Vertes chez
     //   CLIENT-2 : `passed=70 failed=0 declares=70 comptes=70`, [Ecran10, EcranExceptions, EcranFile, EcranRevue] (a3134d5f,
@@ -191,6 +218,17 @@ public static class MafiaCI
         // Inscrites le 2026-09-23 au regroupement — ⑯ et ⑨ de CLIENT-2, voir la note au-dessus du tableau.
         "EcranRevue",
         "EcranFile",
+        // Inscrites le 2026-09-23 après le créneau 05:18-05:58 — vertes avant inscription, voir la note au-dessus du tableau.
+        "HUDv31",
+        "CarteActions",
+        "PoliceGras",
+        "VideChezLeNouveau",
+        "IconesDispatcher",
+        "EcranDistrict",
+        // ㊵ porte la filière (2026-09-23) — 3/3 vert AVANT inscription, par nom (MAFIA_CI_TESTS), créneau 06:20-06:29, tête
+        // e21e0c55 : l'ordre par stage_index et l'écart de TÊTE sur le compte semé (4 étapes, 0 écart), + 2 états fabriqués.
+        // Sans la paire, aucune relation de préfixe (vérifié) : PARTIE 1. Validé par l'orchestrateur.
+        "EcranFiliere",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
@@ -238,9 +276,23 @@ public static class MafiaCI
             UnityEngine.Debug.Log("MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = ["
                                   + string.Join(", ", cats) + "]");
         }
+        // ⚠️ `MAFIA_CI_TESTS` (NOMS COMPLETS, séparés par des virgules) — ajouté le 2026-09-23 : relancer SEUL un test décisif
+        //    que le préfixe des catégories ne sait pas isoler (mesuré : `DashboardPlayModeTests` porte 2 tests SANS catégorie,
+        //    injoignables par tout filtre, et une capture sous `Screenshot`, dont le filtre est proscrit — TD-625, il emporte
+        //    11 planches). Posée, elle REMPLACE les catégories (le log le dit) ; correspondance EXACTE sur `FullName`, et tout
+        //    nom qui ne désigne aucune feuille est NOMMÉ et rougit le verdict — le zéro d'absence, version nominative.
+        string[] noms = null;
+        string surchargeNoms = System.Environment.GetEnvironmentVariable("MAFIA_CI_TESTS");
+        if (!string.IsNullOrWhiteSpace(surchargeNoms))
+        {
+            noms = System.Array.FindAll(System.Array.ConvertAll(surchargeNoms.Split(','), n => n.Trim()), n => n.Length > 0);
+            cats = null;
+            UnityEngine.Debug.Log("MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = ["
+                                  + string.Join(", ", noms) + "]");
+        }
         var api = ScriptableObject.CreateInstance<TestRunnerApi>();
-        api.RegisterCallbacks(new Callbacks(cats));
-        api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode, categoryNames = cats }));
+        api.RegisterCallbacks(new Callbacks(cats, noms));
+        api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode, categoryNames = cats, testNames = noms }));
     }
 
     private class Callbacks : ICallbacks
@@ -272,11 +324,19 @@ public static class MafiaCI
         //      avoir demandé.*
         private readonly System.Collections.Generic.SortedSet<string> categoriesVues
             = new System.Collections.Generic.SortedSet<string>();
-        public Callbacks(string[] categories) { filtre = categories; }
+        private readonly string[] filtreNoms;
+        private readonly System.Collections.Generic.HashSet<string> nomsTrouves = new System.Collections.Generic.HashSet<string>();
+        public Callbacks(string[] categories, string[] noms = null) { filtre = categories; filtreNoms = noms; }
 
         private int CompterFeuillesFiltrees(ITestAdaptor n, string[] heritees)
         {
             string[] cats = (n.Categories != null && n.Categories.Length > 0) ? n.Categories : heritees;
+            if (!n.IsSuite && filtreNoms != null)
+            {
+                if (System.Array.IndexOf(filtreNoms, n.FullName) < 0) return 0;
+                nomsTrouves.Add(n.FullName);
+                return 1;
+            }
             if (!n.IsSuite)
                 return (filtre == null || filtre.Length == 0
                         || (cats != null && System.Array.Exists(cats, c => System.Array.IndexOf(filtre, c) >= 0)))
@@ -357,9 +417,18 @@ public static class MafiaCI
             //    l'éditeur après le marqueur de fin, il relit `failed=` et non ce code — une suite tronquée, un filtre vide
             //    ou un catalogue survivant sortaient donc RC=0 par ce chemin (mesuré le 23/09 avec la sonde du catalogue).
             //    `verdict_log` lit désormais cette ligne ; son absence (anciens journaux) garde le verdict d'avant.
-            int code = failed > 0 || tronquee || filtreVide || catalogueSurvivant.Count > 0 ? 1 : 0;
+            int nomsInconnus = 0;
+            if (filtreNoms != null)
+                foreach (string n in filtreNoms)
+                    if (!nomsTrouves.Contains(n))
+                    {
+                        nomsInconnus++;
+                        Debug.Log($"MafiaCI: ⛔ NOM INCONNU — « {n} » ne désigne AUCUNE feuille de l'arbre PlayMode (nom complet exact attendu).");
+                    }
+            int code = failed > 0 || tronquee || filtreVide || catalogueSurvivant.Count > 0 || nomsInconnus > 0 ? 1 : 0;
             Debug.Log($"MafiaCI: VERDICT code={code} (failed={failed} tronquee={(tronquee ? 1 : 0)} " +
-                      $"filtreVide={(filtreVide ? 1 : 0)} catalogueSurvivant={catalogueSurvivant.Count})");
+                      $"filtreVide={(filtreVide ? 1 : 0)} catalogueSurvivant={catalogueSurvivant.Count}" +
+                      (filtreNoms != null ? $" nomsInconnus={nomsInconnus}" : "") + ")");
             EditorApplication.Exit(code);
         }
 

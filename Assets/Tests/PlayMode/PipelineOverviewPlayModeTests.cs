@@ -62,7 +62,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsFalse(string.IsNullOrEmpty(demoPassword), "discovered demo password");
             Assert.IsTrue(SeederSupport.IsUuid(headNodeId), $"discovered head node uuid (got '{headNodeId}')");
             seeded = true;
-            Debug.Log($"[PipelineE2E] seeded — headNode={headNodeId} email={demoEmail}");
+            Debug.Log($"[PipelineE2E] seeded — headNode={headNodeId} email={MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(demoEmail)}");
         }
 
         [TearDown]

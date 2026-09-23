@@ -180,6 +180,22 @@ namespace MafiaCleanCity.Operational.Exceptions
         public static bool ParleUnLieutenant(ExceptionCardDto c) =>
             c != null && !string.IsNullOrEmpty(c.lieutenant_id);
 
+        /// <summary>Le texte serveur d'une carte : la référence i18n (`event_descriptor_i18n`) si elle est SERVIE, la prose
+        /// (`event_descriptor`) sinon. `Connait` avant `Traduire` — une clé absente ne doit pas remplacer une prose lisible par une
+        /// clé nue. ⛔ UN SEUL SITE pour ⑨ et le panneau de la file (2026-09-23) : le panneau lisait `event_descriptor` BRUT
+        /// (prose anglaise machine, ou `exc_demo_…`) pendant que ⑨ passait par ici — défaut prouvé par l'atelier, alors que le back
+        /// sert le jumeau des 6 cartes de lieutenant (227c39ef) en plus du raid et de la pression. Déplacée depuis
+        /// `ExceptionQueueController` pour que les deux lisent la MÊME règle.</summary>
+        public static string TexteServeur(ExceptionCardDto c)
+        {
+            if (c == null) return string.Empty;
+            if (c.event_descriptor_i18n != null
+                && !string.IsNullOrEmpty(c.event_descriptor_i18n.key)
+                && MafiaCleanCity.I18n.I18nCatalog.Connait(c.event_descriptor_i18n.key))
+                return MafiaCleanCity.I18n.I18nCatalog.Traduire(c.event_descriptor_i18n.key);
+            return c.event_descriptor ?? string.Empty;
+        }
+
         /// <summary>⑨-0 — QUI parle, UN seul site pour ⑨ et ⑩ (ils l'écrivaient chacun de leur côté).
         /// · la carte porte un lieutenant ⇒ son NOM servi (`lieutenant.name`, C3) ;
         /// · pas de lieutenant ⇒ « La ville » ;

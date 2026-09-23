@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -112,6 +114,20 @@ namespace MafiaCleanCity.Operational
 
         // ---- crochets de test ---------------------------------------------------------------
         public LaunderingPipelineDto DernierChargement { get; private set; }
+        /// <summary>La liste des nœuds (`GET …/laundering`) — c'est ELLE qui porte `stage_index`, l'ORDRE servi des étapes.</summary>
+        public LaunderingNodesDto DerniereListe { get; private set; }
+        /// <summary>`deviation_active` lu sur la TÊTE seule (`GET …/laundering/{node}` ne sert que le nœud de tête, mesuré le 23/09) ;
+        /// absent = non lu (échec).</summary>
+        public IReadOnlyDictionary<string, bool> EcartsParNoeud => ecartsParNoeud;
+        private readonly Dictionary<string, bool> ecartsParNoeud = new Dictionary<string, bool>();
+        /// <summary>Les nœuds des étapes, DANS L'ORDRE AFFICHÉ — pour la garde de valeur (ordre affiché == ordre de `stage_index`).</summary>
+        public IReadOnlyList<string> OrdreAffiche => ordreAffiche;
+        private readonly List<string> ordreAffiche = new List<string>();
+        /// <summary>Vrai quand l'ordre affiché vient de `stage_index` ; faux quand une étape n'y figure pas et que l'ordre du
+        /// serveur est gardé tel quel (le trou est journalisé, jamais comblé).</summary>
+        public bool OrdreParStageIndex { get; private set; }
+        /// <summary>La valeur posée dans le compteur « ÉCARTS » au dernier rendu.</summary>
+        public int EcartsAffiches { get; private set; }
         public string DerniereErreur { get; private set; }
         public long DernierCodeErreur { get; private set; }
 
@@ -203,14 +219,17 @@ namespace MafiaCleanCity.Operational
             // ★ « On ne peut pas savoir » et « il n'y a rien encore » se dessinent différemment,
             //   et seule la seconde est vraie. J'allais peindre la première sur l'autorité d'une
             //   maquette — qui, elle, a été dessinée quand la route n'existait peut-être pas.
+            // ⛔ LA LISTE EST DEMANDÉE MÊME QUAND LE NŒUD EST CONNU (2026-09-23) : c'est elle qui porte `stage_index`, l'ordre
+            //    SERVI des étapes — `stages` ne le porte pas. Personne ne le lisait (inventaire de l'atelier, `25-donnees-servies`).
+            LaunderingNodesDto liste = null;
+            yield return client.GetLaunderingNodes(token,
+                dto => liste = dto,
+                (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
+            yield return null;
+            DerniereListe = liste;
+
             if (string.IsNullOrEmpty(nodeId))
             {
-                LaunderingNodesDto liste = null;
-                yield return client.GetLaunderingNodes(token,
-                    dto => liste = dto,
-                    (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
-                yield return null;
-
                 if (liste == null) { RendreEtatIndisponible(); RenduTermine = true; yield break; }
                 if (liste.nodes == null || liste.nodes.Length == 0)
                 {
@@ -220,7 +239,8 @@ namespace MafiaCleanCity.Operational
                 }
                 // ⛔ `.node` — l'UUID DANS l'objet, pas l'objet. Voir `LaunderingNodeRefDto` :
                 // ce champ était `string[]` parce que je l'avais mesuré sur un compte VIDE.
-                nodeId = liste.nodes[0].node;
+                // ⛔ La TÊTE est le plus petit `stage_index`, pas `nodes[0]` : l'ordre du tableau n'est promis par personne.
+                nodeId = liste.nodes.Where(n => n != null).OrderBy(n => n.stage_index).First().node;
             }
 
             yield return client.GetLaunderingPipeline(nodeId, token,
@@ -232,7 +252,22 @@ namespace MafiaCleanCity.Operational
             yield return null;
 
             if (DernierChargement == null) { RendreEtatIndisponible(); RenduTermine = true; yield break; }
-            AppliquerEtat(DernierChargement);
+
+            // ⛔ `deviation_active` VIT SUR LA ROUTE DU NŒUD (`GET …/laundering/{node}`), pas dans `stages`. Seul ⑪ le lisait ; ㊵ a
+            //    un cadre pour lui (maquette série 6, cadre 138). ⚠️ MESURÉ au créneau du 2026-09-23 : cette route ne sert QUE le nœud
+            //    de TÊTE — 404 « is not a player-owned Stage-1 laundering node » sur les trois autres. Le drapeau est donc celui de la
+            //    FILIÈRE, porté par sa tête (l'épingle d'audit de la façade hôte) : UNE lecture, sur la tête. Un échec laisse la tête
+            //    NON LUE — elle ne compte pas comme « sans écart ».
+            ecartsParNoeud.Clear();
+            {
+                LaunderingNodeDto n = null;
+                string tete = nodeId;
+                yield return client.GetLaunderingNode(tete, token, dto => n = dto,
+                    (code, msg) => Debug.LogWarning($"[FILIERE] écart de la tête {tete} NON LU ({code} — {msg})"));
+                if (n != null) ecartsParNoeud[tete] = n.deviation_active;
+            }
+
+            AppliquerEtat(DernierChargement, liste, ecartsParNoeud);
             RenduTermine = true;
         }
 
@@ -266,6 +301,16 @@ namespace MafiaCleanCity.Operational
             AppliquerEtat(dto);
         }
 
+        /// <summary>Même contrat que `RendrePourTest(dto)`, avec la liste (`stage_index`) et les écarts par nœud — pour les tests
+        /// d'état de l'ordre et du cadre 138, sans réseau.</summary>
+        public void RendrePourTest(LaunderingPipelineDto dto, LaunderingNodesDto liste, IDictionary<string, bool> ecarts)
+        {
+            corpsImposeParUnTest = true;
+            if (amorce != null) { StopCoroutine(amorce); amorce = null; }
+            EnsureInitialized();
+            AppliquerEtat(dto, liste, ecarts);
+        }
+
         /// <summary>// MÉTIER ICI — TOUT le rendu métier de cet écran part d'ici. Vide à
         /// dessein : remplir depuis la maquette RATIFIÉE et le corps RÉEL mesuré, jamais depuis
         /// une supposition sur ce que l'interface TypeScript back "devrait" rendre.</summary>
@@ -289,44 +334,84 @@ namespace MafiaCleanCity.Operational
         /// ⚠️ LA BANDE D'UNE ÉTAPE N'EST PAS CELLE DU NŒUD. `GET …/laundering/{node}` rend
         /// `CLEAN` pour le nœud qui vaut `PARTIAL` dans son propre pipeline : deux projections
         /// voisines de la même entité. On lit donc la bande DANS `stages`, jamais ailleurs.</summary>
-        private void AppliquerEtat(LaunderingPipelineDto dto)
+        private void AppliquerEtat(LaunderingPipelineDto dto) => AppliquerEtat(dto, null, null);
+
+        /// <summary>⛔ 2026-09-23 (ruling de f2, reco (a) de l'atelier `25-donnees-servies` §1 : l'onglet Filière monte ㊵) — deux
+        /// conditions : l'ORDRE des étapes vient de `stage_index` (la liste des nœuds), et `deviation_active` est LU (cadre 138).
+        /// · ordre : tri STABLE par `stage_index` quand CHAQUE étape a le sien ; sinon l'ordre du serveur est gardé et le trou
+        ///   journalisé — on n'invente pas de rang ;
+        /// · « ÉCARTS » compte les étapes dont le nœud s'écarte de son profil (`deviation_active`), comme les cadres 137 (« 00
+        ///   écarts » avec des étapes sales) et 138 (« 01 écarts ») de la maquette. Les étapes pas encore propres n'y comptent
+        ///   plus : la bande de chaque étape le dit déjà (jusqu'ici ㊵ les comptait, faute de lire `deviation_active`) ;
+        /// · une étape en écart porte « écart » ; le panneau du cadre 138 remplace celui du cadre nominal.</summary>
+        private void AppliquerEtat(LaunderingPipelineDto dto, LaunderingNodesDto liste, IDictionary<string, bool> ecartsLus)
         {
             ViderListe();
+            ordreAffiche.Clear();
             LaunderingStageDto[] etapes = dto != null && dto.stages != null
                 ? dto.stages : new LaunderingStageDto[0];
 
             if (etapes.Length == 0) { RendreAucunNoeud(); return; }
 
-            sousTitre.text = Lib("LA CHAÎNE, DE LA TÊTE À LA SORTIE");
+            var rangs = new Dictionary<string, int>();
+            if (liste != null && liste.nodes != null)
+                foreach (LaunderingNodeRefDto n in liste.nodes)
+                    if (n != null && !string.IsNullOrEmpty(n.node)) rangs[n.node] = n.stage_index;
+            string[] sansRang = etapes.Where(e => e == null || string.IsNullOrEmpty(e.node) || !rangs.ContainsKey(e.node))
+                                      .Select(e => e?.node ?? "<null>").ToArray();
+            OrdreParStageIndex = sansRang.Length == 0;
+            if (OrdreParStageIndex)
+                etapes = etapes.OrderBy(e => rangs[e.node]).ToArray();   // OrderBy est STABLE
+            else if (liste != null)
+                Debug.LogWarning($"[FILIERE] ordre du SERVEUR gardé : {sansRang.Length} étape(s) sans stage_index dans la liste " +
+                                 $"des nœuds [{string.Join(", ", sansRang)}]");
+
+            System.Func<LaunderingStageDto, bool> enEcart = e => e != null && !string.IsNullOrEmpty(e.node)
+                && ecartsLus != null && ecartsLus.TryGetValue(e.node, out bool v) && v;
 
             int propres = 0, ecarts = 0;
             foreach (LaunderingStageDto e in etapes)
             {
                 if (e == null) continue;
                 if (e.terminal && e.cleanliness_band == "CLEAN") propres++;
-                // ⛔ « ÉCART » = une étape qui n'est pas encore propre. On ne compte PAS
-                // `deviation_active` : il vit sur la route du NŒUD, pas dans `stages` — le lire
-                // ici demanderait un appel par étape, et l'écran affirmerait un chiffre qu'il n'a
-                // pas mesuré. Compter ce qu'on a sous les yeux, jamais ce qu'on suppose ailleurs.
-                if (e.cleanliness_band == "DIRTY" || e.cleanliness_band == "PARTIAL") ecarts++;
+                if (enEcart(e)) ecarts++;
             }
+
+            // ⚠️ Rôle PROPRE (`sous_titre`) : sous `bloc`, ce sous-titre et le titre du panneau (« La filière s’écarte… ») auraient la
+            //    MÊME clé — le slug ignore la casse — et le back ne pourrait servir qu'une casse pour les deux.
+            sousTitre.text = ecarts > 0
+                ? MafiaCleanCity.I18n.Libelle.De("filiere", "sous_titre", "la filière s’écarte de son profil")
+                : Lib("LA CHAÎNE, DE LA TÊTE À LA SORTIE");
 
             MajCompteur(0, etapes.Length, Lib("ÉTAPES"));
             MajCompteur(1, propres, Lib("PROPRE AU BOUT"));
             MajCompteur(2, ecarts, Lib("ÉCARTS"));
+            EcartsAffiches = ecarts;
 
-            for (int i = 0; i < etapes.Length; i++) Etape(i + 1, etapes[i]);
+            for (int i = 0; i < etapes.Length; i++)
+            {
+                Etape(i + 1, etapes[i], enEcart(etapes[i]));
+                ordreAffiche.Add(etapes[i]?.node);
+            }
 
-            MajPanneau(Lib("CE QUE LA CHAÎNE FAIT DE VOTRE ARGENT"),
-                Lib("Elle le lave par paliers, pas d'un coup"),
-                Lib("chaque étape rend l'argent un peu plus propre que la précédente. Seule la "
-                    + "DERNIÈRE crédite le portefeuille — tant qu'il n'y a pas de sortie, il n'y a "
-                    + "pas d'argent, seulement une file d'attente."));
+            if (ecarts > 0)
+                MajPanneau(Lib("un seul voyant"),
+                    Lib("La filière s’écarte de son profil"),
+                    // Mots de l'atelier (4b, 02374169) : la note de maquette (« le serveur dit… du domaine ») parlait au juge ; le
+                    // panneau parle au joueur.
+                    Lib("on vous dit oui ou non : jamais de combien, ni pourquoi. C’est le seul signal d’alerte de la filière — "
+                        + "et il ne se mesure pas."));
+            else
+                MajPanneau(Lib("CE QUE LA CHAÎNE FAIT DE VOTRE ARGENT"),
+                    Lib("Elle le lave par paliers, pas d'un coup"),
+                    Lib("chaque étape rend l'argent un peu plus propre que la précédente. Seule la "
+                        + "DERNIÈRE crédite le portefeuille — tant qu'il n'y a pas de sortie, il n'y a "
+                        + "pas d'argent, seulement une file d'attente."));
         }
 
         /// <summary>Une étape RÉELLE de la chaîne — à ne pas confondre avec `Maillon`, qui dessine
         /// un maillon MANQUANT. Les deux se ressemblent à l'écran et disent le contraire.</summary>
-        private void Etape(int rang, LaunderingStageDto e)
+        private void Etape(int rang, LaunderingStageDto e, bool enEcart = false)
         {
             GameObject go = NouveauUI("Etape" + rang, listeRoot);
             AjouterFond(go, DesignTokens.Current.surfaceCard);
@@ -348,6 +433,10 @@ namespace MafiaCleanCity.Operational
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             NouveauTexte(go.transform, "Titre", bande, Px(12f),
                 DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
+            // Cadre 138 : l'étape dont le nœud s'écarte de son profil porte « écart » — un voyant, jamais une mesure.
+            if (enEcart)
+                NouveauTexte(go.transform, "Ecart", Lib("écart"), Px(8f),
+                    DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             // ⚠️ `has_cash` est un DRAPEAU DE PRÉSENCE, jamais un montant — le serveur ne projette
             // pas les centimes ici. On écrit donc ce qu'on sait, et pas un chiffre inventé.
             NouveauTexte(go.transform, "Texte",

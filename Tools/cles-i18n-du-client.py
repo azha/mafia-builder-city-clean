@@ -76,6 +76,61 @@ HELPER2 = re.compile(
 CONCAT = re.compile(r'"([^"\\]*)"\s*\+\s*"([^"\\]*)"', re.S)
 
 
+# ⛔⛔ TD-694 (2026-09-23) — LES COMMENTAIRES SONT RETIRÉS AVANT TOUTE EXTRACTION, LES CHAÎNES PRÉSERVÉES. Mesuré par le
+#    back : cet outil comptait des clés citées SEULEMENT dans un commentaire — `famille.ecran.nom` (FamilleLabels.cs, une
+#    note qui explique pourquoi le libellé N'EST PAS keyé) et `famille.mode.mode_inconnu` (LieutenantScreenController.cs,
+#    une note sur un repli retiré). Le back devait les exclure nommément. Un commentaire qui DOCUMENTE un appel ne l'est pas ;
+#    le compter pousserait à ne plus expliquer. Même règle que le classifieur de TD-576 (v3) : commentaires `//` et `/* */`
+#    remplacés par des espaces (sauts de ligne gardés), chaînes "…", @"…" et '…' préservées — `"http://…"` n'est pas un commentaire.
+#    Fonction reprise TELLE QUELLE de `Tools/juge-donnees/i18n/orphelines.py` (même dépôt, même besoin).
+def sans_commentaires(t: str) -> str:
+    """Remplace commentaires par des espaces (sauts de ligne gardés) ; respecte "…", @"…", '…'."""
+    o, i, n = [], 0, len(t)
+    while i < n:
+        c = t[i]; d = t[i + 1] if i + 1 < n else ''
+        if c == '/' and d == '/':
+            while i < n and t[i] != '\n': o.append(' '); i += 1
+        elif c == '/' and d == '*':
+            while i < n and not (t[i] == '*' and i + 1 < n and t[i + 1] == '/'):
+                o.append('\n' if t[i] == '\n' else ' '); i += 1
+            o.append('  '); i += 2
+        elif c == '@' and d == '"':
+            o.append('@"'); i += 2
+            while i < n:
+                if t[i] == '"' and i + 1 < n and t[i + 1] == '"': o.append('""'); i += 2; continue
+                o.append(t[i]); i += 1
+                if t[i - 1] == '"': break
+        elif c == '"':
+            o.append(c); i += 1
+            while i < n and t[i] != '"' and t[i] != '\n':
+                if t[i] == '\\': o.append(t[i:i + 2]); i += 2; continue
+                o.append(t[i]); i += 1
+            if i < n: o.append(t[i]); i += 1
+        elif c == "'":
+            o.append(c); i += 1
+            while i < n and t[i] != "'" and t[i] != '\n':
+                if t[i] == '\\': o.append(t[i:i + 2]); i += 2; continue
+                o.append(t[i]); i += 1
+            if i < n: o.append(t[i]); i += 1
+        else:
+            o.append(c); i += 1
+    return ''.join(o)
+
+
+def controles() -> list:
+    """Les deux moitiés, sur des sources FABRIQUÉES (inertes) : une clé dans une chaîne est VUE, la même dans un commentaire
+    ne l'est pas — ni en `//`, ni en `/* */` ; et un `//` DANS une chaîne ne coupe rien."""
+    echecs = []
+    code = 'var a = Libelle.De("sonde", "bloc", "Vue dans le code");\nvar u = "http://x"; var b = Libelle.De("sonde", "bloc", "Après une url");\n'
+    comm = '// Libelle.De("sonde", "bloc", "Cachée en commentaire")\n/* Libelle.De("sonde", "bloc", "Cachée en bloc") */\n'
+    vus = {f"{d}.{r}.{slug(l)}" for d, r, l in cles_du_fichier(recoller(sans_commentaires(code + comm)))}
+    for k in ("sonde.bloc.vue_dans_le_code", "sonde.bloc.apres_une_url"):
+        if k not in vus: echecs.append(f"contrôle POSITIF rouge : « {k} » (dans une chaîne) n'est pas vue")
+    for k in ("sonde.bloc.cachee_en_commentaire", "sonde.bloc.cachee_en_bloc"):
+        if k in vus: echecs.append(f"contrôle NÉGATIF rouge : « {k} » (dans un commentaire) est comptée")
+    return echecs
+
+
 def recoller(src: str) -> str:
     """`"a" + "b"` → `"ab"`, y compris à cheval sur plusieurs lignes, jusqu'à stabilité."""
     avant = None
@@ -106,6 +161,10 @@ def cles_du_fichier(src: str):
 
 
 def main() -> int:
+    echecs = controles()
+    if echecs:
+        for e in echecs: print("⛔ " + e, file=sys.stderr)
+        return 2
     racine = Path(sys.argv[1] if len(sys.argv) > 1 else 'Assets/Scripts')
     detail = '--liste' in sys.argv
     total = {}
@@ -114,7 +173,7 @@ def main() -> int:
         src = f.read_text(encoding='utf-8')
         if 'Libelle' not in src:
             continue
-        src = recoller(src)   # AVANT toute extraction — voir la note de `recoller`.
+        src = recoller(sans_commentaires(src))   # commentaires retirés (TD-694), puis recollage — AVANT toute extraction.
         trouves = cles_du_fichier(src)
         par_fichier[str(f)] = len(trouves)
         for dom, role, lit in trouves:

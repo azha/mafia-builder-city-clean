@@ -130,15 +130,15 @@ cat "$SCENARIO" > "$L"
 # ⚠️ La console est écrite sur STDOUT — la forme réelle d'Unity, mesurée : le préfixe d'abandon
 #    ne va QUE là, jamais dans le -logFile.
 [ -n "${SCENARIO_CONSOLE:-}" ] && cat "$SCENARIO_CONSOLE"
-sleep 6
+sleep ${FAUX_SLEEP:-6}
 exit ${FAUX_RC:-0}
 FU
 chmod +x "$T/faux-unity"
 e2e(){ # e2e <nom> <attendu> <scénario> [args du harnais…]
   local nom="$1" att="$2" sc="$3"; shift 3
   printf '%s' "$sc" > "$T/sc"
-  SCENARIO="$T/sc" SCENARIO_CONSOLE="${SCENARIO_CONSOLE:-}" UNITY="$T/faux-unity" \
-    LOG_FILE="$T/e2e.log" TIMEOUT_S=40 ./run-unity-check.sh "$@" >/dev/null 2>&1
+  SCENARIO="$T/sc" SCENARIO_CONSOLE="${SCENARIO_CONSOLE:-}" UNITY="$T/faux-unity" FAUX_SLEEP="${FAUX_SLEEP:-6}" \
+    STALL_S="${STALL_S:-420}" LOG_FILE="$T/e2e.log" TIMEOUT_S=40 ./run-unity-check.sh "$@" >/dev/null 2>&1
   local got=$?; n=$((n+1))
   if [[ "$got" == "$att" ]]; then printf '  ✅ %-46s → RC=%s\n' "$nom" "$got"
   else printf '  ⛔ %-46s → RC=%s (attendu %s)\n' "$nom" "$got" "$att"; ko=1; fi
@@ -167,6 +167,20 @@ SCENARIO_CONSOLE="$T/sc-console" e2e "abandon RÉEL : préfixe seulement sur la 
 Internal_EditorApplicationQuit
 " -executeMethod MafiaCI.Absent
 unset SCENARIO_CONSOLE
+# ⛔ LE CHIEN DE GARDE DE GEL (2026-09-23) — un faux éditeur qui GÈLE après « MafiaCI: RUN » (journal muet, jamais de marqueur de
+#    fin) : sans la garde, seul `timeout` (40 s ici) l'arrêtait, RC=124, personne de nommé. Attendu : tué après STALL_S, RC=5, et le
+#    test NOMMÉ dans le journal. Moitié négative : un journal muet APRÈS son marqueur de fin ne déclenche rien.
+STALL_S=4 FAUX_SLEEP=60 e2e "gel : tué, RC=5 (RC_GEL)" 5 \
+    "MafiaCI: RUN Faux.Tests.Gel.LeFilPrincipalNeRendJamaisLaMain
+" -executeMethod MafiaCI.RunPlayModeTests
+n=$((n+1))
+if grep -q 'TEST GELÉ .*Faux.Tests.Gel.LeFilPrincipalNeRendJamaisLaMain' "$T/e2e.log"; then printf '  ✅ %-46s\n' "gel : le test gelé est NOMMÉ dans le journal"
+else printf '  ⛔ %-46s\n' "gel : le test gelé n'est PAS nommé"; ko=1; fi
+STALL_S=3 e2e "journal muet APRÈS le marqueur : pas de gel" 0 \
+    "MafiaCI: RUN Faux.Tests.Vert
+MafiaCI: RunPlayModeTests finished — passed=1 failed=0
+Internal_EditorApplicationQuit
+" -executeMethod MafiaCI.RunPlayModeTests
 
 echo
-if [[ $ko == 0 ]]; then echo "✅ verdict : $n/$n — 17 sur la fonction, 5 sur le harnais entier ; 4 faux verts fermés (dont le VERDICT de MafiaCI, 23/09), aucun code existant modifié"; else echo "⛔ verdict : au moins un cas faux"; exit 1; fi
+if [[ $ko == 0 ]]; then echo "✅ verdict : $n/$n — 17 sur la fonction, 8 sur le harnais entier (dont 3 pour le chien de garde de gel, 23/09) ; 4 faux verts fermés (dont le VERDICT de MafiaCI, 23/09)"; else echo "⛔ verdict : au moins un cas faux"; exit 1; fi
