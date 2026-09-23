@@ -23,6 +23,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   B5  le toucher fait le geste du mot en or, puis efface
     //   B6  la géométrie du canon (`top:78px`, 11,5 px, `.06em`, marges 34/7, filets `#ffffff14`) et AUCUN glyphe
     //   B7  le titre de ① se tait pendant que le bandeau parle, y compris à travers un nouveau rendu ; sa couleur ne bouge pas
+    //   B8  lot F : le nom du 1ᵉʳ rapport OUVERT, garde de VALEUR (instance vide, blanc, id recopié ⇒ rien), le 1ᵉʳ seulement
+    //   B9  `Suivante` : la première annonce pas encore dite, jamais moins prioritaire que celle à l'écran
     [Category("EcranDistrict")]
     public class BandeauEphemerePlayModeTests
     {
@@ -198,6 +200,60 @@ namespace MafiaCleanCity.CityMap.Tests
                     StringAssert.DoesNotContain(glyphe, x.Phrase, "point 15 : aucun glyphe");
                 Assert.IsFalse(x.Phrase.Any(char.IsDigit), "R2.2 : aucun chiffre — « " + x.Phrase + " »");
             }
+        }
+
+        private static MafiaCleanCity.Operational.Autonomy.AutonomyReportDto Rapport(string id, string ltId, string nom) =>
+            new MafiaCleanCity.Operational.Autonomy.AutonomyReportDto
+            {
+                report_id = id, lieutenant_id = ltId,
+                lieutenant = new MafiaCleanCity.Operational.Autonomy.AutonomyLieutenantDto { id = ltId, name = nom },
+            };
+
+        [Test]
+        public void B8_LeNomDuPremierRapport_GardeDeValeur()
+        {
+            Assert.AreEqual("Sal", AnnonceDuBandeau.NomDuPremierRapport(new[] { Rapport("r-1", "lt-1", " Sal ") }, out string id));
+            Assert.AreEqual("r-1", id);
+            Assert.IsNull(AnnonceDuBandeau.NomDuPremierRapport(new[]
+                {
+                    new MafiaCleanCity.Operational.Autonomy.AutonomyReportDto
+                        { report_id = "r-1", lieutenant_id = "lt-1", lieutenant = new MafiaCleanCity.Operational.Autonomy.AutonomyLieutenantDto() },
+                }, out id), "l'instance VIDE de JsonUtility (champ absent, back d'avant le lot F) : rien");
+            Assert.IsNull(id);
+            Assert.IsNull(AnnonceDuBandeau.NomDuPremierRapport(new[] { Rapport("r-1", "lt-1", "  ") }, out _), "un nom blanc : rien");
+            Assert.IsNull(AnnonceDuBandeau.NomDuPremierRapport(new[] { Rapport("r-1", "lt-1", "lt-1") }, out _),
+                "un nom qui n'est que l'id recopié : rien");
+            Assert.IsNull(AnnonceDuBandeau.NomDuPremierRapport(new[] { Rapport("r-1", "lt-1", ""), Rapport("r-2", "lt-2", "Rook") }, out _),
+                "le 1ᵉʳ rapport, et lui seul : on ne va pas chercher un nom plus loin");
+            Assert.IsNull(AnnonceDuBandeau.NomDuPremierRapport(new MafiaCleanCity.Operational.Autonomy.AutonomyReportDto[0], out _));
+            Assert.IsNull(AnnonceDuBandeau.NomDuPremierRapport(null, out _));
+        }
+
+        [Test]
+        public void B9_Suivante_LaPremiereNonDite_JamaisMoinsQueCelleALEcran()
+        {
+            List<AnnonceDuBandeau> toutes = AnnonceDuBandeau.ParPriorite(false, null, "HOT", CarteDe("e-1", "lt-1", "Sal"), "Rook", "r-9");
+            CollectionAssert.AreEqual(new[] { AnnonceDuBandeau.Etat.VilleChaude, AnnonceDuBandeau.Etat.Carte, AnnonceDuBandeau.Etat.Rapport },
+                toutes.Select(a => a.Quoi).ToArray(), "l'ordre de l'atelier");
+            Assert.AreEqual("rapport:r-9", toutes[2].Signature, "le rapport se reconnaît à son id");
+            Assert.AreEqual(toutes[0].Signature,
+                AnnonceDuBandeau.Choisir(false, null, "HOT", CarteDe("e-1", "lt-1", "Sal"), "Rook", "r-9").Signature, "Choisir = le premier");
+
+            var dites = new HashSet<string>();
+            Assert.AreEqual(AnnonceDuBandeau.Etat.VilleChaude, AnnonceDuBandeau.Suivante(toutes, dites.Contains, null).Quoi);
+            dites.Add(toutes[0].Signature);
+            Assert.AreEqual(AnnonceDuBandeau.Etat.Carte, AnnonceDuBandeau.Suivante(toutes, dites.Contains, null).Quoi,
+                "la ville déjà dite ne masque plus la carte");
+            dites.Add(toutes[1].Signature);
+            Assert.IsNull(AnnonceDuBandeau.Suivante(toutes, dites.Contains, toutes[1]),
+                "la carte est à l'écran : le rapport, moins prioritaire, attend (sans être marqué dit)");
+            Assert.AreEqual(AnnonceDuBandeau.Etat.Rapport, AnnonceDuBandeau.Suivante(toutes, dites.Contains, null).Quoi,
+                "l'écran libre : le rapport passe");
+            List<AnnonceDuBandeau> avecDescente = AnnonceDuBandeau.ParPriorite(true, "district-16", null, null, "Rook", "r-9");
+            Assert.AreEqual(AnnonceDuBandeau.Etat.Descente, AnnonceDuBandeau.Suivante(avecDescente, dites.Contains, toutes[2]).Quoi,
+                "la descente remplace un rapport à l'écran");
+            dites.Add(toutes[2].Signature);
+            Assert.IsNull(AnnonceDuBandeau.Suivante(toutes, dites.Contains, null), "tout est dit : rien");
         }
 
         [Test]

@@ -441,14 +441,26 @@ namespace MafiaCleanCity.Shell
             MafiaCleanCity.Operational.Exceptions.ExceptionCardDto premiere =
                 LastSessionOpen != null && LastSessionOpen.queue != null && LastSessionOpen.queue.Length > 0
                     ? LastSessionOpen.queue[0] : null;
-            AnnonceDuBandeau a = AnnonceDuBandeau.Choisir(descente, ouDescente, CitywideHeatBucket, premiere, null);
-            System.Action geste = a != null && a.Quoi == AnnonceDuBandeau.Etat.Carte
-                ? (System.Action)OuvrirLaFileDepuisLeBandeau : null;
+            // La première annonce PAS ENCORE DITE, jamais moins prioritaire que celle à l'écran (`Suivante`) : une carte
+            // déjà annoncée ne masque plus le rapport qui vient derrière elle.
+            AnnonceDuBandeau a = AnnonceDuBandeau.Suivante(
+                AnnonceDuBandeau.ParPriorite(descente, ouDescente, CitywideHeatBucket, premiere, nomDuRapport, idDuRapport),
+                TopBar.Bandeau.DejaAnnoncee, TopBar.Bandeau.Visible ? TopBar.Bandeau.Courante : null);
+            System.Action geste = null;
+            if (a != null && a.Quoi == AnnonceDuBandeau.Etat.Carte) geste = OuvrirLaFileDepuisLeBandeau;
+            else if (a != null && a.Quoi == AnnonceDuBandeau.Etat.Rapport) geste = OuvrirLesRapportsDepuisLeBandeau;
             return TopBar.Bandeau.Annoncer(a, geste);
         }
 
+        // ①-3 (lot F) — le 1ᵉʳ rapport ouvert de la session : son lieutenant (garde de VALEUR, `NomDuPremierRapport`) et son id.
+        private string nomDuRapport, idDuRapport;
+
         private void OuvrirLaFileDepuisLeBandeau() =>
             MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+
+        // « lire » : la boîte des rapports, par le même geste de surimpression que la file.
+        private void OuvrirLesRapportsDepuisLeBandeau() =>
+            MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Autonomy.AutonomyInboxController>();
 
         /// <summary>①-3 (r9 M11) — le titre de ① occupe le créneau du bandeau : il se tait tant que le bandeau parle.</summary>
         private void CederLeTitreDuDistrict(bool bandeauVisible)
@@ -716,8 +728,14 @@ namespace MafiaCleanCity.Shell
                 heat => PublishCitywideHeat(heat.citywide_bucket),
                 errMsg => Debug.LogWarning($"[AppShell] sonde heat (best-effort) échouée : {errMsg}"));
             if (this == null) yield break;
-            // ①-3 — le premier bandeau de la session : la ville si elle chauffe, sinon la 1ʳᵉ carte de la file. Jamais la
-            // descente ici : l'`escalated` de la sonde est celui d'un district que le joueur ne regarde pas.
+            // ①-3 (lot F) — le 1ᵉʳ rapport OUVERT, UNE fois par session : la route ne sert que les ouverts. Best-effort,
+            // comme la sonde : un échec laisse le rapport muet, jamais un bandeau inventé.
+            yield return new MafiaCleanCity.Operational.Autonomy.AutonomyClient { BaseUrl = baseUrl }.GetReports(t,
+                rapports => nomDuRapport = AnnonceDuBandeau.NomDuPremierRapport(rapports, out idDuRapport),
+                (code, msg) => Debug.LogWarning($"[AppShell] rapports d'autonomie (best-effort) : {code} {msg}"));
+            if (this == null) yield break;
+            // ①-3 — le premier bandeau de la session : la ville si elle chauffe, sinon la 1ʳᵉ carte de la file, sinon le
+            // rapport. Jamais la descente ici : l'`escalated` de la sonde est celui d'un district que le joueur ne regarde pas.
             AnnoncerAuBandeau(false, null);
         }
 

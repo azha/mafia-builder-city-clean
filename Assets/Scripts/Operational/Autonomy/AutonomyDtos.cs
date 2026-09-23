@@ -17,8 +17,12 @@ namespace MafiaCleanCity.Operational.Autonomy
         public string decided;                 // "A" | "B" | "" (JsonUtility: null → "")
         public AutonomyOptionDto option_a; public AutonomyOptionDto option_b;
     }
+    /// <summary>Lot F du back (`69b34a78`, 23/09) — `lieutenant: { id, name }` sur chaque rapport OUVERT, la forme des cartes
+    /// d'exception ; `lieutenant_id` reste (additif). ⚠️ Forme G : sans cette déclaration, JsonUtility JETTE le champ en silence.</summary>
+    [Serializable] public class AutonomyLieutenantDto { public string id; public string name; }
     [Serializable] public class AutonomyReportDto {
         public string report_id; public string lieutenant_id;
+        public AutonomyLieutenantDto lieutenant;   // lot F — JsonUtility : une instance VIDE quand le champ manque, jamais null
         public int backlog_age_cycles;         // legible count (canon) — rendered as CHROME only
         public AutonomyIssueDto[] issues;
     }

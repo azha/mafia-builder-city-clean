@@ -18,8 +18,9 @@ namespace MafiaCleanCity.Shell
     /// ⚠️ La descente est celle du DISTRICT (`heat.escalated` = `isDistrictEscalated(joueur, district)` côté back) : seul ①
     /// la connaît. Hors district, le shell ne sonde qu'un district arbitraire (`HeatProbeDistrictId`) — son `escalated`
     /// ne dirait rien au joueur, il n'est pas lu.
-    /// ⚠️ Le rapport n'a AUCUNE source servie aujourd'hui : `AutonomyReportDto` n'a ni « non lu » ni nom de lieutenant.
-    /// La branche existe pour que l'ordre soit écrit en un lieu ; le shell lui passe `null`.</summary>
+    /// Le rapport (lot F du back, `69b34a78`) : le 1ᵉʳ rapport OUVERT de `GET /v1/autonomy-reports` (la route ne sert que les
+    /// ouverts), lu une fois par session ; « {nom} a un rapport pour vous » est vrai tant qu'il est ouvert. Aucun « non lu »
+    /// n'existe au back (classe A) : ce n'est pas ce que dit le bandeau.</summary>
     public sealed class AnnonceDuBandeau
     {
         /// <summary>Dans l'ordre de priorité.</summary>
@@ -40,35 +41,80 @@ namespace MafiaCleanCity.Shell
         // se compte ; l'appeler deux fois, pour la forme nue et la forme riche, compterait deux replis pour un mot).
         private const string JetonNom = "\u0001";
 
+        /// <summary>Ce qui a le plus à dire, ou null. = `ParPriorite(…)[0]`.</summary>
         public static AnnonceDuBandeau Choisir(bool descente, string ouDescente, string citywideBucket,
-                                                ExceptionCardDto premiereCarte, string nomRapport)
+                                                ExceptionCardDto premiereCarte, string nomRapport, string idRapport = null)
         {
+            List<AnnonceDuBandeau> toutes = ParPriorite(descente, ouDescente, citywideBucket, premiereCarte, nomRapport, idRapport);
+            return toutes.Count > 0 ? toutes[0] : null;
+        }
+
+        /// <summary>TOUT ce qui a de quoi dire, dans l'ordre de l'atelier. Le shell n'en montre qu'un (`Suivante`) : le plus
+        /// prioritaire qui n'a pas encore été dit — sans cette liste, une carte déjà annoncée masquerait pour toute la session
+        /// un rapport qui arrive derrière elle.</summary>
+        public static List<AnnonceDuBandeau> ParPriorite(bool descente, string ouDescente, string citywideBucket,
+                                                         ExceptionCardDto premiereCarte, string nomRapport, string idRapport = null)
+        {
+            var toutes = new List<AnnonceDuBandeau>();
             if (descente)
-                return Simple(Etat.Descente, Libelle.Gabarit("chrome.bandeau.brigade_quadrille",
-                    "La brigade quadrille le quartier — planquez la caisse"), "descente:" + ouDescente);
+                toutes.Add(Simple(Etat.Descente, Libelle.Gabarit("chrome.bandeau.brigade_quadrille",
+                    "La brigade quadrille le quartier — planquez la caisse"), "descente:" + ouDescente));
 
             HeatBucketResolver.Rank rang = HeatBucketResolver.ResolveRank(citywideBucket);
             if (rang == HeatBucketResolver.Rank.Hot || rang == HeatBucketResolver.Rank.Burning)
-                return Simple(Etat.VilleChaude, Libelle.Gabarit("chrome.bandeau.les_indics_parlent",
-                    "Les indics parlent : la brigade s’agite"), "ville:" + citywideBucket);
+                toutes.Add(Simple(Etat.VilleChaude, Libelle.Gabarit("chrome.bandeau.les_indics_parlent",
+                    "Les indics parlent : la brigade s’agite"), "ville:" + citywideBucket));
 
             if (premiereCarte != null && !string.IsNullOrEmpty(premiereCarte.exception_id))
             {
                 string trancher = Libelle.De("chrome", "bandeau", "trancher");
                 if (!ExceptionBandes.ParleUnLieutenant(premiereCarte))
-                    return new AnnonceDuBandeau(Etat.Carte, Libelle.Gabarit("chrome.bandeau.la_ville_attend_vos_ordres",
-                        "La ville attend vos ordres"), null, trancher, "carte:" + premiereCarte.exception_id);
-                return new AnnonceDuBandeau(Etat.Carte, Libelle.Gabarit("chrome.bandeau.attend_vos_ordres",
-                        "{nom} attend vos ordres", new Dictionary<string, string> { { "nom", JetonNom } }),
-                    ExceptionBandes.Locuteur(premiereCarte), trancher, "carte:" + premiereCarte.exception_id);
+                    toutes.Add(new AnnonceDuBandeau(Etat.Carte, Libelle.Gabarit("chrome.bandeau.la_ville_attend_vos_ordres",
+                        "La ville attend vos ordres"), null, trancher, "carte:" + premiereCarte.exception_id));
+                else
+                    toutes.Add(new AnnonceDuBandeau(Etat.Carte, Libelle.Gabarit("chrome.bandeau.attend_vos_ordres",
+                            "{nom} attend vos ordres", new Dictionary<string, string> { { "nom", JetonNom } }),
+                        ExceptionBandes.Locuteur(premiereCarte), trancher, "carte:" + premiereCarte.exception_id));
             }
 
             if (!string.IsNullOrWhiteSpace(nomRapport))
-                return new AnnonceDuBandeau(Etat.Rapport, Libelle.Gabarit("chrome.bandeau.rapport",
+                toutes.Add(new AnnonceDuBandeau(Etat.Rapport, Libelle.Gabarit("chrome.bandeau.rapport",
                         "{nom} a un rapport pour vous", new Dictionary<string, string> { { "nom", JetonNom } }),
-                    nomRapport.Trim(), Libelle.De("chrome", "bandeau", "lire"), "rapport:" + nomRapport.Trim());
+                    nomRapport.Trim(), Libelle.De("chrome", "bandeau", "lire"),
+                    "rapport:" + (string.IsNullOrEmpty(idRapport) ? nomRapport.Trim() : idRapport)));
 
+            return toutes;
+        }
+
+        /// <summary>Ce que le bandeau dit MAINTENANT : la première annonce pas encore dite, et jamais une annonce MOINS
+        /// prioritaire que celle qui est à l'écran (elle attendra le prochain appel ; elle n'est pas marquée comme dite).</summary>
+        public static AnnonceDuBandeau Suivante(IEnumerable<AnnonceDuBandeau> parPriorite, Func<string, bool> dejaDite,
+                                                AnnonceDuBandeau affichee)
+        {
+            foreach (AnnonceDuBandeau a in parPriorite)
+            {
+                if (dejaDite != null && dejaDite(a.Signature)) continue;
+                if (affichee != null && a.Quoi >= affichee.Quoi) return null;
+                return a;
+            }
             return null;
+        }
+
+        /// <summary>Le nom du 1ᵉʳ rapport OUVERT (lot F), ou null. GARDE DE VALEUR, pas de présence : JsonUtility rend une
+        /// instance VIDE quand `lieutenant` manque ; un nom blanc, ou égal à un identifiant (le nom qui ne serait qu'un id
+        /// recopié), ne s'annonce pas.</summary>
+        public static string NomDuPremierRapport(MafiaCleanCity.Operational.Autonomy.AutonomyReportDto[] rapports,
+                                                 out string idRapport)
+        {
+            idRapport = null;
+            if (rapports == null || rapports.Length == 0 || rapports[0] == null) return null;
+            var r = rapports[0];
+            string nom = r.lieutenant != null ? r.lieutenant.name : null;
+            if (string.IsNullOrWhiteSpace(nom)) return null;
+            nom = nom.Trim();
+            if (nom == r.lieutenant_id || (r.lieutenant != null && nom == r.lieutenant.id) || nom == r.report_id) return null;
+            idRapport = r.report_id;
+            return nom;
         }
 
         private static AnnonceDuBandeau Simple(Etat quoi, string phrase, string signature) =>
@@ -207,6 +253,9 @@ namespace MafiaCleanCity.Shell
             bouton.transition = Selectable.Transition.None;
             bouton.onClick.AddListener(Toucher);
         }
+
+        /// <summary>Cette annonce a-t-elle déjà été dite dans la session ?</summary>
+        public bool DejaAnnoncee(string signature) => signature != null && dejaAnnoncees.Contains(signature);
 
         /// <summary>Montre `a`, sauf s'il a déjà été annoncé dans cette session. Rend vrai s'il s'affiche.</summary>
         public bool Annoncer(AnnonceDuBandeau a, Action quandTouche, float dureeS = DureeParDefautS)
