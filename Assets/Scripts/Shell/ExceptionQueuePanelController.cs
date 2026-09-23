@@ -35,6 +35,9 @@ namespace MafiaCleanCity.Shell
 
         public IReadOnlyList<string> RenderedSeverityLabels => renderedSeverityLabels;
         private readonly List<string> renderedSeverityLabels = new List<string>();
+        /// <summary>Les répliques RÉELLEMENT posées, dans l'ordre des cartes rendues — pour la garde de VALEUR (2026-09-23).</summary>
+        public IReadOnlyList<string> RenderedDescripteurs => renderedDescripteurs;
+        private readonly List<string> renderedDescripteurs = new List<string>();
 
         private RectTransform rowsRoot;
         private TextMeshProUGUI emptyStateText;
@@ -115,6 +118,7 @@ namespace MafiaCleanCity.Shell
         {
             for (int i = rowsRoot.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(rowsRoot.GetChild(i).gameObject);
             renderedSeverityLabels.Clear();
+            renderedDescripteurs.Clear();
 
             if (currentCards.Length == 0)
             {
@@ -158,9 +162,13 @@ namespace MafiaCleanCity.Shell
 
             // ⛔ Le descripteur partait BRUT ici — ni règle, ni guillemets, ni tiret sur le vide.
             //    C'est le `exc_demo_teach_heat` que le juge a lu sur la planche.
+            // ⛔ Et il partait SANS i18n jusqu'au 2026-09-23 (`card.event_descriptor` brut, défaut prouvé par l'atelier) : le texte
+            //    passe désormais par `TexteServeur`, la MÊME règle que ⑨ — le jumeau servi s'il est connu, la prose sinon.
             TextMeshProUGUI descriptor = NewText(row.transform,
-                MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Replique(card.event_descriptor,
+                MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Replique(
+                    MafiaCleanCity.Operational.Exceptions.ExceptionBandes.TexteServeur(card),
                     MafiaCleanCity.Operational.Exceptions.ExceptionBandes.ParleUnLieutenant(card)), 260);
+            renderedDescripteurs.Add(descriptor.text);
 
             GameObject resolveBtn = new GameObject("Resolve", typeof(RectTransform));
             resolveBtn.transform.SetParent(row.transform, false);

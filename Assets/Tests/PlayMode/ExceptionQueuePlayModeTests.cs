@@ -488,6 +488,58 @@ namespace MafiaCleanCity.Operational.Tests
         /// lambda sans copie fait ouvrir la DERNIÈRE carte aux trois attendants. Ce test
         /// l'attrape parce qu'il exige l'identité de la carte ouverte, pas seulement qu'une
         /// carte s'ouvre.</summary>
+        /// <summary>⛔ GARDE DE VALEUR (2026-09-23) — le PANNEAU de la file (`ExceptionQueuePanelController`, Shell) affiche le JUMEAU
+        /// i18n SERVI d'une carte RÉELLE, jamais sa prose brute. Défaut prouvé par l'atelier : le panneau posait `event_descriptor`
+        /// tel quel (prose anglaise machine, ou `exc_demo_…`) pendant que ⑨ passait par l'i18n — alors que le back sert le jumeau des
+        /// 6 cartes de lieutenant (227c39ef), du raid et de la pression. Les cartes viennent de la file RÉELLE du compte semé, le
+        /// catalogue du bundle RÉEL du serveur ; la valeur attendue est `Traduire(clé)` passée par la même règle de réplique.
+        /// Rouge si : le panneau repasse à `event_descriptor` ; une carte servie n'est pas rendue ; aucune carte servie (vacuité).</summary>
+        [UnityTest]
+        public IEnumerator PanneauDeLaFile_AfficheLeJumeauI18nServi_SurLesCartesReelles_JamaisLaProseBrute()
+        {
+            controllerGo = new GameObject("ExceptionQueueScreen");
+            var ctl = controllerGo.AddComponent<ExceptionQueueController>();
+            yield return ctl.SignIn();
+            Assert.IsTrue(ctl.IsAuthenticated, ctl.AuthError);
+            yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(new MafiaCleanCity.I18n.I18nClient { BaseUrl = BaseUrl }, ctl.Token);
+            yield return ctl.LoadQueue();
+            Assert.IsTrue(ctl.QueueLoaded, ctl.QueueError);
+
+            System.Func<ExceptionCardDto, bool> servie = c => c != null && c.event_descriptor_i18n != null
+                && !string.IsNullOrEmpty(c.event_descriptor_i18n.key)
+                && MafiaCleanCity.I18n.I18nCatalog.Connait(c.event_descriptor_i18n.key);
+            int attendues = ctl.Cards.Count(servie);
+            Assert.GreaterOrEqual(attendues, 1,
+                "anti-vacuité : au moins UNE carte réelle doit porter un jumeau i18n servi — clés portées : [" +
+                string.Join(", ", ctl.Cards.Select(c => c?.event_descriptor_i18n?.key ?? "<null>")) + "]");
+
+            var panelGo = new GameObject("ExceptionQueuePanel", typeof(RectTransform));
+            try
+            {
+                var panel = panelGo.AddComponent<MafiaCleanCity.Shell.ExceptionQueuePanelController>();
+                panel.SetQueue(ctl.Token, ctl.Cards);
+                Assert.AreEqual(panel.CurrentCards.Count, panel.RenderedDescripteurs.Count, "une réplique rendue par carte");
+                int vues = 0;
+                for (int i = 0; i < panel.CurrentCards.Count; i++)
+                {
+                    ExceptionCardDto c = panel.CurrentCards[i];
+                    if (!servie(c)) continue;
+                    string traduit = MafiaCleanCity.I18n.I18nCatalog.Traduire(c.event_descriptor_i18n.key);
+                    Assert.AreNotEqual(c.event_descriptor_i18n.key, traduit, "le catalogue réel traduit la clé (pas de clé nue)");
+                    string attendu = ExceptionBandes.Replique(traduit, ExceptionBandes.ParleUnLieutenant(c));
+                    Assert.AreEqual(attendu, panel.RenderedDescripteurs[i],
+                        $"carte {c.exception_id} ({c.event_descriptor_i18n.key}) : le panneau doit poser le jumeau servi");
+                    string brut = (c.event_descriptor ?? "").Trim();
+                    if (brut.Length > 0 && brut != traduit.Trim())
+                        StringAssert.DoesNotContain(brut, panel.RenderedDescripteurs[i],
+                            $"carte {c.exception_id} : la prose BRUTE « {brut} » ne doit plus s'afficher");
+                    vues++;
+                }
+                Assert.AreEqual(attendues, vues, "chaque carte servie de la file est rendue par le panneau");
+            }
+            finally { Object.DestroyImmediate(panelGo); }
+        }
+
         [UnityTest, Category("Ecran10")]
         public IEnumerator Ecran9_ChaqueAttendantOuvreSaPropreCarte()
         {
