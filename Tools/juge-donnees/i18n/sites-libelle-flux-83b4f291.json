@@ -220,6 +220,75 @@
    "servie": false
   }
  ],
+ "Assets/Scripts/Operational/Exceptions/ExceptionBandes.cs": [
+  {
+   "cle": "exceptions.apres.deferred.enseigne",
+   "litteral": "DEFERRED",
+   "flux": "C'",
+   "methode": "PhraseApres",
+   "servie": false
+  },
+  {
+   "cle": "exceptions.apres.repairing.enseigne",
+   "litteral": "REPAIRING",
+   "flux": "C'",
+   "methode": "PhraseApres",
+   "servie": false
+  },
+  {
+   "cle": "exceptions.apres.repairing_slow.enseigne",
+   "litteral": "REPAIRING_SLOW",
+   "flux": "C'",
+   "methode": "PhraseApres",
+   "servie": false
+  },
+  {
+   "cle": "exceptions.bloc.reparer_enseigne",
+   "litteral": "exceptions.bloc.reparer_enseigne",
+   "flux": "C",
+   "methode": "AvecEnseigne",
+   "servie": false
+  }
+ ],
+ "Assets/Scripts/Operational/Exceptions/ExceptionDetailController.cs": [
+  {
+   "cle": "exception_detail.bloc.escalate",
+   "litteral": "exception_detail.bloc.escalate",
+   "flux": "C",
+   "methode": "Gabarit",
+   "servie": true
+  }
+ ],
+ "Assets/Scripts/Operational/Exceptions/ExceptionQueueController.cs": [
+  {
+   "cle": "exceptions.bloc.chez_enseigne",
+   "litteral": "exceptions.bloc.chez_enseigne",
+   "flux": "C",
+   "methode": "AvecEnseigne",
+   "servie": false
+  },
+  {
+   "cle": "exceptions.bloc.nom_retourne_au_travail",
+   "litteral": "exceptions.bloc.nom_retourne_au_travail",
+   "flux": "C",
+   "methode": "Gabarit",
+   "servie": false
+  },
+  {
+   "cle": "exceptions.file.ambiance",
+   "litteral": "exceptions.file.ambiance",
+   "flux": "C",
+   "methode": "CompteEnLettres",
+   "servie": true
+  },
+  {
+   "cle": "exceptions.file.attendent_encore",
+   "litteral": "exceptions.file.attendent_encore",
+   "flux": "C",
+   "methode": "CompteEnLettres",
+   "servie": true
+  }
+ ],
  "Assets/Scripts/Operational/Loi/LoiScreenController.cs": [
   {
    "cle": "loi.badge.a_vos_risques",

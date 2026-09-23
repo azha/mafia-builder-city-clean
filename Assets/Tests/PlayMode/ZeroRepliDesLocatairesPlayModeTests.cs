@@ -33,12 +33,12 @@ namespace MafiaCleanCity.Operational.Tests
         private GameObject shellGo;
         private AppShell shell;
 
-        /// <summary>DETTE DATÉE : les clés que le code SAIT demander et que le back ne sert pas — mesurée contre la pile 83b4f291
-        /// (2026-09-23), sur ce que le code peut rendre et non sur l'état du compte au moment du run : 42 clés = UNION de
-        /// `sites-libelle.py` (littéraux directs : 0), `sites-libelle-flux.py` (littéraux ASSIGNÉS à la variable passée, ou
-        /// passés en PARAMÈTRE : 40) et de ce que CETTE garde a vu au rendu (30, dont 2 qu'aucun statique ne voit encore).
-        /// Pourquoi l'union : une dette mesurée au seul run dépend de l'état du compte — Distribution rendait « en route »
-        /// à 01:34 et « livré » à 01:42, 4 clés de plus. Écrans : Appro, Distribution, Filière, Loi.
+        /// <summary>DETTE DATÉE : les clés que le code SAIT demander et que le back ne sert pas — contre la pile 83b4f291, sur l'arbre
+        /// d7b16069 (2026-09-23). 53 clés = UNION de `sites-libelle.py` (direct : 5), `sites-libelle-flux.py` (A : local assigné,
+        /// B : paramètre, C : clé entière passée à `Libelle.Gabarit` ou à une aide qui la lui transmet, et clé composée
+        /// `"a." + Slug(x) + ".b"` dépliée : 46) et de ce que CETTE garde a vu au rendu (3 runs du 23/09 : 31 non servies).
+        /// Histoire : 24 (statique direct, 40128b53) → 26 → 42 (flux A/B, l'état du compte ne décide plus) → 48 (merge ⑨/⑩ de
+        /// CLIENT-2) → 53 (Libelle.Gabarit rend visibles les 5 clés {enseigne}). Écrans : Appro, Distribution, Filière, Loi, ⑨, ⑩.
         /// Elle ne s'allonge que par décision nommée ; elle RÉTRÉCIT quand le back sert (règle 2).</summary>
         private static readonly HashSet<string> DetteDatee = new HashSet<string>
         {
@@ -73,6 +73,17 @@ namespace MafiaCleanCity.Operational.Tests
             "distribution.titre.c_est_livre",
             "distribution.titre.ce_qui_est_sur_la_route",
             "distribution.titre.l_envoi_de_ce_soir",
+            "exception_detail.bloc.appui_long_la_carte_se_ferme",
+            "exception_detail.bloc.appui_long_la_carte_se_ferme_le_batiment_lui_se_repare_avec_le_temps",
+            "exception_detail.bloc.je_fais_quoi",
+            "exceptions.apres.deferred.enseigne",
+            "exceptions.apres.repairing.enseigne",
+            "exceptions.apres.repairing_slow.enseigne",
+            "exceptions.bloc.ce_soir_au_verge_d_or",
+            "exceptions.bloc.chez_enseigne",
+            "exceptions.bloc.nom_retourne_au_travail",
+            "exceptions.bloc.reparer_enseigne",
+            "exceptions.bloc.rien_a_relire",
             "filiere.bloc.chaque_etape_rend_l_argent_un_peu_plus_propre_que_la_precedente_seule_la_derniere_credite_le_portefeuille_tant_qu_il_n_y_a_pas_de_sortie_il_n_y_a_pas_d_argent_seulement_une_file_d_attente",
             "loi.badge.a_vos_risques",
             "loi.badge.disponible",
@@ -84,18 +95,6 @@ namespace MafiaCleanCity.Operational.Tests
             "loi.bloc.la_filiere",
             "loi.bloc.un_cabinet",
             "loi.bouton.mettre_sous_retention",
-            // + 6 (2026-09-23 ~03:00) : apportées par le merge de CLIENT-2 (b909fbae, ⑨/⑩), non servies par 83b4f291 ;
-            //   `rien_a_relire` vue par la garde (partie 1 de 02:44), les 6 par sites-libelle.py sur l'arbre fusionné.
-            "exception_detail.bloc.appui_long_la_carte_se_ferme",
-            "exception_detail.bloc.appui_long_la_carte_se_ferme_le_batiment_lui_se_repare_avec_le_temps",
-            "exception_detail.bloc.je_fais_quoi",
-            "exceptions.bloc.ce_soir_au_verge_d_or",
-            // ⑨-6e (CLIENT-2 1d9a6704, 23/09) : la concaténation devient un gabarit {nom} — `retourne_au_travail` n'est plus
-            //   demandée ; `nom_retourne_au_travail` la remplace (non servie par 83b4f291). ⚠️ Elle passe par
-            //   `ExceptionBandes.Gabarit`, qui lit le catalogue SANS `Libelle` : la règle (1) ne VOIT PAS son repli ; seule la
-            //   règle (2) la tient (rouge quand le back la servira). Trou de la garde, signalé, pas corrigé ici.
-            "exceptions.bloc.nom_retourne_au_travail",
-            "exceptions.bloc.rien_a_relire",
         };
 
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>

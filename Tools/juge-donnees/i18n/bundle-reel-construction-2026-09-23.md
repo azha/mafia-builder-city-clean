@@ -172,3 +172,10 @@ lisent le catalogue SANS `Libelle` avec une clé et un repli écrits par le clie
 la règle 2 tient ce qui est inscrit à la dette). Les ~8 autres accès directs traduisent des références SERVIES par le back
 (`label_i18n`, `event_descriptor_i18n`, `name_i18n`, `tier_label_i18n`) — leur absence est une lacune du back, pas un littéral client.
 Correctif proposé (lot à part, fichiers de CLIENT-2) : faire passer ces 4 sites par une aide de `Libelle` qui compte le repli.
+
+## 48 → 53 après d7b16069 (Libelle.Gabarit, garde L2 de CLIENT-2) — recalcul direct ∪ flux ∪ vu, contre 83b4f291
+`sites-libelle-flux.py` gagne le flux (C) : clé entière passée à `Libelle.Gabarit` ou à une aide qui la lui transmet (détectées
+transitivement : `Gabarit`, `AvecEnseigne`, `CompteEnLettres`), et la clé composée `"a." + Slug(x) + ".b"` dépliée sur le dictionnaire
+qui la garde. Direct 5 · flux 46 · vu 31 · union **53** ; à ajouter : les 5 clés `{enseigne}` (`exceptions.bloc.chez_enseigne`,
+`.reparer_enseigne`, `exceptions.apres.{repairing,repairing_slow,deferred}.enseigne`) ; rien à retirer. `exceptions.file.attendent_encore`
+et `exception_detail.bloc.escalate` sont SERVIES par 83b4f291 (vues par le flux C, pas en dette).

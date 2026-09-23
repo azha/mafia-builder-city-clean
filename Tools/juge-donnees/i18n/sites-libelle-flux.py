@@ -28,6 +28,16 @@ def methodes(t):
             if d==0: break
         params=[p.strip().split()[-1] for p in m.group(2).split(',') if p.strip()]
         yield m.group(1), params, j, k
+# Les aides qui transmettent leur 1er paramètre (une clé) à `Libelle.Gabarit`, transitivement.
+SRC={p:sans_comm(p.read_text(encoding='utf-8',errors='replace')) for p in pathlib.Path('Assets/Scripts').rglob('*.cs')}
+AIDES_GABARIT={'Gabarit'}
+while True:
+    n0=len(AIDES_GABARIT)
+    for t0 in SRC.values():
+        for m in re.finditer(r'static string (\w+)\(\s*string (\w+)[^)]*\)\s*(?:=>|\{)([\s\S]{0,400}?)(?:;\s*\n|\n\s{8}\})',t0):
+            if re.search(r'(?:Libelle\.|ExceptionBandes\.)?(?:'+'|'.join(sorted(AIDES_GABARIT))+r')\(\s*'+m.group(2)+r'\b',m.group(3)):
+                AIDES_GABARIT.add(m.group(1))
+    if len(AIDES_GABARIT)==n0: break
 res={}
 for p in sorted(pathlib.Path('Assets/Scripts').rglob('*.cs')):
     t=sans_comm(p.read_text(encoding='utf-8',errors='replace'))
@@ -65,11 +75,29 @@ for p in sorted(pathlib.Path('Assets/Scripts').rglob('*.cs')):
                 if i<len(args):
                     lm=re.fullmatch(r'\s*'+LIT+r'\s*',args[i])
                     if lm: sites.append((f'{d}.{r}.{slug(dec(lm.group(1)))}',lm.group(1),'B',n))
+    # (C) CLÉ ENTIÈRE passée à `Libelle.Gabarit` (d7b16069) — directement, ou par une aide qui lui transmet son 1er paramètre
+    #     (détectées ici, transitivement, dans tout le dépôt : `ExceptionBandes.Gabarit`, `AvecEnseigne`, `CompteEnLettres`…).
+    for m in re.finditer(r'(?:(\w+)\.)?(\w+)\(\s*"([a-z][a-z0-9_]*(?:\.[a-z0-9_]+){2,})"',t):
+        if m.group(2) in AIDES_GABARIT:
+            sites.append((m.group(3),m.group(3),'C',m.group(2)))
+    # (C') clé COMPOSÉE « "a." + Libelle.Slug(x) + ".b" » gardée par un `D.TryGetValue(x` : dépliée sur les clés de D.
+    for m in re.finditer(r'"([a-z][a-z0-9_.]*\.)"\s*\+\s*(?:MafiaCleanCity\.I18n\.)?Libelle\.Slug\(\s*([\w.()]+?)\s*\)\s*\+\s*"(\.[a-z0-9_.]+)"',t):
+        expr=m.group(2).replace('.Trim()','')
+        enc=[(n,ps,a2,b2) for n,ps,a2,b2 in meths if a2<m.start()<b2]
+        if not enc: continue
+        corps=t[enc[-1][2]:enc[-1][3]]
+        d=re.search(rf'(\w+)\.TryGetValue\(\s*{re.escape(expr)}',corps)
+        if not d: continue
+        init=re.search(rf'{d.group(1)}\s*=\s*new Dictionary<[^>]+>\([^)]*\)\s*\{{([\s\S]*?)\}};',t)
+        if not init: continue
+        for k in re.findall(r'\{\s*"([^"]+)"\s*,',init.group(1)):
+            cle=m.group(1)+slug(k)+m.group(3); sites.append((cle,k,"C'",enc[-1][0]))
     sites=[s for s in set(sites) if not s[0].endswith('.')]
     if sites: res[str(p)]=[{'cle':c,'litteral':l,'flux':f,'methode':m,'servie':c in servies} for c,l,f,m in sorted(sites)]
 json.dump(res,open(sys.argv[2],'w',encoding='utf-8'),ensure_ascii=False,indent=1)
 tot=sum(len(v) for v in res.values()); ns=sorted({s['cle'] for v in res.values() for s in v if not s['servie']})
-print(f"flux A/B : {tot} sites dans {len(res)} fichiers · {len(ns)} clé(s) non servie(s)")
+print(f"aides Gabarit : {sorted(AIDES_GABARIT)}")
+print(f"flux A/B/C : {tot} sites dans {len(res)} fichiers · {len(ns)} clé(s) non servie(s)")
 for c in ns: print('  ',c)
 
 # ⛔ CONTRÔLE POSITIF (consigne de l'orchestrateur, 23/09) : les 4 sites de Distribution que la garde a vus au rejeu de 01:42 —
