@@ -53,6 +53,7 @@ sorte n'est pas un état. D'où une seconde forme neutre, « type inconnu », qu
 | Loi | palier d'avocat | **type inconnu** (au lieu de « tier inconnu », qui garde un mot anglais) |
 | Démolition | le nom du bâtiment absent | **Un bâtiment** |
 | Forensic | les bandes | **état inconnu** |
+| District | « Tissu » (`TissuDeDistrict`, le profil : tidewater, spine, lattice, stack, glass, verge) | **type inconnu** (choix confirmé par f2, 23/09) |
 
 ⚠️ Hors relevé, vu en mesurant : `"__inconnu__"` (11 littéraux du client) est une SENTINELLE de code, pas un mot affiché — si l'une
 atteint l'écran, c'est un défaut, et elle prend alors la forme de sa famille.

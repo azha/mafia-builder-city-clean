@@ -20,6 +20,8 @@ for l in open(os.path.join(ICI, '28-mots-inconnus.md'), encoding='utf-8'):
 if len(t) != 4: d.append(f'{len(t)} clés, 4 attendues')
 for k, (fr, en) in t.items():
     if k != 'commun.repli.' + slug(fr): d.append(f'{k} ≠ slug ({slug(fr)})')
-    if f"'{k}'" in st: d.append(f'{k} déjà servie')
+    # servie depuis (le back a repris la proposition) : conforme si le fr ET l'en servis sont exactement les nôtres
+    servis = re.findall(r"^\s*'" + re.escape(k) + r"':\s*'((?:[^'\\]|\\.)*)'", st, re.M)
+    if servis and sorted(x.replace("\\'", "'") for x in servis) != sorted([fr, en]): d.append(f'{k} servie avec d\'autres mots : {servis}')
     if fr == en: d.append(f'{k} : en == fr')
 print(f'{len(t)} clés'); [print('  ⛔', x) for x in d]; print(f'{len(d)} défaut(s)'); sys.exit(1 if d else 0)
