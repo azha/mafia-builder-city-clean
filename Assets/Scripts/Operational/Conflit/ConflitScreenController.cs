@@ -705,7 +705,19 @@ namespace MafiaCleanCity.Operational
             foreach (string cle in ConflitResolvers.DomaineFamilles)
             {
                 GameObject ligne = NouveauUI("Famille_" + cle, tableRoot);
-                Image fondLigne = AjouterFond(ligne, cle == ChoixFamille ? DesignTokens.Current.surfaceRaised : DesignTokens.Current.surfaceRow);
+                bool choisie = cle == ChoixFamille;
+                Image fondLigne = AjouterFond(ligne, choisie ? CouleurLocale("#2e2114") : DesignTokens.Current.surfaceRow);
+                if (choisie)
+                {
+                    GameObject bord = NouveauUI("BordChoisi", ligne.transform);
+                    bord.AddComponent<LayoutElement>().ignoreLayout = true;
+                    Image filet = AjouterImage(bord);
+                    filet.sprite = ProceduralUI.RoundedRectOutline(Mathf.Max(1, PxTrait(3f)), Mathf.Max(1f, Px(1f)),
+                        CouleurLocale("#8a6a22"));
+                    filet.type = Image.Type.Sliced;
+                    filet.raycastTarget = false;
+                    Etirer((RectTransform)bord.transform);
+                }
                 // Cadres 59-61 : on choisit la famille DANS la table — seulement s'il y a un gros bras à envoyer.
                 if (muscleLieutenants.Count > 0)
                 {
@@ -723,6 +735,8 @@ namespace MafiaCleanCity.Operational
                 hl.childAlignment = TextAnchor.MiddleLeft;
                 AddLayoutElement(ligne, flexibleHeight: 0);
 
+                AjouterEcusson(ligne.transform, cle, choisie);
+
                 // Pâle : `onSurfaceDim`, jamais `onSurfacePrimary` — la couleur PORTE l'absence de
                 // donnée (aucune route ne dit ce qu'elles préparent), pas seulement la note ci-dessus.
                 GameObject identite = NouveauUI("Identite", ligne.transform);
@@ -732,12 +746,12 @@ namespace MafiaCleanCity.Operational
                 AddLayoutElement(identite, flexibleWidth: 1);
 
                 TextMeshProUGUI nom = NouveauTexteFiche(identite.transform, "Nom",
-                    ConflitResolvers.NomFamille(cle), 10.5f, DesignTokens.Current.onSurfaceDim, true);
+                    ConflitResolvers.NomFamille(cle), 9.5f, DesignTokens.Current.onSurfaceDim, true);
                 TrackText(nom.text);
 
                 // Sous-titre de la maquette ratifiée (cadres 59-61), clé SERVIE (balayage 34 : classe « servi »).
                 TextMeshProUGUI sousTitre = NouveauTexteFiche(identite.transform, "SousTitre",
-                    ConflitResolvers.SousTitreFamille(cle), 7.5f, DesignTokens.Current.onSurfaceMuted, false);
+                    ConflitResolvers.SousTitreFamille(cle), 6.4f, DesignTokens.Current.onSurfaceMuted, false);
                 sousTitre.fontStyle = FontStyles.Italic;
                 TrackText(sousTitre.text);
 
@@ -756,7 +770,7 @@ namespace MafiaCleanCity.Operational
                 compte.TryGetValue(cle, out int n);
                 if (n > 0)
                 {
-                    TextMeshProUGUI fois = NouveauTexteFiche(bloc.transform, "Fois", ConflitResolvers.FoisChezEux(n), 9f,
+                    TextMeshProUGUI fois = NouveauTexteFiche(bloc.transform, "Fois", ConflitResolvers.FoisChezEux(n), 8.5f,
                         DesignTokens.Current.onSurfacePrimary, true);
                     fois.alignment = TextAlignmentOptions.Right;
                     TrackText(fois.text);
@@ -764,7 +778,7 @@ namespace MafiaCleanCity.Operational
                 TextMeshProUGUI visites = NouveauTexteFiche(bloc.transform, "Visites",
                     n > 0 ? Libelle.Gabarit("conflit.bloc.on_est_alles_chez_eux", "on leur a rendu visite")
                           : Libelle.Gabarit("conflit.bloc.on_ne_les_a_pas_croises", "on n’a jamais croisé leur route"),
-                    7.5f, DesignTokens.Current.onSurfaceMuted, false);
+                    6.2f, DesignTokens.Current.onSurfaceMuted, false);
                 visites.fontStyle = FontStyles.Italic;
                 visites.alignment = TextAlignmentOptions.Right;
                 TrackText(visites.text);
@@ -772,11 +786,45 @@ namespace MafiaCleanCity.Operational
                 if (cle == ChoixFamille)
                 {
                     TextMeshProUGUI ceSoir = NouveauTexteFiche(ligne.transform, "CeSoir",
-                        Libelle.Gabarit("conflit.bloc.ce_soir", "Ce soir"), 7f, Or, true);
-                    ceSoir.characterSpacing = 2f;
+                        Libelle.Gabarit("conflit.bloc.ce_soir", "Ce soir"), 6.4f, Or, true);
+                    ceSoir.characterSpacing = 1f;
+                    ceSoir.fontStyle |= FontStyles.UpperCase;
+                    ceSoir.enableWordWrapping = false;
                     TrackText(ceSoir.text);
                 }
             }
+        }
+
+        /// <summary>Le petit écu de la table des familles (`.fam .ecu`) : une initiale stable, purement visuelle, dérivée du
+        /// nom déjà servi — jamais un nouveau fait de jeu.</summary>
+        private void AjouterEcusson(Transform parent, string cle, bool choisi)
+        {
+            float largeur = Px(26f), hauteur = Px(30f);
+            GameObject ecu = NouveauUI("Ecu", parent);
+            AddLayoutElement(ecu, minWidth: largeur, preferredWidth: largeur, minHeight: hauteur, preferredHeight: hauteur,
+                flexibleWidth: 0f, flexibleHeight: 0f);
+            Image fond = AjouterImage(ecu);
+            fond.sprite = ProceduralUI.RoundedRectMask(Mathf.Max(1, PxTrait(4f)));
+            fond.type = Image.Type.Sliced;
+            fond.color = choisi ? CouleurLocale("#4a3618") : CouleurLocale("#3a2d20");
+            fond.raycastTarget = false;
+
+            GameObject bord = NouveauUI("Bord", ecu.transform);
+            Image filet = AjouterImage(bord);
+            filet.sprite = ProceduralUI.RoundedRectOutline(Mathf.Max(1, PxTrait(4f)), Mathf.Max(1f, Px(1f)),
+                choisi ? CouleurLocale("#8a6a22") : CouleurLocale("#5a4938"));
+            filet.type = Image.Type.Sliced;
+            filet.raycastTarget = false;
+            Etirer((RectTransform)bord.transform);
+
+            string nom = ConflitResolvers.NomFamille(cle);
+            TextMeshProUGUI initiale = NouveauTexteFiche(ecu.transform, "Initiale",
+                string.IsNullOrEmpty(nom) ? "?" : nom.Substring(0, 1), 10f,
+                choisi ? CouleurLocale("#f0dfc4") : DesignTokens.Current.onSurfaceMuted, true);
+            initiale.font = DesignTokens.Current.hudSerifFont;
+            initiale.alignment = TextAlignmentOptions.Center;
+            Etirer((RectTransform)initiale.transform);
+            TrackText(initiale.text);
         }
 
         /// <summary>Le compte des envois RENTRÉS (`status == "resolved"`) par `target_rival_key`, côté client. `engagements`

@@ -376,6 +376,10 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
             Assert.AreEqual("tarcum", ecran.ChoixFamille);
             Assert.AreEqual("Ce soir", TexteSous("Famille_tarcum", "CeSoir"), "la famille choisie porte « Ce soir »");
+            Assert.AreEqual(4, CompterNoms(RacineEcran().transform, "Ecu"), "un écusson par famille, jamais un cinquième");
+            Assert.IsNotNull(RacineEcran().transform.Find("Corps/Contenu/Table/Famille_tarcum/BordChoisi"),
+                "la ligne visée porte le filet chaud de la maquette");
+            Assert.AreEqual("T", TexteSous("Famille_tarcum", "Initiale"));
             Assert.IsFalse(ecran.EnvoiPossible, "famille seule : pas encore");
 
             GameObject.Find("Homme_00000000-0000-4000-8000-000000000000").GetComponent<Button>().onClick.Invoke();
