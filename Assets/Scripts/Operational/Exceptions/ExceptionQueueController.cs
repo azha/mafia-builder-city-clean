@@ -529,7 +529,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             if (!ExceptionBandes.ParleUnLieutenant(c)) return null;
             string nom = c.lieutenant != null ? c.lieutenant.name : null;
             if (string.IsNullOrWhiteSpace(nom)) return null;
-            return nom.Trim() + " " + Lib("retourne au travail");
+            // Un GABARIT, plus une concaténation : l'ordre des mots vient de la valeur servie (en : « {nom} is going back to work »).
+            return ExceptionBandes.Gabarit("exceptions.bloc.nom_retourne_au_travail", "{nom} retourne au travail", "nom", nom.Trim());
         }
 
         /// <summary>`filter:grayscale(1)` sur une couleur : la luminance CSS (0,2126 / 0,7152 / 0,0722, en sRGB).</summary>
