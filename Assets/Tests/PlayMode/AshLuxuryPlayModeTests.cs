@@ -121,8 +121,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.LabTierShown, "the lab-tier row is shown on a specialized_lab");
             Assert.IsTrue(controller.PurityBandShown, "the purity-band row is shown for a cooked Ash batch");
             var texts = controller.RenderedTexts;
-            Assert.IsTrue(texts.Any(t => t == "Taille du labo"), "lab-tier row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Affiné"), "lab-tier band value 'Refined' rendered");
+            // ② lot 5 : « L’atelier » (D14, clé `building.row.taille_du_labo` inchangée) et les mots servis des paliers (« amélioré »).
+            Assert.IsTrue(texts.Any(t => t == "L’atelier"), "lab-tier row label rendered");
+            Assert.IsTrue(texts.Any(t => t == "amélioré"), "lab-tier band value REFINED rendered (repli D14)");
             Assert.IsTrue(texts.Any(t => t == "Pureté"), "purity row label rendered");
             Assert.IsTrue(texts.Any(t => t == "Cristalline"), "purity band value 'Crystalline' rendered");
             Assert.IsTrue(texts.Any(t => t == "Ash"), "substance value 'Ash' rendered (the storage substance row)");

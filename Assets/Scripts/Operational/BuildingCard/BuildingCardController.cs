@@ -367,10 +367,11 @@ namespace MafiaCleanCity.Operational
         /// chargement, mêmes hooks. Les données absentes (null) le sont comme après une erreur de route.</summary>
         public void RendrePourTest(BuildingCardDto card, StorageDto storage = null, LabCookDto lab = null,
                                    GetOperationalPrecursorsResponseDto precursors = null, GrowSessionDto grow = null,
-                                   GetMetaTaskCategoriesResponseDto charges = null)
+                                   GetMetaTaskCategoriesResponseDto charges = null, AppointmentDto rendezVous = null)
         {
             EnsureInitialized();
             CurrentTaskCategories = charges;
+            CurrentAppointment = rendezVous;
             CurrentCard = card;
             CurrentStorage = storage;
             CurrentLab = lab;
@@ -789,7 +790,10 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(card.lab_tier_band) && card.lab_tier_band != "NONE")
                 {
                     LabTierShown = true;
-                    AddStatusRow("taille_du_labo", "Taille du labo", LabTierLabel(card.lab_tier_band), LabTierAccent(card.lab_tier_band));
+                    // ② lot 5 : « L’atelier » l'emporte sur « Taille du labo » (D14, tranché par f2) — la VALEUR change, la CLÉ reste
+                    // `building.row.taille_du_labo` : elle est donc nommée, pas dérivée du mot (le mot neuf dériverait `l_atelier`).
+                    AddStatusRow("taille_du_labo", "L’atelier", LabTierLabel(card.lab_tier_band), LabTierAccent(card.lab_tier_band),
+                        cleDuLibelle: "building.row.taille_du_labo");
                 }
 
                 // Purity-band row — the cooked Ash batch's quality grade (from the storage projection). Shown only when a
@@ -807,8 +811,17 @@ namespace MafiaCleanCity.Operational
             // band + the payout band only (never raw ticks/cents); F2: a distinct glyph per status alongside colour.
             if (CurrentAppointment != null && !string.IsNullOrEmpty(CurrentAppointment.status))
             {
+                // ② lot 5 (écrin d'Ash, cadres 92-94, bloc E1) : le titre et la phrase de l'état servi, avant le tampon.
+                (string titre, string phrase) = TitresDuRendezVous(CurrentAppointment.status);
+                if (titre != null)
+                {
+                    AddLigneDEtat("TitreDuRendezVous", titre, 16, TextPrimary, FontStyles.Bold);
+                    AddLigneDEtat("PhraseDuRendezVous", phrase, 13, DesignTokens.Current.onSurfaceSecondaryAlt, FontStyles.Normal);
+                }
                 AddStatusRow("rendez_vous", "Rendez-vous", AppointmentStatusLabel(CurrentAppointment.status), AppointmentStatusAccent(CurrentAppointment.status));
-                AddStatusRow("gain", "Gain", PayoutLabel(CurrentAppointment.payout_band), PayoutAccent(CurrentAppointment.payout_band));
+                // ② lot 5 (bloc E3 « GAIN ») : 5 pastilles et le MOT servi (tranché (e) ; lecture dans PastillesDuGain).
+                AddEchelle("gain", "Gain", PastillesDuGain(CurrentAppointment.payout_band), PastillesGain,
+                    PayoutLabel(CurrentAppointment.payout_band), PayoutAccent(CurrentAppointment.payout_band));
             }
 
             // ----- Phase-3 vector #3 (grow_house cultivation) surface — ONLY for a grow_house with an active grow tracked.
@@ -1291,9 +1304,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "BASIC": return Bande("lab_tier", "BASIC", "Simple");
-                case "REFINED": return Bande("lab_tier", "REFINED", "Affiné");
-                case "MASTER": return Bande("lab_tier", "MASTER", "Maître");
+                // ② lot 5 : replis = les mots D14 servis (ST `building.lab_tier.*`, table 37 : « s'accorde à l'atelier ») — « Simple /
+                // Affiné / Maître » étaient périmés (écart ② cadres 92-94).
+                case "BASIC": return Bande("lab_tier", "BASIC", "de base");
+                case "REFINED": return Bande("lab_tier", "REFINED", "amélioré");
+                case "MASTER": return Bande("lab_tier", "MASTER", "au meilleur niveau");
                 case "NONE": return Bande("lab_tier", "NONE", "Pas de labo");   // atelier 29 (7746e0bb), servi (NONE = la bande ne s'applique pas à ce bâtiment)
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
@@ -1358,6 +1373,41 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
+        // ----- ② lot 5 (2026-09-23) : l'écrin d'Ash (cadres 92-94) -----
+        public const int PastillesGain = 5;
+
+        /// <summary>Les pastilles allumées du GAIN, sur 5 (tranché (e) : 6 valeurs servies, 5 pastilles ; « si la 6ᵉ est NONE ou absente,
+        /// 5 pastilles plus rien »). Lecture retenue, déclarée : les 5 pastilles portent les 5 valeurs d'une vente JOUÉE, NONE (perdue)
+        /// → 1 … PREMIUM → 5, premier cran allumé comme au pupitre — c'est ce que dessinent les cadres 94 (passé, 1/5) et 93 (honoré,
+        /// cristalline, 5/5) ; la 6ᵉ, PENDING, n'a pas encore de valeur (« absente ») : 5 pastilles, RIEN d'allumé. Le 4/5 du cadre 92
+        /// (réservé) est un exemple de maquette (point 19). Six valeurs, six comptes distincts ; hors domaine : rien d'allumé, le mot
+        /// du repli dit le reste.</summary>
+        public static int PastillesDuGain(string b)
+        {
+            switch (b)
+            {
+                case "NONE": return 1;
+                case "MODEST": return 2;
+                case "FAIR": return 3;
+                case "STRONG": return 4;
+                case "PREMIUM": return 5;
+                default: return 0;   // PENDING (pas encore vendu), et le hors-domaine
+            }
+        }
+
+        /// <summary>Le titre et la phrase de l'écrin selon le statut servi (bloc E1 ; clés servies de la table 37). Hors domaine :
+        /// (null, null) — pas de titre plutôt qu'un titre faux.</summary>
+        public static (string titre, string phrase) TitresDuRendezVous(string status)
+        {
+            switch (status)
+            {
+                case "SCHEDULED": return (Cle("bloc", "Un rendez-vous est pris"), Cle("bloc", "Un client du district du Verre vous attend."));
+                case "HONORED": return (Cle("bloc", "Le rendez-vous est honoré"), Cle("bloc", "La marchandise est partie, le client a payé."));
+                case "EXPIRED": return (Cle("bloc", "Le rendez-vous est passé"), Cle("bloc", "Personne n’y est allé. Il faudra en reprendre un."));
+                default: return (null, null);
+            }
+        }
+
         private static Color PayoutAccent(string b)
         {
             switch (b)
@@ -1949,7 +1999,7 @@ namespace MafiaCleanCity.Operational
         /// mesure. Un glyphe plus long ajouté ailleurs doit venir ici, sinon il sera coupé —
         /// c'est le seul endroit du fichier qui doit bouger dans ce cas.</summary>
 
-        private void AddStatusRow(string idStable, string label, string value, Color accent)
+        private void AddStatusRow(string idStable, string label, string value, Color accent, string cleDuLibelle = null)
         {
             GameObject row = NewUI("Row_" + idStable, statusRows);
             row.AddComponent<Image>().color = RowBg;
@@ -1967,7 +2017,9 @@ namespace MafiaCleanCity.Operational
             // raison écrite — a11y C5-F1, « la couleur n'est jamais seule à porter l'information » — est satisfaite par la VALEUR : elle porte
             // un MOT, dans la même couleur. Garde : `GlyphesPlayModeTests` (toute valeur en couleur porte un mot ; plus aucun glyphe).
 
-            string libelle = Cle("row", label);
+            // `cleDuLibelle` (② lot 5) : une clé NOMMÉE quand le mot a changé et que la clé reste (D14 : « L’atelier » sous
+            // `building.row.taille_du_labo`) ; sinon la clé se dérive du libellé, comme partout.
+            string libelle = cleDuLibelle != null ? MafiaCleanCity.I18n.Libelle.Gabarit(cleDuLibelle, label) : Cle("row", label);
             TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);
             l.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
@@ -1978,6 +2030,16 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
             TrackText(l, libelle);
             TrackText(v, value);
+        }
+
+        /// <summary>② lot 5 — une ligne de texte dans la zone d'état (titre et phrase de l'écrin).</summary>
+        private void AddLigneDEtat(string nom, string texte, int taille, Color couleur, FontStyles style)
+        {
+            TextMeshProUGUI t = NewText(nom, statusRows, texte, taille, TextAlignmentOptions.Left);
+            t.color = couleur;
+            t.fontStyle = style;
+            AddLayoutElement(t.gameObject, minHeight: taille + 6, flexibleHeight: 0);
+            TrackText(t, texte);
         }
 
         /// <summary>② lot 1 — une échelle du pupitre : le libellé, `total` crans dont `allumes` en couleur, puis le MOT dans la même
