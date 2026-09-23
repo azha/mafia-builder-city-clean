@@ -146,6 +146,21 @@ namespace MafiaCleanCity.Operational
     [Serializable] public class StorageEnvelope { public StoragePayload payload; }
     [Serializable] public class StoragePayload { public StorageDto data; }
 
+    // GET /v1/operational/lab/:id  (② lot 1, 2026-09-23 — route jamais lue jusqu'ici, écart ② `c4520078` cadre 39 B2 « le feu »).
+    //   { building, substance_type, cook_stage_band } — LabCookProjection, back production/production.projection.service.ts:59-66,
+    //   route production.controller.ts:113. COOK buildings only : un bâtiment qui n'est pas le bâtiment de cuisson OPÉRATIONNEL du
+    //   joueur → 404 RESOURCE_NOT_FOUND. Déclaré (forme G), pas encore mesuré sur la pile : le créneau le mesurera.
+    [Serializable]
+    public class LabCookDto
+    {
+        public string building;            // uuid identity
+        public string substance_type;      // BRINDLE (lab) | CRICK (refinery) | ASH (specialized_lab) — résolu au registre
+        public string cook_stage_band;     // IDLE | EARLY | MID | LATE | DONE (production.projection.service.ts:53) — jamais l'horloge brute
+    }
+
+    [Serializable] public class LabCookEnvelope { public LabCookPayload payload; }
+    [Serializable] public class LabCookPayload { public LabCookDto data; }
+
     // Wallet affordability for the Repair button reuses the EXISTING wallet DTOs from
     // Dashboard/DashboardDtos.cs (WalletDto/WalletEnvelope/WalletPayload, same namespace
     // MafiaCleanCity.Operational) — GET /v1/economy/wallet → { wallet_band }. Do NOT re-declare them

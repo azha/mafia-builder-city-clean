@@ -65,6 +65,13 @@ namespace MafiaCleanCity.Operational
         /// non-empty temperature_status — a cold-chain substance like Crick in a refinery).</summary>
         public bool ColdChainShown { get; private set; }
 
+        // ---- ② lot 1 (2026-09-23) : le PUPITRE du labo, trois échelles de crans -------------------------------------
+        /// <summary>La cuisson du bâtiment (GET /v1/operational/lab/:id). Null hors pupitre, ou sur erreur : pas de ligne « le feu ».</summary>
+        public LabCookDto CurrentLab { get; private set; }
+        /// <summary>Le stock de précurseur du bâtiment (GET /v1/operational/precursors?building_id — le DTO de la chaîne d'appro,
+        /// RÉUTILISÉ). Null hors pupitre, ou sur erreur : pas de ligne « l'étagère ».</summary>
+        public GetOperationalPrecursorsResponseDto CurrentPrecursors { get; private set; }
+
         // ---- Phase-2b raid/repair test hooks -------------------------------
         /// <summary>The player's qualitative wallet band (GET /v1/economy/wallet) used ONLY to gate Repair
         /// affordability (repair_cost band vs this band — never raw cents; R2.2). Null until first loaded.</summary>
@@ -178,6 +185,7 @@ namespace MafiaCleanCity.Operational
             baseUrl = url;
             if (auth != null) auth.BaseUrl = url;
             if (client != null) client.BaseUrl = url;
+            if (appro != null) appro.BaseUrl = url;
         }
 
         private readonly List<string> renderedTexts = new List<string>();
@@ -194,6 +202,7 @@ namespace MafiaCleanCity.Operational
 
         private AuthClient auth;
         private BuildingCardClient client;
+        private ChaineDApproClient appro;   // ② lot 1 : la route des précurseurs a UN client, celui de la chaîne d'appro
 
         // Slate palette (mirrors CityMap + global_conventions_core direction).
         private static Color SurfaceBg => DesignTokens.Current.surfaceCard; // #16191b
@@ -244,6 +253,7 @@ namespace MafiaCleanCity.Operational
             font = DesignTokens.Current.primaryFont;
             auth = new AuthClient { BaseUrl = baseUrl };
             client = new BuildingCardClient { BaseUrl = baseUrl };
+            appro = new ChaineDApproClient { BaseUrl = baseUrl };
             BuildLayout();
             EnsureEventSystem();
         }
@@ -317,6 +327,10 @@ namespace MafiaCleanCity.Operational
             // refinery, temperature_status != null) renders the cold-chain status row. Never blocks the card load.
             yield return RefreshStorage(id);
 
+            // ② lot 1 : le pupitre du labo lit deux routes de plus — la cuisson et l'étagère. Seulement pour un type à pupitre
+            // (tranché (a) du 23/09) : pour les autres, les deux routes répondraient 404 et on ne les appelle pas.
+            yield return RefreshPupitre(id, CurrentCard.operational_type);
+
             // Phase-3 vector #3 (grow_house): also fetch the active grow's qualitative projection (grow_stage_band +
             // husbandry_band + tend_due) when a grow_session is tracked for this grow_house (set on Plant or by a test).
             // A non-grow_house card, or a grow_house with no tracked grow, leaves CurrentGrow null → no grow rows render.
@@ -338,6 +352,35 @@ namespace MafiaCleanCity.Operational
             StorageDto storage = null;
             yield return client.GetStorage(id, Token, s => storage = s, (code, msg) => storage = null);
             CurrentStorage = storage;
+        }
+
+        /// <summary>⛔ Réservé aux tests (② lot 1) : rend la fiche depuis des données DONNÉES, sans réseau — même `Render` que le
+        /// chargement, mêmes hooks. Les données absentes (null) le sont comme après une erreur de route.</summary>
+        public void RendrePourTest(BuildingCardDto card, StorageDto storage = null, LabCookDto lab = null,
+                                   GetOperationalPrecursorsResponseDto precursors = null)
+        {
+            EnsureInitialized();
+            CurrentCard = card;
+            CurrentStorage = storage;
+            CurrentLab = lab;
+            CurrentPrecursors = precursors;
+            CardLoaded = true;
+            Render(card);
+        }
+
+        /// <summary>② lot 1 — la cuisson (`lab/:id`) et l'étagère (`precursors?building_id`) d'un bâtiment à pupitre. Une erreur laisse
+        /// la donnée à null : la ligne correspondante n'est pas dessinée, plutôt que d'afficher un cran qu'on n'a pas reçu.</summary>
+        public IEnumerator RefreshPupitre(string id, string operationalType)
+        {
+            CurrentLab = null;
+            CurrentPrecursors = null;
+            if (!APupitre(operationalType)) yield break;
+            LabCookDto lab = null;
+            yield return client.GetLab(id, Token, l => lab = l, (code, msg) => lab = null);
+            CurrentLab = lab;
+            GetOperationalPrecursorsResponseDto pre = null;
+            yield return appro.GetOperationalPrecursors(Token, id, p => pre = p, (code, msg) => pre = null);
+            CurrentPrecursors = pre;
         }
 
         /// <summary>Fetch the qualitative wallet band (REUSE the economy projection). Conservative on failure.</summary>
@@ -667,6 +710,24 @@ namespace MafiaCleanCity.Operational
             {
                 string notif = $"Descente — saisi : {SeizedLabel(card.seized_amount)}";
                 AddStatusRow("alerte", "Alerte", notif, AccentSevere);
+            }
+
+            // ----- ② lot 1 (2026-09-23) : LE PUPITRE — trois échelles de crans, « le feu » sur 5, « l'étagère » sur 4, « les caisses »
+            // sur 4 ; le premier cran est TOUJOURS allumé (écart ② `c4520078`, cadres 39-44, bloc B2). Le pupitre suit le TYPE (tranché (a)
+            // du 23/09) : `lab` et `specialized_lab`. Chaque échelle porte son MOT à côté des crans (la couleur n'est jamais seule). Une
+            // échelle dont la donnée n'est pas arrivée n'est pas dessinée : un cran allumé affirmerait un état qu'on n'a pas reçu.
+            if (APupitre(card.operational_type))
+            {
+                if (CurrentLab != null)
+                    AddEchelle("le_feu", "le feu", CransDuFeu(CurrentLab.cook_stage_band), CransFeu,
+                        CookStageLabel(CurrentLab.cook_stage_band), CookStageAccent(CurrentLab.cook_stage_band));
+                if (CurrentPrecursors != null)
+                    AddEchelle("l_etagere", "l’étagère", CransDuStock(CurrentPrecursors.stock_band), CransStock,
+                        StockLabel(CurrentPrecursors.stock_band), EtagereAccent(CurrentPrecursors.stock_band));
+                // ⚠️ `product_band` ARRIVAIT déjà (RefreshStorage) et n'était jamais lu (écart ② cadre 39 B2).
+                if (CurrentStorage != null)
+                    AddEchelle("les_caisses", "les caisses", CransDuStock(CurrentStorage.product_band), CransStock,
+                        StockLabel(CurrentStorage.product_band), CaissesAccent(CurrentStorage.product_band));
             }
 
             // ----- Phase-2b vector #2 (Crick) cold-chain surface — ONLY when the storage projection carries a
@@ -1310,6 +1371,77 @@ namespace MafiaCleanCity.Operational
         private static Color GrowStageAccent(string b) =>
             b == "DONE" ? AccentPremium : b == "LATE" ? AccentMild : AccentModerate;
 
+        // ----- ② lot 1 (2026-09-23) : le pupitre du labo — les mots de ses trois échelles (atelier 37, `6c5de8d5`, servis) -----
+        /// <summary>Les types qui ont un pupitre (tranché (a) du 23/09) : le `lab` (Brindle) et le `specialized_lab` (Ash). ⚠️ La
+        /// raffinerie a aussi une cuisson servie par `lab/:id`, mais aucune maquette ne lui dessine de pupitre.</summary>
+        public static bool APupitre(string operationalType) => operationalType == "lab" || operationalType == "specialized_lab";
+
+        public const int CransFeu = 5;     // le domaine de `cook_stage_band` : IDLE, EARLY, MID, LATE, DONE (production.projection.service.ts:53)
+        public const int CransStock = 4;   // le domaine de `stock_band` et de `product_band` : NONE, LOW, MEDIUM, HIGH (:56 ; precursors :36)
+
+        /// <summary>« le feu » : cook_stage_band ⇒ son mot (famille `building.cook_stage.*`).</summary>
+        public static string CookStageLabel(string b)
+        {
+            switch (b)
+            {
+                case "IDLE": return Bande("cook_stage", "IDLE", "Éteint");
+                case "EARLY": return Bande("cook_stage", "EARLY", "Début");
+                case "MID": return Bande("cook_stage", "MID", "Montée");
+                case "LATE": return Bande("cook_stage", "LATE", "Affinage");
+                case "DONE": return Bande("cook_stage", "DONE", "Prêt");
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
+            }
+        }
+
+        /// <summary>« l'étagère » ET « les caisses » : les deux bandes ont le MÊME domaine (NONE à HIGH) et la table 37 leur donne la MÊME
+        /// famille de mots, `building.stock.*` (le fourneau lit `product_band` sous « Stock · Faible », cadre 45).</summary>
+        public static string StockLabel(string b)
+        {
+            switch (b)
+            {
+                case "NONE": return Bande("stock", "NONE", "Vide");
+                case "LOW": return Bande("stock", "LOW", "Faible");
+                case "MEDIUM": return Bande("stock", "MEDIUM", "Moyen");
+                case "HIGH": return Bande("stock", "HIGH", "Haut");
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);
+            }
+        }
+
+        /// <summary>Les crans allumés de « le feu », sur 5. Le premier est TOUJOURS allumé (cadre 39 : un labo éteint montre 1/5) ; une
+        /// valeur hors domaine n'allume que lui — le mot du repli dit le reste.</summary>
+        public static int CransDuFeu(string b)
+        {
+            switch (b)
+            {
+                case "EARLY": return 2;
+                case "MID": return 3;
+                case "LATE": return 4;
+                case "DONE": return 5;
+                default: return 1;   // IDLE, et le hors-domaine
+            }
+        }
+
+        /// <summary>Les crans allumés de « l'étagère » ou « les caisses », sur 4 ; le premier toujours allumé (cadre 39 : vide = 1/4).</summary>
+        public static int CransDuStock(string b)
+        {
+            switch (b)
+            {
+                case "LOW": return 2;
+                case "MEDIUM": return 3;
+                case "HIGH": return 4;
+                default: return 1;   // NONE, et le hors-domaine
+            }
+        }
+
+        // Le feu : éteint = neutre, en cours = ambre, prêt = cyan. L'étagère : vide = rouge (on ne rallume pas sans), peu = ambre.
+        // Les caisses : vides = neutre, pleines = cyan. ⚠️ Choix du client, déclarés : la table 37 donne les mots, pas les couleurs.
+        private static Color CookStageAccent(string b) =>
+            b == "DONE" ? AccentMild : b == "EARLY" || b == "MID" || b == "LATE" ? AccentModerate : DesignTokens.Current.onSurfaceMuted;
+        private static Color EtagereAccent(string b) =>
+            b == "NONE" ? AccentSevere : b == "LOW" ? AccentModerate : b == "MEDIUM" || b == "HIGH" ? AccentMild : DesignTokens.Current.onSurfaceMuted;
+        private static Color CaissesAccent(string b) =>
+            b == "LOW" || b == "MEDIUM" || b == "HIGH" ? AccentMild : DesignTokens.Current.onSurfaceMuted;
+
         // ----- Phase-3 vector #3 (grow_house — T7): husbandry_band (WITHERED | ON_TRACK | THRIVING) — the tend trajectory -----
         // R2.2: the husbandry payoff trajectory as a band, NEVER the raw tend_count. WITHERED (neglected — low yield) <
         // ON_TRACK (partial husbandry — middling) < THRIVING (full husbandry — top yield). Reuses the AccentMild/Moderate/
@@ -1752,6 +1884,53 @@ namespace MafiaCleanCity.Operational
             TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);
             l.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
+
+            TextMeshProUGUI v = NewText("Value", row.transform, value, 16, TextAlignmentOptions.Right);
+            v.color = accent;
+            v.fontStyle = FontStyles.Bold;
+            AddLayoutElement(v.gameObject, minWidth: 140, flexibleWidth: 0);
+            TrackText(l, libelle);
+            TrackText(v, value);
+        }
+
+        /// <summary>② lot 1 — une échelle du pupitre : le libellé, `total` crans dont `allumes` en couleur, puis le MOT dans la même
+        /// couleur (G2 : la valeur en couleur porte un mot). Les crans s'appellent `CranAllume` / `CranEteint` : la garde les compte.</summary>
+        private void AddEchelle(string idStable, string label, int allumes, int total, string value, Color accent)
+        {
+            GameObject row = NewUI("Row_" + idStable, statusRows);
+            row.AddComponent<Image>().color = RowBg;
+            HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.padding = new RectOffset(10, 10, 6, 6);
+            hlg.spacing = 10;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = true;
+            AddLayoutElement(row, minHeight: 30, flexibleHeight: 0);
+
+            string libelle = Cle("row", label);
+            TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);
+            l.color = DesignTokens.Current.onSurfaceMuted;
+            AddLayoutElement(l.gameObject, minWidth: 120, flexibleWidth: 1);
+
+            GameObject crans = NewUI("Crans", row.transform);
+            HorizontalLayoutGroup ch = crans.AddComponent<HorizontalLayoutGroup>();
+            ch.spacing = 4;
+            ch.childAlignment = TextAnchor.MiddleCenter;
+            ch.childControlWidth = true;
+            ch.childControlHeight = true;
+            ch.childForceExpandWidth = false;
+            ch.childForceExpandHeight = false;
+            for (int i = 0; i < total; i++)
+            {
+                bool allume = i < allumes;
+                GameObject cran = NewUI(allume ? "CranAllume" : "CranEteint", crans.transform);
+                Image img = cran.AddComponent<Image>();
+                img.color = allume ? accent : DesignTokens.Current.surfaceRaised;
+                img.raycastTarget = false;
+                AddLayoutElement(cran, minWidth: 14, preferredWidth: 14, minHeight: 10, preferredHeight: 10);
+            }
 
             TextMeshProUGUI v = NewText("Value", row.transform, value, 16, TextAlignmentOptions.Right);
             v.color = accent;

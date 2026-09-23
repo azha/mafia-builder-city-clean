@@ -88,6 +88,34 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>GET /v1/operational/lab/:id — la cuisson du bâtiment, en bande (② lot 1). COOK buildings only ; un autre → 404
+        /// (onErr). onOk(dto) sur 2xx avec { building, substance_type, cook_stage_band }.</summary>
+        public IEnumerator GetLab(string buildingId, string bearer,
+            Action<LabCookDto> onOk, Action<long, string> onErr)
+        {
+            string url = Url($"lab/{buildingId}");
+            using (UnityWebRequest req = UnityWebRequest.Get(url))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    LabCookDto dto = null;
+                    try { dto = JsonUtility.FromJson<LabCookEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                    catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+
+                    if (dto == null) { onErr?.Invoke(req.responseCode, "empty lab payload"); yield break; }
+                    onOk?.Invoke(dto);
+                }
+                else
+                {
+                    onErr?.Invoke(req.responseCode, ReadableError(req));
+                }
+            }
+        }
+
         // --------------------------------------------------------------- actions
 
         // POST helper. Body is JSON; an idempotency UUID-v4 is attached for mutations.
