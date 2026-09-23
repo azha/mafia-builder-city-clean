@@ -25,15 +25,15 @@ DECISIONS = {
     'What your runs bring back from the rival families, and who you have left to go back.',
     '« vos hommes » présume le genre (D13) → « vos envois », le mot de la 40 v3 ; l’en « your men » suit ; clé SERVIE gardée (relevé de CLIENT-1)'),
  'conflit.bloc.les_ferrailleurs_de_spine':
-   ('limite', 'la ferraille, à Spine', 'scrap, in Spine',
-    'LIMITE : un nom de personnes au masculin générique (« les ferrailleurs »), mais il désigne une FAMILLE rivale, pas une personne — '
+   ('net', 'la ferraille, à Spine', 'scrap, in Spine',
+    'TRANCHÉ par f2 (23/09) : oui, par cohérence avec les 3 autres familles dites par un lieu — cas limite au départ : un nom de personnes au masculin générique (« les ferrailleurs »), mais il désigne une FAMILLE rivale, pas une personne — '
     'proposition : le métier plutôt que ceux qui le font ; les 3 autres familles sont déjà dites par un lieu (« le port… », « les docks… », « la ligne de sel… »)'),
  'conflit.bloc.la_derniere_fois_chez_eux':
-   ('limite', f'La dernière fois là-bas{NB}:', 'Last time at theirs:',
-    'LIMITE : « eux » est le pronom masculin d’un GROUPE (la famille visée), pas d’une personne — proposition : « là-bas » ; l’en « theirs » est neutre'),
+   ('net', f'La dernière fois là-bas{NB}:', 'Last time at theirs:',
+    'TRANCHÉ par f2 (23/09) : oui, naturel et neutre — cas limite au départ : « eux » est le pronom masculin d’un GROUPE (la famille visée), pas d’une personne — proposition : « là-bas » ; l’en « theirs » est neutre'),
  'conflit.bloc.derniere_fois_chez_eux':
-   ('limite', f'La dernière fois là-bas{NB}: {{issue}}, et la ville a chauffé {{chaleur}}.', 'Last time at their place: {issue}, and the city heated up {chaleur}.',
-    'LIMITE : même cas (addendum 40) — proposition « là-bas » ; l’en est neutre'),
+   ('net', f'La dernière fois là-bas{NB}: {{issue}}, et la ville a chauffé {{chaleur}}.', 'Last time at their place: {issue}, and the city heated up {chaleur}.',
+    'TRANCHÉ par f2 (23/09) : même cas (addendum 40) — proposition « là-bas » ; l’en est neutre'),
  'conflit.bloc.c_est_lui_qui_part_la_nuit_il_vous_en_manque_un_ce_n_est_pas_casse_vous_n_en_avez_tout_simplement_pas_encore':
    ('net', 'C’est le gros bras qui part la nuit. Il vous en manque un — ce n’est pas cassé, vous n’en avez tout simplement pas encore.',
     'That’s the muscle who goes out at night. You’re missing one — nothing is broken, you simply don’t have one yet.',
