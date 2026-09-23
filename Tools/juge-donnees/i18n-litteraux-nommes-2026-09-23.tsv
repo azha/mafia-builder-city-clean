@@ -1,8 +1,8 @@
-site	résolveur	valeur servie	clé dérivée	fr (octet)	en	état au back HEAD
+site	résolveur	valeur servie	clé dérivée	fr (octet)	en	état au back 0714431c
 Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:920	TextePrix	UP	appro.bloc.le_prix_monte	le prix monte		non servie
 Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:921	TextePrix	STABLE	appro.bloc.le_prix_ne_bouge_pas	le prix ne bouge pas		non servie
 Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:922	TextePrix	DOWN	appro.bloc.le_prix_baisse	le prix baisse		non servie
-Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:943	TexteStock	NONE	appro.bloc.il_n_y_a_plus_rien	il n'y a plus rien		SERVIE, fr DIFFÉRENT « il n’y a plus rien »
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:943	TexteStock	NONE	appro.bloc.il_n_y_a_plus_rien	il n’y a plus rien		SERVIE, fr identique · ’ (D10) au lieu du ' du code
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:731	NomFamille	coil	conflit.bloc.la_coil	La Coil		non servie
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:732	NomFamille	tarcum	conflit.bloc.tarcum	Tarcum		non servie
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:733	NomFamille	iron_throat	conflit.bloc.gorge_de_fer	Gorge-de-Fer		non servie
@@ -10,7 +10,7 @@ Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:734	NomFamille	sal
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:746	SousTitreFamille	coil	conflit.bloc.les_ferrailleurs_de_spine	les ferrailleurs de Spine		non servie
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:747	SousTitreFamille	tarcum	conflit.bloc.le_port_et_ce_qui_y_entre	le port, et ce qui y entre		non servie
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:748	SousTitreFamille	iron_throat	conflit.bloc.les_docks_du_nord	les docks du nord		non servie
-Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:749	SousTitreFamille	saltline	conflit.bloc.la_ligne_de_sel_a_l_est	la ligne de sel, à l'est		non servie
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:749	SousTitreFamille	saltline	conflit.bloc.la_ligne_de_sel_a_l_est	la ligne de sel, à l’est		non servie · ’ (D10) au lieu du ' du code
 Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1733	NomDeType	front_shop	demolition.ecran.une_facade	Une façade		non servie
 Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1734	NomDeType	cash_safehouse	demolition.ecran.une_planque	Une planque		non servie
 Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1735	NomDeType	stash	demolition.ecran.une_cache	Une cache		non servie
@@ -23,7 +23,7 @@ Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1741	NomDeTy
 Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1742	NomDeType	dealer_spot_front	demolition.ecran.un_point_de_vente	Un point de vente		non servie
 Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1743	NomDeType	money_holding	demolition.ecran.une_societe_ecran	Une société-écran		non servie
 Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1744	NomDeType	specialized_lab	demolition.ecran.un_labo_specialise	Un labo spécialisé		non servie
-Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:228	NomTypeBatiment	distribution_hub	distribution.bloc.l_entrepot_de_distribution	l'entrepôt de distribution		non servie
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:228	NomTypeBatiment	distribution_hub	distribution.bloc.l_entrepot_de_distribution	l’entrepôt de distribution		non servie · ’ (D10) au lieu du ' du code
 Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:230	NomTypeBatiment	lab	distribution.bloc.le_labo	le labo		non servie
 Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:231	NomTypeBatiment	refinery	distribution.bloc.la_raffinerie	la raffinerie		non servie
 Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:232	NomTypeBatiment	money_holding	distribution.bloc.la_banque	la banque		non servie
@@ -82,7 +82,7 @@ Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:253	PatrouilleMot	QU
 Assets/Scripts/CityMap/CityMapController.cs:1054	?	north	carte.bloc.nord	nord		non servie
 Assets/Scripts/CityMap/CityMapController.cs:1054	?	south	carte.bloc.sud	sud		non servie
 Assets/Scripts/CityMap/TissuDeDistrict.cs:33	EnLigne	tidewater	carte.tissu.le_port	le port		non servie
-Assets/Scripts/CityMap/TissuDeDistrict.cs:34	EnLigne	spine	carte.tissu.l_avenue	l'avenue		non servie
+Assets/Scripts/CityMap/TissuDeDistrict.cs:34	EnLigne	spine	carte.tissu.l_avenue	l’avenue		non servie · ’ (D10) au lieu du ' du code
 Assets/Scripts/CityMap/TissuDeDistrict.cs:35	EnLigne	lattice	carte.tissu.le_damier	le damier		non servie
 Assets/Scripts/CityMap/TissuDeDistrict.cs:36	EnLigne	stack	carte.tissu.les_cheminees	les cheminées		non servie
 Assets/Scripts/CityMap/TissuDeDistrict.cs:37	EnLigne	glass	carte.tissu.les_tours	les tours		non servie

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """La TABLE « valeur nommée → littéral hors Libelle » (décision f2 du 23/09) : chaque site où un résolveur de texte rend un
 LITTÉRAL à lettres pour une valeur NOMMÉE, avec la clé que `Libelle.De(domaine, rôle, fr)` DÉRIVERA quand le site y passera,
-et le fr recopié À L'OCTET depuis le code. L'atelier n'écrit que l'EN (et le FR des littéraux anglais) ; le back sert.
+et le fr recopié À L'OCTET depuis le code (sauf l'apostrophe : `’`, règle D10). L'atelier n'écrit que l'EN (et le FR des littéraux anglais) ; le back sert.
     python3 Tools/juge-donnees/i18n-litteraux-nommes.py [--back <sha>] > table.tsv
 Formes lues : `case "v": return "lit";` (cases empilés compris) et les ternaires `x == "v" ? "lit"`. Hors table, déclaré :
 les glyphes « [..] », `MotDuType` (repli de `building.type.*` déjà servi, par ParValeur), les endonymes de Settings."""
 import os, re, subprocess, sys, unicodedata
 BACK = '/home/erutheone/project/mafia-back-suite'
 REV = sys.argv[sys.argv.index('--back') + 1] if '--back' in sys.argv else 'HEAD'
+REV = subprocess.run(['git', '-C', BACK, 'rev-parse', '--short', REV], capture_output=True, text=True).stdout.strip() or REV
 def slug(s):                                             # `Libelle.Slug`, recopié (Libelle.cs)
     o = ''
     for c in unicodedata.normalize('NFD', s):
@@ -54,9 +55,13 @@ for d, _, fs in os.walk('Assets/Scripts'):
                     dom, role = ROLE_PAR_RESOLVEUR.get(fn) or ESPACE.get(f, ('?', '?'))
                     en_lit = lit in ANGLAIS
                     cle = f'{dom}.{role}.{slug(lit)}' if not en_lit else f'{dom}.{role}.<à dériver du fr de l’atelier>'
+                    # Règle D10 : l'apostrophe servie est `’`. Le fr de la table la prend déjà (le code passera au `’` dans le lot) ; la
+                    # clé ne change pas (`Slug` fait de l'une et de l'autre un séparateur).
+                    lit_fr = lit.replace("'", "’")
                     servi = FR.get(cle)
-                    etat = ('SERVIE, fr identique' if servi == lit else f'SERVIE, fr DIFFÉRENT « {servi} »') if servi is not None else 'non servie'
-                    lignes.append((f'{p}:{i + 1}', fn or '?', v, cle, '' if en_lit else lit, lit if en_lit else '', etat))
+                    etat = ('SERVIE, fr identique' if servi == lit_fr else f'SERVIE, fr DIFFÉRENT « {servi} »') if servi is not None else 'non servie'
+                    if not en_lit and lit_fr != lit: etat += ' · ’ (D10) au lieu du \' du code'
+                    lignes.append((f'{p}:{i + 1}', fn or '?', v, cle, '' if en_lit else lit_fr, lit if en_lit else '', etat))
 print('site\trésolveur\tvaleur servie\tclé dérivée\tfr (octet)\ten\tétat au back ' + REV)
 for r in lignes: print('\t'.join(r))
 cles = {}

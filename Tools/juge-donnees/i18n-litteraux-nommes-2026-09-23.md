@@ -12,8 +12,10 @@ Décision f2 (23/09) : tout texte affiché passe par `Libelle`. Ces 107 sites (2
   n'emploie encore aucun `Libelle`) : `vente.bloc.*` (Selling), `commissariat.bloc.*` (Precinct), `famille.regle.*` (éditeur de règles).
 - **Littéraux ANGLAIS** (5, éditeur de règles : « Run default », « Pause ops », « in my building », « run the default behavior »,
   « pause operations ») : colonne fr VIDE — l'atelier écrit le FR, la clé se dérivera de ce fr.
-- Au back à la génération : 105 non servies ; `distribution.bloc.tient` servie à l'identique ; `appro.bloc.il_n_y_a_plus_rien` servie avec
-  `’` (le client écrit `'`) — ⚠️ le fr du client devra prendre le `’` servi, sinon la clé dérivée reste la même mais le mot diffère.
+- **Apostrophe : `’` (règle D10, orchestrateur 23/09).** La colonne fr la prend déjà ; le code, qui écrit `'`, passera au `’` dans le lot
+  (la clé ne change pas). La colonne d'état le signale site par site.
+- Au back à la génération (voir l'en-tête de la colonne d'état) : `distribution.bloc.tient` et `appro.bloc.il_n_y_a_plus_rien` servies,
+  fr identique ; le reste non servi.
 - 0 collision de clé (deux fr différents sous une même clé).
 
 **Hors table, déclaré** : `MotDuType` (repli de `building.type.*`, déjà servi, par `ParValeur`) ; les glyphes à lettres (`[C]`, `[o..]`,
