@@ -410,8 +410,8 @@ namespace MafiaCleanCity.Operational
             EnTeteDeSection(rentreRoot,
                 Libelle.Gabarit("conflit.bloc.ce_qui_est_rentre", "Ce qui est rentré"),
                 Libelle.Gabarit("conflit.bloc.ce_que_chaque_homme_a_rapporte_et_ce_que_ca_nous_a_coute",
-                    "Ce que chaque homme a rapporté, et ce que ça nous a coûté."));
-            EtiquetteDeSection(rentreRoot, "IlEstRentre", Libelle.Gabarit("conflit.bloc.il_est_rentre", "Il est rentré"));
+                    "Ce que chaque envoi a rapporté, et ce que ça nous a coûté."));
+            EtiquetteDeSection(rentreRoot, "IlEstRentre", Libelle.Gabarit("conflit.bloc.il_est_rentre", "De retour"));
             LigneDEnvoi(rentreRoot, "Rentre_" + dernier.engagement_id, dernier,
                 Libelle.Gabarit("conflit.bloc.etait_chez_famille", "était chez {famille}",
                     new Dictionary<string, string> { { "famille", ConflitResolvers.FamilleDe(dernier) } }),
@@ -429,7 +429,7 @@ namespace MafiaCleanCity.Operational
             if (muscleLieutenants.Count == 0) return;
             Replique(rentreRoot, "RepliqueRentre", Libelle.Gabarit("conflit.bloc.voila_ce_que_ca_a_donne_a_vous_de_dire_si_on_y_retourne", "«\u00A0Voilà ce que ça a donné. À vous de dire si on y retourne.\u00A0»"));
             string famille = dernier.target_rival_key;
-            BoutonGeste(rentreRoot, "YRetourner", Libelle.Gabarit("conflit.bloc.en_envoyer_un_autre", "En envoyer un autre"),
+            BoutonGeste(rentreRoot, "YRetourner", Libelle.Gabarit("conflit.bloc.en_envoyer_un_autre", "Envoyer quelqu’un d’autre"),
                 Libelle.Gabarit("conflit.bloc.meme_famille_autre_cible", "même famille, autre cible"), true, () => EnEnvoyerUnAutre(famille));
         }
 
@@ -453,20 +453,20 @@ namespace MafiaCleanCity.Operational
             EnTeteDeSection(enCoursRoot,
                 Libelle.Gabarit("conflit.bloc.ce_qui_est_en_cours", "Ce qui est en cours"),
                 Libelle.Gabarit("conflit.bloc.les_hommes_qu_on_a_envoyes_et_qui_ne_sont_pas_encore_rentres",
-                    "Les hommes qu’on a envoyés et qui ne sont pas encore rentrés."));
+                    "Ce qu’on a envoyé et qui n’est pas encore rentré."));
 
             EtiquetteDeSection(enCoursRoot, "Partis",
-                Libelle.Gabarit("conflit.bloc.partis_pas_encore_rentres", "Partis, pas encore rentrés"));
-            string plusLeRappeler = Libelle.Gabarit("conflit.bloc.on_ne_peut_plus_le_rappeler", "on ne peut plus le rappeler");
+                Libelle.Gabarit("conflit.bloc.partis_pas_encore_rentres", "En route, pas encore de retour"));
+            string plusLeRappeler = Libelle.Gabarit("conflit.bloc.on_ne_peut_plus_le_rappeler", "plus de rappel possible");
             foreach (EngagementDto e in partis)
                 LigneDEnvoi(enCoursRoot, "Parti_" + e.engagement_id, e,
-                    Libelle.Gabarit("conflit.bloc.parti_chez_famille", "parti chez {famille}",
+                    Libelle.Gabarit("conflit.bloc.parti_chez_famille", "en route vers {famille}",
                         new Dictionary<string, string> { { "famille", ConflitResolvers.FamilleDe(e) } }),
                     plusLeRappeler);
 
             if (rentres.Count > 0)
             {
-                EtiquetteDeSection(enCoursRoot, "DejaRentres", Libelle.Gabarit("conflit.bloc.deja_rentres", "Déjà rentrés"));
+                EtiquetteDeSection(enCoursRoot, "DejaRentres", Libelle.Gabarit("conflit.bloc.deja_rentres", "Déjà de retour"));
                 foreach (EngagementDto e in rentres)
                     LigneDEnvoi(enCoursRoot, "DejaRentre_" + e.engagement_id, e,
                         Libelle.Gabarit("conflit.bloc.etait_chez_famille", "était chez {famille}",
@@ -483,7 +483,7 @@ namespace MafiaCleanCity.Operational
             TrackText(dehors.text);
 
             if (muscleLieutenants.Count > 0)
-                BoutonGeste(enCoursRoot, "EnEnvoyerUnAutre", Libelle.Gabarit("conflit.bloc.en_envoyer_un_autre", "En envoyer un autre"),
+                BoutonGeste(enCoursRoot, "EnEnvoyerUnAutre", Libelle.Gabarit("conflit.bloc.en_envoyer_un_autre", "Envoyer quelqu’un d’autre"),
                     Libelle.Gabarit("conflit.bloc.autre_famille_autre_cible", "autre famille, autre cible"), true, () => EnEnvoyerUnAutre(null));
         }
 
@@ -651,8 +651,8 @@ namespace MafiaCleanCity.Operational
                     TrackText(fois.text);
                 }
                 TextMeshProUGUI visites = NouveauTexteFiche(bloc.transform, "Visites",
-                    n > 0 ? Libelle.Gabarit("conflit.bloc.on_est_alles_chez_eux", "on est allés chez eux")
-                          : Libelle.Gabarit("conflit.bloc.on_ne_les_a_pas_croises", "on ne les a pas croisés"),
+                    n > 0 ? Libelle.Gabarit("conflit.bloc.on_est_alles_chez_eux", "on leur a rendu visite")
+                          : Libelle.Gabarit("conflit.bloc.on_ne_les_a_pas_croises", "on n’a jamais croisé leur route"),
                     7.5f, DesignTokens.Current.onSurfaceMuted, false);
                 visites.fontStyle = FontStyles.Italic;
                 visites.alignment = TextAlignmentOptions.Right;
@@ -705,7 +705,7 @@ namespace MafiaCleanCity.Operational
         {
             ViderEnfants(coupRoot);
             EnTeteDeSection(coupRoot, Libelle.Gabarit("conflit.bloc.le_coup_de_ce_soir", "Le coup de ce soir"),
-                Libelle.Gabarit("conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain", "On choisit une famille, on choisit un homme, et on l’envoie. On saura demain."));
+                Libelle.Gabarit("conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain", "On choisit une famille, on choisit qui y envoyer. On saura demain."));
 
             if (muscleLieutenants.Count == 0)
             {
@@ -804,7 +804,7 @@ namespace MafiaCleanCity.Operational
                 TrackText(r.text);
             }
             BoutonGeste(piedRoot, "LEnvoyerCeSoir", Libelle.Gabarit("conflit.bloc.l_envoyer_ce_soir", "L’envoyer ce soir"),
-                Libelle.Gabarit("conflit.bloc.on_ne_pourra_plus_le_rappeler", "on ne pourra plus le rappeler"), EnvoiPossible, EnvoyerLeCoup);
+                Libelle.Gabarit("conflit.bloc.on_ne_pourra_plus_le_rappeler", "pas de rappel possible"), EnvoiPossible, EnvoyerLeCoup);
         }
 
         private void Replique(Transform parent, string nom, string texte)
@@ -1149,7 +1149,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>㉙ — « Un homme dehors. » / « N hommes dehors. » : clé ICU `conflit.bloc.hommes_dehors` (table 40), D15 (le
         /// nombre vient de la liste). Appelé à partir de 1.</summary>
         public static string HommesDehors(int n) =>
-            MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.hommes_dehors", "{n, plural, one {Un homme dehors.} other {# hommes dehors.}}",
+            MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.hommes_dehors", "{n, plural, one {Une personne dehors.} other {# personnes dehors.}}",
                 new Dictionary<string, string> { { "n", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
 
         /// <summary>㉙ — « Coup n°N » (`conflit.bloc.coup_n_n`, table 40) depuis `strike_index` SERVI. null tant qu'il est absent
@@ -1227,7 +1227,7 @@ namespace MafiaCleanCity.Operational
             switch (classe)
             {
                 case "muscle":      return MafiaCleanCity.I18n.Libelle.Gabarit("error.engagements.muscle_lieutenant_required",
-                                        "Ce lieutenant ne cogne pas. Il faut un gros bras\u00A0: envoyez-en un, ou recrutez-en un.");
+                                        "Seul un lieutenant du genre Gros bras peut partir sur ce coup. Envoyez-en un, ou recrutez-en un.");
                 case "introuvable": return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.refus.ce_coup_ne_tient_plus_reprenez_depuis_la_liste",
                                         "Ce coup ne tient plus. Reprenez depuis la liste.");
                 case "mal_forme":   return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.refus.l_ordre_n_est_pas_parti_il_etait_mal_forme_reessayez",

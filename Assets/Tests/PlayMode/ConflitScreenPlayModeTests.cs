@@ -279,8 +279,11 @@ namespace MafiaCleanCity.Operational.Tests
                 "Aucun de vos lieutenants n'est du genre Gros bras.",
                 "le message d'impossibilité (« le cœur de ce lot ») n'est pas rendu alors qu'aucun " +
                 "MUSCLE n'existe");
-            CollectionAssert.Contains(ecran.RenderedTexts, "on ne les a pas croisés",
-                "aucun envoi rentré : la ligne de la table 40 (conflit.bloc.on_ne_les_a_pas_croises) doit être rendue");
+            // Bundle RÉEL : la valeur SERVIE de la clé l'emporte sur le repli (v3 de la table 40, df041316, tant que le back sert la v2).
+            // On vérifie que l'écran rend la ligne DE LA CLÉ, quelle que soit la version servie.
+            string attendu = MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.on_ne_les_a_pas_croises", "on n’a jamais croisé leur route");
+            CollectionAssert.Contains(ecran.RenderedTexts, attendu,
+                "aucun envoi rentré : la ligne de conflit.bloc.on_ne_les_a_pas_croises doit être rendue");
         }
 
         // ═══ E — États pilotés par la donnée (RendrePourTest, patron ㊲/㉛/㉘ §5) ═════════════════
@@ -337,13 +340,13 @@ namespace MafiaCleanCity.Operational.Tests
             // Résolveur PARTAGÉ `FamilleLabels` : MUSCLE → « Gros bras », SEASONED → « Du métier » (atelier 28).
             CollectionAssert.Contains(ecran.RenderedTexts, "Gros bras · Du métier");
             CollectionAssert.Contains(ecran.RenderedTexts,
-                "On choisit une famille, on choisit un homme, et on l’envoie. On saura demain.");
+                "On choisit une famille, on choisit qui y envoyer. On saura demain.");
             foreach (string mot in new[] { "leurs gros bras", "leur argent", "leurs informateurs", "leurs installations", "leur tête" })
                 CollectionAssert.Contains(ecran.RenderedTexts, mot, "les 5 axes, mots de la table 40");
             CollectionAssert.Contains(ecran.RenderedTexts,
                 "« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »", "la réplique v2 (D14), sans orateur");
             CollectionAssert.Contains(ecran.RenderedTexts, "L’envoyer ce soir");
-            CollectionAssert.Contains(ecran.RenderedTexts, "on ne pourra plus le rappeler");
+            CollectionAssert.Contains(ecran.RenderedTexts, "pas de rappel possible");
             CollectionAssert.DoesNotContain(ecran.RenderedTexts,
                 "Vous avez l'homme. Personne pour lui dire où frapper — on ne sait pas encore où ils sont.",
                 "phrase devenue FAUSSE (les axes existent) : retirée");
@@ -416,7 +419,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             Assert.AreEqual("autre famille, autre cible", TexteSous("EnEnvoyerUnAutre", "Precision"));
-            Assert.AreEqual("En envoyer un autre", TexteSous("EnEnvoyerUnAutre", "Libelle"));
+            Assert.AreEqual("Envoyer quelqu’un d’autre", TexteSous("EnEnvoyerUnAutre", "Libelle"));
             GameObject.Find("EnEnvoyerUnAutre").GetComponent<Button>().onClick.Invoke();
             yield return null;
             Assert.IsNull(ecran.ChoixFamille); Assert.IsNull(ecran.ChoixAxe); Assert.IsNull(ecran.ChoixLieutenant);
@@ -453,12 +456,12 @@ namespace MafiaCleanCity.Operational.Tests
 
             Assert.AreEqual("2 fois", TexteDe(ecran, "Famille_tarcum", "Fois"),
                 "tarcum : 2 envois RENTRÉS ; le 3ᵉ, parti, n'y est pas encore allé (arbitrage du 23/09)");
-            Assert.AreEqual("on est allés chez eux", TexteDe(ecran, "Famille_tarcum", "Visites"));
+            Assert.AreEqual("on leur a rendu visite", TexteDe(ecran, "Famille_tarcum", "Visites"));
             Assert.AreEqual("1 fois", TexteDe(ecran, "Famille_coil", "Fois"), "`one {# fois}` de l'ICU");
             Assert.IsNull(TexteDe(ecran, "Famille_iron_throat", "Fois"),
                 "iron_throat : un seul envoi, PARTI ⇒ 0 rentré ⇒ pas de compte (l'ICU ne sert qu'à partir de 1)");
-            Assert.AreEqual("on ne les a pas croisés", TexteDe(ecran, "Famille_iron_throat", "Visites"));
-            Assert.AreEqual("on ne les a pas croisés", TexteDe(ecran, "Famille_saltline", "Visites"));
+            Assert.AreEqual("on n’a jamais croisé leur route", TexteDe(ecran, "Famille_iron_throat", "Visites"));
+            Assert.AreEqual("on n’a jamais croisé leur route", TexteDe(ecran, "Famille_saltline", "Visites"));
             CollectionAssert.DoesNotContain(ecran.RenderedTexts, "jamais", "à 0, pas de doublon « jamais » + « on ne les a pas croisés »");
             foreach (string t in ecran.RenderedTexts)
                 StringAssert.DoesNotContain("une_5e_famille", t, "une famille hors domaine ne s'affiche nulle part, ni sa sentinelle");
@@ -510,24 +513,24 @@ namespace MafiaCleanCity.Operational.Tests
 
             // Cadre 62
             CollectionAssert.Contains(ecran.RenderedTexts, "Ce qui est en cours");
-            CollectionAssert.Contains(ecran.RenderedTexts, "Les hommes qu’on a envoyés et qui ne sont pas encore rentrés.");
-            CollectionAssert.Contains(ecran.RenderedTexts, "Partis, pas encore rentrés");
+            CollectionAssert.Contains(ecran.RenderedTexts, "Ce qu’on a envoyé et qui n’est pas encore rentré.");
+            CollectionAssert.Contains(ecran.RenderedTexts, "En route, pas encore de retour");
             Assert.AreEqual("Lt. Voss", TexteSous("Parti_p1", "Lieutenant"));
-            Assert.AreEqual("parti chez Tarcum", TexteSous("Parti_p1", "Lieu"), "le nom SERVI de la famille, dans le gabarit");
-            Assert.AreEqual("on ne peut plus le rappeler", TexteSous("Parti_p1", "Droite"));
+            Assert.AreEqual("en route vers Tarcum", TexteSous("Parti_p1", "Lieu"), "le nom SERVI de la famille, dans le gabarit");
+            Assert.AreEqual("plus de rappel possible", TexteSous("Parti_p1", "Droite"));
             Assert.IsNull(TexteSous("Parti_p2", "Lieutenant"), "lieutenant null (disparu) : la ligne s'affiche SANS nom, sans repli");
-            Assert.AreEqual("parti chez Gorge-de-Fer", TexteSous("Parti_p2", "Lieu"));
-            CollectionAssert.Contains(ecran.RenderedTexts, "Déjà rentrés");
+            Assert.AreEqual("en route vers Gorge-de-Fer", TexteSous("Parti_p2", "Lieu"));
+            CollectionAssert.Contains(ecran.RenderedTexts, "Déjà de retour");
             Assert.AreEqual("était chez La Coil", TexteSous("DejaRentre_r1", "Lieu"));
             Assert.AreEqual("Rien obtenu", TexteSous("DejaRentre_r1", "Droite"));
             Assert.AreEqual("Percée", TexteSous("DejaRentre_r0", "Droite"));
-            CollectionAssert.Contains(ecran.RenderedTexts, "2 hommes dehors. On ne les rappelle pas — on saura demain matin.",
+            CollectionAssert.Contains(ecran.RenderedTexts, "2 personnes dehors. On ne les rappelle pas — on saura demain matin.",
                 "D15 : le nombre vient de la liste (2 partis)");
 
             // Cadre 63 : le DERNIER rentré (r1, premier `resolved` de la liste)
             CollectionAssert.Contains(ecran.RenderedTexts, "Ce qui est rentré");
-            CollectionAssert.Contains(ecran.RenderedTexts, "Ce que chaque homme a rapporté, et ce que ça nous a coûté.");
-            CollectionAssert.Contains(ecran.RenderedTexts, "Il est rentré");
+            CollectionAssert.Contains(ecran.RenderedTexts, "Ce que chaque envoi a rapporté, et ce que ça nous a coûté.");
+            CollectionAssert.Contains(ecran.RenderedTexts, "De retour");
             Assert.AreEqual("était chez La Coil", TexteSous("Rentre_r1", "Lieu"));
             Assert.AreEqual("Rien obtenu", TexteSous("Rentre_r1", "Droite"));
             Assert.IsNull(TexteSous("Rentre_r0", "Lieu"), "un seul envoi dans « Il est rentré » : le dernier");
@@ -578,8 +581,8 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(7, Premier(CorpsRentre.Replace("\"status\"", "\"strike_index\":7,\"status\"")).strike_index,
                 "servi ⇒ la valeur arrive dans le DTO (forme G)");
 
-            Assert.AreEqual("Un homme dehors.", ConflitResolvers.HommesDehors(1));
-            Assert.AreEqual("2 hommes dehors.", ConflitResolvers.HommesDehors(2));
+            Assert.AreEqual("Une personne dehors.", ConflitResolvers.HommesDehors(1));
+            Assert.AreEqual("2 personnes dehors.", ConflitResolvers.HommesDehors(2));
 
             Assert.AreEqual("Gorge-de-Fer", ConflitResolvers.FamilleDe(Premier(CorpsRentre)), "le nom servi");
             Assert.AreEqual("La Coil", ConflitResolvers.FamilleDe(new EngagementDto { target_rival_key = "coil" }),
@@ -663,7 +666,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("autre", ConflitResolvers.ClasserRefusDEnvoi(401, "UNAUTHENTICATED"));
             Assert.AreEqual("autre", ConflitResolvers.ClasserRefusDEnvoi(500, null));
 
-            Assert.AreEqual("Ce lieutenant ne cogne pas. Il faut un gros bras : envoyez-en un, ou recrutez-en un.",
+            Assert.AreEqual("Seul un lieutenant du genre Gros bras peut partir sur ce coup. Envoyez-en un, ou recrutez-en un.",
                 ConflitResolvers.MotDuRefusDEnvoi("muscle"));
             Assert.AreEqual("Ce coup ne tient plus. Reprenez depuis la liste.", ConflitResolvers.MotDuRefusDEnvoi("introuvable"));
             Assert.AreEqual("L’ordre n’est pas parti : il était mal formé. Réessayez.", ConflitResolvers.MotDuRefusDEnvoi("mal_forme"));
