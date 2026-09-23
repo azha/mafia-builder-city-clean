@@ -52,7 +52,12 @@ NOTE = ('<aside><h2>⑲ ㉒ La porte — mise à jour du 2026-09-23</h2><p>Ce qu
         'L11 « Fermer partout », L10 « Tout effacer » — aucune route. Le tiroir « Le compte » (㉒) est inchangé (L7 ouvert).</p></aside>')
 cadre = re.sub(r'<aside>.*?</aside>', NOTE, cadre, count=1, flags=re.S)
 cadre = re.sub(r'<!--.*?-->\s*$', '', cadre, flags=re.S)
-page = _ap.normaliser(tete + cadre + '</div>\n</div>\n')[0]
+# ⚠️ Les styles de la porte ne sont PAS dans la tête de la série : un bloc `<style>` de section (« LE COFFRE + LA VITRINE — préfixé .cofr6 »,
+#    et le « GEL DES ÉCRANS NEUFS ») est posé ENTRE les cadres, après le 94. Payé au premier rendu (06:57:50) : la porte sortait sans style.
+#    On reprend les blocs de section (commentaire « /* ═══ ») placés avant le cadre 98 : tous préfixés, aucune collision.
+SECTIONS = ''.join(m.group(0) for m in re.finditer(r'<style[^>]*>\s*/\* ═══.*?</style>', S6[C[0]:C[98]], re.S))
+assert '.cofr6' in SECTIONS and '.tir{' in SECTIONS, 'le style de la porte a bougé'
+page = _ap.normaliser(tete + SECTIONS + cadre + '</div>\n</div>\n')[0]
 open(SORTIE, 'w', encoding='utf-8').write(page)
 assert page.count('<div class="cadre">') == 1
 print(f'écrit : {SORTIE} — 1 cadre, {len(R)} remplacements vérifiés ; aucun rendu')
