@@ -148,6 +148,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
     /// <summary>Le même corps SANS repère (reinforce_direct_order, reset_observation_window l'ignorent ; un repère présent mais
     /// invalide serait un 422 — on ne l'envoie donc pas).</summary>
     [Serializable] public class SignalDriftDecisionSansRepere { public string kind; }
+    /// <summary>`POST /v1/lieutenants/:id/standing-order` — l'ÉMISSION d'un ordre permanent (Phase-25 L3 T2) : la règle DSL écrite dans
+    /// l'éditeur de ⑧ (UNE seule, compilée par le même compilateur) + ce qui se passe à l'échéance (REVERT_DEFAULT | HOLD_LAST |
+    /// ESCALATE_TO_PLAYER). La durée est FIXE au back (aucun champ). 200 → `{ issued: true, order_id }`.</summary>
+    [Serializable] public class StandingOrderIssueRequest { public string rule_source; public string lapse_action; }
+
     /// <summary>`POST /v1/lieutenants/:id/standing-order/decision` — corps `{ kind }` ∈ RENEW | REVOKE | PROMOTE_TO_DEFAULT.</summary>
     [Serializable] public class StandingOrderDecisionRequest { public string kind; }
 

@@ -40,8 +40,8 @@ namespace MafiaCleanCity.Operational.Tests
         /// nommée, datée, avec la table qui la mesure.</summary>
         private static readonly HashSet<string> DetteDatee = new HashSet<string>
         {
-            // ⑦ LES DEUX DÉCISIONS (2026-09-23) — 28 clés PROPOSÉES par l'atelier (26, page `ecrans-brennar-7-lieutenant.html` ; 41 §4, fd34321c), non
-            // ratifiées, NON servies au back d8e41362 (vérifié sur `string_table.ts` à d8e41362 : 0 sur 28). La dette ne fait que
+            // ⑦ LES DEUX DÉCISIONS (2026-09-23) — 40 clés PROPOSÉES par l'atelier (26, page `ecrans-brennar-7-lieutenant.html` ; table 42, aa2cd03b), non
+            // ratifiées, NON servies au back d8e41362 (vérifié sur `string_table.ts` à d8e41362 : 0 sur 40). La dette ne fait que
             // rétrécir : la règle (2) rougit dès qu'une est servie, pour la retirer d'ici.
             "famille.ecran.signal",
             "famille.ecran.ordre_permanent",
@@ -68,9 +68,21 @@ namespace MafiaCleanCity.Operational.Tests
             "famille.ordre.en_cours",
             "famille.ordre.echu",
             "famille.refus.trop_tot_pour_refaire_ce_geste",
-            "famille.refus.il_n_y_a_pas_d_ordre_en_cours",
+            "famille.refus.aucun_ordre_en_cours",
             "famille.refus.cet_ordre_n_a_pas_encore_fait_ses_preuves",
             "famille.refus.ce_geste_n_est_pas_reconnu",
+            "famille.ecran.donner_un_ordre",
+            "famille.ecran.et_quand_il_expire",
+            "famille.lapse.retour_a_la_routine",
+            "famille.lapse.l_ordre_continue",
+            "famille.lapse.on_vous_demande",
+            "famille.ecran.pour_une_duree_fixe",
+            "famille.ecran.signer_l_ordre",
+            "famille.refus.un_ordre_est_deja_en_cours_renouvelez_le",
+            "famille.fiabilite.en_sommeil",
+            "famille.fiabilite.a_moitie_fiable",
+            "famille.fiabilite.fiable",
+            "famille.fiabilite.decisif",
         };
 
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>

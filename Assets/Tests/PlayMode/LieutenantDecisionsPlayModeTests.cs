@@ -1,9 +1,7 @@
 using System.Collections;
 using System.Linq;
-using System.Text;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.TestTools;
 using MafiaCleanCity.Operational.Lieutenant;
 using MafiaCleanCity.Tests;   // SeederSupport
@@ -15,9 +13,9 @@ namespace MafiaCleanCity.Operational.Tests
     /// reset_observation_window, disrupt_cue + repère) et l'ordre permanent (cadre 2 : RENEW, REVOKE, PROMOTE_TO_DEFAULT), servis par le
     /// back, qu'aucun joueur ne pouvait prendre. Gardes de VALEUR : la décision ENVOYÉE == celle TOUCHÉE ; l'état affiché vient de la
     /// RE-LECTURE (les deux routes rendent `{ applied: true }`, aucun état) ; les refus en mots.
-    /// ⛔ DETTE (plage CLIENT UNITY, 2026-09-23) : le cadre 2 est INJOIGNABLE POUR UN JOUEUR tant que l'émission d'un ordre permanent
-    ///    (`POST /v1/lieutenants/:id/standing-order`) n'a pas d'écran — l'atelier cherche où elle vit (option (a)). Ici l'ordre est émis
-    ///    par le TEST (`EmettreUnOrdre`), jamais par l'écran : ce test prouve la mécanique des 3 décisions, pas un parcours joueur.
+    /// ✅ Le cadre 2 est JOIGNABLE par un vrai chemin joueur (option (a), décision de f2 du 23/09) : « Donner un ordre » ouvre l'éditeur
+    ///    de ⑧ en mode ORDRE PERMANENT, « Signer l’ordre » émet `POST …/standing-order`. La dette « cadre 2 injoignable » (fac52423) tombe :
+    ///    le test réel ÉMET l'ordre par l'écran, plus par un seeder de test.
     /// Catégorie propre, sans la paire (compte du seeder) : au filtre après un run vert.</summary>
     [Category("EcranLieutenantDecisions")]
     public class LieutenantDecisionsPlayModeTests
@@ -77,6 +75,18 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(ctl.RenderedTexts.Contains(FamilleLabels.Signal("DRIFTING")));
             Assert.IsTrue(ctl.RenderedTexts.Contains(FamilleLabels.OrdrePermanent("EXPIRES_SOON")));
 
+            Assert.IsFalse(ctl.DonnerOrdreVisible, "un ordre existe : « Donner un ordre » n'est pas offert");
+            ctl.RendreBandesPourTest(Bandes("DIRECT_ALIGNED", "NONE", false));
+            Assert.IsTrue(ctl.DonnerOrdreVisible, "aucun ordre : « Donner un ordre » est offert (atelier 41 §3)");
+
+            // La fiabilité de chaque repère, à côté de lui (atelier 42 : « l’état du terrain · fiable »), lue dans cue_bands.
+            var b = Bandes("DRIFTING", "NONE", false);
+            b.cue_bands.Add(new System.Collections.Generic.KeyValuePair<string, string>("TERRITORY_STATE", "reliable"));
+            ctl.RendreBandesPourTest(b);
+            Assert.AreEqual(FamilleLabels.Repere("TERRITORY_STATE") + " · " + FamilleLabels.Fiabilite("reliable"),
+                ctl.LibellesDesReperes["TERRITORY_STATE"], "le repère porte sa fiabilité servie");
+            Assert.AreEqual(FamilleLabels.Repere("TIME_SLOT"), ctl.LibellesDesReperes["TIME_SLOT"], "sans fiabilité servie : le repère seul");
+
             ctl.RendreBandesPourTest(Bandes("RESETTING", "FRESH", false));
             Assert.IsFalse(ctl.SectionSignalVisible, "se recale : le cadre 1 part (seul DRIFTING l'ouvre)");
             Assert.IsTrue(ctl.SectionOrdreVisible, "un ordre récent : le cadre 2 reste");
@@ -93,6 +103,8 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("promotion_refusee", LieutenantScreenController.ClasserRefus(409,
                 "standing order for lieutenant x is not flagged for promotion (promotion_suggested is not set)."));
             Assert.AreEqual("invalide", LieutenantScreenController.ClasserRefus(422, "Unknown signal-drift decision kind 'x'"));
+            Assert.AreEqual("deja_actif", LieutenantScreenController.ClasserRefus(409,
+                "lieutenant x already has an active standing order — RENEW it instead of re-issuing."));
             Assert.AreEqual("autre", LieutenantScreenController.ClasserRefus(500, "boom"));
             Assert.AreNotEqual(LieutenantScreenController.MotDuRefus("aucun_ordre"), LieutenantScreenController.MotDuRefus("cooldown"),
                 "« aucun ordre en cours » (mot de f2) se distingue du refus générique");
@@ -134,22 +146,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(LieutenantScreenController.MotDuRefus("cooldown"), ctl.LastOutcome);
         }
 
-        // ═══ 3. CORPS RÉEL — l'ordre permanent, émis par le TEST (cadre 2 injoignable pour un joueur : dette) ═══════════════
-
-        private static IEnumerator EmettreUnOrdre(string jeton, string id, System.Action<long> fini)
-        {
-            string corps = "{\"rule_source\":\"WHEN STATE(cook_idle,==,true) THEN EXECUTE_DEFAULT @10;\",\"lapse_action\":\"REVERT_DEFAULT\"}";
-            using (var req = new UnityWebRequest($"http://localhost/v1/lieutenants/{id}/standing-order", UnityWebRequest.kHttpVerbPOST))
-            {
-                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(corps));
-                req.downloadHandler = new DownloadHandlerBuffer();
-                req.SetRequestHeader("Content-Type", "application/json");
-                req.SetRequestHeader("Authorization", "Bearer " + jeton);
-                req.SetRequestHeader("Idempotency-Key", System.Guid.NewGuid().ToString());
-                yield return req.SendWebRequest();
-                fini(req.responseCode);
-            }
-        }
+        // ═══ 3. CORPS RÉEL — l'ordre permanent, ÉMIS PAR L'ÉCRAN (l'éditeur de ⑧ en mode ordre), puis décidé ═══════════════
 
         [UnityTest]
         public IEnumerator Reel_OrdrePermanent_RenouvelerPuisRetirer_LEcranSuitLaRelecture_EtLesRefusSontDits()
@@ -162,13 +159,33 @@ namespace MafiaCleanCity.Operational.Tests
             while (ctl.CurrentBands == null && Time.realtimeSinceStartup < t) yield return null;
             Assert.IsNotNull(ctl.CurrentBands);
 
-            long code = 0;
-            yield return EmettreUnOrdre(ctl.Token, lieutenantId, c => code = c);
-            Assert.IsTrue(code == 200 || code == 409, $"émission de l'ordre de test : {code} (409 = un ordre est déjà actif, reste valable)");
-            yield return ctl.RefreshBands();
-            Assert.IsNotNull(ctl.CurrentBands.standing_order);
-            Assert.AreNotEqual("NONE", ctl.CurrentBands.standing_order.freshness, "un ordre existe : la fraîcheur n'est plus NONE");
+            // Le chemin JOUEUR : « Donner un ordre » (offert parce que le GET dit NONE sur un lieutenant tout juste semé).
+            Assert.AreEqual("NONE", ctl.CurrentBands.standing_order.freshness, "le lieutenant semé n'a pas d'ordre");
+            Assert.IsTrue(ctl.DonnerOrdreVisible);
+            ctl.OuvrirModeOrdre();
+            Assert.IsTrue(ctl.ModeOrdre, "l'éditeur de ⑧ est en mode ORDRE PERMANENT");
+            Assert.AreEqual(1, ctl.Rules.Count, "un ordre = UNE règle (la règle par défaut de l'archétype)");
+            ctl.ChoisirLapse("REVERT_DEFAULT");
+            yield return ctl.SignerOrdre();
+            Assert.IsNull(ctl.DerniereClasseDeRefus, $"l'ordre signé a été refusé : {ctl.LastOutcome}");
+            // VALEUR : la règle ENVOYÉE == la règle ÉDITÉE (même sérialiseur), et la lapse choisie.
+            StringAssert.Contains("/standing-order", ctl.ClientDesDecisions.DerniereRequeteOrdre);
+            StringAssert.Contains(JsonUtility.ToJson(new StandingOrderIssueRequest { rule_source = ctl.DerniereRegleSignee, lapse_action = "REVERT_DEFAULT" }),
+                ctl.ClientDesDecisions.DerniereRequeteOrdre, "le corps envoyé porte la règle éditée et la lapse choisie");
+            Assert.AreEqual(RuleModel.SerializeRules(new System.Collections.Generic.List<RuleRow>(ctl.Rules)), ctl.DerniereRegleSignee,
+                "la règle signée est celle de l'éditeur");
+            // L'état affiché vient de la RE-LECTURE : FRESH, « en cours », le cadre 2 paraît.
+            Assert.AreEqual("FRESH", ctl.CurrentBands.standing_order.freshness, "le re-GET dit l'ordre en cours");
+            Assert.IsTrue(ctl.RenderedTexts.Contains(FamilleLabels.OrdrePermanent("FRESH")));
             Assert.IsTrue(ctl.SectionOrdreVisible, "le cadre 2 paraît parce que le GET porte un ordre");
+            Assert.IsFalse(ctl.ModeOrdre, "l'éditeur quitte le mode ordre après la signature");
+
+            // Signer un SECOND ordre alors qu'un est en cours : 409, dit en mots (« un ordre est déjà en cours : renouvelez-le »).
+            ctl.OuvrirModeOrdre();
+            yield return ctl.SignerOrdre();
+            Assert.AreEqual("deja_actif", ctl.DerniereClasseDeRefus);
+            Assert.AreEqual(LieutenantScreenController.MotDuRefus("deja_actif"), ctl.LastOutcome);
+            ctl.OuvrirModeOrdre();   // referme
 
             // PROMOTE sans « à promouvoir » : le bouton n'est pas offert ; forcé, le back le refuse et l'écran le dit.
             if (!ctl.CurrentBands.standing_order.promotion_suggested)

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -331,7 +332,23 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public LieutenantClient ClientDesDecisions => client;
         public bool SectionSignalVisible => signalSection != null && signalSection.gameObject.activeSelf;
         public bool SectionOrdreVisible => ordreSection != null && ordreSection.gameObject.activeSelf;
-        public bool PromouvoirVisible => promouvoirButton != null && promouvoirButton.gameObject.activeSelf;       // Phase-21 F2: cooldown failure detail — CHROME (component-tracked only, never in scan corpus)
+        public bool PromouvoirVisible => promouvoirButton != null && promouvoirButton.gameObject.activeSelf;
+        // ⑦ option (a) (2026-09-23, arbitrage du 07/09 point 3 : on ratifie l'éditeur construit) — « Donner un ordre » ouvre l'éditeur de
+        // ⑧ en mode ORDRE PERMANENT : même déclencheur, même action, même sérialiseur ; + « Et quand il expire » ; « Signer l’ordre ».
+        private RectTransform donnerOrdreSection, ordreModeBlock;
+        private Button ajouterRegleButton, attacherButton;
+        private readonly Dictionary<string, Button> lapseButtons = new Dictionary<string, Button>();
+        private readonly Dictionary<string, Button> repereButtons = new Dictionary<string, Button>();
+        /// <summary>Crochet de test : le libellé affiché de chaque repère brouillable (« l’état du terrain · fiable »).</summary>
+        public IReadOnlyDictionary<string, string> LibellesDesReperes =>
+            repereButtons.ToDictionary(kv => kv.Key, kv => kv.Value != null ? kv.Value.GetComponentInChildren<TextMeshProUGUI>(true)?.text : null);
+        private static readonly Color LapseChoisiTeinte = new Color(0.78f, 0.62f, 0.30f, 1f);
+        private Color lapseTeinteRepos = Color.white;
+        /// <summary>L'éditeur est-il en mode ORDRE PERMANENT ? (crochet de test)</summary>
+        public bool ModeOrdre { get; private set; }
+        /// <summary>La `lapse_action` choisie (REVERT_DEFAULT par défaut, le premier choix de la liste).</summary>
+        public string LapseChoisi { get; private set; } = "REVERT_DEFAULT";
+        public bool DonnerOrdreVisible => donnerOrdreSection != null && donnerOrdreSection.gameObject.activeSelf;       // Phase-21 F2: cooldown failure detail — CHROME (component-tracked only, never in scan corpus)
 
         // Slate palette (mirrors BuildingCardController + global_conventions_core direction).
         private static Color SurfaceBg => DesignTokens.Current.surfaceCard; // #16191b
@@ -3102,7 +3119,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             foreach (string cue in FamilleLabels.ReperesBrouillables)
             {
                 string repere = cue;   // capture par itération
-                AddActionButton(reperesListe, "brouiller_" + repere.ToLowerInvariant(), FamilleLabels.Repere(repere),
+                repereButtons[repere] = AddActionButton(reperesListe, "brouiller_" + repere.ToLowerInvariant(), FamilleLabels.Repere(repere),
                     () => StartCoroutine(DecideSignal("disrupt_cue", repere)));
             }
             reperesListe.gameObject.SetActive(false);
@@ -3126,6 +3143,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
             ord.SetActive(false);
             sectionsDetail.Add(ordreSection);
 
+            // « Donner un ordre » — sur la ligne « Ordre permanent · aucun ordre » (atelier 41 §3) : visible ssi freshness == NONE.
+            GameObject don = NewUI("DonnerUnOrdreSection", parent);
+            ConfigurerPile(don);
+            donnerOrdreSection = (RectTransform)don.transform;
+            AddActionButton(donnerOrdreSection, "donner_un_ordre", Lib("Donner un ordre"), OuvrirModeOrdre);
+            don.SetActive(false);
+            sectionsDetail.Add(donnerOrdreSection);
+
             // Le refus, en mots (une seule fonction : MotDuRefus) — le message serveur reste du CHROME, suivi par composant seulement.
             decisionsRefusText = NewText("DecisionsRefus", parent, "", 12, TextAlignmentOptions.Left);
             decisionsRefusText.color = AccentSevere;
@@ -3143,6 +3168,93 @@ namespace MafiaCleanCity.Operational.Lieutenant
             v.childForceExpandHeight = false;
             AddLayoutElement(go, flexibleHeight: 0);
         }
+
+        /// <summary>Le bloc du mode ORDRE PERMANENT, dans l'éditeur de ⑧ (caché hors de ce mode) : « Et quand il expire » et ses trois
+        /// choix, « pour une durée fixe » (la durée est FIXE au back : pas de glissière), « Signer l’ordre ». Mots : atelier 41 §3
+        /// (« Signer l’ordre » ratifié ; les autres PROPOSÉS).</summary>
+        private void BuildOrdreModeBlock(Transform parent)
+        {
+            GameObject bloc = NewUI("OrdreModeBlock", parent);
+            ConfigurerPile(bloc);
+            ordreModeBlock = (RectTransform)bloc.transform;
+            NewSectionLabel(ordreModeBlock, Lib("Et quand il expire"));
+            AjouterLapse("REVERT_DEFAULT", MafiaCleanCity.I18n.Libelle.De("famille", "lapse", "retour à la routine"));
+            AjouterLapse("HOLD_LAST", MafiaCleanCity.I18n.Libelle.De("famille", "lapse", "l’ordre continue"));
+            AjouterLapse("ESCALATE_TO_PLAYER", MafiaCleanCity.I18n.Libelle.De("famille", "lapse", "on vous demande"));
+            TextMeshProUGUI duree = NewText("OrdreDuree", ordreModeBlock, Lib("pour une durée fixe"), 12, TextAlignmentOptions.Left);
+            if (!textComponents.Contains(duree)) textComponents.Add(duree);
+            AddActionButton(ordreModeBlock, "signer_l_ordre", Lib("Signer l’ordre"), () => StartCoroutine(SignerOrdre()));
+            bloc.SetActive(false);
+        }
+
+        private void AjouterLapse(string lapse, string mot)
+        {
+            string choix = lapse;   // capture par appel
+            Button b = AddActionButton(ordreModeBlock, "lapse_" + choix.ToLowerInvariant(), mot, () => ChoisirLapse(choix));
+            lapseButtons[choix] = b;
+            if (b.targetGraphic != null) lapseTeinteRepos = b.targetGraphic.color;
+        }
+
+        /// <summary>« Donner un ordre » : l'éditeur passe en mode ORDRE (une seule règle, la règle par défaut de l'archétype) ; un
+        /// second toucher le referme. PUBLIC : la garde le pilote.</summary>
+        public void OuvrirModeOrdre()
+        {
+            EnsureInitialized();
+            ModeOrdre = !ModeOrdre;
+            if (ModeOrdre) SetRules(new List<RuleRow> { NewDefaultRule() });
+            MajModeOrdre();
+        }
+
+        /// <summary>Le choix « Et quand il expire ». PUBLIC : la garde le pilote.</summary>
+        public void ChoisirLapse(string lapse)
+        {
+            LapseChoisi = lapse;
+            MajModeOrdre();
+        }
+
+        private void MajModeOrdre()
+        {
+            if (ordreModeBlock != null) ordreModeBlock.gameObject.SetActive(ModeOrdre);
+            // UN ordre = UNE règle (le back refuse tout autre compte en 422) : pas d'ajout ; et on SIGNE, on n'attache pas.
+            if (ajouterRegleButton != null) ajouterRegleButton.gameObject.SetActive(!ModeOrdre);
+            if (attacherButton != null) attacherButton.gameObject.SetActive(!ModeOrdre);
+            foreach (var kv in lapseButtons)
+                if (kv.Value != null && kv.Value.targetGraphic != null)
+                    kv.Value.targetGraphic.color = kv.Key == LapseChoisi ? LapseChoisiTeinte : lapseTeinteRepos;
+        }
+
+        /// <summary>« Signer l’ordre » : la règle ÉDITÉE (sérialisée par le même sérialiseur que ⑧) + la lapse_action → POST
+        /// …/standing-order ; puis RE-LECTURE (l'écran rend `standing_order` que le GET dit). 422 : les diagnostics DSL dans la zone de
+        /// l'éditeur (comme l'attache) ; 409 un ordre déjà actif : dit en mots. PUBLIC : la garde le pilote.</summary>
+        public IEnumerator SignerOrdre()
+        {
+            EnsureInitialized();
+            if (!IsAuthenticated || string.IsNullOrEmpty(LastRecruitedId) || !ModeOrdre) yield break;
+            string source = RuleModel.SerializeRules(rules);
+            DerniereRegleSignee = source;
+            DerniereDecisionTouchee = "ordre:signer:" + LapseChoisi;
+            bool ok = false; long code = 0; string msg = null; DslDiagnostic[] diags = null;
+            yield return client.IssueStandingOrder(LastRecruitedId, source, LapseChoisi, Token,
+                () => ok = true, (c, d, m) => { code = c; diags = d; msg = m; });
+            if (Destroyed) yield break;
+            if (!ok)
+            {
+                DerniereClasseDeRefus = ClasserRefus(code, msg);
+                if (code == 422) RenderDiagnostics(diags, msg);   // la règle ne compile pas : les diagnostics de l'éditeur
+                else SetOutcome(MotDuRefus(DerniereClasseDeRefus), AccentSevere);
+                if (decisionsRefusText != null) decisionsRefusText.text = msg ?? "";
+                yield break;
+            }
+            DerniereClasseDeRefus = null;
+            if (decisionsRefusText != null) decisionsRefusText.text = "";
+            ClearDiagnostics();
+            ModeOrdre = false;
+            MajModeOrdre();
+            yield return RefreshBands();   // « Ordre permanent · en cours » vient du GET, jamais d'une supposition
+        }
+
+        /// <summary>Crochet de test : la règle ÉDITÉE au moment de signer (la garde la compare au `rule_source` envoyé).</summary>
+        public string DerniereRegleSignee { get; private set; }
 
         /// <summary>Crochet de test : rend des bandes FABRIQUÉES (sans réseau) — pour les états des cadres 1 et 2 qu'un compte réel
         /// n'atteint pas à coup sûr (DRIFTING naît du tick ; un ordre n'existe que si on l'émet). Ne prouve jamais ce que le back sert.</summary>
@@ -3163,6 +3275,18 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (signalSection != null) signalSection.gameObject.SetActive(derive);
             if (ordreSection != null) ordreSection.gameObject.SetActive(ordre);
             if (promouvoirButton != null) promouvoirButton.gameObject.SetActive(ordre && b.standing_order.promotion_suggested);
+            if (donnerOrdreSection != null) donnerOrdreSection.gameObject.SetActive(b != null && fraicheur == "NONE");
+            // La fiabilité de chaque repère, à côté de lui, là où elle éclaire le choix (atelier 42 : « l’état du terrain · fiable »).
+            foreach (var kv in repereButtons)
+            {
+                TextMeshProUGUI lbl = kv.Value != null ? kv.Value.GetComponentInChildren<TextMeshProUGUI>(true) : null;
+                if (lbl == null) continue;
+                string bande = null;
+                if (b != null && b.cue_bands != null)
+                    foreach (var cb in b.cue_bands) if (cb.Key == kv.Key) bande = cb.Value;
+                lbl.text = string.IsNullOrEmpty(bande) ? FamilleLabels.Repere(kv.Key)
+                                                       : FamilleLabels.Repere(kv.Key) + " · " + FamilleLabels.Fiabilite(bande);
+            }
         }
 
         /// <summary>Cadre 1 — une décision sur le signal. PUBLIC : la garde la pilote. `repere` exigé pour disrupt_cue, null sinon.</summary>
@@ -3214,20 +3338,24 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (code == 409 && m.Contains("is on cooldown")) return "cooldown";
             if (code == 409 && m.Contains("has no standing order")) return "aucun_ordre";
             if (code == 409 && m.Contains("not flagged for promotion")) return "promotion_refusee";
+            if (code == 409 && m.Contains("already has an active standing order")) return "deja_actif";   // l'émission (:108-109, :125-126)
             return "autre";
         }
 
-        /// <summary>LE MOT d'un refus — UNE seule fonction, les codes jamais à l'écran. Mots de l'atelier 41 §4 (fd34321c, PROPOSÉS) ;
+        /// <summary>LE MOT d'un refus — UNE seule fonction, les codes jamais à l'écran. Clés et mots de la table 42 de l'atelier (aa2cd03b,
+        /// À L'OCTET : minuscule, sans point, la forme de la maison ; « aucun ordre en cours » est le mot de f2) ;
         /// « autre » garde le mot SERVI « Échec de la décision. », le motif serveur restant en chrome. (Le refus « un ordre est déjà en
         /// cours » vient de l'ÉMISSION d'un ordre, que ⑦ n'offre pas encore : il entrera avec elle, option (a).)</summary>
         public static string MotDuRefus(string classe)
         {
             switch (classe)
             {
-                case "cooldown":          return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "Trop tôt pour refaire ce geste.");
-                case "aucun_ordre":       return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "Il n’y a pas d’ordre en cours.");
-                case "promotion_refusee": return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "Cet ordre n’a pas encore fait ses preuves.");
-                case "invalide":          return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "Ce geste n’est pas reconnu.");
+                case "cooldown":          return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "trop tôt pour refaire ce geste");
+                case "aucun_ordre":       return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "aucun ordre en cours");
+                case "promotion_refusee": return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "cet ordre n’a pas encore fait ses preuves");
+                case "invalide":          return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "ce geste n’est pas reconnu");
+                // D17 : une insécable (U+00A0) avant « : » (atelier 41 §4).
+                case "deja_actif":        return MafiaCleanCity.I18n.Libelle.De("famille", "refus", "un ordre est déjà en cours\u00a0: renouvelez-le");
                 default: return Lib("Échec de la décision.");
             }
         }
@@ -3291,9 +3419,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             AddLayoutElement(rows, flexibleHeight: 0);
 
             // +Add rule / Validate / Attach controls.
-            AddActionButton(builderSection, "ajouter_une_regle", Lib("+ Ajouter une règle"), () => AddRule(NewDefaultRule()));
+            ajouterRegleButton = AddActionButton(builderSection, "ajouter_une_regle", Lib("+ Ajouter une règle"), () => AddRule(NewDefaultRule()));
             AddActionButton(builderSection, "valider", Lib("Valider"), () => StartCoroutine(ValidateRules()));
-            AddActionButton(builderSection, "attacher", Lib("Attacher"), () => StartCoroutine(AttachRules()));
+            attacherButton = AddActionButton(builderSection, "attacher", Lib("Attacher"), () => StartCoroutine(AttachRules()));
+            BuildOrdreModeBlock(builderSection);
 
             // The diagnostics area — RenderDiagnostics lists the 422 details here (cleared on a successful validate/attach).
             NewSectionLabel(builderSection, Lib("Diagnostics"));

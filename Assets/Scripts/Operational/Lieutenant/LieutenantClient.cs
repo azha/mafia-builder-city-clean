@@ -225,6 +225,32 @@ namespace MafiaCleanCity.Operational.Lieutenant
             yield return PosterDecision(Url($"/{lieutenantId}/standing-order/decision"), body, bearer, onOk, onErr);
         }
 
+        /// <summary>`POST /v1/lieutenants/:id/standing-order` — SIGNER un ordre permanent : la règle de l'éditeur de ⑧ (sérialisée par
+        /// `RuleModel.SerializeRules`, UNE seule) + la `lapse_action`. 200 → onOk ; non-2xx → onInvalid(code, diagnostics DSL du 422,
+        /// message) — le MÊME traitement que l'attache d'un script (422 de compilation, 409 un ordre déjà actif, 404 non possédé).</summary>
+        public IEnumerator IssueStandingOrder(string lieutenantId, string ruleSource, string lapseAction, string bearer,
+            Action onOk, Action<long, DslDiagnostic[], string> onInvalid)
+        {
+            string url = Url($"/{lieutenantId}/standing-order");
+            string body = JsonUtility.ToJson(new StandingOrderIssueRequest { rule_source = ruleSource ?? string.Empty, lapse_action = lapseAction });
+            DerniereRequeteOrdre = url + " " + body;
+            using (var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+            {
+                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                req.downloadHandler = new DownloadHandlerBuffer();
+                req.timeout = TimeoutSeconds;
+                req.SetRequestHeader("Content-Type", "application/json");
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                yield return req.SendWebRequest();
+                if (req.result == UnityWebRequest.Result.Success) onOk?.Invoke();
+                else onInvalid?.Invoke(req.responseCode, ParseDiagnostics(req), ReadableError(req));
+            }
+        }
+
+        /// <summary>Crochet de test : l'URL et le corps du DERNIER ordre signé — la garde compare la règle ENVOYÉE à la règle ÉDITÉE.</summary>
+        public string DerniereRequeteOrdre { get; private set; }
+
         /// <summary>Le POST commun aux deux décisions — Bearer + Idempotency-Key UUID v4, le patron de `ReassignLieutenant`.</summary>
         private IEnumerator PosterDecision(string url, string body, string bearer, Action onOk, Action<long, string> onErr)
         {

@@ -169,6 +169,20 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>⑦ — la fiabilité d'un repère (`cue_bands`), atelier 42 (aa2cd03b, PROPOSÉS) ; affichée à côté de chaque repère de
+        /// « Brouiller un repère ».</summary>
+        public static string Fiabilite(string bande)
+        {
+            switch (bande)
+            {
+                case "dormant":  return MafiaCleanCity.I18n.Libelle.De("famille", "fiabilite", "en sommeil");
+                case "partial":  return MafiaCleanCity.I18n.Libelle.De("famille", "fiabilite", "à moitié fiable");
+                case "reliable": return MafiaCleanCity.I18n.Libelle.De("famille", "fiabilite", "fiable");
+                case "dominant": return MafiaCleanCity.I18n.Libelle.De("famille", "fiabilite", "décisif");
+                default: return string.IsNullOrEmpty(bande) ? "—" : MafiaCleanCity.I18n.Repli.Etat(bande);
+            }
+        }
+
         /// <summary>Les repères BROUILLABLES, dans l'ordre de la page (cadre 1).</summary>
         public static readonly string[] ReperesBrouillables = { "TERRITORY_STATE", "RESOURCE_AVAILABILITY", "TIME_SLOT", "PEER_BEHAVIOR" };
 
