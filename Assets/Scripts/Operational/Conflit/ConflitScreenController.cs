@@ -387,8 +387,11 @@ namespace MafiaCleanCity.Operational
         private void RendreTitre()
         {
             titreTexte.text = Libelle.De("conflit", "titre", "Le conflit");
-            sousTitreTexte.text = Libelle.De("conflit", "sous_titre",
-                "Ce que vos hommes rapportent des familles rivales, et qui vous reste pour y retourner.");
+            // Clé SERVIE explicite, repli = valeur du back à 78faf9b4 (atelier 40 v3.1, 31c95595, D13) : un `Libelle.De` dériverait la
+            // clé du NOUVEAU texte et orphelinerait la clé servie.
+            sousTitreTexte.text = Libelle.Gabarit(
+                "conflit.sous_titre.ce_que_vos_hommes_rapportent_des_familles_rivales_et_qui_vous_reste_pour_y_retourner",
+                "Ce que vos envois rapportent des familles rivales, et qui vous reste pour y retourner.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }
@@ -699,7 +702,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>Cadres 59-61 — « Le coup de ce soir » : on choisit un homme (un gros bras), un axe (un des 5), et une famille
         /// (dans la table, en dessous). Aucun choix présélectionné. Quand les trois sont faits, la phrase d'envoi « On envoie
         /// {nom} chez {famille}, sur {axe}. » ; quand la famille choisie a un envoi rentré, la phrase de l'atelier (addendum à la
-        /// 40, 24897b48) « La dernière fois chez eux : {issue}, et la ville a chauffé {chaleur}. » (`LaDerniereFoisChezEux`).
+        /// 40, 24897b48 ; v3.1 « là-bas », 78faf9b4) « La dernière fois là-bas : {issue}, et la ville a chauffé {chaleur}. » (`LaDerniereFoisChezEux`).
         /// Sans gros bras : les deux phrases servies qui le disent, et rien à choisir.</summary>
         private void RendreCoup(EngagementDto[] engagements)
         {
@@ -715,9 +718,10 @@ namespace MafiaCleanCity.Operational
                 vide.enableWordWrapping = true;
                 TrackText(vide.text);
                 TextMeshProUGUI noteVide = NouveauTexteFiche(coupRoot, "PiedNote",
-                    Libelle.De("conflit", "bloc",
-                        "C'est lui qui part la nuit. Il vous en manque un — ce n'est pas cassé, " +
-                        "vous n'en avez tout simplement pas encore."),
+                    Libelle.Gabarit(   // clé SERVIE explicite, repli = valeur à 78faf9b4 (40 v3.1, D13)
+                        "conflit.bloc.c_est_lui_qui_part_la_nuit_il_vous_en_manque_un_ce_n_est_pas_casse_vous_n_en_avez_tout_simplement_pas_encore",
+                        "C’est le gros bras qui part la nuit. Il vous en manque un — ce n’est pas cassé, " +
+                        "vous n’en avez tout simplement pas encore."),
                     8f, DesignTokens.Current.onSurfaceMuted, false);
                 noteVide.enableWordWrapping = true;
                 TrackText(noteVide.text);
@@ -1126,7 +1130,7 @@ namespace MafiaCleanCity.Operational
         {
             switch (cle)
             {
-                case "coil": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "les ferrailleurs de Spine");
+                case "coil": return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.les_ferrailleurs_de_spine", "la ferraille, à Spine");   // 40 v3.1 (78faf9b4)
                 case "tarcum": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "le port, et ce qui y entre");
                 case "iron_throat": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "les docks du nord");
                 case "saltline": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "la ligne de sel, à l’est");
@@ -1176,7 +1180,7 @@ namespace MafiaCleanCity.Operational
             return null;
         }
 
-        /// <summary>㉙ — « La dernière fois chez eux : {issue}, et la ville a chauffé {chaleur}. » (`conflit.bloc.derniere_fois_chez_eux`,
+        /// <summary>㉙ — « La dernière fois là-bas : {issue}, et la ville a chauffé {chaleur}. » (`conflit.bloc.derniere_fois_chez_eux`,
         /// addendum à la 40, 24897b48), {issue} en forme de milieu de phrase (`IssueEnPhrase`), {chaleur} = `Chaleur`. null si l'envoi
         /// manque, si l'issue est nulle (pas encore rentré, règle de l'atelier) ou si la chaleur est nulle (la phrase l'exige :
         /// aucun mot deviné).</summary>
@@ -1185,7 +1189,7 @@ namespace MafiaCleanCity.Operational
             if (e == null) return null;
             string issue = IssueEnPhrase(e.outcome_bucket), chaleur = Chaleur(e.heat_increment_bucket);
             if (issue == null || chaleur == null) return null;
-            return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.derniere_fois_chez_eux", "La dernière fois chez eux\u00A0: {issue}, et la ville a chauffé {chaleur}.",
+            return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.derniere_fois_chez_eux", "La dernière fois là-bas\u00A0: {issue}, et la ville a chauffé {chaleur}.",
                 new Dictionary<string, string> { { "issue", issue }, { "chaleur", chaleur } });
         }
 

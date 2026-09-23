@@ -389,7 +389,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(ecran.EnvoiPossible);
             Assert.IsTrue(GameObject.Find("LEnvoyerCeSoir").GetComponent<Button>().interactable);
             CollectionAssert.Contains(ecran.RenderedTexts, "On envoie Lt. Kest chez Tarcum, sur leur argent.");
-            CollectionAssert.Contains(ecran.RenderedTexts, "La dernière fois chez eux\u00A0: une percée, et la ville a chauffé pas mal.",
+            CollectionAssert.Contains(ecran.RenderedTexts, "La dernière fois là-bas\u00A0: une percée, et la ville a chauffé pas mal.",
                 "la phrase de l'atelier (addendum à la 40, 24897b48), l'issue en forme de milieu de phrase");
 
             // Un non-gros-bras n'est pas choisissable, même par le crochet.
@@ -465,7 +465,7 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.DoesNotContain(ecran.RenderedTexts, "jamais", "à 0, pas de doublon « jamais » + « on ne les a pas croisés »");
             foreach (string t in ecran.RenderedTexts)
                 StringAssert.DoesNotContain("une_5e_famille", t, "une famille hors domaine ne s'affiche nulle part, ni sa sentinelle");
-            Assert.AreEqual("les ferrailleurs de Spine", TexteDe(ecran, "Famille_coil", "SousTitre"),
+            Assert.AreEqual("la ferraille, à Spine", TexteDe(ecran, "Famille_coil", "SousTitre"),
                 "sous-titre de la maquette ratifiée, clé servie (balayage 34)");
         }
 
@@ -690,7 +690,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("état inconnu", ConflitResolvers.IssueEnPhrase("rout"));
             Assert.IsNull(ConflitResolvers.IssueEnPhrase(""));
 
-            Assert.AreEqual("La dernière fois chez eux : ça s’est disputé, et la ville a chauffé beaucoup.",
+            Assert.AreEqual("La dernière fois là-bas : ça s’est disputé, et la ville a chauffé beaucoup.",
                 ConflitResolvers.LaDerniereFoisChezEux(Envoi("r", "coil", "La Coil", "resolved", "contested", "low", "high")));
             Assert.IsNull(ConflitResolvers.LaDerniereFoisChezEux(Envoi("p", "coil", "La Coil", "scheduled", "", "", "medium")),
                 "issue nulle (pas encore rentré) : pas de phrase");
@@ -800,7 +800,7 @@ namespace MafiaCleanCity.Operational.Tests
         [Test]
         public void EcranConflitR2bis_SousTitreFamille_CouvreLesQuatreValeurs_EtUneCinquiemeTombeDansTypeInconnu()
         {
-            Assert.AreEqual("les ferrailleurs de Spine", ConflitResolvers.SousTitreFamille("coil"));
+            Assert.AreEqual("la ferraille, à Spine", ConflitResolvers.SousTitreFamille("coil"));
             Assert.AreEqual("le port, et ce qui y entre", ConflitResolvers.SousTitreFamille("tarcum"));
             Assert.AreEqual("les docks du nord", ConflitResolvers.SousTitreFamille("iron_throat"));
             Assert.AreEqual("la ligne de sel, à l’est", ConflitResolvers.SousTitreFamille("saltline"));   // D10 : apostrophe typographique
