@@ -251,15 +251,10 @@ namespace MafiaCleanCity.Operational
         public void EnvoyerCeSoir(string lieutenantId, string targetRivalKey, string targetHoldingId) =>
             StartCoroutine(EnvoyerCeSoirEtRecharger(lieutenantId, targetRivalKey, targetHoldingId));
 
-        /// <summary>Crochet de test : awaitable, contrairement à `EnvoyerCeSoir()`.
-        /// ⚠️ COLLAPSE ASSUMÉ (brief : « un 404 sur le POST se montre comme "on ne les connaît
-        /// pas encore" ») — les DEUX comptes sondés ne peuvent produire QUE le 404 « no such
-        /// MUSCLE lieutenant » (voir `ConflitClient.PostEngagements`) : le 404 « cible inconnue »
-        /// que cette phrase décrit n'a jamais pu être observé (il exigerait un lieutenant MUSCLE
-        /// pour dépasser le premier contrôle). Cette méthode collapse donc TOUT code 404 sur
-        /// cette phrase, y compris le cas MUSCLE si elle était appelée sans en avoir un — ce
-        /// qu'aucun appelant ne fait cette passe (`RendrePied` ne construit aucun bouton). Voir
-        /// implementation-notes.md § Deviations.</summary>
+        /// <summary>Crochet de test : awaitable, contrairement à `EnvoyerCeSoir()`. Sur un refus (409
+        /// `MUSCLE_LIEUTENANT_REQUIRED`, 404 lieutenant ou famille, 422, réseau), `DernierCodeErreur`/`DerniereErreur` portent
+        /// le code et le message technique POUR LES TESTS ; le joueur ne voit rien de technique (`RendreMessageErreur`). Les
+        /// mots du refus sont commandés à l'atelier (addendum à la table 40), branchés à leur arrivée.</summary>
         public IEnumerator EnvoyerCeSoirEtRecharger(string lieutenantId, string targetRivalKey, string targetHoldingId)
         {
             DernierEnvoiOk = false;
@@ -277,7 +272,7 @@ namespace MafiaCleanCity.Operational
             if (erreur != null)
             {
                 DernierCodeErreur = code;
-                DerniereErreur = code == 404 ? "On ne les connaît pas encore." : erreur;
+                DerniereErreur = erreur;   // crochet de test ; les mots du refus attendent la table (L4)
                 RendreMessageErreur();
                 yield break;
             }
@@ -676,14 +671,13 @@ namespace MafiaCleanCity.Operational
             TrackText(noteCible.text);
         }
 
+        /// <summary>⛔ `DerniereErreur` est un CROCHET DE TEST (code, route, message du back) : il ne s'affiche JAMAIS au joueur,
+        /// qui ne lit que des mots servis (règle du 23/09 : aucune valeur machine à l'écran). Les échecs de lecture ont déjà
+        /// leurs phrases servies (`RendreEtatIndisponible`, « Le compte des envois précédents n’a pas répondu. ») ; les mots
+        /// des refus du POST (409, 404, 422, réseau) n'existent pas encore dans la table 40 — demandés, branchés en L4.</summary>
         private void RendreMessageErreur()
         {
             ViderEnfants(erreurRoot);
-            if (string.IsNullOrEmpty(DerniereErreur)) return;
-            TextMeshProUGUI msg = NouveauTexteFiche(erreurRoot, "Erreur", DerniereErreur, 7.5f,
-                RougeMauvais, false);
-            msg.enableWordWrapping = true;
-            TrackText(msg.text);
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
@@ -697,9 +691,8 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(piedRoot);
             ViderEnfants(erreurRoot);
             titreTexte.text = Libelle.De("conflit", "titre", "Le conflit n'a pas répondu");
-            sousTitreTexte.text = string.IsNullOrEmpty(DerniereErreur)
-                ? Libelle.De("conflit", "sous_titre", "Réessayez dans un instant.")
-                : DerniereErreur;
+            // Jamais `DerniereErreur` ici : c'est un message technique (route, code), pas un mot pour le joueur.
+            sousTitreTexte.text = Libelle.De("conflit", "sous_titre", "Réessayez dans un instant.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }

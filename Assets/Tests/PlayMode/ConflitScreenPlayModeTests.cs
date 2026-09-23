@@ -428,6 +428,30 @@ namespace MafiaCleanCity.Operational.Tests
                 "sentinelle du back hors domaine : jamais affichée");
         }
 
+        // ═══ L5a — aucun texte technique à l'écran ═══════════════════════════════════════════════
+
+        /// <summary>Un POST refusé (sans jeton : 401 ; pile absente : erreur réseau) remplit le crochet de test, et rien de
+        /// technique n'arrive à l'écran. Aucune écriture possible : sans jeton, le back refuse avant tout.</summary>
+        [UnityTest]
+        public IEnumerator EcranConflitE8_UnRefusDuPost_NAfficheAucunTexteTechnique()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(new GetLieutenantsResponseDto { lieutenants = new LieutenantRowDto[0] },
+                new GetEngagementsResponseDto { engagements = new EngagementDto[0] });
+            yield return null;
+
+            yield return ecran.EnvoyerCeSoirEtRecharger("00000000-0000-4000-8000-000000000000", "coil", "");
+
+            Assert.IsFalse(ecran.DernierEnvoiOk);
+            Assert.IsNotNull(ecran.DerniereErreur, "contrôle positif : le refus a bien eu lieu, et le crochet le porte");
+            foreach (TMPro.TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+            {
+                StringAssert.DoesNotContain("/v1/", t.text, "une route à l'écran : " + t.name);
+                StringAssert.DoesNotContain("a échoué", t.text, "un message technique à l'écran : " + t.name);
+                Assert.AreNotEqual(ecran.DerniereErreur, t.text, "le message technique à l'écran : " + t.name);
+            }
+        }
+
         /// <summary>Le texte du nœud `enfant` sous le nœud `ligne` (à n'importe quelle profondeur sous `ConflitRoot`), ou null.</summary>
         private string TexteSous(string ligne, string enfant)
         {
