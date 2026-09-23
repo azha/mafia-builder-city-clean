@@ -157,18 +157,23 @@ def main():
         if len(c) > 4 and c[2] == '②' and c[4] == 'sans source': mots.setdefault(c[3], []).append(c[1])
     st = subprocess.run(['git', '-C', os.path.expanduser('~/project/mafia-back-suite'), 'show', 'HEAD:services/game-back/src/i18n/string_table.ts'],
                         capture_output=True, text=True).stdout
-    d = st.index('export const FR_MESSAGES'); FR = {m.group(1) for m in re.finditer(r"^\s*'([^'\s]+)':", st[d:st.index('\n};', d)], re.M)}
+    d = st.index('export const FR_MESSAGES')
+    FRV = {m.group(1): m.group(2).replace("\\'", "'") for m in re.finditer(r"^\s*'([^'\s]+)':\s*\n?\s*'((?:[^'\\]|\\.)*)'", st[d:st.index('\n};', d)], re.M)}
+    FR = set(FRV)
+    # ⚖️ Une clé proposée par cette table et SERVIE depuis (back 621630c7 : le back a servi la 37) est conforme si le back sert NOS mots ;
+    #    sinon c'est un écart à lui signaler (même règle que 28, 30, 31). Une valeur D14 servie doit être la nôtre.
+    def ecart(k, fr):
+        return k in FRV and fr and '+' not in fr and FRV[k] != fr
     defauts = []
     if set(mots) != set(T): defauts.append(f'mots non couverts : {sorted(set(mots) - set(T))} · en trop : {sorted(set(T) - set(mots))}')
-    out = ['\t'.join(['mot', 'cadres', 'classe', 'clé', 'fr', 'en', 'note'])]; comptes = collections.Counter()
+    out = ['\t'.join(['mot', 'cadres', 'classe', 'clé', 'fr', 'en', 'note'])]; comptes = collections.Counter(); ecarts = []; servies_depuis = 0
     for m, cadres in mots.items():
         cl, cle, fr, en, note = T[m]; comptes[cl] += 1
         ks = [x.strip() for x in cle.split('+') if x.strip()]
         for k in ks:
             if cl in (S, A) and not k.endswith('*') and k not in FR: defauts.append(f'{m} : {k} annoncée servie, absente du back')
-        # une proposée composée peut porter une moitié servie (« Stock · Haut · Pure » : `building.purity.pure` est servie) — au moins une clé neuve
-        if cl == P and ks and all(k in FR for k in ks): defauts.append(f'{m} : {cle} proposée, mais tout est déjà servi')
-        if cl == P and len(ks) == 1 and ks[0] in FR: defauts.append(f'{m} : {ks[0]} proposée, mais déjà servie')
+        if cl in (P, A) and len(ks) == 1 and ecart(ks[0], fr): ecarts.append(f'{m} : {ks[0]} servie « {FRV[ks[0]]} » ≠ la table « {fr} »')
+        if cl in (P, A) and len(ks) == 1 and ks[0] in FRV and not ecart(ks[0], fr): servies_depuis += 1
         if "'" in fr + en: defauts.append(f'{m} : apostrophe droite')
         if re.search(r' [:;!?»]|« ', fr): defauts.append(f'{m} : D17 (espace ordinaire)')
         if re.search(r'\b(le cuisinier|il est|prêt à)\b', fr): defauts.append(f'{m} : D13')
@@ -179,9 +184,11 @@ def main():
         out.append('\t'.join([m, ','.join(sorted(set(cadres), key=int)), cl, cle, fr, en, note]))
     for cle, fr, en, note in COMPLEMENTS:
         out.append('\t'.join(['(complément de famille)', '', P, cle, fr, en, note]))
-        if cle in FR: defauts.append(f'{cle} : complément déjà servi')
+        if ecart(cle, fr): ecarts.append(f'{cle} : servie « {FRV[cle]} » ≠ la table « {fr} »')
     open(os.path.join(ICI, '37-fiche-batiment-mots-2026-09-23.tsv'), 'w', encoding='utf-8').write('\n'.join(out) + '\n')
     print(f'{len(mots)} mots de ② · ' + ' · '.join(f'{c} {comptes[c]}' for c in ORDRE) + f' · + {len(COMPLEMENTS)} compléments de famille')
+    print(f'clés de la table servies avec nos mots : {servies_depuis} · écarts servi ≠ table (à signaler au back) : {len(ecarts)}')
+    [print('  ≠', x) for x in ecarts]
     [print('  ⛔', x) for x in defauts]; print(f'{len(defauts)} défaut(s)'); sys.exit(1 if defauts else 0)
 
 if __name__ == '__main__':
