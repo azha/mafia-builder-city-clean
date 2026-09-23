@@ -319,6 +319,11 @@ namespace MafiaCleanCity.Shell.Tests
             Transform fondT = sceneT.Find("DistrictBackgroundImage");
             Assert.IsNotNull(fondT, "district 16 (verge-a) a un fond réel en vague 1");
 
+            // ①-3 (23/09) : même raison que `NavF4_District3_…` ci-dessous — le bandeau éphémère, visible, élargit les bornes agrégées de
+            // `TopBarSlot` ; ce test garde le chrome PERMANENT, et le titre CÈDE sa place au bandeau (garde B7). Retiré avant la mesure.
+            // ⚠️ CE N'EST PAS UN CONTOURNEMENT : l'état « bandeau VISIBLE » est couvert par B7 (`BandeauEphemerePlayModeTests.
+            // B7_LeTitreDuDistrict_SeTaitPendantQueLeBandeauParle`).
+            shell.TopBar.Bandeau.Effacer();
             Transform canvasRoot = shell.ShellCanvas.transform;
             Bounds titleB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, (RectTransform)titleT);
             Bounds topBarB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, shell.TopBarSlot);
@@ -413,6 +418,13 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotNull(placeholderT, "district 3 (profil tidewater) n'a AUCUN fond en vague 1 — repli déclaré attendu");
             Assert.IsNull(sceneT.Find("DistrictBackgroundImage"), "anti-vacuité — ce n'est PAS le chemin fond réel");
 
+            // ①-3 (23/09) : le BANDEAU ÉPHÉMÈRE vit sous `TopBarSlot` (`top:78px` du canon) et, visible, élargit les bornes AGRÉGÉES de la
+            // barre. Ce test garde le chrome PERMANENT ; le bandeau est une surimpression de 5 s à laquelle le titre CÈDE sa place (r9
+            // M11, garde B7 de `BandeauEphemerePlayModeTests`). On le retire donc avant de mesurer — sinon la mesure dépend de la file
+            // d'exceptions du compte (une carte ⇒ bandeau visible à l'entrée du district).
+            // ⚠️ CE N'EST PAS UN CONTOURNEMENT : l'état « bandeau VISIBLE » est couvert par B7 (`BandeauEphemerePlayModeTests.
+            // B7_LeTitreDuDistrict_SeTaitPendantQueLeBandeauParle` : le titre se tait tant que le bandeau parle). Ici, le chrome sans lui.
+            shell.TopBar.Bandeau.Effacer();
             Transform canvasRoot = shell.ShellCanvas.transform;
             Bounds placeholderB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, (RectTransform)placeholderT);
             Bounds topBarB = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, shell.TopBarSlot);

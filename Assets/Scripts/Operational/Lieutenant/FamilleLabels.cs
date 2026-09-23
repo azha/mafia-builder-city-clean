@@ -78,9 +78,9 @@ namespace MafiaCleanCity.Operational
                 //    l'écran d'un jeu français ; et la clé `famille.archetype.inconnu` EST servie,
                 //    mais plus personne ne la demandait. Deux défauts d'un seul oubli.
                 case "UNKNOWN": return Lib("Inconnu");
-                // Un 10ᵉ archétype, lui, doit se VOIR brut : le repli sert de signal, pas de
-                // traduction. C'est la distinction que `UNKNOWN` ci-dessus n'avait pas.
-                default: return CasseDeTitre(a);
+                // 23/09 (règle f2, atelier 28) : un 10ᵉ archétype ne se VOIT plus brut — il se NOMME « Inconnu », le mot déjà
+                // servi de la famille ; c'est un TEST de couverture de domaine qui voit le cran neuf, pas l'œil du joueur.
+                default: return string.IsNullOrWhiteSpace(a) ? "—" : Lib("Inconnu");
             }
         }
 
@@ -109,14 +109,13 @@ namespace MafiaCleanCity.Operational
             {
                 case "delegated": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Délégué");
                 case "tasked": return MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Missionné");
-                // ⛔ PAS DE CLÉ SUR LE REPLI, et c'est la garde de catalogue qui me l'a appris.
-                // J'avais écrit `Libelle.De("famille","mode","Mode inconnu")` — une clé que le
-                // back NE SERT PAS. `BundleReel_…_ZeroRepli` a rougi aussitôt : « 2 clés sur 46
-                // sont retombées sur leur littéral ». *Inventer une clé de repli, c'est ajouter
-                // du français non traduisible en croyant bien faire* — et le seul endroit où ça
-                // se voit est cette garde. Les deux résolveurs supprimés rendaient la valeur
-                // BRUTE sur ce chemin ; on garde leur comportement.
-                default: return CasseDeTitre(mode);
+                // Le repli NOMME une valeur présente hors domaine, il ne l'affiche plus BRUTE (23/09, atelier 27, `8c7a75a4` :
+                // « Mode inconnu » / « Unknown mode », même forme que `famille.category.categorie_inconnue` et
+                // `famille.archetype.inconnu`, déjà servis). Une valeur ABSENTE reste « — » (TD-644 : un tiret n'a pas de langue).
+                // ⚠️ Historique : une première clé de repli INVENTÉE (sans mots écrits) avait fait rougir
+                // `BundleReel_…_ZeroRepli` ; celle-ci a ses mots, et se sert avant le créneau (orchestrateur).
+                default:
+                    return string.IsNullOrWhiteSpace(mode) ? "—" : MafiaCleanCity.I18n.Libelle.De("famille", "mode", "Mode inconnu");
             }
         }
 
@@ -135,7 +134,7 @@ namespace MafiaCleanCity.Operational
                 case "SEASONED": return "Aguerri";
                 case "SENIOR": return "Ancien";
                 case "ENTRENCHED": return "Enraciné";
-                default: return CasseDeTitre(bucket);
+                default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
 
@@ -155,15 +154,9 @@ namespace MafiaCleanCity.Operational
                 case "IDLE": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Au repos");
                 case "PAUSED": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "En pause");
                 case "SETTLING": return MafiaCleanCity.I18n.Libelle.De("famille", "opstate", "Prend ses marques");
-                default: return CasseDeTitre(band);   // idem : aucune clé inventée sur le repli
+                default: return MafiaCleanCity.I18n.Repli.Etat(band);   // mot ÉCRIT par l'atelier 28 (plus la brute en casse de titre) ; absent : « — »
             }
         }
 
-        private static string CasseDeTitre(string v)
-        {
-            if (string.IsNullOrEmpty(v)) return "—";
-            string bas = v.Replace('_', ' ').ToLowerInvariant();
-            return char.ToUpperInvariant(bas[0]) + (bas.Length > 1 ? bas.Substring(1) : string.Empty);
-        }
     }
 }

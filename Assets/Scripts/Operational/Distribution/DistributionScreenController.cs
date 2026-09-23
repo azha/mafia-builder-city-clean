@@ -221,7 +221,7 @@ namespace MafiaCleanCity.Operational
         /// 10 types RÉELLEMENT rencontrés sur ce compte (2026-09-03) sont nommés ; repli GRACIEUX
         /// (littéral brut) pour les 2 restants du domaine à 12 membres, jamais un throw : ce
         /// n'est pas un domaine fermé annoncé par une erreur, juste une énumération observée.</summary>
-        private static string NomTypeBatiment(string operationalType)
+        public static string NomTypeBatiment(string operationalType)
         {
             switch (operationalType)
             {
@@ -235,7 +235,7 @@ namespace MafiaCleanCity.Operational
                 case "dealer_spot_front": return "le comptoir";
                 case "cash_safehouse": return "la planque-coffre";
                 case "grow_house": return "la ferme";
-                default: return string.IsNullOrEmpty(operationalType) ? "le bâtiment" : operationalType;
+                default: return MafiaCleanCity.I18n.Repli.LeBatiment;   // repli de NOM (atelier 28) : absent OU hors domaine, la phrase garde son nom — jamais le type brut
             }
         }
 
@@ -1053,7 +1053,7 @@ namespace MafiaCleanCity.Operational
                 case "direct": return "droit — le plus court";                    // m-54, MESURÉ
                 case "meandering": return "ça serpente — plus long, plus discret"; // m-55/56, MESURÉ
                 case "gnarled": return "tordu — beaucoup de détours";              // m-57, cadre 57 — domaine du back
-                default: return string.IsNullOrEmpty(bucket) ? "chemin : état inconnu" : bucket;
+                default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
 
@@ -1067,7 +1067,7 @@ namespace MafiaCleanCity.Operational
                 case "none": return "aucune rivière";  // m-54, MESURÉ
                 case "single": return "un pont";        // m-55/56, MESURÉ
                 case "multiple": return "trois ponts";  // m-57 — hypothèse
-                default: return string.IsNullOrEmpty(bucket) ? "traversée : état inconnu" : bucket;
+                default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
 
@@ -1081,7 +1081,7 @@ namespace MafiaCleanCity.Operational
             switch (state)
             {
                 case "active": return "tient"; // m-55 — lecture retenue, voir implementation-notes.md
-                default: return string.IsNullOrEmpty(state) ? "état inconnu" : state;
+                default: return MafiaCleanCity.I18n.Repli.Etat(state);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
 
@@ -1142,7 +1142,7 @@ namespace MafiaCleanCity.Operational
                 case "ARRIVED": return "arrivé";
                 case "IDLE": return "prêt";
                 case "IN_TRANSIT": return "en chemin"; // hypothèse — jamais observée sur ce compte
-                default: return string.IsNullOrEmpty(band) ? "état inconnu" : band;
+                default: return MafiaCleanCity.I18n.Repli.Etat(band);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
 
@@ -1152,14 +1152,14 @@ namespace MafiaCleanCity.Operational
         /// (minuscules). Comparaison en `ToUpperInvariant()` pour ne pas dupliquer la table.</summary>
         public static string TexteVehicule(string type)
         {
-            if (string.IsNullOrEmpty(type)) return "véhicule inconnu";
+            if (string.IsNullOrEmpty(type)) return MafiaCleanCity.I18n.Repli.Type(type);   // absent : « — » (plus « véhicule inconnu », atelier 28)
             switch (type.ToUpperInvariant())
             {
                 case "FOOT": return "à pied";
                 case "BIKE": return "à vélo";
                 case "CAR": return "en voiture";
                 case "REFRIGERATED_VAN": return "en camion réfrigéré";
-                default: return type;
+                default: return MafiaCleanCity.I18n.Repli.Type(type);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
     }

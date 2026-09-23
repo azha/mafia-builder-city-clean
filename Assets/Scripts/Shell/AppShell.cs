@@ -256,6 +256,7 @@ namespace MafiaCleanCity.Shell
             // qui n'a de sens qu'EN district). F14 (23/09) : la valeur hors district est la phase de la
             // SESSION, projetée par le back à l'ouverture — plus « — » par défaut quand elle est servie.
             TopBar.SetDayPhase(PhaseHorsDistrict());
+            TopBar.SetDescente(false);   // ①-4 — la descente est celle d'UN district : elle ne sort pas avec le joueur
 
             switch (tab)
             {
@@ -395,6 +396,7 @@ namespace MafiaCleanCity.Shell
                                  $"(code={tenant.LastErrorCode}) — repli déclaré affiché.");
                 tenant.Render(new DistrictInteriorDto { day_phase = "UNAVAILABLE" });
                 TopBar.SetDayPhase(PhaseHorsDistrict());   // F14 : le district n'a rien rendu — la phase de session
+                TopBar.SetDescente(false);                 // ①-4 — rien de rendu, rien d'annoncé
                 yield break;
             }
             tenant.Render(tenant.LastFetch);
@@ -402,6 +404,11 @@ namespace MafiaCleanCity.Shell
             // récupéré (JAMAIS dérivée côté client — §6.3 : "la donnée day_phase... est déjà
             // projetée par le back").
             TopBar.SetDayPhase(tenant.LastFetch?.day_phase);
+            // ①-3 — dans un district, la descente est la SIENNE (`heat.escalated` du district, `SetSession` l'a attendue).
+            bool descente = tenant.LastHeat != null && tenant.LastHeat.escalated;
+            TopBar.SetDescente(descente);   // ①-4 — « DESCENTE », braise, pouls, tremblement ; le gyrophare est posé par le rendu
+            tenant.CederLaPlaceAuBandeau(TopBar.Bandeau.Visible);
+            AnnoncerAuBandeau(descente, "district-" + districtId);
         }
 
         /// <summary>§3.3 — "→ ActivateTab(Tab.Empire)" verbatim (Empire is the old City branch,
@@ -421,6 +428,46 @@ namespace MafiaCleanCity.Shell
         {
             CitywideHeatBucket = citywideBucket;
             if (TopBar != null) TopBar.SetCitywideHeatBucket(citywideBucket);
+        }
+
+        /// <summary>①-3 — ce que le bandeau éphémère dit maintenant (`AnnonceDuBandeau.Choisir` : descente > la ville chauffe >
+        /// la 1ʳᵉ carte de `session/open.queue` > un rapport). Rien de neuf ⇒ rien ne s'affiche (une annonce ne se répète pas
+        /// dans la session). Le toucher d'une carte ouvre la file (« trancher ») ; les autres s'effacent au toucher.
+        /// Le rapport reçoit `null` : aucune source servie ne dit « non lu » ni le nom du lieutenant (`AutonomyReportDto`).
+        /// Rend vrai si un bandeau s'est affiché.</summary>
+        public bool AnnoncerAuBandeau(bool descente, string ouDescente)
+        {
+            if (TopBar == null || TopBar.Bandeau == null) return false;
+            MafiaCleanCity.Operational.Exceptions.ExceptionCardDto premiere =
+                LastSessionOpen != null && LastSessionOpen.queue != null && LastSessionOpen.queue.Length > 0
+                    ? LastSessionOpen.queue[0] : null;
+            // La première annonce PAS ENCORE DITE, jamais moins prioritaire que celle à l'écran (`Suivante`) : une carte
+            // déjà annoncée ne masque plus le rapport qui vient derrière elle.
+            AnnonceDuBandeau a = AnnonceDuBandeau.Suivante(
+                AnnonceDuBandeau.ParPriorite(descente, ouDescente, CitywideHeatBucket, premiere, nomDuRapport, idDuRapport),
+                TopBar.Bandeau.DejaAnnoncee, TopBar.Bandeau.Visible ? TopBar.Bandeau.Courante : null);
+            System.Action geste = null;
+            if (a != null && a.Quoi == AnnonceDuBandeau.Etat.Carte) geste = OuvrirLaFileDepuisLeBandeau;
+            else if (a != null && a.Quoi == AnnonceDuBandeau.Etat.Rapport) geste = OuvrirLesRapportsDepuisLeBandeau;
+            return TopBar.Bandeau.Annoncer(a, geste);
+        }
+
+        // ①-3 (lot F) — le 1ᵉʳ rapport ouvert de la session : son lieutenant (garde de VALEUR, `NomDuPremierRapport`) et son id.
+        private string nomDuRapport, idDuRapport;
+
+        private void OuvrirLaFileDepuisLeBandeau() =>
+            MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+
+        // « lire » : la boîte des rapports, par le même geste de surimpression que la file.
+        private void OuvrirLesRapportsDepuisLeBandeau() =>
+            MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Autonomy.AutonomyInboxController>();
+
+        /// <summary>①-3 (r9 M11) — le titre de ① occupe le créneau du bandeau : il se tait tant que le bandeau parle.</summary>
+        private void CederLeTitreDuDistrict(bool bandeauVisible)
+        {
+            if (MountedTenantGameObject == null) return;
+            var district = MountedTenantGameObject.GetComponent<DistrictInteriorScreenController>();
+            if (district != null) district.CederLaPlaceAuBandeau(bandeauVisible);
         }
 
         /// <summary>B1 (hud-session-arbitrages-design.md §1.2) — LE shell signe UNE fois (son
@@ -680,6 +727,16 @@ namespace MafiaCleanCity.Shell
             yield return world.GetDistrictHeat(HeatProbeDistrictId, t,
                 heat => PublishCitywideHeat(heat.citywide_bucket),
                 errMsg => Debug.LogWarning($"[AppShell] sonde heat (best-effort) échouée : {errMsg}"));
+            if (this == null) yield break;
+            // ①-3 (lot F) — le 1ᵉʳ rapport OUVERT, UNE fois par session : la route ne sert que les ouverts. Best-effort,
+            // comme la sonde : un échec laisse le rapport muet, jamais un bandeau inventé.
+            yield return new MafiaCleanCity.Operational.Autonomy.AutonomyClient { BaseUrl = baseUrl }.GetReports(t,
+                rapports => nomDuRapport = AnnonceDuBandeau.NomDuPremierRapport(rapports, out idDuRapport),
+                (code, msg) => Debug.LogWarning($"[AppShell] rapports d'autonomie (best-effort) : {code} {msg}"));
+            if (this == null) yield break;
+            // ①-3 — le premier bandeau de la session : la ville si elle chauffe, sinon la 1ʳᵉ carte de la file, sinon le
+            // rapport. Jamais la descente ici : l'`escalated` de la sonde est celui d'un district que le joueur ne regarde pas.
+            AnnoncerAuBandeau(false, null);
         }
 
         /// <summary>LES QUATRE GESTES DE MONTAGE D'UN LOCATAIRE (design D2 ; item 0.4,
@@ -1514,6 +1571,7 @@ namespace MafiaCleanCity.Shell
             GameObject topBarContentGo = new GameObject("TopBarContent", typeof(RectTransform));
             topBarContentGo.transform.SetParent(echelleGo.transform, false);
             TopBar = topBarContentGo.AddComponent<TopBarController>();
+            TopBar.Bandeau.VisibiliteChangee += CederLeTitreDuDistrict;   // ①-3 (r9 M11)
 
             // 3) TabBarRoot — the bottom nav strip, LAST sibling (topmost render order).
             BuildTabBar();

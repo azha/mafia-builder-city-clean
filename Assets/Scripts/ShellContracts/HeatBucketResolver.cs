@@ -87,7 +87,7 @@ namespace MafiaCleanCity.Shell
                 //      continue de sortir BRUTE. Voir une valeur qu'on n'attendait pas est un
                 //      signal ; la voir disparaître derrière un mot choisi n'en est pas un. Ce sont
                 //      deux mondes différents et ils gardent deux réponses différentes.
-                default: return string.IsNullOrEmpty(bucket) ? "—" : bucket;
+                default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : « état inconnu » (règle f2, atelier 28) ; absent : « — » ; jamais la valeur brute
             }
             return MafiaCleanCity.I18n.Libelle.ParValeur("heat", "bucket", bucket, repli);
         }

@@ -58,12 +58,14 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
-        public void UnProfilInconnu_SeMontreBrut_EtUnProfilVide_RendLeTiret()
+        public void UnProfilInconnu_SeDit_TypeInconnu_EtUnProfilVide_RendLeTiret()
         {
+            // ⛔ 23/09 — épingle REMPLACÉE (règle f2, atelier 28) : un profil inconnu ne se montre plus BRUT ; il se dit « type
+            // inconnu » (un profil est une SORTE). Le 7ᵉ code se voit par le test de couverture de domaine, plus à l'écran.
             const string inconnu = "chrome";   // un 7ᵉ code que le back ne sert pas — contrôle négatif
             Assert.IsFalse(TissuDeDistrict.ProfilsConnus.Contains(inconnu), "le contrôle négatif doit être hors domaine");
-            Assert.AreEqual(inconnu, TissuDeDistrict.EnLigne(inconnu), "un profil inconnu se montre tel quel, jamais un mot inventé");
-            Assert.AreEqual(inconnu, TissuDeDistrict.Valeur(inconnu));
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.TypeInconnu, TissuDeDistrict.EnLigne(inconnu), "jamais la valeur brute, jamais un mot inventé");
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.TypeInconnu, TissuDeDistrict.Valeur(inconnu));
             Assert.AreEqual(TissuDeDistrict.Inconnu, TissuDeDistrict.EnLigne(null));
             Assert.AreEqual(TissuDeDistrict.Inconnu, TissuDeDistrict.Valeur(""));
             Assert.AreEqual("le port", TissuDeDistrict.EnLigne("  TIDEWATER "), "la casse et les espaces du code ne décident pas");

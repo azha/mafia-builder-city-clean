@@ -1088,7 +1088,7 @@ namespace MafiaCleanCity.Operational
 
         // ----------------------------------------------------- band → label/glyph
 
-        private static string TypeLabel(string t)
+        public static string TypeLabel(string t)
         {
             switch (t)
             {
@@ -1102,19 +1102,23 @@ namespace MafiaCleanCity.Operational
                 case "grow_house": return Bande("type", "grow_house", "Serre");
                 case "distribution_hub": return Bande("type", "distribution_hub", "Relais");
                 case "money_holding": return Bande("type", "money_holding", "Banque");
+                // 23/09 — les deux types que la couverture de domaine a trouvés sans mot (le back les sert : `operational_chain.ts:26-30`) ;
+                // mots de l'atelier 22 (§7.1 B), clés `building.type.press_house` / `.office` SERVIES.
+                case "press_house": return Bande("type", "press_house", "Imprimerie");
+                case "office": return Bande("type", "office", "Agence");
                 case "": case null: return "Pas encore ouvert";   // aucune valeur servie ⇒ aucune clé ; famille « Ouvrir » (orchestration 22/09)
-                default: return t;
+                default: return MafiaCleanCity.I18n.Repli.Type(t);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
 
-        private static string SetupLabel(string s)
+        public static string SetupLabel(string s)
         {
             switch (s)
             {
                 case "OPERATIONAL": return Cle("setup", "Operational");
                 case "IN_SETUP": return Cle("setup", "In setup");
                 case "NOT_CONVERTED": return Cle("setup", "Not converted");
-                default: return s;
+                default: return MafiaCleanCity.I18n.Repli.Etat(s);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         private static string SetupGlyph(string s) =>
@@ -1122,7 +1126,7 @@ namespace MafiaCleanCity.Operational
         private static Color SetupAccent(string s) =>
             s == "OPERATIONAL" ? AccentMild : s == "IN_SETUP" ? AccentModerate : AccentSevere;
 
-        private static string CoverLabel(string b)
+        public static string CoverLabel(string b)
         {
             switch (b)
             {
@@ -1130,7 +1134,7 @@ namespace MafiaCleanCity.Operational
                 case "STANDARD": return Cle("cover", "Standard");
                 case "WEAK": return Cle("cover", "Weak");
                 case "NONE": return Cle("cover", "None");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         private static string CoverGlyph(string b)
@@ -1147,14 +1151,14 @@ namespace MafiaCleanCity.Operational
             b == "STRONG" ? AccentMild : b == "STANDARD" ? AccentMild : b == "WEAK" ? AccentModerate : AccentSevere;
 
         // ----- Phase-2b: structural_state (OPERATIONAL | DAMAGED | REPAIRING) -----
-        private static string StructuralLabel(string s)
+        public static string StructuralLabel(string s)
         {
             switch (s)
             {
                 case "OPERATIONAL": return Cle("structural", "Intact");
                 case "DAMAGED": return Cle("structural", "Damaged");
                 case "REPAIRING": return Cle("structural", "Repairing");
-                default: return s;
+                default: return MafiaCleanCity.I18n.Repli.Etat(s);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // Distinct shape per state (a11y F2 — shape carries the meaning alongside colour).
@@ -1164,7 +1168,7 @@ namespace MafiaCleanCity.Operational
             s == "OPERATIONAL" ? AccentMild : s == "REPAIRING" ? AccentModerate : AccentSevere;
 
         // ----- Phase-2b: raid_risk band gauge (LOW | ELEVATED | HIGH | IMMINENT) -----
-        private static string RaidRiskLabel(string b)
+        public static string RaidRiskLabel(string b)
         {
             switch (b)
             {
@@ -1172,7 +1176,7 @@ namespace MafiaCleanCity.Operational
                 case "ELEVATED": return Cle("raid_risk", "Elevated");
                 case "HIGH": return Cle("raid_risk", "High");
                 case "IMMINENT": return Cle("raid_risk", "Imminent");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // A 4-segment filled-bar gauge (shape encodes the level — a11y F2, mirrors the cover/cleanliness gauges).
@@ -1191,7 +1195,7 @@ namespace MafiaCleanCity.Operational
             b == "LOW" ? AccentMild : b == "ELEVATED" ? AccentModerate : AccentSevere;
 
         // ----- Phase-2b: seized_amount band (NONE | LOW | MODERATE | HIGH) — for the raid notification -----
-        private static string SeizedLabel(string b)
+        public static string SeizedLabel(string b)
         {
             switch (b)
             {
@@ -1199,7 +1203,7 @@ namespace MafiaCleanCity.Operational
                 case "MODERATE": return Bande("seized_amount", "MODERATE", "une prise moyenne");
                 case "LOW": return Bande("seized_amount", "LOW", "une petite prise");
                 case "NONE": return Bande("seized_amount", "NONE", "rien");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
 
@@ -1217,7 +1221,7 @@ namespace MafiaCleanCity.Operational
         }
 
         // ----- Phase-2b vector #2 (Crick) cold-chain: substance_type label (BRINDLE | CRICK | …) -----
-        private static string SubstanceLabel(string s)
+        public static string SubstanceLabel(string s)
         {
             switch (s)
             {
@@ -1226,20 +1230,20 @@ namespace MafiaCleanCity.Operational
                 case "HUSH": return Cle("substance", "Hush");
                 case "ASH": return Cle("substance", "Ash");
                 case "": case null: return Cle("substance", "—");
-                default: return s;
+                default: return MafiaCleanCity.I18n.Repli.Type(s);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
 
         // ----- Phase-2b vector #2 (Crick) cold-chain: temperature_status band (OPTIMAL_COLD | MODERATE | HOT) -----
         // R2.2: a qualitative band label, NEVER a raw °C. OPTIMAL_COLD=good (mild), MODERATE=amber, HOT=severe.
-        private static string TemperatureLabel(string b)
+        public static string TemperatureLabel(string b)
         {
             switch (b)
             {
                 case "OPTIMAL_COLD": return Cle("temperature", "Optimal (cold)");
                 case "MODERATE": return Cle("temperature", "Warming");
                 case "HOT": return Cle("temperature", "Hot");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // Distinct shape per band (a11y F2 — shape carries the meaning alongside colour; mirrors the cover/risk gauges).
@@ -1257,14 +1261,14 @@ namespace MafiaCleanCity.Operational
             b == "OPTIMAL_COLD" ? AccentMild : b == "MODERATE" ? AccentModerate : AccentSevere;
 
         // ----- Phase-2c vector #2c (Ash — T5): lab_tier_band (BASIC | REFINED | MASTER) — the specialized_lab standing -----
-        private static string LabTierLabel(string b)
+        public static string LabTierLabel(string b)
         {
             switch (b)
             {
                 case "BASIC": return Bande("lab_tier", "BASIC", "Simple");
                 case "REFINED": return Bande("lab_tier", "REFINED", "Affiné");
                 case "MASTER": return Bande("lab_tier", "MASTER", "Maître");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // A rising filled-pip gauge (shape carries the tier alongside colour — a11y F2, mirrors the cover/risk gauges).
@@ -1284,7 +1288,7 @@ namespace MafiaCleanCity.Operational
 
         // ----- Phase-2c vector #2c (Ash — T9): purity_band (CUT | STANDARD | PURE | CRYSTALLINE) — the batch grade -----
         // R2.2: a qualitative band label, NEVER the raw purity_score. Ascending grade: CUT < STANDARD < PURE < CRYSTALLINE.
-        private static string PurityLabel(string b)
+        public static string PurityLabel(string b)
         {
             switch (b)
             {
@@ -1292,7 +1296,7 @@ namespace MafiaCleanCity.Operational
                 case "STANDARD": return Bande("purity", "STANDARD", "Courante");
                 case "PURE": return Bande("purity", "PURE", "Pure");
                 case "CRYSTALLINE": return Bande("purity", "CRYSTALLINE", "Cristalline");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // A 4-segment crystal-fill gauge (shape encodes the grade — a11y F2: shape carries the level alongside colour).
@@ -1320,14 +1324,14 @@ namespace MafiaCleanCity.Operational
         }
 
         // ----- Phase-2c vector #2c (Ash — T7/T8): appointment status (SCHEDULED | HONORED | EXPIRED) -----
-        private static string AppointmentStatusLabel(string s)
+        public static string AppointmentStatusLabel(string s)
         {
             switch (s)
             {
                 case "SCHEDULED": return Bande("appointment", "SCHEDULED", "Réservé");
                 case "HONORED": return Bande("appointment", "HONORED", "Honoré");
                 case "EXPIRED": return Bande("appointment", "EXPIRED", "Passé");
-                default: return s;
+                default: return MafiaCleanCity.I18n.Repli.Etat(s);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // Distinct shape per status (a11y F2 — shape carries the meaning alongside colour).
@@ -1340,7 +1344,7 @@ namespace MafiaCleanCity.Operational
         // ----- Phase-2c vector #2c (Ash — T9): payout_band (PENDING | NONE | MODEST | FAIR | STRONG | PREMIUM) -----
         // R2.2: the realized-value tier as a band, NEVER the raw payout cents. PENDING (scheduled, not yet sold), NONE
         // (expired, lost), then the ascending honored tiers MODEST < FAIR < STRONG < PREMIUM (the realized purity premium).
-        private static string PayoutLabel(string b)
+        public static string PayoutLabel(string b)
         {
             switch (b)
             {
@@ -1350,7 +1354,7 @@ namespace MafiaCleanCity.Operational
                 case "FAIR": return Bande("payout", "FAIR", "Correct");
                 case "STRONG": return Bande("payout", "STRONG", "Fort");
                 case "PREMIUM": return Bande("payout", "PREMIUM", "Exceptionnel");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         private static string PayoutGlyph(string b)
@@ -1382,7 +1386,7 @@ namespace MafiaCleanCity.Operational
         // ----- Phase-3 vector #3 (grow_house — T7): grow_stage_band (EARLY | MID | LATE | DONE) — the growth phase -----
         // R2.2: a qualitative band label, NEVER the raw stage clock / "stage N of 3" count. Ascending: EARLY < MID < LATE,
         // then DONE (the grow is complete, awaiting harvest).
-        private static string GrowStageLabel(string b)
+        public static string GrowStageLabel(string b)
         {
             switch (b)
             {
@@ -1390,7 +1394,7 @@ namespace MafiaCleanCity.Operational
                 case "MID": return Bande("grow_stage", "MID", "Milieu");
                 case "LATE": return Bande("grow_stage", "LATE", "Fin");
                 case "DONE": return Bande("grow_stage", "DONE", "À récolter");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // A 3-segment rising filled-bar gauge → a full bar at DONE (shape encodes the phase — a11y F2, mirrors the cover/risk gauges).
@@ -1413,14 +1417,14 @@ namespace MafiaCleanCity.Operational
         // R2.2: the husbandry payoff trajectory as a band, NEVER the raw tend_count. WITHERED (neglected — low yield) <
         // ON_TRACK (partial husbandry — middling) < THRIVING (full husbandry — top yield). Reuses the AccentMild/Moderate/
         // Severe/Premium palette: WITHERED = severe, ON_TRACK = amber, THRIVING = premium violet (the best trajectory).
-        private static string HusbandryLabel(string b)
+        public static string HusbandryLabel(string b)
         {
             switch (b)
             {
                 case "WITHERED": return Bande("husbandry", "WITHERED", "Flétrie");
                 case "ON_TRACK": return Bande("husbandry", "ON_TRACK", "En bonne voie");
                 case "THRIVING": return Bande("husbandry", "THRIVING", "Florissante");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // A 3-segment fill gauge (shape encodes the trajectory — a11y F2: shape carries the level alongside colour).
@@ -1447,21 +1451,21 @@ namespace MafiaCleanCity.Operational
         // ----- Phase-3 vector #3 (grow_house — T2): the GROWABLE plant-derived precursor the plant selector cycles -----
         // The server-enforced GROWABLE set (a non-growable precursor → 422): verdant_root_extract | lull_resin | glass_lily.
         private static readonly string[] GrowablePrecursors = { "verdant_root_extract", "lull_resin", "glass_lily" };
-        private static string GrowablePrecursorLabel(string p)
+        public static string GrowablePrecursorLabel(string p)
         {
             switch (p)
             {
                 case "verdant_root_extract": return Bande("precursor", "verdant_root_extract", "Racine verdoyante");
                 case "lull_resin": return Bande("precursor", "lull_resin", "Résine de lull");
                 case "glass_lily": return Bande("precursor", "glass_lily", "Lys de verre");
-                default: return p;
+                default: return MafiaCleanCity.I18n.Repli.Type(p);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
 
         // ----- Phase-4 vector #4 (distribution_hub): hub_tier_band (SMALL | MEDIUM | LARGE | MAJOR | MAX) — the hub standing -----
         // R2.2: a qualitative band label, NEVER the raw hub_tier int. Ascending roster-cap lever: SMALL < MEDIUM < LARGE <
         // MAJOR < MAX (the cap at distribution.hub_max_tier 5). A higher band → a larger concurrent-courier roster cap.
-        private static string HubTierLabel(string b)
+        public static string HubTierLabel(string b)
         {
             switch (b)
             {
@@ -1470,7 +1474,7 @@ namespace MafiaCleanCity.Operational
                 case "LARGE": return Bande("hub_tier", "LARGE", "Grand");
                 case "MAJOR": return Bande("hub_tier", "MAJOR", "Majeur");
                 case "MAX": return Bande("hub_tier", "MAX", "Maximal");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // A 5-segment rising filled-bar gauge (shape encodes the tier alongside colour — a11y F2, mirrors the lab-tier/risk gauges).
@@ -1494,14 +1498,14 @@ namespace MafiaCleanCity.Operational
         // R2.2: the player's concurrent-shipment occupancy as a band, NEVER the raw in-transit count / cap. OPEN (idle —
         // dispatch freely) → BUSY (some shipments out, capacity remains) → FULL (at the cap — a further dispatch is refused
         // 409 OVER_CAPACITY). OPEN = cyan (good), BUSY = amber (filling), FULL = severe (no headroom).
-        private static string RosterLabel(string b)
+        public static string RosterLabel(string b)
         {
             switch (b)
             {
                 case "OPEN": return Bande("roster", "OPEN", "Ouverte");
                 case "BUSY": return Bande("roster", "BUSY", "Occupée");
                 case "FULL": return Bande("roster", "FULL", "Pleine");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // Distinct shape per band (a11y F2 — shape carries the meaning alongside colour).
@@ -1522,14 +1526,14 @@ namespace MafiaCleanCity.Operational
         // The unlocked vehicle SET (available_vehicles) worded as a comma list — categorical labels, NEVER speeds (R2.2).
         // A hub unlocks bike/car; a no-operational-hub set is foot-only.
         private static readonly string[] AllVehicles = { "FOOT", "BIKE", "CAR" };
-        private static string VehicleLabel(string v)
+        public static string VehicleLabel(string v)
         {
             switch (v)
             {
                 case "FOOT": return Bande("vehicle", "FOOT", "À pied");
                 case "BIKE": return Bande("vehicle", "BIKE", "Vélo");
                 case "CAR": return Bande("vehicle", "CAR", "Voiture");
-                default: return v;
+                default: return MafiaCleanCity.I18n.Repli.Type(v);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         private static string AvailableVehiclesLabel(string[] vehicles)
@@ -1543,7 +1547,7 @@ namespace MafiaCleanCity.Operational
         // ----- Phase-5 vector #5a (money_holding): money_holding_tier_band (SMALL | MEDIUM | LARGE | MAJOR | MAX) — the vault standing -----
         // R2.2: a qualitative band label, NEVER the raw money_holding_tier int. Ascending deposit-capacity lever: SMALL <
         // MEDIUM < LARGE < MAJOR < MAX (the cap at money_holding.max_tier 5). A higher band → a larger held-cash capacity.
-        private static string MoneyHoldingTierLabel(string b)
+        public static string MoneyHoldingTierLabel(string b)
         {
             switch (b)
             {
@@ -1552,7 +1556,7 @@ namespace MafiaCleanCity.Operational
                 case "LARGE": return Bande("money_holding_tier", "LARGE", "Grand");
                 case "MAJOR": return Bande("money_holding_tier", "MAJOR", "Majeur");
                 case "MAX": return Bande("money_holding_tier", "MAX", "Maximal");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // A 5-segment rising filled-bar gauge (shape encodes the tier alongside colour — a11y F2, mirrors the hub/lab gauges).
@@ -1575,7 +1579,7 @@ namespace MafiaCleanCity.Operational
         // ----- Phase-5 vector #5a (money_holding): held_band (NONE | LOW | MODERATE | HIGH | MASSIVE) — the clean-cash magnitude -----
         // R2.2: the EFFECTIVE held clean cash as a band, NEVER the raw held_cents. A higher hold earns more passive yield but
         // draws the audit-forfeiture eye (MASSIVE is the forfeiture-threshold territory). NONE = an empty vault.
-        private static string HeldLabel(string b)
+        public static string HeldLabel(string b)
         {
             switch (b)
             {
@@ -1584,7 +1588,7 @@ namespace MafiaCleanCity.Operational
                 case "MODERATE": return Bande("held", "MODERATE", "Moyen");
                 case "HIGH": return Bande("held", "HIGH", "Beaucoup");
                 case "MASSIVE": return Bande("held", "MASSIVE", "Énorme");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         // A rising 4-segment stack glyph (NONE = empty brackets) — shape carries the magnitude alongside colour (a11y F2).
@@ -1607,14 +1611,14 @@ namespace MafiaCleanCity.Operational
         // ----- Phase-5 vector #5a (money_holding): capacity_band (OPEN | BUSY | FULL) — the held-vs-capacity fill -----
         // R2.2: the fill as a band, NEVER the raw held/cap. OPEN (empty — deposit freely) → BUSY (some held, room remains) →
         // FULL (at the cap — a further deposit is refused 409 OVER_CAPACITY). The BYTE-MIRROR of the distribution_hub roster_band.
-        private static string CapacityLabel(string b)
+        public static string CapacityLabel(string b)
         {
             switch (b)
             {
                 case "OPEN": return Bande("capacity", "OPEN", "Ouverte");
                 case "BUSY": return Bande("capacity", "BUSY", "Occupée");
                 case "FULL": return Bande("capacity", "FULL", "Pleine");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         private static string CapacityGlyph(string b)
@@ -1633,13 +1637,13 @@ namespace MafiaCleanCity.Operational
         // ----- Phase-5 vector #5a (money_holding): yield_band (IDLE | EARNING) — the passive-yield state -----
         // R2.2: the yield as a boolean-shaped band, NEVER the raw rate / accrued cents. IDLE (nothing held → no yield) /
         // EARNING (the holding accrues a light passive yield each tick, realized on the next deposit/withdraw).
-        private static string YieldLabel(string b)
+        public static string YieldLabel(string b)
         {
             switch (b)
             {
                 case "IDLE": return Bande("yield", "IDLE", "rien ne rentre");
                 case "EARNING": return Bande("yield", "EARNING", "ça rapporte");
-                default: return b;
+                default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
         private static string YieldGlyph(string b) => b == "EARNING" ? "[+]" : "[ ]";
@@ -1651,8 +1655,8 @@ namespace MafiaCleanCity.Operational
         // number — not even a "$10k" digit — leaks to the player). The server is the final authority (it enforces capacity/
         // funds on the ACTUAL cents passed in the request body). The cents VALUE travels in the body (never rendered); only
         // the band word is shown. The four steps ($1k / $10k / $100k / $1M) anchor on the SAME M1 $ scale the held bands use.
-        private static readonly int[] TransferAmountStepsCents = { 100_000, 1_000_000, 10_000_000, 100_000_000 }; // $1k / $10k / $100k / $1M.
-        private static string TransferAmountLabel(int cents)
+        public static readonly int[] TransferAmountStepsCents = { 100_000, 1_000_000, 10_000_000, 100_000_000 }; // $1k / $10k / $100k / $1M.
+        public static string TransferAmountLabel(int cents)
         {
             switch (cents)
             {
@@ -1660,7 +1664,9 @@ namespace MafiaCleanCity.Operational
                 case 1_000_000: return "Small";   // $10k
                 case 10_000_000: return "Medium"; // $100k
                 case 100_000_000: return "Large"; // $1M
-                default: return "Small";          // a defensive fallback (always a known step via the selector).
+                // ⛔ PLUS « Small » : un montant hors des quatre paliers se disait « Small », c'est-à-dire un palier FAUX affirmé
+                // (règle f2 du 23/09, atelier 28). Il se dit « état inconnu » ; la couverture des quatre paliers est testée.
+                default: return MafiaCleanCity.I18n.Repli.EtatInconnu;
             }
         }
 
@@ -1987,7 +1993,7 @@ namespace MafiaCleanCity.Operational
         // selector reads as a qualitative choice + keeps the no-raw-scalar guard simple (R2.2 — the UI shows no bare
         // numbers anywhere). The server enforces the real max (passes > max → 422); the client clamps only at 0 and at the
         // max-words ceiling. More passes = a longer cook = a higher purity band.
-        private const int MaxRefiningPassesUi = 3; // mirrors the server's production.ash.max_refining_passes default (3).
+        public const int MaxRefiningPassesUi = 3; // mirrors the server's production.ash.max_refining_passes default (3).
         private void AddRefiningPassesSelector(Transform parent)
         {
             string label = NewSectionLabel(parent, "PASSES DE RAFFINAGE (temps ↔ pureté)");
@@ -2021,14 +2027,16 @@ namespace MafiaCleanCity.Operational
 
         // Word the refining-passes count (the time↔purity lever) as a qualitative choice — None / Light / Standard / Deep —
         // so the selector shows no bare digit (R2.2 keeps the no-raw-scalar guard simple). More = a longer cook, purer Ash.
-        private static string RefiningPassesLabel(int passes)
+        public static string RefiningPassesLabel(int passes)
         {
             switch (passes)
             {
                 case 0: return "None";
                 case 1: return "Light";
                 case 2: return "Standard";
-                default: return "Deep"; // 3+ (clamped at the UI max)
+                case 3: return "Deep";   // le max de l'UI (`MaxRefiningPassesUi`)
+                // ⛔ PLUS « Deep » pour tout le reste : 4 ou −1 se disaient « Deep », un cran faux affirmé (règle f2, atelier 28).
+                default: return MafiaCleanCity.I18n.Repli.EtatInconnu;
             }
         }
 

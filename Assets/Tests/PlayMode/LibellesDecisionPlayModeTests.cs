@@ -66,8 +66,9 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual("—", LibellesDecision.Portee(null));
             Assert.AreEqual("—", LibellesDecision.Urgence(""));
             Assert.AreEqual(0, LibellesDecision.Rang("", false), "aucune pastille sur une absence");
-            // Et une valeur INCONNUE sort brute : la voir est un signal, la fondre n'en est pas un.
-            Assert.AreEqual("zzz_hors_domaine", LibellesDecision.Portee("zzz_hors_domaine"));
+            // 23/09 — épingle REMPLACÉE (règle f2, atelier 28) : une valeur INCONNUE ne sort plus brute ; elle se dit « état
+            // inconnu », distincte du « — » de l'absence. La dérive se voit par le test de couverture de domaine.
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, LibellesDecision.Portee("zzz_hors_domaine"));
             Assert.AreEqual(0, LibellesDecision.Rang("zzz_hors_domaine", false),
                 "on n'allume pas une pastille sur une valeur qu'on n'a pas comprise");
         }

@@ -1742,7 +1742,7 @@ namespace MafiaCleanCity.Operational
                 case "dealer_spot_front": return "Un point de vente";
                 case "money_holding":     return "Une société-écran";
                 case "specialized_lab":   return "Un labo spécialisé";
-                default:                  return string.IsNullOrEmpty(t) ? "Un bâtiment" : t;
+                default:                  return MafiaCleanCity.I18n.Repli.UnBatiment;   // repli de NOM en tête de phrase (atelier 28) : absent OU hors domaine, jamais le type brut
             }
         }
     }

@@ -726,7 +726,7 @@ namespace MafiaCleanCity.Operational
             {
                 case "boutique": return "cabinet";
                 case "corruption_pipeline": return "filière";
-                default: return string.IsNullOrEmpty(tier) ? "tier inconnu" : tier;
+                default: return MafiaCleanCity.I18n.Repli.Type(tier);   // plus « tier inconnu » (un mot anglais) ni le palier brut — atelier 28
             }
         }
 

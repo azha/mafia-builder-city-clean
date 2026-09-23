@@ -210,8 +210,10 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(ForensicResolvers.Gravite.Inconnu, ForensicResolvers.NiveauDe(""));
             Assert.AreEqual(ForensicResolvers.Gravite.Inconnu, ForensicResolvers.NiveauDe(null));
 
-            // et la phrase montre le mot du serveur plutôt qu'une paraphrase rassurante
-            Assert.AreEqual("smouldering", ForensicResolvers.Phrase("smouldering"));
+            // et la phrase ne RASSURE pas : 23/09 (règle f2, atelier 28), le mot BRUT du serveur est remplacé par « état inconnu »
+            // — toujours jamais « calme ». L'épingle est remplacée par la propriété qui compte, pas assouplie.
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, ForensicResolvers.Phrase("smouldering"));
+            Assert.AreNotEqual(ForensicResolvers.Phrase("quiet"), ForensicResolvers.Phrase("smouldering"), "jamais rabattue sur calme");
             Assert.AreEqual("—", ForensicResolvers.Phrase(null));
         }
 

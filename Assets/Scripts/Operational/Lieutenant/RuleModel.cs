@@ -406,7 +406,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
 
         // Comparator → a readable symbol/word for the preview (the math symbols read clearer than "==").
-        private static string ComparatorWord(string c)
+        public static string ComparatorWord(string c)
         {
             switch ((c ?? string.Empty).Trim())
             {
@@ -415,19 +415,23 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 case ">": return ">";
                 case "<": return "<";
                 case "==": return "=";
+                case "=": return "=";    // la forme CANONIQUE du back (`dsl/ast.ts:24`, CompareOp) ; `==` n'en est que l'alias accepté
                 case "!=": return "≠";
-                default: return string.IsNullOrEmpty(c) ? "?" : c.Trim();
+                // Hors domaine : « type inconnu » (un jeton de règle est une sorte — atelier 28) ; absent : « — ». Plus jamais le jeton brut.
+                default: return MafiaCleanCity.I18n.Repli.Type(c);
             }
         }
 
         // Action atom → a readable verb phrase for the preview.
-        private static string ActionWord(string a)
+        public static string ActionWord(string a)
         {
             switch ((a ?? string.Empty).Trim())
             {
                 case "EXECUTE_DEFAULT": return "run the default behavior";
                 case "PAUSE_OPS": return "pause operations";
-                default: return string.IsNullOrEmpty(a) ? "do nothing" : a.Trim();
+                // ⛔ PLUS « do nothing » : une action ABSENTE se lisait comme une action (en anglais), et une action inconnue sortait
+                // BRUTE. Absente : « — » ; hors domaine : « type inconnu » (règle f2, atelier 28).
+                default: return MafiaCleanCity.I18n.Repli.Type(a);
             }
         }
     }

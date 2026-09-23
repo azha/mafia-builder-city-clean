@@ -461,19 +461,45 @@ namespace MafiaCleanCity.Operational.Tests
         /// le back ne sert pas), la production rend la casse de titre, sans clé. *Un test qui recopie la
         /// fonction qu'il teste ne teste que sa copie* — et le parcours E2E ne sert que des bandes NOMMÉES
         /// (ACTIVE, PAUSED), donc il ne passe jamais par le `default` : c'est ce test-ci qui le tient.
-        /// Rouge si le `default` change : un mot inventé, une clé demandée, ou « — » perdu pour l'absence.</summary>
+        /// Rouge si le `default` change : un mot inventé, une clé demandée, ou « — » perdu pour l'absence.
+        /// ⛔ 23/09 — ÉPINGLE REMPLACÉE, pas assouplie (règle f2, atelier 28) : elle exigeait « une 5ᵉ bande se VOIT brute »
+        /// (« Retired »). La règle est désormais qu'un joueur ne voit jamais une valeur machine : la 5ᵉ bande se dit
+        /// « état inconnu » (clé ÉCRITE par l'atelier, `commun.repli.etat_inconnu`), et la dérive de domaine est vue par un TEST
+        /// de couverture (`ReplisPlayModeTests`, domaine `op_state_band` lu dans le back) — la propriété que l'épingle gardait,
+        /// déplacée là où elle se mesure.</summary>
         [Test]
-        public void Etat_UneBandeInconnueSortEnCasseDeTitre_SansDemanderDeCle()
+        public void Etat_UneBandeInconnueSeDit_EtatInconnu_JamaisBrute()
         {
-            MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
-            Assert.AreEqual("Retired", FamilleLabels.Etat("RETIRED"),
-                "une 5ᵉ bande doit se VOIR, lisible et brute — pas un mot qui la maquille");
-            Assert.AreEqual("On leave", FamilleLabels.Etat("ON_LEAVE"), "les `_` deviennent des espaces");
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, FamilleLabels.Etat("RETIRED"),
+                "une 5ᵉ bande se NOMME, elle ne sort plus brute (« Retired »)");
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, FamilleLabels.Etat("ON_LEAVE"));
             Assert.AreEqual("—", FamilleLabels.Etat(null), "l'absence de bande est « — », pas une chaîne vide");
-            Assert.AreEqual(0, MafiaCleanCity.I18n.Libelle.NbAppels,
-                "le repli ne demande AUCUNE clé au catalogue (dernière demandée : « " +
-                MafiaCleanCity.I18n.Libelle.DernierRepli + " ») : une clé inventée sur le repli serait " +
-                "une demande que le back ne sert pas");
+            MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
+            FamilleLabels.Etat("RETIRED");
+            Assert.AreEqual("commun.repli.etat_inconnu", MafiaCleanCity.I18n.Libelle.DernierRepli,
+                "la clé demandée est celle que l'atelier a écrite — aucune clé inventée");
+        }
+
+        /// <summary>23/09 (atelier 27, `8c7a75a4`) — le repli de `FamilleLabels.Mode` NOMME une valeur présente hors domaine
+        /// (« Mode inconnu », clé `famille.mode.mode_inconnu`) au lieu de l'afficher BRUTE ; une valeur ABSENTE reste « — »
+        /// (TD-644). Même raison d'être que le test d'`Etat` ci-dessus : le parcours E2E ne sert que des modes NOMMÉS.</summary>
+        [Test]
+        public void Mode_UneValeurHorsDomaineEstNommee_LAbsenceResteUnTiret()
+        {
+            try
+            {
+                MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
+                Assert.AreEqual("Mode inconnu", FamilleLabels.Mode("SUSPENDED"),
+                    "une valeur hors domaine se NOMME : plus jamais la valeur brute en casse de titre");
+                Assert.AreEqual("famille.mode.mode_inconnu", MafiaCleanCity.I18n.Libelle.DernierRepli,
+                    "la clé demandée est celle des mots de l'atelier 27");
+                Assert.AreEqual("—", FamilleLabels.Mode(null), "l'absence est « — »");
+                Assert.AreEqual("—", FamilleLabels.Mode(" "), "l'absence est « — »");
+                MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("en",
+                    new System.Collections.Generic.Dictionary<string, string> { { "famille.mode.mode_inconnu", "Unknown mode" } });
+                Assert.AreEqual("Unknown mode", FamilleLabels.Mode("SUSPENDED"), "la clé servie l'emporte");
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
         }
 
         // (2) DELEGATED STATUS (the proof): the delegated op_state_band tracks the ATTACHED rules — ACTIVE (the COOK

@@ -26,9 +26,8 @@ namespace MafiaCleanCity.Shell
     // pas se faire avaler par une branche connue.
     public static class WalletBandResolver
     {
-        /// <summary>Le libellé affiché pour une bande servie. Rend la bande TELLE QUELLE si elle
-        /// n'est pas des cinq — un `default` qui renverrait « Fauché » masquerait une valeur
-        /// neuve du back derrière un mot plausible.</summary>
+        /// <summary>Le libellé affiché pour une bande servie. Une 6ᵉ bande ne se dit JAMAIS « Fauché » (un mot plausible qui
+        /// masquerait la valeur neuve) — et depuis le 23/09 (règle f2) plus jamais brute : « état inconnu ».</summary>
         public static string Label(string bande)
         {
             switch (bande)
@@ -38,7 +37,7 @@ namespace MafiaCleanCity.Shell
                 case "MODERATE": return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Correct");
                 case "LOW":      return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Juste");
                 case "BROKE":    return MafiaCleanCity.I18n.Libelle.De("accueil", "etat", "Fauché");
-                default:         return bande;
+                default:         return MafiaCleanCity.I18n.Repli.Etat(bande);   // hors domaine : « état inconnu » (règle f2, atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
     }

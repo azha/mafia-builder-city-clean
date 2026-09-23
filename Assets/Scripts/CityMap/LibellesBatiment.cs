@@ -53,15 +53,9 @@ namespace MafiaCleanCity.CityMap
                 case "specialized_lab": return "Labo spécialisé";
                 case "refinery": return "Raffinerie";
                 case "press_house": return "Imprimerie";
-                default: return CasseDeTitre(t);
+                default: return MafiaCleanCity.I18n.Repli.TypeInconnu;   // un type hors domaine (règle f2, atelier 28) — jamais le code brut ; le vide est traité plus haut
             }
         }
 
-        private static string CasseDeTitre(string v)
-        {
-            if (string.IsNullOrEmpty(v)) return "—";
-            string bas = v.Replace('_', ' ').ToLowerInvariant();
-            return char.ToUpperInvariant(bas[0]) + (bas.Length > 1 ? bas.Substring(1) : string.Empty);
-        }
     }
 }

@@ -57,7 +57,7 @@ namespace MafiaCleanCity.Shell
                 case "major": return "majeure";
                 // Une VALEUR INCONNUE sort brute, elle ne se fond pas dans un mot choisi : voir une
                 // valeur qu'on n'attendait pas est un signal. Le tiret est réservé à l'ABSENCE.
-                default: return string.IsNullOrEmpty(bucket) ? "—" : bucket;
+                default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : « état inconnu » (règle f2, atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
 
@@ -68,7 +68,7 @@ namespace MafiaCleanCity.Shell
                 case "low": return "faible";
                 case "elevated": return "élevée";
                 case "pressing": return "pressante";
-                default: return string.IsNullOrEmpty(bucket) ? "—" : bucket;
+                default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : « état inconnu » (règle f2, atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
 

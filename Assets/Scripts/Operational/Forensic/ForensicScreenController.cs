@@ -592,7 +592,7 @@ namespace MafiaCleanCity.Operational
                 case Gravite.Calme:     return MafiaCleanCity.I18n.Libelle.De("forensic", "gravite", "Rien ne dépasse");
                 case Gravite.Surveille: return MafiaCleanCity.I18n.Libelle.De("forensic", "gravite", "On vous regarde");
                 case Gravite.Criant:    return MafiaCleanCity.I18n.Libelle.De("forensic", "gravite", "Ça se voit de loin");
-                default: return string.IsNullOrEmpty(bande) ? "—" : bande;
+                default: return MafiaCleanCity.I18n.Repli.Etat(bande);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
     }

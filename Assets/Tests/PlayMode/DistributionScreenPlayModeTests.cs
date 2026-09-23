@@ -444,9 +444,10 @@ namespace MafiaCleanCity.Operational.Tests
         [Test]
         public void EcranDistributionR2_ResolveurChemin_ReplyGracieuxSurValeurNonObservee()
         {
-            Assert.AreEqual("bogus_5e_valeur", DistributionResolvers.TexteChemin("bogus_5e_valeur"),
-                "domaine NON confirmé fermé — une valeur non listée doit être affichée BRUTE, " +
-                "jamais lever (contrairement à ㉚.supplier_pressure_bucket, confirmé fermé lui)");
+            // 23/09 (règle f2, atelier 28) : l'épingle « affichée BRUTE » est REMPLACÉE — la dérive de domaine se voit par un
+            // test de couverture (`ReplisPlayModeTests`), jamais par l'œil du joueur. Toujours : jamais lever.
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, DistributionResolvers.TexteChemin("bogus_5e_valeur"),
+                "hors domaine : « état inconnu », jamais la valeur brute, jamais lever");
         }
 
         [Test]
@@ -460,8 +461,8 @@ namespace MafiaCleanCity.Operational.Tests
         public void EcranDistributionR4_ResolveurRouteState_CouvreLaSeuleValeurMesureeEtReplieGracieusement()
         {
             Assert.AreEqual("tient", DistributionResolvers.TexteRouteState("active"));
-            Assert.AreEqual("severed", DistributionResolvers.TexteRouteState("severed"),
-                "aucune valeur au-delà de 'active' n'est mesurée — repli brut, pas d'invention de texte");
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, DistributionResolvers.TexteRouteState("severed"),
+                "une valeur non mappée : « état inconnu » — ni la valeur brute, ni un texte inventé (règle f2, atelier 28)");
         }
 
         [Test]

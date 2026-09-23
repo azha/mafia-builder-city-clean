@@ -81,6 +81,9 @@ namespace MafiaCleanCity.Shell
         public int OpenedGameDay { get; private set; }
         public string RenderedGameDayText { get; private set; }
         public string RenderedCashText { get; private set; }
+        /// <summary>①-3 — le bandeau éphémère (`BandeauEphemere`), sous la barre, à `top:78px` du canon. Construit une fois,
+        /// comme le reste de la barre ; c'est le shell qui lui dit quoi annoncer (`AppShell.AnnoncerAuBandeau`).</summary>
+        public BandeauEphemere Bandeau { get; private set; }
 
         // ---- test hooks — day_phase (§6.3, chunk 5) -------------------------
         /// <summary>État affiché par l'aile droite pour day_phase : la valeur DAWN|DAY|DUSK|NIGHT du
@@ -703,6 +706,82 @@ namespace MafiaCleanCity.Shell
             UpdateAlarmState();
         }
 
+        // ----------------------------------------------------------- la descente (①-4)
+
+        /// <summary>①-4 (écart ① M4/M5, D5) — l'état D du canon : la légende « Heat » devient « Descente »
+        /// (`document.getElementById('heatlib').textContent=['Heat','Heat','Descente'][etatHeat]`), la valeur et la légende
+        /// passent en braise, le cerclage et le filet de la barre battent (`pouls 1.1s`), l'aiguille tremble (`tremble .14s`).
+        /// La donnée est `heat.escalated` du DISTRICT affiché : `AppShell` la pose en district, et la retire à la sortie.
+        /// ⚠️ « Descente » est un mot sous veto possible de l'user ; il entre sur consigne de l'orchestrateur (23/09), par
+        /// `Libelle` (clé `chrome.medaillon.descente`, non servie : repli compté).</summary>
+        public void SetDescente(bool descente)
+        {
+            EnsureInitialized();
+            if (Descente == descente) return;
+            Descente = descente;
+            if (gaugeCaption != null)
+            {
+                gaugeCaption.text = descente
+                    ? MafiaCleanCity.I18n.Libelle.De("chrome", "medaillon", "Descente").ToUpperInvariant()
+                    : LegendeCalme;
+                AjusterALEncre(gaugeCaption, gaugeCaptionLargeurMax);
+            }
+            if (!descente)
+            {
+                // Retour à l'état NOMMÉ : opacité pleine, aiguille sur sa bande — jamais « la dernière image du battement ».
+                AppliquerPouls(1f);
+                if (heatNeedle != null) heatNeedle.localEulerAngles = new Vector3(0f, 0f, HeatNeedleAngleDegrees);
+            }
+            UpdateAlarmState();
+        }
+
+        /// <summary>①-4 — vrai pendant une descente du district affiché.</summary>
+        public bool Descente { get; private set; }
+        /// <summary>①-4 — la légende du médaillon telle qu'affichée (« CHALEUR » / « DESCENTE »).</summary>
+        public string GaugeCaptionText => gaugeCaption != null ? gaugeCaption.text : null;
+
+        /// <summary>`@keyframes pouls{0%,100%{opacity:1}50%{opacity:.45}}`, 1,1 s ; l'`ease` approché par un `SmoothStep`.</summary>
+        public static float Pouls(float t)
+        {
+            float phase = Mathf.Repeat(t, PoulsPeriodeS) / PoulsPeriodeS;
+            float m = phase < 0.5f ? phase * 2f : (1f - phase) * 2f;
+            return Mathf.Lerp(1f, PoulsCreux, Mathf.SmoothStep(0f, 1f, m));
+        }
+
+        /// <summary>`@keyframes tremble{0%,100%{rotate(52deg)}50%{rotate(56deg)}}`, 0,14 s : 4° VERS LE CHAUD, et retour.</summary>
+        public static float Tremblement(float t)
+        {
+            float phase = Mathf.Repeat(t, TremblePeriodeS) / TremblePeriodeS;
+            float m = phase < 0.5f ? phase * 2f : (1f - phase) * 2f;
+            float versLeChaud = Mathf.Sign(HeatBucketResolver.NeedleAngleDegrees(HeatBucketResolver.Rank.Burning)
+                                           - HeatBucketResolver.NeedleAngleDegrees(HeatBucketResolver.Rank.Cold));
+            return versLeChaud * TrembleAmplitudeDeg * Mathf.SmoothStep(0f, 1f, m);
+        }
+
+        private void Update()
+        {
+            if (!Descente) return;
+            float t = Time.unscaledTime;
+            AppliquerPouls(Pouls(t));
+            // `HeatNeedleAngleDegrees` reste la valeur de la BANDE (contrat pinné) : seul le transform tremble autour.
+            if (heatNeedle != null)
+                heatNeedle.localEulerAngles = new Vector3(0f, 0f, HeatNeedleAngleDegrees + Tremblement(t));
+        }
+
+        /// <summary>`.tel.descente .medaillon .boitier{animation:pouls}` et `.tel.descente .barre::after{animation:pouls}` :
+        /// l'opacité du cerclage et du filet, rien d'autre.</summary>
+        private void AppliquerPouls(float alpha)
+        {
+            if (boitierRing != null) { Color c = boitierRing.color; c.a = alpha; boitierRing.color = c; }
+            if (hairline != null) { Color c = hairline.color; c.a = alpha; hairline.color = c; }
+        }
+
+        private const string LegendeCalme = "CHALEUR";
+        private const float PoulsPeriodeS = 1.1f, PoulsCreux = 0.45f;
+        private const float TremblePeriodeS = 0.14f, TrembleAmplitudeDeg = 4f;
+        private TextMeshProUGUI gaugeCaption;
+        private float gaugeCaptionLargeurMax;
+
         /// <summary>HUD v3.1 (doctrine — mockup `.tel.chaud`/`.tel.descente`) : le filet de la barre
         /// et l'anneau du médaillon basculent vers la teinte "Severe" quand la ville brûle
         /// (BURNING), sinon restent au filet or calme. La teinte alarme passe PAR LE RÉSOLVEUR —
@@ -761,6 +840,16 @@ namespace MafiaCleanCity.Shell
                 if (gaugeValueText != null) gaugeValueText.color = DesignTokens.Current.hudCreme;
                 if (phaseValueText != null) phaseValueText.color = DesignTokens.Current.hudCreme;
             }
+            // ①-4 — `.tel.descente .heatpct,.tel.descente .heatlib{color:var(--braise)}` et
+            // `.tel.descente .medaillon .boitier{border-color:var(--braise)}`, PAR-DESSUS l'état de la ville : une descente
+            // dans un district tiède reste une descente. La phase (aile droite) n'est pas dans ces règles : elle suit la ville.
+            Color braise = DesignTokens.Current.hudGaugeArcHot;
+            if (Descente)
+            {
+                if (boitierRing != null) boitierRing.color = braise;
+                if (gaugeValueText != null) gaugeValueText.color = braise;
+            }
+            if (gaugeCaption != null) gaugeCaption.color = Descente ? braise : DesignTokens.Current.hudCremeSecondary;
         }
 
         private static Color WithAlpha(Color c, float a)
@@ -771,37 +860,11 @@ namespace MafiaCleanCity.Shell
 
         // ----------------------------------------------------------- cash formatting (C2-F1)
 
-        /// <summary>Format a BigInt-serialized cents STRING as a locale-appropriate currency string —
-        /// NO hard-coded symbol (design C2-F1). Uses `decimal` throughout (never float/double): the
-        /// dimensioning scenario is a value beyond Number.MAX_SAFE_INTEGER (2^53), which decimal's
-        /// ~28-29 significant digits comfortably survive without precision loss. Static + independently
-        /// testable — the falsifiable never depends on a live seeded wallet reaching that magnitude.</summary>
-        public static string FormatCash(string cashCentsRaw, string localeCode)
-        {
-            if (string.IsNullOrEmpty(cashCentsRaw)) return "—";
-            decimal cents;
-            if (!decimal.TryParse(cashCentsRaw, NumberStyles.Integer | NumberStyles.AllowLeadingSign,
-                    CultureInfo.InvariantCulture, out cents))
-            {
-                return "—";
-            }
-            decimal major = cents / 100m;
-            CultureInfo culture = ResolveCulture(localeCode);
-            return major.ToString("C", culture);
-        }
-
-        private static CultureInfo ResolveCulture(string localeCode)
-        {
-            switch (localeCode)
-            {
-                case "fr": return CultureInfo.GetCultureInfo("fr-FR");
-                case "en":
-                default:
-                    // Unknown/absent locale falls back to en-US — still culture-driven formatting
-                    // (grouping/decimal/symbol all come FROM the CultureInfo), never a hard-coded "$".
-                    return CultureInfo.GetCultureInfo("en-US");
-            }
-        }
+        /// <summary>Le montant du portefeuille, tel que la barre l'affiche. Point 10 (07/09, ratifié) : « 24 850 € », sans
+        /// centimes, espace fine insécable. ⛔ Le formatage lui-même vit dans `Argent` (ShellContracts), le SEUL formateur d'argent
+        /// du client : cette méthode garde son nom et sa signature (ses appelants et ses tests), et délègue. `decimal` de bout en
+        /// bout (C2-F1 : un solde au-delà de 2^53 survit sans perte), « — » pour une valeur absente ou illisible.</summary>
+        public static string FormatCash(string cashCentsRaw, string localeCode) => Argent.DepuisCentimes(cashCentsRaw, localeCode);
 
         // --------------------------------------------------------------- UI build
 
@@ -922,6 +985,7 @@ namespace MafiaCleanCity.Shell
             BuildClockCluster();
             BuildNotificationHook();
             BuildVolutes(transform);
+            Bandeau = BandeauEphemere.Construire(transform);   // ①-3 — dernier frère : il passe sur l'art, jamais sous lui
 
             RepositionMoneyCluster();
         }
@@ -1492,11 +1556,13 @@ namespace MafiaCleanCity.Shell
             gaugeValueText.textWrappingMode = TextWrappingModes.NoWrap;
             AjusterALEncre(gaugeValueText, faceDiameter - 8f);
 
-            AjusterALEncre(NewText("GaugeCaption", "CHALEUR",
+            gaugeCaption = NewText("GaugeCaption", LegendeCalme,
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 new Vector2(0f, -21f), new Vector2(faceDiameter - 6f, 9f),
                 GaugeCaptionFontSizePx, TextAlignmentOptions.Center, DesignTokens.Current.hudCremeSecondary,
-                letterSpacing: 3f, parent: manoGo.transform), faceDiameter - 6f);
+                letterSpacing: 3f, parent: manoGo.transform);
+            gaugeCaptionLargeurMax = faceDiameter - 6f;
+            AjusterALEncre(gaugeCaption, gaugeCaptionLargeurMax);
         }
 
         /// <summary>Ramène la boîte d'un libellé du cadran à la largeur de son ENCRE.
@@ -1562,7 +1628,9 @@ namespace MafiaCleanCity.Shell
         /// de bandeau temporisé/animé est une fonctionnalité neuve, pas un restyle). Ce qui reste :
         /// un hook de DONNÉES headless (`notificationText`, alpha 0) qui préserve EXACTEMENT le
         /// contrat R2.2 existant (C2F2/C2F4/DA5 : la VALEUR suit `backlogBadge`, scannée, jamais de
-        /// chrome visible).</summary>
+        /// chrome visible).
+        /// ①-3 (2026-09-23) : le bandeau éphémère existe désormais — `BandeauEphemere`, monté à la fin
+        /// de `BuildLayout`. Ce hook ne change pas : il reste le contrat de données du badge.</summary>
         /// <summary>⛔⛔ LES VOLUTES DU BANDEAU — deux fois relevées absentes par un juge ⊥, et
         /// elles n'étaient pas un rendu d'atelier : le canon les DESSINE, en SVG, dans le HTML.
         ///
