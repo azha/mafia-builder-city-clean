@@ -23,10 +23,12 @@ namespace MafiaCleanCity.Onboarding
     // part : il est offert dès le premier overlay, au même rang visuel que « continuer ». Le
     // cacher derrière trois écrans en ferait une option théorique.
     //
-    // ⚠️ D10-h — LA COPY PRÉ-SEEDÉE DU CANON EST FAUSSE DÈS SA PREMIÈRE PHRASE (décision ouverte
-    // au registre). Cet écran n'invente donc AUCUN texte de tutoriel : il affiche
-    // l'IDENTIFIANT servi. C'est laid et c'est honnête — écrire une copy de remplacement ici la
-    // figerait dans le client et enterrerait la décision que l'user doit prendre.
+    // ✅ D10-h EST CLOSE (back 4a922bc9, 02/09) : les 11 textes `tutorial.*` sont SERVIS. `next_tutorial_id` porte la clé entière
+    // (`tutorial.queue_runs_dry`) : l'écran affiche le TEXTE servi (`TexteDuTutoriel`), plus jamais l'identifiant (atelier 33, 23/09).
+    // ⛔ `next_tutorial_id` NULL NE VEUT PAS DIRE « FINI » : au plus un tutoriel par session (`hasShownAnySince`), et rien n'est
+    //    désigné avant la première décision. « Tout vu » seulement si plus rien n'est éligible (`PhraseSansSuivant`).
+    // ⛔ LA BASCULE EST DANS LE SENS DU JOUEUR : « On vous explique encore » (mot RATIFIÉ, Profil, série 6 cadres 95-96) est ALLUMÉE
+    //    quand `tutorials_opt_out` est FAUX. La clé est un opt-OUT : l'inversion vit ici, en un seul lieu (`BasculeAllumee`).
     //
     // ⚠️ Le 3ᵉ endpoint canon (`PATCH /v1/me/settings`) est ABSENT (S10-a) — non câblé.
     // ⛔ NON REVU — jalon 2026-09-05.
@@ -45,6 +47,40 @@ namespace MafiaCleanCity.Onboarding
         /// dépend d'aucun champ, d'aucun ordre de requêtes, et elle survivra à l'ajout d'un appel.</summary>
         public int RendusEffectues { get; private set; }
         public string DerniereErreur { get; private set; }
+        /// <summary>Garde : le dernier refus DEMANDÉ par la bascule (la valeur envoyée à `tutorials_opt_out`), null avant tout geste.</summary>
+        public bool? DernierRefusDemande { get; private set; }
+        /// <summary>Garde : l'état AFFICHÉ de la bascule « On vous explique encore ».</summary>
+        public bool BasculeAffichee { get; private set; }
+
+        private static string Lib(string litteral) => MafiaCleanCity.I18n.Libelle.De("tutoriel", "ecran", litteral);
+
+        /// <summary>La bascule, dans le sens du JOUEUR : allumée ⇔ on lui explique encore ⇔ `tutorials_opt_out` FAUX.</summary>
+        public static bool BasculeAllumee(bool tutorialsOptOut) => !tutorialsOptOut;
+        /// <summary>La valeur à envoyer à `PATCH /v1/ui/tutorial-opt-out` pour une bascule mise à `allumee`.</summary>
+        public static bool RefusPourBascule(bool allumee) => !allumee;
+
+        /// <summary>Le TEXTE servi d'un tutoriel : `next_tutorial_id` EST sa clé (`tutorial.queue_runs_dry`). Jamais l'identifiant ;
+        /// une clé non servie (ou un id vide) rend « — ».</summary>
+        public static string TexteDuTutoriel(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return "—";
+            string t = MafiaCleanCity.I18n.Libelle.Gabarit(id.Trim(), null);
+            return string.IsNullOrWhiteSpace(t) ? "—" : t;
+        }
+
+        /// <summary>Ce que dit l'écran quand `next_tutorial_id` est null : « tout vu » SEULEMENT si plus rien n'est éligible ; sinon
+        /// « rien de nouveau pour aujourd’hui » (null = rien de nouveau pour CETTE session — atelier 33 §4, mot proposé).</summary>
+        public static string PhraseSansSuivant(string[] eligibles) =>
+            eligibles == null || eligibles.Length == 0 ? Lib("Vous avez tout vu.") : Lib("Rien de nouveau pour aujourd’hui.");
+
+        /// <summary>Couture de test : rend un état fabriqué, sans réseau.</summary>
+        public void RendrePourTest(TutorielData etat)
+        {
+            Init();
+            Etat = etat;
+            DerniereErreur = null;
+            Rendre();
+        }
 
         private const float K = 1280f / 300f;
         private static float Px(float cssPx) => cssPx * K;
@@ -153,10 +189,10 @@ namespace MafiaCleanCity.Onboarding
 
             if (Etat.tutorials_opt_out)
             {
-                Texte(corps, "Refus", "Vous avez demandé qu'on vous laisse tranquille.",
+                Texte(corps, "Refus", Lib("Vous avez demandé qu’on vous laisse tranquille."),
                       Px(11f), Creme2, DesignTokens.Current.hudSerifFont,
                       TextAlignmentOptions.Center).enableWordWrapping = true;
-                Bouton("REVENIR SUR CE CHOIX", Or, () => StartCoroutine(Refuser(false)));
+                Bascule();   // éteinte : la rallumer revient sur le refus
                 RendusEffectues++;
                 return;
             }
@@ -164,25 +200,22 @@ namespace MafiaCleanCity.Onboarding
             string suivant = Etat.next_tutorial_id;
             if (string.IsNullOrEmpty(suivant))
             {
-                Texte(corps, "Fini", "Vous avez tout vu.", Px(13f), Creme,
-                      DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
+                Texte(corps, "Fini", PhraseSansSuivant(Etat.eligible_tutorial_ids), Px(13f), Creme,
+                      DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center).enableWordWrapping = true;
             }
             else
             {
-                // ⚠️ On affiche l'IDENTIFIANT, pas une copy : la copy pré-seedée du canon est
-                // fausse dès sa première phrase (D10-h). En inventer une la figerait ici.
-                Texte(corps, "Titre2", "À DÉCOUVRIR", Px(7.5f), Eteint,
-                      DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
-                    .characterSpacing = 14f;
-                Texte(corps, "Id", suivant, Px(14f), Or,
+                TextMeshProUGUI sur = Texte(corps, "Titre2", Lib("À découvrir"), Px(7.5f), Eteint,
+                      DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+                sur.characterSpacing = 14f;
+                sur.fontStyle = FontStyles.UpperCase;
+                // Le TEXTE servi du tutoriel (D10-h close) — jamais l'identifiant.
+                Texte(corps, "Texte", TexteDuTutoriel(suivant), Px(14f), Or,
                       DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center)
                     .enableWordWrapping = true;
-                Texte(corps, "Note", "⚠️ le texte de ce tutoriel n'est pas encore écrit — "
-                      + "l'identifiant tient lieu de contenu", Px(6.8f), Creme2,
-                      DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
-                    .enableWordWrapping = true;
                 string id = suivant;
-                Bouton("J'AI COMPRIS", Or, () => StartCoroutine(MarquerVu(id)));
+                // « Compris » : le mot RATIFIÉ (série 2, cadre 31 — D14 : il l'emporte sur « J'AI COMPRIS »).
+                Bouton(Lib("Compris"), Or, () => StartCoroutine(MarquerVu(id)));
             }
 
             int vus = Etat.shown_tutorial_ids != null ? Etat.shown_tutorial_ids.Length : 0;
@@ -190,8 +223,8 @@ namespace MafiaCleanCity.Onboarding
             Texte(corps, "Compte", $"{vus} vu(s) · {eligibles} disponible(s)", Px(8f), Creme2,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
 
-            // ★ le refus est un DROIT : au même rang que « continuer », jamais caché
-            Bouton("NE PLUS RIEN ME MONTRER", Creme2, () => StartCoroutine(Refuser(true)));
+            // ★ le refus est un DROIT : la bascule est offerte dès le premier écran, jamais cachée
+            Bascule();   // allumée : l'éteindre, c'est le refus
             RendusEffectues++;
         }
 
@@ -204,9 +237,60 @@ namespace MafiaCleanCity.Onboarding
             Image bf = b.AddComponent<Image>();
             bf.sprite = ProceduralUI.RoundedRectOutline((int)Px(9f), Px(1f), teinte);
             bf.type = Image.Type.Sliced;
-            Texte(b.transform, "L", libelle, Px(9f), teinte,
-                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 12f;
+            TextMeshProUGUI l = Texte(b.transform, "L", libelle, Px(9f), teinte,
+                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            l.characterSpacing = 12f;
+            l.fontStyle = FontStyles.UpperCase;   // la casse est au RENDU, le mot du catalogue reste « Compris »
             b.AddComponent<Button>().onClick.AddListener(action);
+        }
+
+        /// <summary>« On vous explique encore » — la bascule du Profil (série 6, cadres 95-96, RATIFIÉE), dans le sens du joueur.
+        /// Allumée ⇔ `tutorials_opt_out` faux. Le toucher la bascule et envoie l'opt-out INVERSE (`RefusPourBascule`).</summary>
+        private void Bascule()
+        {
+            bool allumee = BasculeAllumee(Etat.tutorials_opt_out);
+            BasculeAffichee = allumee;
+            GameObject ligne = Bloc("Bascule", corps, true, Px(8f));
+            var h = ligne.GetComponent<HorizontalLayoutGroup>();
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childForceExpandWidth = false;
+
+            GameObject textes = Bloc("Textes", ligne.transform, false, Px(2f));
+            textes.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            Texte(textes.transform, "Libelle", Lib("On vous explique encore"), Px(10f), Creme,
+                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Left).enableWordWrapping = true;
+            Texte(textes.transform, "Sous",
+                  Lib("décochez le jour où vous n’avez plus besoin qu’on vous tienne la main"),
+                  Px(7.5f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Left).enableWordWrapping = true;
+
+            // L'interrupteur : une pastille arrondie, le bouton à droite quand elle est allumée.
+            GameObject piste = new GameObject("Interrupteur", typeof(RectTransform));
+            piste.transform.SetParent(ligne.transform, false);
+            LayoutElement pl = piste.AddComponent<LayoutElement>();
+            pl.preferredWidth = pl.minWidth = Px(22f);
+            pl.preferredHeight = pl.minHeight = Px(12f);
+            Image fond = piste.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectMask((int)Px(6f));
+            fond.type = Image.Type.Sliced;
+            fond.color = allumee ? Or : Eteint;
+            GameObject bouton = new GameObject("Curseur", typeof(RectTransform));
+            bouton.transform.SetParent(piste.transform, false);
+            var brt = (RectTransform)bouton.transform;
+            brt.anchorMin = brt.anchorMax = brt.pivot = new Vector2(allumee ? 1f : 0f, 0.5f);
+            brt.sizeDelta = new Vector2(Px(10f), Px(10f));
+            brt.anchoredPosition = new Vector2(allumee ? -Px(1f) : Px(1f), 0f);
+            Image rond = bouton.AddComponent<Image>();
+            rond.sprite = ProceduralUI.RoundedRectMask((int)Px(5f));
+            rond.type = Image.Type.Sliced;
+            rond.color = Creme;
+            rond.raycastTarget = false;
+
+            Button b = ligne.AddComponent<Button>();
+            Image zone = ligne.AddComponent<Image>();
+            Color transparent = Color.white; transparent.a = 0f;
+            zone.color = transparent;
+            b.targetGraphic = zone;
+            b.onClick.AddListener(() => StartCoroutine(Refuser(RefusPourBascule(!allumee))));
         }
 
         /// <summary>⛔ Le SEUL écrivain de `shown_tutorial_ids`. Sans cet appel, le même overlay
@@ -221,6 +305,7 @@ namespace MafiaCleanCity.Onboarding
 
         private IEnumerator Refuser(bool refus)
         {
+            DernierRefusDemande = refus;
             if (string.IsNullOrEmpty(token)) yield break;
             yield return client.DefinirRefus(refus, token, _ => { },
                                              (c, m) => DerniereErreur = $"refus {c}: {m}");
