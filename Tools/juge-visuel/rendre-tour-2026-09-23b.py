@@ -9,7 +9,7 @@
     rangés dans `fiche-batiment/serie6-2026-09-23/cadre-<n>-1080x2102.png` (statuts cadre par cadre : voir le dossier `fiche-batiment/r1-2026-09-23`).
 Même chaîne que le lot du 23/09 (`rendre-tel.py`, ×3,6, polices DejaVu) ; même garde : machine libre (0 mcc-e2e, porte Unity LIBRE) ou rien.
 Imprime « FIN DU NAVIGATEUR ». Après : relire chaque cadre, mettre à jour les dossiers (`preparer-dossiers-2026-09-23.py --refaire ②,㉙`).
-Usage : python3 Tools/juge-visuel/rendre-tour-2026-09-23b.py [--a-blanc]   (--a-blanc : les commandes, rien lancé)"""
+Usage : python3 Tools/juge-visuel/rendre-tour-2026-09-23b.py [--a-blanc] [--conflit]   (--conflit : ㉙ seul)   (--a-blanc : les commandes, rien lancé)"""
 import importlib.util, os, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 sp = importlib.util.spec_from_file_location('lot', os.path.join(ICI, 'rendre-lot-2026-09-23.py'))
@@ -29,6 +29,7 @@ def commandes():
 
 def main():
     cmds = commandes()
+    if '--conflit' in sys.argv: cmds = [c for c in cmds if c[0].startswith('㉙')]   # ㉙ seul (59-64 + ses 2 références)
     if '--a-blanc' in sys.argv:
         [print(' '.join(c)) for _, c in cmds]; print(f'{len(cmds)} rendus'); return
     occ = lot.machine_libre()
