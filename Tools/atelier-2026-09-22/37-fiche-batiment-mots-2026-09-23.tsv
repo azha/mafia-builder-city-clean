@@ -1,0 +1,90 @@
+mot	cadres	classe	clé	fr	en	note
+KESTREL 4	36	note				nom de plant d’exemple (le générateur de plantes tire une graine) : aucune donnée servie ne nomme un plant — ne pas l’afficher
+RÉCOLTE	36,37	servie · D14	building.grow_stage.done	Récolte	Harvest	servi « À récolter »
+VIGOUREUSE	36,37	servie · D14	building.husbandry.thriving	Vigoureuse	Vigorous	servi « Florissante » ; s’accorde à la plante, pas à une personne
+MARSH BLUE	36	note				nom de plant d’exemple (le générateur de plantes tire une graine) : aucune donnée servie ne nomme un plant — ne pas l’afficher
+FLORAISON	36,37,38	servie · D14	building.grow_stage.late	Floraison	Flowering	servi « Fin »
+À SOIGNER	36,38	servie · D14	building.husbandry.withered	À soigner	Needs care	servi « Flétrie »
+PALE 9	36,38	note				nom de plant d’exemple (le générateur de plantes tire une graine) : aucune donnée servie ne nomme un plant — ne pas l’afficher
+CROISSANCE	36,38	servie · D14	building.grow_stage.mid	Croissance	Growth	servi « Milieu »
+HOLLOW 2	37	note				nom de plant d’exemple (le générateur de plantes tire une graine) : aucune donnée servie ne nomme un plant — ne pas l’afficher
+TIDEWAY	37	note				nom de plant d’exemple (le générateur de plantes tire une graine) : aucune donnée servie ne nomme un plant — ne pas l’afficher
+GRAY ELM	37	note				nom de plant d’exemple (le générateur de plantes tire une graine) : aucune donnée servie ne nomme un plant — ne pas l’afficher
+CORRECTE	37	servie · D14	building.husbandry.on_track	Correcte	Fair	servi « En bonne voie »
+ROOK 1	38	note				nom de plant d’exemple (le générateur de plantes tire une graine) : aucune donnée servie ne nomme un plant — ne pas l’afficher
+BOUTURE	38	servie · D14	building.grow_stage.early	Bouture	Cutting	servi « Début » → le mot ratifié de la serre (36-38)
+COLD SNAP	38	note				nom de plant d’exemple (le générateur de plantes tire une graine) : aucune donnée servie ne nomme un plant — ne pas l’afficher
+le cuisinier · J14	39,40,41,42,43	servie	famille.archetype.cuisinier	Cuisinier	Cook	composé : l’archétype servi, SANS article (D13 : « le cuisinier » présume un genre) ; « J14 » = depuis quand il tient le labo — aucun champ servi ne le dit (passé à côté ?)
+« J’ai tiré le dernier bidon cette nuit — l’étagère est vide. Sans pyralin, je ne rallume pas. »	39	servie	appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas			même sens, servi plus court ; ⚠️ le servi porte « Nestor : » en dur — un `{nom}` manquant, comme « Lt. Hara » (33 §5) ; ⚠️ « pyralin » n’est pas au catalogue `building.precursor.*` (D12)
+le feu	39,40,41,42,43,44	proposée	building.row.le_feu	le feu	the fire	l’échelle `cook_stage_band` du pupitre (39-44)
+l’étagère	39,40,41,42,43,44	proposée	building.row.l_etagere	l’étagère	the shelf	l’échelle `stock_band` (le précurseur)
+les caisses	39,40,41,42,43,44	proposée	building.row.les_caisses	les caisses	the crates	l’échelle `product_band` (le produit)
+COMMANDER DU PYRALIN	39	proposée	building.action.commander_du_pyralin	Commander du pyralin	Order pyralin	`POST /v1/operational/precursors/order` ; ⚠️ le mot du précurseur n’est pas au catalogue (Racine verdoyante · Résine de lull · Lys de verre) : à trancher (D12)
+il en faut avant de rallumer	39	proposée	building.bloc.il_en_faut_avant_de_rallumer	il en faut avant de rallumer	you need some before relighting	
+« L’étagère est refaite. Dites-moi combien de passes, et j’allume. »	40	proposée	building.replique.l_etagere_est_refaite_dites_moi_combien_de_passes_et_j_allume	« L’étagère est refaite. Dites-moi combien de passes, et j’allume. »	“The shelf is restocked. Tell me how many passes, and I’ll light it.”	réplique du lieutenant du labo (première personne : aucun genre)
+Passes	40	proposée	building.row.passes	Passes	Passes	`refining_passes` (Ash) ; même clé que « PASSES » du fourneau
+ALLUMER LE FEU	40	proposée	building.action.allumer_le_feu	Allumer le feu	Light the fire	`POST /v1/operational/lab/:id/cook {refining_passes}`
+ça consomme un lot de lys de verre	40	proposée	building.bloc.ca_consomme_un_lot_de_lys_de_verre	ça consomme un lot de lys de verre	it uses one batch of glass lily	« lys de verre » = `building.precursor.glass_lily` (D12)
+« Ça monte comme il faut. Si j’ouvre maintenant, je perds tout. »	41	proposée	building.replique.ca_monte_comme_il_faut_si_j_ouvre_maintenant_je_perds_tout	« Ça monte comme il faut. Si j’ouvre maintenant, je perds tout. »	“It’s rising right. If I open it now, I lose everything.”	
+Rien à faire ici.	41	proposée	building.bloc.rien_a_faire_ici	Rien à faire ici.	Nothing to do here.	
+Repassez quand ce sera tiré	41	proposée	building.bloc.repassez_quand_ce_sera_tire	Repassez quand ce sera tiré	Come back when it’s done	le refus 409 dit, pas codé (front.md l.886-888)
+— et ne me lancez pas une deuxième cuve tant que celle-là tourne.	41	proposée	building.replique.et_ne_me_lancez_pas_une_deuxieme_cuve_tant_que_celle_la_tourne	— et ne me lancez pas une deuxième cuve tant que celle-là tourne.	— and don’t start a second batch while this one’s running.	suite de la réplique ; le refus 409 dit
+« Trois passes, comme demandé. C’est plus long, mais ça sort propre. »	42	proposée	building.replique.passes_passes_comme_demande_c_est_plus_long_mais_ca_sort_propre	« {passes} passes, comme demandé. C’est plus long, mais ça sort propre. »	“{passes} passes, as asked. It takes longer, but it comes out clean.”	D15 : « Trois » vient de `refining_passes` → `{passes}` ; la clé suit le slug du fr
+Chaque passe rallonge la nuit.	42	proposée	building.bloc.chaque_passe_rallonge_la_nuit	Chaque passe rallonge la nuit.	Each pass makes the night longer.	
+C’est vous qui avez choisi	42	proposée	building.bloc.c_est_vous_qui_avez_choisi	C’est vous qui avez choisi	You chose this	
+— je tiens la cuve jusqu’au bout.	42	proposée	building.replique.je_tiens_la_cuve_jusqu_au_bout	— je tiens la cuve jusqu’au bout.	— I’ll see the batch through.	
+« C’est tiré. Ça ne peut pas dormir ici — chaque nuit que ça reste, c’est une nuit de trop. »	43	proposée	building.replique.c_est_tire_ca_ne_peut_pas_dormir_ici_chaque_nuit_que_ca_reste_c_est_une_nuit_de_trop	« C’est tiré. Ça ne peut pas dormir ici — chaque nuit que ça reste, c’est une nuit de trop. »	“It’s done. It can’t sleep here — every night it stays is one night too many.”	
+FAIRE SORTIR LA MARCHANDISE	43	proposée	building.action.faire_sortir_la_marchandise	Faire sortir la marchandise	Move the goods out	le dispatch (aucune route de « collecte », front.md l.889-890) ; servi ailleurs : `autonomy.log.dispatch` « Expédier maintenant » (le journal d’autonomie) — D14 : le mot ratifié pour ②
+vers les coursiers	43	proposée	building.bloc.vers_les_coursiers	vers les coursiers	to the couriers	
+l’approvisionnement · J11	44	proposée	famille.category.approvisionnement	Approvisionnement	Supply	la catégorie déléguée `SUPPLY_SOURCING` n’a pas de mot servi (les 8 `famille.category.*` ne la comptent pas) ; « J11 » : aucun champ servi (passé à côté ?)
+« L’approvisionnement, c’est moi maintenant — vous me l’avez confié. Je commande quand il faut. »	44	proposée	building.replique.l_approvisionnement_c_est_moi_maintenant_vous_me_l_avez_confie_je_commande_quand_il_faut	« L’approvisionnement, c’est moi maintenant — vous me l’avez confié. Je commande quand il faut. »	“Supply is my job now — you handed it to me. I order when it’s needed.”	le 5ᵉ état (`assertNotDelegated(SUPPLY_SOURCING)`, front.md l.891-893)
+Vous ne passez plus les commandes vous-même.	44	proposée	building.bloc.vous_ne_passez_plus_les_commandes_vous_meme	Vous ne passez plus les commandes vous-même.	You no longer place orders yourself.	
+Reprendre la main se fait depuis la Famille	44	proposée	building.bloc.reprendre_la_main_se_fait_depuis_la_famille_pas_depuis_le_labo	Reprendre la main se fait depuis la Famille, pas depuis le labo.	Taking back control happens from the Family, not from the lab.	une phrase en deux nœuds de la maquette (avec « , pas depuis le labo. ») : une clé
+, pas depuis le labo.	44	proposée	building.bloc.reprendre_la_main_se_fait_depuis_la_famille_pas_depuis_le_labo			fin de la phrase précédente : même clé
+PASSES	45,46,47	proposée	building.row.passes	Passes	Passes	doublon de « Passes » (casse de la maquette)
+STOCK · FAIBLE	45	proposée	building.row.stock + building.stock.low	Stock · Faible	Stock · Low	deux clés : la ligne `building.row.stock` (« Stock ») et la bande `building.stock.low` (« Faible », mot ratifié du fourneau) — famille neuve, §compléments
+MONTÉE EN TEMPÉRATURE	45	proposée	building.cook_stage.mid	Montée	Rising	le fourneau dit l’état MID en long ; une bande = un mot (D8) : « Montée »
+CHAÎNE DU FROID OK	45	servie	building.row.chaine_du_froid + building.temperature.optimal_cold	Chaîne du froid · Froide, idéale	Cold chain · Cold, ideal	composé servi ; « OK » cède à la bande servie
+MONTÉE	45,46,47	proposée	building.cook_stage.mid	Montée	Rising	mot ratifié (47 : « DÉBUT · MONTÉE · AFFINAGE · PRÊT ») — famille neuve
+AFFINAGE	45,46,47	proposée	building.cook_stage.late	Affinage	Refining	mot ratifié (47)
+4°	45,46	note				scalaire brut (R2.2) : le cadran porte la bande servie `building.temperature.optimal_cold` (« Froide, idéale »)
+TOUILLER	45	note				geste sans route (le fourneau, direction B « côte à côte », contemplatif : front.md l.874-876) — ne pas en faire un bouton
+BAISSER LE FEU	45	note				geste sans route (le fourneau, direction B « côte à côte », contemplatif : front.md l.874-876) — ne pas en faire un bouton
+STOCK · HAUT · PUR	46	proposée	building.stock.high + building.purity.pure	Stock · Haut · Pure	Stock · High · Pure	`building.stock.high` neuf (« Haut », ratifié) ; la pureté est servie « Pure » : D1 (bandes au féminin) contre « PUR » de la maquette
+PURETÉ HAUTE	46	servie	building.row.purete + building.purity.pure	Pureté · Pure	Purity · Pure	« haute » n’est pas une valeur servie de `purity_band` (D8)
+TROIS PASSES TENUES	46	proposée	building.bloc.passes_passes_tenues	{passes} passes tenues	{passes} passes held	D15 : le nombre vient de `refining_passes`
+TIRER LE PRODUIT	46	note				geste sans route (le fourneau, direction B « côte à côte », contemplatif : front.md l.874-876) — ne pas en faire un bouton ; aucune route de « collecte » : la sortie est « Faire sortir la marchandise »
+UNE PASSE DE PLUS	46	note				geste sans route (le fourneau, direction B « côte à côte », contemplatif : front.md l.874-876) — ne pas en faire un bouton ; les passes se fixent à l’allumage (`POST …/cook {refining_passes}`)
+ÉTAGÈRE VIDÉE	47	note				état de scène de la descente (47, direction B) : les données servies sont `raid_risk`, `seized_amount`, `structural` — à dire avec elles
+FEU COUPÉ	47	note				idem (la descente)
+STOCK SAISI	47	servie	building.row.saisie + building.seized_amount.*	Saisie · {une petite prise …}	Seizure · {a small haul …}	la saisie est servie, avec sa bande
+12°	47	note				scalaire brut (R2.2) : `building.temperature.warming` (« Se réchauffe »)
+TOUT EST PARTI	47	note				idem (la descente) : aucune donnée ne dit « tout » (D15) ; `seized_amount` dit la prise
+Un rendez-vous est pris	92	proposée	building.bloc.un_rendez_vous_est_pris	Un rendez-vous est pris	An appointment is set	titre de l’état `scheduled` (Ash, 92)
+Un client du district du Verre vous attend.	92	proposée	building.bloc.un_client_du_district_du_verre_vous_attend	Un client du district du Verre vous attend.	A client from the Glass district is waiting for you.	« le Verre » est le nom servi du district ; la clientèle d’Ash est celle du Verre (canon, front.md l.936-937)
+RENDEZ-VOUS · DISTRICT DU VERRE	92,93,94	servie	building.row.rendez_vous	Rendez-vous · district du Verre	Appointment · Glass district	composé : la ligne servie + le nom de fiction servi du district
+Verrerie Kestrel	92	note				nom de lieu d’exemple : le lieu vient de `glass_venue_building_id`, son nom est l’enseigne servie (`game.fiction.building.name`)
+A	92,93,94	note				glyphe près de « GAIN » : D11 — le mot suffit, c’est la bande servie `building.payout.*`
+pure · bon prix	92	note				glose sans donnée : la pureté est servie (`building.purity.pure`), un PRIX ne l’est pas (R2.2) ; le gain réel est `payout_band` (`building.payout.*`)
+AFFINÉE	92,93,94	proposée	building.row.affinee	Affinée	Refined	la ligne des passes de l’écrin d’Ash (92-94) ; s’accorde à la marchandise
+1 passe	92	proposée	building.bloc.passes_compte	{passes, plural, =0 {pas du tout} one {# passe} other {# passes}}	{passes, plural, =0 {not at all} one {# pass} other {# passes}}	ICU (le back cite ICU pour D10) ; couvre « 1 passe », « 3 passes », « pas du tout »
+L’ATELIER	92,93,94	servie · D14	building.row.taille_du_labo	L’atelier	The workshop	servi « Taille du labo » pour la même ligne (le palier du labo) ; ⚠️ la valeur sert aussi la fiche du labo : aligner partout, ou une clé à part pour l’écrin — à trancher
+amélioré	92	servie · D14	building.lab_tier.refined	amélioré	upgraded	servi « Affiné » ; s’accorde à l’atelier
+Le rendez-vous est honoré	93	proposée	building.bloc.le_rendez_vous_est_honore	Le rendez-vous est honoré	The appointment was kept	titre de `honored` (93)
+La marchandise est partie, le client a payé.	93	proposée	building.bloc.la_marchandise_est_partie_le_client_a_paye	La marchandise est partie, le client a payé.	The goods are gone, the client has paid.	
+Salon Aldrich	93	note				nom de lieu d’exemple : le lieu vient de `glass_venue_building_id`, son nom est l’enseigne servie (`game.fiction.building.name`)
+cristalline · prix fort	93	note				idem (`building.purity.crystalline`)
+3 passes	93	proposée	building.bloc.passes_compte			même clé que « 1 passe »
+au meilleur niveau	93	servie · D14	building.lab_tier.master	au meilleur niveau	top level	servi « Maître »
+Le rendez-vous est passé	94	proposée	building.bloc.le_rendez_vous_est_passe	Le rendez-vous est passé	The appointment has passed	titre de `expired` (94)
+Personne n’y est allé. Il faudra en reprendre un.	94	proposée	building.bloc.personne_n_y_est_alle_il_faudra_en_reprendre_un	Personne n’y est allé. Il faudra en reprendre un.	Nobody went. You’ll need to set another.	« personne » : pronom indéfini, aucun genre présumé
+Le Cintre	94	note				nom de lieu d’exemple : le lieu vient de `glass_venue_building_id`, son nom est l’enseigne servie (`game.fiction.building.name`)
+coupée · bas prix	94	note				idem (`building.purity.cut`)
+pas du tout	94	proposée	building.bloc.passes_compte			même clé que « 1 passe » (=0)
+de base	94	servie · D14	building.lab_tier.basic	de base	basic	servi « Simple »
+(complément de famille)		proposée	building.cook_stage.idle	Éteint	Out	PROPOSÉ : aucun mot ratifié pour IDLE
+(complément de famille)		proposée	building.cook_stage.early	Début	Start	ratifié (47)
+(complément de famille)		proposée	building.cook_stage.done	Prêt	Ready	ratifié (47)
+(complément de famille)		proposée	building.stock.none	Vide	Empty	PROPOSÉ
+(complément de famille)		proposée	building.stock.medium	Moyen	Medium	PROPOSÉ
+(complément de famille)		proposée	building.row.stock	Stock	Stock	ratifié (45-46)
