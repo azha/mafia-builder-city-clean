@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
+using MafiaCleanCity.I18n;
 using MafiaCleanCity.Operational;
 using MafiaCleanCity.Tests; // REUSE SeederSupport (node-resolve + child-Process + stdout-marker parse).
 using Debug = UnityEngine.Debug;
@@ -43,6 +45,7 @@ namespace MafiaCleanCity.Operational.Tests
         public void TearDown()
         {
             if (controllerGo != null) Object.Destroy(controllerGo);
+            I18nCatalog.Oublier();
         }
 
         [OneTimeSetUp]
@@ -228,8 +231,20 @@ namespace MafiaCleanCity.Operational.Tests
         [Category("Screenshot")]
         public IEnumerator CaptureAshLuxuryScreenshot()
         {
-            var controller = NewLocalController();
+            const int largeur = 1080;
+            const int hauteur = 2400;
+            controllerGo = new GameObject("AshLuxuryCaptureCanvas",
+                typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var canvas = controllerGo.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.WorldSpace;
+            ((RectTransform)controllerGo.transform).sizeDelta = new Vector2(largeur, hauteur);
+            var controller = controllerGo.AddComponent<BuildingCardController>();
+            controller.SetBaseUrl(LocalStack);
+            controller.BuildingId = "";
+            controller.SetMountParent(controllerGo.transform);
             yield return SignInController(controller);
+            yield return I18nCatalog.Amorcer(new I18nClient { BaseUrl = LocalStack }, controller.Token);
+            Assert.IsTrue(I18nCatalog.Charge, "le catalogue réel est chargé avant la capture — aucune clé brute publiée");
 
             yield return controller.LoadBuilding(specializedLabId);
             Assert.IsTrue(controller.CardLoaded, $"specialized_lab card loaded (err={controller.CardError})");
@@ -239,21 +254,18 @@ namespace MafiaCleanCity.Operational.Tests
             yield return controller.LoadBuilding(specializedLabId);
             Assert.IsTrue(controller.PurityBandShown, "purity row shown for the screenshot");
             for (int i = 0; i < 3; i++) yield return null;
-            yield return CaptureTo("ash_luxury_specialized_lab.png");
+            yield return CaptureTo(canvas, largeur, hauteur, "ash_luxury_specialized_lab.png");
         }
 
-        private static IEnumerator CaptureTo(string fileName)
+        private static IEnumerator CaptureTo(Canvas canvas, int largeur, int hauteur, string fileName)
         {
             string dir = Path.Combine(Application.dataPath, "Screenshots");
             Directory.CreateDirectory(dir);
             string path = Path.Combine(dir, fileName);
-            if (File.Exists(path)) File.Delete(path);
-
-            ScreenCapture.CaptureScreenshot(path);
-            float waited = 0f;
-            while (!File.Exists(path) && waited < 10f) { waited += Time.deltaTime; yield return null; }
-            yield return null;
-            Assert.IsTrue(File.Exists(path), $"screenshot written to {path}");
+            Transform fiche = canvas.transform.Find("BuildingCardSheet");
+            Assert.IsNotNull(fiche, "la fiche Ash à capturer existe sous son canvas");
+            yield return CaptureSupport.CapturerCanvas(canvas, (RectTransform)fiche, largeur, hauteur, path);
+            CaptureSupport.GarderLaCapture(path);
             Debug.Log($"[AshLuxuryE2E] screenshot → {path}");
         }
     }
