@@ -31,10 +31,9 @@
 
 ## À trancher, en attente de la mesure du back (f2)
 
-1. **« pyralin »** : le labo le commande, et le servi le nomme (`appro.bloc.nestor_…`), mais le catalogue `building.precursor.*` ne le porte
-   pas (Racine verdoyante, Résine de lull, Lys de verre). Deux cas possibles :
-   - c'est un type de précurseur RÉEL du domaine, et il entre au catalogue (D12) ;
-   - c'est un mot de réplique, et il doit venir d'un `{param}`.
+1. ~~« pyralin »~~ **TRANCHÉ** (mesure du back, 23/09) : Pyralin est un précurseur réel (enum `precursor_type`, avec Thalmite et Garnet salt).
+   Le catalogue avait un trou ; la table 39 le comble. Casse du glossaire : « Pyralin », jamais en minuscule. Le servi
+   `appro.bloc.nestor_…` écrit « pyralin » : à corriger.
 2. **« Nestor : » en dur** dans `appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas`. Deux cas possibles :
    - un personnage FIXE du canon (un fournisseur ?) : le nom en dur est alors de la fiction légitime ;
    - un `{nom}` manquant, comme « Lt. Hara » (33 §5).

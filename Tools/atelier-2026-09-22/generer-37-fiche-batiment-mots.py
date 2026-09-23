@@ -44,12 +44,12 @@ T = {  # mot tel que balayé → (classe, clé, fr, en, note)
    'composé : l’archétype servi, SANS article (D13 : « le cuisinier » présume un genre) ; « J14 » : EXEMPLE de maquette (point 19, tranché par f2 le 23/09) — ne s’affiche pas tant qu’aucun champ ne le porte'),
  '« J’ai tiré le dernier bidon cette nuit — l’étagère est vide. Sans pyralin, je ne rallume pas. »':
    (S, 'appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas', '', '',
-    'même sens, servi plus court ; À TRANCHER (f2 fait mesurer au back) : « Nestor : » en dur — personnage fixe du canon (fiction légitime) ou `{nom}` manquant comme « Lt. Hara » ? ; « pyralin » hors du catalogue `building.precursor.*` — précurseur réel (il entre au catalogue, D12) ou mot de réplique à `{param}` ?'),
+    'même sens, servi plus court ; À TRANCHER (mesure du back en cours) : « Nestor : » en dur — personnage fixe du canon (fiction légitime) ou `{nom}` manquant comme « Lt. Hara » ? ; ⚠️ le servi écrit « pyralin » en minuscule : le glossaire dit « Pyralin », jamais en minuscule (table 39)'),
  'le feu': (P, 'building.row.le_feu', 'le feu', 'the fire', 'l’échelle `cook_stage_band` du pupitre (39-44)'),
  'l’étagère': (P, 'building.row.l_etagere', 'l’étagère', 'the shelf', 'l’échelle `stock_band` (le précurseur)'),
  'les caisses': (P, 'building.row.les_caisses', 'les caisses', 'the crates', 'l’échelle `product_band` (le produit)'),
- 'COMMANDER DU PYRALIN': (P, 'building.action.commander_du_pyralin', 'Commander du pyralin', 'Order pyralin',
-   '`POST /v1/operational/precursors/order` ; À TRANCHER (f2 fait mesurer au back) : « pyralin » n’est pas au catalogue (Racine verdoyante · Résine de lull · Lys de verre) — précurseur réel (D12) ou `{param}` ?'),
+ 'COMMANDER DU PYRALIN': (P, 'building.action.commander_du_pyralin', 'Commander du Pyralin', 'Order Pyralin',
+   '`POST /v1/operational/precursors/order` ; TRANCHÉ (mesure du back, 23/09) : Pyralin est un précurseur RÉEL (enum `precursor_type`) → il entre au catalogue (table 39, `building.precursor.pyralin`, D12) ; casse du glossaire : « Pyralin », jamais en minuscule ; ⚠️ le mot pourrait venir du catalogue par `{precurseur}`'),
  'il en faut avant de rallumer': (P, 'building.bloc.il_en_faut_avant_de_rallumer', 'il en faut avant de rallumer', 'you need some before relighting', ''),
  '« L’étagère est refaite. Dites-moi combien de passes, et j’allume. »':
    (P, 'building.replique.l_etagere_est_refaite_dites_moi_combien_de_passes_et_j_allume', rep('L’étagère est refaite. Dites-moi combien de passes, et j’allume.'),
