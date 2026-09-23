@@ -1861,6 +1861,25 @@ namespace MafiaCleanCity.CityMap
         /// Test hook : une falsifiable peut vérifier QUEL bâtiment est ouvert, pas seulement qu'une
         /// fiche existe.</summary>
         public string FicheBuildingId { get; private set; }
+
+        // ①-0 (2026-09-23, écart ① `e2bd7681` §0.2, décision de l'orchestrateur) — AMÉLIORER ouvre la fiche OPÉRATIONNELLE du
+        // bâtiment AFFICHÉ (`IOuvreurDeFicheOperationnelle`, implémenté par le shell), où vit le bouton de palier. Avant : « ça se
+        // fait sur la fiche du bâtiment » renvoyait vers un écran que rien n'ouvrait avec un bâtiment — la route morte.
+        private GameObject ficheBoutonAmeliorer;
+        /// <summary>Le bouton AMÉLIORER est-il montré pour le bâtiment de la fiche ?</summary>
+        public bool FicheAmeliorerMontre => ficheBoutonAmeliorer != null && ficheBoutonAmeliorer.activeSelf;
+        /// <summary>L'id transmis à la dernière ouverture de la fiche opérationnelle (null avant).</summary>
+        public string DerniereFicheOperationnelleDemandee { get; private set; }
+        /// <summary>Couture de test : un ouvreur posé ici passe AVANT celui du shell (aucun shell étranger ne répond à sa place).</summary>
+        public MafiaCleanCity.Shell.IOuvreurDeFicheOperationnelle OuvreurPourTest;
+
+        /// <summary>Les types dont la fiche opérationnelle porte un bouton de palier (`BuildingCardController` : `specialized_lab`
+        /// → `upgrade-tier`, `distribution_hub` → `upgrade-hub-tier`, `money_holding` → `upgrade-money-holding-tier`). AMÉLIORER
+        /// est ABSENT sur tout autre type. ⚠️ `lab`, `refinery`, `press_house` ont une route côté back
+        /// (`upgrade-equipment-tier`) que la fiche opérationnelle n'expose pas encore : absents ici tant qu'elle ne le fait pas
+        /// (écart ①, lot suivant de ②), plutôt qu'un bouton qui mène à un écran sans bouton.</summary>
+        public static bool AmeliorableDepuisLaFiche(string operationalType) =>
+            operationalType == "specialized_lab" || operationalType == "distribution_hub" || operationalType == "money_holding";
         public bool FicheOuverte => ficheRoot != null && ficheRoot.gameObject.activeSelf;
 
         /// <summary>Une dimension EN PX CSS DE LA MAQUETTE, ramenée en unités de canvas.
@@ -2060,6 +2079,8 @@ namespace MafiaCleanCity.CityMap
                              x: largeurBouton + 9f, largeur: largeurBouton);
             BuildFicheBouton(corps.transform, "AMÉLIORER", "AMÉLIORER", or: false, action: () => ActionFiche("AMÉLIORER"),
                              x: 2f * (largeurBouton + 9f), largeur: largeurBouton);
+            Transform btnAmeliorer = corps.transform.Find("Btn_AMÉLIORER");
+            ficheBoutonAmeliorer = btnAmeliorer != null ? btnAmeliorer.gameObject : null;
 
             // Le retour d'une action. Posé EN SURIMPRESSION de la rangée d'actions plutôt qu'à sa
             // suite : dans le flux, il consommait de la hauteur en permanence pour un texte vide
@@ -2219,6 +2240,7 @@ namespace MafiaCleanCity.CityMap
 
             ficheTitre.text = ResoudreNomBatiment(b);
             ficheType.text = LibellesBatiment.Conversion(b.conversion_band);
+            if (ficheBoutonAmeliorer != null) ficheBoutonAmeliorer.SetActive(AmeliorableDepuisLaFiche(b.operational_type));
 
             // `$ 2 400 / À COLLECTER` ⇒ la bande de revenu : le bâtiment rapporte-t-il ?
             // ⛔ LES TROIS VALEURS ÉTAIENT DE LA MÊME COULEUR, et le juge l'a classé MAJEUR : le
@@ -2344,8 +2366,16 @@ namespace MafiaCleanCity.CityMap
                     if (!blanchimentEnCours)
                         StartCoroutine(BlanchirDepuisFiche());
                     break;
-                default:
-                    ficheSortie.text = "Améliorer : ça se fait sur la fiche du bâtiment.";
+                case "AMÉLIORER":
+                    if (!AmeliorableDepuisLaFiche(ficheOperationalType) || string.IsNullOrEmpty(FicheBuildingId)) break;
+                    var ouvreur = OuvreurPourTest ?? MafiaCleanCity.Shell.OuvreurDeFicheOperationnelleLocator.Find();
+                    if (ouvreur == null)
+                    {
+                        ficheSortie.text = "Amélioration indisponible : la fiche du bâtiment ne s'ouvre pas ici.";
+                        break;
+                    }
+                    DerniereFicheOperationnelleDemandee = FicheBuildingId;
+                    ouvreur.OuvrirFicheOperationnelle(FicheBuildingId);
                     break;
             }
         }
