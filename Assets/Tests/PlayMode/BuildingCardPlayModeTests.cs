@@ -197,6 +197,13 @@ namespace MafiaCleanCity.Operational.Tests
 
         // ------------------------------------------------------------ the test --
 
+        // ⛔ L'ÉCHÉANCE D'ENTRETIEN EST UN COMPTE DE JOURS SERVI, PAS UN SCALAIRE BRUT (2026-09-23) : depuis 1eadfd3f (02/09), ② dit
+        //    `days_until_maintenance_due` en mots — « Dans N j », « En retard de N j » (`BuildingCardController.EcheanceLabel`). Cette
+        //    garde est plus ancienne, et le test ne tournait sous aucun filtre (TD-490) : elle a rougi le 23/09 06:48 sur « Dans 30 j ».
+        //    Exemption ÉTROITE, ces deux formes EXACTES ; tout autre nombre nu reste un rouge.
+        private static bool EcheanceEnJours(string t) =>
+            Regex.IsMatch(t, @"^(Dans \d+ j|En retard de \d+ j)$");
+
         [UnityTest]
         [Category("FicheOperationnelle")]   // TD-490 (2026-09-23) : sans catégorie, aucun filtre ne le lançait — sur la MÉTHODE (la classe emporterait la capture Screenshot)
         public IEnumerator LoadsLabCard_RendersBands_AndWiresPerTypeActions()
@@ -248,6 +255,7 @@ namespace MafiaCleanCity.Operational.Tests
             //    no token is a pure integer/decimal.
             foreach (string t in texts)
             {
+                if (EcheanceEnJours(t)) continue;   // compte de jours servi, dit en mots (voir EcheanceEnJours)
                 Assert.IsFalse(Regex.IsMatch(t, @"(?<![A-Za-z])\d+(\.\d+)?(?![A-Za-z])"),
                     $"no raw scalar may be shown client-side, but rendered text was: '{t}'");
             }

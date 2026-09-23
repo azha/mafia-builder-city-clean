@@ -664,7 +664,10 @@ namespace MafiaCleanCity.Shell.Tests
         // l'allowlist : 2 accès, l'ENSEMBLE ne change pas) PERD un accès à `accentDanger` — la 3ᵉ case de la fiche de ①, « ÉTAT »
         // en `accentDanger`, est devenue « CHALEUR LOCALE » en braise (`hudGaugeArcHot`, `--braise` du canon) au lot ①-1
         // (9b6625ba). Retrait LÉGITIME. Mesuré par comptage d'occurrences (la méthode de ce test) à f88d3240 (41) et 9b6625ba (40).
-        private const int ExpectedSeverityTokenTotal = 40;
+        // RE-AMENDÉ NOMMÉMENT 40 → 34 (2026-09-23, créneau 06:48) : ⑪ `LaunderingController` et ⑫ `PipelineOverviewController` sont
+        // RETIRÉS du dépôt (9be2fe9d, code mort) — ils portaient 3 accès CHACUN (mesuré par la méthode de ce test à 02dbbfa1 et à
+        // 80141d36 : 3 + 3). Leurs deux fichiers ont quitté l'allowlist dans le même lot ; ce compte les suit.
+        private const int ExpectedSeverityTokenTotal = 34;
 
         // ── motif 2 — littéraux de bucket (ferme l'angle mort du motif 1, IMPORTANT-2) ──────
         private static readonly string[] BucketLiterals = { "\"COLD\"", "\"WARM\"", "\"HOT\"", "\"BURNING\"" };

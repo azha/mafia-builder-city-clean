@@ -88,9 +88,13 @@ namespace MafiaCleanCity.Operational.Tests
         [TearDown]
         public void TearDown()
         {
+            // ⛔ TD-576, classe « catalogue » (2026-09-23) : l'écran 3 monte désormais ㊵, qui AMORCE le catalogue i18n — la garde de
+            //    sortie de MafiaCI l'a nommé survivant (créneau 06:48). Destruction IMMÉDIATE (un `Destroy` différé laisserait la
+            //    coroutine de ㊵ courir au-delà du TearDown), puis le catalogue est rendu.
             foreach (GameObject go in spawned)
-                if (go != null) Object.Destroy(go);
+                if (go != null) Object.DestroyImmediate(go);
             spawned.Clear();
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
         }
 
         private T Spawn<T>(string name) where T : Component
@@ -143,9 +147,20 @@ namespace MafiaCleanCity.Operational.Tests
         private static void AssertNoRawScalar(IReadOnlyList<string> texts, string screen)
         {
             foreach (string t in texts)
+            {
+                if (EcheanceEnJours(t)) continue;   // compte de jours servi, dit en mots (voir EcheanceEnJours)
                 Assert.IsFalse(Regex.IsMatch(t, @"(?<![A-Za-z])\d+(\.\d+)?(?![A-Za-z])"),
                     $"[{screen}] no raw scalar may be shown client-side, but rendered text was: '{t}'");
+            }
         }
+
+        // ⛔ L'ÉCHÉANCE D'ENTRETIEN EST UN COMPTE DE JOURS SERVI, PAS UN SCALAIRE BRUT (2026-09-23) : depuis 1eadfd3f (02/09), ② dit
+        //    `days_until_maintenance_due` en mots — « Dans N j », « En retard de N j » (`BuildingCardController.EcheanceLabel`). Cette
+        //    garde est plus ancienne, et le test ne tournait sous aucun filtre (TD-490) : elle a rougi le 23/09 06:48 sur « Dans 30 j ».
+        //    Exemption ÉTROITE, ces deux formes EXACTES ; tout autre nombre nu reste un rouge.
+        private static bool EcheanceEnJours(string t) =>
+            Regex.IsMatch(t, @"^(Dans \d+ j|En retard de \d+ j)$");
+
 
         // Run a load-coroutine up to N times until `succeeded()` holds. This hardens the capstone
         // against a TRANSIENT transport hiccup on the JWT-gated endpoints right after the heavy
