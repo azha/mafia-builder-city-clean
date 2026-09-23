@@ -136,13 +136,15 @@ timeout "$TIMEOUT_S" "$UNITY" -batchmode "${EXTRA_ARGS[@]}" -projectPath "$WT" -
 UNITY_WAITER=$!
 WATCHDOG_FIRED=0
 TEST_GELE=""
+LIGNE_GEL=""
 while kill -0 "$UNITY_WAITER" 2>/dev/null; do
   if [[ "$STALL_S" -gt 0 && -f "$LOG" ]] && grep -q '^MafiaCI: RUN ' "$LOG" 2>/dev/null \
      && ! grep -qE 'MafiaCI: RunPlayModeTests finished' "$LOG" 2>/dev/null; then
     MUET_S=$(( $(date +%s) - $(stat -c %Y "$LOG") ))
     if (( MUET_S >= STALL_S )); then
       TEST_GELE=$(grep '^MafiaCI: RUN ' "$LOG" | tail -1 | sed 's/^MafiaCI: RUN //')
-      echo "MafiaCI-harness: ⛔ TEST GELÉ — journal muet depuis ${MUET_S}s (STALL_S=${STALL_S}) pendant « ${TEST_GELE} » ⇒ éditeur tué" | tee -a "$LOG"
+      LIGNE_GEL="MafiaCI-harness: ⛔ TEST GELÉ — journal muet depuis ${MUET_S}s (STALL_S=${STALL_S}) pendant « ${TEST_GELE} » ⇒ éditeur tué"
+      echo "$LIGNE_GEL"   # au journal APRÈS la mort de l'éditeur (plus bas) : écrite maintenant, Unity l'écraserait à son propre décalage
       pkill -TERM -u "$(id -u)" -f "logFile $LOG" 2>/dev/null || true
       for _try in 1 2 3 4 5; do sleep 2; kill -0 "$UNITY_WAITER" 2>/dev/null || break; done
       pkill -KILL -u "$(id -u)" -f "logFile $LOG" 2>/dev/null || true
@@ -169,6 +171,9 @@ ELAPSED_S=$SECONDS
 # par signal ne dit rien des tests. `failed=0` ⇒ 0, sinon 1. Absence de marqueur de test (phase de
 # compile) ⇒ on garde le RC, et la garde `error CS` plus bas reste seule juge.
 RC=$(verdict_log "$LOG" "$EXECUTE_METHOD" "$WATCHDOG_FIRED" "$RC" "$CONSOLE")
+# La ligne de gel entre au journal ICI, l'éditeur mort : mesuré le 23/09 (sonde de gel), écrite de son vivant elle était écrasée par
+# Unity, qui écrit à son propre décalage sans O_APPEND — elle ne survivait que sur la console.
+[[ -n "${LIGNE_GEL:-}" ]] && echo "$LIGNE_GEL" >> "$LOG"
 # Un gel tranche AVANT tout le reste : le RC d'un éditeur tué ne dit rien des tests, et le test gelé est nommé.
 [[ -n "$TEST_GELE" ]] && RC=$RC_GEL
 
