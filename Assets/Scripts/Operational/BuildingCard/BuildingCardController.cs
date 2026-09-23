@@ -357,13 +357,14 @@ namespace MafiaCleanCity.Operational
         /// <summary>⛔ Réservé aux tests (② lot 1) : rend la fiche depuis des données DONNÉES, sans réseau — même `Render` que le
         /// chargement, mêmes hooks. Les données absentes (null) le sont comme après une erreur de route.</summary>
         public void RendrePourTest(BuildingCardDto card, StorageDto storage = null, LabCookDto lab = null,
-                                   GetOperationalPrecursorsResponseDto precursors = null)
+                                   GetOperationalPrecursorsResponseDto precursors = null, GrowSessionDto grow = null)
         {
             EnsureInitialized();
             CurrentCard = card;
             CurrentStorage = storage;
             CurrentLab = lab;
             CurrentPrecursors = precursors;
+            CurrentGrow = grow;
             CardLoaded = true;
             Render(card);
         }
@@ -803,8 +804,10 @@ namespace MafiaCleanCity.Operational
             if (card.operational_type == "grow_house" && CurrentGrow != null
                 && !string.IsNullOrEmpty(CurrentGrow.grow_stage_band))
             {
-                // Crop row — surfaces which growable precursor this grow_house is cultivating (the planted substance).
-                AddStatusRow("culture", "Culture", GrowablePrecursorLabel(SelectedPrecursor), AccentMild);
+                // ⛔ PLUS DE RANGÉE « CULTURE » (② lot 4, 2026-09-23 — écart ② `c4520078`, cadre 36, verdict FAUX) : elle lisait
+                // `SelectedPrecursor`, une valeur LOCALE (le sélecteur de plantation, `verdant_root_extract` par défaut), et affirmait
+                // une culture que rien ne sert — la projection de la pousse n'a pas de `precursor_type` (grow.projection.service.ts:52-61 ;
+                // manque du back n°4, forme F). Tant qu'elle n'est pas servie, la culture n'est PAS affichée : rien plutôt qu'un faux.
                 // Grow-stage band row — the qualitative growth phase (EARLY → DONE) with a rising filled-bar glyph.
                 GrowStageShown = true;
                 AddStatusRow("pousse", "Pousse", GrowStageLabel(CurrentGrow.grow_stage_band), GrowStageAccent(CurrentGrow.grow_stage_band));
@@ -1360,10 +1363,12 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "EARLY": return Bande("grow_stage", "EARLY", "Début");
-                case "MID": return Bande("grow_stage", "MID", "Milieu");
-                case "LATE": return Bande("grow_stage", "LATE", "Fin");
-                case "DONE": return Bande("grow_stage", "DONE", "À récolter");
+                // ② lot 4 : les replis recopiés À L'OCTET des mots D14 servis (ST `building.grow_stage.*`) — « Début / Milieu / Fin /
+                // À récolter » étaient périmés (écart ② cadre 36) : sans catalogue, l'écran disait autre chose que le jeu.
+                case "EARLY": return Bande("grow_stage", "EARLY", "Bouture");
+                case "MID": return Bande("grow_stage", "MID", "Croissance");
+                case "LATE": return Bande("grow_stage", "LATE", "Floraison");
+                case "DONE": return Bande("grow_stage", "DONE", "Récolte");
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }
@@ -1450,9 +1455,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (b)
             {
-                case "WITHERED": return Bande("husbandry", "WITHERED", "Flétrie");
-                case "ON_TRACK": return Bande("husbandry", "ON_TRACK", "En bonne voie");
-                case "THRIVING": return Bande("husbandry", "THRIVING", "Florissante");
+                // ② lot 4 : replis = mots D14 servis (ST `building.husbandry.*`). « À soigner » est le MOT de WITHERED (tranché (c) du
+                // 23/09) ; `tend_due` pilote le GESTE (Soigner actif ou grisé, BuildActions), pas ce mot — les deux coexistent.
+                case "WITHERED": return Bande("husbandry", "WITHERED", "À soigner");
+                case "ON_TRACK": return Bande("husbandry", "ON_TRACK", "Correcte");
+                case "THRIVING": return Bande("husbandry", "THRIVING", "Vigoureuse");
                 default: return MafiaCleanCity.I18n.Repli.Etat(b);   // hors domaine : le mot de la famille, jamais la valeur brute (atelier 28)
             }
         }

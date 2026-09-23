@@ -130,11 +130,11 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.HusbandryShown, "the husbandry row is shown on a grow_house with an active grow");
             var texts = controller.RenderedTexts;
             Assert.IsTrue(texts.Any(t => t == "Pousse"), "grow-stage row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Mid"), "grow-stage band value 'Mid' rendered");
+            Assert.IsTrue(texts.Any(t => t == "Croissance"), "grow-stage band value MID rendered (repli D14, ② lot 4 — « Mid » était périmé)");
             Assert.IsTrue(texts.Any(t => t == "Soin"), "husbandry row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "En bonne voie"), "husbandry band value 'On track' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Culture"), "crop row label rendered");
-            Assert.IsTrue(texts.Any(t => t == "Racine verdoyante"), "crop value 'Verdant root' rendered (the planted precursor)");
+            Assert.IsTrue(texts.Any(t => t == "Correcte"), "husbandry band value ON_TRACK rendered (repli D14)");
+            // ② lot 4 : la rangée « Culture » est RETIRÉE (FAUX : elle lisait la sélection locale, la pousse ne sert pas son précurseur).
+            Assert.IsFalse(texts.Any(t => t == "Culture"), "aucune rangée « Culture » : la culture n'est pas servie");
 
             // The raid-risk band is REUSED from the building card (an active grow is hot → above LOW). Assert it is a known
             // band and the gauge row rendered (the exact level varies with the city's accumulated heat).
@@ -186,7 +186,7 @@ namespace MafiaCleanCity.Operational.Tests
             // The Tend button is shown but now DISABLED (server-authoritative — the stage is tended).
             Assert.IsTrue(controller.TendButtonShown, "Tend button still shown (an active non-DONE grow)");
             Assert.IsFalse(controller.TendButtonEnabled, "Tend button disabled after tending (tend_due=false this stage)");
-            Assert.IsTrue(controller.RenderedTexts.Any(t => t == "Florissante"), "husbandry band 'Thriving' rendered after the tend");
+            Assert.IsTrue(controller.RenderedTexts.Any(t => t == "Vigoureuse"), "husbandry band THRIVING rendered after the tend (repli D14)");
 
             // A second tend on the now-tended stage → a well-formed 409 (one tend per stage, server-authoritative).
             yield return controller.Tend();
