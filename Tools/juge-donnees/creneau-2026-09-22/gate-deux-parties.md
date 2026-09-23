@@ -31,7 +31,7 @@ passer six catégories dans la partie 2 (CaptureCarte, CaptureDetail, CaptureFam
 - `VuePrincipaleCapturePlayModeTests.Capture_VuePrincipale_DistrictAvecBatiments_SousChromeV31`
 
 **Partie 2 (avec la paire)** : **18 catégories, 58 tests**. **Partie 1 (sans la paire)** : **37 catégories, 533 tests**.
-**Recouvrement : 0 test · 533 + 58 = 591 = le filtre par défaut.** (+27 au merge de b909fbae, +1 au merge de 1d9a6704 — EcranFile, +3 de la garde L2 en d7b16069 — I18n) `EcranDistribution` (20 tests, aucun n'exige la paire, aucune relation de
+**Recouvrement : 0 test · 533 + 58 = 591 = le filtre par défaut.** (+27 au merge de b909fbae, +1 au merge de 1d9a6704 — EcranFile, +3 de la garde L2 en d7b16069 — EcranFile) `EcranDistribution` (20 tests, aucun n'exige la paire, aucune relation de
 préfixe) entre en partie 1 — verte seule avant inscription, `run-distribution.md`.
 
 **Étape 8** = partie 2 ∪ recapture ∪ CaptureFamille, CaptureReputation (dont les 2 captures des sous-vues de ⑥) : **25 catégories, 63 tests, dont 27 exigent la paire**, aucune relation de préfixe.
@@ -59,7 +59,7 @@ préfixe) entre en partie 1 — verte seule avant inscription, `run-distribution
 | EcranLoi | 14 | 14 |
 | EcranConflit | 9 | 9 |
 | Ecran10 | 2 | 2 |
-| I18n | 26 | 26 |
+| I18n | 23 | 23 |
 | I18nReseau | 1 | 1 |
 | BundleReel | 4 | 4 |
 | JUGE | 2 | 2 |
@@ -76,7 +76,7 @@ préfixe) entre en partie 1 — verte seule avant inscription, `run-distribution
 | EcranDistribution | 20 | 20 |
 | Palette | 5 | 5 |
 | EcranRevue | 32 | 32 |
-| EcranFile | 46 | 46 |
+| EcranFile | 49 | 49 |
 
 ## Partie 2 — avec la paire
 
