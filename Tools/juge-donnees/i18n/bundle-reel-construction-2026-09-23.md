@@ -165,3 +165,10 @@ La partie 1 de 02:44 a rougi sur `exceptions.bloc.rien_a_relire` ; `sites-libell
 - `exceptions.bloc.ce_soir_au_verge_d_or`
 - `exceptions.bloc.retourne_au_travail`
 - `exceptions.bloc.rien_a_relire`
+
+## Merge de 1d9a6704 (⑨-6e) : `retourne_au_travail` → `nom_retourne_au_travail` (dette 48, même taille)
+**Trou de la garde nommé** : `ExceptionBandes.Gabarit` (2 sites), `ExceptionDetailController:475` et `BuildingCardController:600`
+lisent le catalogue SANS `Libelle` avec une clé et un repli écrits par le client — leur repli n'est pas compté (règle 1 aveugle ;
+la règle 2 tient ce qui est inscrit à la dette). Les ~8 autres accès directs traduisent des références SERVIES par le back
+(`label_i18n`, `event_descriptor_i18n`, `name_i18n`, `tier_label_i18n`) — leur absence est une lacune du back, pas un littéral client.
+Correctif proposé (lot à part, fichiers de CLIENT-2) : faire passer ces 4 sites par une aide de `Libelle` qui compte le repli.

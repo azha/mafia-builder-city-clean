@@ -90,7 +90,11 @@ namespace MafiaCleanCity.Operational.Tests
             "exception_detail.bloc.appui_long_la_carte_se_ferme_le_batiment_lui_se_repare_avec_le_temps",
             "exception_detail.bloc.je_fais_quoi",
             "exceptions.bloc.ce_soir_au_verge_d_or",
-            "exceptions.bloc.retourne_au_travail",
+            // ⑨-6e (CLIENT-2 1d9a6704, 23/09) : la concaténation devient un gabarit {nom} — `retourne_au_travail` n'est plus
+            //   demandée ; `nom_retourne_au_travail` la remplace (non servie par 83b4f291). ⚠️ Elle passe par
+            //   `ExceptionBandes.Gabarit`, qui lit le catalogue SANS `Libelle` : la règle (1) ne VOIT PAS son repli ; seule la
+            //   règle (2) la tient (rouge quand le back la servira). Trou de la garde, signalé, pas corrigé ici.
+            "exceptions.bloc.nom_retourne_au_travail",
             "exceptions.bloc.rien_a_relire",
         };
 
