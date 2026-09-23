@@ -894,34 +894,57 @@ namespace MafiaCleanCity.Operational
             // pas encore son `rect` résolu.
             Canvas.ForceUpdateCanvases();
 
+            // ⛔ LA FENÊTRE DÉFILE (L6, 23/09) : l'historique grandit sans borne (« Déjà rentrés », une ligne par envoi), et
+            // « rentré », « en cours », le panneau et la table dépassent déjà la hauteur d'un téléphone. `Corps` est la FENÊTRE
+            // (bornée aux insets du chrome, `RectMask2D` : rien ne dessine sur le dock, `ScrollRect` vertical : rien n'est
+            // injoignable) ; `Contenu` est ce qui défile, dimensionné sur ses enfants (`ContentSizeFitter`) — patron
+            // `DelegationScreenController.ConstruireZoneCentrale`. Toutes les sections se parentent sous `Contenu`.
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
             RectTransform corps = (RectTransform)corpsGo.transform;
             corps.anchorMin = Vector2.zero;
             corps.anchorMax = Vector2.one;
             corps.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
             corps.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
+            corpsGo.AddComponent<RectMask2D>();
+            ScrollRect defilement = corpsGo.AddComponent<ScrollRect>();
+            defilement.horizontal = false;
+            defilement.vertical = true;
+            defilement.movementType = ScrollRect.MovementType.Clamped;
+            defilement.scrollSensitivity = 40f;
 
-            VerticalLayoutGroup pile = corpsGo.AddComponent<VerticalLayoutGroup>();
+            GameObject contenuGo = NouveauUI("Contenu", corpsGo.transform);
+            RectTransform contenu = (RectTransform)contenuGo.transform;
+            contenu.anchorMin = new Vector2(0f, 1f);
+            contenu.anchorMax = new Vector2(1f, 1f);
+            contenu.pivot = new Vector2(0.5f, 1f);
+            contenu.offsetMin = Vector2.zero;
+            contenu.offsetMax = Vector2.zero;
+            defilement.viewport = corps;
+            defilement.content = contenu;
+            ContentSizeFitter ajuste = contenuGo.AddComponent<ContentSizeFitter>();
+            ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            VerticalLayoutGroup pile = contenuGo.AddComponent<VerticalLayoutGroup>();
             pile.padding = new RectOffset(PxTrait(16f), PxTrait(16f), PxTrait(14f), PxTrait(14f));
             pile.spacing = Px(12f);
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
             pile.childAlignment = TextAnchor.UpperCenter;
 
-            titreTexte = NouveauTexteFiche(corpsGo.transform, "Titre", "",
+            titreTexte = NouveauTexteFiche(contenuGo.transform, "Titre", "",
                 17f, DesignTokens.Current.onSurfacePrimary, true);
             titreTexte.enableWordWrapping = true;
 
-            sousTitreTexte = NouveauTexteFiche(corpsGo.transform, "SousTitre", "",
+            sousTitreTexte = NouveauTexteFiche(contenuGo.transform, "SousTitre", "",
                 10f, DesignTokens.Current.onSurfaceSecondary, false);
             sousTitreTexte.enableWordWrapping = true;
             AddLayoutElement(sousTitreTexte.gameObject, flexibleHeight: 0);
 
-            rentreRoot = NouvelleSection(corpsGo.transform, "Rentre");
-            enCoursRoot = NouvelleSection(corpsGo.transform, "EnCours");
-            coupRoot = NouvelleSection(corpsGo.transform, "Coup");
+            rentreRoot = NouvelleSection(contenuGo.transform, "Rentre");
+            enCoursRoot = NouvelleSection(contenuGo.transform, "EnCours");
+            coupRoot = NouvelleSection(contenuGo.transform, "Coup");
 
-            GameObject tableGo = NouveauUI("Table", corpsGo.transform);
+            GameObject tableGo = NouveauUI("Table", contenuGo.transform);
             VerticalLayoutGroup vtb = tableGo.AddComponent<VerticalLayoutGroup>();
             vtb.spacing = Px(6f);
             vtb.childControlWidth = true; vtb.childControlHeight = true;
@@ -929,7 +952,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(tableGo, flexibleHeight: 0);
             tableRoot = tableGo.transform;
 
-            GameObject piedGo = NouveauUI("Pied", corpsGo.transform);
+            GameObject piedGo = NouveauUI("Pied", contenuGo.transform);
             VerticalLayoutGroup vp = piedGo.AddComponent<VerticalLayoutGroup>();
             vp.spacing = Px(8f);
             vp.childControlWidth = true; vp.childControlHeight = true;
@@ -937,7 +960,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(piedGo, flexibleHeight: 1);
             piedRoot = piedGo.transform;
 
-            GameObject erreurGo = NouveauUI("Erreur", corpsGo.transform);
+            GameObject erreurGo = NouveauUI("Erreur", contenuGo.transform);
             VerticalLayoutGroup ve = erreurGo.AddComponent<VerticalLayoutGroup>();
             ve.childControlWidth = true; ve.childControlHeight = true;
             ve.childForceExpandWidth = true; ve.childForceExpandHeight = false;

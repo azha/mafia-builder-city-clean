@@ -98,6 +98,85 @@ namespace MafiaCleanCity.Operational.Tests
                 string.Join(", ", nonMaskable));
         }
 
+        /// <summary>L6 — GARDE STRUCTURELLE DU DÉFILEMENT (l'historique grandit sans borne : le débordement est CERTAIN, pas
+        /// à attendre d'une capture). Tout le contenu de ㉙ est sous le `content` d'un `ScrollRect` vertical dont la fenêtre
+        /// (`viewport`) porte un `RectMask2D` ; tout `Graphic` sous la fenêtre est un `MaskableGraphic` MASQUABLE (sinon il
+        /// dessinerait par-dessus le dock). Seul le fond de `ConflitRoot` est hors de la fenêtre.</summary>
+        [UnityTest]
+        public IEnumerator EcranConflitS2_LeContenuDefileSousUnMasque()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(new GetLieutenantsResponseDto { lieutenants = new[] { Lieutenant("MUSCLE") } },
+                new GetEngagementsResponseDto { engagements = new[] { Envoi("p1", "coil", "La Coil", "scheduled", "", "", "medium") } });
+            yield return null;
+
+            Transform racine = RacineEcran().transform;
+            ScrollRect sr = racine.GetComponentInChildren<ScrollRect>(true);
+            Assert.IsTrue(sr != null, "aucun ScrollRect sous ConflitRoot");
+            Assert.IsTrue(sr.vertical && !sr.horizontal, "défilement vertical seulement");
+            Assert.IsTrue(sr.viewport != null && sr.content != null, "fenêtre et contenu posés");
+            Assert.IsTrue(sr.viewport.TryGetComponent<RectMask2D>(out _), "la fenêtre coupe ce qui dépasse (RectMask2D)");
+            Assert.IsTrue(sr.content.IsChildOf(sr.viewport), "le contenu est DANS la fenêtre");
+
+            foreach (string section in new[] { "Titre", "SousTitre", "Rentre", "EnCours", "Coup", "Table", "Pied", "Erreur" })
+            {
+                Transform t = sr.content.Find(section);
+                Assert.IsTrue(t != null, $"la section {section} n'est pas sous le contenu qui défile");
+            }
+
+            var horsFenetre = new List<string>();
+            var nonMasquables = new List<string>();
+            foreach (Graphic g in racine.GetComponentsInChildren<Graphic>(true))
+            {
+                if (g.transform == racine) continue;   // le fond plein écran, seul hors de la fenêtre
+                if (!g.transform.IsChildOf(sr.viewport)) horsFenetre.Add(g.name);
+                else if (!(g is MaskableGraphic mg) || !mg.maskable) nonMasquables.Add(g.name);
+            }
+            Assert.IsEmpty(horsFenetre, "des Graphic hors de la fenêtre dessineraient par-dessus le chrome : " + string.Join(", ", horsFenetre));
+            Assert.IsEmpty(nonMasquables, "des Graphic que le masque ne coupe pas : " + string.Join(", ", nonMasquables));
+        }
+
+        /// <summary>L6 — un historique LONG fabriqué (40 envois rentrés, 3 partis) : le contenu dépasse la fenêtre, et le
+        /// défilement l'atteint (défilé jusqu'au bout, le bouton d'envoi est dans la fenêtre). Rien n'est coupé à la source :
+        /// chaque rentré a sa ligne.</summary>
+        [UnityTest]
+        public IEnumerator EcranConflitE12_UnHistoriqueLong_DepasseLaFenetre_EtSeDefile()
+        {
+            var ecran = MonterEcran();
+            var envois = new List<EngagementDto>();
+            for (int i = 0; i < 3; i++) envois.Add(Envoi("p" + i, "tarcum", "Tarcum", "scheduled", "", "", "medium"));
+            for (int i = 0; i < 40; i++) envois.Add(Envoi("r" + i, i % 2 == 0 ? "coil" : "saltline", i % 2 == 0 ? "La Coil" : "Saltline",
+                "resolved", "hold", "low", "medium"));
+            ecran.RendrePourTest(new GetLieutenantsResponseDto { lieutenants = new[] { Lieutenant("MUSCLE") } },
+                new GetEngagementsResponseDto { engagements = envois.ToArray() });
+            yield return null;
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+
+            ScrollRect sr = RacineEcran().GetComponentInChildren<ScrollRect>(true);
+            float fenetre = sr.viewport.rect.height, contenu = sr.content.rect.height;
+            Assert.Greater(fenetre, 0f, "fenêtre de hauteur nulle : la mesure ne vaudrait rien");
+            Assert.Greater(contenu, fenetre * 1.5f, $"40 rentrés doivent dépasser la fenêtre (contenu {contenu}, fenêtre {fenetre})");
+            Assert.AreEqual(40, CompterNoms(sr.content, "DejaRentre_"), "chaque rentré a sa ligne : rien n'est coupé à la source");
+
+            sr.verticalNormalizedPosition = 0f;   // tout en bas
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            Transform bouton = sr.content.Find("Pied/LEnvoyerCeSoir");
+            Assert.IsTrue(bouton != null, "le bouton d'envoi existe");
+            Vector3[] coins = new Vector3[4], fen = new Vector3[4];
+            ((RectTransform)bouton).GetWorldCorners(coins);
+            sr.viewport.GetWorldCorners(fen);
+            Assert.GreaterOrEqual(coins[0].y, fen[0].y - 1f, "défilé jusqu'au bout, le bouton d'envoi est DANS la fenêtre (joignable)");
+        }
+
+        private static int CompterNoms(Transform racine, string prefixe)
+        {
+            int n = 0;
+            foreach (Transform t in racine.GetComponentsInChildren<Transform>(true)) if (t.name.StartsWith(prefixe)) n++;
+            return n;
+        }
+
         // ═══ 2. LA CAPTURE HORS SHELL A ÉTÉ RETIRÉE — mesurée VIDE, et sa garde la certifiait ═
         //
         // ⛔⛔ Ce que le gabarit posait ici photographiait un écran NON MONTÉ et NON CHARGÉ :
@@ -234,7 +313,7 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.Contains(ecran.RenderedTexts, "Aucun de vos lieutenants n'est du genre Gros bras.");
             Assert.IsNull(GameObject.Find("LEnvoyerCeSoir"), "sans gros bras, aucun bouton d'envoi");
             // `TryGetComponent`, pas `GetComponent == null` sous NUnit : dans l'éditeur, un composant absent rend un « faux null ».
-            Assert.IsFalse(RacineEcran().transform.Find("Corps/Table/Famille_coil").TryGetComponent<Button>(out _),
+            Assert.IsFalse(RacineEcran().transform.Find("Corps/Contenu/Table/Famille_coil").TryGetComponent<Button>(out _),
                 "sans gros bras, la famille ne se choisit pas");
             CollectionAssert.DoesNotContain(ecran.RenderedTexts,
                 "« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »",
@@ -290,7 +369,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             // Par les VRAIS boutons (le geste du joueur), pas seulement les crochets.
-            RacineEcran().transform.Find("Corps/Table/Famille_tarcum").GetComponent<Button>().onClick.Invoke();
+            RacineEcran().transform.Find("Corps/Contenu/Table/Famille_tarcum").GetComponent<Button>().onClick.Invoke();
             yield return null;
             Assert.AreEqual("tarcum", ecran.ChoixFamille);
             Assert.AreEqual("Ce soir", TexteSous("Famille_tarcum", "CeSoir"), "la famille choisie porte « Ce soir »");
