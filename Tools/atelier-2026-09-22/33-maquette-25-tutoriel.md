@@ -1,7 +1,9 @@
 # ㉕ La première fois (le tutoriel) — une maquette autour des données servies (série 6)
 
 > Atelier / DA, 2026-09-23. Commande f2 (GO du 23/09) : ㉕ est le premier écran d'un joueur neuf ; sa seule maquette (série 2, cadres
-> 31-32) ne dessine aucune donnée servie avec sa source. Page : `~/project/atelier3d-mafia/ecrans-brennar-25-tutoriel.html` (atelier `3f60bd5`), générée par
+> 31-32, **ratifiée par délégation le 02/09**, `front.md` l.22) ne dessine aucune donnée servie avec sa source.
+> Registres lus : la ratification par délégation (㉕ ET ㉒/⑲) et les arbitrages de fiction
+> (`docs/superpowers/plans/2026-09-02-propositions-fiction.md` §6 : copy 6A approuvée, « le texte approuvé prime »). Page : `~/project/atelier3d-mafia/ecrans-brennar-25-tutoriel.html` (atelier `5d7b6d9`), générée par
 > `Tools/atelier-2026-09-22/generer-maquette-25-2026-09-23.py`. La génération LIT les textes au back (`FR_MESSAGES`, back `d8e41362`) : aucun
 > n'est recopié à la main. Client lu : cumul `e21e0c55` (`Assets/Scripts/Onboarding/TutorialScreenController.cs`). **Aucun rendu** : il passe par f2.
 
@@ -32,8 +34,12 @@
 | 2 | 2ᵉ session, depuis Plus : la page « la première fois » | la bascule (`tutorials_opt_out` = faux), `shown_tutorial_ids` (02), `eligible_tutorial_ids` (01), `next_tutorial_id` = `cue_stack_intro` |
 | 3 | le refus | `tutorials_opt_out` = vrai : bascule éteinte, et la phrase du client |
 
-- Les deux gestes sont **au même rang**, comme l'exige le client (`TutorialScreenController.cs:22-24` : « le refus est un droit »).
-- « J’ai compris » est le seul geste qui écrit `shown_tutorial_ids` (`PATCH /v1/ui/tutorial`).
+- **« Compris »** est le mot RATIFIÉ (série 2, cadre 31). D14 : il l'emporte sur « J'AI COMPRIS » du client. C'est le seul geste qui écrit
+  `shown_tutorial_ids` (`PATCH /v1/ui/tutorial`).
+- **« Ne plus rien me montrer »** (client) est au même rang, comme l'exige le client (l.22-24 : « le refus est un droit »).
+  ⚠️ Il est **proposé** : la bulle ratifiée de la série 2 n'a qu'un geste.
+- **La bascule porte le libellé RATIFIÉ** du Profil (série 6, cadres 95-96, ratifiés par délégation) : **« On vous explique encore »**,
+  avec « décochez le jour où vous n’avez plus besoin qu’on vous tienne la main ». Elle est déjà dans le sens du joueur.
 
 ## 3. L'inventaire des données servies
 
@@ -52,8 +58,8 @@
   du joueur n'en dépend, donc ils ne sont pas dessinés. Passé à côté ?
 - ⚠️ **Le texte du tutoriel de la 1ʳᵉ carte est la même chaîne que le texte de la carte** : `tutorial.exception_card.onboarding_preseed`
   = `onboarding.preseed_exception.card`, octet pour octet (le générateur le vérifie). La bulle répète la carte au lieu d'expliquer ce
-  qu'est une carte. C'est ce que faisait la série 2 (« Ceci est une carte d’exception. Votre lieutenant n’avait pas de règle… »), mais sans
-  source. **Question pour le back et l'user** : une copy qui explique la carte ?
+  qu'est une carte. La série 2 ratifiée le faisait (« Ceci est une carte d’exception. Votre lieutenant n’avait pas de règle… ») ; ces mots
+  n'ont aucune clé servie. **Question pour le back et l'user** : servir la phrase ratifiée de la série 2 comme texte de ce tutoriel ?
 - ⚠️ **Le client affiche l'IDENTIFIANT** (`TutorialScreenController.cs:171-181`, « le texte de ce tutoriel n'est pas encore écrit »).
   Ce n'est plus vrai : **D10-h est close** et les 11 textes sont servis depuis `4a922bc9` (02/09). Le client peut résoudre
   `next_tutorial_id` par le bundle.
@@ -63,19 +69,23 @@
 
   Null veut dire « rien de nouveau pour cette session », pas « fini ». Proposé : « tout vu » seulement si `eligible_tutorial_ids`
   est vide ; sinon « rien de nouveau pour aujourd’hui » (proposé).
-- **La bascule est dans le sens du JOUEUR** (commande f2) : « Me montrer les premières fois » est allumée quand
+- **La bascule est dans le sens du JOUEUR** (commande f2) : « On vous explique encore » (le mot ratifié) est cochée quand
   `tutorials_opt_out` = **faux**. ⚠️ **Inversion pour le client** : bascule allumée ⇔ `PATCH /v1/ui/tutorial-opt-out { tutorials_opt_out: false }`.
 
 ## 5. Les heurts du servi — signalés, **non corrigés**
 
 1. **« Lt. Hara » en dur**, dans `tutorial.exception_card.onboarding_preseed` ET `onboarding.preseed_exception.card` (FR et EN).
-   - Les deux cuisiniers du joueur neuf s'appellent `'Lieutenant'` (placeholder TD-046, `onboarding-grant.service.ts:453,468`), pas Hara.
-   - Le back le dit lui-même : « Design §6 Q2 is an OPEN … arbitrage », `:167-179`.
-   - C'est très probablement un **`{nom}` manquant** : la carte doit nommer SON lieutenant (params de la carte) ; au back, avec ces deux
-     clés exactes.
-   - Réserve : tant que le grant nomme « Lieutenant », `{nom}` rendra « Lieutenant — cuisson du soir bloquée… ».
-2. **« Il décide seul »** (`tutorial.graduation`) vient d'une proposition du back (`docs/superpowers/plans/2026-09-02-propositions-fiction.md:164`,
-   commit `4a922bc9`), **pas d'une maquette ratifiée** : D13 s'applique, forme épicène.
+   **Il y a un doute, donc à f2 de trancher.**
+   - Pour « `{nom}` manquant » : les deux cuisiniers du joueur neuf s'appellent `'Lieutenant'` (placeholder TD-046,
+     `onboarding-grant.service.ts:453,468`), pas Hara. La carte parle d'un lieutenant que le joueur n'a pas.
+   - Contre : c'est la copy **6A approuvée par l'user**, et « Lt. Hara » est un nom CANON (41 occurrences, un personnage récurrent aux
+     jours 3 et 6 du même funnel ; `onboarding-grant.service.ts:167-179`).
+   - Si `{nom}` : au back, sur ces deux clés exactes. Tant que le grant nomme « Lieutenant », la carte dira « Lieutenant — cuisson du soir
+     bloquée… ».
+   - L'autre voie : que le grant nomme Hara l'un des deux cuisiniers.
+2. **« Il décide seul »** (`tutorial.graduation`) vient des arbitrages de fiction du 02/09 (`propositions-fiction.md:164`, commit `4a922bc9`),
+   écrits par le back après le choix 6A, **pas d'une maquette ratifiée** : D13 s'applique, forme épicène. (Si f2 tient ce document pour
+   ratifié, les deux mots vont à la liste de l'user.)
    - Proposé : « Un lieutenant a fini son apprentissage. **Désormais, la décision lui revient**, dans le cadre que vous fixez. »
    - L'EN (« They decide alone ») est déjà épicène.
 3. **« Un lieutenant est prêt à passer. »** (`tutorial.graduation_eligibility_intro`) : « prêt » s'accorde au masculin. D13 en a retiré
@@ -85,11 +95,17 @@
 
 ## 6. Les mots proposés (non ratifiés)
 
+Mots RATIFIÉS employés, non soulignés :
+- « Compris » (série 2, cadre 31) ;
+- « On vous explique encore » et « décochez le jour où vous n’avez plus besoin qu’on vous tienne la main » (série 6, cadres 95-96).
+
+Tous deux sans clé servie à ce jour.
+
+
 | mot | pour | source |
 |---|---|---|
 | la première fois | surtitre de la bulle, titre de la page | le client (`TutorialScreenController.cs:250`, « LA PREMIÈRE FOIS », sans clé) ; la maquette ratifiée ⑱ (Plus, série 6, 20-21) n'a pas d'entrée tutoriel |
-| J’ai compris · Ne plus rien me montrer | les deux gestes, au même rang | le client (l.182, l.194, sans clé) |
-| Me montrer les premières fois | la bascule, dans le sens du joueur | neuf |
+| Ne plus rien me montrer | le refus, au même rang que « Compris » | le client (l.194, sans clé) ; la série 2 ratifiée n'a qu'un geste |
 | vues · à venir | `shown_tutorial_ids`, `eligible_tutorial_ids` (le client écrit « {n} vu(s) · {n} disponible(s) ») | neuf |
 | à découvrir | le suivant, sur la page | le client (l.174, « À DÉCOUVRIR ») |
 | Vous avez demandé qu’on vous laisse tranquille. | le refus | le client (l.156) |
@@ -97,7 +113,7 @@
 ## 7. À ratifier (user, via f2)
 
 1. La forme : la bulle sur la ville, pointant sa cible ; la page « la première fois » sous Plus ; quatre cadres.
-2. Les mots du §6.
+2. Les mots du §6, dont le second geste de la bulle, absent de la série 2 ratifiée.
 3. La question de §4 : faut-il une copy qui explique la carte, plutôt que de la répéter ?
 
 ## Annexe — les 11 tutoriels servis (3 dessinés, 8 listés)

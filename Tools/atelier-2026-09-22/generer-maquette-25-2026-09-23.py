@@ -60,6 +60,7 @@ CSS = """<style>
 .tu25 .page h3{margin:0;font:400 15px/1.2 'DejaVu Serif';color:#f2c96b;letter-spacing:.05em;text-align:center}
 .tu25 .inter{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 11px;border-radius:9px;background:#ffffff08;border:1px solid #ffffff1c}
 .tu25 .inter span{flex:1;font:400 10px/1.35 'DejaVu Sans';color:#eae0c8}
+.tu25 .inter b{font-weight:400;font-family:'DejaVu Serif';font-size:11px}.tu25 .inter small{color:#b9ad92;font-size:8px}
 .tu25 .bascule{width:38px;height:21px;border-radius:11px;position:relative;background:#3a4454;border:1px solid #ffffff2a;flex:none}
 .tu25 .bascule::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#b9ad92}
 .tu25 .bascule.on{background:linear-gradient(180deg,#e9c56b,#c99a37);border-color:#8a611c}
@@ -89,14 +90,18 @@ def cadre(etiquette, contenu, dock=DOCK):
             f'<div class="panneau"><div class="tu25" style="height:406px">{contenu}'
             f'</div></div>' + dock + '</div></div></div>\n')
 
-GESTES = ('<div class="gestes"><div class="g or"><span class="prop">J’ai compris</span></div>'
-          '<div class="g"><span class="prop">Ne plus rien me montrer</span></div></div>')     # le refus au MÊME rang (client, l.22-24)
+# D14 : « Compris » est le mot RATIFIÉ (série 2 cadre 31, ratifiée par délégation le 02/09) — il l'emporte sur « J'AI COMPRIS » du client.
+# « Ne plus rien me montrer » (client) reste PROPOSÉ : la série 2 ratifiée n'a qu'un geste ; le refus au même rang est l'exigence du client (l.22-24).
+GESTES = ('<div class="gestes"><div class="g or">Compris</div>'
+          '<div class="g"><span class="prop">Ne plus rien me montrer</span></div></div>')
 def bulle(texte, cible=False):
     return (('<div class="cible"></div>' if cible else '') +
             f'<div class="bulle"><div class="sur prop">la première fois</div><div class="texte">{texte}</div>{GESTES}</div>')
 def page(bascule_on, corps):
     return (f'<div class="page"><h3 class="prop">La première fois</h3>'
-            f'<div class="inter"><span class="prop">Me montrer les premières fois</span><div class="bascule{" on" if bascule_on else ""}"></div></div>'
+            # D14 : le libellé RATIFIÉ de la bascule (Profil / réglages, série 6 cadres 95-96, ratifiée par délégation) — dans le sens du joueur
+            f'<div class="inter"><span><b>On vous explique encore</b><br><small>décochez le jour où vous n’avez plus besoin qu’on vous tienne la main</small></span>'
+            f'<div class="bascule{" on" if bascule_on else ""}"></div></div>'
             f'{corps}</div>')
 
 CADRES = [
@@ -105,7 +110,7 @@ CADRES = [
     cadre('㉕ 2ᵉ session, depuis Plus — la page « la première fois »',
           page(True, '<div class="fens"><div><b>02</b><span class="prop">vues</span></div><div><b>01</b><span class="prop">à venir</span></div></div>'
                      f'<div class="suite"><div class="sur prop">à découvrir</div><div class="texte">{servi("tutorial.cue_stack_intro")}</div>'
-                     '<div class="gestes"><div class="g or"><span class="prop">J’ai compris</span></div></div></div>'), DOCK_PLUS),
+                     '<div class="gestes"><div class="g or">Compris</div></div></div>'), DOCK_PLUS),
     cadre('㉕ Le refus — <code>tutorials_opt_out</code> = vrai (la bascule dit l’inverse de la clé)',
           page(False, '<div class="calme prop">Vous avez demandé qu’on vous laisse tranquille.</div>'), DOCK_PLUS),
 ]
