@@ -40,6 +40,8 @@ namespace MafiaCleanCity.Operational.Tests
         /// nommée, datée, avec la table qui la mesure.</summary>
         private static readonly HashSet<string> DetteDatee = new HashSet<string>
         {
+            // ⚠️ COUPE du 2026-09-23 contre la pile e7f52351 (X-Server-Build, bundle fr 1659 clés, `rtk proxy curl`) : 30 clés
+            // SERVIES retirées (18 de ⑦, 12 de ㉙) ; restent les 22 de ⑦ ci-dessous, non servies à e7f52351.
             // ⑦ LES DEUX DÉCISIONS (2026-09-23) — 40 clés PROPOSÉES par l'atelier (26, page `ecrans-brennar-7-lieutenant.html` ; table 42, aa2cd03b), non
             // ratifiées, NON servies au back d8e41362 (vérifié sur `string_table.ts` à d8e41362 : 0 sur 40). La dette ne fait que
             // rétrécir : la règle (2) rougit dès qu'une est servie, pour la retirer d'ici.
@@ -65,41 +67,6 @@ namespace MafiaCleanCity.Operational.Tests
             "famille.ecran.en_faire_la_regle",
             "famille.ecran.renouveler",
             "famille.ecran.retirer",
-            "famille.ordre.en_cours",
-            "famille.ordre.echu",
-            "famille.refus.trop_tot_pour_refaire_ce_geste",
-            "famille.refus.aucun_ordre_en_cours",
-            "famille.refus.cet_ordre_n_a_pas_encore_fait_ses_preuves",
-            "famille.refus.ce_geste_n_est_pas_reconnu",
-            "famille.ecran.donner_un_ordre",
-            "famille.ecran.et_quand_il_expire",
-            "famille.lapse.retour_a_la_routine",
-            "famille.lapse.l_ordre_continue",
-            "famille.lapse.on_vous_demande",
-            "famille.ecran.pour_une_duree_fixe",
-            "famille.ecran.signer_l_ordre",
-            "famille.refus.un_ordre_est_deja_en_cours_renouvelez_le",
-            "famille.fiabilite.en_sommeil",
-            "famille.fiabilite.a_moitie_fiable",
-            "famille.fiabilite.fiable",
-            "famille.fiabilite.decisif",
-            // ㉙ LA TABLE DES FAMILLES (2026-09-23) — 3 clés PROPOSÉES par l'atelier (table 40, 997d6ab4), NON servies au back d8e41362
-            // (vérifié sur `string_table.ts` à d8e41362 : 0 sur 3). L'arrivée (aucun envoi rentré) rend la première ; les deux
-            // autres dès qu'un envoi est rentré.
-            "conflit.bloc.on_ne_les_a_pas_croises",
-            "conflit.bloc.on_est_alles_chez_eux",
-            "conflit.bloc.fois_chez_eux",
-            // ㉙ LE COUP DE CE SOIR (2026-09-23, L4) — même table 40, NON servies à d8e41362 (0 sur 9). L'arrivée rend les deux
-            // premières (sans gros bras) ; avec un gros bras, le bouton, sa précision et les 5 axes, avant tout choix.
-            "conflit.bloc.le_coup_de_ce_soir",
-            "conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain",
-            "conflit.bloc.l_envoyer_ce_soir",
-            "conflit.bloc.on_ne_pourra_plus_le_rappeler",
-            "conflit.axe.muscle",
-            "conflit.axe.finance",
-            "conflit.axe.intel",
-            "conflit.axe.infrastructure",
-            "conflit.axe.leadership",
         };
 
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>
@@ -134,6 +101,9 @@ namespace MafiaCleanCity.Operational.Tests
             // l'exclusion « aucun site Libelle » était PÉRIMÉE ; la garde doit maintenant les voir à 0 repli sur la pile.
             ("PrecinctScreenController",         s => s.MonterLocataireEnSurimpression<MafiaCleanCity.CitySim.Precinct.PrecinctScreenController>()),
             ("SellingScreenController",          s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Selling.SellingScreenController>()),
+            // MESURÉ depuis le 2026-09-23 : ses 7 clés `tutoriel.ecran.*` sont servies à e7f52351 (7/7) — l'épingle de son exclusion
+            // datée était devenue PÉRIMÉE, comme elle le prévoyait.
+            ("TutorialScreenController",         s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Onboarding.TutorialScreenController>()),
         };
 
         /// <summary>Les locataires NON mesurés, avec leur raison : aucun site `Libelle` à littéral (mesuré par
@@ -141,26 +111,9 @@ namespace MafiaCleanCity.Operational.Tests
         private static readonly HashSet<string> ExclusDeclares = new HashSet<string>
         {
             "InspectionScreenController",
-            // ⛔ EXCLU AVEC UNE RAISON DATÉE (2026-09-23) : ㉕ passe par l'i18n depuis 049a863e (CLIENT-2), mais ses 7 clés
-            //    `tutoriel.ecran.*` (ClesDuTutoriel ci-dessous) ne sont PAS servies avant le back d8e41362 — le mesurer ferait rougir
-            //    la garde sur un trou connu du back. La garde VÉRIFIE ce fait à chaque run : le jour où l'une est servie, elle rougit
-            //    (« ÉPINGLE PÉRIMÉE ») et dit de le passer aux MESURÉS.
-            "TutorialScreenController",
             // ⑪ et ⑫ retirés du dépôt le 2026-09-23 (code mort) : leurs exclusions partent avec eux.
             // Precinct et Selling : passés aux MESURÉS le 2026-09-23 (voir la liste Mesures).
             "DecisionDetailScreenController",
-        };
-
-        /// <summary>Les clés de ㉕ (049a863e), NON servies avant le back d8e41362 — la raison DATÉE de l'exclusion du Tutoriel.</summary>
-        private static readonly string[] ClesDuTutoriel =
-        {
-            "tutoriel.ecran.a_decouvrir",
-            "tutoriel.ecran.compris",
-            "tutoriel.ecran.decochez_le_jour_ou_vous_n_avez_plus_besoin_qu_on_vous_tienne_la_main",
-            "tutoriel.ecran.on_vous_explique_encore",
-            "tutoriel.ecran.rien_de_nouveau_pour_aujourd_hui",
-            "tutoriel.ecran.vous_avez_demande_qu_on_vous_laisse_tranquille",
-            "tutoriel.ecran.vous_avez_tout_vu",
         };
 
         [SetUp]
@@ -207,11 +160,6 @@ namespace MafiaCleanCity.Operational.Tests
                 yield return null;
             Assert.IsTrue(I18nCatalog.Charge, "le shell n'a pas amorcé le bundle réel en 45 s — rien de ce qui suit ne vaudrait");
             Assert.Greater(I18nCatalog.NbClesServies, 400, $"le bundle ne sert que {I18nCatalog.NbClesServies} clés : la pile n'a pas l'image à jour");
-
-            // ⛔ LA RAISON DATÉE DE L'EXCLUSION DU TUTORIEL, VÉRIFIÉE : si l'une de ses clés est servie, l'exclusion est PÉRIMÉE.
-            var tutorielServies = ClesDuTutoriel.Where(I18nCatalog.Connait).ToList();
-            Assert.IsEmpty(tutorielServies, $"ÉPINGLE PÉRIMÉE : {tutorielServies.Count} clé(s) du tutoriel SONT servies désormais — " +
-                "passer TutorialScreenController aux MESURÉS et retirer son exclusion : " + string.Join(" · ", tutorielServies));
 
             var horsDette = new List<string>();
             var appelsParEcran = new Dictionary<string, int>();
