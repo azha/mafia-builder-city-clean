@@ -338,6 +338,111 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(GesteVivant(), "sans code servi, aucun geste vivant : on n'envoie ni 0 ni un code deviné");
         }
 
+        // ═══ ㉜ lot 3 — les refus, EN MOTS (sans réseau) ════════════════════════════════════
+
+        private static DelegationClient.Refus Refus(string code, string cle, string message, string raison = null) =>
+            new DelegationClient.Refus { statut = 409, code = code, cle = cle, message = message, raison = raison };
+
+        /// <summary>R1 — la phrase d'un refus vient de sa clé SERVIE (ou de la raison servie) ; le message anglais du serveur et une
+        /// URL de panne ne s'affichent JAMAIS.</summary>
+        [Test]
+        public void EcranDelegationR1_LaPhraseDuRefus_JamaisLeMessageAnglais()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            string anglais = "category 4 has an ACTIVE promotion lock — graduation refused until it closes.";
+            string generique = DelegationScreenController.PhraseDeRefus(Refus("RESOURCE_STATE_CONFLICT", "error.resource.state_conflict", anglais));
+            Assert.AreEqual("Rien n’a été changé.", generique, "sans catalogue : le repli du client, pas le message");
+            string panne = DelegationScreenController.PhraseDeRefus(new DelegationClient.Refus
+                { statut = 0, message = "http://127.0.0.1:9/v1/meta/graduation — Cannot connect to destination host" });
+            Assert.AreEqual("Rien n’a été changé.", panne, "une panne de transport ne montre ni URL ni erreur système");
+
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                ["error.resource.state_conflict"] = "La situation a changé depuis votre dernier coup d’œil. Rechargez et décidez à nouveau.",
+                ["error.core_loops.structural_cap_exhausted"] = "Vous avez utilisé votre décision de structure du jour. Reprenez demain.",
+                ["delegation.refus.un_changement_est_deja_en_cours_sur_cette_charge"] = "un changement est déjà en cours sur cette charge",
+            });
+            try
+            {
+                Assert.AreEqual("La situation a changé depuis votre dernier coup d’œil. Rechargez et décidez à nouveau.",
+                    DelegationScreenController.PhraseDeRefus(Refus("RESOURCE_STATE_CONFLICT", "error.resource.state_conflict", anglais)),
+                    "sans raison servie (aujourd'hui) : la phrase GÉNÉRIQUE servie de la clé du refus");
+                Assert.AreEqual("Vous avez utilisé votre décision de structure du jour. Reprenez demain.",
+                    DelegationScreenController.PhraseDeRefus(Refus("STRUCTURAL_CAP_EXHAUSTED", "error.core_loops.structural_cap_exhausted",
+                        "Structural decisions exhausted for this session. Return in next session.")));
+                Assert.AreEqual("un changement est déjà en cours sur cette charge",
+                    DelegationScreenController.PhraseDeRefus(Refus("RESOURCE_STATE_CONFLICT", "error.resource.state_conflict", anglais,
+                        raison: "promotion_lock_active")), "la raison servie (annoncée) choisit le mot de la table 44");
+                Assert.AreEqual("La situation a changé depuis votre dernier coup d’œil. Rechargez et décidez à nouveau.",
+                    DelegationScreenController.PhraseDeRefus(Refus("RESOURCE_STATE_CONFLICT", "error.resource.state_conflict", anglais,
+                        raison: "__HORS_DOMAINE__")), "une raison inconnue : la phrase générique, jamais la raison brute");
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
+            CollectionAssert.AreEqual(new string[] { null, null, null, null },
+                new[] { null, "", "__X__", "NOT_SELF" }.Select(DelegationScreenController.PhraseDeRaison).ToArray());
+        }
+
+        /// <summary>R2 — le 409 du PLAFOND éteint le jeton PARTAGÉ dès le refus (d'après le refus servi, pas un compteur) et mène au
+        /// tableau « déjà tranché » ; un autre refus reste sur l'état du geste, en mots.</summary>
+        [UnityTest]
+        public IEnumerator EcranDelegationR2_LePlafond_EteintLeJetonDesLeRefus()
+        {
+            var ecran = MonterEcran();
+            ecran.SetBaseUrl("http://127.0.0.1:9");
+            yield return null;
+            var corps = new GetMetaTaskCategoriesResponseDto
+            {
+                task_categories = new[] { new TaskCategoryRowDto { category_key = "SUPPLY_SOURCING", category_id = 4, mastery_bucket = "ELIGIBLE",
+                                                                   progress_band = "HIGH", delegation_state = "SELF" } },
+                delegated = new DelegatedSummaryDto[0],
+            };
+            var roster = new GetLieutenantsResponseDto { lieutenants = new[] { new LieutenantRowDto { lieutenant_id = "lt-1", name = "Lt. Vesk" } } };
+            ecran.RendrePourTest(corps, roster, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            Assert.IsFalse(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "anti-vacuité : le jeton est libre avant le refus");
+
+            ecran.RefuserPourTest(Refus("RESOURCE_STATE_CONFLICT", "error.resource.state_conflict", "category 4 is not SELF-managed"));
+            Assert.AreEqual(DelegationScreenController.EtatEcran.Confier, ecran.EtatCourant, "un refus ordinaire reste sur le geste");
+            Assert.IsFalse(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "un refus ordinaire ne touche pas au jeton");
+            StringAssert.Contains("Rien n’a été changé.", TexteDeLEcran(), "le refus se DIT (en mots)");
+            Assert.IsFalse(TexteDeLEcran().Contains("SELF-managed"), "jamais le message anglais");
+
+            ecran.RefuserPourTest(Refus("STRUCTURAL_CAP_EXHAUSTED", "error.core_loops.structural_cap_exhausted",
+                "Structural decisions exhausted for this session. Return in next session."));
+            Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "le jeton PARTAGÉ (㉝ ㉞) s'éteint dès le refus");
+            Assert.IsTrue(ecran.JetonDepense);
+            Assert.AreEqual(DelegationScreenController.EtatEcran.Tableau, ecran.EtatCourant, "le plafond mène au tableau « déjà tranché »");
+            Assert.IsNull(GesteVivant(), "plus aucun geste vivant : le jeton est dépensé");
+            yield return null;
+        }
+
+        /// <summary>R3 — un refus n'est plus AVALÉ comme un succès : `Charger()` remettait le refus à null, et l'écran repartait au
+        /// tableau. Ici une vraie requête échoue (port fermé) : l'écran reste sur « confier » et dit le refus, sans URL.</summary>
+        [UnityTest]
+        public IEnumerator EcranDelegationR3_UnRefusNEstPasAvaleCommeUnSucces()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var ecran = MonterEcran();
+            ecran.SetBaseUrl("http://127.0.0.1:9");
+            yield return null;
+            var corps = new GetMetaTaskCategoriesResponseDto
+            {
+                task_categories = new[] { new TaskCategoryRowDto { category_key = "SUPPLY_SOURCING", category_id = 4, mastery_bucket = "ELIGIBLE",
+                                                                   progress_band = "HIGH", delegation_state = "SELF" } },
+                delegated = new DelegatedSummaryDto[0],
+            };
+            var roster = new GetLieutenantsResponseDto { lieutenants = new[] { new LieutenantRowDto { lieutenant_id = "lt-1", name = "Lt. Vesk" } } };
+            ecran.RendrePourTest(corps, roster, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            yield return null;
+            GesteVivant().onClick.Invoke();
+            float fin = Time.realtimeSinceStartup + 20f;
+            while (!TexteDeLEcran().Contains("Rien n’a été changé.") && Time.realtimeSinceStartup < fin) yield return null;
+            StringAssert.Contains("Rien n’a été changé.", TexteDeLEcran(), "le refus (une panne) est DIT après le rechargement");
+            Assert.AreEqual(DelegationScreenController.EtatEcran.Confier, ecran.EtatCourant, "PAS le tableau d'un succès");
+            Assert.IsFalse(TexteDeLEcran().Contains("127.0.0.1"), "jamais d'URL à l'écran");
+        }
+
         /// <summary>Le bouton du geste (`Geste` → sa zone `Touche`), s'il est vivant — un geste mort n'a AUCUN gestionnaire.</summary>
         private Button GesteVivant()
         {

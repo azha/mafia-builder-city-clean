@@ -173,6 +173,7 @@ namespace MafiaCleanCity.Operational
         private int candidatIndex;
         private GetMetaRecallPreviewResponseDto apercuCourant;
         private string refusAffiche;
+        private string phraseIndisponible;
 
         private float Px(float css) =>
             EchelleMaquette.Px(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar6);
@@ -330,7 +331,7 @@ namespace MafiaCleanCity.Operational
 
             yield return client.GetMetaTaskCategories(token,
                 dto => DernierChargement = dto,
-                refus => { DernierCodeErreur = refus.statut; DerniereErreur = refus.message; });
+                refus => { DernierCodeErreur = refus.statut; DerniereErreur = refus.message; phraseIndisponible = PhraseDeRefus(refus); });
 
             if (DernierChargement != null)
             {
@@ -487,7 +488,7 @@ namespace MafiaCleanCity.Operational
                 ConstruireGeste(pied, "EN CONFIER UNE", "aucune n'est encore prête", true, null);
             }
 
-            if (refusAffiche != null) ConstruireRien(pied, "Refusé", " : " + refusAffiche);
+            if (refusAffiche != null) ConstruireRien(pied, "", refusAffiche);   // ㉜ lot 3 : la phrase servie, sans « Refusé : » en dur
         }
 
         // ── m-74 — confier ───────────────────────────────────────────────────────────────────
@@ -526,7 +527,7 @@ namespace MafiaCleanCity.Operational
                             !possible,
                             possible ? (System.Action)(() => StartCoroutine(Confier(visee, candidat))) : null);
 
-            if (refusAffiche != null) ConstruireRien(pied, "Refusé", " : " + refusAffiche);
+            if (refusAffiche != null) ConstruireRien(pied, "", refusAffiche);
         }
 
         // ── m-76 — reprendre ─────────────────────────────────────────────────────────────────
@@ -541,9 +542,7 @@ namespace MafiaCleanCity.Operational
             if (visee != null) ConstruirePlaqueDeCharge(zoneCentrale, visee, false);
 
             if (apercuCourant != null) ConstruireApercu(zoneCentrale, apercuCourant);
-            else ConstruireNote(zoneCentrale, refusAffiche != null
-                ? "On ne peut pas vous dire ce que ça coûterait : " + refusAffiche
-                : "On demande ce que ça coûterait…");
+            else ConstruireNote(zoneCentrale, refusAffiche ?? "On demande ce que ça coûterait…");   // ㉜ lot 3 : le refus en mots
 
             ConstruireNote(zoneCentrale,
                 "Ceci est un avertissement, pas un mur : le jeu vous laissera le faire.");
@@ -591,7 +590,8 @@ namespace MafiaCleanCity.Operational
             Vider(pied);
             EcrireTete("Le tableau de service n'a pas répondu",
                        "On n'a pas pu lire ce que vous tenez. Rien n'a été changé.");
-            ConstruireNote(zoneCentrale, DerniereErreur ?? "raison inconnue");
+            // ㉜ lot 3 : la phrase servie du refus — `DerniereErreur` (anglais, diagnostic) reste un crochet de test, jamais un texte.
+            ConstruireNote(zoneCentrale, phraseIndisponible ?? PhraseDeRefus(default));
         }
 
         // ═══ Gestes ══════════════════════════════════════════════════════════════════════════
@@ -599,31 +599,29 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Confier(TaskCategoryRowDto visee, LieutenantRowDto candidat)
         {
             refusAffiche = null;
+            plafondAtteintParRefus = false;
             if (!CodeServi(visee)) yield break;
             int code = visee.category_id;
             DerniereCategorieDemandee = code;
             yield return client.PostMetaGraduation(token,
                 new PostMetaGraduationBody { category_id = code, lieutenant_id = candidat.lieutenant_id },
                 _ => { },
-                refus => refusAffiche = refus.message);
-            yield return Charger();
-            if (refusAffiche == null) AllerA(EtatEcran.Tableau);
-            else AppliquerEtat(DernierChargement);
+                PrendreLeRefus);
+            yield return ApresLeGeste();
         }
 
         private IEnumerator Reprendre(TaskCategoryRowDto visee)
         {
             refusAffiche = null;
+            plafondAtteintParRefus = false;
             if (!CodeServi(visee)) yield break;
             int code = visee.category_id;
             DerniereCategorieDemandee = code;
             yield return client.PostMetaRecall(token,
                 new PostMetaRecallBody { category_id = code },
                 _ => { },
-                refus => refusAffiche = refus.message);
-            yield return Charger();
-            if (refusAffiche == null) AllerA(EtatEcran.Tableau);
-            else AppliquerEtat(DernierChargement);
+                PrendreLeRefus);
+            yield return ApresLeGeste();
         }
 
         /// <summary>Ouvre l'aperçu de reprise : c'est la SEULE transition d'état qui appelle le
@@ -641,9 +639,81 @@ namespace MafiaCleanCity.Operational
             DerniereCategorieDemandee = ligne.category_id;
             yield return client.GetMetaRecallPreview(token, ligne.category_id,
                 dto => apercuCourant = dto,
-                refus => refusAffiche = refus.message);
+                PrendreLeRefus);
 
             AppliquerEtat(DernierChargement);
+        }
+
+        /// <summary>㉜ lot 3 — après confier ou reprendre : relire le tableau, puis dire le refus s'il y en a eu un.
+        /// ⛔ LE REFUS EST GARDÉ À TRAVERS LE RECHARGEMENT. `Charger()` remet `refusAffiche` à null dès sa première ligne : avant ce
+        /// lot, un refus était donc EFFACÉ par le rechargement même qui suivait le geste, et l'écran repartait au tableau comme après
+        /// un SUCCÈS — tout refus du serveur était avalé en silence (mesuré à la relecture, 23/09).
+        /// Le plafond (409 STRUCTURAL_CAP_EXHAUSTED) mène au tableau « déjà tranché » (cadre 77), qui le dit lui-même.</summary>
+        private IEnumerator ApresLeGeste()
+        {
+            string refus = refusAffiche;
+            bool plafond = plafondAtteintParRefus;
+            yield return Charger();
+            refusAffiche = refus;
+            // Succès, ou plafond : le tableau (le plafond s'y dit par le jeton éteint et le titre du cadre 77, pas par un pavé).
+            if (refus == null || plafond) { refusAffiche = null; AllerA(EtatEcran.Tableau); yield break; }
+            AppliquerEtat(DernierChargement);
+        }
+
+        private bool plafondAtteintParRefus;
+
+        /// <summary>㉜ lot 3 — un refus du serveur, EN MOTS. La phrase vient de la clé SERVIE du refus (`user_facing_i18n_key`) ; le
+        /// `message` anglais du serveur ne s'affiche plus jamais. Le 409 du PLAFOND (`STRUCTURAL_CAP_EXHAUSTED`, gouverneur de
+        /// structure) publie le jeton DÉPENSÉ (`JetonDeStructure`, partagé avec ㉝ ㉞) : il s'éteint dès le refus, d'après le refus
+        /// SERVI, jamais d'après un compteur local.
+        /// Les trois `delegation.refus.*` de la table 44 se choisissent par `payload_vars.reason` (annoncé par le back le 23/09, déclaré
+        /// ici) ; sans raison servie — c'est le cas aujourd'hui : le verrou et les deux autres sortent en `RESOURCE_STATE_CONFLICT` avec
+        /// la même clé —, la phrase GÉNÉRIQUE servie de la clé du refus.</summary>
+        private void PrendreLeRefus(DelegationClient.Refus refus)
+        {
+            if (EstLePlafond(refus))
+            {
+                plafondAtteintParRefus = true;
+                JetonDeStructure.Publier(JetonDeStructure.Utilises, true);
+                JetonDepenseConnu = true;
+                JetonDepense = true;
+            }
+            refusAffiche = PhraseDeRefus(refus);
+        }
+
+        public static bool EstLePlafond(DelegationClient.Refus refus) => refus.code == "STRUCTURAL_CAP_EXHAUSTED";
+
+        /// <summary>La phrase d'un refus : la clé servie du refus, sinon (pas de corps d'erreur : une panne de transport) la phrase de
+        /// repli du client. Jamais `refus.message`, jamais une URL.</summary>
+        public static string PhraseDeRefus(DelegationClient.Refus refus)
+        {
+            string parRaison = PhraseDeRaison(refus.raison);
+            if (parRaison != null) return parRaison;
+            string repli = Lib("Rien n’a été changé.");
+            return string.IsNullOrEmpty(refus.cle) ? repli : MafiaCleanCity.I18n.Libelle.Gabarit(refus.cle, repli);
+        }
+
+        /// <summary>La raison SERVIE d'un 409 de la délégation → son mot (table 44, `delegation.refus.*`, servis). Raison absente ou
+        /// inconnue ⇒ null : l'appelant dit la phrase générique servie, jamais la raison brute.</summary>
+        public static string PhraseDeRaison(string raison)
+        {
+            switch (raison)
+            {
+                case "not_self": return MafiaCleanCity.I18n.Libelle.De("delegation", "refus", "la charge n’est plus à vous");
+                case "not_delegated": return MafiaCleanCity.I18n.Libelle.De("delegation", "refus", "la charge n’est plus confiée");
+                case "promotion_lock_active": return MafiaCleanCity.I18n.Libelle.De("delegation", "refus", "un changement est déjà en cours sur cette charge");
+                default: return null;
+            }
+        }
+
+        /// <summary>⛔ Réservé aux tests (㉜ lot 3) : applique un refus FABRIQUÉ, exactement comme le chemin d'un geste.</summary>
+        public void RefuserPourTest(DelegationClient.Refus refus)
+        {
+            refusAffiche = null;
+            plafondAtteintParRefus = false;
+            PrendreLeRefus(refus);
+            if (plafondAtteintParRefus) { refusAffiche = null; AllerA(EtatEcran.Tableau); return; }
+            if (DernierChargement != null) AppliquerEtat(DernierChargement);
         }
 
         // ═══ Lectures dérivées — chacune NOMMÉE, aucune ligne de logique dans le rendu ═══════

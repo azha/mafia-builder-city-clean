@@ -256,7 +256,14 @@ namespace MafiaCleanCity.Operational
     /// arriverait à l'écran sous la forme « HTTP/1.1 422 Unprocessable Entity » — le joueur
     /// lirait un code là où le serveur a écrit une phrase.
     /// Forme mesurée : `payload.error = { code, http_status, user_facing_i18n_key, message, … }`.</summary>
-    [Serializable] public class ApiErreurDto { public string code; public int http_status; public string user_facing_i18n_key; public string message; }
+    [Serializable] public class ApiErreurDto { public string code; public int http_status; public string user_facing_i18n_key; public ApiErreurVarsDto payload_vars; public string message; }
+
+    /// <summary>㉜ lot 3 — `payload.error.payload_vars` (protocol/envelope.ts:117), les variables SERVIES d'un refus.
+    /// `category_id` : tous les 409 de la délégation (graduation.service.ts, promotion-lock.service.ts). `retry_scope` : le plafond
+    /// (`next_session`, structural-decision-governor.service.ts:102). `reason` : DÉCLARÉ AVANT D'ÊTRE SERVI (forme G, annonce du back
+    /// du 23/09 : `not_self` · `not_delegated` · `promotion_lock_active` sur les 409 `RESOURCE_STATE_CONFLICT`) — absent aujourd'hui,
+    /// `JsonUtility` le rend null et l'écran dit alors la phrase générique servie.</summary>
+    [Serializable] public class ApiErreurVarsDto { public string reason; public string retry_scope; public int category_id; }
     [Serializable] public class ApiErreurPayload { public ApiErreurDto error; }
     [Serializable] public class ApiErreurEnvelope { public ApiErreurPayload payload; }
 }

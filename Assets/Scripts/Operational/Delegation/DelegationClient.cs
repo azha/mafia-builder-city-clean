@@ -36,6 +36,11 @@ namespace MafiaCleanCity.Operational
         {
             public long statut;
             public string code;
+            /// <summary>㉜ lot 3 — `payload.error.user_facing_i18n_key` : la phrase SERVIE du refus. C'est ELLE qui s'affiche ;
+            /// `message` est un diagnostic anglais du serveur, jamais montré au joueur.</summary>
+            public string cle;
+            /// <summary>`payload_vars.reason` (déclaré, pas encore servi) : ce qui distingue le verrou d'une charge qui a changé.</summary>
+            public string raison;
             public string message;
 
             public bool EstMetier => !string.IsNullOrEmpty(code);
@@ -185,6 +190,8 @@ namespace MafiaCleanCity.Operational
             {
                 statut = req.responseCode,
                 code = err != null ? err.code : null,
+                cle = err != null ? err.user_facing_i18n_key : null,
+                raison = err?.payload_vars?.reason,
                 message = err != null && !string.IsNullOrEmpty(err.message)
                     ? err.message
                     : $"{req.url} — {req.error}",
