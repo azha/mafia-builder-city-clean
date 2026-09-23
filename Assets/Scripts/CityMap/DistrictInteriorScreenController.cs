@@ -253,6 +253,24 @@ namespace MafiaCleanCity.CityMap
         /// <summary>Couture de test : pose la chaleur sans réseau (même effet que le fetch de `SetSession`).</summary>
         public void PoserChaleurPourTest(DistrictHeatDto heat) => LastHeat = heat;
 
+        // ①-3 (r9 M11) — le titre du district est posé dans le créneau du bandeau éphémère du canon (`top:78px`). Tant qu'un
+        // bandeau parle, le titre se tait ; il revient quand le bandeau s'efface. Un `CanvasGroup` sur le titre lui-même :
+        // aucun nœud ajouté (nav-district-F8 compte les enfants de root), et sa COULEUR ne bouge pas (les gardes la lisent).
+        // ⚠️ La place du titre HORS bandeau reste celle d'aujourd'hui : le déplacer est une question de DA (le canon n'a pas
+        // de titre du tout), posée à l'atelier.
+        private CanvasGroup titreDistrictGroupe;
+        private bool bandeauParle;
+
+        /// <summary>Appelé par le shell à chaque apparition / effacement du bandeau (et après chaque rendu).</summary>
+        public void CederLaPlaceAuBandeau(bool bandeauVisible)
+        {
+            bandeauParle = bandeauVisible;
+            if (titreDistrictGroupe != null) titreDistrictGroupe.alpha = bandeauVisible ? 0f : 1f;
+        }
+
+        /// <summary>Garde : le titre est-il tu en ce moment ?</summary>
+        public bool TitreCedeAuBandeau => titreDistrictGroupe != null && titreDistrictGroupe.alpha == 0f;
+
         // ============================================================== C8 : le rendu
 
         /// <summary>U-9/U-15 — construit (ou reconstruit) l'écran pour un payload donné. Public et
@@ -441,6 +459,8 @@ namespace MafiaCleanCity.CityMap
             title.color = DesignTokens.Current.hudCreme;
             ApplyTitleShadow(title);
             TrackText(title);
+            titreDistrictGroupe = title.gameObject.AddComponent<CanvasGroup>();
+            titreDistrictGroupe.alpha = bandeauParle ? 0f : 1f;   // ①-3 — un rendu pendant un bandeau ne le recouvre pas
 
             // scaleFactor LU AU RUNTIME (design §2.1 : "la valeur 0,859375 n'est vraie qu'à 1100×577,
             // jamais en dur") — le MÊME facteur compense le fond ET chaque sprite joueur.

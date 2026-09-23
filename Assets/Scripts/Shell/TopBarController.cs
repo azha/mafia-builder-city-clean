@@ -81,6 +81,9 @@ namespace MafiaCleanCity.Shell
         public int OpenedGameDay { get; private set; }
         public string RenderedGameDayText { get; private set; }
         public string RenderedCashText { get; private set; }
+        /// <summary>①-3 — le bandeau éphémère (`BandeauEphemere`), sous la barre, à `top:78px` du canon. Construit une fois,
+        /// comme le reste de la barre ; c'est le shell qui lui dit quoi annoncer (`AppShell.AnnoncerAuBandeau`).</summary>
+        public BandeauEphemere Bandeau { get; private set; }
 
         // ---- test hooks — day_phase (§6.3, chunk 5) -------------------------
         /// <summary>État affiché par l'aile droite pour day_phase : la valeur DAWN|DAY|DUSK|NIGHT du
@@ -922,6 +925,7 @@ namespace MafiaCleanCity.Shell
             BuildClockCluster();
             BuildNotificationHook();
             BuildVolutes(transform);
+            Bandeau = BandeauEphemere.Construire(transform);   // ①-3 — dernier frère : il passe sur l'art, jamais sous lui
 
             RepositionMoneyCluster();
         }
@@ -1562,7 +1566,9 @@ namespace MafiaCleanCity.Shell
         /// de bandeau temporisé/animé est une fonctionnalité neuve, pas un restyle). Ce qui reste :
         /// un hook de DONNÉES headless (`notificationText`, alpha 0) qui préserve EXACTEMENT le
         /// contrat R2.2 existant (C2F2/C2F4/DA5 : la VALEUR suit `backlogBadge`, scannée, jamais de
-        /// chrome visible).</summary>
+        /// chrome visible).
+        /// ①-3 (2026-09-23) : le bandeau éphémère existe désormais — `BandeauEphemere`, monté à la fin
+        /// de `BuildLayout`. Ce hook ne change pas : il reste le contrat de données du badge.</summary>
         /// <summary>⛔⛔ LES VOLUTES DU BANDEAU — deux fois relevées absentes par un juge ⊥, et
         /// elles n'étaient pas un rendu d'atelier : le canon les DESSINE, en SVG, dans le HTML.
         ///

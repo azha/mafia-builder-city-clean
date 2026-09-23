@@ -402,6 +402,9 @@ namespace MafiaCleanCity.Shell
             // récupéré (JAMAIS dérivée côté client — §6.3 : "la donnée day_phase... est déjà
             // projetée par le back").
             TopBar.SetDayPhase(tenant.LastFetch?.day_phase);
+            // ①-3 — dans un district, la descente est la SIENNE (`heat.escalated` du district, `SetSession` l'a attendue).
+            tenant.CederLaPlaceAuBandeau(TopBar.Bandeau.Visible);
+            AnnoncerAuBandeau(tenant.LastHeat != null && tenant.LastHeat.escalated, "district-" + districtId);
         }
 
         /// <summary>§3.3 — "→ ActivateTab(Tab.Empire)" verbatim (Empire is the old City branch,
@@ -421,6 +424,34 @@ namespace MafiaCleanCity.Shell
         {
             CitywideHeatBucket = citywideBucket;
             if (TopBar != null) TopBar.SetCitywideHeatBucket(citywideBucket);
+        }
+
+        /// <summary>①-3 — ce que le bandeau éphémère dit maintenant (`AnnonceDuBandeau.Choisir` : descente > la ville chauffe >
+        /// la 1ʳᵉ carte de `session/open.queue` > un rapport). Rien de neuf ⇒ rien ne s'affiche (une annonce ne se répète pas
+        /// dans la session). Le toucher d'une carte ouvre la file (« trancher ») ; les autres s'effacent au toucher.
+        /// Le rapport reçoit `null` : aucune source servie ne dit « non lu » ni le nom du lieutenant (`AutonomyReportDto`).
+        /// Rend vrai si un bandeau s'est affiché.</summary>
+        public bool AnnoncerAuBandeau(bool descente, string ouDescente)
+        {
+            if (TopBar == null || TopBar.Bandeau == null) return false;
+            MafiaCleanCity.Operational.Exceptions.ExceptionCardDto premiere =
+                LastSessionOpen != null && LastSessionOpen.queue != null && LastSessionOpen.queue.Length > 0
+                    ? LastSessionOpen.queue[0] : null;
+            AnnonceDuBandeau a = AnnonceDuBandeau.Choisir(descente, ouDescente, CitywideHeatBucket, premiere, null);
+            System.Action geste = a != null && a.Quoi == AnnonceDuBandeau.Etat.Carte
+                ? (System.Action)OuvrirLaFileDepuisLeBandeau : null;
+            return TopBar.Bandeau.Annoncer(a, geste);
+        }
+
+        private void OuvrirLaFileDepuisLeBandeau() =>
+            MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+
+        /// <summary>①-3 (r9 M11) — le titre de ① occupe le créneau du bandeau : il se tait tant que le bandeau parle.</summary>
+        private void CederLeTitreDuDistrict(bool bandeauVisible)
+        {
+            if (MountedTenantGameObject == null) return;
+            var district = MountedTenantGameObject.GetComponent<DistrictInteriorScreenController>();
+            if (district != null) district.CederLaPlaceAuBandeau(bandeauVisible);
         }
 
         /// <summary>B1 (hud-session-arbitrages-design.md §1.2) — LE shell signe UNE fois (son
@@ -680,6 +711,10 @@ namespace MafiaCleanCity.Shell
             yield return world.GetDistrictHeat(HeatProbeDistrictId, t,
                 heat => PublishCitywideHeat(heat.citywide_bucket),
                 errMsg => Debug.LogWarning($"[AppShell] sonde heat (best-effort) échouée : {errMsg}"));
+            if (this == null) yield break;
+            // ①-3 — le premier bandeau de la session : la ville si elle chauffe, sinon la 1ʳᵉ carte de la file. Jamais la
+            // descente ici : l'`escalated` de la sonde est celui d'un district que le joueur ne regarde pas.
+            AnnoncerAuBandeau(false, null);
         }
 
         /// <summary>LES QUATRE GESTES DE MONTAGE D'UN LOCATAIRE (design D2 ; item 0.4,
@@ -1514,6 +1549,7 @@ namespace MafiaCleanCity.Shell
             GameObject topBarContentGo = new GameObject("TopBarContent", typeof(RectTransform));
             topBarContentGo.transform.SetParent(echelleGo.transform, false);
             TopBar = topBarContentGo.AddComponent<TopBarController>();
+            TopBar.Bandeau.VisibiliteChangee += CederLeTitreDuDistrict;   // ①-3 (r9 M11)
 
             // 3) TabBarRoot — the bottom nav strip, LAST sibling (topmost render order).
             BuildTabBar();
