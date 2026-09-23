@@ -68,15 +68,37 @@ namespace MafiaCleanCity.Operational.Tests
             ("LoiScreenController",              s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.LoiScreenController>()),
             ("ReputationScreenController",       s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.ReputationScreenController>()),
             ("DailyReviewScreenController",      s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Shell.DailyReviewScreenController>()),
+            // RE-CLASSÉS MESURÉS le 2026-09-23 (CLIENT-2 : ils passent par `Libelle` depuis 1053d271, leurs clés servies à d8e41362) —
+            // l'exclusion « aucun site Libelle » était PÉRIMÉE ; la garde doit maintenant les voir à 0 repli sur la pile.
+            ("PrecinctScreenController",         s => s.MonterLocataireEnSurimpression<MafiaCleanCity.CitySim.Precinct.PrecinctScreenController>()),
+            ("SellingScreenController",          s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Selling.SellingScreenController>()),
         };
 
         /// <summary>Les locataires NON mesurés, avec leur raison : aucun site `Libelle` à littéral (mesuré par
         /// sites-libelle.py) — leur texte ne passe pas par le catalogue, une garde de repli n'a rien à y compter.</summary>
         private static readonly HashSet<string> ExclusDeclares = new HashSet<string>
         {
-            "InspectionScreenController", "PrecinctScreenController", "TutorialScreenController",
+            "InspectionScreenController",
+            // ⛔ EXCLU AVEC UNE RAISON DATÉE (2026-09-23) : ㉕ passe par l'i18n depuis 049a863e (CLIENT-2), mais ses 7 clés
+            //    `tutoriel.ecran.*` (ClesDuTutoriel ci-dessous) ne sont PAS servies avant le back d8e41362 — le mesurer ferait rougir
+            //    la garde sur un trou connu du back. La garde VÉRIFIE ce fait à chaque run : le jour où l'une est servie, elle rougit
+            //    (« ÉPINGLE PÉRIMÉE ») et dit de le passer aux MESURÉS.
+            "TutorialScreenController",
             // ⑪ et ⑫ retirés du dépôt le 2026-09-23 (code mort) : leurs exclusions partent avec eux.
-            "SellingScreenController", "DecisionDetailScreenController",
+            // Precinct et Selling : passés aux MESURÉS le 2026-09-23 (voir la liste Mesures).
+            "DecisionDetailScreenController",
+        };
+
+        /// <summary>Les clés de ㉕ (049a863e), NON servies avant le back d8e41362 — la raison DATÉE de l'exclusion du Tutoriel.</summary>
+        private static readonly string[] ClesDuTutoriel =
+        {
+            "tutoriel.ecran.a_decouvrir",
+            "tutoriel.ecran.compris",
+            "tutoriel.ecran.decochez_le_jour_ou_vous_n_avez_plus_besoin_qu_on_vous_tienne_la_main",
+            "tutoriel.ecran.on_vous_explique_encore",
+            "tutoriel.ecran.rien_de_nouveau_pour_aujourd_hui",
+            "tutoriel.ecran.vous_avez_demande_qu_on_vous_laisse_tranquille",
+            "tutoriel.ecran.vous_avez_tout_vu",
         };
 
         [SetUp]
@@ -123,6 +145,11 @@ namespace MafiaCleanCity.Operational.Tests
                 yield return null;
             Assert.IsTrue(I18nCatalog.Charge, "le shell n'a pas amorcé le bundle réel en 45 s — rien de ce qui suit ne vaudrait");
             Assert.Greater(I18nCatalog.NbClesServies, 400, $"le bundle ne sert que {I18nCatalog.NbClesServies} clés : la pile n'a pas l'image à jour");
+
+            // ⛔ LA RAISON DATÉE DE L'EXCLUSION DU TUTORIEL, VÉRIFIÉE : si l'une de ses clés est servie, l'exclusion est PÉRIMÉE.
+            var tutorielServies = ClesDuTutoriel.Where(I18nCatalog.Connait).ToList();
+            Assert.IsEmpty(tutorielServies, $"ÉPINGLE PÉRIMÉE : {tutorielServies.Count} clé(s) du tutoriel SONT servies désormais — " +
+                "passer TutorialScreenController aux MESURÉS et retirer son exclusion : " + string.Join(" · ", tutorielServies));
 
             var horsDette = new List<string>();
             var appelsParEcran = new Dictionary<string, int>();
