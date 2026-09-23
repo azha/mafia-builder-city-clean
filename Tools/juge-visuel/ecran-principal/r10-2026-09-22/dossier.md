@@ -101,6 +101,7 @@
 | ce qu'on voit | pourquoi (mesuré, avec sa source) | ce qui le ferait SORTIR de l'assumé |
 |---|---|---|
 | la bande du nom de district sous la barre, absente du canon | front.md §4 L (ruling user du 25/08, doctrine v3.2 : « le lieu en bandeau sous la barre ») ; mesure atelier du 2026-09-23 : `hud-brennar.html` (5983267) n'a AUCUN nom de district dans `.tel` — la place sous la barre, `.bandeau-alerte{top:78px}` (l.82) / élément l.176 (390 × 33,81 CSS en (1, 79)), est celle du bandeau éphémère QUAND IL PARLE. Tranché par l'orchestrateur le 2026-09-23 : la bande de lieu reste et CÈDE la place au bandeau éphémère. | la bande reste affichée PENDANT que le bandeau éphémère parle (chevauchement ou décalage) ; ou un nom qui n'est pas `interior.name` |
+| l'anneau **crème** autour du badge du bâtiment dont la fiche est ouverte, absent du canon | r9 M6 (« aucun retour de sélection sur la carte : la fiche ne dit pas quel marqueur ») et décision f2 du 2026-09-23 : le canon `hud-brennar.html` n'a AUCUN état de sélection, et le joueur doit voir quel bâtiment sa fiche décrit (CLIENT-2 `e9db74eb`). | un anneau **or** (l'or est réservé à l'argent), plus d'un anneau à la fois, ou un anneau sans fiche ouverte |
 
 ## Format du RAPPORT — imposé
 
