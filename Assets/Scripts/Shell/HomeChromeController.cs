@@ -33,7 +33,8 @@ namespace MafiaCleanCity.Shell
         public string BannerWeekStateRendered { get; private set; }
         public string PressureBandRendered { get; private set; }
         /// <summary>④ (2026-09-23) — `backlog_badge` : d'autres cartes attendent au-delà de celles que la file montre (servi par
-        /// session/open ; jusqu'ici au seul TopBar). Mot PROPOSÉ par l'atelier (25 §2.2), non ratifié.</summary>
+        /// session/open ; jusqu'ici au seul TopBar). Clé `accueil.file.d_autres_attendent_au_dela_de_ce_que_la_file_montre` (addendum à la
+        /// table 45, atelier 9513b05b, servie).</summary>
         public bool BacklogBadgeRendered { get; private set; }
 
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
@@ -42,7 +43,7 @@ namespace MafiaCleanCity.Shell
         private TextMeshProUGUI bannerText;
         private TextMeshProUGUI stateText;
         private TextMeshProUGUI pressureText;
-        private TextMeshProUGUI backlogText;
+        private TextMeshProUGUI backlogText, plusieursText;
         private Button shortcutDailyReview;
         private Button shortcutSecond;
         private bool initialized;
@@ -104,7 +105,7 @@ namespace MafiaCleanCity.Shell
         {
             EnsureInitialized();
             BacklogBadgeRendered = badge;
-            backlogText.text = badge ? MafiaCleanCity.I18n.Libelle.De("accueil", "chrome", "d’autres attendent au-delà de ce que la file montre") : "";
+            backlogText.text = badge ? MafiaCleanCity.I18n.Libelle.De("accueil", "file", "d’autres attendent au-delà de ce que la file montre") : "";
             RebuildTracked();
         }
 
@@ -148,6 +149,11 @@ namespace MafiaCleanCity.Shell
         private void RenderPressure()
         {
             pressureText.text = $"Pression : {PressureLabel(PressureBandRendered)}";
+            // ④ (addendum à la 45, atelier 9513b05b) : une phrase SANS compte, pilotée par la bande — elle REMPLACE sur ④ le pluriel ICU
+            // `exceptions.file.attendent_encore`, qui exigeait un compte que le back ne sert pas.
+            if (plusieursText != null)
+                plusieursText.text = PressureBandRendered == "saturated"
+                    ? MafiaCleanCity.I18n.Libelle.De("accueil", "file", "Plusieurs attendent encore") : "";
             RebuildTracked();
         }
 
@@ -166,6 +172,7 @@ namespace MafiaCleanCity.Shell
             if (!string.IsNullOrEmpty(stateText.text)) renderedTexts.Add(stateText.text);
             if (!string.IsNullOrEmpty(bannerText.text)) renderedTexts.Add(bannerText.text);
             if (!string.IsNullOrEmpty(pressureText.text)) renderedTexts.Add(pressureText.text);
+            if (plusieursText != null && !string.IsNullOrEmpty(plusieursText.text)) renderedTexts.Add(plusieursText.text);
             if (backlogText != null && !string.IsNullOrEmpty(backlogText.text)) renderedTexts.Add(backlogText.text);
         }
 
@@ -186,6 +193,7 @@ namespace MafiaCleanCity.Shell
             stateText = NewText();
             bannerText = NewText();
             pressureText = NewText();
+            plusieursText = NewText();
             backlogText = NewText();
 
             GameObject shortcuts = new GameObject("ShortcutBar", typeof(RectTransform));

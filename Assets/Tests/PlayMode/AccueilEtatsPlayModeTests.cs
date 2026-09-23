@@ -108,11 +108,21 @@ namespace MafiaCleanCity.Shell.Tests
         public void Etat4_LaLigneDuBacklogSuitBacklogBadge()
         {
             var chrome = Monter<HomeChromeController>();
-            string ligne = MafiaCleanCity.I18n.Libelle.De("accueil", "chrome", "d’autres attendent au-delà de ce que la file montre");
+            string ligne = MafiaCleanCity.I18n.Libelle.De("accueil", "file", "d’autres attendent au-delà de ce que la file montre");
             chrome.SetBacklogBadge(true);
             Assert.IsTrue(chrome.RenderedTexts.Contains(ligne), "backlog_badge vrai : la ligne est dite");
             chrome.SetBacklogBadge(false);
             Assert.IsFalse(chrome.RenderedTexts.Contains(ligne), "backlog_badge faux : la ligne se tait");
+
+            // « Plusieurs attendent encore » : SANS compte, pilotée par la bande (addendum à la 45), dans les deux sens.
+            string plusieurs = MafiaCleanCity.I18n.Libelle.De("accueil", "file", "Plusieurs attendent encore");
+            chrome.SetPressureBand("saturated");
+            Assert.IsTrue(chrome.RenderedTexts.Contains(plusieurs), "saturée : la phrase est dite");
+            foreach (string bande in new[] { "warning", "normal", null })
+            {
+                chrome.SetPressureBand(bande);
+                Assert.IsFalse(chrome.RenderedTexts.Contains(plusieurs), $"bande « {bande} » : la phrase se tait");
+            }
         }
 
         [Test]
