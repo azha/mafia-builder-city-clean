@@ -229,6 +229,12 @@ public static class MafiaCI
         // e21e0c55 : l'ordre par stage_index et l'écart de TÊTE sur le compte semé (4 étapes, 0 écart), + 2 états fabriqués.
         // Sans la paire, aucune relation de préfixe (vérifié) : PARTIE 1. Validé par l'orchestrateur.
         "EcranFiliere",
+        // Les gardes de CLASSE du texte affiché (2026-09-23, CLIENT-2) — 7/7 vert AVANT inscription au créneau 06:39 (tête 3f9ecad3,
+        // pile d8e41362, 418/420 : le seul rouge était un test du Tissu resté à l'apostrophe ASCII, vert au ciblé de 06:45 par nom). Portent
+        // R1-R3 (couverture de domaine de 49 résolveurs, domaines lus dans le back ; sentinelles « __inconnu__ »), G1-G2 (plus de glyphe
+        // en texte ; toute valeur en couleur porte un mot) et N1-N2 (aucun littéral nommé hors Libelle, allowlist EXACTE). Hors paire :
+        // aucune relation de préfixe (tests statiques + résolveurs purs). Validé par l'orchestrateur.
+        "Replis",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

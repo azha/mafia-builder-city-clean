@@ -398,7 +398,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 return $", and only if my {(r.condField ?? string.Empty).Trim()} {ComparatorWord(r.condComparator)} {NormalizeLiteral(r.condField, r.condValue)}";
             if (kind == "PEER_STATE")
             {
-                string where = (r.condPeerZone ?? string.Empty).Trim() == "same_building" ? "in my building" : "in my zone";
+                string where = (r.condPeerZone ?? string.Empty).Trim() == "same_building" ? MafiaCleanCity.I18n.Libelle.De("famille", "regle", "dans mon bâtiment") : "in my zone";
                 return $", and only if the {(r.condPeerRole ?? string.Empty).Trim().ToLowerInvariant()} {where} has " +
                        $"{(r.condField ?? string.Empty).Trim()} {ComparatorWord(r.condComparator)} {NormalizeLiteral(r.condField, r.condValue)}";
             }
@@ -427,8 +427,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             switch ((a ?? string.Empty).Trim())
             {
-                case "EXECUTE_DEFAULT": return "run the default behavior";
-                case "PAUSE_OPS": return "pause operations";
+                case "EXECUTE_DEFAULT": return MafiaCleanCity.I18n.Libelle.De("famille", "regle", "faire comme d’habitude");
+                case "PAUSE_OPS": return MafiaCleanCity.I18n.Libelle.De("famille", "regle", "suspendre les opérations");
                 // ⛔ PLUS « do nothing » : une action ABSENTE se lisait comme une action (en anglais), et une action inconnue sortait
                 // BRUTE. Absente : « — » ; hors domaine : « type inconnu » (règle f2, atelier 28).
                 default: return MafiaCleanCity.I18n.Repli.Type(a);

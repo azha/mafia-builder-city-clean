@@ -461,7 +461,9 @@ namespace MafiaCleanCity.Operational.Tests
         public void EcranDistributionR4_ResolveurRouteState_CouvreLaSeuleValeurMesureeEtReplieGracieusement()
         {
             Assert.AreEqual("tient", DistributionResolvers.TexteRouteState("active"));
-            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, DistributionResolvers.TexteRouteState("severed"),
+            // `severed` a reçu son mot (atelier 29, servi) : « coupée ». Une valeur NON servie, elle, reste « état inconnu ».
+            Assert.AreEqual("coupée", DistributionResolvers.TexteRouteState("severed"));
+            Assert.AreEqual(MafiaCleanCity.I18n.Repli.EtatInconnu, DistributionResolvers.TexteRouteState("zzz_hors_domaine"),
                 "une valeur non mappée : « état inconnu » — ni la valeur brute, ni un texte inventé (règle f2, atelier 28)");
         }
 
@@ -480,8 +482,9 @@ namespace MafiaCleanCity.Operational.Tests
         [Test]
         public void EcranDistributionR6_ResolveurTransitBand_CouvreLesDeuxValeursMesureesEtLHypothese()
         {
-            Assert.AreEqual("arrivé", DistributionResolvers.TexteTransitBand("ARRIVED"));
-            Assert.AreEqual("prêt", DistributionResolvers.TexteTransitBand("IDLE"));
+            // D13 (23/09, atelier 30 v2) : formes ÉPICÈNES — « arrivé » / « prêt » présumaient un coursier masculin.
+            Assert.AreEqual("à destination", DistributionResolvers.TexteTransitBand("ARRIVED"));
+            Assert.AreEqual("disponible", DistributionResolvers.TexteTransitBand("IDLE"));
             Assert.AreEqual("en chemin", DistributionResolvers.TexteTransitBand("IN_TRANSIT"));
         }
 

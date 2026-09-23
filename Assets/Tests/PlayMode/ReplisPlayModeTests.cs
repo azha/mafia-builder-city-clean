@@ -15,7 +15,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   R1  les défauts qui MENTAIENT : « Small » et « Deep » (un cran faux affirmé), « do nothing » (anglais, et une action absente
     //       lue comme une action) ; les comparateurs et actions des règles
     //   R2  la couverture de domaine de chaque résolveur, le domaine LU DANS LE BACK (fichier:ligne cité, HEAD 066adae8) ; la DETTE
-    //       (valeurs servies sans mot) est une liste EXACTE — un cran neuf la fait rougir, un mot livré aussi (il faut l'en retirer)
+    //       (valeurs servies sans mot) est une liste EXACTE — un cran neuf la fait rougir, un mot livré aussi (il faut l'en retirer).
+    //       23/09 : les 16 valeurs de la dette ont reçu leurs mots (atelier 29, 7746e0bb) ⇒ DETTE À ZÉRO, couverture complète.
     //   R3  les 11 sentinelles « __inconnu__ » de `RendreTousLesLibelles` n'atteignent jamais un texte affiché
     [Category("Replis")]
     public class ReplisPlayModeTests
@@ -50,22 +51,18 @@ namespace MafiaCleanCity.CityMap.Tests
             // ② fiche bâtiment — real_estate/real-estate.projection.service.ts
             Couvre("SetupLabel", new[] { "NOT_CONVERTED", "IN_SETUP", "OPERATIONAL" }, BuildingCardController.SetupLabel, e);            // :84
             Couvre("CoverLabel", new[] { "NONE", "WEAK", "STANDARD", "STRONG" }, BuildingCardController.CoverLabel, e);                  // :87
-            Couvre("StructuralLabel", new[] { "OPERATIONAL", "DAMAGED", "REPAIRING", "FAILED" }, BuildingCardController.StructuralLabel, e,
-                dette: new[] { "FAILED" });                                                                                          // :95
+            Couvre("StructuralLabel", new[] { "OPERATIONAL", "DAMAGED", "REPAIRING", "FAILED" }, BuildingCardController.StructuralLabel, e);                                                                                          // :95
             Couvre("SeizedLabel", new[] { "NONE", "LOW", "MODERATE", "HIGH" }, BuildingCardController.SeizedLabel, e);                  // :98
-            Couvre("LabTierLabel", new[] { "NONE", "BASIC", "REFINED", "MASTER" }, BuildingCardController.LabTierLabel, e,
-                dette: new[] { "NONE" });                                                                                            // :110
-            Couvre("HubTierLabel", new[] { "NONE", "SMALL", "MEDIUM", "LARGE", "MAJOR", "MAX" }, BuildingCardController.HubTierLabel, e,
-                dette: new[] { "NONE" });                                                                                            // :129
+            Couvre("LabTierLabel", new[] { "NONE", "BASIC", "REFINED", "MASTER" }, BuildingCardController.LabTierLabel, e);                                                                                            // :110
+            Couvre("HubTierLabel", new[] { "NONE", "SMALL", "MEDIUM", "LARGE", "MAJOR", "MAX" }, BuildingCardController.HubTierLabel, e);                                                                                            // :129
             Couvre("RaidRiskLabel", new[] { "LOW", "ELEVATED", "HIGH", "IMMINENT" }, BuildingCardController.RaidRiskLabel, e);          // enforcement/raid-tunables.ts:74
-            Couvre("RosterLabel", new[] { "NONE", "OPEN", "BUSY", "FULL" }, BuildingCardController.RosterLabel, e,
-                dette: new[] { "NONE" });                                                                // distribution/distribution.projection.service.ts:215
+            Couvre("RosterLabel", new[] { "NONE", "OPEN", "BUSY", "FULL" }, BuildingCardController.RosterLabel, e);                                                                // distribution/distribution.projection.service.ts:215
             // money_holding/money-holding.projection.service.ts
             Couvre("MoneyHoldingTierLabel", new[] { "NONE", "SMALL", "MEDIUM", "LARGE", "MAJOR", "MAX" },
-                BuildingCardController.MoneyHoldingTierLabel, e, dette: new[] { "NONE" });                                           // :48
+                BuildingCardController.MoneyHoldingTierLabel, e);                                           // :48
             Couvre("HeldLabel", new[] { "NONE", "LOW", "MODERATE", "HIGH", "MASSIVE" }, BuildingCardController.HeldLabel, e);           // :51
-            Couvre("CapacityLabel", new[] { "NONE", "OPEN", "BUSY", "FULL" }, BuildingCardController.CapacityLabel, e, dette: new[] { "NONE" }); // :54
-            Couvre("YieldLabel", new[] { "NONE", "IDLE", "EARNING" }, BuildingCardController.YieldLabel, e, dette: new[] { "NONE" });    // :57
+            Couvre("CapacityLabel", new[] { "NONE", "OPEN", "BUSY", "FULL" }, BuildingCardController.CapacityLabel, e); // :54
+            Couvre("YieldLabel", new[] { "NONE", "IDLE", "EARNING" }, BuildingCardController.YieldLabel, e);    // :57
             Couvre("TemperatureLabel", new[] { "OPTIMAL_COLD", "MODERATE", "HOT" }, BuildingCardController.TemperatureLabel, e);      // coldchain/cold-chain.service.ts:36
             Couvre("PurityLabel", new[] { "CUT", "STANDARD", "PURE", "CRYSTALLINE" }, BuildingCardController.PurityLabel, e);           // ash/ash-purity.service.ts:40
             Couvre("AppointmentStatusLabel", new[] { "SCHEDULED", "HONORED", "EXPIRED" }, BuildingCardController.AppointmentStatusLabel, e); // ash/ash-appointment.service.ts:41
@@ -107,19 +104,15 @@ namespace MafiaCleanCity.CityMap.Tests
             // Distribution — operational/distribution
             Couvre("TexteChemin", new[] { "direct", "meandering", "gnarled" }, DistributionResolvers.TexteChemin, e);                  // route-finder.service.ts:199
             Couvre("TexteTraverser", new[] { "none", "single", "multiple" }, DistributionResolvers.TexteTraverser, e);                // distribution.projection.service.ts:79
-            Couvre("TexteRouteState", new[] { "draft", "active", "saturated", "severed" }, DistributionResolvers.TexteRouteState, e,
-                dette: new[] { "draft", "saturated", "severed" });                                                                   // route.service.ts:56
+            Couvre("TexteRouteState", new[] { "draft", "active", "saturated", "severed" }, DistributionResolvers.TexteRouteState, e);                                                                   // route.service.ts:56
             Couvre("TexteTransitBand", new[] { "IDLE", "IN_TRANSIT", "ARRIVED" }, DistributionResolvers.TexteTransitBand, e);          // distribution.projection.service.ts:200
             Couvre("TexteVehicule", new[] { "FOOT", "BIKE", "CAR", "REFRIGERATED_VAN" }, DistributionResolvers.TexteVehicule, t);      // db/schema/operational_chain.ts:47
-            Couvre("NomTypeBatiment", Types12, DistributionScreenController.NomTypeBatiment, Repli.LeBatiment,
-                dette: new[] { "press_house", "office" });
+            Couvre("NomTypeBatiment", Types12, DistributionScreenController.NomTypeBatiment, Repli.LeBatiment);
 
             // Chaîne d'appro — operational/precursors ; Loi ; Démolition ; Forensic
             Couvre("TextePrix", new[] { "UP", "STABLE", "DOWN" }, ChaineDApproResolvers.TextePrix, e);                                 // precursor-market.service.ts:67
-            Couvre("TexteStock", new[] { "NONE", "LOW", "MEDIUM", "HIGH" }, ChaineDApproResolvers.TexteStock, e,
-                dette: new[] { "LOW", "MEDIUM", "HIGH" });                                                                           // precursors.projection.service.ts:36
-            Couvre("TierLabelCourt", new[] { "public_defender", "boutique", "corruption_pipeline" }, LoiResolvers.TierLabelCourt, t,
-                dette: new[] { "public_defender" });                                                                                 // legal/legal.types.ts:39
+            Couvre("TexteStock", new[] { "NONE", "LOW", "MEDIUM", "HIGH" }, ChaineDApproResolvers.TexteStock, e);                                                                           // precursors.projection.service.ts:36
+            Couvre("TierLabelCourt", new[] { "public_defender", "boutique", "corruption_pipeline" }, LoiResolvers.TierLabelCourt, t);                                                                                 // legal/legal.types.ts:39
             Couvre("NomDeType", Types12, DemolitionResolvers.NomDeType, Repli.UnBatiment);
             Couvre("Forensic.Phrase", new[] { "clean", "watched", "flagged", "audited", "clear", "faint", "visible", "glaring",
                 "quiet", "noticed", "subpoenaed" }, ForensicResolvers.Phrase, e);                                                    // forensic/forensic.projection.service.ts:79, :98, :118

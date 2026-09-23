@@ -909,9 +909,9 @@ namespace MafiaCleanCity.Shell
         {
             switch (bucket)
             {
-                case "high": return "ÉLEVÉE";
-                case "standard": return "NORMALE";
-                case "low": return "FAIBLE";
+                case "high": return MafiaCleanCity.I18n.Libelle.De("revue", "reserve", "ÉLEVÉE");
+                case "standard": return MafiaCleanCity.I18n.Libelle.De("revue", "reserve", "NORMALE");
+                case "low": return MafiaCleanCity.I18n.Libelle.De("revue", "reserve", "FAIBLE");
                 default: return "—";
             }
         }

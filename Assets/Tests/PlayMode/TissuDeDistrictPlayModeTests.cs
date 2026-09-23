@@ -35,7 +35,9 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.AreNotEqual(p, valeur, $"« {p} » : la valeur de ligne est restée le code brut");
                 Assert.IsTrue(char.IsLower(ligne[0]), $"« {p} » : la forme en ligne commence en minuscule (« le port »), lue : « {ligne} »");
                 Assert.IsTrue(char.IsUpper(valeur[0]), $"« {p} » : la valeur de ligne porte la capitale (« Port »), lue : « {valeur} »");
-                Assert.IsTrue(ligne.StartsWith("le ") || ligne.StartsWith("les ") || ligne.StartsWith("l'"),
+                // Règle D10 (23/09) : l'apostrophe est `’` — le mot servi (`carte.tissu.l_avenue`) et le repli du client la portent ; l'ASCII
+                // `'` n'est plus le bon caractère (mesuré rouge au créneau du 23/09 06:39, « l’avenue »).
+                Assert.IsTrue(ligne.StartsWith("le ") || ligne.StartsWith("les ") || ligne.StartsWith("l’"),
                     $"« {p} » : la forme en ligne porte l'article, lue : « {ligne} »");
             }
             Assert.AreEqual(6, servis.Select(TissuDeDistrict.EnLigne).Distinct().Count(), "six tissus, six mots en ligne distincts");

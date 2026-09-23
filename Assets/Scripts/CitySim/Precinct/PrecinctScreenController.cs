@@ -242,15 +242,15 @@ namespace MafiaCleanCity.CitySim.Precinct
             b == "HUNTING" ? 4 : b == "SUSPICIOUS" ? 3 : b == "WATCHFUL" ? 2 : b == "DORMANT" ? 1 : 0;
 
         private static string CroyanceMot(string b) =>
-            b == "HUNTING" ? "Ils vous cherchent" : b == "SUSPICIOUS" ? "Ils se méfient"
-            : b == "WATCHFUL" ? "Ils regardent" : b == "DORMANT" ? "Ils dorment" : "—";
+            b == "HUNTING" ? MafiaCleanCity.I18n.Libelle.De("police", "bloc", "EN CHASSE") : b == "SUSPICIOUS" ? MafiaCleanCity.I18n.Libelle.De("police", "bloc", "SOUPÇON")
+            : b == "WATCHFUL" ? MafiaCleanCity.I18n.Libelle.De("police", "bloc", "EN VEILLE") : b == "DORMANT" ? MafiaCleanCity.I18n.Libelle.De("police", "bloc", "EN SOMMEIL") : "—";
 
         private static int PatrouilleRang(string b) =>
             b == "HIGH" ? 4 : b == "MEDIUM" ? 3 : b == "LOW" ? 2 : b == "QUIET" ? 1 : 0;
 
         private static string PatrouilleMot(string b) =>
-            b == "HIGH" ? "Partout" : b == "MEDIUM" ? "Présente"
-            : b == "LOW" ? "Clairsemée" : b == "QUIET" ? "Rien dans les rues" : "—";
+            b == "HIGH" ? MafiaCleanCity.I18n.Libelle.De("police", "bloc", "Partout") : b == "MEDIUM" ? MafiaCleanCity.I18n.Libelle.De("police", "bloc", "Présente")
+            : b == "LOW" ? MafiaCleanCity.I18n.Libelle.De("police", "bloc", "Clairsemée") : b == "QUIET" ? MafiaCleanCity.I18n.Libelle.De("police", "bloc", "Rien dans les rues") : "—";
 
         private void Construire()
         {

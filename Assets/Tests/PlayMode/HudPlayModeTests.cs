@@ -670,9 +670,9 @@ namespace MafiaCleanCity.Shell.Tests
         private static readonly string[] BucketLiterals = { "\"COLD\"", "\"WARM\"", "\"HOT\"", "\"BURNING\"" };
 
         // Allowlist MESURÉE (script Python indépendant, même méthode que ci-dessus) — 4 fichiers,
-        // 24 occurrences. `BuildingCardController.cs` (2 occurrences, "HOT" seulement) est un FAUX
+        // 24 occurrences à l'origine (19 depuis le 23/09, voir l'amendement ci-dessous). `BuildingCardController.cs` (2 occurrences, 1 depuis le retrait de `TemperatureGlyph` ; "HOT" seulement) est un FAUX
         // POSITIF DOCUMENTÉ : sa bande `temperature_status` (Crick cold-chain, OPTIMAL_COLD|
-        // MODERATE|HOT, `TemperatureLabel`/`TemperatureGlyph`/`TemperatureAccent`) est un domaine
+        // MODERATE|HOT, `TemperatureLabel`/`TemperatureAccent`) est un domaine
         // ENTIÈREMENT DIFFÉRENT qui partage par coïncidence le mot anglais "HOT" — vérifié : ce
         // fichier a ZÉRO occurrence de "COLD"/"WARM"/"BURNING" (les 3 littéraux les moins ambigus).
         // Laissé SUR l'allowlist plutôt que le motif rétréci à 3 littéraux : le total exact reste le
@@ -685,7 +685,15 @@ namespace MafiaCleanCity.Shell.Tests
             "Operational/Dashboard/DashboardController.cs",
             "ShellContracts/HeatBucketResolver.cs",
         };
-        private const int ExpectedBucketLiteralTotal = 24;
+        // AMENDÉ NOMMÉMENT 24 → 19 (2026-09-23, CLIENT-2, décision f2 D11 — le retrait des glyphes en texte), deux retraits, l'ENSEMBLE
+        // de fichiers ne change pas :
+        //   · −1, `Operational/BuildingCard/BuildingCardController.cs` (2 → 1) : `TemperatureGlyph` (et son `case "HOT"`), retiré avec les
+        //     autres glyphes au commit 9f809f10 — le « HOT » restant est le faux positif DOCUMENTÉ de `TemperatureLabel`. Ce commit-là
+        //     laissait la garde à 24 contre 23 : vu au recomptage, pas au créneau ;
+        //   · −4, `ShellContracts/HeatBucketResolver.cs` (12 → 8) : `Glyph` (« [#...] »…), sans appelant depuis 9f809f10 — une fonction
+        //     MORTE ne soutient pas une allowlist.
+        // Mesuré par comptage d'occurrences (la méthode de ce test) : 24 à aa240c33, 23 à 9f809f10, 19 à ce commit.
+        private const int ExpectedBucketLiteralTotal = 19;
 
         [Test]
         public void F2_SeverityTokenAccesses_EqualMeasuredAllowlist_TopBarControllerExcluded()

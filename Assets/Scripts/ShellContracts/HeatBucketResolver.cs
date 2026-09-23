@@ -83,26 +83,13 @@ namespace MafiaCleanCity.Shell
                 //      écrit pour dire « pas encore de donnée ». Il rejoint donc la convention de
                 //      ses deux voisins de barre, et il devient traduisible par construction —
                 //      un tiret n'a pas de langue.
-                //    ⚠️ Le second membre est CONSERVÉ : une valeur de bande inconnue mais NON VIDE
-                //      continue de sortir BRUTE. Voir une valeur qu'on n'attendait pas est un
-                //      signal ; la voir disparaître derrière un mot choisi n'en est pas un. Ce sont
-                //      deux mondes différents et ils gardent deux réponses différentes.
+                //    ⚠️ RÉVISÉ le 23/09 (règle f2, atelier 28) : une valeur de bande inconnue mais NON VIDE ne sort
+                //      plus BRUTE — elle se dit « état inconnu », distincte du « — » de l'absence (deux mondes, deux
+                //      réponses, toujours). Voir le cran neuf est le rôle du test de couverture de domaine
+                //      (`ReplisPlayModeTests.R2`), plus celui du joueur.
                 default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : « état inconnu » (règle f2, atelier 28) ; absent : « — » ; jamais la valeur brute
             }
             return MafiaCleanCity.I18n.Libelle.ParValeur("heat", "bucket", bucket, repli);
-        }
-
-
-        public static string Glyph(string bucket)
-        {
-            switch (bucket)
-            {
-                case "COLD": return "[#...]";
-                case "WARM": return "[##..]";
-                case "HOT": return "[###.]";
-                case "BURNING": return "[####]";
-                default: return "[....]";
-            }
         }
 
         // §2.2/§2.4 — LA bonne paire, canon (screen_2_city_map.md:148/:405 = gdd/15_glossary.md:2726,

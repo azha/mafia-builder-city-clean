@@ -728,10 +728,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (cle)
             {
-                case "coil": return "La Coil";
-                case "tarcum": return "Tarcum";
-                case "iron_throat": return "Gorge-de-Fer";
-                case "saltline": return "Saltline";
+                case "coil": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "La Coil");
+                case "tarcum": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "Tarcum");
+                case "iron_throat": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "Gorge-de-Fer");
+                case "saltline": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "Saltline");
                 default: throw new System.ArgumentOutOfRangeException(nameof(cle), cle,
                     "ConflitResolvers.NomFamille : clé hors du domaine des 4 familles connues.");
             }
@@ -743,10 +743,10 @@ namespace MafiaCleanCity.Operational
         {
             switch (cle)
             {
-                case "coil": return "les ferrailleurs de Spine";
-                case "tarcum": return "le port, et ce qui y entre";
-                case "iron_throat": return "les docks du nord";
-                case "saltline": return "la ligne de sel, à l'est";
+                case "coil": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "les ferrailleurs de Spine");
+                case "tarcum": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "le port, et ce qui y entre");
+                case "iron_throat": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "les docks du nord");
+                case "saltline": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "la ligne de sel, à l’est");
                 default: throw new System.ArgumentOutOfRangeException(nameof(cle), cle,
                     "ConflitResolvers.SousTitreFamille : clé hors du domaine des 4 familles connues.");
             }

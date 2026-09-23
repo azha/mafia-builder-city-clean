@@ -106,7 +106,6 @@ namespace MafiaCleanCity.Operational
         private readonly List<string> renderedTexts = new List<string>();
 
         private TMP_FontAsset font;
-        private TextMeshProUGUI walletGlyphText;
         private TextMeshProUGUI walletBandText;
         private TextMeshProUGUI walletCaptionText;
         private TextMeshProUGUI headerText;
@@ -374,31 +373,26 @@ namespace MafiaCleanCity.Operational
             TrackText(headerText, headerText.text);
 
             // ---- HEADLINE: the wallet band (the "encaisser" payoff). Large glyph + band label
-            //      + a caption — text+icon, never colour-only (F2). NEVER a raw cents figure (R2.2).
+            //      + a caption — the band is a WORD, never colour-only (F2) ; plus de glyphe (23/09, f2). NEVER a raw cents figure (R2.2).
             string band = CurrentWallet.wallet_band;
             Color wAccent = WalletAccent(band);
-            walletGlyphText.text = WalletGlyph(band);
-            walletGlyphText.color = wAccent;
             walletBandText.text = WalletLabel(band);
             walletBandText.color = wAccent;
             walletCaptionText.text = "Portefeuille";
-            TrackText(walletGlyphText, walletGlyphText.text);
             TrackText(walletBandText, walletBandText.text);
             TrackText(walletCaptionText, walletCaptionText.text);
 
             // ---- Citywide heat band + escalation flag (REUSE the heat projection).
             if (CurrentHeat != null)
             {
-                AddStatusRow("chaleur_de_la_ville", "Chaleur de la ville", HeatLabel(CurrentHeat.citywide_bucket),
-                    HeatGlyph(CurrentHeat.citywide_bucket), HeatAccent(CurrentHeat.citywide_bucket));
+                AddStatusRow("chaleur_de_la_ville", "Chaleur de la ville", HeatLabel(CurrentHeat.citywide_bucket), HeatAccent(CurrentHeat.citywide_bucket));
                 AddStatusRow("descente", "Descente", CurrentHeat.escalated ? "en cours" : "rien en cours",
-                    CurrentHeat.escalated ? "[!]" : "[=]",
                     CurrentHeat.escalated ? AccentSevere : AccentMild);
             }
             else
             {
                 // Heat is JWT-gated + tick-gated; if it isn't available, say so honestly (no fabrication).
-                AddStatusRow("chaleur_de_la_ville", "Chaleur de la ville", "—", "[?]", TextSecondary);
+                AddStatusRow("chaleur_de_la_ville", "Chaleur de la ville", "—", TextSecondary);
             }
 
             // ---- Phase-20: the vocabulary-tier funnel line (GET /v1/progression). The "Tier N" digit is
@@ -406,8 +400,7 @@ namespace MafiaCleanCity.Operational
             if (CurrentProgression != null)
             {
                 AddStatusRow("palier", "Palier",
-                    $"Palier {CurrentProgression.vocabulary_tier} — {ProgressLabel(CurrentProgression.progress_to_next)}",
-                    "[*]", AccentMild, trackValue: false);
+                    $"Palier {CurrentProgression.vocabulary_tier} — {ProgressLabel(CurrentProgression.progress_to_next)}", AccentMild, trackValue: false);
             }
 
             // ---- Minimal alerts line — derived STRICTLY from the projections we fetched. No fabrication.
@@ -421,13 +414,10 @@ namespace MafiaCleanCity.Operational
         {
             ClearRows();
             headerText.text = "Patron";
-            walletGlyphText.text = "[?]";
-            walletGlyphText.color = TextSecondary;
             walletBandText.text = "—";
             walletBandText.color = TextSecondary;
             walletCaptionText.text = "Le portefeuille n'a pas répondu.";
             TrackText(headerText, headerText.text);
-            TrackText(walletGlyphText, walletGlyphText.text);
             TrackText(walletBandText, walletBandText.text);
             TrackText(walletCaptionText, walletCaptionText.text);
             BuildNav();
@@ -452,11 +442,10 @@ namespace MafiaCleanCity.Operational
 
             string line = notes.Count > 0 ? string.Join("  •  ", notes) : "Rien à signaler";
             Color accent = notes.Count > 0 ? AccentSevere : AccentMild;
-            string glyph = notes.Count > 0 ? "[!]" : "[ok]";
 
             string label = NewSectionLabel(statusRows, "ALERTES");
             TrackText(null, label);
-            AddStatusRow("alertes", "Alertes", line, glyph, accent);
+            AddStatusRow("alertes", "Alertes", line, accent);
         }
 
         private void BuildNav()
@@ -485,18 +474,6 @@ namespace MafiaCleanCity.Operational
             // aurait dû être faite à trois endroits.
             return MafiaCleanCity.Shell.WalletBandResolver.Label(b);
         }
-        private static string WalletGlyph(string b)
-        {
-            switch (b)
-            {
-                case "FLUSH": return "[$$$$]";
-                case "HIGH": return "[$$$.]";
-                case "MODERATE": return "[$$..]";
-                case "LOW": return "[$...]";
-                case "BROKE": return "[....]";
-                default: return "[????]";
-            }
-        }
         private static Color WalletAccent(string b)
         {
             switch (b)
@@ -516,7 +493,6 @@ namespace MafiaCleanCity.Operational
         // manomètre du HUD) ; signature et visibilité INCHANGÉES pour les appelants internes de
         // cette classe (`:322-323`) — seul le corps délègue, la valeur produite est byte-identique.
         private static string HeatLabel(string b) => MafiaCleanCity.Shell.HeatBucketResolver.Label(b);
-        private static string HeatGlyph(string b) => MafiaCleanCity.Shell.HeatBucketResolver.Glyph(b);
         // CORRIGÉ (hud-session-arbitrages-design.md §2.2/§2.4, B2) — LA MAUVAISE PAIRE : cette
         // méthode fusionnait {HOT, BURNING} → AccentSevere (rouge). Le canon (screen_2_city_map.md
         // :148/:405 = gdd/15_glossary.md:2726, screen_2a_building_card.md:308/:182) dit
@@ -601,9 +577,7 @@ namespace MafiaCleanCity.Operational
             whlg.childForceExpandHeight = true;
             AddLayoutElement(walletBlock, minHeight: 78, flexibleHeight: 0);
 
-            walletGlyphText = NewText("WalletGlyph", walletBlock.transform, "[....]", 30, TextAlignmentOptions.Center);
-            walletGlyphText.fontStyle = FontStyles.Bold;
-            AddLayoutElement(walletGlyphText.gameObject, minWidth: 150, preferredWidth: 150, flexibleWidth: 0);
+            // ⛔ PLUS DE GLYPHE (23/09, décision f2) : aucune maquette n'en porte, et C5-F1 (« jamais la couleur seule ») est satisfaite par le MOT voisin, même couleur.
 
             GameObject walletText = NewUI("WalletText", walletBlock.transform);
             VerticalLayoutGroup wtv = walletText.AddComponent<VerticalLayoutGroup>();
@@ -645,7 +619,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(nav, flexibleHeight: 1);
         }
 
-        private void AddStatusRow(string idStable, string label, string value, string glyph, Color accent, bool trackValue = true)
+        private void AddStatusRow(string idStable, string label, string value, Color accent, bool trackValue = true)
         {
             GameObject row = NewUI("Row_" + idStable, statusRows);
             row.AddComponent<Image>().color = RowBg;
@@ -659,16 +633,9 @@ namespace MafiaCleanCity.Operational
             hlg.childForceExpandHeight = true;
             AddLayoutElement(row, minHeight: 32, flexibleHeight: 0);
 
-            // Glyph (shape — a11y: colour is never the sole differentiator).
-            TextMeshProUGUI g = NewText("Glyph", row.transform, glyph, 16, TextAlignmentOptions.Center);
-            g.color = accent;
-            g.fontStyle = FontStyles.Bold;
-            // ⛔ La colonne était figée et COUPAIT les glyphes longs — même défaut que ②,
-            // mesuré rouge le 2026-09-02 (« [####] » posé à 4 caractères sur 6 à 46 px/corps 16/gras).
-            // La mesure vit dans `LargeurDeGlyphe` : un producteur, cinq citations.
-            float largeurGlyphe = LargeurDeGlyphe.PourLesPlusLarges(g, "[$$$$]");
-            AddLayoutElement(g.gameObject, minWidth: largeurGlyphe,
-                preferredWidth: largeurGlyphe, flexibleWidth: 0);
+            // ⛔ PLUS DE COLONNE DE GLYPHE (23/09, décision f2) : les « [##.] », « [o..] », « [C] »… n'existent dans AUCUNE maquette, et leur
+            // raison écrite — a11y C5-F1, « la couleur n'est jamais seule à porter l'information » — est satisfaite par la VALEUR : elle porte
+            // un MOT, dans la même couleur. Garde : `GlyphesPlayModeTests` (toute valeur en couleur porte un mot ; plus aucun glyphe).
 
             TextMeshProUGUI l = NewText("Label", row.transform, label, 15, TextAlignmentOptions.Left);
             l.color = TextSecondary;
@@ -678,8 +645,6 @@ namespace MafiaCleanCity.Operational
             v.color = accent;
             v.fontStyle = FontStyles.Bold;
             AddLayoutElement(v.gameObject, minWidth: 180, flexibleWidth: 1);
-
-            TrackText(g, glyph);
             TrackText(l, label);
             if (trackValue) TrackText(v, value); // opt-out = chrome (digit-bearing values stay out of the scan corpus)
         }

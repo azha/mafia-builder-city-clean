@@ -1730,18 +1730,18 @@ namespace MafiaCleanCity.Operational
         {
             switch (t)
             {
-                case "front_shop":        return "Une façade";
-                case "cash_safehouse":    return "Une planque";
-                case "stash":             return "Une cache";
-                case "lab":               return "Un labo";
-                case "grow_house":        return "une serre";
-                case "refinery":          return "Une raffinerie";
-                case "press_house":       return "Une presse";
-                case "distribution_hub":  return "Un point de distribution";
-                case "office":            return "Un bureau";
-                case "dealer_spot_front": return "Un point de vente";
-                case "money_holding":     return "Une société-écran";
-                case "specialized_lab":   return "Un labo spécialisé";
+                case "front_shop":        return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Un commerce-écran");
+                case "cash_safehouse":    return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Une planque");
+                case "stash":             return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Une réserve");
+                case "lab":               return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Un labo");
+                case "grow_house":        return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Une serre");
+                case "refinery":          return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Une raffinerie");
+                case "press_house":       return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Une imprimerie");
+                case "distribution_hub":  return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Un relais");
+                case "office":            return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Une agence");
+                case "dealer_spot_front": return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Un coin de vente");
+                case "money_holding":     return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Une banque");
+                case "specialized_lab":   return MafiaCleanCity.I18n.Libelle.De("demolition", "ecran", "Un labo spécialisé");
                 default:                  return MafiaCleanCity.I18n.Repli.UnBatiment;   // repli de NOM en tête de phrase (atelier 28) : absent OU hors domaine, jamais le type brut
             }
         }

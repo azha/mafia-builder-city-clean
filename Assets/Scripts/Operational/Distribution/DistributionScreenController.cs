@@ -225,16 +225,20 @@ namespace MafiaCleanCity.Operational
         {
             switch (operationalType)
             {
-                case "distribution_hub": return "l'entrepôt de distribution";
-                case "specialized_lab":
-                case "lab": return "le labo";
-                case "refinery": return "la raffinerie";
-                case "money_holding": return "la banque";
-                case "stash": return "la planque";
-                case "front_shop": return "la boutique";
-                case "dealer_spot_front": return "le comptoir";
-                case "cash_safehouse": return "la planque-coffre";
-                case "grow_house": return "la ferme";
+                case "distribution_hub": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "le relais");
+                // D12 (atelier 30 v2) : un mot par type, celui du catalogue `building.type.*` — `specialized_lab` n'est plus « le labo ».
+                case "specialized_lab": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "le labo spécialisé");
+                case "lab": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "le labo");
+                case "refinery": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "la raffinerie");
+                case "money_holding": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "la banque");
+                case "stash": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "la réserve");
+                case "front_shop": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "le commerce-écran");
+                case "dealer_spot_front": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "le coin de vente");
+                case "cash_safehouse": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "la planque");
+                case "grow_house": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "la serre");
+                // D12 : les deux types que le repli « le bâtiment » nommait faute de mot (catalogue : Imprimerie, Agence).
+                case "press_house": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "l’imprimerie");
+                case "office": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "l’agence");
                 default: return MafiaCleanCity.I18n.Repli.LeBatiment;   // repli de NOM (atelier 28) : absent OU hors domaine, la phrase garde son nom — jamais le type brut
             }
         }
@@ -1050,9 +1054,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (bucket)
             {
-                case "direct": return "droit — le plus court";                    // m-54, MESURÉ
-                case "meandering": return "ça serpente — plus long, plus discret"; // m-55/56, MESURÉ
-                case "gnarled": return "tordu — beaucoup de détours";              // m-57, cadre 57 — domaine du back
+                case "direct": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "droit — le plus court");                    // m-54, MESURÉ
+                case "meandering": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "ça serpente — plus long, plus discret"); // m-55/56, MESURÉ
+                case "gnarled": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "tordu — beaucoup de détours");              // m-57, cadre 57 — domaine du back
                 default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
@@ -1064,9 +1068,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (bucket)
             {
-                case "none": return "aucune rivière";  // m-54, MESURÉ
-                case "single": return "un pont";        // m-55/56, MESURÉ
-                case "multiple": return "trois ponts";  // m-57 — hypothèse
+                case "none": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "aucune rivière");  // m-54, MESURÉ
+                case "single": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "un pont");        // m-55/56, MESURÉ
+                case "multiple": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "plusieurs ponts");  // m-57 — hypothèse
                 default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
@@ -1080,7 +1084,11 @@ namespace MafiaCleanCity.Operational
         {
             switch (state)
             {
-                case "active": return "tient"; // m-55 — lecture retenue, voir implementation-notes.md
+                case "active": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "tient");
+                // atelier 29 (7746e0bb), servies : le mot de la maison, « tendre » une route ; « saturé, ou coupé » du trajet.
+                case "draft": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "pas encore tendue");
+                case "saturated": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "saturée");
+                case "severed": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "coupée"); // m-55 — lecture retenue, voir implementation-notes.md
                 default: return MafiaCleanCity.I18n.Repli.Etat(state);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
@@ -1139,9 +1147,9 @@ namespace MafiaCleanCity.Operational
         {
             switch (band)
             {
-                case "ARRIVED": return "arrivé";
-                case "IDLE": return "prêt";
-                case "IN_TRANSIT": return "en chemin"; // hypothèse — jamais observée sur ce compte
+                case "ARRIVED": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "à destination");
+                case "IDLE": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "disponible");
+                case "IN_TRANSIT": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "en chemin"); // hypothèse — jamais observée sur ce compte
                 default: return MafiaCleanCity.I18n.Repli.Etat(band);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }
@@ -1155,10 +1163,10 @@ namespace MafiaCleanCity.Operational
             if (string.IsNullOrEmpty(type)) return MafiaCleanCity.I18n.Repli.Type(type);   // absent : « — » (plus « véhicule inconnu », atelier 28)
             switch (type.ToUpperInvariant())
             {
-                case "FOOT": return "à pied";
-                case "BIKE": return "à vélo";
-                case "CAR": return "en voiture";
-                case "REFRIGERATED_VAN": return "en camion réfrigéré";
+                case "FOOT": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "à pied");
+                case "BIKE": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "à vélo");
+                case "CAR": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "en voiture");
+                case "REFRIGERATED_VAN": return MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "en camion réfrigéré");
                 default: return MafiaCleanCity.I18n.Repli.Type(type);   // hors domaine : le mot de la famille (atelier 28) ; absent : « — » ; jamais la valeur brute
             }
         }

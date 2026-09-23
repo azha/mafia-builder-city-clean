@@ -1051,7 +1051,7 @@ namespace MafiaCleanCity.CityMap
             {
                 detail.rows.Add(new DetailRow(TissuDeDistrict.LibelleDeLigne, TissuDeDistrict.Valeur(cell.Model.profile)));
                 detail.rows.Add(new DetailRow("Blocs", cell.Model.block_count.ToString()));
-                detail.rows.Add(new DetailRow("Rive", cell.Model.bank_side == "north" ? "nord" : cell.Model.bank_side == "south" ? "sud" : cell.Model.bank_side));
+                detail.rows.Add(new DetailRow("Rive", cell.Model.bank_side == "north" ? MafiaCleanCity.I18n.Libelle.De("carte", "bloc", "nord") : cell.Model.bank_side == "south" ? MafiaCleanCity.I18n.Libelle.De("carte", "bloc", "sud") : cell.Model.bank_side));
                 detail.rows.Add(new DetailRow("Contrôle", cell.Model.control_state, true, true, CityMapEnums.ColorFor(cell.State)));
             }
 
