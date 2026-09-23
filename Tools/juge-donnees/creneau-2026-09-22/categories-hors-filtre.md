@@ -56,3 +56,12 @@ Journaux locaux : `creneau-hf{,2,3,4}.log` (passages 1 à 4). Déclarés == comp
 | CaptureNuit | 1 | non lancée (capture, exige la paire) | — | inchangée |
 Filtre par défaut : 55 catégories / 591 tests → **61 / 639**.
 
+## 2026-09-23 06:20-06:29 — EcranFiliere inscrite ; une DETTE nommée
+- `EcranFiliere` (㊵, 3 tests) : 3/3 par nom, tête e21e0c55 → **inscrite** (filtre 62 cat / 670 tests au compteur).
+- ⛔ DETTE — `OperationalLoopPlayModeTests.Loop_IsObservable_AcrossDashboard_BuildingCard_Pipeline_AndCityMap` : **SANS catégorie**, donc
+  jamais lancé par un filtre ; ROUGE mesuré au créneau (par nom). Ses épingles anglaises n'ont pas suivi les traductions :
+  « Citywide heat » (→ « Chaleur de la ville », ffe5fba5), « Escalating »/« Steady » (ffe5fba5), et les bandes de propreté
+  « Dirty »/« Partial »/« Mostly clean » (`OperationalLoopPlayModeTests.cs:142`, 96890e08/8dbe1eef, à relire). Réparation
+  ENTIÈRE en statique après exc_demo (toutes les épingles, lues dans le code actuel, pas au fil des rouges), puis une catégorie,
+  puis le créneau. Une réparation partielle a été tentée puis ANNULÉE (un test à moitié réparé ne s'inscrit pas).
+

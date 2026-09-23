@@ -225,6 +225,10 @@ public static class MafiaCI
         "VideChezLeNouveau",
         "IconesDispatcher",
         "EcranDistrict",
+        // ㊵ porte la filière (2026-09-23) — 3/3 vert AVANT inscription, par nom (MAFIA_CI_TESTS), créneau 06:20-06:29, tête
+        // e21e0c55 : l'ordre par stage_index et l'écart de TÊTE sur le compte semé (4 étapes, 0 écart), + 2 états fabriqués.
+        // Sans la paire, aucune relation de préfixe (vérifié) : PARTIE 1. Validé par l'orchestrateur.
+        "EcranFiliere",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
