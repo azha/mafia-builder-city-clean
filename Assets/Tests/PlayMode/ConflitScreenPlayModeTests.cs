@@ -312,8 +312,8 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(ecran.EnvoiPossible);
             Assert.IsTrue(GameObject.Find("LEnvoyerCeSoir").GetComponent<Button>().interactable);
             CollectionAssert.Contains(ecran.RenderedTexts, "On envoie Lt. Kest chez Tarcum, sur leur argent.");
-            CollectionAssert.Contains(ecran.RenderedTexts, "La dernière fois chez eux : Percée, et la ville a chauffé pas mal",
-                "TELLE QUELLE, sans point ajouté (arbitrage du 23/09)");
+            CollectionAssert.Contains(ecran.RenderedTexts, "La dernière fois chez eux\u00A0: une percée, et la ville a chauffé pas mal.",
+                "la phrase de l'atelier (addendum à la 40, 24897b48), l'issue en forme de milieu de phrase");
 
             // Un non-gros-bras n'est pas choisissable, même par le crochet.
             ecran.ChoisirLieutenant("id-inconnu");
@@ -536,6 +536,90 @@ namespace MafiaCleanCity.Operational.Tests
                 StringAssert.DoesNotContain("a échoué", t.text, "un message technique à l'écran : " + t.name);
                 Assert.AreNotEqual(ecran.DerniereErreur, t.text, "le message technique à l'écran : " + t.name);
             }
+        }
+
+        // ═══ L4b — les refus du POST, et la reprise qui ne part pas deux fois ════════════════════════
+
+        /// <summary>Pile injoignable (port 9, refusé aussitôt) : le refus est « réseau », son MOT s'affiche sous le bouton, et
+        /// l'essai suivant du MÊME envoi réémet la MÊME Idempotency-Key — le back rejoue alors au lieu de réexécuter
+        /// (`idempotency.interceptor.ts`, R-ID-4), ce qui rend vraie « il ne partira pas deux fois ». Un envoi DIFFÉRENT
+        /// (autre axe) part avec une clé neuve. Aucune écriture : rien n'atteint le back.</summary>
+        [UnityTest]
+        public IEnumerator EcranConflitE11_Reseau_LeMotSAffiche_EtLaRepriseReemetLaMemeCle()
+        {
+            var ecran = MonterEcran();
+            ecran.BaseUrl = "http://127.0.0.1:9";
+            ecran.RendrePourTest(
+                new GetLieutenantsResponseDto { lieutenants = new[] { Lieutenant("MUSCLE", "FRESH", "Lt. Kest") } },
+                new GetEngagementsResponseDto { engagements = new EngagementDto[0] });
+            yield return null;
+            ecran.ChoisirFamille("coil");
+            ecran.ChoisirLieutenant("00000000-0000-4000-8000-000000000000");
+            ecran.ChoisirAxe("finance");
+            yield return null;
+
+            yield return ecran.EnvoyerCeSoirEtRecharger(ecran.ChoixLieutenant, ecran.ChoixFamille, ecran.ChoixAxe);
+            yield return null;
+            Assert.AreEqual("reseau", ecran.DerniereClasseDeRefus, "http 0 : on ne sait pas si l'ordre est parti");
+            string cle1 = ecran.DerniereCleDIdempotence;
+            Assert.IsTrue(System.Guid.TryParse(cle1, out _), "une clé UUID (l'intercepteur refuse toute autre forme)");
+            Assert.AreEqual("La ligne a coupé : on ne sait pas si l’ordre est parti. Réessayez, il ne partira pas deux fois.",
+                TexteSous("Pied", "Refus"));
+            Assert.AreEqual("finance", ecran.ChoixAxe, "un refus garde les choix");
+
+            yield return ecran.EnvoyerCeSoirEtRecharger(ecran.ChoixLieutenant, ecran.ChoixFamille, ecran.ChoixAxe);
+            Assert.AreEqual(cle1, ecran.DerniereCleDIdempotence, "la reprise du MÊME envoi réémet la MÊME clé");
+
+            ecran.ChoisirAxe("intel");
+            Assert.IsNull(ecran.DerniereClasseDeRefus, "un nouveau choix efface le refus");
+            yield return ecran.EnvoyerCeSoirEtRecharger(ecran.ChoixLieutenant, ecran.ChoixFamille, ecran.ChoixAxe);
+            Assert.AreNotEqual(cle1, ecran.DerniereCleDIdempotence, "un envoi DIFFÉRENT (autre axe) : clé neuve (contrôle négatif)");
+        }
+
+        [Test]
+        public void EcranConflitR6_LesRefusDuPost_ClassesEtMots()
+        {
+            Assert.AreEqual("reseau", ConflitResolvers.ClasserRefusDEnvoi(0, null));
+            Assert.AreEqual("reseau", ConflitResolvers.ClasserRefusDEnvoi(409, "IDEMPOTENCY_REQUEST_IN_FLIGHT"),
+                "le même envoi encore en vol : on ne sait pas s'il est parti, la clé se garde");
+            Assert.AreEqual("muscle", ConflitResolvers.ClasserRefusDEnvoi(409, "MUSCLE_LIEUTENANT_REQUIRED"));
+            Assert.AreEqual("autre", ConflitResolvers.ClasserRefusDEnvoi(409, "IDEMPOTENCY_KEY_CONFLICT"), "un 409 n'est pas forcément « gros bras »");
+            Assert.AreEqual("introuvable", ConflitResolvers.ClasserRefusDEnvoi(404, "RESOURCE_NOT_FOUND"));
+            Assert.AreEqual("mal_forme", ConflitResolvers.ClasserRefusDEnvoi(422, "VALIDATION_FAILED"));
+            Assert.AreEqual("autre", ConflitResolvers.ClasserRefusDEnvoi(401, "UNAUTHENTICATED"));
+            Assert.AreEqual("autre", ConflitResolvers.ClasserRefusDEnvoi(500, null));
+
+            Assert.AreEqual("Ce lieutenant ne cogne pas. Il faut un gros bras : envoyez-en un, ou recrutez-en un.",
+                ConflitResolvers.MotDuRefusDEnvoi("muscle"));
+            Assert.AreEqual("Ce coup ne tient plus. Reprenez depuis la liste.", ConflitResolvers.MotDuRefusDEnvoi("introuvable"));
+            Assert.AreEqual("L’ordre n’est pas parti : il était mal formé. Réessayez.", ConflitResolvers.MotDuRefusDEnvoi("mal_forme"));
+            Assert.IsNull(ConflitResolvers.MotDuRefusDEnvoi("autre"), "aucun mot écrit pour « autre » : rien à l'écran");
+            Assert.IsNull(ConflitResolvers.MotDuRefusDEnvoi(null));
+
+            Assert.AreEqual("MUSCLE_LIEUTENANT_REQUIRED", ConflitClient.CodeApi(
+                "{\"payload\":{\"error\":{\"code\":\"MUSCLE_LIEUTENANT_REQUIRED\",\"http_status\":409,\"message\":\"x\"}}}"));
+            Assert.IsNull(ConflitClient.CodeApi(""));
+            Assert.IsNull(ConflitClient.CodeApi("<html>502</html>"), "un corps qui n'est pas du JSON : null, jamais une exception");
+        }
+
+        [Test]
+        public void EcranConflitR7_LaDerniereFoisChezEux_LaPhraseDeLAtelier_OuRien()
+        {
+            Assert.AreEqual("une percée", ConflitResolvers.IssueEnPhrase("breakthrough"));
+            Assert.AreEqual("du terrain gagné", ConflitResolvers.IssueEnPhrase("advance"));
+            Assert.AreEqual("rien obtenu", ConflitResolvers.IssueEnPhrase("hold"));
+            Assert.AreEqual("ça s’est disputé", ConflitResolvers.IssueEnPhrase("contested"));
+            Assert.AreEqual("on a reculé", ConflitResolvers.IssueEnPhrase("retreat"));
+            Assert.AreEqual("état inconnu", ConflitResolvers.IssueEnPhrase("rout"));
+            Assert.IsNull(ConflitResolvers.IssueEnPhrase(""));
+
+            Assert.AreEqual("La dernière fois chez eux : ça s’est disputé, et la ville a chauffé beaucoup.",
+                ConflitResolvers.LaDerniereFoisChezEux(Envoi("r", "coil", "La Coil", "resolved", "contested", "low", "high")));
+            Assert.IsNull(ConflitResolvers.LaDerniereFoisChezEux(Envoi("p", "coil", "La Coil", "scheduled", "", "", "medium")),
+                "issue nulle (pas encore rentré) : pas de phrase");
+            Assert.IsNull(ConflitResolvers.LaDerniereFoisChezEux(Envoi("r", "coil", "La Coil", "resolved", "hold", "low", "")),
+                "chaleur nulle : la phrase l'exige, aucun mot deviné");
+            Assert.IsNull(ConflitResolvers.LaDerniereFoisChezEux(null));
         }
 
         /// <summary>Le texte du nœud `enfant` sous le nœud `ligne` (à n'importe quelle profondeur sous `ConflitRoot`), ou null.</summary>

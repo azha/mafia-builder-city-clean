@@ -107,10 +107,27 @@ namespace MafiaCleanCity.Operational
         /// <summary>« L’envoyer ce soir » n'est actif que si la famille, l'homme et l'axe sont choisis.</summary>
         public bool EnvoiPossible => ChoixFamille != null && ChoixLieutenant != null && ChoixAxe != null;
 
+        /// <summary>La classe du dernier refus du POST (`ConflitResolvers.ClasserRefusDEnvoi`), ou null. Crochet de test ; le joueur
+        /// en lit le MOT (`ConflitResolvers.MotDuRefusDEnvoi`) sous le bouton.</summary>
+        public string DerniereClasseDeRefus { get; private set; }
+        /// <summary>L'Idempotency-Key émise au dernier envoi — crochet de test (elle ne s'affiche jamais).</summary>
+        public string DerniereCleDIdempotence { get; private set; }
+        // La clé d'un envoi dont on ne sait pas s'il est parti (réseau, ou encore en vol côté back), et le corps qu'elle couvre :
+        // l'essai suivant du MÊME envoi la RÉÉMET (le back rejoue, il ne réexécute pas). Tout autre issue l'oublie.
+        private string cleEnSuspens, envoiEnSuspens;
+
+        /// <summary>L'adresse du back — réglable par les tests AVANT le premier chargement (patron `RendrePourTest`).</summary>
+        public string BaseUrl
+        {
+            get => baseUrl;
+            set { baseUrl = value; if (client != null) client.BaseUrl = value; }
+        }
+
         public void ChoisirFamille(string cle)
         {
             if (System.Array.IndexOf(ConflitResolvers.DomaineFamilles, cle) < 0) return;
             ChoixFamille = cle;
+            DerniereClasseDeRefus = null;
             AppliquerEtat();
         }
 
@@ -120,6 +137,7 @@ namespace MafiaCleanCity.Operational
             foreach (LieutenantRowDto l in Muscles(DernierChargementLieutenants?.lieutenants)) if (l.lieutenant_id == lieutenantId) gros = true;
             if (!gros) return;   // seuls les gros bras sont choisissables (arbitrage du 23/09)
             ChoixLieutenant = lieutenantId;
+            DerniereClasseDeRefus = null;
             AppliquerEtat();
         }
 
@@ -127,6 +145,7 @@ namespace MafiaCleanCity.Operational
         {
             if (System.Array.IndexOf(ConflitResolvers.Axes, axe) < 0) return;
             ChoixAxe = axe;
+            DerniereClasseDeRefus = null;
             AppliquerEtat();
         }
 
@@ -134,6 +153,7 @@ namespace MafiaCleanCity.Operational
         /// (« même famille, autre cible », cadre 63).</summary>
         public void EnEnvoyerUnAutre(string memeFamille)
         {
+            DerniereClasseDeRefus = null;
             ChoixFamille = System.Array.IndexOf(ConflitResolvers.DomaineFamilles, memeFamille) >= 0 ? memeFamille : null;
             ChoixAxe = null;
             ChoixLieutenant = null;
@@ -304,6 +324,7 @@ namespace MafiaCleanCity.Operational
         /// mots du refus sont commandés à l'atelier (addendum à la table 40), branchés à leur arrivée.</summary>
         public IEnumerator EnvoyerCeSoirEtRecharger(string lieutenantId, string targetRivalKey, string targetHoldingId)
         {
+            EnsureInitialized();
             DernierEnvoiOk = false;
             var body = new PostEngagementsBody
             {
@@ -311,20 +332,31 @@ namespace MafiaCleanCity.Operational
                 target_rival_key = targetRivalKey,
                 target_holding_id = targetHoldingId,
             };
-            string erreur = null;
+            string envoi = ConflitClient.CorpsEnvoye(body);
+            string cle = envoi == envoiEnSuspens && cleEnSuspens != null ? cleEnSuspens : System.Guid.NewGuid().ToString();
+            DerniereCleDIdempotence = cle;
+            string erreur = null, codeApi = null;
             long code = 0;
+            bool refuse = false;
             PostEngagementsResponseDto rep = null;
             yield return client.PostEngagements(token, body, dto => rep = dto,
-                (c, m) => { code = c; erreur = m; });
-            if (erreur != null)
+                (c, api, m) => { refuse = true; code = c; codeApi = api; erreur = m; }, cle);
+            if (refuse)
             {
                 DernierCodeErreur = code;
-                DerniereErreur = erreur;   // crochet de test ; les mots du refus attendent la table (L4)
+                DerniereErreur = erreur;   // crochet de test : TECHNIQUE, jamais affiché
+                DerniereClasseDeRefus = ConflitResolvers.ClasserRefusDEnvoi(code, codeApi);
+                bool enSuspens = DerniereClasseDeRefus == "reseau";
+                cleEnSuspens = enSuspens ? cle : null;
+                envoiEnSuspens = enSuspens ? envoi : null;
+                RendrePied();
                 RendreMessageErreur();
                 yield break;
             }
+            cleEnSuspens = null; envoiEnSuspens = null;
             DernierEnvoiOk = true;
             DerniereErreur = null;
+            DerniereClasseDeRefus = null;
             ChoixFamille = null; ChoixLieutenant = null; ChoixAxe = null;   // l'envoi est parti : on repart de zéro
             yield return Charger();
         }
@@ -663,9 +695,9 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Cadres 59-61 — « Le coup de ce soir » : on choisit un homme (un gros bras), un axe (un des 5), et une famille
         /// (dans la table, en dessous). Aucun choix présélectionné. Quand les trois sont faits, la phrase d'envoi « On envoie
-        /// {nom} chez {famille}, sur {axe}. » ; quand la famille choisie a un envoi rentré, « La dernière fois chez eux : »
-        /// + son issue (+ « , et la ville a chauffé » + la chaleur), rendue TELLE QUELLE, sans point ajouté (l'atelier écrit
-        /// une clé de phrase, arbitrage du 23/09). Sans gros bras : les deux phrases servies qui le disent, et rien à choisir.</summary>
+        /// {nom} chez {famille}, sur {axe}. » ; quand la famille choisie a un envoi rentré, la phrase de l'atelier (addendum à la
+        /// 40, 24897b48) « La dernière fois chez eux : {issue}, et la ville a chauffé {chaleur}. » (`LaDerniereFoisChezEux`).
+        /// Sans gros bras : les deux phrases servies qui le disent, et rien à choisir.</summary>
         private void RendreCoup(EngagementDto[] engagements)
         {
             ViderEnfants(coupRoot);
@@ -741,14 +773,10 @@ namespace MafiaCleanCity.Operational
                 TrackText(phrase.text);
             }
 
-            EngagementDto derniere = ConflitResolvers.DerniereRentreeChez(engagements, ChoixFamille);
-            string issue = derniere != null ? ConflitResolvers.Issue(derniere.outcome_bucket) : null;
-            if (issue != null)
+            string laDerniereFois = ConflitResolvers.LaDerniereFoisChezEux(ConflitResolvers.DerniereRentreeChez(engagements, ChoixFamille));
+            if (laDerniereFois != null)
             {
-                string texte = Libelle.Gabarit("conflit.bloc.la_derniere_fois_chez_eux", "La dernière fois chez eux\u00A0:") + " " + issue;
-                string chaleur = ConflitResolvers.Chaleur(derniere.heat_increment_bucket);
-                if (chaleur != null) texte += Libelle.Gabarit("conflit.bloc.et_la_ville_a_chauffe", ", et la ville a chauffé") + " " + chaleur;
-                TextMeshProUGUI fois = NouveauTexteFiche(coupRoot, "LaDerniereFois", texte, 8f, DesignTokens.Current.onSurfaceSecondary, false);
+                TextMeshProUGUI fois = NouveauTexteFiche(coupRoot, "LaDerniereFois", laDerniereFois, 8f, DesignTokens.Current.onSurfaceSecondary, false);
                 fois.enableWordWrapping = true;
                 TrackText(fois.text);
             }
@@ -761,6 +789,13 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(piedRoot);
             if (muscleLieutenants.Count == 0) return;
             Replique(piedRoot, "Replique", Libelle.Gabarit("conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain", "«\u00A0Dites-moi seulement chez qui. Je pars ce soir, on saura demain.\u00A0»"));
+            string refus = ConflitResolvers.MotDuRefusDEnvoi(DerniereClasseDeRefus);
+            if (refus != null)
+            {
+                TextMeshProUGUI r = NouveauTexteFiche(piedRoot, "Refus", refus, 8.5f, RougeMauvais, false);
+                r.enableWordWrapping = true;
+                TrackText(r.text);
+            }
             BoutonGeste(piedRoot, "LEnvoyerCeSoir", Libelle.Gabarit("conflit.bloc.l_envoyer_ce_soir", "L’envoyer ce soir"),
                 Libelle.Gabarit("conflit.bloc.on_ne_pourra_plus_le_rappeler", "on ne pourra plus le rappeler"), EnvoiPossible, EnvoyerLeCoup);
         }
@@ -1108,6 +1143,69 @@ namespace MafiaCleanCity.Operational
             foreach (EngagementDto e in engagements)
                 if (e != null && e.status == "resolved" && e.target_rival_key == famille) return e;
             return null;
+        }
+
+        /// <summary>㉙ — « La dernière fois chez eux : {issue}, et la ville a chauffé {chaleur}. » (`conflit.bloc.derniere_fois_chez_eux`,
+        /// addendum à la 40, 24897b48), {issue} en forme de milieu de phrase (`IssueEnPhrase`), {chaleur} = `Chaleur`. null si l'envoi
+        /// manque, si l'issue est nulle (pas encore rentré, règle de l'atelier) ou si la chaleur est nulle (la phrase l'exige :
+        /// aucun mot deviné).</summary>
+        public static string LaDerniereFoisChezEux(EngagementDto e)
+        {
+            if (e == null) return null;
+            string issue = IssueEnPhrase(e.outcome_bucket), chaleur = Chaleur(e.heat_increment_bucket);
+            if (issue == null || chaleur == null) return null;
+            return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.derniere_fois_chez_eux", "La dernière fois chez eux\u00A0: {issue}, et la ville a chauffé {chaleur}.",
+                new Dictionary<string, string> { { "issue", issue }, { "chaleur", chaleur } });
+        }
+
+        /// <summary>㉙ — l'issue au MILIEU d'une phrase (`conflit.issue_phrase.<valeur>`, addendum à la 40 : « la casse est un mot »).
+        /// Même contrat que `Issue` : null ⇒ null ; hors domaine ⇒ « état inconnu ».</summary>
+        public static string IssueEnPhrase(string bucket)
+        {
+            switch (bucket)
+            {
+                case "retreat":      return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "issue_phrase", bucket, "on a reculé");
+                case "hold":         return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "issue_phrase", bucket, "rien obtenu");
+                case "contested":    return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "issue_phrase", bucket, "ça s’est disputé");
+                case "advance":      return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "issue_phrase", bucket, "du terrain gagné");
+                case "breakthrough": return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "issue_phrase", bucket, "une percée");
+                default: return string.IsNullOrEmpty(bucket) ? null : MafiaCleanCity.I18n.Repli.Etat(bucket);
+            }
+        }
+
+        /// <summary>㉙ — la classe d'un refus du POST, lue sur le statut ET le code du corps (`payload.error.code`) :
+        ///   · `reseau` : aucune réponse (http 0), OU `IDEMPOTENCY_REQUEST_IN_FLIGHT` (409 : le même envoi est encore en vol) — on ne
+        ///     sait pas s'il est parti ; l'essai suivant réémet la MÊME clé ;
+        ///   · `muscle` : 409 `MUSCLE_LIEUTENANT_REQUIRED` ;
+        ///   · `introuvable` : 404 (lieutenant pas au joueur, famille hors domaine, famille sans état — le back ne les distingue pas) ;
+        ///   · `mal_forme` : 422 ;
+        ///   · `autre` : tout le reste (401, 5xx, 409 `IDEMPOTENCY_KEY_CONFLICT`…) — AUCUN mot écrit : le joueur n'en lit rien.</summary>
+        public static string ClasserRefusDEnvoi(long http, string codeApi)
+        {
+            if (http == 0 || codeApi == "IDEMPOTENCY_REQUEST_IN_FLIGHT") return "reseau";
+            if (http == 409 && codeApi == "MUSCLE_LIEUTENANT_REQUIRED") return "muscle";
+            if (http == 404) return "introuvable";
+            if (http == 422) return "mal_forme";
+            return "autre";
+        }
+
+        /// <summary>㉙ — LE MOT d'un refus du POST (addendum à la 40, 24897b48), ou null (aucun refus, ou classe `autre` : pas de mot écrit).
+        /// Le 409 garde sa clé RATIFIÉE et servie (`error.engagements.muscle_lieutenant_required`) : la valeur servie s'affiche.</summary>
+        public static string MotDuRefusDEnvoi(string classe)
+        {
+            switch (classe)
+            {
+                case "muscle":      return MafiaCleanCity.I18n.Libelle.Gabarit("error.engagements.muscle_lieutenant_required",
+                                        "Ce lieutenant ne cogne pas. Il faut un gros bras\u00A0: envoyez-en un, ou recrutez-en un.");
+                case "introuvable": return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.refus.ce_coup_ne_tient_plus_reprenez_depuis_la_liste",
+                                        "Ce coup ne tient plus. Reprenez depuis la liste.");
+                case "mal_forme":   return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.refus.l_ordre_n_est_pas_parti_il_etait_mal_forme_reessayez",
+                                        "L’ordre n’est pas parti\u00A0: il était mal formé. Réessayez.");
+                case "reseau":      return MafiaCleanCity.I18n.Libelle.Gabarit(
+                                        "conflit.refus.la_ligne_a_coupe_on_ne_sait_pas_si_l_ordre_est_parti_reessayez_il_ne_partira_pas_deux_fois",
+                                        "La ligne a coupé\u00A0: on ne sait pas si l’ordre est parti. Réessayez, il ne partira pas deux fois.");
+                default: return null;
+            }
         }
 
         /// <summary>㉙ — l'issue d'un envoi (`outcome_bucket`), mots de l'atelier table 40 (997d6ab4) ; clé tirée de la VALEUR

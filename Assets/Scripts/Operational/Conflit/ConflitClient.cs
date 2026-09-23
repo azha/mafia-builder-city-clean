@@ -78,11 +78,29 @@ namespace MafiaCleanCity.Operational
             });
         }
 
+        /// <summary>`payload.error.code` d'un corps de refus, ou null (corps vide, réseau, forme inconnue) — jamais une exception.</summary>
+        public static string CodeApi(string corps)
+        {
+            if (string.IsNullOrEmpty(corps)) return null;
+            try
+            {
+                string c = JsonUtility.FromJson<ApiErreurEnvelope>(corps)?.payload?.error?.code;
+                return string.IsNullOrEmpty(c) ? null : c;
+            }
+            catch (ArgumentException) { return null; }
+        }
+
         /// <summary>`POST /v1/me/engagements` — `{lieutenant_id, target_rival_key, target_holding_id?}` ⇒ `{engagement_id}`
         /// (voir `PostEngagementsResponseDto` pour les erreurs). Idempotency-Key posée : l'`IdempotencyInterceptor` global
         /// du back l'honore (`engagements.controller.ts:115`).</summary>
+        /// <para>`cleIdempotence` : la clé à émettre ; null ⇒ une clé neuve. ⛔ Une REPRISE après un échec réseau doit réémettre la
+        /// MÊME clé avec le MÊME corps : l'intercepteur rejoue alors la réponse mémorisée au lieu de réexécuter
+        /// (`protocol/idempotency.interceptor.ts`, R-ID-4) — c'est ce qui rend vraie la phrase « il ne partira pas deux fois ».</para>
+        /// <para>`onErr(http, codeApi, message)` : `http` 0 = réseau ; `codeApi` = `payload.error.code` du corps de refus (null sinon) ;
+        /// `message` est TECHNIQUE (crochet de test, jamais affiché).</para>
         public IEnumerator PostEngagements(string bearer, PostEngagementsBody corps,
-                                     Action<PostEngagementsResponseDto> onOk, Action<long, string> onErr)
+                                     Action<PostEngagementsResponseDto> onOk, Action<long, string, string> onErr,
+                                     string cleIdempotence = null)
         {
             string json = CorpsEnvoye(corps);
             using (var req = new UnityWebRequest(BaseUrl.TrimEnd('/') + "/v1/me/engagements", "POST"))
@@ -90,7 +108,7 @@ namespace MafiaCleanCity.Operational
                 req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
                 req.downloadHandler = new DownloadHandlerBuffer();
                 req.SetRequestHeader("Content-Type", "application/json");
-                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                req.SetRequestHeader("Idempotency-Key", string.IsNullOrEmpty(cleIdempotence) ? Guid.NewGuid().ToString() : cleIdempotence);
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 req.timeout = TimeoutSeconds;
                 yield return req.SendWebRequest();
@@ -98,13 +116,13 @@ namespace MafiaCleanCity.Operational
                 {
                     PostEngagementsResponseDto dto =
                         JsonUtility.FromJson<PostEngagementsEnvelope>(req.downloadHandler.text)?.payload?.data;
-                    if (dto == null) { onErr?.Invoke(0, "corps vide (PostEngagements)"); yield break; }
+                    if (dto == null) { onErr?.Invoke(req.responseCode, null, "corps vide (PostEngagements)"); yield break; }
                     onOk?.Invoke(dto);
                 }
                 else
                 {
                     string corpsErr = req.downloadHandler != null ? req.downloadHandler.text : null;
-                    onErr?.Invoke(req.responseCode,
+                    onErr?.Invoke(req.responseCode, CodeApi(corpsErr),
                                   $"POST /v1/me/engagements a échoué ({req.responseCode}) {req.error} {corpsErr}");
                 }
             }
