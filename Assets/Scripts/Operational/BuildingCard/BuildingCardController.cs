@@ -1651,8 +1651,8 @@ namespace MafiaCleanCity.Operational
         // number — not even a "$10k" digit — leaks to the player). The server is the final authority (it enforces capacity/
         // funds on the ACTUAL cents passed in the request body). The cents VALUE travels in the body (never rendered); only
         // the band word is shown. The four steps ($1k / $10k / $100k / $1M) anchor on the SAME M1 $ scale the held bands use.
-        private static readonly int[] TransferAmountStepsCents = { 100_000, 1_000_000, 10_000_000, 100_000_000 }; // $1k / $10k / $100k / $1M.
-        private static string TransferAmountLabel(int cents)
+        public static readonly int[] TransferAmountStepsCents = { 100_000, 1_000_000, 10_000_000, 100_000_000 }; // $1k / $10k / $100k / $1M.
+        public static string TransferAmountLabel(int cents)
         {
             switch (cents)
             {
@@ -1660,7 +1660,9 @@ namespace MafiaCleanCity.Operational
                 case 1_000_000: return "Small";   // $10k
                 case 10_000_000: return "Medium"; // $100k
                 case 100_000_000: return "Large"; // $1M
-                default: return "Small";          // a defensive fallback (always a known step via the selector).
+                // ⛔ PLUS « Small » : un montant hors des quatre paliers se disait « Small », c'est-à-dire un palier FAUX affirmé
+                // (règle f2 du 23/09, atelier 28). Il se dit « état inconnu » ; la couverture des quatre paliers est testée.
+                default: return MafiaCleanCity.I18n.Repli.EtatInconnu;
             }
         }
 
@@ -1987,7 +1989,7 @@ namespace MafiaCleanCity.Operational
         // selector reads as a qualitative choice + keeps the no-raw-scalar guard simple (R2.2 — the UI shows no bare
         // numbers anywhere). The server enforces the real max (passes > max → 422); the client clamps only at 0 and at the
         // max-words ceiling. More passes = a longer cook = a higher purity band.
-        private const int MaxRefiningPassesUi = 3; // mirrors the server's production.ash.max_refining_passes default (3).
+        public const int MaxRefiningPassesUi = 3; // mirrors the server's production.ash.max_refining_passes default (3).
         private void AddRefiningPassesSelector(Transform parent)
         {
             string label = NewSectionLabel(parent, "PASSES DE RAFFINAGE (temps ↔ pureté)");
@@ -2021,14 +2023,16 @@ namespace MafiaCleanCity.Operational
 
         // Word the refining-passes count (the time↔purity lever) as a qualitative choice — None / Light / Standard / Deep —
         // so the selector shows no bare digit (R2.2 keeps the no-raw-scalar guard simple). More = a longer cook, purer Ash.
-        private static string RefiningPassesLabel(int passes)
+        public static string RefiningPassesLabel(int passes)
         {
             switch (passes)
             {
                 case 0: return "None";
                 case 1: return "Light";
                 case 2: return "Standard";
-                default: return "Deep"; // 3+ (clamped at the UI max)
+                case 3: return "Deep";   // le max de l'UI (`MaxRefiningPassesUi`)
+                // ⛔ PLUS « Deep » pour tout le reste : 4 ou −1 se disaient « Deep », un cran faux affirmé (règle f2, atelier 28).
+                default: return MafiaCleanCity.I18n.Repli.EtatInconnu;
             }
         }
 
