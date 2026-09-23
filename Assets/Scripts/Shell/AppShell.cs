@@ -256,6 +256,7 @@ namespace MafiaCleanCity.Shell
             // qui n'a de sens qu'EN district). F14 (23/09) : la valeur hors district est la phase de la
             // SESSION, projetée par le back à l'ouverture — plus « — » par défaut quand elle est servie.
             TopBar.SetDayPhase(PhaseHorsDistrict());
+            TopBar.SetDescente(false);   // ①-4 — la descente est celle d'UN district : elle ne sort pas avec le joueur
 
             switch (tab)
             {
@@ -395,6 +396,7 @@ namespace MafiaCleanCity.Shell
                                  $"(code={tenant.LastErrorCode}) — repli déclaré affiché.");
                 tenant.Render(new DistrictInteriorDto { day_phase = "UNAVAILABLE" });
                 TopBar.SetDayPhase(PhaseHorsDistrict());   // F14 : le district n'a rien rendu — la phase de session
+                TopBar.SetDescente(false);                 // ①-4 — rien de rendu, rien d'annoncé
                 yield break;
             }
             tenant.Render(tenant.LastFetch);
@@ -403,8 +405,10 @@ namespace MafiaCleanCity.Shell
             // projetée par le back").
             TopBar.SetDayPhase(tenant.LastFetch?.day_phase);
             // ①-3 — dans un district, la descente est la SIENNE (`heat.escalated` du district, `SetSession` l'a attendue).
+            bool descente = tenant.LastHeat != null && tenant.LastHeat.escalated;
+            TopBar.SetDescente(descente);   // ①-4 — « DESCENTE », braise, pouls, tremblement ; le gyrophare est posé par le rendu
             tenant.CederLaPlaceAuBandeau(TopBar.Bandeau.Visible);
-            AnnoncerAuBandeau(tenant.LastHeat != null && tenant.LastHeat.escalated, "district-" + districtId);
+            AnnoncerAuBandeau(descente, "district-" + districtId);
         }
 
         /// <summary>§3.3 — "→ ActivateTab(Tab.Empire)" verbatim (Empire is the old City branch,

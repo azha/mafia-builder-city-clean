@@ -268,6 +268,12 @@ namespace MafiaCleanCity.CityMap
             if (titreDistrictGroupe != null) titreDistrictGroupe.alpha = bandeauVisible ? 0f : 1f;
         }
 
+        // ①-4 — la lueur du gyrophare de la scène, null quand elle ne s'allume pas (pas de descente, le jour, ou un fond dont la
+        // voiture n'est pas relevée).
+        private Gyrophare gyrophare;
+        public bool GyrophareAllume => gyrophare != null;
+        public RectTransform GyrophareRect => gyrophare != null ? (RectTransform)gyrophare.transform : null;
+
         /// <summary>Garde : le titre est-il tu en ce moment ?</summary>
         public bool TitreCedeAuBandeau => titreDistrictGroupe != null && titreDistrictGroupe.alpha == 0f;
 
@@ -393,6 +399,7 @@ namespace MafiaCleanCity.CityMap
         /// du mode, ils suivent les FAITS du bâtiment, pas l'heure du jour).</summary>
         private void RenderHeroDiorama(DistrictInteriorDto dto, string mode)
         {
+            gyrophare = null;   // ①-4 — l'état d'un rendu précédent ne survit pas au suivant
             // Titre — construit en PREMIER (inchangé par P3, nav-F5 : le pivot ne touche ni la
             // position ni le mécanisme) mais repoussé en DERNIER sibling de `root` en fin de méthode
             // (nav-district) : la navigation panne/zoome DistrictScene, dont le fond/les bâtiments
@@ -568,6 +575,11 @@ namespace MafiaCleanCity.CityMap
                 // APRÈS `SnapToScreenPixel`, jamais un delta recalculé. Le nœud du fond, lui, n'est
                 // pas touché : la bit-exactitude du transport est préservée par construction.
                 // Le `RectMask2D` est posé plus bas (chunk C3), après que les cellules existent.
+                // ①-4 (M9/D5) — la descente se voit dans la ville : la lueur du gyrophare, FRÈRE du fond (pp-F6 : le fond ne
+                // porte aucun enfant), posée AVANT les cellules pour passer sous les marqueurs. Voir `Gyrophare`.
+                gyrophare = Gyrophare.DoitSAllumer(LastHeat != null && LastHeat.escalated, mode, tex)
+                    ? Gyrophare.Poser(sceneRt, fondRt, tex, scaleFactor) : null;
+
                 cellsGo = NewUI("DistrictCells", sceneRt);
                 cellsRt = (RectTransform)cellsGo.transform;
                 cellsRt.anchorMin = cellsRt.anchorMax = cellsRt.pivot = new Vector2(0.5f, 0.5f);
