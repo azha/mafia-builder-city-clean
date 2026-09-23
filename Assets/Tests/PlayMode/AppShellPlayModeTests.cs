@@ -25,6 +25,12 @@ namespace MafiaCleanCity.Shell.Tests
 
         private GameObject shellGo;
         private AppShell shell;
+        // ⛔ TD-576 (23/09) — le shell ABANDONNÉ de `StaleAbandonedShell_…` était détruit à la FIN DU CORPS : sur un rouge de
+        //    prémisse (partie 1 du 23/09 02:44), ce nettoyage n'a jamais tourné, le shell A a vécu, sa session a amorcé le
+        //    catalogue pendant la classe SUIVANTE — et la garde de sortie a nommé cette victime (CarteVille). Un nettoyage
+        //    écrit à la fin d'un test ne s'exécute que si le test réussit : il est inscrit ici, rendu par le TearDown.
+        private GameObject shellAbandonneGo;
+        private AppShell shellAbandonne;
 
         // AppShell mirrors the 9 screen controllers' OWN Canvas discovery: `FindFirstObjectByType
         // <Canvas>()`, creating a fresh independent root GameObject only if none exists — it is NEVER
@@ -34,6 +40,11 @@ namespace MafiaCleanCity.Shell.Tests
         [TearDown]
         public void TearDown()
         {
+            if (shellAbandonne != null && shellAbandonne.ShellCanvas != null
+                && (shell == null || shell.ShellCanvas == null || shellAbandonne.ShellCanvas.gameObject != shell.ShellCanvas.gameObject))
+                Object.DestroyImmediate(shellAbandonne.ShellCanvas.gameObject);
+            if (shellAbandonneGo != null) Object.DestroyImmediate(shellAbandonneGo);
+            shellAbandonne = null; shellAbandonneGo = null;
             if (shell != null && shell.ShellCanvas != null) Object.Destroy(shell.ShellCanvas.gameObject);
             if (shellGo != null) Object.Destroy(shellGo);
             shell = null;
@@ -283,6 +294,7 @@ namespace MafiaCleanCity.Shell.Tests
             // teardown de test/capture incomplet, cf. commentaire de TearDown ci-dessus). ----
             GameObject shellAGo = new GameObject("AppShell_A_abandoned");
             AppShell shellA = shellAGo.AddComponent<AppShell>();
+            shellAbandonneGo = shellAGo; shellAbandonne = shellA;   // TD-576 : rendu par le TearDown, même sur un rouge
             shellA.SetIdentity(citymapIdentifier, citymapPassword);
             yield return WaitForEmpireMounted(shellA);
             shellA.ActivateTab(AppShell.Tab.Empire); // re-tap (idempotent-ish remount, items 0.2/0.3 — Empire IS the old City)
@@ -292,10 +304,15 @@ namespace MafiaCleanCity.Shell.Tests
             var cityMapA = shellA.MountedTenantGameObject.GetComponent<CityMapController>();
             float authElapsedA = 0f;
             while (!cityMapA.IsAuthenticated && cityMapA.AuthError == null && authElapsedA < 25f) { authElapsedA += Time.deltaTime; yield return null; }
-            yield return null; // laisser Populate() construire la liste
+            // ⚠️ UNE frame ne suffisait plus (rouge de prémisse, partie 1 du 23/09 02:44 ; vert à 00:16 sur le même code) :
+            //    depuis que chaque classe REND le catalogue (TD-576), le shell l'amorce de nouveau à chaque acquisition — un aller
+            //    réseau de plus avant que la liste ne se peuple. Attente BORNÉE sur la condition, jamais une frame supposée.
+            float populateElapsed = 0f;
+            while (Object.FindObjectsByType<DistrictCellView>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length == 0
+                   && populateElapsed < 10f) { populateElapsed += Time.deltaTime; yield return null; }
 
             Assert.Greater(Object.FindObjectsByType<DistrictCellView>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, 0,
-                "prémisse : A a bien une liste de districts vivante avant l'entrée en scène de B");
+                "prémisse : A a bien une liste de districts vivante avant l'entrée en scène de B (attente bornée 10 s)");
 
             // ---- shell B : le VRAI flux joueur, Empire (la carte) -> district (via `shell`/
             // `shellGo`, trackés par le TearDown de la fixture — A est nettoyé explicitement en fin
@@ -352,9 +369,7 @@ namespace MafiaCleanCity.Shell.Tests
             // Nettoyage de A (B est nettoyé par le TearDown de la fixture via shell/shellGo — le
             // Canvas, partagé par construction si le défaut n'est pas corrigé OU réutilisé même
             // après correctif, n'est détruit qu'UNE fois).
-            if (shellA.ShellCanvas != null && shellA.ShellCanvas.gameObject != shell.ShellCanvas.gameObject)
-                Object.Destroy(shellA.ShellCanvas.gameObject);
-            Object.Destroy(shellAGo);
+            // (A est rendu par le TearDown — `shellAbandonne` —, qu'on arrive ici ou non.)
         }
     }
 }
