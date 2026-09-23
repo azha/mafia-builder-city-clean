@@ -345,10 +345,14 @@ namespace MafiaCleanCity.Shell.Tests
                 $"le champ hors canon nommé ici (`{TokenHorsCanon}`) n'existe plus sur DesignTokens : " +
                 "cette exception a survécu à ce qu'elle excusait, et le `+3` ci-dessous est devenu faux. " +
                 "Le retirer, ne pas relâcher le compte.");
-            Assert.AreEqual(CanonPaletteComparator.ExpectedTokenCount + 3, sealedFields.Count,
+            // ⛔ AMENDÉ (2026-09-23, créneau client-2) : 104cb379 (09/09) a porté `ExpectedTokenCount` de 74 à 75 « + accentCalm »
+            //    — exactement le jour annoncé ci-dessus où le canon le compte. Le `+3` devait redevenir `+2` ce jour-là ; il ne
+            //    l'a pas fait, et cette garde rougissait depuis (77 champs vus pour 78 attendus). `accentCalm` reste nommé et
+            //    asserté juste au-dessus ; il n'est plus compté deux fois.
+            Assert.AreEqual(CanonPaletteComparator.ExpectedTokenCount + 2, sealedFields.Count,
                 $"sanity du reflet lui-même — doit voir {CanonPaletteComparator.ExpectedTokenCount} " +
-                $"Color du canon + primaryFont + hudSerifFont + `{TokenHorsCanon}` (hors canon, " +
-                "voir le commentaire). Vu : [" + string.Join(", ", sealedFields.OrderBy(x => x)) + "]");
+                $"Color du canon (dont `{TokenHorsCanon}` depuis 104cb379) + primaryFont + hudSerifFont. " +
+                "Vu : [" + string.Join(", ", sealedFields.OrderBy(x => x)) + "]");
 
             MatchCollection matches = Regex.Matches(text, @"DesignTokens\.Current\.(\w+)");
             Assert.GreaterOrEqual(matches.Count, 5,
