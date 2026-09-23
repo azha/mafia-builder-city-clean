@@ -111,7 +111,7 @@ modérée · Urgence faible » — les mots de ⑤ ratifié, série 4 — et ses
 « Lt. Quist a un rapport pour vous », « Lire maintenant » / « Laisser en attente ») · **la file sous pression** (« Les exceptions »,
 « saturée », « Plusieurs attendent encore »). Sous la carte, la suivante de la file : « {nom} attend vos ordres » · « grave » · « trancher ».
 Mots : 27 non marqués, tous servis ou ratifiés (vérifié contre `FR_MESSAGES` du back `e355ba63`) ; proposés : « la ville › » (la sortie vers
-la ville) et « d'autres attendent au-delà de ce que la file montre » (`backlog_badge`). Aucun rendu : lot `Tools/juge-visuel/rendre-lot-2026-09-23.py`.
+la ville) et « d'autres attendent au-delà de ce que la file montre » (`backlog_badge`). Aucun rendu : lot `Tools/juge-visuel/rendre-lot-2026-09-23.py`. **Corrigé après relecture** (atelier `d3319eb`) : le dock du canon ajouté (ronds vides, Empire actif) ; « la ville › » retiré (on sort en touchant la ville, `front.md` §4 B) ; titre équilibré. Rendus : `Tools/juge-visuel/accueil/maquette-2026-09-23/cadre-{0..3}-1080x2102.png` — MAQUETTE À RATIFIER.
 
 ## 3. ⑦ la fiche du lieutenant : la base de sa maquette
 

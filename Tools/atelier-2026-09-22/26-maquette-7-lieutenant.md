@@ -52,3 +52,14 @@ Les mots servis employés : `famille.archetype.cuisinier`, `famille.grantedrole.
 1. La forme : une fiche d'identité sur la ville (série 6), trois cadres.
 2. Les mots du §3.
 3. Le « il » des deux questions : garder la voix de « il est sûr » (ratifiée sur ⑨), ou une tournure sans pronom.
+
+## 5. Corrigé après relecture des rendus (2026-09-23, atelier `d3319eb`)
+
+- **Le dock** : la série 6 n'en dessine aucun (0 sur 146 cadres) — convention de cadrage ; mais ⑦ est un onglet de l'application : le dock du
+  canon HUD est ajouté, ronds VIDES (point 15), onglet Famille actif, le point or du canon (son sens reste ouvert, `22-…` §7.3).
+- **Les bandes d'autonomie** : les valeurs SERVIES `famille.band.*` portent une jauge ASCII dans le texte (« [....] Épuisé », « [####] Plein »).
+  La maquette montre le MOT seul (R2.2, comme toutes les bandes de la série 6). ⚠️ C'est au catalogue de retirer la jauge de la valeur servie
+  (même question que les glyphes à lettres du client).
+- Retirés : le sous-titre « il s'installe vite ailleurs » (un « il », et redondant avec la ligne) ; la phrase d'explication du cadre 1 (les
+  trois boutons la disent). Débordement du cadre 1 corrigé (les quatre repères visibles).
+- Rendus : `Tools/juge-visuel/famille/maquette-7-2026-09-23/cadre-{0,1,2}-1080x2102.png` — MAQUETTE À RATIFIER, pas une référence.

@@ -31,6 +31,7 @@ tete = re.sub(r'<header class="bandeau">.*?</header>',
 i131 = [m.start() for m in re.finditer(r'<div class="cadre">', S6)][131]
 barre = re.search(r'<div class="barre">.*?</div></div>(?=<div class="panneau">)', S6[i131:i131 + 4000], re.S).group(0)
 assert '24 850 €' in barre and 'CHALEUR' in barre, 'le chrome du cadre 131 doit être à jour (points 10, 11, 19)'
+DOCK = '<div class="dock9"><div class="db"><span class="rd"><span class="pt"></span></span>Empire</div><div class="db actif"><span class="rd"><small class="disc"></small><span class="pt"></span></span>Famille</div><div class="db"><span class="rd"><span class="pt"></span></span>Filière</div><div class="db"><span class="rd"><span class="pt"></span></span>Plus</div></div>'
 SCENE = '<div class="scene district" style="background-position:center 50%;filter:brightness(.24)"></div><div class="voile-scene"></div>'
 
 CSS = """<style>
@@ -51,7 +52,7 @@ CSS = """<style>
 .fid7 .tampon{position:absolute;right:9px;top:8px;transform:rotate(-8deg);font:700 7.2px/1 'DejaVu Sans';letter-spacing:.16em;
   color:#9b2c1f;border:1.5px solid #9b2c1f;padding:3px 5px;opacity:.85;text-transform:uppercase}
 .fid7 .lignes{margin:9px 12px 0;position:relative;z-index:2;background:rgba(11,17,27,.88);border:1px solid #2a3648;padding:4px 9px}
-.fid7 .l{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid #ffffff10}
+.fid7 .l{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:3.5px 0;border-bottom:1px solid #ffffff10}
 .fid7 .l:last-child{border-bottom:none}
 .fid7 .l span{font:700 6.6px/1 'DejaVu Sans';letter-spacing:.2em;text-transform:uppercase;color:#b9ad92}
 .fid7 .l b{font:400 11px/1.1 'DejaVu Serif';color:#eae0c8;text-align:right}
@@ -60,18 +61,28 @@ CSS = """<style>
 .fid7 .auto{margin:9px 12px 0;position:relative;z-index:2}
 .fid7 .auto i{display:block;font:700 6.4px/1 'DejaVu Sans';font-style:normal;letter-spacing:.3em;color:#b9ad92;text-transform:uppercase;margin-bottom:5px}
 .fid7 .cat{display:flex;justify-content:space-between;font:400 9.4px/1.5 'DejaVu Sans';color:#cfc4a8}
-.fid7 .cat em{font-style:normal;font-family:'DejaVu Sans Mono',monospace;color:#7fd4d9}
+.fid7 .cat em{font-style:normal;font-family:'DejaVu Serif';color:#eae0c8}
 .fid7 .question{margin:10px 12px 0;position:relative;z-index:2;border-left:2px solid #d9ab4e;padding:5px 9px;background:rgba(217,171,78,.07)}
 .fid7 .question b{display:block;font:700 12px/1.2 'DejaVu Serif';color:#f2c96b}
 .fid7 .question small{display:block;font:400 8.6px/1.4 'DejaVu Sans';color:#b9ad92;margin-top:3px}
-.fid7 .gestes{margin-top:auto;padding:10px 12px 14px;position:relative;z-index:2;display:flex;flex-direction:column;gap:6px}
-.fid7 .g{text-align:center;font:700 9px/1 'DejaVu Sans';letter-spacing:.16em;text-transform:uppercase;padding:9px 6px;border-radius:3px;
+.fid7 .gestes{margin-top:auto;padding:8px 12px 10px;position:relative;z-index:2;display:flex;flex-direction:column;gap:6px}
+.fid7 .g{text-align:center;font:700 9px/1 'DejaVu Sans';letter-spacing:.16em;text-transform:uppercase;padding:7px 6px;border-radius:3px;
   border:1px solid #ffffff2a;color:#eae0c8;background:#ffffff0a}
 .fid7 .g.or{background:linear-gradient(180deg,#e9c56b,#c99a37);color:#241804;border-color:#8a611c}
 .fid7 .g small{display:block;font:400 7.4px/1.3 'DejaVu Sans';letter-spacing:.02em;text-transform:none;opacity:.8;margin-top:3px}
 .fid7 .reperes{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
-.fid7 .reperes span{font:400 7.6px/1 'DejaVu Sans';border:1px solid #2a3648;padding:3px 5px;color:#b9ad92}
+.fid7 .reperes span{font:400 7px/1 'DejaVu Sans';border:1px solid #2a3648;padding:2px 4px;color:#b9ad92}
 .fid7 .prop{text-decoration:underline dotted #b9ad92;text-underline-offset:2px}
+
+/* le dock du canon HUD (hud-brennar.html l.106-117), ronds VIDES (ARBITRAGES point 15) — la série 6 n'en dessine aucun (0 sur 146 cadres) ;
+   ⑦ et ④ sont des onglets de l'application, il y figure */
+.dock9{display:flex;justify-content:center;gap:22px;padding:8px 0 10px;background:linear-gradient(180deg,transparent,#070b12d8 40%)}
+.dock9 .db{display:flex;flex-direction:column;align-items:center;gap:5px;color:#b9ad92;font:400 8.5px/1 'DejaVu Sans';letter-spacing:.16em;text-transform:uppercase}
+.dock9 .rd{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 38% 30%,#1d2635,#0d1420 65%);border:1px solid #ffffff22;
+  box-shadow:inset 0 1px 0 #ffffff1c,0 4px 10px #000a;position:relative}
+.dock9 .pt{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:14px;height:2px;background:#b08d3e;border-radius:1px;opacity:0}
+.dock9 .actif .pt{opacity:1}
+.dock9 .disc{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#d9ab4e;border:1.5px solid #0a0f17}
 </style>
 """
 
@@ -89,24 +100,23 @@ def lignes(signal, ordre, vif=None):
         f'<span>{a}</span><b class="{c}">{v}</b></div>' for a, v, c in L) + '</div>'
 
 AUTONOMIE = ('<div class="auto"><i class="prop">Autonomie</i>'
-             '<div class="cat"><span>Opérations de production</span><em>[....] Épuisé</em></div>'
-             '<div class="cat"><span>Flux de blanchiment</span><em>[###.] Normal</em></div>'
-             '<div class="cat"><span>Routage logistique</span><em>[####] Plein</em></div></div>')
+             '<div class="cat"><span>Opérations de production</span><em>Épuisé</em></div>'
+             '<div class="cat"><span>Flux de blanchiment</span><em>Normal</em></div>'
+             '<div class="cat"><span>Routage logistique</span><em>Plein</em></div></div>')
 
 def cadre(etiquette, contenu):
     return (f'<div class="cadre"><div class="etiquette">{etiquette}</div><div class="tel">{SCENE}<div class="ecran">{barre}'
-            f'<div class="panneau"><div class="fid7" style="height:462px"><div class="cerne"></div>{contenu}</div></div></div></div></div>\n')
+            f'<div class="panneau"><div class="fid7" style="height:406px"><div class="cerne"></div>{contenu}</div></div>' + DOCK + '</div></div></div>\n')
 
 CADRES = [
     cadre('⑦ La fiche — ce que le back sert',
           carte('Au repos') + lignes('<span class="prop">à l’écoute</span>', '<span class="prop">aucun ordre</span>') + AUTONOMIE +
-          '<div class="gestes"><div class="g or">Réaffecter…<small class="prop">il s’installe vite ailleurs</small></div>'
+          '<div class="gestes"><div class="g or">Réaffecter…</div>'
           '<div class="g">+ Ajouter une règle</div></div>'),
     cadre('⑦ Le signal dérive — trois façons de le recaler',
           carte('Actif', '<span class="tampon prop">dérive</span>') +
           lignes('<span class="prop">dérive</span>', '<span class="prop">aucun ordre</span>', vif='signal') +
-          '<div class="question"><b class="prop">Il écoute autre chose que vos ordres</b>'
-          '<small class="prop">Vous pouvez rappeler l’ordre direct, remettre son écoute à zéro, ou brouiller ce qu’il écoute à la place.</small></div>'
+          '<div class="question"><b class="prop">Il écoute autre chose que vos ordres</b></div>'
           '<div class="gestes"><div class="g or"><span class="prop">Rappeler l’ordre direct</span></div>'
           '<div class="g"><span class="prop">Remettre l’écoute à zéro</span></div>'
           '<div class="g"><span class="prop">Brouiller un repère</span><small><span class="prop">ce qu’il écoute à la place :</span></small></div>'

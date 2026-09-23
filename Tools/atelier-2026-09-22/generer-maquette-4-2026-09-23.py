@@ -22,6 +22,7 @@ tete = re.sub(r'<header class="bandeau">.*?</header>',
               'Un mot souligné en pointillé est <b>proposé, non ratifié</b>. Atelier / DA, 2026-09-23.</p></header>', S6[:c0], count=1, flags=re.S)
 i131 = [m.start() for m in re.finditer(r'<div class="cadre">', S6)][131]
 barre = re.search(r'<div class="barre">.*?</div></div>(?=<div class="panneau">)', S6[i131:i131 + 4000], re.S).group(0)
+DOCK = '<div class="dock9"><div class="db actif"><span class="rd"><span class="pt"></span></span>Empire</div><div class="db"><span class="rd"><small class="disc"></small><span class="pt"></span></span>Famille</div><div class="db"><span class="rd"><span class="pt"></span></span>Filière</div><div class="db"><span class="rd"><span class="pt"></span></span>Plus</div></div>'
 SCENE = '<div class="scene district" style="background-position:center 50%;filter:brightness(.42)"></div><div class="voile-scene"></div>'
 
 CSS = """<style>
@@ -32,7 +33,7 @@ CSS = """<style>
   border:1px solid #ffffff17;box-shadow:0 10px 26px #000c}
 .acc4 .verre::after{content:"";position:absolute;left:14px;right:14px;top:0;height:1px;background:linear-gradient(90deg,transparent,#b08d3e 30%,#b08d3e 70%,transparent)}
 .acc4 .sur{font:700 6.6px/1 'DejaVu Sans';letter-spacing:.28em;text-transform:uppercase;color:#b9ad92;text-align:center}
-.acc4 .titre{font:400 16px/1.2 'DejaVu Serif';letter-spacing:.06em;color:#f2c96b;text-align:center;margin-top:6px}
+.acc4 .titre{font:400 16px/1.2 'DejaVu Serif';letter-spacing:.06em;color:#f2c96b;text-align:center;margin-top:6px;text-wrap:balance}
 .acc4 .sous{font:400 9.2px/1.4 'DejaVu Sans';color:#b9ad92;text-align:center;margin-top:5px}
 .acc4 .niveaux{display:flex;justify-content:center;gap:14px;margin-top:8px}
 .acc4 .niveaux span{font:700 6.6px/1 'DejaVu Sans';letter-spacing:.2em;text-transform:uppercase;color:#b9ad92}
@@ -48,15 +49,25 @@ CSS = """<style>
 .acc4 .chip{display:inline-block;font:700 6.6px/1 'DejaVu Sans';letter-spacing:.16em;text-transform:uppercase;border:1px solid #e0664a;color:#e0664a;padding:2px 4px;margin-left:5px}
 .acc4 .pression{display:flex;justify-content:center;align-items:baseline;gap:6px;margin-top:6px}
 .acc4 .pression b{font:700 12px/1 'DejaVu Serif';color:#e0664a}
-.acc4 .ville{margin:0 12px 14px;text-align:center;font:700 8px/1 'DejaVu Sans';letter-spacing:.24em;text-transform:uppercase;color:#b9ad92}
+.acc4 .ville{margin:0 12px 6px;text-align:center;font:700 8px/1 'DejaVu Sans';letter-spacing:.24em;text-transform:uppercase;color:#b9ad92}
 .acc4 .prop{text-decoration:underline dotted #b9ad92;text-underline-offset:2px}
+
+/* le dock du canon HUD (hud-brennar.html l.106-117), ronds VIDES (ARBITRAGES point 15) — la série 6 n'en dessine aucun (0 sur 146 cadres) ;
+   ⑦ et ④ sont des onglets de l'application, il y figure */
+.dock9{display:flex;justify-content:center;gap:22px;padding:8px 0 10px;background:linear-gradient(180deg,transparent,#070b12d8 40%)}
+.dock9 .db{display:flex;flex-direction:column;align-items:center;gap:5px;color:#b9ad92;font:400 8.5px/1 'DejaVu Sans';letter-spacing:.16em;text-transform:uppercase}
+.dock9 .rd{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 38% 30%,#1d2635,#0d1420 65%);border:1px solid #ffffff22;
+  box-shadow:inset 0 1px 0 #ffffff1c,0 4px 10px #000a;position:relative}
+.dock9 .pt{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:14px;height:2px;background:#b08d3e;border-radius:1px;opacity:0}
+.dock9 .actif .pt{opacity:1}
+.dock9 .disc{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#d9ab4e;border:1.5px solid #0a0f17}
 </style>
 """
 
 def cadre(etiquette, contenu):
     return (f'<div class="cadre"><div class="etiquette">{etiquette}</div><div class="tel">{SCENE}<div class="ecran">{barre}'
-            f'<div class="panneau"><div class="acc4" style="height:462px">{contenu}'
-            f'<div class="ville"><span class="prop">la ville ›</span></div></div></div></div></div></div>\n')
+            f'<div class="panneau"><div class="acc4" style="height:406px">{contenu}'
+            f'</div></div>' + DOCK + '</div></div></div>\n')          # on sort en touchant la ville (front.md §4 B) : aucun mot
 
 SUIVANT = ('<div class="suivant"><div class="qui">Lt. Quist attend vos ordres<small>grave</small></div>'
            '<span class="act">trancher</span></div>')
