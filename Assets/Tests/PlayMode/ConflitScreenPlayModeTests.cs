@@ -1084,6 +1084,10 @@ namespace MafiaCleanCity.Operational.Tests
             while ((ecran.DernierChargementEngagements?.engagements?.Length ?? 0) == 0 && Time.realtimeSinceStartup < fin) yield return null;
             Assert.AreEqual(1, ecran.DernierChargementEngagements?.engagements?.Length, "un envoi dans la liste");
             Assert.AreEqual("scheduled", ecran.DernierChargementEngagements.engagements[0].status);
+            // Le rendu suit la relecture d'UNE frame (`Charger` : RechargerEngagements → yield → AppliquerEtat) — mesuré au créneau
+            // du 23/09 : lue trop tôt, la liste des textes était encore celle d'avant l'envoi. On attend le RENDU, pas la donnée.
+            fin = Time.realtimeSinceStartup + 10f;
+            while (!System.Linq.Enumerable.Contains(ecran.RenderedTexts, "Ce qui est en cours") && Time.realtimeSinceStartup < fin) yield return null;
             CollectionAssert.Contains(ecran.RenderedTexts, "Ce qui est en cours");
 
             // 4. La promesse : même corps + même clé ⇒ le MÊME engagement, et toujours UN dans la liste.
