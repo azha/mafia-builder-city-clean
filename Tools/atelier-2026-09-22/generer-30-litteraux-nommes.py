@@ -4,6 +4,8 @@
 clés, le FR des 5 littéraux anglais (éditeur de règles), le `’` partout (D10), et un signal quand un fr heurte un mot ratifié ou servi.
 Sortie : `Tools/atelier-2026-09-22/30-litteraux-nommes-2026-09-23.tsv`, même format + une colonne « signal atelier ».
 Le fr existant n'est PAS réécrit (commande f2) : les heurts sont SIGNALÉS, avec le mot en conflit ; seul le `’` est appliqué.
+v2 (décisions f2 D12-D16 du 23/09, registre ARBITRAGES) : `30-litteraux-nommes-v2-2026-09-23.tsv`, même format + une colonne
+« delta v1→v2 » ; la v1 est réécrite à l'identique (témoin).
 Usage : python3 Tools/atelier-2026-09-22/generer-30-litteraux-nommes.py"""
 import os, re, subprocess, unicodedata
 ICI = os.path.dirname(os.path.abspath(__file__))
@@ -105,3 +107,85 @@ for l in lignes[1:]:
 dest = os.path.join(ICI, '30-litteraux-nommes-2026-09-23.tsv')
 open(dest, 'w', encoding='utf-8').write('\n'.join(out) + '\n')
 print(f'écrit : {dest} — {len(out) - 1} sites')
+
+# ── v2 : décisions f2 D12-D16 du 23/09 (registre `ARBITRAGES-user-2026-09-07.md`) ──────────────────────────────────────────────────────────
+# D12 un mot par type : le catalogue `building.type.*` (back `0714431c`) fait foi, l'article en dérive ; en = le mot en du catalogue.
+# D13 épicène ; D14 la maquette ratifiée l'emporte (㉟ cadres 107-112, ⑰ cadres 31/34/35) ; D15 « plusieurs ponts » ; police.bloc validé.
+V2 = {  # (résolveur, valeur) → (fr, en, delta)
+ ('NomDeType', 'front_shop'): ('Un commerce-écran', 'A front shop', 'D12 catalogue « Commerce-écran »'),
+ ('NomDeType', 'cash_safehouse'): ('Une planque', 'A cash safehouse', 'D12 (fr inchangé) ; en du catalogue'),
+ ('NomDeType', 'stash'): ('Une réserve', 'A stash', 'D12 catalogue « Réserve »'),
+ ('NomDeType', 'lab'): ('Un labo', 'A lab', 'D12 (inchangé)'),
+ ('NomDeType', 'grow_house'): ('Une serre', 'A grow house', 'D12 majuscule comme les 11 autres'),
+ ('NomDeType', 'refinery'): ('Une raffinerie', 'A refinery', 'D12 (inchangé)'),
+ ('NomDeType', 'press_house'): ('Une imprimerie', 'A print shop', 'D12 catalogue « Imprimerie »'),
+ ('NomDeType', 'distribution_hub'): ('Un relais', 'A distribution hub', 'D12 catalogue « Relais »'),
+ ('NomDeType', 'office'): ('Une agence', 'An agency', 'D12 catalogue « Agence »'),
+ ('NomDeType', 'dealer_spot_front'): ('Un coin de vente', 'A dealer-spot front', 'D12 catalogue « Coin de vente »'),
+ ('NomDeType', 'money_holding'): ('Une banque', 'A vault', 'D12 « société-écran » retiré : `money_holding` = la banque'),
+ ('NomDeType', 'specialized_lab'): ('Un labo spécialisé', 'A specialized lab', 'D12 (inchangé)'),
+ ('NomTypeBatiment', 'distribution_hub'): ('le relais', 'the distribution hub', 'D12 catalogue « Relais »'),
+ ('NomTypeBatiment', 'lab'): ('le labo', 'the lab', 'D12 : ne sert plus que `lab` (le `case "specialized_lab"` de la l.229 reçoit sa ligne)'),
+ ('NomTypeBatiment', 'refinery'): ('la raffinerie', 'the refinery', 'D12 (inchangé)'),
+ ('NomTypeBatiment', 'money_holding'): ('la banque', 'the vault', 'D12 (inchangé)'),
+ ('NomTypeBatiment', 'stash'): ('la réserve', 'the stash', 'D12 catalogue « Réserve » (« la planque » = `cash_safehouse`)'),
+ ('NomTypeBatiment', 'front_shop'): ('le commerce-écran', 'the front shop', 'D12 catalogue « Commerce-écran »'),
+ ('NomTypeBatiment', 'dealer_spot_front'): ('le coin de vente', 'the dealer-spot front', 'D12 catalogue « Coin de vente » (≠ « le comptoir » de ⑨, ≠ « Planque »)'),
+ ('NomTypeBatiment', 'cash_safehouse'): ('la planque', 'the cash safehouse', 'D12 catalogue « Planque » (« planque-coffre » retiré)'),
+ ('NomTypeBatiment', 'grow_house'): ('la serre', 'the grow house', 'D12 catalogue « Serre »'),
+ ('TexteTraverser', 'multiple'): ('plusieurs ponts', 'several bridges', 'D15'),
+ ('TexteTransitBand', 'ARRIVED'): ('à destination', 'arrived', 'D13 épicène'),
+ ('TexteTransitBand', 'IDLE'): ('disponible', 'ready', 'D13 épicène'),
+ ('Anciennete', 'FRESH'): ('Depuis peu', 'New', 'D13 épicène (« Récent » et « nouveau venu » sortent)'),
+ ('Anciennete', 'ACCLIMATED'): ('Depuis un moment', 'Settled in', 'D13 épicène'),
+ ('Anciennete', 'SEASONED'): ('Du métier', 'Seasoned', 'D13 épicène'),
+ ('Anciennete', 'SENIOR'): ('De la vieille garde', 'Veteran', 'D13 épicène'),
+ ('Anciennete', 'ENTRENCHED'): ('Fait partie des murs', 'Entrenched', 'D13 épicène'),
+ ('Activite', 'WORKING'): ('au travail', 'on shift', 'D14 ㉟ ratifiée (cadres 107-112), sa casse'),
+ ('Activite', 'IDLE'): ('au repos', 'idle', 'D14 ㉟ ratifiée ; épicène (D13)'),
+ ('Activite', 'ABSENT'): ('pas là', 'away', 'D14 ㉟ ratifiée (cadre 107, Dov) ; épicène (D13)'),
+ ('Activite', 'COMPROMISED'): ('grillé', 'burned', 'D14 ㉟ ratifiée (cadres 107, 110) — ⚠️ GENRÉ : à l’user, pas corrigé'),
+ ('CroyanceMot', 'HUNTING'): ('EN CHASSE', 'HUNTING', 'D14 ⑰ ratifiée (cadres 31, 34, 35)'),
+ ('CroyanceMot', 'SUSPICIOUS'): ('SOUPÇON', 'SUSPICIOUS', 'D14 ⑰ ratifiée (cadre 31)'),
+ ('CroyanceMot', 'WATCHFUL'): ('EN VEILLE', 'WATCHFUL', 'D14 ⑰ ratifiée (cadre 31)'),
+ ('CroyanceMot', 'DORMANT'): ('EN SOMMEIL', 'DORMANT', 'PROPOSÉ : ⑰ ne dessine pas DORMANT ; même grammaire que « EN VEILLE »'),
+}
+AJOUTS = {  # D12 : les types que `NomTypeBatiment` renvoie au repli ou confond — une ligne neuve, après la ligne du `lab`
+ 'lab': [('Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:229', 'specialized_lab', 'le labo spécialisé', 'the specialized lab',
+          'D12 AJOUT : aujourd’hui « le labo » (même mot que `lab`) ; catalogue « Labo spécialisé »'),
+         ('Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:238', 'press_house', 'l’imprimerie', 'the print shop',
+          'D12 AJOUT : aujourd’hui le repli « le bâtiment » ; catalogue « Imprimerie » (site : une ligne neuve avant le `default`)'),
+         ('Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:238', 'office', 'l’agence', 'the agency',
+          'D12 AJOUT : aujourd’hui le repli « le bâtiment » ; catalogue « Agence » (site : une ligne neuve avant le `default`)')],
+}
+DOMAINE = {'commissariat.bloc': 'police.bloc'}   # validé par f2 le 23/09
+SIGNAL_V2 = {
+ ('NomTypeBatiment', 'stash'): '« réserve » dit aussi la réserve de confiance (⑯, `ReserveLibelle`) : contexte distinct, le catalogue fait foi (D12)',
+ ('NomDeType', 'stash'): '① sert encore `district.type_batiment.cache` « Cache » : à aligner au catalogue (D12, back)',
+ ('NomDeType', 'dealer_spot_front'): '① sert encore `district.type_batiment.point_de_vente` « Point de vente » : à aligner (D12, back)',
+ ('NomDeType', 'press_house'): '① sert encore `district.type_batiment.atelier_de_presse` « Atelier de presse » : à aligner (D12, back)',
+ ('NomDeType', 'office'): '① sert encore `district.type_batiment.bureau` « Bureau » : à aligner (D12, back)',
+ ('NomDeType', 'lab'): '① sert encore `district.type_batiment.laboratoire` « Laboratoire » : à aligner (D12, back)',
+ ('NomDeType', 'specialized_lab'): '① sert encore `district.type_batiment.laboratoire_specialise` « Laboratoire spécialisé » : à aligner (D12, back)',
+ ('Activite', 'COMPROMISED'): '⚠️ GENRÉ ratifié (D14) : « grillé » (㉟ 107, 110), « grillés » (compteur, 107-112), « personne de grillé » (113-116), « Un homme grillé » (114) — à l’user',
+ ('Anciennete', 'FRESH'): '⑦ (`26-…`) passe de « nouveau venu » à « depuis peu »',
+ ('CroyanceMot', 'DORMANT'): 'PROPOSÉ (non ratifié)',
+}
+v2 = [out[0] + '\tdelta v1→v2']
+for l in out[1:]:
+    c = l.split('\t'); site, res, val, cle, fr, en, etat, sig = c
+    dom = '.'.join(cle.split('.')[:2]); delta = ''
+    if (res, val) in V2:
+        fr2, en2, delta = V2[(res, val)]
+        if (fr2, en2) == (fr, en): delta = ''                      # décision confirmée, rien ne bouge
+        fr, en = fr2, en2; sig = SIGNAL_V2.get((res, val), '')
+    if dom in DOMAINE:
+        dom = DOMAINE[dom]; delta = (delta + ' ; ' if delta else '') + f'domaine {cle.split(".")[0]}.bloc → {dom}'
+    cle = f'{dom}.{slug(fr)}'
+    v2.append('\t'.join([site, res, val, cle, fr, en, etat, sig, delta]))
+    if res == 'NomTypeBatiment' and val in AJOUTS:
+        for s_, v_, f_, e_, d_ in AJOUTS[val]:
+            v2.append('\t'.join([s_, res, v_, f'{dom}.{slug(f_)}', f_, e_, 'non servie', '', d_]))
+dest2 = os.path.join(ICI, '30-litteraux-nommes-v2-2026-09-23.tsv')
+open(dest2, 'w', encoding='utf-8').write('\n'.join(v2) + '\n')
+print(f'écrit : {dest2} — {len(v2) - 1} sites ({len(v2) - len(out)} ajoutés), {sum(1 for x in v2[1:] if x.split(chr(9))[8])} lignes avec delta')

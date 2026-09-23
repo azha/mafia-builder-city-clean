@@ -91,7 +91,7 @@ def carte(etat, tampon=''):
             f'<div class="ident"><b>Lt. Quist</b><i>Cuisinier · Exécutant · Délégué</i><span class="etat">{etat}</span></div>{tampon}</div>')
 
 def lignes(signal, ordre, vif=None):
-    L = [('Ancienneté', '<span class="prop">nouveau venu</span>', ''), ('Règles', 'Aucune règle', ''),
+    L = [('Ancienneté', '<span class="prop">Depuis peu</span>', ''), ('Règles', 'Aucune règle', ''),
          ('Coût de réécriture', 'Réécrire coûte peu', ''), ('Gain de rendement', 'Aucun gain de rendement', ''),
          ('Stabilisation après transfert', "S'installe vite", ''), ('<span class="prop">Signal</span>', signal, 'braise' if vif == 'signal' else ''),
          ('<span class="prop">Ordre permanent</span>', ordre, 'or' if vif == 'ordre' else '')]

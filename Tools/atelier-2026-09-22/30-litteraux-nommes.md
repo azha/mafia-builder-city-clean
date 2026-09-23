@@ -46,3 +46,43 @@
   jour »). Maquette en retard, ou mot manquant.
 - **Mon propre heurt** : `26-…` (⑦) proposait « nouveau venu » pour FRESH ; le client écrit déjà « Récent » — je m'aligne sur « Récent ».
 - Mineur : « une serre » (Démolition) est seul en minuscule de sa série ; « le labo » nomme `lab` et `specialized_lab`.
+
+## 4. v2 — les décisions f2 D12-D16 du 23/09 appliquées (`30-litteraux-nommes-v2-2026-09-23.tsv`)
+
+> Même format que la v1, plus une colonne « delta v1→v2 » (38 lignes). 110 sites : les 107 de la source dans leur ordre, plus 3 AJOUTS.
+> `verifier-30.py` (v2 par défaut, `v1` pour le témoin) : 0 défaut ; il refuse aussi le retour d'un mot retiré (« Récent », « prêt »,
+> « trois ponts », « Une société-écran »…) et contrôle le domaine `police.bloc`. Registre : `ARBITRAGES-user-2026-09-07.md` D12-D16.
+
+- **D12, un mot par type** (catalogue `building.type.*`, back `0714431c`) : les 12 types ont un mot au catalogue, donc aucun mot neuf.
+  `stash` = « Réserve » et `dealer_spot_front` = « Coin de vente » sont distincts de « Planque » (`cash_safehouse`) et du « comptoir » de ⑨.
+  - Démolition (`NomDeType`) : « Un commerce-écran », « Une réserve », « Une serre » (majuscule), « Une imprimerie », « Un relais »,
+    « Une agence », « Un coin de vente », « Une banque ».
+  - Distribution (`NomTypeBatiment`) : « le relais », « la réserve », « le commerce-écran », « le coin de vente », « la planque », « la serre ».
+  - 3 AJOUTS : « le labo spécialisé » (le `case` de la l.229 partageait « le labo »), puis « l’imprimerie » et « l’agence », que le client
+    remplace aujourd’hui par le repli « le bâtiment ». Les en viennent du catalogue.
+  - ⚠️ **Pour le back** : ① sert encore d'autres mots pour 6 types dans `district.type_batiment.*` :
+    - Cache (au catalogue : Réserve) ;
+    - Point de vente (Coin de vente) ;
+    - Laboratoire (Labo) ;
+    - Laboratoire spécialisé (Labo spécialisé) ;
+    - Atelier de presse (Imprimerie) ;
+    - Bureau (Agence).
+- **D13, formes épicènes.**
+  - Ancienneté : « Depuis peu · Depuis un moment · Du métier · De la vieille garde · Fait partie des murs ».
+  - Coursier : « à destination », « disponible ».
+  - « nouveau venu » sort de ⑦ (`generer-maquette-7-…` : « Depuis peu », toujours souligné comme mot proposé).
+- **D14, la maquette ratifiée l'emporte.**
+  - ㉟ : « au travail », « au repos », « pas là » (cadre 107, Dov), « grillé », dans la casse de la maquette.
+  - ⑰ : « EN CHASSE », « SOUPÇON », « EN VEILLE ». DORMANT, que ⑰ ne dessine pas, reçoit « EN SOMMEIL » (**proposé**).
+- **Mots genrés d'une maquette ratifiée : à l'user**, pas corrigés.
+  - ㉟ : « grillé » (107, 110) ; « grillés » dans le compteur (107-112) ; « personne de grillé » (113-116) ; « Un homme grillé » (114) ; « il travaille » (108) ;
+    « Grillé, et il s’est retiré », « quand il a décroché », « ce qu’il en a fait » (110) ; « la case qu’il couvre » (111).
+  - ⑨ : « il est sûr » (cadre 10).
+  - ⑦ : le « il » des deux questions (`26-…` §4.3).
+- **D15** : « plusieurs ponts » / « several bridges ».
+- **D16** : « Matin » devient « Plein jour » par `phase-maquettes-2026-09-23.py`, qui attend un compte par page et peut être relancé sans effet.
+  - 241 remplacements : série 6 ×114, série 6 sans pastilles ×114, série 4 ×4, série 5 ×1, série 1 ×1, ⑦ ×3, ④ ×4.
+  - Celui de la série 1 est dans le texte du Lavomatic : « sort à J14 Plein jour ».
+  - ④ regénérée est identique octet pour octet à ④ passée par l'outil.
+  - Aucun rendu : le lot `rendre-lot-2026-09-23.py` est à lancer au tour que donne f2.
+- **police.bloc validé** : les 8 clés `commissariat.bloc.*` deviennent `police.bloc.*`. Les 3 domaines proposés au §2 sont tous tranchés.

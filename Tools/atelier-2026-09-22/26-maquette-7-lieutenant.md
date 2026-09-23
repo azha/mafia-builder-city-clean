@@ -35,7 +35,7 @@ Ce que la maquette du 25/08 montrait et qui **disparaît**, faute de donnée (`1
 | Signal · à l'écoute · dérive | titre de ligne, `DIRECT_ALIGNED`, `DRIFTING` | `12-…` §3.2 (proposé le 22/09 ; « n'écoute que le terrain », « se recale » pour `INCIDENTAL_LOCKED`, `RESETTING`) |
 | Ordre permanent · aucun ordre · expire bientôt · en faire la règle ? | titre, `NONE`, `EXPIRES_SOON`, `promotion_suggested` | `12-…` §3.2 |
 | Autonomie | titre du bloc `budget_bands` | `12-…` §3.2 |
-| nouveau venu | `tenure_bucket` = FRESH | neuf : le client écrit « Fresh » en anglais, sans clé (`LieutenantScreenController`, commentaires `:167-168`) |
+| ~~nouveau venu~~ → Depuis peu (§6) | `tenure_bucket` = FRESH | neuf : le client écrit « Fresh » en anglais, sans clé (`LieutenantScreenController`, commentaires `:167-168`) |
 | Rappeler l'ordre direct · Remettre l'écoute à zéro · Brouiller un repère | `reinforce_direct_order`, `reset_observation_window`, `disrupt_cue` | neuf |
 | l'état du terrain · ce qu'il reste · l'heure · ce que font les autres | `TERRITORY_STATE`, `RESOURCE_AVAILABILITY`, `TIME_SLOT`, `PEER_BEHAVIOR` (`DIRECT_ORDER` n'est pas un repère à brouiller : c'est l'ordre direct) | neuf |
 | En faire la règle · Renouveler · Retirer | `PROMOTE_TO_DEFAULT`, `RENEW`, `REVOKE` | neuf |
@@ -63,3 +63,9 @@ Les mots servis employés : `famille.archetype.cuisinier`, `famille.grantedrole.
 - Retirés : le sous-titre « il s'installe vite ailleurs » (un « il », et redondant avec la ligne) ; la phrase d'explication du cadre 1 (les
   trois boutons la disent). Débordement du cadre 1 corrigé (les quatre repères visibles).
 - Rendus : `Tools/juge-visuel/famille/maquette-7-2026-09-23/cadre-{0,1,2}-1080x2102.png` — MAQUETTE À RATIFIER, pas une référence.
+
+## 6. Décisions f2 D13 et D16 (2026-09-23)
+
+- `tenure_bucket` = FRESH : « nouveau venu » sort (D13, formes épicènes) ; la fiche dit « **Depuis peu** », toujours marquée comme mot proposé.
+  C'est le fr de `famille.anciennete.depuis_peu` dans `30-…` v2.
+- La barre dit « Plein jour », et non plus « Matin » (D16, `phase-maquettes-2026-09-23.py`). Rendu au prochain tour.

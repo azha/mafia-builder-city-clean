@@ -1,0 +1,111 @@
+site	résolveur	valeur servie	clé dérivée	fr (octet)	en	état au back HEAD	signal atelier	delta v1→v2
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:920	TextePrix	UP	appro.bloc.le_prix_monte	le prix monte	the price is rising	non servie		
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:921	TextePrix	STABLE	appro.bloc.le_prix_ne_bouge_pas	le prix ne bouge pas	the price is holding	non servie		
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:922	TextePrix	DOWN	appro.bloc.le_prix_baisse	le prix baisse	the price is dropping	non servie		
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:943	TexteStock	NONE	appro.bloc.il_n_y_a_plus_rien	il n’y a plus rien	nothing left	SERVIE, fr DIFFÉRENT « il n’y a plus rien »	le fr servi fait foi : « il n’y a plus rien » (’)	
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:731	NomFamille	coil	conflit.bloc.la_coil	La Coil	The Coil	non servie		
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:732	NomFamille	tarcum	conflit.bloc.tarcum	Tarcum	Tarcum	non servie		
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:733	NomFamille	iron_throat	conflit.bloc.gorge_de_fer	Gorge-de-Fer	Iron Throat	non servie		
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:734	NomFamille	saltline	conflit.bloc.saltline	Saltline	Saltline	non servie		
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:746	SousTitreFamille	coil	conflit.bloc.les_ferrailleurs_de_spine	les ferrailleurs de Spine	the scrap dealers of Spine	non servie		
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:747	SousTitreFamille	tarcum	conflit.bloc.le_port_et_ce_qui_y_entre	le port, et ce qui y entre	the port, and what comes in	non servie		
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:748	SousTitreFamille	iron_throat	conflit.bloc.les_docks_du_nord	les docks du nord	the north docks	non servie		
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:749	SousTitreFamille	saltline	conflit.bloc.la_ligne_de_sel_a_l_est	la ligne de sel, à l’est	the salt line, to the east	non servie		
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1733	NomDeType	front_shop	demolition.ecran.un_commerce_ecran	Un commerce-écran	A front shop	non servie		D12 catalogue « Commerce-écran »
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1734	NomDeType	cash_safehouse	demolition.ecran.une_planque	Une planque	A cash safehouse	non servie		D12 (fr inchangé) ; en du catalogue
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1735	NomDeType	stash	demolition.ecran.une_reserve	Une réserve	A stash	non servie	① sert encore `district.type_batiment.cache` « Cache » : à aligner au catalogue (D12, back)	D12 catalogue « Réserve »
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1736	NomDeType	lab	demolition.ecran.un_labo	Un labo	A lab	non servie	① sert encore `district.type_batiment.laboratoire` « Laboratoire » : à aligner (D12, back)	
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1737	NomDeType	grow_house	demolition.ecran.une_serre	Une serre	A grow house	non servie		D12 majuscule comme les 11 autres
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1738	NomDeType	refinery	demolition.ecran.une_raffinerie	Une raffinerie	A refinery	non servie		
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1739	NomDeType	press_house	demolition.ecran.une_imprimerie	Une imprimerie	A print shop	non servie	① sert encore `district.type_batiment.atelier_de_presse` « Atelier de presse » : à aligner (D12, back)	D12 catalogue « Imprimerie »
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1740	NomDeType	distribution_hub	demolition.ecran.un_relais	Un relais	A distribution hub	non servie		D12 catalogue « Relais »
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1741	NomDeType	office	demolition.ecran.une_agence	Une agence	An agency	non servie	① sert encore `district.type_batiment.bureau` « Bureau » : à aligner (D12, back)	D12 catalogue « Agence »
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1742	NomDeType	dealer_spot_front	demolition.ecran.un_coin_de_vente	Un coin de vente	A dealer-spot front	non servie	① sert encore `district.type_batiment.point_de_vente` « Point de vente » : à aligner (D12, back)	D12 catalogue « Coin de vente »
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1743	NomDeType	money_holding	demolition.ecran.une_banque	Une banque	A vault	non servie		D12 « société-écran » retiré : `money_holding` = la banque
+Assets/Scripts/Operational/Demolition/DemolitionScreenController.cs:1744	NomDeType	specialized_lab	demolition.ecran.un_labo_specialise	Un labo spécialisé	A specialized lab	non servie	① sert encore `district.type_batiment.laboratoire_specialise` « Laboratoire spécialisé » : à aligner (D12, back)	
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:228	NomTypeBatiment	distribution_hub	distribution.bloc.le_relais	le relais	the distribution hub	non servie		D12 catalogue « Relais »
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:230	NomTypeBatiment	lab	distribution.bloc.le_labo	le labo	the lab	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:229	NomTypeBatiment	specialized_lab	distribution.bloc.le_labo_specialise	le labo spécialisé	the specialized lab	non servie		D12 AJOUT : aujourd’hui « le labo » (même mot que `lab`) ; catalogue « Labo spécialisé »
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:238	NomTypeBatiment	press_house	distribution.bloc.l_imprimerie	l’imprimerie	the print shop	non servie		D12 AJOUT : aujourd’hui le repli « le bâtiment » ; catalogue « Imprimerie » (site : une ligne neuve avant le `default`)
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:238	NomTypeBatiment	office	distribution.bloc.l_agence	l’agence	the agency	non servie		D12 AJOUT : aujourd’hui le repli « le bâtiment » ; catalogue « Agence » (site : une ligne neuve avant le `default`)
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:231	NomTypeBatiment	refinery	distribution.bloc.la_raffinerie	la raffinerie	the refinery	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:232	NomTypeBatiment	money_holding	distribution.bloc.la_banque	la banque	the vault	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:233	NomTypeBatiment	stash	distribution.bloc.la_reserve	la réserve	the stash	non servie	« réserve » dit aussi la réserve de confiance (⑯, `ReserveLibelle`) : contexte distinct, le catalogue fait foi (D12)	D12 catalogue « Réserve » (« la planque » = `cash_safehouse`)
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:234	NomTypeBatiment	front_shop	distribution.bloc.le_commerce_ecran	le commerce-écran	the front shop	non servie		D12 catalogue « Commerce-écran »
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:235	NomTypeBatiment	dealer_spot_front	distribution.bloc.le_coin_de_vente	le coin de vente	the dealer-spot front	non servie		D12 catalogue « Coin de vente » (≠ « le comptoir » de ⑨, ≠ « Planque »)
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:236	NomTypeBatiment	cash_safehouse	distribution.bloc.la_planque	la planque	the cash safehouse	non servie		D12 catalogue « Planque » (« planque-coffre » retiré)
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:237	NomTypeBatiment	grow_house	distribution.bloc.la_serre	la serre	the grow house	non servie		D12 catalogue « Serre »
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1053	TexteChemin	direct	distribution.bloc.droit_le_plus_court	droit — le plus court	straight — the shortest	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1054	TexteChemin	meandering	distribution.bloc.ca_serpente_plus_long_plus_discret	ça serpente — plus long, plus discret	it winds — longer, quieter	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1055	TexteChemin	gnarled	distribution.bloc.tordu_beaucoup_de_detours	tordu — beaucoup de détours	twisted — lots of detours	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1067	TexteTraverser	none	distribution.bloc.aucune_riviere	aucune rivière	no river	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1068	TexteTraverser	single	distribution.bloc.un_pont	un pont	one bridge	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1069	TexteTraverser	multiple	distribution.bloc.plusieurs_ponts	plusieurs ponts	several bridges	non servie		D15
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1083	TexteRouteState	active	distribution.bloc.tient	tient	holding	SERVIE, fr identique		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1142	TexteTransitBand	ARRIVED	distribution.bloc.a_destination	à destination	arrived	non servie		D13 épicène
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1143	TexteTransitBand	IDLE	distribution.bloc.disponible	disponible	ready	non servie		D13 épicène
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1144	TexteTransitBand	IN_TRANSIT	distribution.bloc.en_chemin	en chemin	on the way	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1158	TexteVehicule	FOOT	distribution.bloc.a_pied	à pied	on foot	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1159	TexteVehicule	BIKE	distribution.bloc.a_velo	à vélo	by bike	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1160	TexteVehicule	CAR	distribution.bloc.en_voiture	en voiture	by car	non servie		
+Assets/Scripts/Operational/Distribution/DistributionScreenController.cs:1161	TexteVehicule	REFRIGERATED_VAN	distribution.bloc.en_camion_refrigere	en camion réfrigéré	by refrigerated van	non servie		
+Assets/Scripts/Operational/Lieutenant/FamilleLabels.cs:132	Anciennete	FRESH	famille.anciennete.depuis_peu	Depuis peu	New	non servie	⑦ (`26-…`) passe de « nouveau venu » à « depuis peu »	D13 épicène (« Récent » et « nouveau venu » sortent)
+Assets/Scripts/Operational/Lieutenant/FamilleLabels.cs:133	Anciennete	ACCLIMATED	famille.anciennete.depuis_un_moment	Depuis un moment	Settled in	non servie		D13 épicène
+Assets/Scripts/Operational/Lieutenant/FamilleLabels.cs:134	Anciennete	SEASONED	famille.anciennete.du_metier	Du métier	Seasoned	non servie		D13 épicène
+Assets/Scripts/Operational/Lieutenant/FamilleLabels.cs:135	Anciennete	SENIOR	famille.anciennete.de_la_vieille_garde	De la vieille garde	Veteran	non servie		D13 épicène
+Assets/Scripts/Operational/Lieutenant/FamilleLabels.cs:136	Anciennete	ENTRENCHED	famille.anciennete.fait_partie_des_murs	Fait partie des murs	Entrenched	non servie		D13 épicène
+Assets/Scripts/Operational/Lieutenant/LieutenantScreenController.cs:3554	ActionLabelFor	EXECUTE_DEFAULT	famille.regle.comme_d_habitude	Comme d’habitude	Run default	non servie		
+Assets/Scripts/Operational/Lieutenant/LieutenantScreenController.cs:3554	ActionLabelFor	PAUSE_OPS	famille.regle.suspendre	Suspendre	Pause ops	non servie		
+Assets/Scripts/Operational/Lieutenant/RuleModel.cs:401	ConditionClause	same_building	famille.regle.dans_mon_batiment	dans mon bâtiment	in my building	non servie		
+Assets/Scripts/Operational/Lieutenant/RuleModel.cs:430	ActionWord	EXECUTE_DEFAULT	famille.regle.faire_comme_d_habitude	faire comme d’habitude	run the default behavior	non servie		
+Assets/Scripts/Operational/Lieutenant/RuleModel.cs:431	ActionWord	PAUSE_OPS	famille.regle.suspendre_les_operations	suspendre les opérations	pause operations	non servie		
+Assets/Scripts/Operational/Loi/LoiScreenController.cs:727	TierLabelCourt	boutique	loi.bloc.cabinet	cabinet	boutique counsel	non servie		
+Assets/Scripts/Operational/Loi/LoiScreenController.cs:728	TierLabelCourt	corruption_pipeline	loi.bloc.filiere	filière	corruption pipeline	non servie		
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:410	Caisse	NONE	vente.bloc.vide	VIDE	EMPTY	non servie		
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:410	Caisse	LOW	vente.bloc.peu	PEU	LOW	non servie		
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:410	Caisse	MODERATE	vente.bloc.moyenne	MOYENNE	PARTLY FULL	non servie		
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:411	Caisse	HIGH	vente.bloc.pleine	PLEINE	FULL	non servie		
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:411	Caisse	FULL	vente.bloc.deborde	DÉBORDE	OVERFLOWING	non servie		
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:422	Marge	STANDARD	vente.bloc.au_tarif	AU TARIF	AT THE RATE	non servie		
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:422	Marge	ELEVATED	vente.bloc.au_dessus	AU-DESSUS	ABOVE	non servie		
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:423	Marge	PREMIUM	vente.bloc.cher	CHER	PRICEY	non servie		
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:423	Marge	HIGH_PREMIUM	vente.bloc.tres_cher	TRÈS CHER	VERY PRICEY	non servie		
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:426	Activite	WORKING	vente.bloc.au_travail	au travail	on shift	non servie		D14 ㉟ ratifiée (cadres 107-112), sa casse
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:426	Activite	IDLE	vente.bloc.au_repos	au repos	idle	non servie		D14 ㉟ ratifiée ; épicène (D13)
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:427	Activite	ABSENT	vente.bloc.pas_la	pas là	away	non servie		D14 ㉟ ratifiée (cadre 107, Dov) ; épicène (D13)
+Assets/Scripts/Operational/Selling/SellingScreenController.cs:427	Activite	COMPROMISED	vente.bloc.grille	grillé	burned	non servie	⚠️ GENRÉ ratifié (D14) : « grillé » (㉟ 107, 110), « grillés » (compteur, 107-112), « personne de grillé » (113-116), « Un homme grillé » (114) — à l’user	D14 ㉟ ratifiée (cadres 107, 110) — ⚠️ GENRÉ : à l’user, pas corrigé
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:245	CroyanceMot	HUNTING	police.bloc.en_chasse	EN CHASSE	HUNTING	non servie		D14 ⑰ ratifiée (cadres 31, 34, 35) ; domaine commissariat.bloc → police.bloc
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:245	CroyanceMot	SUSPICIOUS	police.bloc.soupcon	SOUPÇON	SUSPICIOUS	non servie		D14 ⑰ ratifiée (cadre 31) ; domaine commissariat.bloc → police.bloc
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:246	CroyanceMot	WATCHFUL	police.bloc.en_veille	EN VEILLE	WATCHFUL	non servie		D14 ⑰ ratifiée (cadre 31) ; domaine commissariat.bloc → police.bloc
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:246	CroyanceMot	DORMANT	police.bloc.en_sommeil	EN SOMMEIL	DORMANT	non servie	PROPOSÉ (non ratifié)	PROPOSÉ : ⑰ ne dessine pas DORMANT ; même grammaire que « EN VEILLE » ; domaine commissariat.bloc → police.bloc
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:252	PatrouilleMot	HIGH	police.bloc.partout	Partout	Everywhere	non servie		domaine commissariat.bloc → police.bloc
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:252	PatrouilleMot	MEDIUM	police.bloc.presente	Présente	Present	non servie		domaine commissariat.bloc → police.bloc
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:253	PatrouilleMot	LOW	police.bloc.clairsemee	Clairsemée	Sparse	non servie		domaine commissariat.bloc → police.bloc
+Assets/Scripts/CitySim/Precinct/PrecinctScreenController.cs:253	PatrouilleMot	QUIET	police.bloc.rien_dans_les_rues	Rien dans les rues	Nothing on the streets	non servie		domaine commissariat.bloc → police.bloc
+Assets/Scripts/CityMap/CityMapController.cs:1054	?	north	carte.bloc.nord	nord	north	non servie		
+Assets/Scripts/CityMap/CityMapController.cs:1054	?	south	carte.bloc.sud	sud	south	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:33	EnLigne	tidewater	carte.tissu.le_port	le port	the port	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:34	EnLigne	spine	carte.tissu.l_avenue	l’avenue	the avenue	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:35	EnLigne	lattice	carte.tissu.le_damier	le damier	the grid	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:36	EnLigne	stack	carte.tissu.les_cheminees	les cheminées	the chimneys	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:37	EnLigne	glass	carte.tissu.les_tours	les tours	the towers	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:38	EnLigne	verge	carte.tissu.les_faubourgs	les faubourgs	the outskirts	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:49	Valeur	tidewater	carte.tissu.port	Port	Port	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:50	Valeur	spine	carte.tissu.avenue	Avenue	Avenue	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:51	Valeur	lattice	carte.tissu.damier	Damier	Grid	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:52	Valeur	stack	carte.tissu.cheminees	Cheminées	Chimneys	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:53	Valeur	glass	carte.tissu.tours	Tours	Towers	non servie		
+Assets/Scripts/CityMap/TissuDeDistrict.cs:54	Valeur	verge	carte.tissu.faubourgs	Faubourgs	Outskirts	non servie		
+Assets/Scripts/Shell/DailyReviewScreenController.cs:912	ReserveLibelle	high	revue.reserve.elevee	ÉLEVÉE	HIGH	non servie		
+Assets/Scripts/Shell/DailyReviewScreenController.cs:913	ReserveLibelle	standard	revue.reserve.normale	NORMALE	NORMAL	non servie		
+Assets/Scripts/Shell/DailyReviewScreenController.cs:914	ReserveLibelle	low	revue.reserve.faible	FAIBLE	LOW	non servie		
+Assets/Scripts/Shell/LibellesDecision.cs:55	Portee	minor	decision.portee.mineure	mineure	minor	non servie		
+Assets/Scripts/Shell/LibellesDecision.cs:56	Portee	moderate	decision.portee.moderee	modérée	moderate	non servie		
+Assets/Scripts/Shell/LibellesDecision.cs:57	Portee	major	decision.portee.majeure	majeure	major	non servie		
+Assets/Scripts/Shell/LibellesDecision.cs:68	Urgence	low	decision.urgence.faible	faible	low	non servie		
+Assets/Scripts/Shell/LibellesDecision.cs:69	Urgence	elevated	decision.urgence.elevee	élevée	high	non servie		
+Assets/Scripts/Shell/LibellesDecision.cs:70	Urgence	pressing	decision.urgence.pressante	pressante	pressing	non servie		
+Assets/Scripts/ShellContracts/DayPhaseResolver.cs:51	Label	DAWN	chrome.phase.aube	Aube	Dawn	non servie	⚠️ la série 6 écrit « Matin » dans la barre (114 cadres) : aucune phase servie ne se dit « Matin » (DAWN « Aube », DAY « Plein jour ») — la maquette est en retard, ou il manque un mot	
+Assets/Scripts/ShellContracts/DayPhaseResolver.cs:52	Label	DAY	chrome.phase.plein_jour	Plein jour	Day	non servie		
+Assets/Scripts/ShellContracts/DayPhaseResolver.cs:53	Label	DUSK	chrome.phase.soiree	Soirée	Evening	non servie		
+Assets/Scripts/ShellContracts/DayPhaseResolver.cs:54	Label	NIGHT	chrome.phase.nuit	Nuit	Night	non servie		
