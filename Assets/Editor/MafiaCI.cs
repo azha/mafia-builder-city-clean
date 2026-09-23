@@ -242,9 +242,23 @@ public static class MafiaCI
             UnityEngine.Debug.Log("MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = ["
                                   + string.Join(", ", cats) + "]");
         }
+        // ⚠️ `MAFIA_CI_TESTS` (NOMS COMPLETS, séparés par des virgules) — ajouté le 2026-09-23 : relancer SEUL un test décisif
+        //    que le préfixe des catégories ne sait pas isoler (mesuré : `DashboardPlayModeTests` porte 2 tests SANS catégorie,
+        //    injoignables par tout filtre, et une capture sous `Screenshot`, dont le filtre est proscrit — TD-625, il emporte
+        //    11 planches). Posée, elle REMPLACE les catégories (le log le dit) ; correspondance EXACTE sur `FullName`, et tout
+        //    nom qui ne désigne aucune feuille est NOMMÉ et rougit le verdict — le zéro d'absence, version nominative.
+        string[] noms = null;
+        string surchargeNoms = System.Environment.GetEnvironmentVariable("MAFIA_CI_TESTS");
+        if (!string.IsNullOrWhiteSpace(surchargeNoms))
+        {
+            noms = System.Array.FindAll(System.Array.ConvertAll(surchargeNoms.Split(','), n => n.Trim()), n => n.Length > 0);
+            cats = null;
+            UnityEngine.Debug.Log("MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = ["
+                                  + string.Join(", ", noms) + "]");
+        }
         var api = ScriptableObject.CreateInstance<TestRunnerApi>();
-        api.RegisterCallbacks(new Callbacks(cats));
-        api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode, categoryNames = cats }));
+        api.RegisterCallbacks(new Callbacks(cats, noms));
+        api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.PlayMode, categoryNames = cats, testNames = noms }));
     }
 
     private class Callbacks : ICallbacks
@@ -276,11 +290,19 @@ public static class MafiaCI
         //      avoir demandé.*
         private readonly System.Collections.Generic.SortedSet<string> categoriesVues
             = new System.Collections.Generic.SortedSet<string>();
-        public Callbacks(string[] categories) { filtre = categories; }
+        private readonly string[] filtreNoms;
+        private readonly System.Collections.Generic.HashSet<string> nomsTrouves = new System.Collections.Generic.HashSet<string>();
+        public Callbacks(string[] categories, string[] noms = null) { filtre = categories; filtreNoms = noms; }
 
         private int CompterFeuillesFiltrees(ITestAdaptor n, string[] heritees)
         {
             string[] cats = (n.Categories != null && n.Categories.Length > 0) ? n.Categories : heritees;
+            if (!n.IsSuite && filtreNoms != null)
+            {
+                if (System.Array.IndexOf(filtreNoms, n.FullName) < 0) return 0;
+                nomsTrouves.Add(n.FullName);
+                return 1;
+            }
             if (!n.IsSuite)
                 return (filtre == null || filtre.Length == 0
                         || (cats != null && System.Array.Exists(cats, c => System.Array.IndexOf(filtre, c) >= 0)))
@@ -361,9 +383,18 @@ public static class MafiaCI
             //    l'éditeur après le marqueur de fin, il relit `failed=` et non ce code — une suite tronquée, un filtre vide
             //    ou un catalogue survivant sortaient donc RC=0 par ce chemin (mesuré le 23/09 avec la sonde du catalogue).
             //    `verdict_log` lit désormais cette ligne ; son absence (anciens journaux) garde le verdict d'avant.
-            int code = failed > 0 || tronquee || filtreVide || catalogueSurvivant.Count > 0 ? 1 : 0;
+            int nomsInconnus = 0;
+            if (filtreNoms != null)
+                foreach (string n in filtreNoms)
+                    if (!nomsTrouves.Contains(n))
+                    {
+                        nomsInconnus++;
+                        Debug.Log($"MafiaCI: ⛔ NOM INCONNU — « {n} » ne désigne AUCUNE feuille de l'arbre PlayMode (nom complet exact attendu).");
+                    }
+            int code = failed > 0 || tronquee || filtreVide || catalogueSurvivant.Count > 0 || nomsInconnus > 0 ? 1 : 0;
             Debug.Log($"MafiaCI: VERDICT code={code} (failed={failed} tronquee={(tronquee ? 1 : 0)} " +
-                      $"filtreVide={(filtreVide ? 1 : 0)} catalogueSurvivant={catalogueSurvivant.Count})");
+                      $"filtreVide={(filtreVide ? 1 : 0)} catalogueSurvivant={catalogueSurvivant.Count}" +
+                      (filtreNoms != null ? $" nomsInconnus={nomsInconnus}" : "") + ")");
             EditorApplication.Exit(code);
         }
 
