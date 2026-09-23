@@ -10,8 +10,11 @@ Données servies (back `8d315a36`, lu) :
       (`promotion-lock.service.ts:106-113`, `severance-bucket.ts:29`) ;
   `POST /v1/meta/graduation` (confier) · `POST /v1/meta/recall` (reprendre) — refus 409 : la charge n'est plus à vous / plus confiée,
       un verrou de promotion ACTIF (`graduation.service.ts:217-245`, `promotion-lock.service.ts:404-413`).
-⚠️ La règle « une seule décision de structure par journée » (cadre 77) n'est PAS au back : le seul refus voisin est le verrou de promotion
-   PAR CHARGE. Le cadre 77 est une dette de maquette (point 19) ; le refus servi reçoit ses mots.
+✅ La règle « une seule décision de structure » (cadres 73-77) EST au back (corrigé le 23/09, f2) : `StructuralDecisionGovernorService`
+   (`progression/loop10/structural-decision-governor.service.ts:80-97`) enveloppe `POST /v1/meta/graduation` (TASK_RETIREMENT) ET `POST /v1/meta/recall`
+   (TASK_RECALL) — UNE décision structurelle par SESSION (active), 409 `STRUCTURAL_CAP_EXHAUSTED`, `retry_scope: next_session`. Le message servi
+   (`error.core_loops.structural_cap_exhausted`) dit « Vous avez utilisé votre décision de structure du jour. Reprenez demain. » ⚠️ Tension : l'unité
+   est la SESSION, la maquette ratifiée et le servi disent le JOUR (le funnel du canon nomme ses sessions D1…D7, « jours ») — à f2.
 Clés : `delegation.bloc.<slug>` (le client : `Libelle.De("delegation", "bloc", …)`) ; familles neuves `delegation.charge.*`, `delegation.chute.*`,
 `delegation.regain.*`, `delegation.indemnite.*`, `delegation.fenetre.*`, `delegation.refus.*`.
 ⚠️ D14 — mots GENRÉS de la maquette ratifiée, non corrigés, à la liste de l'user : `GENRES`.
@@ -27,15 +30,16 @@ def slug(s):
     return o.strip('_')
 def q(t): return f'«{NB}{t}{NB}»'
 S, A, P, N = 'servie', 'servie · D14', 'proposée', 'note'
-JOUR = ('DETTE DE MAQUETTE (point 19) : la règle « une décision de structure par journée » n’est pas au back — le refus servi voisin est '
-        'le verrou de promotion PAR CHARGE (409 « ACTIVE promotion lock ») ; mots de ce refus-là : `delegation.refus.*`')
+JOUR = ('refus RÉEL : le gouverneur « une décision structurelle par session » (409 STRUCTURAL_CAP_EXHAUSTED) couvre confier ET reprendre ; '
+        '⚠️ D14 en tension : la maquette dit « jour », l’unité du back est la session (le servi dit aussi « du jour ») — à f2')
 HUIT = 'panneau des charges non vivantes (78) : ce que le jeu prévoit et que rien ne sert — pas un libellé (les 4 charges servies sont celles de `task-categories`)'
 def b(fr, en, note=''): return (P, 'delegation.bloc.' + slug(re.sub(r'\{(\w+)\}', r'\1', re.sub(r'[«» ]', '', fr))), fr, en, note)
 T = {
  'Ce que vous tenez encore vous-même': b('Ce que vous tenez encore vous-même', 'What you still handle yourself', 'titre, toutes les charges `SELF`'),
  'Quatre choses. Chacune peut être confiée — et reprise, à un prix.': b('Quatre choses. Chacune peut être confiée — et reprise, à un prix.',
    'Four things. Each can be handed over — and taken back, at a price.', '« Quatre » = les 4 charges VIVANTES servies (constante du catalogue, pas un compte)'),
- 'Une décision de structure aujourd’hui': (N, '', '', '', JOUR), 'confier ou reprendre — pas les deux': (N, '', '', '', JOUR),
+ 'Une décision de structure aujourd’hui': b('Une décision de structure aujourd’hui', 'One structural decision today', JOUR),
+ 'confier ou reprendre — pas les deux': b('confier ou reprendre — pas les deux', 'hand over or take back — not both', JOUR),
  'Les tournées': (P, 'delegation.charge.route_assignment', 'Les tournées', 'Deliveries', '`category_key` = ROUTE_ASSIGNMENT'),
  'qui livre quoi, et par où': b('qui livre quoi, et par où', 'who delivers what, and which way', 'le sens de ROUTE_ASSIGNMENT'),
  'vous': b('vous', 'you', '`delegation_state` = SELF : qui tient la charge'),
@@ -59,10 +63,12 @@ T = {
      '“Give me {charge}. I’ll handle it, and you won’t see the orders go by any more.”',
      'réplique du lieutenant (74) ; « l’approvisionnement » → `{charge}` ; ⚠️ « les commandes » ne vaut que pour SUPPLY_SOURCING'),
  'LA LUI CONFIER': b('La lui confier', 'Hand it to them', 'geste À ROUTE (`POST /v1/meta/graduation`)'),
- 'c’est votre décision du jour': (N, '', '', '', JOUR),
+ 'c’est votre décision du jour': b('c’est votre décision du jour', 'it’s your decision for the day', JOUR),
  'Ce que vous avez confié': b('Ce que vous avez confié', 'What you’ve handed over', 'titre (75), les charges `DELEGATED`'),
- '2 charges tenues par quelqu’un d’autre. Vous pouvez les reprendre, à un prix.': b('{n, plural, one {# charge tenue} other {# charges tenues}} par quelqu’un d’autre. Vous pouvez les reprendre, à un prix.',
-   '{n, plural, one {# job held} other {# jobs held}} by someone else. You can take them back, at a price.', 'D15 : le nombre vient de `delegated[]` → ICU'),
+ '2 charges tenues par quelqu’un d’autre. Vous pouvez les reprendre, à un prix.': (P, 'delegation.bloc.n_charges_tenues_par_quelqu_un_d_autre',
+   '{n, plural, one {# charge tenue} other {# charges tenues}} par quelqu’un d’autre. Vous pouvez les reprendre, à un prix.',
+   '{n, plural, one {# job held} other {# jobs held}} by someone else. You can take them back, at a price.',
+   'D15 : le nombre vient de `delegated[]` → ICU ; clé NOMMÉE (un message ICU ne se dérive pas par slug, comme en 37, 40, 43)'),
  'depuis 6 jours': (N, '', '', '', 'aucun champ servi ne dit DEPUIS QUAND une charge est confiée (`task-categories` : pas de date ; `delegated[]` vide au corps réel) — exemple (point 19) ; passé à côté ?'),
  'Reprendre l’approvisionnement': b('Reprendre {charge}', 'Take back {charge}', 'titre (76) ; `{charge}` = `delegation.charge.*`'),
  'Voilà ce que ça coûterait. On vous le dit avant, pas après.': b('Voilà ce que ça coûterait. On vous le dit avant, pas après.', 'Here’s what it would cost. We tell you before, not after.', 'l’aperçu `recall-preview` (consultatif)'),
@@ -83,11 +89,17 @@ T = {
    b(q('Vous pouvez la reprendre. Il ne le prendra pas bien, et ce qu’il savait faire, vous devrez le réapprendre.'),
      '“You can take it back. They won’t take it well, and what they knew how to do, you’ll have to learn again.”', 'réplique d’un autre lieutenant (76) ; ⚠️ D14 : « Il », « il » genrés'),
  'LA REPRENDRE QUAND MÊME': b('La reprendre quand même', 'Take it back anyway', 'geste À ROUTE (`POST /v1/meta/recall`)'),
- 'Vous avez déjà tranché aujourd’hui': (N, '', '', '', JOUR), 'On ne redessine pas la maison deux fois dans la même journée.': (N, '', '', '', JOUR),
- 'Décision déjà prise aujourd’hui': (N, '', '', '', JOUR), 'la prochaine sera pour demain': (N, '', '', '', JOUR), 'Vous avez déjà confié': (N, '', '', '', JOUR),
- 'l’embauche': (N, '', '', '', JOUR), 'ce matin.': (N, '', '', '', JOUR), 'plus de décision aujourd’hui': (N, '', '', '', JOUR),
- 'Une seule décision de structure par journée': (N, '', '', '', JOUR),
- ', confier et reprendre comprises. Ce n’est pas une limite d’énergie : c’est pour qu’une maison ne se redessine pas entièrement en un après-midi.': (N, '', '', '', JOUR),
+ 'Vous avez déjà tranché aujourd’hui': b('Vous avez déjà tranché aujourd’hui', 'You’ve already decided today', JOUR + ' ; le titre du refus (le servi générique : `error.core_loops.structural_cap_exhausted`)'),
+ 'On ne redessine pas la maison deux fois dans la même journée.': b('On ne redessine pas la maison deux fois dans la même journée.', 'You don’t redraw the house twice in one day.', JOUR),
+ 'Décision déjà prise aujourd’hui': b('Décision déjà prise aujourd’hui', 'Decision already made today', JOUR),
+ 'la prochaine sera pour demain': b('la prochaine sera pour demain', 'the next one will be tomorrow', JOUR + ' (`retry_scope: next_session`)'),
+ 'Vous avez déjà confié': b('Vous avez déjà confié {charge} aujourd’hui.', 'You already handed over {charge} today.', JOUR + ' ; une phrase en trois nœuds ; « ce matin » : aucune donnée ne dit le moment (point 19) → « aujourd’hui »'),
+ 'l’embauche': (P, 'delegation.bloc.vous_avez_deja_confie_charge_aujourd_hui', '', '', 'même phrase (`{charge}`)'),
+ 'ce matin.': (P, 'delegation.bloc.vous_avez_deja_confie_charge_aujourd_hui', '', '', 'même phrase ; « ce matin » → « aujourd’hui »'),
+ 'plus de décision aujourd’hui': b('plus de décision aujourd’hui', 'no more decisions today', JOUR),
+ 'Une seule décision de structure par journée': b('Une seule décision de structure par journée, confier et reprendre comprises. Ce n’est pas une limite d’énergie : c’est pour qu’une maison ne se redessine pas entièrement en un après-midi.'.replace(' :', '\u00a0:'),
+   'One structural decision per day, handing over and taking back included. It isn’t an energy limit: it’s so a house isn’t redrawn in a single afternoon.', JOUR + ' ; une phrase en deux nœuds ; D17'),
+ ', confier et reprendre comprises. Ce n’est pas une limite d’énergie : c’est pour qu’une maison ne se redessine pas entièrement en un après-midi.': (P, 'delegation.bloc.une_seule_decision_de_structure_par_journee_confier_et_reprendre_comprises_ce_n_est_pas_une_limite_d_energie_c_est_pour_qu_une_maison_ne_se_redessine_pas_entierement_en_un_apres_midi', '', '', 'même phrase'),
  'Ce qui n’est pas encore à confier': (N, '', '', '', HUIT), 'Huit autres charges existent dans le jeu. Personne ne les tient encore.': (N, '', '', '', HUIT),
  'Existent, mais personne n’y touche': (N, '', '', '', HUIT), 'Le Lek': (N, '', '', '', HUIT), 'les contestations de coin': (N, '', '', '', HUIT),
  'Le blanchiment': (N, '', '', '', HUIT), 'faire rentrer l’argent': (N, '', '', '', HUIT), 'Le réoutillage': (N, '', '', '', HUIT),
@@ -109,7 +121,7 @@ COMPLEMENTS = [
  ('delegation.refus.la_charge_n_est_plus_a_vous', 'la charge n’est plus à vous', 'this job is no longer yours', '409 graduation : « is not SELF-managed »'),
  ('delegation.refus.la_charge_n_est_plus_confiee', 'la charge n’est plus confiée', 'this job is no longer handed over', '409 recall : « is not DELEGATED »'),
  ('delegation.refus.un_changement_est_deja_en_cours_sur_cette_charge', 'un changement est déjà en cours sur cette charge', 'a change is already under way on this job',
-  '409 « ACTIVE promotion lock » (confier OU reprendre) — le vrai refus que le cadre 77 croyait « par journée »'),
+  '409 « ACTIVE promotion lock » (confier OU reprendre), PAR CHARGE — distinct du gouverneur par session (cadre 77)'),
 ]
 GENRES = ['« Ce qu’il a appris » (76)', '« Ce qu’on lui doit » (76)', '« Celui qu’il formait » (76)', '« Il ne le prendra pas bien, et ce qu’il savait faire » (76, réplique)']
 
