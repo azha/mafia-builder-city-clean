@@ -89,6 +89,17 @@ namespace MafiaCleanCity.Operational.Tests
             "conflit.bloc.on_ne_les_a_pas_croises",
             "conflit.bloc.on_est_alles_chez_eux",
             "conflit.bloc.fois_chez_eux",
+            // ㉙ LE COUP DE CE SOIR (2026-09-23, L4) — même table 40, NON servies à d8e41362 (0 sur 9). L'arrivée rend les deux
+            // premières (sans gros bras) ; avec un gros bras, le bouton, sa précision et les 5 axes, avant tout choix.
+            "conflit.bloc.le_coup_de_ce_soir",
+            "conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain",
+            "conflit.bloc.l_envoyer_ce_soir",
+            "conflit.bloc.on_ne_pourra_plus_le_rappeler",
+            "conflit.axe.muscle",
+            "conflit.axe.finance",
+            "conflit.axe.intel",
+            "conflit.axe.infrastructure",
+            "conflit.axe.leadership",
         };
 
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>

@@ -96,6 +96,56 @@ namespace MafiaCleanCity.Operational
         public string DerniereErreur { get; private set; }
         public long DernierCodeErreur { get; private set; }
         public bool DernierEnvoiOk { get; private set; }
+
+        // ---- le coup de ce soir (cadres 59-61) : trois choix, AUCUN présélectionné (arbitrage du 23/09) ----------------------
+        /// <summary>La famille choisie (`target_rival_key`), ou null.</summary>
+        public string ChoixFamille { get; private set; }
+        /// <summary>Le lieutenant choisi (`lieutenant_id`, un gros bras seulement), ou null.</summary>
+        public string ChoixLieutenant { get; private set; }
+        /// <summary>L'axe choisi (`target_holding_id`, un des 5), ou null.</summary>
+        public string ChoixAxe { get; private set; }
+        /// <summary>« L’envoyer ce soir » n'est actif que si la famille, l'homme et l'axe sont choisis.</summary>
+        public bool EnvoiPossible => ChoixFamille != null && ChoixLieutenant != null && ChoixAxe != null;
+
+        public void ChoisirFamille(string cle)
+        {
+            if (System.Array.IndexOf(ConflitResolvers.DomaineFamilles, cle) < 0) return;
+            ChoixFamille = cle;
+            AppliquerEtat();
+        }
+
+        public void ChoisirLieutenant(string lieutenantId)
+        {
+            bool gros = false;
+            foreach (LieutenantRowDto l in Muscles(DernierChargementLieutenants?.lieutenants)) if (l.lieutenant_id == lieutenantId) gros = true;
+            if (!gros) return;   // seuls les gros bras sont choisissables (arbitrage du 23/09)
+            ChoixLieutenant = lieutenantId;
+            AppliquerEtat();
+        }
+
+        public void ChoisirAxe(string axe)
+        {
+            if (System.Array.IndexOf(ConflitResolvers.Axes, axe) < 0) return;
+            ChoixAxe = axe;
+            AppliquerEtat();
+        }
+
+        /// <summary>« En envoyer un autre » (cadres 62-63) : les choix repartent de zéro — sauf la famille quand `memeFamille`
+        /// (« même famille, autre cible », cadre 63).</summary>
+        public void EnEnvoyerUnAutre(string memeFamille)
+        {
+            ChoixFamille = System.Array.IndexOf(ConflitResolvers.DomaineFamilles, memeFamille) >= 0 ? memeFamille : null;
+            ChoixAxe = null;
+            ChoixLieutenant = null;
+            AppliquerEtat();
+        }
+
+        /// <summary>Le geste du bouton « L’envoyer ce soir » : rien tant que les trois choix ne sont pas faits.</summary>
+        public void EnvoyerLeCoup()
+        {
+            if (!EnvoiPossible) return;
+            EnvoyerCeSoir(ChoixLieutenant, ChoixFamille, ChoixAxe);
+        }
         /// <summary>Les lieutenants `archetype == "MUSCLE"` — crochet de test, alimenté par la
         /// dernière `RendrePied`. Vide sur les deux comptes sondés (le cas réel).</summary>
         public IReadOnlyList<LieutenantRowDto> MuscleLieutenants => muscleLieutenants;
@@ -241,12 +291,9 @@ namespace MafiaCleanCity.Operational
 
         // ═══ Le geste d'envoi — `POST /v1/me/engagements` ═══════════════════════════════════════
         //
-        // ⛔⛔ NON CÂBLÉE À UN BOUTON CETTE PASSE — voir `RendrePied` : aucun bouton cliquable
-        // n'est construit tant que `target_holding_id` reste indécouvrable (point 3 du
-        // commentaire de classe). Exposée pour un futur écran/test une fois une route de cible
-        // existe (patron `ChaineDApproScreenController.PasserCommandeEtRecharger` /
-        // `DistributionScreenController.AcheterVehicule` : le geste existe, jamais atteint en
-        // succès sur les comptes sondés).
+        // Câblé au bouton « L’envoyer ce soir » (`RendrePied` → `EnvoyerLeCoup`), actif seulement quand la famille, le gros bras
+        // et l'axe sont choisis (L4, 23/09). Succès : les choix repartent de zéro et l'écran se recharge (l'envoi paraît dans
+        // « Ce qui est en cours »).
 
         public void EnvoyerCeSoir(string lieutenantId, string targetRivalKey, string targetHoldingId) =>
             StartCoroutine(EnvoyerCeSoirEtRecharger(lieutenantId, targetRivalKey, targetHoldingId));
@@ -278,6 +325,7 @@ namespace MafiaCleanCity.Operational
             }
             DernierEnvoiOk = true;
             DerniereErreur = null;
+            ChoixFamille = null; ChoixLieutenant = null; ChoixAxe = null;   // l'envoi est parti : on repart de zéro
             yield return Charger();
         }
 
@@ -287,10 +335,12 @@ namespace MafiaCleanCity.Operational
         {
             renderedTexts.Clear();
             RendreTitre();
+            muscleLieutenants = Muscles(DernierChargementLieutenants?.lieutenants);
             RendreRentre(DernierChargementEngagements?.engagements);
             RendreEnCours(DernierChargementEngagements?.engagements);
+            RendreCoup(DernierChargementEngagements?.engagements);
             RendreTable(DernierChargementEngagements?.engagements, DernierChargementEngagements == null);
-            RendrePied(DernierChargementLieutenants?.lieutenants);
+            RendrePied();
             RendreMessageErreur();
         }
 
@@ -338,6 +388,14 @@ namespace MafiaCleanCity.Operational
             string chaleur = ConflitResolvers.Chaleur(dernier.heat_increment_bucket);
             if (chaleur != null)
                 LigneDeMesure(rentreRoot, "Chaleur", Libelle.Gabarit("conflit.bloc.la_ville_a_chauffe", "la ville a chauffé"), chaleur);
+
+            // Cadre 63 : la réplique (sans orateur : le nom est sur la ligne au-dessus, arbitrage du 23/09) et « Y retourner »,
+            // dont les mots sont ceux de la 40 : « En envoyer un autre » · « même famille, autre cible ».
+            if (muscleLieutenants.Count == 0) return;
+            Replique(rentreRoot, "RepliqueRentre", Libelle.Gabarit("conflit.bloc.voila_ce_que_ca_a_donne_a_vous_de_dire_si_on_y_retourne", "«\u00A0Voilà ce que ça a donné. À vous de dire si on y retourne.\u00A0»"));
+            string famille = dernier.target_rival_key;
+            BoutonGeste(rentreRoot, "YRetourner", Libelle.Gabarit("conflit.bloc.en_envoyer_un_autre", "En envoyer un autre"),
+                Libelle.Gabarit("conflit.bloc.meme_famille_autre_cible", "même famille, autre cible"), true, () => EnEnvoyerUnAutre(famille));
         }
 
         /// <summary>Cadre 62 — « Ce qui est en cours » : les envois PARTIS (`scheduled`, on ne peut plus les rappeler : aucune
@@ -388,6 +446,10 @@ namespace MafiaCleanCity.Operational
                 8f, DesignTokens.Current.onSurfaceSecondary, false);
             dehors.enableWordWrapping = true;
             TrackText(dehors.text);
+
+            if (muscleLieutenants.Count > 0)
+                BoutonGeste(enCoursRoot, "EnEnvoyerUnAutre", Libelle.Gabarit("conflit.bloc.en_envoyer_un_autre", "En envoyer un autre"),
+                    Libelle.Gabarit("conflit.bloc.autre_famille_autre_cible", "autre famille, autre cible"), true, () => EnEnvoyerUnAutre(null));
         }
 
         private void EnTeteDeSection(Transform parent, string titre, string chapeau)
@@ -497,7 +559,16 @@ namespace MafiaCleanCity.Operational
             foreach (string cle in ConflitResolvers.DomaineFamilles)
             {
                 GameObject ligne = NouveauUI("Famille_" + cle, tableRoot);
-                AjouterFond(ligne, DesignTokens.Current.surfaceRow);
+                Image fondLigne = AjouterFond(ligne, cle == ChoixFamille ? DesignTokens.Current.surfaceRaised : DesignTokens.Current.surfaceRow);
+                // Cadres 59-61 : on choisit la famille DANS la table — seulement s'il y a un gros bras à envoyer.
+                if (muscleLieutenants.Count > 0)
+                {
+                    fondLigne.raycastTarget = true;
+                    Button choix = ligne.AddComponent<Button>();
+                    choix.targetGraphic = fondLigne;
+                    string famille = cle;
+                    choix.onClick.AddListener(() => ChoisirFamille(famille));
+                }
                 HorizontalLayoutGroup hl = ligne.AddComponent<HorizontalLayoutGroup>();
                 hl.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(6f), PxTrait(6f));
                 hl.spacing = Px(8f);
@@ -551,6 +622,14 @@ namespace MafiaCleanCity.Operational
                 visites.fontStyle = FontStyles.Italic;
                 visites.alignment = TextAlignmentOptions.Right;
                 TrackText(visites.text);
+
+                if (cle == ChoixFamille)
+                {
+                    TextMeshProUGUI ceSoir = NouveauTexteFiche(ligne.transform, "CeSoir",
+                        Libelle.Gabarit("conflit.bloc.ce_soir", "Ce soir"), 7f, DesignTokens.Current.accentGold, true);
+                    ceSoir.characterSpacing = 2f;
+                    TrackText(ceSoir.text);
+                }
             }
         }
 
@@ -571,35 +650,36 @@ namespace MafiaCleanCity.Operational
             return compte;
         }
 
-        /// <summary>§3 — Qui part ce soir : `GET /v1/lieutenants` filtré `archetype == "MUSCLE"`.
-        /// ⛔⛔ LE CŒUR DE CE LOT. Aucun compte sondé n'en a — le repli honnête N'EST PAS un
-        /// bouton grisé en silence : il DIT au joueur qu'il lui manque un homme (brief : « le
-        /// joueur doit comprendre qu'il lui manque un homme, pas croire que l'écran est
-        /// cassé »).</summary>
-        private void RendrePied(LieutenantRowDto[] lieutenants)
+        /// <summary>Les lieutenants `archetype == "MUSCLE"` (« gros bras ») — les SEULS choisissables pour un envoi (le back
+        /// répond 409 `MUSCLE_LIEUTENANT_REQUIRED` à tout autre).</summary>
+        private static List<LieutenantRowDto> Muscles(LieutenantRowDto[] lieutenants)
         {
-            ViderEnfants(piedRoot);
-
-            muscleLieutenants = new List<LieutenantRowDto>();
+            var l = new List<LieutenantRowDto>();
             if (lieutenants != null)
-                foreach (LieutenantRowDto l in lieutenants)
-                    if (l != null && l.archetype == "MUSCLE") muscleLieutenants.Add(l);
+                foreach (LieutenantRowDto x in lieutenants)
+                    if (x != null && x.archetype == "MUSCLE" && !string.IsNullOrEmpty(x.lieutenant_id)) l.Add(x);
+            return l;
+        }
 
-            TextMeshProUGUI label = NouveauTexteFiche(piedRoot, "PiedLabel",
-                Libelle.De("conflit", "bloc", "QUI PART CE SOIR"), 8.5f,
-                DesignTokens.Current.onSurfaceSecondary, false);
-            label.characterSpacing = 4f;
-            TrackText(label.text);
+        /// <summary>Cadres 59-61 — « Le coup de ce soir » : on choisit un homme (un gros bras), un axe (un des 5), et une famille
+        /// (dans la table, en dessous). Aucun choix présélectionné. Quand les trois sont faits, la phrase d'envoi « On envoie
+        /// {nom} chez {famille}, sur {axe}. » ; quand la famille choisie a un envoi rentré, « La dernière fois chez eux : »
+        /// + son issue (+ « , et la ville a chauffé » + la chaleur), rendue TELLE QUELLE, sans point ajouté (l'atelier écrit
+        /// une clé de phrase, arbitrage du 23/09). Sans gros bras : les deux phrases servies qui le disent, et rien à choisir.</summary>
+        private void RendreCoup(EngagementDto[] engagements)
+        {
+            ViderEnfants(coupRoot);
+            EnTeteDeSection(coupRoot, Libelle.Gabarit("conflit.bloc.le_coup_de_ce_soir", "Le coup de ce soir"),
+                Libelle.Gabarit("conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain", "On choisit une famille, on choisit un homme, et on l’envoie. On saura demain."));
 
             if (muscleLieutenants.Count == 0)
             {
-                TextMeshProUGUI vide = NouveauTexteFiche(piedRoot, "PiedVide",
-                    Libelle.De("conflit", "bloc",
-                        "Aucun de vos lieutenants n'est du genre Gros bras."), 9f,
+                TextMeshProUGUI vide = NouveauTexteFiche(coupRoot, "PiedVide",
+                    Libelle.De("conflit", "bloc", "Aucun de vos lieutenants n'est du genre Gros bras."), 9f,
                     DesignTokens.Current.onSurfacePrimary, true);
+                vide.enableWordWrapping = true;
                 TrackText(vide.text);
-
-                TextMeshProUGUI noteVide = NouveauTexteFiche(piedRoot, "PiedNote",
+                TextMeshProUGUI noteVide = NouveauTexteFiche(coupRoot, "PiedNote",
                     Libelle.De("conflit", "bloc",
                         "C'est lui qui part la nuit. Il vous en manque un — ce n'est pas cassé, " +
                         "vous n'en avez tout simplement pas encore."),
@@ -609,66 +689,135 @@ namespace MafiaCleanCity.Operational
                 return;
             }
 
-            LieutenantRowDto envoye = muscleLieutenants[0];
+            // L'homme : une ligne par gros bras, le choisi sur fond surélevé.
+            LieutenantRowDto choisi = null;
+            foreach (LieutenantRowDto l in muscleLieutenants)
+            {
+                bool estChoisi = l.lieutenant_id == ChoixLieutenant;
+                if (estChoisi) choisi = l;
+                string id = l.lieutenant_id;
+                GameObject ligne = LigneChoisissable(coupRoot, "Homme_" + id, estChoisi, () => ChoisirLieutenant(id));
+                TextMeshProUGUI nom = NouveauTexteFiche(ligne.transform, "Nom", l.name, 10f, DesignTokens.Current.onSurfacePrimary, true);
+                AddLayoutElement(nom.gameObject, flexibleWidth: 1);
+                TrackText(nom.text);
+                // Les deux champs RÉELS, par les résolveurs PARTAGÉS (organigramme ⑯) — jamais une puce de fiction.
+                TextMeshProUGUI role = NouveauTexteFiche(ligne.transform, "Role",
+                    $"{FamilleLabels.Archetype(l.archetype)} · {FamilleLabels.Anciennete(l.tenure_bucket)}",
+                    7f, DesignTokens.Current.onSurfaceMuted, false);
+                role.alignment = TextAlignmentOptions.Right;
+                TrackText(role.text);
+            }
 
-            GameObject enTete = NouveauUI("Lieutenant", piedRoot);
-            HorizontalLayoutGroup hl = enTete.AddComponent<HorizontalLayoutGroup>();
-            hl.spacing = Px(8f);
-            hl.childControlWidth = true; hl.childControlHeight = true;
-            hl.childForceExpandWidth = false; hl.childForceExpandHeight = false;
-            AddLayoutElement(enTete, flexibleHeight: 0);
+            // L'axe : 5 choix, aucun présélectionné (le back vise un AXE, pas un bâtiment).
+            GameObject axes = NouveauUI("Axes", coupRoot);
+            HorizontalLayoutGroup ha = axes.AddComponent<HorizontalLayoutGroup>();
+            ha.spacing = Px(4f);
+            ha.childControlWidth = true; ha.childControlHeight = true;
+            ha.childForceExpandWidth = true; ha.childForceExpandHeight = false;
+            AddLayoutElement(axes, flexibleHeight: 0);
+            foreach (string axe in ConflitResolvers.Axes)
+            {
+                string a = axe;
+                GameObject chip = LigneChoisissable(axes.transform, "Axe_" + a, a == ChoixAxe, () => ChoisirAxe(a));
+                TextMeshProUGUI mot = NouveauTexteFiche(chip.transform, "Mot", ConflitResolvers.AxeDeValeur(a), 7.5f,
+                    a == ChoixAxe ? DesignTokens.Current.accentGold : DesignTokens.Current.onSurfaceSecondary, a == ChoixAxe);
+                mot.alignment = TextAlignmentOptions.Center;
+                mot.enableWordWrapping = true;
+                TrackText(mot.text);
+            }
 
-            // Portrait rond — approximation : un disque plein, aucun asset de portrait mesuré ni
-            // mandaté par le brief (patron ㉘).
-            GameObject portrait = NouveauUI("Portrait", enTete.transform);
-            AjouterFond(portrait, DesignTokens.Current.surfaceRow);
-            AddLayoutElement(portrait, preferredWidth: Px(26f), preferredHeight: Px(26f));
+            if (EnvoiPossible && choisi != null)
+            {
+                TextMeshProUGUI phrase = NouveauTexteFiche(coupRoot, "PhraseDEnvoi",
+                    Libelle.Gabarit("conflit.bloc.on_envoie_nom_chez_famille_sur_axe", "On envoie {nom} chez {famille}, sur {axe}.",
+                        new Dictionary<string, string>
+                        {
+                            { "nom", choisi.name },
+                            { "famille", ConflitResolvers.NomFamille(ChoixFamille) },
+                            { "axe", ConflitResolvers.AxeDeValeur(ChoixAxe) },
+                        }),
+                    9.5f, DesignTokens.Current.onSurfacePrimary, false);
+                phrase.enableWordWrapping = true;
+                TrackText(phrase.text);
+            }
 
-            GameObject texteBloc = NouveauUI("TexteBloc", enTete.transform);
-            VerticalLayoutGroup vt = texteBloc.AddComponent<VerticalLayoutGroup>();
-            vt.childControlWidth = true; vt.childControlHeight = true;
-            vt.childForceExpandWidth = true; vt.childForceExpandHeight = false;
-            AddLayoutElement(texteBloc, flexibleWidth: 1);
+            EngagementDto derniere = ConflitResolvers.DerniereRentreeChez(engagements, ChoixFamille);
+            string issue = derniere != null ? ConflitResolvers.Issue(derniere.outcome_bucket) : null;
+            if (issue != null)
+            {
+                string texte = Libelle.Gabarit("conflit.bloc.la_derniere_fois_chez_eux", "La dernière fois chez eux\u00A0:") + " " + issue;
+                string chaleur = ConflitResolvers.Chaleur(derniere.heat_increment_bucket);
+                if (chaleur != null) texte += Libelle.Gabarit("conflit.bloc.et_la_ville_a_chauffe", ", et la ville a chauffé") + " " + chaleur;
+                TextMeshProUGUI fois = NouveauTexteFiche(coupRoot, "LaDerniereFois", texte, 8f, DesignTokens.Current.onSurfaceSecondary, false);
+                fois.enableWordWrapping = true;
+                TrackText(fois.text);
+            }
+        }
 
-            TextMeshProUGUI nom = NouveauTexteFiche(texteBloc.transform, "Nom", envoye.name, 10.5f,
-                DesignTokens.Current.onSurfacePrimary, true);
-            TrackText(nom.text);
+        /// <summary>Sous la table : la réplique de l'homme (v2, sans orateur) et « L’envoyer ce soir », inactif tant que les trois
+        /// choix ne sont pas faits. Rien sans gros bras (le panneau le dit déjà).</summary>
+        private void RendrePied()
+        {
+            ViderEnfants(piedRoot);
+            if (muscleLieutenants.Count == 0) return;
+            Replique(piedRoot, "Replique", Libelle.Gabarit("conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain", "«\u00A0Dites-moi seulement chez qui. Je pars ce soir, on saura demain.\u00A0»"));
+            BoutonGeste(piedRoot, "LEnvoyerCeSoir", Libelle.Gabarit("conflit.bloc.l_envoyer_ce_soir", "L’envoyer ce soir"),
+                Libelle.Gabarit("conflit.bloc.on_ne_pourra_plus_le_rappeler", "on ne pourra plus le rappeler"), EnvoiPossible, EnvoyerLeCoup);
+        }
 
-            // « Bruno · LE MUSCLE · J7 » de m-65 est une puce de FICTION (un jour de tenure
-            // inventé pour un personnage nommé, jamais un champ back). Cet écran affiche à la
-            // place les DEUX champs RÉELS mesurés, via les résolveurs PARTAGÉS déjà enregistrés
-            // par ce dépôt (DRY — pas de seconde table de correspondance archétype/ancienneté) :
-            // `archetype` → `FamilleLabels.Archetype` (organigramme ⑯) et `tenure_bucket` →
-            // `FamilleLabels.Anciennete` (même fichier).
-            TextMeshProUGUI role = NouveauTexteFiche(texteBloc.transform, "Role",
-                $"{FamilleLabels.Archetype(envoye.archetype)} · {FamilleLabels.Anciennete(envoye.tenure_bucket)}",
-                7f, DesignTokens.Current.onSurfaceMuted, false);
-            role.characterSpacing = 2f;
-            TrackText(role.text);
-
-            // Réplique VERBATIM m-65 — générique, ne cite ni Tarcum ni Stack-2 (aucun des deux
-            // n'est sourcé pour ce compte, voir le commentaire de classe).
-            TextMeshProUGUI q = NouveauTexteFiche(piedRoot, "Replique",
-                Libelle.De("conflit", "bloc",
-                    "Dites-moi qui j'envoie et sur quoi. Je pars ce soir, on saura demain."),
-                9f, DesignTokens.Current.onSurfaceSecondary, false);
+        private void Replique(Transform parent, string nom, string texte)
+        {
+            TextMeshProUGUI q = NouveauTexteFiche(parent, nom, texte, 9f, DesignTokens.Current.onSurfaceSecondary, false);
             q.fontStyle = FontStyles.Italic;
             q.enableWordWrapping = true;
             TrackText(q.text);
+        }
 
-            // ⛔⛔ TOUJOURS PAS DE BOUTON — un lieutenant MUSCLE existe (état jamais observé sur
-            // un compte réel, exercé par `RendrePourTest` seulement), mais `target_holding_id`
-            // reste structurellement indécouvrable (point 3 du commentaire de classe) :
-            // fabriquer un bouton cliquable ici enverrait le joueur sur un geste qui échouerait
-            // TOUJOURS, silencieusement pris pour un bug. `EnvoyerCeSoirEtRecharger` reste
-            // exposée pour le jour où une route de cible existera.
-            TextMeshProUGUI noteCible = NouveauTexteFiche(piedRoot, "PiedNoteCible",
-                Libelle.De("conflit", "bloc",
-                    "Vous avez l'homme. Personne pour lui dire où frapper — on ne sait pas encore " +
-                    "où ils sont."),
-                8f, DesignTokens.Current.onSurfaceMuted, false);
-            noteCible.enableWordWrapping = true;
-            TrackText(noteCible.text);
+        /// <summary>Un geste à route (cadres 59-63) : le libellé, et sa précision en petit dessous. `actif` faux ⇒ bouton non
+        /// interactif et libellé éteint.</summary>
+        private void BoutonGeste(Transform parent, string nom, string libelle, string precision, bool actif, UnityEngine.Events.UnityAction geste)
+        {
+            GameObject bouton = NouveauUI(nom, parent);
+            Image fond = AjouterImage(bouton);
+            fond.color = actif ? DesignTokens.Current.accentGold : DesignTokens.Current.surfaceRaised;
+            fond.raycastTarget = true;
+            Button b = bouton.AddComponent<Button>();
+            b.targetGraphic = fond;
+            b.interactable = actif;
+            b.onClick.AddListener(geste);
+            VerticalLayoutGroup vb = bouton.AddComponent<VerticalLayoutGroup>();
+            vb.padding = new RectOffset(PxTrait(12f), PxTrait(12f), PxTrait(8f), PxTrait(8f));
+            vb.childAlignment = TextAnchor.MiddleCenter;
+            vb.childControlWidth = true; vb.childControlHeight = true;
+            vb.childForceExpandWidth = true; vb.childForceExpandHeight = false;
+            AddLayoutElement(bouton, flexibleHeight: 0);
+            Color encre = actif ? DesignTokens.Current.surfaceBase : DesignTokens.Current.onSurfaceDisabled;
+            TextMeshProUGUI l = NouveauTexteFiche(bouton.transform, "Libelle", libelle, 10f, encre, true);
+            l.alignment = TextAlignmentOptions.Center;
+            TrackText(l.text);
+            TextMeshProUGUI p = NouveauTexteFiche(bouton.transform, "Precision", precision, 7f, encre, false);
+            p.alignment = TextAlignmentOptions.Center;
+            TrackText(p.text);
+        }
+
+        /// <summary>Une ligne (ou une puce) qu'on touche pour choisir ; le choix courant est sur fond surélevé.</summary>
+        private GameObject LigneChoisissable(Transform parent, string nom, bool choisie, UnityEngine.Events.UnityAction choisir)
+        {
+            GameObject ligne = NouveauUI(nom, parent);
+            Image fond = AjouterImage(ligne);
+            fond.color = choisie ? DesignTokens.Current.surfaceRaised : DesignTokens.Current.surfaceRow;
+            fond.raycastTarget = true;
+            Button b = ligne.AddComponent<Button>();
+            b.targetGraphic = fond;
+            b.onClick.AddListener(choisir);
+            HorizontalLayoutGroup hl = ligne.AddComponent<HorizontalLayoutGroup>();
+            hl.padding = new RectOffset(PxTrait(8f), PxTrait(8f), PxTrait(5f), PxTrait(5f));
+            hl.spacing = Px(6f);
+            hl.childControlWidth = true; hl.childControlHeight = true;
+            hl.childForceExpandWidth = false; hl.childForceExpandHeight = false;
+            hl.childAlignment = TextAnchor.MiddleLeft;
+            AddLayoutElement(ligne, flexibleHeight: 0, flexibleWidth: 1);
+            return ligne;
         }
 
         /// <summary>⛔ `DerniereErreur` est un CROCHET DE TEST (code, route, message du back) : il ne s'affiche JAMAIS au joueur,
@@ -687,6 +836,7 @@ namespace MafiaCleanCity.Operational
         {
             ViderEnfants(rentreRoot);
             ViderEnfants(enCoursRoot);
+            ViderEnfants(coupRoot);
             ViderEnfants(tableRoot);
             ViderEnfants(piedRoot);
             ViderEnfants(erreurRoot);
@@ -752,6 +902,7 @@ namespace MafiaCleanCity.Operational
 
             rentreRoot = NouvelleSection(corpsGo.transform, "Rentre");
             enCoursRoot = NouvelleSection(corpsGo.transform, "EnCours");
+            coupRoot = NouvelleSection(corpsGo.transform, "Coup");
 
             GameObject tableGo = NouveauUI("Table", corpsGo.transform);
             VerticalLayoutGroup vtb = tableGo.AddComponent<VerticalLayoutGroup>();
@@ -777,7 +928,7 @@ namespace MafiaCleanCity.Operational
             erreurRoot = erreurGo.transform;
         }
 
-        private Transform tableRoot, piedRoot, erreurRoot, rentreRoot, enCoursRoot;
+        private Transform tableRoot, piedRoot, erreurRoot, rentreRoot, enCoursRoot, coupRoot;
 
         /// <summary>Une section verticale vide (hauteur nulle tant qu'elle n'a pas d'enfant).</summary>
         private Transform NouvelleSection(Transform parent, string nom)
@@ -940,6 +1091,24 @@ namespace MafiaCleanCity.Operational
         public static string CoupN(int strikeIndex) =>
             strikeIndex < 1 ? null : MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.coup_n_n", "Coup n°{n}",
                 new Dictionary<string, string> { { "n", strikeIndex.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
+
+        /// <summary>㉙ — les 5 axes que vise un envoi (`target_holding_id`) : `erosion_register_id` du back (`conflict_rival.ts:29`,
+        /// validé par `engagements.controller.ts:176-183`), dans cet ordre. Source unique pour les choix du panneau.</summary>
+        public static readonly string[] Axes = { "muscle", "finance", "intel", "infrastructure", "leadership" };
+
+        /// <summary>㉙ — le mot d'un axe CHOISI (sa valeur, pas une référence servie) : la même clé `conflit.axe.<valeur>`.</summary>
+        public static string AxeDeValeur(string axe) =>
+            string.IsNullOrEmpty(axe) ? null : Axe(new AxeI18nDto { key = "conflit.axe." + axe });
+
+        /// <summary>㉙ — le dernier envoi RENTRÉ chez `famille` : le premier `resolved` de la liste (servie du plus récent au plus
+        /// ancien par minute de jeu), ou null.</summary>
+        public static EngagementDto DerniereRentreeChez(EngagementDto[] engagements, string famille)
+        {
+            if (engagements == null || string.IsNullOrEmpty(famille)) return null;
+            foreach (EngagementDto e in engagements)
+                if (e != null && e.status == "resolved" && e.target_rival_key == famille) return e;
+            return null;
+        }
 
         /// <summary>㉙ — l'issue d'un envoi (`outcome_bucket`), mots de l'atelier table 40 (997d6ab4) ; clé tirée de la VALEUR
         /// servie (`conflit.issue.<valeur>`). Domaine `COMBAT_OUTCOME_BUCKETS` (5). ⚠️ null (envoi `scheduled`, pas encore

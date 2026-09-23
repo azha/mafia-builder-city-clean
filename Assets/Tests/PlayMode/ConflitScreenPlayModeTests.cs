@@ -226,7 +226,7 @@ namespace MafiaCleanCity.Operational.Tests
             };
 
         [UnityTest]
-        public IEnumerator EcranConflitE1_AucunMuscle_AfficheLimpossibiliteEtAucunBouton()
+        public IEnumerator EcranConflitE1_AucunGrosBras_LesPhrasesServies_RienAChoisir()
         {
             var ecran = MonterEcran();
             ecran.RendrePourTest(
@@ -235,15 +235,19 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             Assert.AreEqual(0, ecran.MuscleLieutenants.Count);
-            CollectionAssert.Contains(ecran.RenderedTexts,
-                "Aucun de vos lieutenants n'est du genre Gros bras.");
-            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "Dites-moi qui j'envoie et sur quoi. " +
-                "Je pars ce soir, on saura demain.",
-                "la réplique du lieutenant envoyé ne doit apparaître QUE si un MUSCLE est trouvé");
+            CollectionAssert.Contains(ecran.RenderedTexts, "Le coup de ce soir");
+            CollectionAssert.Contains(ecran.RenderedTexts, "Aucun de vos lieutenants n'est du genre Gros bras.");
+            Assert.IsNull(GameObject.Find("LEnvoyerCeSoir"), "sans gros bras, aucun bouton d'envoi");
+            // `TryGetComponent`, pas `GetComponent == null` sous NUnit : dans l'éditeur, un composant absent rend un « faux null ».
+            Assert.IsFalse(RacineEcran().transform.Find("Corps/Table/Famille_coil").TryGetComponent<Button>(out _),
+                "sans gros bras, la famille ne se choisit pas");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts,
+                "« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »",
+                "la réplique n'apparaît QUE s'il y a un gros bras");
         }
 
         [UnityTest]
-        public IEnumerator EcranConflitE2_MusclePresent_AfficheLeLieutenantMaisAucunBouton()
+        public IEnumerator EcranConflitE2_GrosBras_LePanneauDEnvoi_RienDePreselectionne_BoutonInactif()
         {
             var ecran = MonterEcran();
             ecran.RendrePourTest(
@@ -255,19 +259,101 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             Assert.AreEqual(1, ecran.MuscleLieutenants.Count);
-            CollectionAssert.Contains(ecran.RenderedTexts, "Lt. Vasca",
-                "le nom du lieutenant MUSCLE trouvé n'est pas rendu");
-            // Résolveur PARTAGÉ `FamilleLabels` (DRY, pas une seconde table de correspondance) :
-            // MUSCLE → « Gros bras », SEASONED → « Aguerri ».
-            CollectionAssert.Contains(ecran.RenderedTexts, "Gros bras · Aguerri",
-                "la bande archétype/ancienneté ne passe pas par le résolveur PARTAGÉ FamilleLabels");
+            CollectionAssert.Contains(ecran.RenderedTexts, "Lt. Vasca");
+            // Résolveur PARTAGÉ `FamilleLabels` : MUSCLE → « Gros bras », SEASONED → « Du métier » (atelier 28).
+            CollectionAssert.Contains(ecran.RenderedTexts, "Gros bras · Du métier");
             CollectionAssert.Contains(ecran.RenderedTexts,
-                "Dites-moi qui j'envoie et sur quoi. Je pars ce soir, on saura demain.");
+                "On choisit une famille, on choisit un homme, et on l’envoie. On saura demain.");
+            foreach (string mot in new[] { "leurs gros bras", "leur argent", "leurs informateurs", "leurs installations", "leur tête" })
+                CollectionAssert.Contains(ecran.RenderedTexts, mot, "les 5 axes, mots de la table 40");
             CollectionAssert.Contains(ecran.RenderedTexts,
-                "Vous avez l'homme. Personne pour lui dire où frapper — on ne sait pas encore " +
-                "où ils sont.",
-                "même avec un MUSCLE trouvé, l'écran doit dire que la cible reste indécouvrable — " +
-                "aucun bouton cliquable n'est construit cette passe");
+                "« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »", "la réplique v2 (D14), sans orateur");
+            CollectionAssert.Contains(ecran.RenderedTexts, "L’envoyer ce soir");
+            CollectionAssert.Contains(ecran.RenderedTexts, "on ne pourra plus le rappeler");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts,
+                "Vous avez l'homme. Personne pour lui dire où frapper — on ne sait pas encore où ils sont.",
+                "phrase devenue FAUSSE (les axes existent) : retirée");
+
+            Assert.IsNull(ecran.ChoixFamille, "aucune famille présélectionnée");
+            Assert.IsNull(ecran.ChoixLieutenant, "aucun homme présélectionné, même s'il est seul");
+            Assert.IsNull(ecran.ChoixAxe, "aucun axe présélectionné");
+            Assert.IsFalse(ecran.EnvoiPossible);
+            Assert.IsFalse(GameObject.Find("LEnvoyerCeSoir").GetComponent<Button>().interactable, "inactif tant que rien n'est choisi");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "Ce soir", "aucune famille marquée");
+        }
+
+        [UnityTest]
+        public IEnumerator EcranConflitE9_LesTroisChoix_LaPhraseDEnvoi_EtLeBoutonActif()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(
+                new GetLieutenantsResponseDto { lieutenants = new[] { Lieutenant("MUSCLE", "FRESH", "Lt. Kest"), Lieutenant("COOK") } },
+                new GetEngagementsResponseDto
+                {
+                    engagements = new[] { Envoi("r1", "tarcum", "Tarcum", "resolved", "breakthrough", "high", "medium") },
+                });
+            yield return null;
+
+            // Par les VRAIS boutons (le geste du joueur), pas seulement les crochets.
+            RacineEcran().transform.Find("Corps/Table/Famille_tarcum").GetComponent<Button>().onClick.Invoke();
+            yield return null;
+            Assert.AreEqual("tarcum", ecran.ChoixFamille);
+            Assert.AreEqual("Ce soir", TexteSous("Famille_tarcum", "CeSoir"), "la famille choisie porte « Ce soir »");
+            Assert.IsFalse(ecran.EnvoiPossible, "famille seule : pas encore");
+
+            GameObject.Find("Homme_00000000-0000-4000-8000-000000000000").GetComponent<Button>().onClick.Invoke();
+            yield return null;
+            Assert.AreEqual("00000000-0000-4000-8000-000000000000", ecran.ChoixLieutenant);
+            Assert.IsFalse(ecran.EnvoiPossible, "famille et homme : pas encore — l'axe est OBLIGATOIRE");
+
+            GameObject.Find("Axe_finance").GetComponent<Button>().onClick.Invoke();
+            yield return null;
+            Assert.AreEqual("finance", ecran.ChoixAxe);
+            Assert.IsTrue(ecran.EnvoiPossible);
+            Assert.IsTrue(GameObject.Find("LEnvoyerCeSoir").GetComponent<Button>().interactable);
+            CollectionAssert.Contains(ecran.RenderedTexts, "On envoie Lt. Kest chez Tarcum, sur leur argent.");
+            CollectionAssert.Contains(ecran.RenderedTexts, "La dernière fois chez eux : Percée, et la ville a chauffé pas mal",
+                "TELLE QUELLE, sans point ajouté (arbitrage du 23/09)");
+
+            // Un non-gros-bras n'est pas choisissable, même par le crochet.
+            ecran.ChoisirLieutenant("id-inconnu");
+            Assert.AreEqual("00000000-0000-4000-8000-000000000000", ecran.ChoixLieutenant);
+            ecran.ChoisirAxe("logistique");
+            Assert.AreEqual("finance", ecran.ChoixAxe, "un axe hors des 5 est ignoré");
+        }
+
+        [UnityTest]
+        public IEnumerator EcranConflitE10_EnEnvoyerUnAutre_EtYRetourner_RemettentLesChoixAZero()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(
+                new GetLieutenantsResponseDto { lieutenants = new[] { Lieutenant("MUSCLE", "FRESH", "Lt. Kest") } },
+                new GetEngagementsResponseDto
+                {
+                    engagements = new[]
+                    {
+                        Envoi("p1", "coil", "La Coil", "scheduled", "", "", "medium"),
+                        Envoi("r1", "tarcum", "Tarcum", "resolved", "contested", "low", "medium"),
+                    },
+                });
+            yield return null;
+            ecran.ChoisirFamille("saltline"); ecran.ChoisirAxe("intel");
+            ecran.ChoisirLieutenant("00000000-0000-4000-8000-000000000000");
+            yield return null;
+
+            Assert.AreEqual("autre famille, autre cible", TexteSous("EnEnvoyerUnAutre", "Precision"));
+            Assert.AreEqual("En envoyer un autre", TexteSous("EnEnvoyerUnAutre", "Libelle"));
+            GameObject.Find("EnEnvoyerUnAutre").GetComponent<Button>().onClick.Invoke();
+            yield return null;
+            Assert.IsNull(ecran.ChoixFamille); Assert.IsNull(ecran.ChoixAxe); Assert.IsNull(ecran.ChoixLieutenant);
+
+            CollectionAssert.Contains(ecran.RenderedTexts, "« Voilà ce que ça a donné. À vous de dire si on y retourne. »");
+            Assert.AreEqual("même famille, autre cible", TexteSous("YRetourner", "Precision"));
+            ecran.ChoisirAxe("muscle");
+            GameObject.Find("YRetourner").GetComponent<Button>().onClick.Invoke();
+            yield return null;
+            Assert.AreEqual("tarcum", ecran.ChoixFamille, "« même famille » : celle du dernier rentré");
+            Assert.IsNull(ecran.ChoixAxe, "« autre cible » : l'axe repart de zéro");
         }
 
         [UnityTest]
