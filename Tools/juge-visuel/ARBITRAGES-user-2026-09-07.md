@@ -40,3 +40,21 @@
 
 ---
 *Sources : `BILAN-tour-2026-09-06.md` §4 et §8.bis ; rapports ① r8, ③ r3, ⑨ r1, ㊲ r12/r13, JD ① partielle.*
+
+## Décisions f2 du 23/09 (ruling user du 30/08) — à lire AVANT de trancher (règle 2)
+
+> Prises par l'orchestrateur (f2) le 2026-09-23 sous le ruling du 30/08 (« ya rien qui doit me revenir, t'as toutes les specs »),
+> consignées par l'atelier. Une ligne par décision, avec sa source ; « EN ATTENTE » veut dire qu'elle n'est PAS tranchée.
+
+| # | décision | source |
+|---|---|---|
+| D1 | Les bandes de **gravité** et de **priorité** sont au **féminin** (« modérée », « urgente ») : la maquette ratifiée de ⑨ fait foi. | amendement du point 9 ci-dessus ; `ecrans-brennar-4.html:818,860,862,873` ; atelier `23-…` §2 (`d87966c5`) |
+| D2 | **Ratio** propre/sale de la barre : option **(b)**, retiré — le canon n'a aucune règle d'agrégation et le back ne sert pas la bande. | point 6 ci-dessus ; `front.md` S1-c |
+| D3 | La **bande du nom de district** sous la barre de ① est un écart **ASSUMÉ** : elle cède la place au bandeau éphémère quand il parle. | `front.md` §4 L (25/08, « le lieu en bandeau sous la barre ») ; mesure `hud-brennar.html` l.82/176 ; dossier ① r10 |
+| D4 | L'**anneau crème** autour du badge du bâtiment dont la fiche est ouverte est **ASSUMÉ** (crème, pas or ; un seul à la fois). | r9 M6 ; CLIENT-2 `e9db74eb` ; dossier ① r10 |
+| D5 | Le bandeau « **rapport** » annonce un rapport d'autonomie **OUVERT** (en attente de décision), **une fois par session** — le back n'a aucun état lu / non lu. | atelier `22-…` §7.1 C (`78dfa950`) |
+| D6 | L'onglet **Filière** du dock monte **㊵** ; ⑪ et ⑫ sortent du chemin joueur et ne sont plus à juger (conditions : ㊵ lit `deviation_active`, l'ordre vient de `stage_index`). | `front.md` §4 A (« le bouton ne ment pas ») ; atelier `25-…` §1 ; montage CLIENT-1 |
+| D7 | Le **gyrophare** de la descente reste **caché le jour** (le canon tient) ; la descente de jour est portée par le chrome. | `hud-brennar.html:75` ; CLIENT-2 `881c17f6` ; atelier `22-…` §7.2 (`39d29edb`) |
+| D8 | **Replis** : jamais de valeur brute ni de littéral à l'écran ; hors domaine, un mot « inconnu » par famille, par `Libelle` ; la dérive est détectée par un test de couverture de domaine. | atelier `28-…` (`26c8e265`) |
+| D9 | **Q2 Lek : (c) — EN ATTENTE de l'user.** | message f2 du 23/09 |
+| D10 | **Apostrophe** : `’` dans le FR servi — l'apostrophe droite est le caractère de citation d'ICU ; c'est la typographie française ; les juges classent la droite en écart. | atelier `19-…` (tranché le 23/09) |
