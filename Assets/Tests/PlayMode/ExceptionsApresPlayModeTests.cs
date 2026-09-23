@@ -18,6 +18,8 @@ namespace MafiaCleanCity.Operational.Tests
     //           « Lt. Kane retourne au travail », « Le bâtiment se remet en marche, avec le temps » ; le cachet HORS du masque
     //   R17ter  une phrase par issue (atelier §3.10 A, `exceptions.apres.<issue>`) : les 10, ≠ enum, la clé servie l'emporte,
     //           hors domaine ⇒ pas de phrase ; la ville n'a pas de surtitre ; une carte que le serveur sert encore n'est pas partie
+    //   R17sext  le surtitre de l'après est un GABARIT (`exceptions.bloc.nom_retourne_au_travail`, `{nom}`), plus une concaténation :
+    //           le nom paraît UNE fois, à la place du paramètre, et l'ORDRE vient de la valeur servie (valeur fabriquée : le nom à la fin)
     //   R17quint les comptes en lettres (§3.10 B) : 0, 1, 2 et 7 par les pluriels servis à branches exactes (en fr, `one` couvre
     //           0 ET 1) ; sans clé, le repli composé ; une valeur servie à CHIFFRE (l'ancien `#`) est refusée (R2.2)
     //   R17quater  par la vraie résolution (coutures, aucune requête) : l'après apparaît, puis disparaît au rechargement suivant
@@ -189,6 +191,25 @@ namespace MafiaCleanCity.Operational.Tests
                 "la forme à `#` rend « 3 attendent » : refusée, le repli en lettres");
             I18nCatalog.Oublier();
             Assert.AreEqual("Plusieurs attendent vos ordres — la file est calme", ExceptionQueueController.LigneAmbiance(7), "le repli");
+        }
+
+        [Test]
+        public void R17sext_LeSurtitre_UnGabarit_LOrdreVientDeLaValeurServie()
+        {
+            Assert.AreEqual("Lt. Kane retourne au travail", ExceptionQueueController.KickerApres(Kane()), "le repli fr");
+
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+                { { "exceptions.bloc.nom_retourne_au_travail", "Au travail, à nouveau : {nom}" } });
+            string k = ExceptionQueueController.KickerApres(Kane());
+            Assert.AreEqual("Au travail, à nouveau : Lt. Kane", k, "l'ordre des mots vient de la valeur servie : le nom à la FIN");
+            Assert.AreEqual(k.IndexOf("Lt. Kane", System.StringComparison.Ordinal), k.LastIndexOf("Lt. Kane", System.StringComparison.Ordinal),
+                "le nom paraît UNE fois");
+            StringAssert.DoesNotContain("{nom}", k, "le paramètre est remplacé");
+
+            I18nCatalog.ChargerPourTest("en", new Dictionary<string, string>
+                { { "exceptions.bloc.nom_retourne_au_travail", "{nom} is going back to work" } });
+            Assert.AreEqual("Lt. Kane is going back to work", ExceptionQueueController.KickerApres(Kane()), "l'en de l'atelier §3.5");
+            Assert.IsNull(ExceptionQueueController.KickerApres(Ville()), "la ville n'a toujours pas de surtitre");
         }
 
         [UnityTest]

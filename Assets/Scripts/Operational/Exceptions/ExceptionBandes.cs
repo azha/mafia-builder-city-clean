@@ -292,14 +292,19 @@ namespace MafiaCleanCity.Operational.Exceptions
 
         /// <summary>S03 — une clé à `{enseigne}` (atelier §3.11, `b761a235`) : la valeur servie si le catalogue la connaît, sinon
         /// le repli fr de l'atelier. L'enseigne entre NUE : ni article ni contraction devant, aucun mot accordé derrière.</summary>
-        public static string AvecEnseigne(string cle, string repli, string enseigne)
+        public static string AvecEnseigne(string cle, string repli, string enseigne) => Gabarit(cle, repli, "enseigne", enseigne);
+
+        /// <summary>UN GABARIT à un paramètre : la valeur servie de `cle` avec `{param}` remplacé, sinon le repli fr (même
+        /// remplacement). ⛔ L'ORDRE DES MOTS VIENT DU GABARIT, jamais du code : une concaténation « nom + " " + mot » fige l'ordre
+        /// du français et le traducteur ne peut plus le changer.</summary>
+        public static string Gabarit(string cle, string repli, string param, string valeur)
         {
             if (MafiaCleanCity.I18n.I18nCatalog.Connait(cle))
             {
-                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle, new Dictionary<string, string> { { "enseigne", enseigne } });
+                string t = MafiaCleanCity.I18n.I18nCatalog.Traduire(cle, new Dictionary<string, string> { { param, valeur } });
                 if (!string.IsNullOrWhiteSpace(t)) return t.Trim();
             }
-            return repli.Replace("{enseigne}", enseigne);
+            return repli.Replace("{" + param + "}", valeur);
         }
 
         /// <summary>La clé du SEUL libellé servi qui dit « le bâtiment » (« Réparer le bâtiment ») : c'est lui que le nom remplace.
