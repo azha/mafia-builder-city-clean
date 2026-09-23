@@ -1,0 +1,72 @@
+mot	cadres	classe	clé	fr	en	note
+où en est chaque étape	137	proposée	filiere.sous_titre.ou_en_est_chaque_etape	où en est chaque étape	where each stage stands	sous-titre (137)
+propres	137,138,140	proposée	filiere.bloc.propres	propres	clean	le compte des étapes `CLEAN` (le servi voisin : « PROPRE AU BOUT »)
+node · dirty	137,138	note				identifiant brut montré EXPRÈS (le nœud et sa bande) — pas un libellé
+La blanchisserie	137,138	note				nom de nœud d’EXEMPLE : aucun nom servi (références nues, 142) — dette « nommer les nœuds »
+node · partial	137,138	note				identifiant brut montré EXPRÈS (le nœud et sa bande) — pas un libellé
+à moitié	137,138	proposée	filiere.proprete.partial	à moitié	half	`cleanliness_band` = PARTIAL (ratifié) ; §compléments
+Le garage	137,138	note				nom de nœud d’EXEMPLE : aucun nom servi (références nues, 142) — dette « nommer les nœuds »
+node · mostly_clean	137,138	note				identifiant brut montré EXPRÈS (le nœud et sa bande) — pas un libellé
+Le notaire	137,138	note				nom de nœud d’EXEMPLE : aucun nom servi (références nues, 142) — dette « nommer les nœuds »
+node · clean	137,138	note				identifiant brut montré EXPRÈS (le nœud et sa bande) — pas un libellé
+et c’est voulu	137	note				note de DA dans le téléphone — le servi le dit déjà à la voix du joueur (`filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_…`, 32 4b)
+La propreté, jamais le montant	137	note				note de DA dans le téléphone — le servi le dit déjà à la voix du joueur (`filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_…`, 32 4b)
+le serveur ne rend	137	note				note de DA dans le téléphone — le servi le dit déjà à la voix du joueur (`filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_…`, 32 4b)
+aucun scalaire brut	137	note				note de DA dans le téléphone — le servi le dit déjà à la voix du joueur (`filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_…`, 32 4b)
+: ni montant, ni durée, ni frais — il dit seulement si de l’argent est là. C’est la règle R2.2 du canon, pas un manque à combler.	137	note				note de DA dans le téléphone — le servi le dit déjà à la voix du joueur (`filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_…`, 32 4b)
+INJECTER	137,138,140	proposée	filiere.bloc.injecter	Injecter	Inject	geste À ROUTE (`POST /v1/operational/laundering/inject`)
+depuis votre comptoir, vers une planque à vous	137,138	proposée	filiere.bloc.depuis_votre_comptoir_vers_une_planque_a_vous	depuis votre comptoir, vers une planque à vous	from your counter, to a safehouse of yours	
+le serveur dit	138	note				note de DA dans le téléphone — le servi le dit déjà à la voix du joueur (`filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_…`, 32 4b) — 138 : servi en 4b (32)
+oui ou non	138	note				note de DA dans le téléphone — le servi le dit déjà à la voix du joueur (`filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_…`, 32 4b) (138)
+, jamais de combien ni pourquoi. C’est le seul signal d’alerte du domaine — et il ne se mesure pas.	138	note				note de DA dans le téléphone — le servi le dit déjà à la voix du joueur (`filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_…`, 32 4b) (138)
+ce qui est tenu, ce qui reste flou	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+maillons	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+tenus	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+non re-mesurés	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+Une planque à vous	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+le welcome grant en pose une — écrivain de production compté	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+safehouses	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+Injecter l’argent	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+la porte qui la bloquait est levée ; l’aboutissement n’est pas re-mesuré	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+laundering/inject	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+Le profil de la filière	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+écrit par l’injection — non re-mesuré depuis	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+L’épingle de contrôle	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+posée sur un bâtiment promu — non re-mesuré depuis	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+la chaîne	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+Le premier maillon tient depuis le 31 août	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+il n’avait pas d’écrivain, il en a un — et l’écran le disait encore après. Les trois suivants ne sont	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+pas re-mesurés	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+: ni tenus, ni cassés. On dit ce qu’on sait.	139	note				panneau des maillons / lots (139, 142) — pas un libellé
+vous n’en avez pas encore	140	proposée	filiere.sous_titre.vous_n_en_avez_pas_encore	vous n’en avez pas encore	you don’t have one yet	sous-titre de l’état « aucune filière, une planque » (140)
+Votre planque est prête.	140	proposée	filiere.bloc.votre_planque_est_prete	Votre planque est prête.	Your safehouse is ready.	« prête » s’accorde à la planque
+La filière, elle, reste à monter.	140	proposée	filiere.bloc.la_filiere_elle_reste_a_monter	La filière, elle, reste à monter.	The pipeline still has to be built.	
+par où ça commence	140	proposée	filiere.bloc.par_ou_ca_commence	par où ça commence	where it starts	
+Injecter, puis accrocher une étape	140	proposée	filiere.bloc.injecter_puis_accrocher_une_etape	Injecter, puis accrocher une étape	Inject, then hook on a stage	les deux gestes À ROUTE (`inject`, `stage`)
+la planque vous est donnée	140	proposée	filiere.bloc.la_planque_vous_est_donnee_le_reste_se_construit_une_premiere_injection_ouvre_la_filiere_chaque_etape_suivante_s_accroche_a_la_precedente	la planque vous est donnée ; le reste se construit. Une première injection ouvre la filière, chaque étape suivante s’accroche à la précédente.	the safehouse is given to you; the rest gets built. A first injection opens the pipeline, each next stage hooks onto the one before.	une phrase en deux nœuds
+; le reste se construit. Une première injection ouvre la filière, chaque étape suivante s’accroche à la précédente.	140	proposée	filiere.bloc.la_planque_vous_est_donnee_le_reste_se_construit_une_premiere_injection_ouvre_la_filiere_chaque_etape_suivante_s_accroche_a_la_precedente			même phrase
+aucune filière	141	proposée	filiere.sous_titre.aucune_filiere	aucune filière	no pipeline	sous-titre (141)
+Aucune filière montée.	141	proposée	filiere.bloc.aucune_filiere_montee	Aucune filière montée.	No pipeline built.	titre (141)
+Une filière se construit étape par étape.	141	proposée	filiere.bloc.une_filiere_se_construit_etape_par_etape	Une filière se construit étape par étape.	A pipeline is built stage by stage.	
+comment ça se monte	141	proposée	filiere.bloc.comment_ca_se_monte	comment ça se monte	how it’s built	
+Une étape s’accroche à la précédente	141	proposée	filiere.bloc.une_etape_s_accroche_a_la_precedente	Une étape s’accroche à la précédente	A stage hooks onto the one before	
+chaque étape se pose	141	proposée	filiere.bloc.chaque_etape_se_pose_a_partir_d_un_nœud_existant_et_d_un_batiment_a_vous_la_premiere_a_besoin_d_une_injection_donc_d_une_planque	chaque étape se pose à partir d’un nœud existant et d’un bâtiment à vous. La première a besoin d’une injection — donc d’une planque.	each stage is set from an existing node and a building of yours. The first one needs an injection — so a safehouse.	une phrase en trois nœuds ; `POST …/laundering/stage`
+à partir d’un nœud existant	141	proposée	filiere.bloc.chaque_etape_se_pose_a_partir_d_un_nœud_existant_et_d_un_batiment_a_vous_la_premiere_a_besoin_d_une_injection_donc_d_une_planque			même phrase
+et d’un bâtiment à vous. La première a besoin d’une injection — donc d’une planque.	141	proposée	filiere.bloc.chaque_etape_se_pose_a_partir_d_un_nœud_existant_et_d_un_batiment_a_vous_la_premiere_a_besoin_d_une_injection_donc_d_une_planque			même phrase
+manque	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+livré	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+au canon	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+LIVRÉ	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+La planque est donnée à l’arrivée	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+le premier maillon avait zéro écrivain ; le welcome grant en pose une depuis le 31 août — c’est ce qui a rendu cette planche fausse	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+MANQUE	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+Nommer les nœuds et les bâtiments	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+ce sont des références nues : zéro libellé servi, mesuré — septième écran à buter sur les noms	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+CANON	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+Le montant n’a pas à ressortir	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+aucun scalaire brut ne traverse la projection — R2.2. Le réclamer serait un lot contre la règle, pas un lot manquant	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+L’écart est un voyant, pas une mesure	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+le serveur dit qu’il y a écart, jamais de combien ni pourquoi — même règle, et l’écran le pose comme un voyant	142	note				panneau des maillons / lots (139, 142) — pas un libellé
+(complément de famille)		proposée	filiere.proprete.dirty	sale	dirty	ratifié (137) ; le mot est servi ailleurs
+(complément de famille)		proposée	filiere.proprete.mostly_clean	presque propre	nearly clean	ratifié (137)
+(complément de famille)		proposée	filiere.proprete.clean	propre	clean	ratifié (137)
