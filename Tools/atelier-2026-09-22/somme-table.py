@@ -28,7 +28,8 @@ for f in sys.argv[1:]:
         ks = [x.strip() for x in c[3].split('+')]
         for k in ks: vals[k].add(c[4] if len(ks) == 1 else None)
     vals = {k: {x for x in v if x is not None} or {'(assemblage)'} for k, v in vals.items()}
-    orphelines = {c[3] for c in sans} - set(vals) - {c[3] for c in avec}
+    # une continuation composée « a + b » n'est orpheline que si l'une de ses PARTIES n'a de valeur nulle part
+    orphelines = {c[3] for c in sans if any(k.strip() not in vals for k in c[3].split('+'))} - {c[3] for c in avec}
     doubles = {k: v for k, v in vals.items() if len(v) > 1}
     print(f'{f} : {len(L)} lignes = {len(L) - len(comp)} mots + {len(comp)} compléments · par classe {dict(par)} · '
           f'clés distinctes à valeur {len(vals)} · continuations sans valeur {len(sans)} (clés {len({c[3] for c in sans})})'

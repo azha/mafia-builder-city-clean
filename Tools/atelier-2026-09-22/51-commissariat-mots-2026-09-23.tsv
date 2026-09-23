@@ -1,0 +1,28 @@
+mot	cadres	classe	clé	fr	en	note
+CE QU’ILS SAVENT	31	proposée	police.bloc.ce_qu_ils_savent	Ce qu’ils savent	What they know	titre (31) : `belief` de chaque précinct
+six commissariats · relevé de nos guetteurs	31	proposée	police.bloc.six_commissariats_releve_de_nos_guetteurs	six commissariats · relevé de nos guetteurs	six precincts · from our lookouts	« six » : constante de la ville
+PRÉCINCT 1	31,35	proposée	police.bloc.precinct_n	Précinct {n}	Precinct {n}	le nom d’un précinct ; D15 : `{n}` est l’identifiant servi
+Les Bassins·2·3	31	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple
+patrouilles	31,34,35	proposée	police.bloc.patrouilles	patrouilles	patrols	la ligne de `patrol` (valeurs servies `police.bloc.partout`…)
+descente il y a 3 jours — bloc 47	31	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple
+PRÉCINCT 2	31	proposée	police.bloc.precinct_n			même clé
+La Colonne·B·C	31	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple
+PRÉCINCT 3	31	proposée	police.bloc.precinct_n			même clé
+Saint-Brand · Les Entrepôts·2	31	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple
+PRÉCINCT 4	31	proposée	police.bloc.precinct_n			même clé
+Le Treillis·B·C	31	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple
+PRÉCINCT 5	31	proposée	police.bloc.precinct_n			même clé
+Le Verre·2·3	31	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple
+PRÉCINCT 6	31,34,35	proposée	police.bloc.precinct_n			même clé
+La Lisière·B·C	31,34	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple
+vos quatre bâtiments sont ici	31	proposée	police.bloc.vos_n_batiments_sont_ici	{n, plural, one {votre bâtiment est ici} other {vos # bâtiments sont ici}}	{n, plural, one {your building is here} other {your # buildings are here}}	D15 : le compte vient de l’intérieur servi ; clé NOMMÉE (ICU)
+Quatre d’entre eux vous chassent —	31	proposée	police.bloc.n_d_entre_eux_vous_chassent	{n, plural, one {Un d’entre eux vous chasse} other {# d’entre eux vous chassent}} —	{n, plural, one {One of them is hunting you} other {# of them are hunting you}} —	le compte des `belief` = HUNTING ; clé NOMMÉE (ICU)
+aucun ne dort	31	proposée	police.bloc.aucun_ne_dort	aucun ne dort	none is asleep	le compte des DORMANT = 0
+LEURS DESCENTES	35	proposée	police.bloc.leurs_descentes	Leurs descentes	Their raids	titre (35)
+ce que le back sait déjà et ne dit pas	35	note				explication de DA dans le téléphone — pas un libellé (« le back »)
+Les Quais 1·2·3	35	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple
+DESCENTE · il y a 3 jours · bloc 47 · aucun blessé	35	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple
+Le La Lisière·B·C	35	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple ; ⚠️ coquille de maquette « Le La Lisière »
+DESCENTE · hier · votre entrepôt ·	35	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple
+à réparer	35	note				historique / rattachement NON servi (35 : « Avec les lots : les districts sous chaque commissariat, l’historique des descentes… ») — exemple (l’état du bâtiment est servi ailleurs : `building.structural.*`)
+Avec les lots : les districts sous chaque commissariat, l’historique des descentes, et l’état de représailles qui reste affiché tant qu’il dure.	35	note				explication de DA dans le téléphone — pas un libellé
