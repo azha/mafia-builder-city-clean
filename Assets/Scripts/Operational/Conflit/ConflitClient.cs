@@ -13,14 +13,14 @@ namespace MafiaCleanCity.Operational
     // GET /v1/me/engagements                (aucun paramètre)
     // GET /v1/lieutenants                    (aucun paramètre — pas dans le brief, ajoutée : SEULE
     //                                          route qui porte `archetype`, voir ConflitScreenController)
-    // POST /v1/me/engagements                {lieutenant_id, target_rival_key, target_holding_id}
+    // POST /v1/me/engagements                {lieutenant_id, target_rival_key, target_holding_id?} ⇒ {engagement_id}
     public class ConflitClient
     {
         public string BaseUrl = "http://localhost";
         public int TimeoutSeconds = 10;
 
-        /// <summary>`GET /v1/me/engagements` — mesuré (2026-09-03) : `{engagements: []}`, VIDE sur
-        /// les deux comptes sondés (voir `EngagementDto`).</summary>
+        /// <summary>`GET /v1/me/engagements` — `{engagements: EngagementView[]}` (7 clés, voir `EngagementDto`) ; mesuré
+        /// VIDE sur les comptes sondés le 2026-09-03.</summary>
         public IEnumerator GetEngagements(string bearer,
                                      Action<GetEngagementsResponseDto> onOk, Action<long, string> onErr)
         {
@@ -64,18 +64,27 @@ namespace MafiaCleanCity.Operational
             }
         }
 
-        /// <summary>`POST /v1/me/engagements` — corps mesuré (422 successifs, 2026-09-03) :
-        /// `{lieutenant_id, target_rival_key, target_holding_id}`. ⛔⛔ Réponse de succès JAMAIS
-        /// mesurée : les DEUX comptes sondés échouent tous deux, AVANT toute validation des deux
-        /// autres champs, sur `RESOURCE_NOT_FOUND · "No such MUSCLE lieutenant for this player:
-        /// <uuid>"` — aucun n'a de lieutenant `archetype == "MUSCLE"`. Idempotency-Key posée par
-        /// défaut (l'`IdempotencyInterceptor` global du back l'honore, qu'un `@Idempotent`
-        /// explicite soit présent ou non côté contrôleur — patron `DailyReviewClient`) : à
-        /// RETIRER si la route back ne le supporte pas.</summary>
+        /// <summary>Le corps EXACT que `PostEngagements` envoie : `target_holding_id` est OMIS quand aucun axe n'est choisi
+        /// (le back refuse `""` en 422 : un axe présent doit être un des 5). Public pour que le test lise le corps envoyé,
+        /// pas une copie de sa construction.</summary>
+        public static string CorpsEnvoye(PostEngagementsBody corps)
+        {
+            if (corps == null) return "{}";
+            if (!string.IsNullOrEmpty(corps.target_holding_id)) return JsonUtility.ToJson(corps);
+            return JsonUtility.ToJson(new PostEngagementsBodySansAxe
+            {
+                lieutenant_id = corps.lieutenant_id,
+                target_rival_key = corps.target_rival_key,
+            });
+        }
+
+        /// <summary>`POST /v1/me/engagements` — `{lieutenant_id, target_rival_key, target_holding_id?}` ⇒ `{engagement_id}`
+        /// (voir `PostEngagementsResponseDto` pour les erreurs). Idempotency-Key posée : l'`IdempotencyInterceptor` global
+        /// du back l'honore (`engagements.controller.ts:115`).</summary>
         public IEnumerator PostEngagements(string bearer, PostEngagementsBody corps,
                                      Action<PostEngagementsResponseDto> onOk, Action<long, string> onErr)
         {
-            string json = corps != null ? JsonUtility.ToJson(corps) : "{}";
+            string json = CorpsEnvoye(corps);
             using (var req = new UnityWebRequest(BaseUrl.TrimEnd('/') + "/v1/me/engagements", "POST"))
             {
                 req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));

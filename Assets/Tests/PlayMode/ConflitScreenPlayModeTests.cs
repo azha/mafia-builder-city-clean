@@ -280,10 +280,11 @@ namespace MafiaCleanCity.Operational.Tests
                 {
                     engagements = new[]
                     {
-                        new EngagementDto { target_rival_key = "tarcum" },
-                        new EngagementDto { target_rival_key = "tarcum" },
-                        new EngagementDto { target_rival_key = "coil" },
-                        new EngagementDto { target_rival_key = "une_5e_famille_jamais_annoncee" },
+                        Envoi("e1", "tarcum", "Tarcum", "resolved", "advance", "low", "medium"),
+                        Envoi("e2", "tarcum", "Tarcum", "scheduled", "", "", "medium"),
+                        Envoi("e3", "coil", "La Coil", "resolved", "hold", "high", "medium"),
+                        Envoi("e4", "une_5e_famille_jamais_annoncee", "unknown_une_5e_famille_jamais_annoncee",
+                              "resolved", "contested", "medium", "medium"),
                     },
                 });
             yield return null;
@@ -332,7 +333,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("les ferrailleurs de Spine", ConflitResolvers.SousTitreFamille("coil"));
             Assert.AreEqual("le port, et ce qui y entre", ConflitResolvers.SousTitreFamille("tarcum"));
             Assert.AreEqual("les docks du nord", ConflitResolvers.SousTitreFamille("iron_throat"));
-            Assert.AreEqual("la ligne de sel, à l'est", ConflitResolvers.SousTitreFamille("saltline"));
+            Assert.AreEqual("la ligne de sel, à l’est", ConflitResolvers.SousTitreFamille("saltline"));   // D10 : l’apostrophe typographique du code
         }
 
         [Test]
@@ -340,6 +341,160 @@ namespace MafiaCleanCity.Operational.Tests
         {
             Assert.Throws<System.ArgumentOutOfRangeException>(
                 () => ConflitResolvers.SousTitreFamille("BOGUS_5E_VALEUR"));
+        }
+
+        /// <summary>Un envoi à 7 clés servies (forme `EngagementView`), pour les états pilotés par la donnée.</summary>
+        private static EngagementDto Envoi(string id, string famille, string nom, string status,
+                                           string issue, string cout, string chaleur) =>
+            new EngagementDto
+            {
+                engagement_id = id, target_rival_key = famille,
+                target_rival_name_i18n = new RivalNomI18nDto
+                {
+                    key = "game.fiction.rival.name", @params = new RivalNomParamsDto { nom = nom },
+                },
+                status = status, outcome_bucket = issue, friction_consumed_bucket = cout, heat_increment_bucket = chaleur,
+            };
+
+        // ═══ L1 — forme G et gardes de VALEUR (㉙, 23/09) ═══════════════════════════════════════
+        //
+        // Un envoi porte 7 clés servies (`EngagementView`, back `combat.service.ts:95-103`) et 2 annoncées pour après le gate
+        // (`target_axis_i18n`, `lieutenant`, noms figés par l'orchestrateur). Aucun corps NON VIDE n'a été mesuré sur la pile :
+        // les corps ci-dessous sont FABRIQUÉS à la forme du back, et désérialisés par le MÊME appel que `ConflitClient`
+        // (JsonUtility sur l'enveloppe). Mots attendus : table 40 de l'atelier (997d6ab4), octet pour octet.
+
+        private const string CorpsRentre =
+            "{\"payload\":{\"data\":{\"engagements\":[{\"engagement_id\":\"7c1e0a52-0000-4000-8000-000000000001\"," +
+            "\"target_rival_key\":\"iron_throat\"," +
+            "\"target_rival_name_i18n\":{\"key\":\"game.fiction.rival.name\",\"params\":{\"nom\":\"Gorge-de-Fer\"}}," +
+            "\"status\":\"resolved\",\"outcome_bucket\":\"breakthrough\",\"friction_consumed_bucket\":\"high\"," +
+            "\"heat_increment_bucket\":\"medium\"," +
+            "\"target_axis_i18n\":{\"key\":\"conflit.axe.finance\",\"params\":{}}," +
+            "\"lieutenant\":{\"id\":\"9d2f0000-0000-4000-8000-000000000002\",\"name\":\"Lt. Voss\"}}]}}}";
+
+        private const string CorpsParti =
+            "{\"payload\":{\"data\":{\"engagements\":[{\"engagement_id\":\"7c1e0a52-0000-4000-8000-000000000003\"," +
+            "\"target_rival_key\":\"saltline\"," +
+            "\"target_rival_name_i18n\":{\"key\":\"game.fiction.rival.name\",\"params\":{\"nom\":\"Saltline\"}}," +
+            "\"status\":\"scheduled\",\"outcome_bucket\":null,\"friction_consumed_bucket\":null," +
+            "\"heat_increment_bucket\":null,\"target_axis_i18n\":null,\"lieutenant\":null}]}}}";
+
+        private static EngagementDto Premier(string corps) =>
+            JsonUtility.FromJson<GetEngagementsEnvelope>(corps).payload.data.engagements[0];
+
+        [Test]
+        public void EcranConflitL1_LesNeufClesArriventDansLeDto()
+        {
+            EngagementDto e = Premier(CorpsRentre);
+            Assert.AreEqual("7c1e0a52-0000-4000-8000-000000000001", e.engagement_id);
+            Assert.AreEqual("iron_throat", e.target_rival_key);
+            Assert.AreEqual("game.fiction.rival.name", e.target_rival_name_i18n.key);
+            Assert.AreEqual("Gorge-de-Fer", e.target_rival_name_i18n.@params.nom, "le paramètre `nom` du gabarit `{nom}`");
+            Assert.AreEqual("resolved", e.status);
+            Assert.AreEqual("breakthrough", e.outcome_bucket);
+            Assert.AreEqual("high", e.friction_consumed_bucket);
+            Assert.AreEqual("medium", e.heat_increment_bucket);
+            Assert.AreEqual("conflit.axe.finance", e.target_axis_i18n.key);
+            Assert.AreEqual("9d2f0000-0000-4000-8000-000000000002", e.lieutenant.id);
+            Assert.AreEqual("Lt. Voss", e.lieutenant.name);
+
+            // Contrôle positif : une clé MAL NOMMÉE n'arrive pas — l'égalité ci-dessus mesure bien la déclaration du champ.
+            EngagementDto mal = Premier(CorpsRentre.Replace("\"outcome_bucket\"", "\"outcome\""));
+            Assert.AreEqual("", mal.outcome_bucket ?? "", "une clé servie sous un autre nom doit rester vide dans le DTO");
+        }
+
+        [Test]
+        public void EcranConflitL1_UnEnvoiParti_NullPartoutSaufLaFamille_AucunMotDevine()
+        {
+            EngagementDto e = Premier(CorpsParti);
+            Assert.AreEqual("scheduled", e.status);
+            Assert.IsNull(ConflitResolvers.Issue(e.outcome_bucket), "pas encore rentré : aucune issue, pas de ligne");
+            Assert.IsNull(ConflitResolvers.Cout(e.friction_consumed_bucket), "coût null : pas de ligne « ça nous a coûté »");
+            Assert.IsNull(ConflitResolvers.Chaleur(e.heat_increment_bucket), "chaleur null : pas de ligne « la ville a chauffé »");
+            Assert.IsNull(ConflitResolvers.Axe(e.target_axis_i18n), "axe null (ou pas encore servi) : aucun axe deviné");
+            Assert.IsNull(ConflitResolvers.NomDuLieutenant(e.lieutenant), "lieutenant null (disparu) : le nom s’omet, sans repli");
+            Assert.AreEqual("Saltline", ConflitResolvers.NomServi(e.target_rival_name_i18n));
+
+            // Un corps d'AVANT le lot back (les deux clés absentes) se lit comme null : même rendu.
+            EngagementDto avant = Premier(CorpsParti.Replace(",\"target_axis_i18n\":null,\"lieutenant\":null", ""));
+            Assert.IsNull(ConflitResolvers.Axe(avant.target_axis_i18n));
+            Assert.IsNull(ConflitResolvers.NomDuLieutenant(avant.lieutenant));
+        }
+
+        [Test]
+        public void EcranConflitL1_Issue_CouvreLeDomaineAvecLesMotsDeLaTable40()
+        {
+            Assert.AreEqual("On a reculé", ConflitResolvers.Issue("retreat"));
+            Assert.AreEqual("Rien obtenu", ConflitResolvers.Issue("hold"));
+            Assert.AreEqual("Disputé", ConflitResolvers.Issue("contested"));
+            Assert.AreEqual("Terrain gagné", ConflitResolvers.Issue("advance"));
+            Assert.AreEqual("Percée", ConflitResolvers.Issue("breakthrough"));
+            Assert.AreEqual("Percée", ConflitResolvers.Issue(Premier(CorpsRentre).outcome_bucket), "la valeur d'un corps");
+            Assert.AreEqual("état inconnu", ConflitResolvers.Issue("rout"), "hors domaine : le mot de la famille, jamais la valeur");
+            Assert.IsNull(ConflitResolvers.Issue(""));
+        }
+
+        [Test]
+        public void EcranConflitL1_CoutEtChaleur_CouvrentLeDomaineAvecLesMotsDeLaTable40()
+        {
+            Assert.AreEqual("un peu", ConflitResolvers.Cout("low"));
+            Assert.AreEqual("pas mal", ConflitResolvers.Cout("medium"));
+            Assert.AreEqual("beaucoup", ConflitResolvers.Cout("high"));
+            Assert.AreEqual("un peu", ConflitResolvers.Chaleur("low"));
+            Assert.AreEqual("pas mal", ConflitResolvers.Chaleur("medium"));
+            Assert.AreEqual("beaucoup", ConflitResolvers.Chaleur("high"));
+            EngagementDto e = Premier(CorpsRentre);
+            Assert.AreEqual("beaucoup", ConflitResolvers.Cout(e.friction_consumed_bucket));
+            Assert.AreEqual("pas mal", ConflitResolvers.Chaleur(e.heat_increment_bucket), "`medium` : la seule valeur produite");
+            Assert.AreEqual("état inconnu", ConflitResolvers.Cout("extreme"));
+            Assert.AreEqual("état inconnu", ConflitResolvers.Chaleur("extreme"));
+            Assert.IsNull(ConflitResolvers.Cout(null));
+            Assert.IsNull(ConflitResolvers.Chaleur(null));
+        }
+
+        [Test]
+        public void EcranConflitL1_AxeEtNoms_MotsServisOuRienJamaisLaValeurMachine()
+        {
+            Assert.AreEqual("leurs gros bras", ConflitResolvers.Axe(new AxeI18nDto { key = "conflit.axe.muscle" }));
+            Assert.AreEqual("leur argent", ConflitResolvers.Axe(Premier(CorpsRentre).target_axis_i18n));
+            Assert.AreEqual("leurs informateurs", ConflitResolvers.Axe(new AxeI18nDto { key = "conflit.axe.intel" }));
+            Assert.AreEqual("leurs installations", ConflitResolvers.Axe(new AxeI18nDto { key = "conflit.axe.infrastructure" }));
+            Assert.AreEqual("leur tête", ConflitResolvers.Axe(new AxeI18nDto { key = "conflit.axe.leadership" }));
+            Assert.AreEqual("type inconnu", ConflitResolvers.Axe(new AxeI18nDto { key = "conflit.axe.logistique" }));
+
+            Assert.AreEqual("Gorge-de-Fer", ConflitResolvers.NomServi(Premier(CorpsRentre).target_rival_name_i18n));
+            Assert.IsNull(ConflitResolvers.NomServi(new RivalNomI18nDto
+            {
+                key = "game.fiction.rival.name", @params = new RivalNomParamsDto { nom = "unknown_bogus" },
+            }), "la sentinelle hors domaine du back ne s’affiche jamais");
+            Assert.IsNull(ConflitResolvers.NomServi(new RivalNomI18nDto()), "référence absente ⇒ null");
+
+            Assert.AreEqual("Lt. Voss", ConflitResolvers.NomDuLieutenant(Premier(CorpsRentre).lieutenant));
+        }
+
+        [Test]
+        public void EcranConflitL1_CorpsEnvoye_OmetLAxeQuandAucunNEstChoisi()
+        {
+            var sansAxe = new PostEngagementsBody { lieutenant_id = "lt-1", target_rival_key = "coil", target_holding_id = "" };
+            Assert.AreEqual("{\"lieutenant_id\":\"lt-1\",\"target_rival_key\":\"coil\"}", ConflitClient.CorpsEnvoye(sansAxe));
+            // Contrôle positif : la sérialisation nue écrit bien la clé vide que le back refuse (422) — le cas que la garde attrape.
+            StringAssert.Contains("\"target_holding_id\":\"\"", JsonUtility.ToJson(sansAxe));
+
+            var nulAxe = new PostEngagementsBody { lieutenant_id = "lt-1", target_rival_key = "coil", target_holding_id = null };
+            StringAssert.DoesNotContain("target_holding_id", ConflitClient.CorpsEnvoye(nulAxe));
+
+            var avecAxe = new PostEngagementsBody { lieutenant_id = "lt-1", target_rival_key = "coil", target_holding_id = "finance" };
+            Assert.AreEqual("{\"lieutenant_id\":\"lt-1\",\"target_rival_key\":\"coil\",\"target_holding_id\":\"finance\"}",
+                ConflitClient.CorpsEnvoye(avecAxe));
+            Assert.AreEqual("{}", ConflitClient.CorpsEnvoye(null));
+        }
+
+        [Test]
+        public void EcranConflitL1_ReponseDuPost_PorteLIdentifiantDeLEnvoi()
+        {
+            PostEngagementsResponseDto r = JsonUtility.FromJson<PostEngagementsEnvelope>(
+                "{\"payload\":{\"data\":{\"engagement_id\":\"7c1e0a52-0000-4000-8000-000000000004\"}}}").payload.data;
+            Assert.AreEqual("7c1e0a52-0000-4000-8000-000000000004", r.engagement_id);
         }
     }
 }

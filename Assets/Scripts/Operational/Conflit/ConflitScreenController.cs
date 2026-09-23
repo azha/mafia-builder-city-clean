@@ -737,6 +737,84 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>㉙ — l'issue d'un envoi (`outcome_bucket`), mots de l'atelier table 40 (997d6ab4) ; clé tirée de la VALEUR
+        /// servie (`conflit.issue.<valeur>`). Domaine `COMBAT_OUTCOME_BUCKETS` (5). ⚠️ null (envoi `scheduled`, pas encore
+        /// rentré) ⇒ null : l'appelant n'écrit PAS la ligne. Présente hors domaine ⇒ « état inconnu », jamais la valeur brute.</summary>
+        public static string Issue(string bucket)
+        {
+            switch (bucket)
+            {
+                case "retreat":      return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "issue", bucket, "On a reculé");
+                case "hold":         return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "issue", bucket, "Rien obtenu");
+                case "contested":    return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "issue", bucket, "Disputé");
+                case "advance":      return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "issue", bucket, "Terrain gagné");
+                case "breakthrough": return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "issue", bucket, "Percée");
+                default: return string.IsNullOrEmpty(bucket) ? null : MafiaCleanCity.I18n.Repli.Etat(bucket);
+            }
+        }
+
+        /// <summary>㉙ — ce que l'envoi a coûté (`friction_consumed_bucket`, `FrictionBand` : low · medium · high), table 40,
+        /// clé `conflit.cout.<valeur>`. Même contrat que `Issue` : null ⇒ null (pas de ligne « ça nous a coûté »).</summary>
+        public static string Cout(string bucket)
+        {
+            switch (bucket)
+            {
+                case "low":    return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "cout", bucket, "un peu");
+                case "medium": return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "cout", bucket, "pas mal");
+                case "high":   return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "cout", bucket, "beaucoup");
+                default: return string.IsNullOrEmpty(bucket) ? null : MafiaCleanCity.I18n.Repli.Etat(bucket);
+            }
+        }
+
+        /// <summary>㉙ — ce que l'envoi a fait chauffer (`heat_increment_bucket`), table 40, clé `conflit.chaleur.<valeur>`.
+        /// Le back ne produit que `medium` aujourd'hui ; les mots couvrent low · medium · high. null ⇒ null (pas de ligne
+        /// « la ville a chauffé », ni de suite « , et la ville a chauffé »).</summary>
+        public static string Chaleur(string bucket)
+        {
+            switch (bucket)
+            {
+                case "low":    return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "chaleur", bucket, "un peu");
+                case "medium": return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "chaleur", bucket, "pas mal");
+                case "high":   return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "chaleur", bucket, "beaucoup");
+                default: return string.IsNullOrEmpty(bucket) ? null : MafiaCleanCity.I18n.Repli.Etat(bucket);
+            }
+        }
+
+        /// <summary>㉙ — le nom SERVI de la famille visée (`target_rival_name_i18n`, gabarit `{nom}`). null si la référence
+        /// manque (JsonUtility : `key` vide) ou si le back sert sa sentinelle hors domaine `unknown_<clé>` — une valeur
+        /// machine ne s'affiche jamais ; l'appelant compte alors l'envoi parmi les familles inconnues.</summary>
+        public static string NomServi(RivalNomI18nDto nom)
+        {
+            if (nom == null || string.IsNullOrEmpty(nom.key)) return null;
+            string brut = nom.@params != null ? nom.@params.nom : null;
+            if (string.IsNullOrWhiteSpace(brut) || brut.StartsWith("unknown_", System.StringComparison.Ordinal)) return null;
+            string rendu = MafiaCleanCity.I18n.Libelle.Gabarit(nom.key, "{nom}",
+                new System.Collections.Generic.Dictionary<string, string> { { "nom", brut } });
+            return string.IsNullOrWhiteSpace(rendu) ? null : rendu;
+        }
+
+        /// <summary>㉙ — l'axe visé (`target_axis_i18n`), mots de la table 40 (`conflit.axe.*`). null si aucun axe n'est
+        /// servi (champ absent tant que le back ne le sert pas, ou `null` : envoi sans axe) — l'appelant n'écrit rien, aucun
+        /// axe deviné. Clé servie hors des 5 ⇒ « type inconnu », jamais la clé brute.</summary>
+        public static string Axe(AxeI18nDto axe)
+        {
+            if (axe == null || string.IsNullOrEmpty(axe.key)) return null;
+            switch (axe.key)
+            {
+                case "conflit.axe.muscle":         return MafiaCleanCity.I18n.Libelle.Gabarit(axe.key, "leurs gros bras");
+                case "conflit.axe.finance":        return MafiaCleanCity.I18n.Libelle.Gabarit(axe.key, "leur argent");
+                case "conflit.axe.intel":          return MafiaCleanCity.I18n.Libelle.Gabarit(axe.key, "leurs informateurs");
+                case "conflit.axe.infrastructure": return MafiaCleanCity.I18n.Libelle.Gabarit(axe.key, "leurs installations");
+                case "conflit.axe.leadership":     return MafiaCleanCity.I18n.Libelle.Gabarit(axe.key, "leur tête");
+                default: return MafiaCleanCity.I18n.Repli.Type(axe.key);
+            }
+        }
+
+        /// <summary>㉙ — le nom du lieutenant envoyé (`lieutenant.name`). null si le back sert `lieutenant: null` (lieutenant
+        /// disparu) ou ne le sert pas encore : le nom s'OMET, sans mot de repli (arbitrage de l'orchestrateur, 23/09).</summary>
+        public static string NomDuLieutenant(EngagementLieutenantDto lieutenant) =>
+            lieutenant == null || string.IsNullOrWhiteSpace(lieutenant.name) ? null : lieutenant.name;
+
         /// <summary>Le sous-titre de chaque famille — m-65, verbatim. Même garde et même raison
         /// que `NomFamille`.</summary>
         public static string SousTitreFamille(string cle)
