@@ -649,6 +649,8 @@ namespace MafiaCleanCity.Shell.Tests
         ///   B   | —                |  —   | vide, aiguille neutre, anneau or
         ///   C   | 9 627 820,00 €   |  50  | vide, aiguille neutre, anneau or
         ///   D   | 9 627 820,00 €   |  50  | Brûlant, anneau braise
+        ///   (montants RELEVÉS le 06/09, au format d'alors. Depuis CLIENT-2 c963f557, `Argent` est le formateur unique : la
+        ///   même somme s'affiche « 9 627 820 € » — sans centimes, milliers séparés par une espace fine insécable U+202F.)
         ///
         /// ⇒ Le bandeau est alimenté par DEUX arrivées asynchrones INDÉPENDANTES — le montant et
         ///   le jour d'un côté (`session/open`), le bucket de chaleur de l'autre
