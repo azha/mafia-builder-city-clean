@@ -116,7 +116,8 @@ namespace MafiaCleanCity.Operational
         public LaunderingPipelineDto DernierChargement { get; private set; }
         /// <summary>La liste des nœuds (`GET …/laundering`) — c'est ELLE qui porte `stage_index`, l'ORDRE servi des étapes.</summary>
         public LaunderingNodesDto DerniereListe { get; private set; }
-        /// <summary>`deviation_active` par nœud (`GET …/laundering/{node}`), une lecture par étape rendue ; absent = non lu (échec).</summary>
+        /// <summary>`deviation_active` lu sur la TÊTE seule (`GET …/laundering/{node}` ne sert que le nœud de tête, mesuré le 23/09) ;
+        /// absent = non lu (échec).</summary>
         public IReadOnlyDictionary<string, bool> EcartsParNoeud => ecartsParNoeud;
         private readonly Dictionary<string, bool> ecartsParNoeud = new Dictionary<string, bool>();
         /// <summary>Les nœuds des étapes, DANS L'ORDRE AFFICHÉ — pour la garde de valeur (ordre affiché == ordre de `stage_index`).</summary>
@@ -252,19 +253,19 @@ namespace MafiaCleanCity.Operational
 
             if (DernierChargement == null) { RendreEtatIndisponible(); RenduTermine = true; yield break; }
 
-            // ⛔ `deviation_active` VIT SUR LA ROUTE DU NŒUD (`GET …/laundering/{node}`), pas dans `stages` : une lecture par étape
-            //    (4 au plus). Seul ⑪ le lisait ; ㊵ a un cadre pour lui (maquette série 6, cadre 138). Un échec laisse le nœud NON LU
-            //    — il ne compte pas comme « sans écart ».
+            // ⛔ `deviation_active` VIT SUR LA ROUTE DU NŒUD (`GET …/laundering/{node}`), pas dans `stages`. Seul ⑪ le lisait ; ㊵ a
+            //    un cadre pour lui (maquette série 6, cadre 138). ⚠️ MESURÉ au créneau du 2026-09-23 : cette route ne sert QUE le nœud
+            //    de TÊTE — 404 « is not a player-owned Stage-1 laundering node » sur les trois autres. Le drapeau est donc celui de la
+            //    FILIÈRE, porté par sa tête (l'épingle d'audit de la façade hôte) : UNE lecture, sur la tête. Un échec laisse la tête
+            //    NON LUE — elle ne compte pas comme « sans écart ».
             ecartsParNoeud.Clear();
-            if (DernierChargement.stages != null)
-                foreach (LaunderingStageDto e in DernierChargement.stages)
-                {
-                    if (e == null || string.IsNullOrEmpty(e.node) || ecartsParNoeud.ContainsKey(e.node)) continue;
-                    LaunderingNodeDto n = null;
-                    yield return client.GetLaunderingNode(e.node, token, dto => n = dto,
-                        (code, msg) => Debug.LogWarning($"[FILIERE] écart du nœud {e.node} NON LU ({code} — {msg})"));
-                    if (n != null) ecartsParNoeud[e.node] = n.deviation_active;
-                }
+            {
+                LaunderingNodeDto n = null;
+                string tete = nodeId;
+                yield return client.GetLaunderingNode(tete, token, dto => n = dto,
+                    (code, msg) => Debug.LogWarning($"[FILIERE] écart de la tête {tete} NON LU ({code} — {msg})"));
+                if (n != null) ecartsParNoeud[tete] = n.deviation_active;
+            }
 
             AppliquerEtat(DernierChargement, liste, ecartsParNoeud);
             RenduTermine = true;
@@ -396,7 +397,9 @@ namespace MafiaCleanCity.Operational
             if (ecarts > 0)
                 MajPanneau(Lib("un seul voyant"),
                     Lib("La filière s’écarte de son profil"),
-                    Lib("le serveur dit oui ou non, jamais de combien ni pourquoi. C’est le seul signal d’alerte du domaine — "
+                    // Mots de l'atelier (4b, 02374169) : la note de maquette (« le serveur dit… du domaine ») parlait au juge ; le
+                    // panneau parle au joueur.
+                    Lib("on vous dit oui ou non : jamais de combien, ni pourquoi. C’est le seul signal d’alerte de la filière — "
                         + "et il ne se mesure pas."));
             else
                 MajPanneau(Lib("CE QUE LA CHAÎNE FAIT DE VOTRE ARGENT"),

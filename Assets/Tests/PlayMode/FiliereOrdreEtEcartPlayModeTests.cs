@@ -52,8 +52,8 @@ namespace MafiaCleanCity.Operational.Tests
         }
 
         /// <summary>⛔ GARDE DE VALEUR SUR UN CORPS RÉEL — le compte semé (`seed_operational_demo.mjs`, sans la paire) : l'ordre
-        /// affiché == l'ordre de `stage_index` lu dans la liste servie ; chaque étape a son écart LU ; le compteur « ÉCARTS » ==
-        /// le nombre de `deviation_active` vrais ; l'étiquette « écart » sur ces étapes-là et sur elles seules.
+        /// affiché == l'ordre de `stage_index` lu dans la liste servie ; l'écart de la TÊTE est lu (la route ne sert qu'elle) ; le
+        /// compteur « ÉCARTS » == son `deviation_active` ; l'étiquette « écart » sur la tête seule, et seulement si elle s'écarte.
         /// Anti-vacuité : au moins 2 étapes (sinon l'ordre ne prouve rien).</summary>
         [UnityTest]
         public IEnumerator Reel_OrdreAffiche_EstCeluiDeStageIndex_EtLesEcartsSontLus()
@@ -86,13 +86,16 @@ namespace MafiaCleanCity.Operational.Tests
                 Assert.Less(rangs[ecran.OrdreAffiche[i - 1]], rangs[ecran.OrdreAffiche[i]],
                     $"stage_index croît le long de l'écran (étapes {i} et {i + 1})");
 
-            foreach (string n in ecran.OrdreAffiche)
-                Assert.IsTrue(ecran.EcartsParNoeud.ContainsKey(n), $"l'écart du nœud {n} a été LU (GET …/laundering/{{node}})");
-            int vrais = ecran.OrdreAffiche.Count(n => ecran.EcartsParNoeud[n]);
-            Assert.AreEqual(vrais, ecran.EcartsAffiches, "le compteur « ÉCARTS » == le nombre de deviation_active vrais");
+            // ⚠️ La route du nœud ne sert que la TÊTE (mesuré le 23/09 : 404 « not a player-owned Stage-1 laundering node » sur
+            //    les autres) : le drapeau est celui de la filière, lu UNE fois, sur la tête (1ʳᵉ étape affichée).
+            string tete = ecran.OrdreAffiche[0];
+            Assert.IsTrue(ecran.EcartsParNoeud.ContainsKey(tete), $"l'écart de la tête {tete} a été LU (GET …/laundering/{{node}})");
+            Assert.AreEqual(1, ecran.EcartsParNoeud.Count, "une seule lecture : la tête");
+            int vrais = ecran.EcartsParNoeud[tete] ? 1 : 0;
+            Assert.AreEqual(vrais, ecran.EcartsAffiches, "le compteur « ÉCARTS » == deviation_active de la tête (0 ou 1)");
             for (int i = 0; i < ecran.OrdreAffiche.Count; i++)
-                Assert.AreEqual(ecran.EcartsParNoeud[ecran.OrdreAffiche[i]], PorteLEtiquetteEcart(i + 1),
-                    $"étape {i + 1} : l'étiquette « écart » suit deviation_active");
+                Assert.AreEqual(i == 0 && vrais == 1, PorteLEtiquetteEcart(i + 1),
+                    $"étape {i + 1} : l'étiquette « écart » n'est portée que par la tête, et seulement si elle s'écarte");
             Debug.Log($"[FILIERE] corps réel : {ecran.OrdreAffiche.Count} étapes, ordre par stage_index, {vrais} écart(s)");
         }
 
