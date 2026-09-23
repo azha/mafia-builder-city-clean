@@ -9,9 +9,9 @@ namespace MafiaCleanCity.Shell.Tests
     /// <summary>④ L'ACCUEIL — la MÉCANIQUE des états de la maquette (atelier 25 §2.2, `ecrans-brennar-accueil.html`), sans figer le visuel
     /// (non ratifiée). Gardes de VALEUR par état, sur des corps fabriqués (pas de réseau) :
     /// 1. rien à trancher — « Rien à signaler », « Aucune décision en attente », l'ambiance « Personne ne fait la queue — la routine tient » ;
-    /// 2. une carte de tête — ses deux options SERVIES en RECOMMANDATION, JAMAIS sur un bouton (mesuré par le back : descriptives,
-    ///    commit ne fait aucun effet — `hl-card-types.ts:99-102`) ;
-    /// 3. des rapports à lire — la carte AUTONOMY_REPORTS_PENDING est reconnue (le NOM se lit sur la route des rapports, corps réel) ;
+    /// 2. une carte de tête — ses deux options SERVIES en TEXTE sous « Ce qu’on peut faire », JAMAIS sur un bouton (mesuré par le back :
+    ///    descriptives, commit ne fait aucun effet — `hl-card-types.ts:99-102`) ; boutons [Prendre acte] / [Pas maintenant] (table 45) ;
+    /// 3. des rapports à lire — [Lire maintenant] OUVRE les rapports sans tampon, [Laisser en attente] = skip (table 45) ;
     /// 4. la file sous pression — la ligne `backlog_badge` ;
     /// 5. la suivante sous la carte — queue[0] : « {nom} attend vos ordres · gravité · trancher ».</summary>
     [Category("EcranAccueil")]
@@ -68,6 +68,14 @@ namespace MafiaCleanCity.Shell.Tests
             CollectionAssert.AreEqual(new[] { agir, laisser }, hl.OptionsRendues.ToList(), "les deux options SERVIES, dans l'ordre");
             CollectionAssert.DoesNotContain(hl.LibellesDesBoutons.ToList(), agir, "le bouton du tampon ne porte PAS l'option : elle ne fait rien");
             CollectionAssert.DoesNotContain(hl.LibellesDesBoutons.ToList(), laisser, "le bouton « laisser » ne porte pas l'option non plus");
+            // Table 45 : les boutons disent ce qu'ils FONT.
+            CollectionAssert.AreEqual(new[] { MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Prendre acte"),
+                                              MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Pas maintenant") },
+                hl.LibellesDesBoutons.ToList(), "[Prendre acte] = commit, [Pas maintenant] = skip");
+            Assert.IsTrue(hl.RenderedTexts.Contains(MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Ce qu’on peut faire")),
+                "le surtitre des options");
+            Assert.IsTrue(hl.TamponVisible, "une carte ordinaire se tamponne");
+            Assert.IsNull(hl.LibelleLire, "pas de [Lire maintenant] hors de la carte des rapports");
 
             // Pas exactement deux options : aucune recommandation (jamais une moitié de choix).
             var boiteuse = Carte("DAMAGED_BUILDING", "a", "b");
@@ -80,8 +88,17 @@ namespace MafiaCleanCity.Shell.Tests
         public void Etat3_LaCarteDesRapportsEstReconnue()
         {
             var hl = Monter<HighestLeverageCardController>();
-            hl.SetPayload(null, Carte("AUTONOMY_REPORTS_PENDING", "hl.option.autonomy_reports.review_now", "hl.option.autonomy_reports.leave_pending"), null);
+            var carte = Carte("AUTONOMY_REPORTS_PENDING", "hl.option.autonomy_reports.review_now", "hl.option.autonomy_reports.leave_pending");
+            hl.SetPayload(null, carte, null);
             Assert.IsTrue(hl.EstCarteDesRapports);
+            // Table 45 : [Lire maintenant] OUVRE les rapports (pas le tampon, caché) ; [Laisser en attente] = skip.
+            Assert.AreEqual(MafiaCleanCity.I18n.Libelle.Gabarit(carte.options[0].label, "—"), hl.LibelleLire);
+            Assert.AreEqual(MafiaCleanCity.I18n.Libelle.Gabarit(carte.options[1].label, "—"), hl.LibellesDesBoutons[1]);
+            Assert.IsFalse(hl.TamponVisible, "la carte des rapports ne se tamponne pas d'ici");
+            int tampons = hl.CommitRequestCount;
+            hl.OuvrirLesRapports();
+            Assert.IsTrue(hl.RapportsOuverts, "[Lire maintenant] ouvre les rapports");
+            Assert.AreEqual(tampons, hl.CommitRequestCount, "…sans AUCUN tampon");
             Assert.IsNull(hl.NomDuRapport, "sans jeton, la route des rapports n'est pas lue : pas de nom, jamais un nom inventé");
             hl.SetPayload(null, Carte("DAMAGED_BUILDING", "a", "b"), null);
             Assert.IsFalse(hl.EstCarteDesRapports);

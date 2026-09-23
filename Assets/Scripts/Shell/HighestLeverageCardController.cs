@@ -67,12 +67,21 @@ namespace MafiaCleanCity.Shell
         // sont DESCRIPTIVES (`hl-card-types.ts:99-102`) — commit ne reçoit aucun indice d'option et ne produit aucun effet pour les 8
         // fournisseurs (il enregistre une décision de session). « Réparer via la file » sur le bouton du tampon mentirait. Les boutons
         // gardent leurs libellés jusqu'aux mots de l'atelier (demandés par f2). Et l'entrée du rapport quand la carte est celle des rapports.
-        private TextMeshProUGUI commitLabel, skipLabel, rapportText, recommandationText, alternativeText;
+        private TextMeshProUGUI commitLabel, skipLabel, rapportText, recommandationText, alternativeText, surtitreText, noteText;
+        // Table 45 de l'atelier (a0ff6cba, accueil.carte.*) : les boutons disent ce qu'ils FONT — [Prendre acte] = commit (une décision de
+        // session), [Pas maintenant] = skip — et la carte des rapports garde [Lire maintenant], qui OUVRE les rapports (navigation réelle,
+        // jamais le commit) et [Laisser en attente] = skip.
+        private Button lireButton;
+        private TextMeshProUGUI lireLabel;
+        private GameObject typedRowGo;
         /// <summary>Crochet de test : les deux options RENDUES en recommandation ([0], puis [1]), vide sans carte.</summary>
         public IReadOnlyList<string> OptionsRendues => optionsRendues;
         /// <summary>Crochet de test : les libellés des DEUX BOUTONS (tampon, laisser) — la garde vérifie qu'aucun ne porte une option.</summary>
         public IReadOnlyList<string> LibellesDesBoutons =>
             new List<string> { commitLabel != null ? commitLabel.text : null, skipLabel != null ? skipLabel.text : null };
+        /// <summary>Crochet de test : le libellé de [Lire maintenant] (carte des rapports), null s'il est caché.</summary>
+        public string LibelleLire => lireButton != null && lireButton.gameObject.activeSelf && lireLabel != null ? lireLabel.text : null;
+        public bool TamponVisible => CommitButton != null && CommitButton.gameObject.activeSelf;
         private readonly List<string> optionsRendues = new List<string>();
         /// <summary>Crochet de test : « Lire maintenant » a-t-il ouvert les rapports ?</summary>
         public bool RapportsOuverts { get; private set; }
@@ -124,6 +133,15 @@ namespace MafiaCleanCity.Shell
             if (EstCarteDesRapports && !string.IsNullOrEmpty(token) && isActiveAndEnabled) StartCoroutine(ChargerLeNomDuRapport());
         }
 
+        /// <summary>④ [Lire maintenant] : OUVRE les rapports, comme le « lire » du bandeau — navigation réelle, AUCUN tampon (table 45).</summary>
+        public void OuvrirLesRapports()
+        {
+            if (!EstCarteDesRapports) return;
+            IShellNavigator nav = ShellNavigatorLocator.Find();
+            if (nav != null) nav.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Autonomy.AutonomyInboxController>();
+            RapportsOuverts = true;
+        }
+
         private IEnumerator ChargerLeNomDuRapport()
         {
             string id = null;
@@ -147,13 +165,6 @@ namespace MafiaCleanCity.Shell
             yield return client.Commit(token, CurrentCard.card_id,
                 dto => LastCommitCommitted = dto.committed,
                 (code, msg) => LastCommitError = $"{code}: {msg}");
-            // ④ la carte des rapports : suivre sa recommandation (« Lire maintenant »), c'est OUVRIR les rapports — un effet RÉEL, comme
-            // le « lire » du bandeau (2026-09-23) ; le tampon, lui, n'enregistre qu'une décision de session. Seulement si le tampon a pris.
-            if (LastCommitCommitted == true && EstCarteDesRapports)
-            {
-                IShellNavigator nav = ShellNavigatorLocator.Find();
-                if (nav != null) { nav.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Autonomy.AutonomyInboxController>(); RapportsOuverts = true; }
-            }
         }
 
         /// <summary>The accessible ALTERNATIVE to the long press (canon: "alternative typed-confirm
@@ -191,6 +202,12 @@ namespace MafiaCleanCity.Shell
             if (rapportText != null) rapportText.text = "";
             if (recommandationText != null) recommandationText.text = "";
             if (alternativeText != null) alternativeText.text = "";
+            if (surtitreText != null) surtitreText.text = "";
+            if (noteText != null) noteText.text = "";
+            bool rapports = RenderedState == CardState.Available && EstCarteDesRapports;
+            if (lireButton != null) lireButton.gameObject.SetActive(rapports);
+            if (CommitButton != null) CommitButton.gameObject.SetActive(!rapports);   // la carte des rapports ne se tamponne pas d'ici
+            if (typedRowGo != null) typedRowGo.SetActive(!rapports);
             switch (RenderedState)
             {
                 case CardState.NoCard:
@@ -236,12 +253,30 @@ namespace MafiaCleanCity.Shell
             {
                 string agir = MafiaCleanCity.I18n.Libelle.Gabarit(o[0].label, "—");
                 string laisser = MafiaCleanCity.I18n.Libelle.Gabarit(o[1].label, "—");
-                if (recommandationText != null) recommandationText.text = agir;
-                if (alternativeText != null) alternativeText.text = laisser;
                 optionsRendues.Add(agir);
                 optionsRendues.Add(laisser);
+                if (EstCarteDesRapports)
+                {
+                    // [Lire maintenant] ouvre les rapports, [Laisser en attente] = skip : les options SONT ici les gestes (table 45).
+                    if (lireLabel != null) lireLabel.text = agir;
+                    if (skipLabel != null) skipLabel.text = laisser;
+                }
+                else
+                {
+                    if (surtitreText != null) surtitreText.text = Lib("carte", "Ce qu’on peut faire");
+                    if (recommandationText != null) recommandationText.text = agir;
+                    if (alternativeText != null) alternativeText.text = laisser;
+                    if (noteText != null) noteText.text = Lib("carte", "prendre acte n’agit pas à votre place");
+                    Track(surtitreText != null ? surtitreText.text : null);
+                    Track(noteText != null ? noteText.text : null);
+                }
                 Track(agir);
                 Track(laisser);
+            }
+            if (!EstCarteDesRapports)
+            {
+                if (commitLabel != null) commitLabel.text = Lib("carte", "Prendre acte");
+                if (skipLabel != null) skipLabel.text = Lib("carte", "Pas maintenant");
             }
             if (EstCarteDesRapports && !string.IsNullOrWhiteSpace(NomDuRapport) && rapportText != null)
             {
@@ -289,8 +324,10 @@ namespace MafiaCleanCity.Shell
             urgencyText = NewText("Urgency", 14, FontStyles.Normal);
             stateText = NewText("State", 14, FontStyles.Italic);
             rapportText = NewText("RapportEntree", 14, FontStyles.Normal);   // ④ l'entrée du rapport (vide hors carte des rapports)
+            surtitreText = NewText("CeQuOnPeutFaire", 12, FontStyles.Normal);         // ④ « Ce qu’on peut faire » (table 45)
             recommandationText = NewText("Recommandation", 14, FontStyles.Normal);   // ④ options[0], texte (jamais un bouton)
             alternativeText = NewText("Alternative", 13, FontStyles.Italic);          // ④ options[1], texte
+            noteText = NewText("PrendreActeNote", 12, FontStyles.Italic);               // ④ « prendre acte n’agit pas à votre place »
 
             GameObject actions = new GameObject("Actions", typeof(RectTransform));
             actions.transform.SetParent(transform, false);
@@ -358,6 +395,20 @@ namespace MafiaCleanCity.Shell
             typedConfirmButton.onClick.AddListener(() => StartCoroutine(RequestCommitViaTypedConfirm(typedConfirmInput.text)));
             TextMeshProUGUI typedConfirmLabel = NewChildText(typedConfirmGo.transform, $"Type \"{TypedConfirmKeyword}\"", 13);
             typedConfirmLabel.color = DesignTokens.Current.onSurfacePrimary;
+            typedRowGo = typedRow;
+
+            // ④ [Lire maintenant] — la carte des rapports seulement : OUVRE les rapports, sans tampon (table 45).
+            GameObject lireGo = new GameObject("LireButton", typeof(RectTransform));
+            lireGo.transform.SetParent(actions.transform, false);
+            lireGo.transform.SetSiblingIndex(0);
+            Image lireImg = lireGo.AddComponent<Image>();
+            lireImg.color = DesignTokens.Current.accentGold;
+            lireButton = lireGo.AddComponent<Button>();
+            lireButton.targetGraphic = lireImg;
+            lireButton.onClick.AddListener(OuvrirLesRapports);
+            lireLabel = NewChildText(lireGo.transform, "", 15);
+            lireLabel.color = DesignTokens.Current.surfaceBase;
+            lireGo.SetActive(false);
         }
 
         private TextMeshProUGUI NewText(string name, int size, FontStyles style)
