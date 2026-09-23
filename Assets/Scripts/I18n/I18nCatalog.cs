@@ -40,6 +40,16 @@ namespace MafiaCleanCity.I18n
 
         public static string Locale { get; private set; }
         public static bool Charge { get; private set; }
+
+        /// <summary>⛔ ATTRIBUTION (TD-576, 2026-09-23) — le contexte qui COURT, posé de l'extérieur (le lanceur de tests MafiaCI
+        /// y écrit le nom du test au démarrage de chacun ; en jeu il reste null). Lu à la DEMANDE d'un chargement, pas à son
+        /// arrivée : un chargement EN VOL demandé pendant le test A et arrivé pendant la classe B doit accuser A — la garde de
+        /// sortie accusait B (mesuré : CarteVille, victime du shell abandonné d'AppShellPlayModeTests).</summary>
+        public static string ContexteCourant { get; set; }
+        /// <summary>Le contexte qui a DEMANDÉ le catalogue actuellement chargé (null s'il n'est pas chargé).</summary>
+        public static string DemandePendant { get; private set; }
+        /// <summary>Le contexte pendant lequel ce chargement est ARRIVÉ (différent de `DemandePendant` = il était en vol).</summary>
+        public static string ArrivePendant { get; private set; }
         /// <summary>Nombre de clés servies — un compte, jamais une preuve de couverture.</summary>
         public static int NbClesServies => Messages.Count;
 
@@ -55,6 +65,7 @@ namespace MafiaCleanCity.I18n
         public static IEnumerator Amorcer(I18nClient client, string token)
         {
             if (Charge) yield break;
+            string demande = ContexteCourant;   // à la DEMANDE : c'est elle qu'on attribue, même si la réponse arrive plus tard
             yield return client.GetBundle(token,
                 (locale, messages) =>
                 {
@@ -62,6 +73,8 @@ namespace MafiaCleanCity.I18n
                     Messages.Clear();
                     foreach (KeyValuePair<string, string> kv in messages) Messages[kv.Key] = kv.Value;
                     Charge = true;
+                    DemandePendant = demande;
+                    ArrivePendant = ContexteCourant;
                 },
                 // ⛔⛔ CE MESSAGE DÉCRIVAIT UN SYMPTÔME QUI N'ARRIVE JAMAIS, et ça a coûté cher.
                 // Il annonçait des identifiants bruts à l'écran. Or `Libelle.De` rend
@@ -84,17 +97,24 @@ namespace MafiaCleanCity.I18n
         /// <summary>Réinitialise — pour les tests, et pour un changement de compte.</summary>
         public static void Oublier()
         {
-            Messages.Clear(); Charge = false; Locale = null;
+            Messages.Clear(); Charge = false; Locale = null; DemandePendant = null; ArrivePendant = null;
         }
 
         /// <summary>Injecte un bundle sans réseau — RÉSERVÉ AUX TESTS. Ne prouve jamais que le
         /// serveur émet ces clés, seulement ce que le résolveur en fait.</summary>
         public static void ChargerPourTest(string locale, Dictionary<string, string> messages)
+            => ChargerPourTest(locale, messages, ContexteCourant);
+
+        /// <summary>Même injection, avec le contexte de DEMANDE fourni — pour simuler un chargement demandé ailleurs
+        /// (la sonde de la garde de sortie : demandé dans le test A, arrivé pendant la classe B).</summary>
+        public static void ChargerPourTest(string locale, Dictionary<string, string> messages, string demandePendant)
         {
             Oublier();
             Locale = locale;
             if (messages != null) foreach (KeyValuePair<string, string> kv in messages) Messages[kv.Key] = kv.Value;
             Charge = true;
+            DemandePendant = demandePendant;
+            ArrivePendant = ContexteCourant;
         }
 
         /// <summary>La traduction, ou LA CLÉ. `cle` vide rend `""` — un écran qui n'a pas reçu de

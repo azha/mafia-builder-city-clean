@@ -376,6 +376,7 @@ public static class MafiaCI
         public void TestStarted(ITestAdaptor test)
         {
             if (test.IsSuite) return;
+            MafiaCleanCity.I18n.I18nCatalog.ContexteCourant = test.FullName;   // attribution des chargements (TD-576)
             if (test.Categories != null)
                 foreach (string c in test.Categories) categoriesVues.Add(c);
             Debug.Log($"MafiaCI: RUN {test.FullName}");
@@ -398,8 +399,12 @@ public static class MafiaCI
                 if (result.Test.TypeInfo != null && result.Test.Method == null
                     && MafiaCleanCity.I18n.I18nCatalog.Charge)
                 {
-                    catalogueSurvivant.Add(result.Test.Name);
-                    Debug.Log($"MafiaCI: ⛔ CATALOGUE SURVIVANT en sortie de {result.Test.FullName} — rendu maintenant.");
+                    string demande = MafiaCleanCity.I18n.I18nCatalog.DemandePendant ?? "(inconnu)";
+                    string arrive = MafiaCleanCity.I18n.I18nCatalog.ArrivePendant ?? "(inconnu)";
+                    catalogueSurvivant.Add($"{result.Test.Name} ← chargé pendant {demande}");
+                    Debug.Log($"MafiaCI: ⛔ CATALOGUE SURVIVANT — chargé pendant {demande}" +
+                              (arrive != demande ? $" (arrivé en vol pendant {arrive})" : "") +
+                              $", survivant à la sortie de {result.Test.FullName} — rendu maintenant. Le FAUTIF est celui qui l'a DEMANDÉ.");
                     MafiaCleanCity.I18n.I18nCatalog.Oublier();
                 }
                 return;
