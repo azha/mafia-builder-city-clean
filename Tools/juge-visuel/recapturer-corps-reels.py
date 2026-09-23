@@ -4,11 +4,12 @@
 
 Ce qu'elle enchaîne — et ce que la passe du 22/09 (`atelier-2026-09-22/06-corps-reels-2026-09-22.md`) a dû faire à la main :
   0. les préalables, sans toucher la pile : la paire `MAFIA_CAPTURE_*` posée (on imprime les NOMS, jamais les valeurs),
-     `MAFIA_DEMO_*` absente (posée = FAUTE), aucun gate (`mcc-e2e-*`), la porte Unity LIBRE, `--player-id` fourni ;
+     `MAFIA_DEMO_*` absente (posée = FAUTE), aucun gate (`mcc-e2e-*`), la porte Unity LIBRE ;
   1. FIGER les ensembles de clés PROFONDS des corps actuels (`payload.data.…`, tableaux repliés en `[]`, `response_meta` exclue)
      AVANT la capture : la capture écrase les corps, la ligne de base disparaît au moment précis où elle devient utile ;
-  2. la fenêtre synchrone : `passe-synchrone.py` (empreinte → capture → empreinte → comparaison ; il refuse `MAFIA_DEMO_*`, le gate,
-     l'absence de `--player-id`) ;
+  2. la fenêtre synchrone : `passe-synchrone.py --compte-env --player-id-me` (le `player_id` DÉRIVÉ par `GET /v1/me` avec la paire,
+     aucun `session/open` ; puis empreinte → capture → empreinte → comparaison ; il refuse `MAFIA_DEMO_*` et le gate). Décisions f2 du
+     23/09 : aucun paramètre manuel (il viserait le mauvais compte), identifiant et `player_id` imprimés par leur EMPREINTE (`masquer`) ;
   3. les RESTES : un corps dont la `provenance.date` précède le début de la passe n'a pas été réécrit (route renommée par le lecteur
      de routes, ou sortie du dossier) — LISTÉS, jamais effacés (le 22/09 : 71 fichiers ; deux fichiers pour une route à deux dates,
      c'est un juge qui compare au mauvais) ;
@@ -23,14 +24,16 @@ Ce qu'elle enchaîne — et ce que la passe du 22/09 (`atelier-2026-09-22/06-cor
 Le rapport (`corps-reels-diff-<date>.md`) est un BROUILLON : attribuer une clé A à un commit du back reste un travail de lecture.
 
 ⛔ Ce script ne sème rien, ne prend aucune planche, ne rend rien, n'appelle aucune mutation (le capteur ne les appelle pas).
-⚠️ Le capteur imprime le compte capturé (« COMPTE CAPTURÉ : … ») : comportement existant de `capturer-corps-reels.py`, pas de ce script.
+L'identifiant n'apparaît en clair nulle part : ni sur une ligne de commande (`--compte-env`), ni au journal, ni dans les corps écrits
+(`capturer-corps-reels.py`, `masquer()`). Contrôle : `--controle-masque` (run à blanc sur une pile injoignable, grep des valeurs ⇒ 0).
 
 Contrôle statique (2026-09-23) : `--figer` sur les corps de `d0824c8c^` (06/09) puis `--diff` sur ceux de `d0824c8c` (22/09) retrouve
 le constat de `06-…` : A = `harvest_band`/`relance_band` (intérieur, tous les dossiers), `friction/state` (2 clés), dealers (4 clés), bundle
 i18n ; B = `slots[]`, `beats[]`, `lawyerRoster[]`, `news/beats/{}` (statut). Les comptes diffèrent (222 routes appariées ici, 234 le 22/09) :
 l'appariement d'ici inclut le dossier.
 Usage : recapturer-corps-reels.py                      --plan (défaut) : les préalables, rien lancé
-        recapturer-corps-reels.py --lancer --player-id <uuid>
+        recapturer-corps-reels.py --lancer
+        recapturer-corps-reels.py --controle-masque          run à blanc, pile INJOIGNABLE (127.0.0.1:9) : aucune capture possible
         recapturer-corps-reels.py --figer <sortie.json> [--racine <dossier>]      statique
         recapturer-corps-reels.py --diff <base.json> [--racine <dossier>] [--rapport <sortie.md>]   statique
 Env    : MAFIA_CAPTURE_IDENTIFIER, MAFIA_CAPTURE_PASSWORD — exportées par l'user dans le shell du juge, jamais écrites."""
@@ -48,7 +51,7 @@ def arg(nom, defaut=None):
 
 
 # ── préalables (aucun appel à la pile) ───────────────────────────────────────────────────────────────────────────────────────────────
-def prealables(player_id):
+def prealables():
     """Rend la liste des empêchements ; chaque ligne dit un NOM de variable, jamais une valeur."""
     non = []
     for v in ('MAFIA_CAPTURE_IDENTIFIER', 'MAFIA_CAPTURE_PASSWORD'):
@@ -63,7 +66,6 @@ def prealables(player_id):
         t = (subprocess.run([CRENEAU, 'status'], capture_output=True, text=True).stdout.strip().splitlines() or [''])[0]
         print(f'  porte Unity                {t}')
         if t != 'LIBRE': non.append('porte Unity : ' + t)
-    if not player_id: non.append('--player-id absent (passe-synchrone refuse d’ouvrir une session pour le lire : régime faux)')
     return non
 
 
@@ -158,8 +160,8 @@ def etape(nom, cmd):
     return r.returncode
 
 
-def lancer(player_id):
-    non = prealables(player_id)
+def lancer():
+    non = prealables()
     if non: [print('⛔', x) for x in non]; sys.exit('⛔ préalables non tenus : rien lancé')
     jour = datetime.date.today().isoformat(); debut = datetime.datetime.now().isoformat(timespec='seconds')
     base = os.path.join(ICI, f'base-cles-profondes-avant-recapture-{jour}.json')
@@ -167,8 +169,7 @@ def lancer(player_id):
     print(f'DÉBUT {heure()} · ligne de base figée : {os.path.relpath(base, RACINE)}')
     index = os.path.join(ICI, 'INDEX.md')
     para = next((l for l in open(index, encoding='utf-8').read().split('\n') if l.startswith(PARAGRAPHE)), None)
-    code = etape('fenêtre synchrone', [sys.executable, os.path.join(ICI, 'passe-synchrone.py'),
-                                       '--compte', os.environ['MAFIA_CAPTURE_IDENTIFIER'], '--player-id', player_id])
+    code = etape('fenêtre synchrone', [sys.executable, os.path.join(ICI, 'passe-synchrone.py'), '--compte-env', '--player-id-me'])
     print(f'FIN DE LA PILE {heure()}')
     if code:
         print('⛔ la fenêtre synchrone a échoué (ou le compte a bougé) : pas de diff sur des corps douteux. Lire son log.'); sys.exit(code)
@@ -186,6 +187,32 @@ def lancer(player_id):
     print(f'\nFIN {heure()} — rien commité : lire le diff, les restes, puis commiter.')
 
 
+def controle_masque():
+    """Le run à blanc de la décision f2 du 23/09 : une paire FACTICE, la pile INJOIGNABLE (`STACK_BASE_URL=http://127.0.0.1:9`, rien n'y
+    écoute) — le capteur et la fenêtre synchrone vont jusqu'à leur premier appel réseau et s'arrêtent. On grep les deux valeurs dans le
+    journal : 0 attendu. Aucune capture n'est possible (aucune pile), aucun fichier n'est écrit (les deux échouent avant)."""
+    import secrets
+    ident, mdp = f'controle-{secrets.token_hex(6)}@masque.invalid', secrets.token_hex(12)
+    env = {k: v for k, v in os.environ.items() if not k.startswith(('MAFIA_DEMO_', 'MAFIA_CAPTURE_'))}
+    env.update({'MAFIA_CAPTURE_IDENTIFIER': ident, 'MAFIA_CAPTURE_PASSWORD': mdp, 'STACK_BASE_URL': 'http://127.0.0.1:9',
+                'PYTHONDONTWRITEBYTECODE': '1'})     # les .pyc de `__pycache__/` sont suivis par git : le run à blanc ne les réécrit pas
+    runs = [('capteur', [sys.executable, os.path.join(ICI, 'capturer-corps-reels.py'), '--compte-env']),
+            ('fenêtre synchrone', [sys.executable, os.path.join(ICI, 'passe-synchrone.py'), '--compte-env', '--player-id-me'])]
+    avant = subprocess.run(['git', 'status', '--porcelain'], cwd=RACINE, capture_output=True, text=True).stdout
+    defauts = 0
+    for nom, cmd in runs:
+        r = subprocess.run(cmd, cwd=RACINE, env=env, capture_output=True, text=True, timeout=120)
+        journal = r.stdout + r.stderr
+        n = journal.count(ident) + journal.count(mdp)
+        vu = 'empreinte sha256:' in journal
+        print(f'  {nom:18} code {r.returncode} · valeurs en clair dans le journal : {n} · empreinte imprimée : {"oui" if vu else "NON"}')
+        print('     ' + ' | '.join(l.strip()[:110] for l in journal.strip().splitlines()[-3:]))
+        defauts += (n != 0) + (not vu)
+    if subprocess.run(['git', 'status', '--porcelain'], cwd=RACINE, capture_output=True, text=True).stdout != avant:
+        print('  ⛔ le run à blanc a écrit dans le dépôt'); defauts += 1
+    print(f'{defauts} défaut(s)'); sys.exit(1 if defauts else 0)
+
+
 def main():
     if '--figer' in sys.argv:
         dest = arg('--figer'); json.dump(figer(arg('--racine', ICI)), open(dest, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
@@ -193,9 +220,11 @@ def main():
     if '--diff' in sys.argv:
         diff_et_rapport(arg('--diff'), arg('--racine', ICI), arg('--rapport')); return
     if '--lancer' in sys.argv:
-        lancer(arg('--player-id')); return
+        lancer(); return
+    if '--controle-masque' in sys.argv:
+        controle_masque(); return
     print('PLAN — rien lancé. Préalables :')
-    non = prealables(arg('--player-id'))
+    non = prealables()
     print(f'  corps actuels : {len(figer(ICI))} routes')
     [print('  ⛔', x) for x in non]
     print('prêt' if not non else f'{len(non)} empêchement(s) — la passe ne partira pas')
