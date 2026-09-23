@@ -11,48 +11,30 @@ using MafiaCleanCity.I18n;
 
 namespace MafiaCleanCity.Operational
 {
-    /// <summary>ecran_conflit « Le conflit » (㉙) — « la table du fond », version 2 dite lisible,
-    /// sur ses données réelles.
+    /// <summary>ecran_conflit « Le conflit » (㉙) — la v2 de la maquette ratifiée (atelier `ecrans-brennar-6.html`, cadres 59-64),
+    /// avec les mots de la table 40 de l'atelier (997d6ab4) et de son addendum (24897b48).
     ///
-    /// Patron : `LoiScreenController` (㉛, le voisin le plus récent de la même famille de
-    /// maquette `Tools/juge-visuel/v6/`) — mêmes idiomes : `Libelle.De`, résolveurs nommés,
-    /// `TrackText`/`RenderedTexts`, `ShellChrome.TopInsetPx`/`BottomInsetPx`, section vide
-    /// honnête plutôt que fabriquée.
+    /// Données (back, lu le 2026-09-23) :
+    ///  · `GET /v1/me/engagements` : les envois du joueur, du plus récent au plus ancien (`EngagementDto`, forme G) ;
+    ///  · `GET /v1/lieutenants` : seule route qui porte `archetype` — seuls les gros bras (MUSCLE) partent ;
+    ///  · `POST /v1/me/engagements {lieutenant_id, target_rival_key, target_holding_id}` : l'envoi. `target_holding_id` est un
+    ///    des 5 AXES (`ConflitResolvers.Axes`), pas un bâtiment ; aucune route d'annulation.
     ///
-    /// ⛔⛔ CE QUE m-65/m-66 MONTRENT, ET CE QUE CET ÉCRAN NE PEUT PAS CONSTRUIRE — mesuré en
-    /// direct le 2026-09-03 (`rtk proxy curl`, comptes `operational_demo@example.test` ET un
-    /// signup frais) :
-    ///  1. `GET /v1/me/engagements` rend `{engagements: []}` — VIDE sur les deux comptes. La
-    ///     « vendetta » (« on est allés chez eux 7 fois ») ne peut donc jamais afficher qu'un
-    ///     compte HONNÊTE à zéro pour l'instant — jamais un chiffre fabriqué.
-    ///  2. `POST /v1/me/engagements` EXIGE un lieutenant `archetype == "MUSCLE"`
-    ///     (`RESOURCE_NOT_FOUND · "No such MUSCLE lieutenant for this player: <uuid>"`) — et
-    ///     `GET /v1/lieutenants` en rend ZÉRO sur les DEUX comptes sondés (démo : 3 COOK, 1
-    ///     LAUNDERING, 1 LOGISTICS ; signup frais : 2 COOK). **C'est le cœur de ce lot** : le
-    ///     geste d'envoi ne peut aboutir sur AUCUN compte que nous sachions fabriquer, et
-    ///     l'écran le DIT plutôt que de griser un bouton en silence (`RendrePied`).
-    ///  3. Aucune route ne liste les rivaux du joueur ni leurs possessions — `target_holding_id`
-    ///     est donc structurellement INDÉCOUVRABLE. Les quatre familles (m-65 : La Coil, Tarcum,
-    ///     Gorge-de-Fer, Saltline — `iron_throat` du domaine POST = « Gorge-de-Fer » de la
-    ///     maquette, seule correspondance qui recouvre les 4 noms) restent donc PÂLES : dessinées
-    ///     depuis le domaine clos, sans donnée de possession derrière (`RendreTable`). Aucun
-    ///     bouton d'envoi cliquable n'est construit cette passe, quel que soit l'état des
-    ///     lieutenants — voir `RendrePied`.
-    ///  4. m-63 (« Ce qui est rentré », un historique de coups numérotés) et m-64 (« Ce qu'on ne
-    ///     peut pas faire », le panneau d'aveu explicite du chantier) sont dans le MÊME
-    ///     répertoire `v6/` et narrent le MÊME Bruno/Tarcum — MAIS ne sont PAS dans la liste des
-    ///     livrables de ce lot (§ « CE QUE JE TE DEMANDE »). Non construits cette passe — voir
-    ///     Tools/conflit-implementation-notes.md § Deviations, à faire remonter.
+    /// Sections, dans l'ordre (une méthode `Rendre<Nom>` chacune) :
+    ///  · « Ce qui est rentré » (63) — le dernier envoi rentré, son issue, son coût, sa chaleur ; « Y retourner » ;
+    ///  · « Ce qui est en cours » (62) — les partis, les déjà rentrés, les hommes dehors ; « En envoyer un autre » ;
+    ///  · « Le coup de ce soir » (59-61) — l'homme, l'axe, la phrase d'envoi, « La dernière fois chez eux » ;
+    ///  · « Les quatre familles de Brennar » — le compte des envois RENTRÉS par famille ; on y choisit la famille ;
+    ///  · la réplique et « L’envoyer ce soir », inactif tant que la famille, l'homme et l'axe ne sont pas choisis.
+    /// Aucun choix présélectionné. Un refus du POST s'écrit sous le bouton, jamais en message technique (`DerniereErreur`
+    /// est un crochet de test). Une reprise après un échec réseau réémet la même Idempotency-Key.
     ///
-    /// Ce qui EST construit, sur données réelles mesurées : §1/§2 la table des 4 familles avec
-    /// leur compte de vendetta groupé côté client (`GET /v1/me/engagements`, jamais fabriqué) ;
-    /// §3 le pied — `GET /v1/lieutenants` filtré `archetype == "MUSCLE"`, et l'impossibilité
-    /// déclarée quand il n'y en a aucun (le cas réel, sur les deux comptes sondés).
+    /// Pas encore : l'historique « Depuis le début, chez … » (Coup n°N) attend `strike_index` servi (L3bis) — aucun rang
+    /// dérivé de l'ordre de la liste. Le panneau des manques (64) n'est pas un libellé (table 40 : note).
     ///
     /// GÉOMÉTRIE — deux règles héritées, non négociables (mesurées ailleurs dans ce dépôt) :
     ///  · aucune valeur dérivée de `Screen.*` ni d'un `rect` lu au montage — passer par
-    ///    `EchelleMaquette.Px(...)`. Maquette source NON confirmée (même trou que ㉛/㉘/㉚,
-    ///    répertoire `v6/` commun) : `LargeurEcransBrennar` (300) conservé.
+    ///    `EchelleMaquette.Px(...)` (`LargeurEcransBrennar`, 300).
     ///  · `Canvas.scaleFactor` lu la frame de la création rend 1,0 — plausible et faux. Toute
     ///    lecture de géométrie attend `yield return null` après la construction.</summary>
     public class ConflitScreenController : MonoBehaviour, IShellTenant
@@ -1066,12 +1048,9 @@ namespace MafiaCleanCity.Operational
     /// défaut que ce socle dénonce (une correspondance recopiée qui divergera).</summary>
     public static class ConflitResolvers
     {
-        /// <summary>Les 4 clés du domaine `target_rival_key` — ANNONCÉ CLOS par l'orchestrateur
-        /// (coil · tarcum · iron_throat · saltline), NON reproduit en direct cette passe (voir
-        /// `ConflitDtos.cs`, `PostEngagementsBody`) : le contrôle MUSCLE répond avant que ce champ
-        /// ne soit validé sur les deux comptes sondés — aucun message d'erreur n'a donc pu
-        /// confirmer ce domaine ICI. Source unique pour la table (`ConflitScreenController.
-        /// RendreTable`) et le compte des envois rentrés (`CompterRentres`) — jamais recopiée.</summary>
+        /// <summary>Les 4 clés du domaine `target_rival_key` — CLOS côté back (enum Postgres `rival_key`, `RIVAL_DISPLAY_NAME` à 4
+        /// entrées ; le POST répond 404 hors domaine, `engagements.controller.ts:161-163`). Source unique pour la table
+        /// (`ConflitScreenController.RendreTable`) et le compte des envois rentrés (`CompterRentres`) — jamais recopiée.</summary>
         public static readonly string[] DomaineFamilles = { "coil", "tarcum", "iron_throat", "saltline" };
 
         /// <summary>Le nom affiché de chaque famille — clés servies `conflit.bloc.<nom>` (m-65 ; D11 : le nom accompagne la

@@ -11,21 +11,16 @@ using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.Operational.Tests
 {
-    /// <summary>ecran_conflit « Le conflit » (㉙) — « la table du fond » — suite du chantier de
-    /// métier du 2026-09-03.
+    /// <summary>ecran_conflit « Le conflit » (㉙), v2 (cadres 59-64, tables 40 et addendum de l'atelier).
     ///
-    /// COUVERT : le montage structurel (CanvasRenderer, MaskableGraphic), UN PARCOURS joueur réel
-    /// (§P — signup frais → `Charger()` → assertion sur les DEUX routes réelles : `engagements`
-    /// vide, `lieutenants` sans aucun MUSCLE — « le cas réel » du brief), les états pilotés par la
-    /// donnée (§E, via `RendrePourTest` : vendetta groupée, familles hors domaine, MUSCLE présent
-    /// vs absent) et les résolveurs du domaine clos annoncé (§R, contrôle positif ET négatif).
-    /// NON EXÉCUTÉ cette passe (aucun test n'a tourné, seule la COMPILATION est prouvée — voir
-    /// Tools/conflit-implementation-notes.md). Régime de la semaine : pas de suite complète, pas
-    /// de revue ⊥, pas de gate.
-    /// NON COUVERT : `EnvoyerCeSoirEtRecharger` de bout en bout en SUCCÈS (structurellement
-    /// inatteignable — aucun compte sondé n'a de lieutenant MUSCLE, voir `ConflitClient.cs`) ;
-    /// m-63/m-64 (voir le commentaire de classe de `ConflitScreenController`, hors du périmètre
-    /// de ce lot).</summary>
+    /// COUVERT :
+    ///  · le montage structurel (CanvasRenderer, MaskableGraphic) ;
+    ///  · UN parcours réel (P1 — signup frais → `Charger()` : `engagements` vide, aucun gros bras) ;
+    ///  · la forme G des DTO et les gardes de VALEUR (L1 : corps fabriqués à la forme du back, désérialisés comme le client) ;
+    ///  · les états pilotés par la donnée (E, via `RendrePourTest`) : table des familles, en cours, rentré, panneau d'envoi,
+    ///    choix par les vrais boutons, refus du POST, reprise réseau à clé constante ;
+    ///  · les résolveurs et la couverture de leurs domaines (R).
+    /// NON COUVERT : un envoi RÉUSSI de bout en bout — aucun compte sondé n'a de gros bras (P1).</summary>
     [Category("EcranConflit")]
     public class ConflitScreenPlayModeTests
     {
