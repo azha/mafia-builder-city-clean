@@ -198,6 +198,7 @@ namespace MafiaCleanCity.Operational.Tests
         // ------------------------------------------------------------ the test --
 
         [UnityTest]
+        [Category("FicheOperationnelle")]   // TD-490 (2026-09-23) : sans catégorie, aucun filtre ne le lançait — sur la MÉTHODE (la classe emporterait la capture Screenshot)
         public IEnumerator LoadsLabCard_RendersBands_AndWiresPerTypeActions()
         {
             RunSeeder();
@@ -233,10 +234,13 @@ namespace MafiaCleanCity.Operational.Tests
 
             // The UI reflects it: the rendered texts include the type + the OPERATIONAL band label.
             var texts = controller.RenderedTexts;
-            Assert.IsTrue(texts.Any(t => t.Contains("Labo")), "type label 'Lab' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Operational"), "setup band 'Operational' rendered");
-            Assert.IsTrue(texts.Any(t => t == "Yes"), "operational=true rendered as 'Yes'");
-            Assert.IsTrue(texts.Any(t => t == "Weak"), "cover band 'Weak' rendered");
+            // ⛔ Épingles relues dans le code du 2026-09-23 (TD-490) — elles étaient restées en anglais derrière la traduction de ② :
+            //    type, mise en place et couverture DÉLÉGUÉS à leurs résolveurs (ce que l'écran rend, catalogue amorcé ou non),
+            //    « oui » pour en service (BuildingCardController:643, aucun résolveur).
+            Assert.IsTrue(texts.Any(t => t.Contains(BuildingCardController.TypeLabel("lab"))), "le type du labo est rendu");
+            Assert.IsTrue(texts.Any(t => t == BuildingCardController.SetupLabel("OPERATIONAL")), "la bande de mise en place OPERATIONAL est rendue");
+            Assert.IsTrue(texts.Any(t => t == "oui"), "en service rendu « oui »");
+            Assert.IsTrue(texts.Any(t => t == BuildingCardController.CoverLabel("WEAK")), "la bande de couverture WEAK est rendue");
 
             // 5) NO raw scalar client-side: every rendered string is a band/label/glyph/bool —
             //    nothing should be a bare number (cents/grams/ticks/heat/purity). The only
@@ -276,6 +280,7 @@ namespace MafiaCleanCity.Operational.Tests
 
         // A focused, fast guard: the card endpoint is JWT-gated (unauth → not OK).
         [UnityTest]
+        [Category("FicheOperationnelle")]   // TD-490 (2026-09-23) : sans catégorie, aucun filtre ne le lançait — sur la MÉTHODE (la classe emporterait la capture Screenshot)
         public IEnumerator BuildingCard_WithoutToken_DoesNotLoad()
         {
             var client = new BuildingCardClient();
