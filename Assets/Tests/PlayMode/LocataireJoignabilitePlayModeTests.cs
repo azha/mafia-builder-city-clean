@@ -87,13 +87,46 @@ namespace MafiaCleanCity.Shell.Tests
         {
             var atteints = new HashSet<string>();
             var aVisiter = new Queue<string>();
+            HashSet<string> statiques = ClassesStatiques(sourcesParType);
             if (sourcesParType.ContainsKey(racine)) { atteints.Add(racine); aVisiter.Enqueue(racine); }
             while (aVisiter.Count > 0)
             {
-                foreach (string cible in CiblesMontees(sourcesParType[aVisiter.Dequeue()]))
+                string source = sourcesParType[aVisiter.Dequeue()];
+                var cibles = CiblesMontees(source);
+                cibles.UnionWith(HelpersAppeles(source, statiques));
+                foreach (string cible in cibles)
                     if (sourcesParType.ContainsKey(cible) && atteints.Add(cible)) aVisiter.Enqueue(cible);
             }
             return atteints;
+        }
+
+        // ⛔ L'ARÊTE « APPEL D'UN HELPER STATIQUE » (2026-09-23, option (a) de l'orchestrateur) — le graphe ne suivait que les
+        //    FORMES DE MONTAGE ; `BuildingCardController` a été déclaré sans porte au créneau du 23/09 06:48 alors que son chemin
+        //    existe : AppShell (atteint) APPELLE `OuvertureFicheOperationnelle.Ouvrir(…)` (AppShell.cs:1129), un helper STATIQUE qui,
+        //    lui, fait `MonterLocataireEnSurimpression<BuildingCardController>()` (①-0 de CLIENT-2). On corrige l'INSTRUMENT, pas
+        //    une exception : une exception masquerait la prochaine instance de la même forme.
+        //    Portée ÉTROITE : seules les classes `static` déclarées dans les sources, appelées `T.Méthode(` hors commentaires, par un
+        //    type ATTEINT. Une classe non statique citée, un helper jamais appelé ou cité en commentaire ne créent aucun chemin.
+        private static readonly Regex ClasseStatique = new Regex(@"\bstatic\s+(?:partial\s+)?class\s+([A-Za-z_][A-Za-z0-9_]*)");
+
+        internal static HashSet<string> ClassesStatiques(Dictionary<string, string> sourcesParType)
+        {
+            var res = new HashSet<string>();
+            foreach (var kv in sourcesParType)
+                foreach (Match m in ClasseStatique.Matches(MafiaCleanCity.Tests.IdentiteNonDeriveeDuTexteTests.SansCommentaires(kv.Value)))
+                    if (m.Groups[1].Value == kv.Key) res.Add(kv.Key);
+            return res;
+        }
+
+        internal static HashSet<string> HelpersAppeles(string texte, HashSet<string> statiques)
+        {
+            var res = new HashSet<string>();
+            if (string.IsNullOrEmpty(texte)) return res;
+            string code = MafiaCleanCity.Tests.IdentiteNonDeriveeDuTexteTests.SansCommentaires(texte);
+            foreach (string t in statiques)
+                if (Regex.IsMatch(code, @"\b" + Regex.Escape(t) + @"\s*\.\s*[A-Za-z_][A-Za-z0-9_]*\s*\("))
+                    res.Add(t);
+            return res;
         }
 
         private static Dictionary<string, string> LireSources(string racineDossier)
@@ -192,6 +225,40 @@ namespace MafiaCleanCity.Shell.Tests
                 Assert.IsTrue(atteints.Contains("EcranJoignable"), "l'écran monté doit être atteint");
                 Assert.IsFalse(atteints.Contains("EcranOrphelin"),
                     "l'écran sans porte doit rester HORS des atteints — sinon la garde ne peut jamais rougir");
+            }
+            finally { Directory.Delete(tmp, true); }
+        }
+
+        [Test]
+        public void LeBalayageSuitLesHelpersStatiquesAppeles_EtRienDAutre()
+        {
+            // Contrôle POSITIF de l'arête neuve (2026-09-23) : un écran monté SEULEMENT par un helper statique qu'un type atteint
+            // appelle est trouvé ; un helper jamais appelé (ou cité en commentaire) et une classe NON statique appelée ne créent
+            // aucun chemin. Fixture fabriquée, inerte (même discipline que les deux contrôles voisins).
+            string tmp = Path.Combine(Path.GetTempPath(), "helpers_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tmp);
+            try
+            {
+                File.WriteAllText(Path.Combine(tmp, "AppShell.cs"),
+                    "class AppShell { void M() { Ouvreur.Ouvrir(this); NonStatique.Monter(); }\n" +
+                    "  // HelperJamaisAppele.Ouvrir(this);\n}");
+                File.WriteAllText(Path.Combine(tmp, "Ouvreur.cs"),
+                    "public static class Ouvreur { public static void Ouvrir(object n) { MonterLocataireEnSurimpression<EcranParHelper>(); } }");
+                File.WriteAllText(Path.Combine(tmp, "EcranParHelper.cs"), "class EcranParHelper { }");
+                File.WriteAllText(Path.Combine(tmp, "HelperJamaisAppele.cs"),
+                    "public static class HelperJamaisAppele { public static void Ouvrir(object n) { MonterLocataireEnSurimpression<EcranSansAppel>(); } }");
+                File.WriteAllText(Path.Combine(tmp, "EcranSansAppel.cs"), "class EcranSansAppel { }");
+                File.WriteAllText(Path.Combine(tmp, "NonStatique.cs"),
+                    "public class NonStatique { public static void Monter() { MountTenant<EcranViaNonStatique>(); } }");
+                File.WriteAllText(Path.Combine(tmp, "EcranViaNonStatique.cs"), "class EcranViaNonStatique { }");
+
+                HashSet<string> atteints = TypesAtteints(LireSources(tmp), RacineDuGraphe);
+                Assert.IsTrue(atteints.Contains("Ouvreur"), "le helper statique appelé par un type atteint est atteint");
+                Assert.IsTrue(atteints.Contains("EcranParHelper"), "l'écran monté SEULEMENT par ce helper est atteint");
+                Assert.IsFalse(atteints.Contains("EcranSansAppel"),
+                    "un helper jamais appelé (seulement cité en commentaire) ne crée aucun chemin");
+                Assert.IsFalse(atteints.Contains("EcranViaNonStatique"),
+                    "une classe NON statique appelée ne crée pas d'arête : la portée de l'arête neuve reste étroite");
             }
             finally { Directory.Delete(tmp, true); }
         }
