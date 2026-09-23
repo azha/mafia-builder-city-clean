@@ -105,6 +105,35 @@ ECRANS = {
     ],
 }
 
+if '--cles-22' in sys.argv:
+    # §7.1 de `22-…` : chaque clé proposée n'est PAS déjà servie ; fr sans apostrophe droite ; mêmes placeholders en fr et en ; aucun
+    # chiffre hors placeholder ; les titres dérivés == `Libelle.De("district","fiche", littéral)` ; les familles `ParValeur` couvrent
+    # EXACTEMENT les valeurs de l'énum servi (lu dans le code du back au même SHA, jamais recopié).
+    doc = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '22-interieur-district-fiche-inventaire.md'), encoding='utf-8').read()
+    sec = doc[doc.index('### 7.1 '):doc.index('### 7.2 ')]
+    rows = {}
+    for l in sec.split('\n'):
+        m = re.match(r'\| `([a-z_.]+)` \| ([^|]+) \| ([^|]+) \|', l)
+        if m: rows[m[1]] = (m[2].strip(), m[3].strip())
+    enum = lambda chemin, nom: re.findall(r"'([A-Z_]+)'", re.search(nom + r"\s*=\s*([^;]+);", sh(BACK, 'show', f'{REV_B}:{chemin}'))[1])
+    familles = {'district.harvest': enum('services/game-back/src/operational/capacity/capacity-guard.service.ts', r'export type HarvestBand'),
+                'district.revenue': ['IDLE', 'EARNING'], 'heat.bucket': ['COLD', 'WARM', 'HOT', 'BURNING']}
+    d = []
+    assert familles['district.harvest'] == ['NOTHING', 'AVAILABLE', 'FULL'], f"lecteur d'énum : {familles['district.harvest']}"
+    for k, (fr, en) in rows.items():
+        if k in FR or k in EN: d.append(f'{k} : déjà servie à {REV_B}')
+        if "'" in fr: d.append(f'{k} : apostrophe droite dans le fr')
+        ph = lambda t: sorted(re.findall(r'\{(\w+)\}', t))
+        if ph(fr) != ph(en): d.append(f'{k} : placeholders {ph(fr)} ≠ {ph(en)}')
+        if re.search(r'\d', re.sub(r'\{\w+\}', '', fr + en)): d.append(f'{k} : chiffre hors placeholder')
+        if k.startswith('district.fiche.') and not ph(fr) and k != 'district.fiche.' + slug(fr): d.append(f'{k} : ≠ slug du titre ({slug(fr)})')
+        if fr == en: d.append(f'{k} : en == fr')
+    for fam, vals in familles.items():
+        vues = {k.split('.')[-1] for k in rows if k.startswith(fam + '.')}
+        if vues != {slug(v) for v in vals}: d.append(f'{fam} : clés {sorted(vues)} ≠ énum {vals}')
+    print(f'§7.1 : {len(rows)} clés · back {REV_B}'); [print('  ⛔', x) for x in d]
+    print(f'{len(d)} défaut(s)'); sys.exit(1 if d else 0)
+
 # ── contrôles ──
 assert FR.get('district.type_batiment.laboratoire') == 'Laboratoire', 'contrôle positif (FR)'
 assert EN.get('game.legal.lawyer_tier.public_defender') == 'Public Defender', 'lecteur EN'

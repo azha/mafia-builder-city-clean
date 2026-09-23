@@ -177,19 +177,19 @@ Et une troisième famille, **littérale**, dans `LibellesBatiment.Type` (`:32-44
 une même bande. Avec « Ouvrir », la famille est : **Ouvert · Ouverture en cours · Pas encore ouvert** (et « Ouverture demandée /
 Impossible d'ouvrir » pour le retour d'action) — au back pour `building.setup.*`, et au client pour `LibellesBatiment.Conversion`.
 
-## 5. Ce qui devrait être re-ratifié (par l'user)
+## 5. Ce qui devrait être re-ratifié (par l’user) — corrigé par les registres au §7.4
 
 1. **Le district de ①** : le canon montre ZO (v1), le client montre D. Garder D (le canon illustrait un district ; celui de ① dépend du
    joueur), ou monter ZO v2 comme district par défaut.
-2. **La fiche de ①** : les trois cases en **bandes** (« Rapporte · Raccordée · Sain ») sous « REVENU · CHAÎNE · ÉTAT », au lieu de
-   « $ 2 400 · $ 180/h · 12% » sous « À COLLECTER · REVENUS · HEAT LOCAL » ; et la ligne de type qui dit l'**installation**
-   (« OPÉRATIONNEL ») au lieu de « Bar · Quartier général ». Écart assumé au code, jamais montré à l'user.
-3. **Le heat** : quatre bandes servies (Froid · Tiède · Chaud · Brûlant) contre trois états au canon (37 % · 78 % chaud · 96 %
-   descente) ; « CHALEUR » au lieu de « Heat » ; et l'état **Descente** (pouls, aiguille qui tremble, **gyrophare dans le monde**) qui
-   n'existe pas au client — seule une teinte d'alarme à Brûlant. C'est le bloc que l'annotation 2 du canon met en avant (« l'état vit
-   dans le monde, pas que dans le chrome »).
-4. **L'horloge** : le canon montre « 21:40 » ; le client montre la phase seule (« JOUR 12 · Soirée »). La minute est servie à
-   l'ouverture depuis F14 : l'afficher (une heure n'est pas un scalaire de simulation), ou ratifier la phase seule.
+2. ~~La fiche de ①~~ — **déjà tranché** (§7.4) : `Tools/juge-visuel/ARBITRAGES-user-2026-09-07.md` point 8 (ratifié par f2 le 07/09
+   à 01:05) garde **« À COLLECTER · REVENUS · HEAT LOCAL » en bandes**, HEAT LOCAL = la chaleur du district (point 7). Les cases
+   « REVENU · CHAÎNE · ÉTAT » du client sont donc un **défaut**, pas un écart à ratifier (D2/D3 de CLIENT-2). Reste à l'user : la ligne
+   de type (« Bar · Quartier général » n'a aucune source ; le client montre l'installation).
+3. **Le heat** : le **mot** au lieu du pourcentage est **tranché** (point 11 du 07/09 : « le mot ; canon HUD à mettre à jour ») et
+   « HEAT » dans les références est un retard de maquette (point 19). Reste un **défaut client**, pas une question : l'état **Descente**
+   (pouls, aiguille qui tremble, **gyrophare dans le monde**), que le client n'a pas (`heat.escalated` servi, jamais lu).
+4. ~~L'horloge~~ — **déjà tranché** : point 16 du 07/09, « garder la PHASE (mot, R2.2) et retirer l'heure du canon ». Le client est
+   conforme ; c'est la maquette qui est en retard.
 5. **Le « + $ » qui monte des bâtiments** (annotation 1 : « l'argent se voit gagner ») : absent du client. Le garder au canon (et le
    faire), ou le retirer.
 6. **Un mot par type de bâtiment**, partout (§3.4) — et une orthographe en (*Specialized*).
@@ -203,4 +203,179 @@ Impossible d'ouvrir » pour le retour d'action) — au back pour `building.setup
 - Ce document, et son annexe générée `22-annexe-mots-1-2.md` (201 sites, rejouable par `--controle`).
 - `inventaire-22.py` (les mots de ① et ②, registre par registre) ; `apparier-fond-maquette.py` accepte désormais un `#id` (le fond posé en
   `style` d'un élément, comme dans `hud-brennar.html`).
+- `inventaire-22.py --cles-22` : les 23 clés du §7.1 (non servies, placeholders, aucun chiffre, titres dérivés, familles == énums servis).
 - Aucun rendu, aucun asset, rien sous `Assets`.
+
+---
+
+## 7. Complément — l'écart de CLIENT-2 (`Tools/juge-donnees/ecran-principal/ecart-2026-09-23.md`, `e2bd7681`)
+
+> Back relu à `1b9b1121` (`back/s5-revue-du-jour`) pour « ce qui est déjà servi ». Aucun rendu, aucun Blender.
+> Clés vérifiées : `python3 Tools/atelier-2026-09-22/inventaire-22.py --cles-22 --back 1b9b1121`.
+
+### 7.1 Les mots — fr avec `’`, et ce qui était déjà servi
+
+**Déjà servi, mesuré par nom dans les deux registres** : aucune clé `harvest`, aucune clé pour les bandes de chaleur, aucun titre de case,
+aucun texte de bandeau ; `building.type.*` couvre **10 types sur 12** (manquent `press_house` et `office`) ; `building.yield.idle|earning`
+(« rien ne rentre » / « ça rapporte ») existe, pour le `yield_band` de ②.
+
+**A. Les trois cases de la fiche (lot ①-1)** — les titres par `Libelle.De("district", "fiche", …)`, les valeurs par `ParValeur`.
+Le 3ᵉ titre suit les points 11 et 19 du 07/09 : « Heat » devient « Chaleur ».
+
+| clé | fr | en | note |
+|---|---|---|---|
+| `district.fiche.a_collecter` | À COLLECTER | TO COLLECT | titre de la case 1 (canon) |
+| `district.fiche.revenus` | REVENUS | INCOME | titre de la case 2 (canon) |
+| `district.fiche.chaleur_locale` | CHALEUR LOCALE | LOCAL HEAT | titre de la case 3 (canon « HEAT LOCAL ») |
+| `district.harvest.nothing` | Rien | Nothing | `harvest_band` NOTHING : rien à ramasser ; teinte crème-2 |
+| `district.harvest.available` | Prêt | Ready | AVAILABLE : il y a de quoi ramasser ; teinte **or-vif** (l'argent, comme le « $ 2 400 » du canon) |
+| `district.harvest.full` | Plein | Full | FULL : quelque chose **s’est arrêté** faute de collecte (`capacity-guard.service.ts:70-78`) ; teinte **braise** |
+| `district.revenue.idle` | Au repos | Idle | `revenue_band` IDLE — le mot que ① affiche déjà (`LibellesBatiment.cs:68`) |
+| `district.revenue.earning` | Rapporte | Earning | EARNING (`LibellesBatiment.cs:67`) |
+| `heat.bucket.cold` | Froid | Cold | une famille pour la case 3 **et** le médaillon (`HeatBucketResolver.cs:71-74`, littéraux aujourd'hui) |
+| `heat.bucket.warm` | Tiède | Warm | |
+| `heat.bucket.hot` | Chaud | Hot | |
+| `heat.bucket.burning` | Brûlant | Burning | |
+
+- `district.revenue.*` plutôt que `building.yield.*` : même énum (IDLE | EARNING), mais « ça rapporte » est écrit pour une ligne de ②, en
+  minuscule. Dans une case, à côté de « Prêt » et « Tiède », il faut la capitale. Si l'user veut un seul mot pour les deux écrans, c'est
+  le point 6 du §5.
+- ⚠️ **La donnée de la case 3** : le point 7 du 07/09 a ratifié le bucket **du district** (« le médaillon reste la VILLE »). Le lot ①-1 de
+  CLIENT-2 propose `buildings[].heat_bucket`, le bucket **du bâtiment** (route `…/heat`), plus proche du « Heat local » du canon.
+  C'est un changement de donnée ratifiée : à confirmer par l'orchestrateur. Le titre « CHALEUR LOCALE » convient aux deux.
+
+**B. La tête de la fiche (lot ①-2)** — titre = `params.enseigne` seule (patron S03, `11-…` §3.11) ; dessous, une ligne « type · lieu ».
+
+| clé | fr | en |
+|---|---|---|
+| `district.fiche.type_lieu` | {type} · {district}, îlot {block} | {type} · {district}, block {block} |
+| `district.fiche.type_lieu.rang` | {type} · {district}, îlot {block}, n° {rang} | {type} · {district}, block {block}, no. {rang} |
+| `building.type.press_house` | Imprimerie | Print shop |
+| `building.type.office` | Agence | Agency |
+
+- `{type}` = la valeur servie de `building.type.<operational_type>`. `{district}`, `{block}`, `{rang}` = les params de `name_i18n`, déjà
+  servis. Mêmes mots que le nom servi (`game.fiction.building.name` : « îlot », « n° » / « block », « no. »).
+- Le client met la ligne en capitales, comme `.fiche .titre .type` au canon (`text-transform:uppercase`).
+- **Les deux types manquants** (le back ne les sert pas : « sans clé parce que sans texte ratifié ») — méthode de « la banque » (`e3e007cc`),
+  instrument `mesurer-mot-money-holding.py 64f678a 201c57c1 1b9b1121 <mots>` : chaque candidat compté dans les **trois corpus** (texte
+  des maquettes, littéraux du client, littéraux du back), texte lu seulement.
+
+  | type | candidat | emplois | verdict |
+  |---|---|---|---|
+  | `press_house` | **Imprimerie** | 3, tous l'enseigne « Imprimerie Skeld » (㊲ cadres 80-82) | **retenu** : aucun autre sens ; c'est le mot des enseignes du type |
+  | | « Atelier de presse » (① aujourd'hui, `district.type_batiment`) | 3, lui-même | écarté : « presse » est aussi **les journaux** (« copie de presse », « brève de presse » : série 6, cadres 91 et 130) |
+  | `office` | **Agence** | **0** | **retenu** : compris sans glossaire (une agence, un bureau d'affaires), aucun autre emploi — comme « banque » |
+  | | « Bureau » (① aujourd'hui) | 12 | écarté : **« Le Bureau »** est l'écran ⑫ (série 6, cadres 20-21, « le bureau du patron ») — et l'icône d'Empire est déjà le bâtiment « bureau » (`18-…`) |
+  | | « Cabinet » | 9 | écarté : c'est l'**avocat** (㉝, « Un cabinet », `loi.bloc.un_cabinet`) |
+  | | « Conseil » | 3 | écarté : le conseil de la ville (cadre 91), et un rôle de lieutenant (`LieutenantScreenController.cs:1086`) |
+  | en | **Print shop** · **Agency** | 0 · 0 | retenus. « Office » a 18 emplois (dont la chronique de la ville : « The office of… ») ; « Press house » est le mot actuel de ①, écarté avec « presse » |
+
+  « Imprimerie » et « Agence » sont aussi le premier mot d'une enseigne de leur type (« Imprimerie Skeld », « Agence Tegg ») : sur ces
+  deux-là, la ligne « type · lieu » répète le titre. C'est le cas de toute famille où l'enseigne dit le métier ; ce n'est pas une
+  collision de sens.
+  ⚠️ ① sert encore `district.type_batiment.atelier_de_presse` et `.bureau` (« Atelier de presse », « Bureau ») : un cas de plus pour « un
+  mot par type » (§3.4, §5 point 6). Recommandation : ① prend les mots de `building.type.*`.
+- « Quartier général » n'a **aucune** source (ni drapeau ni type) : pas de mot à écrire tant que le back ne le sert pas.
+- Point 12 du 07/09 (titre sur 2 lignes maximum, jamais rétréci) : l'enseigne seule fait **24 signes** au plus (« Traitement des eaux Dorn »).
+
+**C. Le bandeau éphémère (lot ①-3)** — sources servies : `session/open.queue[]` (cartes d'exception : `lieutenant {id, name} | null`,
+`severity_band`, `building`), `backlog_badge`, `heat.citywide_bucket`, `heat.escalated`, les rapports d'autonomie.
+
+| clé | fr | en | quand |
+|---|---|---|---|
+| `chrome.bandeau.brigade_quadrille` | La brigade quadrille le quartier — planquez la caisse | The squad is combing the district — hide the cash | `heat.escalated` (état D du canon : « La brigade quadrille le Verge — planquez la caisse », le district rendu générique) |
+| `chrome.bandeau.les_indics_parlent` | Les indics parlent : la brigade s’agite | The informants are talking: the squad is stirring | `citywide_bucket` ∈ HOT, BURNING sans `escalated` (état C du canon, mot pour mot) |
+| `chrome.bandeau.attend_vos_ordres` | {nom} attend vos ordres | {nom} is waiting for your orders | la 1ʳᵉ carte de `queue` porte un lieutenant (« vos ordres » : `exceptions.file.ambiance`, servi) |
+| `chrome.bandeau.la_ville_attend_vos_ordres` | La ville attend vos ordres | The city is waiting for your orders | la 1ʳᵉ carte n'a pas de lieutenant (⑨ : c'est la ville qui parle) |
+| `chrome.bandeau.rapport` | {nom} a un rapport pour vous | {nom} has a report for you | un rapport d'autonomie non lu (état N du canon : « Sal a un rapport du soir ») |
+| `chrome.bandeau.trancher` | trancher | decide | le mot d'action en or, après une carte (le canon met « lire » en or) |
+| `chrome.bandeau.lire` | lire | read | le mot d'action après un rapport (canon) |
+
+- « du soir » tombe : un rapport arrive à toute heure, et la phase est déjà dans la barre.
+- Sans genre présumé : « attend », « a » ne s'accordent pas ; `{nom}` est le nom servi du lieutenant.
+- Aucun chiffre. S'il y a plusieurs cartes, le bandeau n'en nomme qu'une ; le compte en lettres existe déjà dans la file (⑨,
+  `exceptions.file.attendent_encore`).
+- **Qui passe en premier** (proposition, le canon ne l'écrit pas) : D > C > carte de la file > rapport. Un seul bandeau à la fois.
+- **Durée** : le canon n'en donne aucune (du CSS, sans minuterie ; la doctrine dit « s'effacent »). Proposition : **5 s**, ou jusqu'au
+  toucher. À ratifier avec le rendu.
+- Les glyphes (✉ ⚠ 🚨 du canon) n'ont pas de langue (TD-644) : le client pose les siens (`[!]`), hors clé.
+
+### 7.2 L'art et la géométrie — r9 B2, r9 M10, le gyrophare
+
+**M10 — la hauteur de l'art : elle existe déjà, en 2400.**
+`Tools/fal/generees/2026-09-06/decors/DISTRICT_D_{NUIT,JOUR}_1080x2400.png` (client, **non monté**) : mesuré, la source 1080×1920 montée
+(`VERGE_D_*_FINAL.png`) y est **à l'identique de y = 480 à y = 2400** (écart **0,000**/255, nuit et jour ; décalé de 4 px : 7,0). Les
+480 px du haut sont une extension de l'art.
+- **Hauteur de l'art** : 2400 px. **Règle de pose unique** : l'art **calé en bas**. À 1920, l'écran montre les lignes 480..2400 de l'art,
+  c'est-à-dire la source actuelle ; à 2400, il montre tout. Plus de bande unie ni de couture (r9 M10 : art posé de 240 à 2160).
+- **Ancres** : la carte d'ancrage est écrite pour 1920. Dans l'art 2400, chaque `pivot_px` prend **+480 en y**, et
+  `base_px_par_m.origine` aussi (`[515,757 ; 996,57]` → `[515,757 ; 1476,57]`). Aucun autre champ ne change (même caméra, même échelle).
+- Montage : sous `Assets/Art/District/Backgrounds/` à côté des deux actuels, et `DistrictBackgroundSlots` pointé dessus. C'est un
+  travail client ; l'atelier ne touche pas `Assets`.
+
+**B2 — deux marqueurs sur sol nu : la cause est la carte d'ancrage, et la corriger demande Blender.**
+- La carte (`VERGE_D_NUIT_FINAL.json`, profil « batiments-reels+semis-sur-empreinte », **51 parcelles**) sort de
+  `~/project/atelier3d-mafia/parcelles.py`, qui importe `bpy`. Son propre en-tête le dit : la grille de **10 colonnes au pas de 6,5 m**
+  est imposée au cadre de CAM_D, et « les colonnes hautes (x ≳ 6) débordent dans la zone quai/docks de la scène pour TOUT district
+  verge ». C'est le Commerce-écran « sur le quai » de B2.
+- Mesure déjà faite par `mafia-blender` le 07/09 (instrument `~/project/mafia-clean-city/scripts/mesure/ancres_v3.py`, `bpy` lui aussi) :
+  **23 ancres sur 40 à plus de 3 m d'un bâtiment**. Ruling user : « tout doit être construit ».
+- Les positions de B2 dans r9 (B06 (305, 947), B11 (148, 1496) en px de capture) ne tombent sur **aucun** `pivot_px` (le plus proche est à
+  160 px) : elles sont dans le repère de la capture, pas dans celui du fond. Nommer les deux parcelles demande donc l'appariement de la
+  capture (`reconcilier_ancres_ecran.py`).
+- **La correction**, au signal seulement : régénérer la carte en ne gardant que les ancres dans une empreinte de bâtiment (la méthode
+  des groupes de `ancres_v3.py` : union des boîtes, aire ≥ 12 m²). Critère d'acceptation : `ancres_v3.py` rend **0 ancre dehors**. Et
+  l'écrire directement pour l'art 2400 (+480), pour ne pas faire deux fois le chemin.
+
+**Le gyrophare (lot ①-4)** — mesuré sur la maquette, puis sur le fond du client.
+- Au canon : `.gyro` = boîte de **60 × 36 CSS** à (23 %, 56,5 %) du téléphone. Le téléphone et le fond sont tous deux en 9:16 : le fond
+  tient **1:1** (×2,7551). Dans l'art 1080×1920 : boîte **(248, 1085) – (414, 1184)**, soit 165 × 99 px, centre **(331, 1134)**, dégradé
+  radial `#ff5a3cbb` → transparent à 70 %, teinte qui bascule en 0,9 s (`:72-76`), **caché le jour** (`:75`).
+- Ce qu'il éclaire : dans ZO, la **voiture de police** peinte dans le fond (gyrophare du toit vers **(230, 988)**). La lueur est posée à
+  101 px à droite et 146 px sous elle, sur le trottoir.
+- Dans **D** (le fond du client), la voiture de police existe aussi, ailleurs : gyrophare du toit vers **(410, 975) ± 5 px** (mesuré sur
+  le fond de jour, même caméra la nuit). Reporter le décalage du canon tomberait sur un **toit** dans D.
+- **Proposition** : la lueur **centrée sur le gyrophare de la voiture de D**, à la taille du canon : centre **(410, 975)** dans l'art
+  1920, **(410, 1455)** dans l'art 2400 ; 165 × 99 px dans l'art ; visible **seulement** si `heat.escalated`.
+- Le jour : le canon cache la lueur (`:75`), ce qui laisse une descente de jour sans signe dans le monde (§1). Garder le canon, ou
+  l'allumer aussi le jour : à trancher avec le rendu.
+
+### 7.3 Le point or de Famille (M21) : son sens **n'est écrit nulle part**
+
+Lu dans la source et la note de la maquette :
+- **La forme** : `.dockb small.disc` (`:117`), un disque de 8 CSS, `--or`, cerclé de `#0a0f17`, en haut à droite du rond ; posé sur
+  **Famille** seulement (`:199`).
+- **La note** (annotation 6, `:227-229`) : « Empire · Famille (**point or discret, pas de badge rouge**) · Marché · Plus ». Elle dit ce
+  qu'il n'est pas (un badge rouge), pas ce qu'il signale.
+- **La doctrine** (annotation 4, `:221-223`) : « Zéro badge permanent […] les événements arrivent en bandeaux éphémères (rapport d'un
+  lieutenant, convocation) et s'effacent ». Le point est donc le seul signe qui **reste** : c'est une tension avec la doctrine, que la
+  note ne résout pas.
+- **Le seul indice**, et c'est une inférence, pas une source : dans le même état (N), le bandeau dit « ✉ **Sal** a un rapport du soir ».
+  Sal est un lieutenant, et les lieutenants sont sous Famille.
+- **Les registres** ne le disent pas non plus : `front.md` §4 A écrit « Famille (+ point or discret) », sans sens. Les juges l'ont lu
+  chacun à leur façon : r2 (25/08) « notification, vraisemblablement pilotée par la donnée » ; juge-données (07/09, D7) « ● (6 en
+  attente) ».
+- ⇒ **À poser à l'user.** Les candidats servis aujourd'hui : un **rapport d'autonomie non lu** (le plus proche de l'indice ; route
+  `GET /v1/autonomy-reports`), ou des **cartes en attente** (`backlog_badge` / `queue` ; mais la file n'est pas le contenu de Famille).
+
+### 7.4 Les arbitrages ouverts du r9 — d'abord dans les registres
+
+| arbitrage (r9, via `e2bd7681` §3) | registre | état |
+|---|---|---|
+| **FILIÈRE contre MARCHÉ** | `front.md` §4 **A**, « TRANCHÉ — ruling user du 2026-08-25 » : « `Empire · Famille · Filière · Plus` […] « Marché » ne s'allume qu'au **jalon 4**, quand `screen_b1` existera […] Ne plus reposer cette question : elle est au registre. » Même dock dans `18-…` (dock ratifié). | **tranché** : FILIÈRE |
+| **Format monétaire** | `Tools/juge-visuel/ARBITRAGES-user-2026-09-07.md` **point 10**, ratifié en bloc par f2 le 07/09 à 01:05 sous le ruling user du 30/08 : « **9 627 820 €**, sans centimes, espace fine insécable » ; point 19 : « $ 24 850 » dans les références = maquette en retard. | **tranché** |
+| **Police** (Noto Serif contre DejaVu Serif) | même fichier, **point 18** : « **re-rendre les références avec DejaVu** » (le client embarque DejaVu, épinglé par un test ; routé à blender). `front.md` §4 J : un écart de police « s'arbitre », il ne se corrige pas. | **tranché** : c'est la référence qui change, au signal |
+| **Flou de la plaque** (r9 m7) | **aucun registre** : ni `front.md` §4, ni `docs_int/06_open_decisions.md`, ni les arbitrages du 07/09, ni les fichiers de l'atelier de ce soir. Mesure : r8 m16, le vu-à-travers corrèle mieux avec l'art **brut** (0,136) qu'avec l'art flouté à 5 CSS (0,100) ; r9 : à l'opacité mesurée, on ne peut pas trancher. uGUI n'a pas de flou d'arrière-plan. | **pour l'user** : accepter la plaque sans flou, ou poser dessous une copie floutée de l'art |
+
+Tranché aussi par les mêmes registres, et que l'écart de CLIENT-2 range encore dans « à trancher » :
+- **Le fil du ratio** (M2 / D8) : point 6 du 07/09, « **(a)** bande portefeuille à 4 crans, **sinon (b)** retirer la barre — **jamais
+  (c)** ». Tant que le back ne sert pas la bande (L3), c'est **(b)**.
+- **La 3ᵉ statistique** : points 7 et 8 (HEAT LOCAL = bucket du district, en bande) — voir la réserve du §7.1 A.
+- **L'heure** : point 16 (garder la phase, retirer l'heure du canon).
+- **La référence de ①** : point 17, `ecran-canon-propre.png`.
+
+⚠️ **Une contradiction à lever — les icônes du dock.** Le point **15** du 07/09 porte l'arbitrage user « **j'aime pas les icônes** », avec
+la recommandation de mettre le canon à jour en ronds vides (et les dossiers de juge le citent comme « arbitrage user connu »). Le
+23/09, F13 (`d8b7ae62`) a **monté** des icônes sur Empire, Famille et Plus, en laissant Filière vide « par choix de l'user ». Si l'user
+a changé d'avis depuis le 07/09, il faut **l'écrire au registre**. Sinon, F13 va contre un arbitrage ratifié.
+
