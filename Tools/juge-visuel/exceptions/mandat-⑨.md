@@ -58,4 +58,6 @@ produite par `VuePrincipaleCapturePlayModeTests.Capture_Detail_ApresTampon_SousC
 réelle de `exc_demo_one_time`, une seule, sur le compte de capture), mais photographié sur ⑨ (cadre 17 : la tranchée, son cachet),
 puisque ⑩ se referme sur la résolution (c1e6752c). Remplace `screen_5a_detail_apres-tampon_…` (retiré) : un nom qui annonçait ⑩ en
 montrant ⑨. La garde de la planche : `ApresPresent` et `ApresCachet` non vide avant la capture, racine cherchée SOUS le shell.
-Première production due à l'étape 8 (avec la paire).
+⚠️ CORRIGÉ le 23/09 : cette planche n'est PAS produite par l'étape 8 — sa catégorie est `MutationDeCarte`, choisie pour n'être le préfixe
+de rien et qu'aucune liste de l'étape 8 n'emporte. Elle se lance SEULE, À DESSEIN, après avoir prévenu (elle résout une carte du compte
+de capture), avec la paire. Première production due à ce lancement dédié.

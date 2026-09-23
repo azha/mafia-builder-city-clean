@@ -114,6 +114,10 @@ public static class MafiaCI
     //   `planche_la_distribution_1080x2400.png`, produite par `PhotoChantierC` sous la garde d'effet. Verte SEULE avant
     //   inscription : `passed=20 failed=0 declares=20 comptes=20`, catégories RÉELLEMENT exécutées = [EcranDistribution], sans
     //   paire d'identité (run du 22/09 23:29). Aucun test n'exige la paire : elle entre dans la PARTIE 1 du gate client.
+    // ⛔ `MutationDeCarte` (1 test) HORS DU FILTRE, PAR CONSTRUCTION, ET POUR TOUJOURS (raison écrite le 2026-09-23, table
+    //   `categories-hors-filtre.md`) : c'est `Capture_Detail_ApresTampon_SousChrome_MUTE`, qui RÉSOUT une exception pour de bon sur le
+    //   compte de capture — sa catégorie a été choisie pour n'être le préfixe de rien, parce qu'un lancement de `CaptureDetail` l'avait un
+    //   jour emportée et consommé la carte. Elle se lance SEULE, à dessein, avec la paire, après avoir prévenu. Jamais au filtre par défaut.
     // ✅ `EcranRevue` (⑯, 32 tests) et `EcranFile` (⑨, 18 tests) INSCRITES (2026-09-23) — écrans de CLIENT-2, entrés au cumul
     //   par le merge de `ecrans/2026-09-23` (8d632ebd, 34aab08c). Sans elles, ⑯ et ⑨ n'étaient dans AUCUN gate. Vertes chez
     //   CLIENT-2 : `passed=70 failed=0 declares=70 comptes=70`, [Ecran10, EcranExceptions, EcranFile, EcranRevue] (a3134d5f,
