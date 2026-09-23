@@ -1,0 +1,8 @@
+clé	fr	en	statut	source
+tutoriel.ecran.vous_avez_tout_vu	Vous avez tout vu.	You’ve seen it all.	littéral du client	`TutorialScreenController.cs:167` ; ⚠️ à n’afficher que si `eligible_tutorial_ids` est vide (33 §4)
+tutoriel.ecran.rien_de_nouveau_pour_aujourd_hui	Rien de nouveau pour aujourd’hui.	Nothing new for today.	PROPOSÉ	atelier 33 §4 (`next_tutorial_id` null ≠ fini)
+tutoriel.ecran.vous_avez_demande_qu_on_vous_laisse_tranquille	Vous avez demandé qu’on vous laisse tranquille.	You asked to be left alone.	littéral du client	`TutorialScreenController.cs:156` ; maquette ㉕ cadre 3 (proposé)
+tutoriel.ecran.a_decouvrir	À découvrir	Next up	littéral du client	`TutorialScreenController.cs:174` ; maquette ㉕ cadre 2 (proposé)
+tutoriel.ecran.compris	Compris	Got it	RATIFIÉ	série 2 cadre 31 (ratifiée par délégation le 02/09) — D14
+tutoriel.ecran.on_vous_explique_encore	On vous explique encore	Keep explaining	RATIFIÉ	Profil série 6 cadres 95-96 (ratifiés par délégation) — D14
+tutoriel.ecran.decochez_le_jour_ou_vous_n_avez_plus_besoin_qu_on_vous_tienne_la_main	décochez le jour où vous n’avez plus besoin qu’on vous tienne la main	untick it the day you no longer need your hand held	RATIFIÉ	Profil série 6 cadres 95-96 (ratifiés par délégation) — D14
