@@ -9,6 +9,8 @@ Données servies (back, lu) :
       `outcome_bucket` ∈ retreat|hold|contested|advance|breakthrough (ou null), `friction_consumed_bucket` ∈ low|medium|high,
       `heat_increment_bucket` (bande) — `combat.service.ts:85-103`, `combat-tunables.ts:47-53`, `friction-budget.service.ts:42-46` ;
   `POST /v1/me/engagements {lieutenant_id, target_rival_key, target_holding_id}` → le geste « l'envoyer ce soir » ; `GET /v1/lieutenants`.
+  ⚠️ `target_holding_id` n'est PAS un bâtiment : c'est un des 5 axes d'érosion (muscle · finance · intel · infrastructure · leadership ;
+  `engagements.controller.ts:166-183`) — famille neuve `conflit.axe.*` (mesure du back transmise par f2 le 23/09).
 Clés : `conflit.<rôle>.<slug>` — les rôles du client (`titre`, `sous_titre`, `bloc`, `Libelle.De("conflit", …)`) ; les bandes en familles neuves
 `conflit.issue.*`, `conflit.cout.*`, `conflit.chaleur.*`.
 ⚠️ D14 — mots GENRÉS de la maquette ratifiée, NON corrigés, à la liste de l'user : voir `GENRES` (imprimés en fin de script).
@@ -26,17 +28,19 @@ def q(t): return f'«{NB}{t}{NB}»'
 S, A, P, N = 'servie', 'servie · D14', 'proposée', 'note'
 V1 = 'cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir'
 GLYPHE = 'initiale de famille dans un médaillon : D11 — le nom servi l’accompagne (`conflit.bloc.<famille>`)'
-CIBLE = ('le bâtiment visé (`target_holding_id`) : aucune route JOUEUR vérifiée ne liste les bâtiments d’une famille rivale '
-         '(`rivals/:id/full-state` existe, non vérifié côté joueur) — nom d’exemple ; passé à côté ?')
+CIBLE = ('DETTE DE MAQUETTE (point 19, mesure du back transmise par f2 le 23/09) : la maquette vise un BÂTIMENT, le back vise un AXE — '
+         '`target_holding_id` est un des 5 axes d’érosion (`engagements.controller.ts:166-183`, `conflict_rival.ts:104-110`) ; aucune route '
+         'joueur ne liste les tenues d’un rival, `rival_holding` n’a aucun écrivain de production (forme A, lot back futur)')
 MANQUE = 'panneau des manques (64) : ce que le jeu prévoit et que personne ne sert — pas un libellé ; le client dit déjà l’idée (`conflit.bloc.dessinees_pas_renseignees_…`)'
 T = {
  'Le coup de ce soir': (P, 'conflit.bloc.le_coup_de_ce_soir', 'Le coup de ce soir', 'Tonight’s strike', 'titre du panneau d’envoi (59-61)'),
  'On choisit une famille, on choisit un homme, et on l’envoie. On saura demain.': (P, 'conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain',
    'On choisit une famille, on choisit un homme, et on l’envoie. On saura demain.', 'Pick a family, pick someone, and send them. We’ll know tomorrow.',
    '⚠️ D14 : « un homme » est genré (ratifié) → liste de l’user'),
- 'On envoie': (P, 'conflit.bloc.on_envoie', 'On envoie', 'We send', 'la phrase d’envoi : « On envoie {nom} chez {famille}, sur {batiment}. »'),
- 'chez': (P, 'conflit.bloc.on_envoie', '', '', 'morceau de la phrase d’envoi : même clé, à paramètres (une seule clé ICU : « On envoie {nom} chez {famille}, sur {batiment}. »)'),
- 'sur': (P, 'conflit.bloc.on_envoie', '', '', 'idem'),
+ 'On envoie': (P, 'conflit.bloc.on_envoie_nom_chez_famille_sur_axe', 'On envoie {nom} chez {famille}, sur {axe}.', 'We send {nom} to {famille}, at {axe}.',
+   'la phrase d’envoi, une clé à paramètres ; `{axe}` = `conflit.axe.*` (le back vise un AXE, pas un bâtiment : mesure transmise par f2)'),
+ 'chez': (P, 'conflit.bloc.on_envoie_nom_chez_famille_sur_axe', '', '', 'morceau de la phrase d’envoi : même clé'),
+ 'sur': (P, 'conflit.bloc.on_envoie_nom_chez_famille_sur_axe', '', '', 'idem'),
  'l’entrepôt de Dépôt-Est': (N, '', '', '', CIBLE), 'leur entrepôt du quai 4': (N, '', '', '', CIBLE), 'leur dépôt de Verrier': (N, '', '', '', CIBLE),
  'ce qu’on prend si ça marche': (N, '', '', '', 'aperçu du butin : aucune donnée servie ne le dit avant l’envoi (R2.2) — pas un libellé'),
  'la ferraille de leur dépôt': (N, '', '', '', 'idem (glose du butin)'),
@@ -85,7 +89,8 @@ T = {
    'No calling them back — we’ll know tomorrow morning.', 'une phrase en deux nœuds'),
  '— on saura demain matin.': (P, 'conflit.bloc.on_ne_les_rappelle_pas_on_saura_demain_matin', '', '', 'fin de la phrase précédente (« matin » est de la prose, pas une phase : D16 hors champ)'),
  'EN ENVOYER UN AUTRE': (P, 'conflit.bloc.en_envoyer_un_autre', 'En envoyer un autre', 'Send another one', 'geste À ROUTE (`POST /v1/me/engagements`) ; ⚠️ D14 : « un autre » genré'),
- 'autre famille, autre bâtiment': (P, 'conflit.bloc.autre_famille_autre_batiment', 'autre famille, autre bâtiment', 'another family, another building', ''),
+ 'autre famille, autre bâtiment': (P, 'conflit.bloc.autre_famille_autre_cible', 'autre famille, autre cible', 'another family, another target',
+   'maquette en retard (point 19) : le back vise un axe, pas un bâtiment → « autre cible »'),
  'Ce qui est rentré': (P, 'conflit.bloc.ce_qui_est_rentre', 'Ce qui est rentré', 'What came back', 'les envois `resolved` (63)'),
  'Ce que chaque homme a rapporté, et ce que ça nous a coûté.': (P, 'conflit.bloc.ce_que_chaque_homme_a_rapporte_et_ce_que_ca_nous_a_coute',
    'Ce que chaque homme a rapporté, et ce que ça nous a coûté.', 'What each one brought back, and what it cost us.', '⚠️ D14 : « chaque homme » genré'),
@@ -102,7 +107,8 @@ T = {
  'Terrain gagné': (P, 'conflit.issue.advance', 'Terrain gagné', 'Ground gained', '= advance'),
  '« Voilà ce que ça a donné. À vous de dire si on y retourne. »': (P, 'conflit.bloc.voila_ce_que_ca_a_donne_a_vous_de_dire_si_on_y_retourne',
    q('Voilà ce que ça a donné. À vous de dire si on y retourne.'), '“That’s how it went. Your call whether we go back.”', ''),
- 'même famille, autre bâtiment': (P, 'conflit.bloc.meme_famille_autre_batiment', 'même famille, autre bâtiment', 'same family, another building', 'sous « Y retourner » (geste À ROUTE)'),
+ 'même famille, autre bâtiment': (P, 'conflit.bloc.meme_famille_autre_cible', 'même famille, autre cible', 'same family, another target',
+   'sous « Y retourner » (geste À ROUTE) ; maquette en retard (point 19) → « autre cible »'),
  'Ce qu’on ne peut pas faire': (N, '', '', '', MANQUE), 'Le jeu prévoit ces trois choses. Personne n’y touche encore.': (N, '', '', '', MANQUE),
  'Savoir qui elles sont': (N, '', '', '', MANQUE), 'ce qu’elles nous ont fait, où elles en sont, ce qu’elles préparent': (N, '', '', '', MANQUE),
  'Leur parler': (N, '', '', '', MANQUE), 'proposer, menacer, s’entendre, rompre': (N, '', '', '', MANQUE), 'Les faire suivre': (N, '', '', '', MANQUE),
@@ -117,6 +123,11 @@ T = {
  'l’allumette': (N, '', '', '', V1), 'ça s’est disputé': (N, '', '', '', V1 + ' ; la v2 dit « Disputé » (servi ailleurs)'), 'EN RENVOYER UN': (N, '', '', '', V1),
 }
 COMPLEMENTS = [
+ ('conflit.axe.muscle', 'leurs gros bras', 'their muscle', 'PROPOSÉ — « gros bras » est le mot servi de l’archétype (`famille.archetype.gros_bras`)'),
+ ('conflit.axe.finance', 'leur argent', 'their money', 'PROPOSÉ'),
+ ('conflit.axe.intel', 'leurs informateurs', 'their informants', 'PROPOSÉ'),
+ ('conflit.axe.infrastructure', 'leurs installations', 'their premises', 'PROPOSÉ'),
+ ('conflit.axe.leadership', 'leur tête', 'their leadership', 'PROPOSÉ'),
  ('conflit.issue.contested', 'Disputé', 'Contested', 'ratifié (63), déjà mot servi ailleurs'),
  ('conflit.issue.retreat', 'On a reculé', 'We fell back', 'PROPOSÉ : la maquette ne dessine pas `retreat`'),
  ('conflit.cout.high', 'beaucoup', 'a lot', 'PROPOSÉ'), ('conflit.chaleur.low', 'un peu', 'a little', 'même mot que le coût'),

@@ -1,10 +1,10 @@
 mot	cadres	classe	clé	fr	en	note
 Le coup de ce soir	59,60,61	proposée	conflit.bloc.le_coup_de_ce_soir	Le coup de ce soir	Tonight’s strike	titre du panneau d’envoi (59-61)
 On choisit une famille, on choisit un homme, et on l’envoie. On saura demain.	59,60,61	proposée	conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain	On choisit une famille, on choisit un homme, et on l’envoie. On saura demain.	Pick a family, pick someone, and send them. We’ll know tomorrow.	⚠️ D14 : « un homme » est genré (ratifié) → liste de l’user
-On envoie	59,60,61	proposée	conflit.bloc.on_envoie	On envoie	We send	la phrase d’envoi : « On envoie {nom} chez {famille}, sur {batiment}. »
-chez	59,60,61	proposée	conflit.bloc.on_envoie			morceau de la phrase d’envoi : même clé, à paramètres (une seule clé ICU : « On envoie {nom} chez {famille}, sur {batiment}. »)
-sur	59,60,61	proposée	conflit.bloc.on_envoie			idem
-l’entrepôt de Dépôt-Est	59,60	note				le bâtiment visé (`target_holding_id`) : aucune route JOUEUR vérifiée ne liste les bâtiments d’une famille rivale (`rivals/:id/full-state` existe, non vérifié côté joueur) — nom d’exemple ; passé à côté ?
+On envoie	59,60,61	proposée	conflit.bloc.on_envoie_nom_chez_famille_sur_axe	On envoie {nom} chez {famille}, sur {axe}.	We send {nom} to {famille}, at {axe}.	la phrase d’envoi, une clé à paramètres ; `{axe}` = `conflit.axe.*` (le back vise un AXE, pas un bâtiment : mesure transmise par f2)
+chez	59,60,61	proposée	conflit.bloc.on_envoie_nom_chez_famille_sur_axe			morceau de la phrase d’envoi : même clé
+sur	59,60,61	proposée	conflit.bloc.on_envoie_nom_chez_famille_sur_axe			idem
+l’entrepôt de Dépôt-Est	59,60	note				DETTE DE MAQUETTE (point 19, mesure du back transmise par f2 le 23/09) : la maquette vise un BÂTIMENT, le back vise un AXE — `target_holding_id` est un des 5 axes d’érosion (`engagements.controller.ts:166-183`, `conflict_rival.ts:104-110`) ; aucune route joueur ne liste les tenues d’un rival, `rival_holding` n’a aucun écrivain de production (forme A, lot back futur)
 ce qu’on prend si ça marche	59,60,61	note				aperçu du butin : aucune donnée servie ne le dit avant l’envoi (R2.2) — pas un libellé
 la ferraille de leur dépôt	59	note				idem (glose du butin)
 Les quatre familles de Brennar	59,60,61	servie · D14	conflit.bloc.les_quatre_familles	Les quatre familles de Brennar	The four families of Brennar	servi « LES QUATRE FAMILLES » ; D14 : le mot ratifié ; la clé reste (exception à la dérivation, contrat additif)
@@ -18,7 +18,7 @@ S	59,60,61	note				initiale de famille dans un médaillon : D11 — le nom servi
 « Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »	59,60	servie · D14	conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain	« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »	“Just tell me where. I’ll leave tonight, we’ll know tomorrow.”	servi : le texte de la v1 (« Dites-moi qui j’envoie et sur quoi… ») ; D14 : la v2 ratifiée l’emporte ; la clé reste (exception à la dérivation)
 L’ENVOYER CE SOIR	59,60,61,65	proposée	conflit.bloc.l_envoyer_ce_soir	L’envoyer ce soir	Send them tonight	geste À ROUTE : `POST /v1/me/engagements` ; ⚠️ D14 : « l’ » renvoie au lieutenant (genre non marqué à l’écrit, rien à signaler)
 on ne pourra plus le rappeler	59,60	proposée	conflit.bloc.on_ne_pourra_plus_le_rappeler	on ne pourra plus le rappeler	there’s no calling them back	aucune route d’annulation (mesuré) ; ⚠️ D14 : « le » genré → liste de l’user
-leur entrepôt du quai 4	60,61,65	note				le bâtiment visé (`target_holding_id`) : aucune route JOUEUR vérifiée ne liste les bâtiments d’une famille rivale (`rivals/:id/full-state` existe, non vérifié côté joueur) — nom d’exemple ; passé à côté ?
+leur entrepôt du quai 4	60,61,65	note				DETTE DE MAQUETTE (point 19, mesure du back transmise par f2 le 23/09) : la maquette vise un BÂTIMENT, le back vise un AXE — `target_holding_id` est un des 5 axes d’érosion (`engagements.controller.ts:166-183`, `conflict_rival.ts:104-110`) ; aucune route joueur ne liste les tenues d’un rival, `rival_holding` n’a aucun écrivain de production (forme A, lot back futur)
 La dernière fois chez eux :	60,65	proposée	conflit.bloc.la_derniere_fois_chez_eux	La dernière fois chez eux :	Last time at theirs:	suivie de l’issue du dernier envoi résolu (`outcome_bucket`) ; D17 : insécable avant « : »
 percée	60	proposée	conflit.issue.breakthrough	Percée	Breakthrough	même mot que « Percée » (63)
 , et la ville a chauffé	60,65	proposée	conflit.bloc.et_la_ville_a_chauffe	, et la ville a chauffé	, and the city heated up	suite de « La dernière fois… » quand `heat_increment_bucket` n’est pas nul
@@ -26,7 +26,7 @@ percée	60	proposée	conflit.issue.breakthrough	Percée	Breakthrough	même mot q
 on est allés chez eux	60,61,65	proposée	conflit.bloc.on_est_alles_chez_eux	on est allés chez eux	we’ve been to them	la ligne du compte (suivie de `fois_chez_eux`)
 7 fois	60,61,65	proposée	conflit.bloc.fois_chez_eux			même clé ICU
 2 fois	60,61	proposée	conflit.bloc.fois_chez_eux			même clé ICU
-leur dépôt de Verrier	61	note				le bâtiment visé (`target_holding_id`) : aucune route JOUEUR vérifiée ne liste les bâtiments d’une famille rivale (`rivals/:id/full-state` existe, non vérifié côté joueur) — nom d’exemple ; passé à côté ?
+leur dépôt de Verrier	61	note				DETTE DE MAQUETTE (point 19, mesure du back transmise par f2 le 23/09) : la maquette vise un BÂTIMENT, le back vise un AXE — `target_holding_id` est un des 5 axes d’érosion (`engagements.controller.ts:166-183`, `conflict_rival.ts:104-110`) ; aucune route joueur ne liste les tenues d’un rival, `rival_holding` n’a aucun écrivain de production (forme A, lot back futur)
 « Lt. Marr tient les comptes, il ne cogne pas. Et Saltline, on ne l’a jamais croisée — je ne saurais pas où frapper. »	61	proposée	conflit.bloc.nom_tient_les_comptes_il_ne_cogne_pas_et_famille_on_ne_l_a_jamais_croisee_je_ne_saurais_pas_ou_frapper	« {nom} tient les comptes, il ne cogne pas. Et {famille}, on ne l’a jamais croisée — je ne saurais pas où frapper. »	“{nom} keeps the books, doesn’t throw punches. And {famille}, we’ve never crossed them — I wouldn’t know where to hit.”	le refus « deux choses ne collent pas » (61) : un lieutenant qui n’est pas du genre Gros bras (servi : `conflit.bloc.aucun_de_vos_lieutenants_n_est_du_genre_gros_bras`) ET une famille jamais croisée ; noms → `{nom}`, `{famille}` ; ⚠️ D14 : « il » genré → liste de l’user
 deux choses ne collent pas	61	proposée	conflit.bloc.deux_choses_ne_collent_pas	deux choses ne collent pas	two things don’t add up	
 Ce qui est en cours	62	proposée	conflit.bloc.ce_qui_est_en_cours	Ce qui est en cours	What’s under way	les envois `status` = scheduled (62)
@@ -43,7 +43,7 @@ Deux hommes dehors.	62	proposée	conflit.bloc.hommes_dehors	{n, plural, one {Un 
 On ne les rappelle pas	62	proposée	conflit.bloc.on_ne_les_rappelle_pas_on_saura_demain_matin	On ne les rappelle pas — on saura demain matin.	No calling them back — we’ll know tomorrow morning.	une phrase en deux nœuds
 — on saura demain matin.	62	proposée	conflit.bloc.on_ne_les_rappelle_pas_on_saura_demain_matin			fin de la phrase précédente (« matin » est de la prose, pas une phase : D16 hors champ)
 EN ENVOYER UN AUTRE	62	proposée	conflit.bloc.en_envoyer_un_autre	En envoyer un autre	Send another one	geste À ROUTE (`POST /v1/me/engagements`) ; ⚠️ D14 : « un autre » genré
-autre famille, autre bâtiment	62	proposée	conflit.bloc.autre_famille_autre_batiment	autre famille, autre bâtiment	another family, another building	
+autre famille, autre bâtiment	62	proposée	conflit.bloc.autre_famille_autre_cible	autre famille, autre cible	another family, another target	maquette en retard (point 19) : le back vise un axe, pas un bâtiment → « autre cible »
 Ce qui est rentré	63	proposée	conflit.bloc.ce_qui_est_rentre	Ce qui est rentré	What came back	les envois `resolved` (63)
 Ce que chaque homme a rapporté, et ce que ça nous a coûté.	63	proposée	conflit.bloc.ce_que_chaque_homme_a_rapporte_et_ce_que_ca_nous_a_coute	Ce que chaque homme a rapporté, et ce que ça nous a coûté.	What each one brought back, and what it cost us.	⚠️ D14 : « chaque homme » genré
 Il est rentré	63	proposée	conflit.bloc.il_est_rentre	Il est rentré	They’re back	⚠️ D14 : « Il », « rentré » genrés → liste de l’user
@@ -61,7 +61,7 @@ Terrain gagné	63	proposée	conflit.issue.advance	Terrain gagné	Ground gained	=
 Coup n°6	63	proposée	conflit.bloc.coup_n_n			même clé
 Coup n°7	63	proposée	conflit.bloc.coup_n_n			même clé
 « Voilà ce que ça a donné. À vous de dire si on y retourne. »	63	proposée	conflit.bloc.voila_ce_que_ca_a_donne_a_vous_de_dire_si_on_y_retourne	« Voilà ce que ça a donné. À vous de dire si on y retourne. »	“That’s how it went. Your call whether we go back.”	
-même famille, autre bâtiment	63,66	proposée	conflit.bloc.meme_famille_autre_batiment	même famille, autre bâtiment	same family, another building	sous « Y retourner » (geste À ROUTE)
+même famille, autre bâtiment	63,66	proposée	conflit.bloc.meme_famille_autre_cible	même famille, autre cible	same family, another target	sous « Y retourner » (geste À ROUTE) ; maquette en retard (point 19) → « autre cible »
 Ce qu’on ne peut pas faire	64	note				panneau des manques (64) : ce que le jeu prévoit et que personne ne sert — pas un libellé ; le client dit déjà l’idée (`conflit.bloc.dessinees_pas_renseignees_…`)
 Le jeu prévoit ces trois choses. Personne n’y touche encore.	64	note				panneau des manques (64) : ce que le jeu prévoit et que personne ne sert — pas un libellé ; le client dit déjà l’idée (`conflit.bloc.dessinees_pas_renseignees_…`)
 Savoir qui elles sont	64	note				panneau des manques (64) : ce que le jeu prévoit et que personne ne sert — pas un libellé ; le client dit déjà l’idée (`conflit.bloc.dessinees_pas_renseignees_…`)
@@ -87,6 +87,11 @@ on saura demain, pas avant	65	note				cadre de la v1 (65-66), remplacée par la 
 l’allumette	66	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir
 ça s’est disputé	66	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir ; la v2 dit « Disputé » (servi ailleurs)
 EN RENVOYER UN	66	note				cadre de la v1 (65-66), remplacée par la v2 (59-64) : pas un libellé à servir
+(complément de famille)		proposée	conflit.axe.muscle	leurs gros bras	their muscle	PROPOSÉ — « gros bras » est le mot servi de l’archétype (`famille.archetype.gros_bras`)
+(complément de famille)		proposée	conflit.axe.finance	leur argent	their money	PROPOSÉ
+(complément de famille)		proposée	conflit.axe.intel	leurs informateurs	their informants	PROPOSÉ
+(complément de famille)		proposée	conflit.axe.infrastructure	leurs installations	their premises	PROPOSÉ
+(complément de famille)		proposée	conflit.axe.leadership	leur tête	their leadership	PROPOSÉ
 (complément de famille)		proposée	conflit.issue.contested	Disputé	Contested	ratifié (63), déjà mot servi ailleurs
 (complément de famille)		proposée	conflit.issue.retreat	On a reculé	We fell back	PROPOSÉ : la maquette ne dessine pas `retreat`
 (complément de famille)		proposée	conflit.cout.high	beaucoup	a lot	PROPOSÉ
