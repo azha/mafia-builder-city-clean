@@ -235,6 +235,14 @@ public static class MafiaCI
         // en texte ; toute valeur en couleur porte un mot) et N1-N2 (aucun littéral nommé hors Libelle, allowlist EXACTE). Hors paire :
         // aucune relation de préfixe (tests statiques + résolveurs purs). Validé par l'orchestrateur.
         "Replis",
+        // ② la fiche bâtiment, lots 1, 4 et 6 (2026-09-23, CLIENT-2) — 10/10 vert AVANT inscription au créneau de 08:00 (tête 84b77b9c,
+        // pile e7f52351, 445/446, 0 rouge). Pupitre (3 échelles), serre, saisie : 9 tests sans réseau + P5, RÉEL en LECTURE SEULE (un vrai
+        // labo d'operational_demo, aucune mutation). Aucune relation de préfixe (vérifié). Validé par l'orchestrateur.
+        "FicheBatiment",
+        // ㉕ le tutoriel (2026-09-23, CLIENT-2) — 3/3 vert AVANT inscription, même créneau (08:00, tête 84b77b9c, pile e7f52351) : le texte
+        // servi au lieu de l'identifiant, « null » n'est pas « tout vu », la bascule dans le sens du joueur. Sans réseau. Aucune relation de
+        // préfixe (vérifié). Validé par l'orchestrateur. ⚠️ Reglages n'entre PAS encore : K2 passe d'abord sur un compte neuf.
+        "Tutoriel",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
