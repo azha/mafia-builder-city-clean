@@ -705,13 +705,14 @@ namespace MafiaCleanCity.Operational
             // Raid-risk band gauge (LOW → IMMINENT) — a filled-bar glyph + worded band label.
             AddStatusRow("risque_de_descente", "Risque de descente", RaidRiskLabel(card.raid_risk), RaidRiskAccent(card.raid_risk));
 
-            // Raid notification/flag — shown only when this building was recently raided. The seized amount is a
-            // qualitative band (NEVER raw grams; R2.2). A warning glyph carries the alert alongside colour (F2).
+            // La SAISIE — seulement quand le bâtiment a subi une descente. La quantité saisie est une bande (jamais des grammes ; R2.2).
+            // ② lot 6 (2026-09-23, écart ② `c4520078`, cadre 47 F3 « STOCK SAISI ») : la ligne est `building.row.saisie` suivie du mot
+            // servi `building.seized_amount.*` (table 37 : « Saisie · {une petite prise …} »). Elle était « Alerte » avec un préfixe
+            // « Descente — saisi : » écrit en dur, hors de toute clé. Une descente qui n'a RIEN pris dit « rien », en ambre : la descente
+            // a eu lieu, la marchandise est restée (choix du client, déclaré).
             if (card.recently_raided)
-            {
-                string notif = $"Descente — saisi : {SeizedLabel(card.seized_amount)}";
-                AddStatusRow("alerte", "Alerte", notif, AccentSevere);
-            }
+                AddStatusRow("stock_saisi", "Saisie", SeizedLabel(card.seized_amount),
+                    card.seized_amount == "NONE" ? AccentModerate : AccentSevere);
 
             // ----- ② lot 1 (2026-09-23) : LE PUPITRE — trois échelles de crans, « le feu » sur 5, « l'étagère » sur 4, « les caisses »
             // sur 4 ; le premier cran est TOUJOURS allumé (écart ② `c4520078`, cadres 39-44, bloc B2). Le pupitre suit le TYPE (tranché (a)

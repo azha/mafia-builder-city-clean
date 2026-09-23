@@ -125,7 +125,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(texts.Any(t => t == "Risque de descente"), "raid-risk row label rendered");
             string riskLabel = RaidRiskWord(card.raid_risk);
             Assert.IsTrue(texts.Any(t => t == riskLabel), $"raid-risk band '{riskLabel}' rendered");
-            Assert.IsTrue(texts.Any(t => t.StartsWith("Descente — saisi")), "raid notification rendered");
+            Assert.IsTrue(texts.Any(t => t == "Saisie"), "raid seizure row rendered (② lot 6 : `building.row.saisie` + la bande servie)");
 
             // The Repair button is present on a DAMAGED building.
             Assert.IsTrue(controller.RepairButtonShown, "Repair button is shown on a DAMAGED building");
@@ -204,7 +204,7 @@ namespace MafiaCleanCity.Operational.Tests
             string riskLabel = RaidRiskWord(card.raid_risk);
             Assert.IsTrue(texts.Any(t => t == riskLabel), $"healthy raid-risk band '{riskLabel}' rendered");
             // No raid notification on a non-raided building.
-            Assert.IsFalse(texts.Any(t => t.StartsWith("Descente — saisi")), "no raid notification on a healthy building");
+            Assert.IsFalse(texts.Any(t => t == "Saisie"), "no seizure row on a healthy building");
             // NO Repair button on a non-DAMAGED building.
             Assert.IsFalse(controller.RepairButtonShown, "no Repair button on a healthy (OPERATIONAL) building");
             Assert.IsFalse(texts.Any(t => t.StartsWith("Réparer · ")), "no Repair button label on a healthy building");
