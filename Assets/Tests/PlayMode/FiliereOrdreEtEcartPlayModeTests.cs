@@ -134,6 +134,14 @@ namespace MafiaCleanCity.Operational.Tests
                 Assert.AreEqual(niveauxAttendus[i - 1], niveau.GetComponent<UnityEngine.UI.LayoutElement>().flexibleWidth, 0.001f,
                     $"Etape{i} : la bande qualitative porte son cran, sans scalaire brut");
             }
+
+            Transform compteurs = tous.First(t => t.name == "Compteurs");
+            for (int i = 0; i < 3; i++)
+            {
+                UnityEngine.UI.LayoutElement largeur = compteurs.Find("Compteur" + i).GetComponent<UnityEngine.UI.LayoutElement>();
+                Assert.AreEqual(0f, largeur.preferredWidth, 0.001f, $"Compteur{i} n'hérite pas de la largeur de son libellé");
+                Assert.AreEqual(1f, largeur.flexibleWidth, 0.001f, $"Compteur{i} prend exactement un tiers disponible");
+            }
         }
 
         /// <summary>État FABRIQUÉ : une étape du pipeline n'a pas de `stage_index` dans la liste ⇒ l'ordre du SERVEUR est gardé

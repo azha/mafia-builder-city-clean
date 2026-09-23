@@ -717,6 +717,10 @@ namespace MafiaCleanCity.Operational
             {
                 GameObject c = NouveauUI("Compteur" + i, bande.transform);
                 AjouterFond(c, DesignTokens.Current.surfaceCard);
+                LayoutElement largeurEgale = c.AddComponent<LayoutElement>();
+                largeurEgale.minWidth = 0f;
+                largeurEgale.preferredWidth = 0f;
+                largeurEgale.flexibleWidth = 1f;
                 var vc = c.AddComponent<VerticalLayoutGroup>();
                 vc.padding = new RectOffset((int)Px(4f), (int)Px(4f), (int)Px(5f), (int)Px(5f));
                 vc.childControlWidth = true; vc.childControlHeight = true;
@@ -725,7 +729,7 @@ namespace MafiaCleanCity.Operational
                     DesignTokens.Current.hudGaugeArcCold, DesignTokens.Current.hudSerifFont);
                 compteurNombre[i].alignment = TextAlignmentOptions.Center;
                 compteurLibelle[i] = NouveauTexte(c.transform, "Libelle", "", Px(6.5f),
-                    DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+                    DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.primaryFont);
                 compteurLibelle[i].alignment = TextAlignmentOptions.Center;
                 compteurLibelle[i].characterSpacing = 16f;
             }
@@ -762,7 +766,7 @@ namespace MafiaCleanCity.Operational
             vp.childControlWidth = true; vp.childControlHeight = true;
             vp.childForceExpandWidth = true; vp.childForceExpandHeight = false;
             pannSur = NouveauTexte(pan.transform, "SurTitre", "", Px(7.5f),
-                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+                DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.primaryFont);
             pannTitre = NouveauTexte(pan.transform, "Titre", "", Px(13f),
                 DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
             pannTexte = NouveauTexte(pan.transform, "Texte", "", Px(9f),
