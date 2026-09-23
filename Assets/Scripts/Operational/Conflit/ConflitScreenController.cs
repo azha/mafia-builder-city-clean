@@ -142,6 +142,24 @@ namespace MafiaCleanCity.Operational
             AppliquerEtat();
         }
 
+        /// <summary>L'écran Famille ouvert par « Recruter un nouveau lieutenant » (crochet de test), ou null.</summary>
+        public MafiaCleanCity.Operational.Lieutenant.LieutenantScreenController DernierRecrutementOuvert { get; private set; }
+
+        /// <summary>L7 — ouvre la Famille EN SURIMPRESSION, panneau de recrutement déplié : le contrat `IShellNavigator`
+        /// (ShellContracts), celui de ⑨ et du tableau de bord ; AppShell n'est pas touché. Sans navigateur (hors du shell) ou
+        /// si le navigateur ne monte rien, le geste le DIT dans le journal au lieu de monter un écran plein cadre par-dessus
+        /// le chrome (la classe de défaut que ce contrat a fermée).</summary>
+        public void OuvrirRecrutement()
+        {
+            DernierRecrutementOuvert = null;
+            MafiaCleanCity.Shell.IShellNavigator nav = MafiaCleanCity.Shell.ShellNavigatorLocator.Find();
+            if (nav == null) { Debug.LogWarning("[㉙] recrutement : aucun navigateur de shell — rien n'est ouvert"); return; }
+            var famille = nav.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Lieutenant.LieutenantScreenController>();
+            if (famille == null) { Debug.LogWarning("[㉙] recrutement : le navigateur n'a rien monté"); return; }
+            if (!famille.RecrutementDeplie) famille.BasculerRecrutement();
+            DernierRecrutementOuvert = famille;
+        }
+
         /// <summary>Le geste du bouton « L’envoyer ce soir » : rien tant que les trois choix ne sont pas faits.</summary>
         public void EnvoyerLeCoup()
         {
@@ -700,6 +718,10 @@ namespace MafiaCleanCity.Operational
                     8f, DesignTokens.Current.onSurfaceMuted, false);
                 noteVide.enableWordWrapping = true;
                 TrackText(noteVide.text);
+                // L7 (23/09) : le chemin existe — un joueur recrute un gros bras (`POST /v1/lieutenants {archetype: 'MUSCLE', …}`).
+                // Le geste ouvre la Famille, panneau de recrutement déplié ; le mot est la clé SERVIE de ce geste là-bas.
+                BoutonGeste(coupRoot, "Recruter", Libelle.De("famille", "ecran", "Recruter un nouveau lieutenant"), null, true,
+                    OuvrirRecrutement);
                 return;
             }
 
@@ -790,8 +812,8 @@ namespace MafiaCleanCity.Operational
             TrackText(q.text);
         }
 
-        /// <summary>Un geste à route (cadres 59-63) : le libellé, et sa précision en petit dessous. `actif` faux ⇒ bouton non
-        /// interactif et libellé éteint.</summary>
+        /// <summary>Un geste à route (cadres 59-63) : le libellé, et sa précision en petit dessous (`precision` null ⇒ aucune).
+        /// `actif` faux ⇒ bouton non interactif et libellé éteint.</summary>
         private void BoutonGeste(Transform parent, string nom, string libelle, string precision, bool actif, UnityEngine.Events.UnityAction geste)
         {
             GameObject bouton = NouveauUI(nom, parent);
@@ -812,6 +834,7 @@ namespace MafiaCleanCity.Operational
             TextMeshProUGUI l = NouveauTexteFiche(bouton.transform, "Libelle", libelle, 10f, encre, true);
             l.alignment = TextAlignmentOptions.Center;
             TrackText(l.text);
+            if (precision == null) return;
             TextMeshProUGUI p = NouveauTexteFiche(bouton.transform, "Precision", precision, 7f, encre, false);
             p.alignment = TextAlignmentOptions.Center;
             TrackText(p.text);

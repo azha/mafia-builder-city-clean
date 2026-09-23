@@ -696,6 +696,56 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(ConflitResolvers.LaDerniereFoisChezEux(null));
         }
 
+        // ═══ L7 — sans gros bras, le chemin du recrutement ═════════════════════════════════════════
+
+        /// <summary>Un navigateur de shell FACTICE : il monte le locataire demandé sous lui et le garde, sans shell réel.</summary>
+        private class FauxNavigateur : MonoBehaviour, MafiaCleanCity.Shell.IShellNavigator
+        {
+            public MonoBehaviour Monte;
+            public T MonterLocataireEnSurimpression<T>() where T : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
+            {
+                var hote = new GameObject("Hote_" + typeof(T).Name, typeof(RectTransform));
+                hote.transform.SetParent(transform, false);
+                T t = hote.AddComponent<T>();
+                t.SetMountParent(transform);
+                Monte = t;
+                return t;
+            }
+        }
+
+        /// <summary>Sans gros bras, « Recruter un nouveau lieutenant » (clé SERVIE `famille.ecran.recruter_un_nouveau_lieutenant`)
+        /// ouvre la Famille EN SURIMPRESSION par le navigateur du shell, panneau de recrutement déplié. Contrôle négatif : sans
+        /// navigateur, rien n'est monté (et le geste le dit dans le journal). L'écran monté est détruit dans la MÊME frame,
+        /// avant son `Start()` : aucun appel réseau.</summary>
+        [UnityTest]
+        public IEnumerator EcranConflitE13_AucunGrosBras_RecruterOuvreLaFamille_PanneauDeRecrutementDeplie()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(new GetLieutenantsResponseDto { lieutenants = new[] { Lieutenant("COOK") } },
+                new GetEngagementsResponseDto { engagements = new EngagementDto[0] });
+            yield return null;
+
+            Assert.AreEqual("Recruter un nouveau lieutenant", TexteSous("Recruter", "Libelle"));
+            Button recruter = GameObject.Find("Recruter").GetComponent<Button>();
+            Assert.IsTrue(recruter.interactable);
+
+            // Contrôle négatif : aucun navigateur ⇒ rien n'est monté.
+            LogAssert.Expect(LogType.Warning, "[㉙] recrutement : aucun navigateur de shell — rien n'est ouvert");
+            recruter.onClick.Invoke();
+            Assert.IsTrue(ecran.DernierRecrutementOuvert == null);
+
+            var navGo = new GameObject("FauxNavigateur", typeof(RectTransform));
+            try
+            {
+                var nav = navGo.AddComponent<FauxNavigateur>();
+                recruter.onClick.Invoke();
+                Assert.IsTrue(ecran.DernierRecrutementOuvert != null, "la Famille est montée par le navigateur");
+                Assert.AreSame(nav.Monte, ecran.DernierRecrutementOuvert, "montée PAR le navigateur du shell, pas en autonome");
+                Assert.IsTrue(ecran.DernierRecrutementOuvert.RecrutementDeplie, "le panneau de recrutement est déplié");
+            }
+            finally { Object.DestroyImmediate(navGo); }
+        }
+
         /// <summary>Le texte du nœud `enfant` sous le nœud `ligne` (à n'importe quelle profondeur sous `ConflitRoot`), ou null.</summary>
         private string TexteSous(string ligne, string enfant)
         {
