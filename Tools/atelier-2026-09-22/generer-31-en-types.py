@@ -69,7 +69,10 @@ def slug(s):
         if c.isalnum(): o += c.lower()
         elif o and o[-1] != '_': o += '_'
     return o.strip('_')
-ADD = [  # (clé servie, fr proposé, clé dérivée du fr ? , raison)
+# ⛔ Contrat du back (ruling du 25/08) : ADDITIF seulement — on ne renomme ni chemin ni clé, et les émetteurs ne suivent pas (f2, 23/09).
+#    On garde la clé, on change la VALEUR. Une clé qui ne suit plus son slug est une EXCEPTION déclarée à la règle de dérivation
+#    (`domaine.rôle.` + slug(fr)) : elle vaut pour ces trois `revue.phrase.*`, et elle est écrite dans la colonne raison.
+ADD = [  # (clé servie, fr proposé, (inutilisé), raison)
  ('revue.phrase.j_ai_rapproche_les_comptes_de_la_facade', 'J’ai rapproché les comptes du commerce-écran', True, 'D12 : « la façade » → le mot du commerce-écran'),
  ('revue.phrase.il_passe_plus_d_argent_par_la_caisse_que_la_facade_ne_peut_en_justifier',
   '— il passe plus d’argent par la caisse que le commerce-écran ne peut en justifier.', True, 'D12 : « la façade » → le mot du commerce-écran'),
@@ -80,8 +83,10 @@ ADD = [  # (clé servie, fr proposé, clé dérivée du fr ? , raison)
 ]
 add = ['\t'.join(['clé', 'fr', 'en', 'clé servie', 'fr servi', 'raison'])]
 for cle_s, fr, derivee, raison in ADD:
-    cle = '.'.join(cle_s.split('.')[:2]) + '.' + slug(fr) if derivee else cle_s
-    add.append('\t'.join([cle, fr, EN[cle_s], cle_s, FR[cle_s], raison + ('' if cle == cle_s else ' ; clé RENOMMÉE (slug du fr)')]))
+    cle = cle_s                                                   # jamais renommée (contrat additif)
+    exc = derivee and '.'.join(cle.split('.')[:2]) + '.' + slug(fr) != cle
+    add.append('\t'.join([cle, fr, EN[cle_s], cle_s, FR[cle_s],
+                          raison + (' ; clé GARDÉE — EXCEPTION déclarée à la dérivation : elle ne suit plus le slug du fr (contrat additif, ruling du 25/08)' if exc else '')]))
 dest_a = os.path.join(ICI, '31-addendum-fr-d12-2026-09-23.tsv')
 open(dest_a, 'w', encoding='utf-8').write('\n'.join(add) + '\n')
 print(f'écrit : {dest_a} — {len(add) - 1} clés (en inchangé : il disait déjà « front », « stash »)')

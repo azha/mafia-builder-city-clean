@@ -31,6 +31,7 @@ for cle, fr, en, cle_s, fr_s, raison in A:   # addendum : le fr servi est bien c
     if (FR.get(cle_s), EN.get(cle_s)) != (fr_s, en) and (FR.get(cle), EN.get(cle)) != (fr, en): d.append(f'addendum {cle_s} : servi périmé')
     if re.search(r'façade|planque', fr): d.append(f'addendum {cle} : mot heurté encore là')
     if "'" in fr: d.append(f'addendum {cle} : apostrophe droite')
+    if cle != cle_s: d.append(f'addendum {cle_s} : clé renommée — le contrat du back est additif (ruling du 25/08)')
 n_der = sum(1 for c in L if not c[0].startswith('building.type.'))
 if n_der != 2 * len(types): d.append(f'{n_der} dérivés pour {len(types)} types')
 print(f'{len(L)} clés · {len(types)} types · {sum(c[4] == "PROPOSÉ" for c in L)} PROPOSÉ(S)'); [print('  ⛔', x) for x in d]

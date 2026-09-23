@@ -35,13 +35,16 @@ qu'un témoin de structure : la v2 est servie depuis `58d2eaaa`.
 
 Les colonnes : clé → fr → en, puis la clé et le fr servis. L'en ne change pas : il disait déjà « front » et « stash ».
 
-| clé | fr |
+| clé (gardée) | fr |
 |---|---|
-| `revue.phrase.j_ai_rapproche_les_comptes_du_commerce_ecran` | J’ai rapproché les comptes du commerce-écran |
-| `revue.phrase.il_passe_plus_d_argent_par_la_caisse_que_le_commerce_ecran_ne_peut_en_justifier` | — il passe plus d’argent par la caisse que le commerce-écran ne peut en justifier. |
-| `revue.phrase.le_commerce_ecran_est_epingle_pour_un_controle` | — le commerce-écran est épinglé pour un contrôle. |
-| `random_world.coupling.pair.erlang_stash__deal_lek` (clé inchangée) | ce que tient votre réserve et ce que la rue vient disputer |
+| `revue.phrase.j_ai_rapproche_les_comptes_de_la_facade` | J’ai rapproché les comptes du commerce-écran |
+| `revue.phrase.il_passe_plus_d_argent_par_la_caisse_que_la_facade_ne_peut_en_justifier` | — il passe plus d’argent par la caisse que le commerce-écran ne peut en justifier. |
+| `revue.phrase.la_facade_est_epinglee_pour_un_controle` | — le commerce-écran est épinglé pour un contrôle. |
+| `random_world.coupling.pair.erlang_stash__deal_lek` | ce que tient votre réserve et ce que la rue vient disputer |
 
-- Les trois `revue.phrase.*` sont **renommées**, puisque la clé suit le slug du fr. Leurs émetteurs, au back ou au client, doivent suivre.
+- **Corrigé le 23/09 (f2)** : les clés sont **gardées**, seules les **valeurs** changent. Le contrat du back est additif (ruling du 25/08) :
+  on ne renomme ni chemin ni clé, et les émetteurs ne suivent pas.
+- **Exception à la règle de dérivation** (`domaine.rôle.` + slug(fr)) : les trois `revue.phrase.*` ne suivent plus le slug de leur fr.
+  L'exception est déclarée dans la colonne raison de la table. `verifier-31` refuse tout renommage.
 - La clé du couplage est nommée par le couplage lui-même, pas par son texte : elle ne change pas.
 - La table principale est servie depuis le back `73ca76df` : ses 36 lignes y sont désormais toutes « inchangé ».
