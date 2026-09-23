@@ -18,7 +18,7 @@
 | `recrutement/reference-1080x2102.png` | cadre nominal `ecrans-brennar-4.html` #9 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
 | `recrutement/ecran-canon-vide.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `recrutement/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar-4.html` 9, 10, 11, 12, 13 — atelier `f67ca63`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-4.html` 9, 10, 11, 12, 13 — atelier `5d7b6d9`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : déduite. série 4 cadres 9-13 « Recrutement » ; canon recrutement/v4-9..13.png
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

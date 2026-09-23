@@ -119,8 +119,10 @@ TABLE = [
       cadres=[(S6, [95, 96, 97])], nominal=(S6, 95), planche="planche_le_coffre_1080x2400.png",
       confiance="déduite", note="déduit par titre (95-97 « Le compte ») — le contrôleur dit « cadres 45-47 », autre numérotation ; canon compte/profil-canon.png ; ⚠️ sa planche s'appelle planche_le_coffre"),
  dict(sym="⑲", ctl="SettingsScreenController", dossier="compte", chemin="Plus → LES RÉGLAGES",
-      cadres=[], nominal=None, planche="planche_les_reglages_1080x2400.png",
-      confiance="aucune", note="canon compte/reglages-canon.png ; aucun cadre de série 4/6 identifié"),
+      cadres=[(S6, [95, 96, 97])], nominal=None, planche="planche_les_reglages_1080x2400.png",
+      confiance="mesurée", note="front.md ⑲ (l.1847) : « fusionnée avec screen_c1 dans « LE PROFIL » … cadres 45-47 » (ancienne numérotation) "
+      "= 95-97 « Le compte », tiroir « Le jeu » (la langue, « On vous explique encore ») ; ratifiée par délégation le 02/09 (front.md l.22). "
+      "Référence : celle de ㉒ (même porte, cadre 95) — pas de rendu propre. Corrigé le 2026-09-23 (atelier, commande f2) : l'INDEX disait « aucune »"),
  dict(sym="㊱", ctl="HorizonScreenController", dossier="screen_c6", chemin="Plus → L'HORIZON DES POSSIBLES",
       cadres=[(S6, list(range(113, 119)))], nominal=(S6, 113), planche="screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png",
       confiance="déduite", note="cadres 113-118 « L'horizon » par le titre ; liste vide par construction sur le compte de démo"),
