@@ -25,7 +25,7 @@ namespace MafiaCleanCity.Operational
     ///   · `friction_consumed_bucket` : `low` | `medium` | `high` | null — `FrictionBand`, `combat.types.ts:39` ;
     ///   · `heat_increment_bucket` : `string | null` côté type ; seul `medium` est produit aujourd'hui
     ///     (`ASSAULT_HEAT_INCREMENT_BUCKET`, provisoire) — les mots couvrent low/medium/high (table 40) ;
-    ///   · `target_axis_i18n` et `lieutenant` : PAS ENCORE SERVIS (le back les ajoute après le gate du 23/09 ; noms
+    ///   · `target_axis_i18n`, `lieutenant` et `strike_index` : PAS ENCORE SERVIS (le back les ajoute après le gate du 23/09 ; noms
     ///     figés par l'orchestrateur le même jour). Déclarés AVANT d'être servis (forme G) ; absents, ils se lisent
     ///     `key` vide / `name` vide, et rien ne s'affiche à leur place (aucun axe ni nom deviné).
     /// ⚠️ JsonUtility rend `""` pour une chaîne `null` servie, et une INSTANCE VIDE pour un objet `null` :
@@ -42,6 +42,11 @@ namespace MafiaCleanCity.Operational
         public string heat_increment_bucket;
         public AxeI18nDto target_axis_i18n;          // `{key: "conflit.axe.<axe>", params: {}}` | null (aucun axe visé)
         public EngagementLieutenantDto lieutenant;   // `{id, name}` | null (soft-ref sans FK : un lieutenant disparu ⇒ null)
+        // `strike_index` — le rang de l'envoi chez SA famille (entier ≥ 1, départage monotone côté serveur) : PAS ENCORE SERVI
+        // (petit lot conflit du back, annoncé par l'orchestrateur le 23/09). Absent ⇒ 0 (JsonUtility) ⇒ AUCUN « Coup n° ».
+        // ⛔ Jamais dérivé de l'ordre de la liste : `created_at_minute DESC, id DESC` départage au hasard (uuid v4) deux envois
+        // de la même minute de jeu (combat.repository.ts:22-23, conflict_combat.ts:149).
+        public int strike_index;
     }
 
     /// <summary>`target_axis_i18n` — l'axe visé, une des 5 clés `conflit.axe.*` (table 40), `params` toujours `{}`.</summary>

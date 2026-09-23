@@ -322,6 +322,124 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.DoesNotContain(ecran.RenderedTexts, "compte indisponible", "l'ancien littéral hors Libelle est retiré");
         }
 
+        // ═══ L3 — cadres 62 (en cours) et 63 (rentré) ══════════════════════════════════════════
+
+        private static EngagementDto AvecLieutenant(EngagementDto e, string nom)
+        {
+            e.lieutenant = nom == null ? null : new EngagementLieutenantDto { id = "lt-" + e.engagement_id, name = nom };
+            return e;
+        }
+
+        [UnityTest]
+        public IEnumerator EcranConflitE5_EnCoursEtRentre_LesMotsDeLaTable40_SansNomQuandLeLieutenantManque()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(
+                new GetLieutenantsResponseDto { lieutenants = new LieutenantRowDto[0] },
+                new GetEngagementsResponseDto
+                {
+                    engagements = new[]   // servie du plus récent au plus ancien
+                    {
+                        AvecLieutenant(Envoi("p1", "tarcum", "Tarcum", "scheduled", "", "", "medium"), "Lt. Voss"),
+                        AvecLieutenant(Envoi("p2", "iron_throat", "Gorge-de-Fer", "scheduled", "", "", "medium"), null),
+                        AvecLieutenant(Envoi("r1", "coil", "La Coil", "resolved", "hold", "high", "medium"), null),
+                        AvecLieutenant(Envoi("r0", "coil", "La Coil", "resolved", "breakthrough", "low", "medium"), "Lt. Dorne"),
+                    },
+                });
+            yield return null;
+
+            // Cadre 62
+            CollectionAssert.Contains(ecran.RenderedTexts, "Ce qui est en cours");
+            CollectionAssert.Contains(ecran.RenderedTexts, "Les hommes qu’on a envoyés et qui ne sont pas encore rentrés.");
+            CollectionAssert.Contains(ecran.RenderedTexts, "Partis, pas encore rentrés");
+            Assert.AreEqual("Lt. Voss", TexteSous("Parti_p1", "Lieutenant"));
+            Assert.AreEqual("parti chez Tarcum", TexteSous("Parti_p1", "Lieu"), "le nom SERVI de la famille, dans le gabarit");
+            Assert.AreEqual("on ne peut plus le rappeler", TexteSous("Parti_p1", "Droite"));
+            Assert.IsNull(TexteSous("Parti_p2", "Lieutenant"), "lieutenant null (disparu) : la ligne s'affiche SANS nom, sans repli");
+            Assert.AreEqual("parti chez Gorge-de-Fer", TexteSous("Parti_p2", "Lieu"));
+            CollectionAssert.Contains(ecran.RenderedTexts, "Déjà rentrés");
+            Assert.AreEqual("était chez La Coil", TexteSous("DejaRentre_r1", "Lieu"));
+            Assert.AreEqual("Rien obtenu", TexteSous("DejaRentre_r1", "Droite"));
+            Assert.AreEqual("Percée", TexteSous("DejaRentre_r0", "Droite"));
+            CollectionAssert.Contains(ecran.RenderedTexts, "2 hommes dehors. On ne les rappelle pas — on saura demain matin.",
+                "D15 : le nombre vient de la liste (2 partis)");
+
+            // Cadre 63 : le DERNIER rentré (r1, premier `resolved` de la liste)
+            CollectionAssert.Contains(ecran.RenderedTexts, "Ce qui est rentré");
+            CollectionAssert.Contains(ecran.RenderedTexts, "Ce que chaque homme a rapporté, et ce que ça nous a coûté.");
+            CollectionAssert.Contains(ecran.RenderedTexts, "Il est rentré");
+            Assert.AreEqual("était chez La Coil", TexteSous("Rentre_r1", "Lieu"));
+            Assert.AreEqual("Rien obtenu", TexteSous("Rentre_r1", "Droite"));
+            Assert.IsNull(TexteSous("Rentre_r0", "Lieu"), "un seul envoi dans « Il est rentré » : le dernier");
+            Assert.AreEqual("ça nous a coûté", TexteSous("Cout", "Libelle"));
+            Assert.AreEqual("beaucoup", TexteSous("Cout", "Mot"));
+            Assert.AreEqual("la ville a chauffé", TexteSous("Chaleur", "Libelle"));
+            Assert.AreEqual("pas mal", TexteSous("Chaleur", "Mot"));
+            foreach (string t in ecran.RenderedTexts)
+                StringAssert.DoesNotContain("Coup n°", t, "aucun rang tant que `strike_index` n'est pas servi");
+        }
+
+        [UnityTest]
+        public IEnumerator EcranConflitE6_RentreSansCoutNiChaleur_LesLignesSOmettent_EtRienEnCoursSansParti()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(
+                new GetLieutenantsResponseDto { lieutenants = new LieutenantRowDto[0] },
+                new GetEngagementsResponseDto
+                {
+                    engagements = new[] { Envoi("r1", "saltline", "Saltline", "resolved", "retreat", "", "") },
+                });
+            yield return null;
+
+            Assert.AreEqual("On a reculé", TexteSous("Rentre_r1", "Droite"));
+            Assert.IsNull(TexteSous("Cout", "Mot"), "coût null : pas de ligne « ça nous a coûté »");
+            Assert.IsNull(TexteSous("Chaleur", "Mot"), "chaleur null : pas de ligne « la ville a chauffé »");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "Ce qui est en cours", "aucun envoi parti : pas de section");
+        }
+
+        [UnityTest]
+        public IEnumerator EcranConflitE7_AucunEnvoi_NiEnCoursNiRentre()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(new GetLieutenantsResponseDto { lieutenants = new LieutenantRowDto[0] },
+                new GetEngagementsResponseDto { engagements = new EngagementDto[0] });
+            yield return null;
+
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "Ce qui est en cours");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "Ce qui est rentré");
+        }
+
+        [Test]
+        public void EcranConflitR5_CoupN_HommesDehors_FamilleDe()
+        {
+            Assert.IsNull(ConflitResolvers.CoupN(0), "`strike_index` absent (0) : aucun « Coup n° »");
+            Assert.AreEqual("Coup n°4", ConflitResolvers.CoupN(4));
+            Assert.AreEqual(0, Premier(CorpsRentre).strike_index, "pas encore servi ⇒ 0");
+            Assert.AreEqual(7, Premier(CorpsRentre.Replace("\"status\"", "\"strike_index\":7,\"status\"")).strike_index,
+                "servi ⇒ la valeur arrive dans le DTO (forme G)");
+
+            Assert.AreEqual("Un homme dehors.", ConflitResolvers.HommesDehors(1));
+            Assert.AreEqual("2 hommes dehors.", ConflitResolvers.HommesDehors(2));
+
+            Assert.AreEqual("Gorge-de-Fer", ConflitResolvers.FamilleDe(Premier(CorpsRentre)), "le nom servi");
+            Assert.AreEqual("La Coil", ConflitResolvers.FamilleDe(new EngagementDto { target_rival_key = "coil" }),
+                "nom servi absent : le nom du domaine");
+            Assert.AreEqual("type inconnu", ConflitResolvers.FamilleDe(Envoi("x", "bogus", "unknown_bogus", "resolved", "hold", "", "")),
+                "sentinelle du back hors domaine : jamais affichée");
+        }
+
+        /// <summary>Le texte du nœud `enfant` sous le nœud `ligne` (à n'importe quelle profondeur sous `ConflitRoot`), ou null.</summary>
+        private string TexteSous(string ligne, string enfant)
+        {
+            foreach (Transform tr in RacineEcran().GetComponentsInChildren<Transform>(true))
+            {
+                if (tr.name != ligne) continue;
+                foreach (TMPro.TextMeshProUGUI t in tr.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                    if (t.name == enfant) return t.text;
+            }
+            return null;
+        }
+
         /// <summary>Le texte du nœud `enfant` sous la ligne `ligne` de la table, ou null s'il n'existe pas. Cherché sous
         /// `ConflitRoot` (`RacineEcran`) : hors shell, l'écran bâtit sous un Canvas découvert, pas sous son hôte.</summary>
         private string TexteDe(ConflitScreenController ecran, string ligne, string enfant)

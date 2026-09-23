@@ -292,6 +292,8 @@ namespace MafiaCleanCity.Operational
         {
             renderedTexts.Clear();
             RendreTitre();
+            RendreRentre(DernierChargementEngagements?.engagements);
+            RendreEnCours(DernierChargementEngagements?.engagements);
             RendreTable(DernierChargementEngagements?.engagements, DernierChargementEngagements == null);
             RendrePied(DernierChargementLieutenants?.lieutenants);
             RendreMessageErreur();
@@ -309,6 +311,158 @@ namespace MafiaCleanCity.Operational
                 "Ce que vos hommes rapportent des familles rivales, et qui vous reste pour y retourner.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
+        }
+
+        /// <summary>Cadre 63 — « Ce qui est rentré » : le DERNIER envoi rentré (le premier `resolved` de la liste, servie du plus
+        /// récent au plus ancien par minute de jeu), son issue, ce qu'il a coûté et ce qu'il a fait chauffer. Rien si aucun
+        /// envoi n'est rentré. Chaque ligne à valeur null est OMISE (aucun mot deviné). Le nom du lieutenant s'affiche s'il est
+        /// servi ; sinon la ligne commence par la famille. L'historique « Depuis le début, chez … » (Coup n°N) attend
+        /// `strike_index` (L3bis) ; « Y retourner » est un geste à route (L4).</summary>
+        private void RendreRentre(EngagementDto[] engagements)
+        {
+            ViderEnfants(rentreRoot);
+            EngagementDto dernier = null;
+            if (engagements != null)
+                foreach (EngagementDto e in engagements)
+                    if (e != null && e.status == "resolved") { dernier = e; break; }
+            if (dernier == null) return;
+
+            EnTeteDeSection(rentreRoot,
+                Libelle.Gabarit("conflit.bloc.ce_qui_est_rentre", "Ce qui est rentré"),
+                Libelle.Gabarit("conflit.bloc.ce_que_chaque_homme_a_rapporte_et_ce_que_ca_nous_a_coute",
+                    "Ce que chaque homme a rapporté, et ce que ça nous a coûté."));
+            EtiquetteDeSection(rentreRoot, "IlEstRentre", Libelle.Gabarit("conflit.bloc.il_est_rentre", "Il est rentré"));
+            LigneDEnvoi(rentreRoot, "Rentre_" + dernier.engagement_id, dernier,
+                Libelle.Gabarit("conflit.bloc.etait_chez_famille", "était chez {famille}",
+                    new Dictionary<string, string> { { "famille", ConflitResolvers.FamilleDe(dernier) } }),
+                ConflitResolvers.Issue(dernier.outcome_bucket));
+
+            string cout = ConflitResolvers.Cout(dernier.friction_consumed_bucket);
+            if (cout != null)
+                LigneDeMesure(rentreRoot, "Cout", Libelle.Gabarit("conflit.bloc.ca_nous_a_coute", "ça nous a coûté"), cout);
+            string chaleur = ConflitResolvers.Chaleur(dernier.heat_increment_bucket);
+            if (chaleur != null)
+                LigneDeMesure(rentreRoot, "Chaleur", Libelle.Gabarit("conflit.bloc.la_ville_a_chauffe", "la ville a chauffé"), chaleur);
+        }
+
+        /// <summary>Cadre 62 — « Ce qui est en cours » : les envois PARTIS (`scheduled`, on ne peut plus les rappeler : aucune
+        /// route d'annulation) puis les DÉJÀ RENTRÉS avec leur issue, et le compte des hommes dehors (D15 : le nombre vient de
+        /// la liste). Rien si aucun envoi n'est parti. « En envoyer un autre » est un geste à route (L4).</summary>
+        private void RendreEnCours(EngagementDto[] engagements)
+        {
+            ViderEnfants(enCoursRoot);
+            var partis = new List<EngagementDto>();
+            var rentres = new List<EngagementDto>();
+            if (engagements != null)
+                foreach (EngagementDto e in engagements)
+                {
+                    if (e == null) continue;
+                    if (e.status == "scheduled") partis.Add(e);
+                    else if (e.status == "resolved") rentres.Add(e);
+                }
+            if (partis.Count == 0) return;
+
+            EnTeteDeSection(enCoursRoot,
+                Libelle.Gabarit("conflit.bloc.ce_qui_est_en_cours", "Ce qui est en cours"),
+                Libelle.Gabarit("conflit.bloc.les_hommes_qu_on_a_envoyes_et_qui_ne_sont_pas_encore_rentres",
+                    "Les hommes qu’on a envoyés et qui ne sont pas encore rentrés."));
+
+            EtiquetteDeSection(enCoursRoot, "Partis",
+                Libelle.Gabarit("conflit.bloc.partis_pas_encore_rentres", "Partis, pas encore rentrés"));
+            string plusLeRappeler = Libelle.Gabarit("conflit.bloc.on_ne_peut_plus_le_rappeler", "on ne peut plus le rappeler");
+            foreach (EngagementDto e in partis)
+                LigneDEnvoi(enCoursRoot, "Parti_" + e.engagement_id, e,
+                    Libelle.Gabarit("conflit.bloc.parti_chez_famille", "parti chez {famille}",
+                        new Dictionary<string, string> { { "famille", ConflitResolvers.FamilleDe(e) } }),
+                    plusLeRappeler);
+
+            if (rentres.Count > 0)
+            {
+                EtiquetteDeSection(enCoursRoot, "DejaRentres", Libelle.Gabarit("conflit.bloc.deja_rentres", "Déjà rentrés"));
+                foreach (EngagementDto e in rentres)
+                    LigneDEnvoi(enCoursRoot, "DejaRentre_" + e.engagement_id, e,
+                        Libelle.Gabarit("conflit.bloc.etait_chez_famille", "était chez {famille}",
+                            new Dictionary<string, string> { { "famille", ConflitResolvers.FamilleDe(e) } }),
+                        ConflitResolvers.Issue(e.outcome_bucket));
+            }
+
+            TextMeshProUGUI dehors = NouveauTexteFiche(enCoursRoot, "HommesDehors",
+                ConflitResolvers.HommesDehors(partis.Count) + " " +
+                Libelle.Gabarit("conflit.bloc.on_ne_les_rappelle_pas_on_saura_demain_matin",
+                    "On ne les rappelle pas — on saura demain matin."),
+                8f, DesignTokens.Current.onSurfaceSecondary, false);
+            dehors.enableWordWrapping = true;
+            TrackText(dehors.text);
+        }
+
+        private void EnTeteDeSection(Transform parent, string titre, string chapeau)
+        {
+            TextMeshProUGUI t = NouveauTexteFiche(parent, "SectionTitre", titre, 12f, DesignTokens.Current.onSurfacePrimary, true);
+            TrackText(t.text);
+            TextMeshProUGUI c = NouveauTexteFiche(parent, "SectionChapeau", chapeau, 8f, DesignTokens.Current.onSurfaceSecondary, false);
+            c.enableWordWrapping = true;
+            TrackText(c.text);
+        }
+
+        private void EtiquetteDeSection(Transform parent, string nom, string texte)
+        {
+            TextMeshProUGUI e = NouveauTexteFiche(parent, nom, texte, 8.5f, DesignTokens.Current.onSurfaceSecondary, false);
+            e.characterSpacing = 4f;
+            TrackText(e.text);
+        }
+
+        /// <summary>Une ligne d'envoi (cadres 62-63) : à gauche le nom du lieutenant (s'il est servi) en gras et le lieu en
+        /// italique, à droite l'issue ou « on ne peut plus le rappeler ». `droite` null ⇒ rien à droite.</summary>
+        private void LigneDEnvoi(Transform parent, string nomLigne, EngagementDto e, string lieu, string droite)
+        {
+            GameObject ligne = NouveauUI(nomLigne, parent);
+            AjouterFond(ligne, DesignTokens.Current.surfaceRow);
+            HorizontalLayoutGroup hl = ligne.AddComponent<HorizontalLayoutGroup>();
+            hl.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(6f), PxTrait(6f));
+            hl.spacing = Px(8f);
+            hl.childControlWidth = true; hl.childControlHeight = true;
+            hl.childForceExpandWidth = false; hl.childForceExpandHeight = false;
+            hl.childAlignment = TextAnchor.MiddleLeft;
+            AddLayoutElement(ligne, flexibleHeight: 0);
+
+            GameObject gauche = NouveauUI("Qui", ligne.transform);
+            VerticalLayoutGroup vg = gauche.AddComponent<VerticalLayoutGroup>();
+            vg.childControlWidth = true; vg.childControlHeight = true;
+            vg.childForceExpandWidth = true; vg.childForceExpandHeight = false;
+            AddLayoutElement(gauche, flexibleWidth: 1);
+
+            string lieutenant = ConflitResolvers.NomDuLieutenant(e.lieutenant);
+            if (lieutenant != null)
+            {
+                TextMeshProUGUI nom = NouveauTexteFiche(gauche.transform, "Lieutenant", lieutenant, 10f,
+                    DesignTokens.Current.onSurfacePrimary, true);
+                TrackText(nom.text);
+            }
+            TextMeshProUGUI ou = NouveauTexteFiche(gauche.transform, "Lieu", lieu, 8f, DesignTokens.Current.onSurfaceMuted, false);
+            ou.fontStyle = FontStyles.Italic;
+            TrackText(ou.text);
+
+            if (droite == null) return;
+            TextMeshProUGUI d = NouveauTexteFiche(ligne.transform, "Droite", droite, 8.5f, DesignTokens.Current.onSurfaceSecondary, false);
+            d.alignment = TextAlignmentOptions.Right;
+            d.enableWordWrapping = true;
+            AddLayoutElement(d.gameObject, preferredWidth: Px(90f));
+            TrackText(d.text);
+        }
+
+        /// <summary>« ça nous a coûté un peu » (cadre 63) : le libellé, puis le mot de la bande en gras.</summary>
+        private void LigneDeMesure(Transform parent, string nom, string libelle, string mot)
+        {
+            GameObject ligne = NouveauUI(nom, parent);
+            HorizontalLayoutGroup hl = ligne.AddComponent<HorizontalLayoutGroup>();
+            hl.spacing = Px(4f);
+            hl.childControlWidth = true; hl.childControlHeight = true;
+            hl.childForceExpandWidth = false; hl.childForceExpandHeight = false;
+            AddLayoutElement(ligne, flexibleHeight: 0);
+            TextMeshProUGUI l = NouveauTexteFiche(ligne.transform, "Libelle", libelle, 8.5f, DesignTokens.Current.onSurfaceSecondary, false);
+            TrackText(l.text);
+            TextMeshProUGUI m = NouveauTexteFiche(ligne.transform, "Mot", mot, 8.5f, DesignTokens.Current.onSurfacePrimary, true);
+            TrackText(m.text);
         }
 
         /// <summary>§1/§2 — La table des 4 familles (cadres 59-61) : le domaine clos de `target_rival_key`
@@ -537,6 +691,8 @@ namespace MafiaCleanCity.Operational
         /// première ligne qui lisait le payload).</summary>
         private void RendreEtatIndisponible()
         {
+            ViderEnfants(rentreRoot);
+            ViderEnfants(enCoursRoot);
             ViderEnfants(tableRoot);
             ViderEnfants(piedRoot);
             ViderEnfants(erreurRoot);
@@ -601,6 +757,9 @@ namespace MafiaCleanCity.Operational
             sousTitreTexte.enableWordWrapping = true;
             AddLayoutElement(sousTitreTexte.gameObject, flexibleHeight: 0);
 
+            rentreRoot = NouvelleSection(corpsGo.transform, "Rentre");
+            enCoursRoot = NouvelleSection(corpsGo.transform, "EnCours");
+
             GameObject tableGo = NouveauUI("Table", corpsGo.transform);
             VerticalLayoutGroup vtb = tableGo.AddComponent<VerticalLayoutGroup>();
             vtb.spacing = Px(6f);
@@ -625,7 +784,19 @@ namespace MafiaCleanCity.Operational
             erreurRoot = erreurGo.transform;
         }
 
-        private Transform tableRoot, piedRoot, erreurRoot;
+        private Transform tableRoot, piedRoot, erreurRoot, rentreRoot, enCoursRoot;
+
+        /// <summary>Une section verticale vide (hauteur nulle tant qu'elle n'a pas d'enfant).</summary>
+        private Transform NouvelleSection(Transform parent, string nom)
+        {
+            GameObject go = NouveauUI(nom, parent);
+            VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(6f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            AddLayoutElement(go, flexibleHeight: 0);
+            return go.transform;
+        }
         private TextMeshProUGUI titreTexte, sousTitreTexte;
 
         private static Color RougeMauvais => DesignTokens.Current.accentDanger;
@@ -759,6 +930,23 @@ namespace MafiaCleanCity.Operational
         public static string FoisChezEux(int n) =>
             MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.fois_chez_eux", "{n, plural, =0 {jamais} one {# fois} other {# fois}}",
                 new Dictionary<string, string> { { "n", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
+
+        /// <summary>㉙ — le nom de la famille d'un envoi : le nom SERVI (`target_rival_name_i18n`), sinon celui du domaine
+        /// (`NomFamille`, « type inconnu » hors des 4).</summary>
+        public static string FamilleDe(EngagementDto e) =>
+            e == null ? MafiaCleanCity.I18n.Repli.Type(null) : NomServi(e.target_rival_name_i18n) ?? NomFamille(e.target_rival_key);
+
+        /// <summary>㉙ — « Un homme dehors. » / « N hommes dehors. » : clé ICU `conflit.bloc.hommes_dehors` (table 40), D15 (le
+        /// nombre vient de la liste). Appelé à partir de 1.</summary>
+        public static string HommesDehors(int n) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.hommes_dehors", "{n, plural, one {Un homme dehors.} other {# hommes dehors.}}",
+                new Dictionary<string, string> { { "n", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
+
+        /// <summary>㉙ — « Coup n°N » (`conflit.bloc.coup_n_n`, table 40) depuis `strike_index` SERVI. null tant qu'il est absent
+        /// (0) : aucun rang dérivé de l'ordre de la liste (arbitrage du 23/09). Branché à l'écran en L3bis.</summary>
+        public static string CoupN(int strikeIndex) =>
+            strikeIndex < 1 ? null : MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.coup_n_n", "Coup n°{n}",
+                new Dictionary<string, string> { { "n", strikeIndex.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
 
         /// <summary>㉙ — l'issue d'un envoi (`outcome_bucket`), mots de l'atelier table 40 (997d6ab4) ; clé tirée de la VALEUR
         /// servie (`conflit.issue.<valeur>`). Domaine `COMBAT_OUTCOME_BUCKETS` (5). ⚠️ null (envoi `scheduled`, pas encore
