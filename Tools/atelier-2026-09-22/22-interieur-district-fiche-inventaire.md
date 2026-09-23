@@ -190,8 +190,8 @@ Impossible d'ouvrir » pour le retour d'action) — au back pour `building.setup
    (pouls, aiguille qui tremble, **gyrophare dans le monde**), que le client n'a pas (`heat.escalated` servi, jamais lu).
 4. ~~L'horloge~~ — **déjà tranché** : point 16 du 07/09, « garder la PHASE (mot, R2.2) et retirer l'heure du canon ». Le client est
    conforme ; c'est la maquette qui est en retard.
-5. **Le « + $ » qui monte des bâtiments** (annotation 1 : « l'argent se voit gagner ») : absent du client. Le garder au canon (et le
-   faire), ou le retirer.
+5. ~~Le « + $ » qui monte des bâtiments~~ — **déjà tranché** : le point 17 du 07/09 range `.floater` dans l'**échafaudage** d'atelier
+   (avec les pastilles `.co` et les bascules) que le canon propre retire. Aucune source servie non plus (M10 de CLIENT-2).
 6. **Un mot par type de bâtiment**, partout (§3.4) — et une orthographe en (*Specialized*).
 7. **Les veto ouverts** qui touchent ① et ② : « la banque », « Ouvrir » (et sa famille, §4).
 8. **Hors user, pour le client** : les **18 mots du chrome** et les **30 de la fiche de ①** n'ont pas de clé ; les **6 libellés anglais**
