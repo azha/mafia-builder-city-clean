@@ -632,8 +632,6 @@ namespace MafiaCleanCity.Shell.Tests
             "Operational/Exceptions/ExceptionDetailController.cs",
             "Operational/Exceptions/ExceptionQueueController.cs",
             "Operational/Forensic/ForensicScreenController.cs",
-            "Operational/Laundering/LaunderingController.cs",
-            "Operational/Laundering/PipelineOverviewController.cs",
             "Operational/Lieutenant/LieutenantScreenController.cs",
             "Operational/Loi/LoiScreenController.cs",
             "Shell/ExceptionQueuePanelController.cs",

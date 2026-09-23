@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap;
-using MafiaCleanCity.Operational; // DashboardController + LaunderingController
+using MafiaCleanCity.Operational; // DashboardController + FiliereScreenController
 using MafiaCleanCity.Operational.Lieutenant;
 using MafiaCleanCity.Tests; // ProductionClickSupport (round 4, BLOQUANT)
 using Object = UnityEngine.Object;
@@ -17,34 +17,56 @@ namespace MafiaCleanCity.Shell.Tests
     [Category("W3U1")]
     public class AppShellPlayModeTests
     {
-        /// <summary>⛔ GARDE STRUCTURELLE DES DEUX CHEMINS (2026-09-23, ruling de f2, reco (a) de l'atelier `25-donnees-servies` §1) :
-        /// AUCUN chemin joueur n'instancie ⑪ `LaunderingController` ni ⑫ `PipelineOverviewController`. Lecture des sources de
-        /// production, commentaires retirés : toute instanciation (`<T>` générique ou `typeof(T)`) hors du fichier de ⑪ lui-même
-        /// rougit, NOMMÉE. ⑪ ouvre ⑫ depuis son propre fichier, et ⑪ n'est plus joignable. Anti-vacuité : les deux instanciations de
-        /// ⑫ DANS ⑪ sont bien vues (sinon le motif ne mord sur rien), et ㊵ est bien instancié par l'onglet ET par la nav.</summary>
+        /// <summary>⛔ GARDE STRUCTURELLE (2026-09-23) — AUCUN chemin n'instancie un contrôleur RETIRÉ. ⑪ `LaunderingController` et ⑫
+        /// `PipelineOverviewController` ont été retirés du dépôt (code mort : 0 chemin joueur depuis que ㊵ porte la filière, ruling de
+        /// f2) ; cette garde REMPLACE celle « ⑪→⑫ = 2 » de de3dd2b4, dont la valeur tombait avec eux (remplacée, pas assouplie).
+        /// Lecture des sources de production, commentaires retirés : toute mention de code d'un nom retiré (instanciation, type, `using`
+        /// de type) rougit, NOMMÉE — un contrôleur recréé sous le même nom, ou un chemin qui le ré-appelle, ne passe pas en silence.
+        /// Les fichiers eux-mêmes doivent être absents. Anti-vacuité : ㊵ est instancié par l'onglet, la nav (×2) et le menu Plus.</summary>
+        internal static readonly string[] ControleursRetires = { "LaunderingController", "PipelineOverviewController" };
+
+        internal static System.Collections.Generic.List<string> MentionsDeRetires(string source)
+        {
+            string src = MafiaCleanCity.Tests.IdentiteNonDeriveeDuTexteTests.SansCommentaires(source);
+            // les littéraux ne comptent pas (un message peut citer un nom) ; le code, si
+            src = System.Text.RegularExpressions.Regex.Replace(src, @"""(?:[^""\\]|\\.)*""", "\"\"");
+            var res = new System.Collections.Generic.List<string>();
+            foreach (string nom in ControleursRetires)
+                foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(src, @"\b" + nom + @"\b"))
+                    res.Add($"{src.Substring(0, m.Index).Split('\n').Length}: {nom}");
+            return res;
+        }
+
+        /// <summary>Contrôle POSITIF : une instanciation fabriquée d'un contrôleur retiré est VUE ; sa citation en commentaire ou en
+        /// littéral ne l'est pas.</summary>
         [Test]
-        public void AucunCheminJoueur_NInstancie_LaunderingController_NiPipelineOverviewController()
+        public void ControlePositif_UneMentionDeControleurRetireEstVue()
+        {
+            Assert.AreEqual(1, MentionsDeRetires("void f(){ var c = go.AddComponent<LaunderingController>(); }").Count);
+            Assert.AreEqual(1, MentionsDeRetires("void f(){ nav.MonterLocataireEnSurimpression<PipelineOverviewController>(); }").Count);
+            Assert.AreEqual(0, MentionsDeRetires("// LaunderingController est retiré\nvoid f(){ Debug.Log(\"LaunderingController\"); }").Count);
+            Assert.AreEqual(0, MentionsDeRetires("void f(){ var c = go.AddComponent<FiliereScreenController>(); }").Count);
+        }
+
+        [Test]
+        public void AucunChemin_NInstancie_UnControleurRetire()
         {
             string racine = System.IO.Path.Combine(Application.dataPath, "Scripts");
-            var motif = new System.Text.RegularExpressions.Regex(
-                @"<\s*(LaunderingController|PipelineOverviewController)\s*>|typeof\(\s*(LaunderingController|PipelineOverviewController)\s*\)");
             var fautes = new System.Collections.Generic.List<string>();
-            int dansOnze = 0, filiere = 0;
+            int filiere = 0;
             foreach (string f in System.IO.Directory.GetFiles(racine, "*.cs", System.IO.SearchOption.AllDirectories))
             {
-                string src = MafiaCleanCity.Tests.IdentiteNonDeriveeDuTexteTests.SansCommentaires(System.IO.File.ReadAllText(f));
-                string nom = System.IO.Path.GetFileName(f);
-                filiere += System.Text.RegularExpressions.Regex.Matches(src, @"<\s*FiliereScreenController\s*>").Count;
-                foreach (System.Text.RegularExpressions.Match m in motif.Matches(src))
-                {
-                    if (nom == "LaunderingController.cs") { dansOnze++; continue; }
-                    int ligne = src.Substring(0, m.Index).Split('\n').Length;
-                    fautes.Add($"{f.Substring(Application.dataPath.Length - "Assets".Length)}:{ligne} « {m.Value} »");
-                }
+                string brut = System.IO.File.ReadAllText(f);
+                filiere += System.Text.RegularExpressions.Regex.Matches(
+                    MafiaCleanCity.Tests.IdentiteNonDeriveeDuTexteTests.SansCommentaires(brut), @"<\s*FiliereScreenController\s*>").Count;
+                foreach (string x in MentionsDeRetires(brut))
+                    fautes.Add($"{f.Substring(Application.dataPath.Length - "Assets".Length)}:{x}");
             }
-            Assert.AreEqual(2, dansOnze, "anti-vacuité : les 2 ouvertures de ⑫ depuis ⑪ (LaunderingController.cs) sont vues par le motif");
+            foreach (string nom in ControleursRetires)
+                Assert.IsEmpty(System.IO.Directory.GetFiles(racine, nom + ".cs", System.IO.SearchOption.AllDirectories),
+                    $"{nom}.cs est revenu dans Assets/Scripts — il a été retiré le 2026-09-23");
             Assert.GreaterOrEqual(filiere, 3, "anti-vacuité : ㊵ est instancié par l'onglet, la nav du Dashboard (×2) et le menu Plus");
-            CollectionAssert.IsEmpty(fautes, "un chemin joueur instancie encore ⑪ ou ⑫ :\n" + string.Join("\n", fautes));
+            CollectionAssert.IsEmpty(fautes, "un contrôleur RETIRÉ est encore mentionné par du code :\n" + string.Join("\n", fautes));
         }
 
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un

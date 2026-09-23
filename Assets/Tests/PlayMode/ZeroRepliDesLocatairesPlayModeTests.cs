@@ -74,8 +74,9 @@ namespace MafiaCleanCity.Operational.Tests
         /// sites-libelle.py) — leur texte ne passe pas par le catalogue, une garde de repli n'a rien à y compter.</summary>
         private static readonly HashSet<string> ExclusDeclares = new HashSet<string>
         {
-            "InspectionScreenController", "PrecinctScreenController", "TutorialScreenController", "LaunderingController",
-            "PipelineOverviewController", "SellingScreenController", "DecisionDetailScreenController",
+            "InspectionScreenController", "PrecinctScreenController", "TutorialScreenController",
+            // ⑪ et ⑫ retirés du dépôt le 2026-09-23 (code mort) : leurs exclusions partent avec eux.
+            "SellingScreenController", "DecisionDetailScreenController",
         };
 
         [SetUp]

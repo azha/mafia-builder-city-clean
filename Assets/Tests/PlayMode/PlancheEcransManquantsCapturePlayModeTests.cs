@@ -140,12 +140,8 @@ namespace MafiaCleanCity.Shell.Tests
             // que le maillon manquant est côté BACK. On prend donc l'image que le joueur a
             // réellement sous les yeux aujourd'hui, avec un prédicat plus faible NOMMÉ, et on
             // épingle l'état juste après.
-            yield return CaptureSousShell.CapturerLocataire<LaunderingController>(
-                shell, "la_filiere", (e, racine) => CaptureSousShell.PorteDuTexte(racine), echecs,
-                nomFeuille: "LaunderingSheet");
-            yield return CaptureSousShell.CapturerLocataire<PipelineOverviewController>(
-                shell, "le_pipeline", (e, racine) => CaptureSousShell.PorteDuTexte(racine), echecs,
-                nomFeuille: "PipelineSheet");
+            // ⑪ « la_filiere » et ⑫ « le_pipeline » : captures RETIRÉES le 2026-09-23 avec leurs contrôleurs (code mort — ㊵ porte la
+            // filière, sa planche est `screen_c2_filiere_sous_chrome`, écrite par sa propre suite).
 
             // ═══ 2026-09-04 — LES TROIS ÉCRANS QUI N'AVAIENT AUCUNE CAPTURE SOUS SHELL ═══════
             // ⛔ MESURE QUI A RÉDUIT LA LISTE DE SEPT À TROIS. On m'a signalé « 7 suites
@@ -177,28 +173,6 @@ namespace MafiaCleanCity.Shell.Tests
             yield return CaptureSousShell.CapturerLocataire<MafiaCleanCity.Operational.Lieutenant.LieutenantScreenController>(
                 shell, "la_famille", (e, racine) => CaptureSousShell.PorteDuTexte(racine), echecs,
                 nomFeuille: "LieutenantSheet");
-
-            // ⛔ L'ÉPINGLE QUI SE RETOURNE — un `toBe(404)` dans le bon sens, AVEC son mode
-            // d'emploi de péremption. Elle n'asserte pas une ABSENCE (une clé qui manque est
-            // satisfaite par n'importe quel échec) : elle asserte la VALEUR d'un booléen que le
-            // chemin de chargement PRODUIT. Le jour où une route amont donne un `nodeId` et où le
-            // shell le passe, `NodeLoaded` devient vrai et CETTE LIGNE ROUGIT.
-            // ⇒ CE QU'IL FAUT FAIRE CE JOUR-LÀ : supprimer ces deux épingles, rendre aux deux
-            // écrans le prédicat `e => e.NodeLoaded` / `e => e.PipelineLoaded`, et reprendre la
-            // capture — l'image d'aujourd'hui montre un écran vide, pas un écran fini.
-            // ⚠️ Sans cette épingle, la capture d'un écran vide se relit dans six mois comme la
-            // preuve que l'écran est livré.
-            var filiere = shell.ContentSlot.GetComponentInChildren<LaunderingController>(true);
-            var pipeline = shell.ContentSlot.GetComponentInChildren<PipelineOverviewController>(true);
-            if (filiere != null && filiere.NodeLoaded)
-                echecs.Add("ÉPINGLE PÉRIMÉE : LaunderingController.NodeLoaded est VRAI — une route "
-                           + "amont donne enfin un nodeId. Rends-lui le prédicat `e => e.NodeLoaded`, "
-                           + "retire cette épingle, et REFAIS la capture : celle du jour montre un vide.");
-            if (pipeline != null && pipeline.PipelineLoaded)
-                echecs.Add("ÉPINGLE PÉRIMÉE : PipelineOverviewController.PipelineLoaded est VRAI — "
-                           + "même geste que ci-dessus pour `le_pipeline`.");
-            Debug.Log($"[PLANCHE2] état épinglé — NodeLoaded={(filiere == null ? "N/A" : filiere.NodeLoaded.ToString())} "
-                      + $"· PipelineLoaded={(pipeline == null ? "N/A" : pipeline.PipelineLoaded.ToString())}");
 
             Assert.IsEmpty(echecs, "écrans en défaut :\n  · " + string.Join("\n  · ", echecs));
         }

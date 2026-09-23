@@ -114,8 +114,6 @@ namespace MafiaCleanCity.Tests
 
             // ⛔ NON SONDABLES SANS IDENTIFIANT — écrits, pas devinés.
             releve.Add("BuildingCardController           (fiche)        ⛔ NON ÉTABLI — exige un buildingId");
-            releve.Add("LaunderingController             (fiche)        ⛔ NON ÉTABLI — rend UN nœud désigné");
-            releve.Add("PipelineOverviewController       (fiche)        ⛔ NON ÉTABLI — rend UN nœud désigné");
             releve.Add("ExceptionDetailController        (fiche)        ⛔ NON ÉTABLI — exige un exceptionId");
             releve.Add("DashboardController              (chrome)       ⛔ NON ÉTABLI — pas de collection isolée");
             releve.Add("HomeChromeController             (chrome)       ⛔ NON ÉTABLI — aucun client, pur chrome");

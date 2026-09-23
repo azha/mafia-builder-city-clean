@@ -39,8 +39,8 @@ namespace MafiaCleanCity.Shell.Tests
         private static readonly string[] SansInsetConnus =
         {
             "DashboardController",
-            "LaunderingController",
-            "PipelineOverviewController",
+            // ⑪ LaunderingController et ⑫ PipelineOverviewController RETIRÉS du dépôt le 2026-09-23 (code mort : 0 chemin joueur
+            // depuis que ㊵ porte la filière) — l'entrée part avec son porteur, comme la garde l'exige.
         };
 
         private static readonly Regex Commentaire = new Regex(@"^\s*(///|//|\*|/\*)", RegexOptions.Compiled);

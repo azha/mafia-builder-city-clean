@@ -68,7 +68,7 @@ VERDICTS = [
  (L, "Deposit cash", 0, "② bouton (:1057)"),
  (L, "Withdraw cash", 0, "② bouton (:1058)"),
  (L, "Convert", 0, "② bouton (:1068) ; « Plant » (:1026) N'EST PAS épinglé : sous-chaîne de « Planter »"),
- (L, "Inject (launder)", 0, "② bouton (:991) ; il reste ⑪ LaunderingController:250, fermé par son commit · lot D1 22/09, ⑪ (1→0)"),
+ (L, "Inject (launder)", 0, "② bouton (:991) ; il restait ⑪ LaunderingController:250, fermé par son commit · lot D1 22/09, ⑪ (1→0) ; ⑪ RETIRÉ le 23/09"),
  (L, "EXCEPTION", 0, "⑨:509 en-tête de panne, ⑩:566/569/591 en-tête de la main"),
  (L, "See all exceptions", 0, "panneau du shell (:236)"),
  (L, "District {districtId}", 0, "③ titre de repli du panneau de détail (:1016)"),
@@ -167,7 +167,7 @@ VERDICTS = [
  (N, "est en route",                            1, "« en route » = en chemin"),
  (N, "CETTE ROUTE",                             1, "l'itinéraire du courrier, pas un endpoint"),
  (N, "se sert de gens",                         2, "« se servir de »"),
- (N, "Commerce-écran",                          2, "traduction maison de FRONT_SHOP : « écran » = paravent — 3 → 2 le 23/09 (①-2 : la carte de ① lit LibellesBatiment.Type, un mot par type)"),
+ (N, "Commerce-écran",                          0, "traduction maison de FRONT_SHOP : « écran » = paravent — 3 → 2 le 23/09 (①-2 : la carte de ① lit LibellesBatiment.Type, un mot par type) ; 2 → 0 le 23/09 : les 2 restants étaient les sous-titres de ⑪ (LaunderingController:211, :346), RETIRÉ (code mort)"),
 ]
 
 ORDRE = [A, E, D, C, R, B, L, N]
@@ -222,8 +222,8 @@ SOURCE = [
  (L, "Order failed", 0, "② RunAction (:355)"),
  (L, "Cook started", 0, "② RunAction (:362)"),
  (L, "Cook unavailable", 0, "② RunAction (:362, :415)"),
- (L, "Cash injected", 0, "② RunAction (:369) fermé ; reste ⑪ LaunderingController:174 (hors annexe c, signalé) · lot D t3 22/09, ⑪ (1→0)"),
- (L, "Inject unavailable", 0, "② RunAction (:369) fermé ; reste ⑪ LaunderingController:174 (hors annexe c, signalé) · lot D t3 22/09, ⑪ (1→0)"),
+ (L, "Cash injected", 0, "② RunAction (:369) fermé ; restait ⑪ LaunderingController:174 (hors annexe c, signalé) · lot D t3 22/09, ⑪ (1→0) ; ⑪ RETIRÉ le 23/09"),
+ (L, "Inject unavailable", 0, "② RunAction (:369) fermé ; restait ⑪ LaunderingController:174 (hors annexe c, signalé) · lot D t3 22/09, ⑪ (1→0) ; ⑪ RETIRÉ le 23/09"),
  (L, "Conversion requested", 0, "② RunAction (:376) → Ouverture demandée"),
  (L, "Convert unavailable", 0, "② RunAction (:376) → Impossible d'ouvrir"),
  (L, "Repair unavailable", 0, "② RunAction (:384)"),

@@ -138,11 +138,6 @@ namespace MafiaCleanCity.Operational.Tests
             MafiaCleanCity.Shell.WalletBandResolver.Label(b);
         private static string HeatLabelFor(string b) =>
             MafiaCleanCity.Shell.HeatBucketResolver.Label(b);
-        // ⛔ DÉLÉGUÉ au producteur unique (2026-09-23) — la copie anglaise (« Dirty »/« Partial »…) est restée derrière la
-        //    traduction de ⑪ ; `PureteResolvers.Libelle` est ce que l'écran rend (« Sale », « À demi propre »…).
-        private static string CleanlinessLabelFor(string b) =>
-            MafiaCleanCity.Operational.PureteResolvers.Libelle(b);
-
         // The recursive no-raw-scalar guard the per-screen tests use: every rendered token must be
         // a band / label / glyph / boolean — never a bare integer/decimal (R2.2 / P5).
         private static void AssertNoRawScalar(IReadOnlyList<string> texts, string screen)
@@ -265,36 +260,30 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(cardTexts.Any(t => t == "oui"), "Building Card renders operational=true as « oui »");
             AssertNoRawScalar(cardTexts, "BuildingCard");
 
-            // ── SCREEN 3 — LAUNDERING PIPELINE (the node): the "launder" anchor, mid-pipeline. ──
-            var laundering = Spawn<LaunderingController>("LaunderingController");
-            laundering.SetToken(bearer);
-            Assert.IsTrue(laundering.IsAuthenticated, "laundering controller carries the Bearer");
-            yield return RetryUntil(() => laundering.LoadNode(nodeId), () => laundering.NodeLoaded);
-            Assert.IsNull(laundering.NodeError, $"node load errored: {laundering.NodeError}");
-            Assert.IsTrue(laundering.NodeLoaded, "laundering node loaded");
+            // ── SCREEN 3 — LA FILIÈRE (㊵) : l'ancre « blanchir ». ⑪ LaunderingController, qui tenait cet écran, est RETIRÉ depuis le
+            //    2026-09-23 (code mort : ㊵ porte la filière). Ce que la boucle prouve ici ne change pas : l'écran de la filière montre
+            //    le nœud semé, et son drapeau d'écart est COHÉRENT avec la projection vivante du nœud. (La bande de propreté de ⑪ était
+            //    celle du NŒUD ; ㊵ montre celle de chaque ÉTAPE — deux projections voisines, « LA BANDE D'UNE ÉTAPE N'EST PAS CELLE DU
+            //    NŒUD », FiliereScreenController — elle n'est donc plus comparée à la route du nœud.)
+            var filiere = Spawn<FiliereScreenController>("FiliereScreenController");
+            filiere.SetNodeId(nodeId);   // AVANT Start() : l'écran se charge lui-même, une seule fois
+            filiere.SetToken(bearer);
+            float attente = 0f;
+            while (!filiere.RenduTermine && attente < 30f) { attente += Time.deltaTime; yield return null; }
+            Assert.IsTrue(filiere.RenduTermine, "㊵ a fini son rendu");
+            Assert.IsNull(filiere.DerniereErreur, $"㊵ : route en échec ({filiere.DernierCodeErreur} — {filiere.DerniereErreur})");
+            Assert.IsNotNull(filiere.DernierChargement, "㊵ a lu le pipeline");
+            Assert.GreaterOrEqual(filiere.OrdreAffiche.Count, 1, "㊵ rend au moins une étape");
+            Assert.AreEqual(nodeId, filiere.OrdreAffiche[0], "la tête affichée est le nœud Stage-1 semé");
 
-            LaunderingNodeDto node = laundering.CurrentNode;
-            Assert.IsNotNull(node, "node projection parsed");
-            Assert.AreEqual(nodeId, node.node, "node is the seeded Stage-1 node");
-
-            // Independently fetch the live node projection — the screen's bands must be COHERENT with it.
+            // Independently fetch the live node projection — the screen's deviation flag must be COHERENT with it.
             string liveCleanliness = null; bool liveDeviation = false; string liveNodeErr = null;
             yield return FetchLiveNode(bearer, nodeId, (c, d) => { liveCleanliness = c; liveDeviation = d; }, e => liveNodeErr = e);
             Assert.IsNull(liveNodeErr, $"live node fetch errored: {liveNodeErr}");
             Assert.IsFalse(string.IsNullOrEmpty(liveCleanliness), "live cleanliness_band present");
-            Assert.AreEqual(liveCleanliness, node.cleanliness_band,
-                "Pipeline cleanliness band is COHERENT with the live node projection");
-            Assert.AreEqual(liveDeviation, node.deviation_active,
-                "Pipeline deviation flag is COHERENT with the live node projection");
-
-            var nodeTexts = laundering.RenderedTexts;
-            Assert.IsTrue(nodeTexts.Any(t => t == "Propreté"), "Pipeline renders the cleanliness row");
-            Assert.IsTrue(nodeTexts.Any(t => t == CleanlinessLabelFor(liveCleanliness)),
-                $"Pipeline renders the live cleanliness band label '{CleanlinessLabelFor(liveCleanliness)}' in {Dump(nodeTexts)}");
-            Assert.IsTrue(nodeTexts.Any(t => t == "Écart"), "Pipeline renders the deviation row");
-            Assert.IsTrue(nodeTexts.Any(t => t == (liveDeviation ? "épingle d'audit posée" : "dans les clous")),
-                $"Pipeline renders the live deviation flag (live deviation={liveDeviation})");
-            AssertNoRawScalar(nodeTexts, "Filière");
+            Assert.IsTrue(filiere.EcartsParNoeud.TryGetValue(nodeId, out bool ecartLu), "㊵ a lu l'écart de la tête");
+            Assert.AreEqual(liveDeviation, ecartLu, "l'écart de ㊵ est COHÉRENT avec la projection vivante du nœud");
+            Assert.AreEqual(liveDeviation ? 1 : 0, filiere.EcartsAffiches, "le compteur « ÉCARTS » de ㊵ suit le drapeau vivant");
 
             // ── SCREEN 4 — CITY MAP: the "where" — 18 districts + a live heat overlay. The City Map
             //    screen reads the citymap_demo player (its own demo creds), the heat-gradient demo

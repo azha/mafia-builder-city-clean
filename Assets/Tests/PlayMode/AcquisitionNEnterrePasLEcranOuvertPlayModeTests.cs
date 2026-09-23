@@ -85,7 +85,9 @@ namespace MafiaCleanCity.Shell.Tests
                 "l'acquisition n'a pas abouti : ce test n'aurait pas exercé la fenêtre qu'il vise");
 
             int generationAvant = shell.SurimpressionsMontees;
-            LaunderingController ouvert = shell.MonterLocataireEnSurimpression<LaunderingController>();
+            // Re-ciblé le 2026-09-23 : ⑪ LaunderingController est RETIRÉ (code mort). N'importe quel locataire vivant prouve la même
+            // chose — un écran monté pendant l'acquisition empêche l'Accueil de se poser dessus ; ㊵, qui porte la filière, en est un.
+            FiliereScreenController ouvert = shell.MonterLocataireEnSurimpression<FiliereScreenController>();
             Assert.IsNotNull(ouvert, "rien n'a été monté — le scénario ne prouverait rien");
             Assert.AreEqual(generationAvant + 1, shell.SurimpressionsMontees,
                 "la génération n'a pas bougé alors qu'une surimpression vient d'être montée : le " +

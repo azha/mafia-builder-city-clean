@@ -301,8 +301,6 @@ namespace MafiaCleanCity.Operational.Tests
             // ㊵ depuis le 2026-09-23 (ruling de f2) : ⑪ est sorti du chemin joueur.
             Assert.IsNotNull(controller.LastNavGameObject.GetComponent<FiliereScreenController>(),
                 "la nav Filière ouvre ㊵ FiliereScreenController");
-            Assert.IsNull(controller.LastNavGameObject.GetComponent<LaunderingController>(),
-                "la nav Filière n'ouvre plus ⑪ LaunderingController");
             // tidy up the opened controller so it doesn't keep running its own fetch loop.
             Object.Destroy(controller.LastNavGameObject);
 

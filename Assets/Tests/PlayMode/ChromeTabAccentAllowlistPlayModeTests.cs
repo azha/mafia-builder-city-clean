@@ -156,8 +156,6 @@ namespace MafiaCleanCity.Theme.Tests
             "Operational/Dashboard/DashboardController.cs",
             "Operational/Exceptions/ExceptionDetailController.cs",
             "Operational/Exceptions/ExceptionQueueController.cs",
-            "Operational/Laundering/LaunderingController.cs",
-            "Operational/Laundering/PipelineOverviewController.cs",
             "Operational/Lieutenant/LieutenantScreenController.cs",
             "Shell/ExceptionQueuePanelController.cs",
             "Shell/HighestLeverageCardController.cs",
