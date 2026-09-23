@@ -167,7 +167,7 @@ VERDICTS = [
  (N, "est en route",                            1, "« en route » = en chemin"),
  (N, "CETTE ROUTE",                             1, "l'itinéraire du courrier, pas un endpoint"),
  (N, "se sert de gens",                         2, "« se servir de »"),
- (N, "Commerce-écran",                          3, "traduction maison de FRONT_SHOP : « écran » = paravent"),
+ (N, "Commerce-écran",                          2, "traduction maison de FRONT_SHOP : « écran » = paravent — 3 → 2 le 23/09 (①-2 : la carte de ① lit LibellesBatiment.Type, un mot par type)"),
 ]
 
 ORDRE = [A, E, D, C, R, B, L, N]

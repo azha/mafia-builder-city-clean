@@ -25,29 +25,38 @@ namespace MafiaCleanCity.CityMap
         /// GARAGE, CLUB, BAR, RESTAURANT) ne sont dans AUCUN domaine du back : retirés. `SAFEHOUSE` était `cash_safehouse`.
         /// Les mots : les six d'avant, et pour les six membres qui n'en avaient pas ici, ceux de `TypeLabel` (intérieur de district,
         /// ratifiés au lot C) — « même concept, même mot sur le même écran » (DistrictInteriorScreenController.cs:1708-1716).</summary>
+        /// <summary>①-2 (2026-09-23) — UN mot par type, pour tout ① : la clé servie `building.type.<operational_type>` (celle de ②),
+        /// repli = les mots de l'atelier (`22-…` §7.1 B ; « Imprimerie » et « Agence » pour les deux types que le back ne sert
+        /// pas encore). ① disait « Cache », « Point de vente », « Atelier de presse », « Bureau » là où ② dit « Réserve »,
+        /// « Coin de vente »… : le joueur lisait deux mots pour un bâtiment en passant de la carte à la fiche.</summary>
         public static string Type(string t)
+        {
+            string repli = MotDuType(t);
+            if (string.IsNullOrEmpty(t)) return repli;
+            return MafiaCleanCity.I18n.Libelle.ParValeur("building", "type", t, repli);
+        }
+
+        private static string MotDuType(string t)
         {
             switch (t)
             {
                 case "": case null: return "Bâtiment civil";
                 case "grow_house": return "Serre";
-                case "lab": return "Laboratoire";
+                case "lab": return "Labo";
                 case "distribution_hub": return "Relais";
                 case "money_holding": return "Banque";
                 case "front_shop": return "Commerce-écran";
                 case "cash_safehouse": return "Planque";
-                case "office": return "Bureau";
-                case "stash": return "Cache";
-                case "dealer_spot_front": return "Point de vente";
-                case "specialized_lab": return "Laboratoire spécialisé";
+                case "office": return "Agence";
+                case "stash": return "Réserve";
+                case "dealer_spot_front": return "Coin de vente";
+                case "specialized_lab": return "Labo spécialisé";
                 case "refinery": return "Raffinerie";
-                case "press_house": return "Atelier de presse";
+                case "press_house": return "Imprimerie";
                 default: return CasseDeTitre(t);
             }
         }
 
-        /// <summary>`conversion_band` — la ligne de sous-titre, à la place du « BAR · QUARTIER
-        /// GÉNÉRAL » du canon (le back ne projette aucun rôle de ce genre).</summary>
         public static string Conversion(string b)
         {
             switch (b)

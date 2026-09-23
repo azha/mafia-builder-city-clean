@@ -1719,23 +1719,10 @@ namespace MafiaCleanCity.CityMap
         //   même concept reçoit deux noms, la convention a coûté plus qu'elle n'a protégé.
         private static string TypeLabel(string t)
         {
-            switch (t)
-            {
-                case "lab": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Laboratoire");
-                case "stash": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Cache");
-                case "front_shop": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Commerce-écran");
-                case "cash_safehouse": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Planque");
-                case "dealer_spot_front": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Point de vente");
-                case "specialized_lab": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Laboratoire spécialisé");
-                case "refinery": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Raffinerie");
-                case "grow_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Serre");
-                case "distribution_hub": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Relais");
-                case "money_holding": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Banque");
-                case "office": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Bureau");
-                case "press_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Atelier de presse");
-                case "": case null: return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Terrain vague");
-                default: return t;
-            }
+            // ①-2 (2026-09-23) : UN mot par type pour ① et ② — `LibellesBatiment.Type` (clé `building.type.*`, décision de l'atelier
+            // `22-…` §7.1 B). Seul le terrain vide garde son mot de carte.
+            if (string.IsNullOrEmpty(t)) return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Terrain vague");
+            return LibellesBatiment.Type(t);
         }
 
         // --------------------------------------------------------------- UI build (racine)
@@ -1992,6 +1979,8 @@ namespace MafiaCleanCity.CityMap
             ficheTitre.font = DesignTokens.Current.hudSerifFont;
             ficheTitre.characterSpacing = 13f;                       // `.13em`
             ficheTitre.color = DesignTokens.Current.hudMoneyGold;     // --or-vif
+            // ①-2 : la maquette ÉCRIT le titre en capitales (« LE VERGE D'OR ») ; juge ⊥ r2 m5 « casse mixte ».
+            ficheTitre.fontStyle = FontStyles.UpperCase;
             ficheTitre.fontFeatures.Clear();
             // ⛔⛔ UNE SEULE LIGNE, ET C'EST LA BOÎTE QUI L'IMPOSE — mesuré à l'exécution le
             // 2026-09-06 (`FicheTeteGeometriePlayModeTests`, run scopé `FicheTete`) :
@@ -2026,6 +2015,7 @@ namespace MafiaCleanCity.CityMap
 
             ficheType = NewText("Type", corps.transform, "", FDi(9f), TextAlignmentOptions.Center);
             ficheType.characterSpacing = 20f;                        // `.2em`
+            ficheType.fontStyle = FontStyles.UpperCase;              // `.fiche .titre .type{text-transform:uppercase}` (①-2)
             ficheType.color = DesignTokens.Current.hudCremeSecondary;
             PoserDansFiche((RectTransform)ficheType.transform, 40.80f, 13.94f);
 
@@ -2211,6 +2201,38 @@ namespace MafiaCleanCity.CityMap
         /// sur `LibellesBatiment.Type` — déjà établi ICI, plus informatif qu'un libellé générique —
         /// tant que le back ne sert encore aucune clé pour ce bâtiment (environnement plus ancien,
         /// ou bâtiment que le lot fiction n'a pas encore couvert).</summary>
+        /// <summary>①-2 (2026-09-23, écart ① `e2bd7681` §2 M12, décision de l'orchestrateur) — le titre de la fiche est
+        /// l'ENSEIGNE seule (`name_i18n.params.enseigne`, « Transit Marrek »), comme « LE VERGE D'OR » de la maquette : le nom
+        /// COMPLET (« Mécanique Skeld — La Lisière, îlot 1501, n° 2 ») occupait 90 % de la plaque (juge ⊥ r9 m5, r3 F2) et
+        /// forçait l'autosize vers son plancher. Le district et l'îlot restent dans le nom composé, ailleurs. Sans enseigne
+        /// servie : le nom composé, puis le type — jamais un nom deviné.</summary>
+        public static string TitreDeFiche(DistrictInteriorBuildingDto b)
+        {
+            if (b == null) return string.Empty;
+            string enseigne = b.name_i18n != null && b.name_i18n.@params != null ? b.name_i18n.@params.enseigne : null;
+            if (!string.IsNullOrWhiteSpace(enseigne)) return enseigne.Trim();
+            return ResoudreNomBatiment(b);
+        }
+
+        /// <summary>①-2 — le sous-titre (`.fiche .titre .type`, « Bar · Quartier général » dans la maquette) : la ligne « type · lieu »
+        /// de l'atelier (`district.fiche.type_lieu`, `.rang` quand le bâtiment a un rang ; `22-…` §7.1 B), `{type}` = le mot servi
+        /// (`LibellesBatiment.Type`), `{district}`/`{block}`/`{rang}` = les params de `name_i18n`. Mise en capitales par le style.
+        /// Sans lieu servi : le type seul. Elle remplace l'état de conversion (« OPÉRATIONNEL »), que la maquette ne montre pas.
+        /// Le rôle « Quartier général » n'a aucune source (écart §0.3).</summary>
+        public static string SousTitreDeFiche(DistrictInteriorBuildingDto b)
+        {
+            if (b == null) return string.Empty;
+            string type = LibellesBatiment.Type(b.operational_type);
+            DistrictBuildingNameParamsDto pr = b.name_i18n != null ? b.name_i18n.@params : null;
+            if (pr == null || string.IsNullOrEmpty(pr.district) || string.IsNullOrEmpty(pr.block)) return type;
+            var p = new Dictionary<string, string> { { "type", type }, { "district", pr.district }, { "block", pr.block } };
+            if (string.IsNullOrEmpty(pr.rang))
+                return MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.type_lieu", "{type} · {district}, îlot {block}", p);
+            p["rang"] = pr.rang;
+            return MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.type_lieu.rang",
+                                                       "{type} · {district}, îlot {block}, n° {rang}", p);
+        }
+
         private static string ResoudreNomBatiment(DistrictInteriorBuildingDto b)
         {
             if (b.name_i18n == null || string.IsNullOrEmpty(b.name_i18n.key))
@@ -2238,8 +2260,8 @@ namespace MafiaCleanCity.CityMap
             FicheDealerId = null;
             DerniereCollecte = null;
 
-            ficheTitre.text = ResoudreNomBatiment(b);
-            ficheType.text = LibellesBatiment.Conversion(b.conversion_band);
+            ficheTitre.text = TitreDeFiche(b);
+            ficheType.text = SousTitreDeFiche(b);
             if (ficheBoutonAmeliorer != null) ficheBoutonAmeliorer.SetActive(AmeliorableDepuisLaFiche(b.operational_type));
 
             // `$ 2 400 / À COLLECTER` ⇒ la bande de revenu : le bâtiment rapporte-t-il ?
