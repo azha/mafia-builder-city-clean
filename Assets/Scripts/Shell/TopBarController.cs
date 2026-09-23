@@ -860,37 +860,11 @@ namespace MafiaCleanCity.Shell
 
         // ----------------------------------------------------------- cash formatting (C2-F1)
 
-        /// <summary>Format a BigInt-serialized cents STRING as a locale-appropriate currency string —
-        /// NO hard-coded symbol (design C2-F1). Uses `decimal` throughout (never float/double): the
-        /// dimensioning scenario is a value beyond Number.MAX_SAFE_INTEGER (2^53), which decimal's
-        /// ~28-29 significant digits comfortably survive without precision loss. Static + independently
-        /// testable — the falsifiable never depends on a live seeded wallet reaching that magnitude.</summary>
-        public static string FormatCash(string cashCentsRaw, string localeCode)
-        {
-            if (string.IsNullOrEmpty(cashCentsRaw)) return "—";
-            decimal cents;
-            if (!decimal.TryParse(cashCentsRaw, NumberStyles.Integer | NumberStyles.AllowLeadingSign,
-                    CultureInfo.InvariantCulture, out cents))
-            {
-                return "—";
-            }
-            decimal major = cents / 100m;
-            CultureInfo culture = ResolveCulture(localeCode);
-            return major.ToString("C", culture);
-        }
-
-        private static CultureInfo ResolveCulture(string localeCode)
-        {
-            switch (localeCode)
-            {
-                case "fr": return CultureInfo.GetCultureInfo("fr-FR");
-                case "en":
-                default:
-                    // Unknown/absent locale falls back to en-US — still culture-driven formatting
-                    // (grouping/decimal/symbol all come FROM the CultureInfo), never a hard-coded "$".
-                    return CultureInfo.GetCultureInfo("en-US");
-            }
-        }
+        /// <summary>Le montant du portefeuille, tel que la barre l'affiche. Point 10 (07/09, ratifié) : « 24 850 € », sans
+        /// centimes, espace fine insécable. ⛔ Le formatage lui-même vit dans `Argent` (ShellContracts), le SEUL formateur d'argent
+        /// du client : cette méthode garde son nom et sa signature (ses appelants et ses tests), et délègue. `decimal` de bout en
+        /// bout (C2-F1 : un solde au-delà de 2^53 survit sans perte), « — » pour une valeur absente ou illisible.</summary>
+        public static string FormatCash(string cashCentsRaw, string localeCode) => Argent.DepuisCentimes(cashCentsRaw, localeCode);
 
         // --------------------------------------------------------------- UI build
 

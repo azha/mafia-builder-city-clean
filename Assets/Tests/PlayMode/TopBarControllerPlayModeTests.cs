@@ -65,7 +65,9 @@ namespace MafiaCleanCity.Shell.Tests
         [Test]
         public void C2F1_Cash_LocaleFormatted_NoHardcodedSymbol_SurvivesBeyondFloatSafeRange()
         {
-            const string hugeCashCents = "123456789012345678"; // 18 digits > 2^53's 16
+            // Point 10 (07/09) : le montant s'affiche SANS centimes — les deux derniers chiffres des centimes ne sont plus
+            // rendus. La valeur est donc choisie pour que les UNITÉS affichées, elles, dépassent 2^53 (19 chiffres).
+            const string hugeCashCents = "900719925474099312345"; // unités 9007199254740993123 > 2^53 = 9007199254740992
             string renderedEn = TopBarController.FormatCash(hugeCashCents, "en");
             string renderedFr = TopBarController.FormatCash(hugeCashCents, "fr");
 
@@ -76,8 +78,8 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsFalse(renderedFr.Contains("$"), $"fr-FR render must not carry a hard-coded '$': '{renderedFr}'");
 
             string digitsOnly = Regex.Replace(renderedEn, @"[^\d]", "");
-            Assert.AreEqual("123456789012345678", digitsOnly,
-                $"the full 18 significant digits must survive without truncation: '{renderedEn}' -> '{digitsOnly}'");
+            Assert.AreEqual("9007199254740993123", digitsOnly,
+                $"the full 19 significant digits of the units must survive without loss: '{renderedEn}' -> '{digitsOnly}'");
         }
 
         [Test]
