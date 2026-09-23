@@ -1,6 +1,8 @@
 #!/bin/bash
 # Lanceur de PASSAGE avec chien de garde de GEL (créneau du 2026-09-23, passages 2 à 4) — forme de passage, en attendant la garde
 # permanente dans `run-unity-check.sh`.
+# ⚠️ DEPUIS LA GARDE PERMANENTE (même jour), `run-unity-check.sh` fait la même chose SEUL (STALL_S, défaut 420, RC_GEL=5, test nommé) :
+#    ce lanceur n'est plus nécessaire ; il reste pour les arbres qui n'ont pas encore mergé la garde.
 # POURQUOI : `ManometreOracle.Oracle1` a gelé le fil principal de l'éditeur 30 min (journal muet, CPU ≈ 378 %) sans que le délai de
 # test d'Unity ne morde — un fil principal gelé ne rend jamais la main à NUnit. Ce lanceur TUE l'éditeur quand le journal ne grandit
 # plus pendant $STALL_S secondes et NOMME le test en cours (dernier « MafiaCI: RUN »). Mesuré au passage 4 : tué à 245 s, test nommé.
