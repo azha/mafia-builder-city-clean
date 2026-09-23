@@ -161,6 +161,11 @@ namespace MafiaCleanCity.Capture.Tests
                    && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsNotNull(district.LastFetch,
                 $"le payload district doit être arrivé (code d'erreur observé = {district.LastErrorCode})");
+            // ⛔ LA DONNÉE N'EST PAS LE RENDU (créneau du 23/09) : depuis ①-1 (9b6625ba), `SetSession` fait AUSSI le GET de la chaleur du
+            //    district APRÈS `LastFetch`, et `AppShell.EnterDistrictSequence` ne rend (`Render` → `BuildRoot` → la fiche) qu'ensuite.
+            //    Lue sur `LastFetch` seul, la fiche n'existait pas encore : `OuvrirFiche` sortait en silence (`ficheRoot == null`).
+            t0 = Time.realtimeSinceStartup;
+            while (district.RenderedBuildingCount == 0 && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             for (int i = 0; i < 20; i++) yield return null;
 
             // 5. anti-mensonge : la capture ne vaut que si des bâtiments sont VRAIMENT rendus
@@ -413,6 +418,11 @@ namespace MafiaCleanCity.Capture.Tests
             while (district.LastFetch == null && district.LastErrorCode == 0
                    && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsNotNull(district.LastFetch, "le payload district doit être arrivé");
+            // ⛔ LA DONNÉE N'EST PAS LE RENDU (créneau du 23/09) : depuis ①-1 (9b6625ba), `SetSession` fait AUSSI le GET de la chaleur du
+            //    district APRÈS `LastFetch`, et `AppShell.EnterDistrictSequence` ne rend (`Render` → `BuildRoot` → la fiche) qu'ensuite.
+            //    Lue sur `LastFetch` seul, la fiche n'existait pas encore : `OuvrirFiche` sortait en silence (`ficheRoot == null`).
+            t0 = Time.realtimeSinceStartup;
+            while (district.RenderedBuildingCount == 0 && Time.realtimeSinceStartup - t0 < 30f) yield return null;
 
             district.LastFetch.day_phase = "NIGHT";
             district.Render(district.LastFetch);

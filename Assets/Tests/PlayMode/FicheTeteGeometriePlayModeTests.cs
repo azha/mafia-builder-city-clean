@@ -96,14 +96,26 @@ namespace MafiaCleanCity.Capture.Tests
                    && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             Assert.IsNotNull(district.LastFetch,
                 $"le payload district doit être arrivé (code d'erreur observé = {district.LastErrorCode})");
+            // ⛔ LA DONNÉE N'EST PAS LE RENDU (créneau du 23/09) : depuis ①-1 (9b6625ba), `SetSession` fait AUSSI le GET de la chaleur du
+            //    district APRÈS `LastFetch`, et `AppShell.EnterDistrictSequence` ne rend (`Render` → `BuildRoot` → la fiche) qu'ensuite.
+            //    Lue sur `LastFetch` seul, la fiche n'existait pas encore : `OuvrirFiche` sortait en silence (`ficheRoot == null`).
+            t0 = Time.realtimeSinceStartup;
+            while (district.RenderedBuildingCount == 0 && Time.realtimeSinceStartup - t0 < 30f) yield return null;
             for (int i = 0; i < 20; i++) yield return null;
 
             Assert.IsNotNull(district.LastFetch.buildings, "le district doit porter des bâtiments");
             Assert.Greater(district.LastFetch.buildings.Length, 0,
                 "sans bâtiment, aucune fiche ne s'ouvre — le test serait vert à vide");
 
-            // Le MÊME chemin que la planche : le premier bâtiment, par `OuvrirFiche`.
+            // Le MÊME chemin que la planche (`OuvrirFiche`), sur le bâtiment dont le NOM SERVI est le plus LONG : c'est lui qui pose la
+            // question du débordement. Mesuré au créneau du 23/09 (pile e7f52351) : le premier bâtiment du district 16 s'appelle désormais
+            // « Atelier Vesk » (12 caractères) — trop court, la garde anti-vacuité (1) rougissait, à raison. Le choix du plus long
+            // garde la question posée quel que soit l'ordre servi ; si AUCUN nom ne dépasse 12 caractères, (1) rougit encore et le dit.
             DistrictInteriorBuildingDto premier = district.LastFetch.buildings[0];
+            foreach (DistrictInteriorBuildingDto b in district.LastFetch.buildings)
+                if (b != null && (DistrictInteriorScreenController.TitreDeFiche(b) ?? "").Length
+                                 > (DistrictInteriorScreenController.TitreDeFiche(premier) ?? "").Length)
+                    premier = b;
             district.OuvrirFiche(premier);
             for (int i = 0; i < 12; i++) yield return null;
             Assert.IsTrue(district.FicheOuverte, "la fiche doit être ouverte");
