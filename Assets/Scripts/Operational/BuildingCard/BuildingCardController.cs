@@ -164,6 +164,8 @@ namespace MafiaCleanCity.Operational
         public int TransferAmountCents { get; private set; } = 1_000_000; // default $10k (a MODERATE-band deposit).
 
         public string BuildingId { get => buildingId; set => buildingId = value; }
+        /// <summary>①-0 — la dernière fiche DEMANDÉE au back (`GET /v1/operational/building/:id`), null avant tout chargement.</summary>
+        public string DerniereUrlDemandee => client != null ? client.DerniereUrlDemandee : null;
 
         /// <summary>
         /// Override the backend base URL (test convenience). The SerializeField defaults to the VPS

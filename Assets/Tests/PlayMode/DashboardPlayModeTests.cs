@@ -280,7 +280,8 @@ namespace MafiaCleanCity.Operational.Tests
 
             // 4) nav buttons exist.
             Assert.IsTrue(texts.Any(t => t == "La carte"), "City Map nav button rendered");
-            Assert.IsTrue(texts.Any(t => t == "La fiche"), "Building Card nav button rendered");
+            // Ruling A du 25/08 (2026-09-23) : le bouton « La fiche » montait la fiche opérationnelle SANS bâtiment — retiré.
+            Assert.IsFalse(texts.Any(t => t == "La fiche"), "le bouton « La fiche » (une fiche vide) ne revient pas");
             Assert.IsTrue(texts.Any(t => t == "Filière"), "le bouton de navigation Filière est rendu (libellé FR — ruling « i18n partout »)");
 
             // 5) NO raw scalar client-side: every rendered string is a band/label/glyph/bool —

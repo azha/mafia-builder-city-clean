@@ -180,8 +180,8 @@ namespace MafiaCleanCity.Shell.Tests
         // BLOQUANT 2 — la chaîne ENTIÈRE, par des GESTES DE PRODUCTION UNIQUEMENT : Dashboard monté
         // AU DÉMARRAGE (jamais fabriqué par ce test — ⛔ c'est exactement ce qui a rendu F0.4-a
         // AVEUGLE : construire soi-même le Dashboard prouve que le CONTRÔLEUR sait naviguer, jamais
-        // qu'un joueur l'a SOUS LES YEUX), puis chacun de ses 5 boutons nav atteint son écran
-        // (un CLIC RÉEL sur chaque bouton — `Nav_CityMap`/`Nav_BuildingCard`/`Nav_Filière`/
+        // qu'un joueur l'a SOUS LES YEUX), puis chacun de ses 4 boutons nav atteint son écran
+        // (un CLIC RÉEL sur chaque bouton — `Nav_CityMap`/`Nav_Filière`/
         // `Nav_Exceptions`/`Nav_Autonomy`, noms posés par `DashboardController.AddNavButton`), puis
         // ExceptionQueue → ExceptionDetail (un clic RÉEL sur la ligne d'une carte SEEDÉE — jamais une
         // `ExceptionCardDto` fabriquée localement, contrairement au harnais F0.4-a).
@@ -202,7 +202,9 @@ namespace MafiaCleanCity.Shell.Tests
 
             var ecransAttendus = new List<string>
             {
-                nameof(DashboardController), nameof(CityMapController), nameof(BuildingCardController),
+                // `BuildingCardController` n'est plus atteint par l'Accueil (2026-09-23, ruling A : le bouton « La fiche » la montait
+                // VIDE) ; son seul geste est AMÉLIORER sur la fiche de ①, avec le bâtiment (EcranDistrict D1-D3).
+                nameof(DashboardController), nameof(CityMapController),
                 nameof(LaunderingController), nameof(ExceptionQueueController), nameof(AutonomyInboxController),
                 nameof(ExceptionDetailController),
             };
@@ -220,7 +222,7 @@ namespace MafiaCleanCity.Shell.Tests
             DashboardController dashboard = shell.ContentSlot.GetComponentInChildren<DashboardController>(false);
             Assert.IsNotNull(dashboard,
                 "le Dashboard doit être monté AUTOMATIQUEMENT en surimpression au démarrage — sans lui, " +
-                "BuildingCardController/ExceptionQueueController/AutonomyInboxController/ExceptionDetailController " +
+                "ExceptionQueueController/AutonomyInboxController/ExceptionDetailController " +
                 "sont TOUS injoignables (BLOQUANT 2, revue ⊥ round 3).");
             ecransAtteints.Add(nameof(DashboardController));
 
@@ -252,11 +254,8 @@ namespace MafiaCleanCity.Shell.Tests
                 "Nav_CityMap doit atteindre CityMapController (clic réel sur le bouton du Dashboard)");
             ecransAtteints.Add(nameof(CityMapController));
 
-            CliquerBoutonNav("Nav_BuildingCard");
-            yield return null;
-            Assert.IsNotNull(dashboard.LastNavGameObject?.GetComponent<BuildingCardController>(),
-                "Nav_BuildingCard doit atteindre BuildingCardController (clic réel sur le bouton du Dashboard)");
-            ecransAtteints.Add(nameof(BuildingCardController));
+            Assert.IsNull(TrouverDescendant(shell.ContentSlot, "Nav_BuildingCard"),
+                "le bouton « La fiche » est retiré (ruling A du 25/08 : un bouton qui ment est pire qu'un bouton absent)");
 
             CliquerBoutonNav("Nav_Filière");
             yield return null;

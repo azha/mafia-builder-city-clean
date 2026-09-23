@@ -21,6 +21,9 @@ namespace MafiaCleanCity.Operational
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/operational/{leaf}";
 
+        /// <summary>La dernière URL de `GET …/building/:id` émise — posée AVANT l'envoi.</summary>
+        public string DerniereUrlDemandee { get; private set; }
+
         // ------------------------------------------------------------- projection
 
         /// <summary>
@@ -31,6 +34,7 @@ namespace MafiaCleanCity.Operational
             Action<BuildingCardDto> onOk, Action<long, string> onErr)
         {
             string url = Url($"building/{buildingId}");
+            DerniereUrlDemandee = url;   // ①-0 : la garde lit la requête ÉMISE (quel bâtiment l'écran a demandé)
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
                 req.timeout = TimeoutSeconds;

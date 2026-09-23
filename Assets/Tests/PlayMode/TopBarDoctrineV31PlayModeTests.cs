@@ -345,10 +345,14 @@ namespace MafiaCleanCity.Shell.Tests
                 $"le champ hors canon nommé ici (`{TokenHorsCanon}`) n'existe plus sur DesignTokens : " +
                 "cette exception a survécu à ce qu'elle excusait, et le `+3` ci-dessous est devenu faux. " +
                 "Le retirer, ne pas relâcher le compte.");
-            Assert.AreEqual(CanonPaletteComparator.ExpectedTokenCount + 3, sealedFields.Count,
+            // ⛔ AMENDÉ (2026-09-23, créneau client-2) : 104cb379 (09/09) a porté `ExpectedTokenCount` de 74 à 75 « + accentCalm »
+            //    — exactement le jour annoncé ci-dessus où le canon le compte. Le `+3` devait redevenir `+2` ce jour-là ; il ne
+            //    l'a pas fait, et cette garde rougissait depuis (77 champs vus pour 78 attendus). `accentCalm` reste nommé et
+            //    asserté juste au-dessus ; il n'est plus compté deux fois.
+            Assert.AreEqual(CanonPaletteComparator.ExpectedTokenCount + 2, sealedFields.Count,
                 $"sanity du reflet lui-même — doit voir {CanonPaletteComparator.ExpectedTokenCount} " +
-                $"Color du canon + primaryFont + hudSerifFont + `{TokenHorsCanon}` (hors canon, " +
-                "voir le commentaire). Vu : [" + string.Join(", ", sealedFields.OrderBy(x => x)) + "]");
+                $"Color du canon (dont `{TokenHorsCanon}` depuis 104cb379) + primaryFont + hudSerifFont. " +
+                "Vu : [" + string.Join(", ", sealedFields.OrderBy(x => x)) + "]");
 
             MatchCollection matches = Regex.Matches(text, @"DesignTokens\.Current\.(\w+)");
             Assert.GreaterOrEqual(matches.Count, 5,
@@ -968,14 +972,13 @@ namespace MafiaCleanCity.Shell.Tests
             return n == 0 ? Color.black : new Color(sr / n, sg / n, sb / n);
         }
 
-        /// <summary>Le filet de barre et le soulignement du montant ont des épaisseurs DIFFÉRENTES
-        /// au canon — `.barre::after{height:1px}` contre `.ratio{height:2px}` — et le client les
-        /// confondait sous une seule constante. Un juge ⊥ a mesuré le filet à 1,81 px CSS pour 1,00.
-        /// ⚠️ La garde porte sur le RAPPORT des deux, pas sur leurs valeurs absolues : elle est donc
-        /// vraie à toute résolution et ne casse pas si la maquette change d'échelle. Et elle exige
-        /// que les deux EXISTENT — un soulignement absent rendrait le rapport indéfini, pas juste.</summary>
+        /// <summary>Le filet de barre existe ; le SOULIGNEMENT du montant n'existe plus (M2, 2026-09-23, écart ① `e2bd7681`).
+        /// Cette garde comparait jusqu'ici leurs épaisseurs (`.barre::after{height:1px}` contre `.ratio{height:2px}`). Le
+        /// soulignement reprenait la géométrie exacte du fil propre/sale de la maquette sans porter aucune donnée — le back ne
+        /// sert ni argent sale ni ratio (S1-c) — et se lisait comme un ratio PLEIN (juge-données D8, juge ⊥ r9 M12). Il est
+        /// retiré : un fil sans donnée est une donnée inventée. La garde dit maintenant qu'il ne revient pas sans elle.</summary>
         [UnityTest]
-        public IEnumerator DA8_FiletDeBarre_MoitieDuSoulignement()
+        public IEnumerator DA8_FiletDeBarre_EtPlusDeSoulignementSansDonnee()
         {
             yield return WaitTopBarLoaded(BootShell());
             yield return new WaitForEndOfFrame();
@@ -987,16 +990,8 @@ namespace MafiaCleanCity.Shell.Tests
                 if (rt.name == "Underline") souligne = rt;
             }
             Assert.IsNotNull(filet, "le filet de bas de barre doit exister");
-            Assert.IsNotNull(souligne, "le soulignement du montant doit exister — sans lui le " +
-                                       "rapport mesuré ci-dessous serait indéfini, pas juste");
             Assert.Greater(filet.rect.height, 0f, "anti-vacuité : le filet doit avoir une épaisseur");
-            float rapport = filet.rect.height / souligne.rect.height;
-            Debug.Log($"[FILET] barre={filet.rect.height:F2} u · soulignement={souligne.rect.height:F2} u " +
-                      $"· rapport={rapport:F3} (canon 1/2 = 0,500)");
-            Assert.AreEqual(0.5f, rapport, 0.05f,
-                $"le filet de barre fait {rapport:F3} fois le soulignement au lieu de la moitié : le " +
-                "canon donne 1 px CSS au filet et 2 au soulignement, et une constante unique pour " +
-                "les deux est vraie pour l'un et fausse pour l'autre");
+            Assert.IsNull(souligne, "M2 : pas de fil propre/sale sans donnée (S1-c) — s'il revient, il doit LIRE une valeur");
         }
 
         /// <summary>Rend le canvas du shell dans une texture AUX DIMENSIONS DE L'ÉCRAN, par le

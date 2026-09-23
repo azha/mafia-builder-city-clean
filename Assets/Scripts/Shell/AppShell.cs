@@ -77,7 +77,7 @@ namespace MafiaCleanCity.Shell
     // jamais sur un joueur qui a déjà navigué ailleurs). Toujours PAS un onglet du dock. CORRIGÉ
     // (item 0.5 §2, C2) — l'énoncé précédent disait que son propre écran (les 4 panneaux orphelins)
     // restait ENTIÈREMENT hors périmètre : FAUX depuis ce chunk — voir `MonterPanneauxAccueil`.
-    public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator
+    public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator, IOuvreurDeFicheOperationnelle
     {
         public enum Tab { Empire, Org, Pipeline, More }
 
@@ -1064,6 +1064,12 @@ namespace MafiaCleanCity.Shell
             SurimpressionsMontees++;
             return ConstruireLocataire<T>(out _);
         }
+
+        /// <summary>①-0 (additif, 2026-09-23) — la fiche opérationnelle d'un bâtiment, AVEC ce bâtiment (`IOuvreurDeFicheOperationnelle`).
+        /// La fiche de ① y passe pour AMÉLIORER ; c'est le seul geste qui monte la fiche opérationnelle (le bouton « La fiche » de
+        /// l'Accueil, qui la montait vide, est retiré — ruling A du 25/08).</summary>
+        public bool OuvrirFicheOperationnelle(string buildingId) =>
+            OuvertureFicheOperationnelle.Ouvrir(this, buildingId) != null;
 
         /// <summary>Vrai dès qu'une surimpression a été montée par un geste du joueur. Lu par le
         /// sentinel d'acquisition, qui sans lui ne voit que la navigation par onglet.</summary>

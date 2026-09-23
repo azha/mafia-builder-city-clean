@@ -239,7 +239,19 @@ namespace MafiaCleanCity.CityMap
             yield return projections.Interior(districtId, bearer,
                 dto => { LastFetch = dto; LastFetchSucceeded = true; },
                 code => LastErrorCode = code);
+
+            // ①-1 (2026-09-23) : la chaleur de CE district (`GET …/district/:id/heat`, `district_bucket`) pour la case « CHALEUR
+            // LOCALE » de la fiche — point 7 des arbitrages du 07/09, ratifié : le bucket du DISTRICT, le médaillon restant la
+            // ville. Non bloquante : en échec, la case dit « — ».
+            LastHeat = null;
+            yield return world.GetDistrictHeat(districtId, bearer, h => LastHeat = h, e => { });
         }
+
+        /// <summary>①-1 — la chaleur du district courant, null tant qu'elle n'est pas revenue (ou en échec).</summary>
+        public DistrictHeatDto LastHeat { get; private set; }
+
+        /// <summary>Couture de test : pose la chaleur sans réseau (même effet que le fetch de `SetSession`).</summary>
+        public void PoserChaleurPourTest(DistrictHeatDto heat) => LastHeat = heat;
 
         // ============================================================== C8 : le rendu
 
@@ -1719,23 +1731,10 @@ namespace MafiaCleanCity.CityMap
         //   même concept reçoit deux noms, la convention a coûté plus qu'elle n'a protégé.
         private static string TypeLabel(string t)
         {
-            switch (t)
-            {
-                case "lab": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Laboratoire");
-                case "stash": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Cache");
-                case "front_shop": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Commerce-écran");
-                case "cash_safehouse": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Planque");
-                case "dealer_spot_front": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Point de vente");
-                case "specialized_lab": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Laboratoire spécialisé");
-                case "refinery": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Raffinerie");
-                case "grow_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Serre");
-                case "distribution_hub": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Relais");
-                case "money_holding": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Banque");
-                case "office": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Bureau");
-                case "press_house": return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Atelier de presse");
-                case "": case null: return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Terrain vague");
-                default: return t;
-            }
+            // ①-2 (2026-09-23) : UN mot par type pour ① et ② — `LibellesBatiment.Type` (clé `building.type.*`, décision de l'atelier
+            // `22-…` §7.1 B). Seul le terrain vide garde son mot de carte.
+            if (string.IsNullOrEmpty(t)) return MafiaCleanCity.I18n.Libelle.De("district", "type_batiment", "Terrain vague");
+            return LibellesBatiment.Type(t);
         }
 
         // --------------------------------------------------------------- UI build (racine)
@@ -1861,6 +1860,25 @@ namespace MafiaCleanCity.CityMap
         /// Test hook : une falsifiable peut vérifier QUEL bâtiment est ouvert, pas seulement qu'une
         /// fiche existe.</summary>
         public string FicheBuildingId { get; private set; }
+
+        // ①-0 (2026-09-23, écart ① `e2bd7681` §0.2, décision de l'orchestrateur) — AMÉLIORER ouvre la fiche OPÉRATIONNELLE du
+        // bâtiment AFFICHÉ (`IOuvreurDeFicheOperationnelle`, implémenté par le shell), où vit le bouton de palier. Avant : « ça se
+        // fait sur la fiche du bâtiment » renvoyait vers un écran que rien n'ouvrait avec un bâtiment — la route morte.
+        private GameObject ficheBoutonAmeliorer;
+        /// <summary>Le bouton AMÉLIORER est-il montré pour le bâtiment de la fiche ?</summary>
+        public bool FicheAmeliorerMontre => ficheBoutonAmeliorer != null && ficheBoutonAmeliorer.activeSelf;
+        /// <summary>L'id transmis à la dernière ouverture de la fiche opérationnelle (null avant).</summary>
+        public string DerniereFicheOperationnelleDemandee { get; private set; }
+        /// <summary>Couture de test : un ouvreur posé ici passe AVANT celui du shell (aucun shell étranger ne répond à sa place).</summary>
+        public MafiaCleanCity.Shell.IOuvreurDeFicheOperationnelle OuvreurPourTest;
+
+        /// <summary>Les types dont la fiche opérationnelle porte un bouton de palier (`BuildingCardController` : `specialized_lab`
+        /// → `upgrade-tier`, `distribution_hub` → `upgrade-hub-tier`, `money_holding` → `upgrade-money-holding-tier`). AMÉLIORER
+        /// est ABSENT sur tout autre type. ⚠️ `lab`, `refinery`, `press_house` ont une route côté back
+        /// (`upgrade-equipment-tier`) que la fiche opérationnelle n'expose pas encore : absents ici tant qu'elle ne le fait pas
+        /// (écart ①, lot suivant de ②), plutôt qu'un bouton qui mène à un écran sans bouton.</summary>
+        public static bool AmeliorableDepuisLaFiche(string operationalType) =>
+            operationalType == "specialized_lab" || operationalType == "distribution_hub" || operationalType == "money_holding";
         public bool FicheOuverte => ficheRoot != null && ficheRoot.gameObject.activeSelf;
 
         /// <summary>Une dimension EN PX CSS DE LA MAQUETTE, ramenée en unités de canvas.
@@ -1973,6 +1991,8 @@ namespace MafiaCleanCity.CityMap
             ficheTitre.font = DesignTokens.Current.hudSerifFont;
             ficheTitre.characterSpacing = 13f;                       // `.13em`
             ficheTitre.color = DesignTokens.Current.hudMoneyGold;     // --or-vif
+            // ①-2 : la maquette ÉCRIT le titre en capitales (« LE VERGE D'OR ») ; juge ⊥ r2 m5 « casse mixte ».
+            ficheTitre.fontStyle = FontStyles.UpperCase;
             ficheTitre.fontFeatures.Clear();
             // ⛔⛔ UNE SEULE LIGNE, ET C'EST LA BOÎTE QUI L'IMPOSE — mesuré à l'exécution le
             // 2026-09-06 (`FicheTeteGeometriePlayModeTests`, run scopé `FicheTete`) :
@@ -2007,6 +2027,7 @@ namespace MafiaCleanCity.CityMap
 
             ficheType = NewText("Type", corps.transform, "", FDi(9f), TextAlignmentOptions.Center);
             ficheType.characterSpacing = 20f;                        // `.2em`
+            ficheType.fontStyle = FontStyles.UpperCase;              // `.fiche .titre .type{text-transform:uppercase}` (①-2)
             ficheType.color = DesignTokens.Current.hudCremeSecondary;
             PoserDansFiche((RectTransform)ficheType.transform, 40.80f, 13.94f);
 
@@ -2060,6 +2081,8 @@ namespace MafiaCleanCity.CityMap
                              x: largeurBouton + 9f, largeur: largeurBouton);
             BuildFicheBouton(corps.transform, "AMÉLIORER", "AMÉLIORER", or: false, action: () => ActionFiche("AMÉLIORER"),
                              x: 2f * (largeurBouton + 9f), largeur: largeurBouton);
+            Transform btnAmeliorer = corps.transform.Find("Btn_AMÉLIORER");
+            ficheBoutonAmeliorer = btnAmeliorer != null ? btnAmeliorer.gameObject : null;
 
             // Le retour d'une action. Posé EN SURIMPRESSION de la rangée d'actions plutôt qu'à sa
             // suite : dans le flux, il consommait de la hauteur en permanence pour un texte vide
@@ -2190,6 +2213,72 @@ namespace MafiaCleanCity.CityMap
         /// sur `LibellesBatiment.Type` — déjà établi ICI, plus informatif qu'un libellé générique —
         /// tant que le back ne sert encore aucune clé pour ce bâtiment (environnement plus ancien,
         /// ou bâtiment que le lot fiction n'a pas encore couvert).</summary>
+        /// <summary>①-1 — « À COLLECTER » : `district.harvest.<valeur>` (Rien / Prêt / Plein), hors domaine « — ».</summary>
+        public static string ValeurACollecter(string harvestBand)
+        {
+            string repli;
+            switch (harvestBand)
+            {
+                case "NOTHING": repli = "Rien"; break;
+                case "AVAILABLE": repli = "Prêt"; break;
+                case "FULL": repli = "Plein"; break;
+                default: return "—";
+            }
+            return MafiaCleanCity.I18n.Libelle.ParValeur("district", "harvest", harvestBand, repli);
+        }
+
+        /// <summary>①-1 — or-vif quand il y a de quoi ramasser (l'argent), braise quand c'est plein (quelque chose s'est arrêté,
+        /// `capacity-guard.service.ts:70-78`), crème-2 sinon.</summary>
+        public static Color TeinteACollecter(string harvestBand) =>
+            harvestBand == "AVAILABLE" ? DesignTokens.Current.hudMoneyGold
+            : harvestBand == "FULL" ? DesignTokens.Current.hudGaugeArcHot
+            : DesignTokens.Current.hudCremeSecondary;
+
+        /// <summary>①-1 — « REVENUS » : `district.revenue.<valeur>` (Au repos / Rapporte), hors domaine « — ».</summary>
+        public static string ValeurRevenus(string revenueBand)
+        {
+            string repli;
+            switch (revenueBand)
+            {
+                case "IDLE": repli = "Au repos"; break;
+                case "EARNING": repli = "Rapporte"; break;
+                default: return "—";
+            }
+            return MafiaCleanCity.I18n.Libelle.ParValeur("district", "revenue", revenueBand, repli);
+        }
+
+        /// <summary>①-2 (2026-09-23, écart ① `e2bd7681` §2 M12, décision de l'orchestrateur) — le titre de la fiche est
+        /// l'ENSEIGNE seule (`name_i18n.params.enseigne`, « Transit Marrek »), comme « LE VERGE D'OR » de la maquette : le nom
+        /// COMPLET (« Mécanique Skeld — La Lisière, îlot 1501, n° 2 ») occupait 90 % de la plaque (juge ⊥ r9 m5, r3 F2) et
+        /// forçait l'autosize vers son plancher. Le district et l'îlot restent dans le nom composé, ailleurs. Sans enseigne
+        /// servie : le nom composé, puis le type — jamais un nom deviné.</summary>
+        public static string TitreDeFiche(DistrictInteriorBuildingDto b)
+        {
+            if (b == null) return string.Empty;
+            string enseigne = b.name_i18n != null && b.name_i18n.@params != null ? b.name_i18n.@params.enseigne : null;
+            if (!string.IsNullOrWhiteSpace(enseigne)) return enseigne.Trim();
+            return ResoudreNomBatiment(b);
+        }
+
+        /// <summary>①-2 — le sous-titre (`.fiche .titre .type`, « Bar · Quartier général » dans la maquette) : la ligne « type · lieu »
+        /// de l'atelier (`district.fiche.type_lieu`, `.rang` quand le bâtiment a un rang ; `22-…` §7.1 B), `{type}` = le mot servi
+        /// (`LibellesBatiment.Type`), `{district}`/`{block}`/`{rang}` = les params de `name_i18n`. Mise en capitales par le style.
+        /// Sans lieu servi : le type seul. Elle remplace l'état de conversion (« OPÉRATIONNEL »), que la maquette ne montre pas.
+        /// Le rôle « Quartier général » n'a aucune source (écart §0.3).</summary>
+        public static string SousTitreDeFiche(DistrictInteriorBuildingDto b)
+        {
+            if (b == null) return string.Empty;
+            string type = LibellesBatiment.Type(b.operational_type);
+            DistrictBuildingNameParamsDto pr = b.name_i18n != null ? b.name_i18n.@params : null;
+            if (pr == null || string.IsNullOrEmpty(pr.district) || string.IsNullOrEmpty(pr.block)) return type;
+            var p = new Dictionary<string, string> { { "type", type }, { "district", pr.district }, { "block", pr.block } };
+            if (string.IsNullOrEmpty(pr.rang))
+                return MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.type_lieu", "{type} · {district}, îlot {block}", p);
+            p["rang"] = pr.rang;
+            return MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.type_lieu.rang",
+                                                       "{type} · {district}, îlot {block}, n° {rang}", p);
+        }
+
         private static string ResoudreNomBatiment(DistrictInteriorBuildingDto b)
         {
             if (b.name_i18n == null || string.IsNullOrEmpty(b.name_i18n.key))
@@ -2217,30 +2306,29 @@ namespace MafiaCleanCity.CityMap
             FicheDealerId = null;
             DerniereCollecte = null;
 
-            ficheTitre.text = ResoudreNomBatiment(b);
-            ficheType.text = LibellesBatiment.Conversion(b.conversion_band);
+            ficheTitre.text = TitreDeFiche(b);
+            ficheType.text = SousTitreDeFiche(b);
+            if (ficheBoutonAmeliorer != null) ficheBoutonAmeliorer.SetActive(AmeliorableDepuisLaFiche(b.operational_type));
 
-            // `$ 2 400 / À COLLECTER` ⇒ la bande de revenu : le bâtiment rapporte-t-il ?
-            // ⛔ LES TROIS VALEURS ÉTAIENT DE LA MÊME COULEUR, et le juge l'a classé MAJEUR : le
-            // canon CODE l'information par la teinte — or = argent, crème = neutre, braise =
-            // danger. Rendues toutes crème, les trois cases ne portent plus aucun signal de
-            // gravité, et l'or quitte la fiche (il n'y restait que le titre et le CTA).
-            //   *Le remplacement des chiffres par des bandes est un écart ASSUMÉ ; la perte du
-            //   codage couleur ne l'est pas — elle ne découle pas de lui.*
-            ficheStatValeurs[0].color = DesignTokens.Current.hudMoneyGold;   // --or-vif : l'argent
-            ficheStatValeurs[1].color = DesignTokens.Current.hudCreme;       // neutre : la chaîne
-            ficheStatValeurs[0].text = LibellesBatiment.Revenu(b.revenue_band);
-            ficheStatLibelles[0].text = "REVENU";
-            // `$ 180/h / REVENUS` ⇒ la chaîne est-elle raccordée ? (un bâtiment qui gagne sans
-            // chaîne ne verse rien — c'est l'information utile, pas un débit inventé)
-            ficheStatValeurs[1].text = LibellesBatiment.Chaine(b.revenue_chain);
-            ficheStatLibelles[1].text = "CHAÎNE";
-            // `12% / HEAT LOCAL` ⇒ ce DTO ne porte AUCUNE chaleur par bâtiment (mesuré : 13 champs,
-            // aucun heat). L'état de l'ouvrage est la bande qui décide vraiment de son sort.
-            ficheStatValeurs[2].text = LibellesBatiment.Etat(b.condition_band);
-            ficheStatLibelles[2].text = "ÉTAT";
-            ficheStatValeurs[2].color = b.condition_band == "SOUND"
-                ? DesignTokens.Current.hudCreme : DesignTokens.Current.accentDanger;
+            // ①-1 (2026-09-23, écart ① `e2bd7681` §2 M14-M16 ; mots de l'atelier `22-…` §7.1 A) — les trois cases avaient GLISSÉ d'un
+            // cran (REVENU · CHAÎNE · ÉTAT au lieu de À COLLECTER · REVENUS · HEAT LOCAL). Elles reprennent les titres du canon, et
+            // chacune la bande SERVIE qui lui répond (R2.2 : jamais un montant, un débit ni un pourcentage) :
+            //   1 « À COLLECTER »    = `harvest_band` (Rien / Prêt / Plein) — or-vif quand il y a de quoi ramasser, braise quand
+            //                         quelque chose s'est ARRÊTÉ faute de collecte, crème-2 sinon ;
+            //   2 « REVENUS »        = `revenue_band` (Au repos / Rapporte) ;
+            //   3 « CHALEUR LOCALE » = le bucket du DISTRICT (point 7 du 07/09, ratifié), braise quand il est chaud ou brûlant.
+            // `revenue_chain` et `condition_band` quittent la fiche : la carte porte déjà leur signal (néon, pastilles d'état).
+            ficheStatLibelles[0].text = MafiaCleanCity.I18n.Libelle.De("district", "fiche", "À COLLECTER");
+            ficheStatLibelles[1].text = MafiaCleanCity.I18n.Libelle.De("district", "fiche", "REVENUS");
+            ficheStatLibelles[2].text = MafiaCleanCity.I18n.Libelle.De("district", "fiche", "CHALEUR LOCALE");
+            ficheStatValeurs[0].text = ValeurACollecter(b.harvest_band);
+            ficheStatValeurs[0].color = TeinteACollecter(b.harvest_band);
+            ficheStatValeurs[1].text = ValeurRevenus(b.revenue_band);
+            ficheStatValeurs[1].color = DesignTokens.Current.hudCreme;
+            string chaleur = LastHeat != null ? LastHeat.district_bucket : null;
+            ficheStatValeurs[2].text = MafiaCleanCity.Shell.HeatBucketResolver.Label(chaleur);
+            ficheStatValeurs[2].color = chaleur == "HOT" || chaleur == "BURNING"
+                ? DesignTokens.Current.hudGaugeArcHot : DesignTokens.Current.hudCreme;
 
             ficheSortie.text = "";
             ficheRoot.gameObject.SetActive(true);
@@ -2344,8 +2432,16 @@ namespace MafiaCleanCity.CityMap
                     if (!blanchimentEnCours)
                         StartCoroutine(BlanchirDepuisFiche());
                     break;
-                default:
-                    ficheSortie.text = "Améliorer : ça se fait sur la fiche du bâtiment.";
+                case "AMÉLIORER":
+                    if (!AmeliorableDepuisLaFiche(ficheOperationalType) || string.IsNullOrEmpty(FicheBuildingId)) break;
+                    var ouvreur = OuvreurPourTest ?? MafiaCleanCity.Shell.OuvreurDeFicheOperationnelleLocator.Find();
+                    if (ouvreur == null)
+                    {
+                        ficheSortie.text = "Amélioration indisponible : la fiche du bâtiment ne s'ouvre pas ici.";
+                        break;
+                    }
+                    DerniereFicheOperationnelleDemandee = FicheBuildingId;
+                    ouvreur.OuvrirFicheOperationnelle(FicheBuildingId);
                     break;
             }
         }
