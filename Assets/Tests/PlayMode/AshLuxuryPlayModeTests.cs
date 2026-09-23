@@ -134,8 +134,12 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.UpgradeTierButtonAffordable, "Upgrade affordable with a FLUSH wallet");
             Assert.IsTrue(texts.Any(t => t == "Agrandir le labo"), "Upgrade-tier button label rendered");
 
-            // The refining-passes selector is shown (the Ash cook-start time↔purity lever).
-            Assert.IsTrue(texts.Any(t => t.StartsWith("PASSES DE RAFFINAGE")), "refining-passes selector section rendered");
+            // ② lot 2 : UN geste selon l'état du pupitre. Le sélecteur « Passes » n'est posé que pour « Allumer » (feu éteint, étagère
+            // non vide) — le lot semé a déjà cuit, son état réel décide ; plus de « PASSES DE RAFFINAGE » en toutes circonstances.
+            var geste = BuildingCardController.GesteSelonLEtat(controller.CurrentLab?.cook_stage_band, controller.CurrentPrecursors?.stock_band);
+            Assert.AreEqual(geste, controller.GesteDuPupitreAffiche, "le geste posé est celui que l'état servi appelle");
+            Assert.AreEqual(geste == BuildingCardController.GesteDuPupitre.Allumer, texts.Any(t => t == "Passes"),
+                "« Passes » exactement quand le geste est « Allumer »");
 
             // R2.2: no raw scalar leaks client-side (no purity_score / cents / multiplier / ticks).
             AssertNoRawScalar(texts);

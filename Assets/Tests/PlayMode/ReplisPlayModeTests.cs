@@ -72,6 +72,9 @@ namespace MafiaCleanCity.CityMap.Tests
             // ② lot 1 (2026-09-23) : le pupitre du labo — domaines lus au HEAD back 8304116d
             Couvre("CookStageLabel", new[] { "IDLE", "EARLY", "MID", "LATE", "DONE" }, BuildingCardController.CookStageLabel, e); // production/production.projection.service.ts:53
             Couvre("StockLabel", new[] { "NONE", "LOW", "MEDIUM", "HIGH" }, BuildingCardController.StockLabel, e);                 // :56 (product_band) ; precursors.projection.service.ts:36 (stock_band)
+            // ② lot 2 : le précurseur SERVI (majuscules, precursors.projection.service.ts:40) — domaine : l'enum substance-config.ts:40-53
+            Couvre("PrecursorLabel", new[] { "PYRALIN", "THALMITE", "GARNET_SALT", "VERDANT_ROOT_EXTRACT", "LULL_RESIN", "GLASS_LILY" },
+                BuildingCardController.PrecursorLabel, t);
             Couvre("TypeLabel", Types12, BuildingCardController.TypeLabel, t);
             Couvre("SubstanceLabel", new[] { "BRINDLE", "CRICK", "HUSH", "ASH" }, BuildingCardController.SubstanceLabel, t);          // substance/substance-config.ts:36 (majuscules : production.projection.service.ts:232)
             Couvre("VehicleLabel", new[] { "FOOT", "BIKE", "CAR" }, BuildingCardController.VehicleLabel, t);                          // la fiche : distribution.projection.service.ts:411

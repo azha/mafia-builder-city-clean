@@ -68,6 +68,8 @@ namespace MafiaCleanCity.Operational
         // ---- ② lot 1 (2026-09-23) : le PUPITRE du labo, trois échelles de crans -------------------------------------
         /// <summary>La cuisson du bâtiment (GET /v1/operational/lab/:id). Null hors pupitre, ou sur erreur : pas de ligne « le feu ».</summary>
         public LabCookDto CurrentLab { get; private set; }
+        /// <summary>② lot 2 — le geste que le pupitre a posé au dernier rendu (`Aucun` hors pupitre).</summary>
+        public GesteDuPupitre GesteDuPupitreAffiche { get; private set; }
         /// <summary>Le stock de précurseur du bâtiment (GET /v1/operational/precursors?building_id — le DTO de la chaîne d'appro,
         /// RÉUTILISÉ). Null hors pupitre, ou sur erreur : pas de ligne « l'étagère ».</summary>
         public GetOperationalPrecursorsResponseDto CurrentPrecursors { get; private set; }
@@ -395,10 +397,13 @@ namespace MafiaCleanCity.Operational
         // ----------------------------------------------------------- actions API
 
         /// <summary>Lab action: order Pyralin precursors (the lab's first step). Genuinely 2xx-able.</summary>
-        public IEnumerator OrderPyralin(int quantityUnits = 10)
+        /// <summary>② lot 2 — commande le précurseur SERVI de ce bâtiment (`CurrentPrecursors.precursor_type`), jamais un type écrit
+        /// en dur. Sans précurseur servi, rien ne part.</summary>
+        public IEnumerator OrderPrecursor(string precursorType, int quantityUnits = 10)
         {
-            yield return RunAction(c => client.OrderPrecursors(buildingId, quantityUnits, Token, c),
-                "Pyralin commandé", "Impossible de commander");
+            if (string.IsNullOrEmpty(precursorType)) yield break;
+            yield return RunAction(c => client.OrderPrecursors(buildingId, precursorType, quantityUnits, Token, c),
+                "Précurseur commandé", "Impossible de commander");
         }
 
         /// <summary>Lab action: start a Brindle cook.</summary>
@@ -439,7 +444,7 @@ namespace MafiaCleanCity.Operational
         /// at 0 client-side; the server enforces the real ceiling (passes &gt; max → 422). Test/UI convenience.</summary>
         public void SetRefiningPasses(int passes)
         {
-            RefiningPasses = passes < 0 ? 0 : passes;
+            RefiningPasses = passes < 0 ? 0 : passes > MaxRefiningPassesUi ? MaxRefiningPassesUi : passes;   // ② lot 2 : borné au domaine 0..3
             // Re-render the actions so the cook-start label reflects the chosen passes (only if the card is loaded).
             if (CardLoaded && CurrentCard != null) BuildActions(CurrentCard);
         }
@@ -930,6 +935,7 @@ namespace MafiaCleanCity.Operational
             repairButton = null;
             RepairButtonShown = false;
             RepairButtonAffordable = false;
+            GesteDuPupitreAffiche = GesteDuPupitre.Aucun;   // ② lot 2 : posé seulement par le pupitre (lab, specialized_lab)
             // Phase-3 vector #3: reset the grow_house affordance flags (set only in the grow_house case below).
             PlantSelectorShown = false;
             TendButtonShown = false;
@@ -1036,15 +1042,10 @@ namespace MafiaCleanCity.Operational
             switch (card.operational_type)
             {
                 case "lab":
-                    AddActionButton(actionBar, "commander_du_pyralin", "Commander du pyralin", () => StartCoroutine(OrderPyralin()));
-                    AddActionButton(actionBar, "lancer_une_cuisson", "Lancer une cuisson", () => StartCoroutine(StartCook()));
+                    AddGesteDuPupitre(card);
                     break;
                 case "specialized_lab":
-                    // Ash cook — the refining-passes selector (the time↔purity lever) + the Start Ash Cook button. The
-                    // selector worded count (no raw number leaks — it's a deliberate label "+N passes" inside our own UI,
-                    // but to keep the no-raw-scalar guard simple we word the passes count rather than print a bare digit).
-                    AddRefiningPassesSelector(actionBar);
-                    AddActionButton(actionBar, "lancer_une_cuisson_d_ash", "Lancer une cuisson d'ash", () => StartCoroutine(StartCookAsh()));
+                    AddGesteDuPupitre(card);
                     // Honor affordance — only when a SCHEDULED appointment is tracked for this lab (the Ash sale path).
                     if (CurrentAppointment != null && CurrentAppointment.status == "SCHEDULED")
                         AddActionButton(actionBar, "honorer_le_rendez_vous", "Honorer le rendez-vous", () => StartCoroutine(HonorAppointment()));
@@ -1447,6 +1448,58 @@ namespace MafiaCleanCity.Operational
             b == "NONE" ? AccentSevere : b == "LOW" ? AccentModerate : b == "MEDIUM" || b == "HIGH" ? AccentMild : DesignTokens.Current.onSurfaceMuted;
         private static Color CaissesAccent(string b) =>
             b == "LOW" || b == "MEDIUM" || b == "HIGH" ? AccentMild : DesignTokens.Current.onSurfaceMuted;
+
+        // ----- ② lot 2 (2026-09-23) : UN geste selon l'état du pupitre (écart ② `c4520078`, cadres 39, 40, 41, 43) -----
+        public enum GesteDuPupitre { Aucun, Commander, Allumer, EnCuisson, FaireSortir }
+
+        /// <summary>Le geste que l'état appelle — un seul à la fois. La cuisson prime : une cuve qui tourne n'appelle ni commande ni
+        /// allumage (le 409 « une cuve à la fois » est DIT avant, pas codé). À IDLE, l'étagère décide : vide ⇒ commander, sinon allumer.
+        /// ⚠️ Étagère non lue (route en erreur) à IDLE ⇒ « Allumer » : le serveur tranche (422 sans précurseur), le client ne devine pas
+        /// un vide. Cuisson non lue ou hors domaine ⇒ AUCUN geste : on ne propose pas d'agir sur un état qu'on ne connaît pas.</summary>
+        public static GesteDuPupitre GesteSelonLEtat(string cookStageBand, string stockBand)
+        {
+            switch (cookStageBand)
+            {
+                case "EARLY": case "MID": case "LATE": return GesteDuPupitre.EnCuisson;
+                case "DONE": return GesteDuPupitre.FaireSortir;
+                case "IDLE": return stockBand == "NONE" ? GesteDuPupitre.Commander : GesteDuPupitre.Allumer;
+                default: return GesteDuPupitre.Aucun;
+            }
+        }
+
+        /// <summary>Le mot d'un précurseur SERVI (`precursor_type`, en majuscules : precursors.projection.service.ts:40) — famille
+        /// `building.precursor.*` (table 39, D12). Domaine : l'enum `precursor_type` (substance-config.ts:40-53).</summary>
+        public static string PrecursorLabel(string p)
+        {
+            switch (p)
+            {
+                case "PYRALIN": return Bande("precursor", "PYRALIN", "Pyralin");
+                case "THALMITE": return Bande("precursor", "THALMITE", "Thalmite");
+                case "GARNET_SALT": return Bande("precursor", "GARNET_SALT", "Sel de grenat");
+                case "VERDANT_ROOT_EXTRACT": return Bande("precursor", "VERDANT_ROOT_EXTRACT", "Racine verdoyante");
+                case "LULL_RESIN": return Bande("precursor", "LULL_RESIN", "Résine de lull");
+                case "GLASS_LILY": return Bande("precursor", "GLASS_LILY", "Lys de verre");
+                default: return MafiaCleanCity.I18n.Repli.Type(p);
+            }
+        }
+
+        /// <summary>« Commander du Pyralin » : la clé se DÉRIVE du précurseur servi (`building.action.commander_du_<precursor>`), jamais
+        /// d'un nom écrit ici (décision de l'orchestrateur du 23/09). Servie aujourd'hui pour PYRALIN seul ; pour un autre précurseur le
+        /// repli COMPTÉ compose avec le mot du catalogue — la clé manquante se voit à la garde, elle ne se cache pas.</summary>
+        public static string CommanderLabel(string precursorType) =>
+            MafiaCleanCity.I18n.Libelle.ParValeur("building", "action", "commander_du_" + precursorType,
+                "Commander du " + PrecursorLabel(precursorType));
+
+        /// <summary>Le nombre de passes CHOISI par le joueur (0..3 — R2.2 le PERMET : c'est son réglage, pas une donnée cachée), dit par
+        /// la clé ICU servie `building.bloc.passes_compte` (« pas du tout » / « 1 passe » / « 3 passes »). Le repli est le MÊME motif,
+        /// formaté par le même moteur ICU. Hors 0..`MaxRefiningPassesUi` : le mot de la famille, jamais un cran faux affirmé.</summary>
+        public static string RefiningPassesLabel(int passes)
+        {
+            if (passes < 0 || passes > MaxRefiningPassesUi) return MafiaCleanCity.I18n.Repli.EtatInconnu;
+            var p = new Dictionary<string, string> { ["passes"] = passes.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+            return MafiaCleanCity.I18n.Libelle.Gabarit("building.bloc.passes_compte",
+                MafiaCleanCity.I18n.IcuFormat.Formater("{passes, plural, =0 {pas du tout} one {# passe} other {# passes}}", p), p);
+        }
 
         // ----- Phase-3 vector #3 (grow_house — T7): husbandry_band (WITHERED | ON_TRACK | THRIVING) — the tend trajectory -----
         // R2.2: the husbandry payoff trajectory as a band, NEVER the raw tend_count. WITHERED (neglected — low yield) <
@@ -1981,51 +2034,126 @@ namespace MafiaCleanCity.Operational
         // numbers anywhere). The server enforces the real max (passes > max → 422); the client clamps only at 0 and at the
         // max-words ceiling. More passes = a longer cook = a higher purity band.
         public const int MaxRefiningPassesUi = 3; // mirrors the server's production.ash.max_refining_passes default (3).
+
+        /// <summary>② lot 2 — le sélecteur « Passes » du cadre 40 (tranché (e) : 4 crans = le domaine 0..3) : le libellé servi
+        /// `building.row.passes`, 4 crans dont `passes + 1` allumés (le premier toujours, comme les échelles du pupitre), le compte dit
+        /// par `building.bloc.passes_compte`, et « − » / « + ». Remplace « PASSES DE RAFFINAGE » et « - Refine » / « + Refine » (anglais,
+        /// FAUX à l'écart) et les mots « None / Light / Standard / Deep ». `specialized_lab` seulement (tranché (a) : un `lab` Brindle
+        /// n'a pas de passes — le serveur refuse tout `refining_passes` non nul, 422).</summary>
         private void AddRefiningPassesSelector(Transform parent)
         {
-            string label = NewSectionLabel(parent, "PASSES DE RAFFINAGE (temps ↔ pureté)");
-            TrackText(null, label);
-
-            GameObject row = NewUI("RefiningPassesRow", parent);
+            GameObject row = NewUI("Row_passes", parent);
+            row.AddComponent<Image>().color = RowBg;
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.padding = new RectOffset(10, 10, 4, 4);
             hlg.spacing = 8;
-            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
-            hlg.childForceExpandWidth = true;
+            hlg.childForceExpandWidth = false;
             hlg.childForceExpandHeight = true;
             AddLayoutElement(row, minHeight: 32, flexibleHeight: 0);
 
-            Button minus = AddActionButton(row.transform, "refine_moins", "- Refine",
-                () => SetRefiningPasses(RefiningPasses - 1));
+            string libelle = Cle("row", "Passes");
+            TextMeshProUGUI l = NewText("Label", row.transform, libelle, 15, TextAlignmentOptions.Left);
+            l.color = DesignTokens.Current.onSurfaceMuted;
+            AddLayoutElement(l.gameObject, minWidth: 80, flexibleWidth: 1);
+            TrackText(l, libelle);
+
+            Button minus = AddActionButton(row.transform, "passes_moins", "−", () => SetRefiningPasses(RefiningPasses - 1));
             SetButtonInteractable(minus, RefiningPasses > 0);
 
-            string passesWord = RefiningPassesLabel(RefiningPasses);
-            TextMeshProUGUI passesText = NewText("RefiningPassesValue", row.transform, passesWord, 15, TextAlignmentOptions.Center);
-            passesText.color = AccentMild;
-            passesText.fontStyle = FontStyles.Bold;
-            AddLayoutElement(passesText.gameObject, minWidth: 110, flexibleWidth: 0);
-            TrackText(passesText, passesWord);
+            GameObject crans = NewUI("Crans", row.transform);
+            HorizontalLayoutGroup ch = crans.AddComponent<HorizontalLayoutGroup>();
+            ch.spacing = 4;
+            ch.childAlignment = TextAnchor.MiddleCenter;
+            ch.childControlWidth = true;
+            ch.childControlHeight = true;
+            ch.childForceExpandWidth = false;
+            ch.childForceExpandHeight = false;
+            for (int i = 0; i <= MaxRefiningPassesUi; i++)
+            {
+                bool allume = i <= RefiningPasses;
+                GameObject cran = NewUI(allume ? "CranAllume" : "CranEteint", crans.transform);
+                Image img = cran.AddComponent<Image>();
+                img.color = allume ? AccentMild : DesignTokens.Current.surfaceRaised;
+                img.raycastTarget = false;
+                AddLayoutElement(cran, minWidth: 14, preferredWidth: 14, minHeight: 10, preferredHeight: 10);
+            }
 
-            Button plus = AddActionButton(row.transform, "refine_plus", "+ Refine",
-                () => SetRefiningPasses(RefiningPasses + 1));
+            Button plus = AddActionButton(row.transform, "passes_plus", "+", () => SetRefiningPasses(RefiningPasses + 1));
             SetButtonInteractable(plus, RefiningPasses < MaxRefiningPassesUi);
+
+            string compte = RefiningPassesLabel(RefiningPasses);
+            TextMeshProUGUI v = NewText("Value", row.transform, compte, 15, TextAlignmentOptions.Right);
+            v.color = AccentMild;
+            v.fontStyle = FontStyles.Bold;
+            AddLayoutElement(v.gameObject, minWidth: 90, flexibleWidth: 0);
+            TrackText(v, compte);
         }
 
-        // Word the refining-passes count (the time↔purity lever) as a qualitative choice — None / Light / Standard / Deep —
-        // so the selector shows no bare digit (R2.2 keeps the no-raw-scalar guard simple). More = a longer cook, purer Ash.
-        public static string RefiningPassesLabel(int passes)
+        /// <summary>② lot 2 — UN geste selon l'état (`GesteSelonLEtat`), tous ses mots par les clés servies de la table 37 :
+        ///   Commander  « Commander du {précurseur} » + « il en faut avant de rallumer » (cadre 39) ;
+        ///   Allumer    (Ash) la réplique « L'étagère est refaite… » et « Passes », puis « Allumer le feu » (+ « ça consomme un lot de lys de
+        ///              verre », Ash seulement : la phrase nomme SON précurseur) (cadre 40) ;
+        ///   EnCuisson  AUCUN bouton : « Rien à faire ici. », « Repassez quand ce sera tiré », et la réplique « Ça monte… — et ne me lancez
+        ///              pas une deuxième cuve… » : le refus 409 DIT avant, pas un bouton qui échoue (cadre 41) ;
+        ///   FaireSortir « Faire sortir la marchandise » GRISÉ + « vers les coursiers » + la réplique « C'est tiré… » (cadre 43) — le geste
+        ///              attend sa destination et sa quantité (manque du back n°5) : dessiné, pas vivant.
+        /// ⚠️ Les répliques sont posées ici SANS nom de locuteur : la bulle du lieutenant (B1, jointure lieutenant → bâtiment) est un
+        /// lot à part. La réplique du cadre 39 (« Nestor : … », appro.bloc.nestor_…) attend la décision de l'user sur Nestor.</summary>
+        private void AddGesteDuPupitre(BuildingCardDto card)
         {
-            switch (passes)
+            bool ash = card.operational_type == "specialized_lab";
+            GesteDuPupitre geste = GesteSelonLEtat(CurrentLab?.cook_stage_band, CurrentPrecursors?.stock_band);
+            GesteDuPupitreAffiche = geste;
+            switch (geste)
             {
-                case 0: return "None";
-                case 1: return "Light";
-                case 2: return "Standard";
-                case 3: return "Deep";   // le max de l'UI (`MaxRefiningPassesUi`)
-                // ⛔ PLUS « Deep » pour tout le reste : 4 ou −1 se disaient « Deep », un cran faux affirmé (règle f2, atelier 28).
-                default: return MafiaCleanCity.I18n.Repli.EtatInconnu;
+                case GesteDuPupitre.Commander:
+                {
+                    string precurseur = CurrentPrecursors.precursor_type;
+                    AddActionButton(actionBar, "commander", CommanderLabel(precurseur), () => StartCoroutine(OrderPrecursor(precurseur)));
+                    AddLigneDuGeste("Bloc", Cle("bloc", "il en faut avant de rallumer"));
+                    break;
+                }
+                case GesteDuPupitre.Allumer:
+                    if (ash)
+                    {
+                        AddLigneDuGeste("Replique", Cle("replique", "«\u00A0L’étagère est refaite. Dites-moi combien de passes, et j’allume.\u00A0»"));
+                        AddRefiningPassesSelector(actionBar);
+                    }
+                    AddActionButton(actionBar, "allumer_le_feu", Cle("action", "Allumer le feu"),
+                        () => StartCoroutine(ash ? StartCookAsh() : StartCook()));
+                    if (ash) AddLigneDuGeste("Bloc", Cle("bloc", "ça consomme un lot de lys de verre"));
+                    break;
+                case GesteDuPupitre.EnCuisson:
+                    AddLigneDuGeste("Replique", Cle("replique", "«\u00A0Ça monte comme il faut. Si j’ouvre maintenant, je perds tout.\u00A0»"));
+                    AddLigneDuGeste("Replique", Cle("replique", "— et ne me lancez pas une deuxième cuve tant que celle-là tourne."));
+                    AddLigneDuGeste("Bloc", Cle("bloc", "Rien à faire ici."));
+                    AddLigneDuGeste("Bloc", Cle("bloc", "Repassez quand ce sera tiré"));
+                    break;
+                case GesteDuPupitre.FaireSortir:
+                {
+                    AddLigneDuGeste("Replique", Cle("replique",
+                        "«\u00A0C’est tiré. Ça ne peut pas dormir ici — chaque nuit que ça reste, c’est une nuit de trop.\u00A0»"));
+                    Button sortir = AddActionButton(actionBar, "faire_sortir_la_marchandise", Cle("action", "Faire sortir la marchandise"), () => { });
+                    SetButtonInteractable(sortir, false);
+                    AddLigneDuGeste("Bloc", Cle("bloc", "vers les coursiers"));
+                    break;
+                }
             }
         }
+
+        /// <summary>Une ligne de texte du geste (bloc ou réplique) sous la barre d'actions.</summary>
+        private void AddLigneDuGeste(string nom, string texte)
+        {
+            TextMeshProUGUI t = NewText(nom, actionBar, texte, 13, TextAlignmentOptions.Left);
+            t.color = DesignTokens.Current.onSurfaceSecondaryAlt;
+            if (nom == "Replique") t.fontStyle = FontStyles.Italic;
+            AddLayoutElement(t.gameObject, minHeight: 18, flexibleHeight: 0);
+            TrackText(t, texte);
+        }
+
 
         // Phase-3 vector #3: the plant selector (choose which growable precursor to cultivate). Three controls on one row:
         //   [< Crop] [<worded crop>] [Crop >]

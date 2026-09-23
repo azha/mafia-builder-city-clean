@@ -169,13 +169,15 @@ namespace MafiaCleanCity.Operational
         }
 
         /// <summary>POST /v1/operational/precursors/order — order Pyralin into a lab (the lab's first action).</summary>
-        public IEnumerator OrderPrecursors(string labBuildingId, int quantityUnits,
+        /// ② lot 2 : `precursorType` est la valeur SERVIE par `GET precursors?building_id` (`precursor_type`), jamais écrite ici —
+        /// le client écrivait « PYRALIN » en dur, faux pour un `specialized_lab` (GLASS_LILY).
+        public IEnumerator OrderPrecursors(string labBuildingId, string precursorType, int quantityUnits,
             string bearer, Action<ActionOutcome> done)
         {
             string body = JsonUtility.ToJson(new OrderPrecursorRequestDto
             {
                 building_id = labBuildingId,
-                precursor_type = "PYRALIN",
+                precursor_type = precursorType,
                 quantity_units = quantityUnits,
             });
             return Post(Url("precursors/order"), body, bearer,

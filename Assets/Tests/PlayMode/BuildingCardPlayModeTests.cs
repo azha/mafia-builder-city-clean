@@ -250,7 +250,10 @@ namespace MafiaCleanCity.Operational.Tests
 
             // 4a) per-type LAB action — Order Pyralin. This is genuinely arrangeable as a 2xx:
             //     ordering precursors always succeeds (201) regardless of current stock.
-            yield return controller.OrderPyralin(10);
+            // ② lot 2 : le précurseur commandé est celui que le back SERT pour ce labo (`precursors?building_id`), plus « PYRALIN »
+            // écrit dans le client.
+            Assert.IsNotNull(controller.CurrentPrecursors, "le labo a lu son étagère (`precursors?building_id`)");
+            yield return controller.OrderPrecursor(controller.CurrentPrecursors.precursor_type, 10);
             ActionOutcome order = controller.LastActionOutcome;
             Assert.IsNotNull(order, "order action produced an outcome");
             StringAssert.Contains("/v1/operational/precursors/order", order.Endpoint, "order hit the right endpoint");
