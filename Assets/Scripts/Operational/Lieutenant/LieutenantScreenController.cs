@@ -3074,11 +3074,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public static string BandLabel(string b)
         {
             switch (b) {
-                case "full": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[####] Plein");
-                case "nominal": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[###.] Normal");
-                case "low": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[##..] Bas");
-                case "depleted": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[....] Épuisé");
-                default: return MafiaCleanCity.I18n.Libelle.De("famille", "band", "[?] Inconnu");
+                case "full": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "Plein");
+                case "nominal": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "Normal");
+                case "low": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "Bas");
+                case "depleted": return MafiaCleanCity.I18n.Libelle.De("famille", "band", "Épuisé");
+                // 23/09 (D11) : la jauge en caractères a quitté les valeurs SERVIES (back 7330eaad) ; le repli du client suit, même clé
+                // (`Slug` ignore les crochets) — aucun traitement de chaîne, le mot est écrit tel quel.
+                default: return MafiaCleanCity.I18n.Libelle.De("famille", "band", "Inconnu");
             }
         }
 

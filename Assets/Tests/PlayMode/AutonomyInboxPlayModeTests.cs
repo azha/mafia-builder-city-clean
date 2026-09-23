@@ -299,10 +299,13 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNotEmpty(ctl.RenderedTexts, "aucun texte rendu : les gardes suivantes seraient vraies À VIDE.");
             Assert.IsFalse(ctl.RenderedTexts.Any(x => x == "depleted" || x == "PRODUCTION_OPS"),
                 "le code de domaine est rendu TEL QUEL : le joueur lit un identifiant de serveur.");
-            Assert.IsTrue(ctl.RenderedTexts.Any(x => x.StartsWith("[....]")),
-                "la bande `depleted` est servie mais aucun texte ne porte son glyphe « [....] » : " +
-                "le résolveur n'a pas couru sur la valeur du serveur. (Le glyphe est le seul " +
-                "marqueur de cette bande qui ne dépende pas de la langue.) " +
+            // 23/09 (décision f2 D11) : la jauge « [....] » a quitté les valeurs servies (back 7330eaad) et le client. Le marqueur
+            // indépendant de la langue devient le MOT que rend le RÉSOLVEUR lui-même pour cette bande — la même clé, lue dans le
+            // même catalogue que l'écran : il n'existe que si le résolveur a couru sur la valeur du serveur.
+            string motEpuise = LieutenantScreenController.BandLabel("depleted");
+            Assert.IsTrue(ctl.RenderedTexts.Any(x => x == motEpuise),
+                $"la bande `depleted` est servie mais aucun texte ne porte son mot « {motEpuise} » : " +
+                "le résolveur n'a pas couru sur la valeur du serveur. " +
                 // ⚠️ LE CORPUS DANS LE MESSAGE — leçon de TD-577, payée trois runs : *une
                 //    assertion qui ne rapporte que ce qu'elle attendait fait payer trois runs à
                 //    celui qui la trouve rouge.* J'ai commis exactement ça il y a dix minutes.
@@ -317,8 +320,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(ctl.LastDecisionError, ctl.LastDecisionError);
             Assert.IsTrue(ctl.BudgetBands.Any(kv => kv.Key == "PRODUCTION_OPS" && kv.Value == "full"),
                 "reset_budget must restore the band to full");
-            Assert.IsTrue(ctl.RenderedTexts.Any(x => x.StartsWith("[####]")),
-                "la bande est revenue à `full` et aucun texte ne porte son glyphe « [####] ». " +
+            string motPlein = LieutenantScreenController.BandLabel("full");
+            Assert.IsTrue(ctl.RenderedTexts.Any(x => x == motPlein),
+                $"la bande est revenue à `full` et aucun texte ne porte son mot « {motPlein} ». " +
                 "Corpus : [" + string.Join(" · ", ctl.RenderedTexts) + "]");
             // ⛔⛔ ET L'ASSERTION SYMÉTRIQUE — « le glyphe ÉPUISÉ a quitté le corpus » — EST FAUSSE,
             // mesurée rouge à 07:4x. Ce n'est pas l'écran : `:2795` rend **une ligne par TYPE de

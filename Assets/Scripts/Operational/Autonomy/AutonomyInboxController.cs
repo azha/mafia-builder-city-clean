@@ -378,7 +378,7 @@ namespace MafiaCleanCity.Operational.Autonomy
                 case "TRADEOFF": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "un compromis");
                 case "ELEVATED_EXPOSURE": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "on s'expose");
                 case "OPPORTUNITY_COST": return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "on laisse passer quelque chose");
-                default: return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "[?] Inconnu");
+                default: return MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "Inconnu");   // D11 : même clé, sans la jauge (back 7330eaad)
             }
         }
 
