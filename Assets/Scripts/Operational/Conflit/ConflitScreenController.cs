@@ -311,20 +311,17 @@ namespace MafiaCleanCity.Operational
             TrackText(sousTitreTexte.text);
         }
 
-        /// <summary>§1/§2 — La table des 4 familles rivales (domaine clos annoncé de
-        /// `target_rival_key`, `ConflitResolvers.DomaineFamilles`) — PÂLES et déclarées comme
-        /// telles (aucune route ne dit ce qu'elles préparent ni ce qu'elles possèdent, point 3 du
-        /// commentaire de classe) — chacune avec sa « vendetta » : le compte d'engagements
-        /// GROUPÉS PAR `target_rival_key` côté client, jamais fabriqué (`GET /v1/me/engagements`,
-        /// vide sur les deux comptes sondés ⇒ « on n'y est jamais allés » partout, honnêtement).
-        /// Un engagement dont la clé sort du domaine des 4 connues n'est PAS silencieusement
-        /// perdu : il est compté et signalé à part (`inconnues`).</summary>
+        /// <summary>§1/§2 — La table des 4 familles (cadres 59-61) : le domaine clos de `target_rival_key`
+        /// (`ConflitResolvers.DomaineFamilles`), chacune avec le compte de ses envois rentrés (`CompterRentres`, jamais
+        /// fabriqué : `GET /v1/me/engagements`). Les familles restent PÂLES : aucune route ne dit ce qu'elles préparent ni ce
+        /// qu'elles possèdent.</summary>
         private void RendreTable(EngagementDto[] engagements, bool indisponible)
         {
             ViderEnfants(tableRoot);
 
+            // Table 40 : « Les quatre familles de Brennar » (D14, le mot ratifié) ; la clé servie reste (exception à la dérivation).
             TextMeshProUGUI label = NouveauTexteFiche(tableRoot, "TableLabel",
-                Libelle.De("conflit", "bloc", "LES QUATRE FAMILLES"), 8.5f,
+                Libelle.Gabarit("conflit.bloc.les_quatre_familles", "Les quatre familles de Brennar"), 8.5f,
                 DesignTokens.Current.onSurfaceSecondary, false);
             label.characterSpacing = 4f;
             TrackText(label.text);
@@ -346,73 +343,73 @@ namespace MafiaCleanCity.Operational
                 TrackText(err.text);
             }
 
-            Dictionary<string, int> compte = CompterVisites(engagements, out int inconnues);
+            Dictionary<string, int> compte = CompterRentres(engagements);
 
             foreach (string cle in ConflitResolvers.DomaineFamilles)
             {
                 GameObject ligne = NouveauUI("Famille_" + cle, tableRoot);
                 AjouterFond(ligne, DesignTokens.Current.surfaceRow);
-                VerticalLayoutGroup vl = ligne.AddComponent<VerticalLayoutGroup>();
-                vl.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(6f), PxTrait(6f));
-                vl.spacing = Px(2f);
-                vl.childControlWidth = true; vl.childControlHeight = true;
-                vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
+                HorizontalLayoutGroup hl = ligne.AddComponent<HorizontalLayoutGroup>();
+                hl.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(6f), PxTrait(6f));
+                hl.spacing = Px(8f);
+                hl.childControlWidth = true; hl.childControlHeight = true;
+                hl.childForceExpandWidth = false; hl.childForceExpandHeight = false;
+                hl.childAlignment = TextAnchor.MiddleLeft;
                 AddLayoutElement(ligne, flexibleHeight: 0);
 
                 // Pâle : `onSurfaceDim`, jamais `onSurfacePrimary` — la couleur PORTE l'absence de
-                // donnée, pas seulement le texte de la note ci-dessus.
+                // donnée (aucune route ne dit ce qu'elles préparent), pas seulement la note ci-dessus.
                 TextMeshProUGUI nom = NouveauTexteFiche(ligne.transform, "Nom",
                     ConflitResolvers.NomFamille(cle), 10.5f, DesignTokens.Current.onSurfaceDim, true);
+                AddLayoutElement(nom.gameObject, flexibleWidth: 1);
                 TrackText(nom.text);
 
-                TextMeshProUGUI sousTitre = NouveauTexteFiche(ligne.transform, "SousTitre",
-                    ConflitResolvers.SousTitreFamille(cle), 8f, DesignTokens.Current.onSurfaceMuted, false);
-                TrackText(sousTitre.text);
+                // Compte indisponible : AUCUNE ligne de compte — la phrase d'erreur au-dessus le dit, un compte à zéro mentirait.
+                if (indisponible) continue;
 
+                GameObject bloc = NouveauUI("Compte", ligne.transform);
+                VerticalLayoutGroup vl = bloc.AddComponent<VerticalLayoutGroup>();
+                vl.childControlWidth = true; vl.childControlHeight = true;
+                vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
+                vl.childAlignment = TextAnchor.MiddleRight;
+
+                // Cadres 59-61, arbitrage de l'orchestrateur (23/09) : on compte les envois RENTRÉS (`resolved`) — un envoi
+                // `scheduled` n'y est pas encore allé. À 0, la seule ligne « on ne les a pas croisés » ; l'ICU `fois_chez_eux`
+                // ne sert qu'à partir de 1 (pas de doublon « jamais » + « on ne les a pas croisés »).
                 compte.TryGetValue(cle, out int n);
-                string texteVisite = indisponible ? "compte indisponible" : TexteVisites(n);
-                TextMeshProUGUI visites = NouveauTexteFiche(ligne.transform, "Visites",
-                    texteVisite, 8f, DesignTokens.Current.onSurfaceDim, false);
+                if (n > 0)
+                {
+                    TextMeshProUGUI fois = NouveauTexteFiche(bloc.transform, "Fois", ConflitResolvers.FoisChezEux(n), 9f,
+                        DesignTokens.Current.onSurfacePrimary, true);
+                    fois.alignment = TextAlignmentOptions.Right;
+                    TrackText(fois.text);
+                }
+                TextMeshProUGUI visites = NouveauTexteFiche(bloc.transform, "Visites",
+                    n > 0 ? Libelle.Gabarit("conflit.bloc.on_est_alles_chez_eux", "on est allés chez eux")
+                          : Libelle.Gabarit("conflit.bloc.on_ne_les_a_pas_croises", "on ne les a pas croisés"),
+                    7.5f, DesignTokens.Current.onSurfaceMuted, false);
+                visites.fontStyle = FontStyles.Italic;
+                visites.alignment = TextAlignmentOptions.Right;
                 TrackText(visites.text);
-            }
-
-            if (inconnues > 0)
-            {
-                string texteInconnues = inconnues == 1
-                    ? "1 envoi vise une famille hors des quatre connues — non affiché ci-dessus."
-                    : $"{inconnues} envois visent une famille hors des quatre connues — non affiché ci-dessus.";
-                TextMeshProUGUI noteInconnue = NouveauTexteFiche(tableRoot, "FamillesInconnues",
-                    texteInconnues, 7.5f, RougeMauvais, false);
-                noteInconnue.enableWordWrapping = true;
-                TrackText(noteInconnue.text);
             }
         }
 
-        /// <summary>Groupe les engagements par `target_rival_key`, côté client — « on est allés
-        /// chez eux N fois » (m-65). `engagements` peut être `null` (jamais chargé) ou vide (les
-        /// deux mesurés) : les deux rendent un dictionnaire vide, jamais une exception.
-        /// `inconnues` compte les entrées dont la clé sort des 4 connues (défensif : une clé non
-        /// reconnue n'est jamais silencieusement perdue).</summary>
-        private static Dictionary<string, int> CompterVisites(EngagementDto[] engagements, out int inconnues)
+        /// <summary>Le compte des envois RENTRÉS (`status == "resolved"`) par `target_rival_key`, côté client. `engagements`
+        /// null (jamais chargé) ou vide : dictionnaire vide, jamais une exception. Une clé hors des 4 n'est pas comptée : le
+        /// back la refuse (404 au POST), elle ne peut pas être servie — la couverture du domaine est gardée par un test.</summary>
+        public static Dictionary<string, int> CompterRentres(EngagementDto[] engagements)
         {
             var compte = new Dictionary<string, int>();
-            inconnues = 0;
             if (engagements == null) return compte;
             foreach (EngagementDto e in engagements)
             {
-                string cle = e?.target_rival_key;
-                if (string.IsNullOrEmpty(cle)) continue;
-                bool connue = false;
-                foreach (string d in ConflitResolvers.DomaineFamilles) if (d == cle) { connue = true; break; }
-                if (!connue) { inconnues++; continue; }
-                compte.TryGetValue(cle, out int n);
-                compte[cle] = n + 1;
+                if (e == null || e.status != "resolved" || string.IsNullOrEmpty(e.target_rival_key)) continue;
+                if (System.Array.IndexOf(ConflitResolvers.DomaineFamilles, e.target_rival_key) < 0) continue;
+                compte.TryGetValue(e.target_rival_key, out int n);
+                compte[e.target_rival_key] = n + 1;
             }
             return compte;
         }
-
-        private static string TexteVisites(int n) =>
-            n == 0 ? "on n'y est jamais allés" : n == 1 ? "on y est allés 1 fois" : $"on y est allés {n} fois";
 
         /// <summary>§3 — Qui part ce soir : `GET /v1/lieutenants` filtré `archetype == "MUSCLE"`.
         /// ⛔⛔ LE CŒUR DE CE LOT. Aucun compte sondé n'en a — le repli honnête N'EST PAS un
@@ -713,17 +710,12 @@ namespace MafiaCleanCity.Operational
         /// `ConflitDtos.cs`, `PostEngagementsBody`) : le contrôle MUSCLE répond avant que ce champ
         /// ne soit validé sur les deux comptes sondés — aucun message d'erreur n'a donc pu
         /// confirmer ce domaine ICI. Source unique pour la table (`ConflitScreenController.
-        /// RendreTable`) et le comptage de vendetta (`CompterVisites`) — jamais recopiée.</summary>
+        /// RendreTable`) et le compte des envois rentrés (`CompterRentres`) — jamais recopiée.</summary>
         public static readonly string[] DomaineFamilles = { "coil", "tarcum", "iron_throat", "saltline" };
 
-        /// <summary>Le nom affiché de chaque famille — m-65, verbatim (« Gorge-de-Fer » pour
-        /// `iron_throat` : seule correspondance qui recouvre exactement les 4 noms de la
-        /// maquette avec les 4 clés du domaine POST). `default: throw` : cet écran n'appelle ce
-        /// résolveur QUE sur les 4 clés qu'il énumère lui-même (`DomaineFamilles`), jamais sur une
-        /// valeur SERVIE par le back — un throw ici ne peut donc se déclencher que sur une faute
-        /// d'orthographe dans CE fichier, jamais sur une divergence avec le back (contrairement à
-        /// `LoiResolvers.TierLabelCourt`, qui reçoit lui une valeur servie et garde un repli
-        /// gracieux pour cette raison).</summary>
+        /// <summary>Le nom affiché de chaque famille — clés servies `conflit.bloc.<nom>` (m-65 ; D11 : le nom accompagne la
+        /// famille). Hors des 4 ⇒ « type inconnu », comme tout résolveur de SORTE (`Repli`) — jamais la clé brute, jamais
+        /// une exception : la couverture du domaine est gardée par un test.</summary>
         public static string NomFamille(string cle)
         {
             switch (cle)
@@ -732,10 +724,16 @@ namespace MafiaCleanCity.Operational
                 case "tarcum": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "Tarcum");
                 case "iron_throat": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "Gorge-de-Fer");
                 case "saltline": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "Saltline");
-                default: throw new System.ArgumentOutOfRangeException(nameof(cle), cle,
-                    "ConflitResolvers.NomFamille : clé hors du domaine des 4 familles connues.");
+                default: return MafiaCleanCity.I18n.Repli.Type(cle);
             }
         }
+
+        /// <summary>㉙ — « N fois » : le compte des envois rentrés chez une famille, clé ICU `conflit.bloc.fois_chez_eux` (table 40).
+        /// Appelé à partir de 1 seulement (à 0, l'écran dit « on ne les a pas croisés »). Le repli est le MÊME motif ICU,
+        /// formaté par `Libelle` comme la valeur servie.</summary>
+        public static string FoisChezEux(int n) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.fois_chez_eux", "{n, plural, =0 {jamais} one {# fois} other {# fois}}",
+                new Dictionary<string, string> { { "n", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
 
         /// <summary>㉙ — l'issue d'un envoi (`outcome_bucket`), mots de l'atelier table 40 (997d6ab4) ; clé tirée de la VALEUR
         /// servie (`conflit.issue.<valeur>`). Domaine `COMBAT_OUTCOME_BUCKETS` (5). ⚠️ null (envoi `scheduled`, pas encore
@@ -782,7 +780,7 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>㉙ — le nom SERVI de la famille visée (`target_rival_name_i18n`, gabarit `{nom}`). null si la référence
         /// manque (JsonUtility : `key` vide) ou si le back sert sa sentinelle hors domaine `unknown_<clé>` — une valeur
-        /// machine ne s'affiche jamais ; l'appelant compte alors l'envoi parmi les familles inconnues.</summary>
+        /// machine ne s'affiche jamais.</summary>
         public static string NomServi(RivalNomI18nDto nom)
         {
             if (nom == null || string.IsNullOrEmpty(nom.key)) return null;
@@ -814,20 +812,5 @@ namespace MafiaCleanCity.Operational
         /// disparu) ou ne le sert pas encore : le nom s'OMET, sans mot de repli (arbitrage de l'orchestrateur, 23/09).</summary>
         public static string NomDuLieutenant(EngagementLieutenantDto lieutenant) =>
             lieutenant == null || string.IsNullOrWhiteSpace(lieutenant.name) ? null : lieutenant.name;
-
-        /// <summary>Le sous-titre de chaque famille — m-65, verbatim. Même garde et même raison
-        /// que `NomFamille`.</summary>
-        public static string SousTitreFamille(string cle)
-        {
-            switch (cle)
-            {
-                case "coil": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "les ferrailleurs de Spine");
-                case "tarcum": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "le port, et ce qui y entre");
-                case "iron_throat": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "les docks du nord");
-                case "saltline": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "la ligne de sel, à l’est");
-                default: throw new System.ArgumentOutOfRangeException(nameof(cle), cle,
-                    "ConflitResolvers.SousTitreFamille : clé hors du domaine des 4 familles connues.");
-            }
-        }
     }
 }

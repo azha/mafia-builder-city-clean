@@ -205,8 +205,8 @@ namespace MafiaCleanCity.Operational.Tests
                 "Aucun de vos lieutenants n'est du genre Gros bras.",
                 "le message d'impossibilité (« le cœur de ce lot ») n'est pas rendu alors qu'aucun " +
                 "MUSCLE n'existe");
-            CollectionAssert.Contains(ecran.RenderedTexts, "on n'y est jamais allés",
-                "la vendetta vide n'affiche pas le message honnête attendu pour au moins une famille");
+            CollectionAssert.Contains(ecran.RenderedTexts, "on ne les a pas croisés",
+                "aucun envoi rentré : la ligne de la table 40 (conflit.bloc.on_ne_les_a_pas_croises) doit être rendue");
         }
 
         // ═══ E — États pilotés par la donnée (RendrePourTest, patron ㊲/㉛/㉘ §5) ═════════════════
@@ -271,7 +271,7 @@ namespace MafiaCleanCity.Operational.Tests
         }
 
         [UnityTest]
-        public IEnumerator EcranConflitE3_VendettaGroupeeParFamille_EtFamilleInconnueSignalee()
+        public IEnumerator EcranConflitE3_LesRentresSeulsSeComptent_ParFamille_ZeroDitOnNeLesAPasCroises()
         {
             var ecran = MonterEcran();
             ecran.RendrePourTest(
@@ -281,66 +281,111 @@ namespace MafiaCleanCity.Operational.Tests
                     engagements = new[]
                     {
                         Envoi("e1", "tarcum", "Tarcum", "resolved", "advance", "low", "medium"),
-                        Envoi("e2", "tarcum", "Tarcum", "scheduled", "", "", "medium"),
-                        Envoi("e3", "coil", "La Coil", "resolved", "hold", "high", "medium"),
-                        Envoi("e4", "une_5e_famille_jamais_annoncee", "unknown_une_5e_famille_jamais_annoncee",
+                        Envoi("e2", "tarcum", "Tarcum", "resolved", "hold", "medium", "medium"),
+                        Envoi("e3", "tarcum", "Tarcum", "scheduled", "", "", "medium"),
+                        Envoi("e4", "coil", "La Coil", "resolved", "hold", "high", "medium"),
+                        Envoi("e5", "iron_throat", "Gorge-de-Fer", "scheduled", "", "", "medium"),
+                        Envoi("e6", "une_5e_famille_jamais_annoncee", "unknown_une_5e_famille_jamais_annoncee",
                               "resolved", "contested", "medium", "medium"),
                     },
                 });
             yield return null;
 
-            CollectionAssert.Contains(ecran.RenderedTexts, "on y est allés 2 fois",
-                "le compte groupé par target_rival_key='tarcum' (2 entrées fabriquées) est faux");
-            CollectionAssert.Contains(ecran.RenderedTexts, "on y est allés 1 fois",
-                "le compte groupé par target_rival_key='coil' (1 entrée fabriquée) est faux");
-            CollectionAssert.Contains(ecran.RenderedTexts, "on n'y est jamais allés",
-                "saltline/iron_throat (0 entrée fabriquée) devraient rester à zéro, honnêtement");
-            CollectionAssert.Contains(ecran.RenderedTexts,
-                "1 envoi vise une famille hors des quatre connues — non affiché ci-dessus.",
-                "une clé hors domaine ne doit pas être silencieusement perdue par le comptage");
+            Assert.AreEqual("2 fois", TexteDe(ecran, "Famille_tarcum", "Fois"),
+                "tarcum : 2 envois RENTRÉS ; le 3ᵉ, parti, n'y est pas encore allé (arbitrage du 23/09)");
+            Assert.AreEqual("on est allés chez eux", TexteDe(ecran, "Famille_tarcum", "Visites"));
+            Assert.AreEqual("1 fois", TexteDe(ecran, "Famille_coil", "Fois"), "`one {# fois}` de l'ICU");
+            Assert.IsNull(TexteDe(ecran, "Famille_iron_throat", "Fois"),
+                "iron_throat : un seul envoi, PARTI ⇒ 0 rentré ⇒ pas de compte (l'ICU ne sert qu'à partir de 1)");
+            Assert.AreEqual("on ne les a pas croisés", TexteDe(ecran, "Famille_iron_throat", "Visites"));
+            Assert.AreEqual("on ne les a pas croisés", TexteDe(ecran, "Famille_saltline", "Visites"));
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "jamais", "à 0, pas de doublon « jamais » + « on ne les a pas croisés »");
+            foreach (string t in ecran.RenderedTexts)
+                StringAssert.DoesNotContain("une_5e_famille", t, "une famille hors domaine ne s'affiche nulle part, ni sa sentinelle");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "les ferrailleurs de Spine",
+                "sous-titres de lore retirés : aucune clé dans la table 40 (arbitrage du 23/09, point 19)");
         }
 
-        // ═══ R — Résolveurs : domaine ANNONCÉ CLOS, contrôle positif ET négatif ═══════════════
+        [UnityTest]
+        public IEnumerator EcranConflitE4_CompteIndisponible_AucuneLigneDeCompte()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(new GetLieutenantsResponseDto { lieutenants = new LieutenantRowDto[0] }, null);
+            yield return null;
+
+            CollectionAssert.Contains(ecran.RenderedTexts, "Le compte des envois précédents n'a pas répondu.");
+            foreach (string cle in ConflitResolvers.DomaineFamilles)
+            {
+                Assert.IsNull(TexteDe(ecran, "Famille_" + cle, "Visites"), cle + " : un compte à zéro mentirait quand la route n'a pas répondu");
+                Assert.IsNull(TexteDe(ecran, "Famille_" + cle, "Fois"));
+            }
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "compte indisponible", "l'ancien littéral hors Libelle est retiré");
+        }
+
+        /// <summary>Le texte du nœud `enfant` sous la ligne `ligne` de la table, ou null s'il n'existe pas. Cherché sous
+        /// `ConflitRoot` (`RacineEcran`) : hors shell, l'écran bâtit sous un Canvas découvert, pas sous son hôte.</summary>
+        private string TexteDe(ConflitScreenController ecran, string ligne, string enfant)
+        {
+            foreach (TMPro.TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (t.name == enfant && t.transform.parent != null
+                    && (t.transform.parent.name == ligne || (t.transform.parent.parent != null && t.transform.parent.parent.name == ligne)))
+                    return t.text;
+            return null;
+        }
+
+        // ═══ R — Résolveurs : couverture du domaine des 4 familles ═══════════════════════════
         //
-        // `target_rival_key` est annoncé clos par l'orchestrateur (coil|tarcum|iron_throat|
-        // saltline), NON reproduit ici par un message d'erreur back (voir `ConflitDtos.cs`) —
-        // c'est pourquoi `ConflitResolvers.NomFamille`/`SousTitreFamille` portent un
-        // `default: throw` MALGRÉ cette réserve : ils ne sont appelés QUE sur les 4 clés que
-        // l'écran énumère lui-même. Contrôle positif (les 4 valeurs connues résolvent) ET négatif
-        // (une 5ᵉ valeur est BRUYANTE, pas absorbée en silence) — sans le second, le premier ne
-        // prouve pas que le repli existe, seulement que les cas heureux marchent.
+        // `target_rival_key` est clos côté back (enum Postgres `rival_key`, `RIVAL_DISPLAY_NAME` à 4 entrées) et une famille
+        // hors domaine est refusée au POST (404). Hors domaine, `NomFamille` rend « type inconnu » comme tout résolveur de
+        // SORTE — jamais la clé brute, jamais une exception.
         [Test]
-        public void EcranConflitR1_ResolveurNomFamille_CouvreLesQuatreValeursAnnoncees()
+        public void EcranConflitR1_ResolveurNomFamille_CouvreLesQuatreValeurs()
         {
             Assert.AreEqual("La Coil", ConflitResolvers.NomFamille("coil"));
             Assert.AreEqual("Tarcum", ConflitResolvers.NomFamille("tarcum"));
             Assert.AreEqual("Gorge-de-Fer", ConflitResolvers.NomFamille("iron_throat"));
             Assert.AreEqual("Saltline", ConflitResolvers.NomFamille("saltline"));
+            var vus = new HashSet<string>();
+            foreach (string cle in ConflitResolvers.DomaineFamilles)
+                Assert.IsTrue(vus.Add(ConflitResolvers.NomFamille(cle)), "deux familles ne partagent pas un nom : " + cle);
         }
 
         [Test]
-        public void EcranConflitR2_ResolveurNomFamille_RejetteUneValeurHorsDomaineAnnonce()
+        public void EcranConflitR2_ResolveurNomFamille_UneCinquiemeValeurTombeDansTypeInconnu()
         {
-            Assert.Throws<System.ArgumentOutOfRangeException>(
-                () => ConflitResolvers.NomFamille("BOGUS_5E_VALEUR"),
-                "une valeur hors du domaine annoncé (coil|tarcum|iron_throat|saltline) doit être " +
-                "BRUYANTE, jamais absorbée en silence par un repli connu");
+            Assert.AreEqual("type inconnu", ConflitResolvers.NomFamille("BOGUS_5E_VALEUR"),
+                "une 5ᵉ valeur fabriquée tombe dans le mot de la famille, comme partout");
+            Assert.AreEqual("—", ConflitResolvers.NomFamille(""), "absente : « — »");
         }
 
         [Test]
-        public void EcranConflitR3_ResolveurSousTitreFamille_CouvreLesQuatreValeursAnnoncees()
+        public void EcranConflitR3_FoisChezEux_LeReplIcuSeFormate_EtLaValeurServieLEmporte()
         {
-            Assert.AreEqual("les ferrailleurs de Spine", ConflitResolvers.SousTitreFamille("coil"));
-            Assert.AreEqual("le port, et ce qui y entre", ConflitResolvers.SousTitreFamille("tarcum"));
-            Assert.AreEqual("les docks du nord", ConflitResolvers.SousTitreFamille("iron_throat"));
-            Assert.AreEqual("la ligne de sel, à l’est", ConflitResolvers.SousTitreFamille("saltline"));   // D10 : l’apostrophe typographique du code
+            Assert.AreEqual("1 fois", ConflitResolvers.FoisChezEux(1), "repli ICU `one` — sans catalogue");
+            Assert.AreEqual("7 fois", ConflitResolvers.FoisChezEux(7), "repli ICU `other`, `#` remplacé");
+            StringAssert.DoesNotContain("{", ConflitResolvers.FoisChezEux(2), "jamais d'accolade ICU à l'écran");
+
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                { "conflit.bloc.fois_chez_eux", "{n, plural, =0 {jamais} one {une fois} other {# fois servies}}" },
+            });
+            Assert.AreEqual("une fois", ConflitResolvers.FoisChezEux(1), "servie : la valeur du catalogue l'emporte sur le repli");
+            Assert.AreEqual("3 fois servies", ConflitResolvers.FoisChezEux(3));
         }
 
         [Test]
-        public void EcranConflitR4_ResolveurSousTitreFamille_RejetteUneValeurHorsDomaineAnnonce()
+        public void EcranConflitR4_CompterRentres_NeCompteQueLesRentresDuDomaine()
         {
-            Assert.Throws<System.ArgumentOutOfRangeException>(
-                () => ConflitResolvers.SousTitreFamille("BOGUS_5E_VALEUR"));
+            Dictionary<string, int> c = ConflitScreenController.CompterRentres(new[]
+            {
+                Envoi("a", "saltline", "Saltline", "resolved", "retreat", "low", "medium"),
+                Envoi("b", "saltline", "Saltline", "scheduled", "", "", "medium"),
+                Envoi("c", "bogus", "unknown_bogus", "resolved", "hold", "low", "medium"),
+                null,
+            });
+            Assert.AreEqual(1, c["saltline"]);
+            Assert.IsFalse(c.ContainsKey("bogus"));
+            Assert.AreEqual(0, ConflitScreenController.CompterRentres(null).Count);
         }
 
         /// <summary>Un envoi à 7 clés servies (forme `EngagementView`), pour les états pilotés par la donnée.</summary>

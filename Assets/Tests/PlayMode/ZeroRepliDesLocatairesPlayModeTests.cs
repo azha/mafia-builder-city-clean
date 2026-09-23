@@ -83,6 +83,12 @@ namespace MafiaCleanCity.Operational.Tests
             "famille.fiabilite.a_moitie_fiable",
             "famille.fiabilite.fiable",
             "famille.fiabilite.decisif",
+            // ㉙ LA TABLE DES FAMILLES (2026-09-23) — 3 clés PROPOSÉES par l'atelier (table 40, 997d6ab4), NON servies au back d8e41362
+            // (vérifié sur `string_table.ts` à d8e41362 : 0 sur 3). L'arrivée (aucun envoi rentré) rend la première ; les deux
+            // autres dès qu'un envoi est rentré.
+            "conflit.bloc.on_ne_les_a_pas_croises",
+            "conflit.bloc.on_est_alles_chez_eux",
+            "conflit.bloc.fois_chez_eux",
         };
 
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>

@@ -125,12 +125,15 @@ namespace MafiaCleanCity.I18n
             return Remplir(repli, parametres);
         }
 
+        /// <summary>Le repli se formate comme la valeur servie (`IcuFormat`, le même que `I18nCatalog.Traduire`) : un repli
+        /// ICU (`{n, plural, …}`, ㉙ `conflit.bloc.fois_chez_eux`) rendait sinon ses accolades telles quelles. Pour un `{nom}`
+        /// simple, même rendu qu'avant ; une valeur null devient "" (comportement d'avant, gardé).</summary>
         private static string Remplir(string gabarit, IDictionary<string, string> parametres)
         {
             if (gabarit == null || parametres == null) return gabarit;
-            foreach (KeyValuePair<string, string> kv in parametres)
-                gabarit = gabarit.Replace("{" + kv.Key + "}", kv.Value ?? string.Empty);
-            return gabarit;
+            var p = new Dictionary<string, string>();
+            foreach (KeyValuePair<string, string> kv in parametres) p[kv.Key] = kv.Value ?? string.Empty;
+            return IcuFormat.Formater(gabarit, p);
         }
 
         public static string CleDe(string domaine, string role, string litteral) =>
