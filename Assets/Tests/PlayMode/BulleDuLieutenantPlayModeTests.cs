@@ -94,5 +94,31 @@ namespace MafiaCleanCity.CityMap.Tests
             CollectionAssert.AreEqual(new[] { "Rien à faire ici.", "Repassez quand ce sera tiré" }, Textes(r, "Bloc"),
                 "le refus reste dit, lui : il n'est la voix de personne");
         }
+
+        [Test]
+        public void B4_LesRepliquesPartagentUneBulle_LesConstatsRestentDehors()
+        {
+            Transform r = Rendre(Lt("lt-b", "COOK"));
+            Transform bulle = r.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "BulleLieutenant");
+            Assert.IsNotNull(bulle, "le lieutenant parle dans un composant visuel dédié");
+            Assert.AreEqual(bulle, r.GetComponentsInChildren<Transform>(true).First(t => t.name == "Locuteur").parent);
+            Assert.IsTrue(r.GetComponentsInChildren<Transform>(true).Where(t => t.name == "Replique").All(t => t.parent == bulle),
+                "toutes les phrases du même locuteur restent dans la même bulle");
+            Assert.IsTrue(r.GetComponentsInChildren<Transform>(true).Where(t => t.name == "Bloc").All(t => t.parent != bulle),
+                "les constats du système ne sont pas attribués au lieutenant");
+            Assert.IsNotNull(bulle.GetComponent<UnityEngine.UI.Image>(), "la bulle a un fond, pas seulement un nom dans l'arbre");
+            Assert.IsNotNull(bulle.GetComponent<UnityEngine.UI.VerticalLayoutGroup>());
+
+            Transform pupitre = r.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "PupitreLaboratoire");
+            Assert.IsNotNull(pupitre, "un état de cuisson connu ouvre la composition du laboratoire");
+            Assert.IsNotNull(pupitre.Find("AppareilLaboratoire"));
+            Assert.AreEqual(pupitre, r.GetComponentsInChildren<Transform>(true).First(t => t.name == "Row_le_feu").parent);
+            Assert.AreEqual(pupitre, r.GetComponentsInChildren<Transform>(true).First(t => t.name == "Row_l_etagere").parent);
+            Assert.IsFalse(r.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_mise_en_place"),
+                "le pupitre actif ne répète pas la fiche technique générique");
+            CollectionAssert.Contains(Textes(r, "Section"), "LE PUPITRE");
+            Assert.IsFalse(r.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Action_ouvrir"),
+                "ouvrir/conversion ne parasite pas le geste appelé par la cuisson");
+        }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -81,6 +82,20 @@ namespace MafiaCleanCity.Operational.Tests
             }
             Assert.IsNull(controller.AuthError, $"sign-in errored: {controller.AuthError}");
             Assert.IsTrue(controller.IsAuthenticated, "controller signed in (Bearer acquired)");
+        }
+
+        private BuildingCardController NewCaptureController(out Canvas canvas, int largeur, int hauteur)
+        {
+            controllerGo = new GameObject("BuildingCardCaptureCanvas",
+                typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            canvas = controllerGo.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.WorldSpace;
+            ((RectTransform)controllerGo.transform).sizeDelta = new Vector2(largeur, hauteur);
+            var controller = controllerGo.AddComponent<BuildingCardController>();
+            controller.SetBaseUrl(LocalStack);
+            controller.BuildingId = "";
+            controller.SetMountParent(controllerGo.transform);
+            return controller;
         }
 
         private static void AssertNoRawScalar(System.Collections.Generic.IReadOnlyList<string> texts)
@@ -233,15 +248,7 @@ namespace MafiaCleanCity.Operational.Tests
         {
             const int largeur = 1080;
             const int hauteur = 2400;
-            controllerGo = new GameObject("AshLuxuryCaptureCanvas",
-                typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            var canvas = controllerGo.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.WorldSpace;
-            ((RectTransform)controllerGo.transform).sizeDelta = new Vector2(largeur, hauteur);
-            var controller = controllerGo.AddComponent<BuildingCardController>();
-            controller.SetBaseUrl(LocalStack);
-            controller.BuildingId = "";
-            controller.SetMountParent(controllerGo.transform);
+            var controller = NewCaptureController(out Canvas canvas, largeur, hauteur);
             yield return SignInController(controller);
             yield return I18nCatalog.Amorcer(new I18nClient { BaseUrl = LocalStack }, controller.Token);
             Assert.IsTrue(I18nCatalog.Charge, "le catalogue réel est chargé avant la capture — aucune clé brute publiée");
@@ -255,6 +262,36 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(controller.PurityBandShown, "purity row shown for the screenshot");
             for (int i = 0; i < 3; i++) yield return null;
             yield return CaptureTo(canvas, largeur, hauteur, "ash_luxury_specialized_lab.png");
+        }
+
+        [UnityTest]
+        [Category("PhotoFicheBatiment")]
+        public IEnumerator CapturePupitreLieutenantScreenshot()
+        {
+            const int largeur = 1080;
+            const int hauteur = 2400;
+            var controller = NewCaptureController(out Canvas canvas, largeur, hauteur);
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                ["game.fiction.building.name"] = "{enseigne} — {district}, îlot {block}"
+            });
+            controller.RendrePourTest(new BuildingCardDto
+            {
+                building = "b-lab",
+                name_i18n = new BuildingNameI18nDto
+                {
+                    key = "game.fiction.building.name",
+                    @params = new BuildingNameParamsDto { enseigne = "Laboratoire Orso", district = "La Lisière", block = "1402" }
+                },
+                setup_state = "OPERATIONAL", cover_band = "STANDARD", operational = true, operational_type = "lab",
+                structural_state = "OPERATIONAL", seized_amount = "NONE", repair_cost = "NONE", raid_risk = "LOW", lab_tier_band = "NONE"
+            },
+            storage: new StorageDto { building = "b-lab", substance_type = "BRINDLE", product_band = "LOW" },
+            lab: new LabCookDto { building = "b-lab", cook_stage_band = "MID" },
+            precursors: new GetOperationalPrecursorsResponseDto { building = "b-lab", stock_band = "MEDIUM", precursor_type = "PYRALIN" },
+            lieutenant: new LieutenantRowDto { lieutenant_id = "lt-cook", archetype = "COOK", name = "Nom volontairement non affiché" });
+            for (int i = 0; i < 3; i++) yield return null;
+            yield return CaptureTo(canvas, largeur, hauteur, "building_card_pupitre_lieutenant.png");
         }
 
         private static IEnumerator CaptureTo(Canvas canvas, int largeur, int hauteur, string fileName)

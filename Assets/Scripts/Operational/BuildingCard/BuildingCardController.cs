@@ -716,10 +716,11 @@ namespace MafiaCleanCity.Operational
 
             bool ecrinAshActif = card.operational_type == "specialized_lab"
                 && CurrentAppointment != null && !string.IsNullOrEmpty(CurrentAppointment.status);
+            bool pupitreActif = !ecrinAshActif && APupitre(card.operational_type) && CurrentLab != null;
 
             // Status rows — each line: glyph (shape) + label + qualitative band value.
             // F2: shape glyph is present alongside colour (colour is never the sole carrier).
-            if (!ecrinAshActif)
+            if (!ecrinAshActif && !pupitreActif)
             {
                 AddStatusRow("mise_en_place", "Mise en place", SetupLabel(card.setup_state), SetupAccent(card.setup_state));
                 AddStatusRow("en_service", "En service", card.operational ? "oui" : "non", card.operational ? AccentMild : AccentSevere);
@@ -751,24 +752,25 @@ namespace MafiaCleanCity.Operational
                 if (card.recently_raided)
                     AddStatusRow("stock_saisi", "Saisie", SeizedLabel(card.seized_amount),
                         card.seized_amount == "NONE" ? AccentModerate : AccentSevere);
+            }
 
             // ----- ② lot 1 (2026-09-23) : LE PUPITRE — trois échelles de crans, « le feu » sur 5, « l'étagère » sur 4, « les caisses »
             // sur 4 ; le premier cran est TOUJOURS allumé (écart ② `c4520078`, cadres 39-44, bloc B2). Le pupitre suit le TYPE (tranché (a)
             // du 23/09) : `lab` et `specialized_lab`. Chaque échelle porte son MOT à côté des crans (la couleur n'est jamais seule). Une
             // échelle dont la donnée n'est pas arrivée n'est pas dessinée : un cran allumé affirmerait un état qu'on n'a pas reçu.
-                if (APupitre(card.operational_type))
-                {
-                    if (CurrentLab != null)
-                        AddEchelle("le_feu", "le feu", CransDuFeu(CurrentLab.cook_stage_band), CransFeu,
-                            CookStageLabel(CurrentLab.cook_stage_band), CookStageAccent(CurrentLab.cook_stage_band));
-                    if (CurrentPrecursors != null)
-                        AddEchelle("l_etagere", "l’étagère", CransDuStock(CurrentPrecursors.stock_band), CransStock,
-                            StockLabel(CurrentPrecursors.stock_band), EtagereAccent(CurrentPrecursors.stock_band));
-                    // ⚠️ `product_band` ARRIVAIT déjà (RefreshStorage) et n'était jamais lu (écart ② cadre 39 B2).
-                    if (CurrentStorage != null)
-                        AddEchelle("les_caisses", "les caisses", CransDuStock(CurrentStorage.product_band), CransStock,
-                            StockLabel(CurrentStorage.product_band), CaissesAccent(CurrentStorage.product_band));
-                }
+            if (!ecrinAshActif && APupitre(card.operational_type))
+            {
+                Transform parentPupitre = pupitreActif ? AddPupitreLaboratoire() : statusRows;
+                if (CurrentLab != null)
+                    AddEchelle("le_feu", "le feu", CransDuFeu(CurrentLab.cook_stage_band), CransFeu,
+                        CookStageLabel(CurrentLab.cook_stage_band), CookStageAccent(CurrentLab.cook_stage_band), parentPupitre);
+                if (CurrentPrecursors != null)
+                    AddEchelle("l_etagere", "l’étagère", CransDuStock(CurrentPrecursors.stock_band), CransStock,
+                        StockLabel(CurrentPrecursors.stock_band), EtagereAccent(CurrentPrecursors.stock_band), parentPupitre);
+                // ⚠️ `product_band` ARRIVAIT déjà (RefreshStorage) et n'était jamais lu (écart ② cadre 39 B2).
+                if (CurrentStorage != null)
+                    AddEchelle("les_caisses", "les caisses", CransDuStock(CurrentStorage.product_band), CransStock,
+                        StockLabel(CurrentStorage.product_band), CaissesAccent(CurrentStorage.product_band), parentPupitre);
             }
 
             // ----- Phase-2b vector #2 (Crick) cold-chain surface — ONLY when the storage projection carries a
@@ -992,7 +994,9 @@ namespace MafiaCleanCity.Operational
             for (int i = actionBar.childCount - 1; i >= 0; i--)
                 Object.Destroy(actionBar.GetChild(i).gameObject);
 
-            string label = NewSectionLabel(actionBar, "ACTIONS");
+            bool pupitreFocal = APupitre(card.operational_type) && CurrentLab != null
+                && (CurrentAppointment == null || string.IsNullOrEmpty(CurrentAppointment.status));
+            string label = NewSectionLabel(actionBar, pupitreFocal ? "LE PUPITRE" : "ACTIONS");
             TrackText(null, label);
 
             // Phase-2b: the Repair affordance — visible ONLY when the building is DAMAGED. It shows the repair
@@ -1209,8 +1213,10 @@ namespace MafiaCleanCity.Operational
                     break;
             }
 
-            // A Convert affordance is always offered (no-op if already operational — backend 409s cleanly).
-            AddActionButton(actionBar, "ouvrir", "Ouvrir", () => StartCoroutine(Convert(card.operational_type)));
+            // Hors des compositions focales, une ouverture/conversion reste disponible. Dans le pupitre actif, ce bouton
+            // sans rapport avec l'état de cuisson brouillait le seul geste appelé par les bandes servies.
+            if (!pupitreFocal)
+                AddActionButton(actionBar, "ouvrir", "Ouvrir", () => StartCoroutine(Convert(card.operational_type)));
 
             actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAlignmentOptions.Left);
             actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;
@@ -2169,6 +2175,63 @@ namespace MafiaCleanCity.Operational
             return row;
         }
 
+        /// <summary>② pupitre — composition dédiée quand l'état de cuisson est connu. Elle remplace les six lignes
+        /// génériques dans ce moment précis, sans les supprimer de la fiche ordinaire.</summary>
+        private Transform AddPupitreLaboratoire()
+        {
+            GameObject pupitre = NewUI("PupitreLaboratoire", statusRows);
+            pupitre.AddComponent<Image>().color = new Color32(17, 22, 29, 255);
+            var disposition = pupitre.AddComponent<VerticalLayoutGroup>();
+            disposition.padding = new RectOffset(14, 14, 14, 14);
+            disposition.spacing = 8;
+            disposition.childControlWidth = true;
+            disposition.childControlHeight = true;
+            disposition.childForceExpandWidth = true;
+            disposition.childForceExpandHeight = false;
+            var ajusteur = pupitre.AddComponent<ContentSizeFitter>();
+            ajusteur.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            ajusteur.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            AddLayoutElement(pupitre, flexibleHeight: 0);
+            AddAppareilLaboratoire(pupitre.transform);
+            return pupitre.transform;
+        }
+
+        /// <summary>Silhouette du fourneau en primitives UI. Elle situe le pupitre sans prétendre illustrer une mesure :
+        /// les trois bandes servies restent les seules porteuses d'état.</summary>
+        private static void AddAppareilLaboratoire(Transform parent)
+        {
+            GameObject scene = NewUI("AppareilLaboratoire", parent);
+            scene.AddComponent<Image>().color = new Color32(13, 18, 24, 255);
+            AddLayoutElement(scene, minHeight: 180, preferredHeight: 180, flexibleHeight: 0);
+
+            void Rectangle(string nom, Vector2 taille, Vector2 position, Color couleur, float angle = 0f)
+            {
+                GameObject go = NewUI(nom, scene.transform);
+                RectTransform rt = (RectTransform)go.transform;
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = taille;
+                rt.anchoredPosition = position;
+                rt.localRotation = Quaternion.Euler(0, 0, angle);
+                go.AddComponent<Image>().color = couleur;
+            }
+
+            Color verre = new Color(0.77f, 0.88f, 0.93f, 0.88f);
+            Color acier = new Color32(82, 96, 108, 255);
+            Color liquide = new Color(0.78f, 0.55f, 0.20f, 0.92f);
+            Rectangle("EtagereHaute", new Vector2(430, 7), new Vector2(0, 66), acier);
+            Rectangle("EtagereBasse", new Vector2(430, 9), new Vector2(0, -70), acier);
+            Rectangle("Ballon", new Vector2(105, 105), new Vector2(-92, -10), new Color(verre.r, verre.g, verre.b, 0.22f));
+            Rectangle("ColBallon", new Vector2(28, 72), new Vector2(-92, 52), verre);
+            Rectangle("LiquideBallon", new Vector2(88, 28), new Vector2(-92, -40), liquide);
+            Rectangle("Condenseur", new Vector2(145, 26), new Vector2(12, 24), verre, -22f);
+            Rectangle("TubeInterieur", new Vector2(124, 7), new Vector2(12, 24), new Color(0.35f, 0.85f, 0.88f, 0.9f), -22f);
+            Rectangle("Fiole", new Vector2(72, 92), new Vector2(112, -22), new Color(verre.r, verre.g, verre.b, 0.30f));
+            Rectangle("ColFiole", new Vector2(32, 42), new Vector2(112, 42), verre);
+            Rectangle("LiquideFiole", new Vector2(58, 18), new Vector2(112, -48), liquide);
+            Rectangle("Thermometre", new Vector2(12, 92), new Vector2(-145, 20), verre);
+            Rectangle("Mercure", new Vector2(5, 58), new Vector2(-145, 5), AccentSevere);
+        }
+
         /// <summary>② écrin Ash — groupe visuel autonome : la composition suit les cadres 92–94 sans transformer
         /// une donnée absente en fiction. Le lieu du rendez-vous n'est pas servi, donc aucun nom de salon n'est inventé.</summary>
         private Transform AddEcrinAsh()
@@ -2380,6 +2443,7 @@ namespace MafiaCleanCity.Operational
         {
             bool ash = card.operational_type == "specialized_lab";
             locuteurPose = false;
+            bulleLieutenant = null;
             GesteDuPupitre geste = GesteSelonLEtat(CurrentLab?.cook_stage_band, CurrentPrecursors?.stock_band,
                 ApprovisionnementDelegue(CurrentTaskCategories));
             GesteDuPupitreAffiche = geste;
@@ -2429,6 +2493,7 @@ namespace MafiaCleanCity.Operational
         }
 
         private bool locuteurPose;
+        private Transform bulleLieutenant;
 
         /// <summary>② bulle — une réplique du lieutenant : l'archétype du locuteur en tête (une fois par rendu), puis la réplique. Sans
         /// lieutenant connu, RIEN : on ne fait pas parler quelqu'un qui n'est pas là.</summary>
@@ -2438,22 +2503,45 @@ namespace MafiaCleanCity.Operational
             if (!locuteurPose)
             {
                 locuteurPose = true;
-                TextMeshProUGUI qui = NewText("Locuteur", actionBar, FamilleLabels.Archetype(CurrentLieutenant.archetype), 12, TextAlignmentOptions.Left);
-                qui.color = DesignTokens.Current.onSurfaceMuted;
+                GameObject bulle = NewUI("BulleLieutenant", actionBar);
+                bulle.AddComponent<Image>().color = new Color32(22, 28, 36, 255);
+                var disposition = bulle.AddComponent<VerticalLayoutGroup>();
+                disposition.padding = new RectOffset(14, 14, 12, 12);
+                disposition.spacing = 7;
+                disposition.childControlWidth = true;
+                disposition.childControlHeight = true;
+                disposition.childForceExpandWidth = true;
+                disposition.childForceExpandHeight = false;
+                var ajusteur = bulle.AddComponent<ContentSizeFitter>();
+                ajusteur.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+                ajusteur.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+                AddLayoutElement(bulle, flexibleHeight: 0);
+                bulleLieutenant = bulle.transform;
+
+                TextMeshProUGUI qui = NewText("Locuteur", bulleLieutenant,
+                    FamilleLabels.Archetype(CurrentLieutenant.archetype), 13, TextAlignmentOptions.Left);
+                qui.color = new Color32(218, 183, 112, 255);
                 qui.fontStyle = FontStyles.Bold;
-                AddLayoutElement(qui.gameObject, minHeight: 16, flexibleHeight: 0);
+                qui.characterSpacing = 4f;
+                AddLayoutElement(qui.gameObject, minHeight: 18, flexibleHeight: 0);
                 TrackText(qui, qui.text);
             }
-            AddLigneDuGeste("Replique", texte);
+            AddLigneDuGeste("Replique", texte, bulleLieutenant);
         }
 
         /// <summary>Une ligne de texte du geste (bloc ou réplique) sous la barre d'actions.</summary>
-        private void AddLigneDuGeste(string nom, string texte)
+        private void AddLigneDuGeste(string nom, string texte, Transform parent = null)
         {
-            TextMeshProUGUI t = NewText(nom, actionBar, texte, 13, TextAlignmentOptions.Left);
+            if (parent == null) parent = actionBar;
+            TextMeshProUGUI t = NewText(nom, parent, texte, 13, TextAlignmentOptions.Left);
             t.color = DesignTokens.Current.onSurfaceSecondaryAlt;
-            if (nom == "Replique") t.fontStyle = FontStyles.Italic;
-            AddLayoutElement(t.gameObject, minHeight: 18, flexibleHeight: 0);
+            if (nom == "Replique")
+            {
+                t.fontStyle = FontStyles.Italic;
+                t.textWrappingMode = TextWrappingModes.Normal;
+                t.overflowMode = TextOverflowModes.Overflow;
+            }
+            AddLayoutElement(t.gameObject, minHeight: nom == "Replique" ? 34 : 18, flexibleHeight: 0);
             TrackText(t, texte);
         }
 
