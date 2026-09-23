@@ -33,7 +33,7 @@
 
 | fichier (dans ce dossier) | rôle | taille px | facteur | largeur CSS ↔ largeur écran |
 |---|---|---|---|---|
-| `hud-canon-1176.png` | le canon du HUD (`hud-brennar.html`, `.tel` de 392 CSS × 3 = 1176 px) — c'est LA référence de ① ; aucun cadre de série 4/6 | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `ecran-canon-propre.png` | le canon du HUD (`hud-brennar.html`, `.tel` de 392 CSS × 3 = 1176 px) — c'est LA référence de ① ; aucun cadre de série 4/6 | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
 | `etats/*-canon.png`, `etats/*-vide.png` (s'ils existent) | canons antérieurs (série 2, ×3,0) — témoins d'ÉTAT, jamais la référence | 900×1752 | ×3,0 | 300 CSS = 900 px |
 
 - **Source HTML/CSS** (aide de lecture, ne prime JAMAIS sur l'image) : `/home/erutheone/project/atelier3d-mafia/hud-brennar.html` (atelier `868ab87`).
@@ -81,7 +81,7 @@
 | | | **rapport capture ÷ référence** | **1,00** |
 
 - Contenu : même échelle des deux côtés, un écart de taille est RÉEL. Le CHROME (bandeau, dock) n'est PAS à cette échelle :
-  `AppShell.Px(css) = css × 1280/392` (×2,755) — il se juge contre `hud-canon-1176.png`, le contenu contre le cadre de série 6.
+  `AppShell.Px(css) = css × 1280/392` (×2,755) — il se juge contre `ecran-canon-propre.png`, le contenu contre le cadre de série 6.
 - Hauteurs : référence 584 CSS (2102 px) ; capture 666,7 CSS (2400 px) — aligner par PARTIES entre bandeau et dock.
 - Les rapports INTERNES sont invariants d'échelle et restent des défauts réels.
 
@@ -100,7 +100,7 @@
 
 | ce qu'on voit | pourquoi (mesuré, avec sa source) | ce qui le ferait SORTIR de l'assumé |
 |---|---|---|
-| (à compléter par l'orchestrateur au top, depuis le `juge-donnees` mode maquette de l'écran s'il existe) | | |
+| la bande du nom de district sous la barre, absente du canon | front.md §4 L (ruling user du 25/08, doctrine v3.2 : « le lieu en bandeau sous la barre ») ; mesure atelier du 2026-09-23 : `hud-brennar.html` (5983267) n'a AUCUN nom de district dans `.tel` — la place sous la barre, `.bandeau-alerte{top:78px}` (l.82) / élément l.176 (390 × 33,81 CSS en (1, 79)), est celle du bandeau éphémère QUAND IL PARLE. Tranché par l'orchestrateur le 2026-09-23 : la bande de lieu reste et CÈDE la place au bandeau éphémère. | la bande reste affichée PENDANT que le bandeau éphémère parle (chevauchement ou décalage) ; ou un nom qui n'est pas `interior.name` |
 
 ## Format du RAPPORT — imposé
 

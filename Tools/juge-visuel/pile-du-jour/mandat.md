@@ -18,7 +18,7 @@
 | `pile-du-jour/reference-1080x2102.png` | cadre nominal `ecrans-brennar-4.html` #19 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
 | `pile-du-jour/ecran-canon-vide.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `pile-du-jour/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar-4.html` 19, 20, 21, 22, 23, 24 — atelier `64f678a`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-4.html` 19, 20, 21, 22, 23, 24 — atelier `9ee6783`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : déduite. série 4 cadres 19-24 « Pile du jour » ; canon pile-du-jour/v4-19..24.png
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

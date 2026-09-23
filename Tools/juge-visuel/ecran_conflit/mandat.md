@@ -16,7 +16,7 @@
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `ecran_conflit/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #59 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 59, 60, 61, 62, 63, 64, 65, 66 — atelier `64f678a`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 59, 60, 61, 62, 63, 64, 65, 66 — atelier `9ee6783`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : déduite. cadres 59-66 (la table du fond) par le titre ; rivaux en noms de fiction NON servis (§C-2)
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

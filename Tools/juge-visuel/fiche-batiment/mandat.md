@@ -16,7 +16,7 @@
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | — | aucune référence rendue (aucune maquette de série 4/6) | — | — | — |
-- **Cadres de la maquette** : aucune — atelier `64f678a`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Cadres de la maquette** : aucune — atelier `9ee6783`. Cadres d'ÉTATS : les autres numéros du groupe.
 - **Attribution cadre ↔ écran** : aucune. dossier juge-donnees existant, aucun dossier juge-visuel ; cadres labo/serre/ash (S6 36-47, 92-94) = variantes par type, non rattachées
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.

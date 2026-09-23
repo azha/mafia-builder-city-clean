@@ -12,8 +12,8 @@
  "atelier": "868ab87",
  "references": [
   [
-   "hud-canon-1176.png",
-   "le canon du HUD (`hud-brennar.html`, `.tel` de 392 CSS × 3 = 1176 px) — c'est LA référence de ① ; aucun cadre de série 4/6"
+   "ecran-canon-propre.png",
+   "le canon PROPRE du HUD (ARBITRAGES 07/09 point 17 : sans échafaudage, ronds vides (15), sans heure (16)), rendu en DejaVu (18) le 2026-09-23 — `hud-brennar-canon.html`, dérivé de `hud-brennar.html` ; c'est LA référence de ① ; aucun cadre de série 4/6"
   ]
  ],
  "cadres": {},
@@ -76,5 +76,12 @@
   "Times New Roman": "\"DejaVu Serif\" \"Book\"",
   "Segoe UI": "\"DejaVu Sans\" \"Book\""
  },
- "captures": []
+ "captures": [],
+ "ecarts_assumes": [
+  {
+   "ce_qu_on_voit": "la bande du nom de district sous la barre, absente du canon",
+   "pourquoi": "front.md §4 L (ruling user du 25/08, doctrine v3.2 : « le lieu en bandeau sous la barre ») ; mesure atelier du 2026-09-23 : `hud-brennar.html` (5983267) n'a AUCUN nom de district dans `.tel` — la place sous la barre, `.bandeau-alerte{top:78px}` (l.82) / élément l.176 (390 × 33,81 CSS en (1, 79)), est celle du bandeau éphémère QUAND IL PARLE. Tranché par l'orchestrateur le 2026-09-23 : la bande de lieu reste et CÈDE la place au bandeau éphémère.",
+   "sortie_de_l_assume": "la bande reste affichée pendant que le bandeau éphémère parle ; ou un nom qui n'est pas interior.name"
+  }
+ ]
 }

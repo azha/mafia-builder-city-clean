@@ -178,7 +178,7 @@ TABLE = [
 HORS_APPSHELL = [
  dict(sym="①", ctl="DistrictInteriorScreenController", dossier="ecran-principal", chemin="depuis la carte : ENTRER dans le quartier",
       cadres=[("hud-brennar.html", ["le HUD de Brennar"])], nominal=None, planche="screen_1_district_sous_chrome_1080x2400.png",
-      confiance="mesurée", note="hors canon (front.md ①) ; canon ecran-principal/ecran-canon.png + mesure-canon.txt"),
+      confiance="mesurée", note="ÉCART ASSUMÉ (2026-09-23, tranché par l'orchestrateur) : la bande du nom de district sous la barre est ABSENTE du canon (hud-brennar.html : aucun nom de district dans .tel ; la place l.82/l.176 est celle du bandeau éphémère QUAND IL PARLE) — elle reste, et CÈDE la place au bandeau ; sources : front.md §4 L (25/08, « le lieu en bandeau sous la barre ») et cette mesure. Ne pas la re-noter. — hors canon (front.md ①) ; canon ecran-principal/ecran-canon.png + mesure-canon.txt"),
  dict(sym="②", ctl="BuildingCardController", dossier="fiche-batiment", chemin="depuis l'intérieur de district : toucher un bâtiment",
       cadres=[], nominal=None, planche="screen_2a_fiche_sous_chrome_1080x2400.png",
       confiance="aucune", note="dossier juge-donnees existant, aucun dossier juge-visuel ; cadres labo/serre/ash (S6 36-47, 92-94) = variantes par type, non rattachées"),
