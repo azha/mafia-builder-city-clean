@@ -118,6 +118,22 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsFalse(PorteLEtiquetteEcart(4));
             var textes = GameObject.Find("FiliereRoot").GetComponentsInChildren<TMPro.TMP_Text>(true).Select(t => t.text).ToList();
             Assert.IsTrue(textes.Any(t => t == "La filière s’écarte de son profil"), "le panneau du cadre 138 est posé");
+
+            // La référence 137-141 est une CHAÎNE de cuves, pas quatre cartes de texte : chaque bande servie produit une jauge
+            // qualitative distincte et les quatre étapes sont reliées par exactement trois tuyaux.
+            GameObject racine = GameObject.Find("FiliereRoot");
+            Transform[] tous = racine.GetComponentsInChildren<Transform>(true);
+            Assert.AreEqual(4, tous.Count(t => t.name == "Cuve"), "une cuve par étape");
+            Assert.AreEqual(3, tous.Count(t => t.name.StartsWith("Connecteur")), "N étapes ⇒ N−1 connecteurs");
+            int[] niveauxAttendus = { 1, 2, 4, 4 };
+            for (int i = 1; i <= 4; i++)
+            {
+                Transform etape = tous.First(t => t.name == "Etape" + i);
+                Transform niveau = etape.Find("Cuve/Niveau");
+                Assert.IsNotNull(niveau, $"Etape{i} porte le niveau de sa cuve");
+                Assert.AreEqual(niveauxAttendus[i - 1], niveau.GetComponent<UnityEngine.UI.LayoutElement>().flexibleWidth, 0.001f,
+                    $"Etape{i} : la bande qualitative porte son cran, sans scalaire brut");
+            }
         }
 
         /// <summary>État FABRIQUÉ : une étape du pipeline n'a pas de `stage_index` dans la liste ⇒ l'ordre du SERVEUR est gardé

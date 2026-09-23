@@ -391,6 +391,7 @@ namespace MafiaCleanCity.Operational
             for (int i = 0; i < etapes.Length; i++)
             {
                 Etape(i + 1, etapes[i], enEcart(etapes[i]));
+                if (i < etapes.Length - 1) Connecteur(i + 1);
                 ordreAffiche.Add(etapes[i]?.node);
             }
 
@@ -416,7 +417,7 @@ namespace MafiaCleanCity.Operational
             GameObject go = NouveauUI("Etape" + rang, listeRoot);
             AjouterFond(go, DesignTokens.Current.surfaceCard);
             var le = go.AddComponent<LayoutElement>();
-            le.minHeight = Px(52f); le.preferredHeight = -1f; le.flexibleHeight = 0f;
+            le.minHeight = Px(66f); le.preferredHeight = -1f; le.flexibleHeight = 0f;
             var v = go.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset((int)Px(9f), (int)Px(9f), (int)Px(7f), (int)Px(7f));
             v.spacing = Px(2f);
@@ -429,6 +430,10 @@ namespace MafiaCleanCity.Operational
             string rangTexte = Lib("ÉTAPE") + "   " + rang.ToString("00");
             if (e != null && e.terminal) rangTexte += "   ·   " + Lib("LA SORTIE");
 
+            // Cadres 137-141 : chaque étape est d'abord une CUVE, pas seulement trois lignes de texte. Le serveur ne livre
+            // aucun volume : le remplissage représente donc exclusivement la BANDE qualitative (1/4…4/4), jamais un montant.
+            // Les quatre couleurs sont celles de la référence ratifiée ; hors domaine, une cuve neutre évite d'inventer un rang.
+            Cuve(go.transform, e != null ? e.cleanliness_band : null);
             NouveauTexte(go.transform, "Rang", rangTexte, Px(7f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             NouveauTexte(go.transform, "Titre", bande, Px(12f),
@@ -443,6 +448,65 @@ namespace MafiaCleanCity.Operational
                 e != null && e.has_cash ? Lib("de l'argent attend à cette étape")
                                         : Lib("rien n'attend à cette étape"),
                 Px(8f), DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+        }
+
+        /// <summary>La jauge qualitative d'une étape. Les quarts codent uniquement le membre de bande servi ; ils ne prétendent
+        /// jamais représenter les centimes présents, une durée ou un pourcentage brut (R2.2).</summary>
+        private void Cuve(Transform parent, string bande)
+        {
+            int niveau;
+            Color couleur;
+            switch (bande)
+            {
+                case "DIRTY":        niveau = 1; couleur = new Color32(0xDA, 0x4F, 0x45, 0xFF); break;
+                case "PARTIAL":      niveau = 2; couleur = new Color32(0xDA, 0x88, 0x37, 0xFF); break;
+                case "MOSTLY_CLEAN": niveau = 3; couleur = new Color32(0xCF, 0xAD, 0x5E, 0xFF); break;
+                case "CLEAN":        niveau = 4; couleur = new Color32(0x6B, 0x9A, 0x5D, 0xFF); break;
+                default:              niveau = 0; couleur = DesignTokens.Current.onSurfaceMuted; break;
+            }
+
+            GameObject cuve = NouveauUI("Cuve", parent);
+            AjouterFond(cuve, DesignTokens.Current.surfaceRaised);
+            LayoutElement le = cuve.AddComponent<LayoutElement>();
+            le.minHeight = Px(12f); le.preferredHeight = Px(12f); le.flexibleHeight = 0f;
+            HorizontalLayoutGroup h = cuve.AddComponent<HorizontalLayoutGroup>();
+            int bord = Mathf.Max(1, (int)PxTrait(2f));
+            h.padding = new RectOffset(bord, bord, bord, bord);
+            h.spacing = 0f;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = true; h.childForceExpandHeight = true;
+
+            GameObject plein = NouveauUI("Niveau", cuve.transform);
+            AjouterFond(plein, couleur);
+            LayoutElement lp = plein.AddComponent<LayoutElement>();
+            lp.flexibleWidth = niveau;
+
+            GameObject vide = NouveauUI("Reste", cuve.transform);
+            AjouterFond(vide, DesignTokens.Current.surfaceBase);
+            LayoutElement lv = vide.AddComponent<LayoutElement>();
+            lv.flexibleWidth = 4 - niveau;
+            if (niveau == 4) vide.SetActive(false);
+        }
+
+        /// <summary>Le tuyau entre deux cuves : pur dessin de chaîne, sans donnée ni action implicite.</summary>
+        private void Connecteur(int apresRang)
+        {
+            GameObject ligne = NouveauUI("Connecteur" + apresRang, listeRoot);
+            LayoutElement le = ligne.AddComponent<LayoutElement>();
+            le.minHeight = Px(6f); le.preferredHeight = Px(6f); le.flexibleHeight = 0f;
+            HorizontalLayoutGroup h = ligne.AddComponent<HorizontalLayoutGroup>();
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = true;
+            GameObject gauche = NouveauUI("MargeGauche", ligne.transform);
+            LayoutElement lg = gauche.AddComponent<LayoutElement>();
+            lg.flexibleWidth = 1f;
+            GameObject tuyau = NouveauUI("Tuyau", ligne.transform);
+            AjouterFond(tuyau, DesignTokens.Current.surfaceRaised);
+            LayoutElement lt = tuyau.AddComponent<LayoutElement>();
+            lt.minWidth = PxTrait(2f); lt.preferredWidth = PxTrait(2f); lt.flexibleWidth = 0f;
+            GameObject droite = NouveauUI("MargeDroite", ligne.transform);
+            LayoutElement ld = droite.AddComponent<LayoutElement>();
+            ld.flexibleWidth = 1f;
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
