@@ -179,3 +179,7 @@ transitivement : `Gabarit`, `AvecEnseigne`, `CompteEnLettres`), et la clé compo
 qui la garde. Direct 5 · flux 46 · vu 31 · union **53** ; à ajouter : les 5 clés `{enseigne}` (`exceptions.bloc.chez_enseigne`,
 `.reparer_enseigne`, `exceptions.apres.{repairing,repairing_slow,deferred}.enseigne`) ; rien à retirer. `exceptions.file.attendent_encore`
 et `exception_detail.bloc.escalate` sont SERVIES par 83b4f291 (vues par le flux C, pas en dette).
+
+## 53 → 0 (2026-09-23, pile reconstruite sur 368d1420 — 1112 clés, instantané versionné)
+`sites-libelle.py` : 455 sites, 0 non servie ; `sites-libelle-flux.py` : 49 sites A/B/C, 0 non servie (contrôle positif vert) ; les 53
+clés de la dette : toutes servies. `DetteDatee` vide — la garde des 25 locataires est un zéro strict.

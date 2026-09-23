@@ -33,69 +33,12 @@ namespace MafiaCleanCity.Operational.Tests
         private GameObject shellGo;
         private AppShell shell;
 
-        /// <summary>DETTE DATÉE : les clés que le code SAIT demander et que le back ne sert pas — contre la pile 83b4f291, sur l'arbre
-        /// d7b16069 (2026-09-23). 53 clés = UNION de `sites-libelle.py` (direct : 5), `sites-libelle-flux.py` (A : local assigné,
-        /// B : paramètre, C : clé entière passée à `Libelle.Gabarit` ou à une aide qui la lui transmet, et clé composée
-        /// `"a." + Slug(x) + ".b"` dépliée : 46) et de ce que CETTE garde a vu au rendu (3 runs du 23/09 : 31 non servies).
-        /// Histoire : 24 (statique direct, 40128b53) → 26 → 42 (flux A/B, l'état du compte ne décide plus) → 48 (merge ⑨/⑩ de
-        /// CLIENT-2) → 53 (Libelle.Gabarit rend visibles les 5 clés {enseigne}). Écrans : Appro, Distribution, Filière, Loi, ⑨, ⑩.
-        /// Elle ne s'allonge que par décision nommée ; elle RÉTRÉCIT quand le back sert (règle 2).</summary>
-        private static readonly HashSet<string> DetteDatee = new HashSet<string>
-        {
-            "appro.bloc.a_quoi_ca_sert",
-            "appro.bloc.ce_qu_il_en_reste",
-            "appro.bloc.des_maillons_existent_mais_cet_ecran_ne_sait_pas_encore_les_afficher",
-            "appro.bloc.la_commande",
-            "appro.bloc.le_fournisseur",
-            "appro.bloc.le_prix",
-            "appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas",
-            "appro.bloc.rien_a_remonter_pour_l_instant_la_chaine_ne_connait_aucun_maillon_sur_ce_compte",
-            "appro.bloc.votre_lieutenant_on_en_a_besoin_et_il_n_y_en_a_plus",
-            "appro.sous_titre.elle_est_payee_et_partie_il_n_y_a_plus_qu_a_attendre",
-            "appro.sous_titre.le_stock_est_reconstitue_vous_pouvez_commander_a_nouveau",
-            "appro.sous_titre.sans_elle_aucun_labo_ne_rallume_le_fournisseur_lui_a_ses_humeurs",
-            "appro.titre.commander_de_la_matiere_premiere",
-            "appro.titre.la_commande_est_arrivee",
-            "appro.titre.la_commande_est_en_route",
-            "distribution.bloc.a_traverser",
-            "distribution.bloc.cette_route",
-            "distribution.bloc.d_ou_ca_part",
-            "distribution.bloc.il_est_parti_a_la_nuit_ca_serpente_mais_c_est_la_seule_qui_evite_le_pont_du_threnny",
-            "distribution.bloc.la_marchandise_est_prete_au_labo_dites_moi_qui_part_et_par_ou_et_je_l_enverrai_ce_soir",
-            "distribution.bloc.le_chemin",
-            "distribution.bloc.livre_le_carton_est_au_comptoir_personne_n_a_rien_vu",
-            "distribution.bloc.ou_ca_va",
-            "distribution.bouton.envoyer_ce_soir",
-            "distribution.bouton.tendre_une_autre_ficelle",
-            "distribution.sous_titre.la_marchandise_est_arrivee_voila_ce_que_le_trajet_a_coute_a_la_route",
-            "distribution.sous_titre.on_choisit_d_ou_ca_part_ou_ca_va_et_par_quel_chemin",
-            "distribution.sous_titre.un_coursier_est_parti_voila_le_chemin_qu_il_prend",
-            "distribution.titre.c_est_livre",
-            "distribution.titre.ce_qui_est_sur_la_route",
-            "distribution.titre.l_envoi_de_ce_soir",
-            "exception_detail.bloc.appui_long_la_carte_se_ferme",
-            "exception_detail.bloc.appui_long_la_carte_se_ferme_le_batiment_lui_se_repare_avec_le_temps",
-            "exception_detail.bloc.je_fais_quoi",
-            "exceptions.apres.deferred.enseigne",
-            "exceptions.apres.repairing.enseigne",
-            "exceptions.apres.repairing_slow.enseigne",
-            "exceptions.bloc.ce_soir_au_verge_d_or",
-            "exceptions.bloc.chez_enseigne",
-            "exceptions.bloc.nom_retourne_au_travail",
-            "exceptions.bloc.reparer_enseigne",
-            "exceptions.bloc.rien_a_relire",
-            "filiere.bloc.chaque_etape_rend_l_argent_un_peu_plus_propre_que_la_precedente_seule_la_derniere_credite_le_portefeuille_tant_qu_il_n_y_a_pas_de_sortie_il_n_y_a_pas_d_argent_seulement_une_file_d_attente",
-            "loi.badge.a_vos_risques",
-            "loi.badge.disponible",
-            "loi.badge.en_place",
-            "loi.bloc.ca_coute_cher_et_ca_peut_se_retourner",
-            "loi.bloc.ca_coute_il_connait_les_juges",
-            "loi.bloc.commis_d_office",
-            "loi.bloc.gratuit_il_fait_ce_qu_il_peut",
-            "loi.bloc.la_filiere",
-            "loi.bloc.un_cabinet",
-            "loi.bouton.mettre_sous_retention",
-        };
+        /// <summary>DETTE DATÉE : les clés que le code SAIT demander et que le back ne sert pas. **53 → 0** contre la pile reconstruite
+        /// sur 368d1420 (2026-09-23, 1112 clés, instantané `Tools/juge-donnees/i18n/string_table-368d1420.ts`) : direct 0, flux A/B/C
+        /// 0, et les 53 inscrites toutes servies (y compris les 2 que seule la garde voyait). Histoire : 24 → 26 → 42 → 48 → 53 → 0.
+        /// Vide, la garde est un ZÉRO STRICT : tout repli observé rougit, nommé avec son écran. Elle ne se rallonge que par décision
+        /// nommée, datée, avec la table qui la mesure.</summary>
+        private static readonly HashSet<string> DetteDatee = new HashSet<string>();
 
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>
         private static readonly (string nom, Func<AppShell, MonoBehaviour> monter)[] Mesures =
