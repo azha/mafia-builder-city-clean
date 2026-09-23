@@ -1,6 +1,6 @@
-# DESIGN v6.2 — les cartes d'exception de démo naissent des producteurs de production (2026-09-23)
+# DESIGN v6.3 — les cartes d'exception de démo naissent des producteurs de production (2026-09-23)
 
-Statut : **v6.2 — option (a) tranchée par f2 le 23/09 après l'arrêt de la Phase 0 (§ 15, M2c = 0 dans le district 16) : `lab2` dans un AUTRE district, bloc à y ≥ 4 ; delta à juger par une revue ⊥ FRAÎCHE (§ 16)** ; v6 : réponse à la revue ⊥ n°5 (§ 13 : 1 BLOQUANT — la propagation est scopée au JOUEUR, pas à `lab2` ; 1 IMPORTANT — les écrivains de `buildings.heat` ; 1 MINEUR) et au verdict du back `f87301bd` (`heat-inject` = chemin de production après l'émission ; magnitude `MICRO` pour imiter une cuisson) — la précondition d'ouverture est LEVÉE** ; v5 était la réponse à la revue ⊥ n°4 (§ 12 : 1 BLOQUANT — la chaleur est hors de portée par la production, pour H ET pour P ; 1 IMPORTANT)** — **PRÉCONDITION D'OUVERTURE : verdict du back sur `_test/citysim/heat-inject`** ; v4 répondait à la revue ⊥ n°3 (§ 11 : 1 BLOQUANT neuf — la chaleur de `lab2` —, 1 IMPORTANT, 2 MINEURS)** ; v3 répondait à la revue ⊥ n°2 (NOT_APPROVED : 1 BLOQUANT neuf, 1 IMPORTANT, 3 MINEURS ; les 11 de la revue n°1 refermés)** — tables de réponse au § 9 (n°1) et au § 10 (n°2).
+Statut : **v6.3 — réponse à la revue ⊥ fraîche de v6.2 (§ 17 : 2 BLOQUANTS, 2 IMPORTANTS, 3 MINEURS) ; PRÉCONDITION NEUVE : le correctif `tileDistance` du back (intra-district, décidé le 23/09 06:40) MERGÉ et vérifié par sonde (§ 0 n°5) — le lot ne s'exécute pas avant** ; v6.2 — option (a) tranchée par f2 le 23/09 après l'arrêt de la Phase 0 (§ 15, M2c = 0 dans le district 16) : `lab2` dans un AUTRE district, bloc à y ≥ 4 ; delta à juger par une revue ⊥ FRAÎCHE (§ 16)** ; v6 : réponse à la revue ⊥ n°5 (§ 13 : 1 BLOQUANT — la propagation est scopée au JOUEUR, pas à `lab2` ; 1 IMPORTANT — les écrivains de `buildings.heat` ; 1 MINEUR) et au verdict du back `f87301bd` (`heat-inject` = chemin de production après l'émission ; magnitude `MICRO` pour imiter une cuisson) — la précondition d'ouverture est LEVÉE** ; v5 était la réponse à la revue ⊥ n°4 (§ 12 : 1 BLOQUANT — la chaleur est hors de portée par la production, pour H ET pour P ; 1 IMPORTANT)** — **PRÉCONDITION D'OUVERTURE : verdict du back sur `_test/citysim/heat-inject`** ; v4 répondait à la revue ⊥ n°3 (§ 11 : 1 BLOQUANT neuf — la chaleur de `lab2` —, 1 IMPORTANT, 2 MINEURS)** ; v3 répondait à la revue ⊥ n°2 (NOT_APPROVED : 1 BLOQUANT neuf, 1 IMPORTANT, 3 MINEURS ; les 11 de la revue n°1 refermés)** — tables de réponse au § 9 (n°1) et au § 10 (n°2).
 Plan d'origine : `plan-cartes-demo-par-producteurs-2026-09-23.md` (`a550891f`, décision `e4f6c330`). Verdict du back sur
 `_test/citysim/raid` : recevable pour le seeder de démo (`back.md`, S6-h ; TD-692 corrigé).
 
@@ -13,6 +13,14 @@ Plan d'origine : `plan-cartes-demo-par-producteurs-2026-09-23.md` (`a550891f`, d
 3. **Plus aucune carte écrite à la main** : `insertCard` et son `INSERT INTO exception_queue` disparaissent. Temps accéléré par
    `_test/citysim/advance`, raid émis par `_test/citysim/raid` (recevable). Les scripts de lieutenant s'attachent par la route RÉELLE.
 4. Aucune épingle recopiée : chaque valeur épinglée est RE-MESURÉE sur la carte produite (M4), citée avec sa mesure.
+5. **PRÉCONDITION (v6.3) — le correctif `tileDistance` du back, MERGÉ et VÉRIFIÉ.** On ne conçoit pas autour d'un défaut qui va
+   disparaître (f2, 23/09) : `tileDistance` compare aujourd'hui des coordonnées LOCALES sans district (§ 15) ; le back le corrige
+   (intra-district). Vérifié avant M0, par TROIS preuves : (a) le SHA du correctif présent dans la pile (`X-Server-Build`) ; (b) lecture
+   du code (`heat-propagation.service.ts`, la garde de district dans la boucle de propagation) ; (c) **SONDE M2p** sur `operational_demo`,
+   qui porte déjà quatre bâtiments aux MÊMES coordonnées locales (0,0) dans quatre districts (1 : distribution_hub, 11 : refinery, 13 :
+   specialized_lab, 16 : lab — § 15) : 26 MICRO sur le hub du district 1 (0,519 après décroissance : HOT, SOURCE, **sous** 0,7 donc
+   aucune escalade), `advance(1)`, puis chaleur des trois autres relevée — attendue INCHANGÉE (à la décroissance près) ; avec le défaut,
+   chacun gagnerait +0,026. Sans ces trois preuves, le lot ne commence pas.
 
 ## 1. Les trois cartes — ce que le code du back impose (lecture seule, références vérifiées par la revue)
 | rôle | producteur | déclencheur | ce qui la rend possible | i18n |
@@ -42,7 +50,9 @@ INÉVITABLE tant que le back n'ajoute pas le jumeau i18n à `exception-producer`
   (autre district ⇒ jamais voisin) : l'option tient dans les DEUX cas. Échec qui le dit s'il n'y en a aucun ; le seeder imprime la
   distance minimale obtenue. Pourquoi 17 : même profil `verge` que le 16 (aucune atténuation `stack` à raisonner), hors des districts du
   dégradé de chaleur de la carte (3/7/11), sans bâtiment du joueur ; mesuré (§ 16) : 5 blocs à y ≥ 4, libres de tout bâtiment,
-  distance minimale 3. L'injection de chaleur passe `district_id=17` (`heat-inject?player_id&building_id&district_id&magnitude`).
+  distance minimale 3. L'injection passe `district_id=17`, mais ce paramètre est **INERTE** (revue ⊥ v6.2, n°7) : `bufferInjection`
+  (`heat-propagation.service.ts:212-215`) ne garde que `{buildingId, delta}` et la route ne valide que `districtId >= 1`
+  (`heat-test.controller.ts:55-58`) — écrit pour qu'aucun lot ne bâtisse dessus.
   Assertion bloc ≠ `raidBlockId` gardée (vraie par construction : autre district). → sa seule carte possible est **H** : son script ne couvre ni `heat` ni
   `building_damaged` et ne peut jamais se déclencher. Texte : **`WHEN STATE(source_has_product,==,true) THEN PAUSE_OPS @1;`** — un champ
   du binding LOGISTICS, ABSENT du snapshot COOK (« every other field stays absent → a false trigger », `cook-binding.ts:105`) : faux
@@ -123,10 +133,27 @@ INÉVITABLE tant que le back n'ajoute pas le jumeau i18n à `exception-producer`
   sachant que `provision-demo-riche.mjs:54,100` lit `MAFIA_DEMO_IDENTIFIER` alors que le seeder lit `MAFIA_SEED_IDENTIFIER`. Résultat
   transmis au back, qui décide (§ 9 n°7).
 - **M1** : la règle de COOK₂ passe `validate` au palier 1 ; celle de COOK₁ aussi.
-- **M2c — faisabilité de `blocLab2()`, AVANT toute écriture** (revue n°6, n°1 ; v6.2) : un `SELECT` en lecture seule sur `blocks`
+- **M2c — faisabilité de `blocLab2()`, APRÈS la lecture du rayon EFFECTIF par M2 et AVANT toute écriture** (revue n°6, n°1 ; v6.2 ;
+  ordre corrigé en v6.3, revue ⊥ v6.2 n°3 — la marge n'est que d'UNE tuile : les 5 blocs sont tous sur la rangée y = 4, le joueur a
+  y ≤ 1, distance 3 contre un rayon par défaut de 2 ; **un rayon effectif ≥ 3 (surcharge DB) invalide l'option (a) dans les onze
+  districts à la fois**, pas seulement le 17 ⇒ arrêt, dit tel quel) : un `SELECT` en lecture seule sur `blocks`
   (`coordinates` jsonb `{x,y}`, propriété du BLOC, `world_geography.ts:57`) et `buildings` : nombre de blocs du district 17, libres de tout
   bâtiment, à y ≥ 4 et à Chebyshev LOCAL > rayon de TOUS les blocs que le décor du seeder occupera. Imprimé. **Zéro ⇒ le lot s'arrête
   AVANT d'écrire** ; l'assertion du seeder reste, en ceinture. v6 (district 16) a rendu 0 le 23/09 06:36 (§ 15) ; v6.2 mesuré : 5 (§ 16).
+- **M2p — la SONDE de la précondition § 0 n°5** (correctif `tileDistance`), AVANT M2.
+- **M2d — l'état politique PARTAGÉ du district 17** (revue ⊥ v6.2, n°2), lecture seule. Lecteurs de `political_district_signal_state`,
+  MESURÉS sur le code : le tick `NIGHTLY` politique (`political-calendar-tick.service.ts:414-428`, il l'avance et déclenche E-POL-12)
+  et un contrôleur de test (`political-event-test.controller.ts:434`) — **aucun écran, aucune capture, aucun test client** (balayage
+  `Assets/`, `Tools/` : 0 hors bundles i18n). Deux portes du code rendent l'écriture IMPOSSIBLE pour ce compte, à mesurer : (1) la
+  boucle SAUTE un district sans ligne `district_cohesion` pour le joueur (`:418`, « district never seeded for this player ») ⇒
+  `operational_demo` a-t-il une cohésion dans le 17 ? ; (2) la ligne n'avance qu'une fois par jour de jeu et IGNORE une évaluation à
+  `gameDay ≤ last_evaluated_game_day` (`political-event.repository.ts:451+`) ⇒ jour de jeu d'`operational_demo` pendant le lot contre
+  `last_evaluated_game_day` du 17 (compte gelé : horloge 72155 ≈ jour 50 ; `operational_demo` : `OP_CLOCK_BASELINE = 1500`). Si l'une
+  des deux ferme la porte : aucune écriture possible, écrit avec la mesure. Sinon : la fenêtre « mauvaise » de `lab2` est HOT et au-dessus
+  (plafond `EPOL12_DISTRICT_HEAT_CEILING_BUCKET = 'WARM'`, `political.tunables.ts:213`), ≈ 252 ticks — si une frontière NIGHTLY tombe
+  dedans, un autre district SANS cohésion pour le joueur est choisi (pas de restauration par écriture directe). Relevé AVANT/APRÈS de la
+  ligne du 17, comme une empreinte. S'y ajoutent deux lectures citywide du même service, relevées : E-POL-10 (`:353`, tirage pondéré par
+  `getCitywideBucket`) et E-POL-11 (`:381-386`, seuil de rang citywide → `political_event_active`).
 - **M2 — PORTE, pas relevé** : D'ABORD la rampe citée par `LieutenantRuleEditorPlayModeTests.cs:480-487` (chaleur de CHAQUE bâtiment du
   joueur sur 3 `advance(1)`, sans injection) — si elle se reproduit, arrêt (§ 2, écrivains) ; valeur effective des tunables lus par le
   § 2 (rayon, facteur, demi-vie, seuil, `cookHeatHighBand`, `tick.real_seconds_per_game_minute` : surcharge DB > env > défaut) — un
@@ -141,10 +168,14 @@ INÉVITABLE tant que le back n'ajoute pas le jumeau i18n à `exception-producer`
   épinglée ailleurs est recherchée ; (e) la **chaleur**, relevée AVANT l'injection et APRÈS la dernière avance : la distance de tuile de `lab2` à CHAQUE bâtiment du joueur
   (attendue > rayon, sinon arrêt) ; la chaleur brute ET les bandes PAR BÂTIMENT (`HeatBucket`, `raid_risk`) de TOUS les bâtiments semés —
   le `raid_risk` du `stash` (« healthy control », `seed_operational_demo.mjs:1098-1101`) et le plancher HIGH de `lab` (:1089-1095) nommément ;
-  le seau du district 16 et le seau citywide ; les quatre abonnés de l'escalade (patrouille du district, pile de cues de `lab2`, compteurs
+  le seau du district **17** et le seau citywide ; les quatre abonnés de l'escalade (patrouille du district, pile de cues de `lab2`, compteurs
   de maîtrise du joueur, carte P) ; toute épingle de ces valeurs dans les tests ; et les classes de test qui ACHÈTENT un bâtiment pour
-  `operational_demo` dans le district 16 (un achat à ≤ 2 tuiles de `lab2` pendant sa fenêtre HOT, ≈ 8 min réelles, le mettrait sous la
-  propagation) — listées par `git grep` sur la route `building/purchase` — `git grep` sur les comptes de bâtiments/labos du joueur de démo
+  `operational_demo` à ≤ rayon de `lab2` en coordonnées locales pendant sa fenêtre HOT (≈ 8 min réelles) — AVEC le correctif (précondition
+  § 0 n°5) : dans le district **17** seulement ; SANS lui : dans N'IMPORTE QUEL district, local x ∈ [0,4] et y ∈ [2,6] (revue ⊥ v6.2, n°1)
+  — listées par `git grep` sur la route `building/purchase` ; et ce que le district 17 porte déjà, relevé (revue ⊥ v6.2, n°6) :
+  e2e du back qui l'utilisent (`vertical_slice_loop.spec.ts:443`, `market_lane_confidence_route.spec.ts:252`,
+  `random_world_permanent_residue_and_gates.spec.ts:582,652`), `random_world_event_active` (ligne GLOBALE, sans `player_id`), bâtiments
+  d'autres comptes (1601, 1602, 1611, 1621, 1622, 1631, 1641, 1642 — le vivier de `blocLab2()` rétrécit à chaque run voisin) — `git grep` sur les comptes de bâtiments/labos du joueur de démo
   (registres, listes, cartes) ; toute occurrence est traitée AVANT d'exécuter.
 - **M3** : marge du plafond de roster (5) — le seeder passe de 1 à 2 lieutenants ; maximum SIMULTANÉ de recrues par classe semeuse
   (LieutenantUiExtension, LieutenantTenureInertia, LieutenantRuleEditor…) mesuré ; une classe à 4 simultanés est traitée AVANT.
@@ -154,8 +185,13 @@ INÉVITABLE tant que le back n'ajoute pas le jumeau i18n à `exception-producer`
 **Phase 1 — seeder** (`Tools/seed_operational_demo.mjs`)
 1. **`lab2`, dans CET ordre (§ 11 n°2, n°3)** : `operationalBuilding(blocLab2(), 'lab')` (district 17, § 2) APRÈS toutes les autres
    acquisitions ; assertion bloc ≠ `raidBlockId` et distance minimale > rayon, imprimée ; **purge** : une clause CIBLÉE neuve dans
-   `sqlDePurge` pour les bâtiments du joueur dans `LAB2_DISTRICT`, sur le modèle des clauses du labo `glass` et du hub (même ordre : après
-   les lieutenants, dont COOK₂ tient la FK `assigned_building_id` sur `lab2`), et comptée par `controlerAtomiciteDeLaPurge` ; son `setup_remaining_ticks=1` + `advance(1)` DÉDIÉS (le nudge de :668-673 est déjà passé) ;
+   `sqlDePurge` pour les bâtiments du joueur dans `LAB2_DISTRICT`, placée **APRÈS** la clause du district 16 (`seed_operational_demo.mjs:347`)
+   — le sabotage du contrôle d'atomicité se pose sur le PREMIER énoncé qui `startsWith("DELETE FROM buildings WHERE player_id=")` (:376) :
+   placée avant, elle le déplacerait en silence (revue ⊥ v6.2, n°4). Ordre FK, mesuré sur `pg_constraint` : deux FK `NO ACTION` vers
+   `buildings`, `lieutenant.assigned_building_id` ET `lieutenant.target_building_id`, toutes deux libérées par le `DELETE FROM lieutenant`
+   de :306 ; `building_operational_state` est `ON DELETE CASCADE` (son `DELETE` explicite est de l'ordre-sûreté, pas une nécessité).
+   `controlerAtomiciteDeLaPurge` reçoit une **7ᵉ sonde** (`sondes`, :399-406) sur les bâtiments du joueur dans `LAB2_DISTRICT` — les six
+   actuelles sont bornées au district 16 et ne la verraient jamais ; son `setup_remaining_ticks=1` + `advance(1)` DÉDIÉS (le nudge de :668-673 est déjà passé) ;
    assertion `conversion_stage='operational'` (PAS de cuisson : la chaleur vient de `heat-inject`, § 2). Tout ceci AVANT l'étape 2 (recrutements), donc
    avant l'étape 13 (raid) et avant les re-pins de l'étape 5.
 2. Le recrutement « Phase-20 » se DÉPLACE avant l'étape 13 : COOK₁ sur `lab`, COOK₂ sur `lab2`, chacun + attache de son script (§ 2).
@@ -302,7 +338,22 @@ tient dans les deux cas.
 Choix : **17** (profil `verge` comme le 16 ; pas de `stack`, dont le facteur de propagation est atténué — sans voisin, sans effet, mais
 un raisonnement de moins) ; le joueur n'y a aucun bâtiment.
 **Delta de v6.1 à v6.2** : § 2 (COOK₂ : `blocLab2()` dans le district 17, `district_id=17` à l'injection), M2c (critère et mesure),
-Phase 1.1 (purge ciblée neuve + contrôle d'atomicité). M2b (e) inchangé mais son objet change : le seau de district forcé BURNING par
+Phase 1.1 (purge ciblée neuve + contrôle d'atomicité). M2b (e) — ~~inchangé~~ (affirmation retirée en v6.3, revue ⊥ v6.2 n°1 : elle était
+déduite, non mesurée) — son objet change : le seau de district forcé BURNING par
 l'escalade (Inv 7) est celui du district **17** du joueur (carte de la ville : le district 17 d'`operational_demo` passera BURNING le
 temps de l'escalade, ≈ 19 ticks) — relevé avant/après avec le reste.
+
+## 17. v6.3 — réponse à la revue ⊥ FRAÎCHE de v6.2 (NOT_APPROVED : 2 BLOQUANTS, 2 IMPORTANTS, 3 MINEURS) et décision de f2
+**Décision de f2 (23/09)** : le BLOQUANT 1 vient du DÉFAUT `tileDistance`, que le back corrige (intra-district) : v6.3 prend le correctif
+comme PRÉCONDITION vérifiable (§ 0 n°5, sonde M2p) et le lot passe DERRIÈRE lui.
+| n° | constat | réponse |
+|---|---|---|
+| 1 BLOQUANT | M2b (e) scopé « district 16 » alors que la distance ignore le district ; « inchangé » déduit | M2b (e) réécrit (avec et sans correctif) ; « inchangé » barré ; précondition § 0 n°5 |
+| 2 BLOQUANT | état politique PARTAGÉ du 17 (`political_district_signal_state`, sans `player_id`) + E-POL-10/11 | **M2d** : lecteurs mesurés (le tick NIGHTLY et un contrôleur de test ; aucun écran ni capture) ; deux portes du code qui rendent l'écriture impossible (pas de cohésion dans le 17 ; `gameDay ≤ last_evaluated_game_day`) à mesurer ; sinon district sans cohésion ; relevé avant/après ; E-POL-10/11 relevés |
+| 3 IMPORTANT | M2c avant la lecture du rayon ; marge d'1 tuile | M2c APRÈS M2 ; « rayon ≥ 3 invalide l'option (a) partout » écrit |
+| 4 IMPORTANT | clause de purge non ancrée ; `startsWith` du sabotage ; une FK oubliée | clause APRÈS :347 ; les DEUX FK `NO ACTION` nommées, `CASCADE` dit ; 7ᵉ sonde |
+| 5 MINEUR | « district 16 » resté dans M2b (e) | → 17 |
+| 6 MINEUR | le 17 n'est pas vierge | relevé écrit dans M2b (e) (e2e, `random_world_event_active` global, bâtiments voisins) |
+| 7 MINEUR | `district_id` à l'injection INERTE | écrit au § 2 |
+Relecture ⊥ du delta v6.3 à faire APRÈS le merge du correctif du back (les preuves (a)-(c) du § 0 n°5 en dépendent).
 
