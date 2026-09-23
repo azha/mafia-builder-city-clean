@@ -34,7 +34,7 @@ def main():
     occ = machine_libre()
     if occ: sys.exit(f'⛔ machine occupée ({occ}) : rien lancé')
     print(f'DÉBUT {heure()}')
-    etape('28 nominales + INDEX', [sys.executable, 'Tools/juge-visuel/construire-dossiers.py'])
+    etape('28 nominales + INDEX', [sys.executable, 'Tools/juge-visuel/construire-dossiers.py', '--client', os.path.expanduser('~/project/mafia-builder-city-clean')])
     spec = importlib.util.spec_from_file_location('cd', os.path.join(ICI, 'construire-dossiers.py'))
     cd = importlib.util.module_from_spec(spec); spec.loader.exec_module(cd)
     extras = [(f, int(re.match(r'cadre (\d+)', n).group(1))) for r in cd.TABLE + cd.HORS_APPSHELL for f, n in r.get('extras', [])]

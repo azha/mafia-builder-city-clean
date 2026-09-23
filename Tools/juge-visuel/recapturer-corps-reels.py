@@ -179,7 +179,7 @@ def lancer():
     print('\n── diff d’ensembles de clés')
     diff_et_rapport(base, ICI, os.path.join(RACINE, 'Tools', 'atelier-2026-09-22', f'corps-reels-diff-{jour}.md'))
     etape('fraîcheur', [sys.executable, os.path.join(ICI, 'verifier-fraicheur-corps.py')])
-    etape('INDEX (sans rendu)', [sys.executable, os.path.join(ICI, 'construire-dossiers.py'), '--sans-rendu'])
+    etape('INDEX (sans rendu)', [sys.executable, os.path.join(ICI, 'construire-dossiers.py'), '--sans-rendu', '--client', os.path.expanduser('~/project/mafia-builder-city-clean')])
     t = open(index, encoding='utf-8').read()
     if para and PARAGRAPHE not in t:
         l = t.split('\n'); l.insert(min(6, len(l)), para); open(index, 'w', encoding='utf-8').write('\n'.join(l))
