@@ -73,6 +73,14 @@ CSS = """<style>
 .fid7 .reperes{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
 .fid7 .reperes span{font:400 7px/1 'DejaVu Sans';border:1px solid #2a3648;padding:2px 4px;color:#b9ad92}
 .fid7 .prop{text-decoration:underline dotted #b9ad92;text-underline-offset:2px}
+/* cadre 3 — le formulaire d'ordre permanent (série 1 ratifiée, GO f2 du 23/09 ; `41-…` §3, clés `42-…`) */
+.fid7 .form7{margin:8px 12px 0;position:relative;z-index:2;display:flex;flex-direction:column;gap:6px}
+.fid7 .form7 .ch{font:700 6.6px/1 'DejaVu Sans';letter-spacing:.2em;text-transform:uppercase;color:#b9ad92}
+.fid7 .form7 .seg{display:flex;gap:4px}
+.fid7 .form7 .seg span{flex:1;text-align:center;font:400 8.4px/1 'DejaVu Sans';border:1px solid #2a3648;padding:5px 3px;color:#b9ad92;border-radius:3px}
+.fid7 .form7 .seg span.sel{border-color:#8a611c;color:#f2c96b;background:rgba(217,171,78,.12)}
+.fid7 .form7 .cib{font:400 9.6px/1 'DejaVu Serif';color:#eae0c8;border:1px solid #2a3648;padding:5px 7px;border-radius:3px;background:rgba(11,17,27,.88)}
+.fid7 .form7 .fixe{font:400 7.6px/1.3 'DejaVu Sans';color:#b9ad92;font-style:italic}
 
 /* le dock du canon HUD (hud-brennar.html l.106-117), ronds VIDES (ARBITRAGES point 15) — la série 6 n'en dessine aucun (0 sur 146 cadres) ;
    ⑦ et ④ sont des onglets de l'application, il y figure */
@@ -128,10 +136,21 @@ CADRES = [
           '<small class="prop">Son ordre du moment a tenu. Vous pouvez le renouveler, le retirer, ou en faire sa règle par défaut.</small></div>'
           '<div class="gestes"><div class="g or"><span class="prop">En faire la règle</span></div>'
           '<div class="g"><span class="prop">Renouveler</span></div><div class="g"><span class="prop">Retirer</span></div></div>'),
+    # cadre 3 (GO f2, 23/09, corrigé le même jour) : l'émission. Registre, point 3 du 07/09 (tel que f2 l'applique à ⑧) : on ratifie l'ÉDITEUR
+    # CONSTRUIT, le formulaire à trois verbes de la série 1 va en backlog ; le back exige une règle DSL complète (WHEN … THEN … @N), aucune
+    # action Collecte/Blanchir/Surveiller n'existe et il n'y a pas de cible (mesure CLIENT-1, compiler.service.ts:66). Donc : « Donner un ordre »
+    # ouvre l'éditeur de ⑧ en mode ordre permanent (UNE règle, écrite avec ses mots servis `famille.regle.*`), + « Et quand il expire », + « Signer l’ordre ».
+    cadre('⑦ Donner un ordre — l’éditeur de ⑧, en ordre permanent',
+          carte('Au repos') +
+          '<div class="question"><b class="prop">Donner un ordre</b><small class="prop">pour une durée fixe</small></div>'
+          '<div class="form7"><div class="cib">dans mon bâtiment → suspendre les opérations</div>'
+          '<span class="ch prop">Et quand il expire</span>'
+          '<div class="seg"><span class="sel prop">retour à la routine</span><span class="prop">l’ordre continue</span><span class="prop">on vous demande</span></div></div>'
+          '<div class="gestes"><div class="g or">Signer l’ordre</div></div>'),
 ]
 
 page = _ap.normaliser(tete + CSS + ''.join(CADRES) + '</div>\n</div>\n')[0]
 open(SORTIE, 'w', encoding='utf-8').write(page)
 n = page.count('<div class="cadre">')
-assert n == 3 and page.count('#buste-lieutenant') >= 3 + 1, (n, page.count('#buste-lieutenant'))
+assert n == 4 and page.count('#buste-lieutenant') >= 4 + 1, (n, page.count('#buste-lieutenant'))
 print(f'écrit : {SORTIE} — {n} cadres, {len(page)} octets ; aucun rendu')

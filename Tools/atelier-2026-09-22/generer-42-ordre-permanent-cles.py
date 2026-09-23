@@ -4,8 +4,10 @@
 (commande f2 du 23/09). Clé = `Libelle.De(domaine, rôle, fr)` = `famille.<rôle>.` + slug(fr) (`Libelle.Slug` recopié).
 Domaine `famille`, rôles ALIGNÉS sur ceux que le client emploie déjà sur ⑦ (cumul `6bb7f837`) :
   `ecran` (le `Lib()` de `LieutenantScreenController.cs:3912-3913`) · `ordre` (freshness, `FamilleLabels.cs:150-151`) · `refus`
-  (`MotDuRefus`, l.3226 : « aucun ordre en cours », mot de f2) ; rôles NEUFS : `instruction` (Collecte · Blanchir · Surveiller), `lapse`
-  (les 3 `lapse_action`), `fiabilite` (`cue_bands`).
+  (`MotDuRefus`, l.3226 : « aucun ordre en cours », mot de f2) ; rôles NEUFS : `lapse` (les 3 `lapse_action`), `fiabilite` (`cue_bands`).
+⚠️ Corrigé le 23/09 (f2) : le formulaire à trois verbes de la série 1 (Collecte · Blanchir · Surveiller, Cible) va en BACKLOG — registre point 3
+  appliqué à ⑧ par f2 : on ratifie l'éditeur construit. Le back exige une règle DSL complète, aucune de ces actions n'existe, il n'y a pas de
+  cible (mesure CLIENT-1, `compiler.service.ts:66`). L'émission passe par l'ÉDITEUR de ⑧ ; ces 4 clés sont retirées de la table.
 Les refus prennent la forme du mot de f2 déjà au client (minuscule, sans point) : 42 REMPLACE les formes de 41 §4 pour les refus.
 Contrôles : clé = slug ; aucune `'` droite (D10) ; D17 (insécable U+00A0 avant « : ») ; en ≠ fr ; une clé déjà servie l'est avec ces mots.
 Sortie : `42-ordre-permanent-cles-2026-09-23.tsv`. Usage : python3 Tools/atelier-2026-09-22/generer-42-ordre-permanent-cles.py"""
@@ -20,17 +22,13 @@ def slug(s):
     return o.strip('_')
 S1 = 'RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285)'
 L = [  # (rôle, fr, en, statut, pour)
- ('ecran', 'Donner un ordre', 'Give an order', 'PROPOSÉ', 'le geste sur la ligne « Ordre permanent · aucun ordre » (freshness = NONE)'),
- ('instruction', 'Collecte', 'Collection', S1, 'l’instruction (produit le `rule_source`)'),
- ('instruction', 'Blanchir', 'Launder', S1, 'idem'),
- ('instruction', 'Surveiller', 'Watch', S1, 'idem'),
- ('ecran', 'Cible', 'Target', S1, 'la condition du `rule_source`'),
+ ('ecran', 'Donner un ordre', 'Give an order', 'PROPOSÉ', 'le geste sur la ligne « Ordre permanent · aucun ordre » (freshness = NONE) ; ouvre l’ÉDITEUR de ⑧ en mode ordre permanent'),
  ('ecran', 'Et quand il expire', 'And when it expires', 'PROPOSÉ', 'le titre des 3 `lapse_action` (« il » = l’ordre)'),
  ('lapse', 'retour à la routine', 'back to routine', 'PROPOSÉ, épicène (D13)', '`lapse_action` = REVERT_DEFAULT'),
  ('lapse', 'l’ordre continue', 'the order keeps running', 'PROPOSÉ, épicène', '= HOLD_LAST'),
  ('lapse', 'on vous demande', 'you get asked', 'PROPOSÉ, épicène', '= ESCALATE_TO_PLAYER'),
  ('ecran', 'pour une durée fixe', 'for a fixed term', 'PROPOSÉ', 'la durée est FIXE au back (`duration_class` ignoré en M2) : pas de glissière'),
- ('ecran', 'Signer l’ordre', 'Sign the order', S1 + ' (« SIGNER L’ORDRE »)', '`POST /v1/lieutenants/:id/standing-order {rule_source, lapse_action}`'),
+ ('ecran', 'Signer l’ordre', 'Sign the order', S1 + ' (« SIGNER L’ORDRE », le seul mot gardé du formulaire)', '`POST /v1/lieutenants/:id/standing-order {rule_source, lapse_action}` — la règle vient de l’éditeur de ⑧'),
  ('ordre', 'en cours', 'in force', 'PROPOSÉ', 'freshness = FRESH (NONE « aucun ordre » et EXPIRES_SOON « expire bientôt » sont déjà au client)'),
  ('ordre', 'échu', 'lapsed', 'PROPOSÉ', 'freshness = EXPIRED (ne se voit qu’avec HOLD_LAST)'),
  ('refus', 'trop tôt pour refaire ce geste', 'too soon to do that again', 'PROPOSÉ', '409 cooldown (par geste+repère pour le signal, par décision pour l’ordre)'),

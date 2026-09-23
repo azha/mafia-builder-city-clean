@@ -1,15 +1,11 @@
 clé	fr	en	statut	pour
-famille.ecran.donner_un_ordre	Donner un ordre	Give an order	PROPOSÉ	le geste sur la ligne « Ordre permanent · aucun ordre » (freshness = NONE)
-famille.instruction.collecte	Collecte	Collection	RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285)	l’instruction (produit le `rule_source`)
-famille.instruction.blanchir	Blanchir	Launder	RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285)	idem
-famille.instruction.surveiller	Surveiller	Watch	RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285)	idem
-famille.ecran.cible	Cible	Target	RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285)	la condition du `rule_source`
+famille.ecran.donner_un_ordre	Donner un ordre	Give an order	PROPOSÉ	le geste sur la ligne « Ordre permanent · aucun ordre » (freshness = NONE) ; ouvre l’ÉDITEUR de ⑧ en mode ordre permanent
 famille.ecran.et_quand_il_expire	Et quand il expire	And when it expires	PROPOSÉ	le titre des 3 `lapse_action` (« il » = l’ordre)
 famille.lapse.retour_a_la_routine	retour à la routine	back to routine	PROPOSÉ, épicène (D13)	`lapse_action` = REVERT_DEFAULT
 famille.lapse.l_ordre_continue	l’ordre continue	the order keeps running	PROPOSÉ, épicène	= HOLD_LAST
 famille.lapse.on_vous_demande	on vous demande	you get asked	PROPOSÉ, épicène	= ESCALATE_TO_PLAYER
 famille.ecran.pour_une_duree_fixe	pour une durée fixe	for a fixed term	PROPOSÉ	la durée est FIXE au back (`duration_class` ignoré en M2) : pas de glissière
-famille.ecran.signer_l_ordre	Signer l’ordre	Sign the order	RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285) (« SIGNER L’ORDRE »)	`POST /v1/lieutenants/:id/standing-order {rule_source, lapse_action}`
+famille.ecran.signer_l_ordre	Signer l’ordre	Sign the order	RATIFIÉ — série 1, « Lieutenant — fiche + formulaire » (ecrans-brennar.html l.~285) (« SIGNER L’ORDRE », le seul mot gardé du formulaire)	`POST /v1/lieutenants/:id/standing-order {rule_source, lapse_action}` — la règle vient de l’éditeur de ⑧
 famille.ordre.en_cours	en cours	in force	PROPOSÉ	freshness = FRESH (NONE « aucun ordre » et EXPIRES_SOON « expire bientôt » sont déjà au client)
 famille.ordre.echu	échu	lapsed	PROPOSÉ	freshness = EXPIRED (ne se voit qu’avec HOLD_LAST)
 famille.refus.trop_tot_pour_refaire_ce_geste	trop tôt pour refaire ce geste	too soon to do that again	PROPOSÉ	409 cooldown (par geste+repère pour le signal, par décision pour l’ordre)
