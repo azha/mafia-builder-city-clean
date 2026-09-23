@@ -10,7 +10,7 @@ namespace MafiaCleanCity.Operational.Tests
 {
     /// <summary>Capture déterministe du cadre 63 : l'historique d'une famille est visible sans inventer
     /// de rang tant que `strike_index` n'est pas servi par le back.</summary>
-    [Category("PhotoConflitHistorique")]
+    [Category("PhotoConflitDeterministe")]
     public class ConflitHistoryVisualPlayModeTests
     {
         private GameObject host;
@@ -30,17 +30,7 @@ namespace MafiaCleanCity.Operational.Tests
             host = new GameObject("ConflitHistoryVisualProbe", typeof(RectTransform));
             ConflitScreenController ecran = host.AddComponent<ConflitScreenController>();
             ecran.RendrePourTest(
-                new GetLieutenantsResponseDto
-                {
-                    lieutenants = new[]
-                    {
-                        new LieutenantRowDto
-                        {
-                            lieutenant_id = "lt-kest", name = "Lt. Kest", archetype = "MUSCLE",
-                            op_state_band = "IDLE", rule_count_band = "NONE", tenure_bucket = "FRESH",
-                        },
-                    },
-                },
+                new GetLieutenantsResponseDto { lieutenants = new[] { LieutenantKest() } },
                 new GetEngagementsResponseDto
                 {
                     engagements = new[]
@@ -66,12 +56,46 @@ namespace MafiaCleanCity.Operational.Tests
             foreach (string texte in ecran.RenderedTexts)
                 StringAssert.DoesNotContain("Coup n°", texte);
 
+            yield return Capturer(racine, "Assets/Screenshots/conflit_historique_sans_rang_deterministe.png");
+        }
+
+        [UnityTest]
+        public IEnumerator Capture_CoupChoisi_Deterministe()
+        {
+            host = new GameObject("ConflitCoupVisualProbe", typeof(RectTransform));
+            ConflitScreenController ecran = host.AddComponent<ConflitScreenController>();
+            ecran.RendrePourTest(
+                new GetLieutenantsResponseDto { lieutenants = new[] { LieutenantKest() } },
+                new GetEngagementsResponseDto { engagements = new EngagementDto[0] });
+            yield return null;
+
+            ecran.ChoisirLieutenant("lt-kest");
+            ecran.ChoisirAxe("infrastructure");
+            ecran.ChoisirFamille("coil");
+            yield return null;
+
+            GameObject racine = GameObject.Find("ConflitRoot");
+            Assert.IsNotNull(racine);
+            Assert.IsTrue(ecran.EnvoiPossible);
+            CollectionAssert.Contains(ecran.RenderedTexts,
+                "On envoie Lt. Kest chez La Coil, sur leurs installations.");
+            Assert.IsNotNull(GameObject.Find("OrdreChoisi").transform.Find("Ligne/Avatar/Buste"),
+                "la fiche papier porte le portrait du lieutenant choisi");
+            Assert.AreSame(MafiaCleanCity.Theme.DesignTokens.Current.hudSerifFont,
+                GameObject.Find("PhraseDEnvoi").GetComponent<TMPro.TextMeshProUGUI>().font,
+                "l'ordre résumé emploie la serif de la maquette");
+            Assert.AreEqual("Ce soir", GameObject.Find("CeSoir").GetComponent<TMPro.TextMeshProUGUI>().text);
+            yield return Capturer(racine, "Assets/Screenshots/conflit_coup_choisi_deterministe.png");
+        }
+
+        private static IEnumerator Capturer(GameObject racine, string chemin)
+        {
             Canvas canvas = racine.GetComponentInParent<Canvas>();
             RenderMode modeAvant = canvas.renderMode;
             Camera cameraAvant = canvas.worldCamera;
             float planAvant = canvas.planeDistance;
             var rt = new RenderTexture(1080, 2400, 24, RenderTextureFormat.ARGB32);
-            var camGo = new GameObject("CaptureCamConflitHistorique");
+            var camGo = new GameObject("CaptureCamConflitDeterministe");
             var cam = camGo.AddComponent<Camera>();
             cam.targetTexture = rt;
             cam.clearFlags = CameraClearFlags.SolidColor;
@@ -96,7 +120,6 @@ namespace MafiaCleanCity.Operational.Tests
             tex.ReadPixels(new Rect(0, 0, 1080, 2400), 0, 0);
             tex.Apply();
             RenderTexture.active = precedent;
-            const string chemin = "Assets/Screenshots/conflit_historique_sans_rang_deterministe.png";
             File.WriteAllBytes(chemin, tex.EncodeToPNG());
             MafiaCleanCity.Shell.Tests.CaptureSousShell.PlancherDEncre(tex, chemin);
 
@@ -108,6 +131,15 @@ namespace MafiaCleanCity.Operational.Tests
             rt.Release();
             Object.DestroyImmediate(rt);
             Object.DestroyImmediate(camGo);
+        }
+
+        private static LieutenantRowDto LieutenantKest()
+        {
+            return new LieutenantRowDto
+            {
+                lieutenant_id = "lt-kest", name = "Lt. Kest", archetype = "MUSCLE",
+                op_state_band = "IDLE", rule_count_band = "NONE", tenure_bucket = "FRESH",
+            };
         }
 
         private static EngagementDto Envoi(string id, string issue, string cout, string chaleur, string lieutenant)

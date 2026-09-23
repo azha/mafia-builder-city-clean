@@ -606,7 +606,7 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Le petit portrait de `.env .av` (cadres 62-63). On réemploie le buste unique déjà arbitré pour les
         /// lieutenants, mais pas le médaillon du comptoir : ce dessin-ci est rond, gris et sans liseré laiton.</summary>
-        private void AjouterAvatar(Transform parent)
+        private void AjouterAvatar(Transform parent, bool clair = false)
         {
             float taille = Px(30f);
             GameObject avatar = NouveauUI("Avatar", parent);
@@ -616,7 +616,7 @@ namespace MafiaCleanCity.Operational
             Image masque = AjouterImage(avatar);
             masque.sprite = ProceduralUI.RoundedRectMask(Mathf.Max(1, Mathf.RoundToInt(taille * 0.5f)));
             masque.type = Image.Type.Sliced;
-            masque.color = DesignTokens.Current.surfaceRow;
+            masque.color = clair ? CouleurLocale("#ddd3c0") : DesignTokens.Current.surfaceRow;
             masque.raycastTarget = false;
             avatar.AddComponent<Mask>().showMaskGraphic = true;
 
@@ -626,9 +626,9 @@ namespace MafiaCleanCity.Operational
                 GameObject buste = NouveauUI("Buste", avatar.transform);
                 Image dessin = AjouterImage(buste);
                 dessin.sprite = silhouette;
-                // Le PNG commun est cuit en beige pour le comptoir (#cfc4a6). Ici la maquette `.env .av .buste-t`
-                // demande #95a1ae : cette multiplication locale neutralise le beige sans repeindre les autres écrans.
-                dessin.color = CouleurLocale("#b8d1ff");
+                // Le PNG commun est cuit en beige pour le comptoir (#cfc4a6). Les deux contextes du conflit demandent
+                // une autre encre : gris-bleu dans `.env`, brun sur la fiche papier `.ordre`.
+                dessin.color = clair ? CouleurLocale("#86807b") : CouleurLocale("#b8d1ff");
                 dessin.preserveAspect = true;
                 dessin.raycastTarget = false;
                 RectTransform brt = (RectTransform)buste.transform;
@@ -641,7 +641,7 @@ namespace MafiaCleanCity.Operational
             GameObject bord = NouveauUI("Bord", avatar.transform);
             Image filet = AjouterImage(bord);
             filet.sprite = ProceduralUI.RoundedRectOutline(Mathf.Max(1, Mathf.RoundToInt(taille * 0.5f)),
-                Mathf.Max(1f, Px(1f)), CouleurLocale("#3b4650"));
+                Mathf.Max(1f, Px(1f)), clair ? CouleurLocale("#bfb39a") : CouleurLocale("#3b4650"));
             filet.type = Image.Type.Sliced;
             filet.raycastTarget = false;
             Etirer((RectTransform)bord.transform);
@@ -840,12 +840,17 @@ namespace MafiaCleanCity.Operational
                 return;
             }
 
-            // L'homme : une ligne par gros bras, le choisi sur fond surélevé.
+            // Le résumé choisi est la fiche papier de la maquette. Les contrôles restent dessous : le joueur peut encore
+            // corriger l'homme ou l'axe avant d'envoyer, sans que la phrase perde sa place dans l'ordre de lecture.
             LieutenantRowDto choisi = null;
+            foreach (LieutenantRowDto l in muscleLieutenants)
+                if (l.lieutenant_id == ChoixLieutenant) { choisi = l; break; }
+            if (EnvoiPossible && choisi != null) RendreOrdreChoisi(engagements, choisi);
+
+            // L'homme : une ligne par gros bras, le choisi sur fond surélevé.
             foreach (LieutenantRowDto l in muscleLieutenants)
             {
                 bool estChoisi = l.lieutenant_id == ChoixLieutenant;
-                if (estChoisi) choisi = l;
                 string id = l.lieutenant_id;
                 GameObject ligne = LigneChoisissable(coupRoot, "Homme_" + id, estChoisi, () => ChoisirLieutenant(id));
                 TextMeshProUGUI nom = NouveauTexteFiche(ligne.transform, "Nom", l.name, 10f, DesignTokens.Current.onSurfacePrimary, true);
@@ -877,28 +882,54 @@ namespace MafiaCleanCity.Operational
                 TrackText(mot.text);
             }
 
-            if (EnvoiPossible && choisi != null)
-            {
-                TextMeshProUGUI phrase = NouveauTexteFiche(coupRoot, "PhraseDEnvoi",
-                    Libelle.Gabarit("conflit.bloc.on_envoie_nom_chez_famille_sur_axe", "On envoie {nom} chez {famille}, sur {axe}.",
-                        new Dictionary<string, string>
-                        {
-                            { "nom", choisi.name },
-                            { "famille", ConflitResolvers.NomFamille(ChoixFamille) },
-                            { "axe", ConflitResolvers.AxeDeValeur(ChoixAxe) },
-                        }),
-                    9.5f, DesignTokens.Current.onSurfacePrimary, false);
-                phrase.enableWordWrapping = true;
-                TrackText(phrase.text);
-            }
+        }
 
-            string laDerniereFois = ConflitResolvers.LaDerniereFoisChezEux(ConflitResolvers.DerniereRentreeChez(engagements, ChoixFamille));
-            if (laDerniereFois != null)
-            {
-                TextMeshProUGUI fois = NouveauTexteFiche(coupRoot, "LaDerniereFois", laDerniereFois, 8f, DesignTokens.Current.onSurfaceSecondary, false);
-                fois.enableWordWrapping = true;
-                TrackText(fois.text);
-            }
+        private void RendreOrdreChoisi(EngagementDto[] engagements, LieutenantRowDto choisi)
+        {
+            GameObject ordre = NouveauUI("OrdreChoisi", coupRoot);
+            Image papier = AjouterImage(ordre);
+            papier.sprite = ProceduralUI.RoundedRectMask(Mathf.Max(1, PxTrait(2f)));
+            papier.type = Image.Type.Sliced;
+            papier.color = CouleurLocale("#f2ece0");
+            papier.raycastTarget = false;
+            VerticalLayoutGroup vo = ordre.AddComponent<VerticalLayoutGroup>();
+            vo.padding = new RectOffset(PxTrait(11f), PxTrait(11f), PxTrait(10f), PxTrait(10f));
+            vo.spacing = Px(7f);
+            vo.childControlWidth = true; vo.childControlHeight = true;
+            vo.childForceExpandWidth = true; vo.childForceExpandHeight = false;
+            AddLayoutElement(ordre, flexibleHeight: 0);
+
+            GameObject ligne = NouveauUI("Ligne", ordre.transform);
+            HorizontalLayoutGroup hl = ligne.AddComponent<HorizontalLayoutGroup>();
+            hl.spacing = Px(8f);
+            hl.childAlignment = TextAnchor.MiddleLeft;
+            hl.childControlWidth = true; hl.childControlHeight = true;
+            hl.childForceExpandWidth = false; hl.childForceExpandHeight = false;
+            AjouterAvatar(ligne.transform, clair: true);
+
+            TextMeshProUGUI phrase = NouveauTexteFiche(ligne.transform, "PhraseDEnvoi",
+                Libelle.Gabarit("conflit.bloc.on_envoie_nom_chez_famille_sur_axe", "On envoie {nom} chez {famille}, sur {axe}.",
+                    new Dictionary<string, string>
+                    {
+                        { "nom", choisi.name },
+                        { "famille", ConflitResolvers.NomFamille(ChoixFamille) },
+                        { "axe", ConflitResolvers.AxeDeValeur(ChoixAxe) },
+                    }),
+                9.5f, CouleurLocale("#2a2118"), false);
+            phrase.font = DesignTokens.Current.hudSerifFont;
+            phrase.enableWordWrapping = true;
+            AddLayoutElement(phrase.gameObject, flexibleWidth: 1);
+            TrackText(phrase.text);
+
+            string laDerniereFois = ConflitResolvers.LaDerniereFoisChezEux(
+                ConflitResolvers.DerniereRentreeChez(engagements, ChoixFamille));
+            if (laDerniereFois == null) return;
+            TextMeshProUGUI fois = NouveauTexteFiche(ordre.transform, "LaDerniereFois", laDerniereFois, 7f,
+                CouleurLocale("#6d6250"), false);
+            fois.font = DesignTokens.Current.hudSerifFont;
+            fois.fontStyle = FontStyles.Italic;
+            fois.enableWordWrapping = true;
+            TrackText(fois.text);
         }
 
         /// <summary>Sous la table : la réplique de l'homme (v2, sans orateur) et « L’envoyer ce soir », inactif tant que les trois
