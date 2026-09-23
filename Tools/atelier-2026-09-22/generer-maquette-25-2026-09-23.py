@@ -43,6 +43,7 @@ T_CARTE_H = T_CARTE.replace('Lt. Hara', '<span class="heurt">Lt. Hara</span>', 1
 
 CSS = """<style>
 /* ═══ ㉕ LA PREMIÈRE FOIS — la bulle sur la ville (atelier 2026-09-23) ═══ */
+/* ⚠️ classes suffixées 25 : la tête de la série 6 définit déjà .page (max-width:1380px) et .texte (opacity:.7) — payé au premier rendu */
 .tu25{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;font-family:'DejaVu Sans',sans-serif;color:#eae0c8}
 .tu25 *{box-sizing:border-box}
 .tu25 .bulle{margin:0 14px 12px;position:relative;border-radius:12px;padding:13px 14px 12px;background:linear-gradient(180deg,#0c1320f2,#080d17f8);
@@ -50,14 +51,14 @@ CSS = """<style>
 .tu25 .bulle::before{content:"";position:absolute;left:50%;top:-7px;width:12px;height:12px;transform:translateX(-50%) rotate(45deg);
   background:#0c1320;border-left:1px solid #b08d3e88;border-top:1px solid #b08d3e88}
 .tu25 .sur{font:700 6.6px/1 'DejaVu Sans';letter-spacing:.28em;text-transform:uppercase;color:#b9ad92;text-align:center}
-.tu25 .texte{font:400 12px/1.45 'DejaVu Serif';color:#f0e6cc;text-align:center;margin-top:8px;text-wrap:pretty}
+.tu25 .tx25{font:400 12px/1.45 'DejaVu Serif';color:#f0e6cc;text-align:center;margin-top:8px;text-wrap:pretty}
 .tu25 .gestes{display:flex;gap:8px;margin-top:12px}
 .tu25 .g{flex:1;text-align:center;padding:9px 4px;border-radius:9px;font:700 8.4px/1.2 'DejaVu Sans';letter-spacing:.1em;text-transform:uppercase;
   background:#ffffff0a;color:#eae0c8;border:1px solid #ffffff2a}
 .tu25 .g.or{background:linear-gradient(180deg,#e9c56b,#c99a37);color:#241804;border-color:#8a611c}
 .tu25 .cible{margin:0 auto 8px;width:62%;height:54px;border-radius:9px;border:1.5px dashed #b08d3e;background:#b08d3e14}
-.tu25 .page{margin:0 12px 10px;border-radius:12px;padding:14px;background:rgba(11,17,27,.9);border:1px solid #2a3648}
-.tu25 .page h3{margin:0;font:400 15px/1.2 'DejaVu Serif';color:#f2c96b;letter-spacing:.05em;text-align:center}
+.tu25 .pg25{margin:0 12px 10px;border-radius:12px;padding:14px;background:rgba(11,17,27,.9);border:1px solid #2a3648}
+.tu25 .pg25 h3{margin:0;font:400 15px/1.2 'DejaVu Serif';color:#f2c96b;letter-spacing:.05em;text-align:center}
 .tu25 .inter{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 11px;border-radius:9px;background:#ffffff08;border:1px solid #ffffff1c}
 .tu25 .inter span{flex:1;font:400 10px/1.35 'DejaVu Sans';color:#eae0c8}
 .tu25 .inter b{font-weight:400;font-family:'DejaVu Serif';font-size:11px}.tu25 .inter small{color:#b9ad92;font-size:8px}
@@ -69,7 +70,7 @@ CSS = """<style>
 .tu25 .fens div{text-align:center}.tu25 .fens b{display:block;font:400 18px/1 'DejaVu Serif';color:#eae0c8}
 .tu25 .fens span{font:700 6.6px/1 'DejaVu Sans';letter-spacing:.2em;text-transform:uppercase;color:#b9ad92}
 .tu25 .suite{margin-top:12px;padding-top:10px;border-top:1px solid #ffffff14}
-.tu25 .suite .texte{font-size:10.5px;margin-top:6px}
+.tu25 .suite .tx25{font-size:10.5px;margin-top:6px}
 .tu25 .calme{font:400 10.5px/1.45 'DejaVu Serif';color:#b9ad92;text-align:center;margin-top:12px}
 .tu25 .prop{text-decoration:underline dotted #b9ad92;text-underline-offset:2px}
 .tu25 .heurt{text-decoration:underline wavy #e0664a;text-underline-offset:2px}
@@ -96,9 +97,9 @@ GESTES = ('<div class="gestes"><div class="g or">Compris</div>'
           '<div class="g"><span class="prop">Ne plus rien me montrer</span></div></div>')
 def bulle(texte, cible=False):
     return (('<div class="cible"></div>' if cible else '') +
-            f'<div class="bulle"><div class="sur prop">la première fois</div><div class="texte">{texte}</div>{GESTES}</div>')
+            f'<div class="bulle"><div class="sur prop">la première fois</div><div class="tx25">{texte}</div>{GESTES}</div>')
 def page(bascule_on, corps):
-    return (f'<div class="page"><h3 class="prop">La première fois</h3>'
+    return (f'<div class="pg25"><h3 class="prop">La première fois</h3>'
             # D14 : le libellé RATIFIÉ de la bascule (Profil / réglages, série 6 cadres 95-96, ratifiée par délégation) — dans le sens du joueur
             f'<div class="inter"><span><b>On vous explique encore</b><br><small>décochez le jour où vous n’avez plus besoin qu’on vous tienne la main</small></span>'
             f'<div class="bascule{" on" if bascule_on else ""}"></div></div>'
@@ -109,7 +110,7 @@ CADRES = [
     cadre('㉕ 1ʳᵉ session, la file vidée — <code>next_tutorial_id</code> = queue_runs_dry', bulle(T_VIDE)),
     cadre('㉕ 2ᵉ session, depuis Plus — la page « la première fois »',
           page(True, '<div class="fens"><div><b>02</b><span class="prop">vues</span></div><div><b>01</b><span class="prop">à venir</span></div></div>'
-                     f'<div class="suite"><div class="sur prop">à découvrir</div><div class="texte">{servi("tutorial.cue_stack_intro")}</div>'
+                     f'<div class="suite"><div class="sur prop">à découvrir</div><div class="tx25">{servi("tutorial.cue_stack_intro")}</div>'
                      '<div class="gestes"><div class="g or">Compris</div></div></div>'), DOCK_PLUS),
     cadre('㉕ Le refus — <code>tutorials_opt_out</code> = vrai (la bascule dit l’inverse de la clé)',
           page(False, '<div class="calme prop">Vous avez demandé qu’on vous laisse tranquille.</div>'), DOCK_PLUS),
