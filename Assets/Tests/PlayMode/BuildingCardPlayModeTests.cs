@@ -119,7 +119,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(IsUuid(frontShopId), $"discovered front_shop uuid (got '{frontShopId}')");
             Assert.IsTrue(IsUuid(safehouseId), $"discovered safehouse uuid (got '{safehouseId}')");
 
-            Debug.Log($"[BuildingCardE2E] seeded — lab={labId} front_shop={frontShopId} safehouse={safehouseId} email={demoEmail}");
+            Debug.Log($"[BuildingCardE2E] seeded — lab={labId} front_shop={frontShopId} safehouse={safehouseId} email={MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(demoEmail)}");
             seeded = true;
         }
 

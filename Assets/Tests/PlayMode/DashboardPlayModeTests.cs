@@ -107,7 +107,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsFalse(string.IsNullOrEmpty(demoEmail), "discovered demo email");
             Assert.IsFalse(string.IsNullOrEmpty(demoPassword), "discovered demo password");
 
-            Debug.Log($"[DashboardE2E] seeded — email={demoEmail}");
+            Debug.Log($"[DashboardE2E] seeded — email={MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(demoEmail)}");
             seeded = true;
         }
 

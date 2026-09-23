@@ -191,11 +191,11 @@ namespace MafiaCleanCity.Shell.Tests
             string a = (annonce ?? "").Trim();
             bool conforme = string.Equals(a, (me.email ?? "").Trim(), System.StringComparison.OrdinalIgnoreCase)
                          || string.Equals(a, (me.handle ?? "").Trim(), System.StringComparison.OrdinalIgnoreCase);
-            Debug.Log($"[IDENTITE-CONNECTEE] {quoi} : /v1/me email={me.email} handle={me.handle} · annoncée « {a} » · "
+            Debug.Log($"[IDENTITE-CONNECTEE] {quoi} : /v1/me email={MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(me.email)} handle={MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(me.handle)} · annoncée « {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(a)} » · "
                       + (conforme ? "CONFORME" : "⛔ DIFFÉRENTE"));
             Assert.IsTrue(conforme,
-                $"capture refusée ({quoi}) : la planche ANNONCE « {a} » mais le jeton utilisé est celui de "
-                + $"« {me.email} » (handle {me.handle}). C'est le défaut du 2026-09-22 (DA §2.4) : l'annonce et la "
+                $"capture refusée ({quoi}) : la planche ANNONCE « {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(a)} » mais le jeton utilisé est celui de "
+                + $"« {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(me.email)} » (handle {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(me.handle)}). C'est le défaut du 2026-09-22 (DA §2.4) : l'annonce et la "
                 + "connexion n'ont pas la même source. Aucune planche n'est écrite.");
         }
 

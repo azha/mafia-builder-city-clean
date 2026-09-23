@@ -138,6 +138,23 @@ namespace MafiaCleanCity.CityMap
     // docstring qui cite le motif qu'il décrit se compte lui-même comme une occurrence).
     public static class DemoIdentityResolver
     {
+        /// <summary>⛔ SÉCURITÉ (2026-09-23) — L'EMPREINTE d'un identifiant, JAMAIS sa valeur : `sha256:` + les 8 premiers caractères
+        /// hexadécimaux du SHA-256 (UTF-8, espaces de bord retirés) ; `∅` pour une valeur vide. Tout journal ou message d'assertion
+        /// qui porte un email, un handle, un identifiant ou un mot de passe passe par ici : l'identifiant du compte de capture est
+        /// la moitié de sa paire et ne s'écrit dans aucun journal (garde : `JournalSansIdentitePlayModeTests`). Deux empreintes
+        /// égales disent « même compte » sans dire lequel — c'est tout ce qu'un journal a besoin de savoir.</summary>
+        public static string Empreinte(string valeur)
+        {
+            if (string.IsNullOrWhiteSpace(valeur)) return "∅";
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] h = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(valeur.Trim()));
+                var sb = new System.Text.StringBuilder("sha256:");
+                for (int k = 0; k < 4; k++) sb.Append(h[k].ToString("x2"));
+                return sb.ToString();
+            }
+        }
+
         // -- identité "operational" (AppShell + les 7 contrôleurs Operational/*) ------------------
         public const string OperationalIdentifierEnvVar = "MAFIA_DEMO_IDENTIFIER";
         public const string OperationalPasswordEnvVar = "MAFIA_DEMO_PASSWORD";
@@ -269,7 +286,7 @@ namespace MafiaCleanCity.CityMap
             (string identifier, string password) = Resolve(
                 identifierEnvVar, passwordEnvVar, fallbackIdentifier, fallbackPassword,
                 allowEnvironmentOverride);
-            Debug.Log($"[DemoIdentityResolver] régime={DescribeRegime(identifierEnvVar, allowEnvironmentOverride)} identité={identifier}");
+            Debug.Log($"[DemoIdentityResolver] régime={DescribeRegime(identifierEnvVar, allowEnvironmentOverride)} identité={Empreinte(identifier)}");
             yield return auth.SignIn(identifier, password, onSuccess, onError);
         }
 

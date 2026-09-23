@@ -82,7 +82,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(SeederSupport.IsUuid(dealerId), $"discovered dealer uuid (got '{dealerId}')");
             Assert.IsTrue(SeederSupport.IsUuid(nodeId), $"discovered laundering node uuid (got '{nodeId}')");
 
-            Debug.Log($"[CapstoneE2E] seeded loop — lab={labId} node={nodeId} email={demoEmail}");
+            Debug.Log($"[CapstoneE2E] seeded loop — lab={labId} node={nodeId} email={MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(demoEmail)}");
         }
 
         [TearDown]

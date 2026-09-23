@@ -57,11 +57,11 @@ namespace MafiaCleanCity.Tests
             const string PorteAssumee = "MAFIA_SEED_ALLOW_FROZEN";
             bool autorise = System.Environment.GetEnvironmentVariable(PorteAssumee) == "1";
             bool gele = ComptesGeles.Contains(identifiant);
-            Debug.Log($"[COMPTE-GELÉ] {geste} sur « {identifiant} » · "
+            Debug.Log($"[COMPTE-GELÉ] {geste} sur « {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(identifiant)} » · "
                       + (gele ? "COMPTE GELÉ" : "compte ordinaire")
                       + $" · {PorteAssumee}={(autorise ? "1 (contournement EXPLICITE)" : "non posée")}");
             if (gele && !autorise)
-                Assert.Fail($"MUTATION REFUSÉE : « {geste} » sur « {identifiant} », un COMPTE GELÉ dont "
+                Assert.Fail($"MUTATION REFUSÉE : « {geste} » sur « {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(identifiant)} », un COMPTE GELÉ dont "
                     + "l'état est la base de preuve des planches jugées. Ce n'est presque jamais une "
                     + "erreur de configuration : c'est une paire d'identité de CAPTURE exportée dans un "
                     + "run qui embarque une suite qui MUTE. ⇒ Pour tester des mécaniques : ne pas "

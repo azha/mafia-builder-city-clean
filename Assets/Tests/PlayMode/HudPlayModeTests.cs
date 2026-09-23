@@ -72,8 +72,8 @@ namespace MafiaCleanCity.Shell.Tests
             var auth = new AuthClient { BaseUrl = BaseUrl };
             string token = null, err = null;
             yield return auth.SignIn(identifier, password, t => token = t, e => err = e);
-            Assert.IsNull(err, $"signin indépendant pour {identifier} a échoué : {err}");
-            Assert.IsFalse(string.IsNullOrEmpty(token), $"signin pour {identifier} a rendu un jeton vide");
+            Assert.IsNull(err, $"signin indépendant pour {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(identifier)} a échoué : {err}");
+            Assert.IsFalse(string.IsNullOrEmpty(token), $"signin pour {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(identifier)} a rendu un jeton vide");
             onToken(token);
         }
 
@@ -101,10 +101,10 @@ namespace MafiaCleanCity.Shell.Tests
                 req.timeout = 10;
                 req.SetRequestHeader("Authorization", "Bearer " + token);
                 yield return req.SendWebRequest();
-                Assert.AreEqual(UnityWebRequest.Result.Success, req.result, $"GET /v1/me a échoué pour {identifier}: {req.error}");
+                Assert.AreEqual(UnityWebRequest.Result.Success, req.result, $"GET /v1/me a échoué pour {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(identifier)}: {req.error}");
                 MeDto me = JsonUtility.FromJson<MeEnvelope>(req.downloadHandler.text)?.payload?.data;
-                Assert.IsNotNull(me, $"/v1/me n'a pas parsé pour {identifier}");
-                Assert.IsFalse(string.IsNullOrEmpty(me.handle), $"callsign vide pour {identifier}");
+                Assert.IsNotNull(me, $"/v1/me n'a pas parsé pour {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(identifier)}");
+                Assert.IsFalse(string.IsNullOrEmpty(me.handle), $"callsign vide pour {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(identifier)}");
                 onCallsign(me.handle);
             }
         }
