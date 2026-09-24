@@ -146,7 +146,7 @@ namespace MafiaCleanCity.Operational
     }
 
     /// <summary>`structural_decisions` de `task-categories` (annoncé ; RENOMMÉ par le back le 2026-09-24, ex-`structural_budget` — ce
-    /// nom-là est déjà un champ de session/open, `{used, cap_reached}`, d'une autre forme) : `{cap_reached, decisions_this_session[]}`. ⛔ PAS de `used`
+    /// nom-là est déjà un champ de session/open, `{used, cap_reached}`, d'une autre forme) : `{cap_reached, decisions[]}`. ⛔ PAS de `used`
     /// (forme corrigée par le back le 2026-09-24 : un scalaire en projection joueur est interdit, R2.2). Deux régimes servis : EN
     /// session, le plafond et les décisions de la session ; HORS session active, `cap_reached=false` et une liste vide (le gouverneur
     /// n'applique aucun plafond).</summary>
@@ -154,7 +154,10 @@ namespace MafiaCleanCity.Operational
     public class StructuralDecisionsDto
     {
         public bool cap_reached;
-        public DecisionDeSessionDto[] decisions_this_session;
+        /// <summary>Les décisions de structure de la session. RENOMMÉE par le back le 2026-09-24 (ex-`decisions_this_session`) : l'ancien
+        /// nom n'était qu'à un suffixe de `decisions_this_session_display` (/meta/pressure), une cadence d'affichage — une AUTRE grandeur.
+        /// Une liste sous l'ancien nom n'est pas lue (JsonUtility lit par nom de champ).</summary>
+        public DecisionDeSessionDto[] decisions;
     }
 
     /// <summary>Une décision de structure prise dans la session : `decision_type` (`StructuralDecisionType` du gouverneur —
