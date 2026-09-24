@@ -8,8 +8,8 @@ Mesure : bundle fr servi par la pile de dev, build `e7f52351` (X-Server-Build, 1
 
 | littéral | site (`BuildingCardController.cs`, branche `restauration/conflit-2026-09-24`) | rendu par | clé `building.*` servie | preuve |
 |---|---|---|---|---|
-| « ACTIONS » | en-tête de la barre d'actions (hors pupitre focal) | `NewSectionLabel` → `NewText`, texte tel quel | **aucune** | la seule valeur « Actions » servie est `famille.ecran.actions` (domaine de la Famille, pas de la fiche) — non réutilisée : une clé d'un autre domaine n'est pas la clé de ce mot ici |
-| « Honorer le rendez-vous » | bouton du rendez-vous Ash, **deux** sites (l'un antérieur au 23/09, l'autre ajouté par la mise en scène de l'écrin) | `AddActionButton` → `NewText`, label tel quel | **aucune** | aucune valeur « Honorer le rendez-vous » servie ; seules `building.bloc.le_rendez_vous_est_honore` et `building.appointment.honored` existent (l'état, pas le geste) |
+| ~~« ACTIONS »~~ | ~~en-tête de la barre d'actions~~ | — | — | **RETIRÉ** (24/09) : l'atelier a vérifié les 146 cadres de la série 6, aucun ne porte ce mot — ordre de l'orchestrateur |
+| « Honorer le rendez-vous » | bouton du rendez-vous Ash, **deux** sites (l'un antérieur au 23/09, l'autre ajouté par la mise en scène de l'écrin) | `AddActionButton` → `NewText`, label tel quel | **aucune** | aucune valeur « Honorer le rendez-vous » servie ; seules `building.bloc.le_rendez_vous_est_honore` et `building.appointment.honored` existent (l'état, pas le geste). **Clé DEMANDÉE** (24/09) : `building.action.honorer_le_rendez_vous`, ajoutée PROPOSÉE à la table 37 par l'atelier, à servir par le back ; le bouton reste (seule voie de vente de l'Ash, `POST …/appointment/:id/honor`) et passera par `Libelle` dès que la clé est au bundle |
 
 À faire (hors client) : l'atelier écrit le mot de ces deux gestes/en-têtes (table de la fiche ②), le back sert la clé, puis le
 client passe par `Libelle` avec la clé servie. D'ici là, le code reste en l'état — aucune clé inventée.

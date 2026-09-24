@@ -996,14 +996,8 @@ namespace MafiaCleanCity.Operational
 
             bool pupitreFocal = APupitre(card.operational_type) && CurrentLab != null
                 && (CurrentAppointment == null || string.IsNullOrEmpty(CurrentAppointment.status));
-            // Correctif du 24/09 : l'en-tête « LE PUPITRE » (pupitre focal) est RETIRÉ — aucune source (ni table 37, ni balayage
-            // 34), et la maquette ② ne montre aucun en-tête à cet endroit (« le pupitre » n'y figure qu'en commentaire).
-            // « ACTIONS » reste hors Libelle : dette déclarée (Tools/juge-donnees/i18n/dette-hors-libelle-fiche-2026-09-24.md).
-            if (!pupitreFocal)
-            {
-                string label = NewSectionLabel(actionBar, "ACTIONS");
-                TrackText(null, label);
-            }
+            // Correctifs du 24/09 : AUCUN en-tête au-dessus des gestes. « LE PUPITRE » n'avait aucune source ; « ACTIONS » non plus :
+            // l'atelier a vérifié les 146 cadres de la série 6, aucun ne porte ce mot (ordre de l'orchestrateur : retiré).
 
             // Phase-2b: the Repair affordance — visible ONLY when the building is DAMAGED. It shows the repair
             // COST band (qualitative — never cents) and is DISABLED when the wallet band can't afford that cost

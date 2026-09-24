@@ -120,7 +120,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsFalse(r.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_mise_en_place"),
                 "le pupitre actif ne répète pas la fiche technique générique");
             CollectionAssert.DoesNotContain(Textes(r, "Section"), "LE PUPITRE", "en-tête sans source, retiré le 24/09");
-            CollectionAssert.DoesNotContain(Textes(r, "Section"), "ACTIONS", "pupitre focal : aucun en-tête (la maquette ② n'en montre pas)");
+            CollectionAssert.DoesNotContain(Textes(r, "Section"), "ACTIONS", "aucun en-tête : ni « LE PUPITRE » ni « ACTIONS » n'ont de source (série 6, 146 cadres)");
             Assert.IsFalse(r.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Action_ouvrir"),
                 "ouvrir/conversion ne parasite pas le geste appelé par la cuisson");
         }
