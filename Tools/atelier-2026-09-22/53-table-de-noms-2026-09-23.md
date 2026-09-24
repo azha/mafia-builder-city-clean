@@ -176,3 +176,11 @@ Ajouter après le paragraphe « Districts have names — invent at art-bible tim
 "terminals," messaging apps generically as "channels" » suppose des smartphones et des messageries, anachroniques en
 1B. La supprimer ou la réécrire touche aux **objets** du jeu, pas aux noms, et donc à l'écart « fin 80 » / « fin 90 »
 relevé par le lot 6. Question pour qui tient le canon.
+
+## Révision du 24/09 — vérification EN LIGNE (f2) et remplaçants
+
+La garde que les revues ⊥ ne pouvaient pas donner (« registre des clans et recherche de marques, en ligne ») a été faite :
+`53-verification-en-ligne-2026-09-24.md` (critère élargi : clan, boss nommé ou victime répertoriée, dans N'IMPORTE QUELLE organisation
+criminelle ; listes consultées et contrôles positifs en tête). **40 noms remplacés** (23 lieutenants, 17 enseignes), par des patronymes hors du
+bassin campanien passés par la MÊME méthode : 85 candidats testés en ligne, 51 OK, 40 retenus. Somme tenue : 138 − 40 + 40 = 138. Les noms
+retirés ou écartés sont dans la liste d'exclusion du générateur. Les surnoms 'o Quaderno et 'o Sartore suivent leur lieutenant.

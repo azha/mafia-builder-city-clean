@@ -30,13 +30,13 @@ def tableaux(txt):  # le CONTENU des « [...] » seulement (les apostrophes des 
 CANON = {'Hara': 'réservoir servi + clés d\'accueil (Lt. Hara) ; « Crédit Hara » sort des enseignes (réservoirs disjoints)', 'Salvatore': 'maquette ⑦ (front.md l. 1396)', 'Nestor': 'clé servie appro.bloc.nestor_… + maquette du labo'}
 # 48 = 4 groupes de 12, servis dans l'ordre (le back sert le groupe suivant quand l'équipe dépasse le précédent, comme Sec → Estuaire)
 LIEUTENANTS = [
-    ['Hara', 'Salvatore', 'Nestor', 'Sparano', 'Improta', 'Astarita', 'Vitiello', 'Sannino', 'Tufano', 'Formisano', 'Sicignano', 'Balzano'],
-    ['Aurilia', 'Ambrosino', 'Caccavale', 'Guardascione', 'Cennamo', 'Anzalone', 'Ciaramella', 'Gargiulo', 'Iaccarino', 'Imparato', 'Pellino', 'Longobardi'],
-    ['Maiello', 'Mascolo', 'Minichini', 'Palomba', 'Parlato', 'Pignalosa', 'Punzo', 'Ragosta', 'Rescigno', 'Siniscalchi', 'Staiano', 'Verrusio'],
-    ['Vanacore', 'Conturso', 'Acampora', 'Cervone', 'Buonocore', 'Capuano', 'Guarracino', 'Musella', 'Orefice', 'Sagliocco', 'Scarpato', 'Scognamiglio'],
+    ['Hara', 'Salvatore', 'Nestor', 'Zotta', 'Improta', 'Astarita', 'Verrastro', 'Labanca', 'Setaro', 'Formisano', 'Sicignano', 'Tortorella'],
+    ['Aurilia', 'Ambrosino', 'Caccavale', 'Guardascione', 'Zaccagnino', 'Tripaldi', 'Ciaramella', 'Zaccara', 'Iaccarino', 'Scaringella', 'Pellino', 'Robortella'],
+    ['Maiello', 'Nardozza', 'Frascella', 'Palomba', 'Montanaro', 'Pignalosa', 'Punzo', 'Cillis', 'Telesca', 'Siniscalchi', 'Lagala', 'Verrusio'],
+    ['Corbo', 'Conturso', 'Acampora', 'Gerardi', 'Brienza', 'Capuano', 'Lovallo', 'Restaino', 'Sileo', 'Sagliocco', 'Scarpato', 'Amatucci'],
 ]
 # surnoms : parcimonie (6 sur 48), champ À PART — le nom servi reste « Lt. {nom} » (les puces n'ont pas la place)
-SURNOMS = {'Vitiello': "'o Sartore", 'Caccavale': "'a Lampara", 'Mascolo': "'o Quaderno", 'Verrusio': "'o Silenzio",
+SURNOMS = {'Verrastro': "'o Sartore", 'Caccavale': "'a Lampara", 'Nardozza': "'o Quaderno", 'Verrusio': "'o Silenzio",
            'Iaccarino': "'a Maestra", 'Scarpato': "'o Pescatore"}
 # 18 = diminutifs de rue (nés entre 1965 et 1975) ; 8 féminins (aucun accord servi : D13)
 DEALERS = ['Lello', 'Nando', 'Nella', 'Peppe', 'Nunziatina', 'Gigino', 'Marietta', 'Mimmo', 'Assuntina',
@@ -48,18 +48,18 @@ SERVIES_GARDEES = {'Laverie du Quai', 'Consigne de la Threnny', 'Remise du 3', '
 #    ne porte, et des NOMS DE LIEU du port (sans personne, donc sans risque de personne réelle), jamais un nom de district
 #    (« Messagerie du Pont — Pont-Gris » se lirait mal dans la forme servie « {enseigne} — {district}, îlot {bloc} »).
 ENSEIGNES = {
-    'front_shop':        ['Pressing du Marché', 'Tabac-Presse du Môle', 'Laverie du Quai', 'Photo Barbato', 'Serrurerie Cafasso', 'Cordonnerie de la Fontaine'],
-    'cash_safehouse':    ['Garde-meubles Lauritano', 'Consigne de la Threnny', 'Box de l’Écluse', 'Entrepôt des Docks', 'Déménagements Iodice', 'Dépôt du Chantier'],
-    'stash':             ['Cave Scamardella', 'Réserve des Tanneurs', 'Remise du 3', 'Débarras Mastrangelo', 'Cellier du Levant', 'Grenier Ascolese'],
-    'lab':               ['Mécanique de l’Arsenal', 'Ferblanterie Vetrano', 'Réparation des Forges', 'Soudure Fusco', 'Outillage de la Fonderie', 'Électricité Perrella'],
-    'grow_house':        ['Serres Rega', 'Jardinerie des Tilleuls', 'Pépinière du Verre', 'Fleurs Pacilio', 'Serres du Treillis', 'Horticulture du Couchant'],
-    'refinery':          ['Distillerie Santaniello', 'Traitement de surface Sibilio', 'Filtration de la Digue', 'Épuration de l’Estuaire', 'Traitement des eaux du Phare', 'Récupération Tagliamonte'],
+    'front_shop':        ['Pressing du Marché', 'Tabac-Presse du Môle', 'Laverie du Quai', 'Photo Tatasciore', 'Serrurerie Cafasso', 'Cordonnerie de la Fontaine'],
+    'cash_safehouse':    ['Garde-meubles Palumbi', 'Consigne de la Threnny', 'Box de l’Écluse', 'Entrepôt des Docks', 'Déménagements Iodice', 'Dépôt du Chantier'],
+    'stash':             ['Cave Scurti', 'Réserve des Tanneurs', 'Remise du 3', 'Débarras Ventresca', 'Cellier du Levant', 'Grenier Ascolese'],
+    'lab':               ['Mécanique de l’Arsenal', 'Ferblanterie Vetrano', 'Réparation des Forges', 'Soudure Cicconetti', 'Outillage de la Fonderie', 'Électricité Pelusi'],
+    'grow_house':        ['Serres Taraschi', 'Jardinerie des Tilleuls', 'Pépinière du Verre', 'Fleurs Spadaccini', 'Serres du Treillis', 'Horticulture du Couchant'],
+    'refinery':          ['Distillerie Cantagallo', 'Traitement de surface Carusi', 'Filtration de la Digue', 'Épuration de l’Estuaire', 'Traitement des eaux du Phare', 'Récupération Tagliamonte'],
     'press_house':       ['Imprimerie Trinchillo', 'Presse du Beffroi', 'Reprographie Vecchione', 'Sérigraphie Zampella', 'Étiquettes Zinno', 'Papeterie des Remparts'],
     'distribution_hub':  ['Transports Cimmaruta', 'Messagerie du Viaduc', 'Coursiers de la Corniche', 'Fret de la Criée', 'Livraisons des Pêcheurs', 'Colis du Square'],
-    'office':            ['Cabinet Della Ragione', 'Fiduciaire des Arcades', 'Agence Amitrano', 'Comptoir Allocca', 'Secrétariat Cinquegrana', 'Études Mauriello'],
-    'dealer_spot_front': ['Kiosque Sarnataro', 'Snack Vollono', 'Salle de jeux Sorvillo', 'Café du Quai', 'Billard Aliperta', 'Vidéo-club Caiazza'],
-    'money_holding':     ['Change Russiello', 'Crédit du Port', 'Caisse Zurolo', 'Prêts Amodio', 'Épargne Ummarino', 'Change du Verre'],
-    'specialized_lab':   ['Laboratoire Fierro', 'Analyses Porzio', 'Chimie fine Chiacchio', 'Contrôle Manna', 'Mesures Lanzetta', 'Optique Nastri'],
+    'office':            ['Cabinet Iezzi', 'Fiduciaire des Arcades', 'Agence Amitrano', 'Comptoir Allocca', 'Secrétariat Cinquegrana', 'Études Pollice'],
+    'dealer_spot_front': ['Kiosque Giancola', 'Snack Vollono', 'Salle de jeux Sorvillo', 'Café du Quai', 'Billard Aliperta', 'Vidéo-club Marinucci'],
+    'money_holding':     ['Change Russiello', 'Crédit du Port', 'Caisse Zurolo', 'Prêts Colasante', 'Épargne Rapino', 'Change du Verre'],
+    'specialized_lab':   ['Laboratoire Fierro', 'Analyses Porzio', 'Chimie fine Chiacchio', 'Contrôle Manna', 'Mesures Colantonio', 'Optique Nastri'],
 }
 LIEU = re.compile(r".*\b(?:du|de la|de l’|des) ?(\w[\w-]*)$")        # « … des eaux du Phare » → « Phare » : un LIEU, pas une personne
 PATRO = re.compile(r"((?:(?:Di|Della|De) )?[A-ZÀ-Ý][\wÀ-ÿ]+)$")     # « Cabinet Della Ragione » → « Della Ragione »
@@ -76,7 +76,9 @@ EXCLUS = {  # LISTE DE L'ATELIER (clans et figures connus de Campanie, personnal
     'Savastano', 'Conte', 'Marzio', 'Troncone', 'Soprano', 'Corleone', 'Moltisanti', 'Montana', 'Capone', 'Coppola',
     'Maradona', 'Ferlaino', 'Bassolino', 'Merola', 'Troisi', 'Filippo', 'Cuomo', 'Maio', 'Donnarumma', 'Sorrentino', 'Starace',
     'Schettino', 'Serpico', 'Cirillo', 'Chianese', 'Nappi', 'Apicella', 'Cacace', 'Gaeta', 'Rosetta', 'Carmela', 'Titti', 'Ragioniere',
-    'Riina', 'Provenzano', 'Gravano', 'Bagarella', 'Brusca', 'Greco', 'Badalamenti', 'Graviano', 'Denaro', 'Pesce', 'Piromalli', 'Mancuso', 'Stefano', 'Pelle', 'Strangio', 'Accardo', 'Cotugno', 'Sepe', 'Luca', 'Montella', 'Nocerino', 'Panariello', 'Totò', 'Pupetta', 'Gomorra', 'Ferrigno', 'Somma', 'Arpaia', 'Trapanese', 'Tittina', 'Cascone', 'Cuccurullo', 'Vincenzina', 'Capasso', 'Sorvino', 'Graziella', 'Mennella', 'Terracciano', 'Cafiero', 'Capuozzo', 'Iannone', 'Napolano', 'Napolitano', 'Bove', 'Pinuccio', 'Halles',
+    'Riina', 'Provenzano', 'Gravano', 'Bagarella', 'Brusca', 'Greco', 'Badalamenti', 'Graviano', 'Denaro', 'Pesce', 'Piromalli', 'Mancuso', 'Stefano', 'Pelle', 'Strangio', 'Accardo', 'Cotugno', 'Sepe', 'Luca', 'Montella', 'Nocerino', 'Panariello', 'Totò', 'Pupetta', 'Gomorra', 'Ferrigno', 'Somma', 'Arpaia', 'Trapanese', 'Tittina', 'Cascone', 'Cuccurullo', 'Vincenzina', 'Capasso', 'Sorvino', 'Graziella', 'Mennella', 'Terracciano',
+    # vérification EN LIGNE du 24/09 (53-verification-en-ligne-2026-09-24.md) : retirés et candidats écartés — ne peuvent pas revenir
+    'Amodio', 'Anzalone', 'Balzano', 'Barbato', 'Barile', 'Buonocore', 'Caiazza', 'Cennamo', 'Cerasoli', 'Cervone', 'Ciampa', 'Donadio', 'Fusco', 'Gargiulo', 'Grieco', 'Guarracino', 'Iannuzzi', 'Imparato', 'Lamorte', 'Lanzetta', 'Lattanzio', 'Lauria', 'Lauritano', 'Longobardi', 'Lopardo', 'Mascolo', 'Mastrangelo', 'Mauriello', 'Menna', 'Mincione', 'Minichini', 'Musella', 'Orefice', 'Pacilio', 'Padula', 'Palladino', 'Parlato', 'Perrella', 'Postiglione', 'Ragione', 'Ragosta', 'Rega', 'Rescigno', 'Sannino', 'Santaniello', 'Sarnataro', 'Sborgia', 'Scamardella', 'Scognamiglio', 'Sibilio', 'Sparano', 'Staiano', 'Summa', 'Tufano', 'Ummarino', 'Vanacore', 'Vignola', 'Vitiello', 'Zuccarini', 'Cafiero', 'Capuozzo', 'Iannone', 'Napolano', 'Napolitano', 'Bove', 'Pinuccio', 'Halles',
     'Carotenuto', 'Langella', 'Auriemma', 'Buonanno', 'Visone', 'Tammaro', 'Ninetta', 'Totonno', 'Varriale', 'Martino', 'Marzano', 'Salzano', 'Mele',
     'Fiorillo', 'Fiorello', 'Palma', 'Ponant', 'Nunziante', 'Marfella', 'Burma', 'Bassins', 'Spinelli', 'Scotti', 'Pisciotta'}
 
