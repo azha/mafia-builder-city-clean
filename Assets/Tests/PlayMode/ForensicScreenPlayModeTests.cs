@@ -20,7 +20,8 @@ namespace MafiaCleanCity.Operational.Tests
     /// `pilote-B`) : `OuvrirJoueurFrais()` (signup + `session/close` défensif + lecture d'un
     /// lieutenant du kit de départ) — à adapter ici selon ce que `GetForensic` exige
     /// réellement comme précondition.</summary>
-    [Category("ScreenB7")]
+    // ⛔ `ScreenB7` est posée TEST PAR TEST, pas sur la classe (lot de classe du 2026-09-24) : posée sur la classe, elle emportait la
+    // capture (Cliche…) avec l'écran — une capture exige l'identité de capture et écrit des PNG. La capture ne porte que sa catégorie.
     public class ForensicScreenPlayModeTests
     {
         private const string BaseUrl = "http://localhost";
@@ -67,6 +68,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// `BuildLayout()` rempli, relever le plancher `Assert.Greater(comptes, 1, ...)` vers une
         /// valeur qui reflète le contenu réel (㊲ l'a posé à 10).</summary>
         [UnityTest]
+        [Category("ScreenB7")]
         public IEnumerator ScreenB7S1_ToutGraphic_PorteSonCanvasRenderer()
         {
             MonterEcran();
@@ -112,7 +114,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// jeton et SANS `Charger()`, donc ses planches `screen_b7_1080x{1920,2400}.png` montrent la
         /// coquille. Lancer `PhotoScreenB7` ne photographie AUCUNE donnée servie ; la planche chargée
         /// est `ScreenB7C2` (`CaptureForensic`).</summary>
-        [UnityTest, Category("Capture"), Category("PhotoScreenB7")]
+        [UnityTest, Category("Capture"), Category("ClicheB7")]
         public IEnumerator ScreenB7C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
             MonterEcran();
@@ -197,6 +199,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// `Inconnu` et s'affiche TELLE QUELLE, jamais rabattue sur « calme ». Sans les négatifs,
         /// un résolveur qui rendrait `Calme` pour tout passerait les positifs.</summary>
         [Test]
+        [Category("ScreenB7")]
         public void ScreenB7_UneBandeInconnueNEstJamaisRabattueSurCalme()
         {
             Assert.AreEqual(ForensicResolvers.Gravite.Calme,     ForensicResolvers.NiveauDe("quiet"));
@@ -222,6 +225,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// chacune doit rendre un texte NON VIDE et DIFFÉRENT de la valeur brute. Avant : `flagged`, `audited`, `subpoenaed`
         /// sortaient brutes (« Inconnu »). Et le dernier cran de chaque piste est un ÉVÉNEMENT (`Franchi`), jamais une gravité.</summary>
         [Test]
+        [Category("ScreenB7")]
         public void ScreenB7_ChaqueValeurServie_RendUnTexte_EtLeDernierCranEstUnEvenement()
         {
             string[] servies = { "clean", "watched", "flagged", "audited",       // AuditRiskBucket

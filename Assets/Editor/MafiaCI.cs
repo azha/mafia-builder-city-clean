@@ -85,7 +85,11 @@ public static class MafiaCI
     //   · `HUDv31` : 5 fichiers / 24 tests — le chrome, la barre d'onglets, la zone sûre, le
     //     manomètre. Le socle de l'écran, jugé par personne.
     //   · `EcranDelegation` : la suite de ㉜, arrivée avec l'écran sans son inscription ici.
-    // ⚠️ `PhotoEcranDelegation` n'est PAS inscrite, et c'est délibéré : les catégories `Photo*`
+    // ⛔ RENOMMÉES LE 2026-09-24 (lot de classe, garde `CategoriesDeCapturePlayModeTests`) : le filtre est une regex NON ANCRÉE, et
+    // `PhotoEcranDelegation` CONTENAIT `EcranDelegation` (elle partait avec l'écran). Correspondance : PhotoEcranDelegation →
+    // ClicheDelegation · PhotoEcranDemolition → ClicheDemolition · PhotoScreenB3/B7/C1/C2/C3/C6 → ClicheB3/B7/C1/C2/C3/C6 ·
+    // PhotoScreenC3SousChrome → ClicheSousChromeC3. Les documents datés avant cette date gardent les anciens noms (ce qui a TOURNÉ).
+    // ⚠️ `PhotoEcranDelegation` (aujourd'hui `ClicheDelegation`) n'est PAS inscrite, et c'est délibéré : les catégories `Photo*`
     // écrivent des PNG à chaque exécution — les faire tourner sous le juge salit l'arbre à chaque
     // run. Même régime que `PhotoPlanche`/`PhotoRevue`.
     // ⚠️ Inscrire une catégorie ne la rend pas VERTE : c'est justement l'inverse du service qu'on

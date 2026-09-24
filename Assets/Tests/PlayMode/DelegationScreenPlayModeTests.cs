@@ -137,7 +137,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// photographiait un fond uniforme. Le test signe désormais avec l'identité de campagne,
         /// exige un corps et un rendu abouti, puis seulement écrit les PNG. Mesure du correctif :
         /// 3,252 % et 2,602 % d'encre aux deux résolutions, contre 0,000 % auparavant.</summary>
-        [UnityTest, Category("PhotoEcranDelegation")]
+        [UnityTest, Category("ClicheDelegation")]
         public IEnumerator EcranDelegationC1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
             var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = BaseUrl };

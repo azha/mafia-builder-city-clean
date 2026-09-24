@@ -24,7 +24,8 @@ namespace MafiaCleanCity.Operational.Tests
     /// `pilote-B`) : `OuvrirJoueurFrais()` (signup + `session/close` défensif + lecture d'un
     /// lieutenant du kit de départ) — à adapter ici selon ce que `GetAmbientFeed` exige
     /// réellement comme précondition.</summary>
-    [Category("ScreenC3")]
+    // ⛔ `ScreenC3` est posée TEST PAR TEST, pas sur la classe (lot de classe du 2026-09-24) : posée sur la classe, elle emportait la
+    // capture (Cliche…) avec l'écran — une capture exige l'identité de capture et écrit des PNG. La capture ne porte que sa catégorie.
     public class CarnetScreenPlayModeTests
     {
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un
@@ -79,6 +80,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// `BuildLayout()` rempli, relever le plancher `Assert.Greater(comptes, 1, ...)` vers une
         /// valeur qui reflète le contenu réel (㊲ l'a posé à 10).</summary>
         [UnityTest]
+        [Category("ScreenC3")]
         public IEnumerator ScreenC3S1_ToutGraphic_PorteSonCanvasRenderer()
         {
             MonterEcran();
@@ -123,6 +125,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// AUTRE raison (padding, pivot, largeur de rang). Elle compare deux bords GAUCHES
         /// mesurés après mise en page : le seul fait qui intéresse le lecteur de l'écran.</summary>
         [UnityTest]
+        [Category("ScreenC3")]
         public IEnumerator ScreenC3S2_CreneauVideEtCreneauPlein_PartagentLaMemeColonne()
         {
             MonterEcran();
@@ -196,7 +199,7 @@ namespace MafiaCleanCity.Operational.Tests
         ///   `Capture<Ecran>` serait emporté par une demande de `Capture` — le piège qui a mordu
         ///   trois sessions le 2026-09-02 (`["HUD"]`→`HUDv31`, `["CaptureDetail"]`→
         ///   `CaptureDetailMutant`, et ma propre série de noms, refusée par ma propre garde).
-        [UnityTest, Category("PhotoScreenC3")]
+        [UnityTest, Category("ClicheC3")]
         public IEnumerator ScreenC3C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
             MonterEcran();
@@ -224,7 +227,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// ⚠️ ATTENTE SUR `RenduTermine`, JAMAIS sur N frames : un compte de frames est une durée
         /// déguisée en état, vert sur une machine rapide et rouge sur une lente, et il photographie
         /// un écran à moitié rempli sans jamais le dire.</summary>
-        [UnityTest, Category("PhotoScreenC3SousChrome")]
+        [UnityTest, Category("ClicheSousChromeC3")]
         public IEnumerator ScreenC3C2_CapturerSousLeChromeReel_ParLeCheminDuJoueur()
         {
             // AVANT TOUT : sans la paire, rien ne s'écrit (patron `CapturerLocataire`).

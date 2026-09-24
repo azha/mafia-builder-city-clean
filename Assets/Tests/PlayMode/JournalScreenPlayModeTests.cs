@@ -20,7 +20,8 @@ namespace MafiaCleanCity.Operational.Tests
     /// `pilote-B`) : `OuvrirJoueurFrais()` (signup + `session/close` défensif + lecture d'un
     /// lieutenant du kit de départ) — à adapter ici selon ce que `GetNewsFeed` exige
     /// réellement comme précondition.</summary>
-    [Category("ScreenC1")]
+    // ⛔ `ScreenC1` est posée TEST PAR TEST, pas sur la classe (lot de classe du 2026-09-24) : posée sur la classe, elle emportait la
+    // capture (Cliche…) avec l'écran — une capture exige l'identité de capture et écrit des PNG. La capture ne porte que sa catégorie.
     public class JournalScreenPlayModeTests
     {
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un
@@ -73,6 +74,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// `BuildLayout()` rempli, relever le plancher `Assert.Greater(comptes, 1, ...)` vers une
         /// valeur qui reflète le contenu réel (㊲ l'a posé à 10).</summary>
         [UnityTest]
+        [Category("ScreenC1")]
         public IEnumerator ScreenC1S1_ToutGraphic_PorteSonCanvasRenderer()
         {
             MonterEcran();
@@ -122,7 +124,7 @@ namespace MafiaCleanCity.Operational.Tests
         ///   `Capture<Ecran>` serait emporté par une demande de `Capture` — le piège qui a mordu
         ///   trois sessions le 2026-09-02 (`["HUD"]`→`HUDv31`, `["CaptureDetail"]`→
         ///   `CaptureDetailMutant`, et ma propre série de noms, refusée par ma propre garde).
-        [UnityTest, Category("PhotoScreenC1")]
+        [UnityTest, Category("ClicheC1")]
         public IEnumerator ScreenC1C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
             // ⛔⛔ ON SE CONNECTE AU COMPTE SERVI. Cette suite ne s'authentifiait PAS : l'écran
@@ -281,6 +283,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// rendent chacune un texte NON VIDE et DIFFÉRENT de la valeur brute. Avant : `onset` et `receding` sortaient bruts — le client
         /// testait `starting` et `settling`, que le back ne sert pas.</summary>
         [Test]
+        [Category("ScreenC1")]
         public void ScreenC1_ChaquePhaseServie_RendUnTexte()
         {
             foreach (string v in new[] { "onset", "unfolding", "receding", "lingering", "permanent" })

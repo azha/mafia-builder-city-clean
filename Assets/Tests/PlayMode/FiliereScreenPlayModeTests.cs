@@ -20,7 +20,8 @@ namespace MafiaCleanCity.Operational.Tests
     /// `pilote-B`) : `OuvrirJoueurFrais()` (signup + `session/close` défensif + lecture d'un
     /// lieutenant du kit de départ) — à adapter ici selon ce que `GetLaundering` exige
     /// réellement comme précondition.</summary>
-    [Category("ScreenC2")]
+    // ⛔ `ScreenC2` est posée TEST PAR TEST, pas sur la classe (lot de classe du 2026-09-24) : posée sur la classe, elle emportait la
+    // capture (Cliche…) avec l'écran — une capture exige l'identité de capture et écrit des PNG. La capture ne porte que sa catégorie.
     public class FiliereScreenPlayModeTests
     {
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un
@@ -72,6 +73,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// `BuildLayout()` rempli, relever le plancher `Assert.Greater(comptes, 1, ...)` vers une
         /// valeur qui reflète le contenu réel (㊲ l'a posé à 10).</summary>
         [UnityTest]
+        [Category("ScreenC2")]
         public IEnumerator ScreenC2S1_ToutGraphic_PorteSonCanvasRenderer()
         {
             MonterEcran();
@@ -121,7 +123,7 @@ namespace MafiaCleanCity.Operational.Tests
         ///   `Capture<Ecran>` serait emporté par une demande de `Capture` — le piège qui a mordu
         ///   trois sessions le 2026-09-02 (`["HUD"]`→`HUDv31`, `["CaptureDetail"]`→
         ///   `CaptureDetailMutant`, et ma propre série de noms, refusée par ma propre garde).
-        [UnityTest, Category("PhotoScreenC2")]
+        [UnityTest, Category("ClicheC2")]
         public IEnumerator ScreenC2C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
             // ⛔⛔ ON SE CONNECTE AU COMPTE SERVI, ET C'EST TOUT LE SUJET DE CETTE CAPTURE.
