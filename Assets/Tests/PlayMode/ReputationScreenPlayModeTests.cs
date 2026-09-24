@@ -811,28 +811,28 @@ namespace MafiaCleanCity.Operational.Tests
 
         // ═══ 3. LES TROUS DÉCLARÉS — l'écran ne doit pas les combler ════════════════════════
 
-        /// <summary>⛔ LE COMPTEUR « ENFREINTES » N'AFFICHE JAMAIS « 00 ».
-        /// Aucune clé du corps ne porte ce compte : la donnée est en base
-        /// (`boss_mirror_violation_ring.violation_slots[]`) et jamais projetée — forme F. Un
-        /// « 00 » dirait « aucune enfreinte » là où la vérité est « le serveur ne le dit pas ».
-        /// ⇒ La garde vise la VALEUR AFFICHÉE, pas l'absence d'une clé : c'est ce qui la rendra
-        /// ROUGE le jour où le lot back projettera le compte et où l'écran devra changer.</summary>
+        /// <summary>⛔ LE COMPTEUR « ENFREINTES » N'EXISTE PLUS (㊲, 24/09, arbitrage Q3). Aucune clé du corps ne porte ce compte (la
+        /// donnée est en base, `boss_mirror_violation_ring.violation_slots[]`, jamais projetée : L3) et le mot n'a pas de clé (table 43 :
+        /// « note »). Un « — » sous « ENFREINTES » disait encore une case que le serveur ne remplit pas. ⇒ Deux compteurs, avec les
+        /// mots servis ; la garde ROUGIRA le jour où un 3ᵉ compteur reviendra sans sa donnée.</summary>
         [UnityTest]
-        public IEnumerator B3T1_CompteurEnfreintes_NAfficheJamaisUnZero()
+        public IEnumerator B3T1_LeCompteurEnfreintes_NExistePlus_DeuxCompteursServis()
         {
-            yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
-            yield return ecran.Charger(lieutenantId);
+            ecran.RendrePourTest(new ReputationSurfaceDto
+            {
+                boss_mirror = new BossMirrorDto { consistency_cue = "aligned", declared_rules = new DeclaredRuleDto[0], portrait_posture = "attentive" },
+            });
+            yield return null;
 
-            TMPro.TextMeshProUGUI cible = null;
+            var libelles = new List<string>();
             foreach (TMPro.TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
-                if (t.text == "ENFREINTES" && t.transform.parent != null)
-                    cible = t.transform.parent.Find("Nombre")?.GetComponent<TMPro.TextMeshProUGUI>();
-
-            Assert.IsNotNull(cible, "compteur ENFREINTES introuvable — garde vraie à vide sinon");
-            StringAssert.DoesNotContain("0", cible.text,
-                "le compteur d'enfreintes affiche un chiffre alors qu'AUCUNE clé du corps ne le " +
-                "porte — un zéro inventé est un mensonge d'écran, pas un état vide");
+            {
+                StringAssert.DoesNotContain("NFREINTE", t.text.ToUpperInvariant(), "« enfreintes » : ni donnée servie ni clé");
+                if (t.name == "Libelle" && t.transform.parent != null && t.transform.parent.name.StartsWith("Fenetre")) libelles.Add(t.text);
+            }
+            CollectionAssert.AreEqual(new[] { "règles données", "absorbées" }, libelles,
+                "deux compteurs, mots SERVIS en casse (les capitales sont typographiques)");
         }
 
         /// <summary>⛔ LES `rule_id` DÉCLARÉS SONT AFFICHÉS EN CLAIR, ET AUTANT QU'IL Y EN A.

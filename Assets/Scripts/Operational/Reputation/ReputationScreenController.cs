@@ -464,21 +464,8 @@ namespace MafiaCleanCity.Operational
             // cran du milieu, c'est « pas encore assez vu ».
             AppliquerEtat(bm != null ? bm.consistency_cue : null, absorbe);
 
-            MajCompteur(0, declarees.ToString("00"), null, "RÈGLES DONNÉES");
-            MajCompteur(1, absorbe.ToString("00"), "/4", "ABSORBÉES");
-            // ⛔ ENFREINTES : TOUJOURS un tiret. Voir la note ENFREINTES plus bas.
-            //
-            // ⚠️ RÉTRACTÉ le 2026-08-31, et la garde B3T1 a mordu avant moi. J'avais mis « 00 »
-            // quand `declarees == 0`, en le justifiant ainsi : « sans règle déclarée, rien ne peut
-            // être enfreint, donc le zéro est DÉDUIT et non inventé ». C'est faux, et la maquette
-            // porte elle-même la réfutation : une règle déclarée tient « jusqu'à ce que vous la
-            // retiriez publiquement ». Une règle déclarée, enfreinte, puis retirée laisse
-            // `declared_rules` VIDE et une enfreinte bien réelle. `declarees == 0` ne prouve donc
-            // rien sur le nombre d'enfreintes — ma déduction n'était pas une déduction.
-            // ★ Ce que je retiens : j'ai reconnu la maquette comme autorité pour lui emprunter son
-            //   « 00 », et ignoré la phrase, deux blocs plus loin dans le MÊME fichier, qui le
-            //   contredisait. On ne cite pas une source en choisissant la ligne qui arrange.
-            MajCompteur(2, "—", null, "ENFREINTES");
+            MajCompteur(0, declarees.ToString("00"), null, Lib("règles données"));
+            MajCompteur(1, absorbe.ToString("00"), "/4", Lib("absorbées"));
 
             // Le pied nomme le PREMIER geste tant qu'aucune règle n'existe — `reputation()` donne
             // « DONNER UNE PREMIÈRE RÈGLE » à la seule vue vierge (ligne 211) et « DONNER UNE
@@ -631,9 +618,8 @@ namespace MafiaCleanCity.Operational
             // défaut que des voyants restés allumés ou qu'une liste de règles non vidée : chaque
             // chemin d'échec doit remettre TOUT ce qu'il a pu laisser derrière lui.
             MajPanneau("", "", "", ReputationResolvers.Muet);
-            MajCompteur(0, "—", null, "RÈGLES DONNÉES");
-            MajCompteur(1, "—", "/4", "ABSORBÉES");
-            MajCompteur(2, "—", null, "ENFREINTES");
+            MajCompteur(0, "—", null, Lib("règles données"));
+            MajCompteur(1, "—", "/4", Lib("absorbées"));
             // La liste est VIDÉE, pas laissée telle quelle : garder les règles du chargement
             // précédent afficherait celles d'un AUTRE lieutenant sur un écran qui annonce ne
             // rien savoir — même défaut que des voyants restés allumés.
@@ -1145,8 +1131,11 @@ namespace MafiaCleanCity.Operational
             EmpilerVertical(go, Px(CssEnseignePadY), Px(5f), Px(CssEnseignePadX));
         }
 
-        private readonly TextMeshProUGUI[] compteurNombre = new TextMeshProUGUI[3];
-        private readonly TextMeshProUGUI[] compteurLibelle = new TextMeshProUGUI[3];
+        // DEUX compteurs (㊲, 24/09) : « règles données » et « absorbées ». Le 3ᵉ, « enfreintes », est RETIRÉ : ni donnée servie
+        // (violation_slots jamais projetés, L3) ni clé (table 43 : « note ») — arbitrage Q3 de l'orchestrateur.
+        private const int NbCompteurs = 2;
+        private readonly TextMeshProUGUI[] compteurNombre = new TextMeshProUGUI[NbCompteurs];
+        private readonly TextMeshProUGUI[] compteurLibelle = new TextMeshProUGUI[NbCompteurs];
 
         private void ConstruireCompteurs(Transform parent)
         {
@@ -1161,7 +1150,7 @@ namespace MafiaCleanCity.Operational
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandWidth = true;
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < NbCompteurs; i++)
             {
                 GameObject fen = NouveauUI("Fenetre" + i, go.transform);
                 // ⛔ TROIS TIERS ÉGAUX, et c'est `preferredWidth = 0` qui l'obtient. Sans lui, la
@@ -1252,7 +1241,7 @@ namespace MafiaCleanCity.Operational
                 compteurLibelle[i] = NouveauTexte(fen.transform, "Libelle", "",
                     CssCompteurLib, ReputationResolvers.Muet, DesignTokens.Current.primaryFont,
                 1.1f);  // interligne maquette — .fen>span{font:700 5.4px/1.1}
-                compteurLibelle[i].fontStyle = TMPro.FontStyles.Bold;   // maquette : le libellé du compteur (.fen>span, 700 5.4px)
+                compteurLibelle[i].fontStyle = TMPro.FontStyles.Bold | TMPro.FontStyles.UpperCase;   // capitales : .rep6 .fen>span (text-transform)   // maquette : le libellé du compteur (.fen>span, 700 5.4px)
                 compteurLibelle[i].alignment = TextAlignmentOptions.Center;
                 compteurLibelle[i].characterSpacing = 16f;
 
@@ -1266,7 +1255,7 @@ namespace MafiaCleanCity.Operational
         /// chose — l'un est une mesure, l'autre un dénominateur fixe.</summary>
         private void MajCompteur(int index, string valeur, string suffixe, string libelle)
         {
-            if (index < 0 || index >= 3) return;
+            if (index < 0 || index >= NbCompteurs) return;
             compteurNombre[index].text = string.IsNullOrEmpty(suffixe)
                 ? valeur
                 : valeur + "<size=64%><color=#" +
