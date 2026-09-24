@@ -471,7 +471,7 @@ namespace MafiaCleanCity.Operational
             // « DONNER UNE PREMIÈRE RÈGLE » à la seule vue vierge (ligne 211) et « DONNER UNE
             // RÈGLE » partout ailleurs (200, 222, 237).
             if (ctaLibelle != null)
-                ctaLibelle.text = declarees == 0 ? "DONNER UNE PREMIÈRE RÈGLE" : Lib("DONNER UNE RÈGLE");
+                ctaLibelle.text = declarees == 0 ? Lib("Donner une première règle") : Lib("DONNER UNE RÈGLE");   // clés servies
 
             RendreListeDesRegles(bm != null ? bm.declared_rules : null);
 
@@ -1637,11 +1637,15 @@ namespace MafiaCleanCity.Operational
 
             CtaDonnerRegle = cta.AddComponent<Button>();
             CtaDonnerRegle.targetGraphic = fond;
+            // ⛔ DÉSACTIVÉ, sans aucun listener (arbitrage Q1 du 24/09) : POST /v1/me/house-rules exige un rule_id, et rien ne dit
+            //    lesquels existent ni ne les nomme (lots back L4 et L1, demandés). La maquette ratifiée montre le geste : il est
+            //    affiché, inactif, avec son mot servi. Le jour où le catalogue des règles est servi, on le câble à `DeclarerRegle`.
+            CtaDonnerRegle.interactable = false;
 
-            ctaLibelle = NouveauTexte(cta.transform, "Libelle", "DONNER UNE RÈGLE",
+            ctaLibelle = NouveauTexte(cta.transform, "Libelle", Lib("DONNER UNE RÈGLE"),
                 CssCtaCorps, ReputationResolvers.OrVif, DesignTokens.Current.primaryFont,
                 1f);  // interligne maquette — .cta6{font:700 8.5px/1}
-            ctaLibelle.fontStyle = TMPro.FontStyles.Bold;   // maquette : .cta6, 700 8.5px
+            ctaLibelle.fontStyle = TMPro.FontStyles.Bold | TMPro.FontStyles.UpperCase;   // maquette : .cta6, 700 8.5px, text-transform:uppercase
             ctaLibelle.alignment = TextAlignmentOptions.Center;
             ctaLibelle.characterSpacing = 11f;
             RectTransform lrt = (RectTransform)ctaLibelle.transform;

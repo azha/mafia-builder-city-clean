@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -833,6 +834,49 @@ namespace MafiaCleanCity.Operational.Tests
             }
             CollectionAssert.AreEqual(new[] { "règles données", "absorbées" }, libelles,
                 "deux compteurs, mots SERVIS en casse (les capitales sont typographiques)");
+        }
+
+        /// <summary>Le nombre de listeners AJOUTÉS EN CODE d'un UnityEvent (m_Calls.m_RuntimeCalls), que l'API publique ne donne pas.
+        /// -1 si la réflexion ne trouve pas le champ (la garde refuse alors de conclure).</summary>
+        private static int ListenersRuntime(UnityEngine.Events.UnityEventBase evt)
+        {
+            var calls = typeof(UnityEngine.Events.UnityEventBase).GetField("m_Calls",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(evt);
+            var runtime = calls?.GetType().GetField("m_RuntimeCalls",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(calls) as System.Collections.IList;
+            return runtime != null ? runtime.Count : -1;
+        }
+
+        /// <summary>㊲ (24/09, arbitrage Q1) — « Donner une règle » est AFFICHÉ, avec son mot servi, mais DÉSACTIVÉ et sans aucun
+        /// listener : le POST exige un rule_id que rien ne liste (L4) ni ne nomme (L1). Contrôle positif : la mesure des listeners
+        /// voit bien un listener ajouté à un bouton témoin (sinon « 0 » ne prouverait rien).</summary>
+        [UnityTest]
+        public IEnumerator B3Q1_DonnerUneRegle_AfficheDesactive_SansListener()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(new ReputationSurfaceDto
+            {
+                boss_mirror = new BossMirrorDto { consistency_cue = "indeterminate", declared_rules = new DeclaredRuleDto[0], portrait_posture = "attentive" },
+            });
+            yield return null;
+
+            Assert.IsTrue(ecran.CtaDonnerRegle != null, "le geste est affiché (la maquette ratifiée le montre)");
+            Assert.IsFalse(ecran.CtaDonnerRegle.interactable, "désactivé tant que le catalogue des règles n'est pas servi");
+            Assert.AreEqual(0, ecran.CtaDonnerRegle.onClick.GetPersistentEventCount(), "aucun listener persistant");
+
+            var temoinGo = new GameObject("Temoin", typeof(RectTransform));
+            try
+            {
+                var temoin = temoinGo.AddComponent<Button>();
+                temoin.onClick.AddListener(() => { });
+                Assert.AreEqual(1, ListenersRuntime(temoin.onClick), "contrôle positif : la mesure des listeners runtime voit un listener");
+            }
+            finally { Object.DestroyImmediate(temoinGo); }
+            Assert.AreEqual(0, ListenersRuntime(ecran.CtaDonnerRegle.onClick), "aucun listener runtime sur le geste désactivé");
+
+            string mot = RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true)
+                .First(t => t.name == "Libelle" && t.transform.parent.name == "CtaDonnerRegle").text;
+            Assert.AreEqual("Donner une première règle", mot, "aucune règle donnée : le mot servi du premier geste, en casse");
         }
 
         /// <summary>⛔ LES `rule_id` DÉCLARÉS SONT AFFICHÉS EN CLAIR, ET AUTANT QU'IL Y EN A.
