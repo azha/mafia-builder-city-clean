@@ -14,6 +14,11 @@ namespace MafiaCleanCity.CityMap.Tests
     //   N1  contrôles de l'instrument (positifs : les deux formes ; négatifs : un mot par Libelle, un glyphe, un commentaire, une comparaison)
     //   N2  aucun site hors allowlist dans `Assets/Scripts` ; l'allowlist elle-même est EXACTE (chaque entrée a encore ses sites, sinon
     //       elle est périmée)
+    //   N3  (2026-09-24) la forme que N2 ne voyait pas : un ternaire dont les DEUX branches sont des littéraux (`a ? "Actif" : "Inactif"`),
+    //       où qu'il soit — sous `return`, 4 sites sur 65 : restreindre à `return` en manquait 61 — et sur plusieurs lignes (texte lu
+    //       ENTIER, commentaires retirés, chaînes gardées). Mesuré au balayage : 65 sites, 26 fichiers. Ils sont NOMMÉS, pas corrigés :
+    //       dette datée PAR FICHIER, exacte dans les deux sens (un site de plus rougit ; un site de moins aussi, pour baisser la dette).
+    //       Liste des sites : Tools/juge-donnees/i18n/dette-ternaires-2026-09-24.md.
     [Category("Replis")]
     public class LitterauxNommesPlayModeTests
     {
@@ -34,6 +39,120 @@ namespace MafiaCleanCity.CityMap.Tests
         // Un identifiant MACHINE (`same_building`, `COST_1`) : une valeur du modèle qu'on bascule, jamais un mot affiché — un mot affiché
         // ne porte pas de `_`. Mesuré : l'éditeur de règles bascule `condPeerZone` entre `same_zone` et `same_building`.
         private static readonly Regex Identifiant = new Regex(@"^[A-Za-z0-9]+(_[A-Za-z0-9]+)+$");
+
+        /// <summary>N3 — dette DATÉE du 2026-09-24, par fichier : (nom de fichier) → nombre de ternaires à deux littéraux dont une branche
+        /// est un mot. Mesurée par le balayage de ce lot ; rien n'y a été corrigé. Une ligne ne se relève pas : elle ne fait que baisser.</summary>
+        private static readonly Dictionary<string, int> DetteDeuxBranches = new Dictionary<string, int>
+        {
+            { "BandeauEphemere.cs", 1 },
+            { "BuildingCardController.cs", 9 },
+            { "ChaineDApproScreenController.cs", 3 },
+            { "CityMapController.cs", 1 },
+            { "CityProjectionsClient.cs", 2 },
+            { "CompressionScreenController.cs", 2 },
+            { "ConflitScreenController.cs", 1 },
+            { "DashboardController.cs", 2 },
+            { "DecisionDetailScreenController.cs", 3 },
+            { "DelegationScreenController.cs", 3 },
+            { "DemoIdentityResolver.cs", 1 },
+            { "DemolitionScreenController.cs", 8 },
+            { "DistributionScreenController.cs", 1 },
+            { "DistrictInteriorScreenController.cs", 4 },
+            { "ExceptionDetailController.cs", 1 },
+            { "HomeChromeController.cs", 1 },
+            { "HorizonScreenController.cs", 1 },
+            { "InspectionScreenController.cs", 3 },
+            { "LieutenantScreenController.cs", 1 },
+            { "LoiScreenController.cs", 4 },
+            { "PrecinctScreenController.cs", 1 },
+            { "RuleModel.cs", 2 },
+            { "SellingScreenController.cs", 6 },
+            { "ShopScreenController.cs", 2 },
+            { "TopBarController.cs", 1 },
+            { "TutorialScreenController.cs", 1 },
+        };
+
+        private static readonly Regex DeuxBranches =
+            new Regex(@"(?<![?""])\?\s*\$?""((?:[^""\\]|\\.)*)""\s*:\s*\$?""((?:[^""\\]|\\.)*)""");
+        // `v == "LOW" ? "PEU" : "—"` est déjà un site de N2 (`Ternaire`) : un site, jamais deux.
+        private static readonly Regex DejaVuParN2 = new Regex(@"==\s*""[A-Za-z_]+""\s*$");
+        private static readonly Regex LitteralCaractere = new Regex(@"\G'(\\.|[^'\\])'");
+        // Ni une couleur (garde Palette), ni une balise de texte riche, ni un booléen sérialisé ne sont des mots affichés.
+        private static readonly Regex Hex = new Regex(@"^#[0-9A-Fa-f]{3,8}$");
+        private static readonly Regex Balise = new Regex(@"^</?\w+>$");
+
+        private static bool EstUnMot(string lit) =>
+            Lettre.IsMatch(lit) && !Glyphe.IsMatch(lit) && !Identifiant.IsMatch(lit) && !Hex.IsMatch(lit) && !Balise.IsMatch(lit)
+            && lit != "true" && lit != "false";
+
+        /// <summary>Le texte sans ses commentaires (`//`, `/* */`), chaînes et littéraux de caractère GARDÉS, sauts de ligne gardés
+        /// (les numéros de ligne restent vrais). `chaines` reçoit les étendues [début, fin) des chaînes DANS le texte rendu : c'est le
+        /// masque qui sait où une chaîne commence, pas une regex relancée après coup (`'"'` lui ferait ouvrir une chaîne fantôme).</summary>
+        internal static string SansCommentaires(string t, List<(int debut, int fin)> chaines = null)
+        {
+            var o = new System.Text.StringBuilder(t.Length);
+            int i = 0, n = t.Length;
+            while (i < n)
+            {
+                char c = t[i];
+                if (c == '"')
+                {
+                    bool verbatim = (i > 0 && t[i - 1] == '@') || (i > 1 && t[i - 1] == '$' && t[i - 2] == '@');
+                    int j = i + 1;
+                    if (verbatim)
+                        while (j < n && (t[j] != '"' || (j + 1 < n && t[j + 1] == '"'))) j += t[j] == '"' ? 2 : 1;
+                    else
+                        while (j < n && t[j] != '"') j += t[j] == '\\' ? 2 : 1;
+                    int fin = System.Math.Min(j + 1, n);
+                    chaines?.Add((o.Length, o.Length + fin - i));
+                    o.Append(t, i, fin - i);
+                    i = fin;
+                    continue;
+                }
+                if (c == '\'')
+                {
+                    Match m = LitteralCaractere.Match(t, i);
+                    if (m.Success) { o.Append(m.Value); i += m.Length; continue; }
+                }
+                if (c == '/' && i + 1 < n && t[i + 1] == '/')
+                {
+                    int j = t.IndexOf('\n', i);
+                    i = j < 0 ? n : j;
+                    continue;
+                }
+                if (c == '/' && i + 1 < n && t[i + 1] == '*')
+                {
+                    int j = t.IndexOf("*/", i + 2, System.StringComparison.Ordinal);
+                    j = j < 0 ? n : j + 2;
+                    for (int k = i; k < j; k++) if (t[k] == '\n') o.Append('\n');
+                    i = j;
+                    continue;
+                }
+                o.Append(c);
+                i++;
+            }
+            return o.ToString();
+        }
+
+        internal static List<string> SitesDeuxBranches(string texte, string fichier)
+        {
+            var res = new List<string>();
+            var chaines = new List<(int debut, int fin)>();
+            string t = SansCommentaires(texte, chaines);
+            foreach (Match m in DeuxBranches.Matches(t))
+            {
+                int p = m.Index;
+                if (chaines.Any(e => e.debut <= p && p < e.fin)) continue;
+                int deb = System.Math.Max(0, p - 80);
+                if (DejaVuParN2.IsMatch(t.Substring(deb, p - deb))) continue;
+                string a = m.Groups[1].Value, b = m.Groups[2].Value;
+                if (!EstUnMot(a) && !EstUnMot(b)) continue;
+                int ligne = 1;
+                for (int k = 0; k < p; k++) if (t[k] == '\n') ligne++;
+                res.Add($"{fichier}:{ligne} ? « {a} » : « {b} »");
+            }
+            return res;
+        }
 
         internal static List<(string cle, string site)> Sites(string texte, string fichier)
         {
@@ -93,6 +212,53 @@ namespace MafiaCleanCity.CityMap.Tests
                     : tous.Any(s => s.cle == entree);
                 Assert.IsTrue(vivante, $"allowlist PÉRIMÉE : « {entree} » n'a plus de site — la retirer ({Allowlist[entree]})");
             }
+        }
+
+        [Test]
+        public void N3_LInstrumentVoitLeTernaireADeuxLitteraux()
+        {
+            int N(string s) => SitesDeuxBranches(s, "x.cs").Count;
+            Assert.AreEqual(1, N("static string F(bool a) { return a ? \"Actif\" : \"Inactif\"; }"), "contrôle positif : sous return");
+            Assert.AreEqual(1, N("string s = a\n    ? \"Actif\"\n    : \"Inactif\";"), "contrôle positif : sur trois lignes");
+            Assert.AreEqual(1, N("string s = j == 0 ? \"aujourd'hui\" : $\"dans {j} j\";"), "contrôle positif : une branche interpolée");
+            Assert.AreEqual(1, N("string s = n > 1 ? \"s\" : \"\";"), "contrôle positif : une seule branche est un mot");
+            Assert.AreEqual(1, N("char q = '\"'; string s = a ? \"Actif\" : \"Inactif\";"),
+                "contrôle positif : un guillemet en littéral de caractère n'avale pas la suite");
+            Assert.AreEqual(3, SansCommentaires("a\n/* b\n c */\nd").Split('\n').Length - 1, "le masque garde les sauts de ligne");
+            Assert.AreEqual(0, N("// return a ? \"Actif\" : \"Inactif\";"), "contrôle négatif : un commentaire de ligne");
+            Assert.AreEqual(0, N("/* a ? \"Actif\" : \"Inactif\" */"), "contrôle négatif : un commentaire de bloc");
+            Assert.AreEqual(0, N("string s = \"a ? \\\"Actif\\\" : \\\"Inactif\\\"\";"), "contrôle négatif : le ternaire est DANS une chaîne");
+            Assert.AreEqual(0, N("string s = @\"a ? \"\"Actif\"\" : \"\"Inactif\"\"\";"), "contrôle négatif : dans une chaîne verbatim");
+            Assert.AreEqual(0, N("string s = v == \"LOW\" ? \"PEU\" : \"—\";"), "contrôle négatif : déjà un site de N2");
+            Assert.AreEqual(1, Sites("string s = v == \"LOW\" ? \"PEU\" : \"—\";", "x.cs").Count, "… et N2 le voit bien, une fois");
+            Assert.AreEqual(0, N("string s = a ? Libelle.De(\"d\", \"r\", \"Actif\") : Libelle.De(\"d\", \"r\", \"Inactif\");"),
+                "contrôle négatif : les mots passent par Libelle");
+            Assert.AreEqual(0, N("string s = a ? \"#05080d\" : \"#070a10\";"), "contrôle négatif : des couleurs");
+            Assert.AreEqual(0, N("string s = a ? \"\" : \"<i>\";"), "contrôle négatif : une balise de texte riche");
+            Assert.AreEqual(0, N("string s = a ? \"true\" : \"false\";"), "contrôle négatif : un booléen sérialisé");
+            Assert.AreEqual(0, N("z = a ? \"same_zone\" : \"same_building\";"), "contrôle négatif : des identifiants machine");
+            Assert.AreEqual(0, N("string s = n ?? \"Inconnu\";"), "contrôle négatif : `??` n'est pas un ternaire");
+        }
+
+        [Test]
+        public void N3_LesTernairesADeuxLitterauxNeDepassentPasLaDette()
+        {
+            string racine = Path.Combine(Application.dataPath, "Scripts");
+            string[] fichiers = Directory.GetFiles(racine, "*.cs", SearchOption.AllDirectories);
+            Assert.Greater(fichiers.Length, 100, "anti-vacuité : le balayage voit le client");
+            var parFichier = fichiers.Select(f => (nom: Path.GetFileName(f), sites: SitesDeuxBranches(File.ReadAllText(f), Path.GetFileName(f))))
+                .Where(x => x.sites.Count > 0).ToDictionary(x => x.nom, x => x.sites);
+            var ecarts = new List<string>();
+            foreach (string nom in parFichier.Keys.Union(DetteDeuxBranches.Keys).OrderBy(x => x, System.StringComparer.Ordinal))
+            {
+                int mesure = parFichier.TryGetValue(nom, out List<string> s) ? s.Count : 0;
+                int dette = DetteDeuxBranches.TryGetValue(nom, out int d) ? d : 0;
+                if (mesure == dette) continue;
+                ecarts.Add(mesure > dette
+                    ? $"{nom} : {mesure} > dette {dette} — un texte affiché passe par Libelle : " + string.Join(" · ", s)
+                    : $"{nom} : {mesure} < dette {dette} — BAISSER la dette à {mesure}");
+            }
+            Assert.IsEmpty(ecarts, $"{ecarts.Count} fichier(s) hors dette (2026-09-24) : " + string.Join(" ‖ ", ecarts));
         }
     }
 }
