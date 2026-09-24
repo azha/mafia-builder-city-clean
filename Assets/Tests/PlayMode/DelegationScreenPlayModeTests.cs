@@ -454,14 +454,14 @@ namespace MafiaCleanCity.Operational.Tests
                                                                    progress_band = "HIGH", delegation_state = "SELF", promotion_lock = verrou } },
                 delegated = new DelegatedSummaryDto[0],
                 structural_decisions = new StructuralDecisionsDto { cap_reached = capAtteint,
-                                                                        decisions = new DecisionDeSessionDto[0] },
+                                                                        taken = new DecisionDeSessionDto[0] },
                 StructuralDecisionsServi = budgetServi,
             };
 
         private static readonly GetLieutenantsResponseDto UnLieutenant =
             new GetLieutenantsResponseDto { lieutenants = new[] { new LieutenantRowDto { lieutenant_id = "lt-1", name = "Lt. Vesk" } } };
 
-        /// <summary>B1 — le budget de `task-categories` (déclaré, forme `{cap_reached, decisions}` — sans `used`, R2.2) ne vaut
+        /// <summary>B1 — le budget de `task-categories` (déclaré, forme `{cap_reached, taken}` — sans `used`, R2.2) ne vaut
         /// que s'il est SERVI : absent (aujourd'hui), le jeton de l'ouverture de session reste ; servi EN session et atteint, il éteint le
         /// jeton PARTAGÉ avant tout appui ; servi HORS session (`cap_reached=false`, liste vide : aucun plafond appliqué), il le rallume.
         /// ⛔ « absent » et « hors session » ont le MÊME objet par défaut côté `JsonUtility` : seule la présence dans le corps brut les
@@ -479,7 +479,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             MafiaCleanCity.Shell.JetonDeStructure.OublierPourTest();
             GetMetaTaskCategoriesResponseDto enSession = CorpsSupply(budgetServi: true, capAtteint: true);
-            enSession.structural_decisions.decisions = new[] { new DecisionDeSessionDto { decision_type_key = "TASK_RECALL", category_key = "HEAT_MANAGEMENT" } };
+            enSession.structural_decisions.taken = new[] { new DecisionDeSessionDto { decision_type_key = "TASK_RECALL", category_key = "HEAT_MANAGEMENT" } };
             ecran.RendrePourTest(enSession, UnLieutenant, jetonDepense: false);
             Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "EN session, servi et atteint : le jeton partagé s'éteint");
             Assert.IsTrue(ecran.JetonDepense);
@@ -503,15 +503,15 @@ namespace MafiaCleanCity.Operational.Tests
         {
             const string lignes = "\"task_categories\":[{\"category_key\":\"SUPPLY_SOURCING\",\"category_id\":4,\"delegation_state\":\"SELF\"}],\"delegated\":[]";
             GetMetaTaskCategoriesResponseDto servi = DelegationClient.LireTaskCategories(
-                "{\"payload\":{\"data\":{" + lignes + ",\"structural_decisions\":{\"cap_reached\":true,\"decisions\":"
+                "{\"payload\":{\"data\":{" + lignes + ",\"structural_decisions\":{\"cap_reached\":true,\"taken\":"
                 + "[{\"decision_type_key\":\"TASK_RETIREMENT\",\"category_key\":\"LIEUTENANT_HIRING\"}]}}}}");
             Assert.IsTrue(servi.StructuralDecisionsServi, "contrôle positif : le nom servi est vu");
             Assert.IsTrue(servi.structural_decisions.cap_reached);
-            Assert.AreEqual("LIEUTENANT_HIRING", servi.structural_decisions.decisions.Single().category_key);
+            Assert.AreEqual("LIEUTENANT_HIRING", servi.structural_decisions.taken.Single().category_key);
             Assert.AreEqual(4, servi.task_categories.Single().category_id, "le reste du corps est lu comme avant");
 
             GetMetaTaskCategoriesResponseDto ancien = DelegationClient.LireTaskCategories(
-                "{\"payload\":{\"data\":{" + lignes + ",\"structural_budget\":{\"cap_reached\":true,\"decisions\":[]}}}}");
+                "{\"payload\":{\"data\":{" + lignes + ",\"structural_budget\":{\"cap_reached\":true,\"taken\":[]}}}}");
             Assert.IsFalse(ancien.StructuralDecisionsServi, "contrôle négatif : l'ANCIEN nom n'est pas lu comme servi");
             Assert.IsFalse(ancien.structural_decisions != null && ancien.structural_decisions.cap_reached,
                 "ni sa valeur : `cap_reached` de l'ancien nom n'atteint jamais le jeton");
@@ -520,15 +520,22 @@ namespace MafiaCleanCity.Operational.Tests
                 "{\"payload\":{\"data\":{" + lignes + ",\"structural_decisions\":{\"cap_reached\":true,\"decisions_this_session\":"
                 + "[{\"decision_type_key\":\"TASK_RETIREMENT\",\"category_key\":\"LIEUTENANT_HIRING\"}]}}}}");
             Assert.IsTrue(listeAncienne.StructuralDecisionsServi, "le voisin, lui, est servi");
-            Assert.IsTrue(listeAncienne.structural_decisions.decisions == null || listeAncienne.structural_decisions.decisions.Length == 0,
+            Assert.IsTrue(listeAncienne.structural_decisions.taken == null || listeAncienne.structural_decisions.taken.Length == 0,
                 "contrôle négatif : une liste sous l'ANCIEN nom `decisions_this_session` n'est pas lue");
             Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(listeAncienne),
                 "et elle ne fait jamais dire « Vous avez déjà confié … »");
 
-            GetMetaTaskCategoriesResponseDto typeAncien = DelegationClient.LireTaskCategories(
+            GetMetaTaskCategoriesResponseDto listeDecisions = DelegationClient.LireTaskCategories(
                 "{\"payload\":{\"data\":{" + lignes + ",\"structural_decisions\":{\"cap_reached\":true,\"decisions\":"
+                + "[{\"decision_type_key\":\"TASK_RETIREMENT\",\"category_key\":\"LIEUTENANT_HIRING\"}]}}}}");
+            Assert.IsTrue(listeDecisions.structural_decisions.taken == null || listeDecisions.structural_decisions.taken.Length == 0,
+                "contrôle négatif : une liste sous l'ancien nom `decisions` n'est pas lue");
+            Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(listeDecisions));
+
+            GetMetaTaskCategoriesResponseDto typeAncien = DelegationClient.LireTaskCategories(
+                "{\"payload\":{\"data\":{" + lignes + ",\"structural_decisions\":{\"cap_reached\":true,\"taken\":"
                 + "[{\"decision_type\":\"TASK_RETIREMENT\",\"category_key\":\"LIEUTENANT_HIRING\"}]}}}}");
-            Assert.IsNull(typeAncien.structural_decisions.decisions.Single().decision_type_key,
+            Assert.IsNull(typeAncien.structural_decisions.taken.Single().decision_type_key,
                 "contrôle négatif : un type sous l'ANCIEN nom `decision_type` n'est pas lu");
             Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(typeAncien),
                 "et une décision sans type lu ne fait jamais dire « Vous avez déjà confié … »");
@@ -579,7 +586,7 @@ namespace MafiaCleanCity.Operational.Tests
         private static GetMetaTaskCategoriesResponseDto AvecDecisions(bool servi, params (string type, string cle)[] decisions)
         {
             GetMetaTaskCategoriesResponseDto c = CorpsSupply(budgetServi: servi, capAtteint: true);
-            c.structural_decisions.decisions =
+            c.structural_decisions.taken =
                 decisions.Select(d => new DecisionDeSessionDto { decision_type_key = d.type, category_key = d.cle }).ToArray();
             return c;
         }
