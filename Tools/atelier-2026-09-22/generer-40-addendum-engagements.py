@@ -53,8 +53,8 @@ LIGNES = [
           'CONDITION : « il ne partira pas deux fois » n’est vrai que si le client réémet la MÊME `Idempotency-Key` (intercepteur global du back) ; '
           'sinon, retirer la seconde phrase'),
     ['La dernière fois chez eux : {issue}, et la ville a chauffé {chaleur}.', CAD, P, 'conflit.bloc.derniere_fois_chez_eux',
-     f'La dernière fois chez eux{NB}: {{issue}}, et la ville a chauffé {{chaleur}}.', 'Last time at their place: {issue}, and the city heated up {chaleur}.',
-     'clé NOMMÉE (paramètres) ; {issue} ← `conflit.issue_phrase.*`, {chaleur} ← `conflit.chaleur.*` (déjà minuscules, 40) ; une phrase entière '
+     f'La dernière fois là-bas{NB}: {{issue}}, et la ville a chauffé {{chaleur}}.', 'Last time at their place: {issue}, and the city heated up {chaleur}.',
+     'v3.1 TRANCHÉ (f2, 23/09, `31c95595`) : « chez eux » → « là-bas » ; clé NOMMÉE (paramètres) ; {issue} ← `conflit.issue_phrase.*`, {chaleur} ← `conflit.chaleur.*` (déjà minuscules, 40) ; une phrase entière '
      'au lieu des fragments `conflit.bloc.fois_chez_eux` + `conflit.bloc.la_ville_a_chauffe` (l’ordre des mots se traduit) ; '
      'issue nulle (coup pas encore rentré) → la phrase ne s’affiche pas'],
 ]

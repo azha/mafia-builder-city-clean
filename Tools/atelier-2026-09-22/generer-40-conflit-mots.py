@@ -66,8 +66,8 @@ T = {
    'geste À ROUTE : `POST /v1/me/engagements` ; D13 : « l’ » élidé, aucun genre marqué à l’écrit'),
  'on ne pourra plus le rappeler': (P, 'conflit.bloc.on_ne_pourra_plus_le_rappeler', 'on ne pourra plus le rappeler', 'there’s no calling them back',
    'aucune route d’annulation (mesuré) ; ⚠️ D14 : « le » genré → liste de l’user'),
- 'La dernière fois chez eux :': (P, 'conflit.bloc.la_derniere_fois_chez_eux', f'La dernière fois chez eux{NB}:', 'Last time at theirs:',
-   'suivie de l’issue du dernier envoi résolu (`outcome_bucket`) ; D17 : insécable avant « : »'),
+ 'La dernière fois chez eux :': (P, 'conflit.bloc.la_derniere_fois_chez_eux', f'La dernière fois là-bas{NB}:', 'Last time at theirs:',
+   'suivie de l’issue du dernier envoi résolu (`outcome_bucket`) ; D17 : insécable avant « : » ; v3.1 TRANCHÉ (f2, 23/09, `31c95595`) : « chez eux » → « là-bas » (groupe, D13) ; clé SERVIE gardée'),
  'percée': (P, 'conflit.issue.breakthrough', 'Percée', 'Breakthrough', 'même mot que « Percée » (63)'),
  ', et la ville a chauffé': (P, 'conflit.bloc.et_la_ville_a_chauffe', ', et la ville a chauffé', ', and the city heated up', 'suite de « La dernière fois… » quand `heat_increment_bucket` n’est pas nul'),
  '« Lt. Marr tient les comptes, il ne cogne pas. Et Saltline, on ne l’a jamais croisée — je ne saurais pas où frapper. »':
@@ -169,7 +169,7 @@ def main():
     st = subprocess.run(['git', '-C', os.path.expanduser('~/project/mafia-back-suite'), 'show', 'HEAD:services/game-back/src/i18n/string_table.ts'],
                         capture_output=True, text=True).stdout
     d0 = st.index('export const FR_MESSAGES')
-    FRV = {m.group(1): m.group(2).replace("\\'", "'") for m in re.finditer(r"^\s*'([^'\s]+)':\s*\n?\s*'((?:[^'\\]|\\.)*)'", st[d0:st.index('\n};', d0)], re.M)}
+    FRV = {m.group(1): re.sub(r'\\u([0-9a-fA-F]{4})', lambda x: chr(int(x.group(1), 16)), m.group(2)).replace("\\'", "'") for m in re.finditer(r"^\s*'([^'\s]+)':\s*\n?\s*'((?:[^'\\]|\\.)*)'", st[d0:st.index('\n};', d0)], re.M)}
     d, ecarts, out, comptes = [], [], ['\t'.join(['mot', 'cadres', 'classe', 'clé', 'fr', 'en', 'note'])], collections.Counter()
     if set(mots) != set(T): d.append(f'non couverts : {sorted(set(mots) - set(T))} · en trop : {sorted(set(T) - set(mots))}')
     renomme, exceptions = {}, set()
@@ -185,7 +185,7 @@ def main():
         T[m] = (P, nouvelle, fr2, en2, f'D13 (v3, ㉙ non ratifiée) : la maquette dit « {fr} » ; forme épicène proposée ; {quoi}')
     for m, (cl, cle, fr, en, note) in list(T.items()):
         if cle in renomme and not fr: T[m] = (cl, renomme[cle], fr, en, note)
-    exceptions |= {'conflit.bloc.les_quatre_familles', 'conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain'}
+    exceptions |= {'conflit.bloc.la_derniere_fois_chez_eux', 'conflit.bloc.les_quatre_familles', 'conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain'}
     for m, cadres in mots.items():
         cl, cle, fr, en, note = T[m]; comptes[cl] += 1
         if cl in (S, A) and cle not in FRV: d.append(f'{m} : {cle} annoncée servie, absente')
