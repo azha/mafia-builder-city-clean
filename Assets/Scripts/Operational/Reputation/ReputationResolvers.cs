@@ -246,29 +246,13 @@ namespace MafiaCleanCity.Operational
 
         // ── Contreparties ────────────────────────────────────────────────────────────────────
 
-        /// <summary>⚠️ `marginalia` rend des ÉTIQUETTES POSITIONNELLES, pas des noms : mesuré
-        /// `["settlement-1","settlement-2","settlement-3"]` (`restraint-index.service.ts:330-336`
-        /// — « counterparty entity is deferred (no name table) »). Le canon (:95) demande des
-        /// noms ; le code n'y répond pas encore, et la table est consignée en lot back (S13-j).
-        ///
-        /// ⇒ Ce résolveur affiche l'étiquette telle quelle, en la rendant LISIBLE sans prétendre
-        /// qu'elle est un nom. Il ne fabrique aucun patronyme : un écran qui inventerait
-        /// « Ferrante » mentirait — c'est l'écart É3, celui qui a fait retirer la v1 de la
-        /// maquette, et il se reproduirait ici au premier qui trouve les étiquettes moches.</summary>
-        public static string ReglementLibelle(string marginale, int rang)
-        {
-            if (string.IsNullOrEmpty(marginale)) return $"règlement n°{rang + 1}";
-            return marginale.StartsWith("settlement-")
-                ? "règlement n°" + marginale.Substring("settlement-".Length)
-                : marginale;
-        }
-
         // ── Offre ────────────────────────────────────────────────────────────────────────────
 
         // ══════════════════════════════════════════════════════════════════════════════════════
-        // ⛔ LES TROIS RÉSOLVEURS CI-DESSOUS ONT ZÉRO APPELANT, ET C'EST MESURÉ, PAS SUPPOSÉ.
+        // ⛔ LES DEUX RÉSOLVEURS CI-DESSOUS ONT ZÉRO APPELANT, ET C'EST MESURÉ, PAS SUPPOSÉ. (Un troisième, `ReglementLibelle`,
+        // « règlement n° » sans source, a été RETIRÉ le 24/09 : restraint reviendra avec ses propres mots, lot back L5.)
         //
-        // `OffrePhrase`, `OffreCouleur` et `ReglementLibelle` servent le groupe `restraint` du
+        // `OffrePhrase` et `OffreCouleur` servent le groupe `restraint` du
         // corps de réponse. Ce groupe est bien REÇU et jamais affiché — non par oubli, mais parce
         // que la section n'est jamais DEMANDÉE : `GET /v1/me/reputation` omet `restraint` sans
         // `counterparty_id`, et aucun chemin joueur ne permet d'en obtenir un.
