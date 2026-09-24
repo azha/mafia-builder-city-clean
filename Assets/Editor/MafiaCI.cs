@@ -248,6 +248,11 @@ public static class MafiaCI
         // en texte ; toute valeur en couleur porte un mot) et N1-N2 (aucun littéral nommé hors Libelle, allowlist EXACTE). Hors paire :
         // aucune relation de préfixe (tests statiques + résolveurs purs). Validé par l'orchestrateur.
         "Replis",
+        // La garde des catégories (fdc13219, CLIENT-2) : K0 aucune catégorie n'en contient une autre, K2 aucune capture ne porte d'écran,
+        // K3 un test qui écrit une image est une capture ou une exception nommée — 3/3 vert AVANT inscription au créneau de CLIENT UNITY
+        // du 2026-09-24 (tête 92bfb1ba, pile 66060cc1, déclarés 115 = comptés 115, Assets/Screenshots propre après le run). Statique,
+        // sans réseau. Aucune relation de préfixe (K0 elle-même). Validé par l'orchestrateur.
+        "GardeCategories",
         // TD-490 (2026-09-23) — deux tests E2E SANS catégorie, donc jamais lancés par un filtre, dont les épingles avaient pourri
         // derrière les traductions : réparés EN ENTIER (épingles déléguées aux résolveurs, bc658b2c / 4ae0dfa0 / 881a0ed4), catégorie
         // posée sur la MÉTHODE (la classe emporterait sa capture `Screenshot`). Verts AVANT inscription : créneau 06:48-06:57, tête
