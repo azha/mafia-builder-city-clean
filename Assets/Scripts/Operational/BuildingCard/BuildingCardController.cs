@@ -2067,6 +2067,11 @@ namespace MafiaCleanCity.Operational
         private static string Bande(string famille, string valeurServie, string repli) =>
             MafiaCleanCity.I18n.Libelle.ParValeur("building", famille, valeurServie, repli);
 
+        /// <summary>TD-612 (24/09) : la TEINTE d'un jeton, avec l'opacité du site. Les quatre fonds opaques du pupitre et de l'écrin
+        /// recopiaient la teinte de jetons translucides (mapDialogBg α 0,98, hudBarGlassTop α 0,91) : on suit la palette pour la
+        /// teinte, et l'alpha reste un choix de composition du site (règle de la garde : l'alpha n'entre pas dans la distance).</summary>
+        private static Color Opaque(Color jeton) => new Color(jeton.r, jeton.g, jeton.b, 1f);
+
         internal static string Cle(string role, string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("building", role, litteral);
 
@@ -2180,7 +2185,7 @@ namespace MafiaCleanCity.Operational
         private Transform AddPupitreLaboratoire()
         {
             GameObject pupitre = NewUI("PupitreLaboratoire", statusRows);
-            pupitre.AddComponent<Image>().color = new Color32(17, 22, 29, 255);
+            pupitre.AddComponent<Image>().color = Opaque(DesignTokens.Current.mapDialogBg);   // TD-612 : (17,22,29) était à 2,45 de ce jeton
             var disposition = pupitre.AddComponent<VerticalLayoutGroup>();
             disposition.padding = new RectOffset(14, 14, 14, 14);
             disposition.spacing = 8;
@@ -2201,7 +2206,7 @@ namespace MafiaCleanCity.Operational
         private static void AddAppareilLaboratoire(Transform parent)
         {
             GameObject scene = NewUI("AppareilLaboratoire", parent);
-            scene.AddComponent<Image>().color = new Color32(13, 18, 24, 255);
+            scene.AddComponent<Image>().color = Opaque(DesignTokens.Current.hudBarGlassTop);   // TD-612 : (13,18,24) était à 3,74
             AddLayoutElement(scene, minHeight: 180, preferredHeight: 180, flexibleHeight: 0);
 
             void Rectangle(string nom, Vector2 taille, Vector2 position, Color couleur, float angle = 0f)
@@ -2237,7 +2242,7 @@ namespace MafiaCleanCity.Operational
         private Transform AddEcrinAsh()
         {
             GameObject ecrin = NewUI("EcrinAsh", statusRows);
-            ecrin.AddComponent<Image>().color = new Color32(17, 19, 25, 255);
+            ecrin.AddComponent<Image>().color = Opaque(DesignTokens.Current.mapDialogBg);   // TD-612 : (17,19,25) était à 3,32
             var disposition = ecrin.AddComponent<VerticalLayoutGroup>();
             disposition.padding = new RectOffset(16, 16, 16, 16);
             disposition.spacing = 8;
@@ -2257,7 +2262,7 @@ namespace MafiaCleanCity.Operational
         private static void AddVitrineAsh(Transform parent, string purityBand)
         {
             GameObject vitrine = NewUI("VitrineAsh", parent);
-            vitrine.AddComponent<Image>().color = new Color32(13, 16, 22, 255);
+            vitrine.AddComponent<Image>().color = Opaque(DesignTokens.Current.hudGaugeFaceOuter);   // TD-612 : (13,16,22) était à 3,61
             AddLayoutElement(vitrine, minHeight: 150, preferredHeight: 150, flexibleHeight: 0);
 
             GameObject halo = NewUI("Halo", vitrine.transform);
