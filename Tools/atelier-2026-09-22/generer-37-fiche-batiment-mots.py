@@ -146,6 +146,10 @@ DETTES = [
  ('building.action.honorer_le_rendez_vous', 'Honorer le rendez-vous', 'Honor the appointment',
   'dette de maquette, point 19 : geste servi par POST /v1/operational/appointment/:id/honor, dessin à venir — la SEULE voie de vente de l’Ash '
   '(note de DA du cadre 94) ; absent du texte des 146 cadres de la série 6 (mesuré le 24/09) ; décision f2 du 24/09 (option a) ; « ACTIONS » : retiré, pas de mot'),
+ ('building.refus.pas_d_ash_sur_place_faites_en_livrer_avant_le_rendez_vous', 'Pas d’Ash sur place\u00a0: faites-en livrer avant le rendez-vous.',
+  'No Ash on site: have some delivered before the appointment.',
+  'le refus 409 NO_STOCK de POST …/appointment/:id/honor (`ash-appointment.service.ts:199-200` : « SCHEDULED but no Ash delivered to the venue — the '
+  'player must distribute Ash there first ») ; la présence d’Ash n’est pas servie avant l’appui, d’où un refus DIT après ; D17 : U+00A0 avant « : » ; décision f2 du 24/09'),
 ]
 COMPLEMENTS = [  # les familles neuves complétées (valeurs que la maquette ne dessine pas, ou dessine ailleurs)
  ('building.cook_stage.idle', 'Éteint', 'Out', 'PROPOSÉ : aucun mot ratifié pour IDLE'),
@@ -194,8 +198,8 @@ def main():
     for cle, fr, en, note in DETTES:
         out.append('\t'.join(['(dette de maquette)', '', P, cle, fr, en, note]))
         if cle in FRV: defauts.append(f'{cle} : déjà servie — la dette la dit neuve')
-        if cle.split('.', 2)[2] != slug(fr): defauts.append(f'{cle} ≠ slug « {slug(fr)} »')
-        if re.search(r'[:;!?]', fr) or "'" in fr + en: defauts.append(f'{cle} : D17 / D10')
+        if cle.split('.', 2)[2] != slug(fr.rstrip('.')): defauts.append(f'{cle} ≠ slug « {slug(fr)} »')
+        if re.search(r'[^\u00a0]:|[^\u202f][;!?]', fr) or "'" in fr + en: defauts.append(f'{cle} : D17 / D10')
     open(os.path.join(ICI, '37-fiche-batiment-mots-2026-09-23.tsv'), 'w', encoding='utf-8').write('\n'.join(out) + '\n')
     print(f'{len(mots)} mots de ② · ' + ' · '.join(f'{c} {comptes[c]}' for c in ORDRE) + f' · + {len(COMPLEMENTS)} compléments de famille · + {len(DETTES)} dette(s) de maquette')
     print(f'clés de la table servies avec nos mots : {servies_depuis} · écarts servi ≠ table (à signaler au back) : {len(ecarts)}')
