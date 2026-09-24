@@ -751,7 +751,8 @@ namespace MafiaCleanCity.Operational
         private void PrendreLeBudgetServi(GetMetaTaskCategoriesResponseDto dto)
         {
             if (dto == null || !dto.StructuralBudgetServi || dto.structural_budget == null) return;
-            JetonDeStructure.Publier(dto.structural_budget.used, dto.structural_budget.cap_reached);
+            // `used` n'est pas servi (R2.2, forme corrigée le 24/09) : le compte publié reste celui déjà connu, seul `cap_reached` décide.
+            JetonDeStructure.Publier(JetonDeStructure.Utilises, dto.structural_budget.cap_reached);
             JetonDepenseConnu = true;
             JetonDepense = dto.structural_budget.cap_reached;
         }
