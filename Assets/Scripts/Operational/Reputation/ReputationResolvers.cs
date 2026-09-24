@@ -218,7 +218,6 @@ namespace MafiaCleanCity.Operational
             }
             return MafiaCleanCity.I18n.Repli.Etat(v);
         }
-        }
 
         /// <summary>Ce que la pose VEUT DIRE — la vertu que le lieutenant a absorbée (ou non).
         /// C'est ce qui empêche l'écran d'être un décor : chaque voyant nomme sa règle.</summary>
