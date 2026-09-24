@@ -141,6 +141,12 @@ T = {  # mot tel que balayé → (classe, clé, fr, en, note)
  'Personne n’y est allé. Il faudra en reprendre un.': (P, 'building.bloc.personne_n_y_est_alle_il_faudra_en_reprendre_un',
    'Personne n’y est allé. Il faudra en reprendre un.', 'Nobody went. You’ll need to set another.', '« personne » : pronom indéfini, aucun genre présumé'),
 }
+# DETTES DE MAQUETTE (point 19) : un geste SERVI que la maquette ne dessine pas — le mot est PROPOSÉ, le dessin viendra (décision f2 du 24/09)
+DETTES = [
+ ('building.action.honorer_le_rendez_vous', 'Honorer le rendez-vous', 'Honor the appointment',
+  'dette de maquette, point 19 : geste servi par POST /v1/operational/appointment/:id/honor, dessin à venir — la SEULE voie de vente de l’Ash '
+  '(note de DA du cadre 94) ; absent du texte des 146 cadres de la série 6 (mesuré le 24/09) ; décision f2 du 24/09 (option a) ; « ACTIONS » : retiré, pas de mot'),
+]
 COMPLEMENTS = [  # les familles neuves complétées (valeurs que la maquette ne dessine pas, ou dessine ailleurs)
  ('building.cook_stage.idle', 'Éteint', 'Out', 'PROPOSÉ : aucun mot ratifié pour IDLE'),
  ('building.cook_stage.early', 'Début', 'Start', 'ratifié (47)'), ('building.cook_stage.done', 'Prêt', 'Ready', 'ratifié (47)'),
@@ -185,8 +191,13 @@ def main():
     for cle, fr, en, note in COMPLEMENTS:
         out.append('\t'.join(['(complément de famille)', '', P, cle, fr, en, note]))
         if ecart(cle, fr): ecarts.append(f'{cle} : servie « {FRV[cle]} » ≠ la table « {fr} »')
+    for cle, fr, en, note in DETTES:
+        out.append('\t'.join(['(dette de maquette)', '', P, cle, fr, en, note]))
+        if cle in FRV: defauts.append(f'{cle} : déjà servie — la dette la dit neuve')
+        if cle.split('.', 2)[2] != slug(fr): defauts.append(f'{cle} ≠ slug « {slug(fr)} »')
+        if re.search(r'[:;!?]', fr) or "'" in fr + en: defauts.append(f'{cle} : D17 / D10')
     open(os.path.join(ICI, '37-fiche-batiment-mots-2026-09-23.tsv'), 'w', encoding='utf-8').write('\n'.join(out) + '\n')
-    print(f'{len(mots)} mots de ② · ' + ' · '.join(f'{c} {comptes[c]}' for c in ORDRE) + f' · + {len(COMPLEMENTS)} compléments de famille')
+    print(f'{len(mots)} mots de ② · ' + ' · '.join(f'{c} {comptes[c]}' for c in ORDRE) + f' · + {len(COMPLEMENTS)} compléments de famille · + {len(DETTES)} dette(s) de maquette')
     print(f'clés de la table servies avec nos mots : {servies_depuis} · écarts servi ≠ table (à signaler au back) : {len(ecarts)}')
     [print('  ≠', x) for x in ecarts]
     [print('  ⛔', x) for x in defauts]; print(f'{len(defauts)} défaut(s)'); sys.exit(1 if defauts else 0)
