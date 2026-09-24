@@ -996,8 +996,14 @@ namespace MafiaCleanCity.Operational
 
             bool pupitreFocal = APupitre(card.operational_type) && CurrentLab != null
                 && (CurrentAppointment == null || string.IsNullOrEmpty(CurrentAppointment.status));
-            string label = NewSectionLabel(actionBar, pupitreFocal ? "LE PUPITRE" : "ACTIONS");
-            TrackText(null, label);
+            // Correctif du 24/09 : l'en-tête « LE PUPITRE » (pupitre focal) est RETIRÉ — aucune source (ni table 37, ni balayage
+            // 34), et la maquette ② ne montre aucun en-tête à cet endroit (« le pupitre » n'y figure qu'en commentaire).
+            // « ACTIONS » reste hors Libelle : dette déclarée (Tools/juge-donnees/i18n/dette-hors-libelle-fiche-2026-09-24.md).
+            if (!pupitreFocal)
+            {
+                string label = NewSectionLabel(actionBar, "ACTIONS");
+                TrackText(null, label);
+            }
 
             // Phase-2b: the Repair affordance — visible ONLY when the building is DAMAGED. It shows the repair
             // COST band (qualitative — never cents) and is DISABLED when the wallet band can't afford that cost
@@ -2313,10 +2319,16 @@ namespace MafiaCleanCity.Operational
             disposition.childForceExpandHeight = false;
             AddLayoutElement(billet, minHeight: 118, flexibleHeight: 0);
 
+            // Correctif du 24/09 : le surtitre était le LITTÉRAL « RENDEZ-VOUS · DISTRICT DU VERRE », hors Libelle. La table 37 le
+            // définit comme « la ligne servie (`building.row.rendez_vous`) + le nom de fiction SERVI du district ». La route
+            // du rendez-vous (`AppointmentDto` : appointment_id, status, payout_band) ne sert AUCUN nom de district : on
+            // rend donc la ligne servie seule, jamais un nom deviné (dette : le nom servi du lieu de vente). Capitales :
+            // TYPOGRAPHIQUES, parce que la maquette ② (cadres 92-94) écrit ce surtitre en capitales.
             TextMeshProUGUI surtitre = NewText("BilletTitre", billet.transform,
-                "RENDEZ-VOUS · DISTRICT DU VERRE", 11, TextAlignmentOptions.Left);
+                MafiaCleanCity.I18n.Libelle.Gabarit("building.row.rendez_vous", "Rendez-vous"), 11, TextAlignmentOptions.Left);
+            surtitre.fontStyle |= FontStyles.UpperCase;
             surtitre.color = new Color32(75, 69, 58, 255);
-            surtitre.fontStyle = FontStyles.Bold;
+            surtitre.fontStyle |= FontStyles.Bold;
             surtitre.characterSpacing = 5f;
             AddLayoutElement(surtitre.gameObject, minHeight: 18, flexibleHeight: 0);
             TrackText(surtitre, surtitre.text);
