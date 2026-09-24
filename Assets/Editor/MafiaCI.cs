@@ -476,6 +476,8 @@ public static class MafiaCI
                           "rendu après elle : la suivante est jugée sur ses propres gestes.");
             else
                 Debug.Log("MafiaCI: catalogue i18n rendu en sortie de CHAQUE classe (0 survivant).");
+            Debug.Log($"MafiaCI: état du shell rendu en sortie de {etatShellRendu.Count} classe(s)" +
+                      (etatShellRendu.Count > 0 ? " : [" + string.Join(", ", etatShellRendu) + "]" : "") + " (EtatPublieParLeShell, point unique).");
             // ⛔ LE CODE DE SORTIE EST AUSSI IMPRIMÉ, parce que le harnais ne le VOIT PAS : quand son chien de garde tue
             //    l'éditeur après le marqueur de fin, il relit `failed=` et non ce code — une suite tronquée, un filtre vide
             //    ou un catalogue survivant sortaient donc RC=0 par ce chemin (mesuré le 23/09 avec la sonde du catalogue).
@@ -522,6 +524,7 @@ public static class MafiaCI
         // après tous ses TearDown, dans le même domaine. ⇒ La classe qui sort catalogue chargé est NOMMÉE, compte dans
         // le code de sortie, et le catalogue est rendu après elle — la suivante est jugée sur ses propres gestes.
         private readonly System.Collections.Generic.List<string> catalogueSurvivant = new System.Collections.Generic.List<string>();
+        private readonly System.Collections.Generic.List<string> etatShellRendu = new System.Collections.Generic.List<string>();
 
         public void TestFinished(ITestResultAdaptor result)
         {
@@ -538,6 +541,19 @@ public static class MafiaCI
                               (arrive != demande ? $" (arrivé en vol pendant {arrive})" : "") +
                               $", survivant à la sortie de {result.Test.FullName} — rendu maintenant. Le FAUTIF est celui qui l'a DEMANDÉ.");
                     MafiaCleanCity.I18n.I18nCatalog.Oublier();
+                }
+                // ⛔ L'ÉTAT PUBLIÉ PAR LE SHELL, MÊME CROCHET (2026-09-24) — marges du chrome, jeton de structure : une classe qui
+                // monte le vrai shell les laisse, et la suivante (㉙ hors shell : EcranConflitE12) bâtit sur les marges d'un shell
+                // détruit. Rendu ICI pour toutes les classes (point unique ; la garde EtatDuShellPlayModeTests exige cet appel), et
+                // la classe est NOMMÉE. Ne compte PAS dans le code de sortie : 23 classes montent le shell, et c'est ce rendu qui
+                // neutralise la fuite — le nom sert à savoir qui publie, pas à rougir.
+                if (result.Test.TypeInfo != null && result.Test.Method == null
+                    && !MafiaCleanCity.Shell.EtatPublieParLeShell.Vierge)
+                {
+                    etatShellRendu.Add(result.Test.Name);
+                    Debug.Log($"MafiaCI: état du shell publié à la sortie de {result.Test.FullName} " +
+                              $"({MafiaCleanCity.Shell.EtatPublieParLeShell.Decrire()}) — rendu maintenant.");
+                    MafiaCleanCity.Shell.EtatPublieParLeShell.RendrePourTest();
                 }
                 return;
             }

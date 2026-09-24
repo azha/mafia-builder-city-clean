@@ -82,7 +82,7 @@ namespace MafiaCleanCity.Operational.Tests
         private (float haut, float bas)? insetsAvant;
 
         /// <summary>Toutes les racines vivantes : scène active ET `DontDestroyOnLoad` (lue par un témoin posé puis retiré).</summary>
-        private static List<GameObject> Racines()
+        internal static List<GameObject> Racines()
         {
             var r = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList();
             var temoin = new GameObject("TemoinDDOL");
