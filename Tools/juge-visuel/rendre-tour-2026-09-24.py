@@ -9,7 +9,7 @@ Même chaîne (`rendre-tel.py`, ×3,6, DejaVu) ; même garde : machine libre (0 
   - ② : le cadre NEUF « honorer le rendez-vous » (PROPOSÉ, `ecrans-brennar-ash-honorer-2026-09-24.html`) → `fiche-batiment/honorer-2026-09-24/`.
   - ㉙ : les 2 cadres PROPOSÉS (choisir, aucun gros bras) → `ecran_conflit/proposes-2026-09-24/`, et 59, 60, 61, 63 + la référence 59 re-rendus
     (réplique sans orateur, doublon « jamais » retiré, atelier `e732cee`).
-Usage : python3 Tools/juge-visuel/rendre-tour-2026-09-24.py [--a-blanc] [--lieutenant | --delegation | --honorer | --conflit | --refaire | --ratif]"""
+Usage : python3 Tools/juge-visuel/rendre-tour-2026-09-24.py [--a-blanc] [--lieutenant | --delegation | --honorer | --conflit | --refaire | --ratif | --deux-lignes]"""
 import importlib.util, os, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 sp = importlib.util.spec_from_file_location('lot', os.path.join(ICI, 'rendre-lot-2026-09-23.py'))
@@ -39,6 +39,7 @@ def main():
     if '--honorer' in sys.argv: cmds = [c for c in cmds if c[0].startswith('②')]
     if '--conflit' in sys.argv: cmds = [c for c in cmds if c[0].startswith('㉙')]
     if '--ratif' in sys.argv: cmds = [c for c in cmds if c[0].startswith('㉕ ratif')]
+    if '--deux-lignes' in sys.argv: cmds = [c for c in cmds if c[0] == '⑦ cadre 1']   # ⑦ cadre 1 tenu sur 2 lignes (atelier 622f17e) ; puis mesurer-7-cadre1-2026-09-24.py
     if '--refaire' in sys.argv: cmds = [c for c in cmds if c[0] in ('⑦ cadre 1', '㉙ proposé 0', '㉙ proposé 1', '② honorer (PROPOSÉ)')]   # les 4 re-rendus du 24/09
     if '--a-blanc' in sys.argv:
         [print(' '.join(c)) for _, c in cmds]; print(f'{len(cmds)} rendus'); return
