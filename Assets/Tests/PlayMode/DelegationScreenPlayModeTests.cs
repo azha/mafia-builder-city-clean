@@ -21,7 +21,9 @@ namespace MafiaCleanCity.Operational.Tests
     /// `pilote-B`) : `OuvrirJoueurFrais()` (signup + `session/close` défensif + lecture d'un
     /// lieutenant du kit de départ) — à adapter ici selon ce que `GetMetaTaskCategories` exige
     /// réellement comme précondition.</summary>
-    [Category("EcranDelegation")]
+    // ⛔ LA CATÉGORIE EST POSÉE TEST PAR TEST, PAS SUR LA CLASSE (2026-09-24, orchestrateur) : posée sur la classe, elle s'unissait
+    // à `PhotoEcranDelegation` sur C1 — la capture partait avec EcranDelegation et rougissait faute de la paire du compte de capture
+    // (créneau du 23/09 08:48, 80/81). C1 ne porte plus que sa catégorie de capture (partie 2), comme les autres écrans.
     public class DelegationScreenPlayModeTests
     {
         private GameObject hostGo;
@@ -71,7 +73,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// squelette non rempli — au moins 1 Graphic (le fond). Une fois le MÉTIER ICI de
         /// `BuildLayout()` rempli, relever le plancher `Assert.Greater(comptes, 1, ...)` vers une
         /// valeur qui reflète le contenu réel (㊲ l'a posé à 10).</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationS1_ToutGraphic_PorteSonCanvasRenderer()
         {
             MonterEcran();
@@ -276,7 +278,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// codes est retirée. Ce test lit le RÉSEAU (compte frais) et épingle la VALEUR servie de chaque charge LIVE contre le catalogue
         /// du back (`task-category-catalogue.ts` : 1, 2, 4, 5 — « 3 » est LEK_CONTEST, en réserve). Il rougit si le champ disparaît
         /// (0), si deux charges partagent un code, ou si le catalogue bouge.</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationG1_ChaqueChargeServiePorteSonCode()
         {
             yield return OuvrirJoueurFrais();
@@ -306,7 +308,7 @@ namespace MafiaCleanCity.Operational.Tests
 
         /// <summary>㉜ lot 1 — sans réseau : « La lui confier » envoie le code SERVI de la ligne visée (un code FABRIQUÉ, 42, qu'aucune
         /// copie client ne connaît — la preuve que rien d'autre ne le fournit) ; une ligne sans code (0) n'offre AUCUN geste vivant.</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationL1_LaLuiConfier_EnvoieLeCodeServi_EtSansCodeRienNePart()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;   // le port fermé fait échouer la requête : on lit le code PARTI
@@ -345,7 +347,7 @@ namespace MafiaCleanCity.Operational.Tests
 
         /// <summary>R1 — la phrase d'un refus vient de sa clé SERVIE (ou de la raison servie) ; le message anglais du serveur et une
         /// URL de panne ne s'affichent JAMAIS.</summary>
-        [Test]
+        [Test, Category("EcranDelegation")]
         public void EcranDelegationR1_LaPhraseDuRefus_JamaisLeMessageAnglais()
         {
             MafiaCleanCity.I18n.I18nCatalog.Oublier();
@@ -384,7 +386,7 @@ namespace MafiaCleanCity.Operational.Tests
 
         /// <summary>R2 — le 409 du PLAFOND éteint le jeton PARTAGÉ dès le refus (d'après le refus servi, pas un compteur) et mène au
         /// tableau « déjà tranché » ; un autre refus reste sur l'état du geste, en mots.</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationR2_LePlafond_EteintLeJetonDesLeRefus()
         {
             var ecran = MonterEcran();
@@ -418,7 +420,7 @@ namespace MafiaCleanCity.Operational.Tests
 
         /// <summary>R3 — un refus n'est plus AVALÉ comme un succès : `Charger()` remettait le refus à null, et l'écran repartait au
         /// tableau. Ici une vraie requête échoue (port fermé) : l'écran reste sur « confier » et dit le refus, sans URL.</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationR3_UnRefusNEstPasAvaleCommeUnSucces()
         {
             UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
@@ -460,7 +462,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// geste « en confier une » INOPÉRANT au premier jour, et donc ce que l'écran doit dire.
         /// ⛔ L'épingle porte sur des VALEURS présentes, jamais sur l'absence d'une clé : une
         /// assertion d'absence resterait verte le jour où la valeur apparaît.</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationP1_UnCompteFraisTientSesQuatreCharges()
         {
             yield return OuvrirJoueurFrais();
@@ -495,7 +497,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// ⚠️ Un corps fabriqué ne prouve JAMAIS que le back émet cette forme — c'est le rôle des
         /// deux tests de parcours ci-dessus. Il prouve seulement le rendu, et il permet d'exercer
         /// l'état « confié » qu'un compte frais ne peut pas atteindre (il faudrait `ELIGIBLE`).</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationE1_DeuxChargesConfiees_LeTitreEtLesNomsSuivent()
         {
             var ecran = MonterEcran();
@@ -538,7 +540,7 @@ namespace MafiaCleanCity.Operational.Tests
 
         /// <summary>Le jeton dépensé change le titre, éteint le geste, et le DIT. C'est l'état
         /// m-77, et c'est la propriété que les trois écrans du jeton (㉜ ㉝ ㉞) doivent partager.</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationE2_JetonDepense_LeGesteSeteintEtLeDit()
         {
             var ecran = MonterEcran();
@@ -570,7 +572,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// `live` — donc ce test épingle la seule chose qui compte : que l'écran en montre HUIT et
         /// que son texte parle bien de huit. *Un écran qui se contredit lui-même apprend au joueur
         /// à ne pas le croire.*</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationE3_LaReserveMontreLesHuitDontElleParle()
         {
             var ecran = MonterEcran();
