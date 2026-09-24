@@ -5,9 +5,13 @@
 ⛔ DEUX RÈGLES DIFFÉRENTES, ET C'EST LEUR ÉCART QUI MENT.
 · DÉCLARÉS (`MafiaCI.CompterFeuillesFiltrees`) : une feuille compte si l'une de ses catégories — méthode ET classe, mesuré :
   les runs du 22/09 rendent declares == comptes (71, 439) — est ÉGALE à une entrée du filtre.
-· EXÉCUTÉS (le `Filter.categoryNames` d'Unity, mesuré dans MafiaCI.cs) : correspondance par PRÉFIXE (`HUD` prend `HUDv31`),
+· EXÉCUTÉS (le `Filter.categoryNames` d'Unity) : chaque catégorie demandée est une REGEX NON ANCRÉE — lu dans la source,
+  `com.unity.test-framework/UnityEngine.TestRunner/TestRunner/RuntimeTestRunnerFilter.cs:31` (`CategoryFilterExtended(s)
+  { IsRegex = true }`, `Regex.IsMatch` de NUnit) ⇒ elle prend toute catégorie qui la CONTIENT, pas seulement celles qui commencent
+  par elle (`HUD` prend `HUDv31`, et `EcranDelegation` prend `PhotoEcranDelegation` — mesuré le 2026-09-24, comptes 86 ≠ declares 85).
+  ⚠️ Ancienne règle de cet outil (préfixe, jusqu'au 24/09) : elle SOUS-COMPTAIT tout infixe ;
   et une catégorie posée sur la CLASSE sélectionne toutes ses méthodes, même celles qui portent la leur.
-Un filtre dont les deux comptes diffèrent (une catégorie PRISE PAR PRÉFIXE) donnera `comptes > declares` au run — MafiaCI
+Un filtre dont les deux comptes diffèrent (une catégorie PRISE PAR LA REGEX) donnera `comptes > declares` au run — MafiaCI
 ne rougit que sur `comptes < declares` : ce script le dit AVANT.
 CALIBRÉ le 2026-09-22 sur trois runs mesurés : Inspection,W3UDA,EcranExceptions @6e83071b → 71 (mesuré 71) ; W3U1 → 38 (38) ;
 Inspection @ac003698 → 5 (5) ; filtre complet @55702bf8 → 438 feuilles lancées (journal), voir le commit.
@@ -16,6 +20,10 @@ Les `[TestCase(...)]` comptent une feuille chacun ; les `[Ignore]` sont déclar�
 Usage : python3 Tools/compter-par-categorie.py Cat1,Cat2,… [--rev <commit>] [--detail]
 """
 import re, subprocess, sys, collections
+
+def prend(demandee, categorie):
+    """la règle RÉELLE du filtre d'Unity : la catégorie demandée est une regex NON ANCRÉE (RuntimeTestRunnerFilter.cs:31, IsRegex)"""
+    return re.search(demandee, categorie) is not None
 
 def fichiers(rev):
     if rev:
@@ -129,7 +137,7 @@ def main():
             # declares == comptes, 71 et 439 — l'adaptateur Unity porte les catégories héritées).
             propres = toutes
             d = any(c in filtre for c in propres)
-            e = any(c.startswith(x) for c in toutes for x in filtre)
+            e = any(prend(x, c) for c in toutes for x in filtre)
             if d:
                 tot_d += n
                 for x in filtre:
@@ -138,9 +146,9 @@ def main():
                 tot_e += n
                 portees |= toutes
                 for c in toutes:
-                    if any(c.startswith(x) for x in filtre): vues[c] += n
+                    if any(prend(x, c) for x in filtre): vues[c] += n
                 for x in filtre:
-                    if any(c.startswith(x) for c in toutes): exe[x] += n
+                    if any(prend(x, c) for c in toutes): exe[x] += n
                 if ignoree: ign.append(f"{f.split('/')[-1]}:{meth}")
             if d != e: diff.append((f.split('/')[-1], classe, meth, cc, cm, 'déclaré seulement' if d else 'exécuté seulement'))
     print(f"filtre = {filtre}" + (f" · rev {rev}" if rev else ""))
