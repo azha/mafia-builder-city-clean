@@ -96,6 +96,11 @@ namespace MafiaCleanCity.Operational
         /// <summary>Cette catégorie a déjà été reprise au moins une fois. SERVI, NON DESSINÉ ;
         /// employé comme sous-ligne.</summary>
         public bool recall_scar;
+
+        /// <summary>㉜ lot 3b — DÉCLARÉ AVANT D'ÊTRE SERVI (forme G, annonce du back du 23/09, « petit lot délégation ») : un verrou
+        /// de promotion ACTIF sur cette charge (confier OU reprendre refusés, 409 `promotion_lock_active`). Absent aujourd'hui ⇒ false,
+        /// c'est-à-dire l'état d'avant ce champ : le serveur reste juge et son refus se dit en mots.</summary>
+        public bool promotion_lock;
     }
 
     /// <summary>`successor` — le domaine qu'une graduation débloque. `substrate` vaut toujours
@@ -128,7 +133,51 @@ namespace MafiaCleanCity.Operational
     {
         public TaskCategoryRowDto[] task_categories;
         public DelegatedSummaryDto[] delegated;
+
+        /// <summary>㉜ lot 3b — DÉCLARÉ AVANT D'ÊTRE SERVI (forme G, annonce du back du 23/09) : le budget de structure voisin,
+        /// relu à chaque chargement. ⛔ `JsonUtility` construit un objet PAR DÉFAUT quand le champ est absent — « absent » se lirait
+        /// « 0 utilisé, plafond libre » et écraserait le jeton publié à l'ouverture. On ne s'en sert donc que si
+        /// <see cref="StructuralBudgetServi"/> (posé par le client d'après le corps BRUT).</summary>
+        public StructuralBudgetDelegationDto structural_budget;
+
+        /// <summary>Vrai seulement si le corps servi PORTE `structural_budget` (lu dans le texte brut par `DelegationClient`).</summary>
+        [NonSerialized] public bool StructuralBudgetServi;
     }
+
+    /// <summary>`structural_budget` de `task-categories` (annoncé) : `{used, cap_reached, decisions_this_session[]}`.</summary>
+    [Serializable]
+    public class StructuralBudgetDelegationDto
+    {
+        public int used;
+        public bool cap_reached;
+        public DecisionDeSessionDto[] decisions_this_session;
+    }
+
+    /// <summary>Une décision de structure prise dans la session : `decision_type` (`StructuralDecisionType` du gouverneur —
+    /// `TASK_RETIREMENT` pour confier, `TASK_RECALL` pour reprendre, structural-decision-catalogue.ts:73, 83 — ou un autre site
+    /// structurel) et `category_key` quand la décision porte sur une charge.</summary>
+    [Serializable]
+    public class DecisionDeSessionDto
+    {
+        public string decision_type;
+        public string category_key;
+    }
+
+    /// <summary>㉜ lot 3b — `GET /v1/meta/pressure` (meta_progression/pressure-tier.controller.ts:48 ; `PressureProjection`,
+    /// pressure-tier.service.ts:55-60) : le budget ENFORCÉ relu à chaque appel. ⛔ `decisions_remaining` est le vrai reste
+    /// (plafond − utilisées) ; `decisions_this_session_display` est une CADENCE D'AFFICHAGE (un autre axe), jamais lue pour le
+    /// jeton (orchestrateur, 23/09). `observation_remaining_h` est omis hors fenêtre (0 ici).</summary>
+    [Serializable]
+    public class GetMetaPressureResponseDto
+    {
+        public int pressure_tier;
+        public int decisions_remaining;
+        public int decisions_this_session_display;
+        public int observation_remaining_h;
+    }
+
+    [Serializable] public class GetMetaPressurePayload { public GetMetaPressureResponseDto data; }
+    [Serializable] public class GetMetaPressureEnvelope { public GetMetaPressurePayload payload; }
 
     [Serializable] public class GetMetaTaskCategoriesPayload { public GetMetaTaskCategoriesResponseDto data; }
     [Serializable] public class GetMetaTaskCategoriesEnvelope { public GetMetaTaskCategoriesPayload payload; }

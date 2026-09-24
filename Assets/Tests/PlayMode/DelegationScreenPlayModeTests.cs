@@ -445,6 +445,78 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsFalse(TexteDeLEcran().Contains("127.0.0.1"), "jamais d'URL à l'écran");
         }
 
+        // ═══ ㉜ lot 3b — le plafond et le verrou, dits AVANT l'appui (sans réseau) ═════════════
+
+        private static GetMetaTaskCategoriesResponseDto CorpsSupply(bool verrou = false, bool budgetServi = false, bool capAtteint = false) =>
+            new GetMetaTaskCategoriesResponseDto
+            {
+                task_categories = new[] { new TaskCategoryRowDto { category_key = "SUPPLY_SOURCING", category_id = 4, mastery_bucket = "ELIGIBLE",
+                                                                   progress_band = "HIGH", delegation_state = "SELF", promotion_lock = verrou } },
+                delegated = new DelegatedSummaryDto[0],
+                structural_budget = new StructuralBudgetDelegationDto { used = capAtteint ? 1 : 0, cap_reached = capAtteint,
+                                                                        decisions_this_session = new DecisionDeSessionDto[0] },
+                StructuralBudgetServi = budgetServi,
+            };
+
+        private static readonly GetLieutenantsResponseDto UnLieutenant =
+            new GetLieutenantsResponseDto { lieutenants = new[] { new LieutenantRowDto { lieutenant_id = "lt-1", name = "Lt. Vesk" } } };
+
+        /// <summary>B1 — le budget de `task-categories` (déclaré) ne vaut que s'il est SERVI : absent (aujourd'hui), le jeton de
+        /// l'ouverture de session reste ; servi avec `cap_reached`, il éteint le jeton PARTAGÉ avant tout appui.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationB1_LeBudgetServi_SeulementSIlEstServi()
+        {
+            var ecran = MonterEcran();
+            ecran.SetBaseUrl("http://127.0.0.1:9");
+            yield return null;
+            MafiaCleanCity.Shell.JetonDeStructure.Publier(1, true);   // l'ouverture de session a dit : dépensé
+            ecran.RendrePourTest(CorpsSupply(budgetServi: false), UnLieutenant, jetonDepense: true);
+            Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint,
+                "un budget ABSENT (objet par défaut de JsonUtility) n'écrase pas le jeton de l'ouverture");
+
+            MafiaCleanCity.Shell.JetonDeStructure.OublierPourTest();
+            ecran.RendrePourTest(CorpsSupply(budgetServi: true, capAtteint: true), UnLieutenant, jetonDepense: false);
+            Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "servi et atteint : le jeton partagé s'éteint");
+            Assert.IsTrue(ecran.JetonDepense);
+            Assert.IsNull(GesteVivant(), "plus de geste vivant AVANT l'appui");
+        }
+
+        /// <summary>B2 — la pression après une décision : `decisions_remaining` décide, `decisions_this_session_display` (cadence
+        /// d'affichage) JAMAIS.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationB2_LaPression_LeResteEnforceDecide_JamaisLaCadence()
+        {
+            var ecran = MonterEcran();
+            yield return null;
+            ecran.PrendreLaPression(new GetMetaPressureResponseDto { decisions_remaining = 0, decisions_this_session_display = 12 });
+            Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "reste 0 : dépensé, même si la cadence affiche 12");
+            Assert.IsTrue(ecran.JetonDepense);
+            ecran.PrendreLaPression(new GetMetaPressureResponseDto { decisions_remaining = 1, decisions_this_session_display = 0 });
+            Assert.IsFalse(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "reste 1 : libre, même si la cadence affiche 0");
+            Assert.IsFalse(ecran.JetonDepense);
+        }
+
+        /// <summary>B3 — le verrou de promotion (déclaré) éteint le geste AVANT l'appui et dit pourquoi, avec le mot servi de la
+        /// table 44 — distinct du plafond, qui reste libre.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationB3_LeVerrou_EteintLeGesteEtLeDit()
+        {
+            var ecran = MonterEcran();
+            ecran.SetBaseUrl("http://127.0.0.1:9");
+            yield return null;
+            ecran.RendrePourTest(CorpsSupply(verrou: true), UnLieutenant, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            yield return null;
+            Assert.IsNull(GesteVivant(), "verrou actif : « La lui confier » n'est pas vivant");
+            StringAssert.Contains("un changement est déjà en cours sur cette charge", TexteDeLEcran(), "le verrou se DIT, avant l'appui");
+            Assert.IsFalse(ecran.JetonDepense, "le verrou n'est pas le plafond : le jeton reste libre");
+
+            ecran.RendrePourTest(CorpsSupply(verrou: false), UnLieutenant, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            yield return null;
+            Assert.IsNotNull(GesteVivant(), "contrôle : sans verrou, le geste est vivant");
+        }
+
         /// <summary>Le bouton du geste (`Geste` → sa zone `Touche`), s'il est vivant — un geste mort n'a AUCUN gestionnaire.</summary>
         private Button GesteVivant()
         {

@@ -332,6 +332,7 @@ namespace MafiaCleanCity.Operational
             yield return client.GetMetaTaskCategories(token,
                 dto => DernierChargement = dto,
                 refus => { DernierCodeErreur = refus.statut; DerniereErreur = refus.message; phraseIndisponible = PhraseDeRefus(refus); });
+            PrendreLeBudgetServi(DernierChargement);
 
             if (DernierChargement != null)
             {
@@ -379,6 +380,7 @@ namespace MafiaCleanCity.Operational
             DernierRoster = roster;
             JetonDepenseConnu = jetonDepense.HasValue;
             JetonDepense = jetonDepense.GetValueOrDefault();
+            PrendreLeBudgetServi(dto);   // même chemin que `Charger` : un budget servi l'emporte sur l'état passé au test
             AppliquerEtat(dto);
         }
 
@@ -521,7 +523,7 @@ namespace MafiaCleanCity.Operational
                       + "les commandes. »   ▸ un autre",
                       () => { candidatIndex++; AppliquerEtat(DernierChargement); });
 
-            bool possible = visee != null && EstPrete(visee) && JetonDisponible && CodeServi(visee);
+            bool possible = visee != null && EstPrete(visee) && JetonDisponible && CodeServi(visee) && !visee.promotion_lock;
             ConstruireGeste(pied, "LA LUI CONFIER",
                             possible ? "c'est votre décision du jour" : RaisonDuRefus(visee),
                             !possible,
@@ -551,9 +553,11 @@ namespace MafiaCleanCity.Operational
                       " « Vous pouvez la reprendre. Il ne le prendra pas bien, et ce qu'il savait faire, "
                       + "vous devrez le réapprendre. »");
 
-            bool possible = visee != null && visee.delegation_state != "SELF" && JetonDisponible && CodeServi(visee);
+            bool verrou = visee != null && visee.promotion_lock;
+            bool possible = visee != null && visee.delegation_state != "SELF" && JetonDisponible && CodeServi(visee) && !verrou;
             ConstruireGeste(pied, "LA REPRENDRE QUAND MÊME",
-                            possible ? "c'est votre décision du jour" : "plus de décision aujourd'hui",
+                            possible ? "c'est votre décision du jour"
+                                     : verrou && JetonDisponible ? PhraseDeRaison("promotion_lock_active") : "plus de décision aujourd'hui",
                             !possible,
                             possible ? (System.Action)(() => StartCoroutine(Reprendre(visee))) : null);
         }
@@ -654,6 +658,9 @@ namespace MafiaCleanCity.Operational
             string refus = refusAffiche;
             bool plafond = plafondAtteintParRefus;
             yield return Charger();
+            // ㉜ lot 3b : après CHAQUE décision, le reste ENFORCÉ relu (`GET /v1/meta/pressure`, orchestrateur 23/09) — le plafond se
+            // dit AVANT l'appui suivant, plus seulement par le 409. Une lecture en échec ne change rien (le serveur reste juge).
+            yield return client.GetMetaPressure(token, PrendreLaPression, _ => { });
             refusAffiche = refus;
             // Succès, ou plafond : le tableau (le plafond s'y dit par le jeton éteint et le titre du cadre 77, pas par un pavé).
             if (refus == null || plafond) { refusAffiche = null; AllerA(EtatEcran.Tableau); yield break; }
@@ -730,8 +737,30 @@ namespace MafiaCleanCity.Operational
 
         private static TaskCategoryRowDto PremierePrete(TaskCategoryRowDto[] rangs)
         {
-            foreach (TaskCategoryRowDto r in rangs) if (EstPrete(r)) return r;
+            foreach (TaskCategoryRowDto r in rangs) if (EstPrete(r) && !r.promotion_lock) return r;
             return null;
+        }
+
+        /// <summary>㉜ lot 3b — le budget de structure SERVI par `task-categories` (déclaré, annoncé par le back) : relu à chaque
+        /// chargement, il publie le jeton PARTAGÉ. Absent du corps (c'est le cas aujourd'hui) ⇒ rien ne change : le jeton reste celui
+        /// de l'ouverture de session.</summary>
+        private void PrendreLeBudgetServi(GetMetaTaskCategoriesResponseDto dto)
+        {
+            if (dto == null || !dto.StructuralBudgetServi || dto.structural_budget == null) return;
+            JetonDeStructure.Publier(dto.structural_budget.used, dto.structural_budget.cap_reached);
+            JetonDepenseConnu = true;
+            JetonDepense = dto.structural_budget.cap_reached;
+        }
+
+        /// <summary>㉜ lot 3b — `GET /v1/meta/pressure` après une décision : `decisions_remaining == 0` ⇒ jeton DÉPENSÉ, publié pour
+        /// ㉝ ㉞. ⛔ `decisions_this_session_display` n'est JAMAIS lu : c'est une cadence d'affichage, pas le budget enforcé.</summary>
+        public void PrendreLaPression(GetMetaPressureResponseDto p)
+        {
+            if (p == null) return;
+            bool depense = p.decisions_remaining <= 0;
+            JetonDeStructure.Publier(JetonDeStructure.Utilises, depense);
+            JetonDepenseConnu = true;
+            JetonDepense = depense;
         }
 
         /// <summary>㉜ lot 1 — une ligne porte-t-elle un code SERVI ? (`category_id` > 0 : `JsonUtility` rend 0 pour un champ absent.)
@@ -750,6 +779,7 @@ namespace MafiaCleanCity.Operational
             if (!JetonDisponible) return "plus de décision aujourd'hui";
             if (visee == null) return "aucune charge visée";
             if (visee.delegation_state != "SELF") return "déjà confiée";
+            if (visee.promotion_lock) return PhraseDeRaison("promotion_lock_active");   // ㉜ lot 3b : le verrou, dit AVANT l'appui
             return DelegationResolvers.PhraseDeMaitrise(visee.mastery_bucket);
         }
 
