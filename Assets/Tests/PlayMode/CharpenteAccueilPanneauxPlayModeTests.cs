@@ -469,19 +469,27 @@ namespace MafiaCleanCity.Shell.Tests
                 "le bandeau doit refléter EXACTEMENT compression_glance du ground-truth (forced OU " +
                 "week_state != 'none') — jamais une valeur supposée à l'avance.");
 
-            // m5 (revue ⊥ item05-C2, mineur — détecteur de péremption, "le toBe(404) dans le bon
-            //      sens") : Deviation 1 (Shortcut_DailyReview, C4a) n'a JAMAIS été asserté nulle
-            //      part — épingle la VALEUR actuelle plutôt que de la laisser filer sans détecteur.
-            //      Ce panneau EST monté PAR LA PRODUCTION (ci-dessus), donc c'est le bon objet à
-            //      épingler. Le jour où C4a câble Shortcut_DailyReview identiquement à
-            //      Shortcut_Second (posant LastOpenedDailyReview), CETTE assertion ROUGIRA — signal
-            //      qu'il faut alors écrire la vraie garde de navigation pour ce raccourci, pas
-            //      supprimer une assertion qui n'a plus de sens. ──
-            Assert.IsNull(homeChrome.LastOpenedDailyReview,
-                "Deviation 1 (Tools/charpente-item05-design.md) : Shortcut_DailyReview ne navigue " +
-                "PAS encore (C4a, hors périmètre C2) — si ceci ROUGIT, C4a a câblé ce raccourci : " +
-                "écrire ici la même garde de clic+raycast que Shortcut_Second ci-dessous, ne pas " +
-                "juste retirer cette ligne.");
+            // m5 (revue ⊥ item05-C2) — le détecteur de péremption a servi : C7 (passe UX du 2026-09-24) CÂBLE Shortcut_DailyReview
+            //      comme Shortcut_Second. Sa consigne est suivie : « écrire la même garde de clic+raycast, ne pas juste retirer la
+            //      ligne ». ⇒ ICI, tant que l'Accueil n'est pas recouvert : les 4 coins sont atteints au raycast. Le CLIC de
+            //      production et ce qu'il monte sont assertés APRÈS la section 6 (le clic monte une surimpression qui recouvrirait
+            //      Shortcut_Second).
+            Transform raccourciRevue = TrouverDescendant(homeChrome.transform, "Shortcut_DailyReview");
+            Assert.IsNotNull(raccourciRevue, "Shortcut_DailyReview doit exister sous HomeChromeController");
+            var rectRevue = (RectTransform)raccourciRevue;
+            foreach (Vector2 coinLocal in new[]
+                     {
+                         new Vector2(rectRevue.rect.xMin + 1f, rectRevue.rect.yMin + 1f), new Vector2(rectRevue.rect.xMax - 1f, rectRevue.rect.yMin + 1f),
+                         new Vector2(rectRevue.rect.xMin + 1f, rectRevue.rect.yMax - 1f), new Vector2(rectRevue.rect.xMax - 1f, rectRevue.rect.yMax - 1f),
+                     })
+            {
+                Vector2 coinEcran = RectTransformUtility.WorldToScreenPoint(null, rectRevue.TransformPoint(coinLocal));
+                var resultats = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = coinEcran }, resultats);
+                Assert.IsTrue(resultats.Count > 0, $"un raycast au coin {coinLocal} (local) de Shortcut_DailyReview ne touche RIEN.");
+                Assert.IsTrue(resultats[0].gameObject == raccourciRevue.gameObject || resultats[0].gameObject.transform.IsChildOf(raccourciRevue),
+                    $"le coin {coinLocal} (local) doit atteindre Shortcut_DailyReview — trouvé « {resultats[0].gameObject.name} ».");
+            }
 
             // ── I6 (revue ⊥ v4) — la machine à 5 états : la branche "tout est chargé" rend LA MÊME
             //      valeur que le défaut jamais câblé (`:19`/`:56`, indiscriminante) — on ne l'asserte
@@ -539,6 +547,19 @@ namespace MafiaCleanCity.Shell.Tests
                 "point (b) : \"un bouton branché sur rien est un défaut joueur\").");
             Assert.IsTrue(homeChrome.LastOpenedExceptions.transform.IsChildOf(shell.ContentSlot),
                 "l'écran monté doit être un descendant de ContentSlot — confinement, pas juste 'existe quelque part'.");
+
+            // ── 7. C7 (passe UX, 2026-09-24) — « La revue du jour » : le clic de PRODUCTION monte RÉELLEMENT la revue (il ne faisait
+            //      que compter). Ses 4 coins ont été assertés plus haut, Accueil découvert. ──
+            Button boutonRevue = raccourciRevue.GetComponent<Button>();
+            Assert.IsNotNull(boutonRevue);
+            int clicsRevueAvant = homeChrome.DailyReviewShortcutClicks;
+            ProductionClickSupport.Click(boutonRevue); // ⛔ LE GESTE DE PRODUCTION — jamais .onClick.Invoke()
+            Assert.AreEqual(clicsRevueAvant + 1, homeChrome.DailyReviewShortcutClicks);
+            Assert.IsNotNull(homeChrome.LastOpenedDailyReview, "le clic RÉEL sur « La revue du jour » doit monter la revue (C7)");
+            Assert.IsNotNull(homeChrome.LastOpenedDailyReview.GetComponent<DailyReviewScreenController>(),
+                "la cible montée doit être DailyReviewScreenController — le raccourci mène RÉELLEMENT à la revue");
+            Assert.IsTrue(homeChrome.LastOpenedDailyReview.transform.IsChildOf(shell.ContentSlot),
+                "la revue montée doit être un descendant de ContentSlot — confinement.");
 
             Debug.Log("[Charpente] C2 — les 4 panneaux orphelins de l'Accueil sont montés PAR LA " +
                       "PRODUCTION, nommés, et chacun a rendu le monde qu'il déclarait (SEEDE_OperationalDemo).");

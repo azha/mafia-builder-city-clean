@@ -342,7 +342,16 @@ namespace MafiaCleanCity.Operational
             {
                 switch (target)
                 {
-                    case NavTarget.CityMap: LastNavGameObject = nav.MonterLocataireEnSurimpression<CityMapController>().gameObject; break;
+                    case NavTarget.CityMap:
+                    {
+                        // G4 (passe UX, 2026-09-24) : ③ en surimpression n'était abonné à RIEN — « Entrer » ne faisait rien. Le shell
+                        // entre dans le district par le même chemin que l'onglet Empire (`IEntreeDeDistrict`).
+                        CityMapController carte = nav.MonterLocataireEnSurimpression<CityMapController>();
+                        MafiaCleanCity.Shell.IEntreeDeDistrict entree = MafiaCleanCity.Shell.EntreeDeDistrictLocator.Find();
+                        if (entree != null) carte.OnEnterDistrict += entree.EntrerDansLeDistrict;
+                        LastNavGameObject = carte.gameObject;
+                        break;
+                    }
                     case NavTarget.Pipeline: LastNavGameObject = nav.MonterLocataireEnSurimpression<FiliereScreenController>().gameObject; break;   // ㊵, plus ⑪ (23/09)
                     case NavTarget.Exceptions: LastNavGameObject = nav.MonterLocataireEnSurimpression<ExceptionQueueController>().gameObject; break;
                     case NavTarget.Autonomy: LastNavGameObject = nav.MonterLocataireEnSurimpression<AutonomyInboxController>().gameObject; break;

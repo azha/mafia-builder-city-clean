@@ -77,7 +77,7 @@ namespace MafiaCleanCity.Shell
     // jamais sur un joueur qui a déjà navigué ailleurs). Toujours PAS un onglet du dock. CORRIGÉ
     // (item 0.5 §2, C2) — l'énoncé précédent disait que son propre écran (les 4 panneaux orphelins)
     // restait ENTIÈREMENT hors périmètre : FAUX depuis ce chunk — voir `MonterPanneauxAccueil`.
-    public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator, IOuvreurDeFicheOperationnelle, IFermetureDuCoffre
+    public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator, IOuvreurDeFicheOperationnelle, IFermetureDuCoffre, IEntreeDeDistrict
     {
         public enum Tab { Empire, Org, Pipeline, More }
 
@@ -300,6 +300,10 @@ namespace MafiaCleanCity.Shell
         /// the design's own EnterDistrict(int) signature carries no token parameter and never says
         /// where one comes from; reading it off the outgoing tenant before destroying it is the
         /// only source available in this architecture at chunk 2 (Deviation, consigned).</summary>
+        /// <summary>G4 (passe UX, 2026-09-24) — `IEntreeDeDistrict` : le MÊME geste qu'« Entrer » depuis l'onglet Empire, pour ③ monté
+        /// en surimpression par l'Accueil.</summary>
+        public void EntrerDansLeDistrict(int districtId) => EnterDistrict(districtId);
+
         public void EnterDistrict(int districtId)
         {
             // MESURÉ 2026-08-21 : ce jeton était pris UNIQUEMENT sur le locataire carte — donc
