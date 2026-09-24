@@ -71,13 +71,16 @@ def texte_page():
 def main():
     st = subprocess.run(['git', '-C', BACK, 'show', 'HEAD:services/game-back/src/i18n/string_table.ts'], capture_output=True, text=True, check=True).stdout
     def registre(nom):
-        d = st.index(f'export const {nom}'); return set(re.findall(r"^\s*'([^'\s]+)':", st[d:st.index('\n};', d)], re.M))
+        d = st.index(f'export const {nom}'); t = st[d:st.index('\n};', d)]
+        return {m.group(1): re.sub(r'\\u([0-9a-fA-F]{4})', lambda x: chr(int(x.group(1), 16)), m.group(3)).replace("\\'", "'")
+                for m in re.finditer(r"^\s*'([^'\s]+)':\s*\n?\s*(['\"])((?:[^'\"\\]|\\.)*)\2", t, re.M)}
     EN, FR = registre('EN_MESSAGES'), registre('FR_MESSAGES')
+    conformes, ecarts = [], []   # ⚖️ le back a servi la 55 (e76f6ffa) : une clé servie avec NOS mots est conforme (règle des 37, 40, 56)
     sha = subprocess.run(['git', '-C', BACK, 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
     page = texte_page().lower()
     d, lignes, servies, absentes = [], [], [], []
     for n, cle0, fr0, cadre, dom, fr, en, nommee, note in L:
-        if cle0 in FR or cle0 in EN: servies.append(cle0)
+        if cle0 in FR and cle0 == (nommee or f'{dom}.{slug(fr)}'): servies.append(cle0)
         if f'{dom}.{slug(fr0)}' != cle0: d.append(f'n° {n} : la clé demandée {cle0} ≠ dérivation de son fr ({dom}.{slug(fr0)})')
         cle = nommee or f'{dom}.{slug(fr)}'
         if not nommee and cle != f'{dom}.{slug(fr)}': d.append(f'n° {n} : clé non dérivée')
@@ -91,13 +94,26 @@ def main():
         lignes.append([fr0, f'⑦ cadre {cadre}', 'proposée', cle, fr, en,
                        note + (f' ; DEMANDÉ : `{cle0}` « {fr0} » — change : {", ".join(change)}' if change else '')
                        + ('' if dans_page else ' ; absent du texte de la page (vient des notes 12 / 26)')])
-    if servies: d.append(f'déjà servies au back {sha} : {servies} (CLIENT-1 les disait non servies à e7f52351)')
+    for l in lignes:
+        k, fr = l[3], l[4]
+        if k in FR and fr:
+            (conformes if FR[k] == fr else ecarts).append(k)
+    for k in ecarts: d.append(f'{k} : servie « {FR[k]} » ≠ la table « {next(l[4] for l in lignes if l[3] == k)} »')
+    # compléments du 24/09 (f2) : la FRAÎCHEUR de l'ordre FRESH / EXPIRED — déjà SERVIE (table 42, `f2972f7f`), renvoi ; et le repère DIRECT_ORDER
+    for cle, cadre, note in (('famille.ordre.en_cours', '⑦', 'FRESH : servie (table 42) « en cours » — renvoi, aucun mot neuf'),
+                             ('famille.ordre.echu', '⑦', 'EXPIRED : servie (table 42) « échu » — renvoi, aucun mot neuf')):
+        if cle not in FR: d.append(f'{cle} annoncée servie, absente')
+        lignes.append(['(fraîcheur, complément f2 24/09)', cadre, 'servie', cle, '', '', note])
+    cle = 'famille.repere.l_ordre_direct'
+    if cle in FR or cle in EN: d.append(f'{cle} : déjà servie — la table la dit neuve')
+    lignes.append(['(complément de famille)', '⑦ cadre 1', 'proposée', cle, 'l’ordre direct', 'the direct order',
+                   '`cue` = DIRECT_ORDER (f2, 24/09) : le même mot que le geste servi « Rappeler l’ordre direct » ; épicène ; D10'])
     out = os.path.join(ICI, '55-lieutenant-cles-2026-09-23.tsv')
     with open(out, 'w', encoding='utf-8') as f:
         f.write('\t'.join(['mot', 'cadres', 'classe', 'clé', 'fr', 'en', 'note']) + '\n')
         for l in lignes: f.write('\t'.join(l) + '\n')
     changees = [l for l in lignes if 'DEMANDÉ' in l[6]]
-    print(f'55 : somme = {len(lignes)} lignes = {len(lignes)} mots + 0 compléments · back {sha} : 0 des 22 servies attendu, {len(servies)} trouvées · '
+    print(f'55 : back {sha} · servies depuis, conformes : {len(conformes)} · écarts : {len(ecarts)} · '
           f'absents de la page : {absentes} · changés par rapport à la demande : {len(changees)} ({", ".join(l[3] for l in changees)})')
     rc = subprocess.run([sys.executable, os.path.join(ICI, 'somme-table.py'), out]).returncode
     if rc: d.append(f'somme-table code {rc}')

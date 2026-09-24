@@ -78,9 +78,27 @@ LIGNES = [
   'v1.1 : ligne `suspended_successor_key` ; « sa » possessif épicène ; la valeur à côté reste « s’arrête aussi » ; clé SERVIE gardée'],
  ['Il vous en veut', CAD + ' 76', P, 'delegation.bloc.rancune', 'Rancune', 'Grudge',
   'v1.1 : clé NEUVE pour ㉜ seul — la clé servie `reputation.etat.il_vous_en_veut` est partagée avec ㊲, RATIFIÉE : elle ne bouge pas (f2) ; suivie de « pendant long » (`delegation.fenetre.*`)'],
+ # 6. v1.2 (f2, 24/09 ; sites ∅ de la table lot 2 de CLIENT-2, `mafia-unity-F` `Tools/juge-donnees/delegation/table-lot2-2026-09-24.md`)
+ ['Quelqu\'un', CAD + ' 75', P, 'delegation.bloc.quelqu_un', 'Quelqu’un', 'Someone', 'v1.2 (f2, 24/09 ; sites ∅ de la table lot 2 de CLIENT-2, `mafia-unity-F` `Tools/juge-donnees/delegation/table-lot2-2026-09-24.md`) #14 : repli du nom quand le tenant n’est pas dans le roster ; épicène ; D10'],
+ ['aucune n\'est encore prête', CAD + ' 73', P, 'delegation.bloc.aucune_n_est_encore_prete', 'aucune n’est encore prête', 'none is ready yet',
+  'v1.2 (f2, 24/09 ; sites ∅ de la table lot 2 de CLIENT-2, `mafia-unity-F` `Tools/juge-donnees/delegation/table-lot2-2026-09-24.md`) #22 : précision du geste mort quand aucune charge n’est ELIGIBLE (dit AVANT l’appui : le 422 « not ELIGIBLE ») ; « prête » s’accorde avec la CHARGE'],
+ ['Personne à qui la confier — la maison n\'a aucun lieutenant.', CAD + ' 74', P, 'delegation.bloc.personne_a_qui_la_confier_la_maison_n_a_aucun_lieutenant',
+  'Personne à qui la confier — la maison n’a aucun lieutenant.', 'No one to hand it to — the house has no lieutenant.', 'v1.2 (f2, 24/09 ; sites ∅ de la table lot 2 de CLIENT-2, `mafia-unity-F` `Tools/juge-donnees/delegation/table-lot2-2026-09-24.md`) #30 : roster vide ; épicène ; D10'],
+ ['aucun candidat', CAD + ' 74', P, 'delegation.bloc.aucun_lieutenant_disponible', 'aucun lieutenant disponible', 'no lieutenant available',
+  'v1.2 (f2, 24/09 ; sites ∅ de la table lot 2 de CLIENT-2, `mafia-unity-F` `Tools/juge-donnees/delegation/table-lot2-2026-09-24.md`) #33 : D13 — « candidat » présume le genre d’une personne ; le NOM du rôle, « lieutenant » (déjà servi partout)'],
+ ['On demande ce que ça coûterait…', CAD + ' 76', P, 'delegation.bloc.on_demande_ce_que_ca_couterait', 'On demande ce que ça coûterait…', 'Asking what it would cost…',
+  'v1.2 (f2, 24/09 ; sites ∅ de la table lot 2 de CLIENT-2, `mafia-unity-F` `Tools/juge-donnees/delegation/table-lot2-2026-09-24.md`) #53 : l’aperçu de reprise en cours de chargement'],
+ ['Le tableau de service n\'a pas répondu', CAD + ' (indisponible)', P, 'delegation.bloc.le_tableau_de_service_n_a_pas_repondu',
+  'Le tableau de service n’a pas répondu', 'The duty roster didn’t answer', 'v1.2 (f2, 24/09 ; sites ∅ de la table lot 2 de CLIENT-2, `mafia-unity-F` `Tools/juge-donnees/delegation/table-lot2-2026-09-24.md`) #57 : état indisponible (hors maquette), tête ; D10'],
+ ['On n\'a pas pu lire ce que vous tenez. Rien n\'a été changé.', CAD + ' (indisponible)', P, 'delegation.bloc.on_n_a_pas_pu_lire_ce_que_vous_tenez_rien_n_a_ete_change',
+  'On n’a pas pu lire ce que vous tenez. Rien n’a été changé.', 'We couldn’t read what you hold. Nothing was changed.', 'v1.2 (f2, 24/09 ; sites ∅ de la table lot 2 de CLIENT-2, `mafia-unity-F` `Tools/juge-donnees/delegation/table-lot2-2026-09-24.md`) #58 : état indisponible, sous-titre ; D10'],
+ ['Rien n’a été changé.', CAD, P, 'delegation.bloc.rien_n_a_ete_change', 'Rien n’a été changé.', 'Nothing was changed.',
+  'v1.2 (f2, 24/09 ; sites ∅ de la table lot 2 de CLIENT-2, `mafia-unity-F` `Tools/juge-donnees/delegation/table-lot2-2026-09-24.md`) #59 : repli d’un refus sans clé (clé déjà demandée par le client, non servie)'],
+ ['Ce qu’on lui doit', CAD + ' 76', P, 'delegation.bloc.ce_qu_on_lui_doit', 'L’indemnité', 'Severance',
+  'v1.2 (f2, 24/09 ; sites ∅ de la table lot 2 de CLIENT-2, `mafia-unity-F` `Tools/juge-donnees/delegation/table-lot2-2026-09-24.md`) : D13 (f2) — reformulé sans personne : « L’indemnité », qui lit sa valeur servie (`delegation.indemnite.*` : peu · une somme · cher · ruineux) ; clé SERVIE gardée, valeur changée'],
 ]
-CLE_76 = LIGNES[-4][3]
-GARDEES = {CLE_76, 'delegation.bloc.ce_qu_il_a_appris', 'delegation.bloc.celui_qu_il_formait'}   # clés SERVIES, valeur changée
+CLE_76 = LIGNES[-13][3]
+GARDEES = {CLE_76, 'delegation.bloc.ce_qu_il_a_appris', 'delegation.bloc.celui_qu_il_formait', 'delegation.bloc.ce_qu_on_lui_doit'}   # clés SERVIES, valeur changée
 D13 = re.compile(r"\b(il|ils|lui|homme|hommes)\b(?! faudra)", re.I)
 
 def main():
@@ -119,7 +137,7 @@ def main():
         for l in LIGNES: f.write('\t'.join(l) + '\n')
     comp = sum(1 for l in LIGNES if l[0].startswith('('))
     print(f'56 : back {sha} · somme = {len(LIGNES)} lignes = {len(LIGNES) - comp} mots + {comp} compléments · clés {len(cles)} '
-          f'(maîtrise 7, charge_phrase 4, replique 4, 76 : 3 servies à valeur changée + 1 neuve, v1.1) · servies depuis, conformes : {len(depuis)} · '
+          f'(maîtrise 7, charge_phrase 4, replique 4, 76 : 3 servies à valeur changée + 1 neuve, v1.1 ; v1.2 : 8 neuves + 1 servie à valeur changée) · servies depuis, conformes : {len(depuis)} · '
           f'clés gardées dont la valeur reste à changer au back : {len(ecarts_gardees)} · domaines : maîtrise {maitrise}, charges {charges}')
     rc = subprocess.run([sys.executable, os.path.join(ICI, 'somme-table.py'), out]).returncode
     if rc: d.append(f'somme-table code {rc}')
