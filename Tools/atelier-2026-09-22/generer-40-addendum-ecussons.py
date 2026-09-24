@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""40 — addendum : la LETTRE de l'écusson des médaillons de familles (cadres 59, 60, 61 de la série 6), 4 clés PROPOSÉES `conflit.ecusson.*`
-(commande f2 du 24/09, pour le back). La première lettre du nom servi ne marche pas : « La Coil » donnerait L, et en anglais « The Coil » et
+"""40 — addendum : la LETTRE de l'écusson des médaillons de familles (cadres 59, 60, 61 de la série 6), 4 clés PROPOSÉES `conflit.initiale.<valeur>`
+(commande f2 du 24/09, pour le back). Forme ParValeur de la maison (`domaine.champ.<valeur servie>`, comme `decision.portee.*`) : la valeur est
+le `rival_key` SERVI (`coil`, `tarcum`, `iron_throat`, `saltline`, `db/schema/conflict_rival.ts`, vérifié ici), pas le slug fr — renommage f2 du
+24/09 avant tout service (v1 `conflit.ecusson.<slug fr>`, cfc44be4, jamais servie : le contrat additif n'est pas en jeu). La première lettre du nom servi ne marche pas : « La Coil » donnerait L, et en anglais « The Coil » et
 « Tarcum » donneraient tous deux T. La lettre est donc CHOISIE, par langue, sous trois conditions vérifiées ici (exit 1 sinon) :
   - DISTINCTES dans chaque langue (4 lettres différentes en fr, 4 en en) ;
   - COHÉRENTES avec le nom lu à l'écran : la lettre est l'initiale d'un mot du nom SERVI dans cette langue (`conflit.bloc.<famille>`, lu par
@@ -17,8 +19,8 @@ ICI = os.path.dirname(os.path.abspath(__file__))
 BACK = os.path.expanduser('~/project/mafia-back-suite')
 S6 = os.path.expanduser('~/project/atelier3d-mafia/ecrans-brennar-6.html')
 ARTICLES = {'la', 'le', 'les', 'the'}
-# famille → (fr, en) ; l'ordre est celui des médaillons de la maquette
-LETTRES = {'la_coil': ('C', 'C'), 'tarcum': ('T', 'T'), 'gorge_de_fer': ('G', 'I'), 'saltline': ('S', 'S')}
+# rival_key servi → (slug du nom servi `conflit.bloc.*`, fr, en) ; l'ordre est celui des médaillons de la maquette
+LETTRES = {'coil': ('la_coil', 'C', 'C'), 'tarcum': ('tarcum', 'T', 'T'), 'iron_throat': ('gorge_de_fer', 'G', 'I'), 'saltline': ('saltline', 'S', 'S')}
 
 def main():
     st = subprocess.run(['git', '-C', BACK, 'show', 'HEAD:services/game-back/src/i18n/string_table.ts'], capture_output=True, text=True, check=True).stdout
@@ -28,23 +30,26 @@ def main():
         return {m.group(1): m.group(3).replace("\\'", "'") for m in re.finditer(r"^\s*'([^'\s]+)':\s*\n?\s*(['\"])((?:[^'\"\\]|\\.)*)\2", t, re.M)}
     FR, EN = registre('FR_MESSAGES'), registre('EN_MESSAGES')
     d = []
-    for i, langue in ((0, 'fr'), (1, 'en')):
+    schema = subprocess.run(['git', '-C', BACK, 'show', 'HEAD:services/game-back/src/db/schema/conflict_rival.ts'], capture_output=True, text=True, check=True).stdout
+    for rk in LETTRES:
+        if f"'{rk}'" not in schema: d.append(f'« {rk} » n’est pas un rival_key servi')
+    for i, langue in ((1, 'fr'), (2, 'en')):
         l = [v[i] for v in LETTRES.values()]
         if len(set(l)) != 4: d.append(f'{langue} : lettres non distinctes {l}')
     lignes = []
-    for fam, (lf, le) in LETTRES.items():
-        cle, nom = f'conflit.ecusson.{fam}', f'conflit.bloc.{fam}'
+    for rk, (fam, lf, le) in LETTRES.items():
+        cle, nom = f'conflit.initiale.{rk}', f'conflit.bloc.{fam}'
         if cle in FR or cle in EN: d.append(f'{cle} déjà servie'); continue
         if nom not in FR or nom not in EN: d.append(f'{nom} non servi'); continue
         for lettre, nomv, langue in ((lf, FR[nom], 'fr'), (le, EN[nom], 'en')):
             initiales = [w[0].upper() for w in re.split(r'[\s\-]+', nomv) if w and w.lower() not in ARTICLES]
             if lettre not in initiales: d.append(f'{cle} {langue} : « {lettre} » n’est l’initiale d’aucun mot de « {nomv} »')
         lignes.append((lf, '59, 60, 61', 'proposée', cle, lf, le,
-                       f'lettre de l’écusson du médaillon ; nom servi « {FR[nom]} » / « {EN[nom]} » (`{nom}`) ; '
+                       f'lettre de l’écusson du médaillon ; ParValeur sur le rival_key servi « {rk} » ; nom servi « {FR[nom]} » / « {EN[nom]} » (`{nom}`) ; '
                        f'initiale du mot fort, article retiré ; 4 lettres distinctes par langue'))
     s6 = open(S6, encoding='utf-8').read()
     C = [m.start() for m in re.finditer(r'<div class="cadre">', s6)] + [len(s6)]
-    attendu = [v[0] for v in LETTRES.values()]
+    attendu = [v[1] for v in LETTRES.values()]
     for i in (59, 60, 61):
         vu = re.findall(r'<div class="ecu">([^<]+)</div>', s6[C[i]:C[i + 1]])
         if vu != attendu: d.append(f'cadre {i} : écussons {vu} ≠ {attendu}')
