@@ -879,22 +879,12 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("Donner une première règle", mot, "aucune règle donnée : le mot servi du premier geste, en casse");
         }
 
-        /// <summary>⛔ LES `rule_id` DÉCLARÉS SONT AFFICHÉS EN CLAIR, ET AUTANT QU'IL Y EN A.
-        ///
-        /// Le brief du lot est explicite : aucun libellé de règle n'existe (bundle i18n mesuré :
-        /// 67 clés, zéro pour ce domaine), l'identifiant se montre tel quel, on ne masque pas le
-        /// trou. La garde vise donc DEUX propriétés que l'on peut perdre séparément :
-        ///   · le COMPTE affiché égale le compte reçu — c'est le détecteur de « disponible et
-        ///     pourtant non affiché », la classe de défaut que le juge données traque ;
-        ///   · le TEXTE contient l'identifiant réel — c'est le détecteur de la table de libellés
-        ///     qu'un futur contributeur aura envie d'écrire pour faire joli, et qui remplacerait
-        ///     un identifiant vrai par un libellé inventé.
-        ///
-        /// ⚠️ Le scénario est DIMENSIONNÉ : on déclare deux règles, pas une. Avec une seule, un
-        /// rendu qui n'afficherait jamais que la première serait vert — la garde passerait à
-        /// travers le défaut qu'elle existe pour voir.</summary>
+        /// <summary>⛔ AUCUN `rule_id` À L'ÉCRAN, ET LE COMPTEUR SERVI DIT COMBIEN (㊲, 24/09, arbitrages D6 et Q2). rule_id est un
+        /// identifiant machine (table 43, panneau 124 : « aucun libellé n’existe », lot back L1) : la liste qui l'affichait en clair
+        /// est retirée. Ce qui reste DOIT porter la donnée : le compteur « règles données » égale le nombre de règles SERVIES.
+        /// ⚠️ Scénario DIMENSIONNÉ (deux règles), réel : un compteur figé à 01 serait vert sur une seule.</summary>
         [UnityTest]
-        public IEnumerator B3T3_LesRuleIdSontAffichesEnClair_EtTousAffiches()
+        public IEnumerator B3T3_AucunRuleIdALEcran_LeCompteurDitCombien()
         {
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
@@ -907,21 +897,16 @@ namespace MafiaCleanCity.Operational.Tests
 
             Assert.IsNotNull(ecran.DernierChargement, "corps non chargé");
             int recues = ecran.DernierChargement.boss_mirror.declared_rules.Length;
-            Assert.GreaterOrEqual(recues, 2,
-                "le serveur devrait porter au moins les 2 règles déclarées — sinon la garde " +
-                "suivante serait vraie pour la mauvaise raison (scénario sous-dimensionné)");
-            Assert.AreEqual(recues, ecran.ReglesAffichees,
-                $"le corps porte {recues} règles et l'écran en dessine {ecran.ReglesAffichees} : " +
-                "« disponible, dessiné nulle part » est un DÉFAUT, pas un choix de mise en page");
+            Assert.GreaterOrEqual(recues, 2, "le serveur devrait porter au moins les 2 règles déclarées (scénario sous-dimensionné sinon)");
 
-            // Le texte réel, pas seulement le compte : un libellé inventé passerait le test ci-dessus.
-            var textes = new List<string>();
+            string nombre = null;
             foreach (TMPro.TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
-                textes.Add(t.text);
-            CollectionAssert.Contains(textes, r1,
-                $"l'identifiant « {r1} » n'apparaît nulle part : il a été masqué ou remplacé par " +
-                "un libellé fabriqué côté client — or aucun libellé n'existe pour ce domaine");
-            CollectionAssert.Contains(textes, r2, $"l'identifiant « {r2} » n'apparaît nulle part");
+            {
+                StringAssert.DoesNotContain(r1, t.text, "un rule_id (identifiant machine) à l'écran");
+                StringAssert.DoesNotContain(r2, t.text, "un rule_id (identifiant machine) à l'écran");
+                if (t.name == "Nombre" && t.transform.parent != null && t.transform.parent.name == "Fenetre0") nombre = t.text;
+            }
+            Assert.AreEqual(recues.ToString("00"), nombre, "le compteur « règles données » porte le compte SERVI");
         }
 
         /// <summary>`restraint` est OMISE du corps sans `counterparty_id` — et le discriminant
