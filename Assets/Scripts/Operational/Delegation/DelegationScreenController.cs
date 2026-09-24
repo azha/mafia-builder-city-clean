@@ -769,7 +769,7 @@ namespace MafiaCleanCity.Operational
             DecisionDeSessionDto derniere = null;
             foreach (DecisionDeSessionDto d in dto.structural_decisions.decisions)
                 if (d != null) derniere = d;
-            if (derniere == null || derniere.decision_type != "TASK_RETIREMENT" || string.IsNullOrEmpty(derniere.category_key)) return null;
+            if (derniere == null || derniere.decision_type_key != "TASK_RETIREMENT" || string.IsNullOrEmpty(derniere.category_key)) return null;
             string charge = ChargeEnPhrase(derniere.category_key);
             if (charge == null) return null;
             var p = new System.Collections.Generic.Dictionary<string, string> { ["charge"] = charge };
