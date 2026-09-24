@@ -342,14 +342,16 @@ namespace MafiaCleanCity.Operational.Tests
             // Résolveur PARTAGÉ `FamilleLabels` : MUSCLE → « Gros bras », SEASONED → « Du métier » (atelier 28).
             CollectionAssert.Contains(ecran.RenderedTexts, "Gros bras · Du métier");
             CollectionAssert.Contains(ecran.RenderedTexts,
-                "On choisit une famille, on choisit un homme, et on l’envoie. On saura\ndemain.");
+                "On choisit une famille, on choisit qui y envoyer. On saura demain.");   // 40 v3, sous SA clé (restauration 24/09)
             foreach (string mot in new[] { "leurs gros bras", "leur argent", "leurs informateurs", "leurs installations", "leur tête" })
                 CollectionAssert.Contains(ecran.RenderedTexts, mot, "les 5 axes, mots de la table 40");
             CollectionAssert.Contains(ecran.RenderedTexts,
-                "Lt. Vasca : « Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »",
-                "la bande basse nomme l'orateur comme la maquette");
+                "« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »",
+                "la réplique SANS orateur (arbitrage 5 du 23/09)");
+            foreach (string t in ecran.RenderedTexts)
+                StringAssert.DoesNotContain("Lt. Vasca :", t, "aucun orateur composé devant la réplique");
             CollectionAssert.Contains(ecran.RenderedTexts, "L’envoyer ce soir");
-            CollectionAssert.Contains(ecran.RenderedTexts, "on ne pourra plus le rappeler");
+            CollectionAssert.Contains(ecran.RenderedTexts, "pas de rappel possible");   // 40 v3
             CollectionAssert.DoesNotContain(ecran.RenderedTexts,
                 "Vous avez l'homme. Personne pour lui dire où frapper — on ne sait pas encore où ils sont.",
                 "phrase devenue FAUSSE (les axes existent) : retirée");
@@ -396,8 +398,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(ecran.EnvoiPossible);
             Assert.IsTrue(GameObject.Find("LEnvoyerCeSoir").GetComponent<Button>().interactable);
             CollectionAssert.Contains(ecran.RenderedTexts, "On envoie Lt. Kest chez Tarcum, sur leur argent.");
-            Assert.AreEqual("Ce qu’on prend si ça marche", TexteSous("Prise", "Libelle"));
-            Assert.AreEqual("leur argent", TexteSous("Prise", "Valeur"));
+            Assert.IsNull(TexteSous("Prise", "Libelle"), "« Ce qu’on prend si ça marche » : une note de la table 40, pas un libellé (retiré 24/09)");
             StringAssert.Contains("<color=#8c2f36>", GameObject.Find("PhraseDEnvoi").GetComponent<TextMeshProUGUI>().text,
                 "la famille porte l'accent rouge dans la phrase héros");
             Assert.IsNull(GameObject.Find("Homme_00000000-0000-4000-8000-000000000000"),
@@ -471,15 +472,14 @@ namespace MafiaCleanCity.Operational.Tests
                 "tarcum : 2 envois RENTRÉS ; le 3ᵉ, parti, n'y est pas encore allé (arbitrage du 23/09)");
             Assert.AreEqual("on leur a rendu visite", TexteDe(ecran, "Famille_tarcum", "Visites"));
             Assert.AreEqual("1 fois", TexteDe(ecran, "Famille_coil", "Fois"), "`one {# fois}` de l'ICU");
-            Assert.AreEqual("jamais", TexteDe(ecran, "Famille_iron_throat", "Fois"),
-                "iron_throat : un seul envoi, PARTI ⇒ 0 rentré ; la carte conserve le mot d'accroche du design system");
+            Assert.IsNull(TexteDe(ecran, "Famille_iron_throat", "Fois"),
+                "iron_throat : un seul envoi, PARTI ⇒ 0 rentré ⇒ pas de compte (arbitrage 2 du 23/09)");
             Assert.AreEqual("on n’a jamais croisé leur route", TexteDe(ecran, "Famille_iron_throat", "Visites"));
             Assert.AreEqual("on n’a jamais croisé leur route", TexteDe(ecran, "Famille_saltline", "Visites"));
-            CollectionAssert.Contains(ecran.RenderedTexts, "jamais",
-                "le mot d'accroche est une pièce de la hiérarchie de la carte, pas un second compte inventé");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "jamais", "à 0, pas de doublon « jamais » + « on n’a jamais croisé leur route »");
             foreach (string t in ecran.RenderedTexts)
                 StringAssert.DoesNotContain("une_5e_famille", t, "une famille hors domaine ne s'affiche nulle part, ni sa sentinelle");
-            Assert.AreEqual("les ferrailleurs de Spine", TexteDe(ecran, "Famille_coil", "SousTitre"),
+            Assert.AreEqual("la ferraille, à Spine", TexteDe(ecran, "Famille_coil", "SousTitre"),
                 "sous-titre de la maquette ratifiée, clé servie (balayage 34)");
         }
 
@@ -858,7 +858,7 @@ namespace MafiaCleanCity.Operational.Tests
         [Test]
         public void EcranConflitR2bis_SousTitreFamille_CouvreLesQuatreValeurs_EtUneCinquiemeTombeDansTypeInconnu()
         {
-            Assert.AreEqual("les ferrailleurs de Spine", ConflitResolvers.SousTitreFamille("coil"));
+            Assert.AreEqual("la ferraille, à Spine", ConflitResolvers.SousTitreFamille("coil"));
             Assert.AreEqual("le port, et ce qui y entre", ConflitResolvers.SousTitreFamille("tarcum"));
             Assert.AreEqual("les docks du nord", ConflitResolvers.SousTitreFamille("iron_throat"));
             Assert.AreEqual("la ligne de sel, à l’est", ConflitResolvers.SousTitreFamille("saltline"));   // D10 : apostrophe typographique
@@ -1022,16 +1022,6 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(ConflitResolvers.NomServi(new RivalNomI18nDto()), "référence absente ⇒ null");
 
             Assert.AreEqual("Lt. Voss", ConflitResolvers.NomDuLieutenant(Premier(CorpsRentre).lieutenant));
-        }
-
-        [Test]
-        public void EcranConflitL1_LaPriseNRepetePasSeulementLAxe()
-        {
-            Assert.AreEqual("leurs armes", ConflitResolvers.PriseDeValeur("muscle"));
-            Assert.AreEqual("leur argent", ConflitResolvers.PriseDeValeur("finance"));
-            Assert.AreEqual("leurs informations", ConflitResolvers.PriseDeValeur("intel"));
-            Assert.AreEqual("la ferraille de leurs installations", ConflitResolvers.PriseDeValeur("infrastructure"));
-            Assert.AreEqual("leurs secrets", ConflitResolvers.PriseDeValeur("leadership"));
         }
 
         [Test]

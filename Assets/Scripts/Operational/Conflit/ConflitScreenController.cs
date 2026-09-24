@@ -391,11 +391,12 @@ namespace MafiaCleanCity.Operational
             // « Le conflit » reste le nom de destination dans le menu Plus ; le répéter ici
             // transformait une table où l'on décide en page documentaire (juge visuel r1 M10).
             titreTexte.text = Libelle.Gabarit("conflit.bloc.le_coup_de_ce_soir", "Le coup de ce soir");
-            // Clé SERVIE explicite, repli = valeur du back à 78faf9b4 (atelier 40 v3.1, 31c95595, D13) : un `Libelle.De` dériverait la
-            // clé du NOUVEAU texte et orphelinerait la clé servie.
+            // Restauration (24/09) : l'en-tête montre le chapeau du panneau d'envoi (cadre 59, mise en scène gardée) — avec SA clé
+            // (`conflit.bloc.on_choisit_…`) et le mot de la table 40 v3 (df041316). La mise en scène l'avait posé sous la clé du
+            // sous-titre (`conflit.sous_titre.ce_que_vos_hommes_…`) : clé et texte ne se répondaient plus.
             sousTitreTexte.text = Libelle.Gabarit(
-                "conflit.sous_titre.ce_que_vos_hommes_rapportent_des_familles_rivales_et_qui_vous_reste_pour_y_retourner",
-                "On choisit une famille, on choisit un homme, et on l’envoie. On saura\ndemain.");
+                "conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain",
+                "On choisit une famille, on choisit qui y envoyer. On saura demain.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }
@@ -774,14 +775,6 @@ namespace MafiaCleanCity.Operational
                     fois.alignment = TextAlignmentOptions.Right;
                     TrackText(fois.text);
                 }
-                else
-                {
-                    TextMeshProUGUI jamais = NouveauTexteFiche(bloc.transform, "Fois",
-                        Libelle.Gabarit("conflit.bloc.jamais", "jamais"), 8.5f,
-                        CouleurLocale("#574433"), true);
-                    jamais.alignment = TextAlignmentOptions.Right;
-                    TrackText(jamais.text);
-                }
                 TextMeshProUGUI visites = NouveauTexteFiche(bloc.transform, "Visites",
                     n > 0 ? Libelle.Gabarit("conflit.bloc.on_est_alles_chez_eux", "on leur a rendu visite")
                           : Libelle.Gabarit("conflit.bloc.on_ne_les_a_pas_croises", "on n’a jamais croisé leur route"),
@@ -1000,29 +993,9 @@ namespace MafiaCleanCity.Operational
             // typographique de la fiche, pas une partie de la phrase métier.
             TrackText(phraseSimple);
 
-            GameObject separateur = NouveauUI("SeparateurPrise", ordre.transform);
-            AjouterFond(separateur, CouleurLocale("#cbbfa4"));
-            AddLayoutElement(separateur, minHeight: Mathf.Max(1f, Px(1f)),
-                preferredHeight: Mathf.Max(1f, Px(1f)), flexibleHeight: 0);
-
-            GameObject prise = NouveauUI("Prise", ordre.transform);
-            HorizontalLayoutGroup hp = prise.AddComponent<HorizontalLayoutGroup>();
-            hp.spacing = Px(8f);
-            hp.childAlignment = TextAnchor.MiddleLeft;
-            hp.childControlWidth = true; hp.childControlHeight = true;
-            hp.childForceExpandWidth = false; hp.childForceExpandHeight = false;
-            TextMeshProUGUI priseLabel = NouveauTexteFiche(prise.transform, "Libelle",
-                Libelle.De("conflit", "bloc", "Ce qu’on prend si ça marche"), 6.4f,
-                CouleurLocale("#756854"), false);
-            priseLabel.fontStyle |= FontStyles.UpperCase;
-            priseLabel.characterSpacing = 1f;
-            AddLayoutElement(priseLabel.gameObject, flexibleWidth: 1);
-            TrackText(priseLabel.text);
-            TextMeshProUGUI priseValeur = NouveauTexteFiche(prise.transform, "Valeur",
-                ConflitResolvers.PriseDeValeur(ChoixAxe), 9f, CouleurLocale("#8c2f36"), true);
-            priseValeur.font = DesignTokens.Current.hudSerifFont;
-            priseValeur.alignment = TextAlignmentOptions.Right;
-            TrackText(priseValeur.text);
+            // Restauration (24/09) : la ligne « Ce qu’on prend si ça marche » est RETIRÉE — la table 40 la classe « note : aucune
+            // donnée servie ne le dit avant l’envoi (R2.2), pas un libellé » ; ses valeurs (« leurs armes », « leurs secrets »…)
+            // étaient inventées. L'axe visé est déjà dit, avec le mot de la table, dans la phrase d'envoi.
 
             string laDerniereFois = ConflitResolvers.LaDerniereFoisChezEux(
                 ConflitResolvers.DerniereRentreeChez(engagements, ChoixFamille));
@@ -1074,21 +1047,18 @@ namespace MafiaCleanCity.Operational
                 TextMeshProUGUI manque = NouveauTexteFiche(piedRoot, "PiedNote",
                     Libelle.Gabarit(
                         "conflit.bloc.c_est_lui_qui_part_la_nuit_il_vous_en_manque_un_ce_n_est_pas_casse_vous_n_en_avez_tout_simplement_pas_encore",
-                        "C’est le gros bras qui part la nuit. Il vous en manque un — recrutez-en un pour préparer le coup."),
+                        "C’est le gros bras qui part la nuit. Il vous en manque un — ce n’est pas cassé, vous n’en avez tout simplement pas encore."),
                     8f, CouleurLocale("#8d99a6"), false);
                 manque.enableWordWrapping = true;
                 TrackText(manque.text);
                 BoutonGeste(piedRoot, "Recruter", Libelle.De("famille", "ecran", "Recruter un nouveau lieutenant"),
-                    Libelle.De("conflit", "bloc", "pour préparer le coup"), true, OuvrirRecrutement);
+                    null, true, OuvrirRecrutement);   // la précision « pour préparer le coup » était inventée (restauration 24/09)
                 return;
             }
             string replique = Libelle.Gabarit("conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain", "«\u00A0Dites-moi seulement chez qui. Je pars ce soir, on saura demain.\u00A0»");
-            LieutenantRowDto orateur = null;
-            foreach (LieutenantRowDto l in muscleLieutenants)
-                if (l.lieutenant_id == ChoixLieutenant) { orateur = l; break; }
-            if (orateur == null && muscleLieutenants.Count > 0) orateur = muscleLieutenants[0];
-            Replique(piedRoot, "Replique", orateur != null && !string.IsNullOrEmpty(orateur.name)
-                ? $"{orateur.name} : {replique}" : replique);
+            // Arbitrage (5) du 23/09 : la réplique SANS orateur — « {nom} : » est une composition sans clé ; le nom est sur la ligne
+            // de l'homme, au-dessus (restauration 24/09).
+            Replique(piedRoot, "Replique", replique);
             string refus = ConflitResolvers.MotDuRefusDEnvoi(DerniereClasseDeRefus);
             if (refus != null)
             {
@@ -1097,7 +1067,7 @@ namespace MafiaCleanCity.Operational
                 TrackText(r.text);
             }
             BoutonGeste(piedRoot, "LEnvoyerCeSoir", Libelle.Gabarit("conflit.bloc.l_envoyer_ce_soir", "L’envoyer ce soir"),
-                Libelle.Gabarit("conflit.bloc.on_ne_pourra_plus_le_rappeler", "on ne pourra plus le rappeler"), EnvoiPossible, EnvoyerLeCoup);
+                Libelle.Gabarit("conflit.bloc.on_ne_pourra_plus_le_rappeler", "pas de rappel possible"), EnvoiPossible, EnvoyerLeCoup);
         }
 
         private void AjouterFondDePied()
@@ -1378,7 +1348,7 @@ namespace MafiaCleanCity.Operational
             rt.pivot = new Vector2(0.5f, 1f);
             rt.offsetMin = new Vector2(0f, -ShellChrome.TopInsetPx - hauteurSousChrome);
             rt.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx + recouvrementSousManometre);
-            Image ciel = AjouterFond(scene, CouleurLocale("#090d14"));
+            Image ciel = AjouterFond(scene, DesignTokens.Current.hudGaugeFaceOuter);   // #090d14 était à 2,45 de ce jeton : une recopie (restauration 24/09)
             ciel.raycastTarget = false;
 
             float[] debuts = { -0.04f, 0.08f, 0.23f, 0.36f, 0.51f, 0.67f, 0.82f };
@@ -1432,6 +1402,14 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>⚠️ EXCEPTION DE PALETTE DÉCLARÉE (restauration du 24/09, règle du dépôt : « aucun littéral à moins de 4 d'un jeton
+        /// nommé », garde `LitterauxDeCouleurPlayModeTests`, catégorie Palette). Mesure : `python3 Tools/apparier-litteraux-aux-tokens.py
+        /// Assets/Scripts/Operational/Conflit/ConflitScreenController.cs` ⇒ **43 littéraux actifs, 0 à moins de 4 d'un jeton** (48 → 43 :
+        /// la seule recopie, `#090d14` à 2,45 de `hudGaugeFaceOuter`, est remplacée par le jeton ; 4 littéraux partent avec la ligne
+        /// « Ce qu’on prend » et le « jamais » retirés). Les 43 restants — fiche papier, écussons, table des familles, pied, ciel de la
+        /// mise en scène du 23/09 — n'ont AUCUN jeton à moins de 4 : ce sont des arbitrages de palette de la maquette ㉙ (non ratifiée),
+        /// à trancher par le juge visuel, jamais par une substitution. Un 44ᵉ littéral, ou un littéral à moins de 4 d'un jeton, se
+        /// remplace par le jeton ou se déclare ici avec le nouveau compte.</summary>
         private static Color CouleurLocale(string html)
         {
             ColorUtility.TryParseHtmlString(html, out Color couleur);
@@ -1550,7 +1528,7 @@ namespace MafiaCleanCity.Operational
         {
             switch (cle)
             {
-                case "coil": return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.les_ferrailleurs_de_spine", "les ferrailleurs de Spine");
+                case "coil": return MafiaCleanCity.I18n.Libelle.Gabarit("conflit.bloc.les_ferrailleurs_de_spine", "la ferraille, à Spine");
                 case "tarcum": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "le port, et ce qui y entre");
                 case "iron_throat": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "les docks du nord");
                 case "saltline": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "la ligne de sel, à l’est");
@@ -1733,22 +1711,6 @@ namespace MafiaCleanCity.Operational
                 case "conflit.axe.infrastructure": return MafiaCleanCity.I18n.Libelle.Gabarit(axe.key, "leurs installations");
                 case "conflit.axe.leadership":     return MafiaCleanCity.I18n.Libelle.Gabarit(axe.key, "leur tête");
                 default: return MafiaCleanCity.I18n.Repli.Type(axe.key);
-            }
-        }
-
-        /// <summary>Formulation de la PRISE promise par la fiche papier. L'axe dit où l'on frappe ;
-        /// cette phrase le rend comme un gain sans inventer de possession, de bâtiment ou de
-        /// district que l'API ne sert pas encore.</summary>
-        public static string PriseDeValeur(string axe)
-        {
-            switch (axe)
-            {
-                case "muscle":         return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "leurs armes");
-                case "finance":        return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "leur argent");
-                case "intel":          return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "leurs informations");
-                case "infrastructure": return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "la ferraille de leurs installations");
-                case "leadership":     return MafiaCleanCity.I18n.Libelle.De("conflit", "bloc", "leurs secrets");
-                default:               return MafiaCleanCity.I18n.Repli.Type(axe);
             }
         }
 
