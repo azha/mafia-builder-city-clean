@@ -600,7 +600,7 @@ namespace MafiaCleanCity.Operational.Tests
             string tout = TexteDeLEcran();
             Assert.IsFalse(tout.Contains("ce matin"), "« ce matin » n'a aucune source");
             Assert.IsFalse(tout.Contains("Vous avez déjà confié"), "aucune décision servie : on n'affirme pas qu'une charge a été confiée");
-            StringAssert.Contains("plus de décision aujourd'hui", tout, "contrôle positif : c'est bien l'état du cadre 77");
+            StringAssert.Contains("plus de décision aujourd’hui", tout, "contrôle positif : c'est bien l'état du cadre 77");
         }
 
         /// <summary>Le bouton du geste (`Geste` → sa zone `Touche`), s'il est vivant — un geste mort n'a AUCUN gestionnaire.</summary>
@@ -716,8 +716,8 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             string tout = TexteDeLEcran();
-            StringAssert.Contains("Vous avez déjà tranché aujourd'hui", tout);
-            StringAssert.Contains("plus de décision aujourd'hui", tout,
+            StringAssert.Contains("Vous avez déjà tranché aujourd’hui", tout);
+            StringAssert.Contains("plus de décision aujourd’hui", tout,
                 "le geste doit dire POURQUOI il est éteint — un bouton gris sans raison est pire " +
                 "qu'un bouton absent");
             StringAssert.Contains("Une seule décision de structure par journée", tout,

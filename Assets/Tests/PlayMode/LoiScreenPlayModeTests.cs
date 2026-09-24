@@ -207,7 +207,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(0, ecran.DernierChargement.lawyerRoster.Length,
                 "un compte fraîchement signé a désormais un roster non vide — RE-MESURER");
 
-            CollectionAssert.Contains(ecran.RenderedTexts, "Vous n'avez encore engagé personne.",
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.De("loi", "bloc", "Vous n’avez encore engagé personne."),
                 "état vide du roster non rendu");
             CollectionAssert.Contains(ecran.RenderedTexts, "Aucune affaire en cours.",
                 "état vide des affaires non rendu");
@@ -378,7 +378,7 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.RendrePourTest(Etat());
             yield return null;
 
-            CollectionAssert.Contains(ecran.RenderedTexts, "Commis d'office");
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.De("loi", "bloc", "Commis d’office"));
             CollectionAssert.Contains(ecran.RenderedTexts, "EN PLACE");
             CollectionAssert.Contains(ecran.RenderedTexts, "Un cabinet");
             CollectionAssert.Contains(ecran.RenderedTexts, "DISPONIBLE");

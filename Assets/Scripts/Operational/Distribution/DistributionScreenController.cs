@@ -399,12 +399,12 @@ namespace MafiaCleanCity.Operational
             }
             else if (arrivee)
             {
-                titre = "C'est livré";                                              // m-56, verbatim
+                titre = "C’est livré";                                              // m-56, verbatim
                 sousTitre = "La marchandise est arrivée. Voilà ce que le trajet a coûté à la route."; // m-56
             }
             else
             {
-                titre = "L'envoi de ce soir";                                       // m-54, verbatim
+                titre = "L’envoi de ce soir";                                       // m-54, verbatim
                 sousTitre = "On choisit d'où ça part, où ça va, et par quel chemin."; // m-54, verbatim
             }
             titreTexte.text = Libelle.De("distribution", "titre", titre);
@@ -514,7 +514,7 @@ namespace MafiaCleanCity.Operational
             if (route == null)
             {
                 TextMeshProUGUI msg = NouveauTexteFiche(lignes.transform, "AucuneRoute",
-                    Libelle.De("distribution", "bloc", "Aucune route tendue pour l'instant."),
+                    Libelle.De("distribution", "bloc", "Aucune route tendue pour l’instant."),
                     9f, DesignTokens.Current.onSurfaceMuted, false);
                 TrackText(msg.text);
                 return;
@@ -730,7 +730,7 @@ namespace MafiaCleanCity.Operational
             {
                 TextMeshProUGUI note = NouveauTexteFiche(piedRoot, "NoteTransit",
                     Libelle.De("distribution", "bloc",
-                        "Il est en chemin. On ne le rappelle pas — on saura à l'arrivée."), 8.5f, // m-55, verbatim
+                        "Il est en chemin. On ne le rappelle pas — on saura à l’arrivée."), 8.5f, // m-55, verbatim
                     DesignTokens.Current.onSurfaceMuted, false);
                 note.enableWordWrapping = true;
                 TrackText(note.text);
@@ -741,7 +741,7 @@ namespace MafiaCleanCity.Operational
             {
                 TextMeshProUGUI noteDest = NouveauTexteFiche(piedRoot, "NoteSansDestination",
                     Libelle.De("distribution", "bloc",
-                        "Aucune destination connue pour l'envoi de ce soir."), 8.5f,
+                        "Aucune destination connue pour l’envoi de ce soir."), 8.5f,
                     RougeMauvais, false);
                 noteDest.enableWordWrapping = true;
                 TrackText(noteDest.text);

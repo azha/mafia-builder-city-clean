@@ -328,7 +328,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             CollectionAssert.Contains(ecran.RenderedTexts,
-                "Rien à remonter pour l'instant — la chaîne ne connaît aucun maillon sur ce compte.",
+                ValeurAttendue.De("appro", "bloc", "Rien à remonter pour l’instant — la chaîne ne connaît aucun maillon sur ce compte."),
                 "l'état vide de la section chaîne n'affiche pas le message honnête attendu");
             // Anti-fabrication : aucun des libellés de crans de la maquette (m-50/51/52, jamais
             // sourcés) ne doit apparaître.

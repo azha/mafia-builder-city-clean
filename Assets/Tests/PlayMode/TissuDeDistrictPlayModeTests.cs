@@ -83,7 +83,7 @@ namespace MafiaCleanCity.CityMap.Tests
             StringAssert.Contains("TissuDeDistrict.LibelleDeLigne", ctl, "CityMapController : le libellé « Tissu » vient du résolveur, pas d'un littéral");
             StringAssert.DoesNotContain("{dto.profile}", cell, "le code brut n'atteint plus le joueur en ligne");
             StringAssert.DoesNotContain("DetailRow(\"Profile\"", ctl, "le libellé anglais « Profile » a disparu du panneau");
-            foreach (string mot in new[] { "le port", "l'avenue", "le damier", "les cheminées", "les tours", "les faubourgs" })
+            foreach (string mot in new[] { "le port", "l’avenue", "le damier", "les cheminées", "les tours", "les faubourgs" })
             {
                 StringAssert.DoesNotContain("\"" + mot + "\"", cell, $"« {mot} » ne vit qu'à un endroit : le résolveur");
                 StringAssert.DoesNotContain("\"" + mot + "\"", ctl, $"« {mot} » ne vit qu'à un endroit : le résolveur");

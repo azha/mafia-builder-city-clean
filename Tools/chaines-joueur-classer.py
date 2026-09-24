@@ -191,7 +191,7 @@ SOURCE = [
  # 2026-09-22 (gate client, partie 1) — cinq chaînes joueur SORTIES du champ de l'extracteur par leur correctif : les textes
  # exposés par une propriété (㉛) ou une constante (chrome) pour que les tests les LISENT au lieu de les recopier. L'extracteur ne
  # lit ni les corps de propriétés ni les constantes : population 1145 → 1140, exactement ces cinq (comparaison avant/après).
- (N, "Vous n'avez encore engagé personne.", 1, "㉛ état vide du roster — `LoiScreenController.MessageRosterVide`, lu par EcranLoiE1"),
+ (N, "Vous n’avez encore engagé personne.", 1, "㉛ état vide du roster — `LoiScreenController.MessageRosterVide`, lu par EcranLoiE1 (’ depuis le 2026-09-24, f2-D10)"),
  (N, "Aucune affaire en cours.", 1, "㉛ état vide des affaires — `LoiScreenController.MessageAffairesVide`, lu par EcranLoiE1"),
  (N, "Une affaire naît d'une descente — rien ici n'en crée.", 1, "㉛ note de l'état vide (atelier, ebf97d1e) — `LoiScreenController.NoteAffaires`, lue par EcranLoiE1"),
  (N, "Friction", 4, "chrome, nom de barre — `OrgVitalsPanelController.NomFriction` ; les 3 autres littéraux qui le contiennent sont des noms de méthode de ㉝ (`DemolitionResolvers.LireFriction…`, `PhraseDeFriction`, `CouleurDeFriction`) : 3 ⇒ la barre a perdu son nom"),

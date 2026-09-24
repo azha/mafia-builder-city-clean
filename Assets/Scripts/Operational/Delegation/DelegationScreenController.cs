@@ -436,7 +436,7 @@ namespace MafiaCleanCity.Operational
             if (!jetonDispo)
             {
                 // m-77 : le titre change AVANT tout le reste — c'est lui qui explique le gris.
-                EcrireTete("Vous avez déjà tranché aujourd'hui",
+                EcrireTete("Vous avez déjà tranché aujourd’hui",
                            "On ne redessine pas la maison deux fois dans la même journée.");
             }
             else if (confiees > 0)
@@ -470,7 +470,7 @@ namespace MafiaCleanCity.Operational
                 // gouverneur. La phrase ne se dit que si la décision de la session est SERVIE (`decisions_this_session`) ; sinon, rien.
                 string decisionDuJour = DitDeLaDecisionDuJour(DernierChargement);
                 if (decisionDuJour != null) EcrireDit(pied, decisionDuJour, "", "");
-                ConstruireGeste(pied, "EN CONFIER UNE", "plus de décision aujourd'hui", true, null);
+                ConstruireGeste(pied, "EN CONFIER UNE", "plus de décision aujourd’hui", true, null);
                 ConstruireRien(pied, "Une seule décision de structure par journée", ", confier et reprendre "
                     + "comprises. Ce n'est pas une limite d'énergie : c'est pour qu'une maison ne se redessine "
                     + "pas entièrement en un après-midi.");
@@ -561,7 +561,7 @@ namespace MafiaCleanCity.Operational
             bool possible = visee != null && visee.delegation_state != "SELF" && JetonDisponible && CodeServi(visee) && !verrou;
             ConstruireGeste(pied, "LA REPRENDRE QUAND MÊME",
                             possible ? "c'est votre décision du jour"
-                                     : verrou && JetonDisponible ? PhraseDeRaison("promotion_lock_active") : "plus de décision aujourd'hui",
+                                     : verrou && JetonDisponible ? PhraseDeRaison("promotion_lock_active") : "plus de décision aujourd’hui",
                             !possible,
                             possible ? (System.Action)(() => StartCoroutine(Reprendre(visee))) : null);
         }
@@ -813,7 +813,7 @@ namespace MafiaCleanCity.Operational
 
         private string RaisonDuRefus(TaskCategoryRowDto visee)
         {
-            if (!JetonDisponible) return "plus de décision aujourd'hui";
+            if (!JetonDisponible) return "plus de décision aujourd’hui";
             if (visee == null) return "aucune charge visée";
             if (visee.delegation_state != "SELF") return "déjà confiée";
             if (visee.promotion_lock) return PhraseDeRaison("promotion_lock_active");   // ㉜ lot 3b : le verrou, dit AVANT l'appui

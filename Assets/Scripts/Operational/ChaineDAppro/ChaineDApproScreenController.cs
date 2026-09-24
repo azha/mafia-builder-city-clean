@@ -574,7 +574,7 @@ namespace MafiaCleanCity.Operational
             bool vide = dto == null || dto.nodes == null || dto.nodes.Length == 0;
             string message = vide
                 // MESURÉ (2026-09-03, compte `operational_demo@example.test`) : `nodes: []`.
-                ? "Rien à remonter pour l'instant — la chaîne ne connaît aucun maillon sur ce compte."
+                ? "Rien à remonter pour l’instant — la chaîne ne connaît aucun maillon sur ce compte."
                 // Jamais observé non vide ici : pas de rendu dédié cette passe (aucune maquette
                 // pour un nœud réel, et backpressure/trace-step/resolve restent inatteignables
                 // sans id de nœud) — voir implementation-notes.md § Deviations.

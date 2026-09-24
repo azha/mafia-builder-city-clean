@@ -323,7 +323,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             {
                 { "REPAIRING", "{enseigne} se remet en marche, avec le temps" },
                 { "REPAIRING_SLOW", "{enseigne} se remet en marche, lentement — c’est moins cher" },
-                { "DEFERRED", "Réparation remise : {enseigne} reste à l’arrêt" },
+                { "DEFERRED", "Réparation remise : {enseigne} reste à l’arrêt" },
             };
 
         /// <summary>S03 — la phrase de l'après, NOMMÉE (`exceptions.apres.<issue>.enseigne`, atelier §3.11 §3) pour les trois issues

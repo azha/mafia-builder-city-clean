@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using MafiaCleanCity.I18n;
+using MafiaCleanCity.Tests;
 
 namespace MafiaCleanCity.Shell.Tests
 {
@@ -40,7 +41,7 @@ namespace MafiaCleanCity.Shell.Tests
         {
             string s = "Quai-Nord → Verrier";
             string gras = "<nobr><b>" + s + "</b></nobr>";
-            Assert.AreEqual(("J’ai réacheminé la tournée " + gras, "— l’ancien trajet ne passait plus : saturé, ou coupé."),
+            Assert.AreEqual(("J’ai réacheminé la tournée " + gras, ValeurAttendue.De("revue", "phrase", "— l’ancien trajet ne passait plus : saturé, ou coupé.")),
                 DailyReviewScreenController.PhraseDeCondition("route_saturated_or_severed", Coursiers, s));
             Assert.AreEqual(("J’ai replanifié la tournée " + gras, "— le trajet fait plus de détours que d’habitude."),
                 DailyReviewScreenController.PhraseDeCondition("route_meandering", Coursiers, s));
@@ -99,7 +100,7 @@ namespace MafiaCleanCity.Shell.Tests
             var (titre, motif) = DailyReviewScreenController.PhraseDuBillet(sujetNonServi);
             Assert.AreEqual("J’ai réacheminé la tournée <nobr><b>Quai-Nord → Verrier</b></nobr>", titre,
                 "le nom du sujet, résolu avec SES paramètres (params déclarés : forme G fermée)");
-            Assert.AreEqual("— l’ancien trajet ne passait plus : saturé, ou coupé.", motif);
+            Assert.AreEqual(ValeurAttendue.De("revue", "phrase", "— l’ancien trajet ne passait plus : saturé, ou coupé."), motif);
         }
     }
 }

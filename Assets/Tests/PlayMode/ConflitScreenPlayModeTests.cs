@@ -278,7 +278,7 @@ namespace MafiaCleanCity.Operational.Tests
                 "un signup frais a désormais des engagements — RE-MESURER, cette note est PÉRIMÉE");
 
             CollectionAssert.Contains(ecran.RenderedTexts,
-                "Aucun de vos lieutenants n'est du genre Gros bras.",
+                ValeurAttendue.De("conflit", "bloc", "Aucun de vos lieutenants n’est du genre Gros bras."),
                 "le message d'impossibilité (« le cœur de ce lot ») n'est pas rendu alors qu'aucun " +
                 "MUSCLE n'existe");
             // Bundle RÉEL : la valeur SERVIE de la clé l'emporte sur le repli (v3 de la table 40, df041316, tant que le back sert la v2).
@@ -315,7 +315,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             Assert.AreEqual(0, ecran.MuscleLieutenants.Count);
             CollectionAssert.Contains(ecran.RenderedTexts, "Le coup de ce soir");
-            CollectionAssert.Contains(ecran.RenderedTexts, "Aucun de vos lieutenants n'est du genre Gros bras.");
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.De("conflit", "bloc", "Aucun de vos lieutenants n’est du genre Gros bras."));
             Assert.IsNull(GameObject.Find("LEnvoyerCeSoir"), "sans gros bras, aucun bouton d'envoi");
             // `TryGetComponent`, pas `GetComponent == null` sous NUnit : dans l'éditeur, un composant absent rend un « faux null ».
             Assert.IsFalse(RacineEcran().transform.Find("Corps/Contenu/Table/Famille_coil").TryGetComponent<Button>(out _),
@@ -492,7 +492,7 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.RendrePourTest(new GetLieutenantsResponseDto { lieutenants = new LieutenantRowDto[0] }, null);
             yield return null;
 
-            CollectionAssert.Contains(ecran.RenderedTexts, "Le compte des envois précédents n'a pas répondu.");
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.De("conflit", "bloc", "Le compte des envois précédents n’a pas répondu."));
             foreach (string cle in ConflitResolvers.DomaineFamilles)
             {
                 Assert.IsNull(TexteDe(ecran, "Famille_" + cle, "Visites"), cle + " : un compte à zéro mentirait quand la route n'a pas répondu");

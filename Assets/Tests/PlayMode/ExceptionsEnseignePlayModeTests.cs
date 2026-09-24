@@ -7,6 +7,7 @@ using MafiaCleanCity.I18n;
 using MafiaCleanCity.Operational.Exceptions;
 using MafiaCleanCity.Shell;
 using Object = UnityEngine.Object;
+using MafiaCleanCity.Tests;
 
 namespace MafiaCleanCity.Operational.Tests
 {
@@ -97,7 +98,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("Pressing Varne se remet en marche, avec le temps", ExceptionBandes.PhraseApres("REPAIRING", "Pressing Varne"));
             Assert.AreEqual("Laverie du Quai se remet en marche, lentement — c’est moins cher",
                 ExceptionBandes.PhraseApres("REPAIRING_SLOW", "Laverie du Quai"));
-            Assert.AreEqual("Réparation remise : Pressing Varne reste à l’arrêt", ExceptionBandes.PhraseApres("DEFERRED", "Pressing Varne"));
+            Assert.AreEqual(ValeurAttendue.Cle("exceptions.apres.deferred.enseigne", "Réparation remise : {enseigne} reste à l’arrêt",
+                new System.Collections.Generic.Dictionary<string, string> { { "enseigne", "Pressing Varne" } }),
+                ExceptionBandes.PhraseApres("DEFERRED", "Pressing Varne"));
             Assert.AreEqual(ExceptionBandes.PhraseApres("DEMOLISHED"), ExceptionBandes.PhraseApres("DEMOLISHED", "Laverie du Quai"),
                 "« rasé / rasée » prendrait le genre de l'enseigne : sans nom");
             Assert.AreEqual(ExceptionBandes.PhraseApres("REPAIRING"), ExceptionBandes.PhraseApres("REPAIRING", null));

@@ -329,7 +329,7 @@ namespace MafiaCleanCity.Operational
             eyebrow.characterSpacing = 4f;
             TrackText(eyebrow.text);
 
-            ConstruireCarteAvocat(recruteRoot, "commis_d_office", "Commis d'office",
+            ConstruireCarteAvocat(recruteRoot, "commis_d_office", "Commis d’office",
                 "gratuit — il fait ce qu'il peut", "EN PLACE", VertBon, null);
             ConstruireCarteAvocat(recruteRoot, "un_cabinet", "Un cabinet",
                 "ça coûte — il connaît les juges", "DISPONIBLE", DesignTokens.Current.onSurfaceMuted,
@@ -350,7 +350,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>Les trois messages de l'état vide — UNE source : l'écran les rend, les tests les lisent ICI. Mesuré le
         /// 2026-09-22 (gate client, partie 1) : `EcranLoiE1` recopiait la troisième phrase et a rougi quand l'atelier l'a
         /// réécrite (ebf97d1e) ; une seconde copie du texte diverge au premier lot de copie.</summary>
-        public static string MessageRosterVide => Libelle.De("loi", "bloc", "Vous n'avez encore engagé personne.");
+        public static string MessageRosterVide => Libelle.De("loi", "bloc", "Vous n’avez encore engagé personne.");
         public static string MessageAffairesVide => Libelle.De("loi", "bloc", "Aucune affaire en cours.");
         public static string NoteAffaires => Libelle.De("loi", "bloc", "Une affaire naît d'une descente — rien ici n'en crée.");
 

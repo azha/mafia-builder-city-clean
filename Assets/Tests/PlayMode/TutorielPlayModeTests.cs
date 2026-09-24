@@ -46,13 +46,13 @@ namespace MafiaCleanCity.CityMap.Tests
         {
             const string id = "tutorial.queue_runs_dry";
             I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
-                { { id, "La file est vide. Rien n’attend votre décision : la ville tourne sans vous." } });
-            Assert.AreEqual("La file est vide. Rien n’attend votre décision : la ville tourne sans vous.",
+                { { id, "La file est vide. Rien n’attend votre décision : la ville tourne sans vous." } });
+            Assert.AreEqual("La file est vide. Rien n’attend votre décision : la ville tourne sans vous.",
                 TutorialScreenController.TexteDuTutoriel(id), "la clé servie EST l'identifiant");
             TutorialScreenController e = Ecran(new TutorielData
                 { next_tutorial_id = id, eligible_tutorial_ids = new[] { id }, shown_tutorial_ids = new string[0] });
             string[] t = Textes(e);
-            CollectionAssert.Contains(t, "La file est vide. Rien n’attend votre décision : la ville tourne sans vous.");
+            CollectionAssert.Contains(t, "La file est vide. Rien n’attend votre décision : la ville tourne sans vous.");
             Assert.IsFalse(t.Any(x => x.Contains(id)), "l'IDENTIFIANT n'atteint jamais l'écran : " + string.Join(" · ", t));
             Assert.IsFalse(t.Any(x => x.Contains("pas encore écrit")), "plus de note « texte pas encore écrit » (D10-h close)");
             I18nCatalog.Oublier();

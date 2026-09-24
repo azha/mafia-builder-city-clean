@@ -352,7 +352,7 @@ if __name__ == '__main__':
         # bien mesurer. Les cinq ci-dessous ont été LUES à leur ligne, dans quatre écrans et
         # quatre idiomes de seam différents (EcrireTete · `.text =` via Lib() · SetOutcome ·
         # Texte(parent, nom, valeur)).
-        temoins = ["Vous avez déjà tranché aujourd'hui",           # Delegation, EcrireTete #1
+        temoins = ["Vous avez déjà tranché aujourd’hui",           # Delegation, EcrireTete #1 (’ depuis le 2026-09-24, f2-D10)
                    "On ne redessine pas la maison deux fois",      # Delegation, EcrireTete #2
                    "LA CHAÎNE, DE LA TÊTE À LA SORTIE",            # Filiere, .text = Lib(…)
                    "Connectez-vous d'abord.",                      # Lieutenant, SetOutcome

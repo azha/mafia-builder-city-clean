@@ -294,7 +294,7 @@ namespace MafiaCleanCity.Operational.Tests
                 ProjectionFabrique(RouteFabrique()));
             yield return null;
 
-            CollectionAssert.Contains(ecran.RenderedTexts, "L'envoi de ce soir", "titre repos absent");
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.De("distribution", "titre", "L’envoi de ce soir"), "titre repos absent");
             CollectionAssert.Contains(ecran.RenderedTexts, "ça serpente — plus long, plus discret",
                 "résolveur LE CHEMIN muet (meandering)");
             CollectionAssert.Contains(ecran.RenderedTexts, "un pont",
@@ -318,7 +318,7 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.DoesNotContain(ecran.RenderedTexts, "ENVOYER CE SOIR",
                 "brief §2 : « en transit, aucun bouton »");
             CollectionAssert.Contains(ecran.RenderedTexts,
-                "Il est en chemin. On ne le rappelle pas — on saura à l'arrivée.",
+                ValeurAttendue.De("distribution", "bloc", "Il est en chemin. On ne le rappelle pas — on saura à l’arrivée."),
                 "brief §2 : « il faut le DIRE au joueur, pas seulement griser » — note absente");
         }
 
@@ -331,7 +331,7 @@ namespace MafiaCleanCity.Operational.Tests
                 ProjectionFabrique(RouteFabrique()));
             yield return null;
 
-            CollectionAssert.Contains(ecran.RenderedTexts, "C'est livré", "titre livré absent");
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.De("distribution", "titre", "C’est livré"), "titre livré absent");
             CollectionAssert.Contains(ecran.RenderedTexts, "TENDRE UNE AUTRE FICELLE", "bouton livré absent");
             CollectionAssert.DoesNotContain(ecran.RenderedTexts, "ENVOYER CE SOIR",
                 "le libellé repos ne doit pas apparaître en état livré");
@@ -344,7 +344,7 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.RendrePourTest(CouriersFabrique(Courier("IDLE")), ProjectionFabrique());
             yield return null;
 
-            CollectionAssert.Contains(ecran.RenderedTexts, "Aucune route tendue pour l'instant.",
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.De("distribution", "bloc", "Aucune route tendue pour l’instant."),
                 "l'état vide de la projection n'affiche pas le message honnête attendu");
         }
 
@@ -360,7 +360,7 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.DoesNotContain(ecran.RenderedTexts, "ENVOYER CE SOIR",
                 "sans destination découverte, aucun bouton ne doit être fabriqué sur un id inventé");
             CollectionAssert.Contains(ecran.RenderedTexts,
-                "Aucune destination connue pour l'envoi de ce soir.",
+                ValeurAttendue.De("distribution", "bloc", "Aucune destination connue pour l’envoi de ce soir."),
                 "la note honnête d'absence de destination est absente");
         }
 

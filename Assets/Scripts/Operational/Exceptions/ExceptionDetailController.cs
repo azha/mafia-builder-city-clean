@@ -451,7 +451,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             bool reparation = choix != null && (string.Equals(choix.method, "REPAIR", StringComparison.OrdinalIgnoreCase)
                 || (choix.effect != null && string.Equals(choix.effect.type, "REPAIR", StringComparison.OrdinalIgnoreCase)));
             return reparation
-                ? Lib("appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps")
+                ? Lib("appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps")
                 : Lib("appui long — la carte se ferme");
         }
 

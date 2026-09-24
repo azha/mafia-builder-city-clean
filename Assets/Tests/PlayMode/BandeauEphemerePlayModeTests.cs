@@ -12,6 +12,7 @@ using MafiaCleanCity.Operational.Exceptions;
 using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using Object = UnityEngine.Object;
+using MafiaCleanCity.Tests;
 
 namespace MafiaCleanCity.CityMap.Tests
 {
@@ -80,7 +81,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("La brigade quadrille le quartier — planquez la caisse",
                 AnnonceDuBandeau.Choisir(true, "district-16", null, null, null).Phrase);
             AnnonceDuBandeau ville = AnnonceDuBandeau.Choisir(false, null, "HOT", null, null);
-            Assert.AreEqual("Les indics parlent : la brigade s’agite", ville.Phrase);
+            Assert.AreEqual(ValeurAttendue.Cle("chrome.bandeau.les_indics_parlent", "Les indics parlent : la brigade s’agite"), ville.Phrase);
             Assert.IsNull(ville.MotAction, "la ville chaude n'invite à aucun geste");
             Assert.AreEqual("Sal attend vos ordres — trancher",
                 AnnonceDuBandeau.Choisir(false, null, "COLD", CarteDe("e-1", "lt-1", "Sal"), null).Phrase);

@@ -63,7 +63,7 @@ namespace MafiaCleanCity.Shell
             HeatBucketResolver.Rank rang = HeatBucketResolver.ResolveRank(citywideBucket);
             if (rang == HeatBucketResolver.Rank.Hot || rang == HeatBucketResolver.Rank.Burning)
                 toutes.Add(Simple(Etat.VilleChaude, Libelle.Gabarit("chrome.bandeau.les_indics_parlent",
-                    "Les indics parlent : la brigade s’agite"), "ville:" + citywideBucket));
+                    "Les indics parlent : la brigade s’agite"), "ville:" + citywideBucket));
 
             if (premiereCarte != null && !string.IsNullOrEmpty(premiereCarte.exception_id))
             {

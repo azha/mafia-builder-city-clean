@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using MafiaCleanCity.Operational.Exceptions;
 using Object = UnityEngine.Object;
+using MafiaCleanCity.Tests;
 
 namespace MafiaCleanCity.Operational.Tests
 {
@@ -153,7 +154,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             // ⑩-1e — le tampon de ⑨ (D08) : papier plein, appui long seul, sous-titre de la maquette pour une réparation.
             Assert.AreEqual("REPAIR", d.TamponLibelleTexte, "le choix (la suggérée), en capitales");
-            Assert.AreEqual("appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps", d.TamponSousTexte,
+            Assert.AreEqual(ValeurAttendue.De("exception_detail", "bloc", "appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps"), d.TamponSousTexte,
                 "cadre 15, la phrase entière pour une réparation");
             Assert.IsNotNull(d.TamponAppuiPourTest, "l'appui long résout");
             Assert.IsNull(d.TamponAppuiPourTest.GetComponent<Button>(), "pas de tap : on choisit sur les cartes, on signe au tampon");

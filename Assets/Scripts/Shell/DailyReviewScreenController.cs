@@ -785,7 +785,7 @@ namespace MafiaCleanCity.Shell
             {
                 case "route_saturated_or_severed":
                     gabarit = Lib("phrase", "J’ai réacheminé la tournée {sujet}");
-                    motif = Lib("phrase", "— l’ancien trajet ne passait plus : saturé, ou coupé.");
+                    motif = Lib("phrase", "— l’ancien trajet ne passait plus : saturé, ou coupé.");
                     break;
                 case "route_meandering":
                     gabarit = Lib("phrase", "J’ai replanifié la tournée {sujet}");

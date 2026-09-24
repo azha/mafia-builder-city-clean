@@ -693,7 +693,7 @@ namespace MafiaCleanCity.Operational
             {
                 TextMeshProUGUI err = NouveauTexteFiche(tableRoot, "VendettaIndisponible",
                     Libelle.De("conflit", "bloc",
-                        "Le compte des envois précédents n'a pas répondu."),
+                        "Le compte des envois précédents n’a pas répondu."),
                     7.5f, RougeMauvais, false);
                 err.enableWordWrapping = true;
                 TrackText(err.text);
@@ -1015,7 +1015,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(ordre, flexibleHeight: 0);
             AjouterAvatar(ordre.transform, clair: true);
             TextMeshProUGUI manque = NouveauTexteFiche(ordre.transform, "PiedVide",
-                Libelle.De("conflit", "bloc", "Aucun de vos lieutenants n'est du genre Gros bras."),
+                Libelle.De("conflit", "bloc", "Aucun de vos lieutenants n’est du genre Gros bras."),
                 9.5f, CouleurLocale("#2a2118"), false);
             manque.font = DesignTokens.Current.hudSerifFont;
             manque.enableWordWrapping = true;
