@@ -2087,6 +2087,22 @@ namespace MafiaCleanCity.CityMap
             ficheType.color = DesignTokens.Current.hudCremeSecondary;
             PoserDansFiche((RectTransform)ficheType.transform, 40.80f, 13.94f);
 
+            // B1 (passe UX 2026-09-24) — la TÊTE de la fiche (titre + type) ouvre la fiche opérationnelle ② du bâtiment AFFICHÉ,
+            // quel que soit son type. AMÉLIORER, montré pour 3 types seulement, était le SEUL chemin vers ② : le kit d'un joueur
+            // neuf (`lab`, `stash`, `front_shop`, `cash_safehouse`) n'y arrivait jamais, et la cuisson ne se lance que là.
+            // Une zone de toucher transparente posée par-dessus, comme la cellule du bâtiment ; aucun trait nouveau n'est peint
+            // (le signe de l'affordance est à dessiner par l'atelier).
+            GameObject tete = NewUI("Tete_OuvrirFiche", corps.transform);
+            PoserDansFiche((RectTransform)tete.transform, 17.00f, 40.80f + 13.94f - 17.00f);
+            Image zoneTete = tete.AddComponent<Image>();
+            Color invisibleTete = Color.white; invisibleTete.a = 0f;
+            zoneTete.color = invisibleTete;
+            zoneTete.raycastTarget = true;
+            Button tapTete = tete.AddComponent<Button>();
+            tapTete.transition = Selectable.Transition.None;
+            tapTete.targetGraphic = zoneTete;
+            tapTete.onClick.AddListener(OuvrirFicheOperationnelle);
+
             // ── les trois cases, en TIERS ÉGAUX ──────────────────────────────────────────────
             // ⛔ Elles étaient dimensionnées AU CONTENU (`childForceExpandWidth` sur des textes qui
             // portent une largeur préférée) : mesuré 125,5 · 116,2 · 94,0 au lieu de trois fois
@@ -2550,17 +2566,33 @@ namespace MafiaCleanCity.CityMap
                         StartCoroutine(BlanchirDepuisFiche());
                     break;
                 case "AMÉLIORER":
-                    if (!AmeliorableDepuisLaFiche(ficheOperationalType) || string.IsNullOrEmpty(FicheBuildingId)) break;
-                    var ouvreur = OuvreurPourTest ?? MafiaCleanCity.Shell.OuvreurDeFicheOperationnelleLocator.Find();
-                    if (ouvreur == null)
-                    {
-                        ficheSortie.text = "Amélioration indisponible : la fiche du bâtiment ne s'ouvre pas ici.";
-                        break;
-                    }
-                    DerniereFicheOperationnelleDemandee = FicheBuildingId;
-                    ouvreur.OuvrirFicheOperationnelle(FicheBuildingId);
+                    if (!AmeliorableDepuisLaFiche(ficheOperationalType)) break;
+                    DemanderFicheOperationnelle("Amélioration indisponible : la fiche du bâtiment ne s'ouvre pas ici.");
                     break;
             }
+        }
+
+        /// <summary>B1 — le toucher de la tête de la fiche : ouvre ② pour le bâtiment AFFICHÉ, quel que soit son type
+        /// (le labo du kit y trouve sa cuisson). Sans fiche ouverte, rien ne part.</summary>
+        public void OuvrirFicheOperationnelle()
+        {
+            if (!FicheOuverte) return;
+            DemanderFicheOperationnelle("La fiche du bâtiment ne s'ouvre pas ici.");
+        }
+
+        /// <summary>Le geste commun à la tête et à AMÉLIORER : l'ouvreur de test d'abord, sinon celui du shell ; le bâtiment
+        /// transmis est celui de la fiche, jamais un autre.</summary>
+        private void DemanderFicheOperationnelle(string siAucunOuvreur)
+        {
+            if (string.IsNullOrEmpty(FicheBuildingId)) return;
+            var ouvreur = OuvreurPourTest ?? MafiaCleanCity.Shell.OuvreurDeFicheOperationnelleLocator.Find();
+            if (ouvreur == null)
+            {
+                if (ficheSortie != null) ficheSortie.text = siAucunOuvreur;
+                return;
+            }
+            DerniereFicheOperationnelleDemandee = FicheBuildingId;
+            ouvreur.OuvrirFicheOperationnelle(FicheBuildingId);
         }
 
         /// <summary>Action réelle du CTA canonique « COLLECTER ». La jointure ne repose sur aucun
