@@ -750,11 +750,11 @@ namespace MafiaCleanCity.Operational
         /// de l'ouverture de session.</summary>
         private void PrendreLeBudgetServi(GetMetaTaskCategoriesResponseDto dto)
         {
-            if (dto == null || !dto.StructuralBudgetServi || dto.structural_budget == null) return;
+            if (dto == null || !dto.StructuralDecisionsServi || dto.structural_decisions == null) return;
             // `used` n'est pas servi (R2.2, forme corrigée le 24/09) : le compte publié reste celui déjà connu, seul `cap_reached` décide.
-            JetonDeStructure.Publier(JetonDeStructure.Utilises, dto.structural_budget.cap_reached);
+            JetonDeStructure.Publier(JetonDeStructure.Utilises, dto.structural_decisions.cap_reached);
             JetonDepenseConnu = true;
-            JetonDepense = dto.structural_budget.cap_reached;
+            JetonDepense = dto.structural_decisions.cap_reached;
         }
 
         /// <summary>㉜ lot 3b — `GET /v1/meta/pressure` après une décision : `decisions_remaining == 0` ⇒ jeton DÉPENSÉ, publié pour
@@ -765,9 +765,9 @@ namespace MafiaCleanCity.Operational
         /// 44 n'a de phrase que pour « confié », et on n'affirme pas une décision qu'on n'a pas lue.</summary>
         public static string DitDeLaDecisionDuJour(GetMetaTaskCategoriesResponseDto dto)
         {
-            if (dto == null || !dto.StructuralBudgetServi || dto.structural_budget?.decisions_this_session == null) return null;
+            if (dto == null || !dto.StructuralDecisionsServi || dto.structural_decisions?.decisions_this_session == null) return null;
             DecisionDeSessionDto derniere = null;
-            foreach (DecisionDeSessionDto d in dto.structural_budget.decisions_this_session)
+            foreach (DecisionDeSessionDto d in dto.structural_decisions.decisions_this_session)
                 if (d != null) derniere = d;
             if (derniere == null || derniere.decision_type != "TASK_RETIREMENT" || string.IsNullOrEmpty(derniere.category_key)) return null;
             string charge = ChargeEnPhrase(derniere.category_key);
