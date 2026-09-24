@@ -33,6 +33,14 @@ ADD = [
  ('d’autres attendent au-delà de ce que la file montre', 'others are waiting beyond what the queue shows', 'PROPOSÉ (addendum)',
   '`backlog_badge` = vrai — la file ne montre que 3 cartes (mot de la maquette ④ cadre 3, déjà dessiné)'),
 ]
+# 24/09 (f2, maquettes à ratifier) — ④ cadre 1 dessine « Portée · modérée » et « Urgence · faible » : ce sont les deux bandes SERVIES de la
+# carte de tête, `hl_card.impact_bucket` et `hl_card.urgency_bucket` (corps réel `accueil/corps-reels/POST_session_open.json`), dont les VALEURS
+# ont déjà leurs familles servies (`decision.portee.*` mineure · modérée · majeure ; `decision.urgence.*` faible · élevée · pressante, écran ⑤).
+# Seuls les deux LIBELLÉS manquent : aucune valeur servie « Portée » / « Urgence » (mesuré, FR et EN).
+LIB = [
+ ('Portée', 'Scope', 'PROPOSÉ (24/09)', 'libellé de `hl_card.impact_bucket` ; valeur par la famille servie `decision.portee.*`'),
+ ('Urgence', 'Urgency', 'PROPOSÉ (24/09)', 'libellé de `hl_card.urgency_bucket` ; valeur par la famille servie `decision.urgence.*`'),
+]
 st = subprocess.run(['git', '-C', os.path.expanduser('~/project/mafia-back-suite'), 'show', 'HEAD:services/game-back/src/i18n/string_table.ts'], capture_output=True, text=True).stdout
 _d = st.index('export const FR_MESSAGES')
 FRV = {m.group(1): m.group(2).replace("\\'", "'") for m in re.finditer(r"^\s*'(accueil\.(?:carte|file)\.[a-z_]+)':\s*\n?\s*'((?:[^'\\]|\\.)*)'", st[_d:st.index('\n};', _d)], re.M)}
@@ -51,6 +59,10 @@ for fr, en, statut, pour in ADD:
     if "'" in fr + en: d.append(f'{cle} : apostrophe droite')
     if re.search(r'\{|plural', fr): d.append(f'{cle} : un compte (ICU) — interdit ici')
     out.append('\t'.join([cle, fr, en, statut, pour]))
+for fr, en, statut, pour in LIB:
+    cle = 'accueil.carte.' + slug(fr)
+    if cle in FR and FRV[cle] != fr: d.append(f'{cle} : servie avec d’autres mots')
+    out.append('\t'.join([cle, fr, en, statut, pour]))
 open(os.path.join(ICI, '45-carte-de-tete-2026-09-23.tsv'), 'w', encoding='utf-8').write('\n'.join(out) + '\n')
-print(f'somme : {len(out) - 1} lignes = {len(L)} (carte) + {len(ADD)} (addendum) ; clés distinctes {len(set(l.split(chr(9))[0] for l in out[1:]))}')
+print(f'somme : {len(out) - 1} lignes = {len(L)} (carte) + {len(ADD)} (addendum) + {len(LIB)} (libellés, 24/09) ; clés distinctes {len(set(l.split(chr(9))[0] for l in out[1:]))}')
 print(f'{len(L)} clés'); [print('  ⛔', x) for x in d]; print(f'{len(d)} défaut(s)'); sys.exit(1 if d else 0)
