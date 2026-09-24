@@ -25,7 +25,7 @@ tete = re.sub(r'<header class="bandeau">.*?</header>',
               '<header class="bandeau"><h1>Écrans de Brennar — ㉙ le conflit : deux cadres PROPOSÉS</h1><p>Dérivés du cadre 59 (la série 6 '
               'n’est pas modifiée) : « choisir » (l’homme et l’axe, adoptés du client) et « aucun gros bras » (l’arrivée du joueur neuf). '
               'Atelier / DA, 2026-09-24.</p></header>', S6[:C[0]], count=1, flags=re.S)
-SECTIONS = ''.join(m.group(0) for m in re.finditer(r'<style[^>]*>\s*/\* ═══.*?</style>', S6[C[0]:C[65]], re.S))
+SECTIONS = ''.join(m.group(0) for m in re.finditer(r'<style[^>]*>\s*/\* ═══.*?</style>', S6[C[0]:], re.S))   # TOUTE la page : le style .cfl6 est posé après le cadre 94 (payé au rendu du 24/09, 14:51)
 AV = '<div class="av"><svg viewBox="0 0 32 32"><use href="#buste-homburg"/></svg></div>'
 STYLE = """<style>/* ═══ ㉙ cadres PROPOSÉS (24/09) — préfixé .cho6, aucune règle de la série touchée ═══ */
 .cho6 .hom{display:flex;align-items:center;gap:8px;padding:6px 9px;margin-top:5px;border-radius:3px;border:1px solid #3a2d20;background:#1c1610}
@@ -78,7 +78,7 @@ def main():
             '(inatteignable) ; mots servis, geste de recrutement (L7). Le liseret bleu pointillé marque le PROPOSÉ.</p></aside>')
     for x in (a, b):
         assert '<div class="cadre">' in x
-    a = re.sub(r'<aside>.*?</aside>', NOTE, a, count=1, flags=re.S); b = re.sub(r'<aside>.*?</aside>', NOTE, b, count=1, flags=re.S)
+    assert '<aside>' not in a + b   # pas d'aside dans la série 6 : la note est dans le bandeau d'en-tête
     page = tete + SECTIONS + STYLE + a + b + '</div>\n</div>\n'
     open(SORTIE, 'w', encoding='utf-8').write(page)
     n = len(re.findall(r'<div class="cadre">', page))

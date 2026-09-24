@@ -29,7 +29,7 @@ tete = re.sub(r'<header class="bandeau">.*?</header>',
               'ratifié (qui n’est pas modifié) : le geste « Honorer le rendez-vous », seule voie de vente de l’Ash, dessiné pour ratification. '
               'Atelier / DA, 2026-09-24.</p></header>', S6[:C[0]], count=1, flags=re.S)
 # les styles de section posés ENTRE les cadres (leçon de la porte : sans eux, le rendu sort sans style)
-SECTIONS = ''.join(m.group(0) for m in re.finditer(r'<style[^>]*>\s*/\* ═══.*?</style>', S6[C[0]:C[95]], re.S))
+SECTIONS = ''.join(m.group(0) for m in re.finditer(r'<style[^>]*>\s*/\* ═══.*?</style>', S6[C[0]:], re.S))   # TOUTE la page (leçon du 24/09 : un bloc de section peut suivre ses cadres)
 assert '.ecrin6' in SECTIONS or '.ecrin6' in tete, 'le style de la scène Ash a bougé'
 STYLE = """<style>/* ═══ ② Ash — honorer (PROPOSÉ, 24/09) — préfixé .hon6, aucune règle de la série touchée ═══ */
 .ecrin6.hon6{flex-direction:column;justify-content:flex-start;padding:0 0 12px}
@@ -54,7 +54,8 @@ NOTE = ('<aside><h2>② Ash — honorer le rendez-vous (PROPOSÉ)</h2><p>Le gest
         '(cet état, celui du cadre 92) ; jamais quand il est honoré (93) ou passé (94). La présence d’Ash au lieu n’est pas servie avant l’appui : '
         '« pas d’Ash sur place » se dit après, par le refus 409 (mots à écrire). Pas d’en-tête de section (« ACTIONS » retiré), pas de sous-titre '
         '(il faudrait un mot sans clé). Le liseret pointillé bleu marque le PROPOSÉ.</p></aside>')
-cadre = re.sub(r'<aside>.*?</aside>', NOTE, cadre, count=1, flags=re.S) if '<aside>' in cadre else cadre.replace('</div></div></div></div>', '</div></div></div>' + NOTE + '</div>', 1)
+# ⛔ les cadres de la série 6 n'ont PAS d'`<aside>` : la note vit dans le bandeau d'en-tête (au premier rendu, elle tombait DANS le téléphone)
+assert '<aside>' not in cadre
 page = tete + SECTIONS + STYLE + cadre + '</div>\n</div>\n'
 open(SORTIE, 'w', encoding='utf-8').write(page)
 n = len(re.findall(r'<div class="cadre">', page))
