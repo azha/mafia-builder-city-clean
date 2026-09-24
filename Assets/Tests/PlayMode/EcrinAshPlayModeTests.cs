@@ -127,7 +127,11 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(ecrin, Trouver(r, "Row_substance").parent);
             Assert.AreEqual(ecrin, Trouver(r, "Row_taille_du_labo").parent);
             Assert.AreEqual(ecrin, Trouver(r, "Row_purete").parent);
-            Assert.AreEqual("RENDEZ-VOUS · DISTRICT DU VERRE", Texte(r, "BilletTitre"));
+            // La ligne SERVIE (`building.row.rendez_vous`), mise en capitales par le RENDU seulement (FontStyles.UpperCase) ; aucun nom
+            // de district : la route du rendez-vous n'en sert pas (correctif du 24/09).
+            Assert.AreEqual("Rendez-vous", Texte(r, "BilletTitre"));
+            Assert.IsTrue((Trouver(r, "BilletTitre").GetComponent<TMPro.TextMeshProUGUI>().fontStyle & TMPro.FontStyles.UpperCase) != 0,
+                "capitales typographiques, comme la maquette ② (cadres 92-94)");
             Assert.IsNull(Trouver(r, "Row_mise_en_place"), "l'écrin ne répète pas la fiche technique pendant le rendez-vous");
             Assert.IsNull(Trouver(r, "Row_risque_de_descente"));
             Assert.IsNull(Trouver(r, "Action_agrandir_le_labo"), "aucun geste de gestion ne parasite l'état de vente");

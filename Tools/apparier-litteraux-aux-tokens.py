@@ -30,6 +30,10 @@ CHAMP = re.compile(r"^\s{2}(\w+):\s*\{r:\s*([0-9.]+),\s*g:\s*([0-9.]+),\s*b:\s*(
 HEX = re.compile(r'"#([0-9a-fA-F]{6})([0-9a-fA-F]{2})?"')
 RICH = re.compile(r'<color=#([0-9a-fA-F]{6})([0-9a-fA-F]{2})?>')
 NEWCOLOR = re.compile(r"new\s+Color\(\s*([0-9]*\.?[0-9]+)f?\s*,\s*([0-9]*\.?[0-9]+)f?\s*,\s*([0-9]*\.?[0-9]+)f?\s*[,)]")
+# QUATRIÈME motif (2026-09-24) : `new Color32(r, g, b[, a])` en entiers 0-255 (décimal ou `0x…`). Mesuré : 16 sites dans
+# Assets/Scripts (BuildingCard 12, Filière 4) qu'AUCUN des trois motifs ne voyait — ni cet outil ni la garde. MÊME motif dans
+# `LitterauxDeCouleurPlayModeTests.FormeColor32` (même population, sinon l'outil et la garde divergent).
+COLOR32 = re.compile(r"new\s+Color32\(\s*((?:0x)?[0-9a-fA-F]+)\s*,\s*((?:0x)?[0-9a-fA-F]+)\s*,\s*((?:0x)?[0-9a-fA-F]+)\s*[,)]")
 COMMENTAIRE = re.compile(r"^\s*(///|//|\*|/\*)")
 
 
@@ -55,6 +59,14 @@ def litteraux(chemin):
             for m in regex.finditer(l):
                 h = m.group(1)
                 out.append((i, m.group(0), tuple(int(h[j:j + 2], 16) for j in (0, 2, 4))))
+        for m in COLOR32.finditer(l):
+            try:
+                v = [int(m.group(k), 0) if m.group(k).lower().startswith('0x') else int(m.group(k)) for k in (1, 2, 3)]
+            except ValueError:
+                continue
+            if any(x > 255 for x in v):
+                continue
+            out.append((i, m.group(0), tuple(v)))
         for m in NEWCOLOR.finditer(l):
             v = [float(m.group(k)) for k in (1, 2, 3)]
             if any(x > 1.0 for x in v):
