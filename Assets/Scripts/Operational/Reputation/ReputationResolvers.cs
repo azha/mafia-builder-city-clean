@@ -185,21 +185,39 @@ namespace MafiaCleanCity.Operational
 
         // ── Les quatre poses de tenue ────────────────────────────────────────────────────────
 
-        /// <summary>Le libellé de la pose, SELON son état. Deux textes par pose : celui de
-        /// l'état neutre et celui de l'état absorbé — « col ouvert » / « col boutonné ».
-        /// ⚠️ L'appelant NE choisit PAS lequel : il passe l'état lu sur le DTO
-        /// (`UniformTellsDto.ActifEstAbsorbe`). C'est ce qui rend impossible de réinverser la
-        /// polarité ici sans qu'une garde de sortie le voie.</summary>
-        public static string PoseLibelle(UniformTellsDto.Pose pose, bool absorbe)
+        /// <summary>Le mot de la pose, tiré de la VALEUR SERVIE du DTO (« col ouvert » / « col boutonné »…) : aucune polarité
+        /// recalculée ici, l'appelant passe le DTO lui-même. `tells` null (échec de lecture) : « — ».</summary>
+        public static string PoseLibelle(UniformTellsDto tells, UniformTellsDto.Pose pose)
         {
+            // ㊲ (24/09, D4) : le mot vient de la VALEUR SERVIE (collar/sleeves/watch/gloves), clé `reputation.<rôle>.<valeur>`
+            // (servies à e7f52351, table 43) — plus de littéraux hors Libelle recalculés d'un booléen. Absent : « — » ; hors domaine :
+            // « état inconnu » (Repli.Etat), jamais la valeur brute.
+            string v = tells == null ? null
+                : pose == UniformTellsDto.Pose.Collar ? tells.collar
+                : pose == UniformTellsDto.Pose.Sleeves ? tells.sleeves
+                : pose == UniformTellsDto.Pose.Watch ? tells.watch
+                : tells.gloves;
             switch (pose)
             {
-                case UniformTellsDto.Pose.Collar:  return absorbe ? "col boutonné"   : "col ouvert";
-                case UniformTellsDto.Pose.Sleeves: return absorbe ? "manches roulées" : "manches basses";
-                case UniformTellsDto.Pose.Watch:   return absorbe ? "montre visible"  : "montre cachée";
-                case UniformTellsDto.Pose.Gloves:  return absorbe ? "gants propres"   : "gants sales";
-                default: return "";
+                case UniformTellsDto.Pose.Collar:
+                    if (v == "buttoned") return MafiaCleanCity.I18n.Libelle.ParValeur("reputation", "col", v, "col boutonné");
+                    if (v == "open")     return MafiaCleanCity.I18n.Libelle.ParValeur("reputation", "col", v, "col ouvert");
+                    break;
+                case UniformTellsDto.Pose.Sleeves:
+                    if (v == "rolled")   return MafiaCleanCity.I18n.Libelle.ParValeur("reputation", "manches", v, "manches roulées");
+                    if (v == "down")     return MafiaCleanCity.I18n.Libelle.ParValeur("reputation", "manches", v, "manches basses");
+                    break;
+                case UniformTellsDto.Pose.Watch:
+                    if (v == "visible")  return MafiaCleanCity.I18n.Libelle.ParValeur("reputation", "montre", v, "montre visible");
+                    if (v == "hidden")   return MafiaCleanCity.I18n.Libelle.ParValeur("reputation", "montre", v, "montre cachée");
+                    break;
+                case UniformTellsDto.Pose.Gloves:
+                    if (v == "clean")    return MafiaCleanCity.I18n.Libelle.ParValeur("reputation", "gants", v, "gants propres");
+                    if (v == "dirty")    return MafiaCleanCity.I18n.Libelle.ParValeur("reputation", "gants", v, "gants sales");
+                    break;
             }
+            return MafiaCleanCity.I18n.Repli.Etat(v);
+        }
         }
 
         /// <summary>Ce que la pose VEUT DIRE — la vertu que le lieutenant a absorbée (ou non).

@@ -836,6 +836,32 @@ namespace MafiaCleanCity.Operational.Tests
                 "deux compteurs, mots SERVIS en casse (les capitales sont typographiques)");
         }
 
+        /// <summary>㊲ (24/09, D4 et D5) — les voyants de tenue par la VALEUR SERVIE (clés reputation.col/manches/montre/gants.*,
+        /// servies à e7f52351), couverture des 8 valeurs du domaine du back ; hors domaine « état inconnu », absent « — ». Le titre du
+        /// lieutenant par la clé servie « {nom}, votre lieutenant » ; sans nom, rien.</summary>
+        [Test]
+        public void B3M4_VoyantsParValeurServie_EtTitreDuLieutenant()
+        {
+            var actifs = new UniformTellsDto { collar = "buttoned", sleeves = "rolled", watch = "visible", gloves = "clean" };
+            var neutres = new UniformTellsDto { collar = "open", sleeves = "down", watch = "hidden", gloves = "dirty" };
+            Assert.AreEqual("col boutonné", ReputationResolvers.PoseLibelle(actifs, UniformTellsDto.Pose.Collar));
+            Assert.AreEqual("manches roulées", ReputationResolvers.PoseLibelle(actifs, UniformTellsDto.Pose.Sleeves));
+            Assert.AreEqual("montre visible", ReputationResolvers.PoseLibelle(actifs, UniformTellsDto.Pose.Watch));
+            Assert.AreEqual("gants propres", ReputationResolvers.PoseLibelle(actifs, UniformTellsDto.Pose.Gloves));
+            Assert.AreEqual("col ouvert", ReputationResolvers.PoseLibelle(neutres, UniformTellsDto.Pose.Collar));
+            Assert.AreEqual("manches basses", ReputationResolvers.PoseLibelle(neutres, UniformTellsDto.Pose.Sleeves));
+            Assert.AreEqual("montre cachée", ReputationResolvers.PoseLibelle(neutres, UniformTellsDto.Pose.Watch));
+            Assert.AreEqual("gants sales", ReputationResolvers.PoseLibelle(neutres, UniformTellsDto.Pose.Gloves));
+            Assert.AreEqual("état inconnu", ReputationResolvers.PoseLibelle(new UniformTellsDto { collar = "zipped" }, UniformTellsDto.Pose.Collar),
+                "hors domaine : jamais la valeur brute");
+            Assert.AreEqual("—", ReputationResolvers.PoseLibelle(null, UniformTellsDto.Pose.Gloves), "lecture échouée : « — »");
+
+            Assert.AreEqual("Lt. Hara, votre lieutenant", ReputationPortrait.TitreDuLieutenant("Lt. Hara"),
+                "clé servie, casse gardée (capitales typographiques)");
+            Assert.AreEqual("", ReputationPortrait.TitreDuLieutenant(null), "sans nom : aucun titre deviné (« VOTRE LIEUTENANT » retiré)");
+            Assert.AreEqual("", ReputationPortrait.TitreDuLieutenant("  "));
+        }
+
         /// <summary>Le nombre de listeners AJOUTÉS EN CODE d'un UnityEvent (m_Calls.m_RuntimeCalls), que l'API publique ne donne pas.
         /// -1 si la réflexion ne trouve pas le champ (la garde refuse alors de conclure).</summary>
         private static int ListenersRuntime(UnityEngine.Events.UnityEventBase evt)

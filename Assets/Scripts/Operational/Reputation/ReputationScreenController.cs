@@ -477,7 +477,7 @@ namespace MafiaCleanCity.Operational
             {
                 portrait.Appliquer(tells, bm.portrait_posture);
                 // Le nom vient du serveur, jamais d'une constante. L'appel est lancé sans bloquer
-                // le rendu : le portrait s'affiche tout de suite avec « VOTRE LIEUTENANT », et se
+                // le rendu : le portrait s'affiche tout de suite SANS titre, et se
                 // complète quand la fiche arrive. Si elle n'arrive pas, il reste sans nom — ce qui
                 // est la vérité, et non un nom de remplacement.
                 // ⛔⛔ CETTE COROUTINE EST DÉTACHÉE, ET `StopCoroutine(amorce)` NE LA TUE PAS.
@@ -508,7 +508,7 @@ namespace MafiaCleanCity.Operational
             {
                 bool actif = tells != null && tells.ActifEstAbsorbe(pose);
                 if (actif) VoyantsAllumes++;
-                voyants[i].Appliquer(ReputationResolvers.PoseLibelle(pose, actif),
+                voyants[i].Appliquer(ReputationResolvers.PoseLibelle(tells, pose),
                                      ReputationResolvers.PoseSens(pose), actif);
                 i++;
             }
@@ -619,7 +619,7 @@ namespace MafiaCleanCity.Operational
             portrait.Eteindre();
             int i = 0;
             foreach (UniformTellsDto.Pose pose in ReputationResolvers.PosesDansLOrdre())
-                voyants[i++].Appliquer(ReputationResolvers.PoseLibelle(pose, false),
+                voyants[i++].Appliquer(ReputationResolvers.PoseLibelle(null, pose),
                                        ReputationResolvers.PoseSens(pose), false);
         }
 
