@@ -453,7 +453,7 @@ namespace MafiaCleanCity.Operational.Tests
                 task_categories = new[] { new TaskCategoryRowDto { category_key = "SUPPLY_SOURCING", category_id = 4, mastery_bucket = "ELIGIBLE",
                                                                    progress_band = "HIGH", delegation_state = "SELF", promotion_lock = verrou } },
                 delegated = new DelegatedSummaryDto[0],
-                structural_budget = new StructuralBudgetDelegationDto { used = capAtteint ? 1 : 0, cap_reached = capAtteint,
+                structural_budget = new StructuralBudgetDelegationDto { cap_reached = capAtteint,
                                                                         decisions_this_session = new DecisionDeSessionDto[0] },
                 StructuralBudgetServi = budgetServi,
             };
@@ -461,8 +461,11 @@ namespace MafiaCleanCity.Operational.Tests
         private static readonly GetLieutenantsResponseDto UnLieutenant =
             new GetLieutenantsResponseDto { lieutenants = new[] { new LieutenantRowDto { lieutenant_id = "lt-1", name = "Lt. Vesk" } } };
 
-        /// <summary>B1 — le budget de `task-categories` (déclaré) ne vaut que s'il est SERVI : absent (aujourd'hui), le jeton de
-        /// l'ouverture de session reste ; servi avec `cap_reached`, il éteint le jeton PARTAGÉ avant tout appui.</summary>
+        /// <summary>B1 — le budget de `task-categories` (déclaré, forme `{cap_reached, decisions_this_session}` — sans `used`, R2.2) ne vaut
+        /// que s'il est SERVI : absent (aujourd'hui), le jeton de l'ouverture de session reste ; servi EN session et atteint, il éteint le
+        /// jeton PARTAGÉ avant tout appui ; servi HORS session (`cap_reached=false`, liste vide : aucun plafond appliqué), il le rallume.
+        /// ⛔ « absent » et « hors session » ont le MÊME objet par défaut côté `JsonUtility` : seule la présence dans le corps brut les
+        /// sépare.</summary>
         [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationB1_LeBudgetServi_SeulementSIlEstServi()
         {
@@ -475,10 +478,21 @@ namespace MafiaCleanCity.Operational.Tests
                 "un budget ABSENT (objet par défaut de JsonUtility) n'écrase pas le jeton de l'ouverture");
 
             MafiaCleanCity.Shell.JetonDeStructure.OublierPourTest();
-            ecran.RendrePourTest(CorpsSupply(budgetServi: true, capAtteint: true), UnLieutenant, jetonDepense: false);
-            Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "servi et atteint : le jeton partagé s'éteint");
+            GetMetaTaskCategoriesResponseDto enSession = CorpsSupply(budgetServi: true, capAtteint: true);
+            enSession.structural_budget.decisions_this_session = new[] { new DecisionDeSessionDto { decision_type = "TASK_RECALL", category_key = "HEAT_MANAGEMENT" } };
+            ecran.RendrePourTest(enSession, UnLieutenant, jetonDepense: false);
+            Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "EN session, servi et atteint : le jeton partagé s'éteint");
             Assert.IsTrue(ecran.JetonDepense);
             Assert.IsNull(GesteVivant(), "plus de geste vivant AVANT l'appui");
+
+            // Régime HORS session : servi, `cap_reached=false`, liste vide — même objet que « absent », mais SERVI.
+            MafiaCleanCity.Shell.JetonDeStructure.Publier(1, true);   // un jeton dépensé publié plus tôt
+            ecran.RendrePourTest(CorpsSupply(budgetServi: true, capAtteint: false), UnLieutenant, jetonDepense: true);
+            Assert.IsFalse(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "HORS session, servi : aucun plafond appliqué, le jeton se rallume");
+            Assert.IsFalse(ecran.JetonDepense);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            yield return null;
+            Assert.IsNotNull(GesteVivant(), "hors session : le geste est vivant");
         }
 
         /// <summary>B2 — la pression après une décision : `decisions_remaining` décide, `decisions_this_session_display` (cadence
