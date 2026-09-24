@@ -467,7 +467,7 @@ namespace MafiaCleanCity.Operational
             {
                 // ㉜ lot 4 (cadre 77 honnête) : plus de « Vous avez déjà confié une charge ce matin. » — « ce matin » n'avait aucune
                 // source, et « confié » était AFFIRMÉ alors que le plafond couvre aussi la reprise et tous les sites structurels du
-                // gouverneur. La phrase ne se dit que si la décision de la session est SERVIE (`decisions`) ; sinon, rien.
+                // gouverneur. La phrase ne se dit que si la décision de la session est SERVIE (`taken`) ; sinon, rien.
                 string decisionDuJour = DitDeLaDecisionDuJour(DernierChargement);
                 if (decisionDuJour != null) EcrireDit(pied, decisionDuJour, "", "");
                 ConstruireGeste(pied, "EN CONFIER UNE", "plus de décision aujourd'hui", true, null);
@@ -765,9 +765,9 @@ namespace MafiaCleanCity.Operational
         /// 44 n'a de phrase que pour « confié », et on n'affirme pas une décision qu'on n'a pas lue.</summary>
         public static string DitDeLaDecisionDuJour(GetMetaTaskCategoriesResponseDto dto)
         {
-            if (dto == null || !dto.StructuralDecisionsServi || dto.structural_decisions?.decisions == null) return null;
+            if (dto == null || !dto.StructuralDecisionsServi || dto.structural_decisions?.taken == null) return null;
             DecisionDeSessionDto derniere = null;
-            foreach (DecisionDeSessionDto d in dto.structural_decisions.decisions)
+            foreach (DecisionDeSessionDto d in dto.structural_decisions.taken)
                 if (d != null) derniere = d;
             if (derniere == null || derniere.decision_type_key != "TASK_RETIREMENT" || string.IsNullOrEmpty(derniere.category_key)) return null;
             string charge = ChargeEnPhrase(derniere.category_key);
