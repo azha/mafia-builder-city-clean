@@ -201,7 +201,6 @@ namespace MafiaCleanCity.Operational
         //    boîte et le buste passait par-dessus le verdict.
         private const float CssHMiroir    = 188f;
         private const float CssHCarteMiroir = 182.7f;  // le contenu du bloc, mesuré sur la maquette
-        private const float CssHRegleVide =  60f;   // l'état « rien » ; une liste pleine vaut n × 30
         private const float CssPiedPadHaut =  9f;   // `.pied{padding:9px 13px 14px}`
         private const float CssPiedPadBas  = 14f;
         private const float CssHauteurCadre = 462f;  // `reputation(cadre, H=462)`
@@ -214,11 +213,9 @@ namespace MafiaCleanCity.Operational
         private const float CssEnseignePadX = 11f;  // `.enseigne{padding:7px 11px 8px}`
         private const float CssRefletY    = 62f;   // 34,7 % de la course de `%(p)s-scan`
         private const float CssRefletHaut =  2f;   // `.elast::after{height:2px}`
-        private const float CssHRegle       = 30f;  // H_REGLE — la hauteur d'UNE règle listée
         private const float CssVerdictTitre   = 10f;   // `.verdict b`  — serif 700
         private const float CssVerdictLegende = 6.4f;  // `.verdict span`
         private const float CssVerdictEcart   = 8f;    // `.verdict` gap
-        private const float CssHRegleEntour = 16f;  // H_ENTOUR — le sur-titre et les marges du bloc
 
         // ⚠️ LE BLOC MIROIR EST LE SEUL ÉLASTIQUE — `.elast{flex:1;min-height:0}`, défini dans
         //    chassis6.py:126 (le châssis COMMUN), pas dans generateur-reputation.py. Les hauteurs
@@ -464,35 +461,23 @@ namespace MafiaCleanCity.Operational
             // cran du milieu, c'est « pas encore assez vu ».
             AppliquerEtat(bm != null ? bm.consistency_cue : null, absorbe);
 
-            MajCompteur(0, declarees.ToString("00"), null, "RÈGLES DONNÉES");
-            MajCompteur(1, absorbe.ToString("00"), "/4", "ABSORBÉES");
-            // ⛔ ENFREINTES : TOUJOURS un tiret. Voir la note ENFREINTES plus bas.
-            //
-            // ⚠️ RÉTRACTÉ le 2026-08-31, et la garde B3T1 a mordu avant moi. J'avais mis « 00 »
-            // quand `declarees == 0`, en le justifiant ainsi : « sans règle déclarée, rien ne peut
-            // être enfreint, donc le zéro est DÉDUIT et non inventé ». C'est faux, et la maquette
-            // porte elle-même la réfutation : une règle déclarée tient « jusqu'à ce que vous la
-            // retiriez publiquement ». Une règle déclarée, enfreinte, puis retirée laisse
-            // `declared_rules` VIDE et une enfreinte bien réelle. `declarees == 0` ne prouve donc
-            // rien sur le nombre d'enfreintes — ma déduction n'était pas une déduction.
-            // ★ Ce que je retiens : j'ai reconnu la maquette comme autorité pour lui emprunter son
-            //   « 00 », et ignoré la phrase, deux blocs plus loin dans le MÊME fichier, qui le
-            //   contredisait. On ne cite pas une source en choisissant la ligne qui arrange.
-            MajCompteur(2, "—", null, "ENFREINTES");
+            MajCompteur(0, declarees.ToString("00"), null, Lib("règles données"));
+            MajCompteur(1, absorbe.ToString("00"), "/4", Lib("absorbées"));
 
             // Le pied nomme le PREMIER geste tant qu'aucune règle n'existe — `reputation()` donne
             // « DONNER UNE PREMIÈRE RÈGLE » à la seule vue vierge (ligne 211) et « DONNER UNE
             // RÈGLE » partout ailleurs (200, 222, 237).
             if (ctaLibelle != null)
-                ctaLibelle.text = declarees == 0 ? "DONNER UNE PREMIÈRE RÈGLE" : Lib("DONNER UNE RÈGLE");
+                ctaLibelle.text = declarees == 0 ? Lib("Donner une première règle") : Lib("DONNER UNE RÈGLE");   // clés servies
 
-            RendreListeDesRegles(bm != null ? bm.declared_rules : null);
+            // ㊲ (24/09, D6/Q2) : plus de LISTE des règles — elle affichait rule_id, un identifiant machine (table 43, panneau 124 :
+            // « rule_id est un identifiant ; aucun libellé n’existe », lot back L1). Seul le compteur servi « règles données » reste.
 
             if (bm != null)
             {
                 portrait.Appliquer(tells, bm.portrait_posture);
                 // Le nom vient du serveur, jamais d'une constante. L'appel est lancé sans bloquer
-                // le rendu : le portrait s'affiche tout de suite avec « VOTRE LIEUTENANT », et se
+                // le rendu : le portrait s'affiche tout de suite SANS titre, et se
                 // complète quand la fiche arrive. Si elle n'arrive pas, il reste sans nom — ce qui
                 // est la vérité, et non un nom de remplacement.
                 // ⛔⛔ CETTE COROUTINE EST DÉTACHÉE, ET `StopCoroutine(amorce)` NE LA TUE PAS.
@@ -523,7 +508,7 @@ namespace MafiaCleanCity.Operational
             {
                 bool actif = tells != null && tells.ActifEstAbsorbe(pose);
                 if (actif) VoyantsAllumes++;
-                voyants[i].Appliquer(ReputationResolvers.PoseLibelle(pose, actif),
+                voyants[i].Appliquer(ReputationResolvers.PoseLibelle(tells, pose),
                                      ReputationResolvers.PoseSens(pose), actif);
                 i++;
             }
@@ -546,45 +531,51 @@ namespace MafiaCleanCity.Operational
         /// de mise en page.</summary>
         private void AppliquerEtat(string cue, int absorbe)
         {
+            // ㊲ (24/09, table 43 de l'atelier, 69a311a9 ; mots SERVIS au back e7f52351) — quatre états, quatre cadres de la maquette :
+            //   119 aligné · 120 indéterminé SANS absorbé · 121 dérive · 144 indéterminé AVEC de l'absorbé.
+            // ⛔ Les notes de DA de la maquette (« « pas jugeable » n’est pas « moyen » », les corps des 120, 121 et 144, la fin du
+            //    119) ne sont PAS des libellés (table 43 : classe « note ») : elles sont RETIRÉES de l'écran (arbitrage du 24/09).
+            //    Seule la 1re phrase du 119 (chaque_vertu_…) est un libellé servi.
+            // Capitales : TYPOGRAPHIQUES (FontStyles.UpperCase, posées à la construction) sur le sous-titre et le surtitre du
+            // panneau, comme la maquette (.rep6 .enseigne i, .rep6 .pann i : text-transform) — les mots servis restent en casse.
             if (ReputationResolvers.CoherenceEstIndeterminee(cue))
             {
-                sousTitre.text = absorbe == 0
-                    ? "UN LIEUTENANT NEUF N’A ENCORE RIEN ABSORBÉ"
-                    : "PERSONNE NE VOUS A ENCORE JUGÉ";
                 MajVerdict("indeterminate");
-                MajPanneau("« PAS JUGEABLE » N’EST PAS « MOYEN »",
-                    "Rien n’a encore déteint",
-                    "ses quatre voyants sont éteints parce qu’il n’a " + Or("rien pris de vous") +
-                    " — pas parce qu’il est médiocre. Et personne ne jugera votre " +
-                    "constance tant qu’il n’a pas assez vu : " + Or("indéterminé") +
-                    ", jamais au milieu d’une jauge.",
-                    ReputationResolvers.Creme);
+                if (absorbe == 0)
+                {
+                    sousTitre.text = Lib("un lieutenant neuf n’a encore rien absorbé");                  // cadre 120
+                    MajPanneau("", Lib("Rien n’a encore déteint"), "", ReputationResolvers.Creme);
+                }
+                else
+                {
+                    sousTitre.text = Lib("il a déjà pris de vous, pas encore de quoi le lire");          // cadre 144
+                    MajPanneau(Lib("ni l’un ni l’autre"), VertusSansVerdict(absorbe), "", ReputationResolvers.Creme);
+                }
                 return;
             }
 
             if (cue == "drifting")
             {
-                sousTitre.text = "VOUS VOUS ÉCARTEZ DE VOS PROPRES RÈGLES";
+                sousTitre.text = Lib("vous vous écartez de vos propres règles");                          // cadre 121
                 MajVerdict("drifting");
-                MajPanneau("CE QUI A CHANGÉ",
-                    "Une règle donnée, une règle enfreinte",
-                    "vous avez laissé passer ce que vous aviez interdit. Les deux cercles " +
-                    "l’enregistrent — le vôtre et le sien. On vous dit " + Or("que") +
-                    " vous dérivez, jamais " + Or("sur quelle règle") +
-                    " : ce n’est pas un choix, c’est ce qui manque encore.",
-                    ReputationResolvers.Ambre);
+                MajPanneau(Lib("ce qui a changé"), "", "", ReputationResolvers.Ambre);
                 return;
             }
 
-            sousTitre.text = "CE QU’IL A PRIS DE VOUS SE VOIT SUR LUI";
+            sousTitre.text = Lib("ce qu’il a pris de vous se voit sur lui");                              // cadre 119
             MajVerdict("aligned");
-            MajPanneau("LA RÈGLE DU JEU",
-                "Vous vous lisez sur lui",
-                "chaque vertu qu’il vous voit tenir finit sur sa tenue — col, manches, montre, " +
-                "gants. Une règle déclarée tient " + Or("jusqu’à ce que vous la retiriez publiquement") +
-                " : la donner, c’est se donner une corde.",
+            MajPanneau(Lib("la règle du jeu"), Lib("Vous vous lisez sur lui"),
+                Lib("chaque vertu qu’il vous voit tenir finit sur sa tenue — col, manches, montre, gants."),
                 ReputationResolvers.Creme);
         }
+
+        /// <summary>Cadre 144 — « {n} vertus sur lui, pas encore un verdict » : clé ICU servie, `n` = le compte des voyants absorbés
+        /// (D15 : le nombre vient de la donnée).</summary>
+        public static string VertusSansVerdict(int n) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("reputation.bloc.n_vertus_sur_lui_pas_encore_un_verdict",
+                "{n, plural, one {Une vertu sur lui} other {# vertus sur lui}}, pas encore un verdict",
+                new System.Collections.Generic.Dictionary<string, string>
+                    { { "n", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
 
         /// <summary>Écrit le verdict de cohérence et sa couleur. Les trois libellés viennent de la
         /// table `COHERENCE` de la maquette (generateur-reputation.py:57-61) et sont écrits ici tels
@@ -617,39 +608,23 @@ namespace MafiaCleanCity.Operational
         {
             AAfficheEtatVide = true;
             VoyantsAllumes = 0;
-            sousTitre.text = "LE MIROIR N'A PAS RÉPONDU";
-            // Le panneau AUSSI — sinon il garderait la prose du chargement précédent (« vous vous
-            // écartez de vos propres règles ») sur un écran qui annonce ne rien savoir. Même
-            // défaut que des voyants restés allumés ou qu'une liste de règles non vidée : chaque
+            // Aucune table ne donne les mots de l'échec : le repli NEUTRE de la maison (Repli.Etat, « état inconnu »), jamais une
+            // phrase inventée (arbitrage du 24/09, D7/Q4). Le panneau est vidé.
+            sousTitre.text = MafiaCleanCity.I18n.Repli.Etat("indisponible");
+            // Le panneau AUSSI — sinon il garderait l'état du chargement précédent sur un écran qui annonce ne rien savoir : chaque
             // chemin d'échec doit remettre TOUT ce qu'il a pu laisser derrière lui.
-            MajPanneau("CE QUE L’ON NE SAIT PAS",
-                "Le miroir n'a pas répondu",
-                "impossible de lire ce que votre lieutenant a retenu de vous. Ce n’est pas un " +
-                "verdict neutre : c’est une absence de verdict.",
-                ReputationResolvers.Muet);
-            MajCompteur(0, "—", null, "RÈGLES DONNÉES");
-            MajCompteur(1, "—", "/4", "ABSORBÉES");
-            MajCompteur(2, "—", null, "ENFREINTES");
-            // La liste est VIDÉE, pas laissée telle quelle : garder les règles du chargement
-            // précédent afficherait celles d'un AUTRE lieutenant sur un écran qui annonce ne
-            // rien savoir — même défaut que des voyants restés allumés.
-            RendreListeDesRegles(null);
+            MajPanneau("", "", "", ReputationResolvers.Muet);
+            MajCompteur(0, "—", null, Lib("règles données"));
+            MajCompteur(1, "—", "/4", Lib("absorbées"));
             portrait.Eteindre();
             int i = 0;
             foreach (UniformTellsDto.Pose pose in ReputationResolvers.PosesDansLOrdre())
-                voyants[i++].Appliquer(ReputationResolvers.PoseLibelle(pose, false),
+                voyants[i++].Appliquer(ReputationResolvers.PoseLibelle(null, pose),
                                        ReputationResolvers.PoseSens(pose), false);
         }
 
-        // ⛔ NOTE « ENFREINTES » — POURQUOI CE COMPTEUR AFFICHE UN TIRET ET NON UN NOMBRE.
-        // La maquette dessine un compteur d'enfreintes. Le corps de réponse n'en porte AUCUNE
-        // clé : `ReputationSurfaceProjection` a trois clés (`boss_mirror`, `restraint?`,
-        // `hidden_curriculum`) et aucune ne compte les violations. La donnée existe pourtant en
-        // base — `boss_mirror_violation_ring.violation_slots[] = { rule_id, severity }` est
-        // ÉCRITE et jamais projetée : c'est une forme F, consignée en lot back (S13-k).
-        // ⇒ On affiche « — », pas « 00 ». Un zéro serait un MENSONGE : il dirait « aucune
-        // enfreinte » là où la vérité est « le serveur ne le dit pas ». C'est la même règle que
-        // pour `rule_id` affiché en clair — on ne masque pas le trou, on le montre.
+        // « ENFREINTES » : compteur RETIRÉ le 24/09 (arbitrage Q3) — le corps ne le porte pas (violation_slots écrits en base,
+        // jamais projetés : lot back L3, ex-S13-k), et le mot n'a pas de clé.
 
         // ═══ Construction de la mise en page ═════════════════════════════════════════════════
 
@@ -1043,7 +1018,6 @@ namespace MafiaCleanCity.Operational
             ConstruireEnseigne(contenuGo.transform);
             ConstruireCompteurs(contenuGo.transform);
             ConstruireMiroir(contenuGo.transform);
-            ConstruireListeDesRegles(contenuGo.transform);
             ConstruirePanneau(contenuGo.transform);
             ConstruirePied(contenuGo.transform);
         }
@@ -1126,7 +1100,7 @@ namespace MafiaCleanCity.Operational
             sousTitre = NouveauTexte(go.transform, "SousTitre", "", CssSousTitre,
                 ReputationResolvers.Creme2, DesignTokens.Current.primaryFont,
                 1f);  // interligne maquette — .enseigne i{font:700 6.4px/1}
-            sousTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : sous-titre de l’enseigne (.enseigne i, 700 6.4px)
+            sousTitre.fontStyle = TMPro.FontStyles.Bold | TMPro.FontStyles.UpperCase;   // maquette : sous-titre de l’enseigne (.enseigne i, 700 6.4px)   // capitales : text-transform de la maquette
             sousTitre.alignment = TextAlignmentOptions.Center;
             sousTitre.characterSpacing = 34f;
 
@@ -1141,8 +1115,11 @@ namespace MafiaCleanCity.Operational
             EmpilerVertical(go, Px(CssEnseignePadY), Px(5f), Px(CssEnseignePadX));
         }
 
-        private readonly TextMeshProUGUI[] compteurNombre = new TextMeshProUGUI[3];
-        private readonly TextMeshProUGUI[] compteurLibelle = new TextMeshProUGUI[3];
+        // DEUX compteurs (㊲, 24/09) : « règles données » et « absorbées ». Le 3ᵉ, « enfreintes », est RETIRÉ : ni donnée servie
+        // (violation_slots jamais projetés, L3) ni clé (table 43 : « note ») — arbitrage Q3 de l'orchestrateur.
+        private const int NbCompteurs = 2;
+        private readonly TextMeshProUGUI[] compteurNombre = new TextMeshProUGUI[NbCompteurs];
+        private readonly TextMeshProUGUI[] compteurLibelle = new TextMeshProUGUI[NbCompteurs];
 
         private void ConstruireCompteurs(Transform parent)
         {
@@ -1157,7 +1134,7 @@ namespace MafiaCleanCity.Operational
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandWidth = true;
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < NbCompteurs; i++)
             {
                 GameObject fen = NouveauUI("Fenetre" + i, go.transform);
                 // ⛔ TROIS TIERS ÉGAUX, et c'est `preferredWidth = 0` qui l'obtient. Sans lui, la
@@ -1248,7 +1225,7 @@ namespace MafiaCleanCity.Operational
                 compteurLibelle[i] = NouveauTexte(fen.transform, "Libelle", "",
                     CssCompteurLib, ReputationResolvers.Muet, DesignTokens.Current.primaryFont,
                 1.1f);  // interligne maquette — .fen>span{font:700 5.4px/1.1}
-                compteurLibelle[i].fontStyle = TMPro.FontStyles.Bold;   // maquette : le libellé du compteur (.fen>span, 700 5.4px)
+                compteurLibelle[i].fontStyle = TMPro.FontStyles.Bold | TMPro.FontStyles.UpperCase;   // capitales : .rep6 .fen>span (text-transform)   // maquette : le libellé du compteur (.fen>span, 700 5.4px)
                 compteurLibelle[i].alignment = TextAlignmentOptions.Center;
                 compteurLibelle[i].characterSpacing = 16f;
 
@@ -1262,7 +1239,7 @@ namespace MafiaCleanCity.Operational
         /// chose — l'un est une mesure, l'autre un dénominateur fixe.</summary>
         private void MajCompteur(int index, string valeur, string suffixe, string libelle)
         {
-            if (index < 0 || index >= 3) return;
+            if (index < 0 || index >= NbCompteurs) return;
             compteurNombre[index].text = string.IsNullOrEmpty(suffixe)
                 ? valeur
                 : valeur + "<size=64%><color=#" +
@@ -1449,10 +1426,6 @@ namespace MafiaCleanCity.Operational
             reflet.transform.SetAsLastSibling();
         }
 
-        private GameObject    listeReglesBloc;   // le bloc ENTIER — masqué quand il n'y a rien à lister
-        private LayoutElement listeReglesHauteur; // sa hauteur suit le NOMBRE de règles (n × 30 CSS)
-        private RectTransform listeReglesRoot;
-        private TextMeshProUGUI listeReglesVide;
         private TextMeshProUGUI pannSurTitre, pannTitre, pannTexte;
         private TextMeshProUGUI verdictTitre;
         private TextMeshProUGUI ctaLibelle;
@@ -1464,20 +1437,10 @@ namespace MafiaCleanCity.Operational
         /// qui distingue les trois états ; l'asserter sur la sortie plutôt que sur la valeur
         /// d'entrée évite une garde tautologique (« l'état vaut ce que je viens de lui donner »).</summary>
         public string PanneauSurTitreAffiche => pannSurTitre != null ? pannSurTitre.text : null;
-
-        /// <summary>L'emphase du corps de texte, telle que la maquette la définit : `<u>` y est
-        /// redéfini en `text-decoration:none; color:or_vif; font-weight:700` (chassis6.py:138 et
-        /// 146). Ce n'est donc PAS un souligné — c'est un mot en or gras.
-        ///
-        /// ⚠️ Ces emphases avaient disparu du rendu, et le juge visuel l'a chiffré : 0 pixel d'or
-        /// dans le paragraphe contre 1 212 en maquette. « rien pris de vous » et « indéterminé »
-        /// sont les deux mots qui PORTENT l'écran — l'un dit que le lieutenant n'a rien absorbé,
-        /// l'autre que le serveur refuse de juger — et ils se lisaient comme du texte courant.
-        /// ⛔ Passer par cette méthode, jamais par un balisage recopié : cinq copies d'une couleur
-        /// littérale divergeraient au premier changement de palette.</summary>
-        private static string Or(string mot) =>
-            "<b><color=#" + ColorUtility.ToHtmlStringRGB(ReputationResolvers.OrVif) + ">"
-            + mot + "</color></b>";
+        /// <summary>Crochets de test (㊲, 24/09) : le sous-titre, le titre et le corps du panneau tels que rendus.</summary>
+        public string SousTitreAffiche => sousTitre != null ? sousTitre.text : null;
+        public string PanneauTitreAffiche => pannTitre != null ? pannTitre.text : null;
+        public string PanneauTexteAffiche => pannTexte != null ? pannTexte.text : null;
 
         private void MajPanneau(string surTitre, string titre, string texte, Color couleurTitre)
         {
@@ -1486,126 +1449,6 @@ namespace MafiaCleanCity.Operational
             pannTitre.text = titre;
             pannTitre.color = couleurTitre;
             pannTexte.text = texte;
-        }
-
-        /// <summary>La liste des règles que le joueur a déclarées — le cadre `regles` de la
-        /// maquette.
-        ///
-        /// ⛔⛔ ET C'EST ICI QUE SE JOUE LA CONSIGNE LA PLUS EXPLICITE DU LOT : `rule_id` EST
-        /// AFFICHÉ EN CLAIR. Le serveur ne rend que cet identifiant — il est écrit par le joueur
-        /// lui-même (`reputation.controller.ts:84-86`, « free-form, player-authored ») et AUCUN
-        /// libellé n'existe nulle part : le bundle i18n mesuré rend 67 clés, 63 `error.*` et
-        /// 4 `game.*`, zéro pour ce domaine. Écrire une table de correspondance côté client
-        /// fabriquerait du contenu que le back ne connaît pas, et le premier `rule_id` inattendu
-        /// tomberait dans un « (règle inconnue) ».
-        /// ⇒ On montre l'identifiant tel quel. **Le trou se montre, il ne se masque pas** — c'est
-        /// la même règle que le compteur d'enfreintes à « — ».
-        /// ⚠️ Ce renvoi citait aussi la mention « lieutenant.name — non projeté » : elle a été
-        /// RETIRÉE, parce que le trou qu'elle annonçait était réparé côté back depuis un lot que
-        /// personne n'avait re-mesuré. Un exemple qui survit à ce qu'il illustre transforme une
-        /// règle juste en preuve d'une chose fausse.
-        ///
-        /// ⚠️ Et il n'y a AUCUN bouton de retrait, volontairement : `retractRule` existe côté
-        /// serveur mais n'a qu'un appelant, de test — zéro en production. Le canon dit qu'une
-        /// règle tient jusqu'à retrait public ; tant que ce maillon manque, une règle donnée est
-        /// définitive, et l'écran le DIT au lieu d'offrir un geste qui échouerait.</summary>
-        private void ConstruireListeDesRegles(Transform parent)
-        {
-            GameObject go = NouveauUI("ListeDesRegles", parent);
-            listeReglesBloc = go;
-            LayoutElement hle = go.AddComponent<LayoutElement>();
-            listeReglesHauteur = hle;
-            hle.minHeight = Px(CssHRegleVide);
-            hle.preferredHeight = Px(CssHRegleVide);
-            hle.flexibleHeight = 0f;
-            AjouterFond(go, ReputationResolvers.Fond2);
-            Contour(go, ReputationResolvers.Lisere);
-
-            NouveauTexte(go.transform, "SurTitre", Lib("LES RÈGLES QUE VOUS AVEZ DONNÉES"),
-                CssPannSurTitre, ReputationResolvers.Muet,
-                DesignTokens.Current.primaryFont,
-                1f).characterSpacing = 19f;  // interligne maquette — .pann i{font:700 5.6px/1}
-
-            GameObject lignes = NouveauUI("Lignes", go.transform);
-            listeReglesRoot = (RectTransform)lignes.transform;
-            VerticalLayoutGroup v = lignes.AddComponent<VerticalLayoutGroup>();
-            v.spacing = Px(3f);
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-
-            listeReglesVide = NouveauTexte(go.transform, "Vide",
-                Lib("vous n’avez encore donné aucune règle — rien ne peut donc être enfreint"),
-                CssPannTexte, ReputationResolvers.Eteint, DesignTokens.Current.primaryFont,
-                1.4f);  // interligne maquette — .pann small{font:6.6px/1.4}
-
-            EmpilerVertical(go, Px(CssPannPadY), Px(4f), Px(CssPannPadX));
-        }
-
-        /// <summary>Combien de règles la liste affiche RÉELLEMENT — crochet de test. Distinct du
-        /// compteur « RÈGLES DONNÉES » de l'en-tête : celui-ci compte ce que le corps porte,
-        /// celui-là compte ce qui est DESSINÉ. Les confondre masquerait exactement le défaut
-        /// qu'on veut voir (« disponible, et pourtant non affiché »).</summary>
-        public int ReglesAffichees { get; private set; }
-
-        private void RendreListeDesRegles(DeclaredRuleDto[] regles)
-        {
-            for (int i = listeReglesRoot.childCount - 1; i >= 0; i--)
-                Object.Destroy(listeReglesRoot.GetChild(i).gameObject);
-
-            ReglesAffichees = 0;
-            bool vide = regles == null || regles.Length == 0;
-
-            // ⛔ VIDE ⇒ LE BLOC ENTIER DISPARAÎT, il ne se contente pas d'afficher « aucune règle ».
-            // La maquette ne laisse pas le choix : `reputation()` (generateur-reputation.py:200-211)
-            // construit la vue `vierge` avec l'enseigne, les compteurs, LE MIROIR, le panneau et le
-            // pied — et rien d'autre. La liste appartient à une vue SÉPARÉE (`rg6`), et `verifier()`
-            // les traite en `if/elif` : jamais les deux dans le même cadre.
-            // ⚠️ Mesuré en comparant ma capture à la référence `m-120.png` : j'affichais un sixième
-            // bloc que la maquette ne montre nulle part dans cet état. Il ne venait d'aucune source
-            // — je l'avais construit parce que l'écran « devait bien » lister les règles.
-            listeReglesBloc.SetActive(!vide);
-            listeReglesVide.gameObject.SetActive(false);
-            if (vide) return;
-
-            // La hauteur est un COMPTE, pas une constante : `H_REGLE = 30` par règle (ligne 280),
-            // plus l'entourage. Une hauteur figée tronquerait la 3ᵉ règle ou laisserait un vide.
-            float haut = regles.Length * CssHRegle + CssHRegleEntour;
-            listeReglesHauteur.minHeight = Px(haut);
-            listeReglesHauteur.preferredHeight = Px(haut);
-
-            foreach (DeclaredRuleDto regle in regles)
-            {
-                if (regle == null || string.IsNullOrEmpty(regle.rule_id)) continue;
-
-                GameObject ligne = NouveauUI("Regle_" + regle.rule_id, listeReglesRoot);
-                AjouterFond(ligne, ReputationResolvers.Panneau);
-                HorizontalLayoutGroup h = ligne.AddComponent<HorizontalLayoutGroup>();
-                h.spacing = Px(7f);
-                h.padding = new RectOffset(PxTrait(8f), PxTrait(8f), PxTrait(5f), PxTrait(5f));
-                h.childControlWidth = true; h.childControlHeight = true;
-                h.childForceExpandWidth = false;
-                h.childAlignment = TextAnchor.MiddleLeft;
-
-                // Le liseré vertical. ⚠️ Il est NEUTRE, et c'est une décision : la maquette le
-                // colore en vert (tenue) ou ambre (enfreinte), mais AUCUNE clé du corps ne dit
-                // quelle règle est enfreinte — le `rule_id` fautif est écrit en base
-                // (`boss_mirror_violation_ring.violation_slots[]`) et jamais projeté. Colorer au
-                // hasard inventerait l'information la plus lourde de l'écran.
-                GameObject sc = NouveauUI("Liseré", ligne.transform);
-                AjouterFond(sc, ReputationResolvers.Lisere);
-                LayoutElement scle = sc.AddComponent<LayoutElement>();
-                scle.preferredWidth = PxTrait(3f);
-                scle.flexibleWidth = 0f;
-
-                // L'identifiant, EN CLAIR. Pas de table de libellés : il n'en existe aucune.
-                TextMeshProUGUI id = NouveauTexte(ligne.transform, "RuleId", regle.rule_id,
-                    CssVoyantTitre, ReputationResolvers.Creme, DesignTokens.Current.primaryFont,
-                1.2f);  // interligne maquette — .ptitre{font:700 7.4px/1.2}
-                LayoutElement idle = id.gameObject.AddComponent<LayoutElement>();
-                idle.flexibleWidth = 1f;
-
-                ReglesAffichees++;
-            }
         }
 
         private void ConstruirePanneau(Transform parent)
@@ -1626,7 +1469,7 @@ namespace MafiaCleanCity.Operational
             pannSurTitre = NouveauTexte(go.transform, "SurTitre", "", CssPannSurTitre,
                 ReputationResolvers.Muet, DesignTokens.Current.primaryFont,
                 1f);  // interligne maquette — .pann i{font:700 5.6px/1}
-            pannSurTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : le sur-titre du panneau (.pann, 700 5.6px)
+            pannSurTitre.fontStyle = TMPro.FontStyles.Bold | TMPro.FontStyles.UpperCase;   // maquette : le sur-titre du panneau (.pann, 700 5.6px)   // capitales : text-transform de la maquette
             pannSurTitre.characterSpacing = 19f;
             pannTitre = NouveauTexte(go.transform, "Titre", "", CssPannTitre,
                 ReputationResolvers.Creme, DesignTokens.Current.hudSerifFont,
@@ -1654,11 +1497,15 @@ namespace MafiaCleanCity.Operational
 
             CtaDonnerRegle = cta.AddComponent<Button>();
             CtaDonnerRegle.targetGraphic = fond;
+            // ⛔ DÉSACTIVÉ, sans aucun listener (arbitrage Q1 du 24/09) : POST /v1/me/house-rules exige un rule_id, et rien ne dit
+            //    lesquels existent ni ne les nomme (lots back L4 et L1, demandés). La maquette ratifiée montre le geste : il est
+            //    affiché, inactif, avec son mot servi. Le jour où le catalogue des règles est servi, on le câble à `DeclarerRegle`.
+            CtaDonnerRegle.interactable = false;
 
-            ctaLibelle = NouveauTexte(cta.transform, "Libelle", "DONNER UNE RÈGLE",
+            ctaLibelle = NouveauTexte(cta.transform, "Libelle", Lib("DONNER UNE RÈGLE"),
                 CssCtaCorps, ReputationResolvers.OrVif, DesignTokens.Current.primaryFont,
                 1f);  // interligne maquette — .cta6{font:700 8.5px/1}
-            ctaLibelle.fontStyle = TMPro.FontStyles.Bold;   // maquette : .cta6, 700 8.5px
+            ctaLibelle.fontStyle = TMPro.FontStyles.Bold | TMPro.FontStyles.UpperCase;   // maquette : .cta6, 700 8.5px, text-transform:uppercase
             ctaLibelle.alignment = TextAlignmentOptions.Center;
             ctaLibelle.characterSpacing = 11f;
             RectTransform lrt = (RectTransform)ctaLibelle.transform;

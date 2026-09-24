@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -458,6 +459,58 @@ namespace MafiaCleanCity.Operational.Tests
         /// Elle vise trois propriétés qu'un état muet perdrait séparément — le verdict change de
         /// texte, il change de couleur, et le panneau change de titre. Un état qui n'écrirait que
         /// le texte passerait une garde qui ne regarderait que lui.</summary>
+        /// <summary>㊲ (24/09, table 43) — les QUATRE états de la maquette (119, 120, 121, 144) avec les mots SERVIS, sans réseau
+        /// (catalogue vide ⇒ repli = la valeur servie à e7f52351). Aucune note de DA à l'écran : le corps du panneau n'est rendu
+        /// qu'en 119 (la 1re phrase, servie). Contrôle : 120 et 144 se distinguent par le compte des voyants absorbés.</summary>
+        [UnityTest]
+        public IEnumerator B3M3_LesQuatreEtats_LesMotsServis_SansNoteDeDA()
+        {
+            var ecran = MonterEcran();
+            UniformTellsDto Tenue(string c, string s, string w, string g) =>
+                new UniformTellsDto { collar = c, sleeves = s, watch = w, gloves = g };
+            void Rendre(string cue, UniformTellsDto tenue) => ecran.RendrePourTest(new ReputationSurfaceDto
+            {
+                boss_mirror = new BossMirrorDto { consistency_cue = cue, declared_rules = new DeclaredRuleDto[0], portrait_posture = "attentive" },
+                hidden_curriculum = new HiddenCurriculumDto { uniform_tells = tenue },
+            });
+
+            Rendre("aligned", Tenue("buttoned", "down", "visible", "dirty"));                      // 119
+            yield return null;
+            Assert.AreEqual("ce qu’il a pris de vous se voit sur lui", ecran.SousTitreAffiche);
+            Assert.AreEqual("la règle du jeu", ecran.PanneauSurTitreAffiche);
+            Assert.AreEqual("Vous vous lisez sur lui", ecran.PanneauTitreAffiche);
+            Assert.AreEqual("chaque vertu qu’il vous voit tenir finit sur sa tenue — col, manches, montre, gants.", ecran.PanneauTexteAffiche,
+                "seule la 1re phrase du 119 est un libellé ; la suite (« jusqu’à ce que vous la retiriez… ») est une note de DA");
+
+            Rendre("indeterminate", Tenue("open", "down", "hidden", "dirty"));                    // 120 : rien d'absorbé
+            yield return null;
+            Assert.AreEqual("un lieutenant neuf n’a encore rien absorbé", ecran.SousTitreAffiche);
+            Assert.AreEqual("", ecran.PanneauSurTitreAffiche, "« « pas jugeable » n’est pas « moyen » » est une note de DA");
+            Assert.AreEqual("Rien n’a encore déteint", ecran.PanneauTitreAffiche);
+            Assert.AreEqual("", ecran.PanneauTexteAffiche, "le corps du 120 est une note de DA");
+
+            Rendre("indeterminate", Tenue("buttoned", "down", "visible", "dirty"));               // 144 : deux absorbés
+            yield return null;
+            Assert.AreEqual("il a déjà pris de vous, pas encore de quoi le lire", ecran.SousTitreAffiche);
+            Assert.AreEqual("ni l’un ni l’autre", ecran.PanneauSurTitreAffiche);
+            Assert.AreEqual("2 vertus sur lui, pas encore un verdict", ecran.PanneauTitreAffiche, "D15 : le compte vient des voyants servis");
+            Assert.AreEqual("", ecran.PanneauTexteAffiche);
+
+            Rendre("drifting", Tenue("buttoned", "rolled", "visible", "clean"));                  // 121
+            yield return null;
+            Assert.AreEqual("vous vous écartez de vos propres règles", ecran.SousTitreAffiche);
+            Assert.AreEqual("ce qui a changé", ecran.PanneauSurTitreAffiche);
+            Assert.AreEqual("", ecran.PanneauTitreAffiche, "« Une règle donnée, une règle enfreinte » est une note de DA");
+            Assert.AreEqual("", ecran.PanneauTexteAffiche);
+
+            Assert.AreEqual("Une vertu sur lui, pas encore un verdict", ReputationScreenController.VertusSansVerdict(1), "ICU `one`");
+            foreach (TMPro.TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+            {
+                StringAssert.DoesNotContain("PERSONNE NE VOUS A ENCORE JUGÉ", t.text, "phrase sans source retirée");
+                StringAssert.DoesNotContain("jusqu’à ce que vous la retiriez", t.text, "note de DA retirée");
+            }
+        }
+
         [UnityTest]
         [Category("ScreenB3")]
         public IEnumerator B3S5_LesTroisEtatsNonProduitsParLeBack_SontRendusEtDistincts()
@@ -759,46 +812,105 @@ namespace MafiaCleanCity.Operational.Tests
 
         // ═══ 3. LES TROUS DÉCLARÉS — l'écran ne doit pas les combler ════════════════════════
 
-        /// <summary>⛔ LE COMPTEUR « ENFREINTES » N'AFFICHE JAMAIS « 00 ».
-        /// Aucune clé du corps ne porte ce compte : la donnée est en base
-        /// (`boss_mirror_violation_ring.violation_slots[]`) et jamais projetée — forme F. Un
-        /// « 00 » dirait « aucune enfreinte » là où la vérité est « le serveur ne le dit pas ».
-        /// ⇒ La garde vise la VALEUR AFFICHÉE, pas l'absence d'une clé : c'est ce qui la rendra
-        /// ROUGE le jour où le lot back projettera le compte et où l'écran devra changer.</summary>
+        /// <summary>⛔ LE COMPTEUR « ENFREINTES » N'EXISTE PLUS (㊲, 24/09, arbitrage Q3). Aucune clé du corps ne porte ce compte (la
+        /// donnée est en base, `boss_mirror_violation_ring.violation_slots[]`, jamais projetée : L3) et le mot n'a pas de clé (table 43 :
+        /// « note »). Un « — » sous « ENFREINTES » disait encore une case que le serveur ne remplit pas. ⇒ Deux compteurs, avec les
+        /// mots servis ; la garde ROUGIRA le jour où un 3ᵉ compteur reviendra sans sa donnée.</summary>
         [UnityTest]
-        public IEnumerator B3T1_CompteurEnfreintes_NAfficheJamaisUnZero()
+        public IEnumerator B3T1_LeCompteurEnfreintes_NExistePlus_DeuxCompteursServis()
         {
-            yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
-            yield return ecran.Charger(lieutenantId);
+            ecran.RendrePourTest(new ReputationSurfaceDto
+            {
+                boss_mirror = new BossMirrorDto { consistency_cue = "aligned", declared_rules = new DeclaredRuleDto[0], portrait_posture = "attentive" },
+            });
+            yield return null;
 
-            TMPro.TextMeshProUGUI cible = null;
+            var libelles = new List<string>();
             foreach (TMPro.TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
-                if (t.text == "ENFREINTES" && t.transform.parent != null)
-                    cible = t.transform.parent.Find("Nombre")?.GetComponent<TMPro.TextMeshProUGUI>();
-
-            Assert.IsNotNull(cible, "compteur ENFREINTES introuvable — garde vraie à vide sinon");
-            StringAssert.DoesNotContain("0", cible.text,
-                "le compteur d'enfreintes affiche un chiffre alors qu'AUCUNE clé du corps ne le " +
-                "porte — un zéro inventé est un mensonge d'écran, pas un état vide");
+            {
+                StringAssert.DoesNotContain("NFREINTE", t.text.ToUpperInvariant(), "« enfreintes » : ni donnée servie ni clé");
+                if (t.name == "Libelle" && t.transform.parent != null && t.transform.parent.name.StartsWith("Fenetre")) libelles.Add(t.text);
+            }
+            CollectionAssert.AreEqual(new[] { "règles données", "absorbées" }, libelles,
+                "deux compteurs, mots SERVIS en casse (les capitales sont typographiques)");
         }
 
-        /// <summary>⛔ LES `rule_id` DÉCLARÉS SONT AFFICHÉS EN CLAIR, ET AUTANT QU'IL Y EN A.
-        ///
-        /// Le brief du lot est explicite : aucun libellé de règle n'existe (bundle i18n mesuré :
-        /// 67 clés, zéro pour ce domaine), l'identifiant se montre tel quel, on ne masque pas le
-        /// trou. La garde vise donc DEUX propriétés que l'on peut perdre séparément :
-        ///   · le COMPTE affiché égale le compte reçu — c'est le détecteur de « disponible et
-        ///     pourtant non affiché », la classe de défaut que le juge données traque ;
-        ///   · le TEXTE contient l'identifiant réel — c'est le détecteur de la table de libellés
-        ///     qu'un futur contributeur aura envie d'écrire pour faire joli, et qui remplacerait
-        ///     un identifiant vrai par un libellé inventé.
-        ///
-        /// ⚠️ Le scénario est DIMENSIONNÉ : on déclare deux règles, pas une. Avec une seule, un
-        /// rendu qui n'afficherait jamais que la première serait vert — la garde passerait à
-        /// travers le défaut qu'elle existe pour voir.</summary>
+        /// <summary>㊲ (24/09, D4 et D5) — les voyants de tenue par la VALEUR SERVIE (clés reputation.col/manches/montre/gants.*,
+        /// servies à e7f52351), couverture des 8 valeurs du domaine du back ; hors domaine « état inconnu », absent « — ». Le titre du
+        /// lieutenant par la clé servie « {nom}, votre lieutenant » ; sans nom, rien.</summary>
+        [Test]
+        public void B3M4_VoyantsParValeurServie_EtTitreDuLieutenant()
+        {
+            var actifs = new UniformTellsDto { collar = "buttoned", sleeves = "rolled", watch = "visible", gloves = "clean" };
+            var neutres = new UniformTellsDto { collar = "open", sleeves = "down", watch = "hidden", gloves = "dirty" };
+            Assert.AreEqual("col boutonné", ReputationResolvers.PoseLibelle(actifs, UniformTellsDto.Pose.Collar));
+            Assert.AreEqual("manches roulées", ReputationResolvers.PoseLibelle(actifs, UniformTellsDto.Pose.Sleeves));
+            Assert.AreEqual("montre visible", ReputationResolvers.PoseLibelle(actifs, UniformTellsDto.Pose.Watch));
+            Assert.AreEqual("gants propres", ReputationResolvers.PoseLibelle(actifs, UniformTellsDto.Pose.Gloves));
+            Assert.AreEqual("col ouvert", ReputationResolvers.PoseLibelle(neutres, UniformTellsDto.Pose.Collar));
+            Assert.AreEqual("manches basses", ReputationResolvers.PoseLibelle(neutres, UniformTellsDto.Pose.Sleeves));
+            Assert.AreEqual("montre cachée", ReputationResolvers.PoseLibelle(neutres, UniformTellsDto.Pose.Watch));
+            Assert.AreEqual("gants sales", ReputationResolvers.PoseLibelle(neutres, UniformTellsDto.Pose.Gloves));
+            Assert.AreEqual("état inconnu", ReputationResolvers.PoseLibelle(new UniformTellsDto { collar = "zipped" }, UniformTellsDto.Pose.Collar),
+                "hors domaine : jamais la valeur brute");
+            Assert.AreEqual("—", ReputationResolvers.PoseLibelle(null, UniformTellsDto.Pose.Gloves), "lecture échouée : « — »");
+
+            Assert.AreEqual("Lt. Hara, votre lieutenant", ReputationPortrait.TitreDuLieutenant("Lt. Hara"),
+                "clé servie, casse gardée (capitales typographiques)");
+            Assert.AreEqual("", ReputationPortrait.TitreDuLieutenant(null), "sans nom : aucun titre deviné (« VOTRE LIEUTENANT » retiré)");
+            Assert.AreEqual("", ReputationPortrait.TitreDuLieutenant("  "));
+        }
+
+        /// <summary>Le nombre de listeners AJOUTÉS EN CODE d'un UnityEvent (m_Calls.m_RuntimeCalls), que l'API publique ne donne pas.
+        /// -1 si la réflexion ne trouve pas le champ (la garde refuse alors de conclure).</summary>
+        private static int ListenersRuntime(UnityEngine.Events.UnityEventBase evt)
+        {
+            var calls = typeof(UnityEngine.Events.UnityEventBase).GetField("m_Calls",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(evt);
+            var runtime = calls?.GetType().GetField("m_RuntimeCalls",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(calls) as System.Collections.IList;
+            return runtime != null ? runtime.Count : -1;
+        }
+
+        /// <summary>㊲ (24/09, arbitrage Q1) — « Donner une règle » est AFFICHÉ, avec son mot servi, mais DÉSACTIVÉ et sans aucun
+        /// listener : le POST exige un rule_id que rien ne liste (L4) ni ne nomme (L1). Contrôle positif : la mesure des listeners
+        /// voit bien un listener ajouté à un bouton témoin (sinon « 0 » ne prouverait rien).</summary>
         [UnityTest]
-        public IEnumerator B3T3_LesRuleIdSontAffichesEnClair_EtTousAffiches()
+        public IEnumerator B3Q1_DonnerUneRegle_AfficheDesactive_SansListener()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(new ReputationSurfaceDto
+            {
+                boss_mirror = new BossMirrorDto { consistency_cue = "indeterminate", declared_rules = new DeclaredRuleDto[0], portrait_posture = "attentive" },
+            });
+            yield return null;
+
+            Assert.IsTrue(ecran.CtaDonnerRegle != null, "le geste est affiché (la maquette ratifiée le montre)");
+            Assert.IsFalse(ecran.CtaDonnerRegle.interactable, "désactivé tant que le catalogue des règles n'est pas servi");
+            Assert.AreEqual(0, ecran.CtaDonnerRegle.onClick.GetPersistentEventCount(), "aucun listener persistant");
+
+            var temoinGo = new GameObject("Temoin", typeof(RectTransform));
+            try
+            {
+                var temoin = temoinGo.AddComponent<Button>();
+                temoin.onClick.AddListener(() => { });
+                Assert.AreEqual(1, ListenersRuntime(temoin.onClick), "contrôle positif : la mesure des listeners runtime voit un listener");
+            }
+            finally { Object.DestroyImmediate(temoinGo); }
+            Assert.AreEqual(0, ListenersRuntime(ecran.CtaDonnerRegle.onClick), "aucun listener runtime sur le geste désactivé");
+
+            string mot = RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true)
+                .First(t => t.name == "Libelle" && t.transform.parent.name == "CtaDonnerRegle").text;
+            Assert.AreEqual("Donner une première règle", mot, "aucune règle donnée : le mot servi du premier geste, en casse");
+        }
+
+        /// <summary>⛔ AUCUN `rule_id` À L'ÉCRAN, ET LE COMPTEUR SERVI DIT COMBIEN (㊲, 24/09, arbitrages D6 et Q2). rule_id est un
+        /// identifiant machine (table 43, panneau 124 : « aucun libellé n’existe », lot back L1) : la liste qui l'affichait en clair
+        /// est retirée. Ce qui reste DOIT porter la donnée : le compteur « règles données » égale le nombre de règles SERVIES.
+        /// ⚠️ Scénario DIMENSIONNÉ (deux règles), réel : un compteur figé à 01 serait vert sur une seule.</summary>
+        [UnityTest]
+        public IEnumerator B3T3_AucunRuleIdALEcran_LeCompteurDitCombien()
         {
             yield return OuvrirJoueurFrais();
             var ecran = MonterEcran();
@@ -811,21 +923,16 @@ namespace MafiaCleanCity.Operational.Tests
 
             Assert.IsNotNull(ecran.DernierChargement, "corps non chargé");
             int recues = ecran.DernierChargement.boss_mirror.declared_rules.Length;
-            Assert.GreaterOrEqual(recues, 2,
-                "le serveur devrait porter au moins les 2 règles déclarées — sinon la garde " +
-                "suivante serait vraie pour la mauvaise raison (scénario sous-dimensionné)");
-            Assert.AreEqual(recues, ecran.ReglesAffichees,
-                $"le corps porte {recues} règles et l'écran en dessine {ecran.ReglesAffichees} : " +
-                "« disponible, dessiné nulle part » est un DÉFAUT, pas un choix de mise en page");
+            Assert.GreaterOrEqual(recues, 2, "le serveur devrait porter au moins les 2 règles déclarées (scénario sous-dimensionné sinon)");
 
-            // Le texte réel, pas seulement le compte : un libellé inventé passerait le test ci-dessus.
-            var textes = new List<string>();
+            string nombre = null;
             foreach (TMPro.TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
-                textes.Add(t.text);
-            CollectionAssert.Contains(textes, r1,
-                $"l'identifiant « {r1} » n'apparaît nulle part : il a été masqué ou remplacé par " +
-                "un libellé fabriqué côté client — or aucun libellé n'existe pour ce domaine");
-            CollectionAssert.Contains(textes, r2, $"l'identifiant « {r2} » n'apparaît nulle part");
+            {
+                StringAssert.DoesNotContain(r1, t.text, "un rule_id (identifiant machine) à l'écran");
+                StringAssert.DoesNotContain(r2, t.text, "un rule_id (identifiant machine) à l'écran");
+                if (t.name == "Nombre" && t.transform.parent != null && t.transform.parent.name == "Fenetre0") nombre = t.text;
+            }
+            Assert.AreEqual(recues.ToString("00"), nombre, "le compteur « règles données » porte le compte SERVI");
         }
 
         /// <summary>`restraint` est OMISE du corps sans `counterparty_id` — et le discriminant

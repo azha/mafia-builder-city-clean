@@ -55,12 +55,13 @@ namespace MafiaCleanCity.Operational
 
             // Le nom vient du serveur (`GET /v1/lieutenants/:id`, clé `name`), jamais d'ici.
             // Le libellé de départ n'est qu'un gabarit sans nom : il ne doit JAMAIS rester visible.
-            titreLieutenant = Texte("Titre", "VOTRE LIEUTENANT", 5.6f,
+            // ㊲ (24/09, D5) : AUCUN gabarit sans nom (« VOTRE LIEUTENANT » n'avait pas de source) — vide jusqu'au nom servi.
+            titreLieutenant = Texte("Titre", "", 5.6f,
                                     ReputationResolvers.Muet, transform);
             TextMeshProUGUI titre = titreLieutenant;
             titre.alignment = TextAlignmentOptions.Center;
             titre.characterSpacing = 14f;
-            titre.fontStyle = TMPro.FontStyles.Bold;   // maquette : .prt i, 700 5.6px
+            titre.fontStyle = TMPro.FontStyles.Bold | TMPro.FontStyles.UpperCase;   // maquette : .prt i, 700 5.6px, text-transform:uppercase
 
             // La zone de dessin : un rectangle aux proportions du viewBox.
             GameObject zone = Nouveau("Dessin", transform);
@@ -385,12 +386,16 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Le nom du lieutenant, tel qu'il vient du serveur. Vide ⇒ on n'affiche que le
         /// rôle, jamais un nom de remplacement : l'écran ne comble pas un trou de données.</summary>
+        /// <summary>㊲ (24/09, D5) — « {nom}, votre lieutenant » : clé SERVIE reputation.bloc.nom_votre_lieutenant, le nom servi par
+        /// `GET /v1/lieutenants/:id`. Sans nom : RIEN (aucun titre deviné). Capitales : typographiques (.prt i de la maquette).</summary>
+        public static string TitreDuLieutenant(string nom) =>
+            string.IsNullOrWhiteSpace(nom) ? "" : MafiaCleanCity.I18n.Libelle.Gabarit("reputation.bloc.nom_votre_lieutenant",
+                "{nom}, votre lieutenant", new System.Collections.Generic.Dictionary<string, string> { { "nom", nom.Trim() } });
+
         public void DefinirNom(string nom)
         {
             if (titreLieutenant == null) return;
-            titreLieutenant.text = string.IsNullOrWhiteSpace(nom)
-                ? "VOTRE LIEUTENANT"
-                : nom.ToUpperInvariant() + ", VOTRE LIEUTENANT";
+            titreLieutenant.text = TitreDuLieutenant(nom);
         }
 
         private Image _epaules, _cou, _tete, _cheveux;
