@@ -33,7 +33,8 @@ namespace MafiaCleanCity.Operational.Tests
         private GameObject shellGo;
         private AppShell shell;
 
-        /// <summary>DETTE DATÉE : les clés que le code SAIT demander et que le back ne sert pas. **53 → 0** contre la pile reconstruite
+        /// <summary>DETTE DATÉE : les clés que le code SAIT demander et que le back ne sert pas. **Vide depuis le 2026-09-24** (22 → 0,
+        /// pile 66060cc1). Avant : **53 → 0** contre la pile reconstruite
         /// sur 368d1420 (2026-09-23, 1112 clés, instantané `Tools/juge-donnees/i18n/string_table-368d1420.ts`) : direct 0, flux A/B/C
         /// 0, et les 53 inscrites toutes servies (y compris les 2 que seule la garde voyait). Histoire : 24 → 26 → 42 → 48 → 53 → 0.
         /// Vide, la garde est un ZÉRO STRICT : tout repli observé rougit, nommé avec son écran. Elle ne se rallonge que par décision
@@ -41,33 +42,8 @@ namespace MafiaCleanCity.Operational.Tests
         // `internal` : la garde de l'écran lieutenant (`BundleReelZeroRepliPlayModeTests`) applique la MÊME dette — une source.
         internal static readonly HashSet<string> DetteDatee = new HashSet<string>
         {
-            // ⚠️ COUPE du 2026-09-23 contre la pile e7f52351 (X-Server-Build, bundle fr 1659 clés, `rtk proxy curl`) : 30 clés
-            // SERVIES retirées (18 de ⑦, 12 de ㉙) ; restent les 22 de ⑦ ci-dessous, non servies à e7f52351.
-            // ⑦ LES DEUX DÉCISIONS (2026-09-23) — 40 clés PROPOSÉES par l'atelier (26, page `ecrans-brennar-7-lieutenant.html` ; table 42, aa2cd03b), non
-            // ratifiées, NON servies au back d8e41362 (vérifié sur `string_table.ts` à d8e41362 : 0 sur 40). La dette ne fait que
-            // rétrécir : la règle (2) rougit dès qu'une est servie, pour la retirer d'ici.
-            "famille.ecran.signal",
-            "famille.ecran.ordre_permanent",
-            "famille.signal.a_l_ecoute",
-            "famille.signal.derive",
-            "famille.signal.n_ecoute_que_le_terrain",
-            "famille.signal.se_recale",
-            "famille.ordre.aucun_ordre",
-            "famille.ordre.expire_bientot",
-            "famille.repere.l_etat_du_terrain",
-            "famille.repere.ce_qu_il_reste",
-            "famille.repere.l_heure",
-            "famille.repere.ce_que_font_les_autres",
-            "famille.ecran.nom_ecoute_autre_chose_que_vos_ordres",   // table 55 (a6159d89) : D13, clé nommée {nom}
-            "famille.ecran.rappeler_l_ordre_direct",
-            "famille.ecran.remettre_l_ecoute_a_zero",
-            "famille.ecran.brouiller_un_repere",
-            "famille.ecran.ce_qui_est_ecoute_a_la_place",            // table 55 : D13 + D17
-            "famille.question.en_faire_la_regle",
-            "famille.ecran.son_ordre_du_moment_a_tenu_vous_pouvez_le_renouveler_le_retirer_ou_en_faire_sa_regle_par_defaut",
-            "famille.ecran.en_faire_la_regle",
-            "famille.ecran.renouveler",
-            "famille.ecran.retirer",
+            // ⚠️ COUPE du 2026-09-24 contre la pile 66060cc1 : les 22 clés de ⑦ (famille.*) SERVIES (règle 2 rouge au créneau, tête
+            // 92bfb1ba ; vérifié sur string_table.ts à 66060cc1 : 22 sur 22, fr et en) — retirées. Dette VIDE : zéro strict.
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
