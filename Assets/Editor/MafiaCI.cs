@@ -25,7 +25,14 @@ public static class MafiaCI
     // rendent vraie (ou fausse) la colonne « monté » des 49 écrans — la scène de démarrage du build,
     // le montage des locataires par le shell. Même patron : on élargit ce filtre, jamais un second
     // point d'entrée.
-    // ⚠️ CE FILTRE MATCHE PAR PRÉFIXE, et un préfixe inexact n'ERREUR PAS : il exécute un AUTRE jeu
+    // ⚠️ CE FILTRE MATCHE PAR REGEX NON ANCRÉE (règle LUE le 2026-09-24 : `RuntimeTestRunnerFilter.cs:31` du Test Framework,
+    // `CategoryFilterExtended(s) { IsRegex = true }` ⇒ toute catégorie qui CONTIENT la demandée — `EcranDelegation` a pris
+    // `PhotoEcranDelegation` au créneau du 24/09 ; on l'avait crue « par préfixe », ce qui n'en voyait qu'un cas), et un nom inexact
+    // n'ERREUR PAS : il exécute un AUTRE jeu. ⚠️ Les mentions « aucune relation de préfixe (vérifié) » des inscriptions ci-dessous
+    // ont été RELUES sous la règle réelle le 2026-09-24 (balayage sous-chaîne de toutes les catégories de Assets/Tests) : elles
+    // tiennent, sauf les paires qui emportent une capture — `EcranDemolition`, `ScreenB3/B7/C1/C2/C3/C6` ⊂ leurs `Photo…` — et
+    // `I18n` ⊂ `I18nReseau` ; voir le lot de classe qui renomme les captures (et `I18nReseau` → `CatalogueEnLigne`, 24/09 : qui
+    // veut les deux les demande tous les deux). Et il
     // et le déclare vert (mesuré ici même le 2026-08-21 : `category_names: ["HUD"]` → 31/31 VERT
     // avec le défaut réarmé exprès, parce que le seul test décisif portait une AUTRE catégorie).
     // ⇒ après tout run qui doit DÉCIDER, relancer le test visé SEUL par son nom complet et vérifier
@@ -41,7 +48,7 @@ public static class MafiaCI
     // signale. Le run rend son `TOTAL:` et son exit 0 en ayant exécuté un AUTRE jeu que celui
     // qu'on croyait. Ce dépôt a déjà payé exactement ça : `category_names: ["HUD"]` a rendu
     // **31/31 VERT avec le défaut réarmé exprès**, parce qu'aucune catégorie « HUD » n'existe et
-    // que le filtre matche par préfixe.
+    // que le filtre matche par regex non ancrée (sous-chaîne).
     //
     // ⇒ Toute catégorie neuve doit être AJOUTÉE ICI le jour où elle est créée, sinon la suite qui
     // la porte est invisible au juge — verte par absence, ce qui ressemble trait pour trait à
@@ -79,7 +86,11 @@ public static class MafiaCI
     //   · `HUDv31` : 5 fichiers / 24 tests — le chrome, la barre d'onglets, la zone sûre, le
     //     manomètre. Le socle de l'écran, jugé par personne.
     //   · `EcranDelegation` : la suite de ㉜, arrivée avec l'écran sans son inscription ici.
-    // ⚠️ `PhotoEcranDelegation` n'est PAS inscrite, et c'est délibéré : les catégories `Photo*`
+    // ⛔ RENOMMÉES LE 2026-09-24 (lot de classe, garde `CategoriesDeCapturePlayModeTests`) : le filtre est une regex NON ANCRÉE, et
+    // `PhotoEcranDelegation` CONTENAIT `EcranDelegation` (elle partait avec l'écran). Correspondance : PhotoEcranDelegation →
+    // ClicheDelegation · PhotoEcranDemolition → ClicheDemolition · PhotoScreenB3/B7/C1/C2/C3/C6 → ClicheB3/B7/C1/C2/C3/C6 ·
+    // PhotoScreenC3SousChrome → ClicheSousChromeC3. Les documents datés avant cette date gardent les anciens noms (ce qui a TOURNÉ).
+    // ⚠️ `PhotoEcranDelegation` (aujourd'hui `ClicheDelegation`) n'est PAS inscrite, et c'est délibéré : les catégories `Photo*`
     // écrivent des PNG à chaque exécution — les faire tourner sous le juge salit l'arbre à chaque
     // run. Même régime que `PhotoPlanche`/`PhotoRevue`.
     // ⚠️ Inscrire une catégorie ne la rend pas VERTE : c'est justement l'inverse du service qu'on
@@ -173,7 +184,7 @@ public static class MafiaCI
     //   partie du correctif, sinon le prochain lot repaie ces quatre runs.
     // ⚠️ Ce n'est PAS un défaut des écrans : ils chargent et se capturent correctement en isolé.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "EcranDemolition", "ScreenC3", "EcranLoi", "EcranConflit", "Ecran10", "I18n", "I18nReseau", "BundleReel", "JUGE", "CaptureDetail", "CaptureExceptions", "CaptureFiche", "CaptureSousChrome", "CaptureHorizon", "CaptureForensic", "FicheTete", "Graisses",
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "EcranDemolition", "ScreenC3", "EcranLoi", "EcranConflit", "Ecran10", "I18n", "CatalogueEnLigne", "BundleReel", "JUGE", "CaptureDetail", "CaptureExceptions", "CaptureFiche", "CaptureSousChrome", "CaptureHorizon", "CaptureForensic", "FicheTete", "Graisses",
         // Montage de l'art (2026-09-07) — entre au filtre AVEC son compte vert, jamais avant :
         // une garde qui n'a jamais tourné n'est pas une garde. Mesuré sous surcharge :
         // `passed=2 failed=0 declares=2 comptes=2`, couverture 12/12, zéro réseau, zéro écriture.
@@ -350,7 +361,8 @@ public static class MafiaCI
         private int declares = -1;
 
         // ⛔⛔ CE QUE LE FILTRE A RÉELLEMENT PRIS — mesuré le 2026-09-02, et payé DEUX FOIS.
-        //    `Filter.categoryNames` d'Unity correspond par PRÉFIXE, pas exactement.
+        //    `Filter.categoryNames` d'Unity correspond par REGEX NON ANCRÉE (sous-chaîne), pas exactement — lu dans la source le
+        //    2026-09-24 (`RuntimeTestRunnerFilter.cs:31`, `IsRegex = true`) ; « par préfixe » n'en était qu'un cas.
         //    · 2026-08-21, session voisine : un run lancé sur `["HUD"]` a rendu **31/31 VERT avec
         //      un défaut réarmé exprès** — aucune catégorie « HUD » n'existe, le filtre avait pris
         //      `HUDv31`. Le vert certifiait le défaut.
@@ -419,7 +431,7 @@ public static class MafiaCI
             if (filtreVide)
                 Debug.Log("MafiaCI: ⛔ FILTRE VIDE — 0 test déclaré sous ce filtre. Le run n'a RIEN " +
                           "exercé : ce n'est pas « tout est vert », c'est « rien n'a été demandé ». " +
-                          "Vérifier le nom de catégorie (le filtre matche par PRÉFIXE et ne signale " +
+                          "Vérifier le nom de catégorie (le filtre matche par REGEX NON ANCRÉE et ne signale " +
                           "jamais un nom inconnu).");
             // Ce que le filtre a RÉELLEMENT sélectionné, et ce qui n'avait pas été demandé.
             if (categoriesVues.Count > 0)
@@ -434,8 +446,8 @@ public static class MafiaCI
                     if (surprises.Count > 0)
                         Debug.LogWarning("MafiaCI: ⚠️ CATÉGORIES NON DEMANDÉES EXÉCUTÉES ["
                             + string.Join(", ", surprises) + "] — le filtre d'Unity correspond par "
-                            + "PRÉFIXE : une catégorie demandée en emporte toute autre qui commence "
-                            + "par elle. Vérifier qu'aucune n'a d'effet de bord (un test qui MUTE un "
+                            + "REGEX NON ANCRÉE : une catégorie demandée en emporte toute autre qui la "
+                            + "CONTIENT. Vérifier qu'aucune n'a d'effet de bord (un test qui MUTE un "
                             + "compte partagé, par exemple) avant de croire ce run inoffensif.");
                 }
             }

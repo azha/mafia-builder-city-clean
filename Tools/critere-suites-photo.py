@@ -99,7 +99,7 @@ for f in sorted(racine.rglob('*.cs')):
 
 cible = ['Screenshot','CaptureDetail','CaptureExceptions','CaptureFiche','CaptureSousChrome',
          'MutationDeCarte','CaptureHorizon','CaptureForensic',
-         'EcranLoi','EcranConflit','Ecran10','I18n','I18nReseau','BundleReel','JUGE']
+         'EcranLoi','EcranConflit','Ecran10','I18n','CatalogueEnLigne','BundleReel','JUGE']
 manque = [c for c in cible if c not in par_cat]
 assert not manque, f"⛔ ENCORE absentes : {manque} — l'instrument ment"
 print(f"méthodes balayées : {n}   (v1 en voyait {459}, et ratait 5 catégories réelles)\n")

@@ -17,7 +17,8 @@ namespace MafiaCleanCity.Shell.Tests
     /// (2) CAPTURE sous chrome 1080×2400 — ce qui rendrait l'image mensongère : le locataire entré,
     ///     la peinture montée, 18 marqueurs, aucun occultant nommé (les parties propres exclues),
     ///     pas un fond uni.</summary>
-    [Category("ScreenCarte")] // la catégorie de l'écran ③ (chantier C, 2026-09-02) — une seule par écran
+    // `ScreenCarte` (la catégorie de l'écran ③, chantier C, 2026-09-02) est posée TEST PAR TEST depuis le 2026-09-24 : sur la classe,
+    // elle emportait la CAPTURE `Capture_CarteVille_1080x2400` (une planche du juge, qui porte désormais `ClicheCarte`).
     public class CarteVillePlayModeTests
     {
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — `Capture_CarteVille_1080x2400` charge la scène du BUILD par son chemin ; son
@@ -35,7 +36,7 @@ namespace MafiaCleanCity.Shell.Tests
             if (controllerGo != null) Object.Destroy(controllerGo);
         }
 
-        [UnityTest]
+        [UnityTest, Category("ScreenCarte")]
         public IEnumerator CarteVille_MontePeintureEt18MarqueursSurAncres()
         {
             controllerGo = new GameObject("CityMapController");
@@ -176,7 +177,7 @@ namespace MafiaCleanCity.Shell.Tests
             }
         }
 
-        [UnityTest]
+        [UnityTest, Category("ClicheCarte")]   // une planche du juge de ③ : une capture, jamais avec l'écran (24/09)
         public IEnumerator Capture_CarteVille_1080x2400()
         {
             const int Largeur = 1080, Hauteur = 2400;

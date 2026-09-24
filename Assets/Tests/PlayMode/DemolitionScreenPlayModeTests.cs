@@ -19,7 +19,8 @@ namespace MafiaCleanCity.Operational.Tests
     /// `pilote-B`) : `OuvrirJoueurFrais()` (signup + `session/close` défensif + lecture d'un
     /// lieutenant du kit de départ) — à adapter ici selon ce que `GetFrictionState` exige
     /// réellement comme précondition.</summary>
-    [Category("EcranDemolition")]
+    // ⛔ `EcranDemolition` est posée TEST PAR TEST, pas sur la classe (lot de classe du 2026-09-24) : posée sur la classe, elle emportait la
+    // capture (Cliche…) avec l'écran — une capture exige l'identité de capture et écrit des PNG. La capture ne porte que sa catégorie.
     public class DemolitionScreenPlayModeTests
     {
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un
@@ -72,6 +73,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// `BuildLayout()` rempli, relever le plancher `Assert.Greater(comptes, 1, ...)` vers une
         /// valeur qui reflète le contenu réel (㊲ l'a posé à 10).</summary>
         [UnityTest]
+        [Category("EcranDemolition")]
         public IEnumerator EcranDemolitionS1_ToutGraphic_PorteSonCanvasRenderer()
         {
             MonterEcran();
@@ -126,7 +128,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// photographiait un fond uniforme. Le test signe désormais avec l'identité de campagne,
         /// exige la friction servie et un rendu abouti, puis seulement écrit les PNG. Mesure du
         /// correctif : 3,270 % et 3,209 % d'encre, contre 0,000 % auparavant.</summary>
-        [UnityTest, Category("PhotoEcranDemolition")]
+        [UnityTest, Category("ClicheDemolition")]
         public IEnumerator EcranDemolitionC1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
             var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
@@ -248,6 +250,7 @@ namespace MafiaCleanCity.Operational.Tests
         // ═══ La ligne de site (㉝·80) — la décision de mise en page, falsifiable ════════════════
 
         [Test]
+        [Category("EcranDemolition")]
         public void LigneDeSite_LEnseigneEstLeTitre_EtLeLieuVaEnSousLigne()
         {
             var b = new DistrictBuildingDto

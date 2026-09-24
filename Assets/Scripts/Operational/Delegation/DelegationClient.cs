@@ -36,12 +36,35 @@ namespace MafiaCleanCity.Operational
         {
             public long statut;
             public string code;
+            /// <summary>㉜ lot 3 — `payload.error.user_facing_i18n_key` : la phrase SERVIE du refus. C'est ELLE qui s'affiche ;
+            /// `message` est un diagnostic anglais du serveur, jamais montré au joueur.</summary>
+            public string cle;
+            /// <summary>`payload_vars.reason` (déclaré, pas encore servi) : ce qui distingue le verrou d'une charge qui a changé.</summary>
+            public string raison;
             public string message;
 
             public bool EstMetier => !string.IsNullOrEmpty(code);
         }
 
         // ═══ Lecture ═════════════════════════════════════════════════════════════════════════
+
+        /// <summary>㉜ lot 3b — `GET /v1/meta/pressure` : le reste ENFORCÉ de décisions de structure (`decisions_remaining`), relu
+        /// après chaque décision pour dire le plafond AVANT l'appui suivant.</summary>
+        public IEnumerator GetMetaPressure(string bearer, Action<GetMetaPressureResponseDto> onOk, Action<Refus> onErr)
+        {
+            using (UnityWebRequest req = UnityWebRequest.Get(Url("/v1/meta/pressure")))
+            {
+                Preparer(req, bearer);
+                yield return req.SendWebRequest();
+                if (Reussi(req))
+                {
+                    GetMetaPressureResponseDto dto = JsonUtility.FromJson<GetMetaPressureEnvelope>(req.downloadHandler.text)?.payload?.data;
+                    if (dto == null) { onErr?.Invoke(CorpsVide(req, "pressure")); yield break; }
+                    onOk?.Invoke(dto);
+                }
+                else onErr?.Invoke(Lire(req));
+            }
+        }
 
         public IEnumerator GetMetaTaskCategories(string bearer,
             Action<GetMetaTaskCategoriesResponseDto> onOk, Action<Refus> onErr)
@@ -55,6 +78,8 @@ namespace MafiaCleanCity.Operational
                     GetMetaTaskCategoriesResponseDto dto =
                         JsonUtility.FromJson<GetMetaTaskCategoriesEnvelope>(req.downloadHandler.text)?.payload?.data;
                     if (dto == null) { onErr?.Invoke(CorpsVide(req, "task-categories")); yield break; }
+                    // ㉜ lot 3b : `JsonUtility` ne distingue pas un objet absent d'un objet par défaut — le corps brut, lui, le dit.
+                    dto.StructuralBudgetServi = req.downloadHandler.text.Contains("\"structural_budget\"");
                     onOk?.Invoke(dto);
                 }
                 else onErr?.Invoke(Lire(req));
@@ -185,6 +210,8 @@ namespace MafiaCleanCity.Operational
             {
                 statut = req.responseCode,
                 code = err != null ? err.code : null,
+                cle = err != null ? err.user_facing_i18n_key : null,
+                raison = err?.payload_vars?.reason,
                 message = err != null && !string.IsNullOrEmpty(err.message)
                     ? err.message
                     : $"{req.url} — {req.error}",

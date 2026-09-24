@@ -138,7 +138,7 @@ namespace MafiaCleanCity.I18nTests
         /// que les clés manquantes sont un lot back et non un défaut du client.
         /// ⚠️ Le plancher est à 1 : un bundle vide serait indiscernable d'un catalogue non
         /// chargé, et tous les écrans afficheraient leurs clés en silence.</summary>
-        [UnityTest, Category("I18nReseau")]
+        [UnityTest, Category("CatalogueEnLigne")]   // ex-`I18nReseau` (24/09) : il CONTENAIT `I18n`, le filtre (regex non ancrée) l'emportait
         public IEnumerator LeBundleReel_EstLisible_EtSaCouvertureEstIMPRIMEE()
         {
             var auth = new AuthClient { BaseUrl = BaseUrl };

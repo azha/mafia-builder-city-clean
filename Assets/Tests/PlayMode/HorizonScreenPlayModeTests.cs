@@ -20,7 +20,8 @@ namespace MafiaCleanCity.Operational.Tests
     /// `pilote-B`) : `OuvrirJoueurFrais()` (signup + `session/close` défensif + lecture d'un
     /// lieutenant du kit de départ) — à adapter ici selon ce que `GetMetaHorizonFeed` exige
     /// réellement comme précondition.</summary>
-    [Category("ScreenC6")]
+    // ⛔ `ScreenC6` est posée TEST PAR TEST, pas sur la classe (lot de classe du 2026-09-24) : posée sur la classe, elle emportait la
+    // capture (Cliche…) avec l'écran — une capture exige l'identité de capture et écrit des PNG. La capture ne porte que sa catégorie.
     public class HorizonScreenPlayModeTests
     {
         private const string BaseUrl = "http://localhost";
@@ -67,6 +68,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// `BuildLayout()` rempli, relever le plancher `Assert.Greater(comptes, 1, ...)` vers une
         /// valeur qui reflète le contenu réel (㊲ l'a posé à 10).</summary>
         [UnityTest]
+        [Category("ScreenC6")]
         public IEnumerator ScreenC6S1_ToutGraphic_PorteSonCanvasRenderer()
         {
             MonterEcran();
@@ -120,7 +122,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// Catégorie propre `PhotoScreenC6` (préfixe `Photo`, gabarit de ㊳ : `Capture<Écran>` serait
         /// emporté par une demande de `Capture`). La classe porte `ScreenC6`, qui couvre déjà cette
         /// méthode : ne pas la répéter ici.</summary>
-        [UnityTest, Category("Capture"), Category("PhotoScreenC6")]
+        [UnityTest, Category("Capture"), Category("ClicheC6")]
         public IEnumerator ScreenC6C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
             var auth = new AuthClient { BaseUrl = BaseUrl };
@@ -292,6 +294,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// ★ C'est le pendant exact de la leçon du jour sur ⑨ : une garde ne mesure que ce
         ///   qu'on lui présente. Ici c'est l'ÉTAT, pas l'écran, qui manquait à la population.</summary>
         [UnityTest]
+        [Category("ScreenC6")]
         public IEnumerator ScreenC6S3_LEchelle_MarqueLeCourant_EtGriseLesFranchis()
         {
             HorizonScreenController ecran = MonterEcran();
@@ -342,6 +345,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// ⚠️ Ce test vaut surtout par ce qu'il interdit : « pas d'échelle » ne doit jamais
         /// devenir « pas d'écran ».</summary>
         [UnityTest]
+        [Category("ScreenC6")]
         public IEnumerator ScreenC6S3_ProgressionAbsente_NeCasseRien()
         {
             HorizonScreenController ecran = MonterEcran();
@@ -363,6 +367,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// ★ C'est la même règle que la clé nue de la fiche ② : ce qu'on ne sait pas nommer se
         ///   montre brut, pas maquillé.</summary>
         [UnityTest]
+        [Category("ScreenC6")]
         public IEnumerator ScreenC6S3_CranInconnu_SeMontreTelQuel()
         {
             HorizonScreenController ecran = MonterEcran();

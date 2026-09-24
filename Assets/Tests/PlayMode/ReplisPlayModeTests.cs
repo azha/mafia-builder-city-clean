@@ -76,6 +76,9 @@ namespace MafiaCleanCity.CityMap.Tests
             // precursors.projection.service.ts:40) — domaine : l'enum substance-config.ts:40-53 (les 6 se commandent, back 23/09)
             Couvre("CommanderLabel", new[] { "PYRALIN", "THALMITE", "GARNET_SALT", "VERDANT_ROOT_EXTRACT", "LULL_RESIN", "GLASS_LILY" },
                 BuildingCardController.CommanderLabel, t);
+            // ㉜ lot 4 : {charge} en phrase, famille `delegation.charge_phrase.*` (table 56) — hors domaine : null (rien n'est dit)
+            Couvre("ChargeEnPhrase", new[] { "ROUTE_ASSIGNMENT", "LIEUTENANT_HIRING", "SUPPLY_SOURCING", "HEAT_MANAGEMENT" },
+                DelegationScreenController.ChargeEnPhrase, null);   // meta_progression/task-category-catalogue.ts (les 4 LIVE)
             Couvre("TypeLabel", Types12, BuildingCardController.TypeLabel, t);
             Couvre("SubstanceLabel", new[] { "BRINDLE", "CRICK", "HUSH", "ASH" }, BuildingCardController.SubstanceLabel, t);          // substance/substance-config.ts:36 (majuscules : production.projection.service.ts:232)
             Couvre("VehicleLabel", new[] { "FOOT", "BIKE", "CAR" }, BuildingCardController.VehicleLabel, t);                          // la fiche : distribution.projection.service.ts:411

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,7 +21,9 @@ namespace MafiaCleanCity.Operational.Tests
     /// `pilote-B`) : `OuvrirJoueurFrais()` (signup + `session/close` défensif + lecture d'un
     /// lieutenant du kit de départ) — à adapter ici selon ce que `GetMetaTaskCategories` exige
     /// réellement comme précondition.</summary>
-    [Category("EcranDelegation")]
+    // ⛔ LA CATÉGORIE EST POSÉE TEST PAR TEST, PAS SUR LA CLASSE (2026-09-24, orchestrateur) : posée sur la classe, elle s'unissait
+    // à `PhotoEcranDelegation` sur C1 — la capture partait avec EcranDelegation et rougissait faute de la paire du compte de capture
+    // (créneau du 23/09 08:48, 80/81). C1 ne porte plus que sa catégorie de capture (partie 2), comme les autres écrans.
     public class DelegationScreenPlayModeTests
     {
         private GameObject hostGo;
@@ -70,7 +73,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// squelette non rempli — au moins 1 Graphic (le fond). Une fois le MÉTIER ICI de
         /// `BuildLayout()` rempli, relever le plancher `Assert.Greater(comptes, 1, ...)` vers une
         /// valeur qui reflète le contenu réel (㊲ l'a posé à 10).</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationS1_ToutGraphic_PorteSonCanvasRenderer()
         {
             MonterEcran();
@@ -134,7 +137,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// photographiait un fond uniforme. Le test signe désormais avec l'identité de campagne,
         /// exige un corps et un rendu abouti, puis seulement écrit les PNG. Mesure du correctif :
         /// 3,252 % et 2,602 % d'encre aux deux résolutions, contre 0,000 % auparavant.</summary>
-        [UnityTest, Category("PhotoEcranDelegation")]
+        [UnityTest, Category("ClicheDelegation")]
         public IEnumerator EcranDelegationC1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
             var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = BaseUrl };
@@ -270,19 +273,13 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNotNull(token, "signup n'a pas rendu de jeton");
         }
 
-        /// <summary>⛔ LE DÉTECTEUR DE TD-530, ET C'EST LE SEUL TEST DE CE FICHIER QUI PEUT
-        /// L'ATTRAPER. `GET /v1/meta/task-categories` sert `category_key` (une chaîne) ; les trois
-        /// routes d'action exigent `category_id` (un entier) que cette réponse n'inclut PAS. Le
-        /// client porte donc une table clé→code en pis-aller (`DelegationCatalogue`).
-        ///
-        /// ⚠️ CE QUI REND CE TEST NON TAUTOLOGIQUE : le dénominateur vient du RÉSEAU, pas de la
-        /// table. Comparer la table à elle-même serait vert pour toujours ; comparer la table à ce
-        /// que le back rend VRAIMENT rougit le jour où une 5ᵉ catégorie devient LIVE — c'est-à-dire
-        /// exactement le jour où le client se mettrait à envoyer un code faux, donc à déléguer la
-        /// MAUVAISE charge. Le contrôle positif est inclus : on exige que la route ait rendu au
-        /// moins une clé, sinon l'assertion serait vraie À VIDE sur une réponse creuse.</summary>
-        [UnityTest]
-        public IEnumerator EcranDelegationG1_ToutesLesClesServiesOntUnCodeCoteClient()
+        /// <summary>㉜ lot 1 (2026-09-23) — TD-530 EST FERMÉE CÔTÉ BACK : `category_id` est SERVI par la projection
+        /// (`meta-progression.projection.service.ts:70`) et c'est lui qui part vers les trois routes d'action ; la copie client des
+        /// codes est retirée. Ce test lit le RÉSEAU (compte frais) et épingle la VALEUR servie de chaque charge LIVE contre le catalogue
+        /// du back (`task-category-catalogue.ts` : 1, 2, 4, 5 — « 3 » est LEK_CONTEST, en réserve). Il rougit si le champ disparaît
+        /// (0), si deux charges partagent un code, ou si le catalogue bouge.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationG1_ChaqueChargeServiePorteSonCode()
         {
             yield return OuvrirJoueurFrais();
 
@@ -292,25 +289,290 @@ namespace MafiaCleanCity.Operational.Tests
             yield return client.GetMetaTaskCategories(token, d => corps = d, r => erreur = r.message);
 
             Assert.IsNull(erreur, $"GET /v1/meta/task-categories a échoué : {erreur}");
-            Assert.IsNotNull(corps, "corps nul");
-            Assert.IsNotNull(corps.task_categories, "`task_categories` absent du corps");
-            // Garde anti-vacuité : sans elle, une réponse vide rendrait la boucle suivante vraie.
-            Assert.Greater(corps.task_categories.Length, 0,
-                "0 catégorie servie — l'assertion de couverture qui suit serait vraie À VIDE");
+            Assert.IsNotNull(corps?.task_categories, "corps ou `task_categories` nul");
+            Assert.Greater(corps.task_categories.Length, 0, "anti-vacuité : 0 charge servie");
 
-            var inconnues = new List<string>();
+            var attendus = new Dictionary<string, int>
+            {
+                ["ROUTE_ASSIGNMENT"] = 1, ["LIEUTENANT_HIRING"] = 2, ["SUPPLY_SOURCING"] = 4, ["HEAT_MANAGEMENT"] = 5,
+            };
             foreach (TaskCategoryRowDto r in corps.task_categories)
             {
-                bool trouve = false;
-                foreach (string cle in DelegationCatalogue.ToutesLesCles())
-                    if (cle == r.category_key) { trouve = true; break; }
-                if (!trouve) inconnues.Add(r.category_key);
+                Assert.IsTrue(DelegationScreenController.CodeServi(r), $"{r.category_key} : `category_id` absent (0) — forme G perdue");
+                Assert.IsTrue(attendus.ContainsKey(r.category_key), $"charge LIVE inconnue du test : {r.category_key}");
+                Assert.AreEqual(attendus[r.category_key], r.category_id, $"{r.category_key} : le code SERVI");
             }
-            Assert.IsEmpty(inconnues,
-                "le back sert des catégories que la table CLIENT ignore : " +
-                string.Join(", ", inconnues) + ". Le client enverrait un code faux, donc " +
-                "délèguerait la MAUVAISE charge. C'est TD-530 qui se rappelle à nous — la " +
-                "réparation est d'ajouter `category_id` à la projection, pas d'étendre la table.");
+            Assert.AreEqual(corps.task_categories.Length, corps.task_categories.Select(r => r.category_id).Distinct().Count(),
+                "deux charges ne partagent jamais un code");
+        }
+
+        /// <summary>㉜ lot 1 — sans réseau : « La lui confier » envoie le code SERVI de la ligne visée (un code FABRIQUÉ, 42, qu'aucune
+        /// copie client ne connaît — la preuve que rien d'autre ne le fournit) ; une ligne sans code (0) n'offre AUCUN geste vivant.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationL1_LaLuiConfier_EnvoieLeCodeServi_EtSansCodeRienNePart()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;   // le port fermé fait échouer la requête : on lit le code PARTI
+            var ecran = MonterEcran();
+            ecran.SetBaseUrl("http://127.0.0.1:9");
+            yield return null;
+            var roster = new GetLieutenantsResponseDto { lieutenants = new[] { new LieutenantRowDto { lieutenant_id = "lt-1", name = "Lt. Vesk" } } };
+            GetMetaTaskCategoriesResponseDto Corps(int code) => new GetMetaTaskCategoriesResponseDto
+            {
+                task_categories = new[]
+                {
+                    new TaskCategoryRowDto { category_key = "SUPPLY_SOURCING", category_id = code, mastery_bucket = "ELIGIBLE",
+                                             progress_band = "HIGH", delegation_state = "SELF" },
+                },
+                delegated = new DelegatedSummaryDto[0],
+            };
+
+            ecran.RendrePourTest(Corps(42), roster, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            yield return null;
+            Button confier = GesteVivant();
+            Assert.IsNotNull(confier, "une charge prête, un candidat, le jeton libre : « La lui confier » est vivant");
+            confier.onClick.Invoke();
+            Assert.AreEqual(42, ecran.DerniereCategorieDemandee, "le code SERVI de la ligne part, pas une copie client");
+
+            ecran.RendrePourTest(Corps(0), roster, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            yield return null;
+            Assert.IsNull(GesteVivant(), "sans code servi, aucun geste vivant : on n'envoie ni 0 ni un code deviné");
+        }
+
+        // ═══ ㉜ lot 3 — les refus, EN MOTS (sans réseau) ════════════════════════════════════
+
+        private static DelegationClient.Refus Refus(string code, string cle, string message, string raison = null) =>
+            new DelegationClient.Refus { statut = 409, code = code, cle = cle, message = message, raison = raison };
+
+        /// <summary>R1 — la phrase d'un refus vient de sa clé SERVIE (ou de la raison servie) ; le message anglais du serveur et une
+        /// URL de panne ne s'affichent JAMAIS.</summary>
+        [Test, Category("EcranDelegation")]
+        public void EcranDelegationR1_LaPhraseDuRefus_JamaisLeMessageAnglais()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            string anglais = "category 4 has an ACTIVE promotion lock — graduation refused until it closes.";
+            string generique = DelegationScreenController.PhraseDeRefus(Refus("RESOURCE_STATE_CONFLICT", "error.resource.state_conflict", anglais));
+            Assert.AreEqual("Rien n’a été changé.", generique, "sans catalogue : le repli du client, pas le message");
+            string panne = DelegationScreenController.PhraseDeRefus(new DelegationClient.Refus
+                { statut = 0, message = "http://127.0.0.1:9/v1/meta/graduation — Cannot connect to destination host" });
+            Assert.AreEqual("Rien n’a été changé.", panne, "une panne de transport ne montre ni URL ni erreur système");
+
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                ["error.resource.state_conflict"] = "La situation a changé depuis votre dernier coup d’œil. Rechargez et décidez à nouveau.",
+                ["error.core_loops.structural_cap_exhausted"] = "Vous avez utilisé votre décision de structure du jour. Reprenez demain.",
+                ["delegation.refus.un_changement_est_deja_en_cours_sur_cette_charge"] = "un changement est déjà en cours sur cette charge",
+            });
+            try
+            {
+                Assert.AreEqual("La situation a changé depuis votre dernier coup d’œil. Rechargez et décidez à nouveau.",
+                    DelegationScreenController.PhraseDeRefus(Refus("RESOURCE_STATE_CONFLICT", "error.resource.state_conflict", anglais)),
+                    "sans raison servie (aujourd'hui) : la phrase GÉNÉRIQUE servie de la clé du refus");
+                Assert.AreEqual("Vous avez utilisé votre décision de structure du jour. Reprenez demain.",
+                    DelegationScreenController.PhraseDeRefus(Refus("STRUCTURAL_CAP_EXHAUSTED", "error.core_loops.structural_cap_exhausted",
+                        "Structural decisions exhausted for this session. Return in next session.")));
+                Assert.AreEqual("un changement est déjà en cours sur cette charge",
+                    DelegationScreenController.PhraseDeRefus(Refus("RESOURCE_STATE_CONFLICT", "error.resource.state_conflict", anglais,
+                        raison: "promotion_lock_active")), "la raison servie (annoncée) choisit le mot de la table 44");
+                Assert.AreEqual("La situation a changé depuis votre dernier coup d’œil. Rechargez et décidez à nouveau.",
+                    DelegationScreenController.PhraseDeRefus(Refus("RESOURCE_STATE_CONFLICT", "error.resource.state_conflict", anglais,
+                        raison: "__HORS_DOMAINE__")), "une raison inconnue : la phrase générique, jamais la raison brute");
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
+            CollectionAssert.AreEqual(new string[] { null, null, null, null },
+                new[] { null, "", "__X__", "NOT_SELF" }.Select(DelegationScreenController.PhraseDeRaison).ToArray());
+        }
+
+        /// <summary>R2 — le 409 du PLAFOND éteint le jeton PARTAGÉ dès le refus (d'après le refus servi, pas un compteur) et mène au
+        /// tableau « déjà tranché » ; un autre refus reste sur l'état du geste, en mots.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationR2_LePlafond_EteintLeJetonDesLeRefus()
+        {
+            var ecran = MonterEcran();
+            ecran.SetBaseUrl("http://127.0.0.1:9");
+            yield return null;
+            var corps = new GetMetaTaskCategoriesResponseDto
+            {
+                task_categories = new[] { new TaskCategoryRowDto { category_key = "SUPPLY_SOURCING", category_id = 4, mastery_bucket = "ELIGIBLE",
+                                                                   progress_band = "HIGH", delegation_state = "SELF" } },
+                delegated = new DelegatedSummaryDto[0],
+            };
+            var roster = new GetLieutenantsResponseDto { lieutenants = new[] { new LieutenantRowDto { lieutenant_id = "lt-1", name = "Lt. Vesk" } } };
+            ecran.RendrePourTest(corps, roster, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            Assert.IsFalse(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "anti-vacuité : le jeton est libre avant le refus");
+
+            ecran.RefuserPourTest(Refus("RESOURCE_STATE_CONFLICT", "error.resource.state_conflict", "category 4 is not SELF-managed"));
+            Assert.AreEqual(DelegationScreenController.EtatEcran.Confier, ecran.EtatCourant, "un refus ordinaire reste sur le geste");
+            Assert.IsFalse(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "un refus ordinaire ne touche pas au jeton");
+            StringAssert.Contains("Rien n’a été changé.", TexteDeLEcran(), "le refus se DIT (en mots)");
+            Assert.IsFalse(TexteDeLEcran().Contains("SELF-managed"), "jamais le message anglais");
+
+            ecran.RefuserPourTest(Refus("STRUCTURAL_CAP_EXHAUSTED", "error.core_loops.structural_cap_exhausted",
+                "Structural decisions exhausted for this session. Return in next session."));
+            Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "le jeton PARTAGÉ (㉝ ㉞) s'éteint dès le refus");
+            Assert.IsTrue(ecran.JetonDepense);
+            Assert.AreEqual(DelegationScreenController.EtatEcran.Tableau, ecran.EtatCourant, "le plafond mène au tableau « déjà tranché »");
+            Assert.IsNull(GesteVivant(), "plus aucun geste vivant : le jeton est dépensé");
+            yield return null;
+        }
+
+        /// <summary>R3 — un refus n'est plus AVALÉ comme un succès : `Charger()` remettait le refus à null, et l'écran repartait au
+        /// tableau. Ici une vraie requête échoue (port fermé) : l'écran reste sur « confier » et dit le refus, sans URL.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationR3_UnRefusNEstPasAvaleCommeUnSucces()
+        {
+            UnityEngine.TestTools.LogAssert.ignoreFailingMessages = true;
+            var ecran = MonterEcran();
+            ecran.SetBaseUrl("http://127.0.0.1:9");
+            yield return null;
+            var corps = new GetMetaTaskCategoriesResponseDto
+            {
+                task_categories = new[] { new TaskCategoryRowDto { category_key = "SUPPLY_SOURCING", category_id = 4, mastery_bucket = "ELIGIBLE",
+                                                                   progress_band = "HIGH", delegation_state = "SELF" } },
+                delegated = new DelegatedSummaryDto[0],
+            };
+            var roster = new GetLieutenantsResponseDto { lieutenants = new[] { new LieutenantRowDto { lieutenant_id = "lt-1", name = "Lt. Vesk" } } };
+            ecran.RendrePourTest(corps, roster, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            yield return null;
+            GesteVivant().onClick.Invoke();
+            float fin = Time.realtimeSinceStartup + 20f;
+            while (!TexteDeLEcran().Contains("Rien n’a été changé.") && Time.realtimeSinceStartup < fin) yield return null;
+            StringAssert.Contains("Rien n’a été changé.", TexteDeLEcran(), "le refus (une panne) est DIT après le rechargement");
+            Assert.AreEqual(DelegationScreenController.EtatEcran.Confier, ecran.EtatCourant, "PAS le tableau d'un succès");
+            Assert.IsFalse(TexteDeLEcran().Contains("127.0.0.1"), "jamais d'URL à l'écran");
+        }
+
+        // ═══ ㉜ lot 3b — le plafond et le verrou, dits AVANT l'appui (sans réseau) ═════════════
+
+        private static GetMetaTaskCategoriesResponseDto CorpsSupply(bool verrou = false, bool budgetServi = false, bool capAtteint = false) =>
+            new GetMetaTaskCategoriesResponseDto
+            {
+                task_categories = new[] { new TaskCategoryRowDto { category_key = "SUPPLY_SOURCING", category_id = 4, mastery_bucket = "ELIGIBLE",
+                                                                   progress_band = "HIGH", delegation_state = "SELF", promotion_lock = verrou } },
+                delegated = new DelegatedSummaryDto[0],
+                structural_budget = new StructuralBudgetDelegationDto { used = capAtteint ? 1 : 0, cap_reached = capAtteint,
+                                                                        decisions_this_session = new DecisionDeSessionDto[0] },
+                StructuralBudgetServi = budgetServi,
+            };
+
+        private static readonly GetLieutenantsResponseDto UnLieutenant =
+            new GetLieutenantsResponseDto { lieutenants = new[] { new LieutenantRowDto { lieutenant_id = "lt-1", name = "Lt. Vesk" } } };
+
+        /// <summary>B1 — le budget de `task-categories` (déclaré) ne vaut que s'il est SERVI : absent (aujourd'hui), le jeton de
+        /// l'ouverture de session reste ; servi avec `cap_reached`, il éteint le jeton PARTAGÉ avant tout appui.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationB1_LeBudgetServi_SeulementSIlEstServi()
+        {
+            var ecran = MonterEcran();
+            ecran.SetBaseUrl("http://127.0.0.1:9");
+            yield return null;
+            MafiaCleanCity.Shell.JetonDeStructure.Publier(1, true);   // l'ouverture de session a dit : dépensé
+            ecran.RendrePourTest(CorpsSupply(budgetServi: false), UnLieutenant, jetonDepense: true);
+            Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint,
+                "un budget ABSENT (objet par défaut de JsonUtility) n'écrase pas le jeton de l'ouverture");
+
+            MafiaCleanCity.Shell.JetonDeStructure.OublierPourTest();
+            ecran.RendrePourTest(CorpsSupply(budgetServi: true, capAtteint: true), UnLieutenant, jetonDepense: false);
+            Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "servi et atteint : le jeton partagé s'éteint");
+            Assert.IsTrue(ecran.JetonDepense);
+            Assert.IsNull(GesteVivant(), "plus de geste vivant AVANT l'appui");
+        }
+
+        /// <summary>B2 — la pression après une décision : `decisions_remaining` décide, `decisions_this_session_display` (cadence
+        /// d'affichage) JAMAIS.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationB2_LaPression_LeResteEnforceDecide_JamaisLaCadence()
+        {
+            var ecran = MonterEcran();
+            yield return null;
+            ecran.PrendreLaPression(new GetMetaPressureResponseDto { decisions_remaining = 0, decisions_this_session_display = 12 });
+            Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "reste 0 : dépensé, même si la cadence affiche 12");
+            Assert.IsTrue(ecran.JetonDepense);
+            ecran.PrendreLaPression(new GetMetaPressureResponseDto { decisions_remaining = 1, decisions_this_session_display = 0 });
+            Assert.IsFalse(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "reste 1 : libre, même si la cadence affiche 0");
+            Assert.IsFalse(ecran.JetonDepense);
+        }
+
+        /// <summary>B3 — le verrou de promotion (déclaré) éteint le geste AVANT l'appui et dit pourquoi, avec le mot servi de la
+        /// table 44 — distinct du plafond, qui reste libre.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationB3_LeVerrou_EteintLeGesteEtLeDit()
+        {
+            var ecran = MonterEcran();
+            ecran.SetBaseUrl("http://127.0.0.1:9");
+            yield return null;
+            ecran.RendrePourTest(CorpsSupply(verrou: true), UnLieutenant, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            yield return null;
+            Assert.IsNull(GesteVivant(), "verrou actif : « La lui confier » n'est pas vivant");
+            StringAssert.Contains("un changement est déjà en cours sur cette charge", TexteDeLEcran(), "le verrou se DIT, avant l'appui");
+            Assert.IsFalse(ecran.JetonDepense, "le verrou n'est pas le plafond : le jeton reste libre");
+
+            ecran.RendrePourTest(CorpsSupply(verrou: false), UnLieutenant, jetonDepense: false);
+            ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
+            yield return null;
+            Assert.IsNotNull(GesteVivant(), "contrôle : sans verrou, le geste est vivant");
+        }
+
+        // ═══ ㉜ lot 4 — le cadre 77 honnête ═════════════════════════════════════════════════
+
+        private static GetMetaTaskCategoriesResponseDto AvecDecisions(bool servi, params (string type, string cle)[] decisions)
+        {
+            GetMetaTaskCategoriesResponseDto c = CorpsSupply(budgetServi: servi, capAtteint: true);
+            c.structural_budget.decisions_this_session =
+                decisions.Select(d => new DecisionDeSessionDto { decision_type = d.type, category_key = d.cle }).ToArray();
+            return c;
+        }
+
+        /// <summary>D1 — « Vous avez déjà confié {charge} aujourd’hui. » ne se dit que depuis une décision CONFIER SERVIE, sur une
+        /// charge nommée ; {charge} vient de la famille « en phrase » (jamais un titre mis en minuscules).</summary>
+        [Test, Category("EcranDelegation")]
+        public void EcranDelegationD1_LaDecisionDuJour_SeulementServieEtConfiee()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            Assert.AreEqual("Vous avez déjà confié l’embauche aujourd’hui.",
+                DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(true, ("TASK_RETIREMENT", "LIEUTENANT_HIRING"))));
+            Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(false, ("TASK_RETIREMENT", "LIEUTENANT_HIRING"))),
+                "budget NON servi (aujourd'hui) : rien — pas d'affirmation sans lecture");
+            Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(true, ("TASK_RECALL", "SUPPLY_SOURCING"))),
+                "une REPRISE n'est pas « confié »");
+            Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(true, ("TASK_RETIREMENT", "SUPPLY_SOURCING"),
+                ("BUILDING_DEMOLITION", null))), "la DERNIÈRE décision est un autre site structurel : rien");
+            Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(true, ("TASK_RETIREMENT", "__HORS__"))),
+                "charge inconnue : rien plutôt qu'une clé brute");
+            Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(true)), "aucune décision servie");
+            CollectionAssert.AreEqual(new[] { "les tournées", "l’embauche", "l’approvisionnement", "la chaleur" },
+                new[] { "ROUTE_ASSIGNMENT", "LIEUTENANT_HIRING", "SUPPLY_SOURCING", "HEAT_MANAGEMENT" }
+                    .Select(DelegationScreenController.ChargeEnPhrase).ToArray(), "les replis de `delegation.charge_phrase.*` (table 56), à l'octet");
+        }
+
+        /// <summary>D2 — le rendu « déjà tranché » sans décision servie : plus de « une charge ce matin », aucune phrase de décision.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationD2_DejaTranche_SansDecisionServie_RienNEstAffirme()
+        {
+            var ecran = MonterEcran();
+            yield return null;
+            ecran.RendrePourTest(CorpsSupply(), UnLieutenant, jetonDepense: true);
+            yield return null;
+            string tout = TexteDeLEcran();
+            Assert.IsFalse(tout.Contains("ce matin"), "« ce matin » n'a aucune source");
+            Assert.IsFalse(tout.Contains("Vous avez déjà confié"), "aucune décision servie : on n'affirme pas qu'une charge a été confiée");
+            StringAssert.Contains("plus de décision aujourd'hui", tout, "contrôle positif : c'est bien l'état du cadre 77");
+        }
+
+        /// <summary>Le bouton du geste (`Geste` → sa zone `Touche`), s'il est vivant — un geste mort n'a AUCUN gestionnaire.</summary>
+        private Button GesteVivant()
+        {
+            foreach (Transform t in RacineEcran().GetComponentsInChildren<Transform>(true))
+                if (t.name == "Geste" && t.gameObject.activeInHierarchy)
+                {
+                    Transform touche = t.Find("Touche");
+                    if (touche != null) return touche.GetComponent<Button>();
+                }
+            return null;
         }
 
         /// <summary>Le corps réel MESURÉ sur un compte frais, épinglé : quatre charges, toutes en
@@ -318,7 +580,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// geste « en confier une » INOPÉRANT au premier jour, et donc ce que l'écran doit dire.
         /// ⛔ L'épingle porte sur des VALEURS présentes, jamais sur l'absence d'une clé : une
         /// assertion d'absence resterait verte le jour où la valeur apparaît.</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationP1_UnCompteFraisTientSesQuatreCharges()
         {
             yield return OuvrirJoueurFrais();
@@ -353,7 +615,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// ⚠️ Un corps fabriqué ne prouve JAMAIS que le back émet cette forme — c'est le rôle des
         /// deux tests de parcours ci-dessus. Il prouve seulement le rendu, et il permet d'exercer
         /// l'état « confié » qu'un compte frais ne peut pas atteindre (il faudrait `ELIGIBLE`).</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationE1_DeuxChargesConfiees_LeTitreEtLesNomsSuivent()
         {
             var ecran = MonterEcran();
@@ -396,7 +658,7 @@ namespace MafiaCleanCity.Operational.Tests
 
         /// <summary>Le jeton dépensé change le titre, éteint le geste, et le DIT. C'est l'état
         /// m-77, et c'est la propriété que les trois écrans du jeton (㉜ ㉝ ㉞) doivent partager.</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationE2_JetonDepense_LeGesteSeteintEtLeDit()
         {
             var ecran = MonterEcran();
@@ -428,7 +690,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// `live` — donc ce test épingle la seule chose qui compte : que l'écran en montre HUIT et
         /// que son texte parle bien de huit. *Un écran qui se contredit lui-même apprend au joueur
         /// à ne pas le croire.*</summary>
-        [UnityTest]
+        [UnityTest, Category("EcranDelegation")]
         public IEnumerator EcranDelegationE3_LaReserveMontreLesHuitDontElleParle()
         {
             var ecran = MonterEcran();

@@ -49,6 +49,17 @@ namespace MafiaCleanCity.Operational
         [Header("Backend")]
         [SerializeField] private string baseUrl = "http://localhost";
 
+        /// <summary>Pointe l'écran sur une autre pile (un test sans réseau : un port fermé). Re-pointe le client déjà construit.</summary>
+        public void SetBaseUrl(string url)
+        {
+            baseUrl = url;
+            if (client != null) client.BaseUrl = url;
+        }
+
+        /// <summary>㉜ lot 1 — le code de charge de la DERNIÈRE requête partie (confier, reprendre, aperçu) : le code SERVI de la
+        /// ligne, jamais une copie client. Posé AVANT l'envoi.</summary>
+        public int DerniereCategorieDemandee { get; private set; }
+
         // ═══ Contrat de locataire ════════════════════════════════════════════════════════════
 
         private Transform mountParent;
@@ -162,6 +173,7 @@ namespace MafiaCleanCity.Operational
         private int candidatIndex;
         private GetMetaRecallPreviewResponseDto apercuCourant;
         private string refusAffiche;
+        private string phraseIndisponible;
 
         private float Px(float css) =>
             EchelleMaquette.Px(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar6);
@@ -319,7 +331,8 @@ namespace MafiaCleanCity.Operational
 
             yield return client.GetMetaTaskCategories(token,
                 dto => DernierChargement = dto,
-                refus => { DernierCodeErreur = refus.statut; DerniereErreur = refus.message; });
+                refus => { DernierCodeErreur = refus.statut; DerniereErreur = refus.message; phraseIndisponible = PhraseDeRefus(refus); });
+            PrendreLeBudgetServi(DernierChargement);
 
             if (DernierChargement != null)
             {
@@ -367,6 +380,7 @@ namespace MafiaCleanCity.Operational
             DernierRoster = roster;
             JetonDepenseConnu = jetonDepense.HasValue;
             JetonDepense = jetonDepense.GetValueOrDefault();
+            PrendreLeBudgetServi(dto);   // même chemin que `Charger` : un budget servi l'emporte sur l'état passé au test
             AppliquerEtat(dto);
         }
 
@@ -451,7 +465,11 @@ namespace MafiaCleanCity.Operational
 
             if (!jetonDispo)
             {
-                EcrireDit(pied, "Vous avez déjà confié une charge ", "ce matin", ".");
+                // ㉜ lot 4 (cadre 77 honnête) : plus de « Vous avez déjà confié une charge ce matin. » — « ce matin » n'avait aucune
+                // source, et « confié » était AFFIRMÉ alors que le plafond couvre aussi la reprise et tous les sites structurels du
+                // gouverneur. La phrase ne se dit que si la décision de la session est SERVIE (`decisions_this_session`) ; sinon, rien.
+                string decisionDuJour = DitDeLaDecisionDuJour(DernierChargement);
+                if (decisionDuJour != null) EcrireDit(pied, decisionDuJour, "", "");
                 ConstruireGeste(pied, "EN CONFIER UNE", "plus de décision aujourd'hui", true, null);
                 ConstruireRien(pied, "Une seule décision de structure par journée", ", confier et reprendre "
                     + "comprises. Ce n'est pas une limite d'énergie : c'est pour qu'une maison ne se redessine "
@@ -476,7 +494,7 @@ namespace MafiaCleanCity.Operational
                 ConstruireGeste(pied, "EN CONFIER UNE", "aucune n'est encore prête", true, null);
             }
 
-            if (refusAffiche != null) ConstruireRien(pied, "Refusé", " : " + refusAffiche);
+            if (refusAffiche != null) ConstruireRien(pied, "", refusAffiche);   // ㉜ lot 3 : la phrase servie, sans « Refusé : » en dur
         }
 
         // ── m-74 — confier ───────────────────────────────────────────────────────────────────
@@ -509,13 +527,13 @@ namespace MafiaCleanCity.Operational
                       + "les commandes. »   ▸ un autre",
                       () => { candidatIndex++; AppliquerEtat(DernierChargement); });
 
-            bool possible = visee != null && EstPrete(visee) && JetonDisponible;
+            bool possible = visee != null && EstPrete(visee) && JetonDisponible && CodeServi(visee) && !visee.promotion_lock;
             ConstruireGeste(pied, "LA LUI CONFIER",
                             possible ? "c'est votre décision du jour" : RaisonDuRefus(visee),
                             !possible,
                             possible ? (System.Action)(() => StartCoroutine(Confier(visee, candidat))) : null);
 
-            if (refusAffiche != null) ConstruireRien(pied, "Refusé", " : " + refusAffiche);
+            if (refusAffiche != null) ConstruireRien(pied, "", refusAffiche);
         }
 
         // ── m-76 — reprendre ─────────────────────────────────────────────────────────────────
@@ -530,9 +548,7 @@ namespace MafiaCleanCity.Operational
             if (visee != null) ConstruirePlaqueDeCharge(zoneCentrale, visee, false);
 
             if (apercuCourant != null) ConstruireApercu(zoneCentrale, apercuCourant);
-            else ConstruireNote(zoneCentrale, refusAffiche != null
-                ? "On ne peut pas vous dire ce que ça coûterait : " + refusAffiche
-                : "On demande ce que ça coûterait…");
+            else ConstruireNote(zoneCentrale, refusAffiche ?? "On demande ce que ça coûterait…");   // ㉜ lot 3 : le refus en mots
 
             ConstruireNote(zoneCentrale,
                 "Ceci est un avertissement, pas un mur : le jeu vous laissera le faire.");
@@ -541,9 +557,11 @@ namespace MafiaCleanCity.Operational
                       " « Vous pouvez la reprendre. Il ne le prendra pas bien, et ce qu'il savait faire, "
                       + "vous devrez le réapprendre. »");
 
-            bool possible = visee != null && visee.delegation_state != "SELF" && JetonDisponible;
+            bool verrou = visee != null && visee.promotion_lock;
+            bool possible = visee != null && visee.delegation_state != "SELF" && JetonDisponible && CodeServi(visee) && !verrou;
             ConstruireGeste(pied, "LA REPRENDRE QUAND MÊME",
-                            possible ? "c'est votre décision du jour" : "plus de décision aujourd'hui",
+                            possible ? "c'est votre décision du jour"
+                                     : verrou && JetonDisponible ? PhraseDeRaison("promotion_lock_active") : "plus de décision aujourd'hui",
                             !possible,
                             possible ? (System.Action)(() => StartCoroutine(Reprendre(visee))) : null);
         }
@@ -580,7 +598,8 @@ namespace MafiaCleanCity.Operational
             Vider(pied);
             EcrireTete("Le tableau de service n'a pas répondu",
                        "On n'a pas pu lire ce que vous tenez. Rien n'a été changé.");
-            ConstruireNote(zoneCentrale, DerniereErreur ?? "raison inconnue");
+            // ㉜ lot 3 : la phrase servie du refus — `DerniereErreur` (anglais, diagnostic) reste un crochet de test, jamais un texte.
+            ConstruireNote(zoneCentrale, phraseIndisponible ?? PhraseDeRefus(default));
         }
 
         // ═══ Gestes ══════════════════════════════════════════════════════════════════════════
@@ -588,27 +607,29 @@ namespace MafiaCleanCity.Operational
         private IEnumerator Confier(TaskCategoryRowDto visee, LieutenantRowDto candidat)
         {
             refusAffiche = null;
-            int code = DelegationCatalogue.CodePour(visee.category_key);
+            plafondAtteintParRefus = false;
+            if (!CodeServi(visee)) yield break;
+            int code = visee.category_id;
+            DerniereCategorieDemandee = code;
             yield return client.PostMetaGraduation(token,
                 new PostMetaGraduationBody { category_id = code, lieutenant_id = candidat.lieutenant_id },
                 _ => { },
-                refus => refusAffiche = refus.message);
-            yield return Charger();
-            if (refusAffiche == null) AllerA(EtatEcran.Tableau);
-            else AppliquerEtat(DernierChargement);
+                PrendreLeRefus);
+            yield return ApresLeGeste();
         }
 
         private IEnumerator Reprendre(TaskCategoryRowDto visee)
         {
             refusAffiche = null;
-            int code = DelegationCatalogue.CodePour(visee.category_key);
+            plafondAtteintParRefus = false;
+            if (!CodeServi(visee)) yield break;
+            int code = visee.category_id;
+            DerniereCategorieDemandee = code;
             yield return client.PostMetaRecall(token,
                 new PostMetaRecallBody { category_id = code },
                 _ => { },
-                refus => refusAffiche = refus.message);
-            yield return Charger();
-            if (refusAffiche == null) AllerA(EtatEcran.Tableau);
-            else AppliquerEtat(DernierChargement);
+                PrendreLeRefus);
+            yield return ApresLeGeste();
         }
 
         /// <summary>Ouvre l'aperçu de reprise : c'est la SEULE transition d'état qui appelle le
@@ -621,11 +642,89 @@ namespace MafiaCleanCity.Operational
             EtatCourant = EtatEcran.Reprendre;
             AppliquerEtat(DernierChargement);
 
-            yield return client.GetMetaRecallPreview(token, DelegationCatalogue.CodePour(cleCategorie),
+            TaskCategoryRowDto ligne = Trouver(DernierChargement?.task_categories, cleCategorie);
+            if (!CodeServi(ligne)) yield break;
+            DerniereCategorieDemandee = ligne.category_id;
+            yield return client.GetMetaRecallPreview(token, ligne.category_id,
                 dto => apercuCourant = dto,
-                refus => refusAffiche = refus.message);
+                PrendreLeRefus);
 
             AppliquerEtat(DernierChargement);
+        }
+
+        /// <summary>㉜ lot 3 — après confier ou reprendre : relire le tableau, puis dire le refus s'il y en a eu un.
+        /// ⛔ LE REFUS EST GARDÉ À TRAVERS LE RECHARGEMENT. `Charger()` remet `refusAffiche` à null dès sa première ligne : avant ce
+        /// lot, un refus était donc EFFACÉ par le rechargement même qui suivait le geste, et l'écran repartait au tableau comme après
+        /// un SUCCÈS — tout refus du serveur était avalé en silence (mesuré à la relecture, 23/09).
+        /// Le plafond (409 STRUCTURAL_CAP_EXHAUSTED) mène au tableau « déjà tranché » (cadre 77), qui le dit lui-même.</summary>
+        private IEnumerator ApresLeGeste()
+        {
+            string refus = refusAffiche;
+            bool plafond = plafondAtteintParRefus;
+            yield return Charger();
+            // ㉜ lot 3b : après CHAQUE décision, le reste ENFORCÉ relu (`GET /v1/meta/pressure`, orchestrateur 23/09) — le plafond se
+            // dit AVANT l'appui suivant, plus seulement par le 409. Une lecture en échec ne change rien (le serveur reste juge).
+            yield return client.GetMetaPressure(token, PrendreLaPression, _ => { });
+            refusAffiche = refus;
+            // Succès, ou plafond : le tableau (le plafond s'y dit par le jeton éteint et le titre du cadre 77, pas par un pavé).
+            if (refus == null || plafond) { refusAffiche = null; AllerA(EtatEcran.Tableau); yield break; }
+            AppliquerEtat(DernierChargement);
+        }
+
+        private bool plafondAtteintParRefus;
+
+        /// <summary>㉜ lot 3 — un refus du serveur, EN MOTS. La phrase vient de la clé SERVIE du refus (`user_facing_i18n_key`) ; le
+        /// `message` anglais du serveur ne s'affiche plus jamais. Le 409 du PLAFOND (`STRUCTURAL_CAP_EXHAUSTED`, gouverneur de
+        /// structure) publie le jeton DÉPENSÉ (`JetonDeStructure`, partagé avec ㉝ ㉞) : il s'éteint dès le refus, d'après le refus
+        /// SERVI, jamais d'après un compteur local.
+        /// Les trois `delegation.refus.*` de la table 44 se choisissent par `payload_vars.reason` (annoncé par le back le 23/09, déclaré
+        /// ici) ; sans raison servie — c'est le cas aujourd'hui : le verrou et les deux autres sortent en `RESOURCE_STATE_CONFLICT` avec
+        /// la même clé —, la phrase GÉNÉRIQUE servie de la clé du refus.</summary>
+        private void PrendreLeRefus(DelegationClient.Refus refus)
+        {
+            if (EstLePlafond(refus))
+            {
+                plafondAtteintParRefus = true;
+                JetonDeStructure.Publier(JetonDeStructure.Utilises, true);
+                JetonDepenseConnu = true;
+                JetonDepense = true;
+            }
+            refusAffiche = PhraseDeRefus(refus);
+        }
+
+        public static bool EstLePlafond(DelegationClient.Refus refus) => refus.code == "STRUCTURAL_CAP_EXHAUSTED";
+
+        /// <summary>La phrase d'un refus : la clé servie du refus, sinon (pas de corps d'erreur : une panne de transport) la phrase de
+        /// repli du client. Jamais `refus.message`, jamais une URL.</summary>
+        public static string PhraseDeRefus(DelegationClient.Refus refus)
+        {
+            string parRaison = PhraseDeRaison(refus.raison);
+            if (parRaison != null) return parRaison;
+            string repli = Lib("Rien n’a été changé.");
+            return string.IsNullOrEmpty(refus.cle) ? repli : MafiaCleanCity.I18n.Libelle.Gabarit(refus.cle, repli);
+        }
+
+        /// <summary>La raison SERVIE d'un 409 de la délégation → son mot (table 44, `delegation.refus.*`, servis). Raison absente ou
+        /// inconnue ⇒ null : l'appelant dit la phrase générique servie, jamais la raison brute.</summary>
+        public static string PhraseDeRaison(string raison)
+        {
+            switch (raison)
+            {
+                case "not_self": return MafiaCleanCity.I18n.Libelle.De("delegation", "refus", "la charge n’est plus à vous");
+                case "not_delegated": return MafiaCleanCity.I18n.Libelle.De("delegation", "refus", "la charge n’est plus confiée");
+                case "promotion_lock_active": return MafiaCleanCity.I18n.Libelle.De("delegation", "refus", "un changement est déjà en cours sur cette charge");
+                default: return null;
+            }
+        }
+
+        /// <summary>⛔ Réservé aux tests (㉜ lot 3) : applique un refus FABRIQUÉ, exactement comme le chemin d'un geste.</summary>
+        public void RefuserPourTest(DelegationClient.Refus refus)
+        {
+            refusAffiche = null;
+            plafondAtteintParRefus = false;
+            PrendreLeRefus(refus);
+            if (plafondAtteintParRefus) { refusAffiche = null; AllerA(EtatEcran.Tableau); return; }
+            if (DernierChargement != null) AppliquerEtat(DernierChargement);
         }
 
         // ═══ Lectures dérivées — chacune NOMMÉE, aucune ligne de logique dans le rendu ═══════
@@ -642,9 +741,67 @@ namespace MafiaCleanCity.Operational
 
         private static TaskCategoryRowDto PremierePrete(TaskCategoryRowDto[] rangs)
         {
-            foreach (TaskCategoryRowDto r in rangs) if (EstPrete(r)) return r;
+            foreach (TaskCategoryRowDto r in rangs) if (EstPrete(r) && !r.promotion_lock) return r;
             return null;
         }
+
+        /// <summary>㉜ lot 3b — le budget de structure SERVI par `task-categories` (déclaré, annoncé par le back) : relu à chaque
+        /// chargement, il publie le jeton PARTAGÉ. Absent du corps (c'est le cas aujourd'hui) ⇒ rien ne change : le jeton reste celui
+        /// de l'ouverture de session.</summary>
+        private void PrendreLeBudgetServi(GetMetaTaskCategoriesResponseDto dto)
+        {
+            if (dto == null || !dto.StructuralBudgetServi || dto.structural_budget == null) return;
+            JetonDeStructure.Publier(dto.structural_budget.used, dto.structural_budget.cap_reached);
+            JetonDepenseConnu = true;
+            JetonDepense = dto.structural_budget.cap_reached;
+        }
+
+        /// <summary>㉜ lot 3b — `GET /v1/meta/pressure` après une décision : `decisions_remaining == 0` ⇒ jeton DÉPENSÉ, publié pour
+        /// ㉝ ㉞. ⛔ `decisions_this_session_display` n'est JAMAIS lu : c'est une cadence d'affichage, pas le budget enforcé.</summary>
+        /// <summary>㉜ lot 4 — « Vous avez déjà confié {charge} aujourd’hui. » : seulement si le budget SERVI de `task-categories`
+        /// (déclaré, annoncé par le back) porte une décision CONFIER (`TASK_RETIREMENT`, structural-decision-catalogue.ts:73) sur une
+        /// charge nommée — la dernière de la session. Une reprise, un autre site structurel, ou un budget non servi ⇒ null : la table
+        /// 44 n'a de phrase que pour « confié », et on n'affirme pas une décision qu'on n'a pas lue.</summary>
+        public static string DitDeLaDecisionDuJour(GetMetaTaskCategoriesResponseDto dto)
+        {
+            if (dto == null || !dto.StructuralBudgetServi || dto.structural_budget?.decisions_this_session == null) return null;
+            DecisionDeSessionDto derniere = null;
+            foreach (DecisionDeSessionDto d in dto.structural_budget.decisions_this_session)
+                if (d != null) derniere = d;
+            if (derniere == null || derniere.decision_type != "TASK_RETIREMENT" || string.IsNullOrEmpty(derniere.category_key)) return null;
+            string charge = ChargeEnPhrase(derniere.category_key);
+            if (charge == null) return null;
+            var p = new System.Collections.Generic.Dictionary<string, string> { ["charge"] = charge };
+            return MafiaCleanCity.I18n.Libelle.Gabarit("delegation.bloc.vous_avez_deja_confie_charge_aujourd_hui",
+                "Vous avez déjà confié {charge} aujourd’hui.", p);
+        }
+
+        /// <summary>{charge} au milieu d'une phrase : la famille `delegation.charge_phrase.*` (table 56, tranché (d) : la casse est
+        /// un MOT, rien n'est mis en minuscules dans le code). Hors domaine ⇒ null (l'appelant ne dit rien plutôt qu'une clé brute).</summary>
+        public static string ChargeEnPhrase(string cle)
+        {
+            switch (cle)
+            {
+                case "ROUTE_ASSIGNMENT": return MafiaCleanCity.I18n.Libelle.ParValeur("delegation", "charge_phrase", "ROUTE_ASSIGNMENT", "les tournées");
+                case "LIEUTENANT_HIRING": return MafiaCleanCity.I18n.Libelle.ParValeur("delegation", "charge_phrase", "LIEUTENANT_HIRING", "l’embauche");
+                case "SUPPLY_SOURCING": return MafiaCleanCity.I18n.Libelle.ParValeur("delegation", "charge_phrase", "SUPPLY_SOURCING", "l’approvisionnement");
+                case "HEAT_MANAGEMENT": return MafiaCleanCity.I18n.Libelle.ParValeur("delegation", "charge_phrase", "HEAT_MANAGEMENT", "la chaleur");
+                default: return null;
+            }
+        }
+
+        public void PrendreLaPression(GetMetaPressureResponseDto p)
+        {
+            if (p == null) return;
+            bool depense = p.decisions_remaining <= 0;
+            JetonDeStructure.Publier(JetonDeStructure.Utilises, depense);
+            JetonDepenseConnu = true;
+            JetonDepense = depense;
+        }
+
+        /// <summary>㉜ lot 1 — une ligne porte-t-elle un code SERVI ? (`category_id` > 0 : `JsonUtility` rend 0 pour un champ absent.)
+        /// Sans code, aucune action ne part : envoyer 0, ou deviner un code, ferait agir le serveur sur la MAUVAISE charge.</summary>
+        public static bool CodeServi(TaskCategoryRowDto r) => r != null && r.category_id > 0;
 
         private static TaskCategoryRowDto Trouver(TaskCategoryRowDto[] rangs, string cle)
         {
@@ -658,6 +815,7 @@ namespace MafiaCleanCity.Operational
             if (!JetonDisponible) return "plus de décision aujourd'hui";
             if (visee == null) return "aucune charge visée";
             if (visee.delegation_state != "SELF") return "déjà confiée";
+            if (visee.promotion_lock) return PhraseDeRaison("promotion_lock_active");   // ㉜ lot 3b : le verrou, dit AVANT l'appui
             return DelegationResolvers.PhraseDeMaitrise(visee.mastery_bucket);
         }
 
@@ -1433,43 +1591,29 @@ namespace MafiaCleanCity.Operational
 
     }
 
-    /// <summary>㉜ — la copie CLIENT du catalogue de catégories. **C'est un pis-aller, et il est
-    /// déclaré comme tel.**
-    ///
-    /// ⛔ POURQUOI IL EXISTE. `GET /v1/meta/task-categories` sert `category_key` (une chaîne) ;
-    /// les trois routes d'action exigent `category_id` (un entier) — mesuré, un envoi de la clé
-    /// rend 422. La correspondance clé→code n'est servie par AUCUNE route : elle vit dans
-    /// `services/game-back/src/meta_progression/task-category-catalogue.ts` (codes lus le
-    /// 2026-09-03 : 1, 2, 4, 5 pour les LIVE — noter que **3 manque**, il appartient à
-    /// `LEK_CONTEST`, en réserve). Sans cette table, l'écran peut TOUT afficher et ne peut RIEN
-    /// faire.
-    /// ⇒ Dette **TD-530** : ajouter `category_id` à la projection (un champ additif, la valeur est
-    /// déjà l'index de la boucle qui construit la réponse), puis SUPPRIMER cette table.
-    /// ⚠️ Le jour où le back ajoute une 5ᵉ catégorie LIVE, cette table ne la connaîtra pas et
-    /// `CodePour` jettera — bruyamment, et c'est voulu : un repli silencieux enverrait un code
-    /// faux, donc déléguerait la MAUVAISE charge. Le test de classe
-    /// `Toutes_les_categories_servies_ont_un_code` est le détecteur : il compare la table aux
-    /// clés que la route rend VRAIMENT.
-    ///
-    /// Les libellés et sous-titres, eux, viennent de la maquette (`generateur-service.py`,
-    /// `CAT` et `RESERVE`) : ce sont des textes d'écran, aucune route n'en sert.</summary>
+    /// <summary>㉜ — les TEXTES des charges, côté client. ✅ Ce n'est PLUS une copie du catalogue du back : les CODES en sont retirés
+    /// (lot 1, 2026-09-23) — `category_id` est SERVI par `GET /v1/meta/task-categories` depuis TD-530
+    /// (`meta-progression.projection.service.ts:70`), et c'est lui qui part vers les trois routes d'action. Cette table portait
+    /// `CodePour`, qui JETAIT sur une charge inconnue : une cinquième charge LIVE aurait fait tomber l'écran, là où le code servi
+    /// la fait simplement fonctionner.
+    /// Les libellés et sous-titres restent ici en attendant le lot 2 (les clés servies `delegation.charge.*` / `delegation.bloc.*`
+    /// de la table 44) ; la réserve (cadre 78) attend son retrait (tranché (a) du 23/09).</summary>
     public static class DelegationCatalogue
     {
         public struct Charge
         {
             public string cle;
-            public int code;
             public string libelle;
             public string sous;
         }
 
-        /// <summary>Les 4 LIVE — clé, code, et les textes de la planche.</summary>
+        /// <summary>Les 4 LIVE — clé et textes de la planche.</summary>
         public static readonly Charge[] Live =
         {
-            new Charge { cle = "ROUTE_ASSIGNMENT",  code = 1, libelle = "Les tournées",          sous = "qui livre quoi, et par où" },
-            new Charge { cle = "LIEUTENANT_HIRING", code = 2, libelle = "L'embauche",            sous = "qui entre dans la maison" },
-            new Charge { cle = "SUPPLY_SOURCING",   code = 4, libelle = "L'approvisionnement",   sous = "ce qu'on commande, et à qui" },
-            new Charge { cle = "HEAT_MANAGEMENT",   code = 5, libelle = "La chaleur",            sous = "ce qu'on fait quand la ville s'échauffe" },
+            new Charge { cle = "ROUTE_ASSIGNMENT",  libelle = "Les tournées",          sous = "qui livre quoi, et par où" },
+            new Charge { cle = "LIEUTENANT_HIRING", libelle = "L'embauche",            sous = "qui entre dans la maison" },
+            new Charge { cle = "SUPPLY_SOURCING",   libelle = "L'approvisionnement",   sous = "ce qu'on commande, et à qui" },
+            new Charge { cle = "HEAT_MANAGEMENT",   libelle = "La chaleur",            sous = "ce qu'on fait quand la ville s'échauffe" },
         };
 
         /// <summary>Les 8 RESERVED. Elles ne sont projetées par AUCUNE route (la projection filtre
@@ -1479,24 +1623,15 @@ namespace MafiaCleanCity.Operational
         /// dans un écran que le joueur va lire.</summary>
         public static readonly Charge[] Reserve =
         {
-            new Charge { cle = "LEK_CONTEST",             code = 3,   libelle = "Le Lek",                       sous = "les contestations de coin" },
-            new Charge { cle = "CASH_LAUNDERING",         code = 6,   libelle = "Le blanchiment",               sous = "faire rentrer l'argent" },
-            new Charge { cle = "NODE_RETOOLING",          code = 7,   libelle = "Le réoutillage",               sous = "changer ce que produit un site" },
-            new Charge { cle = "ROUTE_NETWORK_TOPOLOGY",  code = 101, libelle = "La topologie du réseau",       sous = "redessiner les routes" },
-            new Charge { cle = "DELEGATION_ARCHITECTURE", code = 102, libelle = "L'architecture de délégation", sous = "déléguer la délégation elle-même" },
-            new Charge { cle = "LEK_NETWORK_DESIGN",      code = 103, libelle = "Le dessin du réseau Lek",      sous = "où poser les coins" },
-            new Charge { cle = "SUPPLY_WEB_DESIGN",       code = 104, libelle = "La toile d'appro",             sous = "plusieurs fournisseurs à la fois" },
-            new Charge { cle = "HEAT_POSTURE_DOCTRINE",   code = 105, libelle = "La doctrine de chaleur",       sous = "la posture, pas le geste du jour" },
+            new Charge { cle = "LEK_CONTEST",             libelle = "Le Lek",                       sous = "les contestations de coin" },
+            new Charge { cle = "CASH_LAUNDERING",         libelle = "Le blanchiment",               sous = "faire rentrer l'argent" },
+            new Charge { cle = "NODE_RETOOLING",          libelle = "Le réoutillage",               sous = "changer ce que produit un site" },
+            new Charge { cle = "ROUTE_NETWORK_TOPOLOGY",  libelle = "La topologie du réseau",       sous = "redessiner les routes" },
+            new Charge { cle = "DELEGATION_ARCHITECTURE", libelle = "L'architecture de délégation", sous = "déléguer la délégation elle-même" },
+            new Charge { cle = "LEK_NETWORK_DESIGN",      libelle = "Le dessin du réseau Lek",      sous = "où poser les coins" },
+            new Charge { cle = "SUPPLY_WEB_DESIGN",       libelle = "La toile d'appro",             sous = "plusieurs fournisseurs à la fois" },
+            new Charge { cle = "HEAT_POSTURE_DOCTRINE",   libelle = "La doctrine de chaleur",       sous = "la posture, pas le geste du jour" },
         };
-
-        public static int CodePour(string cle)
-        {
-            foreach (Charge c in Live) if (c.cle == cle) return c.code;
-            foreach (Charge c in Reserve) if (c.cle == cle) return c.code;
-            throw new System.ArgumentOutOfRangeException(nameof(cle), cle,
-                "DelegationCatalogue : catégorie inconnue du client. Le back en sert une que cette "
-                + "table ignore — c'est TD-530 qui se rappelle à nous, pas un cas à replier en silence.");
-        }
 
         public static string LibellePour(string cle)
         {
@@ -1512,12 +1647,6 @@ namespace MafiaCleanCity.Operational
             return "";
         }
 
-        /// <summary>Les clés que la table connaît — le dénominateur du test de couverture.</summary>
-        public static IEnumerable<string> ToutesLesCles()
-        {
-            foreach (Charge c in Live) yield return c.cle;
-            foreach (Charge c in Reserve) yield return c.cle;
-        }
     }
 
     /// <summary>㉜ — les correspondances « valeur du domaine → apparence / phrase », chacune en

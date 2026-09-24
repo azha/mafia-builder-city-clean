@@ -24,8 +24,11 @@ namespace MafiaCleanCity.Operational
     /// chaîne absente et `false`/`null` pour un objet absent, ce que le rendu doit traiter comme
     /// « pas applicable » et jamais comme une valeur.
     ///
-    /// ⛔⛔ CE QUE CETTE PROJECTION NE SERT PAS, ET C'EST LE DÉFAUT QUI COMMANDE TOUT L'ÉCRAN :
-    /// **elle ne sert pas le `category_id`**. Les trois routes d'action l'exigent, et l'exigent
+    /// ✅ TD-530 FERMÉE CÔTÉ BACK (mesuré le 2026-09-23, écart ㉜ `1b45be42`) : `category_id` EST servi
+    /// (`meta-progression.projection.service.ts:70`), déclaré ci-dessous (forme G), et la copie client des codes est retirée.
+    /// Le paragraphe suivant est l'HISTOIRE de ce défaut, gardée pour ce qu'elle apprend.
+    /// ⛔⛔ CE QUE CETTE PROJECTION NE SERVAIT PAS, ET C'ÉTAIT LE DÉFAUT QUI COMMANDAIT TOUT L'ÉCRAN :
+    /// **elle ne servait pas le `category_id`**. Les trois routes d'action l'exigent, et l'exigent
     /// en ENTIER (`intField(..., 'int4')`, `meta-progression.controller.ts:127`/`:167` ;
     /// `@Param('categoryId', IntParam)` `:184`). Mesuré : `POST /v1/meta/recall` avec
     /// `{"category_id":"ROUTE_ASSIGNMENT"}` rend **422 VALIDATION_FAILED**, message
@@ -44,6 +47,11 @@ namespace MafiaCleanCity.Operational
         /// (`meta-progression.projection.service.ts:115`). C'est pourquoi le cadre m-78 (« ce qui
         /// n'est pas encore à confier ») ne peut pas venir du réseau.</summary>
         public string category_key;
+
+        /// <summary>Le CODE de la charge (`TASK_CATEGORY_CATALOGUE.code` : 1, 2, 4, 5 pour les LIVE), SERVI depuis TD-530
+        /// (`meta-progression.projection.service.ts:70`) — celui que les trois routes d'action exigent. ⚠️ `JsonUtility` rend 0
+        /// pour un champ absent : 0 n'est jamais un code, et aucune action ne part avec lui.</summary>
+        public int category_id;
 
         /// <summary>`NASCENT` · `LEARNING` · `PRACTICED` · `ELIGIBLE` (`mastery-bucket.ts:33`).
         /// ⛔ `ELIGIBLE` N'EST PAS UN LIBELLÉ, C'EST LE PRÉDICAT D'ÉLIGIBILITÉ LUI-MÊME : la garde
@@ -88,6 +96,11 @@ namespace MafiaCleanCity.Operational
         /// <summary>Cette catégorie a déjà été reprise au moins une fois. SERVI, NON DESSINÉ ;
         /// employé comme sous-ligne.</summary>
         public bool recall_scar;
+
+        /// <summary>㉜ lot 3b — DÉCLARÉ AVANT D'ÊTRE SERVI (forme G, annonce du back du 23/09, « petit lot délégation ») : un verrou
+        /// de promotion ACTIF sur cette charge (confier OU reprendre refusés, 409 `promotion_lock_active`). Absent aujourd'hui ⇒ false,
+        /// c'est-à-dire l'état d'avant ce champ : le serveur reste juge et son refus se dit en mots.</summary>
+        public bool promotion_lock;
     }
 
     /// <summary>`successor` — le domaine qu'une graduation débloque. `substrate` vaut toujours
@@ -120,7 +133,51 @@ namespace MafiaCleanCity.Operational
     {
         public TaskCategoryRowDto[] task_categories;
         public DelegatedSummaryDto[] delegated;
+
+        /// <summary>㉜ lot 3b — DÉCLARÉ AVANT D'ÊTRE SERVI (forme G, annonce du back du 23/09) : le budget de structure voisin,
+        /// relu à chaque chargement. ⛔ `JsonUtility` construit un objet PAR DÉFAUT quand le champ est absent — « absent » se lirait
+        /// « 0 utilisé, plafond libre » et écraserait le jeton publié à l'ouverture. On ne s'en sert donc que si
+        /// <see cref="StructuralBudgetServi"/> (posé par le client d'après le corps BRUT).</summary>
+        public StructuralBudgetDelegationDto structural_budget;
+
+        /// <summary>Vrai seulement si le corps servi PORTE `structural_budget` (lu dans le texte brut par `DelegationClient`).</summary>
+        [NonSerialized] public bool StructuralBudgetServi;
     }
+
+    /// <summary>`structural_budget` de `task-categories` (annoncé) : `{used, cap_reached, decisions_this_session[]}`.</summary>
+    [Serializable]
+    public class StructuralBudgetDelegationDto
+    {
+        public int used;
+        public bool cap_reached;
+        public DecisionDeSessionDto[] decisions_this_session;
+    }
+
+    /// <summary>Une décision de structure prise dans la session : `decision_type` (`StructuralDecisionType` du gouverneur —
+    /// `TASK_RETIREMENT` pour confier, `TASK_RECALL` pour reprendre, structural-decision-catalogue.ts:73, 83 — ou un autre site
+    /// structurel) et `category_key` quand la décision porte sur une charge.</summary>
+    [Serializable]
+    public class DecisionDeSessionDto
+    {
+        public string decision_type;
+        public string category_key;
+    }
+
+    /// <summary>㉜ lot 3b — `GET /v1/meta/pressure` (meta_progression/pressure-tier.controller.ts:48 ; `PressureProjection`,
+    /// pressure-tier.service.ts:55-60) : le budget ENFORCÉ relu à chaque appel. ⛔ `decisions_remaining` est le vrai reste
+    /// (plafond − utilisées) ; `decisions_this_session_display` est une CADENCE D'AFFICHAGE (un autre axe), jamais lue pour le
+    /// jeton (orchestrateur, 23/09). `observation_remaining_h` est omis hors fenêtre (0 ici).</summary>
+    [Serializable]
+    public class GetMetaPressureResponseDto
+    {
+        public int pressure_tier;
+        public int decisions_remaining;
+        public int decisions_this_session_display;
+        public int observation_remaining_h;
+    }
+
+    [Serializable] public class GetMetaPressurePayload { public GetMetaPressureResponseDto data; }
+    [Serializable] public class GetMetaPressureEnvelope { public GetMetaPressurePayload payload; }
 
     [Serializable] public class GetMetaTaskCategoriesPayload { public GetMetaTaskCategoriesResponseDto data; }
     [Serializable] public class GetMetaTaskCategoriesEnvelope { public GetMetaTaskCategoriesPayload payload; }
@@ -248,7 +305,14 @@ namespace MafiaCleanCity.Operational
     /// arriverait à l'écran sous la forme « HTTP/1.1 422 Unprocessable Entity » — le joueur
     /// lirait un code là où le serveur a écrit une phrase.
     /// Forme mesurée : `payload.error = { code, http_status, user_facing_i18n_key, message, … }`.</summary>
-    [Serializable] public class ApiErreurDto { public string code; public int http_status; public string user_facing_i18n_key; public string message; }
+    [Serializable] public class ApiErreurDto { public string code; public int http_status; public string user_facing_i18n_key; public ApiErreurVarsDto payload_vars; public string message; }
+
+    /// <summary>㉜ lot 3 — `payload.error.payload_vars` (protocol/envelope.ts:117), les variables SERVIES d'un refus.
+    /// `category_id` : tous les 409 de la délégation (graduation.service.ts, promotion-lock.service.ts). `retry_scope` : le plafond
+    /// (`next_session`, structural-decision-governor.service.ts:102). `reason` : DÉCLARÉ AVANT D'ÊTRE SERVI (forme G, annonce du back
+    /// du 23/09 : `not_self` · `not_delegated` · `promotion_lock_active` sur les 409 `RESOURCE_STATE_CONFLICT`) — absent aujourd'hui,
+    /// `JsonUtility` le rend null et l'écran dit alors la phrase générique servie.</summary>
+    [Serializable] public class ApiErreurVarsDto { public string reason; public string retry_scope; public int category_id; }
     [Serializable] public class ApiErreurPayload { public ApiErreurDto error; }
     [Serializable] public class ApiErreurEnvelope { public ApiErreurPayload payload; }
 }

@@ -30,7 +30,8 @@ namespace MafiaCleanCity.Operational.Tests
     /// quatre tours de gardes pixel n'avaient pas vu la classe « occlusion par fratrie » ; une
     /// garde d'ORDRE l'a fermée en douze lignes. Une propriété structurelle ne dépend d'aucune
     /// valeur de pixel, donc d'aucune résolution.</summary>
-    [Category("ScreenB3")]
+    // ⛔ `ScreenB3` est posée TEST PAR TEST, pas sur la classe (lot de classe du 2026-09-24) : posée sur la classe, elle emportait la
+    // capture (Cliche…) avec l'écran — une capture exige l'identité de capture et écrit des PNG. La capture ne porte que sa catégorie.
     public class ReputationScreenPlayModeTests
     {
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un
@@ -173,6 +174,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// la garde (b) ferme deux INSTANCES, dont le `Cou` qui n'a pas de contour et sert de témoin
         /// contre l'autre mécanisme (F4).</summary>
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3M1_LaFigureEstSurLAxeDeSaCarte()
         {
             yield return OuvrirJoueurFrais();
@@ -293,6 +295,7 @@ namespace MafiaCleanCity.Operational.Tests
         ///   et la garde serait verte pour une raison sans rapport — le monde le plus dégénéré qui
         ///   la satisferait.</summary>
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3M2_LInterligneDuParagraphe_SuitLaMaquette()
         {
             yield return OuvrirJoueurFrais();
@@ -381,6 +384,7 @@ namespace MafiaCleanCity.Operational.Tests
         }
 
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3S1_ToutGraphic_PorteSonCanvasRenderer()
         {
             yield return OuvrirJoueurFrais();
@@ -420,6 +424,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// n'est pas fermée ici, et la nommer vaut mieux que de la croire couverte — c'est le
         /// juge visuel ⊥ qui la voit, à deux résolutions.</summary>
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3S2_ConventionDeFratrie_ChaqueContourEstPremierEnfant()
         {
             yield return OuvrirJoueurFrais();
@@ -463,6 +468,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// (catalogue vide ⇒ repli = la valeur servie à e7f52351). Aucune note de DA à l'écran : le corps du panneau n'est rendu
         /// qu'en 119 (la 1re phrase, servie). Contrôle : 120 et 144 se distinguent par le compte des voyants absorbés.</summary>
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3M3_LesQuatreEtats_LesMotsServis_SansNoteDeDA()
         {
             var ecran = MonterEcran();
@@ -724,6 +730,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// dans ce dépôt — quatre tours de gardes de valeur n'avaient pas vu l'occlusion par
         /// fratrie, une garde d'ordre l'a fermée en douze lignes.</summary>
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3S3_AucunDecoratif_EnfantDirectDUnLayoutGroup()
         {
             yield return OuvrirJoueurFrais();
@@ -777,6 +784,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// Le test porte sur la SORTIE (le compte de voyants allumés), pas sur les libellés :
         /// il reste vrai si quelqu'un réécrit les textes, et rouge s'il réinverse le sens.</summary>
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3P1_PolariteDesTells_VierteZero_EtControlePositifQuatre()
         {
             yield return OuvrirJoueurFrais();
@@ -817,6 +825,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// « note »). Un « — » sous « ENFREINTES » disait encore une case que le serveur ne remplit pas. ⇒ Deux compteurs, avec les
         /// mots servis ; la garde ROUGIRA le jour où un 3ᵉ compteur reviendra sans sa donnée.</summary>
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3T1_LeCompteurEnfreintes_NExistePlus_DeuxCompteursServis()
         {
             var ecran = MonterEcran();
@@ -840,6 +849,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// servies à e7f52351), couverture des 8 valeurs du domaine du back ; hors domaine « état inconnu », absent « — ». Le titre du
         /// lieutenant par la clé servie « {nom}, votre lieutenant » ; sans nom, rien.</summary>
         [Test]
+        [Category("ScreenB3")]
         public void B3M4_VoyantsParValeurServie_EtTitreDuLieutenant()
         {
             var actifs = new UniformTellsDto { collar = "buttoned", sleeves = "rolled", watch = "visible", gloves = "clean" };
@@ -877,6 +887,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// listener : le POST exige un rule_id que rien ne liste (L4) ni ne nomme (L1). Contrôle positif : la mesure des listeners
         /// voit bien un listener ajouté à un bouton témoin (sinon « 0 » ne prouverait rien).</summary>
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3Q1_DonnerUneRegle_AfficheDesactive_SansListener()
         {
             var ecran = MonterEcran();
@@ -910,6 +921,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// est retirée. Ce qui reste DOIT porter la donnée : le compteur « règles données » égale le nombre de règles SERVIES.
         /// ⚠️ Scénario DIMENSIONNÉ (deux règles), réel : un compteur figé à 01 serait vert sur une seule.</summary>
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3T3_AucunRuleIdALEcran_LeCompteurDitCombien()
         {
             yield return OuvrirJoueurFrais();
@@ -939,6 +951,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// doit le voir. ⚠️ Un `!= null` ne suffirait pas : `JsonUtility` peut fabriquer l'objet.
         /// La garde porte donc sur la PRÉSENCE D'UNE VALEUR.</summary>
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3T2_RestraintOmise_EstDetectee_SansCounterparty()
         {
             yield return OuvrirJoueurFrais();
@@ -966,6 +979,7 @@ namespace MafiaCleanCity.Operational.Tests
         /// NullReferenceException à la première ligne qui lisait le payload, et l'écran plantait
         /// dès que le réseau toussait. Un échec doit donner un ÉTAT, pas une pile d'appels.</summary>
         [UnityTest]
+        [Category("ScreenB3")]
         public IEnumerator B3E1_EchecDeLecture_DonneUnEtatNomme_PasUneException()
         {
             yield return OuvrirJoueurFrais();
@@ -1003,7 +1017,7 @@ namespace MafiaCleanCity.Operational.Tests
         ///
         /// Catégorie propre `PhotoScreenB3` (2026-09-22, gabarit de ㊳) : la classe porte `ScreenB3`,
         /// qui couvre déjà cette méthode — ne pas la répéter ici.</summary>
-        [UnityTest, Category("Capture"), Category("PhotoScreenB3")]
+        [UnityTest, Category("Capture"), Category("ClicheB3")]
         public IEnumerator B3C1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
             // ⛔⛔ LE COMPTE SERVI, PAS UN COMPTE FRAIS — et la nuance porte sur ce que le juge voit.
