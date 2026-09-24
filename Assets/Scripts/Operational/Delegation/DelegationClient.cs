@@ -75,15 +75,26 @@ namespace MafiaCleanCity.Operational
                 yield return req.SendWebRequest();
                 if (Reussi(req))
                 {
-                    GetMetaTaskCategoriesResponseDto dto =
-                        JsonUtility.FromJson<GetMetaTaskCategoriesEnvelope>(req.downloadHandler.text)?.payload?.data;
+                    GetMetaTaskCategoriesResponseDto dto = LireTaskCategories(req.downloadHandler.text);
                     if (dto == null) { onErr?.Invoke(CorpsVide(req, "task-categories")); yield break; }
-                    // ㉜ lot 3b : `JsonUtility` ne distingue pas un objet absent d'un objet par défaut — le corps brut, lui, le dit.
-                    dto.StructuralBudgetServi = req.downloadHandler.text.Contains("\"structural_budget\"");
                     onOk?.Invoke(dto);
                 }
                 else onErr?.Invoke(Lire(req));
             }
+        }
+
+        /// <summary>㉜ lot 3b — le corps de `task-categories` → son DTO. `JsonUtility` ne distingue pas un objet absent d'un objet par
+        /// défaut : la PRÉSENCE du voisin se lit dans le corps brut, par son NOM — `structural_decisions` (renommé par le back le
+        /// 2026-09-24 : `structural_budget` est déjà un champ de session/open, d'une autre forme). Un corps qui porte l'ANCIEN nom n'est
+        /// pas lu comme servi (JsonUtility ne le remplit pas, et la présence ne le compte pas). Null si le corps n'a pas `payload.data`.</summary>
+        public static GetMetaTaskCategoriesResponseDto LireTaskCategories(string corps)
+        {
+            GetMetaTaskCategoriesResponseDto dto = null;
+            try { dto = JsonUtility.FromJson<GetMetaTaskCategoriesEnvelope>(corps ?? "")?.payload?.data; }
+            catch (Exception) { return null; }
+            if (dto == null) return null;
+            dto.StructuralDecisionsServi = System.Text.RegularExpressions.Regex.IsMatch(corps, "\"structural_decisions\"\\s*:\\s*\\{");
+            return dto;
         }
 
         public IEnumerator GetLieutenants(string bearer,

@@ -138,18 +138,20 @@ namespace MafiaCleanCity.Operational
         /// relu à chaque chargement. ⛔ `JsonUtility` construit un objet PAR DÉFAUT quand le champ est absent — « absent » se lirait
         /// « plafond libre, aucune décision » (EXACTEMENT le régime hors session servi) et écraserait le jeton publié à l'ouverture. On ne s'en sert donc que si
         /// <see cref="StructuralBudgetServi"/> (posé par le client d'après le corps BRUT).</summary>
-        public StructuralBudgetDelegationDto structural_budget;
+        public StructuralDecisionsDto structural_decisions;
 
-        /// <summary>Vrai seulement si le corps servi PORTE `structural_budget` (lu dans le texte brut par `DelegationClient`).</summary>
-        [NonSerialized] public bool StructuralBudgetServi;
+        /// <summary>Vrai seulement si le corps servi PORTE `structural_decisions` (lu dans le texte brut par
+        /// `DelegationClient.LireTaskCategories`).</summary>
+        [NonSerialized] public bool StructuralDecisionsServi;
     }
 
-    /// <summary>`structural_budget` de `task-categories` (annoncé) : `{cap_reached, decisions_this_session[]}`. ⛔ PAS de `used`
+    /// <summary>`structural_decisions` de `task-categories` (annoncé ; RENOMMÉ par le back le 2026-09-24, ex-`structural_budget` — ce
+    /// nom-là est déjà un champ de session/open, `{used, cap_reached}`, d'une autre forme) : `{cap_reached, decisions_this_session[]}`. ⛔ PAS de `used`
     /// (forme corrigée par le back le 2026-09-24 : un scalaire en projection joueur est interdit, R2.2). Deux régimes servis : EN
     /// session, le plafond et les décisions de la session ; HORS session active, `cap_reached=false` et une liste vide (le gouverneur
     /// n'applique aucun plafond).</summary>
     [Serializable]
-    public class StructuralBudgetDelegationDto
+    public class StructuralDecisionsDto
     {
         public bool cap_reached;
         public DecisionDeSessionDto[] decisions_this_session;

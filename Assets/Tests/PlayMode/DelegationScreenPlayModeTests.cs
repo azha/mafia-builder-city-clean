@@ -453,9 +453,9 @@ namespace MafiaCleanCity.Operational.Tests
                 task_categories = new[] { new TaskCategoryRowDto { category_key = "SUPPLY_SOURCING", category_id = 4, mastery_bucket = "ELIGIBLE",
                                                                    progress_band = "HIGH", delegation_state = "SELF", promotion_lock = verrou } },
                 delegated = new DelegatedSummaryDto[0],
-                structural_budget = new StructuralBudgetDelegationDto { cap_reached = capAtteint,
+                structural_decisions = new StructuralDecisionsDto { cap_reached = capAtteint,
                                                                         decisions_this_session = new DecisionDeSessionDto[0] },
-                StructuralBudgetServi = budgetServi,
+                StructuralDecisionsServi = budgetServi,
             };
 
         private static readonly GetLieutenantsResponseDto UnLieutenant =
@@ -479,7 +479,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             MafiaCleanCity.Shell.JetonDeStructure.OublierPourTest();
             GetMetaTaskCategoriesResponseDto enSession = CorpsSupply(budgetServi: true, capAtteint: true);
-            enSession.structural_budget.decisions_this_session = new[] { new DecisionDeSessionDto { decision_type = "TASK_RECALL", category_key = "HEAT_MANAGEMENT" } };
+            enSession.structural_decisions.decisions_this_session = new[] { new DecisionDeSessionDto { decision_type = "TASK_RECALL", category_key = "HEAT_MANAGEMENT" } };
             ecran.RendrePourTest(enSession, UnLieutenant, jetonDepense: false);
             Assert.IsTrue(MafiaCleanCity.Shell.JetonDeStructure.PlafondAtteint, "EN session, servi et atteint : le jeton partagé s'éteint");
             Assert.IsTrue(ecran.JetonDepense);
@@ -493,6 +493,32 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.AllerA(DelegationScreenController.EtatEcran.Confier, "SUPPLY_SOURCING");
             yield return null;
             Assert.IsNotNull(GesteVivant(), "hors session : le geste est vivant");
+        }
+
+        /// <summary>B4 — la lecture du CORPS de task-categories (`DelegationClient.LireTaskCategories`, le chemin réel) : le voisin se
+        /// détecte par son NOM, `structural_decisions` (renommé par le back le 24/09). ⛔ Un corps qui porte l'ANCIEN nom `structural_budget`
+        /// (celui d'un champ de session/open, d'une autre forme) n'est PAS lu comme servi — ni présence, ni valeur.</summary>
+        [Test, Category("EcranDelegation")]
+        public void EcranDelegationB4_LeVoisinSeDetecteParSonNom_JamaisParLAncien()
+        {
+            const string lignes = "\"task_categories\":[{\"category_key\":\"SUPPLY_SOURCING\",\"category_id\":4,\"delegation_state\":\"SELF\"}],\"delegated\":[]";
+            GetMetaTaskCategoriesResponseDto servi = DelegationClient.LireTaskCategories(
+                "{\"payload\":{\"data\":{" + lignes + ",\"structural_decisions\":{\"cap_reached\":true,\"decisions_this_session\":"
+                + "[{\"decision_type\":\"TASK_RETIREMENT\",\"category_key\":\"LIEUTENANT_HIRING\"}]}}}}");
+            Assert.IsTrue(servi.StructuralDecisionsServi, "contrôle positif : le nom servi est vu");
+            Assert.IsTrue(servi.structural_decisions.cap_reached);
+            Assert.AreEqual("LIEUTENANT_HIRING", servi.structural_decisions.decisions_this_session.Single().category_key);
+            Assert.AreEqual(4, servi.task_categories.Single().category_id, "le reste du corps est lu comme avant");
+
+            GetMetaTaskCategoriesResponseDto ancien = DelegationClient.LireTaskCategories(
+                "{\"payload\":{\"data\":{" + lignes + ",\"structural_budget\":{\"cap_reached\":true,\"decisions_this_session\":[]}}}}");
+            Assert.IsFalse(ancien.StructuralDecisionsServi, "contrôle négatif : l'ANCIEN nom n'est pas lu comme servi");
+            Assert.IsFalse(ancien.structural_decisions != null && ancien.structural_decisions.cap_reached,
+                "ni sa valeur : `cap_reached` de l'ancien nom n'atteint jamais le jeton");
+
+            GetMetaTaskCategoriesResponseDto absent = DelegationClient.LireTaskCategories("{\"payload\":{\"data\":{" + lignes + "}}}");
+            Assert.IsFalse(absent.StructuralDecisionsServi, "absent : non servi (l'objet par défaut de JsonUtility ne compte pas)");
+            Assert.IsNull(DelegationClient.LireTaskCategories("{}"), "sans `payload.data` : null");
         }
 
         /// <summary>B2 — la pression après une décision : `decisions_remaining` décide, `decisions_this_session_display` (cadence
@@ -536,7 +562,7 @@ namespace MafiaCleanCity.Operational.Tests
         private static GetMetaTaskCategoriesResponseDto AvecDecisions(bool servi, params (string type, string cle)[] decisions)
         {
             GetMetaTaskCategoriesResponseDto c = CorpsSupply(budgetServi: servi, capAtteint: true);
-            c.structural_budget.decisions_this_session =
+            c.structural_decisions.decisions_this_session =
                 decisions.Select(d => new DecisionDeSessionDto { decision_type = d.type, category_key = d.cle }).ToArray();
             return c;
         }
