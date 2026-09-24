@@ -12,7 +12,7 @@ namespace MafiaCleanCity.Shell
     // `DashboardClient`: a UnityWebRequest coroutine + concrete-envelope JsonUtility parsing, no mock.
     public class SessionClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         public string OpenUrl => BaseUrl.TrimEnd('/') + "/v1/session/open";

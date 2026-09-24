@@ -16,7 +16,7 @@ namespace MafiaCleanCity.Operational
     // POST /v1/supply-chain/legs/:id/maintain              (non câblée cette passe — voir DTOs)
     public class ChaineDApproClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>`GET /v1/operational/precursors?building_id=<uuid>` — mesuré (2026-09-03) : 9

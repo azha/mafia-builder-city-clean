@@ -15,8 +15,7 @@ namespace MafiaCleanCity.I18n
     /// assemblages pour tout le monde.</summary>
     public class I18nClient
     {
-        public string BaseUrl = "http://localhost";
-
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         // ⛔⛔ LE PARAMÈTRE `?locale=` EST LA SEULE CHOSE QUI DÉCIDE DE LA LANGUE — mesuré le
         //    2026-09-04, et ça RÉFUTE ce que trois sessions croyaient ce matin. `i18n.controller.ts`
         //    est PUBLIC et ne lit QUE `@Query('locale')` : `normalizeLocale(undefined)` rend

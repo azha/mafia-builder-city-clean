@@ -23,8 +23,8 @@ namespace MafiaCleanCity.CityMap
     {
         [Header("Backend")]
         [Tooltip("Public game API base. /v1 districts is unauthed; heat needs a token.")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         [Header("Demo sign-in (seeded by Tools/seed_citymap_demo.mjs)")]
         [SerializeField] private string demoIdentifier = "citymap_demo@example.test";
         [SerializeField] private string demoPassword = "citymap-demo-pw";

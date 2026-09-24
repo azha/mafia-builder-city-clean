@@ -25,7 +25,7 @@ namespace MafiaCleanCity.Operational
     // MONTRER tant qu'aucun libellé de jeu n'est écrit pour ce code.
     public class DelegationClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>Ce qu'un refus rend à l'appelant : le code métier du back (stable, décidable),

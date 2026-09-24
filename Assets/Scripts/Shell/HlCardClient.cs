@@ -18,7 +18,7 @@ namespace MafiaCleanCity.Shell
     // envelope/payload/data idiom.
     public class HlCardClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         public IEnumerator Commit(string bearer, string cardId, Action<CommitResponseDto> onOk, Action<long, string> onErr)

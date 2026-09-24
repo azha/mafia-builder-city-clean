@@ -36,8 +36,8 @@ namespace MafiaCleanCity.Onboarding
     public class TutorialScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         public TutorielData Etat { get; private set; }
         public bool EtatVide { get; private set; }
         /// <summary>⛔ LE SEUL PRÉDICAT HONNÊTE POUR UNE CAPTURE. Attendre qu'un CHAMP arrive

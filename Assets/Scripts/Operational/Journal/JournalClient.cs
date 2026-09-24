@@ -18,7 +18,7 @@ namespace MafiaCleanCity.Operational
     // POST /v1/random-world/hollow/:eventId/attend-funeral
     public class JournalClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>`GET /v1/news/feed` → TODO(MÉTIER ICI) : corps de réponse réel non mesuré —

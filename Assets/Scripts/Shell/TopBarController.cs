@@ -66,8 +66,8 @@ namespace MafiaCleanCity.Shell
         public enum LeadingAction { None, BackToMap }
 
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         // ---- test hooks — action leading (§3.1) ----------------------------
         public LeadingAction CurrentLeadingAction { get; private set; } = LeadingAction.None;
 

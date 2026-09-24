@@ -27,8 +27,8 @@ namespace MafiaCleanCity.Shell
         public const string TypedConfirmKeyword = "COMMIT";
 
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         // ---- test hooks ----------------------------------------------------
         public CardState RenderedState { get; private set; } = CardState.NoCard;
         /// <summary>⑤ — le bloc de l'Accueil est un RÉSUMÉ ; l'écran de détail est un autre objet

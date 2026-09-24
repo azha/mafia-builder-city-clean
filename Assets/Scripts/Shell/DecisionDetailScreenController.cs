@@ -31,8 +31,8 @@ namespace MafiaCleanCity.Shell
     public class DecisionDetailScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         // ---- sondes de test ---------------------------------------------------
         public HlCardDto CarteAffichee { get; private set; }
         public bool EtatSabot { get; private set; }

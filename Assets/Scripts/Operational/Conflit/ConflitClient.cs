@@ -16,7 +16,7 @@ namespace MafiaCleanCity.Operational
     // POST /v1/me/engagements                {lieutenant_id, target_rival_key, target_holding_id?} ⇒ {engagement_id}
     public class ConflitClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>`GET /v1/me/engagements` — `{engagements: EngagementView[]}` (7 clés, voir `EngagementDto`) ; mesuré

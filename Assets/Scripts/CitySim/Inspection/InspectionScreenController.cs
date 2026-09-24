@@ -54,8 +54,8 @@ namespace MafiaCleanCity.CitySim.Inspection
     public class InspectionScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         /// <summary>Le domaine de la route (`isValidDistrict` : 1..18) — et le cardinal du pied.</summary>
         public const int NombreDeDistricts = 18;
 

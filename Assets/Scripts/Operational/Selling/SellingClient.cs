@@ -11,7 +11,7 @@ namespace MafiaCleanCity.Operational.Selling
     // pas, on REPRODUIT — une base partagée serait une décision d'architecture, pas un écran.
     public class SellingClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/operational/{leaf}";

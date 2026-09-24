@@ -412,7 +412,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad5185042500e9ae2ac5cf750ce5f31d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Shell::MafiaCleanCity.Shell.AppShell
-  baseUrl: http://localhost
   demoIdentifier: operational_demo@example.test
   demoPassword: operational-demo-pw
 --- !u!4 &800863375

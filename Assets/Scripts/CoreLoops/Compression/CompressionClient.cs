@@ -17,7 +17,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
     // que ce dépôt a déjà payée — 683 routes `_test` sur 1017 comptées comme surface.
     public class CompressionClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/{leaf}";

@@ -26,7 +26,7 @@ namespace MafiaCleanCity.Account.Settings
     // projette `locale`. Deux routes pour un aller-retour, et c'est la surface réelle.
     public class SettingsClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>Les DEUX seules langues servies — `SUPPORTED_LOCALES` vaut `['en','fr']`

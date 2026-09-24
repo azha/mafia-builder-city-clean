@@ -12,7 +12,7 @@ namespace MafiaCleanCity.Operational
     // GET /v1/me/forensic
     public class ForensicClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>`GET /v1/me/forensic` → TODO(MÉTIER ICI) : corps de réponse réel non mesuré —

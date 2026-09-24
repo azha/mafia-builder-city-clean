@@ -11,7 +11,7 @@ namespace MafiaCleanCity.Operational
     // marqueur `@Idempotent` soit présent ou non) — patron : `DailyReviewClient`.
     public class ReputationClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>`GET /v1/me/reputation?lieutenant_id=…[&counterparty_id=…]`

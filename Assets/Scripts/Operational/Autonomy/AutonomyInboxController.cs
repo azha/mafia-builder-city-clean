@@ -48,8 +48,8 @@ namespace MafiaCleanCity.Operational.Autonomy
     public class AutonomyInboxController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         [Header("Demo sign-in (seeded by Tools/seed_operational_demo.mjs)")]
         [SerializeField] private string demoIdentifier = "operational_demo@example.test";
         [SerializeField] private string demoPassword = "operational-demo-pw";

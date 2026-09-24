@@ -36,8 +36,8 @@ namespace MafiaCleanCity.Shell
     public class DailyReviewScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         // ---- test hooks ------------------------------------------------------
         public bool IsOpen { get; private set; }
         public bool RenderedEmptyState { get; private set; }

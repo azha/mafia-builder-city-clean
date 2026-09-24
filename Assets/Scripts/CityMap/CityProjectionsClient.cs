@@ -12,7 +12,7 @@ namespace MafiaCleanCity.CityMap
     // can show the projection as not-yet-available rather than failing.
     public class CityProjectionsClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         private string D(int id, string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/city/district/{id}/{leaf}";

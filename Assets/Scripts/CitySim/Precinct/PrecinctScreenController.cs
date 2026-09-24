@@ -35,7 +35,8 @@ namespace MafiaCleanCity.CitySim.Precinct
     public class PrecinctScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         [Header("Cible")]
         [Tooltip("⛔ La correspondance district→precinct n'a AUCUNE source serveur (S12-e). " +
                  "Cet écran ne la calcule pas : il reçoit l'identifiant.")]

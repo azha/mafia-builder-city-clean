@@ -20,7 +20,7 @@ namespace MafiaCleanCity.Operational
     // BuildingCardClient.cs (same assembly) and REUSED here — one canonical error shape.
     public class LaunderingClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/operational/{leaf}";

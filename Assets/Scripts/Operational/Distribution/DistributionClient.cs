@@ -16,7 +16,7 @@ namespace MafiaCleanCity.Operational
     // POST /v1/operational/vehicles/purchase             {vehicle_type: foot|bike|car|refrigerated_van}
     public class DistributionClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>`GET /v1/operational/couriers` — mesuré (2026-09-03) : `{couriers: [...]}`,

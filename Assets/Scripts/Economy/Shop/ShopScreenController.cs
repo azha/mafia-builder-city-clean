@@ -45,8 +45,8 @@ namespace MafiaCleanCity.Economy.Shop
     public class ShopScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         public SkuDto[] Catalogue { get; private set; }
         public int Solde { get; private set; } = -1;
         public string[] Possedes { get; private set; }

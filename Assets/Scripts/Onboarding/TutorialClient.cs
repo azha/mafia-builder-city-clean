@@ -14,7 +14,7 @@ namespace MafiaCleanCity.Onboarding
     // absente. On construit donc la requête à la main avec son verbe.
     public class TutorialClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/{leaf}";

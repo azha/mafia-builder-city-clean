@@ -11,7 +11,7 @@ namespace MafiaCleanCity.Shell
     // header of `flag-discipline.controller.ts`).
     public class DailyReviewClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         public IEnumerator GetFlagReview(string bearer, Action<FlagReviewResponseDto> onOk, Action<long, string> onErr)

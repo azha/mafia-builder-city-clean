@@ -110,8 +110,8 @@ namespace MafiaCleanCity.CityMap
     public class DistrictInteriorScreenController : MonoBehaviour, MafiaCleanCity.Shell.IShellTenant
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         // nav-hud-design-v1.md §3.4 (chunk 2) — les insets de chrome (0/0 hors shell, la valeur par
         // défaut de ces champs — les 46 falsifiables convergées d'avant ce chunk n'appellent jamais
         // SetSafeInsets et restent donc byte-identiques). Dans le shell, le chrome SUBSTITUE la

@@ -17,7 +17,7 @@ namespace MafiaCleanCity.Account.Profile
     // protège rien sur le fil — c'est écrit à l'écran plutôt que laissé croire.
     public class ProfileClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>GET /v1/me — les 5 champs projetés.</summary>

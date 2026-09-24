@@ -14,7 +14,7 @@ namespace MafiaCleanCity.Operational.Autonomy
     // mutations, readable error mapping (F2 — never a raw HTTP code to the player).
     public class AutonomyClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>GET /v1/autonomy-reports — the pending autonomy reports (one per lieutenant with issues).

@@ -43,8 +43,8 @@ namespace MafiaCleanCity.Account.Settings
     public class SettingsScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         public ProfilData Profil { get; private set; }
         public string LangueCourante { get; private set; }
         public bool EtatVide { get; private set; }

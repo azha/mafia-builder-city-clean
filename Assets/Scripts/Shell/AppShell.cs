@@ -82,8 +82,8 @@ namespace MafiaCleanCity.Shell
         public enum Tab { Empire, Org, Pipeline, More }
 
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         // hud-session-arbitrages-design.md §1.2 (B1) — « le SHELL possède la session » : une
         // identité, portée par un [SerializeField] — LA migration déjà payée (un futur écran de
         // login l'écrit, rien d'autre). Défaut = le compte démo operational_demo, celui du premier

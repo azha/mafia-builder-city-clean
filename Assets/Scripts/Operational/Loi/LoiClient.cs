@@ -18,7 +18,7 @@ namespace MafiaCleanCity.Operational
     // POST /v1/me/legal/cases/:id/payoff                 ⛔ jamais mesurée, jamais câblée (idem)
     public class LoiClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>`GET /v1/me/legal` — mesuré (2026-09-03) : `{activeCases: [], lawyerRoster: [...]}`

@@ -11,7 +11,7 @@ namespace MafiaCleanCity.CitySim.Inspection
     // (juge de données du 07/09, lot L2 côté back : « l'agrégat est à une projection de distance »).
     public class InspectionClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/{leaf}";

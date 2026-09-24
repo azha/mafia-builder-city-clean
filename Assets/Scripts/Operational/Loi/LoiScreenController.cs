@@ -43,8 +43,8 @@ namespace MafiaCleanCity.Operational
     public class LoiScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         // ---- points d'injection du shell (IShellTenant) -----------------------------------
         private Transform mountParent;
 

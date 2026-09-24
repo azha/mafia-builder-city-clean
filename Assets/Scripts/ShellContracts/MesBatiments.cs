@@ -41,7 +41,7 @@ namespace MafiaCleanCity.Shell
     /// <summary>Un seul lecteur pour les quatre écrans qui ont besoin de « mes bâtiments ».</summary>
     public class MesBatimentsClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         public IEnumerator Lire(string bearer, Action<BatimentPossedeDto[]> onOk, Action<long, string> onErr)

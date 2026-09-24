@@ -15,7 +15,7 @@ namespace MafiaCleanCity.Operational
     // POST /v1/meta/horizon-feed/:cardId/dismiss
     public class HorizonClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>`GET /v1/meta/horizon-feed` → `{ cards: [...] }`.

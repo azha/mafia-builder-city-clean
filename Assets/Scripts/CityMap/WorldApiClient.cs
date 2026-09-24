@@ -18,8 +18,7 @@ namespace MafiaCleanCity.CityMap
     {
         // Public game API base. /v1 is part of the route (URI versioning),
         // not a global prefix. GET /v1/world/districts needs no auth.
-        public string BaseUrl = "http://localhost";
-
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         public string DistrictsUrl => BaseUrl.TrimEnd('/') + "/v1/world/districts";

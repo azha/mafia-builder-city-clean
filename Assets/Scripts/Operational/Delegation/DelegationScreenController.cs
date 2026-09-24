@@ -47,8 +47,8 @@ namespace MafiaCleanCity.Operational
     public class DelegationScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
-        [SerializeField] private string baseUrl = "http://localhost";
-
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         /// <summary>Pointe l'écran sur une autre pile (un test sans réseau : un port fermé). Re-pointe le client déjà construit.</summary>
         public void SetBaseUrl(string url)
         {

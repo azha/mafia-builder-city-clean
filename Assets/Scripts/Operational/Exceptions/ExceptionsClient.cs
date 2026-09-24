@@ -12,7 +12,7 @@ namespace MafiaCleanCity.Operational.Exceptions
     // the mutation, readable error mapping (F2 — never a raw HTTP code to the player).
     public class ExceptionsClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>⑨-1 — une requête de résolution TELLE QU'ELLE PART : la route et le corps. Construite par UNE fonction

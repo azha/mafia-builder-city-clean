@@ -63,7 +63,7 @@ namespace MafiaCleanCity.Operational.Exceptions
 
     public class ProgressionClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         /// <summary>GET /v1/progression — { vocabulary_tier: 1..6, progress_to_next: LOCKED|IN_PROGRESS|UNLOCKED }.</summary>

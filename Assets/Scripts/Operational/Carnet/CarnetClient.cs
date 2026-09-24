@@ -21,7 +21,7 @@ namespace MafiaCleanCity.Operational
     /// préfixe ne dit rien de ses enfants.* Les chemins ci-dessus sont lus, pas inventés.</summary>
     public class CarnetClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         private string Url(string suffixe) => BaseUrl.TrimEnd('/') + "/v1/" + suffixe;

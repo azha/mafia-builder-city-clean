@@ -23,7 +23,7 @@ namespace MafiaCleanCity.Operational
     // once in BuildingCardClient.cs (same assembly) and REUSED here.
     public class DashboardClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         public string WalletUrl => BaseUrl.TrimEnd('/') + "/v1/economy/wallet";

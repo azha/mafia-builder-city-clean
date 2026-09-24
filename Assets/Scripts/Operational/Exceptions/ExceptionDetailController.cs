@@ -31,7 +31,8 @@ namespace MafiaCleanCity.Operational.Exceptions
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
 
         private string token;
-        private string baseUrl = "http://localhost";
+        private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
+        private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         private Action onBack;
         private ExceptionsClient client;
 

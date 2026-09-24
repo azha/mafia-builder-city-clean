@@ -16,7 +16,7 @@ namespace MafiaCleanCity.Operational
     // (the backend rejects any other shape with 400 IDEMPOTENCY_KEY_FORMAT_INVALID).
     public class BuildingCardClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/operational/{leaf}";

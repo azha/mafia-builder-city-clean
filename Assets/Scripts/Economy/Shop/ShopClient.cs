@@ -14,7 +14,7 @@ namespace MafiaCleanCity.Economy.Shop
     // fichier, jamais dérivés d'une règle : une convention supposée aurait produit 404 sur l'un.
     public class ShopClient
     {
-        public string BaseUrl = "http://localhost";
+        public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/{leaf}";
