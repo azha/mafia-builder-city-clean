@@ -29,6 +29,13 @@ L = [  # (slug attendu par CLIENT-2, fr, en, statut, source)
  ('decochez_le_jour_ou_vous_n_avez_plus_besoin_qu_on_vous_tienne_la_main',
   'décochez le jour où vous n’avez plus besoin qu’on vous tienne la main', 'untick it the day you no longer need your hand held',
   'RATIFIÉ', 'Profil série 6 cadres 95-96 (ratifiés par délégation) — D14'),
+ # 24/09 (f2, maquettes à ratifier) : les mots de la maquette ㉕ qu'aucune table ne portait — PROPOSÉS ; « =x » = clé NOMMÉE (ICU)
+ ('la_premiere_fois', 'La première fois', 'First time', 'PROPOSÉ', 'atelier 33 §6 ; maquette ㉕ : surtitre de la bulle (cadres 0-1, en capitales) et titre de la page (2-3)'),
+ ('ne_plus_rien_me_montrer', 'Ne plus rien me montrer', 'Show me nothing more', 'PROPOSÉ (ouvert)',
+  'atelier 33 §7.2 : second geste de la bulle (cadres 0-1) — le client a une BASCULE à la place (049a863e) : ARBITRAGE à la ratification'),
+ ('=vues', '{n, plural, one {vue} other {vues}}', '{n, plural, one {seen} other {seen}}', 'PROPOSÉ',
+  'maquette ㉕ cadre 2 : libellé SOUS le nombre (`shown_tutorial_ids`) — accordé au compte, sans « # » (le nombre est dessiné à part) ; clé NOMMÉE'),
+ ('a_venir', 'à venir', 'to come', 'PROPOSÉ', 'maquette ㉕ cadre 2 : libellé sous le nombre (`eligible_tutorial_ids` non vus)'),
 ]
 st = subprocess.run(['git', '-C', os.path.expanduser('~/project/mafia-back-suite'), 'show', 'HEAD:services/game-back/src/i18n/string_table.ts'],
                     capture_output=True, text=True).stdout
@@ -38,8 +45,8 @@ def reg(n):
 EN, FR = reg('export const EN_MESSAGES'), reg('export const FR_MESSAGES')
 d, out = [], ['\t'.join(['clé', 'fr', 'en', 'statut', 'source'])]
 for s_, fr, en, statut, src in L:
-    cle = 'tutoriel.ecran.' + slug(fr)
-    if slug(fr) != s_: d.append(f'{s_} : le slug du fr est {slug(fr)}')
+    cle = 'tutoriel.ecran.' + (s_[1:] if s_.startswith('=') else slug(fr))
+    if not s_.startswith('=') and slug(fr) != s_: d.append(f'{s_} : le slug du fr est {slug(fr)}')
     if "'" in fr + en: d.append(f'{cle} : apostrophe droite')
     if re.search(r' [:;!?»]|« ', fr): d.append(f'{cle} : ponctuation haute après une espace ordinaire (D17)')
     if not en or en == fr: d.append(f'{cle} : en')

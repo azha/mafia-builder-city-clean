@@ -6,3 +6,7 @@ tutoriel.ecran.a_decouvrir	À découvrir	Next up	littéral du client	`TutorialSc
 tutoriel.ecran.compris	Compris	Got it	RATIFIÉ	série 2 cadre 31 (ratifiée par délégation le 02/09) — D14
 tutoriel.ecran.on_vous_explique_encore	On vous explique encore	Keep explaining	RATIFIÉ	Profil série 6 cadres 95-96 (ratifiés par délégation) — D14
 tutoriel.ecran.decochez_le_jour_ou_vous_n_avez_plus_besoin_qu_on_vous_tienne_la_main	décochez le jour où vous n’avez plus besoin qu’on vous tienne la main	untick it the day you no longer need your hand held	RATIFIÉ	Profil série 6 cadres 95-96 (ratifiés par délégation) — D14
+tutoriel.ecran.la_premiere_fois	La première fois	First time	PROPOSÉ	atelier 33 §6 ; maquette ㉕ : surtitre de la bulle (cadres 0-1, en capitales) et titre de la page (2-3)
+tutoriel.ecran.ne_plus_rien_me_montrer	Ne plus rien me montrer	Show me nothing more	PROPOSÉ (ouvert)	atelier 33 §7.2 : second geste de la bulle (cadres 0-1) — le client a une BASCULE à la place (049a863e) : ARBITRAGE à la ratification
+tutoriel.ecran.vues	{n, plural, one {vue} other {vues}}	{n, plural, one {seen} other {seen}}	PROPOSÉ	maquette ㉕ cadre 2 : libellé SOUS le nombre (`shown_tutorial_ids`) — accordé au compte, sans « # » (le nombre est dessiné à part) ; clé NOMMÉE
+tutoriel.ecran.a_venir	à venir	to come	PROPOSÉ	maquette ㉕ cadre 2 : libellé sous le nombre (`eligible_tutorial_ids` non vus)
