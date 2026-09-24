@@ -111,8 +111,19 @@ namespace MafiaCleanCity.Operational.Tests
             try
             {
                 HttpListenerContext ctx = ecouteur.EndGetContext(ar);
-                lock (recues) recues.Add(ctx.Request.HttpMethod + " " + ctx.Request.Url.AbsolutePath);
-                ctx.Response.StatusCode = 503;   // aucun corps : chaque écran rend son état d'échec NOMMÉ, la mesure est la requête
+                string route = ctx.Request.Url.AbsolutePath;
+                lock (recues) recues.Add(ctx.Request.HttpMethod + " " + route);
+                // ⛔ LA SIGNATURE RÉUSSIT (jeton de test) : 9 écrans ne chargent RIEN sans session (`if (string.IsNullOrEmpty(token))
+                // yield break`) — mesuré au premier run (Réputation muette). Le régime du téléphone est « signé » : on le reproduit.
+                // Tout le reste rend 503 sans corps : chaque écran rend son état d'échec NOMMÉ, la mesure est la requête.
+                if (ctx.Request.HttpMethod == "POST" && route == "/v1/auth/signin")
+                {
+                    byte[] corps = System.Text.Encoding.UTF8.GetBytes("{\"payload\":{\"data\":{\"access_token\":\"jeton-de-test\"}}}");
+                    ctx.Response.StatusCode = 200;
+                    ctx.Response.ContentType = "application/json";
+                    ctx.Response.OutputStream.Write(corps, 0, corps.Length);
+                }
+                else ctx.Response.StatusCode = 503;
                 ctx.Response.Close();
             }
             catch (Exception) { return; }
@@ -147,6 +158,9 @@ namespace MafiaCleanCity.Operational.Tests
             while (Nb() == 0 && Time.realtimeSinceStartup - t0 < 15f) yield return null;
             // Le shell lui-même : il signe vers la source (contrôle positif de l'écouteur — sans lui, « 0 requête » ne dirait rien).
             Assert.Greater(Nb(), 0, "le SHELL n'a émis aucune requête vers la source en 15 s — l'écouteur ne mesure rien");
+            t0 = Time.realtimeSinceStartup;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup - t0 < 10f) yield return null;
+            Assert.AreEqual("jeton-de-test", shell.Token, "le shell a signé auprès de l'écouteur : les écrans montés recevront SA session");
             t0 = Time.realtimeSinceStartup;
             int avant = -1;
             while (Time.realtimeSinceStartup - t0 < 10f && Nb() != avant) { avant = Nb(); float t = Time.realtimeSinceStartup; while (Time.realtimeSinceStartup - t < 1.5f) yield return null; }
