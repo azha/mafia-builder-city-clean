@@ -253,6 +253,12 @@ public static class MafiaCI
         // du 2026-09-24 (tête 92bfb1ba, pile 66060cc1, déclarés 115 = comptés 115, Assets/Screenshots propre après le run). Statique,
         // sans réseau. Aucune relation de préfixe (K0 elle-même). Validé par l'orchestrateur.
         "GardeCategories",
+        // L'URL du back, UNE source (9667532b, 2026-09-24) : A1 contrôles de l'instrument, A2 0 URL littérale hors AdresseDuBack.cs, A3 aucune
+        // ressource d'URL laissée, A4 l'EFFET (un écouteur HTTP local devient la source ; le shell y signe, Loi/Conflit/Distribution/Réputation
+        // montés par le shell y envoient leurs requêtes). 4/4 vert DANS le run large du créneau du 2026-09-24 (tête e7a71a52, pile 66060cc1,
+        // 133/0/1, déclarés 134 = comptés 134). Réseau LOCAL seul (127.0.0.1, port libre), aucun compte touché. Aucune relation de préfixe
+        // (vérifiée). Validé par l'orchestrateur.
+        "AdresseDuBack",
         // TD-490 (2026-09-23) — deux tests E2E SANS catégorie, donc jamais lancés par un filtre, dont les épingles avaient pourri
         // derrière les traductions : réparés EN ENTIER (épingles déléguées aux résolveurs, bc658b2c / 4ae0dfa0 / 881a0ed4), catégorie
         // posée sur la MÉTHODE (la classe emporterait sa capture `Screenshot`). Verts AVANT inscription : créneau 06:48-06:57, tête
