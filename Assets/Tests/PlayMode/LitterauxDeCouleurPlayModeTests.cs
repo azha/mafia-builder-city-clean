@@ -113,7 +113,25 @@ namespace MafiaCleanCity.Theme.Tests
         private static readonly Regex FormeNewColor = new Regex(
             @"new\s+Color\(\s*([0-9]*\.?[0-9]+)f?\s*,\s*([0-9]*\.?[0-9]+)f?\s*,\s*([0-9]*\.?[0-9]+)f?\s*[,)]",
             RegexOptions.Compiled);
+        // QUATRIÈME FORME (2026-09-24) : `new Color32(r, g, b[, a])`, entiers 0-255 en décimal ou `0x…`. Mesuré : 16 sites dans
+        // Assets/Scripts (BuildingCard 12, Filière 4) qu'aucune des trois formes ne voyait. MÊME motif que `COLOR32` dans
+        // `Tools/apparier-litteraux-aux-tokens.py` — l'outil et la garde balaient la même population.
+        private static readonly Regex FormeColor32 = new Regex(
+            @"new\s+Color32\(\s*((?:0x)?[0-9a-fA-F]+)\s*,\s*((?:0x)?[0-9a-fA-F]+)\s*,\s*((?:0x)?[0-9a-fA-F]+)\s*[,)]",
+            RegexOptions.Compiled);
         private static readonly Regex LigneCommentaire = new Regex(@"^\s*(///|//|\*|/\*)", RegexOptions.Compiled);
+
+        private static bool OctetLitteral(string s, out byte b)
+        {
+            b = 0;
+            int v;
+            bool ok = s.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                ? int.TryParse(s.Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out v)
+                : int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out v);
+            if (!ok || v < 0 || v > 255) return false;
+            b = (byte)v;
+            return true;
+        }
 
         /// <summary>UNE SEULE implémentation de balayage, employée par la mesure réelle ET par les
         /// contrôles — jamais deux chemins de calcul qui pourraient diverger entre eux (discipline
@@ -152,6 +170,12 @@ namespace MafiaCleanCity.Theme.Tests
                                 byte.Parse(h.Substring(2, 2), NumberStyles.HexNumber),
                                 byte.Parse(h.Substring(4, 2), NumberStyles.HexNumber), 255), m.Value));
                         }
+                    }
+                    foreach (Match m in FormeColor32.Matches(l))
+                    {
+                        if (!OctetLitteral(m.Groups[1].Value, out byte r32) || !OctetLitteral(m.Groups[2].Value, out byte g32)
+                            || !OctetLitteral(m.Groups[3].Value, out byte b32)) continue;   // pas un octet littéral : hors population
+                        trouves.Add(new Littoral(rel, i + 1, new Color32(r32, g32, b32, 255), m.Value));
                     }
                     foreach (Match m in FormeNewColor.Matches(l))
                     {
@@ -271,6 +295,35 @@ namespace MafiaCleanCity.Theme.Tests
                 Assert.Less(dAlpha, SeuilDistance,
                     $"`#d9ab4e40` doit être reconnu comme une recopie de son token (trouvé {nomAlpha} " +
                     $"à {dAlpha:F1}) : le voir sans le classer ne ferait que déplacer l'angle mort.");
+            }
+            finally { Directory.Delete(dir, recursive: true); }
+        }
+
+        /// <summary>Contrôles de la 4ᵉ forme (2026-09-24) — POSITIF : un `new Color32` à moins de 4 d'un jeton (la valeur de
+        /// `hudCreme`, en `0x…`) DOIT sortir comme recopie ; NÉGATIF : un `new Color32` loin de tout jeton est VU mais pas classé
+        /// recopie, une ligne de commentaire et une forme à variables ne sont pas comptées.</summary>
+        [Test]
+        public void Controle_LaFormeColor32_EstVueEtClassee()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), $"td612c32_{Guid.NewGuid():N}");
+            Directory.CreateDirectory(dir);
+            try
+            {
+                File.WriteAllText(Path.Combine(dir, "Color32.cs"),
+                    "var recopie = new Color32(0xEA, 0xE0, 0xC8, 255);\n" +
+                    "var loin = new Color32(1, 250, 3, 255);\n" +
+                    "// commentaire : new Color32(234, 224, 200, 255) NE DOIT PAS compter\n" +
+                    "var calculee = new Color32(r, g, b, 255);\n");
+                List<Littoral> vus = Balayer(dir);
+                Assert.AreEqual(2, vus.Count, "deux Color32 littéraux, ni le commentaire ni la forme à variables. Vu : " +
+                    string.Join(" · ", vus.Select(v => $"{v.Ligne}:{v.Source}")));
+                Dictionary<string, Color32> tokens = Tokens();
+                Littoral recopie = vus.First(v => v.Ligne == 1);
+                string nom = PlusProche(tokens, recopie.Valeur, out double d);
+                Assert.Less(d, SeuilDistance, $"contrôle POSITIF : la recopie (0xEA,0xE0,0xC8) doit sortir — trouvé {nom} à {d:F1}");
+                Littoral loin = vus.First(v => v.Ligne == 2);
+                PlusProche(tokens, loin.Valeur, out double dLoin);
+                Assert.GreaterOrEqual(dLoin, SeuilDistance, "contrôle NÉGATIF : (1,250,3) n'est proche d'aucun jeton");
             }
             finally { Directory.Delete(dir, recursive: true); }
         }
