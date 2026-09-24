@@ -546,45 +546,51 @@ namespace MafiaCleanCity.Operational
         /// de mise en page.</summary>
         private void AppliquerEtat(string cue, int absorbe)
         {
+            // ㊲ (24/09, table 43 de l'atelier, 69a311a9 ; mots SERVIS au back e7f52351) — quatre états, quatre cadres de la maquette :
+            //   119 aligné · 120 indéterminé SANS absorbé · 121 dérive · 144 indéterminé AVEC de l'absorbé.
+            // ⛔ Les notes de DA de la maquette (« « pas jugeable » n’est pas « moyen » », les corps des 120, 121 et 144, la fin du
+            //    119) ne sont PAS des libellés (table 43 : classe « note ») : elles sont RETIRÉES de l'écran (arbitrage du 24/09).
+            //    Seule la 1re phrase du 119 (chaque_vertu_…) est un libellé servi.
+            // Capitales : TYPOGRAPHIQUES (FontStyles.UpperCase, posées à la construction) sur le sous-titre et le surtitre du
+            // panneau, comme la maquette (.rep6 .enseigne i, .rep6 .pann i : text-transform) — les mots servis restent en casse.
             if (ReputationResolvers.CoherenceEstIndeterminee(cue))
             {
-                sousTitre.text = absorbe == 0
-                    ? "UN LIEUTENANT NEUF N’A ENCORE RIEN ABSORBÉ"
-                    : "PERSONNE NE VOUS A ENCORE JUGÉ";
                 MajVerdict("indeterminate");
-                MajPanneau("« PAS JUGEABLE » N’EST PAS « MOYEN »",
-                    "Rien n’a encore déteint",
-                    "ses quatre voyants sont éteints parce qu’il n’a " + Or("rien pris de vous") +
-                    " — pas parce qu’il est médiocre. Et personne ne jugera votre " +
-                    "constance tant qu’il n’a pas assez vu : " + Or("indéterminé") +
-                    ", jamais au milieu d’une jauge.",
-                    ReputationResolvers.Creme);
+                if (absorbe == 0)
+                {
+                    sousTitre.text = Lib("un lieutenant neuf n’a encore rien absorbé");                  // cadre 120
+                    MajPanneau("", Lib("Rien n’a encore déteint"), "", ReputationResolvers.Creme);
+                }
+                else
+                {
+                    sousTitre.text = Lib("il a déjà pris de vous, pas encore de quoi le lire");          // cadre 144
+                    MajPanneau(Lib("ni l’un ni l’autre"), VertusSansVerdict(absorbe), "", ReputationResolvers.Creme);
+                }
                 return;
             }
 
             if (cue == "drifting")
             {
-                sousTitre.text = "VOUS VOUS ÉCARTEZ DE VOS PROPRES RÈGLES";
+                sousTitre.text = Lib("vous vous écartez de vos propres règles");                          // cadre 121
                 MajVerdict("drifting");
-                MajPanneau("CE QUI A CHANGÉ",
-                    "Une règle donnée, une règle enfreinte",
-                    "vous avez laissé passer ce que vous aviez interdit. Les deux cercles " +
-                    "l’enregistrent — le vôtre et le sien. On vous dit " + Or("que") +
-                    " vous dérivez, jamais " + Or("sur quelle règle") +
-                    " : ce n’est pas un choix, c’est ce qui manque encore.",
-                    ReputationResolvers.Ambre);
+                MajPanneau(Lib("ce qui a changé"), "", "", ReputationResolvers.Ambre);
                 return;
             }
 
-            sousTitre.text = "CE QU’IL A PRIS DE VOUS SE VOIT SUR LUI";
+            sousTitre.text = Lib("ce qu’il a pris de vous se voit sur lui");                              // cadre 119
             MajVerdict("aligned");
-            MajPanneau("LA RÈGLE DU JEU",
-                "Vous vous lisez sur lui",
-                "chaque vertu qu’il vous voit tenir finit sur sa tenue — col, manches, montre, " +
-                "gants. Une règle déclarée tient " + Or("jusqu’à ce que vous la retiriez publiquement") +
-                " : la donner, c’est se donner une corde.",
+            MajPanneau(Lib("la règle du jeu"), Lib("Vous vous lisez sur lui"),
+                Lib("chaque vertu qu’il vous voit tenir finit sur sa tenue — col, manches, montre, gants."),
                 ReputationResolvers.Creme);
         }
+
+        /// <summary>Cadre 144 — « {n} vertus sur lui, pas encore un verdict » : clé ICU servie, `n` = le compte des voyants absorbés
+        /// (D15 : le nombre vient de la donnée).</summary>
+        public static string VertusSansVerdict(int n) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("reputation.bloc.n_vertus_sur_lui_pas_encore_un_verdict",
+                "{n, plural, one {Une vertu sur lui} other {# vertus sur lui}}, pas encore un verdict",
+                new System.Collections.Generic.Dictionary<string, string>
+                    { { "n", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
 
         /// <summary>Écrit le verdict de cohérence et sa couleur. Les trois libellés viennent de la
         /// table `COHERENCE` de la maquette (generateur-reputation.py:57-61) et sont écrits ici tels
@@ -617,16 +623,14 @@ namespace MafiaCleanCity.Operational
         {
             AAfficheEtatVide = true;
             VoyantsAllumes = 0;
-            sousTitre.text = "LE MIROIR N'A PAS RÉPONDU";
+            // Aucune table ne donne les mots de l'échec : le repli NEUTRE de la maison (Repli.Etat, « état inconnu »), jamais une
+            // phrase inventée (arbitrage du 24/09, D7/Q4). Le panneau est vidé.
+            sousTitre.text = MafiaCleanCity.I18n.Repli.Etat("indisponible");
             // Le panneau AUSSI — sinon il garderait la prose du chargement précédent (« vous vous
             // écartez de vos propres règles ») sur un écran qui annonce ne rien savoir. Même
             // défaut que des voyants restés allumés ou qu'une liste de règles non vidée : chaque
             // chemin d'échec doit remettre TOUT ce qu'il a pu laisser derrière lui.
-            MajPanneau("CE QUE L’ON NE SAIT PAS",
-                "Le miroir n'a pas répondu",
-                "impossible de lire ce que votre lieutenant a retenu de vous. Ce n’est pas un " +
-                "verdict neutre : c’est une absence de verdict.",
-                ReputationResolvers.Muet);
+            MajPanneau("", "", "", ReputationResolvers.Muet);
             MajCompteur(0, "—", null, "RÈGLES DONNÉES");
             MajCompteur(1, "—", "/4", "ABSORBÉES");
             MajCompteur(2, "—", null, "ENFREINTES");
@@ -1126,7 +1130,7 @@ namespace MafiaCleanCity.Operational
             sousTitre = NouveauTexte(go.transform, "SousTitre", "", CssSousTitre,
                 ReputationResolvers.Creme2, DesignTokens.Current.primaryFont,
                 1f);  // interligne maquette — .enseigne i{font:700 6.4px/1}
-            sousTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : sous-titre de l’enseigne (.enseigne i, 700 6.4px)
+            sousTitre.fontStyle = TMPro.FontStyles.Bold | TMPro.FontStyles.UpperCase;   // maquette : sous-titre de l’enseigne (.enseigne i, 700 6.4px)   // capitales : text-transform de la maquette
             sousTitre.alignment = TextAlignmentOptions.Center;
             sousTitre.characterSpacing = 34f;
 
@@ -1464,20 +1468,10 @@ namespace MafiaCleanCity.Operational
         /// qui distingue les trois états ; l'asserter sur la sortie plutôt que sur la valeur
         /// d'entrée évite une garde tautologique (« l'état vaut ce que je viens de lui donner »).</summary>
         public string PanneauSurTitreAffiche => pannSurTitre != null ? pannSurTitre.text : null;
-
-        /// <summary>L'emphase du corps de texte, telle que la maquette la définit : `<u>` y est
-        /// redéfini en `text-decoration:none; color:or_vif; font-weight:700` (chassis6.py:138 et
-        /// 146). Ce n'est donc PAS un souligné — c'est un mot en or gras.
-        ///
-        /// ⚠️ Ces emphases avaient disparu du rendu, et le juge visuel l'a chiffré : 0 pixel d'or
-        /// dans le paragraphe contre 1 212 en maquette. « rien pris de vous » et « indéterminé »
-        /// sont les deux mots qui PORTENT l'écran — l'un dit que le lieutenant n'a rien absorbé,
-        /// l'autre que le serveur refuse de juger — et ils se lisaient comme du texte courant.
-        /// ⛔ Passer par cette méthode, jamais par un balisage recopié : cinq copies d'une couleur
-        /// littérale divergeraient au premier changement de palette.</summary>
-        private static string Or(string mot) =>
-            "<b><color=#" + ColorUtility.ToHtmlStringRGB(ReputationResolvers.OrVif) + ">"
-            + mot + "</color></b>";
+        /// <summary>Crochets de test (㊲, 24/09) : le sous-titre, le titre et le corps du panneau tels que rendus.</summary>
+        public string SousTitreAffiche => sousTitre != null ? sousTitre.text : null;
+        public string PanneauTitreAffiche => pannTitre != null ? pannTitre.text : null;
+        public string PanneauTexteAffiche => pannTexte != null ? pannTexte.text : null;
 
         private void MajPanneau(string surTitre, string titre, string texte, Color couleurTitre)
         {
@@ -1626,7 +1620,7 @@ namespace MafiaCleanCity.Operational
             pannSurTitre = NouveauTexte(go.transform, "SurTitre", "", CssPannSurTitre,
                 ReputationResolvers.Muet, DesignTokens.Current.primaryFont,
                 1f);  // interligne maquette — .pann i{font:700 5.6px/1}
-            pannSurTitre.fontStyle = TMPro.FontStyles.Bold;   // maquette : le sur-titre du panneau (.pann, 700 5.6px)
+            pannSurTitre.fontStyle = TMPro.FontStyles.Bold | TMPro.FontStyles.UpperCase;   // maquette : le sur-titre du panneau (.pann, 700 5.6px)   // capitales : text-transform de la maquette
             pannSurTitre.characterSpacing = 19f;
             pannTitre = NouveauTexte(go.transform, "Titre", "", CssPannTitre,
                 ReputationResolvers.Creme, DesignTokens.Current.hudSerifFont,

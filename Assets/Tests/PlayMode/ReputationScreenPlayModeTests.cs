@@ -458,6 +458,58 @@ namespace MafiaCleanCity.Operational.Tests
         /// Elle vise trois propriétés qu'un état muet perdrait séparément — le verdict change de
         /// texte, il change de couleur, et le panneau change de titre. Un état qui n'écrirait que
         /// le texte passerait une garde qui ne regarderait que lui.</summary>
+        /// <summary>㊲ (24/09, table 43) — les QUATRE états de la maquette (119, 120, 121, 144) avec les mots SERVIS, sans réseau
+        /// (catalogue vide ⇒ repli = la valeur servie à e7f52351). Aucune note de DA à l'écran : le corps du panneau n'est rendu
+        /// qu'en 119 (la 1re phrase, servie). Contrôle : 120 et 144 se distinguent par le compte des voyants absorbés.</summary>
+        [UnityTest]
+        public IEnumerator B3M3_LesQuatreEtats_LesMotsServis_SansNoteDeDA()
+        {
+            var ecran = MonterEcran();
+            UniformTellsDto Tenue(string c, string s, string w, string g) =>
+                new UniformTellsDto { collar = c, sleeves = s, watch = w, gloves = g };
+            void Rendre(string cue, UniformTellsDto tenue) => ecran.RendrePourTest(new ReputationSurfaceDto
+            {
+                boss_mirror = new BossMirrorDto { consistency_cue = cue, declared_rules = new DeclaredRuleDto[0], portrait_posture = "attentive" },
+                hidden_curriculum = new HiddenCurriculumDto { uniform_tells = tenue },
+            });
+
+            Rendre("aligned", Tenue("buttoned", "down", "visible", "dirty"));                      // 119
+            yield return null;
+            Assert.AreEqual("ce qu’il a pris de vous se voit sur lui", ecran.SousTitreAffiche);
+            Assert.AreEqual("la règle du jeu", ecran.PanneauSurTitreAffiche);
+            Assert.AreEqual("Vous vous lisez sur lui", ecran.PanneauTitreAffiche);
+            Assert.AreEqual("chaque vertu qu’il vous voit tenir finit sur sa tenue — col, manches, montre, gants.", ecran.PanneauTexteAffiche,
+                "seule la 1re phrase du 119 est un libellé ; la suite (« jusqu’à ce que vous la retiriez… ») est une note de DA");
+
+            Rendre("indeterminate", Tenue("open", "down", "hidden", "dirty"));                    // 120 : rien d'absorbé
+            yield return null;
+            Assert.AreEqual("un lieutenant neuf n’a encore rien absorbé", ecran.SousTitreAffiche);
+            Assert.AreEqual("", ecran.PanneauSurTitreAffiche, "« « pas jugeable » n’est pas « moyen » » est une note de DA");
+            Assert.AreEqual("Rien n’a encore déteint", ecran.PanneauTitreAffiche);
+            Assert.AreEqual("", ecran.PanneauTexteAffiche, "le corps du 120 est une note de DA");
+
+            Rendre("indeterminate", Tenue("buttoned", "down", "visible", "dirty"));               // 144 : deux absorbés
+            yield return null;
+            Assert.AreEqual("il a déjà pris de vous, pas encore de quoi le lire", ecran.SousTitreAffiche);
+            Assert.AreEqual("ni l’un ni l’autre", ecran.PanneauSurTitreAffiche);
+            Assert.AreEqual("2 vertus sur lui, pas encore un verdict", ecran.PanneauTitreAffiche, "D15 : le compte vient des voyants servis");
+            Assert.AreEqual("", ecran.PanneauTexteAffiche);
+
+            Rendre("drifting", Tenue("buttoned", "rolled", "visible", "clean"));                  // 121
+            yield return null;
+            Assert.AreEqual("vous vous écartez de vos propres règles", ecran.SousTitreAffiche);
+            Assert.AreEqual("ce qui a changé", ecran.PanneauSurTitreAffiche);
+            Assert.AreEqual("", ecran.PanneauTitreAffiche, "« Une règle donnée, une règle enfreinte » est une note de DA");
+            Assert.AreEqual("", ecran.PanneauTexteAffiche);
+
+            Assert.AreEqual("Une vertu sur lui, pas encore un verdict", ReputationScreenController.VertusSansVerdict(1), "ICU `one`");
+            foreach (TMPro.TextMeshProUGUI t in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+            {
+                StringAssert.DoesNotContain("PERSONNE NE VOUS A ENCORE JUGÉ", t.text, "phrase sans source retirée");
+                StringAssert.DoesNotContain("jusqu’à ce que vous la retiriez", t.text, "note de DA retirée");
+            }
+        }
+
         [UnityTest]
         [Category("ScreenB3")]
         public IEnumerator B3S5_LesTroisEtatsNonProduitsParLeBack_SontRendusEtDistincts()
