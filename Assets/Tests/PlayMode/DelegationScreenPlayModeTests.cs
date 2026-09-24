@@ -517,6 +517,52 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNotNull(GesteVivant(), "contrôle : sans verrou, le geste est vivant");
         }
 
+        // ═══ ㉜ lot 4 — le cadre 77 honnête ═════════════════════════════════════════════════
+
+        private static GetMetaTaskCategoriesResponseDto AvecDecisions(bool servi, params (string type, string cle)[] decisions)
+        {
+            GetMetaTaskCategoriesResponseDto c = CorpsSupply(budgetServi: servi, capAtteint: true);
+            c.structural_budget.decisions_this_session =
+                decisions.Select(d => new DecisionDeSessionDto { decision_type = d.type, category_key = d.cle }).ToArray();
+            return c;
+        }
+
+        /// <summary>D1 — « Vous avez déjà confié {charge} aujourd’hui. » ne se dit que depuis une décision CONFIER SERVIE, sur une
+        /// charge nommée ; {charge} vient de la famille « en phrase » (jamais un titre mis en minuscules).</summary>
+        [Test, Category("EcranDelegation")]
+        public void EcranDelegationD1_LaDecisionDuJour_SeulementServieEtConfiee()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            Assert.AreEqual("Vous avez déjà confié l’embauche aujourd’hui.",
+                DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(true, ("TASK_RETIREMENT", "LIEUTENANT_HIRING"))));
+            Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(false, ("TASK_RETIREMENT", "LIEUTENANT_HIRING"))),
+                "budget NON servi (aujourd'hui) : rien — pas d'affirmation sans lecture");
+            Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(true, ("TASK_RECALL", "SUPPLY_SOURCING"))),
+                "une REPRISE n'est pas « confié »");
+            Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(true, ("TASK_RETIREMENT", "SUPPLY_SOURCING"),
+                ("BUILDING_DEMOLITION", null))), "la DERNIÈRE décision est un autre site structurel : rien");
+            Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(true, ("TASK_RETIREMENT", "__HORS__"))),
+                "charge inconnue : rien plutôt qu'une clé brute");
+            Assert.IsNull(DelegationScreenController.DitDeLaDecisionDuJour(AvecDecisions(true)), "aucune décision servie");
+            CollectionAssert.AreEqual(new[] { "les tournées", "l’embauche", "l’approvisionnement", "la chaleur" },
+                new[] { "ROUTE_ASSIGNMENT", "LIEUTENANT_HIRING", "SUPPLY_SOURCING", "HEAT_MANAGEMENT" }
+                    .Select(DelegationScreenController.ChargeEnPhrase).ToArray(), "les replis de `delegation.charge_phrase.*` (table 56), à l'octet");
+        }
+
+        /// <summary>D2 — le rendu « déjà tranché » sans décision servie : plus de « une charge ce matin », aucune phrase de décision.</summary>
+        [UnityTest, Category("EcranDelegation")]
+        public IEnumerator EcranDelegationD2_DejaTranche_SansDecisionServie_RienNEstAffirme()
+        {
+            var ecran = MonterEcran();
+            yield return null;
+            ecran.RendrePourTest(CorpsSupply(), UnLieutenant, jetonDepense: true);
+            yield return null;
+            string tout = TexteDeLEcran();
+            Assert.IsFalse(tout.Contains("ce matin"), "« ce matin » n'a aucune source");
+            Assert.IsFalse(tout.Contains("Vous avez déjà confié"), "aucune décision servie : on n'affirme pas qu'une charge a été confiée");
+            StringAssert.Contains("plus de décision aujourd'hui", tout, "contrôle positif : c'est bien l'état du cadre 77");
+        }
+
         /// <summary>Le bouton du geste (`Geste` → sa zone `Touche`), s'il est vivant — un geste mort n'a AUCUN gestionnaire.</summary>
         private Button GesteVivant()
         {

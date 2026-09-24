@@ -465,7 +465,11 @@ namespace MafiaCleanCity.Operational
 
             if (!jetonDispo)
             {
-                EcrireDit(pied, "Vous avez déjà confié une charge ", "ce matin", ".");
+                // ㉜ lot 4 (cadre 77 honnête) : plus de « Vous avez déjà confié une charge ce matin. » — « ce matin » n'avait aucune
+                // source, et « confié » était AFFIRMÉ alors que le plafond couvre aussi la reprise et tous les sites structurels du
+                // gouverneur. La phrase ne se dit que si la décision de la session est SERVIE (`decisions_this_session`) ; sinon, rien.
+                string decisionDuJour = DitDeLaDecisionDuJour(DernierChargement);
+                if (decisionDuJour != null) EcrireDit(pied, decisionDuJour, "", "");
                 ConstruireGeste(pied, "EN CONFIER UNE", "plus de décision aujourd'hui", true, null);
                 ConstruireRien(pied, "Une seule décision de structure par journée", ", confier et reprendre "
                     + "comprises. Ce n'est pas une limite d'énergie : c'est pour qu'une maison ne se redessine "
@@ -754,6 +758,38 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>㉜ lot 3b — `GET /v1/meta/pressure` après une décision : `decisions_remaining == 0` ⇒ jeton DÉPENSÉ, publié pour
         /// ㉝ ㉞. ⛔ `decisions_this_session_display` n'est JAMAIS lu : c'est une cadence d'affichage, pas le budget enforcé.</summary>
+        /// <summary>㉜ lot 4 — « Vous avez déjà confié {charge} aujourd’hui. » : seulement si le budget SERVI de `task-categories`
+        /// (déclaré, annoncé par le back) porte une décision CONFIER (`TASK_RETIREMENT`, structural-decision-catalogue.ts:73) sur une
+        /// charge nommée — la dernière de la session. Une reprise, un autre site structurel, ou un budget non servi ⇒ null : la table
+        /// 44 n'a de phrase que pour « confié », et on n'affirme pas une décision qu'on n'a pas lue.</summary>
+        public static string DitDeLaDecisionDuJour(GetMetaTaskCategoriesResponseDto dto)
+        {
+            if (dto == null || !dto.StructuralBudgetServi || dto.structural_budget?.decisions_this_session == null) return null;
+            DecisionDeSessionDto derniere = null;
+            foreach (DecisionDeSessionDto d in dto.structural_budget.decisions_this_session)
+                if (d != null) derniere = d;
+            if (derniere == null || derniere.decision_type != "TASK_RETIREMENT" || string.IsNullOrEmpty(derniere.category_key)) return null;
+            string charge = ChargeEnPhrase(derniere.category_key);
+            if (charge == null) return null;
+            var p = new System.Collections.Generic.Dictionary<string, string> { ["charge"] = charge };
+            return MafiaCleanCity.I18n.Libelle.Gabarit("delegation.bloc.vous_avez_deja_confie_charge_aujourd_hui",
+                "Vous avez déjà confié {charge} aujourd’hui.", p);
+        }
+
+        /// <summary>{charge} au milieu d'une phrase : la famille `delegation.charge_phrase.*` (table 56, tranché (d) : la casse est
+        /// un MOT, rien n'est mis en minuscules dans le code). Hors domaine ⇒ null (l'appelant ne dit rien plutôt qu'une clé brute).</summary>
+        public static string ChargeEnPhrase(string cle)
+        {
+            switch (cle)
+            {
+                case "ROUTE_ASSIGNMENT": return MafiaCleanCity.I18n.Libelle.ParValeur("delegation", "charge_phrase", "ROUTE_ASSIGNMENT", "les tournées");
+                case "LIEUTENANT_HIRING": return MafiaCleanCity.I18n.Libelle.ParValeur("delegation", "charge_phrase", "LIEUTENANT_HIRING", "l’embauche");
+                case "SUPPLY_SOURCING": return MafiaCleanCity.I18n.Libelle.ParValeur("delegation", "charge_phrase", "SUPPLY_SOURCING", "l’approvisionnement");
+                case "HEAT_MANAGEMENT": return MafiaCleanCity.I18n.Libelle.ParValeur("delegation", "charge_phrase", "HEAT_MANAGEMENT", "la chaleur");
+                default: return null;
+            }
+        }
+
         public void PrendreLaPression(GetMetaPressureResponseDto p)
         {
             if (p == null) return;
