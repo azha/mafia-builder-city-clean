@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -103,6 +104,13 @@ namespace MafiaCleanCity.Operational
         /// faire ce qu'il avait à faire.</summary>
         public bool RenduTermine { get; private set; }
 
+        /// <summary>C2 — les quartiers de `GET /v1/world/districts` (null tant qu'ils ne sont pas arrivés, ou en échec).</summary>
+        public WorldDistrictDto[] Quartiers { get; private set; }
+        /// <summary>Crochet de test : pose les quartiers sans réseau, AVANT `RendrePourTest`.</summary>
+        public void PoserQuartiersPourTest(WorldDistrictDto[] quartiers) => Quartiers = quartiers;
+        /// <summary>C2 — combien de lignes rendues n'ont PAS de texte servi (leur clé est montrée à la place).</summary>
+        public int LignesSansTexte { get; private set; }
+
         private RectTransform racinePleinEcran;
         private JournalClient client;
         private bool initialise;
@@ -190,6 +198,11 @@ namespace MafiaCleanCity.Operational
             yield return client.GetRandomWorldActive(token,
                 dto => DernierMonde = dto, (code, msg) => DernierMonde = null);
 
+            // C2 (passe UX 2026-09-24) — les noms de fiction des quartiers. NON fatal : en échec, la ligne dit « quartier 16 »
+            // plutôt que le slug, et le reste de l'écran ne dépend pas d'elle.
+            yield return client.GetWorldDistricts(token,
+                dto => Quartiers = dto.districts, (code, msg) => Quartiers = null);
+
             // La frame de création rend des rects non résolus : on attend le layout AVANT de
             // rendre quoi que ce soit qui lise une géométrie.
             yield return null;
@@ -265,16 +278,21 @@ namespace MafiaCleanCity.Operational
                     Lib("ces trois listes se remplissent avec ce que la ville fait. Aucune ne "
                         + "dépend de vos gestes."));
             }
+            else if (LignesSansTexte > 0)
+            {
+                // ⛔ LE PANNEAU DIT LE TROU PLUTÔT QUE DE LE MASQUER — et il le COMPTE. Jusqu'au 24/09 il affirmait
+                // « aucune de ces brèves n'a de texte » quoi qu'il arrive : vrai à sa date (cadre 135, L1), faux depuis que le
+                // bundle fr porte les 25 clés servies (passe UX, C2). Un énoncé daté qui désarme : il n'est plus écrit que
+                // quand une ligne, CE matin, montre réellement sa clé.
+                MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"),
+                    LignesSansTexte == 1 ? Lib("Une brève est arrivée sans son texte")
+                                         : string.Format(Lib("{0} brèves sont arrivées sans leur texte"), LignesSansTexte),
+                    Lib("leur clé est montrée à la place du titre. Le reste du journal est écrit."));
+            }
             else
             {
-                // ⛔ LE PANNEAU DIT LE TROU PLUTÔT QUE DE LE MASQUER — et ici le trou est mesuré,
-                // pas supposé : les titres servis sont des CLÉS (`news_beat.digest.…`), et le
-                // dictionnaire ne les porte pas. C'est le maillon L1 que la maquette déclare
-                // elle-même au cadre 130, confirmé par le corps réel.
-                MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"),
-                    Lib("Aucune de ces brèves n'a de texte"),
-                    Lib("les brèves sont arrivées sans leur texte : le journal de ce matin n'a que des "
-                        + "titres à trous. Voilà ce qu'on peut vous montrer aujourd'hui."));
+                // Tout est écrit : le panneau n'a rien à dire, il se tait (le cadre 130 y met un geste que rien ne câble).
+                MajPanneau("", "", "");
             }
         }
 
@@ -316,6 +334,7 @@ namespace MafiaCleanCity.Operational
         {
             if (pannSur == null) return;
             pannSur.text = sur; pannTitre.text = titre; pannTexte.text = texte;
+            if (panneauGo != null) panneauGo.SetActive(!string.IsNullOrEmpty(titre));
         }
 
         /// <summary>Les trois listes, dans l'ordre du cadre 125 : la une, puis la rue, puis ce
@@ -328,6 +347,7 @@ namespace MafiaCleanCity.Operational
         {
             for (int i = listeRoot.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(listeRoot.GetChild(i).gameObject);
+            LignesSansTexte = 0;
 
             if (rienNeBouge)
             {
@@ -341,12 +361,13 @@ namespace MafiaCleanCity.Operational
             foreach (NewsBeatDto b in breves)
             {
                 if (b == null) continue;
-                Ligne(b.outlet_i18n_key, b.headline_i18n_key, b.district, b.recency_band, false);
+                Ligne(Texte(b.outlet_i18n_key), b.headline_i18n_key, ParametresDuTitre(b.headline_params, Quartiers),
+                      b.district, b.recency_band, false);
             }
             foreach (AmbientEventDto a in rue)
             {
                 if (a == null) continue;
-                Ligne(null, a.descriptor_i18n_key, a.district, a.recency_band, false);
+                Ligne(null, a.descriptor_i18n_key, null, a.district, a.recency_band, false);
             }
             foreach (RandomWorldEventDto m in monde)
             {
@@ -355,14 +376,20 @@ namespace MafiaCleanCity.Operational
                 // c'est toute la thèse de ce bloc. Il se signale ici par son contour, jamais par
                 // la couleur seule (a11y) — la phase est aussi écrite en toutes lettres.
                 bool acquis = m.phase_band == "permanent";
-                Ligne(PhaseEnMots(m.phase_band), m.template_i18n_key, m.district,
+                Ligne(PhaseEnMots(m.phase_band), m.template_i18n_key, null, m.district,
                       m.recency_band, acquis);
             }
         }
 
-        /// <summary>Une ligne : le titre (une CLÉ), et sous lui la clé technique + le quartier.</summary>
-        private void Ligne(string sur, string cle, string quartier, string fraicheur, bool acquis)
+        /// <summary>Une ligne : le titre (le TEXTE servi de la clé, ses trous remplis ; la clé seulement si le bundle ne la porte
+        /// pas), et sous lui le quartier par son nom + la fraîcheur.</summary>
+        private void Ligne(string sur, string cle, IDictionary<string, string> parametres, string quartier, string fraicheur,
+                           bool acquis)
         {
+            bool ecrit = MafiaCleanCity.I18n.I18nCatalog.Connait(cle);
+            if (!ecrit) LignesSansTexte++;
+            string titreEcrit = ecrit ? Capitale(MafiaCleanCity.I18n.I18nCatalog.Traduire(cle, parametres)) : null;
+            quartier = NomDuQuartier(quartier, Quartiers);
             GameObject go = NouveauUI("Ligne", listeRoot);
             AjouterFond(go, FondBloc);
             // ⛔ HAUTEUR PLANCHER, PAS FIGÉE — TROISIÈME fois aujourd'hui que ce défaut se
@@ -387,7 +414,8 @@ namespace MafiaCleanCity.Operational
                 NouveauTexte(go.transform, "Sur", sur, Px(7f),
                     acquis ? AccentVif : AccentOr, DesignTokens.Current.primaryFont);
 
-            NouveauTexte(go.transform, "Titre", cle ?? "(sans clé)", Px(11f), TexteFort,
+            // Le repli reste un ARGUMENT de l'appel : l'extracteur des chaînes joueur (`Tools/chaines-joueur.py`) le voit là.
+            NouveauTexte(go.transform, "Titre", titreEcrit ?? cle ?? "(sans clé)", Px(11f), TexteFort,
                 DesignTokens.Current.hudSerifFont);
 
             string dessous = quartier ?? "";
@@ -406,6 +434,48 @@ namespace MafiaCleanCity.Operational
         /// pas », mesurée par CLIENT-2) : le client testait `starting` et `settling` — `settling` est une valeur de RÉCENCE
         /// (`RandomWorldRecencyBand`), pas une phase — donc `onset` et `receding` sortaient BRUTS. Mots : atelier ca69012c §4,
         /// cadre 145, en capitales comme les autres phases de cet écran.</summary>
+        /// <summary>C2 — le texte servi d'une clé, ou `null` si elle est vide ; la clé elle-même si le bundle ne la porte pas.</summary>
+        private static string Texte(string cle) =>
+            string.IsNullOrEmpty(cle) ? null : MafiaCleanCity.I18n.I18nCatalog.Traduire(cle);
+
+        /// <summary>C2 — les trous d'un titre de brève : `outlet` et `subject` sont des CLÉS servies (résolues à leur tour),
+        /// `district` un slug, rendu par son nom de fiction.</summary>
+        public static IDictionary<string, string> ParametresDuTitre(HeadlineParamsDto p, WorldDistrictDto[] quartiers)
+        {
+            var d = new Dictionary<string, string>();
+            if (p == null) return d;
+            if (!string.IsNullOrEmpty(p.outlet)) d["outlet"] = Texte(p.outlet);
+            if (!string.IsNullOrEmpty(p.subject)) d["subject"] = Texte(p.subject);
+            if (!string.IsNullOrEmpty(p.district)) d["district"] = NomDuQuartier(p.district, quartiers);
+            if (!string.IsNullOrEmpty(p.frame)) d["frame"] = p.frame;
+            return d;
+        }
+
+        /// <summary>C2 — `district-16` → « La Lisière » (nom de fiction de `world/districts`), sinon son nom de code, sinon
+        /// « quartier 16 ». Un texte qui n'est pas un slug est rendu tel quel.</summary>
+        public static string NomDuQuartier(string slug, WorldDistrictDto[] quartiers)
+        {
+            if (string.IsNullOrEmpty(slug)) return slug;
+            const string prefixe = "district-";
+            int id;
+            if (!slug.StartsWith(prefixe, System.StringComparison.Ordinal)
+                || !int.TryParse(slug.Substring(prefixe.Length), System.Globalization.NumberStyles.None,
+                                 System.Globalization.CultureInfo.InvariantCulture, out id))
+                return slug;
+            if (quartiers != null)
+                foreach (WorldDistrictDto q in quartiers)
+                    if (q != null && q.id == id)
+                        return !string.IsNullOrEmpty(q.name) ? q.name
+                             : !string.IsNullOrEmpty(q.name_canonical) ? q.name_canonical
+                             : string.Format(Lib("quartier {0}"), id);
+            return string.Format(Lib("quartier {0}"), id);
+        }
+
+        /// <summary>Un titre commence par une capitale : les descripteurs servis sont écrits pour s'insérer dans une phrase
+        /// (« un pâté de maisons bruyant »).</summary>
+        private static string Capitale(string t) =>
+            string.IsNullOrEmpty(t) ? t : char.ToUpper(t[0], System.Globalization.CultureInfo.GetCultureInfo("fr-FR")) + t.Substring(1);
+
         public static string PhaseEnMots(string bande)
         {
             switch (bande)
@@ -483,6 +553,7 @@ namespace MafiaCleanCity.Operational
         private readonly TextMeshProUGUI[] compteurNombre = new TextMeshProUGUI[3];
         private readonly TextMeshProUGUI[] compteurLibelle = new TextMeshProUGUI[3];
         private TextMeshProUGUI pannSur, pannTitre, pannTexte;
+        private GameObject panneauGo;
 
         /// <summary>L'enseigne : « Le journal » et, dessous, CE QUE CE CADRE MONTRE. Les six
         /// cadres ratifiés ne diffèrent que par ce sous-titre — « ce qui se dit ce matin »,
@@ -594,6 +665,7 @@ namespace MafiaCleanCity.Operational
         private void ConstruirePanneau(Transform parent)
         {
             GameObject go = NouveauUI("Panneau", parent);
+            panneauGo = go;
             AjouterFond(go, FondBloc);
             var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
             le.minHeight = Px(CssHPanneau);

@@ -42,11 +42,26 @@ namespace MafiaCleanCity.Operational
     {
         public string beat_id;
         public string headline_i18n_key;
+        /// <summary>C2 (passe UX 2026-09-24) — les trous du titre. Corps réel (pile dev @66060cc1, `corps/014`) :
+        /// `{"outlet":"press.outlet.tilbey_weekly.name","subject":"ambient.micro_event.noisy_block","district":"district-16"}`,
+        /// et `frame` sur les titres de tempête. Le bundle fr n'ouvre que trois trous (`{district}` ×99, `{subject}` ×26,
+        /// `{outlet}` ×22) : trois champs typés suffisent, et un champ absent reste `null`.</summary>
+        public HeadlineParamsDto headline_params;
         public string category;              // brennar_local | … (domaine non clos, non mesuré)
         public string outlet_i18n_key;
         public string frame_tag_i18n_key;    // null sur tout le corps mesuré
         public string district;
         public string recency_band;          // fresh | fading | … (mesuré : fading)
+    }
+
+    /// <summary>C2 — `headline_params` : `outlet` et `subject` sont des CLÉS, `district` un slug (`district-16`).</summary>
+    [Serializable]
+    public class HeadlineParamsDto
+    {
+        public string outlet;
+        public string subject;
+        public string district;
+        public string frame;
     }
 
     [Serializable] public class GetNewsFeedPayload { public GetNewsFeedResponseDto data; }
