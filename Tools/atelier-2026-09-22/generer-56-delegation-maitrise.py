@@ -18,6 +18,8 @@ ecart-2026-09-23.md`, questions (b), (d), (e), (f)), commande f2 du 23/09. ㉜ n
      pour SUPPLY_SOURCING. Le gabarit servi `delegation.bloc.donnez_moi_charge_…_les_commandes` reste servi (contrat additif), le client
      passe à la famille.
   4. le cadre 76 (question (f)) : SANS locuteur, la maison prévient, forme épicène — la clé servie est GARDÉE, seule la VALEUR change.
+  5. v1.1 (f2, 24/09) : les libellés genrés de l'aperçu du 76 — « Ce qui a été appris », « Sa relève » (clés servies gardées), et la clé
+     NEUVE `delegation.bloc.rancune` « Rancune » pour ㉜ seul (`reputation.etat.il_vous_en_veut` est à ㊲, ratifiée : elle ne bouge pas).
 Clés : familles indexées par la valeur servie, en minuscules (`Libelle.ParValeur`). Contrôles (exit 1) : domaines couverts (maîtrise lue dans
 `mastery-bucket.ts`, charges = les clés servies `delegation.charge.*`) ; aucune clé neuve déjà servie ; la clé du 76 servie ; D10 ; D13 ;
 D17 (U+00A0 dans « » et avant « : », U+202F avant « ; ! ? ») ; paramètres fr = en ; somme-table code 0.
@@ -69,8 +71,16 @@ LIGNES = [
   'You can take it back. It will be taken badly, and everything learned there will have to be learned again.',
   'SANS locuteur : la maison prévient (question (f)) ; D13 : « Il », « il savait » sortent — « il faudra » est impersonnel ; sans « » (plus de réplique) ; '
   'clé SERVIE gardée (contrat additif), seule la valeur change'],
+ # 5. v1.1 (f2, 24/09) : les libellés GENRÉS de l'aperçu de reprise (cadre 76) — ㉜ non ratifiée, D13 (la 44 les envoyait à la liste de l'user, D14)
+ ['Ce qu’il a appris', CAD + ' 76', P, 'delegation.bloc.ce_qu_il_a_appris', 'Ce qui a été appris', 'What was learned',
+  'v1.1 : ligne `drop_bucket` ; D13 (« il » sort) ; clé SERVIE gardée, valeur changée'],
+ ['Celui qu’il formait', CAD + ' 76', P, 'delegation.bloc.celui_qu_il_formait', 'Sa relève', 'Their successor',
+  'v1.1 : ligne `suspended_successor_key` ; « sa » possessif épicène ; la valeur à côté reste « s’arrête aussi » ; clé SERVIE gardée'],
+ ['Il vous en veut', CAD + ' 76', P, 'delegation.bloc.rancune', 'Rancune', 'Grudge',
+  'v1.1 : clé NEUVE pour ㉜ seul — la clé servie `reputation.etat.il_vous_en_veut` est partagée avec ㊲, RATIFIÉE : elle ne bouge pas (f2) ; suivie de « pendant long » (`delegation.fenetre.*`)'],
 ]
-CLE_76 = LIGNES[-1][3]
+CLE_76 = LIGNES[-4][3]
+GARDEES = {CLE_76, 'delegation.bloc.ce_qu_il_a_appris', 'delegation.bloc.celui_qu_il_formait'}   # clés SERVIES, valeur changée
 D13 = re.compile(r"\b(il|ils|lui|homme|hommes)\b(?! faudra)", re.I)
 
 def main():
@@ -78,8 +88,10 @@ def main():
     st = git('i18n/string_table.ts')
     sha = subprocess.run(['git', '-C', BACK, 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
     def registre(nom):
-        d = st.index(f'export const {nom}'); return set(re.findall(r"^\s*'([^'\s]+)':", st[d:st.index('\n};', d)], re.M))
+        d = st.index(f'export const {nom}'); t = st[d:st.index('\n};', d)]
+        return {m.group(1): re.sub(r'\\u([0-9a-fA-F]{4})', lambda x: chr(int(x.group(1), 16)), m.group(3)).replace("\\'", "'") for m in re.finditer(r"^\s*'([^'\s]+)':\s*\n?\s*(['\"])((?:[^'\"\\]|\\.)*)\2", t, re.M)}
     FR, EN = registre('FR_MESSAGES'), registre('EN_MESSAGES')
+    depuis = []   # ⚖️ une clé de CETTE table servie depuis (le back a servi la 56, 66060cc1) est conforme si le back sert NOS mots (règle de la 37)
     maitrise = [x.lower() for x in re.findall(r"'([A-Z]+)'", re.search(r'type MasteryBucket\s*=([^;]*);', git('meta_progression/mastery-bucket.ts')).group(1))]
     charges = sorted(k.split('.')[-1] for k in FR if k.startswith('delegation.charge.'))
     d = []
@@ -90,20 +102,25 @@ def main():
         if manque: d.append(f'{fam} : domaine non couvert {manque}')
     for l in LIGNES:
         m, _, cl, k, fr, en, note = l
-        if k != CLE_76 and (k in FR or k in EN): d.append(f'{k} : DÉJÀ servie — la table la dit neuve')
+        if k not in GARDEES and k in FR and fr:
+            if FR[k] == fr: depuis.append(k)
+            else: d.append(f'{k} : servie « {FR[k]} » ≠ la table « {fr} »')
+        if k in GARDEES and k not in FR: d.append(f'{k} : annoncée servie, absente')
         if not fr: continue
         if "'" in fr + en: d.append(f'{k} : apostrophe droite (D10)')
         if D13.search(fr): d.append(f'{k} : forme genrée (D13)')
         if re.search(r'« |[^ ]»|[^ ]:|[^ ][;!?]', fr): d.append(f'{k} : D17')
         if sorted(re.findall(r'\{\w+\}', fr)) != sorted(re.findall(r'\{\w+\}', en)): d.append(f'{k} : paramètres fr ≠ en')
     if CLE_76 not in FR: d.append('la clé du 76 n’est plus servie')
+    ecarts_gardees = [k for k in GARDEES if k in FR and FR[k] != next(l[4] for l in LIGNES if l[3] == k)]
     out = os.path.join(ICI, '56-delegation-maitrise-2026-09-23.tsv')
     with open(out, 'w', encoding='utf-8') as f:
         f.write('\t'.join(['mot', 'cadres', 'classe', 'clé', 'fr', 'en', 'note']) + '\n')
         for l in LIGNES: f.write('\t'.join(l) + '\n')
     comp = sum(1 for l in LIGNES if l[0].startswith('('))
     print(f'56 : back {sha} · somme = {len(LIGNES)} lignes = {len(LIGNES) - comp} mots + {comp} compléments · clés {len(cles)} '
-          f'(maîtrise 7, charge_phrase 4, replique 4, 76 : 1 servie à valeur changée) · domaines : maîtrise {maitrise}, charges {charges}')
+          f'(maîtrise 7, charge_phrase 4, replique 4, 76 : 3 servies à valeur changée + 1 neuve, v1.1) · servies depuis, conformes : {len(depuis)} · '
+          f'clés gardées dont la valeur reste à changer au back : {len(ecarts_gardees)} · domaines : maîtrise {maitrise}, charges {charges}')
     rc = subprocess.run([sys.executable, os.path.join(ICI, 'somme-table.py'), out]).returncode
     if rc: d.append(f'somme-table code {rc}')
     for x in d: print('⛔', x)
