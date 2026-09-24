@@ -277,10 +277,12 @@ namespace MafiaCleanCity.Shell.Tests
             // le verdict ENSUITE, une seule fois, sur tout ce qui a été mesuré.
             var constats = new List<string>();
 
+            // ⛔ `Temp/`, plus `Assets/Screenshots/` (2026-09-24, garde K3) : ces images sont des SONDES DE MESURE (« une mesure de bords »,
+            // jamais photographiée pour un juge) — écrites dans l'arbre, elles le salissaient à CHAQUE run de `Charpente`.
             yield return MesurerEtCapturer(shell, hlCard, exceptions, orgVitals, homeChrome,
-                1080, 1920, "Assets/Screenshots/accueil_panneaux_geometrie_1080x1920.png", constats);
+                1080, 1920, "Temp/accueil_panneaux_geometrie_1080x1920.png", constats);
             yield return MesurerEtCapturer(shell, hlCard, exceptions, orgVitals, homeChrome,
-                1080, 2400, "Assets/Screenshots/accueil_panneaux_geometrie_1080x2400.png", constats);
+                1080, 2400, "Temp/accueil_panneaux_geometrie_1080x2400.png", constats);
 
             Debug.Log("[Charpente] MESURE géométrique + photographique des 4 panneaux de l'Accueil " +
                       "terminée — voir les lignes [GEOM]/[NO-OP]/[CAPTURE] ci-dessus pour la table complète. " +
@@ -331,7 +333,7 @@ namespace MafiaCleanCity.Shell.Tests
         public IEnumerator MesureGeometrie_AccueilPanneaux_MontageNatif1080x1920_SEEDE_OperationalDemo()
         {
             const int Largeur = 1080, Hauteur = 1920;
-            const string Chemin = "Assets/Screenshots/accueil_panneaux_geometrie_1080x1920_montage_natif.png";
+            const string Chemin = "Temp/accueil_panneaux_geometrie_1080x1920_montage_natif.png";
 
             GameObject canvasGo = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             Canvas canvas = canvasGo.GetComponent<Canvas>();

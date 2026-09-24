@@ -31,7 +31,8 @@ public static class MafiaCI
     // n'ERREUR PAS : il exécute un AUTRE jeu. ⚠️ Les mentions « aucune relation de préfixe (vérifié) » des inscriptions ci-dessous
     // ont été RELUES sous la règle réelle le 2026-09-24 (balayage sous-chaîne de toutes les catégories de Assets/Tests) : elles
     // tiennent, sauf les paires qui emportent une capture — `EcranDemolition`, `ScreenB3/B7/C1/C2/C3/C6` ⊂ leurs `Photo…` — et
-    // `I18n` ⊂ `I18nReseau` ; voir le lot de classe qui renomme les captures. Et il
+    // `I18n` ⊂ `I18nReseau` ; voir le lot de classe qui renomme les captures (et `I18nReseau` → `CatalogueEnLigne`, 24/09 : qui
+    // veut les deux les demande tous les deux). Et il
     // et le déclare vert (mesuré ici même le 2026-08-21 : `category_names: ["HUD"]` → 31/31 VERT
     // avec le défaut réarmé exprès, parce que le seul test décisif portait une AUTRE catégorie).
     // ⇒ après tout run qui doit DÉCIDER, relancer le test visé SEUL par son nom complet et vérifier
@@ -183,7 +184,7 @@ public static class MafiaCI
     //   partie du correctif, sinon le prochain lot repaie ces quatre runs.
     // ⚠️ Ce n'est PAS un défaut des écrans : ils chargent et se capturent correctement en isolé.
     private static readonly string[] Categories =
-        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "EcranDemolition", "ScreenC3", "EcranLoi", "EcranConflit", "Ecran10", "I18n", "I18nReseau", "BundleReel", "JUGE", "CaptureDetail", "CaptureExceptions", "CaptureFiche", "CaptureSousChrome", "CaptureHorizon", "CaptureForensic", "FicheTete", "Graisses",
+        { "W4P4a", "W3UDA", "W3U1", "W3U2", "Charpente", "DemoIdentity", "ScreenB3", "ShellSurimpression", "CaptureDistrict", "CaptureReputation", "CaptureFamille", "Joignabilite", "ScreenCarte", "CaptureCarte", "EcranAutonomy", "EcranExceptions", "EcranRegleLieutenant", "EcranTenureLieutenant", "EcranUiLieutenant", "EcranRegleTier2", "EcranAppro", "ScreenB7", "ScreenC1", "ScreenC6", "EcranDelegation", "ScreenC2", "EcranDemolition", "ScreenC3", "EcranLoi", "EcranConflit", "Ecran10", "I18n", "CatalogueEnLigne", "BundleReel", "JUGE", "CaptureDetail", "CaptureExceptions", "CaptureFiche", "CaptureSousChrome", "CaptureHorizon", "CaptureForensic", "FicheTete", "Graisses",
         // Montage de l'art (2026-09-07) — entre au filtre AVEC son compte vert, jamais avant :
         // une garde qui n'a jamais tourné n'est pas une garde. Mesuré sous surcharge :
         // `passed=2 failed=0 declares=2 comptes=2`, couverture 12/12, zéro réseau, zéro écriture.
