@@ -384,7 +384,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(4, CompterNoms(RacineEcran().transform, "Ecu"), "un écusson par famille, jamais un cinquième");
             Assert.IsNotNull(RacineEcran().transform.Find("Corps/Contenu/Table/Famille_tarcum/BordChoisi"),
                 "la ligne visée porte le filet chaud de la maquette");
-            Assert.AreEqual("T", TexteSous("Famille_tarcum", "Initiale"));
+            foreach (string cle in ConflitResolvers.DomaineFamilles)
+                Assert.AreEqual("", TexteSous("Famille_" + cle, "Initiale"),
+                    $"l'écusson de {cle} est VIDE tant que {ConflitResolvers.CleInitiale(cle)} n'est pas servie (arbitrage 24/09) — aucune lettre inventée");
             Assert.IsFalse(ecran.EnvoiPossible, "famille seule : pas encore");
 
             GameObject.Find("Homme_00000000-0000-4000-8000-000000000000").GetComponent<Button>().onClick.Invoke();
@@ -835,6 +837,22 @@ namespace MafiaCleanCity.Operational.Tests
         // `target_rival_key` est clos côté back (enum Postgres `rival_key`, `RIVAL_DISPLAY_NAME` à 4 entrées) et une famille
         // hors domaine est refusée au POST (404). Hors domaine, `NomFamille` rend « type inconnu » comme tout résolveur de
         // SORTE — jamais la clé brute, jamais une exception.
+        // L'initiale de l'écusson : vide, sans appel à Libelle (aucun repli compté), sur les 4 familles et hors domaine. Le jour où
+        // la clé est servie, la garde BundleReel (ZeroRepliDesLocataires, règle 3) rougit : brancher ParValeur, réécrire ce test.
+        [Test]
+        public void EcranConflitR8_InitialeFamille_VideTantQueLaCleNEstPasServie_SansRepliCompte()
+        {
+            MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
+            foreach (string cle in ConflitResolvers.DomaineFamilles)
+            {
+                Assert.AreEqual("", ConflitResolvers.InitialeFamille(cle), cle);
+                StringAssert.StartsWith("conflit.initiale.", ConflitResolvers.CleInitiale(cle));
+            }
+            Assert.AreEqual("", ConflitResolvers.InitialeFamille("inconnue"), "hors domaine : vide aussi, pas de « ? »");
+            Assert.AreEqual(0, MafiaCleanCity.I18n.Libelle.NbAppels, "aucune clé demandée : rien de compté en repli");
+            Assert.AreEqual("conflit.initiale.iron_throat", ConflitResolvers.CleInitiale("iron_throat"), "forme ParValeur, la valeur servie");
+        }
+
         [Test]
         public void EcranConflitR1_ResolveurNomFamille_CouvreLesQuatreValeurs()
         {

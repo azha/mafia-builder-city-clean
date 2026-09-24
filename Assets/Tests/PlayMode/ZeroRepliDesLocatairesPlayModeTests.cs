@@ -70,6 +70,11 @@ namespace MafiaCleanCity.Operational.Tests
             "famille.ecran.retirer",
         };
 
+        /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
+        /// repli ne les voit. La règle (3) rougit le jour où l'une est servie. Source : le résolveur qui les nomme, jamais recopiées.</summary>
+        private static readonly string[] CleesAttenduesNonBranchees =
+            MafiaCleanCity.Operational.ConflitResolvers.DomaineFamilles.Select(MafiaCleanCity.Operational.ConflitResolvers.CleInitiale).ToArray();
+
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>
         private static readonly (string nom, Func<AppShell, MonoBehaviour> monter)[] Mesures =
         {
@@ -190,6 +195,13 @@ namespace MafiaCleanCity.Operational.Tests
             var devenuesServies = DetteDatee.Where(I18nCatalog.Connait).ToList();
             Assert.IsEmpty(devenuesServies, $"{devenuesServies.Count} clé(s) de la dette SONT servies désormais — les retirer de " +
                 "DetteDatee : " + string.Join(" · ", devenuesServies));
+            // (3) une clé ATTENDUE que le code ne demande pas encore (arbitrage : rien d'affiché tant qu'elle manque) et que le back
+            // sert désormais : la BRANCHER. Aujourd'hui : l'initiale des écussons de ㉙ (2026-09-24).
+            var attenduesServies = CleesAttenduesNonBranchees.Where(I18nCatalog.Connait).ToList();
+            Assert.IsEmpty(attenduesServies, $"{attenduesServies.Count} clé(s) ATTENDUE(S) sont servies — les brancher : " +
+                string.Join(" · ", attenduesServies) + ". Mode d'emploi (initiales) : `ConflitResolvers.InitialeFamille` rend " +
+                "`Libelle.ParValeur(\"conflit\", \"initiale\", cle, \"\")` ; le test E9 passe de « écusson vide » à « initiale = valeur " +
+                "servie » ; R8 est réécrit ; l'entrée sort de CleesAttenduesNonBranchees.");
         }
     }
 }

@@ -805,8 +805,8 @@ namespace MafiaCleanCity.Operational
             }
         }
 
-        /// <summary>Le petit écu de la table des familles (`.fam .ecu`) : une initiale stable, purement visuelle, dérivée du
-        /// nom déjà servi — jamais un nouveau fait de jeu.</summary>
+        /// <summary>Le petit écu de la table des familles (`.fam .ecu`). Son initiale est `ConflitResolvers.InitialeFamille` :
+        /// VIDE tant que sa clé n'est pas servie (arbitrage du 2026-09-24).</summary>
         private void AjouterEcusson(Transform parent, string cle, bool choisi)
         {
             float largeur = Px(26f), hauteur = Px(30f);
@@ -827,26 +827,13 @@ namespace MafiaCleanCity.Operational
             filet.raycastTarget = false;
             Etirer((RectTransform)bord.transform);
 
-            string nom = ConflitResolvers.NomFamille(cle);
             TextMeshProUGUI initiale = NouveauTexteFiche(ecu.transform, "Initiale",
-                InitialeFamille(cle, nom), 10f,
+                ConflitResolvers.InitialeFamille(cle), 10f,
                 choisi ? CouleurLocale("#f0dfc4") : CouleurLocale("#c9a86a"), true);
             initiale.font = DesignTokens.Current.hudSerifFont;
             initiale.alignment = TextAlignmentOptions.Center;
             Etirer((RectTransform)initiale.transform);
             TrackText(initiale.text);
-        }
-
-        private static string InitialeFamille(string cle, string nom)
-        {
-            switch (cle)
-            {
-                case "coil": return "C";
-                case "tarcum": return "T";
-                case "iron_throat": return "G";
-                case "saltline": return "S";
-                default: return string.IsNullOrEmpty(nom) ? "?" : nom.Substring(0, 1);
-            }
         }
 
         /// <summary>Le compte des envois RENTRÉS (`status == "resolved"`) par `target_rival_key`, côté client. `engagements`
@@ -1521,6 +1508,20 @@ namespace MafiaCleanCity.Operational
                 default: return MafiaCleanCity.I18n.Repli.Type(cle);
             }
         }
+
+        /// <summary>La clé ATTENDUE de l'initiale d'un écusson — forme `ParValeur` (`conflit.initiale.<valeur servie>`), proposée à
+        /// l'atelier le 2026-09-24 ; si l'atelier la nomme autrement, c'est ICI qu'on la corrige (une source, lue par la garde
+        /// `BundleReel` qui rougit le jour où elle est servie).</summary>
+        public static string CleInitiale(string cle) => MafiaCleanCity.I18n.Libelle.CleDe("conflit", "initiale", cle);
+
+        /// <summary>L'initiale de l'écusson d'une famille : VIDE (arbitrage du 2026-09-24). Les médaillons C/T/G/S de la maquette
+        /// (cadres 59-61) ne se DÉDUISENT pas du nom servi : « La Coil » donne L en fr, « The Coil » donne T en en (deux T avec
+        /// Tarcum), « Iron Throat » donne I. Aucune lettre inventée, aucun appel à `Libelle` (pas de repli compté) tant que la
+        /// clé n'est pas servie.
+        /// ⇒ Le jour où `CleInitiale(cle)` est servie (la garde `ZeroRepliDesLocataires`, règle 3, rougit) : rendre
+        ///   `Libelle.ParValeur("conflit", "initiale", cle, "")`, repli vide, et remplacer le test E9 « écusson vide » par
+        ///   « initiale = valeur servie ».</summary>
+        public static string InitialeFamille(string cle) => string.Empty;
 
         /// <summary>Le sous-titre de chaque famille — maquette ratifiée (cadres 59-61), clés servies `conflit.bloc.*` (balayage 34 de
         /// l'atelier : classe « servi »). Hors des 4 ⇒ « type inconnu », comme `NomFamille`.</summary>
