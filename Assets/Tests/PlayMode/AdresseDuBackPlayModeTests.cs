@@ -79,6 +79,7 @@ namespace MafiaCleanCity.Operational.Tests
         private GameObject shellGo;
         private AppShell shell;
         private HashSet<GameObject> racinesAvant;
+        private (float haut, float bas)? insetsAvant;
 
         /// <summary>Toutes les racines vivantes : scène active ET `DontDestroyOnLoad` (lue par un témoin posé puis retiré).</summary>
         private static List<GameObject> Racines()
@@ -102,6 +103,14 @@ namespace MafiaCleanCity.Operational.Tests
             // ⛔ TOUT CE QUE LE SHELL A CRÉÉ PART — mesuré au créneau du 24/09 : sans ce balayage, A4 laissait une racine à Canvas, et
             // l'écran ㉙ monté HORS shell juste après (EcranConflitE12, vert seul) bâtissait sous ELLE : « le bouton reste dans la
             // fenêtre masquée » rougissait. Un test qui monte le shell rend la scène comme il l'a trouvée, et nomme ce qu'il retire.
+            // ⛔ ET SES STATIQUES : le shell PUBLIE ses marges (ShellChrome.PublierInsets) ; un écran monté hors shell ensuite (㉙
+            // bâtit son corps entre `BottomInsetPx` et `TopInsetPx`) héritait des marges d'un shell détruit. Mesuré : la racine
+            // retirée seule (EventSystem) laissait E12 rouge ; ce sont les marges. Rendues à leur valeur d'AVANT.
+            if (insetsAvant.HasValue)
+            {
+                MafiaCleanCity.Shell.ShellChrome.PublierInsets(insetsAvant.Value.haut, insetsAvant.Value.bas);
+                insetsAvant = null;
+            }
             if (racinesAvant != null)
             {
                 var restes = Racines().Where(g => g != null && !racinesAvant.Contains(g)).ToList();
@@ -167,6 +176,7 @@ namespace MafiaCleanCity.Operational.Tests
         public IEnumerator A4_LesEcransMontesParLeShell_EnvoientLeursRequetesALaSource()
         {
             racinesAvant = new HashSet<GameObject>(Racines());
+            insetsAvant = (MafiaCleanCity.Shell.ShellChrome.TopInsetPx, MafiaCleanCity.Shell.ShellChrome.BottomInsetPx);
             LogAssert.ignoreFailingMessages = true;   // 503 partout : les erreurs réseau sont le bruit attendu, la mesure est la requête
             int port = PortLibre();
             ecouteur = new HttpListener();
