@@ -160,13 +160,15 @@ namespace MafiaCleanCity.Operational
         public DecisionDeSessionDto[] decisions;
     }
 
-    /// <summary>Une décision de structure prise dans la session : `decision_type` (`StructuralDecisionType` du gouverneur —
+    /// <summary>Une décision de structure prise dans la session : `decision_type_key` (`StructuralDecisionType` du gouverneur —
     /// `TASK_RETIREMENT` pour confier, `TASK_RECALL` pour reprendre, structural-decision-catalogue.ts:73, 83 — ou un autre site
     /// structurel) et `category_key` quand la décision porte sur une charge.</summary>
     [Serializable]
     public class DecisionDeSessionDto
     {
-        public string decision_type;
+        /// <summary>Le NOM du type de décision (`TASK_RETIREMENT`, …). RENOMMÉ par le back le 2026-09-24 (ex-`decision_type`) : même nom
+        /// et même sens que la carte HL (hl-card-projection.ts). Une décision sous l'ancien nom n'est pas lue (JsonUtility lit par nom).</summary>
+        public string decision_type_key;
         public string category_key;
     }
 
