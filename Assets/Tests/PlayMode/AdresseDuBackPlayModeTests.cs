@@ -78,6 +78,18 @@ namespace MafiaCleanCity.Operational.Tests
         private readonly List<string> recues = new List<string>();
         private GameObject shellGo;
         private AppShell shell;
+        private HashSet<GameObject> racinesAvant;
+
+        /// <summary>Toutes les racines vivantes : scène active ET `DontDestroyOnLoad` (lue par un témoin posé puis retiré).</summary>
+        private static List<GameObject> Racines()
+        {
+            var r = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList();
+            var temoin = new GameObject("TemoinDDOL");
+            Object.DontDestroyOnLoad(temoin);
+            r.AddRange(temoin.scene.GetRootGameObjects().Where(g => g != temoin));
+            Object.DestroyImmediate(temoin);
+            return r;
+        }
 
         [TearDown]
         public void TearDown()
@@ -87,6 +99,16 @@ namespace MafiaCleanCity.Operational.Tests
             if (shell != null && shell.ShellCanvas != null) Object.DestroyImmediate(shell.ShellCanvas.gameObject);
             if (shellGo != null) Object.DestroyImmediate(shellGo);
             shell = null; shellGo = null;
+            // ⛔ TOUT CE QUE LE SHELL A CRÉÉ PART — mesuré au créneau du 24/09 : sans ce balayage, A4 laissait une racine à Canvas, et
+            // l'écran ㉙ monté HORS shell juste après (EcranConflitE12, vert seul) bâtissait sous ELLE : « le bouton reste dans la
+            // fenêtre masquée » rougissait. Un test qui monte le shell rend la scène comme il l'a trouvée, et nomme ce qu'il retire.
+            if (racinesAvant != null)
+            {
+                var restes = Racines().Where(g => g != null && !racinesAvant.Contains(g)).ToList();
+                if (restes.Count > 0) Debug.Log("[AdresseDuBack] racines laissées par le shell, retirées : " + string.Join(", ", restes.Select(g => g.name)));
+                foreach (GameObject g in restes) Object.DestroyImmediate(g);
+                racinesAvant = null;
+            }
             if (ecouteur != null) { try { ecouteur.Close(); } catch (ObjectDisposedException) { } ecouteur = null; }
             I18nCatalog.Oublier();
         }
@@ -144,6 +166,7 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest]
         public IEnumerator A4_LesEcransMontesParLeShell_EnvoientLeursRequetesALaSource()
         {
+            racinesAvant = new HashSet<GameObject>(Racines());
             LogAssert.ignoreFailingMessages = true;   // 503 partout : les erreurs réseau sont le bruit attendu, la mesure est la requête
             int port = PortLibre();
             ecouteur = new HttpListener();
