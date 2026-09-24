@@ -264,8 +264,11 @@ namespace MafiaCleanCity.Operational.Tests
             yield return CaptureTo(canvas, largeur, hauteur, "ash_luxury_specialized_lab.png");
         }
 
+        // RENDU FABRIQUÉ (décision de l'orchestrateur, 24/09) : cette capture n'est PAS une capture de compte servi. Les données sont
+        // fabriquées, elle n'exige aucune identité, et elle écrit Assets/Screenshots/building_card_pupitre_lieutenant.png. Catégorie de
+        // capture `ClichePupitre` (ex-`PhotoFicheBatiment`, qui CONTENAIT `FicheBatiment` et partait avec l'écran : K0).
         [UnityTest]
-        [Category("PhotoFicheBatiment")]
+        [Category("ClichePupitre")]
         public IEnumerator CapturePupitreLieutenantScreenshot()
         {
             const int largeur = 1080;
