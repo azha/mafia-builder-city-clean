@@ -9,6 +9,10 @@ le domaine `commissariat.bloc` devient `police.bloc` (validé par f2 le 23/09), 
 Usage : verifier-30.py [v1|v2]"""
 import os, re, subprocess, sys, unicodedata
 ICI = os.path.dirname(os.path.abspath(__file__))
+# Contrat i18n ADDITIF (ruling du 25/08) : une clé SERVIE n'est jamais renommée ; si le fr change, la valeur change et la clé garde
+# l'ancien slug. Exceptions déclarées, une par une, avec la décision qui a changé la valeur :
+CLE_GARDEE = {'conflit.bloc.les_ferrailleurs_de_spine'}   # 40 v3.1 (f8bed110) : « la ferraille, à Spine » (D13), clé gardée
+
 def slug(s):
     o = ''
     for c in unicodedata.normalize('NFD', s):
@@ -45,7 +49,7 @@ for a, b in zip(src, base):
     sa, sb = a.split('\t'), b.split('\t'); cle, fr, en = sb[3], sb[4], sb[5]
     dom = '.'.join((sa[3] if '<' not in sa[3] else 'famille.regle.x').split('.')[:2]); dom = DOMAINE.get(dom, dom)
     if fr in GENRES: d.append(f'{cle} : « {fr} » retiré par D12-D15')
-    if cle != f'{dom}.{slug(fr)}': d.append(f'{sb[0]} : clé {cle} ≠ {dom}.{slug(fr)}')
+    if cle != f'{dom}.{slug(fr)}' and cle not in CLE_GARDEE: d.append(f'{sb[0]} : clé {cle} ≠ {dom}.{slug(fr)}')
     if "'" in fr: d.append(f'{cle} : apostrophe droite')
     if not en: d.append(f'{cle} : en vide')
     if fr == en and fr not in MEMES: d.append(f'{cle} : en == fr')

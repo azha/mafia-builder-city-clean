@@ -7,7 +7,7 @@ Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:731	NomFamille	coi
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:732	NomFamille	tarcum	conflit.bloc.tarcum	Tarcum	Tarcum	non servie		
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:733	NomFamille	iron_throat	conflit.bloc.gorge_de_fer	Gorge-de-Fer	Iron Throat	non servie		
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:734	NomFamille	saltline	conflit.bloc.saltline	Saltline	Saltline	non servie		
-Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:746	SousTitreFamille	coil	conflit.bloc.les_ferrailleurs_de_spine	les ferrailleurs de Spine	the scrap dealers of Spine	non servie		
+Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:746	SousTitreFamille	coil	conflit.bloc.les_ferrailleurs_de_spine	la ferraille, à Spine	scrap, in Spine	non servie		
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:747	SousTitreFamille	tarcum	conflit.bloc.le_port_et_ce_qui_y_entre	le port, et ce qui y entre	the port, and what comes in	non servie		
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:748	SousTitreFamille	iron_throat	conflit.bloc.les_docks_du_nord	les docks du nord	the north docks	non servie		
 Assets/Scripts/Operational/Conflit/ConflitScreenController.cs:749	SousTitreFamille	saltline	conflit.bloc.la_ligne_de_sel_a_l_est	la ligne de sel, à l’est	the salt line, to the east	non servie		
