@@ -29,6 +29,9 @@ namespace MafiaCleanCity.Shell.Tests
     //   A6  la ligne de file a la hauteur de la maquette (7,2 % de l'écran), la MÊME avec et sans carte de tête — jamais étirée
     //   A8  (26/09, reste de l'UX) le fond de ville de ③ derrière l'Accueil ; « {nom} attend vos ordres » UNE fois à l'écran : le
     //       bandeau n'annonce pas la carte que la ligne de file porte (contrôle positif : sans la ligne, il l'annonce)
+    //   A9  (f2, 26/09, après les arrondis et liserés de 1562d6fa) garde STRUCTURELLE du socle sur ④ monté en entier (suite, file, fond
+    //       de ville) : tout Graphic porte son CanvasRenderer, tout Graphic sous un Mask / RectMask2D est un MaskableGraphic ; plancher
+    //       anti-vacuité (les liserés arrondis sont là)
     //   A7  « La suite » (cadre 4, table 72) : sans carte, au palier 1, elle PREND le milieu (le calme s'efface), la file reste en bas ;
     //       au palier 2, rien ne change
     //   A3  G1 (suivi ⊥ UX §I, 26/09) : l'Accueil rouvert RELIT la tête et la file (session/open recalcule hl_card) — une carte
@@ -422,6 +425,43 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsFalse(shell.LaLigneDeFileEstALEcran());
             Assert.IsTrue(shell.AnnoncerAuBandeau(false, null), "sans la ligne, le bandeau parle");
             Assert.AreEqual(AnnonceDuBandeau.Etat.Carte, shell.TopBar.Bandeau.Courante?.Quoi, "et c'est la carte qu'il annonce");
+        }
+
+        [UnityTest]
+        public IEnumerator A9_Structure_ToutGraphicASonRenderer_EtEstMaskableSousUnMasque()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_Structure");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            Poser(shell, "Token", "jeton-de-test");
+            SessionOpenDto reponse = AvecCarte(null);
+            reponse.queue = new[] { new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "e-1", severity_band = "MODERATE" } };
+            shell.TransportDeSessionPourTest = new TransportTemoin { Reponse = reponse };
+            EtatDeLaSuite neuf = JoueurNeuf(1); neuf.ChargePlanque = "FULL";   // A1 · B · E-pleine (au plus 3) : trois gestes, dont l'or
+            shell.SourceDeLaSuitePourTest = new SourceTemoin { Etat = neuf };
+            yield return RouvrirParEmpire();
+            Assert.IsTrue(shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).Any(s => s.Visible), "précondition : la suite est montrée");
+
+            var sansRenderer = new List<string>();
+            var nonMaskable = new List<string>();
+            int graphiques = 0, sousMasque = 0;
+            foreach (UnityEngine.UI.Graphic g in shell.ContentSlot.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+            {
+                graphiques++;
+                if (g.GetComponent<CanvasRenderer>() == null) sansRenderer.Add(g.name);
+                bool masque = g.GetComponentsInParent<UnityEngine.UI.Mask>(true).Any(m => m.gameObject != g.gameObject)
+                              || g.GetComponentsInParent<UnityEngine.UI.RectMask2D>(true).Any();
+                if (!masque) continue;
+                sousMasque++;
+                if (!(g is UnityEngine.UI.MaskableGraphic)) nonMaskable.Add(g.name);
+            }
+            int liseres = shell.ContentSlot.GetComponentsInChildren<Transform>(true).Count(x => x.name == "Lisere");
+            Assert.GreaterOrEqual(liseres, 5, $"anti-vacuité : le bloc, 3 gestes et la ligne portent leur liseré (vus : {liseres})");
+            Assert.Greater(sousMasque, 0, "anti-vacuité : le fond de ville est sous son RectMask2D");
+            Assert.Greater(graphiques, 20, $"anti-vacuité : ④ monté en entier ({graphiques} Graphic)");
+            Assert.IsEmpty(sansRenderer, "Graphic sans CanvasRenderer : " + string.Join(", ", sansRenderer));
+            Assert.IsEmpty(nonMaskable, "Graphic NON maskable sous un masque : " + string.Join(", ", nonMaskable));
         }
 
         [UnityTest]
