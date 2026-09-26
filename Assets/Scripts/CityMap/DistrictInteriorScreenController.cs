@@ -2785,9 +2785,12 @@ namespace MafiaCleanCity.CityMap
             }
             else if (ficheSortie != null)
             {
+                // f2 (26/09) : la phrase par GABARIT (l'ordre des mots vient de la valeur, jamais d'une concaténation) ; la raison est déjà
+                // une phrase servie (RefusServi) ou du client — jamais le texte brut du back.
                 string raison = outcome != null && !string.IsNullOrEmpty(outcome.Message)
-                    ? outcome.Message : "réponse absente";
-                ficheSortie.text = "Blanchiment indisponible : " + raison;
+                    ? outcome.Message : MafiaCleanCity.I18n.Libelle.De("district", "fiche", "réponse absente");
+                ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.blanchiment_indisponible_raison",
+                    "Blanchiment indisponible : {raison}", new System.Collections.Generic.Dictionary<string, string> { { "raison", raison } });
             }
             blanchimentEnCours = false;
         }
