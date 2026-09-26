@@ -99,6 +99,9 @@ namespace MafiaCleanCity.Operational.Tests
             "tutoriel.vide.une_premiere_lecon_vous_attend",
             "famille.ecran.recruter_archetype",
             "famille.ecran.nouvelle_recrue_archetype",
+            "profil.etat.active",
+            "profil.langue.fr",
+            "profil.langue.en",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
