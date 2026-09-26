@@ -358,11 +358,16 @@ namespace MafiaCleanCity.Shell
                         "Vos lieutenants n’ont encore rien à tenir\u00A0: donnez-leur une première règle.")
                     : Lib("bloc", "Vos lieutenants ont tenu la ligne — rien ne réclame votre parole");
                 if (versLaFamille != null) versLaFamille.interactable = RienATenir;
+                // ⑯ (§G de la passe UX, 26/09) : UN état, UNE phrase. Sans rien à tenir, le registre (« La routine, tenue sans vous ·
+                // rien n'a dévié · 0 ») contredisait la plaque juste au-dessus — il se retire ; il revient dès qu'une routine attend.
+                if (registreRoot != null) registreRoot.gameObject.SetActive(!RienATenir);
                 MajRegistre(enAttente, tamponDisponible, 0);
                 return;
             }
 
             RenderedEmptyState = false;
+            RienATenir = false;
+            if (registreRoot != null) registreRoot.gameObject.SetActive(true);
             plaqueVide.SetActive(false);
             tabourets.SetActive(false);
             decor.AppliquerEtat(vide: false);

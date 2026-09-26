@@ -9,6 +9,7 @@ namespace MafiaCleanCity.Shell.Tests
     // 0 carte ET 0 routine ⇒ « rien à tenir : donnez-leur une première règle », qui mène à ⑧. Hors réseau.
     //   V1  0 carte, 0 routine ⇒ la phrase de la table, et le toucher mène à la Famille (⑥ porte ⑧)
     //   V2  0 carte, des routines en attente ⇒ la phrase d'avant (vraie), et le toucher ne mène nulle part
+    //   V3  ⑯ (§G, 26/09) : rien à tenir ⇒ le registre (« rien n'a dévié · 0 ») se retire ; des routines ⇒ il est là
     [Category("RevueSansRoutine")]
     public class RevueSansRoutinePlayModeTests
     {
@@ -48,6 +49,16 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual("Vos lieutenants ont tenu la ligne — rien ne réclame votre parole", e.PlaqueDuMatinTitre.text);
             e.OuvrirLaFamille();
             Assert.AreEqual(0, e.OuverturesDeLaFamille, "hors de l'état « rien à tenir », le toucher ne mène nulle part");
+        }
+
+        [Test]
+        public void V3_RienATenir_LeRegistreSeRetire()
+        {
+            var e = Ecran();
+            e.AppliquerRevue(new FlagReviewResponseDto { cards = new FlagCardDto[0], routine_pending_count = 0 });
+            Assert.IsFalse(e.Registre.gameObject.activeSelf, "une seule phrase : la plaque, pas le registre qui la contredit");
+            e.AppliquerRevue(new FlagReviewResponseDto { cards = new FlagCardDto[0], routine_pending_count = 3, batch_confirm_available = true });
+            Assert.IsTrue(e.Registre.gameObject.activeSelf, "des routines attendent : le registre les compte");
         }
     }
 }
