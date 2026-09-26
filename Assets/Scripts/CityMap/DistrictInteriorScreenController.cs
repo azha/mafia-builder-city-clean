@@ -1911,7 +1911,6 @@ namespace MafiaCleanCity.CityMap
         public int FicheBlanchimentTentatives { get; private set; }
         public int FicheBlanchimentReussites { get; private set; }
         public DistrictLaunderOutcome DernierBlanchiment { get; private set; }
-        public const int FicheBlanchimentMontantCents = 25_000;
 
         /// <summary>Le bâtiment actuellement ouvert dans la fiche — `null` si elle est fermée.
         /// Test hook : une falsifiable peut vérifier QUEL bâtiment est ouvert, pas seulement qu'une
@@ -2775,7 +2774,7 @@ namespace MafiaCleanCity.CityMap
 
             string frontShopId = FicheBuildingId;
             DistrictLaunderOutcome outcome = null;
-            yield return projections.InjectLaundering(frontShopId, FicheSafehouseId, FicheBlanchimentMontantCents,
+            yield return projections.InjectLaundering(frontShopId, FicheSafehouseId,
                 sessionBearer, r => outcome = r);
             DernierBlanchiment = outcome;
             if (outcome != null && outcome.Ok)

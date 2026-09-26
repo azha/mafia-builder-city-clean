@@ -214,14 +214,13 @@ namespace MafiaCleanCity.Operational
         }
 
         /// <summary>POST /v1/operational/laundering/inject — inject dirty cash through a front-shop into a Stage-1 node.</summary>
-        public IEnumerator Inject(string frontShopId, string safehouseId, int amountCents,
+        public IEnumerator Inject(string frontShopId, string safehouseId,
             string bearer, Action<ActionOutcome> done)
         {
             string body = JsonUtility.ToJson(new InjectRequestDto
             {
                 front_shop_id = frontShopId,
                 safehouse_id = safehouseId,
-                amount_cents = amountCents,
             });
             return Post(Url("laundering/inject"), body, bearer,
                 json => JsonUtility.FromJson<InjectEnvelope>(json)?.payload?.data?.node_id,

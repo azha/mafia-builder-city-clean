@@ -447,9 +447,9 @@ namespace MafiaCleanCity.Operational
         }
 
         /// <summary>Front-shop action: inject dirty cash to launder (front-shop = this building).</summary>
-        public IEnumerator Inject(string safehouseId, int amountCents)
+        public IEnumerator Inject(string safehouseId)
         {
-            yield return RunAction(c => client.Inject(buildingId, safehouseId, amountCents, Token, c),
+            yield return RunAction(c => client.Inject(buildingId, safehouseId, Token, c),
                 "Argent injecté", "Impossible d'injecter");
         }
 
@@ -1196,12 +1196,12 @@ namespace MafiaCleanCity.Operational
                     break;
                 case "front_shop":
                     // ⛔ ② (f2 26/09) : « Injecter » avait un geste VIDE — un bouton qui ne faisait rien. « Blanchir » vise la planque la plus
-                    // chargée du quartier (même règle et même montant que ① et ㊵) ; sans planque qui tienne de quoi blanchir, PAS de bouton.
+                    // chargée du quartier (même règle que ① et ㊵ ; le montant, c’est le back qui le décide — TD-765) ; sans planque qui tienne de quoi blanchir, PAS de bouton.
                     if (BlanchirOffertSurLaFiche(buildingId, PlanqueDuQuartier))
                     {
                         string planqueVisee = PlanqueDuQuartier.safehouse_id;
                         AddActionButton(actionBar, "blanchir", Cle("action", "Blanchir"),
-                            () => StartCoroutine(Inject(planqueVisee, MafiaCleanCity.CityMap.DistrictInteriorScreenController.FicheBlanchimentMontantCents)));
+                            () => StartCoroutine(Inject(planqueVisee)));
                     }
                     break;
                 case "grow_house":
