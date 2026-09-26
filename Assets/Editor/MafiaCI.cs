@@ -300,6 +300,10 @@ public static class MafiaCI
         "CartePanneau",    //  4 — ③ le panneau d'un district par valeur (table 68 + addendum)
         "ChainesDev",      //  4 — aucune chaîne de développeur à l'écran (crochets, noms de type) ; table 66 des diagnostics
         "EtatsVides",      //  2 — table 63 v2 (① BLANCHIR, planque vide)
+        // « La suite » (cadre 4 de ④, table 72, CLIENT-1, 2026-09-26) — catégorie NEUVE, verte avant inscription au créneau du 26/09
+        // (cumul c4889d71 : LaSuite+AccueilCanon+EcranAccueil+BundleReel+Charpente = 69/70, 1 ignoré déclaré, déclarés = comptés ; LaSuite
+        // 10/10). Hors réseau, aucune capture : PARTIE 1. Aucune relation de préfixe (compteur : PORTÉES = prises). Validé par l'orchestrateur.
+        "LaSuite",         // 10 — la décision par état (A1/A2/A3/B/C/D), l'ordre, les disparitions, les gestes, le premier geste doré
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
