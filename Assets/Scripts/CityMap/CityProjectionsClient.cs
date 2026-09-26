@@ -152,7 +152,7 @@ namespace MafiaCleanCity.CityMap
 
         /// <summary>Action portée par la fiche intégrée. Elle vit ici pour respecter le sens de
         /// dépendance CityMap ← Operational tout en utilisant le même endpoint serveur.</summary>
-        public IEnumerator InjectLaundering(string frontShopId, string safehouseId, int amountCents,
+        public IEnumerator InjectLaundering(string frontShopId, string safehouseId,
             string token, Action<DistrictLaunderOutcome> done)
         {
             string url = $"{BaseUrl.TrimEnd('/')}/v1/operational/laundering/inject";
@@ -160,7 +160,6 @@ namespace MafiaCleanCity.CityMap
             {
                 front_shop_id = frontShopId,
                 safehouse_id = safehouseId,
-                amount_cents = amountCents,
             });
             var outcome = new DistrictLaunderOutcome();
             using (var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))

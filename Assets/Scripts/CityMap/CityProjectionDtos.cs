@@ -192,8 +192,7 @@ namespace MafiaCleanCity.CityMap
     public class DistrictLaunderRequestDto
     {
         public string front_shop_id;
-        public string safehouse_id;
-        public int amount_cents;
+        public string safehouse_id;   // SANS montant (TD-765) : le back décide ce qui part de la planque
     }
 
     [Serializable] public class DistrictLaunderResultDto { public string node_id; }

@@ -740,7 +740,7 @@ namespace MafiaCleanCity.Operational
                 DesignTokens.Current.hudCreme, DesignTokens.Current.primaryFont);
         }
 
-        /// <summary>BLANCHIR depuis ㊵ : `inject` de la planque retenue vers la façade, le montant de ① (FicheBlanchimentMontantCents).
+        /// <summary>BLANCHIR depuis ㊵ : `inject` de la planque retenue vers la façade, SANS montant (TD-765 : le back décide ce qui part de la planque).
         /// Réussi ⇒ un nœud existe : la filière se RELIT (Charger) et montre ses étapes. Échoué ⇒ la phrase du refus (servie spécifique par
         /// RefusServi, sinon celle du client) sous le geste.</summary>
         public IEnumerator Blanchir()
@@ -749,7 +749,7 @@ namespace MafiaCleanCity.Operational
             BlanchimentsTentes++;
             MafiaCleanCity.CityMap.DistrictLaunderOutcome o = null;
             yield return new MafiaCleanCity.CityMap.CityProjectionsClient { BaseUrl = baseUrl }.InjectLaundering(FacadeId, SafehouseIdDeLaPlanque,
-                MafiaCleanCity.CityMap.DistrictInteriorScreenController.FicheBlanchimentMontantCents, token, x => o = x);
+                token, x => o = x);
             if (this == null) yield break;
             DernierBlanchiment = o;
             if (o != null && o.Ok) { yield return Charger(); yield break; }

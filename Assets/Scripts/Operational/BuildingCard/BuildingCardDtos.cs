@@ -197,13 +197,13 @@ namespace MafiaCleanCity.Operational
         public int quantity_units;
     }
 
-    // POST /v1/operational/laundering/inject  { front_shop_id, safehouse_id, amount_cents }
+    // POST /v1/operational/laundering/inject  { front_shop_id, safehouse_id } — SANS montant (TD-765) : le back décide ce qui part
+    // de la planque (montant OPTIONNEL côté back, décision f2 du 26/09). Un 25 000 fixe refusait (409) une planque de 10 000.
     [Serializable]
     public class InjectRequestDto
     {
         public string front_shop_id;
         public string safehouse_id;
-        public int amount_cents;
     }
 
     // ----- Action success payloads (ids / flags only — never the raw cents/grams debited; R2.2) -----
