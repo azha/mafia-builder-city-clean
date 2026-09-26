@@ -1,0 +1,7 @@
+clé	fr	en	statut	rule_id	note
+reputation.etat.le_silence_aux_remises	le silence aux remises	silence at handoffs	PROPOSÉ	silence_at_handoffs	canon 3.4 : fuit moins vite sous la pression MIS
+reputation.etat.les_dettes_honorees	les dettes honorées	debts made good	PROPOSÉ	debt_handling	canon 3.4 : emprunte et rembourse
+reputation.etat.le_reflexe_de_faire_remonter	le réflexe de faire remonter	passing problems up	PROPOSÉ	escalation_reflex	canon 3.4 ; « remontées » = le mot servi de la carte des escalades
+reputation.etat.la_force_mesuree	la force mesurée	force kept in check	PROPOSÉ	restraint_with_force	canon 3.4 : n’accepte pas les ordres durs sans question
+reputation.etat.le_reglement_a_la_loyale	le règlement à la loyale	settling fair	PROPOSÉ	settle_fair	PRÉFIXE (startsWith) ; canon 3.1/3.2 « I always settle fair » — enfreinte écrite par restraint-index.service.ts
+reputation.etat.la_juste_indemnite_de_depart	la juste indemnité de départ	fair severance	PROPOSÉ	recall_severance_fair	PRÉFIXE (startsWith) ; promotion_lock : l’indemnité du lieutenant rappelé — enfreinte écrite par promotion-lock.service.ts
