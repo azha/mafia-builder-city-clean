@@ -2634,6 +2634,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
                                                     FamilleRoleTaille, TextAlignmentOptions.Left);
                 metierTxt.color = DesignTokens.Current.hudCremeSecondary;
                 AddLayoutElement(metierTxt.gameObject, minHeight: FX(28), flexibleHeight: 0);
+                // ⑥ (§G, 26/09 — planche F1) : « Cuisinie » — le groupe horizontal donnait au métier un peu MOINS que sa largeur rendue,
+                // et `Truncate` mangeait la dernière lettre. Le métier ne descend jamais sous sa largeur, et ne se tronque pas.
+                metierTxt.overflowMode = TextOverflowModes.Overflow;
+                metierTxt.GetComponent<LayoutElement>().minWidth = Mathf.Ceil(metierTxt.GetPreferredValues(metier).x) + 1f;
                 TrackText(metierTxt, metier);
             }
             // L'écart métier↔puce n'a pas d'homologue dans la maquette (elle n'a que la puce sur
@@ -2771,10 +2775,18 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 ? MafiaCleanCity.I18n.Libelle.Gabarit("famille.vide.au_repos_rien_a_cuire_pour_l_instant", "Au repos\u00A0: rien à cuire pour l’instant.")
                   + "\n" + MafiaCleanCity.I18n.Libelle.Gabarit("famille.vide.commandez_de_la_matiere_depuis_la_chaine_d_appro", "Commandez de la matière depuis la chaîne d’appro.")
                 : Lib("Aucune équipe rattachée");
+            // ⑥ (§G de la passe UX, 26/09 — planche F1) : « …depuis la chaî » COUPÉ. Le texte était ÉTIRÉ dans un cadre de hauteur
+            // FIGÉE (71 u) en `Truncate` : deux phrases longues reviennent à la ligne sur TROIS lignes, la troisième était tronquée.
+            // ⇒ le cadre prend la hauteur de son texte (groupe vertical, marges), 71 u restant le plancher ; et rien ne se tronque.
+            VerticalLayoutGroup vv = vide.AddComponent<VerticalLayoutGroup>();
+            vv.padding = new RectOffset(FX(12), FX(12), FX(8), FX(8));
+            vv.childAlignment = TextAnchor.MiddleCenter;
+            vv.childControlWidth = true; vv.childControlHeight = true;
+            vv.childForceExpandWidth = true; vv.childForceExpandHeight = false;
             TextMeshProUGUI t = NewText("Texte", vide.transform, texte, FamilleVideTaille, TextAlignmentOptions.Center);
             t.color = DesignTokens.Current.hudCremeSecondary;
-            t.enableWordWrapping = true;
-            Stretch((RectTransform)t.transform);
+            t.textWrappingMode = TextWrappingModes.Normal;
+            t.overflowMode = TextOverflowModes.Overflow;
             TrackText(t, texte);
             if (auRepos)
             {
