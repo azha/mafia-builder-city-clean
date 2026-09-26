@@ -23,6 +23,8 @@ namespace MafiaCleanCity.Shell.Tests
     //   A4  G4 (suivi ⊥ UX §I, 26/09) : avec une carte, AUCUNE surface tactile (la surface B6 posée sur la racine de la carte) ne
     //       recouvre un geste de la tête — mesuré au RAYCAST au centre de chaque geste montré ; « La carte » de l'ancienne feuille n'est
     //       plus sur l'Accueil (feuille éteinte, dbf8e71b) : le chevauchement déduit par la passe n'a plus d'objet
+    //   A5  suivi ⊥ UX §I (26/09) : pas de carte à fort levier mais une file ⇒ la FILE SEULE, en haut, sans « Rien à signaler » qui la
+    //       démente ; sa ligne porte « trancher » ; garde géométrique (départ en haut, écarts ≤ 5 %) aussi en A1/A2
     //   A3  G1 (suivi ⊥ UX §I, 26/09) : l'Accueil rouvert RELIT la tête et la file (session/open recalcule hl_card) — une carte
     //       RÉGLÉE depuis le lancement ne revient pas « en attente » ; la réponse périmée du lancement n'est jamais remontrée
     [Category("AccueilCanon")]
@@ -114,6 +116,7 @@ namespace MafiaCleanCity.Shell.Tests
             (float basTete, float _) = Bande((RectTransform)tete.transform);
             (float _, float hautFile) = Bande((RectTransform)file.transform);
             Assert.Greater(basTete, hautFile, $"{quand} : les bandes de la tête et de la file sont DISJOINTES (tête dès {basTete}, file jusqu'à {hautFile})");
+            VerifierGeometrie(quand, (RectTransform)tete.transform, (RectTransform)file.transform);
 
             Assert.AreEqual(HighestLeverageCardController.CardState.NoCard, tete.RenderedState, $"{quand} : précondition, pas de carte (hors réseau)");
             foreach (string geste in new[] { "CommitButton", "SkipButton", "TypedConfirmRow" })
@@ -188,6 +191,56 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(2, transport.Ouvertures);
             Assert.AreEqual(HighestLeverageCardController.CardState.NoCard, Tete().RenderedState,
                 "la carte réglée ne revient pas « en attente » (la réponse du lancement n'est jamais remontrée)");
+        }
+
+        /// <summary>Garde GÉOMÉTRIQUE (suivi ⊥ UX §I, 26/09 : « ~55 % de vide ») — dans le repère de `ContentSlot` : la première bande
+        /// part du HAUT de la zone sûre (à 1 % près), et deux bandes consécutives ne laissent pas plus de 5 % de la zone entre elles.</summary>
+        private void VerifierGeometrie(string quand, params RectTransform[] bandesDeHautEnBas)
+        {
+            Canvas.ForceUpdateCanvases();
+            float haut = shell.ContentSlot.rect.yMax - ShellChrome.TopInsetPx, bas = shell.ContentSlot.rect.yMin + ShellChrome.BottomInsetPx;
+            float zone = haut - bas;
+            Assert.Greater(zone, 1f, $"{quand} : précondition, une zone sûre mesurable");
+            var c = new Vector3[4];
+            var bornes = bandesDeHautEnBas.Select(rt =>
+            {
+                rt.GetWorldCorners(c);
+                float y0 = shell.ContentSlot.InverseTransformPoint(c[0]).y, y1 = shell.ContentSlot.InverseTransformPoint(c[1]).y;
+                return (bas: Mathf.Min(y0, y1), haut: Mathf.Max(y0, y1));
+            }).ToList();
+            Assert.LessOrEqual(Mathf.Abs(bornes[0].haut - haut), 0.01f * zone,
+                $"{quand} : la première bande part du haut de la zone sûre (bande {bornes[0].haut:F0}, zone {haut:F0})");
+            for (int i = 1; i < bornes.Count; i++)
+            {
+                float ecart = bornes[i - 1].bas - bornes[i].haut;
+                Assert.LessOrEqual(ecart, 0.05f * zone, $"{quand} : écart de {ecart / zone:P0} entre deux bandes (≤ 5 % de la zone sûre)");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator A5_SansCarteAvecUneFile_LaFileSeuleEnHaut_SansDementi()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_FileSeule");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            Poser(shell, "Token", "jeton-de-test");
+            SessionOpenDto reponse = AvecCarte(null);
+            reponse.queue = new[] { new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "e-1", severity_band = "MODERATE" } };
+            shell.TransportDeSessionPourTest = new TransportTemoin { Reponse = reponse };
+            yield return RouvrirParEmpire();
+
+            Assert.AreEqual(0, shell.ContentSlot.GetComponentsInChildren<HighestLeverageCardController>(false).Length,
+                "pas de carte à fort levier, une file : la tête vide n'est PAS montée (elle dirait « Rien à signaler » contre la file)");
+            ExceptionQueuePanelController file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
+            Assert.IsNotNull(file, "la file est montée");
+            Assert.AreEqual(1, file.RenderedCardCount, "précondition : la file porte la carte servie");
+            VerifierGeometrie("file seule", (RectTransform)file.transform);
+            var textes = shell.ContentSlot.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false).Select(t => t.text).ToList();
+            Assert.IsFalse(textes.Any(t => t.Contains("Aucune décision en attente") || t.Contains("Rien à signaler")),
+                "aucune affirmation contraire à la file (« Rien à signaler », « Aucune décision en attente »)");
+            Assert.IsNotNull(file.transform.GetComponentsInChildren<Transform>(false).FirstOrDefault(t => t.name == "Trancher"),
+                "la ligne porte son geste « trancher » (plus d'aplat « Resolve » muet)");
         }
 
         [UnityTest]

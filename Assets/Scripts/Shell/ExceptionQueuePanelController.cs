@@ -182,19 +182,46 @@ namespace MafiaCleanCity.Shell
                     MafiaCleanCity.Operational.Exceptions.ExceptionBandes.ParleUnLieutenant(card)), 260);
             renderedDescripteurs.Add(descriptor.text);
 
-            GameObject resolveBtn = new GameObject("Resolve", typeof(RectTransform));
-            resolveBtn.transform.SetParent(row.transform, false);
-            Image img = resolveBtn.AddComponent<Image>();
-            img.color = DesignTokens.Current.accentGold;
-            Button b = resolveBtn.AddComponent<Button>();
-            b.targetGraphic = img;
-            string suggestedMethod = "ONE_TIME";
-            string suggestedActionId = card.suggested_action != null ? card.suggested_action.id : null;
-            b.onClick.AddListener(() => StartCoroutine(ResolveInline(card.exception_id, suggestedMethod, suggestedActionId)));
-            LayoutElement btnLe = resolveBtn.AddComponent<LayoutElement>();
+            // ⛔ PASSE UX 26/09 (§G/§I, ④) — ici vivait « Resolve » : un APLAT `accentGold` SANS libellé, étiré par la mise en page (le plus
+            //    gros élément de l'écran de la minute 0), dont le toucher RÉGLAIT la carte par l'action suggérée sans rien dire. Le geste
+            //    de la ligne est « trancher » (le mot du canon, `ecrans-brennar-accueil.html` cadres 1-2, clé servie du bandeau) : il OUVRE
+            //    la carte (⑩), où le joueur choisit. Décidé (reco, 26/09). `ResolveInline` reste (sa garde W3U1 l'appelle directement).
+            GameObject trancherGo = new GameObject("Trancher", typeof(RectTransform));
+            trancherGo.transform.SetParent(row.transform, false);
+            Image zone = trancherGo.AddComponent<Image>();
+            Color invisible = DesignTokens.Current.surfaceRow; invisible.a = 0f;
+            zone.color = invisible;                                   // une zone de toucher, pas un aplat
+            Button b = trancherGo.AddComponent<Button>();
+            b.transition = Selectable.Transition.None;
+            b.targetGraphic = zone;
+            ExceptionCardDto carte = card;
+            b.onClick.AddListener(() => OuvrirLaCarte(carte));
+            LayoutElement btnLe = trancherGo.AddComponent<LayoutElement>();
             btnLe.minWidth = 70;
             btnLe.minHeight = 28;
+            btnLe.flexibleWidth = 0f;                                  // ne s'étire plus
+            TextMeshProUGUI mot = NewText(trancherGo.transform, MafiaCleanCity.I18n.Libelle.De("chrome", "bandeau", "trancher"), 90);
+            mot.color = DesignTokens.Current.accentGold;              // l'or du geste, sur le mot — jamais un aplat
+            mot.alignment = TextAlignmentOptions.Center;
+            mot.raycastTarget = false;
+            RectTransform motRt = (RectTransform)mot.transform;
+            motRt.anchorMin = Vector2.zero; motRt.anchorMax = Vector2.one; motRt.offsetMin = motRt.offsetMax = Vector2.zero;
         }
+
+        /// <summary>« trancher » : ouvre la carte (⑩) PAR LE SHELL, en surimpression — le joueur y choisit. Hors shell : rien.</summary>
+        public void OuvrirLaCarte(ExceptionCardDto card)
+        {
+            if (card == null) return;
+            IShellNavigator nav = ShellNavigatorLocator.Find();
+            if (nav == null) return;
+            ExceptionDetailController detail = nav.MonterLocataireEnSurimpression<ExceptionDetailController>();
+            if (detail == null) return;
+            detail.Init(card, token, client != null ? client.BaseUrl : MafiaCleanCity.AdresseDuBack.Url, onBack: null);
+            LastCarteOuverte = detail.gameObject;
+        }
+
+        /// <summary>Le détail ⑩ ouvert par « trancher » (garde).</summary>
+        public GameObject LastCarteOuverte { get; private set; }
 
         // ⛔ LES TROIS ÉTAIENT MORTES, et la troisième était le pire des trois : elle rendait
         //    « High »/« Medium »/« Low » — de l'anglais — sur un domaine que le back n'émet PAS

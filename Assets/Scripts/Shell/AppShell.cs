@@ -1556,6 +1556,15 @@ namespace MafiaCleanCity.Shell
         /// JOUR entre les deux — plus aucune bande ne touche sa voisine (la ligne « Lt. Tull attend vos ordres » posée sur le texte de la
         /// carte, §G P1).</summary>
         internal static readonly (float min, float max) BandeTete = (0.30f, 1.00f), BandeFile = (0.00f, 0.26f);
+        // ⛔ Suivi ⊥ UX §I (26/09) — deux restes de la planche de ④ : (2) ~55 % de VIDE entre une tête sans carte et la file ; (3) « Rien à
+        //    signaler · Aucune décision en attente » à côté de « Lt. Quist attend vos ordres — trancher », deux affirmations contraires.
+        //    Décidé (reco, 26/09) — la mise en page suit l'ÉTAT, la tête épouse son contenu :
+        //      · une carte à fort levier  : la tête (sa carte, ses options), puis la file — `BandeTete` / `BandeFile` ;
+        //      · pas de carte, une file   : la FILE SEULE, EN HAUT — sa première décision EST la tête (plus de « Rien à signaler » démenti) ;
+        //      · rien du tout (cadre 0)   : la tête vide et la file vide, serrées en haut.
+        //    Garde géométrique : `AccueilCanonPlayModeTests` (la première bande part du haut, écart ≤ 5 % entre deux bandes).
+        internal static readonly (float min, float max) BandeFileSeule = (0.56f, 1.00f),
+                                                         BandeTeteVide = (0.72f, 1.00f), BandeFileVide = (0.44f, 0.68f);
 
         private void MonterPanneauxAccueil(SessionOpenDto dto)
         {
@@ -1572,7 +1581,18 @@ namespace MafiaCleanCity.Shell
             // reçoit donc une BANDE fractionnaire distincte par panneau — un empilement STRUCTUREL
             // (chacun occupe toute la largeur, un quart de la hauteur), pas une composition visuelle
             // finale (celle-ci reste un travail ultérieur, DA/juge-visuel — consigné en Deviation).
-            HighestLeverageCardController hlCard = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", BandeTete.min, BandeTete.max);
+            bool avecCarte = dto?.hl_card != null && !string.IsNullOrEmpty(dto.hl_card.card_id);
+            bool avecFile = dto?.queue != null && dto.queue.Length > 0;
+            if (!avecCarte && avecFile)
+            {
+                // Pas de carte, une file : la file SEULE, en haut (voir `BandeFileSeule`).
+                ExceptionQueuePanelController seule = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", BandeFileSeule.min, BandeFileSeule.max);
+                seule.SetQueue(Token, dto.queue);
+                return;
+            }
+            (float min, float max) bandeTete = avecCarte ? BandeTete : BandeTeteVide;
+            (float min, float max) bandeFile = avecCarte ? BandeFile : BandeFileVide;
+            HighestLeverageCardController hlCard = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", bandeTete.min, bandeTete.max);
             // ⑤ `screen_1a` — le DÉTAIL de la carte, en surimpression. L'écran existe (maquette
             // ratifiée « ok top on garde comme ça »), et sans ce fil il ne serait montable par
             // personne : les quatre onglets sont pris, et un écran de détail n'a pas vocation à en
@@ -1583,7 +1603,7 @@ namespace MafiaCleanCity.Shell
 
             hlCard.SetPayload(Token, dto?.hl_card, dto?.structural_budget);
 
-            ExceptionQueuePanelController exceptions = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", BandeFile.min, BandeFile.max);
+            ExceptionQueuePanelController exceptions = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", bandeFile.min, bandeFile.max);
             exceptions.SetQueue(Token, dto?.queue);
             // ⛔ PASSE UX 26/09 (§G P1, « deux mises en page superposées ») — les VITAUX (OrgVitals : « Friction: Light · Tension: Calm »,
             //    cohésion) et le CHROME (HomeChrome : bandeau de chaufferie, raccourcis, machine à 5 états « [LoadingState] ») ne sont plus

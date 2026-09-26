@@ -381,7 +381,8 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotNull(ligneRendue,
                 $"la ligne 'Row_{idPremiereCarte}' doit exister dans le rendu PRODUCTION du panneau — " +
                 "précédent maison : \"Card_\" + exception_id (CharpenteOuvertureSessionOverlayPlayModeTests).");
-            Assert.IsNotNull(ligneRendue.Find("Resolve"), "chaque ligne doit porter un bouton 'Resolve' (ExceptionQueuePanelController.AddRow)");
+            Assert.IsNotNull(ligneRendue.Find("Trancher"), "chaque ligne porte son geste « trancher » (26/09 : plus l'aplat « Resolve » muet) — il ouvre ⑩");
+            Assert.IsNull(ligneRendue.Find("Resolve"), "plus d'aplat « Resolve » qui règle la carte sans rien dire (§G/§I ④)");
 
             // ── 4. UNE seule mise en page (§G P1) : la feuille du tableau de bord est ÉTEINTE (le fond reste, il cache la carte), et
             //      aucun texte de développeur ni d'anglais n'atteint l'Accueil au lancement. ──
