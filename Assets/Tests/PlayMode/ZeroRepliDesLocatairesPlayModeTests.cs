@@ -94,6 +94,8 @@ namespace MafiaCleanCity.Operational.Tests
             "inspection.vide.rien_a_faire_ici_tant_qu_aucune_file_n_est_ouverte",
             "revue.vide.vos_lieutenants_n_ont_encore_rien_a_tenir_donnez_leur_une_premiere_regle",
             "autonomie.vide.aucun_rapport_pour_l_instant_il_en_viendra_quand_vous_aurez_confie_une_tache_a_un_lieutenant",
+            "famille.vide.au_repos_rien_a_cuire_pour_l_instant",
+            "famille.vide.commandez_de_la_matiere_depuis_la_chaine_d_appro",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
