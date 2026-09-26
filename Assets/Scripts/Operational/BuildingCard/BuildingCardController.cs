@@ -767,7 +767,9 @@ namespace MafiaCleanCity.Operational
             ClearRows();
 
             titleText.text = NomDuBatiment(card);
-            typeText.text = $"Type: {TypeLabel(card.operational_type)}";
+            // ② (relevé f1 P5, atelier 26/09) : le type SEUL, par valeur (building.type.<operational_type>) — le préfixe « Type: » en dur
+            // (hors i18n, typographie anglaise) n'apprenait rien au joueur ; comme sur ①, le type suit le nom.
+            typeText.text = TypeLabel(card.operational_type);
             TrackText(titleText, titleText.text);
             TrackText(typeText, typeText.text);
 
@@ -2037,7 +2039,7 @@ namespace MafiaCleanCity.Operational
             titleText.fontStyle = FontStyles.Bold;
             AddLayoutElement(titleText.gameObject, minHeight: 30, flexibleHeight: 0);
 
-            typeText = NewText("Type", card.transform, "Type : —", 16, TextAlignmentOptions.Center);
+            typeText = NewText("Type", card.transform, "—", 16, TextAlignmentOptions.Center);   // le tiret de repli de la maison (D8), le temps de la réponse
             typeText.color = DesignTokens.Current.onSurfaceDim;
             AddLayoutElement(typeText.gameObject, minHeight: 24, flexibleHeight: 0);
 
