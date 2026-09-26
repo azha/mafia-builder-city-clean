@@ -395,6 +395,15 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotNull(accueil?.FondDeVille, "le fond de ville est posé (ressource CityMap/carte_ville_nuit)");
             Assert.IsTrue(accueil.FondDeVille.gameObject.activeInHierarchy, "il est visible derrière l'Accueil");
             Assert.AreSame(Resources.Load<Sprite>(DashboardController.CheminFondDeVille), accueil.FondDeVille.sprite, "la peinture de ③");
+            // Sous le chrome du haut (f1 26/09 : « LE PORT » transparaissait sous « JOUR 1 ») : la zone du fond, masquée, s'arrête à
+            // la zone sûre en haut.
+            Canvas.ForceUpdateCanvases();
+            var coins = new Vector3[4];
+            ((RectTransform)accueil.FondDeVille.transform.parent).GetWorldCorners(coins);
+            float hautZone = shell.ContentSlot.InverseTransformPoint(coins[1]).y;
+            float hautSur = shell.ContentSlot.rect.yMax - ShellChrome.TopInsetPx;
+            Assert.LessOrEqual(hautZone, hautSur + 1f, $"le fond s'arrête sous le chrome du haut ({hautZone:F0} ≤ {hautSur:F0})");
+            Assert.IsNotNull(accueil.FondDeVille.transform.parent.GetComponent<UnityEngine.UI.RectMask2D>(), "et il est rogné à sa zone");
 
             // (2) une seule fois à l'écran : la ligne de file porte la carte, le bandeau ne l'annonce pas.
             Assert.IsTrue(shell.LaLigneDeFileEstALEcran(), "précondition : la ligne de l'Accueil porte la carte");

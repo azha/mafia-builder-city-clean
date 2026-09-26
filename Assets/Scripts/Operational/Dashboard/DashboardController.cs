@@ -570,7 +570,13 @@ namespace MafiaCleanCity.Operational
             Sprite ville = Resources.Load<Sprite>(CheminFondDeVille);
             if (ville != null)
             {
-                fondDeVille = NewUI("FondDeVille", backdrop.transform);
+                // SOUS le chrome du haut, comme ③ (`ZoneLibre`) : la peinture porte ses noms de quartier cuits dans la texture, et la
+                // barre, translucide, les laissait transparaître (« LE PORT » sous « JOUR 1 », planche P1, f1 26/09). Derrière le
+                // dock, elle reste (la maquette y montre la ville).
+                GameObject zone = NewUI("ZoneDuFond", backdrop.transform);
+                Stretch((RectTransform)zone.transform, Vector2.zero, new Vector2(0f, -MafiaCleanCity.Shell.ShellChrome.TopInsetPx));
+                zone.AddComponent<RectMask2D>();
+                fondDeVille = NewUI("FondDeVille", zone.transform);
                 Stretch((RectTransform)fondDeVille.transform, Vector2.zero, Vector2.zero);
                 Image img = fondDeVille.AddComponent<Image>();
                 img.sprite = ville;
@@ -579,8 +585,8 @@ namespace MafiaCleanCity.Operational
                 AspectRatioFitter fit = fondDeVille.AddComponent<AspectRatioFitter>();
                 fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
                 fit.aspectRatio = ville.rect.width / ville.rect.height;
-                backdrop.AddComponent<RectMask2D>();                  // le COVER rogne sur les bords, jamais hors de l'écran
                 FondDeVille = img;
+                fondDeVille = zone;                                    // on active/éteint la zone entière
                 fondDeVille.SetActive(FeuilleMasquee);
             }
 
