@@ -290,6 +290,7 @@ namespace MafiaCleanCity.Operational
                 // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26, table 63) : sans relais possédé (le joueur neuf), l'écran disait « La distribution
                 // n'a pas répondu » + une phrase de DÉVELOPPEUR (« la prémisse de cet écran… ne tient pas ici »). Ce n'est pas une panne :
                 // la réponse est VIDE. Le catalogue s'amorce ICI (plus bas, il ne l'est qu'après la route) : sinon les mots retomberaient.
+                DerniereErreur = errRoute;   // le DIAGNOSTIC nommé reste (EcranDistributionP1) ; il n'est pas affiché dans cet état
                 yield return I18nCatalog.Amorcer(new I18nClient { BaseUrl = baseUrl }, token);
                 if (renduExpliciteDemande) yield break;
                 RendreAucunRelais();
