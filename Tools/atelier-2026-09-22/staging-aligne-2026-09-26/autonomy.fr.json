@@ -1,0 +1,20 @@
+{
+  "autonomy.cook.now": "Cuisiner maintenant",
+  "autonomy.cook.refine": "Affiner d’abord",
+  "autonomy.launder.baseline": "Injecter comme d’habitude",
+  "autonomy.launder.safe": "Injecter prudemment",
+  "autonomy.book.max": "Tout déposer",
+  "autonomy.book.reserve": "Garder une réserve",
+  "autonomy.sec.repair": "Réparer maintenant",
+  "autonomy.sec.defer": "Remettre à plus tard",
+  "autonomy.log.dispatch": "Expédier maintenant",
+  "autonomy.log.hold": "Retenir le chargement",
+  "autonomy.dist.collect": "Ramasser maintenant",
+  "autonomy.dist.letride": "Laisser courir",
+  "autonomy.muscle.assault": "Leur tomber dessus",
+  "autonomy.muscle.wait": "Attendre le bon moment",
+  "autonomy.intel.observe": "Les observer de près",
+  "autonomy.intel.wait": "Ne rien faire pour l’instant",
+  "autonomy.facility.schedule_now": "Faire l’entretien maintenant",
+  "autonomy.facility.wait": "Laisser pour l’instant"
+}

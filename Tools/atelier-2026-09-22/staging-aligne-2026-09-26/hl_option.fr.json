@@ -1,0 +1,18 @@
+{
+  "hl.option.autonomy_reports.review_now": "Lire maintenant",
+  "hl.option.autonomy_reports.leave_pending": "Laisser en attente",
+  "hl.option.backpressure_critical_trace.trace_now": "Remonter la piste",
+  "hl.option.backpressure_critical_trace.leave_pending": "Laisser en attente",
+  "hl.option.cue_cascade_fallout.review_now": "Examiner maintenant",
+  "hl.option.cue_cascade_fallout.leave_pending": "Laisser en attente",
+  "hl.option.damaged_building.repair_via_queue": "Mettre en réparation",
+  "hl.option.damaged_building.leave_damaged": "Laisser en l’état",
+  "hl.option.escalation_backlog.review_now": "Traiter maintenant",
+  "hl.option.escalation_backlog.leave_pending": "Laisser en attente",
+  "hl.option.legal_case.accept_plea_deal": "Accepter l’arrangement",
+  "hl.option.legal_case.let_ride": "Laisser aller au procès",
+  "hl.option.mycelial_stressed_leg.maintain_now": "Entretenir maintenant",
+  "hl.option.mycelial_stressed_leg.leave_stressed": "Laisser sous tension",
+  "hl.option.severed_route.reroute_now": "Détourner maintenant",
+  "hl.option.severed_route.leave_severed": "Laisser la route coupée"
+}

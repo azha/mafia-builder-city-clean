@@ -1,0 +1,27 @@
+{
+  "decision.type.DAMAGED_BUILDING_REPAIR": "Un local à remettre en état",
+  "decision.type.SEVERED_ROUTE_REBUILD": "Une route coupée",
+  "decision.type.ESCALATION_BACKLOG_REVIEW": "Des remontées en attente",
+  "decision.type.AUTONOMY_REPORTS_PENDING": "Des rapports à lire",
+  "decision.type.LEGAL_CASE_DECISION": "Une affaire chez le juge",
+  "decision.type.BACKPRESSURE_CRITICAL_TRACE": "Un engorgement critique",
+  "decision.type.MYCELIAL_STRESSED_LEG": "Un maillon sous tension",
+  "decision.type.CUE_CASCADE_FALLOUT": "Une cascade de signaux",
+
+  "decision.type.BUILDING_ACQUISITION": "Acquisition d’un local",
+  "decision.type.BUILDING_CONVERT": "Reconversion d’un local",
+  "decision.type.LIEUTENANT_RECRUIT": "Recrutement d’un lieutenant",
+  "decision.type.LIEUTENANT_ROLE_REASSIGN": "Changement de poste",
+  "decision.type.BEHAVIOR_SCRIPT_REPLACE": "Nouvelles consignes permanentes",
+  "decision.type.AUTONOMY_TIER_CHANGE": "Relèvement du plafond d’autonomie",
+  "decision.type.TASK_RETIREMENT": "Passation définitive d’une tâche",
+  "decision.type.TASK_RECALL": "Reprise en main d’une tâche",
+  "decision.type.ORG_TOPOLOGY_CHANGE": "Remaniement de l’organigramme",
+  "decision.type.SINUOSITY_FULL_RESET": "Refonte complète d’un tracé",
+  "decision.type.MYCELIAL_STRUCTURAL_REINFORCE": "Renforcement de fond du réseau",
+  "decision.type.NODE_DECOMMISSION": "Mise hors service d’un point",
+  "decision.type.SUBSTANCE_UNLOCK": "Ouverture d’une filière",
+  "decision.type.RECRUITMENT_FINALIZE": "Embauche définitive",
+  "decision.type.NAMED_SEQUENCE_SAVE": "Enregistrement d’une séquence",
+  "decision.type.CAPABILITY_ADOPT": "Adoption d’un savoir-faire"
+}
