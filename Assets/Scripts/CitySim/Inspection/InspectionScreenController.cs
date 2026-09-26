@@ -89,6 +89,7 @@ namespace MafiaCleanCity.CitySim.Inspection
         }
 
         private InspectionClient client;
+        private MesBatimentsClient batiments;
         private string token;
         private bool initialise;
         private bool depotEnCours;
@@ -110,6 +111,7 @@ namespace MafiaCleanCity.CitySim.Inspection
             if (initialise) return;
             initialise = true;
             client = new InspectionClient { BaseUrl = baseUrl };
+            batiments = new MesBatimentsClient { BaseUrl = baseUrl };
             Construire();
         }
 
@@ -145,10 +147,8 @@ namespace MafiaCleanCity.CitySim.Inspection
             yield return client.LireDistricts(bearer, d => Districts = d,
                                               (c, m) => DerniereErreur = $"{c}: {m}");
             yield return LireLesFiles(bearer);
-            // ⛔ PLUS DE CIBLE TIRÉE DE `me/buildings` (passe UX 2026-09-26, table 63 v2, consigne f2) : « ne jamais cibler un bâtiment
-            // du joueur ». Or la route n'accepte QUE ses bâtiments (contrôle d'appartenance, `inspection.controller.ts`, TD-481) : le
-            // geste n'a donc AUCUNE cible légitime aujourd'hui, et il est caché (`DepotVisible`). Conflit de contrat remonté à f2.
-            Cible = null;
+            yield return batiments.Lire(bearer, bs => Cible = ChoisirCible(bs),
+                                        (c, m) => DerniereErreurDepot = $"{c}: {m}");
             Rendre();
         }
 
@@ -167,10 +167,10 @@ namespace MafiaCleanCity.CitySim.Inspection
             }
         }
 
-        /// <summary>Le dépôt ne se montre que s'il a une cible légitime ET qu'une file est ouverte (table 63 v2 : le cacher tant
-        /// qu'aucune file n'est ouverte). Aujourd'hui, jamais : aucune cible légitime (voir `Charger`).</summary>
-        public bool DepotVisible => !EtatVide && Cible != null;
-        private readonly System.Collections.Generic.List<GameObject> depotUI = new System.Collections.Generic.List<GameObject>();
+        /// <summary>Le premier bâtiment servi. La maquette #33 en prend un « de La Lisière » : sans
+        /// choix du joueur dessiné, le premier de la liste est le seul choix qui ne suppose rien.</summary>
+        private static BatimentPossedeDto ChoisirCible(BatimentPossedeDto[] bs) =>
+            bs != null && bs.Length > 0 ? bs[0] : null;
 
         // ═══ LE DÉPÔT (#33) — le bouton fait un FAUX signalement ; le test choisit son type ═════════
 
@@ -222,7 +222,8 @@ namespace MafiaCleanCity.CitySim.Inspection
             piedTexte.gameObject.SetActive(!EtatVide);
             if (EtatVide)
             {
-                // table 63 v2 : la phrase de la police, PUIS ce que le joueur peut en faire — rien, tant qu'aucune file n'est ouverte
+                // table 63 v2 : la phrase de la police, PUIS ce que le joueur peut en faire — rien, tant qu'aucune file n'est ouverte.
+                // (Le dépôt, lui, reste tel que D3 le prévoit — décision de registre du 22/09, rappelée par f2 le 26/09.)
                 videTexte.text = DerniereErreur == null
                     ? "La police n'a pas encore ouvert ses files — elle les ouvre sur les 18 districts à la fois."
                       + "\n" + MafiaCleanCity.I18n.Libelle.Gabarit("inspection.vide.rien_a_faire_ici_tant_qu_aucune_file_n_est_ouverte", "Rien à faire ici tant qu’aucune file n’est ouverte.")
@@ -244,8 +245,6 @@ namespace MafiaCleanCity.CitySim.Inspection
 
         private void RendreDepot()
         {
-            foreach (GameObject g in depotUI) if (g != null) g.SetActive(DepotVisible);
-            if (!DepotVisible) return;
             cibleTexte.text = Cible != null ? $"SUR · {NomDeBatiment(Cible)}" : "SUR · aucun bâtiment à vous";
             deposerBouton.interactable = PeutDeposer;
             if (DernierRapport != null)
@@ -399,18 +398,15 @@ namespace MafiaCleanCity.CitySim.Inspection
             TextMeshProUGUI depotTitre = Texte(transform, "DepotTitre", "DÉPOSER UN SIGNALEMENT", Px(9f), Or,
                                                DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             depotTitre.characterSpacing = 12f;
-            depotUI.Add(depotTitre.gameObject);
             cibleTexte = Texte(transform, "Cible", "", Px(7.5f), Creme2,
                                DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             cibleTexte.enableWordWrapping = true;
-            depotUI.Add(cibleTexte.gameObject);
-            depotUI.Add(Texte(transform, "Effet", "EFFET · une entrée de plus dans leur file", Px(7f), Creme2,
-                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).gameObject);
+            Texte(transform, "Effet", "EFFET · une entrée de plus dans leur file", Px(7f), Creme2,
+                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             prixTexte = Texte(transform, "Prix", "", Px(7.5f), Creme,
                               DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             prixTexte.enableWordWrapping = true;
             prixTexte.gameObject.SetActive(false);
-            depotUI.Add(prixTexte.gameObject);
 
             var bGo = new GameObject("Deposer", typeof(RectTransform));
             bGo.transform.SetParent(transform, false);
@@ -420,7 +416,6 @@ namespace MafiaCleanCity.CitySim.Inspection
             deposerBouton.targetGraphic = fondBouton;
             deposerBouton.interactable = false;
             deposerBouton.onClick.AddListener(Deposer);
-            depotUI.Add(bGo);
             LayoutElement leBouton = bGo.AddComponent<LayoutElement>();
             leBouton.preferredHeight = Px(22f); leBouton.minHeight = Px(22f);
             TextMeshProUGUI libBouton = Texte(bGo.transform, "Lib", "DÉPOSER", Px(9f), Or,
@@ -430,15 +425,14 @@ namespace MafiaCleanCity.CitySim.Inspection
             libRt.anchorMin = Vector2.zero; libRt.anchorMax = Vector2.one;
             libRt.offsetMin = Vector2.zero; libRt.offsetMax = Vector2.zero;
 
-            depotUI.Add(Texte(transform, "Avert", "⚠ au bout de plusieurs, la police se retourne", Px(6.5f), Creme2,
-                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).gameObject);
+            Texte(transform, "Avert", "⚠ au bout de plusieurs, la police se retourne", Px(6.5f), Creme2,
+                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
 
             // ★ le retour de bâton (#34) : figé jusqu'au prochain geste
             batonTexte = Texte(transform, "Baton", "", Px(9f), Braise,
                                DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             batonTexte.enableWordWrapping = true;
             batonTexte.gameObject.SetActive(false);
-            depotUI.Add(batonTexte.gameObject);
 
             videTexte = Texte(transform, "Vide", "", Px(11f), Creme2,
                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
