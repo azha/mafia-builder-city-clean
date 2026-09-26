@@ -183,7 +183,10 @@ namespace MafiaCleanCity.Shell.Tests
         {
             Assert.IsFalse(string.IsNullOrEmpty(jeton),
                 $"capture refusée ({quoi}) : aucun jeton — rien ne dit quel compte l'écran photographierait");
-            var client = new MafiaCleanCity.Operational.DashboardClient { BaseUrl = "http://localhost" };
+            // ⛔ LA MÊME ADRESSE QUE LE SHELL (mesuré au créneau du 26/09, parcours contre le VPS) : `http://localhost` était écrit en dur ;
+            //    un jeton du VPS présenté à la pile locale rend 401, et la garde refusait une capture JUSTE. Le jeton vient du back que
+            //    vise `AdresseDuBack.Url` : c'est là qu'on vérifie son identité.
+            var client = new MafiaCleanCity.Operational.DashboardClient { BaseUrl = MafiaCleanCity.AdresseDuBack.Url };
             MafiaCleanCity.Operational.MeDto me = null; string err = null;
             yield return client.GetMe(jeton, m => me = m, (c, m) => err = $"{c}: {m}");
             Assert.IsNull(err, $"capture refusée ({quoi}) : GET /v1/me n'a pas répondu ({err}) — identité non vérifiable");
