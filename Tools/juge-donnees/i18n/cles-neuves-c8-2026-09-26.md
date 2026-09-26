@@ -16,3 +16,10 @@ Cadre de référence : maquette m-91 (`ecrans-brennar-6.html` #91) — « Ce qui
 Orphelines (servies, plus demandées) : `carnet.bloc.ce_que_la_ville_ne_dit_pas`,
 `carnet.bloc.ce_que_la_ville_prepare_personne_ne_vous_le_rapporte_encore_ce_sera_ici_le_jour_ou_quelqu_un_le_fera` — elles RESTENT au
 servi (contrat additif, f2 26/09 : on n'enlève ni ne renomme une clé servie) ; sans consommateur, le juge des données les verra.
+
+## Corrigée le même jour (table 65 de l'atelier, 20d9be5f)
+
+Les 12 noms sont DÉJÀ servis, fr et en, sous `political.event.E-POL-01..12` (ratifiés au staging) : le client compose
+« political.event. » + `eventId` tel que servi (casse et tiret gardés) et passe par `Libelle.Gabarit` avec cette clé exacte — les
+12 `politique.evenement.*` ci-dessus n'existent plus, et sont sortis de la DetteDatee. Restent 5 clés neuves (carnet.bloc.*),
+replis à l'octet de la table 65 ; « annoncé » y devient « à venir » (clé `carnet.bloc.annonce` gardée).

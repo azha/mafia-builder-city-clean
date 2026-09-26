@@ -62,26 +62,14 @@ namespace MafiaCleanCity.Operational.Tests
             // + 2 le 2026-09-26 : l'addendum de l'atelier (table 62) keye les deux littéraux bruts de l'état vide de ㉟.
             "vente.vide.les_coins_de_vente_n_ont_pas_repondu",
             "vente.vide.aucun_coin_de_vente",
-            // ⚠️ RALLONGÉE le 2026-09-26 — C8 (CLIENT-2) : ㉞ montre « Ce qui arrive » (calendrier politique servi). 5 mots du panneau et
-            // les 12 noms d'événements du catalogue du back (E-POL-01..12, keyés par id : le back sert un littéral anglais sans clé, K2),
-            // NON servis @5e792a3c. Table : `Tools/juge-donnees/i18n/cles-neuves-c8-2026-09-26.md` (mots à l'atelier, via f2).
+            // ⚠️ RALLONGÉE le 2026-09-26 — C8 (CLIENT-2) : ㉞ montre « Ce qui arrive » (calendrier politique servi). Les 5 mots du panneau,
+            // table 65 de l'atelier (20d9be5f), NON servis @5e792a3c. Les noms d'événements sont SERVIS (`political.event.E-POL-*`) :
+            // aucune dette pour eux.
             "carnet.bloc.ce_qui_arrive",
             "carnet.bloc.le_calendrier_n_a_pas_repondu",
             "carnet.bloc.rien_n_est_annonce",
             "carnet.bloc.en_cours",
             "carnet.bloc.annonce",
-            "politique.evenement.e_pol_01",
-            "politique.evenement.e_pol_02",
-            "politique.evenement.e_pol_03",
-            "politique.evenement.e_pol_04",
-            "politique.evenement.e_pol_05",
-            "politique.evenement.e_pol_06",
-            "politique.evenement.e_pol_07",
-            "politique.evenement.e_pol_08",
-            "politique.evenement.e_pol_09",
-            "politique.evenement.e_pol_10",
-            "politique.evenement.e_pol_11",
-            "politique.evenement.e_pol_12",
             // ⚠️ RALLONGÉE le 2026-09-26 — états vides de la passe UX (CLIENT-2), mots de l'atelier table 63 (client 8979d626), PROPOSÉS,
             // non servis @5e792a3c. Retirées par la règle (2) dès qu'elles sont servies.
             "police.vide.le_commissariat_n_a_encore_rien_sur_vous",

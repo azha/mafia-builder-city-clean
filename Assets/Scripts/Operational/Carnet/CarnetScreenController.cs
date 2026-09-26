@@ -347,6 +347,7 @@ namespace MafiaCleanCity.Operational
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             pannSur = NouveauTexte(go.transform, "SurTitre", "", Px(7f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            pannSur.fontStyle = FontStyles.UpperCase;   // les capitales du surtitre sont du STYLE (table 65) ; les valeurs déjà en capitales n'y perdent rien
             pannTitre = NouveauTexte(go.transform, "Titre", "", Px(12f),
                 DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
             pannTexte = NouveauTexte(go.transform, "Texte", "", Px(8.5f),
@@ -369,25 +370,31 @@ namespace MafiaCleanCity.Operational
         {
             if (DernierCalendrier == null)
             {
-                MajPanneau(Lib("CE QUI ARRIVE"), Lib("Ce que la ville prépare"), Lib("Le calendrier n’a pas répondu."));
+                MajPanneau(MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.ce_qui_arrive", "Ce qui arrive"), Lib("Ce que la ville prépare"),
+                    MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.le_calendrier_n_a_pas_repondu", "Le calendrier n’a pas répondu."));
                 return;
             }
             var lignes = LignesCeQuiArrive(DernierCalendrier);
             if (lignes.Count == 0)
             {
-                MajPanneau(Lib("CE QUI ARRIVE"), Lib("Ce que la ville prépare"), Lib("Rien n’est annoncé."));
+                MajPanneau(MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.ce_qui_arrive", "Ce qui arrive"), Lib("Ce que la ville prépare"),
+                    MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.rien_n_est_annonce", "Rien n’est annoncé."));
                 return;
             }
             var corps = new System.Text.StringBuilder();
             foreach (var (id, nom, enCours) in lignes)
             {
                 if (corps.Length > 0) corps.Append('\n');
-                // le nom : keyé par l'id servi (le back sert un littéral anglais sans clé, K2) — le nom servi en repli
-                corps.Append(MafiaCleanCity.I18n.Libelle.ParValeur("politique", "evenement", id, nom))
-                     .Append(" — ").Append(enCours ? Lib("en cours") : Lib("annoncé"));
+                // le nom : la clé SERVIE `political.event.<eventId>` (fr et en, ratifiée au staging — table 65), composée avec l'id TEL
+                // QU'IL EST SERVI (casse et tiret gardés : `ParValeur` les abaisserait et ne la trouverait pas) ; le nom servi en repli
+                corps.Append(MafiaCleanCity.I18n.Libelle.Gabarit(CleDEvenement(id), nom))
+                     .Append(" — ").Append(enCours ? MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.en_cours", "en cours") : MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.annonce", "à venir"));
             }
-            MajPanneau(Lib("CE QUI ARRIVE"), Lib("Ce que la ville prépare"), corps.ToString());
+            MajPanneau(MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.ce_qui_arrive", "Ce qui arrive"), Lib("Ce que la ville prépare"), corps.ToString());
         }
+
+        /// <summary>C8 — la clé servie du nom d'un événement politique : « political.event. » + l'id TEL QU'IL EST SERVI.</summary>
+        public static string CleDEvenement(string eventId) => "political.event." + eventId;
 
         private void MajPanneau(string sur, string titre, string texte)
         {
