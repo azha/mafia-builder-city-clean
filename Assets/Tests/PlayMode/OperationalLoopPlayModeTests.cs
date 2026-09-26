@@ -268,11 +268,10 @@ namespace MafiaCleanCity.Operational.Tests
 
             var cardTexts = buildingCard.RenderedTexts;
             Assert.IsTrue(cardTexts.Any(t => t.Contains("Labo")), "Building Card renders the 'Lab' type label");
-            // ⛔ Relu dans le code du 2026-09-23 : la bande de mise en place passe par `SetupLabel` (DÉLÉGUÉ, pas recopié), et
-            //    « en service » s'écrit « oui » (BuildingCardController:643) — l'épingle « Yes » était restée en anglais.
-            Assert.IsTrue(cardTexts.Any(t => t == BuildingCardController.SetupLabel("OPERATIONAL")),
-                "Building Card renders the OPERATIONAL setup band");
-            Assert.IsTrue(cardTexts.Any(t => t == "oui"), "Building Card renders operational=true as « oui »");
+            // ⛔ AMENDÉ (26/09, créneau CLIENT-1 sur 386e4a38) — MÊME attente périmée que LoadsLabCard (763fe0f0), second site que
+            //    je n'avais pas balayé : depuis 4ab3abcf (pupitre du labo, maquette ② cadres 45-47), un labo dont la route `lab`
+            //    répond montre le PUPITRE À LA PLACE des rangées « Mise en place / En service ». La DONNÉE ci-dessus (setup_state
+            //    OPERATIONAL, operational) prouve la boucle ; les deux rendus sont épinglés hors réseau (FicheLaboRangeesPlayModeTests).
             AssertNoRawScalar(cardTexts, "BuildingCard");
 
             // ── SCREEN 3 — LA FILIÈRE (㊵) : l'ancre « blanchir ». ⑪ LaunderingController, qui tenait cet écran, est RETIRÉ depuis le
