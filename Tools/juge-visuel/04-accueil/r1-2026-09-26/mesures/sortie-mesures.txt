@@ -1,0 +1,245 @@
+
+===== m2 : La bande sombre : borne basse DERIVEE de la courbe, pas choisie. Controle negatif : REF.
+
+  REF cadre 4    1080x2102  colonnes echantillonnees=664
+     pic de filet : y=83  mediane=19  ecart aux voisins=+1   -> AUCUN filet
+     coeur=19 seuil derive=21  -> bande y=84..374 = 291 px (13.8 % de la hauteur)
+
+  REF cadre 0    1080x2102  colonnes echantillonnees=664
+     pic de filet : y=83  mediane=19  ecart aux voisins=+1   -> AUCUN filet
+     coeur=19 seuil derive=21  -> bande y=84..374 = 291 px (13.8 % de la hauteur)
+
+  JEU 1920       1080x1920  colonnes echantillonnees=664
+     pic de filet : y=141  mediane=129  ecart aux voisins=+110
+     coeur=13 seuil derive=15  -> bande y=142..231 = 90 px (4.7 % de la hauteur)
+
+  JEU 2400       1080x2400  colonnes echantillonnees=664
+     pic de filet : y=141  mediane=129  ecart aux voisins=+110
+     coeur=13 seuil derive=15  -> bande y=142..231 = 90 px (3.8 % de la hauteur)
+
+===== m7b : 
+seuil ABSOLU L>=120 ; les 3 images font 1080 de large
+  REF ARGENT                             1080x2102 n=  533 bbox=(  60,  45, 179,  63) l=120 h= 19 TRONQUEE:G
+  J24 ARGENT                             1080x2400 n=  521 bbox=(  60,  27, 149,  45) l= 90 h= 19 TRONQUEE:G
+  REF JOUR 12                            1080x2102 n=  524 bbox=( 887,  45,1026,  68) l=140 h= 24 OK
+  J24 JOUR 1                             1080x2400 n=  377 bbox=( 955,  28,1033,  48) l= 79 h= 21 OK
+  REF Plein jour                         1080x2102 n= 2160 bbox=( 824,  79,1032, 128) l=209 h= 50 OK
+  J24 Aube                               1080x2400 n=  872 bbox=( 935,  70,1033,  98) l= 99 h= 29 OK
+  -- controles negatifs (chrome sans texte) --
+  CTRL NEG chrome jeu                    1080x2400  (620, 10, 760, 60)  ENCRE 0 %
+  CTRL NEG chrome ref                    1080x2102  (640, 10, 780, 40)  ENCRE 0 %
+
+===== m8 : L'ornement gris : masque GRIS NEUTRE, qui exclut l'or du montant et le creme du libelle.
+masque : 55<=L<=150, max-min canal <=18, b>=r ; fenetre (0,30,160,130)
+  REF cadre 0    1080x2102 n=  33 bbox=(54,44,142,64)
+  REF cadre 3    1080x2102 n=  33 bbox=(54,44,142,64)
+  REF cadre 4    1080x2102 n=  33 bbox=(54,44,142,64)
+  JEU 2400       1080x2400 n= 264 bbox=(12,57,75,72)
+  JEU 1920       1080x1920 n= 264 bbox=(12,57,75,72)
+  echantillons RGB sur l ornement : [(73, 75, 76), (73, 75, 76), (50, 52, 55)]
+
+===== m9 : Montant : encre OR segmentee en chiffres. Borne x<440 OBLIGATOIRE (sinon : le medaillon).
+CONTROLE : sans la borne x<440 la bbox va jusqu a x=636 = l anneau du medaillon
+  REF 24 850 EUR             1080x2102 fenetre (30, 70, 300, 170) : 4 groupes
+     g0 x=  48..99   l=52 y= 81..116 h=36
+     g1 x= 113..135  l=23 y= 81..117 h=37
+     g2 x= 141..189  l=49 y= 81..117 h=37
+     g3 x= 203..228  l=26 y= 81..117 h=37
+  J24 10 000 EUR             1080x2400 fenetre (30, 52, 300, 140) : 6 groupes
+     g0 x=  49..61   l=13 y= 71..97  h=27
+     g1 x=  69..86   l=18 y= 71..97  h=27
+     g2 x=  99..116  l=18 y= 71..97  h=27
+     g3 x= 122..139  l=18 y= 71..97  h=27
+     g4 x= 145..162  l=18 y= 71..97  h=27
+     g5 x= 172..191  l=20 y= 71..97  h=27
+
+===== m11 : Medaillon : diametre horizontal par encre or sur la ligne du centre.
+  REF   1080x2102 ligne y=115 : or de x=443 a x=636 -> diametre H = 194 (centre 539.5)
+  J24   1080x2400 ligne y=90 : or de x=448 a x=631 -> diametre H = 184 (centre 539.5)
+  J19   1080x1920 ligne y=90 : or de x=448 a x=631 -> diametre H = 184 (centre 539.5)
+
+===== m12 : Filet or du bandeau : present ? traverse-t-il ? et le losange sous le medaillon.
+  J24 1080x2400 ligne y=141 : 10:(43, 38, 30) 200:(170, 136, 60) 440:(176, 141, 61) 500:(23, 28, 39) 540:(31, 36, 49) 610:(13, 17, 26) 640:(176, 141, 61) 900:(162, 130, 57) 1070:(41, 37, 30)
+  REF   1080x2102 mediane de ligne x 100..400 : y135=19 y137=19 y139=19 y141=19 y143=19 y145=19 y147=19 y149=19 y151=19
+  J24   1080x2400 mediane de ligne x 100..400 : y135=19 y137=19 y139=19 y141=142 y143=13 y145=13 y147=13 y149=13 y151=13
+  REF sous medaillon   1080x2102 n=0 AUCUN
+  J24 sous medaillon   1080x2400 n=526 bbox=(506,196,573,231)
+
+===== m16 : 
+  REF fond du panneau                    1080x2102  (300, 900, 420, 940)  RGB=( 12, 19, 30)
+  J24 fond du panneau                    1080x2400  (300, 1430, 420, 1460)  RGB=( 22, 22, 28)
+  REF fond carte de file                 1080x2102  (300, 1750, 600, 1780)  RGB=( 11, 19, 28)
+  J24 fond carte de file                 1080x2400  (300, 2050, 600, 2080)  RGB=( 22, 22, 28)
+  REF   1080x2102 bord gauche du panneau, y=1100 : 40:(35, 38, 40) 41:(34, 37, 40) 42:(32, 36, 38) 43:(30, 33, 37) 44:(28, 32, 34) 45:(27, 31, 33) 46:(34, 39, 49) 47:(33, 38, 48) 48:(33, 39, 49) 49:(11, 17, 28) 50:(11, 18, 29) 51:(10, 17, 28) 52:(11, 18, 29) 53:(10, 16, 28)
+  J24   1080x2400 bord gauche du panneau, y=1400 : 26:(17, 51, 67) 27:(17, 51, 67) 28:(19, 51, 67) 29:(19, 51, 67) 30:(19, 51, 68) 31:(18, 52, 67) 32:(18, 52, 67) 33:(18, 52, 67) 34:(114, 114, 115) 35:(78, 78, 80) 36:(22, 22, 28) 37:(22, 22, 28) 38:(22, 22, 28) 39:(22, 22, 28)
+
+===== m18 : Bouton principal : bbox, aplat haut/bas (degrade ?), rayon par elargissement du haut.
+  REF COMMANDER        1080x2102 n=24119 bbox=(654,855,976,940) l=323 h=86
+       aplat haut  RGB=(231,194,103)
+       aplat bas   RGB=(204,157,59)
+       largeur du haut=283  pleine=323 atteinte a dy=17  => rayon ~17 px
+  J24 COMMANDER        1080x2400 n=19697 bbox=(714,1380,996,1456) l=283 h=77
+       aplat haut  RGB=(201,154,56)
+       aplat bas   RGB=(201,154,56)
+       largeur du haut=273  pleine=283 atteinte a dy=6  => rayon ~6 px
+  J19 COMMANDER        1080x1920 n=20514 bbox=(714,970,996,1049) l=283 h=80
+       aplat haut  RGB=(201,154,56)
+       aplat bas   RGB=(201,154,56)
+       largeur du haut=262  pleine=283 atteinte a dy=9  => rayon ~9 px
+
+===== m20 : Carte verticale du panneau : bandes d'encre dans la colonne de gauche (x 80..640).
+  REF panneau    1080x2102 -> 13 bandes
+     y= 779..803  h= 25 encre RGB=(185,173,146)
+     y= 854..894  h= 41 encre RGB=(242,201,107)
+     y= 914..946  h= 33 encre RGB=(185,173,146)
+     y=1023..1063 h= 41 encre RGB=(242,201,107)
+     y=1082..1112 h= 31 encre RGB=(242,201,107)
+     y=1132..1154 h= 23 encre RGB=(185,173,146)
+     y=1162..1164 h=  3 encre RGB=(185,173,146)
+     y=1173..1205 h= 33 encre RGB=(185,173,146)
+     y=1282..1322 h= 41 encre RGB=(242,201,107)
+     y=1332..1421 h= 90 encre RGB=(234,201,107)
+     y=1440..1473 h= 34 encre RGB=(185,173,146)
+     y=1481..1503 h= 23 encre RGB=(185,173,146)
+     y=1511..1513 h=  3 encre RGB=(185,173,146)
+  J24 panneau    1080x2400 -> 5 bandes
+     y=1300..1300 h=  1 encre RGB=(201,154, 56)
+     y=1329..1344 h= 16 encre RGB=(138,151,156)
+     y=1383..1419 h= 37 encre RGB=(222,187,101)
+     y=1431..1452 h= 22 encre RGB=(162,171,180)
+     y=1514..1541 h= 28 encre RGB=(220,186,100)
+
+===== m21 : 
+fenetres bornees a x<640 (REF, bouton a x>=654) et x<700 (J24, bouton a x>=714)
+  REF titre r1                           1080x2102 n= 4433 bbox=(  99, 854, 606, 894) l=508 h= 41 TRONQUEE:B
+  J24 titre r1                           1080x2400 n= 3595 bbox=(  83,1383, 555,1419) l=473 h= 37 OK
+  REF sous-ligne r1                      1080x2102 n= 2020 bbox=(  99, 914, 417, 946) l=319 h= 33 OK
+  J24 sous-ligne r1                      1080x2400 n= 1353 bbox=(  83,1431, 344,1452) l=262 h= 22 OK
+  REF LA SUITE                           1080x2102 n=  863 bbox=( 456, 779, 617, 795) l=162 h= 17 OK
+  J24 LA SUITE                           1080x2400 n=  664 bbox=( 473,1329, 606,1344) l=134 h= 16 OK
+
+===== m22 : Hauteur de CAPITALE : blocs contigus -> exclut le souligne pointille « PROPOSE ».
+  REF « L » de « Le labo »               1080x2102 cols 99..126 : y=855..883 (h=29), y=891..894 (h=4)
+  J24 « L » de « Le labo »               1080x2400 cols 83..107 : y=1384..1410 (h=27)
+  REF « S » de « Sans lui »              1080x2102 cols 99..124 : y=915..936 (h=22), y=944..946 (h=3)
+  J24 « S » de « Sans lui »              1080x2400 cols 83..104 : y=1431..1450 (h=20)
+  REF « L » de « LA SUITE »              1080x2102 cols 456..478 : y=779..795 (h=17), y=802..803 (h=2)
+  J24 « L » de « LA SUITE »              1080x2400 cols 473..492 : y=1329..1344 (h=16)
+
+===== m26 : Dock : diametre/centre des pastilles (pics de bord) et bbox des 4 libelles.
+  REF    1080x2102 y=1930 : 8 bords -> [91, 254, 336, 498, 581, 743, 825, 988]
+       diametres [163, 162, 162, 163]  centres [172.5, 417.0, 662.0, 906.5]
+  J24    1080x2400 y=2240 : 8 bords -> [197, 320, 384, 508, 571, 695, 759, 882]
+       diametres [123, 124, 124, 123]  centres [258.5, 446.0, 633.0, 820.5]
+  REF libelles   1080x2102 -> 4 groupes : x=104..237 l=134 c=170.5 | x=341..489 l=149 c=415.0 | x=592..728 l=137 c=660.0 | x=863..947 l=85 c=905.0
+  J24 libelles   1080x2400 -> 4 groupes : x=208..310 l=103 c=259.0 | x=390..503 l=114 c=446.5 | x=581..686 l=106 c=633.5 | x=789..853 l=65 c=821.0
+  J19 libelles   1080x1920 -> 4 groupes : x=208..310 l=103 c=259.0 | x=390..503 l=114 c=446.5 | x=581..686 l=106 c=633.5 | x=789..853 l=65 c=821.0
+
+===== m28 : Pip de notification : composantes connexes OR d'aire >=60 dans la bande du dock.
+  REF bande du dock      1080x2102 y 1820..2000 : 1 blob(s) or >=60 px
+     x= 481 y=1848 l=19 h=18 aire=260
+  J24 bande du dock      1080x2400 y 2150..2320 : 1 blob(s) or >=60 px
+     x= 240 y=2312 l=38 h= 5 aire=190
+
+===== m29 : Carte de file : textes, severite, TRANCHER.
+  REF « Lt. Tull attend vos ordres » 1080x2102 n= 2799 bbox=(89,1670,509,1696) h=27 RGB=(208,199,176)
+  J24 « Lt. Ilm attend vos ordres »  1080x2400 n= 2543 bbox=(67,1979,414,2001) h=23 RGB=(211,214,215)
+  REF severite GRAVE                 1080x2102 n=  608 bbox=(87,1721,190,1740) h=20 RGB=(182,170,144)
+  J24 severite LEGERE                1080x2400 n=  408 bbox=(66,2013,142,2030) h=18 RGB=( 59,198,169)
+  REF TRANCHER                       1080x2102 n= 2251 bbox=(772,1693,989,1716) h=24 RGB=(231,192,102)
+  J24 TRANCHER                       1080x2400 n= 1570 bbox=(844,1995,1014,2013) h=19 RGB=(255,210, 64)
+
+===== m30 : Filet or du panneau : position et etendue en X, des deux cotes.
+  REF    1080x2102 y= 733 : aucun pixel or
+  REF    1080x2102 y= 734 : or x=216..865 (l=650) centre 540.5
+  REF    1080x2102 y= 735 : or x=215..863 (l=649) centre 539.0
+  REF    1080x2102 y= 736 : or x=216..864 (l=649) centre 540.0
+  REF    1080x2102 y= 737 : aucun pixel or
+  J24    1080x2400 y=1266 : aucun pixel or
+  J24    1080x2400 y=1299 : aucun pixel or
+  J24    1080x2400 y=1300 : or x=81..998 (l=918) centre 539.5
+  J24    1080x2400 y=1301 : aucun pixel or
+  J19    1080x1920 y= 859 : or x=19..22 (l=4) centre 20.5
+  J19    1080x1920 y= 892 : aucun pixel or
+  J19    1080x1920 y= 893 : or x=81..998 (l=918) centre 539.5
+  J19    1080x1920 y= 894 : or x=81..998 (l=918) centre 539.5
+  J19    1080x1920 y= 895 : aucun pixel or
+
+===== m31 : Couche globale. Controle : la somme des parts doit valoir 100 %.
+  REF cadre 4    1080x2102 luminance moyenne=26.3  pixels clairs(L>=90)=3.8 %
+        23.30 %  RGB=(8, 13, 21)
+        21.26 %  RGB=(11, 17, 27)
+        18.63 %  RGB=(25, 32, 40)
+        15.44 %  RGB=(12, 20, 30)
+        14.40 %  RGB=(17, 23, 32)
+         6.97 %  RGB=(77, 73, 62)
+       somme = 100.00 % (controle)
+  REF cadre 0    1080x2102 luminance moyenne=26.6  pixels clairs(L>=90)=1.6 %
+        22.69 %  RGB=(31, 36, 43)
+        21.45 %  RGB=(8, 14, 21)
+        20.28 %  RGB=(14, 19, 27)
+        14.21 %  RGB=(23, 28, 35)
+        13.31 %  RGB=(11, 17, 26)
+         8.06 %  RGB=(61, 60, 55)
+       somme = 100.00 % (controle)
+  JEU 2400       1080x2400 luminance moyenne=31.9  pixels clairs(L>=90)=3.4 %
+        24.24 %  RGB=(22, 22, 28)
+        22.44 %  RGB=(29, 39, 53)
+        18.99 %  RGB=(12, 17, 25)
+        15.63 %  RGB=(23, 30, 41)
+        10.99 %  RGB=(15, 22, 32)
+         7.71 %  RGB=(68, 77, 72)
+       somme = 100.00 % (controle)
+  JEU 1920       1080x1920 luminance moyenne=30.7  pixels clairs(L>=90)=4.0 %
+        27.84 %  RGB=(22, 22, 28)
+        25.75 %  RGB=(25, 32, 43)
+        19.50 %  RGB=(13, 19, 29)
+         9.86 %  RGB=(57, 61, 60)
+         8.98 %  RGB=(11, 14, 20)
+         8.07 %  RGB=(17, 24, 35)
+       somme = 100.00 % (controle)
+
+===== m32 : Contrastes WCAG des textes contre leur fond local.
+  REF EMPIRE                     1080x2102 encre=(170, 159, 136) fond=(7, 12, 19)  contraste=7.49:1
+  J24 EMPIRE                     1080x2400 encre=(161, 151, 127) fond=(13, 19, 30)  contraste=6.42:1
+  REF ARGENT                     1080x2102 encre=(185, 173, 146) fond=(12, 18, 28)  contraste=8.45:1
+  J24 ARGENT                     1080x2400 encre=(185, 173, 146) fond=(13, 15, 28)  contraste=8.58:1
+  REF phase                      1080x2102 encre=(234, 224, 200) fond=(14, 20, 31)  contraste=14.05:1
+  J24 phase                      1080x2400 encre=(234, 224, 200) fond=(13, 18, 28)  contraste=14.28:1
+  REF titre r1                   1080x2102 encre=(242, 201, 107) fond=(12, 19, 31)  contraste=11.82:1
+  J24 titre r1                   1080x2400 encre=(222, 187, 101) fond=(22, 22, 28)  contraste=9.78:1
+
+===== m34 : Bords du panneau (lateraux et bas) et rythme vertical.
+  REF bords lateraux     1080x2102 y=1200 : bords x=[47, 489, 1033]
+  J24 bords lateraux     1080x2400 y=1700 : bords x=[34, 121, 176, 217, 225, 243]
+  REF bord bas           1080x2102 bord bas = y=1592 (pic +27, L=39)
+  J24 bord bas           1080x2400 bord bas = y=1857 (pic +76, L=114)
+  hauteur du panneau : REF=858 px (40.8 % de l ecran)  JEU=591 px (24.6 %)
+
+===== m35 : ARGENT : bbox d encre, fenetre depuis x=20 (au-dessus de l ornement gris).
+  REF ARGENT                             1080x2102 n=  612 bbox=(  47,  45, 179,  63) l=133 h= 19 OK
+  J24 ARGENT                             1080x2400 n=  619 bbox=(  45,  27, 149,  45) l=105 h= 19 OK
+
+===== m36 : Gouttieres d'ecran et marge basse.
+  REF   1080x2102 colonne x=0    moy=66.0 ecart-type=0.00
+  REF   1080x2102 colonne x=W-1  moy=66.0 ecart-type=0.00
+        derniere ligne claire y=2054  -> marge basse 47 px
+  J24   1080x2400 colonne x=0    moy=22.9 ecart-type=14.77
+  J24   1080x2400 colonne x=W-1  moy=24.9 ecart-type=20.48
+        derniere ligne claire y=2341  -> marge basse 58 px
+  J19   1080x1920 colonne x=0    moy=13.4 ecart-type=6.68
+  J19   1080x1920 colonne x=W-1  moy=11.8 ecart-type=7.36
+        derniere ligne claire y=1861  -> marge basse 58 px
+
+===== m38 : Nature de la bande : couleur, uniformite, comparaison bandeau / art.
+  J24   1080x2400  bandeau(y95..135)=(13, 20, 28)  BANDE(y150..225)=(13, 13, 13) ecart-type=0.00 sur 31500 px  art(y240..300)=(19, 31, 38)
+  J19   1080x1920  bandeau(y95..135)=(13, 20, 28)  BANDE(y150..225)=(13, 13, 13) ecart-type=0.00 sur 31500 px  art(y240..300)=(19, 33, 43)
+
+===== m39 : Agitation du fond du dock + comptage des taches claires. Controle sur un aplat.
+  REF bande du dock                      1080x2102 n=18370 moy= 13.3 ecart-type= 3.24  >moy+12 :  0.0 %
+  J24 bande du dock                      1080x2400 n=24758 moy= 18.8 ecart-type= 4.91  >moy+12 :  2.4 %
+  -- controle : un aplat, les deux cotes doivent rendre ~3 --
+  REF aplat du panneau (controle)        1080x2102 n=10600 moy= 13.6 ecart-type= 3.10  >moy+12 :  1.7 %
+  J24 aplat du panneau (controle)        1080x2400 n=10503 moy= 22.2 ecart-type= 2.94  >moy+12 :  0.2 %
+  REF bande du dock                      1080x2102 taches claires >=8 px : 1
+  J24 bande du dock                      1080x2400 taches claires >=8 px : 40

@@ -1,0 +1,12 @@
+  REF COMMANDER            1080x2102 n=24296 bbox=( 580, 855, 976, 940) l=397 h= 86 TRONQ:G
+       aplat haut  RGB=(231,194,103)
+       aplat bas   RGB=(204,157,59)
+       largeur ligne du haut = 283 ; largeur pleine = 397 atteinte a dy=27  => rayon ~ 27 px
+  J24 COMMANDER            1080x2400 n=19697 bbox=( 714,1380, 996,1456) l=283 h= 77 TRONQ:H
+       aplat haut  RGB=(201,154,56)
+       aplat bas   RGB=(201,154,56)
+       largeur ligne du haut = 273 ; largeur pleine = 283 atteinte a dy=6  => rayon ~ 6 px
+  J19 COMMANDER            1080x1920 n=20514 bbox=( 714, 970, 996,1049) l=283 h= 80 TRONQ:H
+       aplat haut  RGB=(201,154,56)
+       aplat bas   RGB=(201,154,56)
+       largeur ligne du haut = 262 ; largeur pleine = 283 atteinte a dy=9  => rayon ~ 9 px

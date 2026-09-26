@@ -1,0 +1,15 @@
+== carte de file (queue) : textes ==
+  REF « Lt. Tull attend vos ordres » 1080x2102 n= 2799 bbox=(  89,1670, 509,1696) l=421 h= 27 RGB=(208,199,176) OK
+  J24 « Lt. Ilm attend vos ordres »  1080x2400 n= 2543 bbox=(  67,1979, 414,2001) l=348 h= 23 RGB=(211,214,215) OK
+  REF severite GRAVE                 1080x2102 n=  608 bbox=(  87,1721, 190,1740) l=104 h= 20 RGB=(182,170,144) OK
+  J24 severite LEGERE                1080x2400 n=  408 bbox=(  66,2013, 142,2030) l= 77 h= 18 RGB=( 59,198,169) OK
+  REF TRANCHER                       1080x2102 n= 2251 bbox=( 772,1693, 989,1716) l=218 h= 24 RGB=(231,192,102) OK
+  J24 TRANCHER                       1080x2400 n= 1570 bbox=( 844,1995,1014,2013) l=171 h= 19 RGB=(255,210, 64) OK
+
+== severite : est-elle VERTE dans le jeu ? (canal) ==
+   J24 : n=408 ; echantillons [(53, 178, 152), (55, 185, 158), (55, 184, 158), (55, 186, 159), (46, 152, 130), (61, 207, 178), (60, 201, 172), (49, 164, 140)]
+   REF : n=608 ; echantillons [(134, 142, 132), (176, 170, 144), (182, 170, 144), (182, 170, 144), (182, 170, 144), (182, 170, 144), (182, 166, 132), (155, 137, 110)]
+
+== fond et bordure de la carte de file ==
+  REF fond carte de file             (300, 1750, 600, 1780) RGB=( 11, 19, 28)
+  J24 fond carte de file             (300, 2050, 600, 2080) RGB=( 22, 22, 28)

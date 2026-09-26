@@ -1,0 +1,13 @@
+== libelles du dock ==
+  REF EMPIRE                       1080x2102  encre=(170, 159, 136)  fond=(7, 12, 19)  contraste=7.49:1   fond: moy=12.4 ecart-type=7.08
+  J24 EMPIRE                       1080x2400  encre=(161, 151, 127)  fond=(13, 19, 30)  contraste=6.42:1   fond: moy=18.1 ecart-type=3.08
+  REF FILIERE                      1080x2102  encre=(174, 164, 137)  fond=(7, 12, 19)  contraste=7.91:1   fond: moy=12.0 ecart-type=6.93
+  J24 FILIERE                      1080x2400  encre=(170, 160, 134)  fond=(13, 19, 30)  contraste=7.16:1   fond: moy=18.4 ecart-type=4.19
+== textes du bandeau haut ==
+  REF ARGENT                       1080x2102  encre=(185, 173, 146)  fond=(12, 18, 28)  contraste=8.45:1   fond: moy=18.1 ecart-type=5.61
+  J24 ARGENT                       1080x2400  encre=(185, 173, 146)  fond=(13, 15, 28)  contraste=8.58:1   fond: moy=16.5 ecart-type=6.55
+  REF phase                        1080x2102  encre=(234, 224, 200)  fond=(14, 20, 31)  contraste=14.05:1   fond: moy=19.4 ecart-type=3.11
+  J24 phase                        1080x2400  encre=(234, 224, 200)  fond=(13, 18, 28)  contraste=14.28:1   fond: moy=17.5 ecart-type=2.03
+== textes du panneau (controle positif attendu : eleve des deux cotes) ==
+  REF titre r1                     1080x2102  encre=(242, 201, 107)  fond=(12, 19, 31)  contraste=11.82:1   fond: moy=18.6 ecart-type=5.58
+  J24 titre r1                     1080x2400  encre=(222, 187, 101)  fond=(22, 22, 28)  contraste=9.78:1   fond: moy=22.5 ecart-type=4.38

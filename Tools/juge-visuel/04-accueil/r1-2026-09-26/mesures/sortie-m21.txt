@@ -1,0 +1,12 @@
+== titre r1 « Le labo attend du Pyralin » (meme chaine) ==
+  REF titre r1                           1080x2102 n= 4607 bbox=(  99, 854, 606, 894) l=508 h= 41 TRONQ:B
+  J24 titre r1                           1080x2400 n= 3864 bbox=(  83,1383, 555,1419) l=473 h= 37 OK
+== capitale L de « Le » ==
+  REF L                                  1080x2102 n=  231 bbox=(  99, 855, 125, 894) l= 27 h= 40 TRONQ:DB
+  J24 L                                  1080x2400 n=  207 bbox=(  83,1384, 104,1410) l= 22 h= 27 OK
+== sous-ligne r1 « Sans lui, rien ne cuit. » ==
+  REF sous-ligne r1                      1080x2102 n= 2085 bbox=(  99, 914, 417, 946) l=319 h= 33 OK
+  J24 sous-ligne r1                      1080x2400 n= 1403 bbox=(  83,1431, 344,1452) l=262 h= 22 OK
+== capitale S de « Sans » ==
+  REF S                                  1080x2102 n=  198 bbox=(  99, 915, 123, 946) l= 25 h= 32 TRONQ:D
+  J24 S                                  1080x2400 n=  165 bbox=(  83,1431, 103,1450) l= 21 h= 20 TRONQ:D

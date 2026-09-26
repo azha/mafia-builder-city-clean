@@ -1,0 +1,8 @@
+  J24 1080x2400
+     fond du BANDEAU  (y 95..135)  RGB=(13, 20, 28)  L=18
+     BANDE            (y 150..225) RGB=(13, 13, 13)  L=13  ecart-type=0.00 (uni si ~0)
+     art juste apres  (y 240..300) RGB=(19, 31, 38)  L=28
+  J19 1080x1920
+     fond du BANDEAU  (y 95..135)  RGB=(13, 20, 28)  L=18
+     BANDE            (y 150..225) RGB=(13, 13, 13)  L=13  ecart-type=0.00 (uni si ~0)
+     art juste apres  (y 240..300) RGB=(19, 33, 43)  L=29

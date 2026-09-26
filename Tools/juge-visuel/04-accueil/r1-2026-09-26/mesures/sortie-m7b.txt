@@ -1,0 +1,33 @@
+seuil absolu L>=120 ; les deux images font 1080 de large (comparaison X directe)
+
+-- ARGENT (meme mot) --
+  REF   ARGENT                           src 1080x2102 encre  4.3%  bbox=(  60,  45, 179,  63) l=120 h= 19 TRONQ:G
+  J24   ARGENT                           src 1080x2400 encre  5.0%  bbox=(  60,  27, 149,  45) l= 90 h= 19 TRONQ:G
+  J19   ARGENT                           src 1080x1920 encre  5.0%  bbox=(  60,  27, 149,  45) l= 90 h= 19 TRONQ:G
+
+-- montant --
+  REF   24 850 EUR                       src 1080x2102 encre  7.8%  bbox=(  60,  76, 459, 144) l=400 h= 69 TRONQ:GDHB
+  J24   10 000 EUR                       src 1080x2400 encre  2.3%  bbox=( 150,  58, 467, 119) l=318 h= 62 TRONQ:GHB
+
+-- JOUR n --
+  REF   JOUR 12                          src 1080x2102 encre  6.4%  bbox=( 887,  45,1026,  68) l=140 h= 24 OK
+  J24   JOUR 1                           src 1080x2400 encre  5.4%  bbox=( 955,  28,1033,  48) l= 79 h= 21 OK
+
+-- phase --
+  REF   Plein jour                       src 1080x2102 encre 13.3%  bbox=( 824,  79,1032, 128) l=209 h= 50 OK
+  J24   Aube                             src 1080x2400 encre 11.6%  bbox=( 935,  70,1033,  98) l= 99 h= 29 OK
+
+-- 1re capitale --
+  REF   P de Plein                       src 1080x2102 encre 20.5%  bbox=( 824,  82, 849, 116) l= 26 h= 35 OK
+  J24   A de Aube                        src 1080x2400 encre 14.1%  bbox=( 935,  71, 967,  98) l= 33 h= 28 TRONQ:D
+  REF   A de ARGENT                      src 1080x2102 encre 13.7%  bbox=(  94,  45, 109,  63) l= 16 h= 19 OK
+  J24   A de ARGENT                      src 1080x2400 encre 19.0%  bbox=(  88,  27, 113,  45) l= 26 h= 19 TRONQ:G
+
+-- artefact gris --
+  J24   artefact                         src 1080x2400 encre  7.3%  bbox=(  45,  40, 149,  97) l=105 h= 58 TRONQ:DH
+  J19   artefact                         src 1080x1920 encre  7.3%  bbox=(  45,  40, 149,  97) l=105 h= 58 TRONQ:DH
+  REF   CTRL NEG meme zone en ref (x<90) src 1080x2102 encre  5.5%  bbox=(  47,  55,  89, 116) l= 43 h= 62 TRONQ:DH
+
+-- controle negatif : chrome sombre sans rien --
+  J24   CTRL NEG chrome (jeu)            (620, 10, 760, 60)  ENCRE 0%
+  REF   CTRL NEG chrome (ref)            (640, 10, 780, 40)  ENCRE 0%

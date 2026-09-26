@@ -1,0 +1,12 @@
+sonde : encre OR = L>=90 et R-B>=45 ; fenetre x<440
+
+  REF montant 24 850 EUR               1080x2102  n= 1943  bbox=(  48,  81, 228, 117)  l=181 h= 37
+  J24 montant 10 000 EUR               1080x2400  n= 1152  bbox=(  49,  71, 191,  97)  l=143 h= 27
+  J19 montant 10 000 EUR               1080x1920  n= 1152  bbox=(  49,  71, 191,  97)  l=143 h= 27
+
+  CTRL NEG REF libelle ARGENT (creme)  1080x2102  n=  196  bbox=(  48,  45, 179,  63)  l=132 h= 19
+  CTRL NEG J24 libelle ARGENT (creme)  1080x2400  n=0
+
+hauteur du chiffre '0' (cercle plein, pas de jambage ni d'ascendante) :
+  REF  chiffre 4 de 24 850             1080x2102  n=  520  bbox=( 150,  81, 204, 117)  l= 55 h= 37
+  J24  chiffre 0 de 10 000             1080x2400  n=0

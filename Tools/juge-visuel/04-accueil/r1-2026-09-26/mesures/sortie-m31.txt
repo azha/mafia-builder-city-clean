@@ -1,0 +1,36 @@
+  REF cadre 4            1080x2102  luminance moyenne=26.3  part de pixels clairs(L>=90)=3.8 %
+        23.30 %  RGB=(8, 13, 21)
+        21.26 %  RGB=(11, 17, 27)
+        18.63 %  RGB=(25, 32, 40)
+        15.44 %  RGB=(12, 20, 30)
+        14.40 %  RGB=(17, 23, 32)
+         6.97 %  RGB=(77, 73, 62)
+       somme = 100.00 % (controle)
+
+  REF cadre 0            1080x2102  luminance moyenne=26.6  part de pixels clairs(L>=90)=1.6 %
+        22.69 %  RGB=(31, 36, 43)
+        21.45 %  RGB=(8, 14, 21)
+        20.28 %  RGB=(14, 19, 27)
+        14.21 %  RGB=(23, 28, 35)
+        13.31 %  RGB=(11, 17, 26)
+         8.06 %  RGB=(61, 60, 55)
+       somme = 100.00 % (controle)
+
+  JEU 1080x2400          1080x2400  luminance moyenne=31.9  part de pixels clairs(L>=90)=3.4 %
+        24.24 %  RGB=(22, 22, 28)
+        22.44 %  RGB=(29, 39, 53)
+        18.99 %  RGB=(12, 17, 25)
+        15.63 %  RGB=(23, 30, 41)
+        10.99 %  RGB=(15, 22, 32)
+         7.71 %  RGB=(68, 77, 72)
+       somme = 100.00 % (controle)
+
+  JEU 1080x1920          1080x1920  luminance moyenne=30.7  part de pixels clairs(L>=90)=4.0 %
+        27.84 %  RGB=(22, 22, 28)
+        25.75 %  RGB=(25, 32, 43)
+        19.50 %  RGB=(13, 19, 29)
+         9.86 %  RGB=(57, 61, 60)
+         8.98 %  RGB=(11, 14, 20)
+         8.07 %  RGB=(17, 24, 35)
+       somme = 100.00 % (controle)
+

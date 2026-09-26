@@ -1,0 +1,16 @@
+== ARGENT, fenetre depuis x=20 ==
+  REF ARGENT                     1080x2102 n= 612 bbox=(  47,  45, 179,  63) l=133 h= 19 OK
+  J24 ARGENT (x>=150 : hors ornement) n=0
+  J24 ARGENT (x>=84)             1080x2400 n= 366 bbox=(  84,  27, 149,  45) l= 66 h= 19 TRONQ:G
+
+== recherche d un PIP or rond (d>=12) dans la bande du dock ==
+  REF bande des pastilles  1080x2102  y 1820..2000  blobs or >=60 px : 1
+     x= 481 y=1848  l=19 h=18  aire=260
+  J24 bande des pastilles  1080x2400  y 2150..2320  blobs or >=60 px : 1
+     x= 240 y=2312  l=38 h= 5  aire=190
+== ARGENT (fenetre x 20..340, y au-dessus de l ornement) ==
+  REF ARGENT                     1080x2102 n= 612 bbox=(  47,  45, 179,  63) l=133 h= 19 OK
+  J24 ARGENT                     1080x2400 n= 619 bbox=(  45,  27, 149,  45) l=105 h= 19 OK
+== JOUR n : largeur par caractere ==
+   REF « JOUR 12 » l=140 pour 7 caracteres -> 20,0 px/car ; cap h=24
+   JEU « JOUR 1 »  l= 79 pour 6 caracteres -> 13,2 px/car ; cap h=21

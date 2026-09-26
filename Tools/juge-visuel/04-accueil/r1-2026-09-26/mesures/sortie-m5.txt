@@ -1,0 +1,46 @@
+=== REFERENCE cadre 4 (1080x2102) ===
+  ARGENT (libelle)               src 1080x2102  fenetre (90, 30, 460, 78)  seuil=57  glyphes=5  (attendus 6)
+      g0  x=  93..109   y=  44..64    l= 17  h= 21
+      g1  x= 120..131   y=  44..63    l= 12  h= 20
+      g2  x= 141..156   y=  44..63    l= 16  h= 20
+      g4  x= 454..459   y=  68..77    l=  6  h= 10
+      -> chasse totale (1er a dernier) = 367 px
+  montant 24 850 EUR             src 1080x2102  fenetre (90, 78, 560, 150)  seuil=59  glyphes=8  (attendus 8)
+      g0  x=  90..99    y=  81..116   l= 10  h= 36
+      g1  x= 113..135   y=  81..117   l= 23  h= 37
+      g2  x= 141..162   y=  81..117   l= 22  h= 37
+      g7  x= 551..559   y= 141..149   l=  9  h=  9
+      -> chasse totale (1er a dernier) = 470 px
+  JOUR 12                        src 1080x2102  fenetre (760, 28, 1050, 76)  seuil=58  glyphes=6  (attendus 6)
+      g0  x= 887..894   y=  44..68    l=  8  h= 25
+      g1  x= 904..922   y=  44..64    l= 19  h= 21
+      g2  x= 932..946   y=  44..63    l= 15  h= 20
+      g5  x=1014..1026  y=  44..63    l= 13  h= 20
+      -> chasse totale (1er a dernier) = 140 px
+  phase Plein jour               src 1080x2102  fenetre (760, 76, 1050, 150)  seuil=59  glyphes=3  (attendus 10)
+      g0  x= 823..932   y=  79..117   l=110  h= 39
+      g1  x= 945..956   y=  81..128   l= 12  h= 48
+      g2  x= 963..1033  y=  91..117   l= 71  h= 27
+      -> chasse totale (1er a dernier) = 211 px
+
+=== JEU 1080x2400 ===
+  ARGENT (libelle)               src 1080x2400  fenetre (90, 18, 460, 60)  seuil=56  glyphes=3  (attendus 6)
+      g0  x=  90..96    y=  27..45    l=  7  h= 19
+      g1  x= 102..113   y=  28..45    l= 12  h= 18
+      g2  x= 118..150   y=  28..45    l= 33  h= 18
+      -> chasse totale (1er a dernier) = 61 px
+  montant 10 000 EUR (sans artefact) src 1080x2400  fenetre (155, 58, 560, 120)  seuil=58  glyphes=4  (attendus 7)
+      g0  x= 155..162   y=  71..97    l=  8  h= 27
+      g1  x= 172..191   y=  71..97    l= 20  h= 27
+      g2  x= 446..471   y=  58..119   l= 26  h= 62
+      g3  x= 492..559   y=  63..119   l= 68  h= 57
+      -> chasse totale (1er a dernier) = 405 px
+  JOUR 1                         src 1080x2400  fenetre (760, 18, 1050, 58)  seuil=56  glyphes=3  (attendus 5)
+      g0  x= 955..995   y=  28..48    l= 41  h= 21
+      g1  x=1000..1012  y=  29..44    l= 13  h= 16
+      g2  x=1024..1033  y=  29..44    l= 10  h= 16
+      -> chasse totale (1er a dernier) = 79 px
+  phase Aube                     src 1080x2400  fenetre (760, 58, 1050, 120)  seuil=58  glyphes=2  (attendus 4)
+      g0  x= 935..1010  y=  69..98    l= 76  h= 30
+      g1  x=1015..1033  y=  78..98    l= 19  h= 21
+      -> chasse totale (1er a dernier) = 99 px

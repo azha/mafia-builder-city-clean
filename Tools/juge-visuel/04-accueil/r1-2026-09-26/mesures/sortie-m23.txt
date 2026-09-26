@@ -1,0 +1,5 @@
+  REF « S » de « Sans lui »          1080x2102 cols 99..124  blocs: y=915..936(h=22), y=944..946(h=3)
+  J24 « S » de « Sans lui »          1080x2400 cols 83..104  blocs: y=1431..1450(h=20)
+
+  REF « L » de « LA SUITE »          1080x2102 cols 456..478  blocs: y=779..795(h=17), y=802..803(h=2)
+  J24 « L » de « LA SUITE »          1080x2400 cols 473..492  blocs: y=1329..1344(h=16)

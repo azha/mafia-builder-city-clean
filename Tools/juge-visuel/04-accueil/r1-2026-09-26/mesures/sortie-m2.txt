@@ -1,0 +1,26 @@
+
+=== REF cadre 4 — cadre-4-la-suite.png — 1080x2102 — colonnes echantillonnees : 664 ===
+  pic de ligne (barre haute) : y=83  mediane=19  ecart aux voisins=+1
+  -> AUCUN pic net : pas de filet horizontal sur cette image
+  coeur de bande (max des medianes y=87..123) = 19  -> seuil derive = 21
+  bande sombre : y=84 .. 374  soit 291 px  (13.8 % de la hauteur)
+  mediane juste apres la bande (y=375..395) : [22, 23, 24, 26, 27, 29]
+
+=== REF cadre 0 — cadre-0-rien-a-trancher.png — 1080x2102 — colonnes echantillonnees : 664 ===
+  pic de ligne (barre haute) : y=83  mediane=19  ecart aux voisins=+1
+  -> AUCUN pic net : pas de filet horizontal sur cette image
+  coeur de bande (max des medianes y=87..123) = 19  -> seuil derive = 21
+  bande sombre : y=84 .. 374  soit 291 px  (13.8 % de la hauteur)
+  mediane juste apres la bande (y=375..395) : [22, 23, 24, 26, 27, 29]
+
+=== JEU 1080x1920 — p1_lancement_1080x1920.png — 1080x1920 — colonnes echantillonnees : 664 ===
+  pic de ligne (barre haute) : y=141  mediane=129  ecart aux voisins=+110
+  coeur de bande (max des medianes y=145..181) = 13  -> seuil derive = 15
+  bande sombre : y=142 .. 231  soit 90 px  (4.7 % de la hauteur)
+  mediane juste apres la bande (y=232..252) : [26, 26, 26, 26, 26, 26]
+
+=== JEU 1080x2400 — p1_lancement_1080x2400.png — 1080x2400 — colonnes echantillonnees : 664 ===
+  pic de ligne (barre haute) : y=141  mediane=129  ecart aux voisins=+110
+  coeur de bande (max des medianes y=145..181) = 13  -> seuil derive = 15
+  bande sombre : y=142 .. 231  soit 90 px  (3.8 % de la hauteur)
+  mediane juste apres la bande (y=232..252) : [22, 22, 22, 23, 23, 23]

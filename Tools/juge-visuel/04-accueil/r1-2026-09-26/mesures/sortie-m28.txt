@@ -1,0 +1,22 @@
+== pastille de notification OR au-dessus de FAMILLE ==
+  REF pip (zone au-dessus de FAMILLE)      1080x2102  n= 260 bbox=(481,1848,499,1865) l=19 h=18 RGB=(217,171,78)
+  J24 pip (meme zone relative)             1080x2400  n= 177 bbox=(387,2134,536,2194) l=150 h=61 RGB=(157,131,75)
+  J24 pip (zone elargie)                   1080x2400  n= 345 bbox=(305,2104,687,2194) l=383 h=91 RGB=(163,137,79)
+
+== souligne OR de l onglet actif (EMPIRE) ==
+  REF souligne EMPIRE                      1080x2102  n= 336 bbox=(148,2017,197,2023) l=50 h=7 RGB=(176,141,62)
+  J24 souligne EMPIRE                      1080x2400  n= 190 bbox=(240,2312,277,2316) l=38 h=5 RGB=(176,141,61)
+  J19 souligne EMPIRE                      1080x1920  n= 190 bbox=(240,1832,277,1836) l=38 h=5 RGB=(176,141,61)
+
+== TRANSLUCIDITE des pastilles : le fond traverse-t-il ? ==
+   ecart-type de la luminance dans un disque interieur (r=40) : uni => opaque ; disperse => translucide
+   REF pastille FAMILLE               1080x2102  n=9475  moy=27.6  ecart-type=4.18  min=19 max=37
+   J24 pastille FAMILLE               1080x2400  n=5023  moy=29.2  ecart-type=2.59  min=25 max=37
+   REF pastille FILIERE               1080x2102  n=9475  moy=27.6  ecart-type=4.18  min=19 max=37
+   J24 pastille FILIERE               1080x2400  n=5023  moy=29.2  ecart-type=2.59  min=25 max=37
+
+== couleur du texte TRANCHER et de la severite ==
+  REF TRANCHER                       1080x2102 n=2251 RGB=(231,192,102) bbox=(772,1693,989,1716) h=24
+  J24 TRANCHER                       1080x2400 n= 461 RGB=(114,114,115) bbox=(820,2095,1039,2127) h=33
+  REF severite (GRAVE)               1080x2102 n= 608 RGB=(182,170,144) bbox=(87,1721,190,1740) h=20
+  J24 severite (LEGERE)              1080x2400 n=  78 RGB=(126,133,142) bbox=(118,2130,169,2151) h=22

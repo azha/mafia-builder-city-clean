@@ -1,0 +1,24 @@
+--- libelles et valeurs du chrome (fenetres generees larges) ---
+  REF   ARGENT                       src 1080x2102  seuil= 57  bbox=(  60,  44, 479,  79)  l=420 h= 36 ⛔ TRONQUEE (gauche,droite,bas)
+  J24   ARGENT                       src 1080x2400  seuil= 56  bbox=(  60,  27, 479,  57)  l=420 h= 31 ⛔ TRONQUEE (gauche,droite,bas)
+  J19   ARGENT                       src 1080x1920  seuil= 56  bbox=(  60,  27, 479,  57)  l=420 h= 31 ⛔ TRONQUEE (gauche,droite,bas)
+
+  REF   montant (ligne)              src 1080x2102  seuil= 59  bbox=(  60,  78, 598, 149)  l=539 h= 72 ⛔ TRONQUEE (gauche,haut,bas)
+  J24   montant (ligne, apres artefact) src 1080x2400  seuil= 59  bbox=( 160,  58, 588, 129)  l=429 h= 72 ⛔ TRONQUEE (gauche,haut,bas)
+
+  REF   JOUR n                       src 1080x2102  seuil= 58  bbox=( 887,  25,1059,  68)  l=173 h= 44 ⛔ TRONQUEE (droite,haut)
+  J24   JOUR n                       src 1080x2400  seuil= 56  bbox=( 955,  28,1033,  48)  l= 79 h= 21 OK
+
+  REF   phase (ligne)                src 1080x2102  seuil= 59  bbox=( 823,  79,1033, 128)  l=211 h= 50 OK
+  J24   phase (ligne)                src 1080x2400  seuil= 58  bbox=( 935,  69,1033,  98)  l= 99 h= 30 OK
+
+--- premiere capitale isolee ---
+  REF   P de "Plein jour"            src 1080x2102  seuil= 59  bbox=( 823,  81, 847, 116)  l= 25 h= 36 ⛔ TRONQUEE (droite)
+  J24   A de "Aube"                  src 1080x2400  seuil= 58  bbox=( 935,  70, 961,  98)  l= 27 h= 29 ⛔ TRONQUEE (droite)
+  REF   A de "ARGENT"                src 1080x2102  seuil= 58  bbox=(  93,  44, 109,  64)  l= 17 h= 21 OK
+  J24   A de "ARGENT"                src 1080x2400  seuil= 56  bbox=(  86,  27, 111,  45)  l= 26 h= 19 ⛔ TRONQUEE (gauche,droite)
+
+--- artefact gris a gauche du montant (JEU seulement) ---
+  J24   artefact                     src 1080x2400  seuil= 58  bbox=(  12,  45, 159,  97)  l=148 h= 53 ⛔ TRONQUEE (droite,haut)
+  J19   artefact                     src 1080x1920  seuil= 58  bbox=(  12,  45, 159,  97)  l=148 h= 53 ⛔ TRONQUEE (droite,haut)
+  REF   CONTROLE : meme zone en reference src 1080x2102  seuil= 59  bbox=(   0,  60, 159, 149)  l=160 h= 90 ⛔ TRONQUEE (gauche,droite,haut,bas)

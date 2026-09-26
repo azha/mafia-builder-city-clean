@@ -1,0 +1,8 @@
+== bande du dock, pastilles exclues (rayon 90 ref / 70 jeu autour de chaque centre) ==
+  REF bande du dock                        1080x2102  n=18370  moy= 13.3  ecart-type= 3.24  pixels >moy+12 :  0.0 %
+  J24 bande du dock                        1080x2400  n=24758  moy= 18.8  ecart-type= 4.91  pixels >moy+12 :  2.4 %
+== controle : bande d aplat du panneau ==
+  REF aplat du panneau (controle)          1080x2102  n=10600  moy= 13.6  ecart-type= 3.10  pixels >moy+12 :  1.7 %
+  J24 aplat du panneau (controle)          1080x2400  n=10503  moy= 22.2  ecart-type= 2.94  pixels >moy+12 :  0.2 %
+  REF bande du dock                        1080x2102  y 1840..2060  taches claires (>=8 px, hors bandes de texte) : 1
+  J24 bande du dock                        1080x2400  y 2150..2350  taches claires (>=8 px, hors bandes de texte) : 40

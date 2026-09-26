@@ -1,0 +1,10 @@
+  REF pastilles      1080x2102  seuil=42
+     aucun y ne rend 8 bords entre 1860 et 2010
+  J24 pastilles      1080x2400  seuil=60
+     aucun y ne rend 8 bords entre 2190 et 2300
+  J19 pastilles      1080x1920  seuil=60
+     aucun y ne rend 8 bords entre 1710 et 1820
+
+== libelles du dock : bbox par groupe ==
+  REF libelles     1080x2102 -> 4 groupes : x=104..237 l=134 c=170.5 | x=341..489 l=149 c=415.0 | x=592..728 l=137 c=660.0 | x=863..947 l=85 c=905.0
+  J24 libelles     1080x2400 -> 4 groupes : x=208..310 l=103 c=259.0 | x=390..503 l=114 c=446.5 | x=581..686 l=106 c=633.5 | x=789..853 l=65 c=821.0

@@ -1,0 +1,33 @@
+  REF dock         1080x2102  y 1560..2102
+     bande y=1670..1740 h= 71
+     bande y=1849..1864 h= 16
+     bande y=2017..2023 h=  7
+     bande y=2032..2053 h= 22
+
+  J24 dock         1080x2400  y 1560..2400
+     bande y=1560..1610 h= 51
+     bande y=1628..1632 h=  5
+     bande y=1658..1661 h=  4
+     bande y=1668..1707 h= 40
+     bande y=1715..1751 h= 37
+     bande y=1762..1811 h= 50
+     bande y=1851..1907 h= 57
+     bande y=1979..2030 h= 52
+     bande y=2100..2195 h= 96
+     bande y=2312..2316 h=  5
+     bande y=2324..2341 h= 18
+
+  J19 dock         1080x1920  y 1080..1920
+     bande y=1107..1135 h= 29
+     bande y=1146..1212 h= 67
+     bande y=1265..1301 h= 37
+     bande y=1308..1349 h= 42
+     bande y=1356..1380 h= 25
+     bande y=1387..1404 h= 18
+     bande y=1448..1496 h= 49
+     bande y=1516..1518 h=  3
+     bande y=1536..1586 h= 51
+     bande y=1632..1705 h= 74
+     bande y=1715..1717 h=  3
+     bande y=1832..1836 h=  5
+     bande y=1844..1861 h= 18

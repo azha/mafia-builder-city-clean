@@ -1,0 +1,14 @@
+  REF bord bas panneau     1080x2102  bord bas le plus marque : y=1592 (pic +27, L=39)
+  J24 bord bas panneau     1080x2400  bord bas le plus marque : y=1857 (pic +76, L=114)
+
+== bouton secondaire ==
+  REF VOIR LA VENTE          1080x2102  y=1066..1157 h=92   x=605..979 l=375
+  J24 VOIR LA VENTE          1080x2400  y=1590..1719 h=130   x=719..991 l=273
+
+== rythme, recalcule ==
+   hauteur panneau : REF=858 px (40.8 % de la hauteur d ecran)  JEU=591 px (24.6 %)
+   filet or     REF   0.1 % du panneau   JEU   5.8 %   ecart  +5.6 pt
+   LA SUITE     REF   5.2 % du panneau   JEU  10.7 %   ecart  +5.4 pt
+   titre r1     REF  14.1 % du panneau   JEU  20.0 %   ecart  +5.9 pt
+   sep 1        REF  28.9 % du panneau   JEU  36.5 %   ecart  +7.6 pt
+   titre r2     REF  33.7 % du panneau   JEU  42.0 %   ecart  +8.3 pt

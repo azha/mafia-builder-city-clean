@@ -1,0 +1,10 @@
+== bords LATERAUX du panneau (pic de bordure sur une ligne du panneau) ==
+  REF panneau y=1200     1080x2102 y=1200 : 47 489 1033
+  J24 panneau y=1700     1080x2400 y=1700 : 34 121 176 217 225 243
+
+== losange or sous le medaillon : present dans la REFERENCE ? ==
+  REF sous le medaillon (y 222..300) 1080x2102  zone (480, 222, 600, 300)  n=0 AUCUN
+  J24 sous le medaillon (y 196..250) 1080x2400  zone (480, 196, 600, 250)  n=526 bbox=(506,196,573,231)
+
+== centrage de « LA SUITE » ==
+   REF : x 456..617 -> centre 536,5 (ecran 540)  ;  JEU : x 473..606 -> centre 539,5

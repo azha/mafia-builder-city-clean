@@ -1,0 +1,25 @@
+== LIBELLES du dock ==
+  REF libelles                       1080x2102  y 1938..1972 seuil=90 -> 0 groupes
+  J24 libelles                       1080x2400  y 2318..2350 seuil=90 -> 4 groupes
+     x= 208..310   l=103  centre=259.0
+     x= 390..503   l=114  centre=446.5
+     x= 581..686   l=106  centre=633.5
+     x= 789..853   l= 65  centre=821.0
+  J19 libelles                       1080x1920  y 1838..1870 seuil=90 -> 4 groupes
+     x= 208..310   l=103  centre=259.0
+     x= 390..503   l=114  centre=446.5
+     x= 581..686   l=106  centre=633.5
+     x= 789..853   l= 65  centre=821.0
+
+== PASTILLES : ligne passant par le centre des cercles ==
+  REF pastilles (y=1850)             1080x2102  y 1848..1852 seuil=45 -> 7 groupes
+     x=   0..2     l=  3  centre=  1.0
+     x= 146..199   l= 54  centre=172.5
+     x= 391..443   l= 53  centre=417.0
+     x= 483..497   l= 15  centre=490.0
+     x= 636..688   l= 53  centre=662.0
+     x= 880..933   l= 54  centre=906.5
+     x=1077..1079  l=  3  centre=1078.0
+  J24 pastilles (y=2240)             1080x2400  y 2238..2242 seuil=45 -> 2 groupes
+     x= 384..384   l=  1  centre=384.0
+     x= 695..695   l=  1  centre=695.0

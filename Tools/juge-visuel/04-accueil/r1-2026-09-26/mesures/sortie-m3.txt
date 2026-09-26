@@ -1,0 +1,8 @@
+ref4  chrome-haut  source 1080x2102  boite (0, 0, 1080, 420)  -> ref4_chrome-haut.png 1080x420
+j24   chrome-haut  source 1080x2400  boite (0, 0, 1080, 420)  -> j24_chrome-haut.png 1080x420
+j19   chrome-haut  source 1080x1920  boite (0, 0, 1080, 420)  -> j19_chrome-haut.png 1080x420
+ref4  panneau      source 1080x2102  boite (0, 690, 1080, 1580)  -> ref4_panneau.png 1080x890
+j24   panneau      source 1080x2400  boite (0, 1040, 1080, 1560)  -> j24_panneau.png 1512x728
+ref4  dock         source 1080x2102  boite (0, 1580, 1080, 2102)  -> ref4_dock.png 1080x522
+j24   dock         source 1080x2400  boite (0, 1880, 1080, 2400)  -> j24_dock.png 1080x520
+j19   dock         source 1080x1920  boite (0, 1400, 1080, 1920)  -> j19_dock.png 1080x520

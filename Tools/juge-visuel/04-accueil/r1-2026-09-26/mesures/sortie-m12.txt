@@ -1,0 +1,35 @@
+src (1080, 2400)
+ligne or y=141 : echantillons RGB le long de x
+   x=  10  (43, 38, 30)
+   x= 200  (170, 136, 60)
+   x= 400  (176, 141, 61)
+   x= 440  (176, 141, 61)
+   x= 470  (14, 18, 27)
+   x= 500  (23, 28, 39)
+   x= 540  (31, 36, 49)
+   x= 580  (23, 28, 39)
+   x= 610  (13, 17, 26)
+   x= 640  (176, 141, 61)
+   x= 700  (176, 141, 61)
+   x= 900  (162, 130, 57)
+   x=1070  (41, 37, 30)
+
+le filet traverse-t-il le medaillon ? (le medaillon occupe x 448..631 a y=90)
+   x=540,y=141 : (31, 36, 49)    x=500,y=141 : (23, 28, 39)
+
+losange or sous le medaillon : bbox de l'encre or dans (500,205,580,245)
+   n=284 bbox=(517,200,562,231) l=46 h=32
+
+MEME zone dans la reference (cadre 4) :
+src (1080, 2102)
+   losange : n=586
+   filet horizontal : luminance mediane des lignes y=135..150 sur x 100..400 (ref)
+     y=135  ref L= 19   jeu L= 19
+     y=137  ref L= 19   jeu L= 19
+     y=139  ref L= 19   jeu L= 19
+     y=141  ref L= 19   jeu L=142
+     y=143  ref L= 19   jeu L= 13
+     y=145  ref L= 19   jeu L= 13
+     y=147  ref L= 19   jeu L= 13
+     y=149  ref L= 19   jeu L= 13
+     y=151  ref L= 19   jeu L= 13

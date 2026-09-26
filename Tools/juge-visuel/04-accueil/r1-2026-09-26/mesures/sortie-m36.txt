@@ -1,0 +1,17 @@
+  REF              1080x2102  y 250..700 : ecart moyen |col0-col24|=37.5  |colW-1-colW-25|=47.3
+     colonne x=0    moy=66.0 ecart-type=0.00  (un ecart-type ~0 = colonne UNIE)
+     colonne x=1    moy=66.0 ecart-type=0.00  (un ecart-type ~0 = colonne UNIE)
+     colonne x=W-1  moy=66.0 ecart-type=0.00  (un ecart-type ~0 = colonne UNIE)
+  J24              1080x2400  y 260..1000 : ecart moyen |col0-col24|=8.7  |colW-1-colW-25|=19.6
+     colonne x=0    moy=22.9 ecart-type=14.77  (un ecart-type ~0 = colonne UNIE)
+     colonne x=1    moy=22.9 ecart-type=15.27  (un ecart-type ~0 = colonne UNIE)
+     colonne x=W-1  moy=24.9 ecart-type=20.48  (un ecart-type ~0 = colonne UNIE)
+  J19              1080x1920  y 260..800 : ecart moyen |col0-col24|=8.7  |colW-1-colW-25|=9.1
+     colonne x=0    moy=13.4 ecart-type=6.68  (un ecart-type ~0 = colonne UNIE)
+     colonne x=1    moy=13.7 ecart-type=8.38  (un ecart-type ~0 = colonne UNIE)
+     colonne x=W-1  moy=11.8 ecart-type=7.36  (un ecart-type ~0 = colonne UNIE)
+
+== derniere ligne non noire de chaque image (rien de coupe en bas ?) ==
+   REF   1080x2102  derniere ligne avec du clair (L>=70) : y=2054  (marge basse = 47 px)
+   J24   1080x2400  derniere ligne avec du clair (L>=70) : y=2341  (marge basse = 58 px)
+   J19   1080x1920  derniere ligne avec du clair (L>=70) : y=1861  (marge basse = 58 px)

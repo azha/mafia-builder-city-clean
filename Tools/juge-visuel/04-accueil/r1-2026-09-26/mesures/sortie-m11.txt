@@ -1,0 +1,11 @@
+  REF cadre 4          1080x2102  cx=540
+     ligne y=115 : or de x=443 a x=636  -> diametre H = 194
+     colonne x=540 : or de y=25 a y=218  -> diametre V = 194
+  JEU 1080x2400        1080x2400  cx=540
+     anneau, bras gauche : y=141..142  (hauteur 2)
+     ligne y=90 : or de x=448 a x=631  -> diametre H = 184
+     colonne x=540 : or de y=17 a y=231  -> diametre V = 215
+  JEU 1080x1920        1080x1920  cx=540
+     anneau, bras gauche : y=141..272  (hauteur 132)
+     ligne y=90 : or de x=448 a x=631  -> diametre H = 184
+     colonne x=540 : or de y=17 a y=231  -> diametre V = 215

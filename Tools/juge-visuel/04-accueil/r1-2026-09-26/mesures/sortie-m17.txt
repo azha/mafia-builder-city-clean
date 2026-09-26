@@ -1,0 +1,14 @@
+--- bouton COMMANDER ---
+  REF COMMANDER                  1080x2102 n=26877 bbox=( 560, 852, 979, 943) l=420 h= 92
+       aplat au centre (hors lettres) RGB=(92,62,27)  (fenetre 40x16 au centre)
+       profil du coin haut : dy0:l=273 dy2:l=402 dy4:l=404 dy6:l=406 dy8:l=409 dy10:l=411 dy12:l=412 dy14:l=413 dy16:l=415 dy18:l=416 dy20:l=416 dy22:l=417 dy24:l=417
+  J24 COMMANDER                  1080x2400 n=15127 bbox=( 712,1400, 998,1457) l=287 h= 58
+       aplat au centre (hors lettres) RGB=(201,154,56)  (fenetre 40x16 au centre)
+       profil du coin haut : dy0:l=287 dy2:l=287 dy4:l=287 dy6:l=287 dy8:l=287 dy10:l=287 dy12:l=287 dy14:l=287 dy16:l=287 dy18:l=287 dy20:l=287 dy22:l=287 dy24:l=287
+  J19 COMMANDER                  1080x1920 n=16209 bbox=( 712, 990, 998,1051) l=287 h= 62
+       aplat au centre (hors lettres) RGB=(201,154,56)  (fenetre 40x16 au centre)
+       profil du coin haut : dy0:l=287 dy2:l=287 dy4:l=287 dy6:l=287 dy8:l=287 dy10:l=287 dy12:l=287 dy14:l=287 dy16:l=287 dy18:l=287 dy20:l=287 dy22:l=287 dy24:l=287
+
+--- boutons secondaires : bbox par leur BORDURE (filet clair) ---
+  REF VOIR LA VENTE              1080x2102  lignes-bord y=1066..1157  colonnes-bord x=606..978
+  J24 VOIR LA VENTE              1080x2400  lignes-bord y=1602..1700  colonnes-bord x=1044..1045

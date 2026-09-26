@@ -1,0 +1,43 @@
+== REFERENCE : bord haut du panneau ==
+  REF                                      y= 728 : aucun pixel or
+  REF                                      y= 729 : aucun pixel or
+  REF                                      y= 730 : aucun pixel or
+  REF                                      y= 731 : aucun pixel or
+  REF                                      y= 732 : aucun pixel or
+  REF                                      y= 733 : aucun pixel or
+  REF                                      1080x2102 y= 734 : or de x=216 a x=865 (l=650)  RGB au centre=(176, 141, 62)
+  REF                                      1080x2102 y= 735 : or de x=215 a x=863 (l=649)  RGB au centre=(176, 141, 62)
+  REF                                      1080x2102 y= 736 : or de x=216 a x=864 (l=649)  RGB au centre=(176, 141, 62)
+  REF                                      y= 737 : aucun pixel or
+  REF                                      y= 738 : aucun pixel or
+  REF                                      y= 739 : aucun pixel or
+  REF                                      y= 740 : aucun pixel or
+  REF                                      y= 741 : aucun pixel or
+== JEU 1080x2400 : bord haut (1266) puis filet (1300) ==
+  J24                                      1080x2400 y=1264 : or de x=282 a x=313 (l=32)  RGB au centre=(28, 74, 94)
+  J24                                      y=1266 : aucun pixel or
+  J24                                      y=1268 : aucun pixel or
+  J24                                      y=1280 : aucun pixel or
+  J24                                      y=1290 : aucun pixel or
+  J24                                      y=1298 : aucun pixel or
+  J24                                      y=1299 : aucun pixel or
+  J24                                      1080x2400 y=1300 : or de x=81 a x=998 (l=918)  RGB au centre=(201, 154, 56)
+  J24                                      y=1301 : aucun pixel or
+  J24                                      y=1302 : aucun pixel or
+  J24                                      y=1310 : aucun pixel or
+== JEU 1080x1920 ==
+  J19                                      1080x1920 y= 857 : or de x=936 a x=939 (l=4)  RGB au centre=(30, 34, 41)
+  J19                                      1080x1920 y= 859 : or de x=19 a x=22 (l=4)  RGB au centre=(114, 114, 115)
+  J19                                      1080x1920 y= 861 : or de x=19 a x=23 (l=5)  RGB au centre=(22, 22, 28)
+  J19                                      y= 880 : aucun pixel or
+  J19                                      y= 891 : aucun pixel or
+  J19                                      y= 892 : aucun pixel or
+  J19                                      1080x1920 y= 893 : or de x=81 a x=998 (l=918)  RGB au centre=(201, 154, 56)
+  J19                                      1080x1920 y= 894 : or de x=81 a x=998 (l=918)  RGB au centre=(201, 154, 56)
+  J19                                      y= 895 : aucun pixel or
+  J19                                      y= 900 : aucun pixel or
+
+== bord gris du panneau : ou commence-t-il ? ==
+   REF premiere ligne de bord dense : y=734 (n=768, RGB=(176, 141, 62))
+   J24 premiere ligne de bord dense : y=1260 (n=876, RGB=(28, 74, 94))
+   J19 premiere ligne de bord dense : y=859 (n=880, RGB=(114, 114, 115))

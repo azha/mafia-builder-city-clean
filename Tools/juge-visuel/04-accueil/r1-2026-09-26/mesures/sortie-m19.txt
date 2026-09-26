@@ -1,0 +1,17 @@
+--- titre de rangee 1 : « Le labo attend du Pyralin » (meme chaine) ---
+  REF titre r1                       1080x2102 n=  255 bbox=( 102, 795, 617, 859) l=516 h= 65 TRONQ:HB
+  J24 titre r1                       1080x2400 n= 8463 bbox=(  83,1374, 859,1409) l=777 h= 36 TRONQ:DB
+--- sous-ligne r1 : « Sans lui, rien ne cuit. » ---
+  REF sous-ligne r1                  1080x2102 n=  955 bbox=(  99, 860, 605, 894) l=507 h= 35 TRONQ:H
+  J24 sous-ligne r1                  1080x2400 n= 1403 bbox=(  83,1431, 344,1452) l=262 h= 22 OK
+--- titre « LA SUITE » ---
+  REF LA SUITE                       1080x2102 n=  739 bbox=( 456, 779, 616, 795) l=161 h= 17 OK
+  J24 LA SUITE                       1080x2400 n=  768 bbox=( 473,1329, 606,1344) l=134 h= 16 OK
+
+--- couleurs de texte (mediane sur les pixels d encre) ---
+   REF titre r1                   n=  245 RGB=(242,201,107)
+   J24 titre r1                   n= 7750 RGB=(201,154, 56)
+   REF sous-ligne r1              n=  590 RGB=(185,173,146)
+   J24 sous-ligne r1              n= 1144 RGB=(171,180,189)
+   REF LA SUITE                   n=  686 RGB=(185,173,146)
+   J24 LA SUITE                   n=  514 RGB=(138,151,156)

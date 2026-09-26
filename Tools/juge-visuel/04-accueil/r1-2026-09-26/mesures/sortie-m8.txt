@@ -1,0 +1,12 @@
+masque : 55<=L<=150, gris neutre (max-min canal <=18), b>=r  -> exclut l'or du montant
+fenetre : (0,30,160,130) = le coin haut-gauche, AVANT le montant dans les deux images
+
+  cadre-0-rien-a-trancher.png              1080x2102  n=  33  bbox=(54,44,142,64)
+  cadre-1-carte-de-tete.png                1080x2102  n=  33  bbox=(54,44,142,64)
+  cadre-2-rapports-a-lire.png              1080x2102  n=  33  bbox=(54,44,142,64)
+  cadre-3-file-sous-pression.png           1080x2102  n=  33  bbox=(54,44,142,64)
+  cadre-4-la-suite.png                     1080x2102  n=  33  bbox=(54,44,142,64)
+  p1_lancement_1080x2400.png               1080x2400  n= 264  bbox=(12,57,75,72)
+  p1_lancement_1080x1920.png               1080x1920  n= 264  bbox=(12,57,75,72)
+
+echantillons RGB sur l'ornement : [(73, 75, 76), (73, 75, 76), (73, 75, 76), (73, 74, 75), (50, 52, 55), (13, 17, 28)]

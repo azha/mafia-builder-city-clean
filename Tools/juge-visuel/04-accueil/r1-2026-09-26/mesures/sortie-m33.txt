@@ -1,0 +1,12 @@
+== bouton secondaire « VOIR LA VENTE » ==
+  REF VOIR LA VENTE              1080x2102  y=1066..1157  x=605..979  => l=375 h=92
+  J24 VOIR LA VENTE              1080x2400  y=1602..1700  x=-  => l=- h=99
+
+== RYTHME vertical du panneau (px, et % de la hauteur du panneau) ==
+   REF bord bas = None   JEU bord bas = 1857
+   hauteur panneau : REF=-734  JEU=591
+   filet or               REF y= 735 ( -0.1 % du panneau)   JEU y=1300 (  5.8 %)
+   LA SUITE (haut caps)   REF y= 779 ( -6.1 % du panneau)   JEU y=1329 ( 10.7 %)
+   titre r1               REF y= 855 (-16.5 % du panneau)   JEU y=1384 ( 20.0 %)
+   sep 1                  REF y= 982 (-33.8 % du panneau)   JEU y=1482 ( 36.5 %)
+   titre r2               REF y=1023 (-39.4 % du panneau)   JEU y=1514 ( 42.0 %)

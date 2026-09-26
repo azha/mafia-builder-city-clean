@@ -1,0 +1,21 @@
+=== REFERENCE cadre 4 (1080 de large) ===
+  ARGENT (libelle)           src 1080x2102  fenetre (100, 30, 420, 80)  fond= 17 seuil= 57  encre   3.0 %  bbox=(100,44,179,64)  l=80 h=21
+  montant                    src 1080x2102  fenetre (100, 80, 500, 140)  fond= 18 seuil= 58  encre   9.9 %  bbox=(113,80,499,139)  l=387 h=60
+  JOUR 12 (libelle)          src 1080x2102  fenetre (780, 30, 1040, 75)  fond= 18 seuil= 58  encre   6.1 %  bbox=(887,44,1026,68)  l=140 h=25
+  phase                      src 1080x2102  fenetre (700, 75, 1040, 140)  fond= 19 seuil= 59  encre  11.0 %  bbox=(823,79,1033,128)  l=211 h=50
+  CONTROLE NEG coin vide     src 1080x2102  fenetre (0, 30, 140, 140)  fond= 18 seuil= 58  encre  12.3 %  bbox=(0,30,135,139)  l=136 h=110
+
+=== JEU 1080x2400 ===
+  ARGENT (libelle)           src 1080x2400  fenetre (100, 20, 420, 62)  fond= 16 seuil= 56  encre   2.6 %  bbox=(102,28,150,45)  l=49 h=18
+  montant                    src 1080x2400  fenetre (100, 62, 500, 115)  fond= 18 seuil= 58  encre   6.8 %  bbox=(100,62,499,114)  l=400 h=53
+  JOUR 1 (libelle)           src 1080x2400  fenetre (780, 20, 1040, 60)  fond= 16 seuil= 56  encre   4.4 %  bbox=(955,28,1033,48)  l=79 h=21
+  phase                      src 1080x2400  fenetre (700, 60, 1040, 125)  fond= 18 seuil= 58  encre   4.3 %  bbox=(935,69,1033,98)  l=99 h=30
+  ARTEFACT gris a gauche     src 1080x2400  fenetre (0, 55, 150, 115)  fond= 18 seuil= 58  encre  12.6 %  bbox=(12,57,149,97)  l=138 h=41
+  CONTROLE NEG bande noire   (0, 150, 140, 230)  fond=13 seuil=53  ENCRE 0 %  (rien au-dessus du seuil)
+
+=== JEU 1080x1920 ===
+  ARGENT (libelle)           src 1080x1920  fenetre (100, 20, 420, 62)  fond= 16 seuil= 56  encre   2.6 %  bbox=(102,28,150,45)  l=49 h=18
+  montant                    src 1080x1920  fenetre (100, 62, 500, 115)  fond= 18 seuil= 58  encre   6.8 %  bbox=(100,62,499,114)  l=400 h=53
+  JOUR 1 (libelle)           src 1080x1920  fenetre (780, 20, 1040, 60)  fond= 16 seuil= 56  encre   4.4 %  bbox=(955,28,1033,48)  l=79 h=21
+  phase                      src 1080x1920  fenetre (700, 60, 1040, 125)  fond= 18 seuil= 58  encre   4.3 %  bbox=(935,69,1033,98)  l=99 h=30
+  ARTEFACT gris a gauche     src 1080x1920  fenetre (0, 55, 150, 115)  fond= 18 seuil= 58  encre  12.6 %  bbox=(12,57,149,97)  l=138 h=41
