@@ -90,6 +90,10 @@ namespace MafiaCleanCity.Operational.Tests
             // + 2 le 2026-09-26 : l'addendum de l'atelier (table 62) keye les deux littéraux bruts de l'état vide de ㉟.
             "vente.vide.les_coins_de_vente_n_ont_pas_repondu",
             "vente.vide.aucun_coin_de_vente",
+            // ③ présence (2026-09-26, ordre de l'orchestrateur, table 58 de l'atelier `58-carte-presence-2026-09-26.tsv`) : la clé est
+            // PROPOSÉE, le back la servira ; d'ici là la carte montre l'état `mien` SANS le nombre (repli ordonné). La règle (2) rougit
+            // le jour où elle est servie : la retirer alors.
+            "carte.presence.batiments",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

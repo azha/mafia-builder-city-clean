@@ -117,6 +117,8 @@ namespace MafiaCleanCity.CityMap
         /// rapport 0,625, avec pour contrôle positif « LE THRENNY », peint dans la texture, qui rend
         /// 18 px des DEUX côtés (×1,000). Le rapport s'applique au corps : 16 ÷ 0,625 = 25,6.</summary>
         private const int CorpsDuNomUnites = 26;
+        // `.nbq{font-size:4.6px}` contre `.nomq{font-size:6.6px}` : 26 × 4,6 / 6,6 ≈ 18.
+        private const int CorpsDeLaPresenceUnites = 18;
 
 
         /// <summary>Le plafond d'opacité du halo d'état de contrôle — DÉRIVÉ, pas choisi.
@@ -208,6 +210,7 @@ namespace MafiaCleanCity.CityMap
             if (IsAuthenticated)
             {
                 RefreshEnterInteractable();
+                yield return LoadPresence();
                 yield return LoadHeat();
                 yield break;
             }
@@ -231,6 +234,7 @@ namespace MafiaCleanCity.CityMap
             RefreshEnterInteractable(); // §3.2 — 2e point : le panneau peut avoir été ouvert AVANT l'auth (Populate à :98, signature à :102)
             Debug.Log("[CityMap] Signed in — Bearer token acquired.");
 
+            yield return LoadPresence();
             yield return LoadHeat();
         }
 
@@ -270,6 +274,66 @@ namespace MafiaCleanCity.CityMap
             HeatLoaded = true;
             ApplyOverlayVisibility();
             Debug.Log($"[CityMap] Heat overlay loaded for {cells.Count} districts.");
+        }
+
+        // ─────────────────────────── ③ LA PRÉSENCE DU JOUEUR (ruling user du 24/09, ARBITRAGES D21 ; table 58, 2026-09-26)
+        // Le décompte vient de `GET /v1/me/buildings` (`district_id` par bâtiment), COMPTÉ par le client : aucune route neuve.
+        // Un échec laisse la carte sans présence (jamais une présence inventée) ; la clé non servie laisse l'état `mien` sans le nombre.
+
+        /// <summary>Vrai une fois `GET /v1/me/buildings` lu et appliqué.</summary>
+        public bool PresenceChargee { get; private set; }
+        public const string ClePresence = "carte.presence.batiments";
+
+        public IEnumerator LoadPresence()
+        {
+            if (!IsAuthenticated) yield break;
+            MafiaCleanCity.Shell.BatimentPossedeDto[] batiments = null;
+            yield return new MafiaCleanCity.Shell.MesBatimentsClient { BaseUrl = baseUrl }.Lire(Token, b => batiments = b,
+                (code, msg) => Debug.LogWarning($"[CityMap] présence (me/buildings) : {code} {msg}"));
+            if (this == null) yield break;
+            if (batiments != null) AppliquerPresence(CompterParDistrict(batiments));
+        }
+
+        /// <summary>Le nombre de bâtiments par `district_id` — une ligne par bâtiment servi, rien d'autre.</summary>
+        public static Dictionary<int, int> CompterParDistrict(IEnumerable<MafiaCleanCity.Shell.BatimentPossedeDto> batiments)
+        {
+            var parDistrict = new Dictionary<int, int>();
+            if (batiments == null) return parDistrict;
+            foreach (MafiaCleanCity.Shell.BatimentPossedeDto b in batiments)
+            {
+                if (b == null) continue;
+                parDistrict.TryGetValue(b.district_id, out int n);
+                parDistrict[b.district_id] = n + 1;
+            }
+            return parDistrict;
+        }
+
+        /// <summary>« 4 bâtiments » : la valeur SERVIE de `carte.presence.batiments` (ICU `{n, plural, …}`), ou null tant que le back
+        /// ne la sert pas — le client ne compose pas le mot (repli ordonné : l'état `mien` sans le nombre).</summary>
+        public static string LignePresence(int n) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit(ClePresence, null,
+                new Dictionary<string, string> { { "n", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
+
+        /// <summary>Pose la présence sur CHAQUE marqueur : `mien` là où le décompte est positif, retiré ailleurs.</summary>
+        public void AppliquerPresence(IReadOnlyDictionary<int, int> parDistrict)
+        {
+            foreach (DistrictCellView cell in cells)
+            {
+                if (cell == null || cell.Model == null) continue;
+                int n = parDistrict != null && parDistrict.TryGetValue(cell.Model.id, out int k) ? k : 0;
+                cell.PoserPresence(n, n > 0 ? LignePresence(n) : null);
+            }
+            PresenceChargee = true;
+        }
+
+        /// <summary>Test HORS RÉSEAU : bâtit l'écran et pose les districts donnés, sans `Start` ni requête.</summary>
+        public void MonterPourTest(List<DistrictDto> districts)
+        {
+            font = DesignTokens.Current.primaryFont;
+            BuildLayout();
+            ClearCells();
+            Populate(districts);
+            IsLoaded = true;
         }
 
         /// <summary>Toggle the heat overlay on/off (button + public API for tests).</summary>
@@ -333,6 +397,7 @@ namespace MafiaCleanCity.CityMap
             NorthCount = 0;
             SouthCount = 0;
             HeatLoaded = false;
+            PresenceChargee = false;
         }
 
         // W3.U1 C1 (design D2) — optional parent-of-mount the AppShell renseigne BEFORE Start() runs.
@@ -801,8 +866,41 @@ namespace MafiaCleanCity.CityMap
             TextMeshProUGUI badgeLabel = NewText("HeatLabel", badge.transform, "", 12, TextAlignmentOptions.Left);
             Stretch((RectTransform)badgeLabel.transform, new Vector2(SwatchDiameterPx + 6f, 2f), new Vector2(0f, -2f));
 
+            // ③ PRÉSENCE (D21, table 58) — le voile or du « sol chaud » (sous le halo, qui garde l'état de contrôle) et la ligne du
+            // nombre sous le nom (`.nbq` : DejaVu gras, 4,6 contre 6,6 pour le nom, or, espacement .22em, capitales). Cachés tant que
+            // `PoserPresence` ne dit pas « mien ».
+            GameObject solGo = NewUI("SolMien", cell.transform);
+            solGo.transform.SetAsFirstSibling();   // sous le halo et le nom
+            var solRt = (RectTransform)solGo.transform;
+            solRt.anchorMin = solRt.anchorMax = solRt.pivot = new Vector2(0.5f, 0.5f);
+            solRt.sizeDelta = new Vector2(MarqueurLargeur, MarqueurHauteur * 2f);
+            Image sol = solGo.AddComponent<Image>();
+            sol.sprite = MafiaCleanCity.Shell.ProceduralUI.VoileRadial(128, Color.white, new Vector2(0.5f, 0.5f), 0.5f, 0.5f);
+            Color teinteSol = DesignTokens.Current.hudMoneyGold; teinteSol.a = AlphaHaloMax;   // le plafond du halo : un voile, jamais un aplat
+            sol.color = teinteSol;
+            sol.raycastTarget = false;
+
+            TextMeshProUGUI presence = NewText("Presence", cell.transform, "", CorpsDeLaPresenceUnites, TextAlignmentOptions.Center);
+            presence.fontStyle = FontStyles.UpperCase | FontStyles.Bold;   // capitales en STYLE — le texte reste la valeur servie
+            presence.characterSpacing = 22f;                                // `.nbq{letter-spacing:.22em}`
+            presence.color = DesignTokens.Current.hudMoneyGold;
+            presence.raycastTarget = false;
+            presence.overflowMode = TextOverflowModes.Overflow;
+            var presenceRt = (RectTransform)presence.transform;
+            presenceRt.anchorMin = new Vector2(0f, 0f);
+            presenceRt.anchorMax = new Vector2(1f, 0f);
+            presenceRt.pivot = new Vector2(0.5f, 1f);
+            presenceRt.sizeDelta = new Vector2(0f, DistrictCellView.LignePresenceHauteur);
+            presenceRt.anchoredPosition = new Vector2(0f, -2f);
+            var matPresence = presence.fontMaterial;   // le même contour que le nom (`.nbq{stroke:#080d14}`)
+            matPresence.EnableKeyword(ShaderUtilities.Keyword_Underlay);
+            matPresence.SetColor(ShaderUtilities.ID_UnderlayColor, ContourNomCouleur);
+            matPresence.SetFloat(ShaderUtilities.ID_UnderlayDilate, ContourNomDilatation);
+            matPresence.SetFloat(ShaderUtilities.ID_UnderlaySoftness, 0f);
+
             DistrictCellView view = cell.AddComponent<DistrictCellView>();
             view.AttachHeatBadge(badge, badgeBg, badgeLabel);
+            view.AttachPresence(sol, presence);
             Button cellButton = cell.AddComponent<Button>();
             cellButton.targetGraphic = hit;
             cellButton.onClick.AddListener(() => SelectDistrict(view.Model.id));
