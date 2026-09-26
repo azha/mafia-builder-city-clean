@@ -96,6 +96,9 @@ namespace MafiaCleanCity.Capture.Tests
 
         [UnityTest]
         [Category("ClicheParcours")]
+        // ⛔ Le délai PAR DÉFAUT d'un test Unity est 180 s : il coupait le parcours à ⑰ (créneau du 26/09, 180 000 ms dépassés) depuis
+        //    que M3 attend un tick RÉEL du monde (jusqu'à 120 s, bcccdf7d) et que P1 attend LA SUITE. Le parcours entier : 10 min au plus.
+        [Timeout(600000)]
         public IEnumerator Parcours_JoueurNeuf_Inscription_Carte_District_Batiment_FicheOperationnelle()
         {
             string sortie = System.Environment.GetEnvironmentVariable(VariableSortie);
