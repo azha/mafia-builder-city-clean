@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 namespace MafiaCleanCity.Operational.Tests
 {
     // ⑨-6 — les états de la file. Gardes de STRUCTURE et de SOURCE :
-    //   R15     personne (cadre 16) : la plaque du soir « Ce soir, au Verge d’Or » / « … — la routine tient » et trois
+    //   R15     personne (cadre 16) : la plaque du soir « Ce soir, au Verge d’Or » / « Personne ne fait la queue » (63 v2) et trois
     //           tabourets vides REMPLACENT la ligne, la file, la bulle et le tampon ; des cartes ⇒ l'inverse
     //   R15bis  la phrase servie (`exceptions.file.ambiance`, branche `=0` du pluriel ICU) l'emporte sur le repli
     //   R15ter  UN seul code pour la plaque : ⑨ et ⑯ portent le même arbre (Verre, Bord, FiletInterieur), masqué, en pile
@@ -59,8 +59,8 @@ namespace MafiaCleanCity.Operational.Tests
             NouvelEcran();
             Assert.IsTrue(ecran.PlaqueDuSoir.activeSelf, "la plaque du soir (cadre 16)");
             Assert.AreEqual("Ce soir, au Verge d’Or", ecran.PlaqueDuSoirSurtitre);
-            Assert.AreEqual("Personne ne fait la queue — la routine tient", ecran.PlaqueDuSoirTitre,
-                "« la routine tient », pas « le comptoir est vide » (atelier §3.4)");
+            Assert.AreEqual("Personne ne fait la queue", ecran.PlaqueDuSoirTitre,
+                "table 63 v2 (26/09) : « la routine tient » était faux pour un joueur sans routine ; jamais « le comptoir est vide »");
             Assert.IsTrue(ecran.TabouretsVides.activeSelf);
             Assert.AreEqual(3, ecran.TabouretsVides.transform.childCount, "trois tabourets");
             Assert.IsNotNull(ecran.TabouretsVides.transform.GetChild(0).Find("Siege"));
@@ -91,7 +91,7 @@ namespace MafiaCleanCity.Operational.Tests
             });
             Assert.AreEqual("Personne au zinc — la routine tient", ExceptionQueueController.AmbianceVide());
             I18nCatalog.Oublier();
-            Assert.AreEqual("Personne ne fait la queue — la routine tient", ExceptionQueueController.AmbianceVide(), "le repli");
+            Assert.AreEqual("Personne ne fait la queue", ExceptionQueueController.AmbianceVide(), "le repli (table 63 v2, branche =0)");
         }
 
         [Test]
