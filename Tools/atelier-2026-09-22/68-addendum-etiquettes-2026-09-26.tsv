@@ -1,0 +1,26 @@
+clé	mots du client (e575a536)	fr	en	statut	note
+carte.panneau.blocs	Blocs	Blocs	Blocks	PROPOSÉ	gardé
+carte.panneau.rive	Rive	Rive	Bank	PROPOSÉ	gardé ; valeurs servies carte.bloc.nord / sud
+carte.panneau.controle	Contrôle	Contrôle	Control	PROPOSÉ	gardé
+carte.panneau.releves	Relevés	Relevés	Readings	PROPOSÉ	gardé ; la valeur « ouvrez une session » est un littéral : carte.panneau.releves_ouvrez_une_session ci-dessous
+carte.panneau.releves_ouvrez_une_session	ouvrez une session	revenez après l’ouverture de votre journée	come back once your day has opened	PROPOSÉ	D18 : « session » ne se dit pas au joueur
+carte.panneau.pas_encore_releve	pas encore relevé	pas encore relevé	not read yet	PROPOSÉ	gardé ; ⚠️ le client l’écrit pour TOUT non-2xx, 500 compris (:1043) — seulement sur 404
+carte.panneau.chaleur_quartier	Chaleur — le quartier	Chaleur — le quartier	Heat — the district	PROPOSÉ	gardé
+carte.panneau.chaleur_ville	Chaleur — la ville	Chaleur — la ville	Heat — the city	PROPOSÉ	gardé
+carte.panneau.descente	Descente	Descente	Raid	PROPOSÉ	gardé ; valeurs « oui »/« non » littérales : carte.panneau.oui / non
+carte.panneau.oui	oui	oui	yes	PROPOSÉ	
+carte.panneau.non	non	non	no	PROPOSÉ	
+carte.panneau.refoulement	Refoulement	Circulation	Traffic	PROPOSÉ	« refoulement » est le terme de la simulation ; fém., valeurs 68 carte.refoulement ACCORDÉES en conséquence (fluide, engorgée, saturée)
+carte.panneau.exposition	Exposition	Exposition	Exposure	PROPOSÉ	gardé
+carte.panneau.proprete_du_reseau	Propreté du réseau	Propreté de l’argent	How clean the money is	PROPOSÉ	valeurs filiere.proprete.* : c’est l’argent de la filière qui est propre ou sale
+carte.panneau.reserve_qui_bloque	Réserve qui bloque	Planques encombrées	Safehouses clogged	PROPOSÉ	valeurs 68 carte.reserve (à peine … à saturation) ; « réserve » est un type de bâtiment (D12), ambigu
+carte.panneau.tampon_charge	Tampon — charge	Marchandise en attente	Goods waiting	PROPOSÉ	jargon (buffer) remplacé ; fém., accordé aux valeurs 68 carte.tampon_charge (vide, faible, normale, forte, critique)
+carte.panneau.tampon_traine	Tampon — traîne	L’attente	The wait	PROPOSÉ	jargon (percentile de traîne) remplacé ; fém., accordé aux valeurs carte.tampon_traine (courte, moyenne, longue, critique)
+carte.panneau.file_d_inspection	File d’inspection	File d’inspection	Inspection queue	PROPOSÉ	gardé : fém. sing., accordé aux valeurs servies inspection.charge.* (vide, légère, moyenne, lourde, saturée)
+carte.panneau.regime_du_dispatch	Régime du dispatch	Rythme des inspecteurs	Inspectors’ pace	PROPOSÉ	« dispatch » = jargon ; valeurs inspection.regime.* (nominal, arriéré, budget coupé, en renfort)
+carte.panneau.epingles_d_audit	Épingles d’audit	Marques sur vos dossiers	Marks on your files	PROPOSÉ	« épingle d’audit » = jargon ; fém. plur., accordé aux valeurs 68 carte.epingles (aucune, quelques-unes, partout)
+carte.panneau.coins_de_vente	Coins de vente	Coins de vente	Corners	PROPOSÉ	gardé (D12)
+carte.panneau.cohesion	Cohésion	Cohésion	Cohesion	PROPOSÉ	gardé
+carte.panneau.ce_qu_ils_croient	Ce qu’ils croient (précinct {precinct})	Ce qu’ils croient — précinct {precinct}	What they believe — precinct {precinct}	PROPOSÉ	« précinct » = mot servi de ⑰ (police.bloc.precinct_n) ; parenthèse remplacée par un tiret
+carte.panneau.la_patrouille	La patrouille (précinct {precinct})	La patrouille — précinct {precinct}	The patrol — precinct {precinct}	PROPOSÉ	idem
+carte.panneau.ce_qui_se_dit	Ce qui se dit (la ville)	Ce qui se dit en ville	What the city is saying	PROPOSÉ	gardé en substance

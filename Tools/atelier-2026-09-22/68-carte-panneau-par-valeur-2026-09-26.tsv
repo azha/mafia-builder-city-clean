@@ -4,9 +4,9 @@ control_state	ControlStateBucket	carte.controle.contested	Disputé	Contested	PRO
 control_state	ControlStateBucket	carte.controle.player_held	À vous	Yours	PROPOSÉ	rangée « Contrôle » ; mêmes mots que carte.bloc.a_vous (servie, clé de maquette) — casse de phrase
 control_state	ControlStateBucket	carte.controle.rival_held	Rival	Rival	PROPOSÉ	rangée « Contrôle » ; mêmes mots que carte.bloc.rival (servie, clé de maquette) — casse de phrase
 heat.district_bucket / heat.citywide_bucket	HeatBucket	heat.bucket.<valeur>	—	—	SERVIE (réutiliser)	déjà au format ParValeur : burning, cold, hot, warm ; rangée « Chaleur — le quartier / la ville »
-flow.backpressure	BackpressureBucket	carte.refoulement.normal	fluide	flowing	PROPOSÉ	rangée « Refoulement »
-flow.backpressure	BackpressureBucket	carte.refoulement.congested	engorgé	congested	PROPOSÉ	rangée « Refoulement »
-flow.backpressure	BackpressureBucket	carte.refoulement.saturated	saturé	saturated	PROPOSÉ	rangée « Refoulement »
+flow.backpressure	BackpressureBucket	carte.refoulement.normal	fluide	flowing	PROPOSÉ	rangée « Circulation » (addendum : fém.)
+flow.backpressure	BackpressureBucket	carte.refoulement.congested	engorgée	congested	PROPOSÉ	rangée « Circulation » (addendum : fém.)
+flow.backpressure	BackpressureBucket	carte.refoulement.saturated	saturée	saturated	PROPOSÉ	rangée « Circulation » (addendum : fém.)
 thr.exposure_band	ExposureBand	carte.exposition.minimal	minime	minimal	PROPOSÉ	rangée « Exposition »
 thr.exposure_band	ExposureBand	carte.exposition.low	faible	low	PROPOSÉ	rangée « Exposition »
 thr.exposure_band	ExposureBand	carte.exposition.elevated	élevée	high	PROPOSÉ	rangée « Exposition »
