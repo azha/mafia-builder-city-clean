@@ -259,7 +259,14 @@ namespace MafiaCleanCity.Operational
 
             // ⛔ LE SOUS-TITRE PORTE LE MODE — cadre 125 « ce qui se dit ce matin », cadre 129
             // « rien ne bouge ». Les six cadres ratifiés ne diffèrent que par lui.
-            sousTitre.text = rienNeBouge ? Lib("RIEN NE BOUGE") : Lib("CE QUI SE DIT CE MATIN");
+            // classe « moment en dur » (f2 26/09, table 78) : le surtitre suit day_phase SERVI ; capitales par le style
+            sousTitre.fontStyle |= FontStyles.UpperCase;
+            sousTitre.text = rienNeBouge ? Lib("RIEN NE BOUGE") : MafiaCleanCity.I18n.Moment.Dire("journal.moment.titre",
+                MafiaCleanCity.Shell.PhaseDeSession.DayPhase, new Dictionary<string, string>
+                {
+                    { "DAWN", "Ce qui se dit ce matin" }, { "DAY", "Ce qui se dit aujourd\u2019hui" },
+                    { "DUSK", "Ce qui se dit ce soir" }, { "NIGHT", "Ce qui se dit cette nuit" },
+                }, "Ce qui se dit");
 
             MajCompteur(0, breves.Length, Lib("À LA UNE"));
             MajCompteur(1, rue.Length,    Lib("DANS LA RUE"));
@@ -352,7 +359,15 @@ namespace MafiaCleanCity.Operational
             if (rienNeBouge)
             {
                 TextMeshProUGUI vide = NouveauTexte(listeRoot, "RienCeMatin",
-                    Lib("Rien ce matin.\nLa ville a passé une nuit tranquille."),
+                    // classe « moment en dur » (f2 26/09, table 78) : la nuit tranquille ne se dit plus qu'au matin
+                    MafiaCleanCity.I18n.Moment.Dire("journal.moment.vide", MafiaCleanCity.Shell.PhaseDeSession.DayPhase,
+                        new Dictionary<string, string>
+                        {
+                            { "DAWN", "Rien ce matin.\nLa ville a passé une nuit tranquille." },
+                            { "DAY", "Rien aujourd\u2019hui.\nLa ville est calme." },
+                            { "DUSK", "Rien ce soir.\nLa journée a été tranquille." },
+                            { "NIGHT", "Rien cette nuit.\nLa ville se tient tranquille." },
+                        }, "Rien pour l\u2019instant.\nLa ville est calme."),
                     Px(10f), TexteFaible, DesignTokens.Current.hudSerifFont);
                 vide.alignment = TextAlignmentOptions.Center;
                 return;

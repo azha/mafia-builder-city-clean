@@ -55,6 +55,28 @@ namespace MafiaCleanCity.Operational.Tests
             "filiere.etat.a_blanchir_la_planque_est_pleine",
             "filiere.bloc.blanchir",   // le mot du bouton, clé dérivée (Lib) — demandé à l'atelier
             "building.action.blanchir",   // ② « Blanchir » de la façade (f2 26/09), clé dérivée (Cle) — même mot que ㊵
+            // classe « moment en dur » (f2 26/09) : tables 77 @6ed61816 et 78 @3be2e866, non servies @1ffb08b4 — TOUTES les phases, la
+            // phase de la session mesurée n'étant pas connue d'avance (⑨, ⑯, ㊳, ⑤).
+            "exceptions.moment.dawn",
+            "exceptions.moment.day",
+            "exceptions.moment.dusk",
+            "exceptions.moment.night",
+            "exceptions.moment.inconnu",
+            "journal.moment.titre.dawn",
+            "journal.moment.titre.day",
+            "journal.moment.titre.dusk",
+            "journal.moment.titre.night",
+            "journal.moment.titre.inconnu",
+            "journal.moment.vide.dawn",
+            "journal.moment.vide.day",
+            "journal.moment.vide.dusk",
+            "journal.moment.vide.night",
+            "journal.moment.vide.inconnu",
+            "decision.moment.vide.dawn",
+            "decision.moment.vide.day",
+            "decision.moment.vide.dusk",
+            "decision.moment.vide.night",
+            "decision.moment.vide.inconnu",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

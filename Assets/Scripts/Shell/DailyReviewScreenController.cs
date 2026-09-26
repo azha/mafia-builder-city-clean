@@ -347,7 +347,13 @@ namespace MafiaCleanCity.Shell
                 // geste qui les traite (v4-1) : le nombre affiché a toujours son geste en face.
                 // Mot pour mot le cadre v4-1. L'ancienne phrase (« Personne au comptoir ce matin. »)
                 // était la LÉGENDE du cadre, pas son texte : sa clé servie devient orpheline (⑯-2).
-                plaqueSurtitre.text = Lib("bloc", "Ce matin, au Verge d’Or");
+                // classe « moment en dur » (f2 26/09) : la table 77 de ⑨ (exceptions.moment.*), par day_phase SERVI
+                plaqueSurtitre.text = MafiaCleanCity.I18n.Moment.Dire("exceptions.moment", PhaseDeSession.DayPhase,
+                    new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "DAWN", "Ce matin, au Verge d\u2019Or" }, { "DAY", "Aujourd\u2019hui, au Verge d\u2019Or" },
+                    { "DUSK", "Ce soir, au Verge d\u2019Or" }, { "NIGHT", "Cette nuit, au Verge d\u2019Or" },
+                }, "Au Verge d\u2019Or");
                 // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26, table 63 v2) : « ont tenu la ligne » FLATTE un joueur qui n'a AUCUNE routine
                 // (0 carte ET 0 routine en attente — le joueur neuf). Ce qui est vrai alors : ils n'ont rien à tenir ; et le geste qui
                 // change ça, une première règle — le toucher mène à ⑧ (l'éditeur de règles, dans la Famille). Jamais en panne de

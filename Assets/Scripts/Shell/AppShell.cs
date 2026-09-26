@@ -521,7 +521,7 @@ namespace MafiaCleanCity.Shell
                 yield return Transport().Ouvrir(Token, d => frais = d, (code, msg) => Debug.LogWarning($"[AppShell] Accueil rouvert : relecture impossible ({code} {msg})"));
             if (this == null) yield break;
             if (MontagesEffectues != generation || !SurimpressionOuverte) yield break;   // le joueur est déjà parti : ne pas l'enterrer
-            if (frais != null) LastSessionOpen = frais;
+            if (frais != null) { LastSessionOpen = frais; PhaseDeSession.Publier(frais.day_phase); }   // la phase publiée aux locataires
             AccueilRelu = frais != null;
             MonterPanneauxAccueil(frais);
         }
@@ -626,6 +626,7 @@ namespace MafiaCleanCity.Shell
         private IEnumerator PublierOuverture(string t, SessionOpenDto dto)
         {
             LastSessionOpen = dto;
+            PhaseDeSession.Publier(dto != null ? dto.day_phase : null);   // classe « moment en dur » (26/09) : la phase publiée aux locataires
             // ⛔ LE JETON DE STRUCTURE SE PUBLIE ICI, ET C'EST LE SEUL ENDROIT. Trois écrans du
             // canon (㉜ le tableau de service, ㉝ raser un site, et toute graduation) partagent
             // le plafond « une décision de structure par journée » : ils doivent en donner la
