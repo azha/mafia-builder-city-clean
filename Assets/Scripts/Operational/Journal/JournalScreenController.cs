@@ -386,9 +386,11 @@ namespace MafiaCleanCity.Operational
         private void Ligne(string sur, string cle, IDictionary<string, string> parametres, string quartier, string fraicheur,
                            bool acquis)
         {
-            bool ecrit = MafiaCleanCity.I18n.I18nCatalog.Connait(cle);
+            // par `Libelle` (garde I18nHorsLibelle L2, créneau du 26/09) : une clé du client se lit là, et son repli se COMPTE
+            string servi = MafiaCleanCity.I18n.Libelle.Gabarit(cle, null, parametres);
+            bool ecrit = servi != null;
             if (!ecrit) LignesSansTexte++;
-            string titreEcrit = ecrit ? Capitale(MafiaCleanCity.I18n.I18nCatalog.Traduire(cle, parametres)) : null;
+            string titreEcrit = ecrit ? Capitale(servi) : null;
             quartier = NomDuQuartier(quartier, Quartiers);
             GameObject go = NouveauUI("Ligne", listeRoot);
             AjouterFond(go, FondBloc);
@@ -436,7 +438,7 @@ namespace MafiaCleanCity.Operational
         /// cadre 145, en capitales comme les autres phases de cet écran.</summary>
         /// <summary>C2 — le texte servi d'une clé, ou `null` si elle est vide ; la clé elle-même si le bundle ne la porte pas.</summary>
         private static string Texte(string cle) =>
-            string.IsNullOrEmpty(cle) ? null : MafiaCleanCity.I18n.I18nCatalog.Traduire(cle);
+            string.IsNullOrEmpty(cle) ? null : MafiaCleanCity.I18n.Libelle.Gabarit(cle, cle);   // repli = la clé (compté)
 
         /// <summary>C2 — les trous d'un titre de brève : `outlet` et `subject` sont des CLÉS servies (résolues à leur tour),
         /// `district` un slug, rendu par son nom de fiction.</summary>
