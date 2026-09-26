@@ -76,6 +76,14 @@ namespace MafiaCleanCity.Operational.Tests
             "police.vide.tant_que_vous_ne_faites_pas_de_bruit_ca_peut_durer",
             "filiere.vide.votre_planque_enseigne_est_vide",
             "filiere.vide.l_argent_y_entre_quand_vous_ramassez_la_caisse_d_un_dealer",
+            // ㉝ : tables 63 (état light, compte accordé) et 64 (les 4 répliques, {nom} = le lieutenant réel), non servies @5e792a3c.
+            "demolition.vide.rien_ne_se_gene_vos_sites_tournent_sans_se_marcher_dessus",
+            "demolition.vide.rien_a_raser_pour_l_instant",
+            "demolition.ecran.n_endroits_se_genent",
+            "demolition.dit.on_a_trop_de_choses_au_meme_endroit_il_va_falloir_en_enlever_une",
+            "demolition.dit.celui_la_on_le_garde_par_habitude_il_gene_les_voisins_et_il_ne_rend_presque_rien",
+            "demolition.dit.trop_tard_pour_celle_la",
+            "demolition.dit.deux_propositions_la_premiere_est_mieux_placee_elles_ne_resteront_pas_sur_la_table",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

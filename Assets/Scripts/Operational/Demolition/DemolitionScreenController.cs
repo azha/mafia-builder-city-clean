@@ -271,6 +271,10 @@ namespace MafiaCleanCity.Operational
 
             yield return TrouverLesBatiments();
 
+            // table 64 : le nom de qui parle vient du roster servi
+            yield return new LieutenantClient { BaseUrl = baseUrl }.ListLieutenants(token, r => Roster = r,
+                (c, m) => Debug.LogWarning($"[㉝] roster indisponible : {c} {m}"));
+
             yield return null;   // la frame de création rend des rects non résolus
 
             if (DerniereFriction == null) { RendreEtatIndisponible(); yield break; }
@@ -435,11 +439,18 @@ namespace MafiaCleanCity.Operational
 
         private void RendreGlobal()
         {
-            EcrireTete("L'organisation frotte",
-                       "Plus vous tenez de choses, plus elles se gênent entre elles.");
-
             int noeuds = DerniereFriction.friction_node_count;
             string bande = DerniereFriction.friction_bucket;
+            // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26, table 63) : « L'organisation frotte » et « il va falloir en enlever une » étaient
+            // dits à un joueur dont RIEN ne se gêne (friction 0, bande light, sans pénalité — le joueur neuf). Ce qui est VRAI alors :
+            leger = EstLeger(DerniereFriction);
+            if (leger)
+                EcrireTete(MafiaCleanCity.I18n.Libelle.Gabarit("demolition.vide.rien_ne_se_gene_vos_sites_tournent_sans_se_marcher_dessus",
+                               "Rien ne se gêne\u00A0: vos sites tournent sans se marcher dessus."),
+                           MafiaCleanCity.I18n.Libelle.Gabarit("demolition.vide.rien_a_raser_pour_l_instant", "Rien à raser pour l’instant."));
+            else
+                EcrireTete("L'organisation frotte",
+                           "Plus vous tenez de choses, plus elles se gênent entre elles.");
 
             GameObject bloc = NouveauUI("Global", zoneCentrale);
             AjouterPlaqueArrondie(bloc, DemolitionResolvers.BlocFond, DemolitionResolvers.BlocBord, CssRayonMoyen);
@@ -470,8 +481,12 @@ namespace MafiaCleanCity.Operational
             NouveauTexte(q.transform, "Bande", DemolitionResolvers.PhraseDeFriction(bande),
                          Px(CssGlobTitre), DemolitionResolvers.TitreVif, DesignTokens.Current.hudSerifFont)
                 .fontStyle = FontStyles.Bold;
-            NouveauTexte(q.transform, "Sous",
-                $"{noeuds} endroits se gênent entre eux. Chacun coûte un peu de ce que les autres rapportent.",
+            // le compte, accordé (table 63, ICU : =0 / one / other) ; la seconde phrase ne vaut que s'il y a quelque chose qui gêne
+            string sous = MafiaCleanCity.I18n.Libelle.Gabarit("demolition.ecran.n_endroits_se_genent",
+                    "{n, plural, =0 {Aucun endroit ne se gêne.} one {Un endroit en gêne un autre.} other {# endroits se gênent entre eux.}}",
+                    new System.Collections.Generic.Dictionary<string, string> { { "n", noeuds.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
+            if (noeuds > 0) sous += " Chacun coûte un peu de ce que les autres rapportent.";
+            NouveauTexte(q.transform, "Sous", sous,
                 Px(CssGlobSous), DemolitionResolvers.Muet, DesignTokens.Current.primaryFont);
 
             if (DerniereFriction.penalty_active)
@@ -494,8 +509,9 @@ namespace MafiaCleanCity.Operational
 
             ListerLesSites();
 
-            EcrireDit(pied, "", "Dima :",
-                      " « On a trop de choses au même endroit. Il va falloir en enlever une. »");
+            // table 63 : à la bande light (rien ne se gêne), la réplique ne s'affiche pas
+            if (!leger) Dit(pied, "demolition.dit.on_a_trop_de_choses_au_meme_endroit_il_va_falloir_en_enlever_une",
+                "{nom}\u00A0: «\u00A0On a trop de choses au même endroit. Il va falloir en enlever une.\u00A0»", Locuteur(Roster, null));
             // ⛔ LE GESTE ET LA LISTE DOIVENT DIRE LA MÊME CHOSE. La première capture les a pris
             // en flagrant délit : le bouton annonçait « aucun site trouvé », ÉTEINT, pendant que
             // la liste au-dessus en affichait un. `batimentVise` n'était renseigné que par les
@@ -618,9 +634,9 @@ namespace MafiaCleanCity.Operational
 
             if (!confirmation)
             {
-                EcrireDit(pied, "", "Dima :",
-                          " « Celui-là, on le garde par habitude. Il gêne les voisins et il ne rend "
-                          + "presque rien. »");
+                Dit(pied, "demolition.dit.celui_la_on_le_garde_par_habitude_il_gene_les_voisins_et_il_ne_rend_presque_rien",
+                    "{nom}\u00A0: «\u00A0Celui-là, on le garde par habitude. Il gêne les voisins et il ne rend presque rien.\u00A0»",
+                    Locuteur(Roster, batimentVise != null ? batimentVise.lieutenant_ids : null));
                 ConstruireGeste(pied, "LE RASER",
                                 bloque ? "un lieutenant y travaille"
                                        : !JetonDisponible ? "plus de décision aujourd'hui"
@@ -831,7 +847,7 @@ namespace MafiaCleanCity.Operational
 
             if (fermee)
             {
-                EcrireDit(pied, "", "Dima :", " « Trop tard pour celle-là. »");
+                Dit(pied, "demolition.dit.trop_tard_pour_celle_la", "{nom}\u00A0: «\u00A0Trop tard pour celle-là.\u00A0»", Locuteur(Roster, null));
             // ⛔⛔⛔ D9 — LE GESTE EST ÉTEINT QUAND LE JETON EST DÉPENSÉ, ET CE N'EST PAS UNE
             //    PRUDENCE : sans ça, l'écran propose au joueur la SEULE séquence où il est CERTAIN
             //    de perdre. Mesuré par un juge ⊥ de bout en bout :
@@ -865,9 +881,8 @@ namespace MafiaCleanCity.Operational
             }
             else
             {
-                EcrireDit(pied, "", "Dima :",
-                          " « Deux propositions. La première est mieux placée. Elles ne resteront pas "
-                          + "sur la table. »");
+                Dit(pied, "demolition.dit.deux_propositions_la_premiere_est_mieux_placee_elles_ne_resteront_pas_sur_la_table",
+                    "{nom}\u00A0: «\u00A0Deux propositions. La première est mieux placée. Elles ne resteront pas sur la table.\u00A0»", Locuteur(Roster, null));
                 ReplacementOptionDto premiere = PremiereOffreOuverte(offres, 1);
                 ConstruireGeste(pied, "PRENDRE LA PREMIÈRE",
                                 jetonPris ? "votre jeton de structure est déjà dépensé aujourd'hui"
@@ -1222,6 +1237,40 @@ namespace MafiaCleanCity.Operational
         }
 
         // ═══ Blocs partagés ══════════════════════════════════════════════════════════════════
+
+        /// <summary>Le roster SERVI (`GET /v1/lieutenants`) : c'est là que se trouve le nom de qui parle (table 64). Null tant que non lu.</summary>
+        public RosterRow[] Roster { get; private set; }
+        private bool leger;
+
+        /// <summary>Table 63 — l'état où RIEN ne se gêne : bande light, zéro nœud de friction, aucune pénalité. Pure.</summary>
+        public static bool EstLeger(GetFrictionStateResponseDto f) =>
+            f != null && f.friction_bucket == "light" && f.friction_node_count == 0 && !f.penalty_active;
+
+        /// <summary>Table 64 — QUI parle : le lieutenant du site dont il est question s'il y en a un au roster, sinon le premier du roster
+        /// servi ; personne ⇒ null, et la réplique ne s'affiche pas. Jamais un nom inventé (« Dima » était figé). Pure.</summary>
+        public static string Locuteur(RosterRow[] roster, string[] lieutenantsDuSite)
+        {
+            if (roster == null) return null;
+            if (lieutenantsDuSite != null)
+                foreach (string id in lieutenantsDuSite)
+                    foreach (RosterRow r in roster)
+                        if (r != null && r.lieutenant_id == id && !string.IsNullOrWhiteSpace(r.name)) return r.name;
+            foreach (RosterRow r in roster) if (r != null && !string.IsNullOrWhiteSpace(r.name)) return r.name;
+            return null;
+        }
+
+        /// <summary>Une réplique SERVIE « {nom} : « … » » : le nom en gras DROIT, le reste en italique (`.dm-dit`). Le gabarit est
+        /// rendu ENTIER (jamais recoupé à la main) avec un marqueur à la place du nom, puis coupé autour du marqueur.</summary>
+        private void Dit(Transform parent, string cle, string repli, string nom)
+        {
+            if (string.IsNullOrWhiteSpace(nom)) return;   // aucun lieutenant concerné : la ligne ne s'affiche pas
+            const string Marque = "\u241E";
+            string t = MafiaCleanCity.I18n.Libelle.Gabarit(cle, repli,
+                new System.Collections.Generic.Dictionary<string, string> { { "nom", Marque } });
+            int i = t.IndexOf(Marque, System.StringComparison.Ordinal);
+            if (i < 0) { EcrireDit(parent, t, "", ""); return; }
+            EcrireDit(parent, t.Substring(0, i), nom, t.Substring(i + Marque.Length));
+        }
 
         private void EcrireTete(string titre, string sous)
         {
