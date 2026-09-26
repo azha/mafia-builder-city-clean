@@ -33,6 +33,7 @@ namespace MafiaCleanCity.Shell.Tests
     //       de ville) : tout Graphic porte son CanvasRenderer, tout Graphic sous un Mask / RectMask2D est un MaskableGraphic ; plancher
     //       anti-vacuité (les liserés arrondis sont là)
     //   A10 contrôle POSITIF de A9 : un Graphic nu sous le RectMask2D la fait rougir ; un Graphic dérivé ajouté sans son renderer aussi
+    //   A11 (juge ⊥ r1, F7) la pastille de FAMILLE suit les rapports d'autonomie SERVIS (≥ 1 ⇒ allumée), sur FAMILLE seulement
     //   A7  « La suite » (cadre 4, table 72) : sans carte, au palier 1, elle PREND le milieu (le calme s'efface), la file reste en bas ;
     //       au palier 2, rien ne change
     //   A3  G1 (suivi ⊥ UX §I, 26/09) : l'Accueil rouvert RELIT la tête et la file (session/open recalcule hl_card) — une carte
@@ -392,22 +393,24 @@ namespace MafiaCleanCity.Shell.Tests
             } };
             shell.TransportDeSessionPourTest = new TransportTemoin { Reponse = reponse };
             Poser(shell, "LastSessionOpen", reponse);
+            MafiaCleanCity.Shell.PhaseDeSession.Publier("DAY");   // la phase SERVIE choisit le diorama (rendue au TearDown : RendrePourTest)
             yield return RouvrirParEmpire();
 
-            // (1) le fond de ville : la peinture de ③, active, derrière l'Accueil.
+            // (1) le fond : le QUARTIER PEINT (diorama du district, juge ⊥ r1 F3), celui de la phase servie, actif derrière l'Accueil,
+            //     et jusqu'en HAUT derrière le bandeau translucide (F1 : plus de bande de 90 px).
             DashboardController accueil = shell.ContentSlot.GetComponentsInChildren<DashboardController>(true).LastOrDefault();
-            Assert.IsNotNull(accueil?.FondDeVille, "le fond de ville est posé (ressource CityMap/carte_ville_nuit)");
+            Assert.IsNotNull(accueil?.FondDeVille, "le fond est posé (DistrictBackgroundSlots, profil verge)");
             Assert.IsTrue(accueil.FondDeVille.gameObject.activeInHierarchy, "il est visible derrière l'Accueil");
-            Assert.AreSame(Resources.Load<Sprite>(DashboardController.CheminFondDeVille), accueil.FondDeVille.sprite, "la peinture de ③");
-            // Sous le chrome du haut (f1 26/09 : « LE PORT » transparaissait sous « JOUR 1 ») : la zone du fond, masquée, s'arrête à
-            // la zone sûre en haut.
+            Assert.AreEqual("jour", DashboardController.ModeDuFond("DAY"));
+            Assert.AreEqual("nuit", DashboardController.ModeDuFond(null), "phase inconnue : la nuit");
+            Assert.AreSame(MafiaCleanCity.CityMap.DistrictBackgroundSlots.Current.Resolve(DashboardController.ProfilDuFond, "jour").fond,
+                accueil.FondDeVille.sprite, "le diorama de JOUR, pour la phase DAY servie");
             Canvas.ForceUpdateCanvases();
             var coins = new Vector3[4];
             ((RectTransform)accueil.FondDeVille.transform.parent).GetWorldCorners(coins);
             float hautZone = shell.ContentSlot.InverseTransformPoint(coins[1]).y;
-            float hautSur = shell.ContentSlot.rect.yMax - ShellChrome.TopInsetPx;
-            Assert.LessOrEqual(hautZone, hautSur + 1f, $"le fond s'arrête sous le chrome du haut ({hautZone:F0} ≤ {hautSur:F0})");
-            Assert.IsNotNull(accueil.FondDeVille.transform.parent.GetComponent<UnityEngine.UI.RectMask2D>(), "et il est rogné à sa zone");
+            Assert.GreaterOrEqual(hautZone, shell.ContentSlot.rect.yMax - 1f, $"le fond monte jusqu'en haut, derrière le bandeau ({hautZone:F0})");
+            Assert.IsNotNull(accueil.FondDeVille.transform.parent.GetComponent<UnityEngine.UI.RectMask2D>(), "et il est rogné à l'écran");
 
             // (2) une seule fois à l'écran : la ligne de file porte la carte, le bandeau ne l'annonce pas.
             Assert.IsTrue(shell.LaLigneDeFileEstALEcran(), "précondition : la ligne de l'Accueil porte la carte");
@@ -512,6 +515,29 @@ namespace MafiaCleanCity.Shell.Tests
                           "cette version d'Unity ; la branche « sans renderer » de A9 ne peut pas rougir ainsi.");
             Object.DestroyImmediate(derive);
             yield return null;
+        }
+
+        /// <summary>A11 — juge ⊥ r1 de ④, F7 (arbitrage f2, 26/09) : la pastille de présence du dock (`.disc` du HUD) est sur FAMILLE
+        /// seulement, et suit la valeur SERVIE de `GET /v1/autonomy-reports` : allumée pour ≥ 1 rapport ouvert, éteinte sinon.</summary>
+        [UnityTest]
+        public IEnumerator A11_PastilleDeFamille_SuitLesRapportsServis()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_Pastille");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            var pastilles = shell.TabBarRoot.GetComponentsInChildren<Transform>(true).Where(x => x.name == AppShell.NomPastilleFamille).ToList();
+            Assert.AreEqual(1, pastilles.Count, "UNE pastille dans le dock");
+            Assert.IsNotNull(pastilles[0].GetComponentsInParent<Transform>(true).FirstOrDefault(x => x.name == "Tab_" + AppShell.Tab.Org), "posée sur FAMILLE");
+
+            shell.PoserPastilleFamille(new[] { new MafiaCleanCity.Operational.Autonomy.AutonomyReportDto() });
+            Assert.IsTrue(shell.PastilleFamilleAllumee, "1 rapport ouvert servi : allumée");
+            shell.PoserPastilleFamille(new MafiaCleanCity.Operational.Autonomy.AutonomyReportDto[0]);
+            Assert.IsFalse(shell.PastilleFamilleAllumee, "aucun rapport servi : éteinte");
+            shell.PoserPastilleFamille(null);
+            Assert.IsFalse(shell.PastilleFamilleAllumee, "lecture manquée : éteinte (on n'invente pas de présence)");
+            shell.PoserPastilleFamille(new MafiaCleanCity.Operational.Autonomy.AutonomyReportDto[] { null });
+            Assert.IsFalse(shell.PastilleFamilleAllumee, "des entrées nulles ne comptent pas");
         }
 
         [UnityTest]

@@ -62,12 +62,14 @@ namespace MafiaCleanCity.Shell
             bloc.anchorMin = new Vector2(0f, 0f);
             bloc.anchorMax = new Vector2(1f, 0f);
             bloc.pivot = new Vector2(0.5f, 0f);                        // ancré en BAS de la bande, il pousse vers le haut
-            bloc.offsetMin = new Vector2(40f, 0f);
-            bloc.offsetMax = new Vector2(-40f, 0f);
+            // Juge ⊥ r1 de ④ (26/09) — F15 : marges 34 → 47 px (56 u) ; F12 : la plaque en BLEU NUIT (ficheGlassBottom, (8,13,23) mesuré
+            // sur le cadre 4 re-rendu @5d1485c4), son bord discret (32,37,47).
+            bloc.offsetMin = new Vector2(MargeLaterale, 0f);
+            bloc.offsetMax = new Vector2(-MargeLaterale, 0f);
             Image fond = go.AddComponent<Image>();
-            Arrondir(fond, RayonBloc, DesignTokens.Current.surfaceCard);
+            Arrondir(fond, RayonBloc, DesignTokens.Current.ficheGlassBottom);
             fond.raycastTarget = false;
-            Lisere(go.transform, RayonBloc, LisereClair);
+            Lisere(go.transform, RayonBloc, BordDePlaque);
             VerticalLayoutGroup vlg = go.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset(56, 56, 40, 48);
             vlg.spacing = 28;
@@ -76,19 +78,22 @@ namespace MafiaCleanCity.Shell
             ContentSizeFitter fit = go.AddComponent<ContentSizeFitter>();
             fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            // Le filet d'or du haut (la maquette), puis l'intitulé en capitales espacées.
-            GameObject filet = new GameObject("Filet", typeof(RectTransform));
-            filet.transform.SetParent(go.transform, false);
-            Image fi = filet.AddComponent<Image>();
-            fi.color = DesignTokens.Current.ficheCtaOrBas;
-            fi.raycastTarget = false;
-            LayoutElement fle = filet.AddComponent<LayoutElement>();
-            fle.minHeight = fle.preferredHeight = 2f;
-            filet.transform.SetSiblingIndex(0);
+            // F8 : le liseré or est SUR le bord supérieur de la plaque (3 px, laiton, ~66 % de sa largeur, centré) — plus un filet flottant
+            // à l'intérieur, qui se lisait comme un séparateur au-dessus de « LA SUITE ».
+            GameObject lisereOr = new GameObject("LisereOr", typeof(RectTransform));
+            lisereOr.transform.SetParent(go.transform, false);
+            lisereOr.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform lrt = (RectTransform)lisereOr.transform;
+            lrt.anchorMin = new Vector2(0.17f, 1f); lrt.anchorMax = new Vector2(0.83f, 1f); lrt.pivot = new Vector2(0.5f, 1f);
+            lrt.sizeDelta = new Vector2(0f, 3.6f); lrt.anchoredPosition = Vector2.zero;
+            Image li = lisereOr.AddComponent<Image>();
+            li.color = DesignTokens.Current.hudHairlineGold;
+            li.raycastTarget = false;
 
-            TextMeshProUGUI titre = Texte(go.transform, LaSuite.Titre().ToUpperInvariant(), 26, DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.primaryFont);
+            // F10 : le crème CHAUD du bandeau (hudCremeSecondary, le jeton de « ARGENT ») — plus le gris froid. F16 : interlettrage rendu.
+            TextMeshProUGUI titre = Texte(go.transform, LaSuite.Titre().ToUpperInvariant(), 26, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             titre.name = "Titre";
-            titre.characterSpacing = 18;
+            titre.characterSpacing = 26;
             titre.fontStyle = FontStyles.Bold;
             titre.alignment = TextAlignmentOptions.Center;
 
@@ -139,8 +144,7 @@ namespace MafiaCleanCity.Shell
             GameObject s = new GameObject("Separateur", typeof(RectTransform));
             s.transform.SetParent(parent, false);
             Image im = s.AddComponent<Image>();
-            Color c = DesignTokens.Current.onSurfaceSecondary; c.a = 0.25f;
-            im.color = c;
+            im.color = BordDePlaque;
             im.raycastTarget = false;
             LayoutElement le = s.AddComponent<LayoutElement>();
             le.minHeight = le.preferredHeight = 2f;
@@ -163,9 +167,9 @@ namespace MafiaCleanCity.Shell
             col.childControlWidth = true; col.childControlHeight = true;
             col.childForceExpandWidth = true; col.childForceExpandHeight = false;
             textes.AddComponent<LayoutElement>().flexibleWidth = 1f;
-            TextMeshProUGUI t = Texte(textes.transform, l.Titre, 44, DesignTokens.Current.ficheCtaOrHaut, DesignTokens.Current.hudSerifFont != null ? DesignTokens.Current.hudSerifFont : DesignTokens.Current.primaryFont);
+            TextMeshProUGUI t = Texte(textes.transform, l.Titre, 44, DesignTokens.Current.hudMoneyGold, DesignTokens.Current.hudSerifFont != null ? DesignTokens.Current.hudSerifFont : DesignTokens.Current.primaryFont);
             t.name = "TitreDeLigne";
-            TextMeshProUGUI p = Texte(textes.transform, l.Phrase, 30, DesignTokens.Current.onSurfaceMuted, DesignTokens.Current.primaryFont);
+            TextMeshProUGUI p = Texte(textes.transform, l.Phrase, 30, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             p.name = "Phrase";
 
             if (l.Geste == GesteDeLaSuite.Aucun || string.IsNullOrEmpty(l.MotDuGeste)) return;
@@ -174,15 +178,30 @@ namespace MafiaCleanCity.Shell
             Image im = geste.AddComponent<Image>();
             // Arrondis et liserés de la maquette (cadre 4) : le premier geste en or plein bordé d'or sombre, les suivants sombres bordés
             // d'un filet clair.
-            Arrondir(im, RayonGeste, premierGeste ? DesignTokens.Current.ficheCtaOrBas : DesignTokens.Current.surfaceRow);
-            Lisere(geste.transform, RayonGeste, premierGeste ? DesignTokens.Current.ficheCtaOrBord : LisereClair);
+            // F9 : le premier geste est une PILULE LUSTRÉE — la forme arrondie sert de MASQUE, un dégradé vertical ficheCtaOrHaut →
+            // ficheCtaOrBas (mesuré (232,196,106) → (205,159,61) sur le cadre 4) la remplit ; bord ficheCtaOrBord. Les suivants : fond nuit
+            // à peine levé (19,25,35), bord (58,63,72).
+            Arrondir(im, RayonGeste, premierGeste ? DesignTokens.Current.ficheCtaOrBas : FondGesteSombre);
+            if (premierGeste)
+            {
+                geste.AddComponent<Mask>().showMaskGraphic = false;
+                GameObject lustre = new GameObject("Degrade", typeof(RectTransform));
+                lustre.transform.SetParent(geste.transform, false);
+                lustre.AddComponent<LayoutElement>().ignoreLayout = true;
+                RectTransform drt = (RectTransform)lustre.transform;
+                drt.anchorMin = Vector2.zero; drt.anchorMax = Vector2.one; drt.offsetMin = drt.offsetMax = Vector2.zero;
+                Image degrade = lustre.AddComponent<Image>();
+                degrade.sprite = ProceduralUI.VerticalGradient(64, DesignTokens.Current.ficheCtaOrHaut, DesignTokens.Current.ficheCtaOrBas);
+                degrade.raycastTarget = false;
+            }
+            Lisere(geste.transform, RayonGeste, premierGeste ? DesignTokens.Current.ficheCtaOrBord : BordDeGesteSombre);
             Button b = geste.AddComponent<Button>();
             b.targetGraphic = im;
             GesteDeLaSuite g = l.Geste;
             b.onClick.AddListener(() => Ouvrir(g));
             LayoutElement le = geste.AddComponent<LayoutElement>();
             le.minHeight = le.preferredHeight = 100f;
-            le.minWidth = le.preferredWidth = 340f;
+            le.minWidth = le.preferredWidth = 385f;   // 323 px à 1080 (cadre 4) — il en faisait 283
             le.flexibleWidth = 0f;
             TextMeshProUGUI mot = Texte(geste.transform, l.MotDuGeste.ToUpperInvariant(), 28,
                 premierGeste ? DesignTokens.Current.ficheCtaOrEncre : DesignTokens.Current.onSurfacePrimary, DesignTokens.Current.primaryFont);
@@ -199,7 +218,22 @@ namespace MafiaCleanCity.Shell
         // ⚠️ PAS de pointillés sous les textes : dans la maquette, ils soulignent TOUS les mots du cadre 4 (titres, phrases, boutons,
         //    « LA SUITE ») et AUCUN du cadre 0 ratifié — c'est la marque de l'atelier pour une copie PROPOSÉE, pas un ornement.
         public const int RayonBloc = 28, RayonGeste = 22;
-        private static Color LisereClair => new Color(1f, 1f, 1f, 0.16f);
+        public const float MargeLaterale = 56f;   // 47 px à 1080 (cadre 4 : marges 47/46)
+
+        // ⛔ Projet en espace LINÉAIRE : une opacité CSS recopiée telle quelle rend trop clair (le socle l'a payé 5 fois). Les teintes
+        //    mesurées sur la maquette (un mélange sRGB du navigateur) sont donc rendues par la couleur EXACTE que le mélange linéaire
+        //    donnerait (`ProceduralUI.CouleurPourMelangeLineaire`), opaque — jamais par un alpha.
+        public static Color Melange(Color encre, Color fond, float alphaCss)
+        {
+            Color c = ProceduralUI.CouleurPourMelangeLineaire(encre, fond, alphaCss, out bool atteignable);
+            if (!atteignable) c = Color.Lerp(fond, encre, alphaCss);
+            c.a = 1f;
+            return c;
+        }
+        /// <summary>Le bord de plaque (32,37,47) sur la nuit de la plaque.</summary>
+        public static Color BordDePlaque => Melange(DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.ficheGlassBottom, 0.18f);
+        private static Color FondGesteSombre => Melange(DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.ficheGlassTop, 0.055f);
+        private static Color BordDeGesteSombre => Melange(DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.ficheGlassTop, 0.37f);
 
         /// <summary>Une surface pleine aux coins arrondis (sprite découpé de `ProceduralUI`, le même que la bulle de ⑨).</summary>
         public static void Arrondir(Image im, int rayon, Color couleur)

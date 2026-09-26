@@ -612,6 +612,22 @@ namespace MafiaCleanCity.Shell
             ContentSlot != null && ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false)
                 .Any(p => p.LigneDeLAccueil && p.RenderedCardCount > 0);
 
+        public const string NomPastilleFamille = "PastilleFamille";
+        private int rapportsOuverts;
+
+        /// <summary>F7 — la pastille de FAMILLE, réglée sur la valeur SERVIE : allumée si au moins un rapport ouvert est servi, éteinte
+        /// sinon (null, vide, entrées nulles). Public : la garde la pilote hors réseau.</summary>
+        public void PoserPastilleFamille(MafiaCleanCity.Operational.Autonomy.AutonomyReportDto[] rapports)
+        {
+            rapportsOuverts = rapports == null ? 0 : rapports.Count(r => r != null);
+            Transform disc = TabBarRoot != null ? TabBarRoot.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == NomPastilleFamille) : null;
+            if (disc != null) disc.gameObject.SetActive(rapportsOuverts > 0);
+        }
+
+        /// <summary>La pastille de FAMILLE est-elle allumée (garde) ?</summary>
+        public bool PastilleFamilleAllumee =>
+            TabBarRoot != null && TabBarRoot.GetComponentsInChildren<Transform>(true).Any(t => t.name == NomPastilleFamille && t.gameObject.activeSelf);
+
         // ①-3 (lot F) — le 1ᵉʳ rapport ouvert de la session : son lieutenant (garde de VALEUR, `NomDuPremierRapport`) et son id.
         private string nomDuRapport, idDuRapport;
 
@@ -1021,7 +1037,7 @@ namespace MafiaCleanCity.Shell
             // ①-3 (lot F) — le 1ᵉʳ rapport OUVERT, UNE fois par session : la route ne sert que les ouverts. Best-effort,
             // comme la sonde : un échec laisse le rapport muet, jamais un bandeau inventé.
             yield return new MafiaCleanCity.Operational.Autonomy.AutonomyClient { BaseUrl = baseUrl }.GetReports(t,
-                rapports => nomDuRapport = AnnonceDuBandeau.NomDuPremierRapport(rapports, out idDuRapport),
+                rapports => { nomDuRapport = AnnonceDuBandeau.NomDuPremierRapport(rapports, out idDuRapport); PoserPastilleFamille(rapports); },
                 (code, msg) => Debug.LogWarning($"[AppShell] rapports d'autonomie (best-effort) : {code} {msg}"));
             if (this == null) yield break;
             // ①-3 — le premier bandeau de la session : la ville si elle chauffe, sinon la 1ʳᵉ carte de la file, sinon le
@@ -2342,6 +2358,33 @@ namespace MafiaCleanCity.Shell
             joncImg.sprite = ProceduralUI.Ring(128, 128f * (Px(1f) / rondPx), jonc);
             joncImg.color = Color.white;
             joncImg.raycastTarget = false;
+
+            // ── LA PASTILLE DE PRÉSENCE (`.dockb .disc`, hud-brennar.html:117/199) — FAMILLE seulement ────────────────────────
+            // `top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--or);border:1.5px solid #0a0f17` : un POINT or,
+            // SANS nombre (« pas de badge rouge »). Juge ⊥ r1 de ④, F7 (arbitrage f2, 26/09) : allumé quand `GET /v1/autonomy-reports`
+            // sert au moins un rapport ouvert (un lieutenant a « un rapport pour vous »), jamais sur la file d'exceptions (sa carte
+            // TRANCHER est déjà sur ④). Éteint par défaut ; `PoserPastilleFamille` le règle sur la valeur servie.
+            if (tab == Tab.Org)
+            {
+                GameObject disc = new GameObject(NomPastilleFamille, typeof(RectTransform));
+                disc.transform.SetParent(rondGo.transform, false);
+                disc.AddComponent<LayoutElement>().ignoreLayout = true;
+                RectTransform drt = (RectTransform)disc.transform;
+                drt.anchorMin = drt.anchorMax = new Vector2(1f, 1f);
+                drt.pivot = new Vector2(1f, 1f);
+                drt.sizeDelta = new Vector2(Px(8f + 2f * 1.5f), Px(8f + 2f * 1.5f));   // le point et son bord de 1,5
+                drt.anchoredPosition = new Vector2(Px(2f), Px(2f));                       // top:-2 ; right:-2
+                Image bord = disc.AddComponent<Image>();
+                bord.sprite = ProceduralUI.RadialDisc(64, DesignTokens.Current.dockRondOuter, DesignTokens.Current.dockRondOuter);
+                bord.raycastTarget = false;
+                GameObject point = new GameObject("Point", typeof(RectTransform));
+                point.transform.SetParent(disc.transform, false);
+                Stretch((RectTransform)point.transform, new Vector2(Px(1.5f), Px(1.5f)), new Vector2(-Px(1.5f), -Px(1.5f)));
+                Image or = point.AddComponent<Image>();
+                or.sprite = ProceduralUI.RadialDisc(64, DesignTokens.Current.hudMoneyUnderlineGold, DesignTokens.Current.hudMoneyUnderlineGold);
+                or.raycastTarget = false;
+                disc.SetActive(rapportsOuverts > 0);
+            }
 
             // ── L'INDICATEUR D'ACTIF (`.dockb .pointe`) ─────────────────────────────────────
             // `width:14px;height:2px;background:var(--laiton);bottom:-4px` — un TIRET sous le rond,

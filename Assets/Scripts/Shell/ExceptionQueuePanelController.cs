@@ -85,7 +85,7 @@ namespace MafiaCleanCity.Shell
             EnsureInitialized();
             LigneDeLAccueil = true;
             VerticalLayoutGroup vlg = GetComponent<VerticalLayoutGroup>();
-            if (vlg != null) { vlg.padding = new RectOffset(40, 40, 0, 0); vlg.childAlignment = TextAnchor.UpperCenter; }
+            if (vlg != null) { vlg.padding = new RectOffset((int)LaSuitePanelController.MargeLaterale, (int)LaSuitePanelController.MargeLaterale, 0, 0); vlg.childAlignment = TextAnchor.UpperCenter; }
             // La bande de la file EST l'emplacement de la ligne sur la maquette (452 → 494, 7,2 % de l'écran) : la ligne ÉPOUSE sa bande.
             // Une hauteur fixe (180 u) débordait à 1080×1920 (bande 148 px, ligne 152 px — AccueilPanneauxGeometriePhoto, créneau du 26/09).
             rowsRoot.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
@@ -269,9 +269,10 @@ namespace MafiaCleanCity.Shell
             GameObject row = new GameObject("Row_" + card.exception_id, typeof(RectTransform));
             row.transform.SetParent(rowsRoot, false);
             Image fond = row.AddComponent<Image>();
-            LaSuitePanelController.Arrondir(fond, LaSuitePanelController.RayonBloc, DesignTokens.Current.surfaceCard);   // la maquette : arrondie, bordée
+            // Juge ⊥ r1 de ④ (26/09) — F12 : la plaque de file en bleu nuit (ficheGlassBottom), son bord discret (le même que LA SUITE).
+            LaSuitePanelController.Arrondir(fond, LaSuitePanelController.RayonBloc, DesignTokens.Current.ficheGlassBottom);
             fond.raycastTarget = false;                               // le toucher passe à la surface « ViewAll », dessous
-            LaSuitePanelController.Lisere(row.transform, LaSuitePanelController.RayonBloc, new Color(1f, 1f, 1f, 0.16f));
+            LaSuitePanelController.Lisere(row.transform, LaSuitePanelController.RayonBloc, LaSuitePanelController.BordDePlaque);
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.padding = new RectOffset(36, 36, 18, 18);
             hlg.spacing = 16;
@@ -295,12 +296,14 @@ namespace MafiaCleanCity.Shell
 
             TextMeshProUGUI qui = NewText(gauche.transform, QuiAttend(card), -1);
             qui.fontSize = 34;
+            // F10 : le crème CHAUD (cadre 4 : (205,196,175)) — plus le blanc froid.
+            qui.color = LaSuitePanelController.Melange(DesignTokens.Current.hudCreme, DesignTokens.Current.ficheGlassBottom, 0.87f);
             qui.overflowMode = TextOverflowModes.Ellipsis;
             qui.enableWordWrapping = false;
             TextMeshProUGUI gravite = NewText(gauche.transform, SeverityLabel(card.severity_band).ToUpperInvariant(), -1);
             gravite.fontSize = 22;
             gravite.characterSpacing = 8;
-            gravite.color = SeverityAccent(card.severity_band);
+            gravite.color = GraviteSurLAccueil(card.severity_band);
             renderedSeverityLabels.Add(SeverityLabel(card.severity_band));
 
             GameObject trancherGo = new GameObject("Trancher", typeof(RectTransform));
@@ -320,10 +323,26 @@ namespace MafiaCleanCity.Shell
             mot.fontSize = 30;
             mot.fontStyle = FontStyles.Bold;
             mot.characterSpacing = 10;
-            mot.color = OrDuGeste;
+            mot.color = DesignTokens.Current.ficheCtaOrHaut;   // F13 : UN or sur ④ (cadre 4 : (231,192,102)) ; la liste garde OrDuGeste
             mot.alignment = TextAlignmentOptions.MidlineRight;
             RectTransform motRt = (RectTransform)mot.transform;
             motRt.anchorMin = Vector2.zero; motRt.anchorMax = Vector2.one; motRt.offsetMin = motRt.offsetMax = Vector2.zero;
+        }
+
+        /// <summary>F17 (arbitrage f2, 26/09 ; cadres 2 et 4 re-rendus @65be0216) — sur l'Accueil, la gravité n'est PAS une couleur : la
+        /// couleur est réservée à l'alarme. LÉGÈRE en gris chaud éteint (139,129,113), MODÉRÉE en gris intermédiaire, GRAVE en gris chaud
+        /// (182,170,144) — le crème secondaire à trois intensités, rendues en couleur EXACTE (espace linéaire). Hors domaine : la plus éteinte.</summary>
+        public static Color GraviteSurLAccueil(string bande)
+        {
+            float intensite;
+            switch (MafiaCleanCity.Operational.Exceptions.ExceptionBandes.RangGravite(bande))
+            {
+                case 2: intensite = 1f; break;
+                case 1: intensite = 0.86f; break;
+                default: intensite = 0.72f; break;
+            }
+            return intensite >= 1f ? DesignTokens.Current.hudCremeSecondary
+                : LaSuitePanelController.Melange(DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.ficheGlassBottom, intensite);
         }
 
         /// <summary>QUI attend : le lieutenant NOMMÉ, ou la ville — les deux clés du bandeau, servies (la première partie de `Suivante`).</summary>

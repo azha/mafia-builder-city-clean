@@ -114,7 +114,14 @@ namespace MafiaCleanCity.Operational
         // l'Accueil. C'est la peinture de ③ (`CityMap/carte_ville_nuit`, la même ressource que `CityMapController`), en COVER sur le
         // fond, BLANCHE (la couleur est cuite dans la texture), RIEN par-dessus. Seulement quand ce contrôleur SERT d'Accueil (feuille
         // éteinte) : sa feuille propre garde son ardoise. Sans la ressource : l'ardoise, comme avant (jamais un trou).
-        public const string CheminFondDeVille = "CityMap/carte_ville_nuit";
+        // ⛔ REMPLACÉ le 26/09 (juge ⊥ r1 de ④, F3 et F1 ; arbitrage f2) : la maquette pose un quartier PEINT en isométrie, pas la carte
+        //    vectorielle de ③ (rues, « LE PORT », rose des vents — 40 taches claires sous le dock contre 1). Le quartier peint EXISTE :
+        //    le diorama du district (`DistrictBackgroundSlots`, profil « verge », seul rendu), jour ou nuit selon la phase SERVIE
+        //    (`PhaseDeSession` : DAY/DAWN ⇒ jour, DUSK/NIGHT/inconnue ⇒ nuit — la table de `ResolveArtPhase`). Sans texte cuit, il
+        //    remonte jusqu'en HAUT derrière le bandeau translucide (F1 : plus de bande de 90 px sous l'inset).
+        public const string ProfilDuFond = "verge";
+        /// <summary>Le mode du diorama pour une phase servie. Pur.</summary>
+        public static string ModeDuFond(string dayPhase) => dayPhase == "DAY" || dayPhase == "DAWN" ? "jour" : "nuit";
         private GameObject fondDeVille;
         /// <summary>Le fond de ville posé (garde) ; null sans la ressource.</summary>
         public Image FondDeVille { get; private set; }
@@ -567,14 +574,12 @@ namespace MafiaCleanCity.Operational
             GameObject backdrop = NewUI("DashboardBackdrop", root);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
             backdrop.AddComponent<Image>().color = SurfaceBg;
-            Sprite ville = Resources.Load<Sprite>(CheminFondDeVille);
+            Sprite ville = MafiaCleanCity.CityMap.DistrictBackgroundSlots.Current?
+                .Resolve(ProfilDuFond, ModeDuFond(MafiaCleanCity.Shell.PhaseDeSession.DayPhase))?.fond;
             if (ville != null)
             {
-                // SOUS le chrome du haut, comme ③ (`ZoneLibre`) : la peinture porte ses noms de quartier cuits dans la texture, et la
-                // barre, translucide, les laissait transparaître (« LE PORT » sous « JOUR 1 », planche P1, f1 26/09). Derrière le
-                // dock, elle reste (la maquette y montre la ville).
                 GameObject zone = NewUI("ZoneDuFond", backdrop.transform);
-                Stretch((RectTransform)zone.transform, Vector2.zero, new Vector2(0f, -MafiaCleanCity.Shell.ShellChrome.TopInsetPx));
+                Stretch((RectTransform)zone.transform, Vector2.zero, Vector2.zero);   // tout l'écran, derrière le bandeau et le dock
                 zone.AddComponent<RectMask2D>();
                 fondDeVille = NewUI("FondDeVille", zone.transform);
                 Stretch((RectTransform)fondDeVille.transform, Vector2.zero, Vector2.zero);
