@@ -49,7 +49,7 @@ namespace MafiaCleanCity.Tests
         }
 
         // ── M3 : la garde de CLASSE ─────────────────────────────────────────────────────────────────────────────────────────────
-        private static readonly Regex MotDuMoment = new Regex(@"\b(ce soir|ce matin|cette nuit|à l['’]aube|ce_soir|ce_matin|cette_nuit)\b",
+        private static readonly Regex MotDuMoment = new Regex(@"\b(ce soir|ce matin|cette nuit|à l['’]aube|ce_soir|ce_matin|cette_nuit|la nuit|à la nuit|la_nuit)\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex Litteral = new Regex("\"(?:\\\\.|[^\"\\\\])*\"", RegexOptions.Compiled);
         private static readonly Regex DansUneTableDePhase = new Regex(@"\{ ""(DAWN|DAY|DUSK|NIGHT)"",", RegexOptions.Compiled);
@@ -59,6 +59,9 @@ namespace MafiaCleanCity.Tests
         {
             // (B) retirées (table 80 @20ceeca0) : aucun geste n'attend le soir (mesure back -51) — les « ce soir » sont réécrits
             { "JournalScreenController.cs", 1 },       // la fraîcheur « ce matin » (table 49, recency_band = fresh : un temps RELATIF, f2)
+            { "ConflitScreenController.cs", 1 },       // :1038 « … le gros bras qui part la nuit » : VRAI, le coup se résout à minuit (f2)
+            { "DistributionScreenController.cs", 1 },  // :707 « Il est parti à la nuit » : FAUX (le coursier part tout de suite) — chez
+                                                       //   l'atelier (f2) ; cette exception SORT avec ses mots
         };
 
         /// <summary>Un littéral qui n'est qu'une CLÉ i18n (« conflit.bloc.ce_soir ») : un nom GARDÉ dont la valeur servie a été réécrite
@@ -76,6 +79,9 @@ namespace MafiaCleanCity.Tests
             Assert.AreEqual(0, Sites("                { \"DUSK\", \"Ce soir, au Verge d’Or\" },"), "un mot de table de phase n'est pas un moment en dur");
             Assert.AreEqual(0, Sites("                Libelle.Gabarit(\"conflit.bloc.ce_soir\", \"En cours\"),"), "une clé gardée n'est pas un texte montré");
             Assert.AreEqual(1, Sites("                Libelle.Gabarit(\"conflit.bloc.ce_soir\", \"Ce soir\"),"), "… mais son repli, si");
+            // f2 (26/09) : la forme DÉRIVÉE « la nuit / à la nuit » — contrôle positif sur ㉘:707
+            Assert.AreEqual(1, Sites("                replique = \"Il est parti à la nuit. Ça serpente, mais c'est la seule qui évite le pont du Threnny.\";"),
+                "contrôle positif : « à la nuit » est VU");
 
             string racine = Path.Combine(Application.dataPath, "Scripts");
             var ecarts = new List<string>();
