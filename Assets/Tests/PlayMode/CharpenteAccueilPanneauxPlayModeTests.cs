@@ -408,8 +408,10 @@ namespace MafiaCleanCity.Shell.Tests
             //   SANS elle 35/1 — ce rouge-ci est le mien, l'autre (`BLOQUANT2_Dashboard…`) ne l'est
             //   pas et tombait déjà. *Deux rouges dans le même run n'ont pas forcément la même
             //   cause, et le seul moyen de le savoir est de faire varier UNE chose.*
-            Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.Contains("indisponible")),
-                "le panneau doit DÉCLARER l'indisponibilité de la cohésion dans son texte rendu — "
+            // ⛔ AMENDÉ (table 63 v2, 2026-09-26) : la phrase écrite en dur (« indisponible pour l'ensemble de la ville ») était fausse
+            //    dès que la sonde répondait ; l'écran ne dit plus que « pas encore mesurée », sur 404 seulement. L'état reste la VALEUR.
+            Assert.IsFalse(orgVitals.RenderedTexts.Any(t => t.Contains("indisponible pour l")),
+                "la cohésion ne se déclare plus « indisponible pour l'ensemble de la ville » en dur — "
                 + $"textes vus : [{string.Join(" | ", orgVitals.RenderedTexts)}]");
 
             // I4 (revue ⊥ item05-C2, IMPORTANT-PREUVE) — ANTI-VACUITÉ D'ABORD : sans elle, un

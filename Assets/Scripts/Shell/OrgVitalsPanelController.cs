@@ -118,6 +118,8 @@ namespace MafiaCleanCity.Shell
             yield return projections.Cohesion(probeDistrictId, token,
                 dto => { LastCohesionFetch = dto; LastCohesionSucceeded = true; },
                 code => LastCohesionErrorCode = code);
+            if (this == null) yield break;
+            RendreReponseCohesion(LastCohesionSucceeded ? 200 : LastCohesionErrorCode);
         }
 
         /// <summary>Item 0.5 §2 (C2) — le mécanisme que l'Accueil déclenche : les DEUX requêtes que ce
@@ -183,7 +185,20 @@ namespace MafiaCleanCity.Shell
         private void RenderCohesionDeclaredUnavailable()
         {
             CohesionDeclaredUnavailable = true;
-            cohesionText.text = Lib("vitals", "Cohésion : indisponible pour l'ensemble de la ville");
+            // ⛔ Table 63 v2 (atelier, 2026-09-26) + décision de l'orchestrateur : « indisponible pour l'ensemble de la ville », ÉCRIT EN
+            //    DUR au build, était faux dès que la sonde répondait. L'indisponibilité reste une VALEUR (`CohesionDeclaredUnavailable`,
+            //    D5) ; l'écran ne dit que ce que la sonde a RÉPONDU (`RendreReponseCohesion`).
+            cohesionText.text = string.Empty;
+            RebuildTrackedTexts();
+        }
+
+        /// <summary>Table 63 v2 — ce que la sonde de cohésion a répondu, et RIEN d'autre : 404 (pas encore calculée) ⇒ « Cohésion :
+        /// pas encore mesurée » ; 200 ⇒ rien (la sonde lit UN district, `probeDistrictId` : l'afficher comme la cohésion de la ville
+        /// serait faux, D5) ; toute autre erreur ⇒ rien. Décidé (reco CLIENT-1, retenue par l'orchestrateur le 26/09).</summary>
+        public void RendreReponseCohesion(long code)
+        {
+            EnsureInitialized();
+            cohesionText.text = code == 404 ? Lib("vitals", "Cohésion : pas encore mesurée") : string.Empty;
             RebuildTrackedTexts();
         }
 

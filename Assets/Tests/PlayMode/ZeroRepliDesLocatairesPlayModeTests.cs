@@ -111,6 +111,7 @@ namespace MafiaCleanCity.Operational.Tests
             "lieutenant.diagnostic.tenure_peer_scope_violation",
             // Table 63 v2 (atelier, 2026-09-26) : ① BLANCHIR, planque vide.
             "building.vide.rien_a_blanchir_la_planque_est_vide",
+            "accueil.vitals.cohesion_pas_encore_mesuree",   // table 63 v2 : ④ cohésion, sur 404 seulement
             // Table 68 + addendum (atelier, 2026-09-26) : ③ panneau district — 41 mots par valeur (carte.* / police.*) et 25 étiquettes.
             "carte.controle.uncontested",
             "carte.controle.contested",

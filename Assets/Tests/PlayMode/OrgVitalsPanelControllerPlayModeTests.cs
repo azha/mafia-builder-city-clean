@@ -95,9 +95,10 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsTrue(CohesionNommeeIndisponible(new[] { "Chaleur : — (x)", "Cohésion : indisponible pour l'ensemble de la ville" }),
                 "contrôle positif : le texte de l'atelier satisfait le prédicat");
 
-            Assert.IsTrue(CohesionNommeeIndisponible(panel.RenderedTexts),
-                "the COHESION text carries the NAMED state (« indisponible »), never just an absent 4th bar — vus : [" +
-                string.Join(" | ", panel.RenderedTexts) + "]");
+            // ⛔ AMENDÉ (table 63 v2, 2026-09-26) : « indisponible pour l'ensemble de la ville », écrit en dur au build, était FAUX dès
+            //    que la sonde répondait. L'état reste une VALEUR (ci-dessus) ; au build, l'écran ne dit RIEN de la cohésion.
+            Assert.IsFalse(panel.RenderedTexts.Any(t => t != null && t.StartsWith("Cohésion")),
+                "au build, aucune phrase de cohésion (rien n'a répondu) — vus : [" + string.Join(" | ", panel.RenderedTexts) + "]");
 
             int cohesionCitywideFields = OrgVitalsPanelController.CountCitywideFields(typeof(CohesionDto));
             Assert.AreEqual(0, cohesionCitywideFields, "CohesionDto has ZERO citywide-named fields (D5: no citywide aggregate exists)");
@@ -106,6 +107,23 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.GreaterOrEqual(heatCitywideFields, 1,
                 "CAPACITY GUARD: the SAME oracle applied to heat finds >= 1 — proves the oracle CAN see a citywide " +
                 "field when one exists, so cohesion's 0 is a real absence, not a mistargeted probe");
+        }
+
+        /// <summary>Table 63 v2 (2026-09-26) — l'écran dit ce que la sonde a RÉPONDU : 404 ⇒ la phrase de la table (à l'octet) ; 200 et
+        /// toute autre erreur ⇒ rien (une cohésion de district n'est pas celle de la ville, D5).</summary>
+        [Test]
+        public void C6F2b_Cohesion_PasEncoreMesureeSur404Seulement()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            var panel = NewBarePanel();
+            panel.RendreReponseCohesion(404);
+            Assert.IsTrue(panel.RenderedTexts.Contains("Cohésion : pas encore mesurée"), "404 ⇒ la phrase de la table 63, à l'octet");
+            foreach (long code in new long[] { 200, 500, 0, 401 })
+            {
+                panel.RendreReponseCohesion(code);
+                Assert.IsFalse(panel.RenderedTexts.Any(t => t != null && t.StartsWith("Cohésion")), $"{code} ⇒ rien");
+            }
+            Assert.IsTrue(panel.CohesionDeclaredUnavailable, "l'état reste une VALEUR");
         }
 
         /// <summary>Le texte de COHÉSION du panneau (et lui seul) nomme l'état « indisponible ». Le texte servi par le bundle
