@@ -61,6 +61,27 @@ namespace MafiaCleanCity.Shell.Tests
                 }
                 ecran.OuvrirFiche(rien);
                 Assert.IsFalse(ecran.FicheCollecterActif, "et redevient inactif (réversible)");
+
+                // Le geste suit le TYPE (§G P4, suite) : COLLECTER seulement sur un point de vente, BLANCHIR seulement sur une façade.
+                DistrictInteriorBuildingDto Typee(string type, string recolte)
+                {
+                    DistrictInteriorBuildingDto x = B("b-" + type, recolte);
+                    x.operational_type = type;
+                    return x;
+                }
+                ecran.OuvrirFiche(Typee("front_shop", "AVAILABLE"));
+                Assert.IsFalse(ecran.FicheCollecterActif, "une façade n'est pas un point de vente : COLLECTER estompé, même « Prêt »");
+                Assert.IsTrue(ecran.FicheBlanchirActif, "une façade : BLANCHIR actif");
+                ecran.OuvrirFiche(Typee("lab", "NOTHING"));
+                Assert.IsFalse(ecran.FicheCollecterActif, "un labo : COLLECTER estompé");
+                Assert.IsFalse(ecran.FicheBlanchirActif, "un labo : BLANCHIR estompé (§G : « BLANCHIR sur un labo »)");
+                ecran.OuvrirFiche(Typee("dealer_spot_front", "FULL"));
+                Assert.IsTrue(ecran.FicheCollecterActif, "un point de vente plein : COLLECTER actif");
+                Assert.IsFalse(ecran.FicheBlanchirActif, "un point de vente : BLANCHIR estompé");
+
+                // La tête touchable est SIGNALÉE : le titre souligné (§G P4, « rien ne le montre »).
+                var titre = ecran.ScreenRoot.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).First(x => x.gameObject.name == "Titre");
+                Assert.IsTrue((titre.fontStyle & TMPro.FontStyles.Underline) != 0, "le titre de la fiche est souligné (la tête s'ouvre vers ②)");
                 if (ecran.ScreenRoot != null) UnityEngine.Object.DestroyImmediate(ecran.ScreenRoot.gameObject);
             }
             finally { UnityEngine.Object.DestroyImmediate(hote); }

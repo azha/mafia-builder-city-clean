@@ -81,6 +81,10 @@ namespace MafiaCleanCity.CityMap.Tests
             Button collecter = screen.ScreenRoot.GetComponentsInChildren<Button>(true)
                 .FirstOrDefault(b => b.gameObject.name == "Btn_COLLECTER");
             Assert.IsNotNull(collecter, "la fiche canonique porte un vrai Button COLLECTER");
+            // §G P4 (26/09) : COLLECTER n'est actif que sur un point de vente qui a de quoi ramasser — la caisse seedée (précondition
+            // ci-dessus) doit se lire dans la bande servie, sinon le bouton serait estompé sur une vraie caisse.
+            Assert.IsTrue(screen.FicheCollecterActif,
+                $"une caisse à collecter ({dealerAvant.cash_band}) ⇒ COLLECTER actif (harvest_band servi : {pointDeVente.harvest_band})");
             RectTransform rt = (RectTransform)collecter.transform;
             Vector2 positionAvant = rt.anchoredPosition;
             Vector2 tailleAvant = rt.sizeDelta;

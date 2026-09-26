@@ -1929,21 +1929,36 @@ namespace MafiaCleanCity.CityMap
         // appel à agir sur rien. Il n'est ACTIF que s'il y a de quoi ramasser (`harvest_band` AVAILABLE ou FULL) ; sinon il reste à sa
         // place (la rangée des trois actions du canon ne bouge pas) mais ESTOMPÉ et sans effet. Décidé (reco, 26/09) : désactiver
         // plutôt que masquer — un trou dans la rangée se lirait comme un bouton perdu.
-        private GameObject ficheBoutonCollecter;
+        // Suite du §G P4 (26/09, ordre de l'orchestrateur) — Décidé (reco, 26/09) : chaque geste suit le TYPE du bâtiment. Le canon
+        // (`hud-brennar.html`) ne dessine qu'UNE fiche, celle d'un bar, avec ses trois actions ; il ne dit rien des autres types. Un
+        // bouton montré sur un bâtiment où il ne peut rien (« Collecte : choisissez un point de vente. ») est le même défaut que
+        // COLLECTER sur « Rien » : il reste à sa place du canon, estompé et sans effet.
+        //   · COLLECTER : un point de vente (`dealer_spot_front`) qui a de quoi ramasser ;
+        //   · BLANCHIR  : un commerce de façade (`front_shop`) — la planque vide est dite au geste (table 63) ;
+        //   · « cuire »  : AUCUN geste sur ① (le canon n'en a pas) : la cuisson vit sur le pupitre de ② (maquette, cadres 45-47),
+        //                  atteint par la TÊTE de la fiche (B1), désormais signalée (titre souligné, voir BuildFiche).
+        private GameObject ficheBoutonCollecter, ficheBoutonBlanchir;
         public const float CollecterEstompe = 0.35f;
         /// <summary>Vrai si COLLECTER est actif (interactif, plein) sur la fiche ouverte.</summary>
-        public bool FicheCollecterActif => ficheBoutonCollecter != null && ficheBoutonCollecter.GetComponent<Button>() != null
-                                           && ficheBoutonCollecter.GetComponent<Button>().interactable;
+        public bool FicheCollecterActif => Actif(ficheBoutonCollecter);
+        /// <summary>Vrai si BLANCHIR est actif sur la fiche ouverte.</summary>
+        public bool FicheBlanchirActif => Actif(ficheBoutonBlanchir);
+        private static bool Actif(GameObject go) => go != null && go.GetComponent<Button>() != null && go.GetComponent<Button>().interactable;
         /// <summary>Il y a de quoi ramasser : `harvest_band` AVAILABLE (prêt) ou FULL (plein, quelque chose s'est arrêté).</summary>
         public static bool ACollecter(string harvestBand) => harvestBand == "AVAILABLE" || harvestBand == "FULL";
+        /// <summary>COLLECTER a un sens : un point de vente, avec de quoi ramasser.</summary>
+        public static bool CollecterPossible(string operationalType, string harvestBand) =>
+            operationalType == "dealer_spot_front" && ACollecter(harvestBand);
+        /// <summary>BLANCHIR a un sens : un commerce de façade (le seul qui porte un nœud de blanchiment de tête).</summary>
+        public static bool BlanchirPossible(string operationalType) => operationalType == "front_shop";
 
-        private void PoserCollecter(bool actif)
+        private static void PoserAction(GameObject bouton, bool actif)
         {
-            if (ficheBoutonCollecter == null) return;
-            Button b = ficheBoutonCollecter.GetComponent<Button>();
+            if (bouton == null) return;
+            Button b = bouton.GetComponent<Button>();
             if (b != null) b.interactable = actif;
-            CanvasGroup g = ficheBoutonCollecter.GetComponent<CanvasGroup>();
-            if (g == null) g = ficheBoutonCollecter.AddComponent<CanvasGroup>();
+            CanvasGroup g = bouton.GetComponent<CanvasGroup>();
+            if (g == null) g = bouton.AddComponent<CanvasGroup>();
             g.alpha = actif ? 1f : CollecterEstompe;
         }
         /// <summary>L'id transmis à la dernière ouverture de la fiche opérationnelle (null avant).</summary>
@@ -2125,6 +2140,10 @@ namespace MafiaCleanCity.CityMap
             tapTete.transition = Selectable.Transition.None;
             tapTete.targetGraphic = zoneTete;
             tapTete.onClick.AddListener(OuvrirFicheOperationnelle);
+            // §G P4 (26/09) — « la tête est touchable mais rien ne le montre ». Décidé (reco, 26/09) : le titre du bâtiment est SOULIGNÉ,
+            // le signe le plus discret d'un « ceci s'ouvre » — ni glyphe (garde G1 des Replis), ni couleur neuve, ni chrome. La tête reste
+            // touchable : c'est le seul chemin de ① vers ② (et vers la cuisson) pour un labo, un stash, une planque.
+            ficheTitre.fontStyle |= FontStyles.Underline;
 
             // ── les trois cases, en TIERS ÉGAUX ──────────────────────────────────────────────
             // ⛔ Elles étaient dimensionnées AU CONTENU (`childForceExpandWidth` sur des textes qui
@@ -2180,6 +2199,8 @@ namespace MafiaCleanCity.CityMap
             ficheBoutonAmeliorer = btnAmeliorer != null ? btnAmeliorer.gameObject : null;
             Transform btnCollecter = corps.transform.Find("Btn_COLLECTER");
             ficheBoutonCollecter = btnCollecter != null ? btnCollecter.gameObject : null;
+            Transform btnBlanchir = corps.transform.Find("Btn_BLANCHIR");
+            ficheBoutonBlanchir = btnBlanchir != null ? btnBlanchir.gameObject : null;
 
             // Le retour d'une action. Posé EN SURIMPRESSION de la rangée d'actions plutôt qu'à sa
             // suite : dans le flux, il consommait de la hauteur en permanence pour un texte vide
@@ -2477,7 +2498,8 @@ namespace MafiaCleanCity.CityMap
             ficheStatLibelles[2].text = MafiaCleanCity.I18n.Libelle.De("district", "fiche", "CHALEUR LOCALE");
             ficheStatValeurs[0].text = ValeurACollecter(b.harvest_band);
             ficheStatValeurs[0].color = TeinteACollecter(b.harvest_band);
-            PoserCollecter(ACollecter(b.harvest_band));   // §G P4 : pas de bouton principal sur « Rien »
+            PoserAction(ficheBoutonCollecter, CollecterPossible(b.operational_type, b.harvest_band));   // §G P4 : ni sur « Rien », ni hors d'un point de vente
+            PoserAction(ficheBoutonBlanchir, BlanchirPossible(b.operational_type));                     // §G P4 : le geste suit le type
             ficheStatValeurs[1].text = ValeurRevenus(b.revenue_band);
             ficheStatValeurs[1].color = DesignTokens.Current.hudCreme;
             string chaleur = LastHeat != null ? LastHeat.district_bucket : null;
