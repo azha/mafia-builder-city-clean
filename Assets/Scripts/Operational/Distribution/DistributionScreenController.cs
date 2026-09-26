@@ -83,6 +83,10 @@ namespace MafiaCleanCity.Operational
         public GetOperationalCouriersResponseDto DernierChargementCouriers { get; private set; }
         public GetOperationalDistributionProjectionResponseDto DernierChargementProjection { get; private set; }
         public string DerniereErreur { get; private set; }
+        /// <summary>Garde de classe des refus (f2 2026-09-26) — la phrase SERVIE du refus de la route qui a échoué
+        /// (`client.DernierePhraseDeRefus`, lue dans son onErr), montrée au sous-titre de l'état indisponible ; sinon la phrase
+        /// de l'écran. `DerniereErreur` reste TECHNIQUE (crochet de test), jamais affiché.</summary>
+        public string PhraseDuRefus { get; private set; }
         public long DernierCodeErreur { get; private set; }
         /// <summary>Le hub de distribution découvert par `DecouvrirRoute` — crochet de test.</summary>
         public string FromBuildingId { get; private set; }
@@ -279,6 +283,7 @@ namespace MafiaCleanCity.Operational
         {
             EnsureInitialized();
             DerniereErreur = null;
+            PhraseDuRefus = null;
             DernierCodeErreur = 0;
 
             string errRoute = null;
@@ -323,11 +328,12 @@ namespace MafiaCleanCity.Operational
         private IEnumerator RechargerCouriers()
         {
             DerniereErreur = null;
+            PhraseDuRefus = null;
             DernierCodeErreur = 0;
             DernierChargementCouriers = null;
             yield return client.GetOperationalCouriers(token,
                 dto => DernierChargementCouriers = dto,
-                (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
+                (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; PhraseDuRefus = client.DernierePhraseDeRefus; });
             // La frame de création rend des rects non résolus : on attend le layout AVANT de
             // rendre quoi que ce soit qui lise une géométrie.
             yield return null;
@@ -338,7 +344,7 @@ namespace MafiaCleanCity.Operational
             DernierChargementProjection = null;
             yield return client.GetOperationalDistributionProjection(token,
                 dto => DernierChargementProjection = dto,
-                (code, msg) => DerniereErreur = DerniereErreur ?? $"projection : {code} {msg}");
+                (code, msg) => { DerniereErreur = DerniereErreur ?? $"projection : {code} {msg}"; PhraseDuRefus = PhraseDuRefus ?? client.DernierePhraseDeRefus; });
             yield return null;
         }
 
@@ -812,8 +818,10 @@ namespace MafiaCleanCity.Operational
             titreTexte.text = Libelle.Gabarit("distribution.vide.pas_encore_de_relais", "Pas encore de relais.");
             sousTitreTexte.text = Libelle.Gabarit("distribution.vide.sans_relais_rien_ne_part_c_est_de_la_que_vos_coursiers_livrent",
                                       "Sans relais, rien ne part\u00A0: c’est de là que vos coursiers livrent.")
-                                  + "\n" + Libelle.Gabarit("distribution.vide.un_relais_s_obtient_en_reconvertissant_un_de_vos_locaux_une_decision_de_structure",
-                                      "Un relais s’obtient en reconvertissant un de vos locaux — une décision de structure.");
+                                  // addendum 63 (client 33b422c5, 26/09) : « s'obtient en reconvertissant un de vos locaux » était FAUX
+                                  // (le back refuse de reconvertir un local du kit, real-estate.service.ts:355) — REMPLACÉE.
+                                  + "\n" + Libelle.Gabarit("distribution.vide.un_relais_s_achete_sur_un_bloc_libre_puis_s_ouvre_depuis_sa_fiche",
+                                      "Un relais s’achète sur un bloc libre, puis s’ouvre depuis sa fiche — de l’argent et deux décisions de structure, sur deux jours.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }
@@ -826,9 +834,8 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(couriersRoot);
             ViderEnfants(piedRoot);
             titreTexte.text = Libelle.De("distribution", "titre", "La distribution n'a pas répondu");
-            sousTitreTexte.text = string.IsNullOrEmpty(DerniereErreur)
-                ? Libelle.De("distribution", "sous_titre", "Réessayez dans un instant.")
-                : DerniereErreur;
+            // la phrase SERVIE du refus, sinon celle de l'écran — jamais `DerniereErreur` (garde de classe des refus)
+            sousTitreTexte.text = PhraseDuRefus ?? Libelle.De("distribution", "sous_titre", "Réessayez dans un instant.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }
@@ -862,6 +869,14 @@ namespace MafiaCleanCity.Operational
             if (erreur != null)
             {
                 DerniereErreur = erreur;
+                // table 67 (26/09) : le refus était SILENCIEUX pour le joueur (diagnostic seulement). Sa phrase servie se pose sous le geste.
+                if (client.DernierePhraseDeRefus != null && piedRoot != null)
+                {
+                    TextMeshProUGUI refus = NouveauTexteFiche(piedRoot, "RefusDuGeste", client.DernierePhraseDeRefus, 8.5f,
+                        DesignTokens.Current.onSurfaceSecondary, false);
+                    refus.enableWordWrapping = true;
+                    TrackText(refus.text);
+                }
                 yield break;
             }
             yield return RechargerCouriers();

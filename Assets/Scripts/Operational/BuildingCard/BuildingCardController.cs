@@ -678,7 +678,10 @@ namespace MafiaCleanCity.Operational
             // par `Libelle` (2026-09-23) : une clé servie mais absente du bundle retombe sur « {échec}. » — ce repli est désormais
             // COMPTÉ (garde « zéro repli »). Même rendu qu'avant ; clé vide ⇒ ni lecture ni compte.
             // lot des refus (26/09) : les trous de la phrase servie viennent de `payload_vars`, déjà RÉSOLUS en mots (`*_key` → `<racine>`)
-            string raison = MafiaCleanCity.I18n.Libelle.Gabarit(outcome?.CleI18n, null, outcome?.Variables);
+            // clé GÉNÉRIQUE (couche protocole, `RefusServi.EstGenerique`) ⇒ l'échec seul (f2 26/09, suivi ⊥ UX §I) : T3 disait
+            // « Impossible de lancer la cuisson — Une partie de ce que vous avez saisi… », une phrase qui n'en dit pas plus que l'échec
+            string cle = MafiaCleanCity.I18n.RefusServi.EstGenerique(outcome?.CleI18n) ? null : outcome?.CleI18n;
+            string raison = MafiaCleanCity.I18n.Libelle.Gabarit(cle, null, outcome?.Variables);
             return raison != null ? $"{echec} — {raison}" : $"{echec}.";
         }
 

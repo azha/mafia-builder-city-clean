@@ -1006,7 +1006,7 @@ namespace MafiaCleanCity.Operational
             Rendre();
             yield return client.GetFrictionNodes(token, b.building,
                 d => DerniereFiche = d,
-                r => refusAffiche = r.message);
+                r => refusAffiche = r.AAfficher);
             Rendre();
         }
 
@@ -1020,7 +1020,7 @@ namespace MafiaCleanCity.Operational
             PostFrictionNodesDecommissionResponseDto r = null;
             yield return client.PostFrictionNodesDecommission(token, batimentVise.building, true,
                 d => r = d,
-                refus => refusAffiche = refus.message);
+                refus => refusAffiche = refus.AAfficher);
 
             if (r != null && r.decommissioned)
             {
@@ -1043,7 +1043,7 @@ namespace MafiaCleanCity.Operational
             bool ok = false;
             yield return client.PostFrictionReplacementOptionsPick(token, o.id,
                 _ => ok = true,
-                refus => refusAffiche = refus.message);
+                refus => refusAffiche = refus.AAfficher);
 
             // L'état réel se relit sur les offres, jamais sur ce qu'on croit que `pick` a rendu :
             // le corps de succès de cette route n'a jamais été observé (TD-533).
@@ -1265,8 +1265,9 @@ namespace MafiaCleanCity.Operational
         {
             if (string.IsNullOrWhiteSpace(nom)) return;   // aucun lieutenant concerné : la ligne ne s'affiche pas
             const string Marque = "\u241E";
-            string t = MafiaCleanCity.I18n.Libelle.Gabarit(cle, repli,
-                new System.Collections.Generic.Dictionary<string, string> { { "nom", Marque } });
+            // EXIGEANT (f2 26/09, table 64) : une valeur servie sans {nom} (un nom figé, « Dima ») compte comme NON servie
+            string t = MafiaCleanCity.I18n.Libelle.GabaritExigeant(cle, repli,
+                new System.Collections.Generic.Dictionary<string, string> { { "nom", Marque } }, "nom");
             int i = t.IndexOf(Marque, System.StringComparison.Ordinal);
             if (i < 0) { EcrireDit(parent, t, "", ""); return; }
             EcrireDit(parent, t.Substring(0, i), nom, t.Substring(i + Marque.Length));

@@ -163,6 +163,8 @@ namespace MafiaCleanCity.Operational
                     outcome.Ok = false;
                     outcome.Message = ReadableError(req);
                     outcome.CleI18n = BuildingCardClient.CleUtilisateur(req);
+                    outcome.Variables = MafiaCleanCity.I18n.VariablesDeRefus.Resoudre(   // table 67 (26/09) : les trous de la phrase servie
+                        MafiaCleanCity.I18n.VariablesDeRefus.Lire(req.downloadHandler != null ? req.downloadHandler.text : null));
                 }
             }
             done?.Invoke(outcome);

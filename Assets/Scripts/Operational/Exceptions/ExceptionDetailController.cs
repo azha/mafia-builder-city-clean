@@ -27,6 +27,9 @@ namespace MafiaCleanCity.Operational.Exceptions
         public ExceptionCardDto CurrentCard { get; private set; }
         public string LastOutcome { get; private set; }
         public string LastError { get; private set; }
+        /// <summary>Garde de classe des refus (f2 2026-09-26) — la phrase MONTRÉE quand le geste échoue : la phrase SERVIE du refus
+        /// (`client.DernierePhraseDeRefus`), sinon celle de l'écran. `LastError` reste TECHNIQUE (code + message), jamais affiché.</summary>
+        public string PhraseDuRefus { get; private set; }
         public bool AddAsRule { get; private set; }
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
 
@@ -176,10 +179,15 @@ namespace MafiaCleanCity.Operational.Exceptions
             if (CurrentCard == null || resolving || ferme) yield break;
             resolving = true;
             LastError = null;
+            PhraseDuRefus = null;
             ResolveResponse res = null;
             yield return client.Resolve(CurrentCard.exception_id, method, chosenActionId, token,
                 ok => res = ok,
                 (code, msg) => LastError = msg);
+            if (LastError != null)
+                PhraseDuRefus = client.DernierePhraseDeRefus
+                    ?? MafiaCleanCity.I18n.Libelle.Gabarit("exception_detail.refus.votre_decision_n_a_pas_ete_enregistree_reessayez",
+                                                          "Votre décision n\u2019a pas été enregistrée. Réessayez.");   // table 70
             resolving = false;
             if (Destroyed) yield break;
             if (res == null)
@@ -254,9 +262,10 @@ namespace MafiaCleanCity.Operational.Exceptions
             // NON DÉTERMINISTES (tirage dans le handler) : une capture de l'après d'un pot-de-vin doit le dire dans son nom.
 
             // ---- Error line (if present — producer text, chrome). ----
-            if (!string.IsNullOrEmpty(LastError))
+            // la phrase du refus (servie, sinon celle de l'écran), jamais `LastError` (garde de classe des refus)
+            if (!string.IsNullOrEmpty(PhraseDuRefus))
             {
-                TextMeshProUGUI errText = NewText("Error", body, LastError, 13, TextAlignmentOptions.Left);
+                TextMeshProUGUI errText = NewText("Error", body, PhraseDuRefus, 13, TextAlignmentOptions.Left);
                 errText.color = AccentSevere;
                 AddLayoutElement(errText.gameObject, minHeight: 18, flexibleHeight: 0);
                 // chrome — NOT tracked

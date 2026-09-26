@@ -14,6 +14,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   U1  le TEXTE servi du tutoriel, jamais son identifiant (D10-h close, back 4a922bc9 : `next_tutorial_id` EST la clé)
     //   U2  `next_tutorial_id` null ≠ « fini » : un éligible NON VU se montre (C10, 26/09) ; « tout vu » SEULEMENT si plus rien
     //       n'est éligible ; « rien de nouveau pour aujourd’hui » quand tous les éligibles sont vus
+    //   U4  ㉕ (§G, 26/09) : un tutoriel NOMMÉ (`tutorial.exception_card.*`) sans nom servi ne se lit pas — la tête seule, ni son
+    //       texte, ni « Compris », ni « rien de nouveau » ; avec le nom servi, le texte le porte
     //   U3  la bascule « On vous explique encore » dans le sens du JOUEUR, test de VALEUR sur les DEUX états : allumée ⇔ opt-out faux,
     //       et le toucher envoie l'opt-out inverse
     [Category("Tutoriel")]
@@ -68,20 +70,21 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("Rien de nouveau pour aujourd’hui.",
                 TutorialScreenController.PhraseSansSuivant(new[] { "tutorial.exception_card.onboarding_preseed" }),
                 "1ʳᵉ session avant la première décision, ou plafond d'un par session : rien de nouveau POUR AUJOURD’HUI");
-            // C10 (26/09) — le JOUEUR NEUF mesuré (corps/012, 072) : `next` null, UN éligible jamais vu. « Rien de nouveau » lui était
-            // faux à vie (le back ne choisit jamais cet id) : l'écran montre l'éligible non vu, par son TEXTE servi.
+            // C10 (26/09) — `next` null, UN éligible jamais vu : « Rien de nouveau » serait faux à vie. L'écran montre l'éligible non vu,
+            // par son TEXTE servi (un tutoriel NON nommé ; le preseed, nommé, est U4).
             const string preseed = "tutorial.exception_card.onboarding_preseed";
-            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, "Une carte vous attend : c’est ici que tout commence." } });
+            const string carte = "tutorial.city_map_heat_intro";
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { carte, "La carte montre la chaleur par îlot." } });
             TutorialScreenController e = Ecran(new TutorielData
             {
-                next_tutorial_id = "", eligible_tutorial_ids = new[] { preseed }, shown_tutorial_ids = new string[0],
+                next_tutorial_id = "", eligible_tutorial_ids = new[] { carte }, shown_tutorial_ids = new string[0],
             });
             string[] t = Textes(e);
             Assert.IsFalse(t.Contains("Vous avez tout vu."), "le joueur neuf ne lit pas « tout vu » avant d'avoir rien vu");
             Assert.IsFalse(t.Contains("Rien de nouveau pour aujourd’hui."), "C10 : ni « rien de nouveau » — un éligible l'attend");
-            CollectionAssert.Contains(t, "Une carte vous attend : c’est ici que tout commence.", "l'éligible non vu, par son texte servi");
+            CollectionAssert.Contains(t, "La carte montre la chaleur par îlot.", "l'éligible non vu, par son texte servi");
             CollectionAssert.Contains(t, "Une première leçon vous attend.", "table 63 v2 : le joueur neuf lit la tête de sa première leçon");
-            Assert.IsFalse(t.Any(x => x.Contains(preseed)), "jamais l'identifiant");
+            Assert.IsFalse(t.Any(x => x.Contains(carte)), "jamais l'identifiant");
             Assert.AreEqual(preseed, TutorialScreenController.PremierEligibleNonVu(new[] { preseed }, new string[0]));
 
             // tous les éligibles déjà vus (le plafond d'un par session) : alors seulement, « rien de nouveau pour aujourd’hui »
@@ -91,6 +94,38 @@ namespace MafiaCleanCity.CityMap.Tests
                 next_tutorial_id = "", eligible_tutorial_ids = new[] { preseed }, shown_tutorial_ids = new[] { preseed },
             }));
             CollectionAssert.Contains(vus, "Rien de nouveau pour aujourd’hui.");
+        }
+
+        [Test]
+        public void U4_UnTutorielNomme_SansNomServi_NeSeLitPas()
+        {
+            // la VALEUR servie mesurée (string_table.ts, fr) : un nom écrit dans le texte, qui n'est pas le lieutenant du joueur
+            const string preseed = "tutorial.exception_card.onboarding_preseed";
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                { preseed, "Lt. Hara — cuisson du soir bloquée : plus de solvant." },
+                { "tutorial.exception_card.gabarit_test", "{nom} — cuisson du soir bloquée." },
+            });
+            Assert.IsTrue(TutorialScreenController.EstNomme(preseed));
+            Assert.IsFalse(TutorialScreenController.EstNomme("tutorial.city_map_heat_intro"));
+            Assert.IsNull(TutorialScreenController.TexteDuTutoriel(preseed), "nommé, nom non servi : rien");
+            Assert.AreEqual("Lt. Vesk — cuisson du soir bloquée.",
+                TutorialScreenController.TexteDuTutoriel("tutorial.exception_card.gabarit_test", "Lt. Vesk"), "nom servi : le texte le porte");
+            // EXIGEANT (table 64) : nom servi, mais la valeur servie écrit « Lt. Hara » en dur ⇒ le repli nommé de la 64
+            Assert.AreEqual("Lt. Vesk \u2014 cuisson du soir bloquée\u00A0: plus de solvant. Commander maintenant (coût) ou attendre demain (rendement).",
+                TutorialScreenController.TexteDuTutoriel(preseed, "Lt. Vesk"), "valeur sans {nom} ⇒ repli de la 64 avec le vrai nom");
+
+            foreach (string next in new[] { "", preseed })   // l'éligible (C10) ET le `next` servi : même règle
+            {
+                string[] t = Textes(Ecran(new TutorielData
+                {
+                    next_tutorial_id = next, eligible_tutorial_ids = new[] { preseed }, shown_tutorial_ids = new string[0],
+                }));
+                Assert.IsFalse(t.Any(x => x.Contains("Hara")), $"next « {next} » : rien de nommé — " + string.Join(" | ", t));
+                CollectionAssert.Contains(t, "Une première leçon vous attend.", "une leçon attend : la tête le dit");
+                Assert.IsFalse(t.Contains("Rien de nouveau pour aujourd’hui.") || t.Contains("Vous avez tout vu."), "ni fini ni rien de nouveau");
+                Assert.IsFalse(t.Contains("Compris"), "on ne marque pas vu ce qu'on n'a pas montré");
+            }
         }
 
         [Test]

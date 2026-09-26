@@ -57,13 +57,32 @@ namespace MafiaCleanCity.Onboarding
 
 
         /// <summary>Le TEXTE servi d'un tutoriel : `next_tutorial_id` EST sa clé (`tutorial.queue_runs_dry`). Jamais l'identifiant ;
-        /// une clé non servie (ou un id vide) rend « — ».</summary>
-        public static string TexteDuTutoriel(string id)
+        /// une clé non servie (ou un id vide) rend « — ».
+        /// ㉕ (§G de la passe UX, 26/09 ; f2) : un texte NOMMÉ (`EstNomme`) sans nom servi rend NULL — rien de nommé à l'écran.</summary>
+        public static string TexteDuTutoriel(string id, string nomServi = null)
         {
             if (string.IsNullOrWhiteSpace(id)) return "—";
-            string t = MafiaCleanCity.I18n.Libelle.Gabarit(id.Trim(), null);
+            if (EstNomme(id) && string.IsNullOrWhiteSpace(nomServi)) return null;
+            string t = EstNomme(id)
+                // EXIGEANT (f2 26/09, table 64) : une valeur servie sans {nom} compte comme NON servie ⇒ le repli nommé de la 64
+                ? MafiaCleanCity.I18n.Libelle.GabaritExigeant(id.Trim(), id.Trim() == ClePreseed ? RepliPreseed : null,
+                    new System.Collections.Generic.Dictionary<string, string> { { "nom", nomServi } }, "nom")
+                : MafiaCleanCity.I18n.Libelle.Gabarit(id.Trim(), null);
             return string.IsNullOrWhiteSpace(t) ? "—" : t;
         }
+
+        /// <summary>㉕ (§G de la passe UX, 26/09) — l'espace des tutoriels LIÉS À UNE CARTE d'exception : leur texte parle du lieutenant
+        /// de la carte. Mesuré : `tutorial.exception_card.onboarding_preseed` est servi « Lt. Hara — cuisson du soir bloquée… », un nom
+        /// ÉCRIT DANS LA VALEUR, qui n'est pas le lieutenant du joueur. Le back passera `{nom}` (f2) ; tant que le paramètre n'est pas
+        /// servi, le client n'affiche RIEN de nommé. TD-761 : brancher le nom servi dès que le tutoriel le porte (champ encore inconnu).</summary>
+        public const string EspaceNomme = "tutorial.exception_card.";
+        public const string ClePreseed = "tutorial.exception_card.onboarding_preseed";
+        /// <summary>Le repli nommé de la table 64, à l'octet.</summary>
+        public const string RepliPreseed =
+            "{nom} \u2014 cuisson du soir bloquée\u00A0: plus de solvant. Commander maintenant (coût) ou attendre demain (rendement).";
+
+        public static bool EstNomme(string id) =>
+            !string.IsNullOrWhiteSpace(id) && id.Trim().StartsWith(EspaceNomme, System.StringComparison.Ordinal);
 
         /// <summary>Ce que dit l'écran quand il n'a RIEN à montrer (ni `next_tutorial_id`, ni éligible non vu — C10) : « tout vu »
         /// SEULEMENT si plus rien n'est éligible ; sinon « rien de nouveau pour aujourd’hui » (atelier 33 §4, mot proposé).</summary>
@@ -213,13 +232,29 @@ namespace MafiaCleanCity.Onboarding
             }
 
             string suivant = Etat.next_tutorial_id;
+            // ㉕ : un tutoriel NOMMÉ sans nom servi ne se montre pas (rien de nommé) — mais il ATTEND : ce n'est ni « tout vu » ni
+            // « rien de nouveau ».
+            bool nommeEnAttente = false;
+            if (!string.IsNullOrEmpty(suivant) && TexteDuTutoriel(suivant) == null) { nommeEnAttente = true; suivant = null; }
             if (string.IsNullOrEmpty(suivant))
             {
                 // C10 — `next` null n'épuise pas l'éligible : un tutoriel éligible, pas encore vu, et dont le texte est SERVI, se montre.
                 string eligible = PremierEligibleNonVu(Etat.eligible_tutorial_ids, Etat.shown_tutorial_ids);
-                if (eligible != null && TexteDuTutoriel(eligible) != "—") suivant = eligible;
+                string texteEligible = eligible != null ? TexteDuTutoriel(eligible) : "—";
+                if (texteEligible == null) nommeEnAttente = true;
+                else if (texteEligible != "—") suivant = eligible;
             }
-            if (string.IsNullOrEmpty(suivant))
+            if (string.IsNullOrEmpty(suivant) && nommeEnAttente)
+            {
+                // ㉕ : la tête seule — une leçon attend, on ne la lit pas encore (son texte nomme un lieutenant qui n'est pas le vôtre).
+                // Pas de « Compris » : on ne marque pas vu ce qu'on n'a pas montré.
+                Texte(corps, "Titre2",
+                      PremiereLecon(Etat)
+                          ? MafiaCleanCity.I18n.Libelle.Gabarit("tutoriel.vide.une_premiere_lecon_vous_attend", "Une première leçon vous attend.")
+                          : Lib("À découvrir"),
+                      Px(13f), Creme, DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center).enableWordWrapping = true;
+            }
+            else if (string.IsNullOrEmpty(suivant))
             {
                 Texte(corps, "Fini", PhraseSansSuivant(Etat.eligible_tutorial_ids), Px(13f), Creme,
                       DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center).enableWordWrapping = true;

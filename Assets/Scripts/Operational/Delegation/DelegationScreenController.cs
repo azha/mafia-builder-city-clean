@@ -701,7 +701,7 @@ namespace MafiaCleanCity.Operational
             string parRaison = PhraseDeRaison(refus.raison);
             if (parRaison != null) return parRaison;
             string repli = Lib("Rien n’a été changé.");
-            return string.IsNullOrEmpty(refus.cle) ? repli : MafiaCleanCity.I18n.Libelle.Gabarit(refus.cle, repli);
+            return string.IsNullOrEmpty(refus.cle) ? repli : MafiaCleanCity.I18n.Libelle.Gabarit(refus.cle, repli, refus.variables);
         }
 
         /// <summary>La raison SERVIE d'un 409 de la délégation → son mot (table 44, `delegation.refus.*`, servis). Raison absente ou

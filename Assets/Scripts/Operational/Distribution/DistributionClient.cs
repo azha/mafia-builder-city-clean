@@ -29,6 +29,7 @@ namespace MafiaCleanCity.Operational
                 req.timeout = TimeoutSeconds;
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
                 if (req.result == UnityWebRequest.Result.Success)
                 {
                     GetOperationalCouriersResponseDto dto =
@@ -51,6 +52,7 @@ namespace MafiaCleanCity.Operational
                 req.timeout = TimeoutSeconds;
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
                 if (req.result == UnityWebRequest.Result.Success)
                 {
                     GetOperationalDistributionProjectionResponseDto dto =
@@ -62,6 +64,10 @@ namespace MafiaCleanCity.Operational
                                    $"GET /v1/operational/distribution/projection a échoué ({req.responseCode}) {req.error}");
             }
         }
+        /// <summary>Table 67 (26/09) — la phrase SERVIE du dernier refus (clé + payload_vars résolues ; R6, R7, R16… à l'envoi), posée après
+        /// CHAQUE requête (garde de classe des refus) : null sur un 2xx ou sans clé servie.</summary>
+        public string DernierePhraseDeRefus { get; private set; }
+
         /// <summary>`POST /v1/operational/distribution/dispatch` — corps mesuré (422 successifs,
         /// 2026-09-03) : `{from_building_id, to_building_id, cargo_grams}`. Réponse de succès
         /// JAMAIS atteinte sur le compte de démo (stock source à zéro — voir
@@ -82,6 +88,7 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 req.timeout = TimeoutSeconds;
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
                 if (req.result == UnityWebRequest.Result.Success)
                 {
                     PostOperationalDistributionDispatchResponseDto dto =
@@ -116,6 +123,7 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 req.timeout = TimeoutSeconds;
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
                 if (req.result == UnityWebRequest.Result.Success)
                 {
                     PostOperationalVehiclesPurchaseResponseDto dto =

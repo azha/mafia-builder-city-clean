@@ -421,6 +421,7 @@ namespace MafiaCleanCity.Operational
                 DesignTokens.Current.hudSerifFont);
 
             string dessous = quartier ?? "";
+            fraicheur = FraicheurEnMots(fraicheur);
             if (!string.IsNullOrEmpty(fraicheur))
                 dessous = string.IsNullOrEmpty(dessous) ? fraicheur : dessous + " · " + fraicheur;
             NouveauTexte(go.transform, "Cle", dessous, Px(7f), TexteFaible,
@@ -488,6 +489,20 @@ namespace MafiaCleanCity.Operational
                 case "lingering": return Lib("ÇA TRAÎNE");
                 case "permanent": return Lib("ÇA NE PARTIRA PAS");
                 default: return string.IsNullOrEmpty(bande) ? Lib("PHASE INCONNUE") : bande;
+            }
+        }
+
+        /// <summary>㊳ (§G de la passe UX, 26/09) : la fraîcheur servie (`recency_band`) en MOTS — table 49 (`journal.fraicheur.*`),
+        /// repli à l'octet. « fresh » brut était montré au joueur (la note de la 49 le gardait exprès : décision close).
+        /// Une bande inconnue ne s'écrit PAS : jamais l'identifiant à l'écran.</summary>
+        public static string FraicheurEnMots(string bande)
+        {
+            switch (bande)
+            {
+                case "fresh":    return MafiaCleanCity.I18n.Libelle.Gabarit("journal.fraicheur.fresh", "ce matin");
+                case "settling": return MafiaCleanCity.I18n.Libelle.Gabarit("journal.fraicheur.settling", "hier");
+                case "fading":   return MafiaCleanCity.I18n.Libelle.Gabarit("journal.fraicheur.fading", "la semaine passée");
+                default: return null;
             }
         }
 

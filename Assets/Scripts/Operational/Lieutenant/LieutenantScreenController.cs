@@ -520,9 +520,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }
             else
             {
-                // Surface the readable error message (F2) — the raw code is kept on the log line only.
+                // F2 : le code et le message technique restent sur la ligne de log ; garde de classe des refus : la phrase SERVIE, sinon celle de l'écran — jamais le message d'onErr
                 Debug.LogError($"[Lieutenant] recruit failed ({errCode}): {errMsg}");
-                SetOutcome(errMsg ?? Lib("Échec du recrutement."), AccentSevere);
+                SetOutcome(client.DernierePhraseDeRefus ?? Lib("Échec du recrutement."), AccentSevere);
             }
         }
 
@@ -551,7 +551,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 {
                     // F2: surface the readable error — the raw code is kept on the log line only.
                     Debug.LogError($"[Lieutenant] status failed ({code}): {msg}");
-                    SetOutcome(Lib("Échec de l'état — ") + msg, AccentSevere);
+                    // garde de classe des refus : la phrase SERVIE, sinon celle de l'écran — jamais le message d'onErr
+                    SetOutcome(client.DernierePhraseDeRefus ?? Lib("Échec de l'état."), AccentSevere);
                 });
 
             // The GET is a network round-trip; bail before touching UI if torn down by an inter-fixture teardown.
@@ -623,7 +624,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 {
                     // F2: surface the readable error — the raw code is kept on the log line only.
                     Debug.LogError($"[Lieutenant] roster failed ({code}): {msg}");
-                    SetOutcome(Lib("Échec du chargement de la famille — ") + msg, AccentSevere);
+                    // garde de classe des refus : la phrase SERVIE, sinon celle de l'écran — jamais le message d'onErr
+                    SetOutcome(client.DernierePhraseDeRefus ?? Lib("Échec du chargement de la famille."), AccentSevere);
                 });
         }
 
@@ -733,9 +735,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
             }
             else
             {
-                // Surface the readable error message (F2) — the raw code is kept on the log line only.
+                // F2 : le code et le message technique restent sur la ligne de log ; garde de classe des refus : la phrase SERVIE, sinon celle de l'écran — jamais le message d'onErr
                 Debug.LogError($"[Lieutenant] reassign failed ({errCode}): {errMsg}");
-                SetOutcome(errMsg ?? Lib("Échec de la réaffectation."), AccentSevere);
+                SetOutcome(client.DernierePhraseDeRefus ?? Lib("Échec de la réaffectation."), AccentSevere);
             }
         }
 
@@ -840,7 +842,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 {
                     if (Destroyed) return;
                     Debug.LogError($"[Lieutenant] validate rejected ({code}): {msg}");
-                    RenderDiagnostics(details, msg);
+                    RenderDiagnostics(details, client.DernierePhraseDeRefus);   // garde de classe des refus : la phrase SERVIE, sinon celle de l'écran — jamais le message d'onErr
                 });
         }
 
@@ -867,7 +869,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 {
                     if (Destroyed) return;
                     Debug.LogError($"[Lieutenant] attach rejected ({code}): {msg}");
-                    RenderDiagnostics(details, msg);
+                    RenderDiagnostics(details, client.DernierePhraseDeRefus);   // garde de classe des refus : la phrase SERVIE, sinon celle de l'écran — jamais le message d'onErr
                 });
 
             // The POST is a network round-trip; bail before any further UI/coroutine if torn down by a teardown.
@@ -892,9 +894,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             // Header line — the readable error message (F2). The diagnostics-area header is band-safe (a sentence, no
             // raw scalar) so it stays in the scan corpus; the per-diagnostic lines carry the player's own DSL spans.
-            // Table 66 (atelier, 2026-09-26) : l'en-tête du refus est la phrase de l'atelier, TOUJOURS — le message global du serveur
-            // (`message`) est de l'anglais générique ; le détail passe par les diagnostics ci-dessous. Décidé (reco, 26/09).
-            string header = MafiaCleanCity.I18n.Libelle.De("lieutenant", "editeur", "Ces règles ne passent pas.");
+            // Fusion du 26/09 (ux/refus de CLIENT-2) : la version des refus l'emporte sur celle de b7d499f2 — `message` est désormais la
+            // phrase SERVIE du refus (plus l'anglais générique qui justifiait de l'ignorer) ; repli : la clé de la table 66.
+            // garde de classe des refus : `message` est la phrase SERVIE du refus (ou null), jamais le message d'onErr
+            // table 70 → la clé de l'en-tête du refus de la 66, réutilisée (pas de clé neuve)
+            string header = string.IsNullOrEmpty(message)
+                ? MafiaCleanCity.I18n.Libelle.Gabarit("lieutenant.editeur.ces_regles_ne_passent_pas", "Ces règles ne passent pas.")
+                : message;
             SetOutcome(header, AccentSevere);
 
             int n = LastDiagnostics.Length;
@@ -3185,7 +3191,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 // Pass a band-safe outcome label through SetOutcome (→ renderedTexts) so the scan corpus stays digit-free;
                 // the raw error stays in LastDecisionError ONLY (not tracked into the band corpus).
                 SetOutcome(Lib("Échec de la décision."), AccentSevere);
-                if (decisionErrorText != null) decisionErrorText.text = LastDecisionError ?? "";
+                // garde de classe des refus : la phrase SERVIE, sinon celle de l'écran — jamais le message d'onErr
+                if (decisionErrorText != null) decisionErrorText.text = autonomyClient.DernierePhraseDeRefus ?? "";
                 yield break;
             }
             if (decisionErrorText != null) decisionErrorText.text = "";
@@ -3340,9 +3347,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (!ok)
             {
                 DerniereClasseDeRefus = ClasserRefus(code, msg);
-                if (code == 422) RenderDiagnostics(diags, msg);   // la règle ne compile pas : les diagnostics de l'éditeur
+                // garde de classe des refus : la phrase SERVIE, sinon celle de l'écran — jamais le message d'onErr
+                if (code == 422) RenderDiagnostics(diags, client.DernierePhraseDeRefus);   // la règle ne compile pas : les diagnostics de l'éditeur
                 else SetOutcome(MotDuRefus(DerniereClasseDeRefus), AccentSevere);
-                if (decisionsRefusText != null) decisionsRefusText.text = msg ?? "";
+                if (decisionsRefusText != null) decisionsRefusText.text = client.DernierePhraseDeRefus ?? "";
                 yield break;
             }
             DerniereClasseDeRefus = null;
@@ -3426,7 +3434,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
             {
                 DerniereClasseDeRefus = ClasserRefus(code, msg);
                 SetOutcome(MotDuRefus(DerniereClasseDeRefus), AccentSevere);
-                if (decisionsRefusText != null) decisionsRefusText.text = msg ?? "";   // chrome : le motif serveur, jamais dans le corpus
+                // garde de classe des refus : la phrase SERVIE, sinon celle de l'écran — jamais le message d'onErr (chrome : jamais dans le corpus)
+                if (decisionsRefusText != null) decisionsRefusText.text = client.DernierePhraseDeRefus ?? "";
                 yield break;
             }
             DerniereClasseDeRefus = null;

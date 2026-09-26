@@ -10,6 +10,7 @@ namespace MafiaCleanCity.CityMap.Tests
     // (district/:id/stash) se nomme par l'enseigne que `me/buildings` sert pour son bâtiment. Hors réseau.
     //   V1  l'enseigne servie du bâtiment de la planque ; bâtiment ou enseigne absents ⇒ null (on n'en invente pas)
     //   V2  le mot de la table 63 porte l'enseigne en paramètre (repli à l'octet)
+    //   V3  ㊵ (§G, 26/09) : un SEUL maillon manquant ne porte pas de numéro (« MAILLON MANQUANT 2 » seul) ; plusieurs, si
     [Category("PlanqueVide")]
     public class PlanqueVidePlayModeTests
     {
@@ -37,6 +38,14 @@ namespace MafiaCleanCity.CityMap.Tests
             string t = Libelle.Gabarit("filiere.vide.votre_planque_enseigne_est_vide", "Votre planque, {enseigne}, est vide.",
                 new Dictionary<string, string> { { "enseigne", "Dépôt Oster" } });
             Assert.AreEqual("Votre planque, Dépôt Oster, est vide.", t);
+        }
+
+        [Test]
+        public void V3_UnSeulMaillonManquant_SansNumero()
+        {
+            I18nCatalog.Oublier();
+            Assert.AreEqual("MAILLON MANQUANT", FiliereScreenController.EtiquetteDeRang("2", 1), "planque servie : un seul manquant");
+            Assert.AreEqual("MAILLON MANQUANT   2", FiliereScreenController.EtiquetteDeRang("2", 2), "sans planque : deux, numérotés");
         }
     }
 }

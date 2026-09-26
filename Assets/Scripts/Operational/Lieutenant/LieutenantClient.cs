@@ -29,6 +29,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
     // diagnostics (T3); it never re-implements parse/compile (the backend is authoritative).
     public class LieutenantClient
     {
+        /// <summary>Garde de classe des refus (f2 2026-09-26) — la phrase SERVIE du DERNIER refus de ce client (clé + payload_vars
+        /// résolues, `RefusServi`), posée après CHAQUE requête : null sur un 2xx, ou quand le corps ne porte pas de clé servie.
+        /// ⛔ C'est la SEULE phrase de refus qu'un écran montre au joueur (sinon la sienne) ; le `message` d'onErr est TECHNIQUE.</summary>
+        public string DernierePhraseDeRefus { get; private set; }
+
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
@@ -74,6 +79,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString()); // UUID v4 — backend mandate
 
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
 
                 if (req.result == UnityWebRequest.Result.Success)
                 {
@@ -132,6 +138,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString()); // UUID v4 — backend mandate
 
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
 
                 if (req.result == UnityWebRequest.Result.Success)
                 {
@@ -164,6 +171,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 req.timeout = TimeoutSeconds;
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
 
                 if (req.result == UnityWebRequest.Result.Success)
                 {
@@ -243,6 +251,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
                 if (req.result == UnityWebRequest.Result.Success) onOk?.Invoke();
                 else onInvalid?.Invoke(req.responseCode, ParseDiagnostics(req), ReadableError(req));
             }
@@ -264,6 +273,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
                 if (req.result == UnityWebRequest.Result.Success) onOk?.Invoke();
                 else onErr?.Invoke(req.responseCode, ReadableError(req));
             }
@@ -292,6 +302,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 req.timeout = TimeoutSeconds;
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
 
                 if (req.result == UnityWebRequest.Result.Success)
                 {
@@ -359,6 +370,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString()); // UUID v4 — backend mandate
 
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
 
                 if (req.result == UnityWebRequest.Result.Success)
                 {
@@ -397,6 +409,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private static string ReadableError(UnityWebRequest req)
         {
             string text = req.downloadHandler != null ? req.downloadHandler.text : null;
+            // table 67 (26/09) : la phrase SERVIE du refus d'abord (clé + payload_vars résolues) ; le message de développeur n'est plus
+            // qu'un repli quand le bundle ne sert pas la clé.
+            string servie = MafiaCleanCity.I18n.RefusServi.Phrase(text);
+            if (servie != null) return servie;
             if (!string.IsNullOrEmpty(text))
             {
                 try

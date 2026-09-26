@@ -16,6 +16,11 @@ namespace MafiaCleanCity.Operational
     // POST /v1/me/engagements                {lieutenant_id, target_rival_key, target_holding_id?} ⇒ {engagement_id}
     public class ConflitClient
     {
+        /// <summary>Garde de classe des refus (f2 2026-09-26) — la phrase SERVIE du DERNIER refus de ce client (clé + payload_vars
+        /// résolues, `RefusServi`), posée après CHAQUE requête : null sur un 2xx, ou quand le corps ne porte pas de clé servie.
+        /// ⛔ C'est la SEULE phrase de refus qu'un écran montre au joueur (sinon la sienne) ; le `message` d'onErr est TECHNIQUE.</summary>
+        public string DernierePhraseDeRefus { get; private set; }
+
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
@@ -29,6 +34,7 @@ namespace MafiaCleanCity.Operational
                 req.timeout = TimeoutSeconds;
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
                 if (req.result == UnityWebRequest.Result.Success)
                 {
                     GetEngagementsResponseDto dto =
@@ -52,6 +58,7 @@ namespace MafiaCleanCity.Operational
                 req.timeout = TimeoutSeconds;
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
                 if (req.result == UnityWebRequest.Result.Success)
                 {
                     GetLieutenantsResponseDto dto =
@@ -112,6 +119,7 @@ namespace MafiaCleanCity.Operational
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 req.timeout = TimeoutSeconds;
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
                 if (req.result == UnityWebRequest.Result.Success)
                 {
                     PostEngagementsResponseDto dto =

@@ -8,7 +8,7 @@ using TMPro;
 
 namespace MafiaCleanCity.Economy.Shop
 {
-    // ㉓ LA VITRINE — le catalogue, le solde en jetons, l'achat, ce qu'on possède déjà.
+    // ㉓ LA VITRINE — le catalogue, le solde en Marks, l'achat, ce qu'on possède déjà.
     //
     // MATIÈRE — les 5 routes d'`iap.controller.ts`, 4 tirées ici, toutes sous `JwtAuthGuard` :
     // `iap/catalogue` · `me/iap/balance` · `me/iap/items/purchase` · `me/iap/entitlements`.
@@ -21,7 +21,7 @@ namespace MafiaCleanCity.Economy.Shop
     // toujours. Ce n'est pas un cas limite à cacher au fond d'un état vide — c'est l'état dans
     // lequel finit tout joueur qui ne paie pas.
     // ⇒ L'écran l'ÉCRIT, sous le solde, en une ligne. *Une vitrine qui laisse croire qu'on
-    // pourrait revenir demain avec plus de jetons ment sur l'économie qu'elle présente.*
+    // pourrait revenir demain avec plus de Marks ment sur l'économie qu'elle présente.*
     //
     // ⛔ ET LE SECOND MUR, MESURÉ : les MARKS_PACK et SUPPORT sont en argent réel et passent par
     // `iap/purchase/validate`, qui **ne peut créditer dans AUCUN environnement** — la production
@@ -31,12 +31,12 @@ namespace MafiaCleanCity.Economy.Shop
     // prendre : il fait porter l'échec au joueur.
     //
     // ⚠️ DEUX ASSUMÉS, contre la convention du lot 0, écrits plutôt que masqués :
-    // · `display_name` est servi en **littéral ANGLAIS** — le bundle i18n ne porte aucune clé
-    //   produit (67 messages, tous `error.*`). On affiche donc ce que le back sert, tel quel.
+    // · `display_name` est servi en **littéral ANGLAIS** — ㉓ (table 69) : le nom passe par `boutique.sku.<sku_id>`, et ce
+    //   littéral n'est plus que le repli compté tant que la clé n'est pas servie.
     // · les sous-titres descriptifs de la maquette **n'ont aucune source** ; il n'y en a pas ici.
     //
-    // ⚠️ `bonus_pct` compare le **ratio jetons/euro** au pack de base — l'étiquette dit donc
-    // « +N % de jetons par euro », jamais « +N % » collé au nombre de jetons : « 600 jetons +20 % »
+    // ⚠️ `bonus_pct` compare le **ratio Marks/euro** au pack de base — l'étiquette dit donc
+    // « +N % de Marks par euro », jamais « +N % » collé au nombre de Marks : « 600 Marks +20 % »
     // se lit « 720 », et c'est faux. Défaut relevé par le juge sur la maquette, corrigé ici aussi.
     //
     // ⚠️ MAQUETTE v6 « LA VITRINE » (cadres 48-50) NON RATIFIÉE par l'user au 2026-09-02 — cet
@@ -172,19 +172,11 @@ namespace MafiaCleanCity.Economy.Shop
                 UnityEngine.Object.Destroy(etageres.GetChild(i).gameObject);
 
             // ⚠️ -1 signifie « pas lu », 0 signifie « lu, et il est vide ». Les confondre ferait
-            // afficher « zéro jeton » à un joueur dont la route a simplement échoué.
-            // ⛔ UN SEUL DES DEUX PASSE PAR LA CLÉ, et le choix n'est pas cosmétique.
-            // · « — jetons » est un littéral STATIQUE : l'état « solde inconnu ». Il a sa clé.
-            // · `$"{Solde} jetons"` ASSEMBLE une valeur avec un mot. Le faire passer entier par
-            //   le catalogue exigerait un gabarit à trou (`{n} jetons`) que le dictionnaire ne
-            //   porte pas, et keyer le seul mot « jetons » fabriquerait une phrase que personne
-            //   n'a écrite — l'ordre des mots et l'accord ne sont pas les mêmes dans toutes les
-            //   langues.
-            // ★ C'est le même cas que la phrase ambiante de ⑨ (« Trois attendent vos ordres »),
-            //   qui a dû être demandée au back comme clé ICU plurielle plutôt que recomposée
-            //   côté client. Ici la clé n'existe pas encore : je laisse la composition VISIBLE
-            //   plutôt que d'en fabriquer une moitié.
-            soldeTexte.text = Solde < 0 ? Lib("— jetons") : $"{Solde} jetons";
+            // afficher « 0 Mark » à un joueur dont la route a simplement échoué.
+            // ㉓ (table 69, client 06a500d4, f2 2026-09-26) : la monnaie s'appelle « Marks » (canon). Le solde connu passe par le
+            // gabarit ICU `boutique.bloc.n_marks` ; « — Marks » garde la clé `boutique.bloc.jetons` (valeur changée, clé gardée).
+            //   Il clôt l'ancien arbitrage (« le gabarit à trou n'existe pas, je laisse la composition visible ») : il existe.
+            soldeTexte.text = Solde < 0 ? SoldeInconnu() : NMarks(Solde);
             soldeTexte.color = Solde == 0 ? Braise : Or;
 
             var possedes = new HashSet<string>(Possedes ?? new string[0]);
@@ -235,8 +227,10 @@ namespace MafiaCleanCity.Economy.Shop
             LayoutElement pl = pastille.AddComponent<LayoutElement>();
             pl.preferredWidth = Px(11f); pl.preferredHeight = Px(11f); pl.flexibleWidth = 0f;
 
-            // ⚠️ littéral ANGLAIS servi par le back — aucune clé i18n produit n'existe (assumé).
-            Texte(tete.transform, "Nom", string.IsNullOrEmpty(s.display_name) ? s.sku_id : s.display_name,
+            // ㉓ (table 69) : le nom se lit par la clé COMPOSÉE depuis l'id servi, `boutique.sku.<sku_id>`. Sans valeur servie, le
+            // repli (compté) est ce que le back sert — `display_name`, littéral anglais, sinon l'id : la phrase d'avant, jamais un nom
+            // que le client inventerait.
+            Texte(tete.transform, "Nom", NomDuSku(s),
                   Px(11.5f), Creme, DesignTokens.Current.hudSerifFont);
 
             GameObject espace = new GameObject("Espace", typeof(RectTransform));
@@ -246,9 +240,9 @@ namespace MafiaCleanCity.Economy.Shop
             if (possede)
                 Texte(tete.transform, "Possede", "ACQUIS", Px(7.5f), Or, DesignTokens.Current.primaryFont);
 
-            // le prix : en jetons, ou en argent réel — jamais les deux dans la même unité
+            // le prix : en Marks, ou en argent réel — jamais les deux dans la même unité
             if (s.price_marks > 0)
-                Texte(r.transform, "Prix", $"{s.price_marks} jetons", Px(9f),
+                Texte(r.transform, "Prix", NMarks(s.price_marks), Px(9f),
                       abordable || possede ? Creme : Eteint, DesignTokens.Current.primaryFont);
             else if (!string.IsNullOrEmpty(s.price_store_product_id))
                 Texte(r.transform, "Prix", "en boutique", Px(9f), Creme2, DesignTokens.Current.primaryFont);
@@ -256,12 +250,16 @@ namespace MafiaCleanCity.Economy.Shop
             // ce que le pack DONNE, écrit sur l'objet — le pack de soutien était le seul des cinq
             // à ne pas le dire (défaut du juge, corrigé dans la maquette et ici).
             if (s.marks_granted > 0)
-                Texte(r.transform, "Donne", $"donne {s.marks_granted} jetons", Px(7.5f), Creme2,
+                Texte(r.transform, "Donne", MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.donne_n_marks",
+                          "donne {n, plural, one {# Mark} other {# Marks}}", N(s.marks_granted)), Px(7.5f), Creme2,
                       DesignTokens.Current.primaryFont);
 
-            // ⚠️ `bonus_pct` porte sur le RATIO jetons/euro, pas sur le nombre de jetons.
+            // ⚠️ `bonus_pct` porte sur le RATIO Marks/euro, pas sur le nombre de Marks.
             if (s.bonus_pct > 0)
-                Texte(r.transform, "Bonus", $"+{s.bonus_pct} % de jetons par euro", Px(7.5f), Or,
+                Texte(r.transform, "Bonus", MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.bonus_de_marks_par_euro",
+                          "+{bonus}\u202f% de Marks par euro",
+                          new Dictionary<string, string> { { "bonus", s.bonus_pct.ToString(System.Globalization.CultureInfo.InvariantCulture) } }),
+                      Px(7.5f), Or,
                       DesignTokens.Current.primaryFont);
 
             Geste(r.transform, s, possede, argentReel, abordable);
@@ -285,7 +283,11 @@ namespace MafiaCleanCity.Economy.Shop
             else if (!abordable)
             {
                 libelle = "ACHETER";
-                raison = Solde == 0 ? "plus aucun jeton, et rien n'en redonne" : "pas assez de jetons";
+                // ㉓ (table 69) : les deux refus d'achat disent « Marks ».
+                raison = Solde == 0
+                    ? MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.plus_aucun_mark_et_rien_n_en_redonne",
+                                                          "plus aucun Mark, et rien n\u2019en redonne")
+                    : MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.pas_assez_de_marks", "pas assez de Marks");
                 teinte = Eteint;
             }
             else { libelle = "ACHETER"; raison = null; teinte = Or; }
@@ -356,7 +358,7 @@ namespace MafiaCleanCity.Economy.Shop
                                           DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             titre.characterSpacing = 18f;
 
-            // le comptoir : le solde en jetons, et ce que ça veut dire
+            // le comptoir : le solde en Marks, et ce que ça veut dire
             GameObject comptoir = Bloc("Comptoir", transform, false, Px(2f));
             var vc = comptoir.GetComponent<VerticalLayoutGroup>();
             vc.childAlignment = TextAnchor.MiddleCenter;
@@ -364,7 +366,7 @@ namespace MafiaCleanCity.Economy.Shop
             Image cf = comptoir.AddComponent<Image>();
             cf.sprite = ProceduralUI.RoundedRectOutline((int)Px(10f), Px(1f), OrLisere);
             cf.type = Image.Type.Sliced;
-            soldeTexte = Texte(comptoir.transform, "Solde", "— jetons", Px(14f), Or,
+            soldeTexte = Texte(comptoir.transform, "Solde", SoldeInconnu(), Px(14f), Or,
                                DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             terminalTexte = Texte(comptoir.transform, "Terminal",
                                   "le don de bienvenue ne se reçoit qu'une fois — rien ne recrédite en jouant",
@@ -487,11 +489,30 @@ namespace MafiaCleanCity.Economy.Shop
 
         /// <summary>Item 0.6 — les littéraux STATIQUES passent par `boutique.bloc.<slug>`, repli
         /// sur le littéral.
-        /// ⚠️ N'Y PASSE PAS la composition `$"{Solde} jetons"` : voir le commentaire au site
-        /// d'appel. Une chaîne assemblée avec une valeur demande un gabarit ICU côté serveur,
-        /// pas une clé côté client.</summary>
+        /// ⚠️ Jamais une chaîne assemblée avec une valeur : celle-là passe par un gabarit ICU à clé
+        /// explicite (`NMarks`, table 69).</summary>
         private static string Lib(string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("boutique", "bloc", litteral);
+
+        /// <summary>㉓ (table 69) : « — Marks », le solde INCONNU. Valeur changée, clé gardée : `boutique.bloc.jetons` (le slug de
+        /// l'ancien littéral) — d'où `Gabarit` et non `Lib`, qui ferait suivre la clé au mot.</summary>
+        private static string SoldeInconnu() =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.jetons", "— Marks");
+
+        /// <summary>㉓ (table 69) : un nombre de Marks — le solde connu et le prix. Gabarit ICU pluriel, jamais « {n} » collé à un mot.</summary>
+        private static string NMarks(int n) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.n_marks", "{n, plural, one {# Mark} other {# Marks}}", N(n));
+
+        private static Dictionary<string, string> N(int n) =>
+            new Dictionary<string, string> { { "n", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } };
+
+        /// <summary>㉓ (table 69) : le nom d'un article, par `boutique.sku.<sku_id>` (clé composée depuis l'id SERVI, telle quelle) ;
+        /// repli compté sur ce que le back sert.</summary>
+        private static string NomDuSku(SkuDto s)
+        {
+            string servi = string.IsNullOrEmpty(s.display_name) ? s.sku_id : s.display_name;
+            return string.IsNullOrEmpty(s.sku_id) ? servi : MafiaCleanCity.I18n.Libelle.Gabarit("boutique.sku." + s.sku_id, servi);
+        }
 
     }
 }

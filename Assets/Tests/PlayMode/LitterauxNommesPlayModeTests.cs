@@ -67,7 +67,7 @@ namespace MafiaCleanCity.CityMap.Tests
             { "LoiScreenController.cs", 4 },
             { "RuleModel.cs", 2 },
             { "SellingScreenController.cs", 5 },   // 6 → 5 le 2026-09-26 (1d0937fc : l'état vide de ㉟ passe par Libelle, table 62)
-            { "ShopScreenController.cs", 2 },
+            { "ShopScreenController.cs", 1 },   // 2 → 1 le 2026-09-26 (㉓, table 69 : les deux refus d'achat passent par Libelle)
             { "TopBarController.cs", 1 },
             { "TutorialScreenController.cs", 1 },
         };

@@ -37,6 +37,11 @@ namespace MafiaCleanCity.Operational
             public long statut;
             public string code;
             public string message;
+            /// <summary>Table 67 (26/09) — la phrase SERVIE du refus (clé + payload_vars résolues) ; null sans clé servie. C'est elle
+            /// que le joueur lit ; `message` (développeur) n'est qu'un repli.</summary>
+            public string phrase;
+            /// <summary>Ce qui s'affiche : la phrase servie, sinon le message.</summary>
+            public string AAfficher => phrase ?? message;
             public bool EstMetier => !string.IsNullOrEmpty(code);
         }
 
@@ -215,6 +220,7 @@ namespace MafiaCleanCity.Operational
                 statut = req.responseCode,
                 code = err != null ? err.code : null,
                 message = err != null && !string.IsNullOrEmpty(err.message) ? err.message : $"{req.url} — {req.error}",
+                phrase = MafiaCleanCity.I18n.RefusServi.Phrase(texte),
             };
         }
 

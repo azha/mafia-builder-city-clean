@@ -288,8 +288,9 @@ namespace MafiaCleanCity.Operational.Selling
         {
             if (string.IsNullOrEmpty(dealerId) || string.IsNullOrEmpty(SafehouseId) || string.IsNullOrEmpty(token))
             {
-                DerniereErreur = "Aucune planque n'est disponible pour cette collecte.";
-                if (actionTexte != null) actionTexte.text = DerniereErreur;
+                string sansPlanque = "Aucune planque n'est disponible pour cette collecte.";
+                DerniereErreur = sansPlanque;
+                if (actionTexte != null) actionTexte.text = sansPlanque;
                 yield break;
             }
 
@@ -301,10 +302,13 @@ namespace MafiaCleanCity.Operational.Selling
 
             if (resultat == null)
             {
-                DerniereErreur = code == 409
-                    ? "Cette caisse est vide ou la planque est pleine."
-                    : "La collecte n'a pas abouti.";
-                if (actionTexte != null) actionTexte.text = DerniereErreur;
+                // table 67 (26/09) : la phrase SERVIE du refus d'abord ; les phrases fixes par code ne sont plus qu'un repli
+                // garde de classe des refus : la phrase montrée est écrite dans une LOCALE — `DerniereErreur` porte aussi le
+                // message technique de `ListDealers`, et un texte joueur ne le lit jamais
+                string phrase = client.DernierePhraseDeRefus
+                    ?? (code == 409 ? "Cette caisse est vide ou la planque est pleine." : "La collecte n'a pas abouti.");
+                DerniereErreur = phrase;
+                if (actionTexte != null) actionTexte.text = phrase;
                 yield break;
             }
 
