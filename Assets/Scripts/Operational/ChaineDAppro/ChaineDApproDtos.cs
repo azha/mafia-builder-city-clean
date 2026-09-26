@@ -69,6 +69,11 @@ namespace MafiaCleanCity.Operational
     [Serializable]
     public class SupplyChainNodeDto
     {
+        // Lus depuis la passe UX du 2026-09-26 (état vide de ㉚, table 63) — forme SERVIE, `supply-chain.controller.ts:128-132` @5e792a3c.
+        public string building_id;
+        public string bucket;                 // silent | mild | warm | critical (BackpressureBucket)
+        public bool has_arrow;
+        public string arrow_to_building_id;
     }
 
     /// <summary>Un tronçon de la chaîne — mesuré (2026-09-03) : `leg_id`, `origin_building_id`,
