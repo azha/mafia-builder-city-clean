@@ -82,6 +82,10 @@ namespace MafiaCleanCity.Operational.Tests
             "politique.evenement.e_pol_10",
             "politique.evenement.e_pol_11",
             "politique.evenement.e_pol_12",
+            // ⚠️ RALLONGÉE le 2026-09-26 — états vides de la passe UX (CLIENT-2), mots de l'atelier table 63 (client 8979d626), PROPOSÉS,
+            // non servis @5e792a3c. Retirées par la règle (2) dès qu'elles sont servies.
+            "police.vide.le_commissariat_n_a_encore_rien_sur_vous",
+            "police.vide.tant_que_vous_ne_faites_pas_de_bruit_ca_peut_durer",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

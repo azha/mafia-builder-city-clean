@@ -38,9 +38,13 @@ namespace MafiaCleanCity.CitySim.Precinct
         private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
         private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         [Header("Cible")]
-        [Tooltip("⛔ La correspondance district→precinct n'a AUCUNE source serveur (S12-e). " +
-                 "Cet écran ne la calcule pas : il reçoit l'identifiant.")]
-        [SerializeField] private string precinctId = "1";
+        // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26, table 63 de l'atelier) : ce champ valait « 1 » EN DUR, et le shell monte l'écran par
+        // `AddComponent` sans le poser — tout joueur lisait le commissariat 1, quel que soit son quartier (le joueur neuf mesuré est
+        // au 6). La correspondance EST servie désormais : `world/districts` porte `precinct_id` par district (déjà lu par ③,
+        // `CityMapController`). Vide ⇒ l'écran la RÉSOUT : le district du premier bâtiment du joueur (`me/buildings`), puis son
+        // `precinct_id` servi. Un appelant (test, carte) peut encore la poser.
+        [SerializeField] private string precinctId = "";
+        public string PrecinctId { get => precinctId; set => precinctId = value; }
 
         public CroyanceData Croyance { get; private set; }
         public PatrouilleData Patrouille { get; private set; }
@@ -140,11 +144,33 @@ namespace MafiaCleanCity.CitySim.Precinct
 
         private IEnumerator Charger(string bearer)
         {
+            if (string.IsNullOrEmpty(precinctId)) yield return ResoudreLeCommissariat(bearer);
+            if (string.IsNullOrEmpty(precinctId))
+            {
+                // pas de quartier à soi (aucun bâtiment), ou les routes muettes : on ne lit PAS un commissariat au hasard
+                DerniereErreur = DerniereErreur ?? "commissariat non résolu";
+                Rendre();
+                yield break;
+            }
             yield return client.LireCroyance(precinctId, bearer, c => Croyance = c,
                                              (c, m) => DerniereErreur = c == 404 ? null : $"croyance {c}: {m}");
             yield return client.LirePatrouille(precinctId, bearer, p => Patrouille = p,
                                                (c, m) => DerniereErreur = c == 404 ? null : $"patrouille {c}: {m}");
             Rendre();
+        }
+
+        /// <summary>Le commissariat du JOUEUR : le district de son premier bâtiment servi, puis le `precinct_id` que `world/districts`
+        /// sert pour ce district. Rien de calculé côté client.</summary>
+        private IEnumerator ResoudreLeCommissariat(string bearer)
+        {
+            BatimentPossedeDto[] possedes = null;
+            yield return new MesBatimentsClient { BaseUrl = baseUrl }.Lire(bearer, b => possedes = b, (c, m) => DerniereErreur = $"me/buildings {c}: {m}");
+            int quartier = PrecinctDuJoueur.QuartierDuJoueur(possedes);
+            if (quartier <= 0) yield break;
+            System.Collections.Generic.List<MafiaCleanCity.CityMap.DistrictDto> districts = null;
+            yield return new MafiaCleanCity.CityMap.WorldApiClient { BaseUrl = baseUrl }.GetDistricts(d => districts = d, e => DerniereErreur = e);
+            int precinct = PrecinctDuJoueur.PrecinctServi(districts, quartier);
+            if (precinct > 0) precinctId = precinct.ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
 
         private void Rendre()
@@ -157,8 +183,11 @@ namespace MafiaCleanCity.CitySim.Precinct
             if (videIllustration != null) videIllustration.gameObject.SetActive(EtatVide);
             if (EtatVide)
             {
+                // table 63 : QUAND la mémoire du commissariat du quartier sur le joueur est vide (les deux lectures 404)
                 videTexte.text = DerniereErreur == null
-                    ? "Ce commissariat n'a encore rien retenu de vous."
+                    ? MafiaCleanCity.I18n.Libelle.Gabarit("police.vide.le_commissariat_n_a_encore_rien_sur_vous", "Le commissariat n’a encore rien sur vous.")
+                      + "\n" + MafiaCleanCity.I18n.Libelle.Gabarit("police.vide.tant_que_vous_ne_faites_pas_de_bruit_ca_peut_durer",
+                                                                  "Tant que vous ne faites pas de bruit, ça peut durer.")
                     : "Le commissariat n'a pas répondu.";
                 RendusEffectues++;
                 return;
@@ -326,6 +355,26 @@ namespace MafiaCleanCity.CitySim.Precinct
             le.preferredWidth = 0f;
             le.flexibleWidth = 1f;
             return t;
+        }
+    }
+
+    /// <summary>⑰ — le commissariat du joueur, depuis les données SERVIES. Pur, testé hors réseau.</summary>
+    public static class PrecinctDuJoueur
+    {
+        /// <summary>Le district du premier bâtiment servi ; -1 sans bâtiment.</summary>
+        public static int QuartierDuJoueur(BatimentPossedeDto[] possedes)
+        {
+            if (possedes == null) return -1;
+            foreach (BatimentPossedeDto b in possedes) if (b != null && b.district_id > 0) return b.district_id;
+            return -1;
+        }
+
+        /// <summary>Le `precinct_id` que `world/districts` sert pour ce district ; -1 s'il n'y est pas.</summary>
+        public static int PrecinctServi(System.Collections.Generic.List<MafiaCleanCity.CityMap.DistrictDto> districts, int districtId)
+        {
+            if (districts == null) return -1;
+            foreach (MafiaCleanCity.CityMap.DistrictDto d in districts) if (d != null && d.id == districtId && d.precinct_id > 0) return d.precinct_id;
+            return -1;
         }
     }
 }
