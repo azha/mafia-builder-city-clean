@@ -583,6 +583,10 @@ namespace MafiaCleanCity.Shell
             MafiaCleanCity.Operational.Exceptions.ExceptionCardDto premiere =
                 LastSessionOpen != null && LastSessionOpen.queue != null && LastSessionOpen.queue.Length > 0
                     ? LastSessionOpen.queue[0] : null;
+            // ④ (26/09, planche c4889d71) : « Lt. Wend attend vos ordres » s'affichait DEUX fois — au bandeau et sur la ligne de file.
+            // La maquette (cadres 1 et 4) ne l'a qu'au-dessus du dock : quand la ligne de l'Accueil porte la carte, le bandeau ne
+            // l'annonce pas (ni ne la marque dite — hors de l'Accueil, elle s'annoncera). Descente, ville et rapport parlent toujours.
+            if (premiere != null && LaLigneDeFileEstALEcran()) premiere = null;
             // La première annonce PAS ENCORE DITE, jamais moins prioritaire que celle à l'écran (`Suivante`) : une carte
             // déjà annoncée ne masque plus le rapport qui vient derrière elle.
             AnnonceDuBandeau a = AnnonceDuBandeau.Suivante(
@@ -593,6 +597,11 @@ namespace MafiaCleanCity.Shell
             else if (a != null && a.Quoi == AnnonceDuBandeau.Etat.Rapport) geste = OuvrirLesRapportsDepuisLeBandeau;
             return TopBar.Bandeau.Annoncer(a, geste);
         }
+
+        /// <summary>La ligne de file de l'Accueil est montée et porte au moins une carte (elle dit déjà « {nom} attend vos ordres »).</summary>
+        public bool LaLigneDeFileEstALEcran() =>
+            ContentSlot != null && ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false)
+                .Any(p => p.LigneDeLAccueil && p.RenderedCardCount > 0);
 
         // ①-3 (lot F) — le 1ᵉʳ rapport ouvert de la session : son lieutenant (garde de VALEUR, `NomDuPremierRapport`) et son id.
         private string nomDuRapport, idDuRapport;

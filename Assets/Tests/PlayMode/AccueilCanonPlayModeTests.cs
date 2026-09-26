@@ -27,6 +27,8 @@ namespace MafiaCleanCity.Shell.Tests
     //       ligne porte « trancher ». Garde GÉOMÉTRIQUE (mesure de l'UX sur la maquette @ d4b0379, 26/09 — remplace « la file seule en
     //       haut ») : la file juste au-dessus du dock et sous tout le reste, rien hors de la zone sûre (ni sur le bandeau), vide borné
     //   A6  la ligne de file a la hauteur de la maquette (7,2 % de l'écran), la MÊME avec et sans carte de tête — jamais étirée
+    //   A8  (26/09, reste de l'UX) le fond de ville de ③ derrière l'Accueil ; « {nom} attend vos ordres » UNE fois à l'écran : le
+    //       bandeau n'annonce pas la carte que la ligne de file porte (contrôle positif : sans la ligne, il l'annonce)
     //   A7  « La suite » (cadre 4, table 72) : sans carte, au palier 1, elle PREND le milieu (le calme s'efface), la file reste en bas ;
     //       au palier 2, rien ne change
     //   A3  G1 (suivi ⊥ UX §I, 26/09) : l'Accueil rouvert RELIT la tête et la file (session/open recalcule hl_card) — une carte
@@ -368,6 +370,49 @@ namespace MafiaCleanCity.Shell.Tests
             source.Etat = JoueurNeuf(1);
             yield return RouvrirParEmpire();
             Assert.AreEqual(0, shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).Length, "avec une carte : aucune suite");
+        }
+
+        [UnityTest]
+        public IEnumerator A8_FondDeVille_EtLaCarteDiteUneSeuleFois()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_UneFois");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            Poser(shell, "Token", "jeton-de-test");
+            SessionOpenDto reponse = AvecCarte(null);
+            reponse.queue = new[] { new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto
+            {
+                exception_id = "e-1", severity_band = "MODERATE", lieutenant_id = "lt-1",
+                lieutenant = new MafiaCleanCity.Operational.Exceptions.ExceptionLieutenantDto { id = "lt-1", name = "Lt. Wend" },
+            } };
+            shell.TransportDeSessionPourTest = new TransportTemoin { Reponse = reponse };
+            Poser(shell, "LastSessionOpen", reponse);
+            yield return RouvrirParEmpire();
+
+            // (1) le fond de ville : la peinture de ③, active, derrière l'Accueil.
+            DashboardController accueil = shell.ContentSlot.GetComponentsInChildren<DashboardController>(true).LastOrDefault();
+            Assert.IsNotNull(accueil?.FondDeVille, "le fond de ville est posé (ressource CityMap/carte_ville_nuit)");
+            Assert.IsTrue(accueil.FondDeVille.gameObject.activeInHierarchy, "il est visible derrière l'Accueil");
+            Assert.AreSame(Resources.Load<Sprite>(DashboardController.CheminFondDeVille), accueil.FondDeVille.sprite, "la peinture de ③");
+
+            // (2) une seule fois à l'écran : la ligne de file porte la carte, le bandeau ne l'annonce pas.
+            Assert.IsTrue(shell.LaLigneDeFileEstALEcran(), "précondition : la ligne de l'Accueil porte la carte");
+            shell.AnnoncerAuBandeau(false, null);
+            yield return null;
+            int fois = shell.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false)
+                .Concat(shell.ShellCanvas.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false)).Distinct()
+                .Count(t => t.text != null && t.text.Contains("attend vos ordres"));
+            Assert.AreEqual(1, fois, "« Lt. Wend attend vos ordres » n'apparaît qu'UNE fois à l'écran (la ligne au-dessus du dock)");
+            Assert.IsFalse(shell.TopBar.Bandeau.Visible && shell.TopBar.Bandeau.Courante?.Quoi == AnnonceDuBandeau.Etat.Carte,
+                "le bandeau n'annonce pas la carte que la file porte");
+
+            // (3) contrôle POSITIF : sans la ligne de l'Accueil, la même carte s'annonce au bandeau.
+            foreach (ExceptionQueuePanelController p in shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false))
+                Object.DestroyImmediate(p.gameObject);
+            Assert.IsFalse(shell.LaLigneDeFileEstALEcran());
+            Assert.IsTrue(shell.AnnoncerAuBandeau(false, null), "sans la ligne, le bandeau parle");
+            Assert.AreEqual(AnnonceDuBandeau.Etat.Carte, shell.TopBar.Bandeau.Courante?.Quoi, "et c'est la carte qu'il annonce");
         }
 
         [UnityTest]

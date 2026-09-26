@@ -104,9 +104,20 @@ namespace MafiaCleanCity.Operational
         {
             FeuilleMasquee = true;
             if (feuille != null) feuille.SetActive(false);
+            if (fondDeVille != null) fondDeVille.SetActive(true);
         }
         public bool FeuilleMasquee { get; private set; }
         private GameObject feuille;
+
+        // ④ LE FOND DE VILLE (26/09, reste de l'UX après la planche c4889d71 : « ~45 % de noir en haut ») — la maquette
+        // (`ecrans-brennar-accueil.html`, cadres 0-4 ; registre « fond de ville partout ») pose la ville de nuit derrière TOUT
+        // l'Accueil. C'est la peinture de ③ (`CityMap/carte_ville_nuit`, la même ressource que `CityMapController`), en COVER sur le
+        // fond, BLANCHE (la couleur est cuite dans la texture), RIEN par-dessus. Seulement quand ce contrôleur SERT d'Accueil (feuille
+        // éteinte) : sa feuille propre garde son ardoise. Sans la ressource : l'ardoise, comme avant (jamais un trou).
+        public const string CheminFondDeVille = "CityMap/carte_ville_nuit";
+        private GameObject fondDeVille;
+        /// <summary>Le fond de ville posé (garde) ; null sans la ressource.</summary>
+        public Image FondDeVille { get; private set; }
 
         // ⛔ `BuildingCard` RETIRÉ (2026-09-23, ruling A du 25/08 « un bouton qui ment est pire qu'un bouton absent ») : le bouton
         //    « La fiche » montait `BuildingCardController` SANS bâtiment — `Boot()` n'y chargeait rien, l'écran restait vide
@@ -556,6 +567,22 @@ namespace MafiaCleanCity.Operational
             GameObject backdrop = NewUI("DashboardBackdrop", root);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
             backdrop.AddComponent<Image>().color = SurfaceBg;
+            Sprite ville = Resources.Load<Sprite>(CheminFondDeVille);
+            if (ville != null)
+            {
+                fondDeVille = NewUI("FondDeVille", backdrop.transform);
+                Stretch((RectTransform)fondDeVille.transform, Vector2.zero, Vector2.zero);
+                Image img = fondDeVille.AddComponent<Image>();
+                img.sprite = ville;
+                img.color = Color.white;
+                img.raycastTarget = false;
+                AspectRatioFitter fit = fondDeVille.AddComponent<AspectRatioFitter>();
+                fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+                fit.aspectRatio = ville.rect.width / ville.rect.height;
+                backdrop.AddComponent<RectMask2D>();                  // le COVER rogne sur les bords, jamais hors de l'écran
+                FondDeVille = img;
+                fondDeVille.SetActive(FeuilleMasquee);
+            }
 
             // The dashboard card, anchored top-centre (portrait landing column).
             GameObject card = NewUI("DashboardSheet", root);
