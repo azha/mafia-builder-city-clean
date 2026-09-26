@@ -73,6 +73,27 @@ namespace MafiaCleanCity.Shell.Tests
                 "on n'allume pas une pastille sur une valeur qu'on n'a pas comprise");
         }
 
+        /// <summary>Revue i18n du back (26/09) : un `decision_type_key` servi trouve SA clé, casse gardée (le back sert
+        /// `decision.type.DAMAGED_BUILDING_REPAIR`) ; la forme en minuscules que le slug fabriquait ne la trouve pas.</summary>
+        [Test]
+        public void LeTypeServi_TrouveSaCle_CasseGardee()
+        {
+            try
+            {
+                MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+                {
+                    { "decision.type.DAMAGED_BUILDING_REPAIR", "§Réparer" },
+                    { "decision.type.severed_route_rebuild", "§minuscules" },
+                });
+                Assert.AreEqual("§Réparer", LibellesDecision.Type("DAMAGED_BUILDING_REPAIR"), "le type servi lit SA clé, en majuscules");
+                Assert.AreNotEqual("§minuscules", LibellesDecision.Type("SEVERED_ROUTE_REBUILD"),
+                    "une clé en minuscules n'est pas la clé du type servi");
+                StringAssert.DoesNotContain("_", LibellesDecision.Type("SEVERED_ROUTE_REBUILD"), "non servie : la lecture dé-sluggée, jamais la clé machine");
+                Assert.AreEqual("", LibellesDecision.Type(null));
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
+        }
+
         [Test]
         public void AucunAutreCodeNeNommeCesGrandeurs()
         {

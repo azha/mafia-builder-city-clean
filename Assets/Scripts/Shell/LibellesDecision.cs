@@ -44,8 +44,12 @@ namespace MafiaCleanCity.Shell
         public static string Type(string cle)
         {
             if (string.IsNullOrEmpty(cle)) return "";
-            string traduit = MafiaCleanCity.I18n.Libelle.De("decision", "type", cle);
-            return traduit == cle ? Lisible(cle) : traduit;
+            // ⛔ Revue i18n du back (26/09) : la clé se compose avec le `decision_type_key` TEL QUE SERVI, casse gardée
+            //    (`decision.type.DAMAGED_BUILDING_REPAIR`, `string_table.ts`). `Libelle.De` dérivait un slug en minuscules
+            //    (`decision.type.damaged_building_repair`) : clé injoignable, le titre retombait toujours sur le repli. Même piège
+            //    que `political.event.E-POL-*`. Pas de `n` servi aujourd'hui (target_count viendra avec le lot HL) : branche « one ».
+            string traduit = MafiaCleanCity.I18n.Libelle.Gabarit("decision.type." + cle, null);
+            return string.IsNullOrWhiteSpace(traduit) ? Lisible(cle) : traduit;
         }
 
         public static string Portee(string bucket)
