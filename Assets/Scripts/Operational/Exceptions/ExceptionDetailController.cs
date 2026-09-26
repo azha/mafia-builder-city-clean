@@ -313,6 +313,10 @@ namespace MafiaCleanCity.Operational.Exceptions
         private const float CssCarteLargeur = 100f;  // .carte{max-width:100px}
         private const float CssCarteRatio  = 3f / 2f;// .carte{aspect-ratio:2/3}
         private const float CssCarteLeve   = 8f;     // .carte:nth-child(2){translateY(-8px)}
+        /// <summary>⑩ (relevé f1 §K.6, planche A2 1080×1920) : le DÉBORD de l'éventail sous la main — les cartes ♠ et ♣ sont tournées de
+        /// ±5° autour de leur centre ET descendues de 6 px : leur coin bas sort de la rangée (≈ largeur × sin 5° / 2 + 6 ; 7 + 6 pour une
+        /// carte de 160 u) et passait SOUS le tampon. La rangée réserve cette marge en bas.</summary>
+        private const float CssDebordEventail = 14f;
         private const float CssCarteL      = 8f;     // .carte .l
         private const float CssCarteT      = 11.5f;  // .carte .t
         private const float CssCarteC      = 7.5f;   // .carte .c
@@ -364,13 +368,16 @@ namespace MafiaCleanCity.Operational.Exceptions
             h.childAlignment = TextAnchor.LowerCenter;
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandWidth = true; h.childForceExpandHeight = false;
-            AddLayoutElement(main, minHeight: PxD(CssCarteLargeur * CssCarteRatio + CssCarteLeve),
+            h.padding = new RectOffset(0, 0, 0, Mathf.CeilToInt(PxD(CssDebordEventail)));   // ⑩ : le débord de l'éventail reste dans la main
+            AddLayoutElement(main, minHeight: PxD(CssCarteLargeur * CssCarteRatio + CssCarteLeve + CssDebordEventail),
                              flexibleHeight: 0);
 
             // L'ORDRE EST CELUI DU DESSIN : risquée, suggérée (levée, au milieu), apprendre.
             // ⑩-1c — l'éventail du cadre 15 : risquée ♠ à −5°, descendue de 6 ; suggérée ♦ droite, LEVÉE de 8 ; apprendre ♣ à
             // +5°, descendue de 6. Le rôle décide de la place, pas l'ordre du tableau.
-            if (risquee != null)   Carte(main.transform, Lib("Risqué"),        risquee,   sombre: true,  levee: false,
+            // ⑩ (table 77, f2 26/09) : le MOT de cette place suit l'EFFET de l'option servie, plus la place — « Risqué » n'allait
+            // qu'à une issue qui peut se retourner (BRIBE) ; l'escalade archive et ne change rien : « Sans suite ». Sinon, aucun mot.
+            if (risquee != null)   Carte(main.transform, MarqueurDOption(risquee) ?? "", risquee, sombre: true,  levee: false,
                                          glyphe: "♠", rotationCss: -5f, translateYCss: 6f);
             if (sug != null)       Carte(main.transform, Lib("Suggéré"),       sug,       sombre: false, levee: true,
                                          glyphe: "♦", rotationCss: 0f, translateYCss: -CssCarteLeve);
@@ -472,6 +479,18 @@ namespace MafiaCleanCity.Operational.Exceptions
             selection = escalade ? null : a;
             selectionEscalade = escalade;
             Render();
+        }
+
+        /// <summary>⑩ (table 77 @6ed61816, f2 26/09) — le marqueur d'une option, par le TYPE SERVI de son effet (ou son `method`, pile
+        /// antérieure à D4) : ESCALATE ⇒ « Sans suite » (exception_detail.bloc.sans_suite) ; BRIBE ⇒ « Risqué » (l'issue qui peut se
+        /// retourner) ; toute autre ⇒ null (pas de marqueur). Jamais par la place dans l'éventail. Pur.</summary>
+        public static string MarqueurDOption(CandidateActionDto a)
+        {
+            if (a == null) return null;
+            if (EstEscalade(a)) return MafiaCleanCity.I18n.Libelle.Gabarit("exception_detail.bloc.sans_suite", "Sans suite");
+            string type = a.effect != null && !string.IsNullOrEmpty(a.effect.type) ? a.effect.type : a.method;
+            if (string.Equals(type, "BRIBE", StringComparison.OrdinalIgnoreCase)) return Lib("Risqué");
+            return null;
         }
 
         private static bool EstEscalade(CandidateActionDto a) =>

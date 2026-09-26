@@ -583,7 +583,8 @@ namespace MafiaCleanCity.Operational.Tests
             ctl.Cards[0].suggested_action = new CandidateActionDto { id = "sug", label = "Réparer" };
             ctl.Cards[0].candidate_actions = new[]
             {
-                new CandidateActionDto { id = "risq", label = "Soudoyer" },
+                // ⑩ (table 77) : « Risqué » suit l'EFFET servi (BRIBE), plus la place
+                new CandidateActionDto { id = "risq", label = "Soudoyer", effect = new ExceptionEffectDto { type = "BRIBE" } },
                 new CandidateActionDto { id = "sug",  label = "Réparer" },
                 new CandidateActionDto { id = "appr", label = "Gérer seul", add_rule_dsl = "WHEN raid THEN repair" },
                 new CandidateActionDto { id = "autre1", label = "X" },

@@ -83,6 +83,16 @@ namespace MafiaCleanCity.Shell
 
         private RectTransform pipsPortee, pipsUrgence;
         private TextMeshProUGUI porteeLibelle, urgenceLibelle, sabotTexte;
+
+        /// <summary>⑤ l'état SABOT — classe « moment en dur » (f2 26/09, table 78) : le moment suit day_phase SERVI (PhaseDeSession).</summary>
+        public static string PhraseDuSabot() =>
+            MafiaCleanCity.I18n.Moment.Dire("decision.moment.vide", PhaseDeSession.DayPhase, new System.Collections.Generic.Dictionary<string, string>
+            {
+                { "DAWN", "Rien ne se détache du sabot ce matin." },
+                { "DAY", "Rien ne se détache du sabot aujourd\u2019hui." },
+                { "DUSK", "Rien ne se détache du sabot ce soir." },
+                { "NIGHT", "Rien ne se détache du sabot cette nuit." },
+            }, "Rien ne se détache du sabot pour l\u2019instant.");
         private GameObject filet, tampon;
 
         private void Awake() => Init();
@@ -167,6 +177,7 @@ namespace MafiaCleanCity.Shell
             // « non applicable » (arbitrage JD-E4, canon re-basé). Ce n'est pas une erreur : c'est
             // qu'aucune carte ne se détache aujourd'hui, et l'écran le dit dans ces mots.
             carteRoot.gameObject.SetActive(carte != null);
+            if (carte == null) sabotTexte.text = PhraseDuSabot();   // la phase servie peut avoir changé depuis le montage
             sabotTexte.gameObject.SetActive(carte == null);
             filet.SetActive(carte != null);
             tampon.SetActive(carte != null);
@@ -360,7 +371,7 @@ namespace MafiaCleanCity.Shell
 
             // ── l'état SABOT : aucune carte ne se détache ────────────────────────────────────
             sabotTexte = Texte(transform, "Sabot",
-                               "Rien ne se détache du sabot ce matin.", Px(11f), Creme2,
+                               PhraseDuSabot(), Px(11f), Creme2,
                                DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             sabotTexte.gameObject.SetActive(false);
 

@@ -299,10 +299,18 @@ namespace MafiaCleanCity.Capture.Tests
             var geste = carte?.suggested_action ?? carte?.candidate_actions?.FirstOrDefault(a => a != null);
             if (geste == null) { Noter("A3", "Prendre acte", "aucun geste servi — rien à toucher"); yield break; }
             yield return detail.ResolveWith(geste);
-            for (int i = 0; i < 60; i++) yield return null;
+            // ⛔ A3 (relevé f1 §K.6, planches VPS) : 60 frames FIXES ne suffisaient pas contre un back distant — la relecture de ⑨ n'était
+            //    pas revenue, la planche montrait encore la carte. On ATTEND une condition (borné) : ⑨ relue SANS la carte tranchée, ou le
+            //    panneau de l'après visible. Le journal dit laquelle — ou le délai : si la carte est encore là APRÈS, c'est un vrai défaut.
+            string tranchee = carte?.exception_id;
+            bool Retour() => (file != null && file.QueueLoaded && !file.Cards.Any(c => c != null && c.exception_id == tranchee))
+                             || (file != null && file.ApresBloc != null && file.ApresBloc.activeInHierarchy);
+            float t0 = Time.realtimeSinceStartup;
+            yield return Attendre(() => Retour() ? file : null, 20f);
+            string attente = Retour() ? $"retour vu en {Time.realtimeSinceStartup - t0:0.0} s" : "DÉLAI 20 s : la carte tranchée est ENCORE là (vrai défaut)";
             bool accueilLa = accueil != null && accueil.isActiveAndEnabled;
             yield return Photographier("a3_retour");
-            Noter("A3", $"Prendre acte ({geste.method})", $"erreur={detail.LastError ?? "aucune"} · Accueil encore actif : {(accueilLa ? "oui" : "non")} · "
+            Noter("A3", $"Prendre acte ({geste.method})", $"{attente} · erreur={detail.LastError ?? "aucune"} · Accueil encore actif : {(accueilLa ? "oui" : "non")} · "
                 + $"locataire monté : {shell.MountedTenantType?.Name ?? "aucun"}");
 
             // A4 · « Les télégrammes » (barre ALLER À de l'Accueil), s'il est encore joignable

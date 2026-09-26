@@ -259,7 +259,14 @@ namespace MafiaCleanCity.Operational
 
             // ⛔ LE SOUS-TITRE PORTE LE MODE — cadre 125 « ce qui se dit ce matin », cadre 129
             // « rien ne bouge ». Les six cadres ratifiés ne diffèrent que par lui.
-            sousTitre.text = rienNeBouge ? Lib("RIEN NE BOUGE") : Lib("CE QUI SE DIT CE MATIN");
+            // classe « moment en dur » (f2 26/09, table 78) : le surtitre suit day_phase SERVI ; capitales par le style
+            sousTitre.fontStyle |= FontStyles.UpperCase;
+            sousTitre.text = rienNeBouge ? Lib("RIEN NE BOUGE") : MafiaCleanCity.I18n.Moment.Dire("journal.moment.titre",
+                MafiaCleanCity.Shell.PhaseDeSession.DayPhase, new Dictionary<string, string>
+                {
+                    { "DAWN", "Ce qui se dit ce matin" }, { "DAY", "Ce qui se dit aujourd\u2019hui" },
+                    { "DUSK", "Ce qui se dit ce soir" }, { "NIGHT", "Ce qui se dit cette nuit" },
+                }, "Ce qui se dit");
 
             MajCompteur(0, breves.Length, Lib("À LA UNE"));
             MajCompteur(1, rue.Length,    Lib("DANS LA RUE"));
@@ -352,7 +359,15 @@ namespace MafiaCleanCity.Operational
             if (rienNeBouge)
             {
                 TextMeshProUGUI vide = NouveauTexte(listeRoot, "RienCeMatin",
-                    Lib("Rien ce matin.\nLa ville a passé une nuit tranquille."),
+                    // classe « moment en dur » (f2 26/09, table 78) : la nuit tranquille ne se dit plus qu'au matin
+                    MafiaCleanCity.I18n.Moment.Dire("journal.moment.vide", MafiaCleanCity.Shell.PhaseDeSession.DayPhase,
+                        new Dictionary<string, string>
+                        {
+                            { "DAWN", "Rien ce matin.\nLa ville a passé une nuit tranquille." },
+                            { "DAY", "Rien aujourd\u2019hui.\nLa ville est calme." },
+                            { "DUSK", "Rien ce soir.\nLa journée a été tranquille." },
+                            { "NIGHT", "Rien cette nuit.\nLa ville se tient tranquille." },
+                        }, "Rien pour l\u2019instant.\nLa ville est calme."),
                     Px(10f), TexteFaible, DesignTokens.Current.hudSerifFont);
                 vide.alignment = TextAlignmentOptions.Center;
                 return;
@@ -537,8 +552,8 @@ namespace MafiaCleanCity.Operational
             // nuit tranquille.
             MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"),
                 Lib("Pas de réponse"),
-                Lib("on n'a pas eu de réponse. Ce n'est pas « la ville est calme » : c'est « on "
-                    + "ne sait pas ce qu'elle a fait cette nuit »."));
+                // table 80 @20ceeca0 : version NEUTRE (sans « cette nuit »), clé gardée
+                MafiaCleanCity.I18n.Libelle.Gabarit("journal.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_la_ville_est_calme_c_est_on_ne_sait_pas_ce_qu_elle_a_fait_cette_nuit", "on n\u2019a pas eu de réponse. Ce n\u2019est pas \u00AB\u00A0la ville est calme\u00A0\u00BB\u00A0: c\u2019est \u00AB\u00A0on ne sait pas ce qu\u2019elle a fait\u00A0\u00BB."));
         }
 
         // ═══ Géométrie — conventions du châssis de la série 6, PAS une maquette mesurée au pixel

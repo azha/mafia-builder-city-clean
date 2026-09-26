@@ -56,7 +56,6 @@ namespace MafiaCleanCity.CityMap.Tests
             { "DelegationScreenController.cs", 3 },
             { "DemoIdentityResolver.cs", 1 },
             { "DemolitionScreenController.cs", 8 },
-            { "DistributionScreenController.cs", 1 },
             { "DistrictInteriorScreenController.cs", 4 },
             { "ExceptionDetailController.cs", 1 },
             // HomeChromeController.cs : 1 → 0 le 2026-09-26 (bandeau de chaufferie par Gabarit/ParValeur, 342f5c83 + b7d499f2 : le ternaire

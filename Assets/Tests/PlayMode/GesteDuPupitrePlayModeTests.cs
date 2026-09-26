@@ -20,7 +20,7 @@ namespace MafiaCleanCity.CityMap.Tests
     //   G3  « Allumer le feu » : le `lab` Brindle sans passes ; le `specialized_lab` Ash avec sa réplique, « Passes » (4 crans = 0..3,
     //       tranché (e)) et « ça consomme un lot de lys de verre »
     //   G4  en cuisson : AUCUN bouton du pupitre, le refus DIT avant (« Rien à faire ici. », « Repassez quand ce sera tiré »)
-    //   G5  prêt : « Faire sortir la marchandise » DESSINÉ mais GRISÉ (manque du back n°5), « vers les coursiers »
+    //   G5  prêt : « Faire sortir la marchandise » MÈNE à ㉘ Distribution (f2 26/09 : plus de bouton éteint), « vers les coursiers »
     //   G6  les passes : crans et compte suivent le réglage ; le compte passe par la clé ICU servie `building.bloc.passes_compte`
     //   G7  chaque état demande EXACTEMENT ses clés servies de la table 37 (aucune clé inventée par le client)
     //   G8  ② lot 3 (cadre 44) : la charge SUPPLY_SOURCING retirée au joueur (DELEGATED ou RETIRED : tout sauf SELF, comme le garde
@@ -159,13 +159,16 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
-        public void G5_Pret_FaireSortir_DessineMaisGrise()
+        public void G5_Pret_FaireSortir_MeneALaDistribution()
         {
             var (fiche, r) = Rendre("lab", "DONE", "LOW", "PYRALIN");
             Assert.AreEqual(Geste.FaireSortir, fiche.GesteDuPupitreAffiche);
             Transform sortir = Boutons(r).Single();
             Assert.AreEqual("Faire sortir la marchandise", Texte(sortir));
-            Assert.IsFalse(sortir.GetComponent<Button>().interactable, "manque du back n°5 (destination, quantité) : pas vivant");
+            // f2 (26/09) : plus de bouton éteint — le geste MÈNE à ㉘ Distribution, l'écran des coursiers qui porte l'envoi
+            Assert.IsTrue(sortir.GetComponent<Button>().interactable, "un geste vivant, jamais un bouton éteint");
+            sortir.GetComponent<Button>().onClick.Invoke();
+            Assert.AreEqual(1, fiche.OuverturesDeLaDistribution, "le toucher ouvre ㉘");
             CollectionAssert.AreEqual(new[] { "vers les coursiers" }, Lignes(r, "Bloc"));
 
             var (aucun, ra) = Rendre("lab", null, "LOW", "PYRALIN");

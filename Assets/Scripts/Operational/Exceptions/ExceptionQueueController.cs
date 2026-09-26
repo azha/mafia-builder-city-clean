@@ -284,7 +284,13 @@ namespace MafiaCleanCity.Operational.Exceptions
             plaqueDuSoir.SetActive(vide);
             if (vide)
             {
-                plaqueSurtitre.text = Lib("Ce soir, au Verge d’Or");
+                // T18 / classe « moment en dur » (f2 26/09, table 77) : le moment suit day_phase SERVI, jamais « ce soir » à l'aube
+                plaqueSurtitre.text = MafiaCleanCity.I18n.Moment.Dire("exceptions.moment", MafiaCleanCity.Shell.PhaseDeSession.DayPhase,
+                    new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "DAWN", "Ce matin, au Verge d\u2019Or" }, { "DAY", "Aujourd\u2019hui, au Verge d\u2019Or" },
+                    { "DUSK", "Ce soir, au Verge d\u2019Or" }, { "NIGHT", "Cette nuit, au Verge d\u2019Or" },
+                }, "Au Verge d\u2019Or");
                 plaqueTitre.text = AmbianceVide();
                 TrackText(plaqueSurtitre, plaqueSurtitre.text);
                 TrackText(plaqueTitre, plaqueTitre.text);

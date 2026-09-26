@@ -23,6 +23,7 @@ namespace MafiaCleanCity.Shell
             "JetonDeStructure.Connu",
             "JetonDeStructure.Utilises",
             "JetonDeStructure.PlafondAtteint",
+            "PhaseDeSession.DayPhase",   // classe « moment en dur » (26/09) : la phase servie à l'ouverture
         };
 
         /// <summary>Les statiques mutables de `Shell` que cette assembly NE PEUT PAS rendre (`ShellContracts` ne voit pas `AppShell` :
@@ -37,14 +38,15 @@ namespace MafiaCleanCity.Shell
         /// <summary>Vrai quand rien n'a été publié : l'état d'un processus où aucun shell n'a tourné.</summary>
         public static bool Vierge =>
             ShellChrome.TopInsetPx == 0f && ShellChrome.BottomInsetPx == 0f
-            && !JetonDeStructure.Connu && JetonDeStructure.Utilises == 0 && !JetonDeStructure.PlafondAtteint;
+            && !JetonDeStructure.Connu && JetonDeStructure.Utilises == 0 && !JetonDeStructure.PlafondAtteint
+            && PhaseDeSession.DayPhase == null;
 
         /// <summary>Ce qui est publié, pour qu'un journal NOMME l'état laissé (vide si <see cref="Vierge"/>).</summary>
         public static string Decrire()
         {
             if (Vierge) return string.Empty;
             return $"insets haut={ShellChrome.TopInsetPx} bas={ShellChrome.BottomInsetPx} · jeton connu={JetonDeStructure.Connu} " +
-                   $"utilisés={JetonDeStructure.Utilises} plafond={JetonDeStructure.PlafondAtteint}";
+                   $"utilisés={JetonDeStructure.Utilises} plafond={JetonDeStructure.PlafondAtteint} phase={PhaseDeSession.DayPhase}";
         }
 
         /// <summary>⛔ Réservé aux tests et à `MafiaCI` : l'état « aucun shell n'a tourné ».</summary>
@@ -52,6 +54,7 @@ namespace MafiaCleanCity.Shell
         {
             ShellChrome.PublierInsets(0f, 0f);
             JetonDeStructure.OublierPourTest();
+            PhaseDeSession.Oublier();
         }
     }
 }
