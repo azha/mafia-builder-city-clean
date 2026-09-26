@@ -26,8 +26,8 @@ namespace MafiaCleanCity.Operational.Exceptions
         private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
         private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         [Header("Demo sign-in (seeded by Tools/seed_operational_demo.mjs)")]
-        [SerializeField] private string demoIdentifier = "operational_demo@example.test";
-        [SerializeField] private string demoPassword = "operational-demo-pw";
+        [SerializeField] private string demoIdentifier = MafiaCleanCity.IdentiteDeDemo.Operationnelle;
+        [SerializeField] private string demoPassword = MafiaCleanCity.IdentiteDeDemo.MotDePasseOperationnel;
 
         // ---- Public state (PlayMode test hooks) ----
         public bool IsAuthenticated { get; private set; }

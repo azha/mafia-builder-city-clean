@@ -139,6 +139,11 @@ public static class BuildScript
     public static string VerifierLApk(string apk, string urlVoulue)
     {
         byte[][] interdits = { System.Text.Encoding.UTF8.GetBytes("http://localhost"), System.Text.Encoding.Unicode.GetBytes("http://localhost") };
+        // B5 point 7 (f2 26/09) : la paire de démo, MOT DE PASSE compris, était dans chaque APK distribué (global-metadata.dat, ×2 au
+        // 26/09). `IdentiteDeDemo` ne la porte plus qu'en éditeur ; ce balayage refuse l'APK qui la porterait encore.
+        string[] paireDeDemo = { "operational-demo-pw", "operational_demo@example.test", "citymap-demo-pw", "citymap_demo@example.test" };
+        byte[][] demo = paireDeDemo.SelectMany(p => new[] { System.Text.Encoding.UTF8.GetBytes(p), System.Text.Encoding.Unicode.GetBytes(p) }).ToArray();
+        var fautivesDemo = new System.Collections.Generic.List<string>();
         byte[][] voulus = { System.Text.Encoding.UTF8.GetBytes(urlVoulue), System.Text.Encoding.Unicode.GetBytes(urlVoulue) };
         var fautives = new System.Collections.Generic.List<string>();
         int entrees = 0, presencesVoulues = 0;
@@ -157,13 +162,18 @@ public static class BuildScript
                 }
                 int n = interdits.Sum(motif => Compter(octets, motif));
                 if (n > 0) fautives.Add(e.FullName + " ×" + n);
+                int d = demo.Sum(motif => Compter(octets, motif));
+                if (d > 0) fautivesDemo.Add(e.FullName + " ×" + d);
                 presencesVoulues += voulus.Sum(motif => Compter(octets, motif));
             }
         }
         Debug.Log("[BuildScript] balayage APK : " + entrees + " entrées hors lib/ · http://localhost = " + fautives.Count + " entrée(s)" +
                   (fautives.Count > 0 ? " [" + string.Join(", ", fautives) + "]" : "") + " · « " + urlVoulue + " » présente ×" + presencesVoulues);
         if (entrees < 10) return "seulement " + entrees + " entrées balayées — le balayage ne voit pas l'APK";
+        Debug.Log("[BuildScript] balayage APK : paire de démo = " + fautivesDemo.Count + " entrée(s)" +
+                  (fautivesDemo.Count > 0 ? " [" + string.Join(", ", fautivesDemo) + "]" : ""));
         if (fautives.Count > 0) return "http://localhost dans " + string.Join(", ", fautives);
+        if (fautivesDemo.Count > 0) return "la paire de démo (identifiant ou mot de passe) dans " + string.Join(", ", fautivesDemo);
         if (presencesVoulues == 0) return "l'URL voulue « " + urlVoulue + " » n'est NULLE PART dans l'APK";
         return null;
     }

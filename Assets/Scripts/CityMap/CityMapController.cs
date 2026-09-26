@@ -26,8 +26,8 @@ namespace MafiaCleanCity.CityMap
         private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
         private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
         [Header("Demo sign-in (seeded by Tools/seed_citymap_demo.mjs)")]
-        [SerializeField] private string demoIdentifier = "citymap_demo@example.test";
-        [SerializeField] private string demoPassword = "citymap-demo-pw";
+        [SerializeField] private string demoIdentifier = MafiaCleanCity.IdentiteDeDemo.Carte;
+        [SerializeField] private string demoPassword = MafiaCleanCity.IdentiteDeDemo.MotDePasseCarte;
 
         [Header("Overlay")]
         [SerializeField] private bool heatOverlayOn = true;
