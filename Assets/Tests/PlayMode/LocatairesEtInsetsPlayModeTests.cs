@@ -38,7 +38,8 @@ namespace MafiaCleanCity.Shell.Tests
         /// prétend donc pas excuser, elle prétend seulement empêcher la liste de grandir.</summary>
         private static readonly string[] SansInsetConnus =
         {
-            "DashboardController",
+            // DashboardController SORTI le 2026-09-26 (CLIENT-1, b8829d49) : servant d'Accueil, il pose le fond de ville SOUS l'inset
+            // haut (`ShellChrome.TopInsetPx`) — la garde l'a vu (« plus de porteur ») au créneau du 26/09, l'entrée part avec lui.
             // ⑪ LaunderingController et ⑫ PipelineOverviewController RETIRÉS du dépôt le 2026-09-23 (code mort : 0 chemin joueur
             // depuis que ㊵ porte la filière) — l'entrée part avec son porteur, comme la garde l'exige.
         };

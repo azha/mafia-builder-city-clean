@@ -256,7 +256,7 @@ namespace MafiaCleanCity.Shell
             btnLe.minHeight = 28;
             btnLe.flexibleWidth = 0f;                                  // ne s'étire plus
             TextMeshProUGUI mot = NewText(trancherGo.transform, MafiaCleanCity.I18n.Libelle.De("chrome", "bandeau", "trancher"), 90);
-            mot.color = DesignTokens.Current.accentGold;              // l'or du geste, sur le mot — jamais un aplat
+            mot.color = OrDuGeste;              // l'or du geste, sur le mot — jamais un aplat
             mot.alignment = TextAlignmentOptions.Center;
             mot.raycastTarget = false;
             RectTransform motRt = (RectTransform)mot.transform;
@@ -320,7 +320,7 @@ namespace MafiaCleanCity.Shell
             mot.fontSize = 30;
             mot.fontStyle = FontStyles.Bold;
             mot.characterSpacing = 10;
-            mot.color = DesignTokens.Current.accentGold;
+            mot.color = OrDuGeste;
             mot.alignment = TextAlignmentOptions.MidlineRight;
             RectTransform motRt = (RectTransform)mot.transform;
             motRt.anchorMin = Vector2.zero; motRt.anchorMax = Vector2.one; motRt.offsetMin = motRt.offsetMax = Vector2.zero;
@@ -332,6 +332,10 @@ namespace MafiaCleanCity.Shell
                 ? MafiaCleanCity.I18n.Libelle.Gabarit("chrome.bandeau.attend_vos_ordres", "{nom} attend vos ordres",
                     new Dictionary<string, string> { { "nom", MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Locuteur(c) } })
                 : MafiaCleanCity.I18n.Libelle.Gabarit("chrome.bandeau.la_ville_attend_vos_ordres", "La ville attend vos ordres");
+
+        /// <summary>L'or du geste « trancher », sur le MOT (jamais un aplat) — UNE liaison pour les deux formes de la ligne (liste et
+        /// Accueil) : la garde C5F2 compte une liaison accentGold par fichier porteur.</summary>
+        private static Color OrDuGeste => DesignTokens.Current.accentGold;
 
         /// <summary>« trancher » : ouvre la carte (⑩) PAR LE SHELL, en surimpression — le joueur y choisit. Hors shell : rien.</summary>
         public void OuvrirLaCarte(ExceptionCardDto card)
