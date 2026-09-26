@@ -308,6 +308,12 @@ public static class MafiaCI
         // 1ffb08b4) dans le run de liste (2/2, 241/243, seul rouge la dette ZeroRepli coupée en 1c51baf8), pas lancée seule. Aucune relation
         // de préfixe (compteur : PORTÉES = prises). Validé par l'orchestrateur.
         "CuisinierAuRepos", //  2
+        // Créneau CLIENT-1 du 26/09 (cumul 386e4a38 → b7fb8a8d, pile 1ffb08b4) : trois catégories PORTÉES, jamais inscrites — la 2ᵉ fois
+        // aujourd'hui après CuisinierAuRepos, c'est une CLASSE (garde de classe à suivre). Vertes dans le run 2 de la liste (584 : 581 verts,
+        // les 2 rouges étaient deux gardes de classe, corrigées en b7fb8a8d et rejouées 2/2). Validé par l'orchestrateur.
+        "AccueilCanon",     // 10 — ④ canon : mise en page, la suite, la file au-dessus du dock, le fond, A9/A10 structure
+        "PlanqueVide",      //  6 — ① / ㊵ la planque vide ou non (table 63)
+        "ConflitReel",      //  1 — ㉙ contre le back réel
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
