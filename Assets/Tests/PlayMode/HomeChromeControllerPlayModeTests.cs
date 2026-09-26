@@ -60,6 +60,13 @@ namespace MafiaCleanCity.Shell.Tests
                 var chrome = NewBareChrome();
                 chrome.SetCompressionGlance(new CompressionGlanceDto { stress_bucket = "mounting", week_state = "active", forced = true });
                 Assert.IsTrue(chrome.RenderedTexts.Any(t => t == "La chaufferie — §semaine"), string.Join(" | ", chrome.RenderedTexts));
+                // Table 66 : le gabarit lui-même servi (`accueil.bandeau.la_chaufferie_etat`).
+                MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+                {
+                    { "compression.week_state.active", "§semaine" }, { "accueil.bandeau.la_chaufferie_etat", "§chaufferie {etat}" },
+                });
+                chrome.SetCompressionGlance(new CompressionGlanceDto { stress_bucket = "mounting", week_state = "active", forced = true });
+                Assert.IsTrue(chrome.RenderedTexts.Any(t => t == "§chaufferie §semaine"), string.Join(" | ", chrome.RenderedTexts));
             }
             finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
         }

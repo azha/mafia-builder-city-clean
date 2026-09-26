@@ -98,6 +98,17 @@ namespace MafiaCleanCity.Operational.Tests
             // l'atelier écrit les mots. Les deux valeurs qui ALLUMENT le bandeau (`none` l'éteint, sans lecture). Règle (2) : retirer.
             "compression.week_state.warning",
             "compression.week_state.active",
+            // Table 66 (atelier, 2026-09-26) : le gabarit du bandeau, et ⑧ l'éditeur de règles (en-tête, gabarit de ligne, 7 kinds).
+            "accueil.bandeau.la_chaufferie_etat",
+            "lieutenant.editeur.ces_regles_ne_passent_pas",
+            "lieutenant.editeur.ligne_colonne_message",
+            "lieutenant.diagnostic.syntax_error",
+            "lieutenant.diagnostic.tier_not_unlocked",
+            "lieutenant.diagnostic.not_supported_yet",
+            "lieutenant.diagnostic.rule_count_exceeded",
+            "lieutenant.diagnostic.priority_out_of_bounds",
+            "lieutenant.diagnostic.condition_depth_exceeded",
+            "lieutenant.diagnostic.tenure_peer_scope_violation",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

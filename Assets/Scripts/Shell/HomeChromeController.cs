@@ -162,7 +162,13 @@ namespace MafiaCleanCity.Shell
             //    mots à venir de l'atelier) ; repli VIDE ⇒ tant que la clé n'est pas servie, le bandeau ne dit que « La chaufferie ».
             //    Jamais l'identifiant.
             string mot = MafiaCleanCity.I18n.Libelle.ParValeur("compression", "week_state", BannerWeekStateRendered, "");
-            bannerText.text = !BannerActive ? "" : string.IsNullOrEmpty(mot) ? Chaufferie : $"{Chaufferie} — {mot}";
+            // Mot servi en casse de phrase (« la pression monte ») : il vient APRÈS le tiret, tel quel.
+            // Table 66 : le gabarit du bandeau passe par sa clé (`accueil.bandeau.la_chaufferie_etat`), repli à l'octet de la table.
+            // Mot masqué (clé de valeur non servie) ⇒ « La chaufferie » seule : la table n'a pas de clé pour ce cas.
+            bannerText.text = !BannerActive ? ""
+                : string.IsNullOrEmpty(mot) ? Chaufferie
+                : MafiaCleanCity.I18n.Libelle.Gabarit("accueil.bandeau.la_chaufferie_etat", "La chaufferie — {etat}",
+                      new System.Collections.Generic.Dictionary<string, string> { { "etat", mot } });
             RebuildTracked();
         }
 

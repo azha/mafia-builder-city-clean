@@ -80,6 +80,38 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsEmpty(ecarts, "texte entre crochets hors journal — une chaîne de développeur peut atteindre l'écran :\n" + string.Join("\n", ecarts));
         }
 
+        /// <summary>Table 66 (atelier, 2026-09-26) — les 7 `kind` du compilateur DSL (`dsl-errors.ts`, `DslDiagnosticKind`), RECOPIÉS
+        /// du back (anti-tautologie) : chacun lit `lieutenant.diagnostic.<slug du kind>`.</summary>
+        private static readonly string[] KindsDuBack =
+        {
+            "SYNTAX_ERROR", "TIER_NOT_UNLOCKED", "NOT_SUPPORTED_YET", "RULE_COUNT_EXCEEDED", "PRIORITY_OUT_OF_BOUNDS",
+            "CONDITION_DEPTH_EXCEEDED", "TENURE_PEER_SCOPE_VIOLATION",
+        };
+
+        [Test]
+        public void C3_LigneDeDiagnostic_GabaritDeLaTable66_JamaisLeKind()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            var d = new MafiaCleanCity.Operational.Lieutenant.DslDiagnostic { line = 3, col = 7, message = "unexpected token", kind = "SYNTAX_ERROR" };
+            Assert.AreEqual("Ligne 3, colonne 7 — unexpected token",
+                MafiaCleanCity.Operational.Lieutenant.LieutenantScreenController.LigneDeDiagnostic(d),
+                "repli : le gabarit de la table 66, le message servi à la place du mot");
+
+            var servi = KindsDuBack.ToDictionary(k => "lieutenant.diagnostic." + k.ToLowerInvariant(), k => "§" + k);
+            servi["lieutenant.editeur.ligne_colonne_message"] = "L{ligne}C{colonne}:{message}";
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", servi);
+            try
+            {
+                foreach (string k in KindsDuBack)
+                {
+                    d.kind = k;
+                    Assert.AreEqual("L3C7:§" + k, MafiaCleanCity.Operational.Lieutenant.LieutenantScreenController.LigneDeDiagnostic(d),
+                        $"{k} lit sa clé de la table 66, dans le gabarit servi");
+                }
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
+        }
+
         [Test]
         public void C2_AucunNomDeType_HorsJournal()
         {

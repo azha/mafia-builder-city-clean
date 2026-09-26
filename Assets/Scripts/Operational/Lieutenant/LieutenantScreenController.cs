@@ -892,7 +892,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             // Header line — the readable error message (F2). The diagnostics-area header is band-safe (a sentence, no
             // raw scalar) so it stays in the scan corpus; the per-diagnostic lines carry the player's own DSL spans.
-            string header = string.IsNullOrEmpty(message) ? "Script rejected." : message;
+            // Table 66 (atelier, 2026-09-26) : l'en-tête du refus est la phrase de l'atelier, TOUJOURS — le message global du serveur
+            // (`message`) est de l'anglais générique ; le détail passe par les diagnostics ci-dessous. Décidé (reco, 26/09).
+            string header = MafiaCleanCity.I18n.Libelle.De("lieutenant", "editeur", "Ces règles ne passent pas.");
             SetOutcome(header, AccentSevere);
 
             int n = LastDiagnostics.Length;
@@ -909,11 +911,24 @@ namespace MafiaCleanCity.Operational.Lieutenant
                         DslDiagnostic d = LastDiagnostics[i];
                         // ⛔ PASSE UX 26/09 (tâche 3) : `[{d.kind}]` (code interne du serveur, SCREAMING_SNAKE_CASE, entre crochets) sort de
                         //    l'écran ; il reste dans `LastDiagnostics` (la donnée que les tests lisent).
-                        string line = $"Line {d.line}:{d.col} — {d.message}";
+                        // Table 66 : le gabarit ENTIER (l'ordre des mots reste dans la langue) ; {message} = le mot du `kind`
+                        // (`lieutenant.diagnostic.<kind>`), repli le message servi par le compilateur DSL.
+                        string line = LigneDeDiagnostic(d);
                         AddDiagnosticLine(line, AccentSevere);
                     }
                 }
             }
+        }
+
+        /// <summary>Table 66 — « Ligne {ligne}, colonne {colonne} — {message} », {message} étant le mot du `kind` servi.</summary>
+        public static string LigneDeDiagnostic(DslDiagnostic d)
+        {
+            if (d == null) return string.Empty;
+            string mot = MafiaCleanCity.I18n.Libelle.ParValeur("lieutenant", "diagnostic", d.kind, d.message ?? string.Empty);
+            var ci = System.Globalization.CultureInfo.InvariantCulture;
+            return MafiaCleanCity.I18n.Libelle.Gabarit("lieutenant.editeur.ligne_colonne_message",
+                "Ligne {ligne}, colonne {colonne} — {message}",
+                new Dictionary<string, string> { { "ligne", d.line.ToString(ci) }, { "colonne", d.col.ToString(ci) }, { "message", mot } });
         }
 
         // Clear the diagnostics area + the LastDiagnostics hook (on a successful validate/attach).
