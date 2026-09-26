@@ -20,7 +20,7 @@ CSS = f"""{DEBUT} (hud-brennar.html @ hud-v3.1, × 300/392) — décision f2 du 
 .aile .lib{{font-size:{e(8.5)};letter-spacing:.22em}}
 .aile .val{{font-size:{e(17)};letter-spacing:.02em;font-variant-numeric:tabular-nums}}
 /* le médaillon (canon .medaillon 64 px, top 7) et son losange (canon .medaillon .losange 7 px, bottom -11) */
-.mano{{top:{e(7)};width:{e(64)};height:{e(64)};border-width:1.5px;box-shadow:inset 0 1px 2px #ffffff2a,inset 0 -4px 8px #0009,0 6px 14px #000c}}
+.mano{{z-index:3;top:{e(7)};width:{e(64)};height:{e(64)};border-width:1.5px;box-shadow:inset 0 1px 2px #ffffff2a,inset 0 -4px 8px #0009,0 6px 14px #000c}}
 .mano::after{{content:"";position:absolute;bottom:-{e(11)};left:50%;transform:translateX(-50%) rotate(45deg);width:{e(7)};height:{e(7)};background:var(--laiton);box-shadow:0 0 0 1px #0009}}
 .mano svg{{width:{e(44)};height:{e(28)}}}
 .mano .val{{font-size:{e(13)}}}
@@ -31,7 +31,16 @@ CSS = f"""{DEBUT} (hud-brennar.html @ hud-v3.1, × 300/392) — décision f2 du 
 .dock9 .rd{{width:{e(46)};height:{e(46)}}}
 .dock9 .pt{{bottom:-{e(4)};width:{e(14)}}}
 .dock9 .disc{{width:{e(8)};height:{e(8)}}}
+/* les volutes (canon .volute, opacité .28) — f2 26/09 : elles FONT partie du chrome */
+.volute{{position:absolute;top:50%;transform:translateY(-50%);width:{e(34)};height:{e(12)};opacity:.28;pointer-events:none}}
+.volute svg{{width:100%;height:100%;display:block}}
+.volute.g{{left:{e(4)}}}.volute.d{{right:{e(4)};transform:translateY(-50%) scaleX(-1)}}
 {FIN}"""
+
+VOLUTE = ('<span class="volute {}"><svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1">'
+          '<path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg></span>')   # hud-brennar.html @ hud-v3.1 l.154-155, 172-173
+BARRE = '<div class="barre">'
+SANS_VOLUTES = lambda x: x.replace(BARRE + VOLUTE.format('g') + VOLUTE.format('d'), BARRE)
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else '--controle'
@@ -41,12 +50,13 @@ def main():
     if DEBUT in t:
         a = t.index(DEBUT); b = t.index(FIN, a) + len(FIN); t = t[:a] + t[b:]
     t = t.replace(ANCRE, ANCRE + CSS, 1)
+    t = SANS_VOLUTES(t).replace(BARRE, BARRE + VOLUTE.format('g') + VOLUTE.format('d'))   # réécrites, jamais doublées
     cadres = t.count('<div class="cadre">')
     comptes = {'cadres': cadres, 'barres': t.count('<div class="barre">'), 'médaillons': t.count('<div class="mano">'),
-               'docks': t.count('<div class="dock9">'), 'blocs chrome': t.count(DEBUT),
-               'hors style inchangé': re.sub(r'<style>.*?</style>', '', t, flags=re.S) == re.sub(r'<style>.*?</style>', '', s, flags=re.S)}
+               'docks': t.count('<div class="dock9">'), 'blocs chrome': t.count(DEBUT), 'volutes': t.count('<span class="volute '),
+               'hors style et volutes inchangé': SANS_VOLUTES(re.sub(r'<style>.*?</style>', '', t, flags=re.S)) == SANS_VOLUTES(re.sub(r'<style>.*?</style>', '', s, flags=re.S))}
     print(comptes)
-    if comptes != {'cadres': 5, 'barres': 5, 'médaillons': 5, 'docks': 5, 'blocs chrome': 1, 'hors style inchangé': True}:
+    if comptes != {'cadres': 5, 'barres': 5, 'médaillons': 5, 'docks': 5, 'blocs chrome': 1, 'volutes': 10, 'hors style et volutes inchangé': True}:
         print('⛔ comptes'); return 1
     if t == s: print('déjà écrite (identique)'); return 0
     print('écrite' if mode == '--ecrire' else 'à écrire')
