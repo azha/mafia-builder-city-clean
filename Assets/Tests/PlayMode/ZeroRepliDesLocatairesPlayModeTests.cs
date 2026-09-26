@@ -92,6 +92,7 @@ namespace MafiaCleanCity.Operational.Tests
             "distribution.vide.un_relais_s_obtient_en_reconvertissant_un_de_vos_locaux_une_decision_de_structure",
             // table 63 v2 (client 34beb6e7), non servies @5e792a3c.
             "inspection.vide.rien_a_faire_ici_tant_qu_aucune_file_n_est_ouverte",
+            "revue.vide.vos_lieutenants_n_ont_encore_rien_a_tenir_donnez_leur_une_premiere_regle",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

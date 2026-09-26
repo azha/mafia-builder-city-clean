@@ -50,6 +50,20 @@ namespace MafiaCleanCity.Shell
         public string LastBatchConfirmError { get; private set; }
         public int? LastBatchConfirmedCount { get; private set; }
         public FlagReviewResponseDto LastLoadedReview { get; private set; }
+        /// <summary>Table 63 v2 — la revue est vide ET aucune routine n'attend : la phrase dit « rien à tenir » et mène à ⑧.</summary>
+        public bool RienATenir { get; private set; }
+        private Button versLaFamille;
+        /// <summary>Test hook : combien de fois le toucher a mené à la Famille (⑥, qui porte l'éditeur ⑧).</summary>
+        public int OuverturesDeLaFamille { get; private set; }
+
+        /// <summary>⑯ → ⑧ : l'éditeur de règles vit dans la Famille ⑥ (`LieutenantScreenController`) ; on la monte par le navigateur.</summary>
+        public void OuvrirLaFamille()
+        {
+            if (!RienATenir) return;
+            OuverturesDeLaFamille++;
+            MafiaCleanCity.Shell.IShellNavigator nav = MafiaCleanCity.Shell.ShellNavigatorLocator.Find();
+            nav?.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.LieutenantScreenController>();
+        }
 
         public LongPressButton BatchConfirmButton { get; private set; }
 
@@ -334,7 +348,16 @@ namespace MafiaCleanCity.Shell
                 // Mot pour mot le cadre v4-1. L'ancienne phrase (« Personne au comptoir ce matin. »)
                 // était la LÉGENDE du cadre, pas son texte : sa clé servie devient orpheline (⑯-2).
                 plaqueSurtitre.text = Lib("bloc", "Ce matin, au Verge d’Or");
-                emptyStateText.text = Lib("bloc", "Vos lieutenants ont tenu la ligne — rien ne réclame votre parole");
+                // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26, table 63 v2) : « ont tenu la ligne » FLATTE un joueur qui n'a AUCUNE routine
+                // (0 carte ET 0 routine en attente — le joueur neuf). Ce qui est vrai alors : ils n'ont rien à tenir ; et le geste qui
+                // change ça, une première règle — le toucher mène à ⑧ (l'éditeur de règles, dans la Famille). Jamais en panne de
+                // flag-review : une revue qui n'a pas répondu ne passe pas par ici (`LoadReview`).
+                RienATenir = enAttente == 0;
+                emptyStateText.text = RienATenir
+                    ? MafiaCleanCity.I18n.Libelle.Gabarit("revue.vide.vos_lieutenants_n_ont_encore_rien_a_tenir_donnez_leur_une_premiere_regle",
+                        "Vos lieutenants n’ont encore rien à tenir\u00A0: donnez-leur une première règle.")
+                    : Lib("bloc", "Vos lieutenants ont tenu la ligne — rien ne réclame votre parole");
+                if (versLaFamille != null) versLaFamille.interactable = RienATenir;
                 MajRegistre(enAttente, tamponDisponible, 0);
                 return;
             }
@@ -1063,6 +1086,11 @@ namespace MafiaCleanCity.Shell
                                    DesignTokens.Current.hudSerifFont);
             emptyStateText.characterSpacing = 4f;
             emptyStateText.enableWordWrapping = true;
+            // ⑯ → ⑧ (table 63 v2) : la phrase « donnez-leur une première règle » se TOUCHE ; éteinte dans tous les autres états
+            versLaFamille = emptyStateText.gameObject.AddComponent<Button>();
+            versLaFamille.transition = Selectable.Transition.None;
+            versLaFamille.interactable = false;
+            versLaFamille.onClick.AddListener(OuvrirLaFamille);
 
             plaqueVide.SetActive(false);
         }
