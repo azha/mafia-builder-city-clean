@@ -62,7 +62,7 @@ namespace MafiaCleanCity.Shell
             if (!RienATenir) return;
             OuverturesDeLaFamille++;
             MafiaCleanCity.Shell.IShellNavigator nav = MafiaCleanCity.Shell.ShellNavigatorLocator.Find();
-            nav?.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.LieutenantScreenController>();
+            nav?.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Lieutenant.LieutenantScreenController>();
         }
 
         public LongPressButton BatchConfirmButton { get; private set; }

@@ -95,7 +95,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>Table 64 (passe UX 2026-09-26) — les lieutenants SERVIS du labo (`me/buildings`) et le roster (`GET /v1/lieutenants`) :
         /// c'est là qu'est le nom de qui parle. « Nestor » était figé.</summary>
         public string[] LieutenantsDuLabo { get; private set; }
-        public RosterRow[] Roster { get; private set; }
+        public MafiaCleanCity.Operational.Lieutenant.RosterRow[] Roster { get; private set; }
         /// <summary>Les textes RÉELLEMENT rendus, dans l'ordre — crochet de test (patron
         /// `ExceptionQueueController.RenderedTexts`), pour asserter le contenu sans dépendre de la
         /// hiérarchie d'objets.</summary>
@@ -217,11 +217,11 @@ namespace MafiaCleanCity.Operational
         public const string CleRepliqueNestor = "appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas";
 
         /// <summary>Qui parle au pied de la fiche : le premier des lieutenants SERVIS du labo présent au roster ; aucun ⇒ null. Pure.</summary>
-        public static string LieutenantDuLabo(RosterRow[] roster, string[] lieutenantsDuLabo)
+        public static string LieutenantDuLabo(MafiaCleanCity.Operational.Lieutenant.RosterRow[] roster, string[] lieutenantsDuLabo)
         {
             if (roster == null || lieutenantsDuLabo == null) return null;
             foreach (string id in lieutenantsDuLabo)
-                foreach (RosterRow r in roster)
+                foreach (MafiaCleanCity.Operational.Lieutenant.RosterRow r in roster)
                     if (r != null && r.lieutenant_id == id && !string.IsNullOrWhiteSpace(r.name)) return r.name;
             return null;
         }
@@ -252,7 +252,7 @@ namespace MafiaCleanCity.Operational
             string errBuilding = null;
             yield return DecouvrirBuildingId(id => buildingId = id, e => errBuilding = e);
             // table 64 : le nom de qui parle vient du roster servi
-            yield return new LieutenantClient { BaseUrl = baseUrl }.ListLieutenants(token, r => Roster = r,
+            yield return new MafiaCleanCity.Operational.Lieutenant.LieutenantClient { BaseUrl = baseUrl }.ListLieutenants(token, r => Roster = r,
                 (c, m) => Debug.LogWarning($"[㉚] roster indisponible : {c} {m}"));
             if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
             if (string.IsNullOrEmpty(buildingId))

@@ -272,7 +272,7 @@ namespace MafiaCleanCity.Operational
             yield return TrouverLesBatiments();
 
             // table 64 : le nom de qui parle vient du roster servi
-            yield return new LieutenantClient { BaseUrl = baseUrl }.ListLieutenants(token, r => Roster = r,
+            yield return new MafiaCleanCity.Operational.Lieutenant.LieutenantClient { BaseUrl = baseUrl }.ListLieutenants(token, r => Roster = r,
                 (c, m) => Debug.LogWarning($"[㉝] roster indisponible : {c} {m}"));
 
             yield return null;   // la frame de création rend des rects non résolus
@@ -1239,7 +1239,7 @@ namespace MafiaCleanCity.Operational
         // ═══ Blocs partagés ══════════════════════════════════════════════════════════════════
 
         /// <summary>Le roster SERVI (`GET /v1/lieutenants`) : c'est là que se trouve le nom de qui parle (table 64). Null tant que non lu.</summary>
-        public RosterRow[] Roster { get; private set; }
+        public MafiaCleanCity.Operational.Lieutenant.RosterRow[] Roster { get; private set; }
         private bool leger;
 
         /// <summary>Table 63 — l'état où RIEN ne se gêne : bande light, zéro nœud de friction, aucune pénalité. Pure.</summary>
@@ -1248,14 +1248,14 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Table 64 — QUI parle : le lieutenant du site dont il est question s'il y en a un au roster, sinon le premier du roster
         /// servi ; personne ⇒ null, et la réplique ne s'affiche pas. Jamais un nom inventé (« Dima » était figé). Pure.</summary>
-        public static string Locuteur(RosterRow[] roster, string[] lieutenantsDuSite)
+        public static string Locuteur(MafiaCleanCity.Operational.Lieutenant.RosterRow[] roster, string[] lieutenantsDuSite)
         {
             if (roster == null) return null;
             if (lieutenantsDuSite != null)
                 foreach (string id in lieutenantsDuSite)
-                    foreach (RosterRow r in roster)
+                    foreach (MafiaCleanCity.Operational.Lieutenant.RosterRow r in roster)
                         if (r != null && r.lieutenant_id == id && !string.IsNullOrWhiteSpace(r.name)) return r.name;
-            foreach (RosterRow r in roster) if (r != null && !string.IsNullOrWhiteSpace(r.name)) return r.name;
+            foreach (MafiaCleanCity.Operational.Lieutenant.RosterRow r in roster) if (r != null && !string.IsNullOrWhiteSpace(r.name)) return r.name;
             return null;
         }
 

@@ -52,7 +52,7 @@ namespace MafiaCleanCity.Operational
             string affecte = Premier(liste, Hotes.TryGetValue(archetype ?? "", out string[] h) ? h : null, exclu: null)
                              ?? liste[0].building;
             string cible = null;
-            if (RuleModel.NeedsTarget(archetype))
+            if (MafiaCleanCity.Operational.Lieutenant.RuleModel.NeedsTarget(archetype))
                 cible = Premier(liste, Cibles.TryGetValue(archetype, out string[] c) ? c : null, exclu: affecte)
                         ?? liste.Select(b => b.building).FirstOrDefault(id => id != affecte);
             return (affecte, cible);

@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using MafiaCleanCity.Operational;
+using MafiaCleanCity.Operational.Lieutenant;
 using MafiaCleanCity.Shell;
 
 namespace MafiaCleanCity.CityMap.Tests
