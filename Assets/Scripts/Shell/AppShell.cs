@@ -504,15 +504,28 @@ namespace MafiaCleanCity.Shell
             StartCoroutine(PanneauxDeLAccueilRouvert(MontagesEffectues));
         }
 
-        /// <summary>Les quatre panneaux de l'Accueil, une frame APRÈS son fond (même marge et mêmes gardes que l'acquisition de session :
-        /// sinon `DashboardBackdrop`, bâti au `Start()` suivant, les recouvre) — nourris de la même réponse `session/open`.</summary>
+        /// <summary>La tête et la file de l'Accueil rouvert, une frame APRÈS son fond (même marge et mêmes gardes que l'acquisition :
+        /// sinon `DashboardBackdrop`, bâti au `Start()` suivant, les recouvre).
+        /// ⛔ G1, suivi ⊥ de la passe UX (§I, 26/09) : elles étaient nourries de `LastSessionOpen`, la réponse du LANCEMENT — une carte
+        ///    réglée depuis revenait « en attente ». Elles sont désormais RELUES : `POST session/open` recalcule `hl_card` et `queue` à
+        ///    chaque appel (`session-open-sequence.service.ts`, `getCurrentCardProjection` dans le `Promise.all`), seule la ligne de session
+        ///    est figée — par le même transport que le retour au premier plan (B4). Échec de la relecture ⇒ les panneaux SANS donnée
+        ///    (leurs états vides nommés), jamais la réponse périmée. Décidé (reco, 26/09).</summary>
         private IEnumerator PanneauxDeLAccueilRouvert(int generation)
         {
             yield return null;
+            SessionOpenDto frais = null;
+            if (!string.IsNullOrEmpty(Token))
+                yield return Transport().Ouvrir(Token, d => frais = d, (code, msg) => Debug.LogWarning($"[AppShell] Accueil rouvert : relecture impossible ({code} {msg})"));
             if (this == null) yield break;
             if (MontagesEffectues != generation || !SurimpressionOuverte) yield break;   // le joueur est déjà parti : ne pas l'enterrer
-            MonterPanneauxAccueil(LastSessionOpen);
+            if (frais != null) LastSessionOpen = frais;
+            AccueilRelu = frais != null;
+            MonterPanneauxAccueil(frais);
         }
+
+        /// <summary>Vrai si le dernier Accueil rouvert a été nourri d'une relecture fraîche (G1) ; faux s'il a été monté sans donnée.</summary>
+        public bool AccueilRelu { get; private set; }
 
         /// <summary>Geste (2) : dépile UN niveau. Rend ce qui a été dépilé — `surimpression`, `fiche`, `district`, `entree` (du menu
         /// Plus), `onglet` — ou `racine` quand on est déjà sur la carte (et rien n'est fait).</summary>

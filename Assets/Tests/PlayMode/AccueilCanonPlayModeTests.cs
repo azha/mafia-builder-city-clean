@@ -20,6 +20,8 @@ namespace MafiaCleanCity.Shell.Tests
     //   A1  au LANCEMENT (vrai shell, branche d'échec de l'acquisition : port fermé, hors réseau) : EXACTEMENT la tête et la file ; ni
     //       vitaux ni chrome ; la feuille éteinte ; les deux bandes disjointes ; sans carte, aucun geste ; aucun texte de développeur
     //   A2  rouvert par G1 (Empire sur la carte) : la MÊME mise en page — les trois sites passent par `AppShell.MonterLAccueil`
+    //   A3  G1 (suivi ⊥ UX §I, 26/09) : l'Accueil rouvert RELIT la tête et la file (session/open recalcule hl_card) — une carte
+    //       RÉGLÉE depuis le lancement ne revient pas « en attente » ; la réponse périmée du lancement n'est jamais remontrée
     [Category("AccueilCanon")]
     public class AccueilCanonPlayModeTests
     {
@@ -121,6 +123,68 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotEmpty(textes, $"{quand} : anti-vacuité, l'Accueil rend des textes");
             var fautifs = textes.Where(TexteDeDeveloppeur).ToList();
             Assert.IsEmpty(fautifs, $"{quand} : texte de développeur ou anglais : [" + string.Join(" | ", fautifs) + "] — vus : [" + string.Join(" | ", textes) + "]");
+        }
+
+        private sealed class TransportTemoin : ITransportDeSession
+        {
+            public int Ouvertures;
+            public SessionOpenDto Reponse;
+            public IEnumerator Fermer(string jeton, System.Action<long, string> echec) { yield break; }
+            public IEnumerator Ouvrir(string jeton, System.Action<SessionOpenDto> ok, System.Action<long, string> echec)
+            {
+                Ouvertures++;
+                ok(Reponse);
+                yield break;
+            }
+        }
+
+        private static void Poser<T>(object cible, string propriete, T valeur) =>
+            typeof(AppShell).GetField($"<{propriete}>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .SetValue(cible, valeur);
+
+        private static SessionOpenDto AvecCarte(string id) => new SessionOpenDto
+        {
+            session_id = "s", hl_card = id == null ? null : new HlCardDto { card_id = id, decision_type_key = "AUTONOMY_REPORTS_PENDING",
+                                                                               impact_bucket = "moderate", urgency_bucket = "low" },
+            queue = new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto[0],
+        };
+
+        private IEnumerator RouvrirParEmpire()
+        {
+            if (shell.SurimpressionOuverte) Assert.AreEqual("surimpression", shell.Depiler());
+            yield return null;
+            ProductionClickSupport.Click(shell.TabBarRoot.Find("Tab_Empire").GetComponent<UnityEngine.UI.Button>());
+            yield return AttendreLAccueil();
+        }
+
+        private HighestLeverageCardController Tete() =>
+            shell.ContentSlot.GetComponentsInChildren<HighestLeverageCardController>(false).LastOrDefault();
+
+        [UnityTest]
+        public IEnumerator A3_RouvertParEmpire_LaTeteEstRelue_JamaisLaReponseDuLancement()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_AccueilRelu");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            // Le monde du LANCEMENT : une carte « c-perime » en attente (la réponse gardée), un jeton de session.
+            Poser(shell, "Token", "jeton-de-test");
+            Poser(shell, "LastSessionOpen", AvecCarte("c-perime"));
+            var transport = new TransportTemoin { Reponse = AvecCarte("c-frais") };
+            shell.TransportDeSessionPourTest = transport;
+
+            // A3 (1) — la carte a CHANGÉ depuis le lancement : l'Accueil rouvert montre la FRAÎCHE, jamais la périmée.
+            yield return RouvrirParEmpire();
+            Assert.AreEqual(1, transport.Ouvertures, "la réouverture RELIT la session (une fois)");
+            Assert.IsTrue(shell.AccueilRelu);
+            Assert.AreEqual("c-frais", Tete().CurrentCard?.card_id, "la tête montre la carte RELUE, pas celle du lancement (« c-perime »)");
+
+            // A3 (2) — la carte a été RÉGLÉE depuis : l'Accueil rouvert ne la remontre pas « en attente ».
+            transport.Reponse = AvecCarte(null);
+            yield return RouvrirParEmpire();
+            Assert.AreEqual(2, transport.Ouvertures);
+            Assert.AreEqual(HighestLeverageCardController.CardState.NoCard, Tete().RenderedState,
+                "la carte réglée ne revient pas « en attente » (la réponse du lancement n'est jamais remontrée)");
         }
 
         [UnityTest]
