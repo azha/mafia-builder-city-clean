@@ -107,17 +107,15 @@ namespace MafiaCleanCity.Shell
     public static class NomsDeJoueur
     {
         public const string CheminA = "NomsJoueur/A-noms-de-famille", CheminB = "NomsJoueur/B-sobriquets";
-        private static string[] a, b;
+        // Les listes de l'atelier, IMMUABLES, chargées une fois : `static readonly Lazy`, pas un statique mutable — rien ne fuit d'une classe de
+        // test à la suivante (garde EtatDuShell S1, créneau du 26/09 : `NomsDeJoueur.a/b` mutables y rougissaient, à raison).
+        private static readonly Lazy<string[]> a = new Lazy<string[]>(() => Lire(Resources.Load<TextAsset>(CheminA)?.text));
+        private static readonly Lazy<string[]> b = new Lazy<string[]>(() => Lire(Resources.Load<TextAsset>(CheminB)?.text));
 
         public static string[] Lire(string texte) =>
             (texte ?? "").Replace("\r", "").Split('\n').Where(l => l.Length > 0).ToArray();
 
-        public static (string[] a, string[] b) Listes()
-        {
-            if (a == null) a = Lire(Resources.Load<TextAsset>(CheminA)?.text);
-            if (b == null) b = Lire(Resources.Load<TextAsset>(CheminB)?.text);
-            return (a, b);
-        }
+        public static (string[] a, string[] b) Listes() => (a.Value, b.Value);
 
         public static string Composer(long graine, string[] listeA, string[] listeB)
         {
