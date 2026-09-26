@@ -60,6 +60,11 @@ namespace MafiaCleanCity.Operational.Tests
             "filiere.etat.l_argent_passe_de_la_planque_a_la_filiere",
             "filiere.etat.a_blanchir_la_planque_est_pleine",
             "filiere.bloc.blanchir",   // le mot du bouton, clé dérivée (Lib) — demandé à l'atelier
+            // B5 (table 79 @f81ad7cb, 26/09) : l'écran d'échec de démarrage et la ligne de ㉒ — 4 clés PROPOSÉES, non servies à 1ffb08b4.
+            "demarrage.echec.la_partie_n_a_pas_pu_commencer",
+            "demarrage.echec.la_ville_ne_repond_pas_verifiez_votre_connexion_puis_reessayez",
+            "demarrage.echec.reessayer",
+            "reglages.bloc.votre_partie_vit_sur_cet_appareil_desinstaller_l_appli_l_efface",
             "building.action.blanchir",   // ② « Blanchir » de la façade (f2 26/09), clé dérivée (Cle) — même mot que ㊵
             "exception_detail.bloc.sans_suite",   // ⑩ marqueur de l'escalade (table 77), non servie @1ffb08b4
             // classe « moment en dur » (f2 26/09) : tables 77 @6ed61816 et 78 @3be2e866, non servies @1ffb08b4 — TOUTES les phases, la

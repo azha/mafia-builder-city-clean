@@ -102,8 +102,8 @@ namespace MafiaCleanCity.Shell
         // branche de repli-échec, et rougissaient dès qu'un éditeur voisin posait
         // `MAFIA_DEMO_IDENTIFIER` — la configuration même que ce lot existe pour permettre.
         [Header("Identité de session (B1 — le shell signe UNE fois)")]
-        [SerializeField] private string demoIdentifier = "operational_demo@example.test";
-        [SerializeField] private string demoPassword = "operational-demo-pw";
+        [SerializeField] private string demoIdentifier = MafiaCleanCity.IdentiteDeDemo.Operationnelle;
+        [SerializeField] private string demoPassword = MafiaCleanCity.IdentiteDeDemo.MotDePasseOperationnel;
         private bool identityExplicitlySet;
 
         // ---- test hooks --------------------------------------------------
@@ -162,6 +162,15 @@ namespace MafiaCleanCity.Shell
         public ITransportDeSession TransportDeSessionPourTest;
         /// <summary>« La suite » (cadre 4) : sa source d'état. Null ⇒ la source réseau ; un test pose la sienne (hors réseau).</summary>
         public ISourceDeLaSuite SourceDeLaSuitePourTest;
+        /// <summary>B5 — le compte par appareil : son transport et son stockage (null ⇒ HTTP et PlayerPrefs), et le régime forcé en test
+        /// (en éditeur, le régime est l'existant ; un test pose ceci pour exercer le chemin d'un build joueur, hors réseau).</summary>
+        public IAuthDuCompte AuthDuComptePourTest;
+        public IStockageDeCompte StockageDuComptePourTest;
+        public bool RegimeAppareilPourTest;
+        /// <summary>B5 — l'issue de la dernière acquisition du compte d'appareil (gardes) ; null en régime existant.</summary>
+        public IssueDuCompte DerniereIssueDuCompte { get; private set; }
+        /// <summary>B5 — l'écran « La partie n'a pas pu commencer », monté À LA PLACE de l'Accueil (gardes).</summary>
+        public EcranEchecDeDemarrage EchecDeDemarrage { get; private set; }
         /// <summary>B4 — nombre de retours au premier plan qui ont rouvert une session (test hook).</summary>
         public int SessionsRouvertesAuRetour { get; private set; }
         private bool retourEnCours;
@@ -643,6 +652,20 @@ namespace MafiaCleanCity.Shell
             yield return TopBar.Load(t, dto.backlog_badge, dto.opened_game_day);
         }
 
+        /// <summary>B5 — « La partie n'a pas pu commencer » à la place de l'Accueil. « Réessayer » relance l'acquisition (la paire stockée
+        /// repasse par un SIGNIN d'abord) ; un compte SANCTIONNÉ (403) montre la phrase servie, sans « Réessayer ».</summary>
+        private void MonterEchecDeDemarrage(IssueDuCompte issue)
+        {
+            if (EchecDeDemarrage != null) Destroy(EchecDeDemarrage.gameObject);
+            bool sanction = issue != null && issue.Quoi == IssueDuCompte.Etat.Sanctionne;
+            EchecDeDemarrage = EcranEchecDeDemarrage.Construire(ContentSlot, sanction ? issue.PhraseServie : null, sanction ? null : (System.Action)(() =>
+            {
+                if (EchecDeDemarrage != null) Destroy(EchecDeDemarrage.gameObject);
+                EchecDeDemarrage = null;
+                StartCoroutine(AcquireSessionThenActivateHome());
+            }));
+        }
+
         /// <summary>B4 — le transport des deux requêtes du cycle : le double de test s'il est posé, sinon HTTP.</summary>
         private ITransportDeSession Transport() =>
             TransportDeSessionPourTest ?? new TransportDeSessionHttp(new SessionClient { BaseUrl = baseUrl });
@@ -733,13 +756,37 @@ namespace MafiaCleanCity.Shell
         /// la précédence documentée dans `DemoIdentityResolver.cs`).</summary>
         private IEnumerator AcquireSessionThenActivateHome()
         {
-            var auth = new AuthClient { BaseUrl = baseUrl };
             string t = null, authErr = null;
-            yield return DemoIdentityResolver.ResolveAndSignIn(auth,
-                DemoIdentityResolver.OperationalIdentifierEnvVar, DemoIdentityResolver.OperationalPasswordEnvVar,
-                demoIdentifier, demoPassword, x => t = x, e => authErr = e,
-                allowEnvironmentOverride: !identityExplicitlySet);
-            if (this == null) yield break; // shell torn down mid-fetch
+            // B5 — dans un BUILD JOUEUR (et sans identité posée), le compte de l'APPAREIL ; jamais le compte de démo. Un échec monte
+            // « La partie n'a pas pu commencer » À LA PLACE de l'Accueil — jamais un Accueil vide, jamais un repli sur la démo.
+            if (RegimeDIdentite.Choisir(Application.isEditor && !RegimeAppareilPourTest, identityExplicitlySet) == RegimeDIdentite.Regime.Appareil)
+            {
+                IssueDuCompte issue = null;
+                yield return CompteDeLAppareil.Acquerir(AuthDuComptePourTest ?? new AuthDuCompteHttp { BaseUrl = baseUrl },
+                    StockageDuComptePourTest ?? new StockagePlayerPrefs(), CompteDeLAppareil.GraineNeuve, CompteDeLAppareil.SecretNeuf,
+                    () => System.Guid.NewGuid().ToString(), x => issue = x);
+                if (this == null) yield break;
+                DerniereIssueDuCompte = issue;
+                if (issue == null || issue.Quoi != IssueDuCompte.Etat.Connecte)
+                {
+                    MonterEchecDeDemarrage(issue);
+                    yield break;
+                }
+                t = issue.Jeton;
+            }
+            else
+            {
+                // Le régime existant (éditeur, tests, capture). Boot.unity ne sérialise plus la paire (B5 point 7) : un champ vide
+                // retombe sur `IdentiteDeDemo`, qui n'existe qu'en éditeur.
+                var auth = new AuthClient { BaseUrl = baseUrl };
+                yield return DemoIdentityResolver.ResolveAndSignIn(auth,
+                    DemoIdentityResolver.OperationalIdentifierEnvVar, DemoIdentityResolver.OperationalPasswordEnvVar,
+                    string.IsNullOrEmpty(demoIdentifier) ? MafiaCleanCity.IdentiteDeDemo.Operationnelle : demoIdentifier,
+                    string.IsNullOrEmpty(demoPassword) ? MafiaCleanCity.IdentiteDeDemo.MotDePasseOperationnel : demoPassword,
+                    x => t = x, e => authErr = e,
+                    allowEnvironmentOverride: !identityExplicitlySet);
+                if (this == null) yield break; // shell torn down mid-fetch
+            }
 
             if (string.IsNullOrEmpty(t))
             {

@@ -193,6 +193,12 @@ namespace MafiaCleanCity.Account.Settings
             else
                 Geste("FermerLeCoffre", Lib("Fermer le coffre"), Lib("cette session seulement"),
                       () => StartCoroutine(FermerLeCoffre()));
+            // B5 (table 79 @f81ad7cb) : sans écran de connexion, la partie vit sur l'appareil — le dire, sans « compte » ni
+            // « identifiant ». À retirer le jour où une connexion existera.
+            Texte(corps, "PartieSurCetAppareil", MafiaCleanCity.I18n.Libelle.Gabarit(
+                      "reglages.bloc.votre_partie_vit_sur_cet_appareil_desinstaller_l_appli_l_efface",
+                      "Votre partie vit sur cet appareil : désinstaller l’appli l’efface."),
+                  Px(7.5f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
 
             // Ce que le back NE sert PAS : dessiné par la porte ratifiée, éteint, avec sa raison — le client dit vrai.
             Section(Lib("Ce qui ne s’ouvre pas encore"));
