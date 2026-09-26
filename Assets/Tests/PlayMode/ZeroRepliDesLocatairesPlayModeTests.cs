@@ -47,6 +47,12 @@ namespace MafiaCleanCity.Operational.Tests
             // vente, conflit…) — retirées. Restent les 2 clés de l'addendum de la table 62 (état vide de ㉟), non servies à 1ffb08b4.
             "vente.vide.les_coins_de_vente_n_ont_pas_repondu",
             "vente.vide.aucun_coin_de_vente",
+            // Table 76 (atelier fa4dba93, 26/09), ligne E de « La suite » : 5 clés PROPOSÉES, non servies à 1ffb08b4 ; replis de la table.
+            "accueil.suite.de_l_argent_attend_dans_la_planque",
+            "accueil.suite.blanchissez_le_il_ne_rapporte_rien_tant_qu_il_dort",
+            "accueil.suite.la_planque_est_pleine",
+            "accueil.suite.blanchissez_sinon_la_caisse_des_dealers_ne_peut_plus_s_y_vider",
+            "accueil.suite.blanchir",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

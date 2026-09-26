@@ -21,6 +21,8 @@ namespace MafiaCleanCity.Shell.Tests
     //   S8  une lecture manquée n'affirme rien ; un précurseur hors domaine ne s'écrit jamais brut
     //   S9  les gestes ouvrent PAR LE SHELL : ㉚, ② (avec le labo), ㉟, ⑧
     //   S10 le panneau : premier geste doré, A2 sans bouton, rien de vrai ⇒ rien de rendu et `Rendue(false)`
+    //   S11 table 76, ligne E : planque LOW à HIGH ⇒ « De l'argent attend » ; FULL ⇒ « La planque est pleine » ET la ligne C se retire
+    //       (épinglé sur la valeur servie) ; EMPTY, hors domaine, non lue ⇒ rien ; ordre A · B|C · E · D, au plus 3 ; geste ㊵
     [Category("LaSuite")]
     public class LaSuitePlayModeTests
     {
@@ -180,6 +182,7 @@ namespace MafiaCleanCity.Shell.Tests
             LaSuitePanelController.OuvrirPar(nav, GesteDeLaSuite.VoirLaVente, "labo-1");
             LaSuitePanelController.OuvrirPar(nav, GesteDeLaSuite.Ramasser, "labo-1");
             LaSuitePanelController.OuvrirPar(nav, GesteDeLaSuite.EcrireUneRegle, "labo-1");
+            LaSuitePanelController.OuvrirPar(nav, GesteDeLaSuite.Blanchir, "labo-1");
             LaSuitePanelController.OuvrirPar(nav, GesteDeLaSuite.Cuire, null);
             LaSuitePanelController.OuvrirPar(nav, GesteDeLaSuite.Aucun, "labo-1");
             CollectionAssert.AreEqual(new[]
@@ -188,7 +191,42 @@ namespace MafiaCleanCity.Shell.Tests
                 typeof(MafiaCleanCity.Operational.BuildingCardController),
                 typeof(SellingScreenController), typeof(SellingScreenController),
                 typeof(LieutenantScreenController),
-            }, nav.Montes, "㉚ · ② (avec son labo, jamais sans) · ㉟ · ㉟ · ⑧ — et rien pour « aucun »");
+                typeof(MafiaCleanCity.Operational.FiliereScreenController),
+            }, nav.Montes, "㉚ · ② (avec son labo, jamais sans) · ㉟ · ㉟ · ⑧ · ㊵ — et rien pour « aucun »");
+        }
+
+        [Test]
+        public void S11_LaPlanque_E_EtLaCaisseQuiSeRetireQuandElleEstPleine()
+        {
+            EtatDeLaSuite e = Neuf(); e.ChargePlanque = "NOMINAL";
+            LigneDeLaSuite planque = LaSuite.Lignes(e).Single(l => l.Id == "E");
+            Assert.AreEqual("De l’argent attend dans la planque", planque.Titre);
+            Assert.AreEqual("Blanchissez-le\u00a0: il ne rapporte rien tant qu’il dort.", planque.Phrase, "insécable et apostrophe de la table 76, à l'octet");
+            Assert.AreEqual(GesteDeLaSuite.Blanchir, planque.Geste);
+            Assert.AreEqual("Blanchir", planque.MotDuGeste);
+            CollectionAssert.AreEqual(new[] { "A1", "B", "E" }, Ids(e), "ordre A · B|C · E · D, au plus 3 : D tombe");
+
+            // FULL : la variante, ET la caisse (C) se retire — « Ramassez-la » pousserait vers un refus.
+            EtatDeLaSuite plein = Neuf();
+            plein.Dealers = new[] { new DealerDto { dealer = "d1", name_i18n = "Sacha", activity_band = "WORKING", cash_band = "FULL" } };
+            Assert.Contains("C", Ids(plein), "précondition : une caisse à ramasser, planque non lue");
+            plein.ChargePlanque = "FULL";
+            List<LigneDeLaSuite> l = LaSuite.Lignes(plein);
+            Assert.IsFalse(l.Any(x => x.Id == "C"), "planque FULL (valeur servie) : la ligne C n'est pas montrée");
+            LigneDeLaSuite pleine = l.Single(x => x.Id == "E-pleine");
+            Assert.AreEqual("La planque est pleine", pleine.Titre);
+            Assert.AreEqual("Blanchissez\u00a0: sinon, la caisse des dealers ne peut plus s’y vider.", pleine.Phrase);
+            CollectionAssert.AreEqual(new[] { "A1", "E-pleine", "D" }, l.Select(x => x.Id).ToList());
+            plein.ChargePlanque = "HIGH";
+            Assert.Contains("C", Ids(plein), "HIGH n'est pas FULL : la caisse se ramasse encore");
+
+            foreach (string rien in new[] { "EMPTY", "ZZZ", null })
+            {
+                EtatDeLaSuite x = Neuf(); x.ChargePlanque = rien;
+                Assert.IsFalse(Ids(x).Any(i => i.StartsWith("E")), $"planque « {rien ?? "non lue"} » : aucune ligne E");
+            }
+            Assert.AreEqual(4, LaSuite.RangDeCharge("FULL"));
+            Assert.AreEqual(-1, LaSuite.RangDeCharge("ZZZ"));
         }
 
         [Test]

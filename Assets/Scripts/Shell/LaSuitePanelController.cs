@@ -209,7 +209,8 @@ namespace MafiaCleanCity.Shell
 
         // ─────────────────────────────────────────────────────────────── gestes
 
-        /// <summary>Le geste d'une ligne, PAR LE SHELL (en surimpression) : ㉚ la chaîne d'appro, ② la fiche du labo, ㉟ la vente, ⑧ les règles.</summary>
+        /// <summary>Le geste d'une ligne, PAR LE SHELL (en surimpression) : ㉚ la chaîne d'appro, ② la fiche du labo, ㉟ la vente, ⑧ les règles,
+        /// ㊵ la filière (blanchir).</summary>
         public void Ouvrir(GesteDeLaSuite geste)
         {
             IShellNavigator nav = ShellNavigatorLocator.Find();
@@ -232,6 +233,8 @@ namespace MafiaCleanCity.Shell
                     return nav.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Selling.SellingScreenController>();
                 case GesteDeLaSuite.EcrireUneRegle:
                     return nav.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Lieutenant.LieutenantScreenController>();
+                case GesteDeLaSuite.Blanchir:
+                    return nav.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.FiliereScreenController>();   // ㊵ la filière
                 default:
                     return null;
             }

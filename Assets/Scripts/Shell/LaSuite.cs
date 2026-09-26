@@ -31,9 +31,11 @@ namespace MafiaCleanCity.Shell
         public bool CommandeArrivee;           // … → has_arrived_order
         public DealerDto[] Dealers;            // GET /v1/operational/dealers
         public RosterRow[] Lieutenants;        // GET /v1/lieutenants
+        public string ChargePlanque;           // GET /v1/city/district/:id/stash → load_bucket de la planque la PLUS chargée du joueur
+                                               // (StashLoadBucket : EMPTY | LOW | NOMINAL | HIGH | FULL) ; null = non lue
     }
 
-    public enum GesteDeLaSuite { Aucun, Commander, Cuire, VoirLaVente, Ramasser, EcrireUneRegle }
+    public enum GesteDeLaSuite { Aucun, Commander, Cuire, VoirLaVente, Ramasser, EcrireUneRegle, Blanchir }
 
     /// <summary>Une ligne : son identité de table (A1, A2, A3, B, C, D), ses deux textes, son geste.</summary>
     public sealed class LigneDeLaSuite
@@ -63,7 +65,13 @@ namespace MafiaCleanCity.Shell
             LigneDeLaSuite labo = LigneDuLabo(e);
             if (labo != null) lignes.Add(labo);
             LigneDeLaSuite vente = LigneDeLaVente(e.Dealers);
-            if (vente != null) lignes.Add(vente);
+            // Table 76 (26/09, reco f1 décidée) : planque PLEINE ⇒ « Ramassez-la » pousserait vers un refus (la caisse ne peut plus
+            // s'y vider) — la ligne C se retire, la ligne E (blanchir) dit quoi faire.
+            if (vente != null && !(vente.Id == "C" && e.ChargePlanque == "FULL")) lignes.Add(vente);
+            LigneDeLaSuite planque = LigneDeLaPlanque(e.ChargePlanque);
+            if (planque != null) lignes.Add(planque);
+            // F (recruter BLANCHIMENT) et G (recruter DISTRIBUTION) de la table 76 ATTENDENT le lot back B7 (éligibilité au
+            // recrutement par rôle, forme F le 26/09) : rien n'est simulé ici — les règles R11/R12 ne se recopient pas (TD-762).
             LigneDeLaSuite regles = LigneDesRegles(e.Lieutenants);
             if (regles != null) lignes.Add(regles);
             return lignes.Take(LignesAuPlus).ToList();
@@ -160,6 +168,51 @@ namespace MafiaCleanCity.Shell
             };
         }
 
+        // ── E · la planque (table 76) ───────────────────────────────────────────────────────────────────────────────────────────
+        // `load_bucket` servi : EMPTY ⇒ rien à blanchir ; LOW | NOMINAL | HIGH ⇒ « De l'argent attend » ; FULL ⇒ « La planque est
+        // pleine ». Une valeur hors domaine ne s'affirme pas.
+        private static LigneDeLaSuite LigneDeLaPlanque(string charge)
+        {
+            string titre, phrase;
+            switch (charge)
+            {
+                case "LOW": case "NOMINAL": case "HIGH":
+                    titre = Libelle.Gabarit("accueil.suite.de_l_argent_attend_dans_la_planque", "De l’argent attend dans la planque");
+                    phrase = Libelle.Gabarit("accueil.suite.blanchissez_le_il_ne_rapporte_rien_tant_qu_il_dort",
+                        "Blanchissez-le : il ne rapporte rien tant qu’il dort.");
+                    break;
+                case "FULL":
+                    titre = Libelle.Gabarit("accueil.suite.la_planque_est_pleine", "La planque est pleine");
+                    phrase = Libelle.Gabarit("accueil.suite.blanchissez_sinon_la_caisse_des_dealers_ne_peut_plus_s_y_vider",
+                        "Blanchissez : sinon, la caisse des dealers ne peut plus s’y vider.");
+                    break;
+                default:
+                    return null;
+            }
+            return new LigneDeLaSuite
+            {
+                Id = charge == "FULL" ? "E-pleine" : "E",
+                Titre = titre,
+                Phrase = phrase,
+                Geste = GesteDeLaSuite.Blanchir,
+                MotDuGeste = Libelle.Gabarit("accueil.suite.blanchir", "Blanchir"),
+            };
+        }
+
+        /// <summary>Le rang d'une charge servie (EMPTY 0 … FULL 4), -1 hors domaine — pour garder la planque la plus chargée. Pure.</summary>
+        public static int RangDeCharge(string charge)
+        {
+            switch (charge)
+            {
+                case "EMPTY": return 0;
+                case "LOW": return 1;
+                case "NOMINAL": return 2;
+                case "HIGH": return 3;
+                case "FULL": return 4;
+                default: return -1;
+            }
+        }
+
         // ── D · les règles ──────────────────────────────────────────────────────────────────────────────────────────────────────
         // Tous les lieutenants à `rule_count_band` NONE — et au moins un : sans lieutenant, personne n'attend de consigne.
         private static LigneDeLaSuite LigneDesRegles(RosterRow[] lieutenants)
@@ -218,6 +271,19 @@ namespace MafiaCleanCity.Shell
                     e.CommandeEnRoute = pr.has_pending_order;
                     e.CommandeArrivee = pr.has_arrived_order;
                 }, Journal("precursors"));
+            }
+            // E · la planque : `district/:id/stash` sur les quartiers du joueur (le chemin de ㊵), la plus chargée.
+            if (possedes != null)
+            {
+                var projections = new MafiaCleanCity.CityMap.CityProjectionsClient { BaseUrl = BaseUrl };
+                foreach (int quartier in possedes.Where(b => b != null && b.district_id > 0).Select(b => b.district_id).Distinct())
+                {
+                    MafiaCleanCity.CityMap.StashDto stash = null;
+                    yield return projections.Stash(quartier, jeton, x => stash = x, code => UnityEngine.Debug.LogWarning($"[LaSuite] stash {quartier} : {code}"));
+                    if (stash?.safehouses == null) continue;
+                    foreach (MafiaCleanCity.CityMap.SafehouseDto p in stash.safehouses)
+                        if (p != null && LaSuite.RangDeCharge(p.load_bucket) > LaSuite.RangDeCharge(e.ChargePlanque)) e.ChargePlanque = p.load_bucket;
+                }
             }
             yield return new SellingClient { BaseUrl = BaseUrl }.ListDealers(jeton, d => e.Dealers = d ?? new DealerDto[0], Journal("dealers"));
             yield return new LieutenantClient { BaseUrl = BaseUrl }.ListLieutenants(jeton, r => e.Lieutenants = r ?? new RosterRow[0], Journal("lieutenants"));
