@@ -196,7 +196,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             {
                 string t = MafiaCleanCity.I18n.Libelle.Gabarit(CleCartePreparee, RepliCartePreparee,
                     new Dictionary<string, string> { { "nom", Locuteur(c) } });
-                return MafiaCleanCity.I18n.NomsFiges.EstPerime(CleCartePreparee, t) ? RepliCartePreparee : t;   // pont TD-763
+                return t;   // pont TD-763 (NomsFiges) retiré le 26/09 : le back sert D37 (lot i18n 3, 256de0f8)
             }
             if (c.event_descriptor_i18n != null
                 && !string.IsNullOrEmpty(c.event_descriptor_i18n.key)

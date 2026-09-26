@@ -76,7 +76,7 @@ namespace MafiaCleanCity.Onboarding
             string repli = cle == ClePreseed ? RepliPreseed : null;
             string t = MafiaCleanCity.I18n.Libelle.Gabarit(cle, repli, string.IsNullOrWhiteSpace(nomServi) ? null
                 : new System.Collections.Generic.Dictionary<string, string> { { "nom", nomServi } });
-            if (MafiaCleanCity.I18n.NomsFiges.EstPerime(cle, t)) t = repli;   // pont TD-763
+            // pont TD-763 (NomsFiges) retiré le 26/09 : le back sert D37 (lot i18n 3, 256de0f8)
             return string.IsNullOrWhiteSpace(t) ? null : t;
         }
 
