@@ -1,0 +1,18 @@
+point	clé	fr	en	statut	note
+(1)	exceptions.apres.resolved	Noté : rien n’a bougé pour autant.	Noted: nothing has changed, though.	PROPOSÉ (valeur changée, clé gardée)	seule issue RESOLVED du back = ONE_TIME (one-time.handler.ts:18), « no real mutation » : « C’est réglé » était faux dans TOUS les cas
+(1)	exception_detail.outcome.resolved	NOTÉ	NOTED	PROPOSÉ (valeur changée, clé gardée)	le tampon (à la place de RÉGLÉ) ; même raison
+(2)	boutique.bloc.jetons	— Marks	— Marks	PROPOSÉ (valeur changée, clé gardée)	solde inconnu ; nom unique = Marks (canon : currencies.md, economy_states.marks, iap_catalogue) ; en == fr : à classer dans _en-egal-fr-classement.txt (nom propre de monnaie)
+(2)	boutique.bloc.n_marks	{n, plural, one {# Mark} other {# Marks}}	{n, plural, one {# Mark} other {# Marks}}	PROPOSÉ (clé neuve)	le solde et le prix (client : « {Solde} jetons », « {price_marks} jetons ») ; en == fr, à classer
+(2)	boutique.bloc.donne_n_marks	donne {n, plural, one {# Mark} other {# Marks}}	gives {n, plural, one {# Mark} other {# Marks}}	PROPOSÉ (clé neuve)	« donne {marks_granted} jetons »
+(2)	boutique.bloc.bonus_de_marks_par_euro	+{bonus} % de Marks par euro	+{bonus}% more Marks per euro	PROPOSÉ (clé neuve)	« +N % de jetons par euro » ; jamais collé au nombre de Marks
+(2)	boutique.bloc.plus_aucun_mark_et_rien_n_en_redonne	plus aucun Mark, et rien n’en redonne	no Marks left, and nothing gives any back	PROPOSÉ (clé neuve)	refus d’achat, solde à zéro
+(2)	boutique.bloc.pas_assez_de_marks	pas assez de Marks	not enough Marks	PROPOSÉ (clé neuve)	refus d’achat
+(2)	boutique.sku.marks_pack_small	Liasse de 100 Marks	A wad of 100 Marks	PROPOSÉ (clé neuve (ParValeur sur sku_id))	display_name servi en anglais « Pack — 100 Marks » (iap-sku-catalogue.ts:56), sans clé (K2)
+(2)	boutique.sku.marks_pack_med	Liasse de 600 Marks	A wad of 600 Marks	PROPOSÉ (clé neuve)	
+(2)	boutique.sku.marks_pack_large	Liasse de 1 400 Marks	A wad of 1,400 Marks	PROPOSÉ (clé neuve)	
+(2)	boutique.sku.marks_pack_xl	Liasse de 3 500 Marks	A wad of 3,500 Marks	PROPOSÉ (clé neuve)	
+(2)	boutique.sku.cosm_callsign_color	Couleurs d’indicatif	Callsign colours	PROPOSÉ (clé neuve)	
+(2)	boutique.sku.cosm_dashboard_theme_1	Thème : nuit au sodium	Theme: sodium night	PROPOSÉ (clé neuve)	
+(2)	boutique.sku.save_slot_2	Une deuxième partie	A second save	PROPOSÉ (clé neuve)	
+(2)	boutique.sku.save_slot_3	Une troisième partie	A third save	PROPOSÉ (clé neuve)	
+(2)	boutique.sku.support_pack	Soutien au studio	Studio support	PROPOSÉ (clé neuve)	
