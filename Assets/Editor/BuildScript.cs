@@ -141,7 +141,8 @@ public static class BuildScript
         byte[][] interdits = { System.Text.Encoding.UTF8.GetBytes("http://localhost"), System.Text.Encoding.Unicode.GetBytes("http://localhost") };
         // B5 point 7 (f2 26/09) : la paire de démo, MOT DE PASSE compris, était dans chaque APK distribué (global-metadata.dat, ×2 au
         // 26/09). `IdentiteDeDemo` ne la porte plus qu'en éditeur ; ce balayage refuse l'APK qui la porterait encore.
-        string[] paireDeDemo = { "operational-demo-pw", "operational_demo@example.test", "citymap-demo-pw", "citymap_demo@example.test" };
+        // Élargi le 26/09 (f2, après l'APK 620bc05a) : « operational_demo » TOUT COURT — plus aucun texte de démo, même d'attribut d'inspecteur.
+        string[] paireDeDemo = { "operational-demo-pw", "operational_demo", "citymap-demo-pw", "citymap_demo" };
         byte[][] demo = paireDeDemo.SelectMany(p => new[] { System.Text.Encoding.UTF8.GetBytes(p), System.Text.Encoding.Unicode.GetBytes(p) }).ToArray();
         var fautivesDemo = new System.Collections.Generic.List<string>();
         byte[][] voulus = { System.Text.Encoding.UTF8.GetBytes(urlVoulue), System.Text.Encoding.Unicode.GetBytes(urlVoulue) };

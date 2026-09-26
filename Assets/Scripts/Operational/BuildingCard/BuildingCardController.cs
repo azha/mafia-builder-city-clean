@@ -39,7 +39,7 @@ namespace MafiaCleanCity.Operational
         [Header("Backend")]
         private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
         private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
-        [Header("Demo sign-in (seeded by Tools/seed_operational_demo.mjs)")]
+        // Paire de démo (éditeur seulement, IdentiteDeDemo), semée par Tools/seed_operational_demo.mjs — en COMMENTAIRE, pas en attribut : le texte d'un attribut part dans l'APK (f2 26/09).
         [SerializeField] private string demoIdentifier = MafiaCleanCity.IdentiteDeDemo.Operationnelle;
         [SerializeField] private string demoPassword = MafiaCleanCity.IdentiteDeDemo.MotDePasseOperationnel;
 

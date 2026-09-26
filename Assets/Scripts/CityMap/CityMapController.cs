@@ -25,7 +25,7 @@ namespace MafiaCleanCity.CityMap
         [Tooltip("Public game API base. /v1 districts is unauthed; heat needs a token.")]
         private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
         private string baseUrl { get => baseUrlPose ?? MafiaCleanCity.AdresseDuBack.Url; set => baseUrlPose = value; }
-        [Header("Demo sign-in (seeded by Tools/seed_citymap_demo.mjs)")]
+        // Paire de démo (éditeur seulement, IdentiteDeDemo), semée par Tools/seed_citymap_demo.mjs — en COMMENTAIRE, pas en attribut : le texte d'un attribut part dans l'APK (f2 26/09).
         [SerializeField] private string demoIdentifier = MafiaCleanCity.IdentiteDeDemo.Carte;
         [SerializeField] private string demoPassword = MafiaCleanCity.IdentiteDeDemo.MotDePasseCarte;
 
