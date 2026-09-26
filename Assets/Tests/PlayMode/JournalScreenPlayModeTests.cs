@@ -340,6 +340,9 @@ namespace MafiaCleanCity.Operational.Tests
                 "sous le titre, le quartier par son nom de fiction");
             Assert.IsFalse(textes.Exists(x => x.Contains("news_beat.") || x.Contains("press.outlet.") || x.Contains("district-16")),
                 "aucune clé ni slug à l'écran : " + string.Join(" | ", textes));
+            // ㊳ (§G, 26/09) : la fraîcheur en mots (table 49), jamais la bande brute
+            CollectionAssert.Contains(textes, "La Lisière · ce matin", string.Join(" | ", textes));
+            Assert.IsFalse(textes.Exists(x => x.Contains("fresh")), "« fresh » brut : " + string.Join(" | ", textes));
             Assert.AreEqual(0, ecran.LignesSansTexte);
             Assert.IsFalse(textes.Exists(x => x.Contains("n'a de texte") || x.Contains("sans leur texte") || x.Contains("sans son texte")),
                 "tout est écrit : le panneau ne prétend plus le contraire");
