@@ -153,6 +153,9 @@ namespace MafiaCleanCity.Shell
             }
         }
 
+        /// <summary>La hauteur d'une ligne de file (deux lignes de texte à 14 et la marge de 6 + 6) — fixe, voir AddRow.</summary>
+        public const float HauteurLigne = 48f;
+
         private void AddRow(ExceptionCardDto card)
         {
             GameObject row = new GameObject("Row_" + card.exception_id, typeof(RectTransform));
@@ -164,7 +167,14 @@ namespace MafiaCleanCity.Shell
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
             LayoutElement rowLe = row.AddComponent<LayoutElement>();
-            rowLe.minHeight = 36;
+            // ⛔ Créneau du 26/09 (planche P1, file seule) : l'UNIQUE ligne s'étirait sur toute la bande (≈ 44 % de l'écran), texte
+            //    minuscule, « trancher » perdu à droite. Décidé (reco, 26/09) : la ligne a une hauteur FIXE de conception — deux lignes de
+            //    texte et leur marge — ni min seul, ni flexible : elle ne s'étire jamais, quelle que soit la bande ou l'ordre de layout (la
+            //    hauteur préférée d'un TMP calculée à largeur nulle suffisait à la gonfler). La réplique trop longue finit en ellipse.
+            //    Garde : AccueilCanonPlayModeTests A6 (même hauteur avec et sans carte de tête).
+            rowLe.minHeight = HauteurLigne;
+            rowLe.preferredHeight = HauteurLigne;
+            rowLe.flexibleHeight = 0f;
 
             // Gravité — le MOT, dans la couleur de sa gravité (C5-F1 : la couleur n'est jamais seule). 23/09 (décision f2 D11) : le glyphe
             // « [!..] » qui portait la couleur à côté du mot est RETIRÉ ; la couleur passe au mot lui-même.
@@ -181,6 +191,7 @@ namespace MafiaCleanCity.Shell
                     MafiaCleanCity.Operational.Exceptions.ExceptionBandes.TexteServeur(card),
                     MafiaCleanCity.Operational.Exceptions.ExceptionBandes.ParleUnLieutenant(card)), 260);
             renderedDescripteurs.Add(descriptor.text);
+            descriptor.overflowMode = TextOverflowModes.Ellipsis;   // la hauteur de la ligne est fixe : la réplique ne la pousse pas
 
             // ⛔ PASSE UX 26/09 (§G/§I, ④) — ici vivait « Resolve » : un APLAT `accentGold` SANS libellé, étiré par la mise en page (le plus
             //    gros élément de l'écran de la minute 0), dont le toucher RÉGLAIT la carte par l'action suggérée sans rien dire. Le geste

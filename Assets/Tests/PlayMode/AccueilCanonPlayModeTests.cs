@@ -243,6 +243,44 @@ namespace MafiaCleanCity.Shell.Tests
                 "la ligne porte son geste « trancher » (plus d'aplat « Resolve » muet)");
         }
 
+        /// <summary>A6 (créneau du 26/09, planche P1) — la ligne de file garde sa hauteur de conception, ancrée en haut de la file, AVEC
+        /// et SANS carte de tête : l'unique ligne ne s'étire plus sur la bande (« file seule »).</summary>
+        [UnityTest]
+        public IEnumerator A6_LaLigneDeFile_GardeSaHauteur_AvecEtSansCarteDeTete()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_LigneDeFile");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            Poser(shell, "Token", "jeton-de-test");
+            var file = new[] { new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "e-1", severity_band = "MODERATE" } };
+            var transport = new TransportTemoin();
+            shell.TransportDeSessionPourTest = transport;
+
+            float Hauteur(string cas)
+            {
+                Canvas.ForceUpdateCanvases();
+                Transform ligne = shell.ContentSlot.GetComponentsInChildren<Transform>(false).LastOrDefault(t => t.name == "Row_e-1");
+                Assert.IsNotNull(ligne, $"{cas} : la ligne de la carte est rendue");
+                return ((RectTransform)ligne).rect.height;
+            }
+
+            SessionOpenDto avecCarte = AvecCarte("c-tete"); avecCarte.queue = file;
+            transport.Reponse = avecCarte;
+            yield return RouvrirParEmpire();
+            yield return null;
+            float hAvec = Hauteur("avec carte de tête");
+
+            SessionOpenDto sansCarte = AvecCarte(null); sansCarte.queue = file;
+            transport.Reponse = sansCarte;
+            yield return RouvrirParEmpire();
+            yield return null;
+            float hSans = Hauteur("file seule");
+
+            Assert.AreEqual(ExceptionQueuePanelController.HauteurLigne, hAvec, 0.5f, "avec carte de tête : la hauteur de conception");
+            Assert.AreEqual(hAvec, hSans, 0.5f, $"la ligne a la MÊME hauteur avec et sans carte de tête ({hAvec:F1} contre {hSans:F1}) — jamais étirée");
+        }
+
         [UnityTest]
         public IEnumerator A4_AvecUneCarte_AucuneSurfaceNeRecouvreUnGesteDeLaTete()
         {
