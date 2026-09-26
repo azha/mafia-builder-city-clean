@@ -10,11 +10,13 @@
 - classes de la commande : les 3 « agir » qui prélèvent disent le coût sans montant (« tant que l’argent suit ») ; les 3 « laisser » en face disent
   « Rien n’est payé » ; les 4 navigations disent qu'elles ne font rien (« rien n’ ») ; la ligne 15 ne promet ni traitement, ni résolution, ni reprise.
 Contrôle de mutation (`--mutation`) : 6 fautes semées, chacune doit être vue (⛔), sinon code 2.
+Addendum (f2, 26/09) : `57-addendum-libelle-remontees-2026-09-26.tsv`, une valeur SERVIE changée, clé gardée.
 Ce que ce contrôle NE voit PAS : la justesse au singulier comme au pluriel et l'épicène (lus à la main, §2 du rapport) ; la mise en page."""
 import csv, io, os, re, subprocess, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 TSV = os.path.join(ICI, '57-hl-consequences-2026-09-26.tsv')
 COMMANDE = os.path.join(ICI, 'commande-hl-consequences-2026-09-24.md')
+ADDENDUM = os.path.join(ICI, '57-addendum-libelle-remontees-2026-09-26.tsv')
 BACK, BREV = os.path.expanduser('~/project/mafia-clean-city'), 'e418ff65'
 DESIGN = 'docs/superpowers/specs/2026-09-23-hl-card-agit-design.md'
 TABLE = 'services/game-back/src/i18n/string_table.ts'
@@ -107,6 +109,13 @@ def main():
             rate += not d
         print(f'{len(semees) - rate}/{len(semees)} mutations vues'); return 2 if rate else 0
     D = verifier(entete, lignes, commande, annexe, en_reg, fr_reg)
+    ea, la = lire_tsv(open(ADDENDUM, encoding='utf-8').read())       # addendum f2 26/09 : UNE valeur servie changée, clé gardée
+    if ea != ['clé', 'fr', 'en', 'statut'] or len(la) != 1: D.append(f'addendum : forme {ea} / {len(la)} ligne(s)')
+    for k, fr, en, statut in la:
+        if k != 'hl.option.escalation_backlog.review_now': D.append(f'addendum : clé {k}')
+        if k not in en_reg or k not in fr_reg: D.append(f'addendum : {k} non servie (une clé neuve n’est pas un changement de valeur)')
+        elif fr_reg[k] == fr or en_reg[k] == en: D.append(f'addendum : {k} valeur inchangée')
+        if "'" in fr or fr == en or not statut.startswith('PROPOSÉ'): D.append(f'addendum : {k} D10 / en == fr / statut')
     print(f'commande {len(commande)} options ; annexe §14 ({BREV}) {len(annexe)} ; TSV {len(lignes)} lignes ; '
           f'registres EN {len(en_reg)} / FR {len(fr_reg)} clés')
     for x in D: print('  ⛔', x)
