@@ -80,8 +80,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(DesignTokens.Current.hudMoneyUnderlineGold, marr.Find("Rail").GetComponent<Image>().color, "modérée ⇒ or");
             Assert.AreEqual(DesignTokens.Current.hudGaugeArcCold, ExceptionQueueController.CouleurRail("MILD"), "légère ⇒ cyan");
 
-            Assert.AreEqual("Lt. Kane", kane.Find("Nom").GetComponent<TextMeshProUGUI>().text);
-            Assert.AreEqual("La ville", ville.Find("Nom").GetComponent<TextMeshProUGUI>().text);
+            // ⑨ (atelier D36) : le nom vit dans l'étiquette d'une ligne (nom · métier)
+            Assert.AreEqual("Lt. Kane", kane.Find("Etiquette/Nom").GetComponent<TextMeshProUGUI>().text);
+            Assert.AreEqual("La ville", ville.Find("Etiquette/Nom").GetComponent<TextMeshProUGUI>().text);
         }
 
         [Test]

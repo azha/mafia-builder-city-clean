@@ -53,6 +53,17 @@ namespace MafiaCleanCity.Operational.Exceptions
             return rangee;
         }
 
+        /// <summary>⑩ (relecture f1 §I.6, planche A2 de 20260926-044215) : la bulle ÉPOUSE son texte au lieu d'être étirée sur la
+        /// hauteur de la rangée — « un grand vide sous la réplique ». La rangée de ⑨ garde l'étirement (`.parle{align-items:flex-end}`,
+        /// cadre 14) ; ⑩ n'est pas un comptoir : le haut de la carte porte la parole, les options suivent. Pur sur la rangée.</summary>
+        public static void EpouserLeTexte(RectTransform rangee)
+        {
+            HorizontalLayoutGroup hp = rangee != null ? rangee.GetComponent<HorizontalLayoutGroup>() : null;
+            if (hp == null) return;
+            hp.childForceExpandHeight = false;
+            hp.childAlignment = TextAnchor.UpperLeft;
+        }
+
         /// <summary>Le médaillon et la bulle de `c`, dans `rangee` (vidée d'abord par l'appelant). Rend la bulle.</summary>
         public GameObject Construire(Transform rangee, ExceptionCardDto c, string contexte, string replique, params string[] pastilles)
         {

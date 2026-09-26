@@ -252,6 +252,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             ParleurAuComptoir parleur = Parleur();
             parleur.ContexteSuivi = ExceptionBandes.EnseigneVisee(c) == null;
             RectTransform rangee = parleur.ConstruireRangee(body, 10f);
+            ParleurAuComptoir.EpouserLeTexte(rangee);   // ⑩ : la bulle épouse sa réplique (relecture f1 §I.6)
             parleur.Construire(rangee, c, ExceptionQueueController.Contexte(RoleDuLocuteur, c), RepliqueMain(c),
                 ExceptionBandes.Gravite(c.severity_band), ExceptionBandes.Priorite(c.priority_band),
                 ExceptionBandes.Confiance(c.confidence_band));
