@@ -14,4 +14,5 @@ Cadre de référence : maquette m-91 (`ecrans-brennar-6.html` #91) — « Ce qui
 | `politique.evenement.e_pol_01` … `e_pol_12` | le `name` servi (anglais, K2) | le nom de l'événement, keyé par `eventId` (`Libelle.ParValeur`) — 12 ids du catalogue `operational/political/*` |
 
 Orphelines (servies, plus demandées) : `carnet.bloc.ce_que_la_ville_ne_dit_pas`,
-`carnet.bloc.ce_que_la_ville_prepare_personne_ne_vous_le_rapporte_encore_ce_sera_ici_le_jour_ou_quelqu_un_le_fera` — à retirer côté back.
+`carnet.bloc.ce_que_la_ville_prepare_personne_ne_vous_le_rapporte_encore_ce_sera_ici_le_jour_ou_quelqu_un_le_fera` — elles RESTENT au
+servi (contrat additif, f2 26/09 : on n'enlève ni ne renomme une clé servie) ; sans consommateur, le juge des données les verra.

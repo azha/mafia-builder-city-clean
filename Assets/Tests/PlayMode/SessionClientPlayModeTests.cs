@@ -286,6 +286,12 @@ namespace MafiaCleanCity.Shell.Tests
                 // C'est CE couple qui voit un ajout/retrait SERVEUR — ni C3-F2 seul (compare le DTO à
                 // une constante), ni une lecture typée seule (JsonUtility ignore silencieusement une
                 // clé inconnue au lieu de la signaler).
+                // ⛔ MODE D'EMPLOI (B4, 26/09, f2) — CETTE ÉPINGLE ROUGIRA LE JOUR OÙ LE BACK SERVIRA LES DEUX JOURS DE LA FAMILLE dans
+                //   session/open (design L1, `design/boucle-argent`) : 14 champs contre 16 clés. C'est VOULU, elle annonce l'arrivée.
+                //   Ce jour-là : (1) lire les noms exacts dans le design L1 et corriger `CycleDeSession.ChampsServis` ; (2) remplacer les
+                //   deux PROPRIÉTÉS `SessionOpenDto.JourDeFamille` / `JourDeFamilleALOuverture` par deux vrais CHAMPS de ces noms
+                //   (`int`, sérialisés) et retirer leur lecture par `CycleDeSession.LireEntier` dans `SessionClient.OpenSession` ;
+                //   (3) passer C3-F2 de 14 à 16. Ne JAMAIS faire reverdir en retirant les clés du compte.
                 int rawDataKeyCount = CountTopLevelObjectKeys(raw, "\"data\":");
                 Assert.AreNotEqual(-1, rawDataKeyCount, "the raw body actually contains a payload.data object");
                 var fields = typeof(SessionOpenDto).GetFields(
