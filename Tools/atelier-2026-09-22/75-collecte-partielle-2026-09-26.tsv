@@ -1,7 +1,16 @@
 n°	quand	clé	fr	en	statut	note
-1	collecte partielle : une part ramassée, le reste chez le dealer	vente.geste.ramasse_collecte_il_reste_reste_chez_prenom	Ramassé : {collecte}. Il reste {reste} chez {prenom}.	Collected: {collecte}. {reste} still with {prenom}.	PROPOSÉ	{collecte}, {reste} = montants servis, au format de la maison (« 24 850 € », ARBITRAGES point 10) ; {prenom} = name_i18n du dealer (un prénom seul) ; remplace « la caisse est vide ou la planque est pleine », faux pour un dealer bloqué
-2	collecte entière	vente.geste.tout_est_ramasse_collecte	Tout est ramassé : {collecte}.	All collected: {collecte}.	PROPOSÉ	
-3	refus réel : la planque est pleine (rien n’a pu entrer)	vente.refus.la_planque_est_pleine_blanchissez_d_abord_pour_faire_de_la_place	La planque est pleine : blanchissez d’abord, pour faire de la place.	The safehouse is full: launder first, to make room.	PROPOSÉ	code proposé au lot COLLECTE : error.selling.safehouse_full (distinct de la caisse vide) ; « blanchir » vide la planque (injection)
-4	refus réel : la caisse du dealer est vide	vente.refus.la_caisse_de_prenom_est_vide	La caisse de {prenom} est vide.	{prenom}’s cash is empty.	PROPOSÉ	code proposé : error.selling.cash_empty ; plus jamais fondu avec la planque pleine
-—	sites	—	—	—	NOTE	littéral actuel « la caisse est vide ou la planque est pleine » à 2 sites du client (mafia-unity-F) : ㉟ SellingScreenController.cs:309, ① CityProjectionsClient.cs:144 — les deux passent sur ces clés ; À SERVIR APRÈS le lot COLLECTE (collecte partielle, TD-797)
-—	source	—	—	—	SOURCE	RAPPORT-26-09.md §J-septies @ 8c309767 ; ARBITRAGES D44, D47
+1	collecte partielle (collected_band + remaining_band), nom servi	vente.geste.ramasse_collecte_encore_chez_prenom_reste	Ramassé : {collecte}. Encore chez {prenom} : {reste}.	Collected: {collecte}. Still with {prenom}: {reste}.	PROPOSÉ	{collecte} / {reste} = un MOT de bande (vente.somme.<bande>, ci-dessous), JAMAIS un nombre (R2.2, selling.controller.ts:19) ; {prenom} = name_i18n du dealer, quand le back le sert
+1b	idem, SANS nom (tant que le nom du dealer n’est pas servi)	vente.geste.ramasse_collecte_encore_chez_le_dealer_reste	Ramassé : {collecte}. Encore chez le dealer : {reste}.	Collected: {collecte}. Still with the dealer: {reste}.	PROPOSÉ	
+2	collecte entière (remaining_band = NONE)	vente.geste.tout_est_ramasse_collecte	Tout est ramassé : {collecte}.	All collected: {collecte}.	PROPOSÉ	{collecte} = un mot de bande
+3	refus : planque pleine (error.selling.safehouse_full, accepté)	vente.refus.la_planque_est_pleine_blanchissez_d_abord_pour_faire_de_la_place	La planque est pleine : blanchissez d’abord, pour faire de la place.	The safehouse is full: launder first, to make room.	PROPOSÉ	
+4	refus : caisse vide (error.selling.cash_empty, accepté), nom servi	vente.refus.la_caisse_de_prenom_est_vide	La caisse de {prenom} est vide.	{prenom}’s cash is empty.	PROPOSÉ	
+4b	idem, SANS nom	vente.refus.la_caisse_du_dealer_est_vide	La caisse du dealer est vide.	The dealer’s cash is empty.	PROPOSÉ	
+5	bande LOW (DealerCashBand, même échelle que la caisse servie)	vente.somme.low	une petite somme	a small sum	PROPOSÉ	ParValeur(« vente », « somme », bande) ; groupe NOMINAL pour la phrase — les mots de jauge servis (vente.bloc.vide / peu / moyenne / pleine / deborde) sont des adjectifs de la jauge, gardés tels quels pour elle
+6	bande MODERATE	vente.somme.moderate	une somme correcte	a fair sum	PROPOSÉ	
+7	bande HIGH	vente.somme.high	une grosse somme	a large sum	PROPOSÉ	
+8	bande FULL	vente.somme.full	une caisse pleine	a full cash box	PROPOSÉ	
+9	bande NONE (seulement pour {reste} : sinon c’est la phrase 2 ou le refus 4)	vente.somme.none	rien	nothing	PROPOSÉ	ne s’affiche pas dans la phrase 1 : remaining NONE ⇒ phrase 2
+—	course pendant la collecte	—	—	—	NOTE	aucun libellé : le code reste générique et le client réessaie UNE fois en silence (décision back, 26/09)
+—	sites	—	—	—	NOTE	littéral actuel « la caisse est vide ou la planque est pleine » à 2 sites du client : ㉟ SellingScreenController.cs:309, ① CityProjectionsClient.cs:144 — À SERVIR APRÈS le lot COLLECTE (TD-797)
+—	corrigé le 26/09	—	—	—	NOTE	la première écriture portait des MONTANTS dans les phrases ; le back ne sert jamais de montant brut (R2.2) : bandes collected_band / remaining_band (décision back, 26/09), mots de bande ci-dessus. Les clés de la première écriture, jamais servies, sont remplacées
+—	source	—	—	—	SOURCE	RAPPORT-26-09.md §J-septies @ 8c309767 ; ARBITRAGES D44, D47 ; DealerCashBand (back bfd194bc) ; selling.controller.ts:19 (R2.2)
