@@ -1,0 +1,13 @@
+n°	écran	clé (gardée)	fr	en	statut	note
+1	㉞	carnet.bloc.les_ordres_de_ce_soir	Les ordres à lancer	Orders to launch	PROPOSÉ (valeur changée, clé gardée)	le carnet part DÈS le lancement (back 1ffb08b4) ; 3 sites de lecture (liste de CLIENT-2)
+2	㉘	distribution.titre.l_envoi_de_ce_soir	Le prochain envoi	The next run	PROPOSÉ (valeur changée, clé gardée)	l’envoi part dès l’appel
+3	㉘	distribution.bloc.aucune_destination_connue_pour_l_envoi_de_ce_soir	Aucune destination connue pour le prochain envoi.	No known destination for the next run.	PROPOSÉ (valeur changée, clé gardée)	
+4	㉘	distribution.bloc.la_marchandise_est_prete_au_labo_dites_moi_qui_part_et_par_ou_et_je_l_enverrai_ce_soir	La marchandise est prête au labo. Dites-moi qui part et par où, et je l’envoie tout de suite.	The product is ready at the lab. Tell me who goes and which way, and I’ll send it right away.	PROPOSÉ (valeur changée, clé gardée)	le coursier est en route tout de suite
+5	㉘	distribution.bouton.envoyer_ce_soir	ENVOYER MAINTENANT	SEND NOW	PROPOSÉ (valeur changée, clé gardée)	
+6	㉙	conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain	« Dites-moi seulement chez qui. J’y vais, on saura demain. »	“Just tell me where. I’m going, we’ll know tomorrow.”	PROPOSÉ (valeur changée, clé gardée)	le coup se résout au prochain passage de nuit : « on saura demain » est vrai, « ce soir » ne l’est pas
+7	㉙	conflit.bloc.qui_part_ce_soir	QUI Y VA	WHO GOES	PROPOSÉ (valeur changée, clé gardée)	
+8	㉙	conflit.bloc.le_coup_de_ce_soir	Le prochain coup	The next strike	PROPOSÉ (valeur changée, clé gardée)	
+9	㉙	conflit.bloc.ce_soir	En cours	Under way	PROPOSÉ (valeur changée, clé gardée)	le coup est lancé, il attend le passage de nuit
+10	㉙	conflit.bloc.l_envoyer_ce_soir	L’envoyer	Send them	PROPOSÉ (valeur changée, clé gardée)	
+11	㊳	journal.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_la_ville_est_calme_c_est_on_ne_sait_pas_ce_qu_elle_a_fait_cette_nuit	on n’a pas eu de réponse. Ce n’est pas « la ville est calme » : c’est « on ne sait pas ce qu’elle a fait ».	no answer came back. That's not “the city is quiet” — it's “we don't know what it did”.	PROPOSÉ (valeur changée, clé gardée)	NEUTRE, vraie à toute phase (JournalScreenController.cs:556)
+—	source	—	—	—	SOURCE	décision f2 (reco back, 26/09) : on réécrit les mots, pas le moteur ; mesure back main 1ffb08b4 (carnet et envoi partent dès l’appel ; le coup ㉙ se résout au prochain passage de nuit) ; valeurs lues au bundle 1ffb08b4, seul le segment faux remplacé (le reste à l’octet)
