@@ -69,17 +69,20 @@ namespace MafiaCleanCity.Operational.Tests
             hostGo = new GameObject("ExceptionQueue", typeof(RectTransform));
             ecran = hostGo.AddComponent<ExceptionQueueController>();
             ecran.RendrePourTest(new[] { CartePreparee() });   // même frame : pas de Boot réseau
+            ecran.ClientPourTest.SubstitutFilePourTest = () => new[] { CartePreparee() };   // un rechargement rend la même carte
             yield return null;
-            var canvas = Object.FindFirstObjectByType<Canvas>();
-            Assert.IsNotNull(canvas);
-            Transform comptoir = canvas.GetComponentsInChildren<Transform>(true).FirstOrDefault(x => x.name == "Comptoir");
-            Assert.IsNotNull(comptoir, "⑨ n'a pas de comptoir");
+            // ⛔ LE COMPTOIR DE CET ÉCRAN-CI — mesuré au créneau du 26/09 : `FindFirstObjectByType<Canvas>()` rendait le Canvas d'un test
+            //    PRÉCÉDENT de la catégorie (deux attendants « La ville »), et la garde mesurait le comptoir d'un autre.
+            Assert.IsNotNull(ecran.ParlePourTest, "⑨ n'a pas de rangée .parle");
+            Transform comptoir = ecran.ParlePourTest.transform.parent;
+            Assert.AreEqual("Comptoir", comptoir.name);
             MiseEnPage(comptoir);
 
             var textes = comptoir.GetComponentsInChildren<TextMeshProUGUI>(false)
                 .Where(t => t.isActiveAndEnabled && !string.IsNullOrWhiteSpace(t.text)).ToList();
             Assert.Greater(textes.Count, 5, "le comptoir n'a pas rendu ce qu'on croit mesurer : " + string.Join(" | ", textes.Select(t => t.name)));
-            Assert.IsTrue(textes.Any(t => t.text.Contains("solvant")), "la réplique longue est rendue");
+            Assert.IsTrue(textes.Any(t => t.text.Contains("solvant")), $"la réplique longue n'est pas rendue — {ecran.Cards.Length} carte(s) ; "
+                + "textes : " + string.Join(" | ", textes.Select(t => t.name + "=" + t.text)));
             var tronques = textes.Where(t => { t.ForceMeshUpdate(); return t.isTextTruncated; }).Select(t => t.name).ToList();
             Assert.IsEmpty(tronques, "texte tronqué : " + string.Join(", ", tronques));
 
