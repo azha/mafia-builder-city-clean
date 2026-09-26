@@ -423,10 +423,11 @@ namespace MafiaCleanCity.Operational
             }
             else
             {
-                titre = "L’envoi de ce soir";                                       // m-54, verbatim
+                titre = null;                                                       // table 80 : « Le prochain envoi » (clé gardée, ci-dessous)
                 sousTitre = "On choisit d'où ça part, où ça va, et par quel chemin."; // m-54, verbatim
             }
-            titreTexte.text = Libelle.De("distribution", "titre", titre);
+            titreTexte.text = titre != null ? Libelle.De("distribution", "titre", titre)
+                : MafiaCleanCity.I18n.Libelle.Gabarit("distribution.titre.l_envoi_de_ce_soir", "Le prochain envoi");   // table 80 @20ceeca0 : la valeur servie réécrite (le geste part tout de suite — mesure back), clé gardée
             sousTitreTexte.text = Libelle.De("distribution", "sous_titre", sousTitre);
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
@@ -707,7 +708,7 @@ namespace MafiaCleanCity.Operational
             else if (arrivee)
                 replique = "Livré. Le carton est au comptoir, personne n'a rien vu.";                                // m-56
             else
-                replique = "La marchandise est prête au labo. Dites-moi qui part et par où, et je l'enverrai ce soir."; // m-54
+                replique = null;   // table 80 : « … et je l'envoie tout de suite. » (clé gardée, au rendu)
 
             GameObject enTete = NouveauUI("Lieutenant", piedRoot);
             HorizontalLayoutGroup hl = enTete.AddComponent<HorizontalLayoutGroup>();
@@ -745,7 +746,8 @@ namespace MafiaCleanCity.Operational
             TrackText(roleTexte.text);
 
             TextMeshProUGUI q = NouveauTexteFiche(piedRoot, "Replique",
-                Libelle.De("distribution", "bloc", replique), 9f, DesignTokens.Current.onSurfaceSecondary, false);
+                replique != null ? Libelle.De("distribution", "bloc", replique)
+                    : MafiaCleanCity.I18n.Libelle.Gabarit("distribution.bloc.la_marchandise_est_prete_au_labo_dites_moi_qui_part_et_par_ou_et_je_l_enverrai_ce_soir", "La marchandise est prête au labo. Dites-moi qui part et par où, et je l\u2019envoie tout de suite."), 9f, DesignTokens.Current.onSurfaceSecondary, false);
             q.fontStyle = FontStyles.Italic;
             q.enableWordWrapping = true;
             TrackText(q.text);
@@ -764,8 +766,7 @@ namespace MafiaCleanCity.Operational
             if (string.IsNullOrEmpty(ToBuildingId))
             {
                 TextMeshProUGUI noteDest = NouveauTexteFiche(piedRoot, "NoteSansDestination",
-                    Libelle.De("distribution", "bloc",
-                        "Aucune destination connue pour l’envoi de ce soir."), 8.5f,
+                    MafiaCleanCity.I18n.Libelle.Gabarit("distribution.bloc.aucune_destination_connue_pour_l_envoi_de_ce_soir", "Aucune destination connue pour le prochain envoi."), 8.5f, // table 80 @20ceeca0 : la valeur servie réécrite (le geste part tout de suite — mesure back), clé gardée
                     RougeMauvais, false);
                 noteDest.enableWordWrapping = true;
                 TrackText(noteDest.text);
@@ -784,9 +785,11 @@ namespace MafiaCleanCity.Operational
             hb.childAlignment = TextAnchor.MiddleLeft;
             AddLayoutElement(bouton, preferredHeight: Px(36f));
 
-            string libLitteral = arrivee ? "TENDRE UNE AUTRE FICELLE" : "ENVOYER CE SOIR"; // m-56 / m-54
+            // m-56 / m-54 ; table 80 : « ENVOYER MAINTENANT » — l'envoi part tout de suite (clé gardée distribution.bouton.envoyer_ce_soir)
+            string libBoutonTexte = arrivee ? Libelle.De("distribution", "bouton", "TENDRE UNE AUTRE FICELLE")
+                : MafiaCleanCity.I18n.Libelle.Gabarit("distribution.bouton.envoyer_ce_soir", "ENVOYER MAINTENANT");
             TextMeshProUGUI libBouton = NouveauTexteFiche(bouton.transform, "Libelle",
-                Libelle.De("distribution", "bouton", libLitteral), 10.5f, EncreSombre, true);
+                libBoutonTexte, 10.5f, EncreSombre, true);
             libBouton.characterSpacing = 4f;
             TrackText(libBouton.text);
             boutonEnvoyerTexte = libBouton;

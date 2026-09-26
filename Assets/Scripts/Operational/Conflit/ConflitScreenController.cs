@@ -390,7 +390,7 @@ namespace MafiaCleanCity.Operational
             // Le titre est le geste de l'écran, comme dans les six cadres `.cfl6` de la maquette.
             // « Le conflit » reste le nom de destination dans le menu Plus ; le répéter ici
             // transformait une table où l'on décide en page documentaire (juge visuel r1 M10).
-            titreTexte.text = Libelle.Gabarit("conflit.bloc.le_coup_de_ce_soir", "Le coup de ce soir");
+            titreTexte.text = Libelle.Gabarit("conflit.bloc.le_coup_de_ce_soir", "Le prochain coup");
             // Restauration (24/09) : l'en-tête montre le chapeau du panneau d'envoi (cadre 59, mise en scène gardée) — avec SA clé
             // (`conflit.bloc.on_choisit_…`) et le mot de la table 40 v3 (df041316). La mise en scène l'avait posé sous la clé du
             // sous-titre (`conflit.sous_titre.ce_que_vos_hommes_…`) : clé et texte ne se répondaient plus.
@@ -797,7 +797,7 @@ namespace MafiaCleanCity.Operational
                     tagLayout.childControlWidth = true; tagLayout.childControlHeight = true;
                     tagLayout.childForceExpandWidth = false; tagLayout.childForceExpandHeight = false;
                     TextMeshProUGUI ceSoir = NouveauTexteFiche(tag.transform, "CeSoir",
-                        Libelle.Gabarit("conflit.bloc.ce_soir", "Ce soir"), 6.4f, Or, true);
+                        Libelle.Gabarit("conflit.bloc.ce_soir", "En cours"), 6.4f, Or, true);
                     ceSoir.characterSpacing = 1f;
                     ceSoir.fontStyle |= FontStyles.UpperCase;
                     ceSoir.enableWordWrapping = false;
@@ -1043,7 +1043,7 @@ namespace MafiaCleanCity.Operational
                     null, true, OuvrirRecrutement);   // la précision « pour préparer le coup » était inventée (restauration 24/09)
                 return;
             }
-            string replique = Libelle.Gabarit("conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain", "«\u00A0Dites-moi seulement chez qui. Je pars ce soir, on saura demain.\u00A0»");
+            string replique = Libelle.Gabarit("conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain", "\u00AB\u00A0Dites-moi seulement chez qui. J\u2019y vais, on saura demain.\u00A0\u00BB");
             // Arbitrage (5) du 23/09 : la réplique SANS orateur — « {nom} : » est une composition sans clé ; le nom est sur la ligne
             // de l'homme, au-dessus (restauration 24/09).
             Replique(piedRoot, "Replique", replique);
@@ -1054,7 +1054,7 @@ namespace MafiaCleanCity.Operational
                 r.enableWordWrapping = true;
                 TrackText(r.text);
             }
-            BoutonGeste(piedRoot, "LEnvoyerCeSoir", Libelle.Gabarit("conflit.bloc.l_envoyer_ce_soir", "L’envoyer ce soir"),
+            BoutonGeste(piedRoot, "LEnvoyerCeSoir", Libelle.Gabarit("conflit.bloc.l_envoyer_ce_soir", "L\u2019envoyer"),
                 Libelle.Gabarit("conflit.bloc.on_ne_pourra_plus_le_rappeler", "pas de rappel possible"), EnvoiPossible, EnvoyerLeCoup);
         }
 

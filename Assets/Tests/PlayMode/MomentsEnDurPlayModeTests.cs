@@ -14,8 +14,8 @@ namespace MafiaCleanCity.Tests
     //   M1  Moment.Dire : la phase servie choisit la clé et son repli ; absente ou hors domaine ⇒ « inconnu » — jamais un « ce matin » fixe
     //   M2  les 5 en-têtes suivent la phase (⑨/⑯ exceptions.moment, ㊳ titre et vide, ⑤ sabot) : DAWN ≠ DUSK
     //   M3  garde de CLASSE : aucun littéral « ce matin / ce soir / cette nuit / à l'aube » (ni clé dérivée ce_soir…) dans Assets/Scripts
-    //       hors exceptions EXACTES nommées — (B) les gestes PLANIFIÉS le soir (mesure back en attente, f2), la fraîcheur de la table 49,
-    //       l'état « pas de réponse » de ㊳ (mots demandés à l'atelier)
+    //       hors exceptions EXACTES nommées — la seule : la fraîcheur de la table 49. (B) réécrits par la table 80 (aucun geste n'attend
+    //       le soir, mesure back) ; une clé GARDÉE (« conflit.bloc.ce_soir ») n'est pas un texte montré
     [Category("I18n")]
     public class MomentsEnDurPlayModeTests
     {
@@ -57,21 +57,25 @@ namespace MafiaCleanCity.Tests
         /// <summary>Exceptions EXACTES (fichier → nombre de littéraux), chacune avec sa raison.</summary>
         private static readonly Dictionary<string, int> Exceptions = new Dictionary<string, int>
         {
-            { "CarnetScreenController.cs", 3 },        // (B) « les ordres de ce soir » : le cue-stack part le soir ? mesure back (f2)
-            { "ConflitScreenController.cs", 5 },       // (B) le coup de ce soir, clé conflit.bloc.ce_soir + repli, réplique, « L'envoyer ce soir »
-            { "DistributionScreenController.cs", 4 },  // (B) l'envoi de ce soir (titre, réplique, état, bouton)
-            { "JournalScreenController.cs", 2 },       // la fraîcheur « ce matin » (table 49, f2 : reste) ; l'état « pas de réponse » (atelier)
+            // (B) retirées (table 80 @20ceeca0) : aucun geste n'attend le soir (mesure back -51) — les « ce soir » sont réécrits
+            { "JournalScreenController.cs", 1 },       // la fraîcheur « ce matin » (table 49, recency_band = fresh : un temps RELATIF, f2)
         };
+
+        /// <summary>Un littéral qui n'est qu'une CLÉ i18n (« conflit.bloc.ce_soir ») : un nom GARDÉ dont la valeur servie a été réécrite
+        /// (table 80) — pas un texte montré.</summary>
+        private static readonly Regex CleSeule = new Regex(@"^""[a-z0-9_]+(\.[a-z0-9_]+)+""$", RegexOptions.Compiled);
 
         private static int Sites(string source) =>
             source.Split('\n').Where(l => !l.TrimStart().StartsWith("//") && !l.TrimStart().StartsWith("*") && !DansUneTableDePhase.IsMatch(l))
-                .Sum(l => Litteral.Matches(l).Cast<Match>().Count(m => MotDuMoment.IsMatch(m.Value)));
+                .Sum(l => Litteral.Matches(l).Cast<Match>().Count(m => MotDuMoment.IsMatch(m.Value) && !CleSeule.IsMatch(m.Value)));
 
         [Test]
         public void M3_AucunMomentEnDur_HorsExceptionsNommees()
         {
             Assert.AreEqual(1, Sites("            plaqueSurtitre.text = Lib(\"Ce soir, au Verge d’Or\");"), "contrôle positif : T18 d'avant est VU");
             Assert.AreEqual(0, Sites("                { \"DUSK\", \"Ce soir, au Verge d’Or\" },"), "un mot de table de phase n'est pas un moment en dur");
+            Assert.AreEqual(0, Sites("                Libelle.Gabarit(\"conflit.bloc.ce_soir\", \"En cours\"),"), "une clé gardée n'est pas un texte montré");
+            Assert.AreEqual(1, Sites("                Libelle.Gabarit(\"conflit.bloc.ce_soir\", \"Ce soir\"),"), "… mais son repli, si");
 
             string racine = Path.Combine(Application.dataPath, "Scripts");
             var ecarts = new List<string>();

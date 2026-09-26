@@ -242,7 +242,7 @@ namespace MafiaCleanCity.Operational
         /// confondre fait passer une panne pour une soirée sans ordres.</summary>
         private void RendreEtatInitial()
         {
-            titreEcran.text = Lib("Les ordres de ce soir");
+            titreEcran.text = MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.les_ordres_de_ce_soir", "Les ordres à lancer");   // table 80 @20ceeca0 : la valeur servie réécrite (le geste part tout de suite — mesure back), clé gardée
             sousTitre.text = Lib("le carnet n'a pas encore été ouvert");
             compte.text = "";
             ViderCreneaux();
@@ -254,7 +254,7 @@ namespace MafiaCleanCity.Operational
 
         private void RendreEtatIndisponibleNomme()
         {
-            titreEcran.text = Lib("Les ordres de ce soir");
+            titreEcran.text = MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.les_ordres_de_ce_soir", "Les ordres à lancer");   // table 80 @20ceeca0 : la valeur servie réécrite (le geste part tout de suite — mesure back), clé gardée
             sousTitre.text = Lib("le carnet n'a pas répondu");
             compte.text = "";
             ViderCreneaux();
@@ -268,7 +268,7 @@ namespace MafiaCleanCity.Operational
         {
             string[] creneaux = dto != null && dto.slots != null ? dto.slots : new string[0];
 
-            titreEcran.text = Lib("Les ordres de ce soir");
+            titreEcran.text = MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.les_ordres_de_ce_soir", "Les ordres à lancer");   // table 80 @20ceeca0 : la valeur servie réécrite (le geste part tout de suite — mesure back), clé gardée
             sousTitre.text = creneaux.Length == 0
                 ? Lib("aucun ordre posé — entre quatre et huit, dans l'ordre où ils partiront")
                 : Lib("entre quatre et huit gestes, dans l'ordre où ils partiront");
