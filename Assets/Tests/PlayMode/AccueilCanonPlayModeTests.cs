@@ -20,6 +20,9 @@ namespace MafiaCleanCity.Shell.Tests
     //   A1  au LANCEMENT (vrai shell, branche d'échec de l'acquisition : port fermé, hors réseau) : EXACTEMENT la tête et la file ; ni
     //       vitaux ni chrome ; la feuille éteinte ; les deux bandes disjointes ; sans carte, aucun geste ; aucun texte de développeur
     //   A2  rouvert par G1 (Empire sur la carte) : la MÊME mise en page — les trois sites passent par `AppShell.MonterLAccueil`
+    //   A4  G4 (suivi ⊥ UX §I, 26/09) : avec une carte, AUCUNE surface tactile (la surface B6 posée sur la racine de la carte) ne
+    //       recouvre un geste de la tête — mesuré au RAYCAST au centre de chaque geste montré ; « La carte » de l'ancienne feuille n'est
+    //       plus sur l'Accueil (feuille éteinte, dbf8e71b) : le chevauchement déduit par la passe n'a plus d'objet
     //   A3  G1 (suivi ⊥ UX §I, 26/09) : l'Accueil rouvert RELIT la tête et la file (session/open recalcule hl_card) — une carte
     //       RÉGLÉE depuis le lancement ne revient pas « en attente » ; la réponse périmée du lancement n'est jamais remontrée
     [Category("AccueilCanon")]
@@ -185,6 +188,38 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(2, transport.Ouvertures);
             Assert.AreEqual(HighestLeverageCardController.CardState.NoCard, Tete().RenderedState,
                 "la carte réglée ne revient pas « en attente » (la réponse du lancement n'est jamais remontrée)");
+        }
+
+        [UnityTest]
+        public IEnumerator A4_AvecUneCarte_AucuneSurfaceNeRecouvreUnGesteDeLaTete()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_AccueilGestes");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            Poser(shell, "Token", "jeton-de-test");
+            shell.TransportDeSessionPourTest = new TransportTemoin { Reponse = AvecCarte("c-gestes") };
+            yield return RouvrirParEmpire();
+            Assert.AreEqual(HighestLeverageCardController.CardState.Available, Tete().RenderedState, "précondition : une carte est montrée");
+            Assert.IsNotNull(Tete().SurfaceButton, "précondition : la surface B6 existe (sinon la garde ne défend rien)");
+
+            // A4 — avec une carte : chaque geste montré reçoit son toucher (la surface B6 posée sur la racine de la carte ne le couvre pas).
+            Assert.IsNull(shell.ContentSlot.GetComponentsInChildren<Transform>(false).FirstOrDefault(t => t.name == "Nav_CityMap"),
+                "« La carte » de l'ancienne feuille n'est plus visible sur l'Accueil (G4 : plus rien à recouvrir)");
+            var gestes = Tete().GetComponentsInChildren<Transform>(false)
+                .Where(t => t.name == "CommitButton" || t.name == "SkipButton" || t.name == "LireButton" || t.name == "TypedConfirmButton").ToList();
+            Assert.IsNotEmpty(gestes, "anti-vacuité : avec une carte, la tête montre des gestes");
+            foreach (Transform g in gestes)
+            {
+                var rt = (RectTransform)g;
+                Vector2 centre = RectTransformUtility.WorldToScreenPoint(null, rt.TransformPoint(rt.rect.center));
+                var touches = new List<UnityEngine.EventSystems.RaycastResult>();
+                UnityEngine.EventSystems.EventSystem.current.RaycastAll(
+                    new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current) { position = centre }, touches);
+                Assert.IsTrue(touches.Count > 0 && (touches[0].gameObject == g.gameObject || touches[0].gameObject.transform.IsChildOf(g)),
+                    $"le geste « {g.name} » est RECOUVERT au toucher — premier touché : « {(touches.Count > 0 ? touches[0].gameObject.name : "rien")} »");
+            }
+
         }
 
         [UnityTest]
