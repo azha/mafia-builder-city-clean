@@ -77,7 +77,7 @@ namespace MafiaCleanCity.Shell
     // jamais sur un joueur qui a déjà navigué ailleurs). Toujours PAS un onglet du dock. CORRIGÉ
     // (item 0.5 §2, C2) — l'énoncé précédent disait que son propre écran (les 4 panneaux orphelins)
     // restait ENTIÈREMENT hors périmètre : FAUX depuis ce chunk — voir `MonterPanneauxAccueil`.
-    public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator, IOuvreurDeFicheOperationnelle, IFermetureDuCoffre, IEntreeDeDistrict
+    public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator, IOuvreurDeFicheOperationnelle, IFermetureDuCoffre, IEntreeDeDistrict, IRetourDuShell
     {
         public enum Tab { Empire, Org, Pipeline, More }
 

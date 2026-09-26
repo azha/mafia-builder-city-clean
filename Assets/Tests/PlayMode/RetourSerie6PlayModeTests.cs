@@ -26,6 +26,7 @@ namespace MafiaCleanCity.Shell.Tests
     //       l'ordre attendu ; et le toucher de l'Empire y mène en un geste. Aucun état ne rend la flèche.
     //   R2  toucher l'onglet actif, surimpression ouverte, ramène à la racine de CET onglet (pas à la carte)
     //   R3  garde de source : aucun `SetLeadingAction(…BackToMap…)` dans le code de production (contrôle positif fabriqué)
+    //   G3  le « ‹ » de l'en-tête Famille fait le retour du shell (`IRetourDuShell`) ; hors shell, rien ; l'en-tête l'appelle (source)
     //   G2  sur un district rendu : re-toucher le bâtiment ouvert referme (un autre bascule) ; toucher le sol referme ; toucher la
     //       fiche ne referme pas (les deux sens de `EstLeSol`)
     // R1-R3 sont SYNCHRONES (`[Test]`, une frame) : aucun `Start()` ne tourne, donc aucun locataire ne signe ni ne charge ; le seul
@@ -270,6 +271,48 @@ namespace MafiaCleanCity.Shell.Tests
             CollectionAssert.IsEmpty(sites,
                 "§C.14 (ARBITRAGES-user-2026-09-07, « pas de domicile en série 6 ») : la flèche du bandeau est retirée ; on revient par " +
                 "l'onglet actif ou par le retour du système (AppShell.Depiler). Sites : " + string.Join(", ", sites));
+        }
+
+        // ── G3 ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+        private class FauxRetour : MonoBehaviour, IRetourDuShell
+        {
+            public int Appels;
+            public string Depiler() { Appels++; return "onglet"; }
+        }
+
+        [Test]
+        public void G3_LeChevronDeLaFamille_FaitLeRetourDuShell_EtRienHorsShell()
+        {
+            if (EventSystem.current == null) new GameObject("EventSystem_G3", typeof(EventSystem));   // rendu au TearDown (racine neuve)
+            hote = new GameObject("Retour_G3", typeof(RectTransform));
+            var retourGo = new GameObject("Retour", typeof(RectTransform));
+            retourGo.transform.SetParent(hote.transform, false);
+            Image disque = retourGo.AddComponent<Image>();
+            disque.raycastTarget = false;   // l'état de l'en-tête AVANT le branchement : un disque décoratif
+            Button b = MafiaCleanCity.Operational.Lieutenant.LieutenantScreenController.BrancherRetourDuShell(retourGo, disque);
+            Assert.IsTrue(disque.raycastTarget, "le disque reçoit le toucher");
+            Assert.AreEqual(Selectable.Transition.None, b.transition, "aucun changement visuel");
+
+            // contrôle négatif : aucun IRetourDuShell vivant ⇒ le toucher ne fait rien (et ne lève rien)
+            ProductionClickSupport.Click(b);
+
+            FauxRetour faux = hote.AddComponent<FauxRetour>();
+            ProductionClickSupport.Click(b);
+            Assert.AreEqual(1, faux.Appels, "le « ‹ » fait UN retour du shell par toucher");
+        }
+
+        [Test]
+        public void G3_LEnTeteDeLaFamille_BrancheSonChevron()
+        {
+            string source = File.ReadAllText(Path.Combine(Application.dataPath, "Scripts", "Operational", "Lieutenant", "LieutenantScreenController.cs"));
+            string sansCommentaires = Regex.Replace(source, @"//[^\n]*", "");
+            int debut = sansCommentaires.IndexOf("private void BuildFamilyHeader(", StringComparison.Ordinal);
+            Assert.GreaterOrEqual(debut, 0, "BuildFamilyHeader introuvable : l'en-tête Famille a changé de forme, relire G3");
+            int fin = sansCommentaires.IndexOf("\n        private ", debut + 1, StringComparison.Ordinal);
+            string corps = fin > debut ? sansCommentaires.Substring(debut, fin - debut) : sansCommentaires.Substring(debut);
+            Assert.AreEqual(1, Regex.Matches(corps, @"BrancherRetourDuShell\s*\(").Count,
+                "l'en-tête Famille doit brancher son « ‹ » sur le retour du shell (sinon il redevient décoratif)");
         }
 
         // ── G2 ─────────────────────────────────────────────────────────────────────────────────────────────────────────

@@ -1547,6 +1547,20 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// par un filet laiton qui S'ESTOMPE aux deux bouts — la maquette l'écrit littéralement
         /// (`transparent, laiton 30%, laiton 70%, transparent`), et le dépôt sait déjà le faire
         /// depuis le bandeau haut (`ProceduralUI.HorizontalFade`).</summary>
+        /// <summary>G3 (passe UX, 2026-09-26) — le « ‹ » de l'en-tête était DÉCORATIF (aucun `Button`). Il fait désormais le geste du
+        /// retour du système (`IRetourDuShell` → `AppShell.Depiler`) : la Famille à la racine de son onglet revient à la carte ; montée
+        /// en surimpression (Conflit › Recruter), elle revient à l'écran d'en dessous. Aucun changement visuel : transition nulle, la
+        /// cible de toucher est le disque déjà dessiné. Hors shell (aucun `IRetourDuShell` vivant), le toucher ne fait rien.</summary>
+        public static Button BrancherRetourDuShell(GameObject retour, Graphic cible)
+        {
+            cible.raycastTarget = true;
+            Button b = retour.AddComponent<Button>();
+            b.transition = Selectable.Transition.None;
+            b.targetGraphic = cible;
+            b.onClick.AddListener(() => MafiaCleanCity.Shell.RetourDuShellLocator.Find()?.Depiler());
+            return b;
+        }
+
         private void BuildFamilyHeader(Transform parent)
         {
             // ⛔⛔ LE FILET PAYAIT LA GOUTTIÈRE DE `.corps`, ET C'EST LÀ QUE PASSAIT LE SURPLUS.
@@ -1661,6 +1675,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TextMeshProUGUI chevron = NewText("Chevron", retour.transform, "\u2039", FX(28), TextAlignmentOptions.Center);
             chevron.color = DesignTokens.Current.hudCremeSecondary;
             Stretch((RectTransform)chevron.transform);
+            BrancherRetourDuShell(retour, disque);   // G3 : le « ‹ » n'est plus décoratif
 
             // Le bloc titre + sous-titre.
             GameObject bloc = NewUI("Titres", tete.transform);

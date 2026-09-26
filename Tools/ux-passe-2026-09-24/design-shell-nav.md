@@ -87,3 +87,9 @@ Décidé (reco, 26/09) — réversibles, à dire à l'orchestrateur :
 
 Reste : G3 (le « ‹ » décoratif de l'en-tête Famille) — reco : le brancher sur `Depiler` par un contrat de `ShellContracts`,
 lot suivant ; G7 est couvert par le retour du système (⑩ n'est sans retour que monté hors shell, jamais sur le chemin joueur).
+
+MàJ 2026-09-26 (bis) — **G3 CODÉ** (validé par l'orchestrateur) : le « ‹ » de l'en-tête Famille devient un `Button` sans
+transition sur le disque déjà dessiné (`LieutenantScreenController.BrancherRetourDuShell`), qui appelle `IRetourDuShell.Depiler`
+(contrat neuf de `ShellContracts`, implémenté par `AppShell`). Famille racine d'onglet → carte ; en surimpression → l'écran
+d'en dessous ; hors shell → rien. Gardes `RetourSerie6.G3_*` (effet sur un faux shell + contrôle négatif ; garde de source).
+Les choix « Décidé (reco, 26/09) » ci-dessus sont validés par l'orchestrateur.
