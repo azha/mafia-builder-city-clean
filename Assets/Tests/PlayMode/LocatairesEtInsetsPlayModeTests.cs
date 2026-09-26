@@ -38,8 +38,10 @@ namespace MafiaCleanCity.Shell.Tests
         /// prétend donc pas excuser, elle prétend seulement empêcher la liste de grandir.</summary>
         private static readonly string[] SansInsetConnus =
         {
-            // DashboardController SORTI le 2026-09-26 (CLIENT-1, b8829d49) : servant d'Accueil, il pose le fond de ville SOUS l'inset
-            // haut (`ShellChrome.TopInsetPx`) — la garde l'a vu (« plus de porteur ») au créneau du 26/09, l'entrée part avec lui.
+            // DashboardController : sorti le 26/09 (b8829d49, fond rogné sous l'inset), REVENU le même jour (d91447bb, juge ⊥ r1 de ④, F1/F3) —
+            // servant d'Accueil, il ne pose plus qu'un FOND PLEIN ÉCRAN (le diorama peint du district, derrière le bandeau translucide,
+            // comme la maquette) ; sa feuille propre est éteinte. Un fond n'a pas d'inset à lire : c'est la raison écrite.
+            "DashboardController",
             // ⑪ LaunderingController et ⑫ PipelineOverviewController RETIRÉS du dépôt le 2026-09-23 (code mort : 0 chemin joueur
             // depuis que ㊵ porte la filière) — l'entrée part avec son porteur, comme la garde l'exige.
         };
