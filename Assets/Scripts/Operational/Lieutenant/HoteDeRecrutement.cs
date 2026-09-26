@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using MafiaCleanCity.Shell;
+using MafiaCleanCity.Operational.Lieutenant;   // RuleModel (typecheck --tout du 26/09 sur le cumul : CS0103)
 
 namespace MafiaCleanCity.Operational
 {
