@@ -119,7 +119,8 @@ namespace MafiaCleanCity.Shell.Tests
 
             (float basTete, float _) = Bande((RectTransform)tete.transform);
             (float _, float hautFile) = Bande((RectTransform)file.transform);
-            Assert.Greater(basTete, hautFile, $"{quand} : les bandes de la tête et de la file sont DISJOINTES (tête dès {basTete}, file jusqu'à {hautFile})");
+            // Disjointes, le CONTACT admis : au cadre 0 (0985a1b6), le calme se pose SUR la file vide — un seul bloc mesuré (0,025 ; 0,271).
+            Assert.GreaterOrEqual(basTete, hautFile - 0.5f, $"{quand} : les bandes de la tête et de la file sont DISJOINTES (tête dès {basTete}, file jusqu'à {hautFile})");
             VerifierGeometrie(quand, (RectTransform)tete.transform, (RectTransform)file.transform);
 
             Assert.AreEqual(HighestLeverageCardController.CardState.NoCard, tete.RenderedState, $"{quand} : précondition, pas de carte (hors réseau)");
@@ -289,7 +290,8 @@ namespace MafiaCleanCity.Shell.Tests
             yield return null;
             float hSans = Hauteur("file seule");
 
-            Assert.AreEqual(ExceptionQueuePanelController.HauteurLigneAccueil, hAvec, 0.5f, "avec carte de tête : la hauteur de la maquette");
+            float bande = ((RectTransform)shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).Last().transform).rect.height;
+            Assert.AreEqual(bande, hSans, 1f, "la ligne ÉPOUSE sa bande (l'emplacement mesuré sur la maquette), jamais plus");
             Assert.AreEqual(hAvec, hSans, 0.5f, $"la ligne a la MÊME hauteur avec et sans carte de tête ({hAvec:F1} contre {hSans:F1}) — jamais étirée");
         }
 

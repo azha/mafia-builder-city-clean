@@ -52,9 +52,6 @@ namespace MafiaCleanCity.Shell
         // Le reste de la file vit dans l'ardoise ⑨ : toucher la ligne l'ouvre (« ViewAll », devenu la surface de la ligne) ; TRANCHER
         // ouvre la carte ⑩. Posé par le shell (`PoserEnLigneDeLAccueil`) ; hors Accueil, le panneau garde sa forme de liste.
         public bool LigneDeLAccueil { get; private set; }
-        /// <summary>La hauteur de la ligne de l'Accueil, en unités de canvas (référence 1 280 de large) : 7,2 % d'un écran d'aspect 0,51
-        /// (la maquette) ≈ 180. Fixe : elle ne s'étire jamais sur sa bande.</summary>
-        public const float HauteurLigneAccueil = 180f;
         private GameObject viewAllGo;
         private TextMeshProUGUI viewAllLabel;
         private ExceptionsClient client;
@@ -89,6 +86,10 @@ namespace MafiaCleanCity.Shell
             LigneDeLAccueil = true;
             VerticalLayoutGroup vlg = GetComponent<VerticalLayoutGroup>();
             if (vlg != null) { vlg.padding = new RectOffset(40, 40, 0, 0); vlg.childAlignment = TextAnchor.UpperCenter; }
+            // La bande de la file EST l'emplacement de la ligne sur la maquette (452 → 494, 7,2 % de l'écran) : la ligne ÉPOUSE sa bande.
+            // Une hauteur fixe (180 u) débordait à 1080×1920 (bande 148 px, ligne 152 px — AccueilPanneauxGeometriePhoto, créneau du 26/09).
+            rowsRoot.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
+            rowsRoot.GetComponent<VerticalLayoutGroup>().childForceExpandHeight = true;
             // « Voir l'ardoise » devient la SURFACE de la ligne : transparente, étendue au panneau, DERRIÈRE la ligne (TRANCHER, posé
             // après, reste au-dessus) — toucher « Lt. X attend vos ordres » ouvre l'ardoise, toucher TRANCHER ouvre la carte.
             viewAllGo.GetComponent<LayoutElement>().ignoreLayout = true;
@@ -279,9 +280,8 @@ namespace MafiaCleanCity.Shell
             hlg.childForceExpandWidth = false;
             hlg.childForceExpandHeight = false;
             LayoutElement rowLe = row.AddComponent<LayoutElement>();
-            rowLe.minHeight = HauteurLigneAccueil;
-            rowLe.preferredHeight = HauteurLigneAccueil;
-            rowLe.flexibleHeight = 0f;
+            rowLe.minHeight = 0f;
+            rowLe.flexibleHeight = 1f;                                // la ligne remplit SA bande (l'emplacement mesuré), rien de plus
 
             GameObject gauche = new GameObject("QuiAttend", typeof(RectTransform));
             gauche.transform.SetParent(row.transform, false);
@@ -313,7 +313,7 @@ namespace MafiaCleanCity.Shell
             ExceptionCardDto carte = card;
             b.onClick.AddListener(() => OuvrirLaCarte(carte));
             LayoutElement btnLe = trancherGo.AddComponent<LayoutElement>();
-            btnLe.minWidth = 220; btnLe.preferredWidth = 220; btnLe.minHeight = 100;
+            btnLe.minWidth = 220; btnLe.preferredWidth = 220;
             btnLe.flexibleWidth = 0f;
             TextMeshProUGUI mot = NewText(trancherGo.transform, MafiaCleanCity.I18n.Libelle.De("chrome", "bandeau", "trancher").ToUpperInvariant(), -1);
             mot.fontSize = 30;

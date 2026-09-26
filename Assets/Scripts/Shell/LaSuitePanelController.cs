@@ -96,6 +96,34 @@ namespace MafiaCleanCity.Shell
                 if (i > 0) Separateur(go.transform);
                 Ligne(go.transform, lignesRendues[i], premierGeste: i == PremierGeste());
             }
+            Ajuster();
+        }
+
+        /// <summary>Le bloc ne sort JAMAIS de sa bande : plus haut qu'elle (petit écran, trois lignes longues), il se réduit à l'échelle
+        /// depuis son pied (pivot bas) au lieu de monter sur le bandeau. Mesuré au créneau du 26/09 : à la résolution du batch, le bloc
+        /// montait à 541 pour un bandeau à 205 (AccueilCanon A7).</summary>
+        public void Ajuster()
+        {
+            if (bloc == null) return;
+            bloc.localScale = Vector3.one;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(bloc);
+            float h = LayoutUtility.GetPreferredHeight(bloc);
+            float dispo = ((RectTransform)transform).rect.height;
+            float k = h > 0f && dispo > 0f && h > dispo ? dispo / h : 1f;
+            bloc.localScale = new Vector3(k, k, 1f);
+            Echelle = k;
+        }
+
+        /// <summary>L'échelle posée par `Ajuster` (1 = le bloc tient dans sa bande) — garde.</summary>
+        public float Echelle { get; private set; } = 1f;
+
+        private bool aAjuster;
+        private void OnRectTransformDimensionsChange() => aAjuster = true;   // la bande a bougé (rebâtie) : ré-ajuster hors du layout
+        private void LateUpdate()
+        {
+            if (!aAjuster) return;
+            aAjuster = false;
+            Ajuster();
         }
 
         /// <summary>L'index de la première ligne qui porte un geste — c'est elle qui est dorée.</summary>
