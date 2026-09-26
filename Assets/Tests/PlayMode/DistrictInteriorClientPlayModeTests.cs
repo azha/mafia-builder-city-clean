@@ -19,7 +19,7 @@ namespace MafiaCleanCity.CityMap.Tests
     [Category("W3U2")]
     public class DistrictInteriorClientPlayModeTests
     {
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
         private const int VergeADistrictId = 16; // onboarding-grant.service.ts:112 — les 4 bâtiments starter-kit
         private static int callsignSeq;
 

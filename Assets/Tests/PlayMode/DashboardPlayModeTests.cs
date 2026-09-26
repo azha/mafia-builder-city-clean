@@ -36,7 +36,7 @@ namespace MafiaCleanCity.Operational.Tests
         private static string demoPassword;
         private static bool seeded;
 
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
         private const int HeatProbeDistrict = 16; // the operational district (Verge); any 1..18 returns the same citywide_bucket
 
         [TearDown]

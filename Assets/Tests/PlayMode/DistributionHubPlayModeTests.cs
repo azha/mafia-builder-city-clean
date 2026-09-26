@@ -15,7 +15,7 @@ namespace MafiaCleanCity.Operational.Tests
     // E2E (charter 27: NO MOCK) for the Phase-4 vector #4 (distribution_hub courier-dispatch logistics) building-card
     // surface (T9 Stage B). Drives the real BuildingCardController against the LOCAL dockerized stack (Traefik @
     // http://localhost — the distribution_hub backend lives on the local game-back; the controller's SerializeField
-    // defaults to the VPS, so this fixture overrides it with SetBaseUrl("http://localhost")):
+    // defaults to the VPS, so this fixture overrides it with SetBaseUrl(MafiaCleanCity.AdresseDuBack.Url)):
     //   1. runs Tools/seed_operational_demo.mjs and parses its stdout JSON to DISCOVER the demo creds + the
     //      `distribution_hub` (Tier-2 MEDIUM, BUSY roster, FOOT/BIKE/CAR unlocked) + a valid dispatch source
     //      (`hub_dispatch_from` = the Crick refinery, which holds product) + destination (`hub_dispatch_to`) — the ids
@@ -32,7 +32,7 @@ namespace MafiaCleanCity.Operational.Tests
     // op fixture's re-seed can't invalidate the ids this fixture loads.
     public class DistributionHubPlayModeTests
     {
-        private const string LocalStack = "http://localhost";
+        private static string LocalStack => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
 
         private GameObject controllerGo;
 

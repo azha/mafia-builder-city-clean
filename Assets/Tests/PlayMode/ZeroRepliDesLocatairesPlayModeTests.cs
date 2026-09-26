@@ -53,6 +53,13 @@ namespace MafiaCleanCity.Operational.Tests
             "accueil.suite.la_planque_est_pleine",
             "accueil.suite.blanchissez_sinon_la_caisse_des_dealers_ne_peut_plus_s_y_vider",
             "accueil.suite.blanchir",
+            // ㊵ planque non vide + BLANCHIR (f2 26/09, relevé f1 §K.5) : tables 77 @6ed61816 et 76 @fa4dba93, non servies @1ffb08b4 ;
+            // le compte de mesure a l'amorce du kit (NOMINAL) ⇒ la tête « tient de quoi blanchir » et le geste s'affichent.
+            "filiere.etat.votre_planque_enseigne_tient_de_quoi_blanchir",
+            "filiere.etat.votre_planque_tient_de_quoi_blanchir",
+            "filiere.etat.l_argent_passe_de_la_planque_a_la_filiere",
+            "filiere.etat.a_blanchir_la_planque_est_pleine",
+            "filiere.bloc.blanchir",   // le mot du bouton, clé dérivée (Lib) — demandé à l'atelier
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

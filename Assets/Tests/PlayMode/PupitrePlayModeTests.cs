@@ -76,7 +76,7 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         // ----- P5 : réel, lecture seule -----
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
         private const string DemoEmail = "operational_demo@example.test";   // le compte SERVI, jamais le compte gelé de capture
         private const string DemoPassword = "operational-demo-pw";
         private static readonly string[] DomaineFeu = { "IDLE", "EARLY", "MID", "LATE", "DONE" };

@@ -106,7 +106,8 @@ namespace MafiaCleanCity.Operational.Tests
 
             Assert.AreEqual(1, envois, "UNE résolution émise");
             Assert.IsTrue(client.DerniereRequeteResolve.HasValue);
-            Assert.AreEqual("http://localhost/v1/exceptions/" + Id + "/resolve", client.DerniereRequeteResolve.Value.Url);
+            // l'URL émise suit la source du client (ExceptionsClient.BaseUrl = AdresseDuBack.Url — garde de classe du 26/09)
+            Assert.AreEqual(MafiaCleanCity.AdresseDuBack.Url.TrimEnd('/') + "/v1/exceptions/" + Id + "/resolve", client.DerniereRequeteResolve.Value.Url);
             Assert.AreEqual("{\"method\":\"ONE_TIME\",\"chosen_action_id\":\"teach_idle\"}", client.DerniereRequeteResolve.Value.Corps);
             Assert.AreEqual("TAUGHT", ecran.DerniereIssue);
             Assert.AreEqual(0, ecran.Cards.Length, "la file est rechargée après la résolution (le serveur fait foi)");

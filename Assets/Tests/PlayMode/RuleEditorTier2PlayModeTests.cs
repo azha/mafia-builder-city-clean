@@ -46,7 +46,7 @@ namespace MafiaCleanCity.Operational.Tests
         private static string exceptionLtId;
         private static bool seeded;
 
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
 
         [TearDown]
         public void TearDown()

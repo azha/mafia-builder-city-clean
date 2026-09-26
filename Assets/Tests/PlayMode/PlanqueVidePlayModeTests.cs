@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using MafiaCleanCity.I18n;
 using MafiaCleanCity.Operational;
@@ -10,6 +11,8 @@ namespace MafiaCleanCity.CityMap.Tests
     // (district/:id/stash) se nomme par l'enseigne que `me/buildings` sert pour son bâtiment. Hors réseau.
     //   V1  l'enseigne servie du bâtiment de la planque ; bâtiment ou enseigne absents ⇒ null (on n'en invente pas)
     //   V2  le mot de la table 63 porte l'enseigne en paramètre (repli à l'octet)
+    //   V4-V6 ㊵ (f2 26/09) : la planque la plus chargée (règle unique avec l'Accueil), le geste BLANCHIR suit la charge SERVIE, la tête ne
+    //       dit jamais « vide » quand la planque tient de quoi blanchir
     //   V3  ㊵ (§G, 26/09) : un SEUL maillon manquant ne porte pas de numéro (« MAILLON MANQUANT 2 » seul) ; plusieurs, si
     [Category("PlanqueVide")]
     public class PlanqueVidePlayModeTests
@@ -47,5 +50,43 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("MAILLON MANQUANT", FiliereScreenController.EtiquetteDeRang("2", 1), "planque servie : un seul manquant");
             Assert.AreEqual("MAILLON MANQUANT   2", FiliereScreenController.EtiquetteDeRang("2", 2), "sans planque : deux, numérotés");
         }
-    }
+    
+        // ── ㊵ planque non vide + BLANCHIR (f2 26/09, relevé f1 §K.5) ──────────────────────────────────────────────────────────────
+        private static MafiaCleanCity.CityMap.SafehouseDto P(string id, string charge) =>
+            new MafiaCleanCity.CityMap.SafehouseDto { safehouse_id = id, building_id = "b-" + id, load_bucket = charge };
+
+        [Test]
+        public void V4_LaPlanqueLaPlusChargee_LaRegleDeLAccueil()
+        {
+            Assert.AreEqual("h", FiliereScreenController.PlusChargee(new[] { P("v", "EMPTY"), P("h", "HIGH"), P("n", "NOMINAL") }).safehouse_id);
+            Assert.AreEqual("a", FiliereScreenController.PlusChargee(new[] { P("a", "NOMINAL"), P("b", "NOMINAL") }).safehouse_id, "à rang égal : la première");
+            Assert.IsNull(FiliereScreenController.PlusChargee(new MafiaCleanCity.CityMap.SafehouseDto[0]));
+            // le domaine de la charge (StashLoadBucket), et hors domaine ⇒ -1. À la fusion, LaSuite.RangDeCharge (CLIENT-1) DÉLÈGUE à
+            // ChargeDePlanque.Rang : une seule règle pour l'Accueil et ㊵.
+            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4, -1, -1 },
+                new[] { "EMPTY", "LOW", "NOMINAL", "HIGH", "FULL", "INCONNU", null }.Select(MafiaCleanCity.Shell.ChargeDePlanque.Rang).ToArray());
+        }
+
+        [Test]
+        public void V5_LeGesteBlanchir_SuitLaChargeServie()
+        {
+            Assert.IsTrue(FiliereScreenController.GesteBlanchirOffert("NOMINAL", "facade", "planque"), "l'amorce du kit : le geste est là");
+            Assert.IsTrue(FiliereScreenController.GesteBlanchirOffert("FULL", "facade", "planque"));
+            Assert.IsFalse(FiliereScreenController.GesteBlanchirOffert("EMPTY", "facade", "planque"), "vide : absent");
+            Assert.IsFalse(FiliereScreenController.GesteBlanchirOffert("INCONNU", "facade", "planque"), "hors domaine : on ne promet rien");
+            Assert.IsFalse(FiliereScreenController.GesteBlanchirOffert("NOMINAL", null, "planque"), "sans façade : absent");
+        }
+
+        [Test]
+        public void V6_LaTete_NeDitJamaisVide_QuandLaPlanqueTientDeQuoiBlanchir()
+        {
+            I18nCatalog.Oublier();
+            Assert.AreEqual("Votre planque, Dépôt Oster, tient de quoi blanchir.", FiliereScreenController.TeteDeLaPlanque("NOMINAL", "Dépôt Oster"));
+            Assert.AreEqual("Votre planque tient de quoi blanchir.", FiliereScreenController.TeteDeLaPlanque("LOW", null));
+            Assert.AreEqual("À blanchir : la planque est pleine.", FiliereScreenController.TeteDeLaPlanque("FULL", "Dépôt Oster"));
+            Assert.AreEqual("Votre planque, Dépôt Oster, est vide.", FiliereScreenController.TeteDeLaPlanque("EMPTY", "Dépôt Oster"));
+            foreach (string c in new[] { "LOW", "NOMINAL", "HIGH", "FULL" })
+                StringAssert.DoesNotContain("vide", FiliereScreenController.TeteDeLaPlanque(c, "Dépôt Oster"), $"« {c} » : jamais « vide »");
+        }
+}
 }

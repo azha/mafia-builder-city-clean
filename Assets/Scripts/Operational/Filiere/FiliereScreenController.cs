@@ -173,24 +173,71 @@ namespace MafiaCleanCity.Operational
         /// enseigne, servie par `me/buildings` pour le bâtiment de la planque. Null tant que non trouvée.</summary>
         public bool PlanqueTrouvee { get; private set; }
         public string EnseigneDeLaPlanque { get; private set; }
+        /// <summary>㊵ (f2 26/09, relevé f1 §K.5) : la CHARGE servie de la planque retenue (`load_bucket`), son id, et la façade du joueur —
+        /// ce qu'`inject` attend (front_shop_id, safehouse_id). Null tant que non lus.</summary>
+        public string ChargeDeLaPlanque { get; private set; }
+        public string SafehouseIdDeLaPlanque { get; private set; }
+        public string FacadeId { get; private set; }
+
+        /// <summary>La planque la plus chargée parmi celles servies (ChargeDePlanque.Rang, la règle de l'Accueil) ; à rang égal, la première
+        /// servie. Null si aucune. Pure.</summary>
+        public static MafiaCleanCity.CityMap.SafehouseDto PlusChargee(IEnumerable<MafiaCleanCity.CityMap.SafehouseDto> planques)
+        {
+            MafiaCleanCity.CityMap.SafehouseDto retenue = null;
+            foreach (var p in planques ?? Enumerable.Empty<MafiaCleanCity.CityMap.SafehouseDto>())
+                if (p != null && !string.IsNullOrEmpty(p.safehouse_id)
+                    && (retenue == null || ChargeDePlanque.Rang(p.load_bucket) > ChargeDePlanque.Rang(retenue.load_bucket)))
+                    retenue = p;
+            return retenue;
+        }
+
+        /// <summary>Le geste BLANCHIR est offert si la planque servie tient de quoi blanchir (load_bucket ≠ EMPTY, dans le domaine) ET
+        /// qu'une façade et la planque sont connues — sinon il est ABSENT, jamais éteint. Pure (garde épinglée sur la valeur servie).</summary>
+        public static bool GesteBlanchirOffert(string charge, string facadeId, string safehouseId) =>
+            ChargeDePlanque.TientDeQuoiBlanchir(charge) && !string.IsNullOrEmpty(facadeId) && !string.IsNullOrEmpty(safehouseId);
+
+        /// <summary>La tête du maillon 1 selon la charge SERVIE (tables 63, 76, 77 — replis à l'octet). EMPTY ou hors domaine ⇒ la phrase
+        /// « est vide » d'avant (ou null sans enseigne : l'appelant garde sa ligne d'entrée) ; LOW…HIGH ⇒ « tient de quoi blanchir » ;
+        /// FULL ⇒ « À blanchir : la planque est pleine. » Pure.</summary>
+        public static string TeteDeLaPlanque(string charge, string enseigne)
+        {
+            int rang = ChargeDePlanque.Rang(charge);
+            if (rang == 4)
+                return MafiaCleanCity.I18n.Libelle.Gabarit("filiere.etat.a_blanchir_la_planque_est_pleine", "\u00C0 blanchir\u00A0: la planque est pleine.");
+            if (rang >= 1)
+                return enseigne != null
+                    ? MafiaCleanCity.I18n.Libelle.Gabarit("filiere.etat.votre_planque_enseigne_tient_de_quoi_blanchir",
+                        "Votre planque, {enseigne}, tient de quoi blanchir.", new Dictionary<string, string> { { "enseigne", enseigne } })
+                    : MafiaCleanCity.I18n.Libelle.Gabarit("filiere.etat.votre_planque_tient_de_quoi_blanchir", "Votre planque tient de quoi blanchir.");
+            return enseigne != null
+                ? MafiaCleanCity.I18n.Libelle.Gabarit("filiere.vide.votre_planque_enseigne_est_vide",
+                    "Votre planque, {enseigne}, est vide.", new Dictionary<string, string> { { "enseigne", enseigne } })
+                : null;
+        }
 
         private IEnumerator TrouverLaPlanque()
         {
             PlanqueTrouvee = false; EnseigneDeLaPlanque = null;
+            ChargeDeLaPlanque = null; SafehouseIdDeLaPlanque = null; FacadeId = null;
             MafiaCleanCity.Shell.BatimentPossedeDto[] possedes = null;
             yield return new MafiaCleanCity.Shell.MesBatimentsClient { BaseUrl = baseUrl }.Lire(token, b => possedes = b, (c, m) => { });
             if (possedes == null) yield break;
+            FacadeId = possedes.FirstOrDefault(b => b != null && b.operational_type == "front_shop" && !string.IsNullOrEmpty(b.building))?.building;
             var projections = new MafiaCleanCity.CityMap.CityProjectionsClient { BaseUrl = baseUrl };
+            // ㊵ (f2 26/09) : TOUTES les planques servies de ses quartiers, puis la plus chargée — la règle de l'Accueil (« La suite »)
+            var toutes = new List<MafiaCleanCity.CityMap.SafehouseDto>();
             foreach (int quartier in possedes.Where(b => b != null && b.district_id > 0).Select(b => b.district_id).Distinct())
             {
                 MafiaCleanCity.CityMap.StashDto stash = null;
                 yield return projections.Stash(quartier, token, x => stash = x, _ => { });
-                var planque = stash?.safehouses?.FirstOrDefault(x => x != null && !string.IsNullOrEmpty(x.safehouse_id));
-                if (planque == null) continue;
-                PlanqueTrouvee = true;
-                EnseigneDeLaPlanque = EnseigneDe(possedes, planque.building_id);
-                yield break;
+                if (stash?.safehouses != null) toutes.AddRange(stash.safehouses);
             }
+            var planque = PlusChargee(toutes);
+            if (planque == null) yield break;
+            PlanqueTrouvee = true;
+            EnseigneDeLaPlanque = EnseigneDe(possedes, planque.building_id);
+            ChargeDeLaPlanque = planque.load_bucket;
+            SafehouseIdDeLaPlanque = planque.safehouse_id;
         }
 
         /// <summary>L'enseigne SERVIE du bâtiment (`name_i18n.params.enseigne`) ; null si le bâtiment ou l'enseigne manquent. Pure.</summary>
@@ -610,12 +657,17 @@ namespace MafiaCleanCity.Operational
             // client 8979d626, à l'octet) — elle est vide, et comment l'argent y entre ; la phrase « il faut une planque » se tait.
             string entree = MafiaCleanCity.I18n.Libelle.Gabarit("filiere.vide.l_argent_y_entre_quand_vous_ramassez_la_caisse_d_un_dealer",
                 "L’argent y entre quand vous ramassez la caisse d’un dealer.");
-            if (PlanqueTrouvee && EnseigneDeLaPlanque != null)
-                Maillon("1", MafiaCleanCity.I18n.Libelle.Gabarit("filiere.vide.votre_planque_enseigne_est_vide",
-                    "Votre planque, {enseigne}, est vide.", new Dictionary<string, string> { { "enseigne", EnseigneDeLaPlanque } }),
-                    entree, manquant: false);
+            // ⛔ ㊵ FAUX (relevé f1 §K.5, f2 26/09) : « est vide » s'affichait dès la planque trouvée, SANS lire sa charge — or le kit donne
+            // une amorce (NOMINAL mesuré sur le VPS) et ① propose BLANCHIR. La tête suit désormais `load_bucket` SERVI (TeteDeLaPlanque),
+            // et le geste BLANCHIR est offert quand la planque tient de quoi blanchir (GesteBlanchirOffert).
+            string tete = PlanqueTrouvee ? TeteDeLaPlanque(ChargeDeLaPlanque, EnseigneDeLaPlanque) : null;
+            bool pleineOuChargee = ChargeDePlanque.TientDeQuoiBlanchir(ChargeDeLaPlanque);
+            if (PlanqueTrouvee && tete != null)
+                Maillon("1", tete, pleineOuChargee ? "" : entree, manquant: false);
             else if (PlanqueTrouvee)
-                Maillon("1", entree, "", manquant: false);   // enseigne non servie : on ne la nomme pas, on n'en invente pas
+                Maillon("1", entree, "", manquant: false);   // vide, enseigne non servie : on ne la nomme pas, on n'en invente pas
+            if (PlanqueTrouvee && GesteBlanchirOffert(ChargeDeLaPlanque, FacadeId, SafehouseIdDeLaPlanque))
+                RendreGesteBlanchir();
             else
                 Maillon("1", Lib("Obtenir une planque"),
                     Lib("le premier maillon : sans elle, rien n'entre dans la filière — et rien ne se "
@@ -657,6 +709,51 @@ namespace MafiaCleanCity.Operational
                 DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
             NouveauTexte(go.transform, "Texte", explication, Px(8f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+        }
+
+        // ═══ ㊵ le geste BLANCHIR (f2 26/09 ; mots table 77 @6ed61816) — le même appel que ① (CityProjectionsClient.InjectLaundering) ═══
+
+        public int BlanchimentsTentes { get; private set; }
+        public MafiaCleanCity.CityMap.DistrictLaunderOutcome DernierBlanchiment { get; private set; }
+        private TextMeshProUGUI resultatBlanchir;
+
+        private void RendreGesteBlanchir()
+        {
+            GameObject bouton = NouveauUI("BoutonBlanchir", listeRoot);
+            AjouterFond(bouton, DesignTokens.Current.surfaceRaised);
+            Button b = bouton.AddComponent<Button>();
+            b.targetGraphic = bouton.GetComponent<Image>();
+            b.onClick.AddListener(() => StartCoroutine(Blanchir()));
+            var h = bouton.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(8f));
+            h.childAlignment = TextAnchor.MiddleCenter;
+            h.childControlWidth = true; h.childControlHeight = true;
+            var le = bouton.AddComponent<LayoutElement>();
+            le.minHeight = Px(26f); le.flexibleHeight = 0f;
+            NouveauTexte(bouton.transform, "Libelle", Lib("Blanchir"), Px(9f),
+                DesignTokens.Current.onSurfacePrimary, DesignTokens.Current.primaryFont);
+            // sous BLANCHIR (table 77, ligne 5) : ce que le geste fait
+            NouveauTexte(listeRoot, "SousBlanchir", MafiaCleanCity.I18n.Libelle.Gabarit("filiere.etat.l_argent_passe_de_la_planque_a_la_filiere",
+                "l\u2019argent passe de la planque \u00E0 la fili\u00E8re"), Px(8f),
+                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            resultatBlanchir = NouveauTexte(listeRoot, "ResultatBlanchir", "", Px(8f),
+                DesignTokens.Current.hudCreme, DesignTokens.Current.primaryFont);
+        }
+
+        /// <summary>BLANCHIR depuis ㊵ : `inject` de la planque retenue vers la façade, le montant de ① (FicheBlanchimentMontantCents).
+        /// Réussi ⇒ un nœud existe : la filière se RELIT (Charger) et montre ses étapes. Échoué ⇒ la phrase du refus (servie spécifique par
+        /// RefusServi, sinon celle du client) sous le geste.</summary>
+        public IEnumerator Blanchir()
+        {
+            if (!GesteBlanchirOffert(ChargeDeLaPlanque, FacadeId, SafehouseIdDeLaPlanque) || string.IsNullOrEmpty(token)) yield break;
+            BlanchimentsTentes++;
+            MafiaCleanCity.CityMap.DistrictLaunderOutcome o = null;
+            yield return new MafiaCleanCity.CityMap.CityProjectionsClient { BaseUrl = baseUrl }.InjectLaundering(FacadeId, SafehouseIdDeLaPlanque,
+                MafiaCleanCity.CityMap.DistrictInteriorScreenController.FicheBlanchimentMontantCents, token, x => o = x);
+            if (this == null) yield break;
+            DernierBlanchiment = o;
+            if (o != null && o.Ok) { yield return Charger(); yield break; }
+            if (resultatBlanchir != null) resultatBlanchir.text = o?.Message ?? "";
         }
 
         /// <summary>L'état AVANT tout chargement — le troisième, celui qu'on oublie (leçon ㊳).</summary>

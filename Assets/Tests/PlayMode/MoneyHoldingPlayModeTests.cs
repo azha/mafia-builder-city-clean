@@ -15,7 +15,7 @@ namespace MafiaCleanCity.Operational.Tests
     // E2E (charter 27: NO MOCK) for the Phase-5 vector #5a (money_holding — clean-cash holding vault) building-card surface
     // (T9 Stage B). Drives the real BuildingCardController against the LOCAL dockerized stack (Traefik @ http://localhost —
     // the money_holding backend lives on the local game-back; the controller's SerializeField defaults to the VPS, so this
-    // fixture overrides it with SetBaseUrl("http://localhost")):
+    // fixture overrides it with SetBaseUrl(MafiaCleanCity.AdresseDuBack.Url)):
     //   1. runs Tools/seed_operational_demo.mjs and parses its stdout JSON to DISCOVER the demo creds + the `money_holding`
     //      (Tier-2 MEDIUM vault, MODERATE held, BUSY capacity, EARNING yield, PENDING forfeiture) — the id changes every run;
     //   2. points the controller at http://localhost, then signs in via its AuthClient → Bearer;
@@ -32,7 +32,7 @@ namespace MafiaCleanCity.Operational.Tests
     // sibling op fixture's re-seed can't invalidate the id this fixture loads.
     public class MoneyHoldingPlayModeTests
     {
-        private const string LocalStack = "http://localhost";
+        private static string LocalStack => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
 
         private GameObject controllerGo;
 

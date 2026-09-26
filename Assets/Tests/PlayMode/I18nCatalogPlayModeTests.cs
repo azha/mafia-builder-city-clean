@@ -20,7 +20,7 @@ namespace MafiaCleanCity.I18nTests
     [Category("I18n")]
     public class I18nCatalogPlayModeTests
     {
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
 
         // ⛔ LA PRÉCONDITION SE POSE AU SETUP, PAS SEULEMENT AU TEARDOWN (23/09). Le catalogue est un global STATIQUE :
         //    la classe le rendait après chacun de ses tests, jamais AVANT le premier. Mesuré à la partie 1 du cumul

@@ -32,7 +32,7 @@ namespace MafiaCleanCity.Operational.Tests
     [Category("W3U2")]
     public class BuildingCardMaintenanceKeysPlayModeTests
     {
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
         private static int callsignSeq;
 
         private static IEnumerator SignUpAndOpenSession(Action<string, string> onTokenAndCallsign)
