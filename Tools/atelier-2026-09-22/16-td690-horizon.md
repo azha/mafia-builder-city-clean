@@ -22,10 +22,10 @@
 | clé | fr (le littéral du client) | en |
 |---|---|---|
 | `horizon.bloc.ce_qui_manque_encore` | ce qui manque encore | what’s still missing |
-| `horizon.bloc.pourquoi_c_est_vide` | pourquoi c'est vide | why it’s empty |
+| `horizon.bloc.pourquoi_c_est_vide` | pourquoi c’est vide | why it’s empty |
 | `horizon.bloc.les_cartes_viennent_du_monde_pas_du_menu` | Les cartes viennent du monde, pas du menu | Cards come from the world, not from a menu |
-| `horizon.bloc.rien_ne_s_ouvre_pour_l_instant` | Rien ne s'ouvre pour l'instant. | Nothing is opening up for now. |
-| `horizon.bloc.l_horizon_se_remplit_en_jouant` | L'horizon se remplit en jouant. | The horizon fills up as you play. |
+| `horizon.bloc.rien_ne_s_ouvre_pour_l_instant` | Rien ne s’ouvre pour l’instant. | Nothing is opening up for now. |
+| `horizon.bloc.l_horizon_se_remplit_en_jouant` | L’horizon se remplit en jouant. | The horizon fills up as you play. |
 | `horizon.bloc.indisponible` | indisponible | unavailable |
 
 ## Notes

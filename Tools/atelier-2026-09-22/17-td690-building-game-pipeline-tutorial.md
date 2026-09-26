@@ -71,9 +71,9 @@ Vérifié : `python3 Tools/atelier-2026-09-22/verifier-vouvoiement.py`. L'en du 
 
 | clé | fr servi (tutoie) | fr réécrit (vouvoie) |
 |---|---|---|
-| `tutorial.compression_week` | Semaine de compression : l'organisation est sous tension. Réduis, ou encaisse. | Semaine de compression : l'organisation est sous tension. Réduisez, ou encaissez. |
+| `tutorial.compression_week` | Semaine de compression : l’organisation est sous tension. Réduis, ou encaisse. | Semaine de compression : l'organisation est sous tension. Réduisez, ou encaissez. |
 | `tutorial.cue_stack_intro` | La pile du jour ordonne tes consignes. Le premier créneau part en premier. | La pile du jour ordonne vos consignes. Le premier créneau part en premier. |
 | `tutorial.daily_review_intro` | Chaque matin, la Revue liste ce qui a dévié de la routine. Tranche, ou laisse. | Chaque matin, la Revue liste ce qui a dévié de la routine. Tranchez, ou laissez. |
 | `tutorial.graduation` | Un lieutenant a fini son apprentissage. Il décide seul, dans le cadre que tu fixes. | Un lieutenant a fini son apprentissage. Il décide seul, dans le cadre que vous fixez. |
-| `tutorial.possibility_horizon_intro` | L'horizon montre ce que tes lieutenants peuvent apprendre ensuite. | L'horizon montre ce que vos lieutenants peuvent apprendre ensuite. |
-| `tutorial.queue_runs_dry` | La file est vide. Rien n'attend ta décision : la ville tourne sans toi. | La file est vide. Rien n'attend votre décision : la ville tourne sans vous. |
+| `tutorial.possibility_horizon_intro` | L’horizon montre ce que tes lieutenants peuvent apprendre ensuite. | L'horizon montre ce que vos lieutenants peuvent apprendre ensuite. |
+| `tutorial.queue_runs_dry` | La file est vide. Rien n’attend ta décision : la ville tourne sans toi. | La file est vide. Rien n'attend votre décision : la ville tourne sans vous. |

@@ -285,7 +285,7 @@ Le 3ᵉ titre suit les points 11 et 19 du 07/09 : « Heat » devient « Chaleur 
 | clé | fr | en | quand |
 |---|---|---|---|
 | `chrome.bandeau.brigade_quadrille` | La brigade quadrille le quartier — planquez la caisse | The squad is combing the district — hide the cash | `heat.escalated` (état D du canon : « La brigade quadrille le Verge — planquez la caisse », le district rendu générique) |
-| `chrome.bandeau.les_indics_parlent` | Les indics parlent : la brigade s’agite | The informants are talking: the squad is stirring | `citywide_bucket` ∈ HOT, BURNING sans `escalated` (état C du canon, mot pour mot) |
+| `chrome.bandeau.les_indics_parlent` | Les indics parlent : la brigade s’agite | The informants are talking: the squad is stirring | `citywide_bucket` ∈ HOT, BURNING sans `escalated` (état C du canon, mot pour mot) |
 | `chrome.bandeau.attend_vos_ordres` | {nom} attend vos ordres | {nom} is waiting for your orders | la 1ʳᵉ carte de `queue` porte un lieutenant (« vos ordres » : `exceptions.file.ambiance`, servi) |
 | `chrome.bandeau.la_ville_attend_vos_ordres` | La ville attend vos ordres | The city is waiting for your orders | la 1ʳᵉ carte n'a pas de lieutenant (⑨ : c'est la ville qui parle) |
 | `chrome.bandeau.rapport` | {nom} a un rapport pour vous | {nom} has a report for you | un rapport d'autonomie **OUVERT** — en attente de votre décision — annoncé **une fois par session** ; le back ne tient aucun état lu / non lu, d'où ce déclencheur (tranché par l'orchestrateur le 2026-09-23 ; état N du canon : « Sal a un rapport du soir ») |
