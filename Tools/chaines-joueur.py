@@ -268,17 +268,33 @@ MOTS_CLES = {'if', 'while', 'for', 'foreach', 'switch', 'return', 'lock', 'using
 LITTERAL = re.compile(r'@?\$?"((?:[^"\\\n]|\\.)*)"')
 
 
+# ⛔ LES ARGUMENTS « CLÉ » DES API DE `Libelle` NE SONT PAS DU TEXTE JOUEUR — par CLASSE (f2, 2026-09-26), pas seulement pour `De`.
+#    Mesuré le 26/09 : `Libelle.Gabarit("vente.geste.poster_un_dealer", "Poster un dealer")` passé à un seam comptait la CLÉ comme une
+#    chaîne joueur (13 clés entrées d'un coup sur ㉟) ; `ParValeur("vente", "bloc", v, "…")` comptait son domaine et son rôle.
+#    ⇒ Par API, les arguments GARDÉS (0-based) — ce sont les REPLIS, qui SONT des chaînes joueur ; tout le reste (domaine, rôle, clé,
+#      valeur servie, dictionnaire de paramètres) sort :
+#        De(domaine, role, litteral)                 → garde 2 (le littéral est le repli ET la source de la clé)
+#        ParValeur(domaine, role, valeurServie, repli) → garde 3
+#        Gabarit(cle, repli, parametres)             → garde 1 (les NOMS de paramètres du dictionnaire ne s'affichent pas)
+#        CleDe(domaine, role, litteral), Slug(s)     → rien (ils rendent une CLÉ)
+#    La liste suit `Libelle.cs` (5 API publiques rendant une chaîne) : une API neuve doit y entrer, sinon ses arguments restent comptés.
+GARDES_LIBELLE = {'De': (2,), 'ParValeur': (3,), 'Gabarit': (1,), 'CleDe': (), 'Slug': ()}
+APPEL_LIBELLE = re.compile(r'\bLibelle\.(' + '|'.join(GARDES_LIBELLE) + r')\s*\(')
+
+
 def litteraux(expr):
-    """Littéraux d'une expression, en DESCENDANT `Libelle.De(dom, role, "…")` : ses
-    arguments 1 et 2 sont des CLÉS techniques, jamais du texte joueur."""
+    """Littéraux d'une expression, en DESCENDANT les appels à `Libelle` : seuls leurs arguments REPLI
+    (`GARDES_LIBELLE`) sont du texte joueur ; les arguments clé (domaine, rôle, clé, valeur servie,
+    paramètres) n'en sont jamais. Un argument gardé est lui-même descendu (un repli peut contenir un appel)."""
     out = []
     while True:
-        m = re.search(r'\bLibelle\.De\s*\(', expr)
+        m = APPEL_LIBELLE.search(masquer_litteraux(expr))
         if not m: break
         fin = fin_parenthese(expr, m.end()-1)
         args = decouper_args(expr[m.end():fin])
-        if len(args) >= 3:
-            out += [x.group(1) for x in LITTERAL.finditer(args[2])]
+        for i in GARDES_LIBELLE[m.group(1)]:
+            if len(args) > i:
+                out += litteraux(args[i])
         expr = expr[:m.start()] + ' ' * (fin + 1 - m.start()) + expr[fin+1:]
     out += [m.group(1) for m in LITTERAL.finditer(expr)]
     return out
@@ -356,13 +372,16 @@ if __name__ == '__main__':
                    "On ne redessine pas la maison deux fois",      # Delegation, EcrireTete #2
                    "LA CHAÎNE, DE LA TÊTE À LA SORTIE",            # Filiere, .text = Lib(…)
                    "Connectez-vous d'abord.",                      # Lieutenant, SetOutcome
-                   "qui vend, et ce qu'il y a dans la caisse"]     # Selling, Texte(…, valeur, …)
+                   "qui vend, et ce qu'il y a dans la caisse",     # Selling, Texte(…, valeur, …)
+                   "Coin de vente sans dealer"]                    # Selling, Texte(…, Libelle.Gabarit(clé, REPLI), …) — le repli reste compté
         # ⛔ ET LE CONTRÔLE NÉGATIF, qui est le seul à protéger du sens inverse : ces trois
         # chaînes sont des NOMS DE GAMEOBJECT passés en argument 2 des mêmes appels. Un
         # extracteur qui prendrait « l'argument avant le texte » les ramasserait, et la
         # population se remplirait d'accusés qui ne s'adressent à personne.
         intrus = ["SousTitre", "VideIllustration", "Compteurs",   # noms de GameObject
-                  "indeterminate", "drifting", "aligned"]         # CLÉS passées à un résolveur
+                  "indeterminate", "drifting", "aligned",         # CLÉS passées à un résolveur
+                  "vente.geste.point_de_vente_sans_dealer",       # la CLÉ du même Gabarit : elle ne s'affiche jamais
+                  "famille"]                                      # un NOM de paramètre (㉙ : Gabarit(clé, repli, { "famille", … }))
         textes = {e['texte'] for e in pop}
         manquants = [t for t in temoins if not any(t in x for x in textes)]
         faux = [t for t in intrus if t in textes]
