@@ -145,7 +145,11 @@ namespace MafiaCleanCity.Shell
 
         private void RenderState()
         {
-            stateText.text = $"[{CurrentState}]";
+            // ⛔ PASSE UX 26/09 (tâche 3) — cette ligne affichait `[LoadingState]` au joueur : le NOM DE L'ENUM C#, entre crochets. Le
+            //    back ne sert aucun mot pour ces états, et les quatre panneaux de l'Accueil rendent déjà chacun leur état vide NOMMÉ :
+            //    l'état reste une VALEUR (`CurrentState`, lue par les gardes), l'écran n'en dit rien. Garde de classe :
+            //    `ChainesDeDeveloppeurPlayModeTests`.
+            stateText.text = string.Empty;
             RebuildTracked();
         }
 
