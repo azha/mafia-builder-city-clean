@@ -1522,7 +1522,10 @@ namespace MafiaCleanCity.Operational
         /// ⇒ Le jour où `CleInitiale(cle)` est servie (la garde `ZeroRepliDesLocataires`, règle 3, rougit) : rendre
         ///   `Libelle.ParValeur("conflit", "initiale", cle, "")`, repli vide, et remplacer le test E9 « écusson vide » par
         ///   « initiale = valeur servie ».</summary>
-        public static string InitialeFamille(string cle) => string.Empty;
+        /// BRANCHÉ le 2026-09-26 : la pile bfd194bc sert les quatre clés (règle 3 de ZeroRepli rouge au créneau) — l'initiale est la
+        /// VALEUR servie, repli VIDE (jamais une lettre déduite du nom) ; hors domaine, vide sans rien demander.
+        public static string InitialeFamille(string cle) =>
+            System.Array.IndexOf(DomaineFamilles, cle) < 0 ? string.Empty : MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "initiale", cle, "");
 
         /// <summary>Le sous-titre de chaque famille — maquette ratifiée (cadres 59-61), clés servies `conflit.bloc.*` (balayage 34 de
         /// l'atelier : classe « servi »). Hors des 4 ⇒ « type inconnu », comme `NomFamille`.</summary>

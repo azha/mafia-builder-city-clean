@@ -239,8 +239,10 @@ namespace MafiaCleanCity.Operational.Tests
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
         /// repli ne les voit. La règle (3) rougit le jour où l'une est servie. Source : le résolveur qui les nomme, jamais recopiées.</summary>
-        private static readonly string[] CleesAttenduesNonBranchees =
-            MafiaCleanCity.Operational.ConflitResolvers.DomaineFamilles.Select(MafiaCleanCity.Operational.ConflitResolvers.CleInitiale).ToArray();
+        // VIDE depuis le 2026-09-26 : les initiales des écussons de ㉙ (conflit.initiale.*) sont servies (pile bfd194bc) et BRANCHÉES
+        // (ConflitResolvers.InitialeFamille). Le mécanisme reste : une clé attendue qu'on n'affiche pas encore s'inscrit ici, et la
+        // règle (3) rougit le jour où le back la sert.
+        private static readonly string[] CleesAttenduesNonBranchees = new string[0];
 
         /// <summary>Les locataires MESURÉS — écrits à la main (anti-tautologie), et leur couverture vérifiée par réflexion.</summary>
         private static readonly (string nom, Func<AppShell, MonoBehaviour> monter)[] Mesures =

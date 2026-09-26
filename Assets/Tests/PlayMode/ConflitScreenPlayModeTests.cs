@@ -384,9 +384,10 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(4, CompterNoms(RacineEcran().transform, "Ecu"), "un écusson par famille, jamais un cinquième");
             Assert.IsNotNull(RacineEcran().transform.Find("Corps/Contenu/Table/Famille_tarcum/BordChoisi"),
                 "la ligne visée porte le filet chaud de la maquette");
+            // BRANCHÉ le 26/09 (les clés sont servies à bfd194bc) : l'écusson porte la VALEUR servie de son initiale, repli vide.
             foreach (string cle in ConflitResolvers.DomaineFamilles)
-                Assert.AreEqual("", TexteSous("Famille_" + cle, "Initiale"),
-                    $"l'écusson de {cle} est VIDE tant que {ConflitResolvers.CleInitiale(cle)} n'est pas servie (arbitrage 24/09) — aucune lettre inventée");
+                Assert.AreEqual(ValeurAttendue.Cle(ConflitResolvers.CleInitiale(cle), ""), TexteSous("Famille_" + cle, "Initiale"),
+                    $"l'écusson de {cle} porte la valeur servie de {ConflitResolvers.CleInitiale(cle)} (vide si non servie) — aucune lettre inventée");
             Assert.IsFalse(ecran.EnvoiPossible, "famille seule : pas encore");
 
             GameObject.Find("Homme_00000000-0000-4000-8000-000000000000").GetComponent<Button>().onClick.Invoke();
@@ -840,16 +841,25 @@ namespace MafiaCleanCity.Operational.Tests
         // L'initiale de l'écusson : vide, sans appel à Libelle (aucun repli compté), sur les 4 familles et hors domaine. Le jour où
         // la clé est servie, la garde BundleReel (ZeroRepliDesLocataires, règle 3) rougit : brancher ParValeur, réécrire ce test.
         [Test]
-        public void EcranConflitR8_InitialeFamille_VideTantQueLaCleNEstPasServie_SansRepliCompte()
+        public void EcranConflitR8_InitialeFamille_LaValeurServie_RepliVide_HorsDomaineSansAppel()
         {
-            MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
-            foreach (string cle in ConflitResolvers.DomaineFamilles)
+            // RÉÉCRIT le 26/09 (branchement : les 4 clés sont servies à bfd194bc, règle 3 de ZeroRepli rouge au créneau).
+            var servi = new Dictionary<string, string>();
+            foreach (string cle in ConflitResolvers.DomaineFamilles) servi[ConflitResolvers.CleInitiale(cle)] = "§" + cle;
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", servi);
+            try
             {
-                Assert.AreEqual("", ConflitResolvers.InitialeFamille(cle), cle);
-                StringAssert.StartsWith("conflit.initiale.", ConflitResolvers.CleInitiale(cle));
+                foreach (string cle in ConflitResolvers.DomaineFamilles)
+                {
+                    Assert.AreEqual("§" + cle, ConflitResolvers.InitialeFamille(cle), $"{cle} : la valeur SERVIE de son initiale");
+                    StringAssert.StartsWith("conflit.initiale.", ConflitResolvers.CleInitiale(cle));
+                }
             }
-            Assert.AreEqual("", ConflitResolvers.InitialeFamille("inconnue"), "hors domaine : vide aussi, pas de « ? »");
-            Assert.AreEqual(0, MafiaCleanCity.I18n.Libelle.NbAppels, "aucune clé demandée : rien de compté en repli");
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
+            Assert.AreEqual("", ConflitResolvers.InitialeFamille("coil"), "clé non servie : repli VIDE, jamais une lettre déduite du nom");
+            MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
+            Assert.AreEqual("", ConflitResolvers.InitialeFamille("inconnue"), "hors domaine : vide, pas de « ? »");
+            Assert.AreEqual(0, MafiaCleanCity.I18n.Libelle.NbAppels, "hors domaine : rien demandé au catalogue");
             Assert.AreEqual("conflit.initiale.iron_throat", ConflitResolvers.CleInitiale("iron_throat"), "forme ParValeur, la valeur servie");
         }
 
