@@ -42,11 +42,19 @@ namespace MafiaCleanCity.Onboarding
                 if (req.result != UnityWebRequest.Result.Success)
                 { onErr?.Invoke(req.responseCode, req.error ?? "network error"); yield break; }
                 TutorielData dto = null;
-                try { dto = JsonUtility.FromJson<TutorielEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                try { dto = Lire(req.downloadHandler.text); }
                 catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
                 if (dto == null) { onErr?.Invoke(req.responseCode, "corps sans `payload.data`"); yield break; }
                 onOk?.Invoke(dto);
             }
+        }
+
+        /// <summary>Le corps brut de `ui/tutorial-state` → l'état ; `ParamsDuPreseedServis` = la clé est dans le corps (forme G). Pur.</summary>
+        public static TutorielData Lire(string corps)
+        {
+            TutorielData dto = JsonUtility.FromJson<TutorielEnvelope>(corps)?.payload?.data;
+            if (dto != null) dto.ParamsDuPreseedServis = corps != null && corps.Contains("\"onboarding_preseed_params\"");
+            return dto;
         }
 
         /// <summary>PATCH /v1/ui/tutorial — corps `{ tutorial_id }`. Marque un overlay comme vu.

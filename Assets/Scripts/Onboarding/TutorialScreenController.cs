@@ -71,10 +71,19 @@ namespace MafiaCleanCity.Onboarding
             return string.IsNullOrWhiteSpace(t) ? "—" : t;
         }
 
+        /// <summary>TD-761 fermée : le nom SERVI pour un tutoriel nommé — `onboarding_preseed_params.nom` pour le tutoriel préparé
+        /// (le back ne sert de paramètres que pour lui, cc46166d) ; null sinon. Pur.</summary>
+        public static string NomServi(TutorielData e, string id)
+        {
+            if (e == null || string.IsNullOrWhiteSpace(id) || id.Trim() != ClePreseed) return null;
+            string nom = e.onboarding_preseed_params != null ? e.onboarding_preseed_params.nom : null;
+            return string.IsNullOrWhiteSpace(nom) ? null : nom.Trim();
+        }
+
         /// <summary>㉕ (§G de la passe UX, 26/09) — l'espace des tutoriels LIÉS À UNE CARTE d'exception : leur texte parle du lieutenant
         /// de la carte. Mesuré : `tutorial.exception_card.onboarding_preseed` est servi « Lt. Hara — cuisson du soir bloquée… », un nom
         /// ÉCRIT DANS LA VALEUR, qui n'est pas le lieutenant du joueur. Le back passera `{nom}` (f2) ; tant que le paramètre n'est pas
-        /// servi, le client n'affiche RIEN de nommé. TD-761 : brancher le nom servi dès que le tutoriel le porte (champ encore inconnu).</summary>
+        /// servi, le client n'affiche RIEN de nommé. TD-761 FERMÉE : le nom est servi par `onboarding_preseed_params` (`NomServi`).</summary>
         public const string EspaceNomme = "tutorial.exception_card.";
         public const string ClePreseed = "tutorial.exception_card.onboarding_preseed";
         /// <summary>Le repli nommé de la table 64, à l'octet.</summary>
@@ -235,12 +244,12 @@ namespace MafiaCleanCity.Onboarding
             // ㉕ : un tutoriel NOMMÉ sans nom servi ne se montre pas (rien de nommé) — mais il ATTEND : ce n'est ni « tout vu » ni
             // « rien de nouveau ».
             bool nommeEnAttente = false;
-            if (!string.IsNullOrEmpty(suivant) && TexteDuTutoriel(suivant) == null) { nommeEnAttente = true; suivant = null; }
+            if (!string.IsNullOrEmpty(suivant) && TexteDuTutoriel(suivant, NomServi(Etat, suivant)) == null) { nommeEnAttente = true; suivant = null; }
             if (string.IsNullOrEmpty(suivant))
             {
                 // C10 — `next` null n'épuise pas l'éligible : un tutoriel éligible, pas encore vu, et dont le texte est SERVI, se montre.
                 string eligible = PremierEligibleNonVu(Etat.eligible_tutorial_ids, Etat.shown_tutorial_ids);
-                string texteEligible = eligible != null ? TexteDuTutoriel(eligible) : "—";
+                string texteEligible = eligible != null ? TexteDuTutoriel(eligible, NomServi(Etat, eligible)) : "—";
                 if (texteEligible == null) nommeEnAttente = true;
                 else if (texteEligible != "—") suivant = eligible;
             }
@@ -270,7 +279,7 @@ namespace MafiaCleanCity.Onboarding
                 sur.characterSpacing = premiereLecon ? 0f : 14f;
                 sur.fontStyle = premiereLecon ? FontStyles.Normal : FontStyles.UpperCase;
                 // Le TEXTE servi du tutoriel (D10-h close) — jamais l'identifiant.
-                Texte(corps, "Texte", TexteDuTutoriel(suivant), Px(14f), Or,
+                Texte(corps, "Texte", TexteDuTutoriel(suivant, NomServi(Etat, suivant)), Px(14f), Or,
                       DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center)
                     .enableWordWrapping = true;
                 string id = suivant;
