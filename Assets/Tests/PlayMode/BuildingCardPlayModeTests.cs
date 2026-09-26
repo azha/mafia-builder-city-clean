@@ -246,9 +246,10 @@ namespace MafiaCleanCity.Operational.Tests
             //    type, mise en place et couverture DÉLÉGUÉS à leurs résolveurs (ce que l'écran rend, catalogue amorcé ou non),
             //    « oui » pour en service (BuildingCardController:643, aucun résolveur).
             Assert.IsTrue(texts.Any(t => t.Contains(BuildingCardController.TypeLabel("lab"))), "le type du labo est rendu");
-            Assert.IsTrue(texts.Any(t => t == BuildingCardController.SetupLabel("OPERATIONAL")), "la bande de mise en place OPERATIONAL est rendue");
-            Assert.IsTrue(texts.Any(t => t == "oui"), "en service rendu « oui »");
-            Assert.IsTrue(texts.Any(t => t == BuildingCardController.CoverLabel("WEAK")), "la bande de couverture WEAK est rendue");
+            // ⛔ AMENDÉ (26/09) : les rangées « Mise en place / En service / Couverture » ne sont PAS une attente de cette jambe
+            //    réseau — depuis 4ab3abcf (pupitre du labo, maquette ② cadres 45-47), un labo dont la route `lab` répond montre le
+            //    PUPITRE À LA PLACE, et c'est la DONNÉE du compte qui choisit la branche. Les deux rendus sont épinglés hors réseau
+            //    (FicheLaboRangeesPlayModeTests L1/L2) ; ici, la donnée (ci-dessus) et le type rendu suffisent.
 
             // 5) NO raw scalar client-side: every rendered string is a band/label/glyph/bool —
             //    nothing should be a bare number (cents/grams/ticks/heat/purity). The only
