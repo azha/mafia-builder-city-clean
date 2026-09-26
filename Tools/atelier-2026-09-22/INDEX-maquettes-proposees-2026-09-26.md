@@ -14,6 +14,7 @@ sans me demander ») ; les mots restent PROPOSÉS jusqu'à leur service par le b
 | Navigation — G1 | 0 | `navigation/maquette-2026-09-26/cadre-0-1080x2102.png` | `ecrans-brennar-navigation.html` #0 | la carte, Empire actif : toucher EMPIRE rouvre l'Accueil | Décidé (reco, 26/09) — retenu par f2 tel que proposé | — |
 | Navigation — G1 | 1 | `navigation/maquette-2026-09-26/cadre-1-1080x2102.png` | `ecrans-brennar-navigation.html` #1 | l'Accueil rouvert ; le retour système le referme sur la carte (flèche retirée, §C.14) | Décidé (reco, 26/09) | — |
 | Navigation — G5, le menu Plus | 2 | `navigation/maquette-2026-09-26/cadre-2-1080x2102.png` | `ecrans-brennar-navigation.html` #2 | 20 entrées en 5 groupes titrés, deux colonnes, sans défiler ; la Filière est au dock (D6) | Décidé (reco, 26/09) — retenu par f2 tel que proposé | table **60** |
+| ④ l'Accueil — un joueur neuf sans carte de tête : « la suite » | 4 | `accueil/maquette-2026-09-23/cadre-4-1080x2102.png` | `ecrans-brennar-accueil.html` #4 | au plus 3 prochaines choses, chacune allumée et éteinte sur un état servi, avec son geste (labo → Commander/Cuire ; vente → Voir la vente/Ramasser ; règles → Écrire une règle) ; disparaît sans ligne vraie ou au palier 2 | Décidé (reco, 26/09) — commande f2 du 26/09, retenue | table **72** |
 
 ## Réserves de relecture (à porter au client, pas à la maquette)
 - ③ présence et navigation #0 : le pied de carte hérité de ③·22 ratifié (« Brennar, la nuit — … ») recouvre la rangée du bas (Les Friches,

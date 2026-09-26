@@ -44,7 +44,7 @@ def cadre(base, par):
     file_ = ('<div class="suivant"><div class="qui">Lt. Tull attend vos ordres<small>grave</small></div>'
              '<span class="act">trancher</span></div>')
     a = base.index('<div class="acc4" style="height:406px">'); b = base.index('<div class="dock9">')
-    neuf = base[:a] + '<div class="acc4" style="height:406px">' + suite + file_ + '</div></div></div>' + base[b:]
+    neuf = base[:a] + '<div class="acc4" style="height:406px">' + suite + file_ + '</div></div>' + base[b:]   # ferme acc4 et panneau — PAS l'écran (payé le 26/09 : le dock sortait du cadre)
     return re.sub(r'<div class="etiquette">[^<]*</div>', f'<div class="etiquette">{ETIQ}</div>', neuf, count=1)
 
 def main():
@@ -64,10 +64,11 @@ def main():
     if CSS not in t:
         if t.count(CSS_ANCRE) != 1: print('⛔ ancre de style'); return 1
         t = t.replace(CSS_ANCRE, CSS + CSS_ANCRE, 1)
-    comptes = {'cadres': t.count('<div class="cadre">'), 'lignes': nouveau.count('class="r4"'), 'gestes': nouveau.count('class="g4'),
+    ok_div = nouveau.count('<div') == nouveau.count('</div>') and base.count('<div') == base.count('</div>')
+    comptes = {'div équilibrées': ok_div, 'cadres': t.count('<div class="cadre">'), 'lignes': nouveau.count('class="r4"'), 'gestes': nouveau.count('class="g4'),
                'icônes': len(re.findall(r'<svg|<img', nouveau[nouveau.index('suite4'):nouveau.index('dock9')]))}
     print(comptes)
-    if comptes != {'cadres': 5, 'lignes': 3, 'gestes': 3, 'icônes': 0}: print('⛔ comptes'); return 1
+    if comptes != {'div équilibrées': True, 'cadres': 5, 'lignes': 3, 'gestes': 3, 'icônes': 0}: print('⛔ comptes'); return 1
     if t == s: print('déjà écrite (identique)'); return 0
     print('à écrire' if mode != '--ecrire' else 'écrite')
     if mode == '--ecrire': open(PAGE, 'w', encoding='utf-8').write(t)
