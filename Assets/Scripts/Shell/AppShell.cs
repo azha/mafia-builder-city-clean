@@ -229,6 +229,7 @@ namespace MafiaCleanCity.Shell
         {
             EnsureInitialized();
             UnmountCurrentTenant();
+            PoserLaRacine(() => ActivateTab(tab));
             CurrentTab = tab;
             ongletSignale = tab;
             // ⚠️ PLUS AUCUNE destination vide : `Tab.More` monte ㊲ (La réputation) depuis ce
@@ -361,6 +362,7 @@ namespace MafiaCleanCity.Shell
             //    sur `Expected: 16 · But was: -1`.
             UneSurimpressionAEteMontee = true;
             SurimpressionsMontees++;
+            PoserLaRacine(() => EnterDistrict(districtId));   // APRÈS la déclaration au sentinelle : le district est une RACINE, pas une surimpression (Depiler)
             DistrictInteriorScreenController tenant = ConstruireLocataire<DistrictInteriorScreenController>(out GameObject host);
             MountedTenantGameObject = host;
             MountedTenantType = typeof(DistrictInteriorScreenController);
@@ -380,7 +382,7 @@ namespace MafiaCleanCity.Shell
             float topInset = topSafeInset + TopBarSlot.rect.height + TopBar.EffectiveBottomOverhangPx;
             float bottomInset = bottomSafeInset + TabBarRoot.rect.height;
             tenant.SetSafeInsets(topInset, bottomInset); // §3.4
-            TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
+            // ARBITRAGES-user-2026-09-07 §C.14 (appliqué le 24/09) : plus de flèche dans le bandeau — on revient par l'onglet actif ou par Depiler().
             StartCoroutine(EnterDistrictSequence(tenant, token, districtId));
         }
 
@@ -419,6 +421,73 @@ namespace MafiaCleanCity.Shell
         /// items 0.2/0.3) : no special branch, the ordinary remount path resets CityTabDistrictId
         /// to -1 and clears the leading action.</summary>
         public void ExitToCityMap() => ActivateTab(Tab.Empire);
+
+        // ─────────────────────────── « Revenir » en série 6 (ARBITRAGES-user-2026-09-07 §C.14, appliqué le 2026-09-24)
+        // La flèche est RETIRÉE du bandeau (« pas de domicile en série 6 » ; l'ARGENT revient au bord, `RepositionMoneyCluster`).
+        // Le « revenir » vit dans DEUX gestes, sans chrome ni mot :
+        //   (1) toucher l'onglet ACTIF du dock ramène à sa racine — déjà vrai : chaque bouton d'onglet appelle `ActivateTab`, qui démonte
+        //       tout (district, surimpressions, fiche) et remonte la racine ; dans un district, l'onglet signalé est l'Empire (la carte) ;
+        //   (2) le retour du SYSTÈME (Android ; `Escape` dans l'éditeur) DÉPILE, un niveau par appui, dans cet ordre :
+        //       surimpression → la RACINE du contexte, remontée par le geste qui l'avait montée (l'onglet, le district, ou l'entrée du
+        //       menu Plus ; l'Accueil se ferme donc sur la carte) ; fiche du district → fermée ; district → la carte ; entrée du menu
+        //       Plus → le menu ; racine d'un autre onglet → la carte. Sur la carte : rien (`racine`).
+        //   ⇒ Depuis tout écran monté par le shell, des appuis successifs mènent à la carte (garde `RetourSerie6PlayModeTests`).
+        // ⚠️ Limites dites : (a) les surimpressions IMBRIQUÉES (Conflit › Recruter ouvre la Famille) se dépilent ENSEMBLE vers la
+        //    racine — le contenu d'une surimpression est bâti dans `ContentSlot` au `Start()` suivant, mêlé à celui de la racine ; un
+        //    dépilage fin exigerait que chaque locataire range son contenu sous son hôte ; (b) la racine est REMONTÉE, pas conservée :
+        //    un district re-demande son intérieur, un écran du menu recharge.
+
+        /// <summary>Le compteur de surimpressions au dernier montage de RACINE : au-delà, une surimpression est ouverte.</summary>
+        private int surimpressionsALaRacine;
+        /// <summary>Le geste qui a monté la racine courante (onglet, district, entrée du menu Plus) — rejoué pour dépiler une surimpression.</summary>
+        private System.Action remonterLaRacine;
+
+        /// <summary>Vrai si une surimpression est ouverte au-dessus de la racine courante.</summary>
+        public bool SurimpressionOuverte => SurimpressionsMontees > surimpressionsALaRacine;
+
+        /// <summary>Appelé par CHAQUE montage de racine (`ActivateTab`, `EnterDistrict`, `MonterUneEntreeDuMenu`), après son propre
+        /// compte de surimpressions : ce qui se monte ensuite par `MonterLocataireEnSurimpression` est au-dessus d'elle.</summary>
+        private void PoserLaRacine(System.Action remonter)
+        {
+            surimpressionsALaRacine = SurimpressionsMontees;
+            remonterLaRacine = remonter;
+        }
+
+        /// <summary>Une entrée du menu Plus devient la racine du contexte (le menu la remplace, elle ne s'y superpose pas).</summary>
+        private void MonterUneEntreeDuMenu(System.Action monter)
+        {
+            monter();
+            PoserLaRacine(() => MonterUneEntreeDuMenu(monter));
+        }
+
+        /// <summary>Geste (2) : dépile UN niveau. Rend ce qui a été dépilé — `surimpression`, `fiche`, `district`, `entree` (du menu
+        /// Plus), `onglet` — ou `racine` quand on est déjà sur la carte (et rien n'est fait).</summary>
+        public string Depiler()
+        {
+            EnsureInitialized();
+            if (CoffreFermeAffiche) return "racine";   // la barre d'onglets est éteinte : le seul geste est « Rouvrir le coffre »
+            DistrictInteriorScreenController district = MountedTenantType == typeof(DistrictInteriorScreenController) && MountedTenantGameObject != null
+                ? MountedTenantGameObject.GetComponent<DistrictInteriorScreenController>() : null;
+            if (SurimpressionOuverte)
+            {
+                if (remonterLaRacine != null) remonterLaRacine(); else ExitToCityMap();
+                return "surimpression";
+            }
+            if (district != null && district.FicheOuverte) { district.FermerFiche(); return "fiche"; }
+            if (district != null || CityTabDistrictId >= 0) { ExitToCityMap(); return "district"; }
+            if (CurrentTab == Tab.More && MountedTenantType != null) { ActivateTab(Tab.More); return "entree"; }   // le menu lui-même ne monte aucun locataire
+            // Sentinelle `(Tab)(-1)` : rien n'est encore activé (acquisition en cours) — le retour n'y monte rien, sinon il
+            // court-circuiterait la garde d'acquisition (l'Accueil ne se poserait plus).
+            if (CurrentTab != Tab.Empire && CurrentTab != (Tab)(-1)) { ExitToCityMap(); return "onglet"; }
+            return "racine";
+        }
+
+        private void Update()
+        {
+            // Le retour du système Android arrive en `Escape` (Input System) ; `Escape` au clavier dans l'éditeur.
+            var clavier = UnityEngine.InputSystem.Keyboard.current;
+            if (clavier != null && clavier.escapeKey.wasPressedThisFrame) Depiler();
+        }
 
         /// <summary>nav-hud-design-v1.md §6.1 — reçoit un jeton d'un locataire (DashboardController
         /// ou CityMapController) et ouvre la session côté shell si ce n'est pas déjà fait POUR CE
@@ -551,7 +620,7 @@ namespace MafiaCleanCity.Shell
                     // `TopBarController.LabelFor` (round 8) : la flèche rendue N'A PAS de texte de
                     // destination — la découvrabilité tient au fait que c'est le seul contrôle du
                     // coin gauche, pas à un mot affiché.
-                    TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
+                    // ARBITRAGES-user-2026-09-07 §C.14 (appliqué le 24/09) : plus de flèche dans le bandeau — on revient par l'onglet actif ou par Depiler().
                     // ITEM 0.5 §2 (C2) — CORRIGÉ (mesuré, pas supposé — garde de RAYCAST du
                     // C2_AccueilMonteLes4Panneaux..., rouge à sa première version) : `DashboardController.
                     // BuildLayout()` est différé d'une frame (`Start()`, IShellTenant) et parente SON
@@ -686,7 +755,7 @@ namespace MafiaCleanCity.Shell
                 // ROUND 7 (revue ⊥, BLOQUANT 2) — même geste, même ordre, même raison que la branche
                 // d'échec ci-dessus : `ActivateTab` a déjà remis l'action de tête à `None`, cette
                 // ligne vient donc APRÈS lui et après le montage de l'overlay.
-                TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
+                // ARBITRAGES-user-2026-09-07 §C.14 (appliqué le 24/09) : plus de flèche dans le bandeau — on revient par l'onglet actif ou par Depiler().
                 // ITEM 0.5 §2 (C2) — les 4 panneaux orphelins de l'Accueil, nourris de LA MÊME
                 // réponse `session/open` que ce shell vient d'obtenir (`dto`, peut être null si
                 // cette étape a échoué alors que le sign-in a réussi — `MonterPanneauxAccueil` gère
@@ -1049,7 +1118,7 @@ namespace MafiaCleanCity.Shell
                 Button b = entree.AddComponent<Button>();
                 b.targetGraphic = fond;
                 System.Action geste = monter;   // capture par valeur : sinon les N entrées montent la DERNIÈRE
-                b.onClick.AddListener(() => geste());
+                b.onClick.AddListener(() => MonterUneEntreeDuMenu(geste));
 
                 GameObject textGo = new GameObject("Libelle", typeof(RectTransform));
                 textGo.transform.SetParent(entree.transform, false);

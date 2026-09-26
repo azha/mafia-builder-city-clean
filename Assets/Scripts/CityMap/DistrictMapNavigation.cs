@@ -265,6 +265,21 @@ namespace MafiaCleanCity.CityMap
 
         private void OnEnable() => EnhancedTouchSupport.Enable();
 
+        // G2 (passe UX du 2026-09-24, reco retenue par l'orchestrateur) — TOUCHER LE SOL referme la fiche. Un toucher qui débute HORS
+        // de tout `Selectable` (la règle du pan, `IsOverInteractiveUI`) et se relâche sans avoir bougé au-delà du seuil de glisser
+        // d'`EventSystem` est un TAP sur la carte : signalé, jamais consommé (le pan reste entier). ⛔ PAS un `Button` posé sur le sol :
+        // un `Selectable` couvrant la scène bloquerait le pan PARTOUT (règle ci-dessous). À l'abonné de dire si le point est bien sur
+        // la scène (et pas sur un panneau non interactif au-dessus).
+        public event System.Action<Vector2> OnToucheSol;
+        private Vector2 pressePos;
+        private bool presseSurLaCarte;
+
+        /// <summary>Signale un tap sur la carte à `screenPos` — appelé par la lecture d'input, et par les tests (surface testable, même
+        /// patron que `PanBy`/`ZoomTo` : aucun précédent dans ce dépôt pour simuler l'Input System brut).</summary>
+        public void SignalerToucheSol(Vector2 screenPos) => OnToucheSol?.Invoke(screenPos);
+
+        private static float SeuilDeTapPx => EventSystem.current != null ? EventSystem.current.pixelDragThreshold : 10f;
+
         private bool mouseDragArmed;
         private Vector2 lastMousePos;
         private bool touchDragArmed;
@@ -318,12 +333,19 @@ namespace MafiaCleanCity.CityMap
                 case TouchPhase.Began:
                     touchDragArmed = !IsOverInteractiveUI(t.screenPosition);
                     lastTouchPos = t.screenPosition;
+                    presseSurLaCarte = touchDragArmed;
+                    pressePos = t.screenPosition;
                     break;
                 case TouchPhase.Moved:
                     if (touchDragArmed) { PanBy(t.screenPosition - lastTouchPos); lastTouchPos = t.screenPosition; }
                     break;
                 case TouchPhase.Ended:
+                    if (presseSurLaCarte && Vector2.Distance(pressePos, t.screenPosition) <= SeuilDeTapPx) SignalerToucheSol(t.screenPosition);
+                    presseSurLaCarte = false;
+                    touchDragArmed = false;
+                    break;
                 case TouchPhase.Canceled:
+                    presseSurLaCarte = false;
                     touchDragArmed = false;
                     break;
             }
@@ -339,6 +361,8 @@ namespace MafiaCleanCity.CityMap
                 Vector2 pos = mouse.position.ReadValue();
                 mouseDragArmed = !IsOverInteractiveUI(pos);
                 lastMousePos = pos;
+                presseSurLaCarte = mouseDragArmed;
+                pressePos = pos;
             }
             else if (mouse.leftButton.isPressed && mouseDragArmed)
             {
@@ -348,6 +372,9 @@ namespace MafiaCleanCity.CityMap
             }
             else if (mouse.leftButton.wasReleasedThisFrame)
             {
+                Vector2 pos = mouse.position.ReadValue();
+                if (presseSurLaCarte && Vector2.Distance(pressePos, pos) <= SeuilDeTapPx) SignalerToucheSol(pos);
+                presseSurLaCarte = false;
                 mouseDragArmed = false;
             }
 

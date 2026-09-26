@@ -691,7 +691,7 @@ namespace MafiaCleanCity.CityMap
                     Button tap = cell.AddComponent<Button>();
                     tap.transition = Selectable.Transition.None;
                     tap.targetGraphic = zone;
-                    tap.onClick.AddListener(() => OuvrirFiche(capture));
+                    tap.onClick.AddListener(() => ToucherBatiment(capture));   // G2 (a) : re-toucher le bâtiment ouvert referme
                     RenderedBuildingCount++;
                     // `DistrictMapNavigation.Configure` attend ce point dans l'espace de DistrictScene ;
                     // la cellule est désormais relative au centre de `DistrictCells`, c'est-à-dire au
@@ -813,6 +813,7 @@ namespace MafiaCleanCity.CityMap
                     initialFocus = sum / playerBuildingLocalPositions.Count;
                 }
                 MapNavigation.Configure(fondRt, initialFocus);
+                MapNavigation.OnToucheSol += QuandLeSolEstTouche;   // G2 (b) : toucher le sol referme la fiche
             }
 
             // nav-district — le titre est du CHROME (voir le commentaire au début de cette méthode) :
@@ -2494,6 +2495,40 @@ namespace MafiaCleanCity.CityMap
             ficheOperationalType = null;
             FicheDealerId = null;
             if (ficheRoot != null) ficheRoot.gameObject.SetActive(false);
+        }
+
+        // G2 (passe UX du 2026-09-24, reco (a)+(b) retenue par l'orchestrateur) — la fiche ne se fermait pas : `FermerFiche` n'avait
+        // que des appelants de test, et le canon de ① (`hud-brennar.html`) la dessine en cadre statique, sans ✕ ni mot. Deux gestes,
+        // sans chrome neuf : (a) re-toucher le bâtiment dont la fiche est ouverte la referme (un AUTRE bâtiment y bascule, comme
+        // avant) ; (b) toucher le SOL la referme — signalé par `DistrictMapNavigation.OnToucheSol`, qui ne voit que les touchers nés
+        // hors de tout `Selectable` et relâchés sans glisser.
+
+        /// <summary>G2 (a) — le geste du bâtiment : ouvre sa fiche, ou la referme si c'est déjà la sienne qui est ouverte.</summary>
+        public void ToucherBatiment(DistrictInteriorBuildingDto b)
+        {
+            if (b != null && FicheOuverte && FicheBuildingId == b.building) { FermerFiche(); return; }
+            OuvrirFiche(b);
+        }
+
+        /// <summary>G2 (b) — un tap sur la carte referme la fiche, SI le point est bien le sol (voir `EstLeSol`).</summary>
+        private void QuandLeSolEstTouche(Vector2 screenPos)
+        {
+            if (FicheOuverte && EstLeSol(screenPos)) FermerFiche();
+        }
+
+        /// <summary>Le sol, c'est ce que le PREMIER objet sous le doigt dit : rien (le fond et le décor sont inertes, pp-F6) ou un
+        /// objet de CET écran hors de la fiche. ⛔ Un panneau posé au-dessus garde le toucher : la fiche elle-même (son fond n'est
+        /// pas un `Selectable`, donc le pan s'y arme et le tap est signalé), le chrome du shell (`TopBarSlot` est raycastable) et
+        /// une surimpression montée par-dessus le district (hors de `root`).</summary>
+        private bool EstLeSol(Vector2 screenPos)
+        {
+            if (root == null || UnityEngine.EventSystems.EventSystem.current == null) return false;
+            var ped = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current) { position = screenPos };
+            var touches = new List<UnityEngine.EventSystems.RaycastResult>();
+            UnityEngine.EventSystems.EventSystem.current.RaycastAll(ped, touches);
+            if (touches.Count == 0) return true;
+            Transform premier = touches[0].gameObject.transform;
+            return premier.IsChildOf(root) && (ficheRoot == null || !premier.IsChildOf(ficheRoot));
         }
 
         /// <summary>⚠️ CE QUE CHAQUE ACTION FAIT VRAIMENT, MESURÉ AVANT D'ÊTRE CÂBLÉ.

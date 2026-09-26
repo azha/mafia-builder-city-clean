@@ -59,3 +59,31 @@ Source : rapport de la passe UX (`~/project/mafia-ux-passe`, `scratchpad/ux-pass
   laquelle, et quel montant, est un choix de produit. « Ouvrir » (`:1219`) rend 409 sur un bâtiment déjà ouvert.
 - Latent : un joueur neuf n'atteint pas ② (B1, routé CLIENT-2). **Reco** : masquer « Ouvrir » quand le bâtiment est déjà ouvert
   (donnée servie à vérifier) et retirer « Injecter » tant qu'il n'a pas de cible — à trancher avec CLIENT-2, propriétaire de ②.
+
+## MàJ 2026-09-26 — D (G2, G3/G7) et §Registre : **CODÉ** sur ordre de l'orchestrateur (focus UX)
+
+La contradiction du §Registre est levée : §C.14 appliqué (l'orchestrateur confirme « tranchée, retirer »). Livré :
+
+- **(4) flèche retirée** : plus aucun `SetLeadingAction(BackToMap, …)` (district, Accueil ×2) ; l'ARGENT revient au bord par
+  `TopBarController.RepositionMoneyCluster`. Garde de source R3 (contrôle positif fabriqué).
+- **(1) l'onglet actif** ramène à sa racine : c'était déjà vrai (`ActivateTab` remonte) ; garde R2.
+- **(2) le retour du système** (`AppShell.Depiler`, sur `Escape` = retour Android) dépile un niveau par appui :
+  surimpression → la racine du contexte, REMONTÉE par le geste qui l'avait montée ; fiche → fermée ; district → carte ;
+  entrée du menu Plus → le menu ; racine d'un autre onglet → la carte ; sur la carte → rien.
+- **G2** : re-toucher le bâtiment ouvert referme la fiche (un autre y bascule) ; toucher le SOL la referme
+  (`DistrictMapNavigation.OnToucheSol`, un tap né hors de tout `Selectable`, relâché sous le seuil de glisser).
+- **Garde « depuis chaque écran monté, un chemin mène à la carte »** : `RetourSerie6PlayModeTests.R1` — population = les onglets
+  de l'enum, chaque entrée RÉELLE du menu Plus, le district, sa fiche, une surimpression sur chacun, deux empilées ; pour chaque
+  état, la suite des retours est épinglée et finit sur la carte, et le toucher de l'Empire y mène en un geste.
+
+Décidé (reco, 26/09) — réversibles, à dire à l'orchestrateur :
+- La racine d'un onglet autre que l'Empire se dépile vers la CARTE (l'Empire est le seul domicile du dock) ; sur la carte, le
+  retour ne fait rien (il ne quitte pas l'application).
+- Une entrée du menu Plus se dépile vers le MENU (elle en est un niveau).
+- Dépiler une surimpression REMONTE la racine (un district re-demande son intérieur) plutôt que de la conserver ; les
+  surimpressions imbriquées se dépilent ensemble (leur contenu est mêlé à celui de la racine sous `ContentSlot`).
+- Le « sol » de G2 = le PREMIER objet sous le doigt est absent ou appartient à l'écran du district hors de la fiche (le titre
+  compte comme sol) ; la fiche, le chrome du shell et une surimpression gardent le toucher.
+
+Reste : G3 (le « ‹ » décoratif de l'en-tête Famille) — reco : le brancher sur `Depiler` par un contrat de `ShellContracts`,
+lot suivant ; G7 est couvert par le retour du système (⑩ n'est sans retour que monté hors shell, jamais sur le chemin joueur).
