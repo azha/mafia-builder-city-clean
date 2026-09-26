@@ -1924,6 +1924,28 @@ namespace MafiaCleanCity.CityMap
         private GameObject ficheBoutonAmeliorer;
         /// <summary>Le bouton AMÉLIORER est-il montré pour le bâtiment de la fiche ?</summary>
         public bool FicheAmeliorerMontre => ficheBoutonAmeliorer != null && ficheBoutonAmeliorer.activeSelf;
+
+        // Passe UX du 26/09 (rapport §G P4) — le bouton PRINCIPAL (doré) était « COLLECTER » sur une case « Rien à collecter » : un
+        // appel à agir sur rien. Il n'est ACTIF que s'il y a de quoi ramasser (`harvest_band` AVAILABLE ou FULL) ; sinon il reste à sa
+        // place (la rangée des trois actions du canon ne bouge pas) mais ESTOMPÉ et sans effet. Décidé (reco, 26/09) : désactiver
+        // plutôt que masquer — un trou dans la rangée se lirait comme un bouton perdu.
+        private GameObject ficheBoutonCollecter;
+        public const float CollecterEstompe = 0.35f;
+        /// <summary>Vrai si COLLECTER est actif (interactif, plein) sur la fiche ouverte.</summary>
+        public bool FicheCollecterActif => ficheBoutonCollecter != null && ficheBoutonCollecter.GetComponent<Button>() != null
+                                           && ficheBoutonCollecter.GetComponent<Button>().interactable;
+        /// <summary>Il y a de quoi ramasser : `harvest_band` AVAILABLE (prêt) ou FULL (plein, quelque chose s'est arrêté).</summary>
+        public static bool ACollecter(string harvestBand) => harvestBand == "AVAILABLE" || harvestBand == "FULL";
+
+        private void PoserCollecter(bool actif)
+        {
+            if (ficheBoutonCollecter == null) return;
+            Button b = ficheBoutonCollecter.GetComponent<Button>();
+            if (b != null) b.interactable = actif;
+            CanvasGroup g = ficheBoutonCollecter.GetComponent<CanvasGroup>();
+            if (g == null) g = ficheBoutonCollecter.AddComponent<CanvasGroup>();
+            g.alpha = actif ? 1f : CollecterEstompe;
+        }
         /// <summary>L'id transmis à la dernière ouverture de la fiche opérationnelle (null avant).</summary>
         public string DerniereFicheOperationnelleDemandee { get; private set; }
         /// <summary>Couture de test : un ouvreur posé ici passe AVANT celui du shell (aucun shell étranger ne répond à sa place).</summary>
@@ -2156,6 +2178,8 @@ namespace MafiaCleanCity.CityMap
                              x: 2f * (largeurBouton + 9f), largeur: largeurBouton);
             Transform btnAmeliorer = corps.transform.Find("Btn_AMÉLIORER");
             ficheBoutonAmeliorer = btnAmeliorer != null ? btnAmeliorer.gameObject : null;
+            Transform btnCollecter = corps.transform.Find("Btn_COLLECTER");
+            ficheBoutonCollecter = btnCollecter != null ? btnCollecter.gameObject : null;
 
             // Le retour d'une action. Posé EN SURIMPRESSION de la rangée d'actions plutôt qu'à sa
             // suite : dans le flux, il consommait de la hauteur en permanence pour un texte vide
@@ -2453,6 +2477,7 @@ namespace MafiaCleanCity.CityMap
             ficheStatLibelles[2].text = MafiaCleanCity.I18n.Libelle.De("district", "fiche", "CHALEUR LOCALE");
             ficheStatValeurs[0].text = ValeurACollecter(b.harvest_band);
             ficheStatValeurs[0].color = TeinteACollecter(b.harvest_band);
+            PoserCollecter(ACollecter(b.harvest_band));   // §G P4 : pas de bouton principal sur « Rien »
             ficheStatValeurs[1].text = ValeurRevenus(b.revenue_band);
             ficheStatValeurs[1].color = DesignTokens.Current.hudCreme;
             string chaleur = LastHeat != null ? LastHeat.district_bucket : null;
