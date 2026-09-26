@@ -59,7 +59,8 @@ namespace MafiaCleanCity.CityMap.Tests
             { "DistributionScreenController.cs", 1 },
             { "DistrictInteriorScreenController.cs", 4 },
             { "ExceptionDetailController.cs", 1 },
-            { "HomeChromeController.cs", 1 },
+            // HomeChromeController.cs : 1 → 0 le 2026-09-26 (bandeau de chaufferie par Gabarit/ParValeur, 342f5c83 + b7d499f2 : le ternaire
+            // « … — {week_state} » : "" est sorti) — entrée RETIRÉE, la dette est exacte dans les deux sens.
             { "HorizonScreenController.cs", 1 },
             { "InspectionScreenController.cs", 2 },   // 3 → 2 le 2026-09-26 (état vide de ⑮ : la seconde ligne passe par Libelle)
             { "LieutenantScreenController.cs", 1 },
