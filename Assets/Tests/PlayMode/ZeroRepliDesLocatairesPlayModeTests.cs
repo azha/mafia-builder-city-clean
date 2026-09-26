@@ -47,6 +47,26 @@ namespace MafiaCleanCity.Operational.Tests
             // G5 menu Plus (2026-09-26, ordre de l'orchestrateur, table 60 de l'atelier `60-menu-plus-cles-2026-09-26.tsv`) : 25 clés
             // PROPOSÉES, le back les servira dans son prochain lot i18n ; d'ici là les replis de la table (à l'octet). Règle (2) : les
             // retirer quand elles sont servies.
+            // « La suite » (cadre 4 de ④, 2026-09-26, table 72 de l'atelier `72-accueil-la-suite-2026-09-26.tsv`) : 18 clés PROPOSÉES,
+            // non servies à la pile e4d52039 ; replis de la table à l'octet. Règle (2) : les retirer quand elles sont servies.
+            "accueil.suite.la_suite",
+            "accueil.suite.le_labo_attend_du_precurseur",
+            "accueil.suite.sans_lui_rien_ne_cuit",
+            "accueil.suite.commander",
+            "accueil.suite.le_precurseur_est_en_route",
+            "accueil.suite.a_son_arrivee_lancez_la_cuisson",
+            "accueil.suite.le_precurseur_est_la",
+            "accueil.suite.lancez_la_cuisson",
+            "accueil.suite.cuire",
+            "accueil.suite.personne_ne_vend_encore",
+            "accueil.suite.un_dealer_sur_un_coin_de_vente_et_la_marchandise_part",
+            "accueil.suite.voir_la_vente",
+            "accueil.suite.la_caisse_de_prenom_se_remplit",
+            "accueil.suite.ramassez_la_elle_rejoint_la_planque",
+            "accueil.suite.ramasser",
+            "accueil.suite.vos_lieutenants_attendent_une_consigne",
+            "accueil.suite.une_premiere_regle_et_ils_tiennent_sans_vous",
+            "accueil.suite.ecrire_une_regle",
             "plus.groupe.vos_journees",
             "plus.groupe.vos_affaires",
             "plus.groupe.ce_qui_se_dit",

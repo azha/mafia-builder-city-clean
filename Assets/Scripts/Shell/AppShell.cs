@@ -160,6 +160,8 @@ namespace MafiaCleanCity.Shell
         public IHorodatageDeSortie HorodatageDeSortie = new HorodatageDeSortiePlayerPrefs();
         public System.Func<System.DateTime> Horloge = () => System.DateTime.UtcNow;
         public ITransportDeSession TransportDeSessionPourTest;
+        /// <summary>« La suite » (cadre 4) : sa source d'état. Null ⇒ la source réseau ; un test pose la sienne (hors réseau).</summary>
+        public ISourceDeLaSuite SourceDeLaSuitePourTest;
         /// <summary>B4 — nombre de retours au premier plan qui ont rouvert une session (test hook).</summary>
         public int SessionsRouvertesAuRetour { get; private set; }
         private bool retourEnCours;
@@ -1552,19 +1554,20 @@ namespace MafiaCleanCity.Shell
         /// entreraient en collision de composants), parenté directement sous `ContentSlot` — comme
         /// tout host de locataire, donc recyclé GRATUITEMENT par `UnmountCurrentTenant` (qui vide
         /// TOUT `ContentSlot` au prochain changement d'onglet) sans mécanisme de teardown dédié.</summary>
-        /// <summary>Les bandes de l'Accueil canon, en fraction de la zone sûre : la zone de tête en haut, la ligne de file en bas, et un
-        /// JOUR entre les deux — plus aucune bande ne touche sa voisine (la ligne « Lt. Tull attend vos ordres » posée sur le texte de la
-        /// carte, §G P1).</summary>
-        internal static readonly (float min, float max) BandeTete = (0.30f, 1.00f), BandeFile = (0.00f, 0.26f);
-        // ⛔ Suivi ⊥ UX §I (26/09) — deux restes de la planche de ④ : (2) ~55 % de VIDE entre une tête sans carte et la file ; (3) « Rien à
-        //    signaler · Aucune décision en attente » à côté de « Lt. Quist attend vos ordres — trancher », deux affirmations contraires.
-        //    Décidé (reco, 26/09) — la mise en page suit l'ÉTAT, la tête épouse son contenu :
-        //      · une carte à fort levier  : la tête (sa carte, ses options), puis la file — `BandeTete` / `BandeFile` ;
-        //      · pas de carte, une file   : la FILE SEULE, EN HAUT — sa première décision EST la tête (plus de « Rien à signaler » démenti) ;
-        //      · rien du tout (cadre 0)   : la tête vide et la file vide, serrées en haut.
-        //    Garde géométrique : `AccueilCanonPlayModeTests` (la première bande part du haut, écart ≤ 5 % entre deux bandes).
-        internal static readonly (float min, float max) BandeFileSeule = (0.56f, 1.00f),
-                                                         BandeTeteVide = (0.72f, 1.00f), BandeFileVide = (0.44f, 0.68f);
+        /// <summary>Les bandes de l'Accueil canon, en fraction de la ZONE SÛRE (du bas du dock au haut du bandeau), MESURÉES par l'UX
+        /// sur la maquette `ecrans-brennar-accueil.html` @ d4b0379 rendue dans Chromium (§I.5, instrument `mesure-maquette-accueil.js` ;
+        /// écran 298×581, zone sûre 98 → 504) — transposées en pourcentages, jamais en pixels (aspects 0,51 contre 0,45) :
+        ///   · la LIGNE DE FILE, juste au-dessus du dock, dans TOUS les états : 452 → 494 ⇒ (0,025 ; 0,128) ;
+        ///   · la CARTE DE TÊTE (cadre 1) : 239 → 442 ⇒ (0,153 ; 0,653) ;
+        ///   · « LA SUITE » (cadre 4, joueur neuf sans carte) : 201 → 442 ⇒ (0,153 ; 0,746) ;
+        ///   · le CALME (cadre 0, ni carte ni file) : la tête vide juste au-dessus de la file — le bloc de la maquette, 395 → 492.
+        /// ⛔ Corrige la « mise en page par état » du 26/09 (file seule EN HAUT) : un écart à la maquette, où la file ne remonte jamais
+        ///    (mesure de l'UX, ordre de l'orchestrateur du 26/09) ; elle chevauchait aussi le bandeau. Garde : `AccueilCanonPlayModeTests`
+        ///    (file au-dessus du dock et sous tout le reste, rien hors de la zone sûre, vide borné entre la tête ou la suite et la file).</summary>
+        internal static readonly (float min, float max) BandeFile = (0.025f, 0.128f),
+                                                         BandeTete = (0.153f, 0.653f),
+                                                         BandeSuite = (0.153f, 0.746f),
+                                                         BandeTeteVide = (0.153f, 0.270f);
 
         private void MonterPanneauxAccueil(SessionOpenDto dto)
         {
@@ -1574,36 +1577,40 @@ namespace MafiaCleanCity.Shell
             // accumuler des bandes d'un montage précédent déjà détruit.
             panneauxAccueilBandes.Clear();
 
-            // Sans anchors explicites, `new GameObject(nom, typeof(RectTransform))` pose un
-            // RectTransform PAR DÉFAUT (anchorMin=anchorMax=(0,0), sizeDelta=(100,100)) — les 4
-            // panneaux se superposeraient EXACTEMENT dans le même coin bas-gauche de `ContentSlot`,
-            // le dernier monté (HomeChrome) recouvrant les trois autres au raycast. `NouveauPanneauAccueil`
-            // reçoit donc une BANDE fractionnaire distincte par panneau — un empilement STRUCTUREL
-            // (chacun occupe toute la largeur, un quart de la hauteur), pas une composition visuelle
-            // finale (celle-ci reste un travail ultérieur, DA/juge-visuel — consigné en Deviation).
+            // Chaque panneau reçoit une BANDE fractionnaire distincte (sans anchors explicites, `new GameObject(nom,
+            // typeof(RectTransform))` les superposerait tous dans le coin bas-gauche de `ContentSlot`).
             bool avecCarte = dto?.hl_card != null && !string.IsNullOrEmpty(dto.hl_card.card_id);
             bool avecFile = dto?.queue != null && dto.queue.Length > 0;
-            if (!avecCarte && avecFile)
+            if (avecCarte)
             {
-                // Pas de carte, une file : la file SEULE, en haut (voir `BandeFileSeule`).
-                ExceptionQueuePanelController seule = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", BandeFileSeule.min, BandeFileSeule.max);
-                seule.SetQueue(Token, dto.queue);
-                return;
-            }
-            (float min, float max) bandeTete = avecCarte ? BandeTete : BandeTeteVide;
-            (float min, float max) bandeFile = avecCarte ? BandeFile : BandeFileVide;
-            HighestLeverageCardController hlCard = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", bandeTete.min, bandeTete.max);
-            // ⑤ `screen_1a` — le DÉTAIL de la carte, en surimpression. L'écran existe (maquette
-            // ratifiée « ok top on garde comme ça »), et sans ce fil il ne serait montable par
-            // personne : les quatre onglets sont pris, et un écran de détail n'a pas vocation à en
-            // occuper un. *Un écran construit que rien ne monte est un écran que le joueur ne voit
-            // jamais* — c'est le défaut exact qui laissait la Revue du jour invisible depuis W3.U1.
-            if (hlCard != null)
+                HighestLeverageCardController hlCard = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", BandeTete.min, BandeTete.max);
+                // ⑤ `screen_1a` — le DÉTAIL de la carte, en surimpression. L'écran existe (maquette ratifiée « ok top on garde comme
+                // ça »), et sans ce fil il ne serait montable par personne : *un écran construit que rien ne monte est un écran que le
+                // joueur ne voit jamais* — c'est le défaut exact qui laissait la Revue du jour invisible depuis W3.U1.
                 hlCard.OnOuvrirDetail += () => MonterLocataireEnSurimpression<DecisionDetailScreenController>();
+                hlCard.SetPayload(Token, dto.hl_card, dto.structural_budget);
+            }
+            else
+            {
+                // Sans carte, une file : pas de tête vide — elle dirait « Rien à signaler » contre la file (suivi ⊥ UX §I, 26/09).
+                HighestLeverageCardController calme = null;
+                if (!avecFile)
+                {
+                    calme = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", BandeTeteVide.min, BandeTeteVide.max);
+                    calme.OnOuvrirDetail += () => MonterLocataireEnSurimpression<DecisionDetailScreenController>();
+                    calme.SetPayload(Token, null, dto?.structural_budget);
+                }
+                // « LA SUITE » (cadre 4, table 72) : le vide du joueur neuf rempli par ses objectifs. Elle lit son état ; si une ligne est
+                // vraie, elle PREND le milieu et le calme s'efface (le bloc de la maquette remplace « Rien à signaler ») ; sinon rien ne
+                // change.
+                LaSuitePanelController suite = NouveauPanneauAccueil<LaSuitePanelController>("AccueilLaSuite", BandeSuite.min, BandeSuite.max);
+                HighestLeverageCardController calmeVu = calme;
+                suite.Rendue += visible => { if (calmeVu != null) calmeVu.gameObject.SetActive(!visible); };
+                suite.Charger(Token, SourceDeLaSuitePourTest ?? new SourceDeLaSuiteReseau { BaseUrl = baseUrl }, carteDeTete: false);
+            }
 
-            hlCard.SetPayload(Token, dto?.hl_card, dto?.structural_budget);
-
-            ExceptionQueuePanelController exceptions = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", bandeFile.min, bandeFile.max);
+            ExceptionQueuePanelController exceptions = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", BandeFile.min, BandeFile.max);
+            exceptions.PoserEnLigneDeLAccueil();
             exceptions.SetQueue(Token, dto?.queue);
             // ⛔ PASSE UX 26/09 (§G P1, « deux mises en page superposées ») — les VITAUX (OrgVitals : « Friction: Light · Tension: Calm »,
             //    cohésion) et le CHROME (HomeChrome : bandeau de chaufferie, raccourcis, machine à 5 états « [LoadingState] ») ne sont plus

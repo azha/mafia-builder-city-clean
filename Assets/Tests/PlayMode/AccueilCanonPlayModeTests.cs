@@ -23,8 +23,12 @@ namespace MafiaCleanCity.Shell.Tests
     //   A4  G4 (suivi ⊥ UX §I, 26/09) : avec une carte, AUCUNE surface tactile (la surface B6 posée sur la racine de la carte) ne
     //       recouvre un geste de la tête — mesuré au RAYCAST au centre de chaque geste montré ; « La carte » de l'ancienne feuille n'est
     //       plus sur l'Accueil (feuille éteinte, dbf8e71b) : le chevauchement déduit par la passe n'a plus d'objet
-    //   A5  suivi ⊥ UX §I (26/09) : pas de carte à fort levier mais une file ⇒ la FILE SEULE, en haut, sans « Rien à signaler » qui la
-    //       démente ; sa ligne porte « trancher » ; garde géométrique (départ en haut, écarts ≤ 5 %) aussi en A1/A2
+    //   A5  suivi ⊥ UX §I (26/09) : pas de carte à fort levier mais une file ⇒ la file, sans « Rien à signaler » qui la démente ; sa
+    //       ligne porte « trancher ». Garde GÉOMÉTRIQUE (mesure de l'UX sur la maquette @ d4b0379, 26/09 — remplace « la file seule en
+    //       haut ») : la file juste au-dessus du dock et sous tout le reste, rien hors de la zone sûre (ni sur le bandeau), vide borné
+    //   A6  la ligne de file a la hauteur de la maquette (7,2 % de l'écran), la MÊME avec et sans carte de tête — jamais étirée
+    //   A7  « La suite » (cadre 4, table 72) : sans carte, au palier 1, elle PREND le milieu (le calme s'efface), la file reste en bas ;
+    //       au palier 2, rien ne change
     //   A3  G1 (suivi ⊥ UX §I, 26/09) : l'Accueil rouvert RELIT la tête et la file (session/open recalcule hl_card) — une carte
     //       RÉGLÉE depuis le lancement ne revient pas « en attente » ; la réponse périmée du lancement n'est jamais remontrée
     [Category("AccueilCanon")]
@@ -193,8 +197,10 @@ namespace MafiaCleanCity.Shell.Tests
                 "la carte réglée ne revient pas « en attente » (la réponse du lancement n'est jamais remontrée)");
         }
 
-        /// <summary>Garde GÉOMÉTRIQUE (suivi ⊥ UX §I, 26/09 : « ~55 % de vide ») — dans le repère de `ContentSlot` : la première bande
-        /// part du HAUT de la zone sûre (à 1 % près), et deux bandes consécutives ne laissent pas plus de 5 % de la zone entre elles.</summary>
+        /// <summary>Garde GÉOMÉTRIQUE (mesure de l'UX sur `ecrans-brennar-accueil.html` @ d4b0379, 26/09) — dans le repère de `ContentSlot`,
+        /// bandes données de HAUT en BAS, la dernière étant la file : toutes DANS la zone sûre (rien sur le bandeau ni sous le dock, à
+        /// 1 % près) ; la file posée juste AU-DESSUS du dock (≤ 5 % de la zone) ; deux bandes consécutives DISJOINTES et séparées de
+        /// 5 % de la zone au plus (le vide entre la tête — ou la suite — et la file est borné).</summary>
         private void VerifierGeometrie(string quand, params RectTransform[] bandesDeHautEnBas)
         {
             Canvas.ForceUpdateCanvases();
@@ -208,17 +214,23 @@ namespace MafiaCleanCity.Shell.Tests
                 float y0 = shell.ContentSlot.InverseTransformPoint(c[0]).y, y1 = shell.ContentSlot.InverseTransformPoint(c[1]).y;
                 return (bas: Mathf.Min(y0, y1), haut: Mathf.Max(y0, y1));
             }).ToList();
-            Assert.LessOrEqual(Mathf.Abs(bornes[0].haut - haut), 0.01f * zone,
-                $"{quand} : la première bande part du haut de la zone sûre (bande {bornes[0].haut:F0}, zone {haut:F0})");
+            foreach (var b in bornes)
+            {
+                Assert.LessOrEqual(b.haut, haut + 0.01f * zone, $"{quand} : une bande monte sur le bandeau ({b.haut:F0} > {haut:F0})");
+                Assert.GreaterOrEqual(b.bas, bas - 0.01f * zone, $"{quand} : une bande descend sous le dock ({b.bas:F0} < {bas:F0})");
+            }
+            Assert.LessOrEqual(bornes[bornes.Count - 1].bas - bas, 0.05f * zone,
+                $"{quand} : la file vit juste au-dessus du dock (à {(bornes[bornes.Count - 1].bas - bas) / zone:P0} de la zone)");
             for (int i = 1; i < bornes.Count; i++)
             {
                 float ecart = bornes[i - 1].bas - bornes[i].haut;
+                Assert.GreaterOrEqual(ecart, -0.5f, $"{quand} : deux bandes se recouvrent ({ecart:F0})");
                 Assert.LessOrEqual(ecart, 0.05f * zone, $"{quand} : écart de {ecart / zone:P0} entre deux bandes (≤ 5 % de la zone sûre)");
             }
         }
 
         [UnityTest]
-        public IEnumerator A5_SansCarteAvecUneFile_LaFileSeuleEnHaut_SansDementi()
+        public IEnumerator A5_SansCarteAvecUneFile_LaFileAuDessusDuDock_SansDementi()
         {
             LogAssert.ignoreFailingMessages = true;
             shellGo = new GameObject("AppShell_FileSeule");
@@ -277,8 +289,83 @@ namespace MafiaCleanCity.Shell.Tests
             yield return null;
             float hSans = Hauteur("file seule");
 
-            Assert.AreEqual(ExceptionQueuePanelController.HauteurLigne, hAvec, 0.5f, "avec carte de tête : la hauteur de conception");
+            Assert.AreEqual(ExceptionQueuePanelController.HauteurLigneAccueil, hAvec, 0.5f, "avec carte de tête : la hauteur de la maquette");
             Assert.AreEqual(hAvec, hSans, 0.5f, $"la ligne a la MÊME hauteur avec et sans carte de tête ({hAvec:F1} contre {hSans:F1}) — jamais étirée");
+        }
+
+        private sealed class SourceTemoin : ISourceDeLaSuite
+        {
+            public EtatDeLaSuite Etat;
+            public System.Collections.IEnumerator Lire(string jeton, bool carteDeTete, System.Action<EtatDeLaSuite> ok)
+            {
+                if (Etat != null) Etat.CarteDeTete = carteDeTete;
+                ok(Etat);
+                yield break;
+            }
+        }
+
+        private static EtatDeLaSuite JoueurNeuf(int palier) => new EtatDeLaSuite
+        {
+            Palier = palier, LaboId = "labo-1", Cuisson = "IDLE", PrecurseurType = "PYRALIN", Stock = "NONE",
+            Dealers = new MafiaCleanCity.Operational.Selling.DealerDto[0],
+            Lieutenants = new[] { new MafiaCleanCity.Operational.Lieutenant.RosterRow { lieutenant_id = "lt-1", rule_count_band = "NONE" } },
+        };
+
+        /// <summary>A7 — « La suite » dans le VRAI shell, source témoin (hors réseau) : avec et sans file, puis au palier 2.</summary>
+        [UnityTest]
+        public IEnumerator A7_LaSuite_PrendLeMilieu_LaFileResteEnBas_EtSEteintAuPalier2()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_LaSuite");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            Poser(shell, "Token", "jeton-de-test");
+            var transport = new TransportTemoin();
+            shell.TransportDeSessionPourTest = transport;
+            var source = new SourceTemoin { Etat = JoueurNeuf(1) };
+            shell.SourceDeLaSuitePourTest = source;
+
+            // (1) sans carte, une file : la suite au milieu, la file dessous.
+            SessionOpenDto avecFile = AvecCarte(null);
+            avecFile.queue = new[] { new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "e-1", severity_band = "MODERATE" } };
+            transport.Reponse = avecFile;
+            yield return RouvrirParEmpire();
+            LaSuitePanelController suite = shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).LastOrDefault();
+            Assert.IsNotNull(suite, "sans carte : « La suite » est montée");
+            Assert.IsTrue(suite.Visible, "palier 1, A1/B/D vraies : elle se montre");
+            CollectionAssert.AreEqual(new[] { "A1", "B", "D" }, suite.LignesRendues.Select(l => l.Id).ToList());
+            ExceptionQueuePanelController file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
+            Assert.IsTrue(file.LigneDeLAccueil, "la file de l'Accueil est UNE ligne");
+            Transform bloc = suite.transform.Find("LaSuite");
+            Assert.IsNotNull(bloc, "le bloc est construit");
+            VerifierGeometrie("la suite et la file", (RectTransform)bloc, (RectTransform)file.transform);
+            Assert.AreEqual(0, shell.ContentSlot.GetComponentsInChildren<HighestLeverageCardController>(false).Length, "aucune tête : ni carte, ni calme");
+
+            // (2) sans carte ni file : le calme s'efface devant la suite ; la file (vide) reste en bas.
+            transport.Reponse = AvecCarte(null);
+            yield return RouvrirParEmpire();
+            suite = shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).LastOrDefault();
+            Assert.IsTrue(suite != null && suite.Visible);
+            Assert.AreEqual(0, shell.ContentSlot.GetComponentsInChildren<HighestLeverageCardController>(false).Length,
+                "le calme (« Rien à signaler ») s'efface : la suite dit ce qu'il y a à faire");
+            file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
+            VerifierGeometrie("la suite, file vide", (RectTransform)suite.transform.Find("LaSuite"), (RectTransform)file.transform);
+
+            // (3) palier 2 : rien ne change — le calme au-dessus de la file.
+            source.Etat = JoueurNeuf(2);
+            yield return RouvrirParEmpire();
+            suite = shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).LastOrDefault();
+            Assert.IsFalse(suite != null && suite.Visible, "palier 2 : la suite ne se montre pas");
+            HighestLeverageCardController calme = shell.ContentSlot.GetComponentsInChildren<HighestLeverageCardController>(false).LastOrDefault();
+            Assert.IsNotNull(calme, "palier 2, ni carte ni file : le calme");
+            file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
+            VerifierGeometrie("le calme", (RectTransform)calme.transform, (RectTransform)file.transform);
+
+            // (4) une carte de tête : jamais de suite.
+            transport.Reponse = AvecCarte("c-1");
+            source.Etat = JoueurNeuf(1);
+            yield return RouvrirParEmpire();
+            Assert.AreEqual(0, shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).Length, "avec une carte : aucune suite");
         }
 
         [UnityTest]

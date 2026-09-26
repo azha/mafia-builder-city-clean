@@ -47,6 +47,16 @@ namespace MafiaCleanCity.Shell
         private TextMeshProUGUI suivanteText, ambianceText;
         public string TexteSuivante => suivanteText != null && suivanteText.gameObject.activeSelf ? suivanteText.text : null;
         public string TexteAmbiance => ambianceText != null && ambianceText.gameObject.activeSelf ? ambianceText.text : null;
+        // ④ LA LIGNE DE L'ACCUEIL (2026-09-26, mesure de l'UX sur `ecrans-brennar-accueil.html` @ d4b0379, §I.5) — sur l'Accueil, la file
+        // n'est qu'UNE ligne, juste au-dessus du dock : « {nom} attend vos ordres » / GRAVITÉ, et TRANCHER à droite, 7,2 % de l'écran.
+        // Le reste de la file vit dans l'ardoise ⑨ : toucher la ligne l'ouvre (« ViewAll », devenu la surface de la ligne) ; TRANCHER
+        // ouvre la carte ⑩. Posé par le shell (`PoserEnLigneDeLAccueil`) ; hors Accueil, le panneau garde sa forme de liste.
+        public bool LigneDeLAccueil { get; private set; }
+        /// <summary>La hauteur de la ligne de l'Accueil, en unités de canvas (référence 1 280 de large) : 7,2 % d'un écran d'aspect 0,51
+        /// (la maquette) ≈ 180. Fixe : elle ne s'étire jamais sur sa bande.</summary>
+        public const float HauteurLigneAccueil = 180f;
+        private GameObject viewAllGo;
+        private TextMeshProUGUI viewAllLabel;
         private ExceptionsClient client;
         private string token;
         private ExceptionCardDto[] currentCards = Array.Empty<ExceptionCardDto>();
@@ -69,6 +79,31 @@ namespace MafiaCleanCity.Shell
             EnsureInitialized();
             token = bearerToken;
             currentCards = cards ?? Array.Empty<ExceptionCardDto>();
+            Render();
+        }
+
+        /// <summary>Passe le panneau en LIGNE DE L'ACCUEIL (voir `LigneDeLAccueil`) et le re-rend.</summary>
+        public void PoserEnLigneDeLAccueil()
+        {
+            EnsureInitialized();
+            LigneDeLAccueil = true;
+            VerticalLayoutGroup vlg = GetComponent<VerticalLayoutGroup>();
+            if (vlg != null) { vlg.padding = new RectOffset(40, 40, 0, 0); vlg.childAlignment = TextAnchor.UpperCenter; }
+            // « Voir l'ardoise » devient la SURFACE de la ligne : transparente, étendue au panneau, DERRIÈRE la ligne (TRANCHER, posé
+            // après, reste au-dessus) — toucher « Lt. X attend vos ordres » ouvre l'ardoise, toucher TRANCHER ouvre la carte.
+            viewAllGo.GetComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform va = (RectTransform)viewAllGo.transform;
+            va.anchorMin = Vector2.zero; va.anchorMax = Vector2.one; va.offsetMin = va.offsetMax = Vector2.zero;
+            Image vaImg = viewAllGo.GetComponent<Image>();
+            Color transparent = vaImg.color; transparent.a = 0f; vaImg.color = transparent;
+            viewAllLabel.gameObject.SetActive(false);
+            viewAllGo.transform.SetSiblingIndex(0);
+            foreach (TextMeshProUGUI t in new[] { emptyStateText, ambianceText })
+            {
+                t.fontSize = 30;
+                t.alignment = TextAlignmentOptions.Center;
+                t.GetComponent<LayoutElement>().preferredWidth = -1;
+            }
             Render();
         }
 
@@ -141,8 +176,16 @@ namespace MafiaCleanCity.Shell
             RenderedEmptyState = false;
             emptyStateText.gameObject.SetActive(false);
             ambianceText.gameObject.SetActive(false);
-            suivanteText.gameObject.SetActive(true);
+            suivanteText.gameObject.SetActive(!LigneDeLAccueil);   // sur l'Accueil, la ligne EST la suivante
             suivanteText.text = Suivante(currentCards[0]);
+
+            if (LigneDeLAccueil)
+            {
+                // UNE ligne : la première décision. `RenderedCardCount` reste le nombre de cartes PORTÉES (la file entière, dans ⑨).
+                RenderedCardCount = currentCards.Length;
+                AddLigneDeLAccueil(currentCards[0]);
+                return;
+            }
 
             // R2.3 sensitivity (C5-F2): render EXACTLY as many rows as the array carries — never a
             // hard-coded count (3 is only the TUNABLE'S default, never a client-side constant).
@@ -219,6 +262,76 @@ namespace MafiaCleanCity.Shell
             motRt.anchorMin = Vector2.zero; motRt.anchorMax = Vector2.one; motRt.offsetMin = motRt.offsetMax = Vector2.zero;
         }
 
+        /// <summary>La ligne de l'Accueil : « {nom} attend vos ordres » sur la GRAVITÉ en capitales, TRANCHER en or à droite.</summary>
+        private void AddLigneDeLAccueil(ExceptionCardDto card)
+        {
+            GameObject row = new GameObject("Row_" + card.exception_id, typeof(RectTransform));
+            row.transform.SetParent(rowsRoot, false);
+            Image fond = row.AddComponent<Image>();
+            fond.color = DesignTokens.Current.surfaceCard;
+            fond.raycastTarget = false;                               // le toucher passe à la surface « ViewAll », dessous
+            HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.padding = new RectOffset(36, 36, 18, 18);
+            hlg.spacing = 16;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = false;
+            LayoutElement rowLe = row.AddComponent<LayoutElement>();
+            rowLe.minHeight = HauteurLigneAccueil;
+            rowLe.preferredHeight = HauteurLigneAccueil;
+            rowLe.flexibleHeight = 0f;
+
+            GameObject gauche = new GameObject("QuiAttend", typeof(RectTransform));
+            gauche.transform.SetParent(row.transform, false);
+            VerticalLayoutGroup col = gauche.AddComponent<VerticalLayoutGroup>();
+            col.spacing = 6;
+            col.childAlignment = TextAnchor.MiddleLeft;
+            col.childControlWidth = true; col.childControlHeight = true;
+            col.childForceExpandWidth = true; col.childForceExpandHeight = false;
+            gauche.AddComponent<LayoutElement>().flexibleWidth = 1f;
+
+            TextMeshProUGUI qui = NewText(gauche.transform, QuiAttend(card), -1);
+            qui.fontSize = 34;
+            qui.overflowMode = TextOverflowModes.Ellipsis;
+            qui.enableWordWrapping = false;
+            TextMeshProUGUI gravite = NewText(gauche.transform, SeverityLabel(card.severity_band).ToUpperInvariant(), -1);
+            gravite.fontSize = 22;
+            gravite.characterSpacing = 8;
+            gravite.color = SeverityAccent(card.severity_band);
+            renderedSeverityLabels.Add(SeverityLabel(card.severity_band));
+
+            GameObject trancherGo = new GameObject("Trancher", typeof(RectTransform));
+            trancherGo.transform.SetParent(row.transform, false);
+            Image zone = trancherGo.AddComponent<Image>();
+            Color invisible = DesignTokens.Current.surfaceCard; invisible.a = 0f;
+            zone.color = invisible;
+            Button b = trancherGo.AddComponent<Button>();
+            b.transition = Selectable.Transition.None;
+            b.targetGraphic = zone;
+            ExceptionCardDto carte = card;
+            b.onClick.AddListener(() => OuvrirLaCarte(carte));
+            LayoutElement btnLe = trancherGo.AddComponent<LayoutElement>();
+            btnLe.minWidth = 220; btnLe.preferredWidth = 220; btnLe.minHeight = 100;
+            btnLe.flexibleWidth = 0f;
+            TextMeshProUGUI mot = NewText(trancherGo.transform, MafiaCleanCity.I18n.Libelle.De("chrome", "bandeau", "trancher").ToUpperInvariant(), -1);
+            mot.fontSize = 30;
+            mot.fontStyle = FontStyles.Bold;
+            mot.characterSpacing = 10;
+            mot.color = DesignTokens.Current.accentGold;
+            mot.alignment = TextAlignmentOptions.MidlineRight;
+            RectTransform motRt = (RectTransform)mot.transform;
+            motRt.anchorMin = Vector2.zero; motRt.anchorMax = Vector2.one; motRt.offsetMin = motRt.offsetMax = Vector2.zero;
+        }
+
+        /// <summary>QUI attend : le lieutenant NOMMÉ, ou la ville — les deux clés du bandeau, servies (la première partie de `Suivante`).</summary>
+        public static string QuiAttend(ExceptionCardDto c) =>
+            c == null ? "" : MafiaCleanCity.Operational.Exceptions.ExceptionBandes.ParleUnLieutenant(c)
+                ? MafiaCleanCity.I18n.Libelle.Gabarit("chrome.bandeau.attend_vos_ordres", "{nom} attend vos ordres",
+                    new Dictionary<string, string> { { "nom", MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Locuteur(c) } })
+                : MafiaCleanCity.I18n.Libelle.Gabarit("chrome.bandeau.la_ville_attend_vos_ordres", "La ville attend vos ordres");
+
         /// <summary>« trancher » : ouvre la carte (⑩) PAR LE SHELL, en surimpression — le joueur y choisit. Hors shell : rien.</summary>
         public void OuvrirLaCarte(ExceptionCardDto card)
         {
@@ -244,11 +357,7 @@ namespace MafiaCleanCity.Shell
         public static string Suivante(ExceptionCardDto c)
         {
             if (c == null) return "";
-            string qui = MafiaCleanCity.Operational.Exceptions.ExceptionBandes.ParleUnLieutenant(c)
-                ? MafiaCleanCity.I18n.Libelle.Gabarit("chrome.bandeau.attend_vos_ordres", "{nom} attend vos ordres",
-                    new Dictionary<string, string> { { "nom", MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Locuteur(c) } })
-                : MafiaCleanCity.I18n.Libelle.Gabarit("chrome.bandeau.la_ville_attend_vos_ordres", "La ville attend vos ordres");
-            return qui + " · " + SeverityLabel(c.severity_band) + " · " + MafiaCleanCity.I18n.Libelle.De("chrome", "bandeau", "trancher");
+            return QuiAttend(c) + " · " + SeverityLabel(c.severity_band) + " · " + MafiaCleanCity.I18n.Libelle.De("chrome", "bandeau", "trancher");
         }
 
         private static string SeverityLabel(string b) =>
@@ -298,7 +407,7 @@ namespace MafiaCleanCity.Shell
             ambianceText = NewText(transform, "", 260);
             ambianceText.gameObject.SetActive(false);
 
-            GameObject viewAllGo = new GameObject("ViewAll", typeof(RectTransform));
+            viewAllGo = new GameObject("ViewAll", typeof(RectTransform));
             viewAllGo.transform.SetParent(transform, false);
             Image vaImg = viewAllGo.AddComponent<Image>();
             vaImg.color = DesignTokens.Current.surfaceRow;
@@ -307,7 +416,7 @@ namespace MafiaCleanCity.Shell
             vaBtn.onClick.AddListener(() => StartCoroutine(ViewAll()));
             LayoutElement vaLe = viewAllGo.AddComponent<LayoutElement>();
             vaLe.minHeight = 32;
-            TextMeshProUGUI vaLabel = NewText(viewAllGo.transform, "Voir l'ardoise ›", 200);
+            viewAllLabel = NewText(viewAllGo.transform, "Voir l'ardoise ›", 200);
         }
 
         private TextMeshProUGUI NewText(Transform parent, string value, float preferredWidth)
