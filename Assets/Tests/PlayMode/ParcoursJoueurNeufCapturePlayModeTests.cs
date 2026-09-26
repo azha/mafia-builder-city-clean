@@ -229,6 +229,39 @@ namespace MafiaCleanCity.Capture.Tests
             yield return Photographier("p4_fiche_du_district");
             Noter("P4", $"toucher le bâtiment ({touche.operational_type})", $"fiche ouverte · actions visibles : {actions}");
 
+            // ── P4b · BLANCHIR sur la façade du kit (INJECT, f2 26/09 : « la preuve qu'on attend ») ────────────────────────────────
+            // Le geste de PRODUCTION (clic sur Btn_BLANCHIR) sur le compte NEUF, contre le back visé ; la réponse SERVIE est notée telle
+            // quelle (code HTTP, réussi ou refusé, phrase). Puis la fiche du bâtiment de P4 est rouverte : P5 reste le même parcours.
+            DistrictInteriorBuildingDto facade = duKit.FirstOrDefault(b => b.operational_type == "front_shop");
+            if (facade == null) Noter("P4b", "BLANCHIR", "ÉCHEC : aucune façade (front_shop) dans le kit — geste non joué");
+            else
+            {
+                district.OuvrirFiche(facade);
+                for (int i = 0; i < 8; i++) yield return null;
+                Button blanchir = Descendant(shell.ContentSlot, "Btn_BLANCHIR")?.GetComponent<Button>();
+                if (blanchir == null || !blanchir.interactable)
+                    Noter("P4b", "BLANCHIR (façade)", $"ÉCHEC : Btn_BLANCHIR {(blanchir == null ? "absent" : "éteint")} · planque vide={district.FichePlanqueVide}");
+                else
+                {
+                    var avant = district.DernierBlanchiment;
+                    int tentatives = district.FicheBlanchimentTentatives;
+                    bool clic = ProductionClickSupport.Click(blanchir);
+                    float finB = Time.realtimeSinceStartup + 30f;
+                    while (clic && Time.realtimeSinceStartup < finB
+                           && (district.FicheBlanchimentTentatives == tentatives || ReferenceEquals(district.DernierBlanchiment, avant))) yield return null;
+                    for (int i = 0; i < 10; i++) yield return null;
+                    var o = district.DernierBlanchiment;
+                    string vu = !clic ? "ÉCHEC : le bouton refuse le clic de production"
+                        : district.FicheBlanchimentTentatives == tentatives ? $"aucune tentative partie (planque vide={district.FichePlanqueVide}, planque={(string.IsNullOrEmpty(district.FicheSafehouseId) ? "introuvable" : "trouvée")})"
+                        : ReferenceEquals(o, avant) || o == null ? "ÉCHEC : aucune réponse en 30 s"
+                        : $"HTTP {o.HttpStatus} · {(o.Ok ? "RÉUSSI" : "REFUSÉ")} · réussites={district.FicheBlanchimentReussites}" + (o.Ok ? "" : $" · {o.Message}");
+                    yield return Photographier("p4b_blanchir");
+                    Noter("P4b", "BLANCHIR (façade)", vu);
+                }
+                district.OuvrirFiche(touche);
+                for (int i = 0; i < 8; i++) yield return null;
+            }
+
             // ── P5 · fiche ② par la tête (B1) ───────────────────────────────────────────────────────────────────────────────────
             // Cherchée APRÈS les planches de P4 : leur recuit a rebâti la racine du district, et avec elle la tête.
             Transform tete = Descendant(shell.ContentSlot, "Tete_OuvrirFiche");
