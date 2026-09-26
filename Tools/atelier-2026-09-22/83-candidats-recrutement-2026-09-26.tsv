@@ -1,0 +1,17 @@
+n°	quand	clé	fr	en	statut	note
+1	pool	recrutement.candidat.pool.saltline	Quelqu’un que la Saltline vous envoie	Someone the Saltline sends your way	PROPOSÉ (clé neuve)	pool='saltline' (saltline-recruitment.service.ts:189) : la famille passe ses gens par un intermédiaire ; remplace le nom provisoire « Saltline Candidate #n » (TD-046)
+2	pool	recrutement.candidat.pool.civilian	Quelqu’un du quartier	A local	PROPOSÉ (clé neuve)	pool='civilian' (civilian-recruitment.service.ts:187-199), citizen_id posé ; remplace « Civilian Prospect »
+3	pool	recrutement.candidat.pool.defector	Quelqu’un qui quitte une autre famille	Someone walking out on another family	PROPOSÉ (clé neuve)	repli si source_rival_key est absent ou inconnu ; sinon la clé par rival ci-dessous
+4	rival	recrutement.candidat.defector.coil	Quelqu’un qui quitte La Coil	Someone walking out on the Coil	PROPOSÉ (clé neuve)	ParValeur(recrutement.candidat, defector, source_rival_key) ; rivalKey ∈ ALL_RIVAL_KEYS ; noms de famille = conflit.bloc.* servis (une phrase par rival : l’article varie, pas d’interpolation) ; remplace « Defector Contact (coil) »
+5	rival	recrutement.candidat.defector.tarcum	Quelqu’un qui quitte Tarcum	Someone walking out on Tarcum	PROPOSÉ (clé neuve)	idem
+6	rival	recrutement.candidat.defector.iron_throat	Quelqu’un qui quitte Gorge-de-Fer	Someone walking out on Iron Throat	PROPOSÉ (clé neuve)	idem ; le slug est iron_throat (la clé servie du nom est conflit.bloc.gorge_de_fer)
+7	rival	recrutement.candidat.defector.saltline	Quelqu’un qui quitte la Saltline	Someone walking out on the Saltline	PROPOSÉ (clé neuve)	idem
+8	experience	recrutement.candidat.experience.none	N’a jamais travaillé pour une famille	Has never worked for a family	PROPOSÉ (clé neuve)	experienceBands NONE/SOME/VETERAN ; ligne sous le nom, sans nombre
+9	experience	recrutement.candidat.experience.some	A déjà rendu quelques services	Has done a few jobs	PROPOSÉ (clé neuve)	idem
+10	experience	recrutement.candidat.experience.veteran	A des années de métier	Has years in the trade	PROPOSÉ (clé neuve)	idem ; épicène (pas « un vieux de la vieille », D13)
+11	district_familiarity	recrutement.candidat.district_familiarity.low	Connaît mal le terrain	Barely knows the ground	PROPOSÉ (clé neuve)	familiarityBands LOW/MEDIUM/HIGH ; le profil ne lie aucun quartier : « le terrain », pas un nom de quartier
+12	district_familiarity	recrutement.candidat.district_familiarity.medium	Connaît un peu le terrain	Knows the ground a little	PROPOSÉ (clé neuve)	idem
+13	district_familiarity	recrutement.candidat.district_familiarity.high	Connaît le terrain par cœur	Knows the ground inside out	PROPOSÉ (clé neuve)	idem
+14	ask_band	recrutement.candidat.ask_band.low	Demande peu	Asks for little	PROPOSÉ (clé neuve)	askBands LOW/FAIR/HIGH ; pas de montant (R2.2)
+15	ask_band	recrutement.candidat.ask_band.fair	Demande le prix courant	Asks the going rate	PROPOSÉ (clé neuve)	idem
+16	ask_band	recrutement.candidat.ask_band.high	Demande cher	Asks a lot	PROPOSÉ (clé neuve)	idem
