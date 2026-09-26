@@ -136,8 +136,23 @@ namespace MafiaCleanCity.Capture.Tests
             fin = Time.realtimeSinceStartup + 30f;
             while (!accueil.DashboardLoaded && Time.realtimeSinceStartup < fin) yield return null;
             Assert.IsTrue(accueil.DashboardLoaded, "P1 : l'Accueil n'a pas chargé — la planche montrerait un écran vide qui a l'air fini");
+            // f1 26/09 (run VPS) : la planche P1 à 2400 était prise AVANT que LA SUITE soit lue (8 requêtes contre un back distant) — on
+            // attend une CONDITION : la suite lue (montrée ou vide assumé), ou pas de suite du tout (carte de tête). Le délai mesuré entre
+            // au journal : c'est aussi le temps pendant lequel le joueur voit un Accueil sans guide.
+            float t0Suite = Time.realtimeSinceStartup;
+            MafiaCleanCity.Shell.LaSuitePanelController suite = null;
+            fin = Time.realtimeSinceStartup + 30f;
+            while (Time.realtimeSinceStartup < fin)
+            {
+                suite = shell.ContentSlot.GetComponentsInChildren<MafiaCleanCity.Shell.LaSuitePanelController>(true).LastOrDefault();
+                if (suite == null || suite.Lu) break;
+                yield return null;
+            }
+            string etatSuite = suite == null ? "sans suite (carte de tête)"
+                : !suite.Lu ? "ÉCHEC : la suite n'a pas été lue en 30 s"
+                : $"la suite lue en {(Time.realtimeSinceStartup - t0Suite) * 1000f:F0} ms après l'Accueil chargé · {suite.LignesRendues.Count} ligne(s)";
             yield return Photographier("p1_lancement", rebatirAccueil: true);
-            Noter("P1", "lancement", $"Accueil chargé · bandeau {Bandeau()}");
+            Noter("P1", "lancement", $"Accueil chargé · {etatSuite} · bandeau {Bandeau()}");
             yield return DepuisLAccueil(accueil);
 
             // ── P2 · carte ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -377,11 +392,27 @@ namespace MafiaCleanCity.Capture.Tests
             for (int i = 0; i < 5; i++) yield return null;
             MonoBehaviour monte = shell.MountedTenantGameObject != null
                 ? shell.MountedTenantGameObject.GetComponent(shell.MountedTenantType) as MonoBehaviour : null;
+            // f1 26/09 : ⑰ photographié AVANT le premier tick du monde montrait un état vide qui n'est pas celui du joueur. On attend
+            // un tick RÉEL — anti-vacuité : `city/precinct/6/patrol` rend 200 (404 tant qu'aucun tick) — puis on charge l'écran.
+            string attenteTick = null;
+            if (pas == "M3")
+            {
+                var projections = new MafiaCleanCity.CityMap.CityProjectionsClient { BaseUrl = MafiaCleanCity.AdresseDuBack.Url };
+                float t0 = Time.realtimeSinceStartup, finTick = t0 + 120f;
+                bool tick = false;
+                while (!tick && Time.realtimeSinceStartup < finTick)
+                {
+                    yield return projections.Patrol(0, shell.Token, _ => tick = true, _ => { }, precinctId: 6);
+                    if (!tick) { float r = Time.realtimeSinceStartup + 2f; while (Time.realtimeSinceStartup < r) yield return null; }
+                }
+                attenteTick = tick ? $"premier tick vu en {Time.realtimeSinceStartup - t0:F0} s (patrol 6 = 200)"
+                                   : "ÉCHEC : aucun tick en 120 s (patrol 6 toujours 404) — la planche montre l'état d'AVANT le monde";
+            }
             if (monte == null) { Noter(pas, ecran, "ÉCHEC : cliquée, aucun locataire monté"); yield break; }
             string etat = null;
             yield return Charger(monte, e => etat = e);
             yield return Photographier($"{pas.ToLowerInvariant()}_{id}");
-            Noter(pas, ecran, $"{shell.MountedTenantType.Name} · {etat}");
+            Noter(pas, ecran, $"{shell.MountedTenantType.Name} · {etat}" + (attenteTick != null ? " · " + attenteTick : ""));
         }
 
         /// <summary>Attend qu'un écran dise qu'il a fini — par les drapeaux publics que CES écrans portent (lus par réflexion : ils
