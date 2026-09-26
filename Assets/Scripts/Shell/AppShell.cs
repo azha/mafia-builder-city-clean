@@ -1560,14 +1560,16 @@ namespace MafiaCleanCity.Shell
         ///   · la LIGNE DE FILE, juste au-dessus du dock, dans TOUS les états : 452 → 494 ⇒ (0,025 ; 0,128) ;
         ///   · la CARTE DE TÊTE (cadre 1) : 239 → 442 ⇒ (0,153 ; 0,653) ;
         ///   · « LA SUITE » (cadre 4, joueur neuf sans carte) : 201 → 442 ⇒ (0,153 ; 0,746) ;
-        ///   · le CALME (cadre 0, ni carte ni file) : la tête vide juste au-dessus de la file — le bloc de la maquette, 395 → 492.
+        ///   · le CALME (cadre 0, ni carte ni file) : UN bloc 394 → 494 ⇒ (0,025 ; 0,271), mesuré par l'instrument de l'UX. Il n'y a pas
+        ///     de ligne de file dans ce cadre : la tête vide (« Rien à signaler · Aucune décision en attente ») et la file vide
+        ///     (« Aucune exception en attente », l'ambiance SERVIE de la table 63 v2) se TOUCHENT et couvrent ensemble ce bloc.
         /// ⛔ Corrige la « mise en page par état » du 26/09 (file seule EN HAUT) : un écart à la maquette, où la file ne remonte jamais
         ///    (mesure de l'UX, ordre de l'orchestrateur du 26/09) ; elle chevauchait aussi le bandeau. Garde : `AccueilCanonPlayModeTests`
         ///    (file au-dessus du dock et sous tout le reste, rien hors de la zone sûre, vide borné entre la tête ou la suite et la file).</summary>
         internal static readonly (float min, float max) BandeFile = (0.025f, 0.128f),
                                                          BandeTete = (0.153f, 0.653f),
                                                          BandeSuite = (0.153f, 0.746f),
-                                                         BandeTeteVide = (0.153f, 0.270f);
+                                                         BandeTeteVide = (0.128f, 0.271f);
 
         private void MonterPanneauxAccueil(SessionOpenDto dto)
         {
