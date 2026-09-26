@@ -74,6 +74,14 @@ namespace MafiaCleanCity.Operational
         public string cover_band;        // NONE | WEAK | STANDARD | STRONG
         public bool operational;         // setup_state == OPERATIONAL (function-enable gate)
         public string operational_type;  // front_shop | cash_safehouse | stash | lab | dealer_spot_front | ... ("" when not converted)
+        /// <summary>Lot back « achat-ouvrable » (lot/achat-ouvrable 6b6d7a5a, additif ; f2 26/09) — le type M1 ACHETÉ (toujours
+        /// présent, dérivé de buildings.building_type), et les types en lesquels le bâtiment peut ENCORE s'ouvrir (le MÊME prédicat
+        /// que les gardes de convert : district pour distribution_hub, gate grow_house ; `[]` une fois converti).</summary>
+        public string purchased_type;
+        public string[] convertible_types;
+        /// <summary>Forme G : `convertible_types` est-il dans le corps SERVI ? Lu dans le corps brut (un back antérieur ne le sert
+        /// pas, et JsonUtility ne dit pas l'absence). Pas un champ : JsonUtility ne le touche pas.</summary>
+        public bool TypesOuvrablesServis { get; set; }
 
         // ----- Phase-2b raid / repair / risk surface (present on EVERY building-card response) -----
         public string structural_state;  // OPERATIONAL | DAMAGED | REPAIRING — the raid/repair band (DAMAGED gates Repair)

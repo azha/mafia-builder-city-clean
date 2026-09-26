@@ -448,6 +448,23 @@ namespace MafiaCleanCity.Operational
                 "Argent injecté", "Impossible d'injecter");
         }
 
+        /// <summary>Le type que « Ouvrir » envoie à `POST …/:id/convert`, ou NULL (geste retiré). Pur.
+        /// · lot back achat-ouvrable SERVI (`TypesOuvrablesServis`) : le type ACHETÉ (`purchased_type`) s'il est dans
+        ///   `convertible_types` — liste vide (déjà converti) ou type hors liste (ex. un relais hors du port / des cheminées) ⇒ null.
+        ///   Décidé (reco, 26/09) : jamais un AUTRE type de la liste choisi par le client — le joueur a acheté un usage.
+        /// · back antérieur : `operational_type` s'il n'est pas vide (comportement d'avant) ; vide ⇒ null, jamais "".</summary>
+        public static string TypeAOuvrir(BuildingCardDto card)
+        {
+            if (card == null) return null;
+            if (card.TypesOuvrablesServis)
+            {
+                if (card.convertible_types == null || string.IsNullOrEmpty(card.purchased_type)) return null;
+                foreach (string t in card.convertible_types) if (t == card.purchased_type) return t;
+                return null;
+            }
+            return string.IsNullOrEmpty(card.operational_type) ? null : card.operational_type;
+        }
+
         /// <summary>Convert affordance: convert this building to an M1 operational type.</summary>
         public IEnumerator Convert(string operationalType, string coverQuality = "weak")
         {
@@ -1219,8 +1236,11 @@ namespace MafiaCleanCity.Operational
 
             // Hors des compositions focales, une ouverture/conversion reste disponible. Dans le pupitre actif, ce bouton
             // sans rapport avec l'état de cuisson brouillait le seul geste appelé par les bandes servies.
-            if (!pupitreFocal)
-                AddActionButton(actionBar, "ouvrir", "Ouvrir", () => StartCoroutine(Convert(card.operational_type)));
+            // « Ouvrir » ne part JAMAIS avec "" (f2 26/09 ; B3-d du suivi ⊥ UX : 422 sur un bâtiment acheté) : `TypeAOuvrir`, sinon
+            // le geste est retiré, sans phrase neuve.
+            string typeAOuvrir = TypeAOuvrir(card);
+            if (!pupitreFocal && typeAOuvrir != null)
+                AddActionButton(actionBar, "ouvrir", "Ouvrir", () => StartCoroutine(Convert(typeAOuvrir)));
 
             actionStatusText = NewText("ActionStatus", actionBar, "", 14, TextAlignmentOptions.Left);
             actionStatusText.color = DesignTokens.Current.onSurfaceMutedAlt;

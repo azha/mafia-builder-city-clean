@@ -32,6 +32,14 @@ namespace MafiaCleanCity.Shell
         public string operational_type;      // distribution_hub | specialized_lab | refinery | money_holding | … | null
         public NomDeBatimentI18nDto name_i18n;
         public string[] lieutenant_ids;
+        /// <summary>Lot back « achat-ouvrable » (lot/achat-ouvrable 6b6d7a5a, additif ; f2 26/09) — le type M1 ACHETÉ (toujours
+        /// présent, dérivé de buildings.building_type), et les types en lesquels le bâtiment peut ENCORE s'ouvrir (le MÊME prédicat
+        /// que les gardes de convert : district pour distribution_hub, gate grow_house ; `[]` une fois converti).</summary>
+        public string purchased_type;
+        public string[] convertible_types;
+        /// <summary>Forme G : `convertible_types` est-il dans le corps SERVI ? Lu dans le corps brut (un back antérieur ne le sert
+        /// pas, et JsonUtility ne dit pas l'absence). Pas un champ : JsonUtility ne le touche pas.</summary>
+        public bool TypesOuvrablesServis { get; set; }
     }
 
     [Serializable] public class MesBatimentsData { public BatimentPossedeDto[] buildings; }
@@ -43,6 +51,17 @@ namespace MafiaCleanCity.Shell
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
+
+        /// <summary>Le corps brut de `me/buildings` → les données ; `TypesOuvrablesServis` posé sur CHAQUE bâtiment si
+        /// `convertible_types` est dans le corps (forme G, lot back achat-ouvrable). Pur.</summary>
+        public static MesBatimentsData LireCorps(string corps)
+        {
+            MesBatimentsData dto = UnityEngine.JsonUtility.FromJson<MesBatimentsEnvelope>(corps)?.payload?.data;
+            bool servis = corps != null && corps.Contains("\"convertible_types\"");
+            if (dto != null && dto.buildings != null)
+                foreach (BatimentPossedeDto b in dto.buildings) if (b != null) b.TypesOuvrablesServis = servis;
+            return dto;
+        }
 
         public IEnumerator Lire(string bearer, Action<BatimentPossedeDto[]> onOk, Action<long, string> onErr)
         {
@@ -57,7 +76,7 @@ namespace MafiaCleanCity.Shell
                     yield break;
                 }
                 MesBatimentsData dto = null;
-                try { dto = JsonUtility.FromJson<MesBatimentsEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                try { dto = LireCorps(req.downloadHandler.text); }
                 catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
                 if (dto == null) { onErr?.Invoke(req.responseCode, "corps sans `payload.data`"); yield break; }
                 onOk?.Invoke(dto.buildings ?? new BatimentPossedeDto[0]);

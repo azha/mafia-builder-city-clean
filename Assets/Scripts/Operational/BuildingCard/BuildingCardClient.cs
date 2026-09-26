@@ -44,7 +44,7 @@ namespace MafiaCleanCity.Operational
                 if (req.result == UnityWebRequest.Result.Success)
                 {
                     BuildingCardDto dto = null;
-                    try { dto = JsonUtility.FromJson<BuildingCardEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                    try { dto = LireFiche(req.downloadHandler.text); }
                     catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
 
                     if (dto == null) { onErr?.Invoke(req.responseCode, "empty building-card payload"); yield break; }
@@ -503,6 +503,14 @@ namespace MafiaCleanCity.Operational
         // error envelope's `message` (a human sentence) rather than a raw HTTP code to
         // the player (F2: never a bare 503/ERR_NETWORK). The status is kept separately
         // on the outcome for the wiring assertion / logs.
+        /// <summary>Le corps brut de la fiche → le DTO ; `TypesOuvrablesServis` = `convertible_types` est dans le corps (forme G). Pur.</summary>
+        public static BuildingCardDto LireFiche(string corps)
+        {
+            BuildingCardDto dto = JsonUtility.FromJson<BuildingCardEnvelope>(corps)?.payload?.data;
+            if (dto != null) dto.TypesOuvrablesServis = corps != null && corps.Contains("\"convertible_types\"");
+            return dto;
+        }
+
         /// <summary>La clé `user_facing_i18n_key` de l'enveloppe d'erreur, ou null (atelier c2-bis).</summary>
         internal static string CleUtilisateur(UnityWebRequest req)
         {

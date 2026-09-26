@@ -1110,6 +1110,15 @@ namespace MafiaCleanCity.Operational.Exceptions
             comptoir.sizeDelta = new Vector2(comptoir.sizeDelta.x, Px(CssComptoirHaut));
 
             VerticalLayoutGroup pile = comptoirGo.AddComponent<VerticalLayoutGroup>();
+            // ⑨ (§G de la passe UX, planche A1) : TOUT se chevauchait — « CUISINIER · LÉGÈRE · À SURVEILLER » sur « Lt. Tull », le nom
+            // sur son métier, la réplique coupée, le titre du tampon sur son sous-titre, « Escalades archivées » hors de son filet. Cause
+            // UNIQUE : le comptoir avait une hauteur FIGÉE (230 u) ; avec la réplique servie (4 lignes), la somme des enfants la dépassait
+            // et le groupe vertical les COMPRIMAIT sous leur taille préférée. ⇒ le comptoir prend la hauteur de son contenu (il grandit
+            // vers le haut, sur le décor : ancré en bas, pivot en bas — la garde A4 du dock est inchangée), et les rangées à hauteur
+            // dessinée ne descendent plus sous elle (plancher). Garde : ExceptionsNonRecouvrement.
+            ContentSizeFitter ajuste = comptoirGo.AddComponent<ContentSizeFitter>();
+            ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            ajuste.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             pile.spacing = Px(CssComptoirEcart);
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
@@ -1130,19 +1139,19 @@ namespace MafiaCleanCity.Operational.Exceptions
             hf.childForceExpandWidth = false; hf.childForceExpandHeight = false;
             hf.childAlignment = TextAnchor.LowerLeft;                   // `.file{align-items:flex-end}`, tassée à gauche
             hf.padding = new RectOffset(PxI(10f), PxI(10f), 0, 0);      // `.file{padding:0 10px}`
-            AddLayoutElement(fileRoot.gameObject, preferredHeight: Px(CssFileHaut));
+            AddLayoutElement(fileRoot.gameObject, minHeight: Px(CssFileHaut));   // plancher : la file grandit avec ses attendants
 
             BuildApres(comptoirGo.transform);
 
             parleRoot = Parleur().ConstruireRangee(comptoirGo.transform, CssParleEcart);   // ⑩-1 — le code partagé avec ⑩
 
             tamponRoot = (RectTransform)NewUI("Tampon", comptoirGo.transform).transform;
-            AddLayoutElement(tamponRoot.gameObject, preferredHeight: Px(CssTamponHaut));
+            AddLayoutElement(tamponRoot.gameObject, preferredHeight: Px(CssTamponHaut), minHeight: Px(CssTamponHaut));
 
             BuildEtatVide(comptoirGo.transform);
 
             lienRoot = (RectTransform)NewUI("LienEscalades", comptoirGo.transform).transform;
-            AddLayoutElement(lienRoot.gameObject, preferredHeight: Px(CssLienHaut));
+            AddLayoutElement(lienRoot.gameObject, preferredHeight: Px(CssLienHaut), minHeight: Px(CssLienHaut));
 
             // ⑨-2 — le décor, premier enfant de la racine, SOUS tout le comptoir, hors mise en page.
             decor = DecorAuComptoir.Construire<DecorAuComptoir>(racineGo.transform, ParametresFile());
