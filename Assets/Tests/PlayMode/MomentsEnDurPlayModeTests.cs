@@ -60,8 +60,6 @@ namespace MafiaCleanCity.Tests
             // (B) retirées (table 80 @20ceeca0) : aucun geste n'attend le soir (mesure back -51) — les « ce soir » sont réécrits
             { "JournalScreenController.cs", 1 },       // la fraîcheur « ce matin » (table 49, recency_band = fresh : un temps RELATIF, f2)
             { "ConflitScreenController.cs", 1 },       // :1038 « … le gros bras qui part la nuit » : VRAI, le coup se résout à minuit (f2)
-            { "DistributionScreenController.cs", 1 },  // :707 « Il est parti à la nuit » : FAUX (le coursier part tout de suite) — chez
-                                                       //   l'atelier (f2) ; cette exception SORT avec ses mots
         };
 
         /// <summary>Un littéral qui n'est qu'une CLÉ i18n (« conflit.bloc.ce_soir ») : un nom GARDÉ dont la valeur servie a été réécrite

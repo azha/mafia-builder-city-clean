@@ -702,9 +702,14 @@ namespace MafiaCleanCity.Operational
             // ⛔ NOM INVENTÉ RETIRÉ (table 64, NOTE) : le repli « Dima » de la maquette nommait un lieutenant que le joueur n'a pas.
             // Nom réel découvert, ou AUCUN nom : la réplique reste, sans locuteur.
             string lieutenantAffiche = LieutenantLabel;
-            string replique;
+            string replique, repliqueServie = null;
             if (enTransit)
-                replique = "Il est parti à la nuit. Ça serpente, mais c'est la seule qui évite le pont du Threnny."; // m-55
+            {
+                replique = null;   // table 80 @26ce8926 (12ᵉ ligne) : le coursier part TOUT DE SUITE — « à la nuit » était faux ; clé gardée
+                repliqueServie = MafiaCleanCity.I18n.Libelle.Gabarit(
+                    "distribution.bloc.il_est_parti_a_la_nuit_ca_serpente_mais_c_est_la_seule_qui_evite_le_pont_du_threnny",
+                    "Il est en route. Ça serpente, mais c\u2019est la seule qui évite le pont du Threnny.");
+            }
             else if (arrivee)
                 replique = "Livré. Le carton est au comptoir, personne n'a rien vu.";                                // m-56
             else
@@ -746,8 +751,8 @@ namespace MafiaCleanCity.Operational
             TrackText(roleTexte.text);
 
             TextMeshProUGUI q = NouveauTexteFiche(piedRoot, "Replique",
-                replique != null ? Libelle.De("distribution", "bloc", replique)
-                    : MafiaCleanCity.I18n.Libelle.Gabarit("distribution.bloc.la_marchandise_est_prete_au_labo_dites_moi_qui_part_et_par_ou_et_je_l_enverrai_ce_soir", "La marchandise est prête au labo. Dites-moi qui part et par où, et je l\u2019envoie tout de suite."), 9f, DesignTokens.Current.onSurfaceSecondary, false);
+                repliqueServie ?? (replique != null ? Libelle.De("distribution", "bloc", replique)
+                    : MafiaCleanCity.I18n.Libelle.Gabarit("distribution.bloc.la_marchandise_est_prete_au_labo_dites_moi_qui_part_et_par_ou_et_je_l_enverrai_ce_soir", "La marchandise est prête au labo. Dites-moi qui part et par où, et je l\u2019envoie tout de suite.")), 9f, DesignTokens.Current.onSurfaceSecondary, false);
             q.fontStyle = FontStyles.Italic;
             q.enableWordWrapping = true;
             TrackText(q.text);
