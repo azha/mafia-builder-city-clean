@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems; // round 8 (revue ⊥, MAJEUR 2) — garde de collision sur la sortie
@@ -200,14 +201,15 @@ namespace MafiaCleanCity.Shell.Tests
                                 // MÊME passe de coroutine que l'activation d'Empire (AppShell.
                                 // AcquireSessionThenActivateHome) — un seul frame de marge suffit.
 
+            // ⛔ AMENDÉ (26/09, dbf8e71b : l'Accueil ④ au canon) — la barre « Aller à » du tableau de bord est ÉTEINTE avec sa feuille
+            //    (§G P1 : deux mises en page superposées). La chaîne se prouve désormais par les chemins du CANON, gestes de production
+            //    uniquement : la file de l'Accueil (« Voir l'ardoise ») ⇒ ⑨ ⇒ un attendant ⇒ ⑩ ; le retour du système ⇒ ③ ; Empire sur
+            //    la carte (G1) ⇒ l'Accueil relu ⇒ « Lire maintenant » de la carte des rapports (seedée) ⇒ ㉔ ; le dock ⇒ ㊵.
+            //    `BuildingCardController` n'est toujours pas atteint par l'Accueil (ruling A du 25/08) : ① AMÉLIORER / la tête (B1).
             var ecransAttendus = new List<string>
             {
-                // `BuildingCardController` n'est plus atteint par l'Accueil (2026-09-23, ruling A : le bouton « La fiche » la montait
-                // VIDE) ; son seul geste est AMÉLIORER sur la fiche de ①, avec le bâtiment (EcranDistrict D1-D3).
-                nameof(DashboardController), nameof(CityMapController),
-                // ㊵ remplace ⑪ sur la nav Filière (2026-09-23, ruling de f2 : ⑪ et ⑫ sortent du chemin joueur).
-                nameof(FiliereScreenController), nameof(ExceptionQueueController), nameof(AutonomyInboxController),
-                nameof(ExceptionDetailController),
+                nameof(DashboardController), nameof(ExceptionQueueController), nameof(ExceptionDetailController),
+                nameof(CityMapController), nameof(AutonomyInboxController), nameof(FiliereScreenController),
             };
             var ecransAtteints = new List<string>();
 
@@ -237,50 +239,23 @@ namespace MafiaCleanCity.Shell.Tests
                 $"le Dashboard monté par la production doit charger (walletErr={dashboard.WalletError}) — " +
                 "précondition serveur : Tools/seed_operational_demo.mjs (OneTimeSetUp de cette fixture).");
 
-            void CliquerBoutonNav(string nomBouton)
+            // ⑨ — « Voir l'ardoise », sous la file de l'Accueil (le geste de production).
+            Transform voirArdoise = TrouverDescendant(shell.ContentSlot, "ViewAll");
+            Assert.IsNotNull(voirArdoise, "« Voir l'ardoise » (ViewAll) doit exister sous la file de l'Accueil");
+            ExceptionQueuePanelController fileAccueil = voirArdoise.GetComponentInParent<ExceptionQueuePanelController>();
+            Assert.IsNotNull(fileAccueil, "« Voir l'ardoise » appartient à la file de l'Accueil");
+            ProductionClickSupport.Click(voirArdoise.GetComponent<Button>()); // ⛔ LE GESTE DE PRODUCTION
+            float attenteArdoise = 0f;
+            while (fileAccueil != null && fileAccueil.LastViewAllNavGameObject == null && attenteArdoise < 30f)
             {
-                Transform boutonT = TrouverDescendant(shell.ContentSlot, nomBouton);
-                Assert.IsNotNull(boutonT, $"le bouton {nomBouton} du Dashboard doit exister dans ContentSlot");
-                Button bouton = boutonT.GetComponent<Button>();
-                Assert.IsNotNull(bouton, $"{nomBouton} doit porter un Button");
-                // ⛔ round 4 (revue ⊥, BLOQUANT) — `.onClick.Invoke()` court-circuite les gardes
-                // IsActive()/IsInteractable() de Button.Press(). `ProductionClickSupport.Click`
-                // passe PAR l'EventSystem — jamais `dashboard.OpenXxx()` appelé directement non plus.
-                ProductionClickSupport.Click(bouton); // ⛔ LE GESTE DE PRODUCTION
+                attenteArdoise += Time.deltaTime;
+                yield return null;
             }
-
-            CliquerBoutonNav("Nav_CityMap");
-            yield return null;
-            Assert.IsNotNull(dashboard.LastNavGameObject?.GetComponent<CityMapController>(),
-                "Nav_CityMap doit atteindre CityMapController (clic réel sur le bouton du Dashboard)");
-            ecransAtteints.Add(nameof(CityMapController));
-
-            Assert.IsNull(TrouverDescendant(shell.ContentSlot, "Nav_BuildingCard"),
-                "le bouton « La fiche » est retiré (ruling A du 25/08 : un bouton qui ment est pire qu'un bouton absent)");
-
-            CliquerBoutonNav("Nav_Filière");
-            yield return null;
-            Assert.IsNotNull(dashboard.LastNavGameObject?.GetComponent<FiliereScreenController>(),
-                "Nav_Filière doit atteindre ㊵ FiliereScreenController (clic réel sur le bouton du Dashboard)");
-            ecransAtteints.Add(nameof(FiliereScreenController));
-
-            // Capturé ICI, AVANT que le clic Autonomy n'écrase `LastNavGameObject` (même ordre que
-            // F0.4-a, précédent maison : « dernier nav », pas un registre).
-            CliquerBoutonNav("Nav_Exceptions");
-            yield return null;
-            ExceptionQueueController queue = dashboard.LastNavGameObject?.GetComponent<ExceptionQueueController>();
-            Assert.IsNotNull(queue, "Nav_Exceptions doit atteindre ExceptionQueueController (clic réel sur le bouton du Dashboard)");
+            ExceptionQueueController queue = fileAccueil != null && fileAccueil.LastViewAllNavGameObject != null
+                ? fileAccueil.LastViewAllNavGameObject.GetComponent<ExceptionQueueController>() : null;
+            Assert.IsNotNull(queue, "« Voir l'ardoise » doit atteindre ExceptionQueueController");
             ecransAtteints.Add(nameof(ExceptionQueueController));
 
-            CliquerBoutonNav("Nav_Autonomy");
-            yield return null;
-            Assert.IsNotNull(dashboard.LastNavGameObject?.GetComponent<AutonomyInboxController>(),
-                "Nav_Autonomy doit atteindre AutonomyInboxController (clic réel sur le bouton du Dashboard)");
-            ecransAtteints.Add(nameof(AutonomyInboxController));
-
-            // ── ExceptionQueue → ExceptionDetail : le clic sur une carte RÉELLE, SEEDÉE — `queue`
-            // reste vivant (un overlay `MonterLocataireEnSurimpression` n'est jamais démonté par le
-            // montage d'un AUTRE overlay ; F0.4-a exerce déjà ce même empilement). ──
             float elapsedQueue = 0f;
             while (!queue.QueueLoaded && queue.QueueError == null && elapsedQueue < 30f)
             {
@@ -334,14 +309,51 @@ namespace MafiaCleanCity.Shell.Tests
                 "le détail monté doit être un descendant de ContentSlot — confinement, pas juste 'existe quelque part'");
             ecransAtteints.Add(nameof(ExceptionDetailController));
 
+            // ③ — le retour du système dépile jusqu'à la carte.
+            for (int i = 0; i < 4 && !(shell.MountedTenantType == typeof(CityMapController) && !shell.SurimpressionOuverte); i++)
+            {
+                shell.Depiler();
+                yield return null;
+            }
+            Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType, "le retour ramène à la carte ③");
+            Assert.IsFalse(shell.SurimpressionOuverte, "… sans rien par-dessus");
+            ecransAtteints.Add(nameof(CityMapController));
+
+            // ㉔ — Empire sur la carte rouvre l'Accueil (G1, relu) ; la carte de tête SEEDÉE est celle des rapports : « Lire maintenant ».
+            ProductionClickSupport.Click(shell.TabBarRoot.Find("Tab_Empire").GetComponent<Button>());
+            HighestLeverageCardController tete = null;
+            float attenteTete = 0f;
+            while (attenteTete < 30f && (tete == null || tete.RenderedState != HighestLeverageCardController.CardState.Available))
+            {
+                tete = shell.ContentSlot.GetComponentsInChildren<HighestLeverageCardController>(false).LastOrDefault();
+                attenteTete += Time.deltaTime;
+                yield return null;
+            }
+            Assert.IsNotNull(tete, "Empire sur la carte rouvre l'Accueil (G1) : la zone de tête est montée");
+            Assert.AreEqual(HighestLeverageCardController.CardState.Available, tete.RenderedState, "la carte seedée est servie à la relecture");
+            Transform lire = TrouverDescendant(tete.transform, "LireButton");
+            Assert.IsNotNull(lire, "« Lire maintenant » existe sur la carte des rapports");
+            Assert.IsTrue(lire.gameObject.activeInHierarchy, "la carte seedée est celle des rapports (AUTONOMY_REPORTS_PENDING) : « Lire maintenant » est montré");
+            ProductionClickSupport.Click(lire.GetComponent<Button>()); // ⛔ LE GESTE DE PRODUCTION
+            yield return null;
+            Assert.IsNotNull(shell.ContentSlot.GetComponentInChildren<AutonomyInboxController>(false),
+                "« Lire maintenant » doit atteindre AutonomyInboxController (clic réel)");
+            ecransAtteints.Add(nameof(AutonomyInboxController));
+
+            // ㊵ — le dock.
+            ProductionClickSupport.Click(shell.TabBarRoot.Find("Tab_Pipeline").GetComponent<Button>());
+            yield return null;
+            Assert.AreEqual(typeof(FiliereScreenController), shell.MountedTenantType, "la bulle Filière du dock mène à ㊵");
+            ecransAtteints.Add(nameof(FiliereScreenController));
+
             // Anti-vacuité du COMPTE lui-même : la liste est NOMMÉE, comparée à une cible ÉCRITE ICI
             // (indépendante de tout code de production), jamais un nombre nu.
             CollectionAssert.AreEqual(ecransAttendus, ecransAtteints,
                 $"la chaîne ENTIÈRE doit être atteinte, DANS CET ORDRE, en {ecransAttendus.Count} écrans NOMMÉS " +
                 $"— atteint {{{string.Join(", ", ecransAtteints)}}}.");
 
-            Debug.Log($"[Charpente] BLOQUANT 2 (round 3) — chaîne {string.Join(" → ", ecransAtteints)} " +
-                      "atteinte par des gestes de production uniquement ; Dashboard NON fabriqué par ce test.");
+            Debug.Log($"[Charpente] BLOQUANT 2 (canon ④, 26/09) — chaîne {string.Join(" → ", ecransAtteints)} " +
+                      "atteinte par des gestes de production uniquement ; Accueil NON fabriqué par ce test.");
         }
 
         // ═════════════════════════════════════════════════════════════════════════════════════════
