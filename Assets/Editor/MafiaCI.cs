@@ -291,6 +291,15 @@ public static class MafiaCI
         // (ab7059d8). Ils sèment operational_demo (seeder), jamais le compte gelé : PARTIE 1. Aucune relation de préfixe (vérifié).
         // Validé par l'orchestrateur.
         "AshLuxury",
+        // Passe UX du 24-26/09 (CLIENT-1) — cinq catégories NEUVES, vertes SEULES avant inscription au créneau du 26/09 05:04-05:10
+        // (cumul 22fdcb55, pile 66060cc1, sans la paire, empreinte de demo_capture identique avant/après) : run 1 = 68/69, le seul rouge
+        // (CartePanneau P4, attendu écrit à la main) corrigé en 27effcba et vert au run 2 (par noms, 35/35). Aucune relation de préfixe
+        // (compteur : RÉELLEMENT prises = PORTÉES = les 5). Hors paire, aucune capture : PARTIE 1. Validé par l'orchestrateur.
+        "RetourSerie6",    // 10 — revenir en série 6 : retour du système, onglet actif, G1/G2/G3/G5, F1 (fusion B4)
+        "CartePresence",   //  4 — ③ la présence du joueur (D21, table 58)
+        "CartePanneau",    //  4 — ③ le panneau d'un district par valeur (table 68 + addendum)
+        "ChainesDev",      //  4 — aucune chaîne de développeur à l'écran (crochets, noms de type) ; table 66 des diagnostics
+        "EtatsVides",      //  2 — table 63 v2 (① BLANCHIR, planque vide)
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
@@ -344,6 +353,11 @@ public static class MafiaCI
         //    11 planches). Posée, elle REMPLACE les catégories (le log le dit) ; correspondance EXACTE sur `FullName`, et tout
         //    nom qui ne désigne aucune feuille est NOMMÉ et rougit le verdict — le zéro d'absence, version nominative.
         string[] noms = null;
+        // ⛔ TD-751 (dette client, 2026-09-26, CLIENT-1) — le compteur de « déclarés » ne sait lire que des noms de TEST complets. Un
+        //    filtre par noms de CLASSE (fixture), que Unity accepte et exécute bien, rend `declares=0`, `nomsInconnus=N`, `filtreVide=1`
+        //    et donc `VERDICT code=1` sur un run tout vert. Cas mesuré : créneau du 26/09, run 2, 9 classes, passed=35 failed=0 — les 35
+        //    déclarés ont dû être recomptés À LA MAIN (attributs [Test]/[UnityTest] des 9 fichiers). Reste : faire compter aussi les
+        //    fixtures (déclarés = somme de leurs tests) avant d'accepter un nom de classe comme connu.
         string surchargeNoms = System.Environment.GetEnvironmentVariable("MAFIA_CI_TESTS");
         if (!string.IsNullOrWhiteSpace(surchargeNoms))
         {
