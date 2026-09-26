@@ -135,7 +135,7 @@ namespace MafiaCleanCity.Operational.Tests
             //   donné.* Sans données, « cassé » et « correctement vide » rendent la MÊME image.
             // ⚠️ La garde anti-vacuité ci-dessous restait donc satisfaite par la coquille : elle
             //    vérifiait qu'il Y A du texte, sur un écran qui n'avait rien à dire.
-            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
+            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = MafiaCleanCity.AdresseDuBack.Url };
             string token = null, err = null;
             // ⛔⛔ LE COMPTE PHOTOGRAPHIÉ VIENT DE LA CAMPAGNE, PLUS D'UN LITTÉRAL. Cette suite
             //    SÈME un compte et en PHOTOGRAPHIE un autre — ce qui n'était pas distinguable tant

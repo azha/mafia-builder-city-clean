@@ -135,7 +135,7 @@ namespace MafiaCleanCity.Operational.Tests
             //   qu'il n'y a rien » rendent EXACTEMENT la même image, et aucune garde de pixels ne
             //   les sépare — c'est ce qui a permis à la garde `horsFond` de certifier le vide
             //   pendant des semaines.
-            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
+            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = MafiaCleanCity.AdresseDuBack.Url };
             string token = null, err = null;
             // ⛔⛔ LE COMPTE PHOTOGRAPHIÉ VIENT DE LA CAMPAGNE, PLUS D'UN LITTÉRAL. Cette suite
             //    SÈME un compte et en PHOTOGRAPHIE un autre — ce qui n'était pas distinguable tant

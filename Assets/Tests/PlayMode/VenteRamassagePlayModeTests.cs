@@ -48,7 +48,7 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest]
         public IEnumerator Ramasser_DecouvreLaPlanque_PosteLeBonCorps_EtVideLaCaisse()
         {
-            var auth = new AuthClient { BaseUrl = "http://localhost" };
+            var auth = new AuthClient { BaseUrl = MafiaCleanCity.AdresseDuBack.Url };
             string token = null;
             string authError = null;
             yield return auth.SignIn(email, password, t => token = t, e => authError = e);
@@ -57,7 +57,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             host = new GameObject("VenteRamassageHost", typeof(RectTransform));
             SellingScreenController screen = host.AddComponent<SellingScreenController>();
-            screen.SetBaseUrl("http://localhost");
+            screen.SetBaseUrl(MafiaCleanCity.AdresseDuBack.Url);
             screen.SetToken(token);
 
             float deadline = Time.realtimeSinceStartup + 45f;

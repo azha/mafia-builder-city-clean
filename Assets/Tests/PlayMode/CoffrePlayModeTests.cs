@@ -78,7 +78,7 @@ namespace MafiaCleanCity.CityMap.Tests
             // (`POST /v1/auth/signout`). Sur `operational_demo`, partagé par les suites qui tournent EN SÉRIE dans le même
             // processus, il changerait le régime d'un autre lot par un compte partagé. Compte jetable (classe C de la garde
             // `DemoIdentityResolverGuardPlayModeTests`), posé AVANT `Start()` ; le lancement rejoué le re-signe.
-            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
+            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = MafiaCleanCity.AdresseDuBack.Url };
             string callsign = MafiaCleanCity.Tests.SeederSupport.SafeCallsign("coffre", ref callsignSeq);
             const string password = "coffre-k2-pw";
             string err = null;

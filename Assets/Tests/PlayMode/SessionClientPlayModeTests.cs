@@ -17,7 +17,7 @@ namespace MafiaCleanCity.Shell.Tests
     [Category("W3U1")]
     public class SessionClientPlayModeTests
     {
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
         private static int callsignSeq;
 
         private static IEnumerator SignUp(System.Action<string, string> onTokenAndCallsign)

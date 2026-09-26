@@ -24,7 +24,7 @@ namespace MafiaCleanCity.Operational.Tests
     // capture (Cliche…) avec l'écran — une capture exige l'identité de capture et écrit des PNG. La capture ne porte que sa catégorie.
     public class HorizonScreenPlayModeTests
     {
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
         private GameObject hostGo;
 
         [TearDown]

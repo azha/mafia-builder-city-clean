@@ -30,7 +30,7 @@ namespace MafiaCleanCity.Tests
     [Category("CarteActions")]
     public class CarteActionsPlayModeTests
     {
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
         private static int callsignSeq;
 
         [UnityTest]

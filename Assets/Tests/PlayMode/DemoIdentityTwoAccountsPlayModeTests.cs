@@ -84,7 +84,7 @@ namespace MafiaCleanCity.CityMap.Tests
     [Category("DemoIdentity")]
     public class DemoIdentityTwoAccountsPlayModeTests
     {
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
         private const int VergeADistrictId = 16; // onboarding-grant.service.ts:112 — starter kit, profile "verge"
         private const string PurchaseBuildingTypeTarget = "dealer_spot_front"; // M1 valide, PAS un des 4 du kit
         private static int callsignSeq;

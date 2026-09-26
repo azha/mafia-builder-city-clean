@@ -136,7 +136,7 @@ namespace MafiaCleanCity.Operational.Tests
 
         // ═══ Fixtures parcours — patron ㊲/㉚ ══════════════════════════════════════════════════
 
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
         private static int callsignSeq;
         private string token;
 

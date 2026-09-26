@@ -15,7 +15,7 @@ namespace MafiaCleanCity.Operational.Tests
     // E2E (charter 27: NO MOCK) for the Phase-2b vector #2 (substances / Crick) COLD-CHAIN building-card surface
     // (T8 Stage B). Drives the real BuildingCardController against the LOCAL dockerized stack (Traefik @
     // http://localhost — the cold-chain backend lives on the local e2e-overlay game-back; the controller's
-    // SerializeField defaults to the VPS, so this fixture overrides it with SetBaseUrl("http://localhost")):
+    // SerializeField defaults to the VPS, so this fixture overrides it with SetBaseUrl(MafiaCleanCity.AdresseDuBack.Url)):
     //   1. runs Tools/seed_operational_demo.mjs and parses its stdout JSON to DISCOVER the demo creds + the Crick
     //      cold-chain `refinery` (holds 200 g Crick → OPTIMAL_COLD) — its id changes every run (never hard-coded);
     //   2. points the controller at http://localhost, then signs in via its AuthClient → Bearer;
@@ -28,7 +28,7 @@ namespace MafiaCleanCity.Operational.Tests
     // re-seed can't invalidate the id this fixture loads.
     public class CrickColdChainPlayModeTests
     {
-        private const string LocalStack = "http://localhost";
+        private static string LocalStack => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
 
         private GameObject controllerGo;
 

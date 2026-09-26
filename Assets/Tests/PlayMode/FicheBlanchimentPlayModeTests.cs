@@ -21,7 +21,7 @@ namespace MafiaCleanCity.CityMap.Tests
         // la garde de sortie de MafiaCI nomme toute classe qui le laisserait encore chargé.
         [TearDown] public void OublierLeCatalogue() => MafiaCleanCity.I18n.I18nCatalog.Oublier();
 
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
         private const int DistrictId = 16;
         private static string email, password, dealerId, frontShopId, safehouseId;
         private GameObject host;

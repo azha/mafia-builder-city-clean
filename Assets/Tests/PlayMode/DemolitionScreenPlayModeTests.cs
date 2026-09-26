@@ -131,7 +131,7 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest, Category("ClicheDemolition")]
         public IEnumerator EcranDemolitionC1_CapturerPourLeJugeVisuel_DeuxResolutions()
         {
-            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
+            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = MafiaCleanCity.AdresseDuBack.Url };
             string token = null, erreurConnexion = null;
             var (identifiant, motDePasse) =
                 MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("ecran_demolition");

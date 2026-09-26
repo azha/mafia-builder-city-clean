@@ -62,7 +62,7 @@ namespace MafiaCleanCity.Operational.Tests
             string email = SeederSupport.ExtractString(json, "email"), mdp = SeederSupport.ExtractString(json, "password");
             Assert.IsFalse(string.IsNullOrEmpty(email) || string.IsNullOrEmpty(mdp), "identité du compte semé lue dans le manifeste");
 
-            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = "http://localhost" };
+            var auth = new MafiaCleanCity.CityMap.AuthClient { BaseUrl = MafiaCleanCity.AdresseDuBack.Url };
             string token = null, err = null;
             yield return auth.SignIn(email, mdp, t => token = t, e => err = e);
             Assert.IsNull(err, $"connexion au compte semé échouée : {err}");

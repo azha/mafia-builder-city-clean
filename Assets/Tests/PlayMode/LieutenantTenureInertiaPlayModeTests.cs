@@ -70,7 +70,7 @@ namespace MafiaCleanCity.Operational.Tests
         // Resolved once (the Editor doesn't inherit the login-shell PATH).
         private static string dockerBin;
 
-        private const string BaseUrl = "http://localhost";
+        private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
         private const string ComposeProject = "mafia-clean-city";
         private const string PgUser = "mafia";
         private const string PgDb = "mafia_clean_city";

@@ -15,7 +15,7 @@ namespace MafiaCleanCity.Operational.Tests
     // E2E (charter 27: NO MOCK) for the Phase-3 vector #3 (grow_house cultivation) building-card surface (T10 Stage B).
     // Drives the real BuildingCardController against the LOCAL dockerized stack (Traefik @ http://localhost — the grow
     // backend lives on the local game-back; the controller's SerializeField defaults to the VPS, so this fixture overrides
-    // it with SetBaseUrl("http://localhost")):
+    // it with SetBaseUrl(MafiaCleanCity.AdresseDuBack.Url)):
     //   1. runs Tools/seed_operational_demo.mjs and parses its stdout JSON to DISCOVER the demo creds + the `grow_house`
     //      (in a Verge district, holding an ACTIVE grow at MID stage / ON_TRACK husbandry / tend_due) + its
     //      `grow_session_id` — the ids change every run (never hard-coded);
@@ -34,7 +34,7 @@ namespace MafiaCleanCity.Operational.Tests
     // MID/ON_TRACK/tend_due each run) gives every test a genuinely fresh tend_due grow regardless of run order.
     public class GrowHousePlayModeTests
     {
-        private const string LocalStack = "http://localhost";
+        private static string LocalStack => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
 
         private GameObject controllerGo;
 

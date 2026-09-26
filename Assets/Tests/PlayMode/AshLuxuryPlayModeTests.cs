@@ -18,7 +18,7 @@ namespace MafiaCleanCity.Operational.Tests
     // E2E (charter 27: NO MOCK) for the Phase-2c vector #2c (substances / Ash) LUXURY-CHANNEL building-card surface
     // (T12 Stage B). Drives the real BuildingCardController against the LOCAL dockerized stack (Traefik @ http://localhost
     // — the Ash backend lives on the local game-back; the controller's SerializeField defaults to the VPS, so this fixture
-    // overrides it with SetBaseUrl("http://localhost")):
+    // overrides it with SetBaseUrl(MafiaCleanCity.AdresseDuBack.Url)):
     //   1. runs Tools/seed_operational_demo.mjs and parses its stdout JSON to DISCOVER the demo creds + the Ash
     //      `specialized_lab` (Tier-2 REFINED, holds 200 g Ash → CRYSTALLINE) + its booked SCHEDULED `ash_appointment_id`
     //      — the ids change every run (never hard-coded);
@@ -34,7 +34,7 @@ namespace MafiaCleanCity.Operational.Tests
     // op fixture's re-seed can't invalidate the ids this fixture loads.
     public class AshLuxuryPlayModeTests
     {
-        private const string LocalStack = "http://localhost";
+        private static string LocalStack => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
 
         private GameObject controllerGo;
 
