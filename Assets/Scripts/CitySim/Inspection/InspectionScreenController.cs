@@ -222,11 +222,12 @@ namespace MafiaCleanCity.CitySim.Inspection
             piedTexte.gameObject.SetActive(!EtatVide);
             if (EtatVide)
             {
-                // table 63 v2 : la phrase de la police, PUIS ce que le joueur peut en faire — rien, tant qu'aucune file n'est ouverte.
-                // (Le dépôt, lui, reste tel que D3 le prévoit — décision de registre du 22/09, rappelée par f2 le 26/09.)
+                // table 63 v2 : la phrase de la police, PUIS l'état. Addendum 63 (client 33b422c5, 26/09) : « Rien à faire ici tant
+                // qu'aucune file n'est ouverte » était FAUX au-dessus d'un DÉPOSER actif (D3) — REMPLACÉE par une phrase vraie avec le
+                // dépôt offert. (Le dépôt reste tel que D3 le prévoit — décision de registre du 22/09, rappelée par f2 le 26/09.)
                 videTexte.text = DerniereErreur == null
                     ? "La police n'a pas encore ouvert ses files — elle les ouvre sur les 18 districts à la fois."
-                      + "\n" + MafiaCleanCity.I18n.Libelle.Gabarit("inspection.vide.rien_a_faire_ici_tant_qu_aucune_file_n_est_ouverte", "Rien à faire ici tant qu’aucune file n’est ouverte.")
+                      + "\n" + MafiaCleanCity.I18n.Libelle.Gabarit("inspection.vide.aucune_inspection_en_cours", "Aucune inspection en cours.")
                     : "La file n'a pas répondu.";
                 RendreDepot();
                 RendusEffectues++;

@@ -818,8 +818,10 @@ namespace MafiaCleanCity.Operational
             titreTexte.text = Libelle.Gabarit("distribution.vide.pas_encore_de_relais", "Pas encore de relais.");
             sousTitreTexte.text = Libelle.Gabarit("distribution.vide.sans_relais_rien_ne_part_c_est_de_la_que_vos_coursiers_livrent",
                                       "Sans relais, rien ne part\u00A0: c’est de là que vos coursiers livrent.")
-                                  + "\n" + Libelle.Gabarit("distribution.vide.un_relais_s_obtient_en_reconvertissant_un_de_vos_locaux_une_decision_de_structure",
-                                      "Un relais s’obtient en reconvertissant un de vos locaux — une décision de structure.");
+                                  // addendum 63 (client 33b422c5, 26/09) : « s'obtient en reconvertissant un de vos locaux » était FAUX
+                                  // (le back refuse de reconvertir un local du kit, real-estate.service.ts:355) — REMPLACÉE.
+                                  + "\n" + Libelle.Gabarit("distribution.vide.un_relais_s_achete_sur_un_bloc_libre_puis_s_ouvre_depuis_sa_fiche",
+                                      "Un relais s’achète sur un bloc libre, puis s’ouvre depuis sa fiche — de l’argent et deux décisions de structure, sur deux jours.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }

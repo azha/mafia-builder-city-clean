@@ -89,9 +89,9 @@ namespace MafiaCleanCity.Operational.Tests
             // ㉘ : table 63 (aucun relais possédé), non servies @5e792a3c.
             "distribution.vide.pas_encore_de_relais",
             "distribution.vide.sans_relais_rien_ne_part_c_est_de_la_que_vos_coursiers_livrent",
-            "distribution.vide.un_relais_s_obtient_en_reconvertissant_un_de_vos_locaux_une_decision_de_structure",
+            "distribution.vide.un_relais_s_achete_sur_un_bloc_libre_puis_s_ouvre_depuis_sa_fiche",   // addendum 63 : remplace la reconversion
             // table 63 v2 (client 34beb6e7), non servies @5e792a3c.
-            "inspection.vide.rien_a_faire_ici_tant_qu_aucune_file_n_est_ouverte",
+            "inspection.vide.aucune_inspection_en_cours",   // addendum 63 : remplace « rien à faire ici »
             "revue.vide.vos_lieutenants_n_ont_encore_rien_a_tenir_donnez_leur_une_premiere_regle",
             "autonomie.vide.aucun_rapport_pour_l_instant_il_en_viendra_quand_vous_aurez_confie_une_tache_a_un_lieutenant",
             "famille.vide.au_repos_rien_a_cuire_pour_l_instant",
