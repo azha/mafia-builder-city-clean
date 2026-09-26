@@ -397,4 +397,15 @@ namespace MafiaCleanCity.Operational
         public override string ToString() =>
             $"ActionOutcome(ok={Ok}, http={HttpStatus}, endpoint={Endpoint}, id={ResultId}, msg={Message})";
     }
+    // B3 (passe UX 2026-09-24) — acheter un bâtiment sur un bloc libre (`POST /v1/operational/building/purchase`) et poster un
+    // dealer sur un point de vente possédé (`POST /v1/operational/dealer/assign`). Champs exacts des allowlists du back
+    // (`rejectUnknownFields`, @5e792a3c) : un nom de champ plausible mais faux est refusé.
+    [Serializable] public class AchatBatimentRequestDto { public int block_id; public string building_type_target; }
+    [Serializable] public class AchatBatimentData { public string building_id; }
+    [Serializable] public class AchatBatimentPayload { public AchatBatimentData data; }
+    [Serializable] public class AchatBatimentEnvelope { public AchatBatimentPayload payload; }
+    [Serializable] public class PosteDeDealerRequestDto { public string dealer_spot_id; public int lek_tile_id; }
+    [Serializable] public class PosteDeDealerData { public string dealer_id; }
+    [Serializable] public class PosteDeDealerPayload { public PosteDeDealerData data; }
+    [Serializable] public class PosteDeDealerEnvelope { public PosteDeDealerPayload payload; }
 }

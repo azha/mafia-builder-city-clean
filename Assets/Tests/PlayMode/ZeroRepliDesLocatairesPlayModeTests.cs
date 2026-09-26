@@ -44,6 +44,20 @@ namespace MafiaCleanCity.Operational.Tests
         {
             // ⚠️ COUPE du 2026-09-24 contre la pile 66060cc1 : les 22 clés de ⑦ (famille.*) SERVIES (règle 2 rouge au créneau, tête
             // 92bfb1ba ; vérifié sur string_table.ts à 66060cc1 : 22 sur 22, fr et en) — retirées. Dette VIDE : zéro strict.
+            // ⚠️ RALLONGÉE le 2026-09-26 — B3 de la passe UX (CLIENT-2) : les 11 mots des gestes de ㉟ (poster un dealer, acheter un
+            // point de vente), NEUFS, non servis à la tête back 5e792a3c. Table : `Tools/juge-donnees/i18n/cles-neuves-b3-2026-09-26.md`
+            // (fr ; en et mots définitifs à l'atelier et au back). La règle (2) les retire dès qu'elles sont servies.
+            "vente.geste.un_dealer_tient_ce_point_de_vente",
+            "vente.geste.le_dealer_n_a_pas_ete_poste",
+            "vente.geste.aucun_bloc_libre_dans_votre_quartier",
+            "vente.geste.point_de_vente_achete_ouvrez_le_depuis_sa_fiche",
+            "vente.geste.l_achat_n_a_pas_abouti",
+            "vente.vide.aucun_dealer_au_travail",
+            "vente.geste.point_de_vente_sans_dealer",
+            "vente.geste.poster_un_dealer",
+            "vente.geste.vous_n_avez_aucun_point_de_vente",
+            "vente.geste.acheter_un_point_de_vente",
+            "vente.geste.coute_de_l_argent_et_la_decision_de_structure_de_cette_session_il_faudra_ensuite_l_ouvrir_depuis_sa_fiche",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

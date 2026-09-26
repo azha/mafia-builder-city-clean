@@ -168,6 +168,24 @@ namespace MafiaCleanCity.Operational
                 done);
         }
 
+        /// <summary>B3 — POST /v1/operational/building/purchase : un bâtiment sur un bloc LIBRE, du type visé. Il naît NON converti
+        /// (« Ouvrir » sur ② le convertit) ; le back DÉBITE et prend la décision de structure de la session (gouverneur).</summary>
+        public IEnumerator AcheterBatiment(int blockId, string typeVise, string bearer, Action<ActionOutcome> done)
+        {
+            string body = JsonUtility.ToJson(new AchatBatimentRequestDto { block_id = blockId, building_type_target = typeVise });
+            return Post(Url("building/purchase"), body, bearer,
+                json => JsonUtility.FromJson<AchatBatimentEnvelope>(json)?.payload?.data?.building_id, done);
+        }
+
+        /// <summary>B3 — POST /v1/operational/dealer/assign : un dealer au travail sur un point de vente OPÉRATIONNEL du joueur,
+        /// couvrant la tuile `lekTileId` (un bloc réel, TD-660 du back).</summary>
+        public IEnumerator PosterUnDealer(string dealerSpotId, int lekTileId, string bearer, Action<ActionOutcome> done)
+        {
+            string body = JsonUtility.ToJson(new PosteDeDealerRequestDto { dealer_spot_id = dealerSpotId, lek_tile_id = lekTileId });
+            return Post(Url("dealer/assign"), body, bearer,
+                json => JsonUtility.FromJson<PosteDeDealerEnvelope>(json)?.payload?.data?.dealer_id, done);
+        }
+
         /// <summary>POST /v1/operational/precursors/order — order Pyralin into a lab (the lab's first action).</summary>
         /// ② lot 2 : `precursorType` est la valeur SERVIE par `GET precursors?building_id` (`precursor_type`), jamais écrite ici —
         /// le client écrivait « PYRALIN » en dur, faux pour un `specialized_lab` (GLASS_LILY).

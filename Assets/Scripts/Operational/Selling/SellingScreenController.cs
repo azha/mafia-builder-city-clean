@@ -52,6 +52,11 @@ namespace MafiaCleanCity.Operational.Selling
         public string SafehouseId { get; private set; }
         public bool RecherchePlanqueTerminee { get; private set; }
         public string DerniereErreur { get; private set; }
+        /// <summary>B3 — les bâtiments servis (`me/buildings`) ; null tant que non lus.</summary>
+        public BatimentPossedeDto[] Possedes { get; private set; }
+        public int PosteTentatives { get; private set; }
+        public int AchatTentatives { get; private set; }
+        public ActionOutcome DernierGeste { get; private set; }
 
         private const float K = 1280f / 300f;
         private static float Px(float cssPx) => cssPx * K;
@@ -71,6 +76,8 @@ namespace MafiaCleanCity.Operational.Selling
         private SellingClient client;
         private WorldApiClient world;
         private CityProjectionsClient projections;
+        private BuildingCardClient gestes;            // B3 — l'achat et le poste de dealer passent par son `Post` (erreur lisible, clé servie)
+        private MesBatimentsClient mesBatiments;      // B3 — le lecteur unique de `me/buildings`
         private string token;
         private bool initialise;
         private Transform mountParent;
@@ -89,6 +96,8 @@ namespace MafiaCleanCity.Operational.Selling
             client = new SellingClient { BaseUrl = baseUrl };
             world = new WorldApiClient { BaseUrl = baseUrl };
             projections = new CityProjectionsClient { BaseUrl = baseUrl };
+            gestes = new BuildingCardClient { BaseUrl = baseUrl };
+            mesBatiments = new MesBatimentsClient { BaseUrl = baseUrl };
             Construire();
         }
 
@@ -102,6 +111,8 @@ namespace MafiaCleanCity.Operational.Selling
             client.BaseUrl = url;
             world.BaseUrl = url;
             projections.BaseUrl = url;
+            gestes.BaseUrl = url;
+            mesBatiments.BaseUrl = url;
         }
 
         /// <summary>⛔ CE CONTRÔLEUR NE SE PLACE PLUS LUI-MÊME, ET C'EST UNE DÉCISION MESURÉE.
@@ -187,7 +198,58 @@ namespace MafiaCleanCity.Operational.Selling
                                             (c, m) => DerniereErreur = $"{c}: {m}");
             if (Dealers != null)
                 yield return TrouverPlanque(bearer);
+            yield return mesBatiments.Lire(bearer, b => Possedes = b, (c, m) => Debug.LogWarning($"[㉟] me/buildings indisponible : {c} {m}"));
             Rendre();
+        }
+
+        /// <summary>B3 — relit ce qu'un geste a changé (dealers, bâtiments), sans refaire la recherche de planque.</summary>
+        private IEnumerator Recharger()
+        {
+            yield return client.ListDealers(token, d => Dealers = d, (c, m) => DerniereErreur = $"{c}: {m}");
+            yield return mesBatiments.Lire(token, b => Possedes = b, (c, m) => Debug.LogWarning($"[㉟] me/buildings indisponible : {c} {m}"));
+            Rendre();
+        }
+
+        /// <summary>B3 — poster un dealer sur un point de vente possédé qui n'en a pas ; la tuile couverte est son propre bloc
+        /// (`PointsDeVente`). Le refus se dit par la clé servie (`LigneDAction`), jamais par le message de développeur.</summary>
+        public IEnumerator PosterUnDealer(BatimentPossedeDto pointDeVente)
+        {
+            if (pointDeVente == null || string.IsNullOrEmpty(token)) yield break;
+            PosteTentatives++;
+            ActionOutcome resultat = null;
+            yield return gestes.PosterUnDealer(pointDeVente.building, pointDeVente.block_id, token, o => resultat = o);
+            if (this == null) yield break;
+            DernierGeste = resultat;
+            actionTexte.text = BuildingCardController.LigneDAction(resultat,
+                MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Un dealer tient ce point de vente."),
+                MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Le dealer n’a pas été posté"));
+            if (resultat != null && resultat.Ok) yield return Recharger();
+        }
+
+        /// <summary>B3 — acheter un point de vente sur un bloc libre du quartier du joueur. Offert SEULEMENT quand il n'en possède
+        /// aucun ; le geste dit AVANT ce qu'il coûte (argent, décision de structure, puis l'ouverture depuis la fiche).</summary>
+        public IEnumerator AcheterUnPointDeVente()
+        {
+            if (string.IsNullOrEmpty(token)) yield break;
+            int quartier = PointsDeVente.QuartierDAchat(Possedes);
+            DistrictInteriorDto interieur = null;
+            if (quartier > 0) yield return projections.Interior(quartier, token, d => interieur = d, _ => { });
+            if (this == null) yield break;
+            int bloc = PointsDeVente.BlocLibre(interieur, Possedes);
+            if (bloc < 0)
+            {
+                actionTexte.text = MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Aucun bloc libre dans votre quartier.");
+                yield break;
+            }
+            AchatTentatives++;
+            ActionOutcome resultat = null;
+            yield return gestes.AcheterBatiment(bloc, PointsDeVente.TypePointDeVente, token, o => resultat = o);
+            if (this == null) yield break;
+            DernierGeste = resultat;
+            actionTexte.text = BuildingCardController.LigneDAction(resultat,
+                MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Point de vente acheté — ouvrez-le depuis sa fiche."),
+                MafiaCleanCity.I18n.Libelle.De("vente", "geste", "L’achat n’a pas abouti"));
+            if (resultat != null && resultat.Ok) yield return Recharger();
         }
 
         /// <summary>Découvre la première planque possédée sans id de test ni district codé en dur.
@@ -271,11 +333,17 @@ namespace MafiaCleanCity.Operational.Selling
             EtatVide = Dealers == null || Dealers.Length == 0;
             videTexte.gameObject.SetActive(EtatVide);
             if (videIllustration != null) videIllustration.gameObject.SetActive(EtatVide);
+            List<BatimentPossedeDto> sansDealer = PointsDeVente.SansDealer(Possedes, Dealers);
+            // B3 — les gestes qui font commencer la vente, AVANT les rangées et même dans l'état vide.
+            foreach (BatimentPossedeDto p in sansDealer) RangeeSansDealer(p);
+            if (PointsDeVente.AucunPointDeVente(Possedes)) RangeeAchat();
             if (EtatVide)
             {
-                videTexte.text = DerniereErreur == null
-                    ? "Aucun point de vente."
-                    : "Les points de vente n'ont pas répondu.";
+                videTexte.text = DerniereErreur != null
+                    ? "Les points de vente n'ont pas répondu."
+                    : sansDealer.Count > 0
+                        ? MafiaCleanCity.I18n.Libelle.De("vente", "vide", "Aucun dealer au travail.")
+                        : "Aucun point de vente.";
                 RendusEffectues++;
                 return;
             }
@@ -359,6 +427,59 @@ namespace MafiaCleanCity.Operational.Selling
                       Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
                     .enableWordWrapping = true;
             }
+        }
+
+        /// <summary>B3 — un point de vente possédé, sans dealer : son nom de quartier et « POSTER UN DEALER ».</summary>
+        private void RangeeSansDealer(BatimentPossedeDto p)
+        {
+            GameObject r = CadreDeGeste("SansDealer_" + p.building);
+            Texte(r.transform, "Nom", MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Point de vente sans dealer"), Px(11.5f), Creme,
+                  DesignTokens.Current.hudSerifFont);
+            if (!string.IsNullOrEmpty(p.district_name))
+                Texte(r.transform, "Quartier", p.district_name, Px(7.5f), Creme2, DesignTokens.Current.primaryFont);
+            BatimentPossedeDto capture = p;
+            BoutonDeGeste(r.transform, "Poster", MafiaCleanCity.I18n.Libelle.De("vente", "geste", "POSTER UN DEALER"),
+                () => StartCoroutine(PosterUnDealer(capture)), null);
+        }
+
+        /// <summary>B3 — aucun point de vente possédé : l'achat, avec ce qu'il coûte écrit AVANT le geste.</summary>
+        private void RangeeAchat()
+        {
+            GameObject r = CadreDeGeste("AcheterPointDeVente");
+            Texte(r.transform, "Nom", MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Vous n’avez aucun point de vente"), Px(11.5f), Creme,
+                  DesignTokens.Current.hudSerifFont);
+            BoutonDeGeste(r.transform, "Acheter", MafiaCleanCity.I18n.Libelle.De("vente", "geste", "ACHETER UN POINT DE VENTE"),
+                () => StartCoroutine(AcheterUnPointDeVente()),
+                MafiaCleanCity.I18n.Libelle.De("vente", "geste",
+                    "coûte de l’argent et la décision de structure de cette session\u00A0; il faudra ensuite l’ouvrir depuis sa fiche"));
+        }
+
+        private GameObject CadreDeGeste(string nom)
+        {
+            GameObject r = Bloc(nom, rangees, false, Px(4f));
+            Image fond = r.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectOutline((int)Px(12f), Px(1f), Hex("#ffffff24"));
+            fond.type = Image.Type.Sliced;
+            r.GetComponent<VerticalLayoutGroup>().padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(9f));
+            return r;
+        }
+
+        /// <summary>Même bouton que RAMASSER (pointillé or, `Tiled` — voir sa note), toujours actif : le back tranche.</summary>
+        private void BoutonDeGeste(Transform parent, string nom, string libelle, UnityEngine.Events.UnityAction action, string sousLigne)
+        {
+            GameObject g = Bloc(nom, parent, false, Px(1f));
+            g.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+            g.GetComponent<VerticalLayoutGroup>().padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(6f), (int)Px(6f));
+            Image img = g.AddComponent<Image>();
+            img.sprite = ProceduralUI.RoundedRectDashedOutline((int)Px(9f), Px(1f), (int)Px(4f), (int)Px(3f), Or);
+            img.type = Image.Type.Tiled;
+            Button b = g.AddComponent<Button>();
+            b.targetGraphic = img;
+            b.onClick.AddListener(action);
+            Texte(g.transform, "Lib", libelle, Px(9f), Or, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 14f;
+            if (!string.IsNullOrEmpty(sousLigne))
+                Texte(g.transform, "Cout", sousLigne, Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
+                    .enableWordWrapping = true;
         }
 
         /// <summary>Une jauge à CRANS — un cran par palier servi, allumé ou non. Pas une barre :
