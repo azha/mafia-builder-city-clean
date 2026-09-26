@@ -104,6 +104,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             hp.childControlWidth = true; hp.childControlHeight = true;
             hp.childForceExpandWidth = false; hp.childForceExpandHeight = false;
             hp.childAlignment = TextAnchor.MiddleLeft;
+            LayoutElement lePastilles = rangPastilles.AddComponent<LayoutElement>();
+            lePastilles.flexibleHeight = 0f;   // ⑩ : la rangée ne prend jamais la hauteur libre de la bulle
             // Les noms d'objet des deux premières sont ceux de ⑨-4 (R13ter : « Gravite », « Priorite ») ; la troisième, ⑩.
             string[] noms = { "Gravite", "Priorite", "Confiance" };
             for (int i = 0; i < pastilles.Length; i++)
@@ -126,7 +128,10 @@ namespace MafiaCleanCity.Operational.Exceptions
             HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset(PxI(5f), PxI(5f), PxI(1f), PxI(1f));
             h.childControlWidth = true; h.childControlHeight = true;
-            h.childForceExpandWidth = false;
+            // ⑩ (§G de la passe UX, planche A2) : « LÉGÈRE · À SURVEILLER · IL EST SÛR » étirées en GRANDS CADRES VIDES. Le groupe gardait
+            // `childForceExpandHeight` par défaut (vrai) : Unity lui donne alors une hauteur FLEXIBLE de 1, qui remonte à la rangée des
+            // pastilles, et la bulle étirée par la rangée `.parle` leur versait toute sa hauteur libre. ⇒ ni expansion, ni flexible.
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
             TextMeshProUGUI t = Texte(go.transform, "Lib", texte, 6.5f, Creme2);
             t.fontStyle = FontStyles.UpperCase;
             t.characterSpacing = 8f;                              // `.chip{letter-spacing:.08em}`
