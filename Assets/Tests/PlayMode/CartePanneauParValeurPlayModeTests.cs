@@ -115,7 +115,8 @@ namespace MafiaCleanCity.Shell.Tests
             CollectionAssert.AreEquivalent(EtiquettesAddendum, MotsDuPanneau.Etiquettes.Keys, "les étiquettes du code = celles de l'addendum");
             foreach (string cle in EtiquettesAddendum)
                 Assert.IsFalse(string.IsNullOrEmpty(MotsDuPanneau.Etiquette(cle, new Dictionary<string, string> { { "precinct", "3" } })), cle);
-            Assert.AreEqual("Ce qu’ils croient (précinct 3)",
+            Assert.AreEqual("Ce qu’ils croient — précinct 3",   // colonne fr de l'addendum (la colonne « actuel » portait les parenthèses)
+                
                 MotsDuPanneau.Etiquette("carte.panneau.ce_qu_ils_croient", new Dictionary<string, string> { { "precinct", "3" } }), "paramètre rempli");
         }
 
