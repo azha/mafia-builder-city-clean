@@ -1,0 +1,21 @@
+ligne	condition servie (le compte neuf de ux_vide_2609 les rend vraies : A1, B, D)	clé	fr	en	statut	geste / note
+bloc	montré seulement si hl_card = null (session/open) ET vocabulary_tier = 1 (GET /v1/progression) ET au moins une ligne ci-dessous est vraie	accueil.suite.la_suite	La suite	What’s next	PROPOSÉ	
+A1 labo	GET /v1/operational/lab/:id → cook_stage_band = IDLE ET GET /v1/operational/precursors?building_id=:id → stock_band = NONE ET has_pending_order = false	accueil.suite.le_labo_attend_du_precurseur	Le labo attend du {precurseur}	The lab is waiting for {precurseur}	PROPOSÉ	{precurseur} = building.precursor.<precursor_type> (servi : Pyralin)
+A1 labo	idem	accueil.suite.sans_lui_rien_ne_cuit	Sans lui, rien ne cuit.	Without it, nothing cooks.	PROPOSÉ	« lui » = le précurseur ; au palier 1, le seul exigé (D33)
+A1 labo	idem	accueil.suite.commander	Commander	Order	PROPOSÉ	→ ㉚ la chaîne d’appro (ou ② la fiche du labo, qui porte « Commander du Pyralin »)
+A2 labo	has_pending_order = true ET has_arrived_order = false	accueil.suite.le_precurseur_est_en_route	Le {precurseur} est en route	The {precurseur} is on its way	PROPOSÉ	aucun geste : rien à faire qu’attendre (ne pas promettre de délai)
+A2 labo	idem	accueil.suite.a_son_arrivee_lancez_la_cuisson	À son arrivée, lancez la cuisson.	When it arrives, start the cook.	PROPOSÉ	
+A3 labo	stock_band ≠ NONE ET cook_stage_band = IDLE	accueil.suite.le_precurseur_est_la	Le {precurseur} est là	The {precurseur} is here	PROPOSÉ	
+A3 labo	idem	accueil.suite.lancez_la_cuisson	Lancez la cuisson.	Start the cook.	PROPOSÉ	
+A3 labo	idem	accueil.suite.cuire	Cuire	Cook	PROPOSÉ	→ ② la fiche du labo
+B vente	GET /v1/operational/dealers : aucun dealer à activity_band = WORKING	accueil.suite.personne_ne_vend_encore	Personne ne vend encore	Nobody is selling yet	PROPOSÉ	
+B vente	idem	accueil.suite.un_dealer_sur_un_coin_de_vente_et_la_marchandise_part	Un dealer sur un coin de vente, et la marchandise part.	A dealer on a corner, and the goods start moving.	PROPOSÉ	« coin de vente » (D12)
+B vente	idem	accueil.suite.voir_la_vente	Voir la vente	Go to sales	PROPOSÉ	→ ㉟ la vente (poster un dealer, ou acheter un coin : 62)
+C caisse	un dealer à cash_band ∈ {MODERATE, HIGH, FULL} (remplace B)	accueil.suite.la_caisse_de_prenom_se_remplit	La caisse de {prenom} se remplit	{prenom}’s cash is filling up	PROPOSÉ	{prenom} = name_i18n du dealer (un prénom seul, servi) ; la plus pleine d’abord
+C caisse	idem	accueil.suite.ramassez_la_elle_rejoint_la_planque	Ramassez-la : elle rejoint la planque.	Collect it: it goes to the safehouse.	PROPOSÉ	collect → planque (selling.controller.ts:10)
+C caisse	idem	accueil.suite.ramasser	Ramasser	Collect	PROPOSÉ	→ ㉟ la vente
+D règles	GET /v1/lieutenants : tous à rule_count_band = NONE	accueil.suite.vos_lieutenants_attendent_une_consigne	Vos lieutenants attendent une consigne	Your lieutenants are waiting for instructions	PROPOSÉ	
+D règles	idem	accueil.suite.une_premiere_regle_et_ils_tiennent_sans_vous	Une première règle, et ils tiennent sans vous.	One first rule, and they hold the line without you.	PROPOSÉ	même promesse que la revue ⑯ (63) ; épicène
+D règles	idem	accueil.suite.ecrire_une_regle	Écrire une règle	Write a rule	PROPOSÉ	→ ⑧ l’éditeur de règles
+(disparition)	—	—	—	—	NOTE	le bloc disparaît dès qu’aucune ligne n’est vraie (chaque ligne s’éteint sur SON état servi), et en tout cas au palier 2 (progression.vocabulary_tier ≥ 2) ; au plus 3 lignes, dans l’ordre A · B ou C · D ; jamais au-dessus d’une carte à fort levier
+(données)	—	—	—	—	NOTE	aucune donnée manquante : toutes les conditions sont servies à 66060cc1 (corps de ux_vide_2609 : 002, 004, 015, 024, 040, 041) ; une requête par écran existant, rien de neuf au back
