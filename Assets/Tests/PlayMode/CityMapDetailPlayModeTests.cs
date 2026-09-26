@@ -64,26 +64,26 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.Greater(d.rows.Count, 15, "rich panel aggregates many projection rows");
 
             // District facts.
-            Assert.IsTrue(d.rows.Any(r => r.label == "Contrôle"), "control_state row present");
+            Assert.IsTrue(d.rows.Any(r => r.champ == "carte.panneau.controle"), "control_state row present");
 
             // Heat — the seeded BURNING value, surfaced through the authenticated projection.
-            DetailRow heat = d.rows.First(r => r.label == "Chaleur — le quartier");
+            DetailRow heat = d.rows.First(r => r.champ == "carte.panneau.chaleur_quartier");
             Assert.IsTrue(heat.available, "heat available");
-            Assert.AreEqual("BURNING", heat.value, "district 3 seeded BURNING");
+            Assert.AreEqual("BURNING", heat.valeurServie, "district 3 seeded BURNING (la VALEUR servie ; l'écran montre son mot, table 68)");
 
             // Flow returns data even for a lightly-advanced player.
-            DetailRow flow = d.rows.First(r => r.label == "Refoulement");
+            DetailRow flow = d.rows.First(r => r.champ == "carte.panneau.refoulement");
             Assert.IsTrue(flow.available, "flow projection returned data");
             Assert.IsFalse(string.IsNullOrEmpty(flow.value), "flow has a backpressure band");
 
             // Police belief (precinct-derived) is wired too.
-            Assert.IsTrue(d.rows.Any(r => r.label.StartsWith("Ce qu'ils croient")), "belief row present");
+            Assert.IsTrue(d.rows.Any(r => r.champ == "carte.panneau.ce_qu_ils_croient"), "belief row present");
 
             // The slow-cadence projections now carry real data (the heavy-advance seed fired
             // nightly/12h/30-min): cohesion, inspection and patrol are no longer n/a.
-            Assert.IsTrue(d.rows.First(r => r.label == "Cohésion").available, "cohesion populated after heavy advance");
-            Assert.IsTrue(d.rows.First(r => r.label == "File d'inspection").available, "inspection populated after heavy advance");
-            Assert.IsTrue(d.rows.First(r => r.label.StartsWith("La patrouille")).available, "patrol populated after heavy advance");
+            Assert.IsTrue(d.rows.First(r => r.champ == "carte.panneau.cohesion").available, "cohesion populated after heavy advance");
+            Assert.IsTrue(d.rows.First(r => r.champ == "carte.panneau.file_d_inspection").available, "inspection populated after heavy advance");
+            Assert.IsTrue(d.rows.First(r => r.champ == "carte.panneau.la_patrouille").available, "patrol populated after heavy advance");
 
             // Close.
             controller.HideDetail();

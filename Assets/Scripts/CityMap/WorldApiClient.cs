@@ -62,6 +62,10 @@ namespace MafiaCleanCity.CityMap
         /// Coroutine: GET the heat projection for one district (JWT-gated). Pass the
         /// Bearer token from a prior sign-in. onSuccess gets the parsed projection.
         /// </summary>
+        /// <summary>Le code HTTP de la dernière réponse de `GetDistrictHeat` (0 : pas de réponse) — le panneau ③ ne dit « pas encore
+        /// relevé » que sur 404 (table 68).</summary>
+        public long DernierCodeHttp { get; private set; }
+
         public IEnumerator GetDistrictHeat(int districtId, string bearerToken,
             Action<DistrictHeatDto> onSuccess, Action<string> onError)
         {
@@ -76,6 +80,7 @@ namespace MafiaCleanCity.CityMap
 
                 yield return req.SendWebRequest();
 
+                DernierCodeHttp = req.responseCode;
                 if (req.result != UnityWebRequest.Result.Success)
                 {
                     onError?.Invoke($"GET {url} failed: {req.result} ({req.responseCode}) {req.error}");

@@ -289,6 +289,11 @@ namespace MafiaCleanCity.CityMap
     {
         public string label;
         public string value;
+        /// <summary>Table 68 (2026-09-26) — la VALEUR servie derrière le mot affiché (`value`) ; null pour une rangée sans valeur servie.
+        /// C'est la donnée que les gardes lisent ; l'écran ne la montre jamais.</summary>
+        public string valeurServie;
+        /// <summary>Table 68 — la clé de l'étiquette (`carte.panneau.*`) : l'identité STABLE de la rangée, que les gardes lisent.</summary>
+        public string champ;
         public bool available;
         public bool useAccent;
         public Color accent;

@@ -1138,24 +1138,47 @@ namespace MafiaCleanCity.CityMap
             rootVlg.padding = new RectOffset(RootPadding, right, RootPadding, BottomPadding);
         }
 
-        private static DetailRow Missing(string label) => new DetailRow(label, "pas encore relevé", false);
+        // ─────────────────────────── ③ LE PANNEAU D'UN DISTRICT (table 68 + addendum des étiquettes, 2026-09-26)
+        // Étiquettes par `carte.panneau.*` ; valeurs par la clé de leur VALEUR (`MotsDuPanneau.Mot`), jamais brutes. Une sonde qui
+        // rend 404 (la projection n'existe pas encore pour ce district) dit « pas encore relevé » ; toute AUTRE erreur (500, réseau…)
+        // ne dit RIEN — la rangée n'est pas posée (même règle que ④ ; décision de l'orchestrateur du 26/09).
+        // Chaque rangée porte sa clé d'étiquette (`DetailRow.champ`) : l'identité que les gardes lisent, jamais le libellé affiché.
 
-        // Aggregate the per-district system projections into the detail view model.
+        private static DetailRow Rangee(string champ, string valeur, bool disponible = true, bool accent = false, Color teinte = default,
+                                        IDictionary<string, string> parametres = null) =>
+            new DetailRow(MotsDuPanneau.Etiquette(champ, parametres), valeur, disponible, accent, teinte) { champ = champ };
+
+        /// <summary>Une rangée dont la valeur servie s'affiche par son MOT ; la valeur reste dans `valeurServie`.</summary>
+        private static DetailRow ParValeur(string champ, string domaine, string role, string valeurServie, bool accent = false,
+                                           Color teinte = default, IDictionary<string, string> parametres = null)
+        {
+            DetailRow r = Rangee(champ, MotsDuPanneau.Mot(domaine, role, valeurServie), true, accent, teinte, parametres);
+            r.valeurServie = valeurServie;
+            return r;
+        }
+
+        /// <summary>Sonde en échec : 404 ⇒ « pas encore relevé » ; autre code ⇒ null (aucune rangée).</summary>
+        private static DetailRow Manquante(string champ, long code, IDictionary<string, string> parametres = null) =>
+            code == 404 ? Rangee(champ, MotsDuPanneau.Etiquette("carte.panneau.pas_encore_releve"), false, parametres: parametres) : null;
+
+        private static void Poser(DistrictDetail detail, DetailRow r) { if (r != null) detail.rows.Add(r); }
+
         private IEnumerator BuildDetail(int districtId, DistrictCellView cell)
         {
             var detail = new DistrictDetail { districtId = districtId, title = detailTitle != null ? detailTitle.text : "" };
 
             if (cell != null)
             {
-                detail.rows.Add(new DetailRow(TissuDeDistrict.LibelleDeLigne, TissuDeDistrict.Valeur(cell.Model.profile)));
-                detail.rows.Add(new DetailRow("Blocs", cell.Model.block_count.ToString()));
-                detail.rows.Add(new DetailRow("Rive", cell.Model.bank_side == "north" ? MafiaCleanCity.I18n.Libelle.De("carte", "bloc", "nord") : cell.Model.bank_side == "south" ? MafiaCleanCity.I18n.Libelle.De("carte", "bloc", "sud") : cell.Model.bank_side));
-                detail.rows.Add(new DetailRow("Contrôle", cell.Model.control_state, true, true, CityMapEnums.ColorFor(cell.State)));
+                detail.rows.Add(new DetailRow(TissuDeDistrict.LibelleDeLigne, TissuDeDistrict.Valeur(cell.Model.profile)) { champ = "tissu" });
+                detail.rows.Add(Rangee("carte.panneau.blocs", cell.Model.block_count.ToString()));
+                detail.rows.Add(Rangee("carte.panneau.rive", cell.Model.bank_side == "north" ? MafiaCleanCity.I18n.Libelle.De("carte", "bloc", "nord")
+                    : cell.Model.bank_side == "south" ? MafiaCleanCity.I18n.Libelle.De("carte", "bloc", "sud") : string.Empty));   // jamais la valeur brute
+                detail.rows.Add(ParValeur("carte.panneau.controle", "carte", "controle", cell.Model.control_state, true, CityMapEnums.ColorFor(cell.State)));
             }
 
             if (!IsAuthenticated)
             {
-                detail.rows.Add(new DetailRow("Relevés", "ouvrez une session", false));
+                detail.rows.Add(Rangee("carte.panneau.releves", MotsDuPanneau.Etiquette("carte.panneau.releves_ouvrez_une_session"), false));
                 FinishDetail(detail);
                 yield break;
             }
@@ -1169,78 +1192,83 @@ namespace MafiaCleanCity.CityMap
             {
                 HeatBucket db = CityMapEnums.ParseHeatBucket(heat.district_bucket);
                 HeatBucket cbk = CityMapEnums.ParseHeatBucket(heat.citywide_bucket);
-                detail.rows.Add(new DetailRow("Chaleur — le quartier", heat.district_bucket, true, true, CityMapEnums.HeatColorFor(db)));
-                detail.rows.Add(new DetailRow("Chaleur — la ville", heat.citywide_bucket, true, true, CityMapEnums.HeatColorFor(cbk)));
-                detail.rows.Add(new DetailRow("Descente", heat.escalated ? "oui" : "non"));
+                detail.rows.Add(ParValeur("carte.panneau.chaleur_quartier", "heat", "bucket", heat.district_bucket, true, CityMapEnums.HeatColorFor(db)));
+                detail.rows.Add(ParValeur("carte.panneau.chaleur_ville", "heat", "bucket", heat.citywide_bucket, true, CityMapEnums.HeatColorFor(cbk)));
+                detail.rows.Add(Rangee("carte.panneau.descente", MotsDuPanneau.Etiquette(heat.escalated ? "carte.panneau.oui" : "carte.panneau.non")));
             }
-            else detail.rows.Add(Missing("Chaleur"));
+            else Poser(detail, Manquante("carte.panneau.chaleur_quartier", world.DernierCodeHttp));
 
-            FlowDto flow = null; bool flowOk = false;
-            yield return proj.Flow(districtId, Token, f => { flow = f; flowOk = true; }, _ => { });
-            detail.rows.Add(flowOk && flow != null ? new DetailRow("Refoulement", flow.backpressure) : Missing("Refoulement"));
+            long code = 0;
+            FlowDto flow = null;
+            yield return proj.Flow(districtId, Token, x => flow = x, c => code = c);
+            Poser(detail, flow != null ? ParValeur("carte.panneau.refoulement", "carte", "refoulement", flow.backpressure)
+                                       : Manquante("carte.panneau.refoulement", code));
 
-            ThroughputDto thr = null; bool thrOk = false;
-            yield return proj.Throughput(districtId, Token, t => { thr = t; thrOk = true; }, _ => { });
-            if (thrOk && thr != null)
+            code = 0; ThroughputDto thr = null;
+            yield return proj.Throughput(districtId, Token, x => thr = x, c => code = c);
+            if (thr != null)
             {
-                detail.rows.Add(new DetailRow("Exposition", thr.exposure_band));
-                detail.rows.Add(new DetailRow("Propreté du réseau", thr.network_cleanliness));
+                detail.rows.Add(ParValeur("carte.panneau.exposition", "carte", "exposition", thr.exposure_band));
+                detail.rows.Add(ParValeur("carte.panneau.proprete_du_reseau", "filiere", "proprete", thr.network_cleanliness));
             }
-            else detail.rows.Add(Missing("Débit"));
+            else Poser(detail, Manquante("carte.panneau.exposition", code));
 
-            StashDto stash = null; bool stashOk = false;
-            yield return proj.Stash(districtId, Token, s => { stash = s; stashOk = true; }, _ => { });
-            detail.rows.Add(stashOk && stash != null ? new DetailRow("Réserve qui bloque", stash.district_blocking_band) : Missing("Réserve qui bloque"));
+            code = 0; StashDto stash = null;
+            yield return proj.Stash(districtId, Token, x => stash = x, c => code = c);
+            Poser(detail, stash != null ? ParValeur("carte.panneau.reserve_qui_bloque", "carte", "reserve", stash.district_blocking_band)
+                                        : Manquante("carte.panneau.reserve_qui_bloque", code));
 
-            BufferDto buf = null; bool bufOk = false;
-            yield return proj.Buffer(districtId, Token, b => { buf = b; bufOk = true; }, _ => { });
-            if (bufOk && buf != null)
+            code = 0; BufferDto buf = null;
+            yield return proj.Buffer(districtId, Token, x => buf = x, c => code = c);
+            if (buf != null)
             {
-                detail.rows.Add(new DetailRow("Tampon — charge", buf.district_load_band));
-                detail.rows.Add(new DetailRow("Tampon — traîne", buf.district_tail_band));
+                detail.rows.Add(ParValeur("carte.panneau.tampon_charge", "carte", "tampon_charge", buf.district_load_band));
+                detail.rows.Add(ParValeur("carte.panneau.tampon_traine", "carte", "tampon_traine", buf.district_tail_band));
             }
-            else detail.rows.Add(Missing("Tampon"));
+            else Poser(detail, Manquante("carte.panneau.tampon_charge", code));
 
-            InspectionDto insp = null; bool inspOk = false;
-            yield return proj.Inspection(districtId, Token, x => { insp = x; inspOk = true; }, _ => { });
-            if (inspOk && insp != null)
+            code = 0; InspectionDto insp = null;
+            yield return proj.Inspection(districtId, Token, x => insp = x, c => code = c);
+            if (insp != null)
             {
-                detail.rows.Add(new DetailRow("File d'inspection", insp.queue_load));
-                detail.rows.Add(new DetailRow("Régime du dispatch", insp.dispatcher_regime));
+                detail.rows.Add(ParValeur("carte.panneau.file_d_inspection", "inspection", "charge", insp.queue_load));
+                detail.rows.Add(ParValeur("carte.panneau.regime_du_dispatch", "inspection", "regime", insp.dispatcher_regime));
             }
-            else detail.rows.Add(Missing("File d'inspection"));
+            else Poser(detail, Manquante("carte.panneau.file_d_inspection", code));
 
-            UnconformityDto unc = null; bool uncOk = false;
-            yield return proj.Unconformity(districtId, Token, u => { unc = u; uncOk = true; }, _ => { });
-            detail.rows.Add(uncOk && unc != null ? new DetailRow("Épingles d'audit", unc.audit_pin_presence) : Missing("Épingles d'audit"));
+            code = 0; UnconformityDto unc = null;
+            yield return proj.Unconformity(districtId, Token, x => unc = x, c => code = c);
+            Poser(detail, unc != null ? ParValeur("carte.panneau.epingles_d_audit", "carte", "epingles", unc.audit_pin_presence)
+                                      : Manquante("carte.panneau.epingles_d_audit", code));
 
-            LeksDto leks = null; bool leksOk = false;
-            yield return proj.Leks(districtId, Token, l => { leks = l; leksOk = true; }, _ => { });
-            detail.rows.Add(leksOk && leks != null ? new DetailRow("Coins de vente", (leks.leks?.Count ?? 0).ToString()) : Missing("Coins de vente"));
+            code = 0; LeksDto leks = null;
+            yield return proj.Leks(districtId, Token, x => leks = x, c => code = c);
+            Poser(detail, leks != null ? Rangee("carte.panneau.coins_de_vente", (leks.leks?.Count ?? 0).ToString())
+                                       : Manquante("carte.panneau.coins_de_vente", code));
 
-            CohesionDto coh = null; bool cohOk = false;
-            yield return proj.Cohesion(districtId, Token, c => { coh = c; cohOk = true; }, _ => { });
-            detail.rows.Add(cohOk && coh != null ? new DetailRow("Cohésion", coh.cohesion_state) : Missing("Cohésion"));
+            code = 0; CohesionDto coh = null;
+            yield return proj.Cohesion(districtId, Token, x => coh = x, c => code = c);
+            Poser(detail, coh != null ? ParValeur("carte.panneau.cohesion", "carte", "cohesion", coh.cohesion_state)
+                                      : Manquante("carte.panneau.cohesion", code));
 
-            // 2026-09-02 — precinct_id SERVI par le district (cell.Model), passé explicitement à
-            // Belief/Patrol : c'est la valeur d'AUTORITÉ (CityProjectionsClient.PrecinctForDistrict
-            // n'est qu'un repli client pour l'appelant qui n'a qu'un districtId nu — voir son
-            // commentaire). `cell` peut être null (districtId sans cellule correspondante) : repli
-            // sur la formule dans ce cas aussi, ce que `?? ` couvre.
             int? servedPrecinct = cell?.Model?.precinct_id;
             int precinct = servedPrecinct ?? CityProjectionsClient.PrecinctForDistrict(districtId);
+            var p = new Dictionary<string, string> { { "precinct", precinct.ToString(System.Globalization.CultureInfo.InvariantCulture) } };
 
-            BeliefDto bel = null; bool belOk = false;
-            yield return proj.Belief(districtId, Token, b => { bel = b; belOk = true; }, _ => { }, servedPrecinct);
-            detail.rows.Add(belOk && bel != null ? new DetailRow($"Ce qu'ils croient (précinct {precinct})", bel.belief) : Missing($"Ce qu'ils croient (précinct {precinct})"));
+            code = 0; BeliefDto bel = null;
+            yield return proj.Belief(districtId, Token, x => bel = x, c => code = c, servedPrecinct);
+            Poser(detail, bel != null ? ParValeur("carte.panneau.ce_qu_ils_croient", "police", "croyance", bel.belief, parametres: p)
+                                      : Manquante("carte.panneau.ce_qu_ils_croient", code, p));
 
-            PatrolDto pat = null; bool patOk = false;
-            yield return proj.Patrol(districtId, Token, p => { pat = p; patOk = true; }, _ => { }, servedPrecinct);
-            detail.rows.Add(patOk && pat != null ? new DetailRow($"La patrouille (précinct {precinct})", pat.patrol_heat) : Missing($"La patrouille (précinct {precinct})"));
+            code = 0; PatrolDto pat = null;
+            yield return proj.Patrol(districtId, Token, x => pat = x, c => code = c, servedPrecinct);
+            Poser(detail, pat != null ? ParValeur("carte.panneau.la_patrouille", "police", "patrouille", pat.patrol_heat, parametres: p)
+                                      : Manquante("carte.panneau.la_patrouille", code, p));
 
-            WhisperDto whi = null; bool whiOk = false;
-            yield return proj.Whisper(Token, w => { whi = w; whiOk = true; }, _ => { });
-            detail.rows.Add(whiOk && whi != null ? new DetailRow("Ce qui se dit (la ville)", whi.whisper_index) : Missing("Ce qui se dit (la ville)"));
+            code = 0; WhisperDto whi = null;
+            yield return proj.Whisper(Token, x => whi = x, c => code = c);
+            Poser(detail, whi != null ? ParValeur("carte.panneau.ce_qui_se_dit", "carte", "rumeur", whi.whisper_index)
+                                      : Manquante("carte.panneau.ce_qui_se_dit", code));
 
             FinishDetail(detail);
         }
