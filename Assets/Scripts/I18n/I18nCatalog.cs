@@ -127,6 +127,16 @@ namespace MafiaCleanCity.I18n
             return IcuFormat.Formater(motif, parametres);
         }
 
+        /// <summary>Vrai si la valeur SERVIE de `cle` porte le trou `{trou}` (simple, ou argument ICU `{trou, …}`). Faux si la clé
+        /// n'est pas servie. Pour `Libelle.GabaritExigeant` (répliques nommées, table 64).</summary>
+        public static bool PorteLeTrou(string cle, string trou)
+        {
+            if (string.IsNullOrEmpty(cle) || string.IsNullOrEmpty(trou)) return false;
+            if (!Messages.TryGetValue(cle, out string motif) || motif == null) return false;
+            return System.Text.RegularExpressions.Regex.IsMatch(motif,
+                "\\{\\s*" + System.Text.RegularExpressions.Regex.Escape(trou) + "\\s*[},]");
+        }
+
         /// <summary>Vrai si la clé est réellement servie — pour qu'un écran puisse DIRE qu'il
         /// montre une clé plutôt que de laisser croire à un nom.</summary>
         public static bool Connait(string cle) =>

@@ -189,12 +189,22 @@ namespace MafiaCleanCity.Operational.Exceptions
         public static string TexteServeur(ExceptionCardDto c)
         {
             if (c == null) return string.Empty;
+            // la carte PRÉPARÉE (table 64, f2 26/09) : sa valeur servie écrit « Lt. Hara » en dur ; EXIGEANTE sur {nom} = qui parle
+            if (c.event_descriptor_i18n != null && c.event_descriptor_i18n.key == CleCartePreparee)
+                return MafiaCleanCity.I18n.Libelle.GabaritExigeant(CleCartePreparee, RepliCartePreparee,
+                    new Dictionary<string, string> { { "nom", Locuteur(c) } }, "nom");
             if (c.event_descriptor_i18n != null
                 && !string.IsNullOrEmpty(c.event_descriptor_i18n.key)
                 && MafiaCleanCity.I18n.I18nCatalog.Connait(c.event_descriptor_i18n.key))
                 return MafiaCleanCity.I18n.I18nCatalog.Traduire(c.event_descriptor_i18n.key);
             return c.event_descriptor ?? string.Empty;
         }
+
+        /// <summary>La carte préparée du kit de départ (`ONBOARDING_PRESEED_CARD_I18N_KEY`, onboarding-grant.service.ts:177) et son
+        /// repli nommé, à l'octet de la table 64.</summary>
+        public const string CleCartePreparee = "onboarding.preseed_exception.card";
+        public const string RepliCartePreparee =
+            "{nom} \u2014 cuisson du soir bloquée\u00A0: plus de solvant. Commander maintenant (coût) ou attendre demain (rendement).";
 
         /// <summary>⑨-0 — QUI parle, UN seul site pour ⑨ et ⑩ (ils l'écrivaient chacun de leur côté).
         /// · la carte porte un lieutenant ⇒ son NOM servi (`lieutenant.name`, C3) ;

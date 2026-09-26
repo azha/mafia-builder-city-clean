@@ -1265,8 +1265,9 @@ namespace MafiaCleanCity.Operational
         {
             if (string.IsNullOrWhiteSpace(nom)) return;   // aucun lieutenant concerné : la ligne ne s'affiche pas
             const string Marque = "\u241E";
-            string t = MafiaCleanCity.I18n.Libelle.Gabarit(cle, repli,
-                new System.Collections.Generic.Dictionary<string, string> { { "nom", Marque } });
+            // EXIGEANT (f2 26/09, table 64) : une valeur servie sans {nom} (un nom figé, « Dima ») compte comme NON servie
+            string t = MafiaCleanCity.I18n.Libelle.GabaritExigeant(cle, repli,
+                new System.Collections.Generic.Dictionary<string, string> { { "nom", Marque } }, "nom");
             int i = t.IndexOf(Marque, System.StringComparison.Ordinal);
             if (i < 0) { EcrireDit(parent, t, "", ""); return; }
             EcrireDit(parent, t.Substring(0, i), nom, t.Substring(i + Marque.Length));

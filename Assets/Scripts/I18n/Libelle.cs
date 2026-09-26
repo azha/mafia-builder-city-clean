@@ -125,6 +125,23 @@ namespace MafiaCleanCity.I18n
             return Remplir(repli, parametres);
         }
 
+        /// <summary>UN GABARIT EXIGEANT, en OPT-IN par site (f2 26/09) : comme `Gabarit`, mais une valeur servie qui ne porte PAS le
+        /// trou `trouRequis` compte comme NON servie — le repli s'affiche (et se compte). Pour les répliques NOMMÉES de la table 64 :
+        /// le back sert encore « Nestor : … », « Lt. Hara — … », un nom écrit DANS la valeur ; le client fournit `{nom}` = le vrai
+        /// lieutenant. Quand le back servira la valeur réécrite (avec `{nom}`), elle reprendra la main toute seule.
+        /// ⚠️ Jamais global : ailleurs, un paramètre peut être facultatif dans la valeur servie.</summary>
+        public static string GabaritExigeant(string cle, string repli, IDictionary<string, string> parametres, string trouRequis)
+        {
+            if (string.IsNullOrEmpty(cle)) return Remplir(repli, parametres);
+            if (string.IsNullOrEmpty(trouRequis) || !I18nCatalog.Connait(cle) || I18nCatalog.PorteLeTrou(cle, trouRequis))
+                return Gabarit(cle, repli, parametres);
+            NbAppels++;
+            NbReplis++;
+            DernierRepli = cle;
+            clesEnRepli.Add(cle);
+            return Remplir(repli, parametres);
+        }
+
         /// <summary>Le repli se formate comme la valeur servie (`IcuFormat`, le même que `I18nCatalog.Traduire`) : un repli
         /// ICU (`{n, plural, …}`, ㉙ `conflit.bloc.fois_chez_eux`) rendait sinon ses accolades telles quelles. Pour un `{nom}`
         /// simple, même rendu qu'avant ; une valeur null devient "" (comportement d'avant, gardé).</summary>

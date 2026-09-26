@@ -111,6 +111,9 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNull(TutorialScreenController.TexteDuTutoriel(preseed), "nommé, nom non servi : rien");
             Assert.AreEqual("Lt. Vesk — cuisson du soir bloquée.",
                 TutorialScreenController.TexteDuTutoriel("tutorial.exception_card.gabarit_test", "Lt. Vesk"), "nom servi : le texte le porte");
+            // EXIGEANT (table 64) : nom servi, mais la valeur servie écrit « Lt. Hara » en dur ⇒ le repli nommé de la 64
+            Assert.AreEqual("Lt. Vesk \u2014 cuisson du soir bloquée\u00A0: plus de solvant. Commander maintenant (coût) ou attendre demain (rendement).",
+                TutorialScreenController.TexteDuTutoriel(preseed, "Lt. Vesk"), "valeur sans {nom} ⇒ repli de la 64 avec le vrai nom");
 
             foreach (string next in new[] { "", preseed })   // l'éligible (C10) ET le `next` servi : même règle
             {

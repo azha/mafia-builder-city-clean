@@ -563,8 +563,10 @@ namespace MafiaCleanCity.Operational
                 {
                     string nom = LieutenantDuLabo(Roster, LieutenantsDuLabo);
                     if (nom != null)
-                        replique = Libelle.Gabarit(CleRepliqueNestor, "{nom}\u00A0: «\u00A0L’étagère est vide. Sans Pyralin, je ne rallume pas.\u00A0»",
-                            new System.Collections.Generic.Dictionary<string, string> { { "nom", nom } });
+                        // EXIGEANT (f2 26/09) : la valeur servie « Nestor : … » ne porte pas {nom} ⇒ NON servie ⇒ le repli de la 64,
+                        // avec le vrai nom ; la valeur réécrite par le back reprendra la main toute seule
+                        replique = Libelle.GabaritExigeant(CleRepliqueNestor, "{nom}\u00A0: «\u00A0L’étagère est vide. Sans Pyralin, je ne rallume pas.\u00A0»",
+                            new System.Collections.Generic.Dictionary<string, string> { { "nom", nom } }, "nom");
                 }
                 else
                     replique = Libelle.De("appro", "bloc", "Votre lieutenant : « On en a besoin, et il n'y en a plus. »");
