@@ -912,7 +912,7 @@ namespace MafiaCleanCity.Operational
                                   // addendum 63 (client 33b422c5, 26/09) : « s'obtient en reconvertissant un de vos locaux » était FAUX
                                   // (le back refuse de reconvertir un local du kit, real-estate.service.ts:355) — REMPLACÉE.
                                   + "\n" + Libelle.Gabarit("distribution.vide.un_relais_s_achete_sur_un_bloc_libre_puis_s_ouvre_depuis_sa_fiche",
-                                      "Un relais s’achète sur un bloc libre, puis s’ouvre depuis sa fiche — de l’argent et deux décisions de structure, sur deux jours.");
+                                      "Un relais s\u2019achète sur un bloc libre, puis s\u2019ouvre depuis sa fiche, sur le port ou dans les cheminées seulement \u2014 de l\u2019argent et deux décisions de structure, sur deux jours.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }
