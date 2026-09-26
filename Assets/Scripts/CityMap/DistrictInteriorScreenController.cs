@@ -2636,12 +2636,12 @@ namespace MafiaCleanCity.CityMap
                 case "BLANCHIR":
                     if (ficheOperationalType != "front_shop")
                     {
-                        ficheSortie.text = "Blanchiment : choisissez un commerce de façade.";
+                        ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.blanchiment_choisissez_un_commerce_de_facade", "Pour blanchir, choisissez d\u2019abord un commerce de fa\u00e7ade.");
                         break;
                     }
                     if (string.IsNullOrEmpty(sessionBearer) || string.IsNullOrEmpty(FicheBuildingId))
                     {
-                        ficheSortie.text = "Blanchiment indisponible : session absente.";
+                        ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.blanchiment_indisponible_session_absente", "Blanchiment impossible\u00a0: la connexion au jeu est perdue.");
                         break;
                     }
                     if (!blanchimentEnCours)
@@ -2755,14 +2755,14 @@ namespace MafiaCleanCity.CityMap
             blanchimentEnCours = true;
             FicheBlanchimentTentatives++;
             DernierBlanchiment = null;
-            if (ficheSortie != null) ficheSortie.text = "Recherche de la planque…";
+            if (ficheSortie != null) ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.recherche_de_la_planque", "On cherche la planque\u2026");
 
             if (string.IsNullOrEmpty(FicheSafehouseId))
                 yield return TrouverPlanquePourFiche();
 
             if (string.IsNullOrEmpty(FicheSafehouseId))
             {
-                if (ficheSortie != null) ficheSortie.text = "Blanchiment indisponible : aucune planque.";
+                if (ficheSortie != null) ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.blanchiment_indisponible_aucune_planque", "Blanchiment impossible\u00a0: vous n\u2019avez aucune planque.");
                 blanchimentEnCours = false;
                 yield break;
             }
@@ -2781,16 +2781,17 @@ namespace MafiaCleanCity.CityMap
             if (outcome != null && outcome.Ok)
             {
                 FicheBlanchimentReussites++;
-                if (ficheSortie != null) ficheSortie.text = "Petit lot confié à la filière.";
+                if (ficheSortie != null) ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.petit_lot_confie_a_la_filiere", "Un petit lot est confi\u00e9 \u00e0 la fili\u00e8re.");
             }
             else if (ficheSortie != null)
             {
                 // f2 (26/09) : la phrase par GABARIT (l'ordre des mots vient de la valeur, jamais d'une concaténation) ; la raison est déjà
                 // une phrase servie (RefusServi) ou du client — jamais le texte brut du back.
                 string raison = outcome != null && !string.IsNullOrEmpty(outcome.Message)
-                    ? outcome.Message : MafiaCleanCity.I18n.Libelle.De("district", "fiche", "réponse absente");
+                    ? outcome.Message : MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.reponse_absente", "Aucune r\u00e9ponse n\u2019est arriv\u00e9e.");
+                // table 84 : « Blanchiment refusé. {raison} » — la raison est une PHRASE (servie, ou blanchiment.raison.*), jamais un fragment
                 ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.blanchiment_indisponible_raison",
-                    "Blanchiment indisponible : {raison}", new System.Collections.Generic.Dictionary<string, string> { { "raison", raison } });
+                    "Blanchiment refus\u00e9. {raison}", new System.Collections.Generic.Dictionary<string, string> { { "raison", raison } });
             }
             blanchimentEnCours = false;
         }

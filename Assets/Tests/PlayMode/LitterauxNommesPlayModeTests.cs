@@ -48,7 +48,7 @@ namespace MafiaCleanCity.CityMap.Tests
             { "BuildingCardController.cs", 9 },
             { "ChaineDApproScreenController.cs", 1 },   // 3 → 1 le 2026-09-26 (états vides : « Nestor » et le texte de chantier passent par Libelle)
             { "CityMapController.cs", 1 },
-            { "CityProjectionsClient.cs", 2 },
+            { "CityProjectionsClient.cs", 1 },   // 2 → 1 le 2026-09-26 (table 84 : « aucun nœud » passe par Libelle)
             { "CompressionScreenController.cs", 2 },
             { "ConflitScreenController.cs", 1 },
             { "DashboardController.cs", 2 },
