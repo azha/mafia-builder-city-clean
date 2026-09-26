@@ -42,60 +42,16 @@ namespace MafiaCleanCity.Operational.Tests
         // `internal` : la garde de l'écran lieutenant (`BundleReelZeroRepliPlayModeTests`) applique la MÊME dette — une source.
         internal static readonly HashSet<string> DetteDatee = new HashSet<string>
         {
-            // ⚠️ COUPE du 2026-09-26 (créneau CLIENT-1, cumul 5632e6db) contre la pile reconstruite sur main 1ffb08b4 (bundle fr 1935
-            // clés) : la règle (2) a rougi, 180 des 182 clés de la dette SONT servies (G5 menu Plus, tables 60 à 72 dont « La suite »,
-            // vente, conflit…) — retirées. Restent les 2 clés de l'addendum de la table 62 (état vide de ㉟), non servies à 1ffb08b4.
-            "vente.vide.les_coins_de_vente_n_ont_pas_repondu",
-            "vente.vide.aucun_coin_de_vente",
-            // Table 76 (atelier fa4dba93, 26/09), ligne E de « La suite » : 5 clés PROPOSÉES, non servies à 1ffb08b4 ; replis de la table.
-            "accueil.suite.de_l_argent_attend_dans_la_planque",
-            "accueil.suite.blanchissez_le_il_ne_rapporte_rien_tant_qu_il_dort",
-            "accueil.suite.la_planque_est_pleine",
-            "accueil.suite.blanchissez_sinon_la_caisse_des_dealers_ne_peut_plus_s_y_vider",
-            "accueil.suite.blanchir",
-            // ㊵ planque non vide + BLANCHIR (f2 26/09, relevé f1 §K.5) : tables 77 @6ed61816 et 76 @fa4dba93, non servies @1ffb08b4 ;
-            // le compte de mesure a l'amorce du kit (NOMINAL) ⇒ la tête « tient de quoi blanchir » et le geste s'affichent.
-            "filiere.etat.votre_planque_enseigne_tient_de_quoi_blanchir",
-            "filiere.etat.votre_planque_tient_de_quoi_blanchir",
-            "filiere.etat.l_argent_passe_de_la_planque_a_la_filiere",
-            "filiere.etat.a_blanchir_la_planque_est_pleine",
-            "filiere.bloc.blanchir",   // le mot du bouton, clé dérivée (Lib) — demandé à l'atelier
-            // B5 (table 79 @f81ad7cb, 26/09) : l'écran d'échec de démarrage et la ligne de ㉒ — 4 clés PROPOSÉES, non servies à 1ffb08b4.
+            // ⚠️ COUPE du 2026-09-26 (créneau CLIENT-1, cumul 9e9704e1) contre la pile reconstruite sur main 256de0f8 (bundle fr 1996
+            // clés) : la règle (2) a rougi, 37 des 43 clés de la dette SONT servies (vente.vide, accueil.suite ligne E, filiere.etat, ㉞…)
+            // — retirées. Restent 6 clés, non servies à 256de0f8 :
+            "filiere.bloc.blanchir",       // le mot du bouton de ㊵ (clé dérivée) — demandé à l'atelier
+            "building.action.blanchir",
+            // B5 (table 79 @f81ad7cb) : l'écran d'échec de démarrage et la ligne de ㉒.
             "demarrage.echec.la_partie_n_a_pas_pu_commencer",
             "demarrage.echec.la_ville_ne_repond_pas_verifiez_votre_connexion_puis_reessayez",
             "demarrage.echec.reessayer",
             "reglages.bloc.votre_partie_vit_sur_cet_appareil_desinstaller_l_appli_l_efface",
-            "building.action.blanchir",   // ② « Blanchir » de la façade (f2 26/09), clé dérivée (Cle) — même mot que ㊵
-            "exception_detail.bloc.sans_suite",   // ⑩ marqueur de l'escalade (table 77), non servie @1ffb08b4
-            // classe « moment en dur » (f2 26/09) : tables 77 @6ed61816 et 78 @3be2e866, non servies @1ffb08b4 — TOUTES les phases, la
-            // phase de la session mesurée n'étant pas connue d'avance (⑨, ⑯, ㊳, ⑤).
-            "exceptions.moment.dawn",
-            "exceptions.moment.day",
-            "exceptions.moment.dusk",
-            "exceptions.moment.night",
-            "exceptions.moment.inconnu",
-            "journal.moment.titre.dawn",
-            "journal.moment.titre.day",
-            "journal.moment.titre.dusk",
-            "journal.moment.titre.night",
-            "journal.moment.titre.inconnu",
-            "journal.moment.vide.dawn",
-            "journal.moment.vide.day",
-            "journal.moment.vide.dusk",
-            "journal.moment.vide.night",
-            "journal.moment.vide.inconnu",
-            "decision.moment.vide.dawn",
-            "decision.moment.vide.day",
-            "decision.moment.vide.dusk",
-            "decision.moment.vide.night",
-            "decision.moment.vide.inconnu",
-            // ㉞ le composeur (f2 26/09) : table 73 @a2c0b2e4, non servie @1ffb08b4 — l'ARRIVÉE sur un carnet vide rend l'état vide
-            // (les 4 phrases, selon le compte de cibles du compte mesuré) et la première ligne touchable.
-            "carnet.vide.il_faut_au_moins_quatre_ordres_pour_une_soiree",
-            "carnet.vide.vous_pouvez_deja_poser",
-            "carnet.vide.n_cibles",
-            "carnet.vide.pas_encore_de_quoi_remplir_une_soiree",
-            "carnet.composeur.poser_un_ordre",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

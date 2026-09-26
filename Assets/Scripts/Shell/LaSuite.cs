@@ -50,6 +50,9 @@ namespace MafiaCleanCity.Shell
     public static class LaSuite
     {
         public const int PalierDuBloc = 1;
+        /// <summary>Les identités de ligne de la planque (table 76) : des NOMS internes (gardes), jamais affichés — en constantes, pour
+        /// que la garde des littéraux nommés ne les prenne pas pour un texte (LitterauxNommes N2, créneau du 26/09).</summary>
+        public const string IdPlanque = "E", IdPlanquePleine = "E-pleine";
         public const int LignesAuPlus = 3;
 
         /// <summary>Le titre du bloc (table 72, `accueil.suite.la_suite`).</summary>
@@ -191,7 +194,7 @@ namespace MafiaCleanCity.Shell
             }
             return new LigneDeLaSuite
             {
-                Id = charge == "FULL" ? "E-pleine" : "E",
+                Id = charge == "FULL" ? IdPlanquePleine : IdPlanque,
                 Titre = titre,
                 Phrase = phrase,
                 Geste = GesteDeLaSuite.Blanchir,
