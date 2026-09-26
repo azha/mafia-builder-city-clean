@@ -54,6 +54,7 @@ namespace MafiaCleanCity.Operational.Tests
             "filiere.etat.l_argent_passe_de_la_planque_a_la_filiere",
             "filiere.etat.a_blanchir_la_planque_est_pleine",
             "filiere.bloc.blanchir",   // le mot du bouton, clé dérivée (Lib) — demandé à l'atelier
+            "building.action.blanchir",   // ② « Blanchir » de la façade (f2 26/09), clé dérivée (Cle) — même mot que ㊵
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

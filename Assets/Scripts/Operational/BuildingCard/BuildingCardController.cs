@@ -344,6 +344,11 @@ namespace MafiaCleanCity.Operational
             // (tranché (a) du 23/09) : pour les autres, les deux routes répondraient 404 et on ne les appelle pas.
             yield return RefreshPupitre(id, CurrentCard.operational_type);
 
+            // ② (f2 26/09) : une façade lit la planque la plus chargée de SON quartier — le geste « Blanchir » n'existe que si elle
+            // tient de quoi blanchir. Pour les autres types, rien n'est lu.
+            if (CurrentCard != null && CurrentCard.operational_type == "front_shop") yield return RefreshPlanqueDuQuartier(id);
+            if (Destroyed) yield break;
+
             // Phase-3 vector #3 (grow_house): also fetch the active grow's qualitative projection (grow_stage_band +
             // husbandry_band + tend_due) when a grow_session is tracked for this grow_house (set on Plant or by a test).
             // A non-grow_house card, or a grow_house with no tracked grow, leaves CurrentGrow null → no grow rows render.
@@ -447,6 +452,28 @@ namespace MafiaCleanCity.Operational
             yield return RunAction(c => client.Inject(buildingId, safehouseId, amountCents, Token, c),
                 "Argent injecté", "Impossible d'injecter");
         }
+
+        /// <summary>② (f2 26/09) — la planque la plus chargée du quartier de CETTE façade (me/buildings → district_id → district/:id/stash →
+        /// FiliereScreenController.PlusChargee, la règle ChargeDePlanque.Rang de ㊵ et de l'Accueil). Null si rien n'est servi.</summary>
+        public MafiaCleanCity.CityMap.SafehouseDto PlanqueDuQuartier { get; private set; }
+
+        private IEnumerator RefreshPlanqueDuQuartier(string id)
+        {
+            PlanqueDuQuartier = null;
+            MafiaCleanCity.Shell.BatimentPossedeDto[] possedes = null;
+            yield return new MafiaCleanCity.Shell.MesBatimentsClient { BaseUrl = client.BaseUrl }.Lire(Token, b => possedes = b, (c, m) => { });
+            int quartier = 0;
+            if (possedes != null) foreach (var b in possedes) if (b != null && b.building == id) { quartier = b.district_id; break; }
+            if (quartier <= 0) yield break;
+            MafiaCleanCity.CityMap.StashDto stash = null;
+            yield return new MafiaCleanCity.CityMap.CityProjectionsClient { BaseUrl = client.BaseUrl }.Stash(quartier, Token, x => stash = x, _ => { });
+            PlanqueDuQuartier = FiliereScreenController.PlusChargee(stash?.safehouses);
+        }
+
+        /// <summary>② (f2 26/09) : le geste « Blanchir » de la façade — offert par la MÊME règle que ㊵ (GesteBlanchirOffert : la planque
+        /// tient de quoi blanchir, la façade et la planque sont connues), sinon ABSENT. Pur.</summary>
+        public static bool BlanchirOffertSurLaFiche(string buildingId, MafiaCleanCity.CityMap.SafehouseDto planque) =>
+            FiliereScreenController.GesteBlanchirOffert(planque?.load_bucket, buildingId, planque?.safehouse_id);
 
         /// <summary>Le type que « Ouvrir » envoie à `POST …/:id/convert`, ou NULL (geste retiré). Pur.
         /// · lot back achat-ouvrable SERVI (`TypesOuvrablesServis`) : le type ACHETÉ (`purchased_type`) s'il est dans
@@ -1157,8 +1184,14 @@ namespace MafiaCleanCity.Operational
                         AddActionButton(actionBar, "honorer_le_rendez_vous", "Honorer le rendez-vous", () => StartCoroutine(HonorAppointment()));
                     break;
                 case "front_shop":
-                    // Inject needs a safehouse target — wired by the caller/test via Inject(safehouseId, amount).
-                    AddActionButton(actionBar, "injecter", "Injecter", () => { /* needs safehouse target; driven via Inject() */ });
+                    // ⛔ ② (f2 26/09) : « Injecter » avait un geste VIDE — un bouton qui ne faisait rien. « Blanchir » vise la planque la plus
+                    // chargée du quartier (même règle et même montant que ① et ㊵) ; sans planque qui tienne de quoi blanchir, PAS de bouton.
+                    if (BlanchirOffertSurLaFiche(buildingId, PlanqueDuQuartier))
+                    {
+                        string planqueVisee = PlanqueDuQuartier.safehouse_id;
+                        AddActionButton(actionBar, "blanchir", Cle("action", "Blanchir"),
+                            () => StartCoroutine(Inject(planqueVisee, MafiaCleanCity.CityMap.DistrictInteriorScreenController.FicheBlanchimentMontantCents)));
+                    }
                     break;
                 case "grow_house":
                     // Phase-3 vector #3: the cultivation affordances.
