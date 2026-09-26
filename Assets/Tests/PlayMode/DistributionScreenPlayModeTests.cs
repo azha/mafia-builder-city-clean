@@ -301,7 +301,7 @@ namespace MafiaCleanCity.Operational.Tests
                 "résolveur À TRAVERSER muet (single)");
             CollectionAssert.Contains(ecran.RenderedTexts, "tient",
                 "résolveur CETTE ROUTE muet (active)");
-            CollectionAssert.Contains(ecran.RenderedTexts, "ENVOYER CE SOIR",
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.Cle("distribution.bouton.envoyer_ce_soir", "ENVOYER MAINTENANT"),
                 "le bouton n'est pas construit en état repos");
         }
 
@@ -315,7 +315,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             CollectionAssert.Contains(ecran.RenderedTexts, "Ce qui est sur la route", "titre en-transit absent");
-            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "ENVOYER CE SOIR",
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, ValeurAttendue.Cle("distribution.bouton.envoyer_ce_soir", "ENVOYER MAINTENANT"),
                 "brief §2 : « en transit, aucun bouton »");
             CollectionAssert.Contains(ecran.RenderedTexts,
                 ValeurAttendue.De("distribution", "bloc", "Il est en chemin. On ne le rappelle pas — on saura à l’arrivée."),
@@ -332,8 +332,8 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.De("distribution", "titre", "C’est livré"), "titre livré absent");
-            CollectionAssert.Contains(ecran.RenderedTexts, "TENDRE UNE AUTRE FICELLE", "bouton livré absent");
-            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "ENVOYER CE SOIR",
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.De("distribution", "bouton", "TENDRE UNE AUTRE FICELLE"), "bouton livré absent");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, ValeurAttendue.Cle("distribution.bouton.envoyer_ce_soir", "ENVOYER MAINTENANT"),
                 "le libellé repos ne doit pas apparaître en état livré");
         }
 
@@ -357,7 +357,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             Assert.IsNull(ecran.ToBuildingId, "fixture : toLabel=null doit laisser ToBuildingId null");
-            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "ENVOYER CE SOIR",
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, ValeurAttendue.Cle("distribution.bouton.envoyer_ce_soir", "ENVOYER MAINTENANT"),
                 "sans destination découverte, aucun bouton ne doit être fabriqué sur un id inventé");
             CollectionAssert.Contains(ecran.RenderedTexts,
                 ValeurAttendue.Cle("distribution.bloc.aucune_destination_connue_pour_l_envoi_de_ce_soir", "Aucune destination connue pour le prochain envoi."),   // table 80
