@@ -12,8 +12,8 @@ namespace MafiaCleanCity.CityMap.Tests
 {
     // ㉕ LA PREMIÈRE FOIS (23/09, atelier 33 `ecrans-brennar-25-tutoriel.html`) — trois défauts mesurés par l'atelier :
     //   U1  le TEXTE servi du tutoriel, jamais son identifiant (D10-h close, back 4a922bc9 : `next_tutorial_id` EST la clé)
-    //   U2  `next_tutorial_id` null ≠ « fini » : « tout vu » SEULEMENT si plus rien n'est éligible, sinon « rien de nouveau pour
-    //       aujourd’hui » (au plus un tutoriel par session ; rien avant la première décision)
+    //   U2  `next_tutorial_id` null ≠ « fini » : un éligible NON VU se montre (C10, 26/09) ; « tout vu » SEULEMENT si plus rien
+    //       n'est éligible ; « rien de nouveau pour aujourd’hui » quand tous les éligibles sont vus
     //   U3  la bascule « On vous explique encore » dans le sens du JOUEUR, test de VALEUR sur les DEUX états : allumée ⇔ opt-out faux,
     //       et le toucher envoie l'opt-out inverse
     [Category("Tutoriel")]
@@ -68,14 +68,28 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("Rien de nouveau pour aujourd’hui.",
                 TutorialScreenController.PhraseSansSuivant(new[] { "tutorial.exception_card.onboarding_preseed" }),
                 "1ʳᵉ session avant la première décision, ou plafond d'un par session : rien de nouveau POUR AUJOURD’HUI");
+            // C10 (26/09) — le JOUEUR NEUF mesuré (corps/012, 072) : `next` null, UN éligible jamais vu. « Rien de nouveau » lui était
+            // faux à vie (le back ne choisit jamais cet id) : l'écran montre l'éligible non vu, par son TEXTE servi.
+            const string preseed = "tutorial.exception_card.onboarding_preseed";
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, "Une carte vous attend : c’est ici que tout commence." } });
             TutorialScreenController e = Ecran(new TutorielData
             {
-                next_tutorial_id = "", eligible_tutorial_ids = new[] { "tutorial.exception_card.onboarding_preseed" },
-                shown_tutorial_ids = new string[0],
+                next_tutorial_id = "", eligible_tutorial_ids = new[] { preseed }, shown_tutorial_ids = new string[0],
             });
             string[] t = Textes(e);
             Assert.IsFalse(t.Contains("Vous avez tout vu."), "le joueur neuf ne lit pas « tout vu » avant d'avoir rien vu");
-            CollectionAssert.Contains(t, "Rien de nouveau pour aujourd’hui.");
+            Assert.IsFalse(t.Contains("Rien de nouveau pour aujourd’hui."), "C10 : ni « rien de nouveau » — un éligible l'attend");
+            CollectionAssert.Contains(t, "Une carte vous attend : c’est ici que tout commence.", "l'éligible non vu, par son texte servi");
+            Assert.IsFalse(t.Any(x => x.Contains(preseed)), "jamais l'identifiant");
+            Assert.AreEqual(preseed, TutorialScreenController.PremierEligibleNonVu(new[] { preseed }, new string[0]));
+
+            // tous les éligibles déjà vus (le plafond d'un par session) : alors seulement, « rien de nouveau pour aujourd’hui »
+            Assert.IsNull(TutorialScreenController.PremierEligibleNonVu(new[] { preseed }, new[] { preseed }));
+            string[] vus = Textes(Ecran(new TutorielData
+            {
+                next_tutorial_id = "", eligible_tutorial_ids = new[] { preseed }, shown_tutorial_ids = new[] { preseed },
+            }));
+            CollectionAssert.Contains(vus, "Rien de nouveau pour aujourd’hui.");
         }
 
         [Test]
