@@ -59,6 +59,18 @@ namespace MafiaCleanCity.Capture.Tests
     {
         private const string MotDePasse = "parcours-neuf-pw";
         private const string VariableSortie = "MAFIA_PARCOURS_SORTIE";
+        /// <summary>f1/f2 (26/09) — la cible du parcours. Posée (ex. l'URL du VPS) : l'inscription ET le shell visent cette adresse
+        /// (`AdresseDuBack.PoserPourTest` au SetUp, AVANT tout client : `AuthClient` lit l'adresse à sa construction). Absente : rien ne
+        /// change (pile dev, `AdresseDuBack.Url`). ⚠️ Contre un serveur distant, chaque run y crée un compte NEUF — voulu (c'est ce que
+        /// voit un joueur sur son téléphone) ; jamais le compte de démo ni le compte de capture.</summary>
+        private const string VariableCible = "MAFIA_PARCOURS_BACK_URL";
+
+        [SetUp]
+        public void SetUp()
+        {
+            string cible = System.Environment.GetEnvironmentVariable(VariableCible);
+            if (!string.IsNullOrWhiteSpace(cible)) MafiaCleanCity.AdresseDuBack.PoserPourTest(cible.Trim().TrimEnd('/'));
+        }
         private static readonly (int largeur, int hauteur)[] Resolutions = { (1080, 2400), (1080, 1920) };
         private static int callsignSeq;
 
@@ -76,6 +88,7 @@ namespace MafiaCleanCity.Capture.Tests
             shell = null; shellGo = null;
             LogAssert.ignoreFailingMessages = false;
             MafiaCleanCity.I18n.I18nCatalog.Oublier();   // TD-576 : le shell amorce le catalogue, la classe le rend
+            MafiaCleanCity.AdresseDuBack.Oublier();       // la cible posée par MAFIA_PARCOURS_BACK_URL ne survit pas au test
         }
 
         [UnityTest]
@@ -97,7 +110,7 @@ namespace MafiaCleanCity.Capture.Tests
             string errSignup = null;
             yield return auth.SignUp(callsign, MotDePasse, _ => { }, e => errSignup = e);
             Assert.IsNull(errSignup, $"P0 : l'inscription du compte neuf a échoué ({errSignup}) — la pile dev répond-elle ?");
-            Noter("P0", "inscription", $"compte neuf {DemoIdentityResolver.Empreinte(callsign)}");
+            Noter("P0", "inscription", $"compte neuf {DemoIdentityResolver.Empreinte(callsign)} · back visé {MafiaCleanCity.AdresseDuBack.Url}");
 
             // ── P1 · lancement ──────────────────────────────────────────────────────────────────────────────────────────────────
             LogAssert.ignoreFailingMessages = true;   // le shell journalise ses replis réseau ; ce test juge ce qu'il VOIT
