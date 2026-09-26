@@ -370,7 +370,9 @@ namespace MafiaCleanCity.Operational.Exceptions
             // L'ORDRE EST CELUI DU DESSIN : risquée, suggérée (levée, au milieu), apprendre.
             // ⑩-1c — l'éventail du cadre 15 : risquée ♠ à −5°, descendue de 6 ; suggérée ♦ droite, LEVÉE de 8 ; apprendre ♣ à
             // +5°, descendue de 6. Le rôle décide de la place, pas l'ordre du tableau.
-            if (risquee != null)   Carte(main.transform, Lib("Risqué"),        risquee,   sombre: true,  levee: false,
+            // ⑩ (table 77, f2 26/09) : le MOT de cette place suit l'EFFET de l'option servie, plus la place — « Risqué » n'allait
+            // qu'à une issue qui peut se retourner (BRIBE) ; l'escalade archive et ne change rien : « Sans suite ». Sinon, aucun mot.
+            if (risquee != null)   Carte(main.transform, MarqueurDOption(risquee) ?? "", risquee, sombre: true,  levee: false,
                                          glyphe: "♠", rotationCss: -5f, translateYCss: 6f);
             if (sug != null)       Carte(main.transform, Lib("Suggéré"),       sug,       sombre: false, levee: true,
                                          glyphe: "♦", rotationCss: 0f, translateYCss: -CssCarteLeve);
@@ -472,6 +474,18 @@ namespace MafiaCleanCity.Operational.Exceptions
             selection = escalade ? null : a;
             selectionEscalade = escalade;
             Render();
+        }
+
+        /// <summary>⑩ (table 77 @6ed61816, f2 26/09) — le marqueur d'une option, par le TYPE SERVI de son effet (ou son `method`, pile
+        /// antérieure à D4) : ESCALATE ⇒ « Sans suite » (exception_detail.bloc.sans_suite) ; BRIBE ⇒ « Risqué » (l'issue qui peut se
+        /// retourner) ; toute autre ⇒ null (pas de marqueur). Jamais par la place dans l'éventail. Pur.</summary>
+        public static string MarqueurDOption(CandidateActionDto a)
+        {
+            if (a == null) return null;
+            if (EstEscalade(a)) return MafiaCleanCity.I18n.Libelle.Gabarit("exception_detail.bloc.sans_suite", "Sans suite");
+            string type = a.effect != null && !string.IsNullOrEmpty(a.effect.type) ? a.effect.type : a.method;
+            if (string.Equals(type, "BRIBE", StringComparison.OrdinalIgnoreCase)) return Lib("Risqué");
+            return null;
         }
 
         private static bool EstEscalade(CandidateActionDto a) =>

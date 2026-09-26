@@ -80,6 +80,23 @@ namespace MafiaCleanCity.Operational.Tests
         }
 
         [Test]
+        public void R11_LeMarqueurSuitLEffet_JamaisRisquePourLEscalade()
+        {
+            // ⑩ (table 77 @6ed61816, f2 26/09) : le mot suit le TYPE servi de l'option, plus sa place dans l'éventail
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            var escalade = new CandidateActionDto { id = "esc", method = "ESCALATE", effect = new ExceptionEffectDto { type = "ESCALATE" } };
+            var escaladeD4 = new CandidateActionDto { id = "esc2", method = "ESCALATE", effect = new ExceptionEffectDto() };
+            var pot = new CandidateActionDto { id = "pot", method = "BRIBE", effect = new ExceptionEffectDto { type = "BRIBE" } };
+            var reparer = new CandidateActionDto { id = "rep", method = "ONE_TIME", effect = new ExceptionEffectDto { type = "REPAIR" } };
+            Assert.AreEqual("Sans suite", ExceptionDetailController.MarqueurDOption(escalade), "l'escalade archive : aucun aléa");
+            Assert.AreEqual("Sans suite", ExceptionDetailController.MarqueurDOption(escaladeD4));
+            Assert.AreEqual("Risqué", ExceptionDetailController.MarqueurDOption(pot), "BRIBE peut se retourner");
+            Assert.IsNull(ExceptionDetailController.MarqueurDOption(reparer), "sans marqueur de son effet : aucun mot");
+            foreach (var o in new[] { escalade, escaladeD4 })
+                Assert.AreNotEqual("Risqué", ExceptionDetailController.MarqueurDOption(o), "garde : ESCALATE n'est JAMAIS « Risqué »");
+        }
+
+        [Test]
         public void R10bis_LaRequete_RouteEtCorpsExacts()
         {
             var r = ExceptionsClient.ConstruireResolve("http://localhost/", Id, "ONE_TIME", "teach_idle");

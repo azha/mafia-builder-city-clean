@@ -55,6 +55,7 @@ namespace MafiaCleanCity.Operational.Tests
             "filiere.etat.a_blanchir_la_planque_est_pleine",
             "filiere.bloc.blanchir",   // le mot du bouton, clé dérivée (Lib) — demandé à l'atelier
             "building.action.blanchir",   // ② « Blanchir » de la façade (f2 26/09), clé dérivée (Cle) — même mot que ㊵
+            "exception_detail.bloc.sans_suite",   // ⑩ marqueur de l'escalade (table 77), non servie @1ffb08b4
             // classe « moment en dur » (f2 26/09) : tables 77 @6ed61816 et 78 @3be2e866, non servies @1ffb08b4 — TOUTES les phases, la
             // phase de la session mesurée n'étant pas connue d'avance (⑨, ⑯, ㊳, ⑤).
             "exceptions.moment.dawn",
