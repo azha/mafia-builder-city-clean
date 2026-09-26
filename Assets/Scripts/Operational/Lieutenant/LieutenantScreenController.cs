@@ -895,7 +895,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // Header line — the readable error message (F2). The diagnostics-area header is band-safe (a sentence, no
             // raw scalar) so it stays in the scan corpus; the per-diagnostic lines carry the player's own DSL spans.
             // garde de classe des refus : `message` est la phrase SERVIE du refus (ou null), jamais le message d'onErr
-            string header = string.IsNullOrEmpty(message) ? Lib("La règle est refusée.") : message;
+            // table 70 → la clé de l'en-tête du refus de la 66, réutilisée (pas de clé neuve)
+            string header = string.IsNullOrEmpty(message)
+                ? MafiaCleanCity.I18n.Libelle.Gabarit("lieutenant.editeur.ces_regles_ne_passent_pas", "Ces règles ne passent pas.")
+                : message;
             SetOutcome(header, AccentSevere);
 
             int n = LastDiagnostics.Length;

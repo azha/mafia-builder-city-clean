@@ -186,7 +186,8 @@ namespace MafiaCleanCity.Operational.Exceptions
                 (code, msg) => LastError = msg);
             if (LastError != null)
                 PhraseDuRefus = client.DernierePhraseDeRefus
-                    ?? MafiaCleanCity.I18n.Libelle.De("exception_detail", "refus", "Le choix n'est pas passé.");
+                    ?? MafiaCleanCity.I18n.Libelle.Gabarit("exception_detail.refus.votre_decision_n_a_pas_ete_enregistree_reessayez",
+                                                          "Votre décision n\u2019a pas été enregistrée. Réessayez.");   // table 70
             resolving = false;
             if (Destroyed) yield break;
             if (res == null)

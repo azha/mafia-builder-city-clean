@@ -491,7 +491,8 @@ namespace MafiaCleanCity.Operational
             if (erreur != null)
             {
                 DerniereErreur = erreur;
-                PhraseDuRefus = client.DernierePhraseDeRefus ?? Libelle.De("loi", "refus", "Le recrutement n'est pas passé.");
+                PhraseDuRefus = client.DernierePhraseDeRefus   // table 70
+                    ?? Libelle.Gabarit("loi.refus.l_embauche_n_a_pas_abouti_reessayez_plus_tard", "L\u2019embauche n\u2019a pas abouti. Réessayez plus tard.");
                 RendreMessageErreur();
                 yield break;
             }
@@ -529,7 +530,8 @@ namespace MafiaCleanCity.Operational
             if (erreur != null)
             {
                 DerniereErreur = erreur;
-                PhraseDuRefus = client.DernierePhraseDeRefus ?? Libelle.De("loi", "refus", "Le changement n'est pas passé.");
+                PhraseDuRefus = client.DernierePhraseDeRefus   // table 70
+                    ?? Libelle.Gabarit("loi.refus.la_retention_n_a_pas_change_reessayez_plus_tard", "La rétention n\u2019a pas changé. Réessayez plus tard.");
                 RendreMessageErreur();
                 yield break;
             }

@@ -205,7 +205,8 @@ namespace MafiaCleanCity.Operational.Autonomy
             {
                 LastError = err;
                 PhraseDuRefus = client.DernierePhraseDeRefus
-                    ?? MafiaCleanCity.I18n.Libelle.De("autonomie", "refus", "Le choix n'est pas passé.");
+                    ?? MafiaCleanCity.I18n.Libelle.Gabarit("autonomie.refus.votre_choix_n_a_pas_ete_enregistre_reessayez",
+                                                          "Votre choix n\u2019a pas été enregistré. Réessayez.");   // table 70
                 Render();
                 resolving = false;
                 yield break;
