@@ -221,8 +221,8 @@ namespace MafiaCleanCity.Operational.Selling
             if (this == null) yield break;
             DernierGeste = resultat;
             actionTexte.text = BuildingCardController.LigneDAction(resultat,
-                MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Un dealer tient ce point de vente."),
-                MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Le dealer n’a pas été posté"));
+                MafiaCleanCity.I18n.Libelle.Gabarit("vente.geste.un_dealer_tient_ce_point_de_vente", "Un dealer tient ce coin de vente."),
+                MafiaCleanCity.I18n.Libelle.Gabarit("vente.geste.le_dealer_n_a_pas_ete_poste", "Le poste n’a pas pu être pourvu"));
             if (resultat != null && resultat.Ok) yield return Recharger();
         }
 
@@ -238,7 +238,7 @@ namespace MafiaCleanCity.Operational.Selling
             int bloc = PointsDeVente.BlocLibre(interieur, Possedes);
             if (bloc < 0)
             {
-                actionTexte.text = MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Aucun bloc libre dans votre quartier.");
+                actionTexte.text = MafiaCleanCity.I18n.Libelle.Gabarit("vente.geste.aucun_bloc_libre_dans_votre_quartier", "Aucun bloc libre dans votre quartier.");
                 yield break;
             }
             AchatTentatives++;
@@ -247,8 +247,8 @@ namespace MafiaCleanCity.Operational.Selling
             if (this == null) yield break;
             DernierGeste = resultat;
             actionTexte.text = BuildingCardController.LigneDAction(resultat,
-                MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Point de vente acheté — ouvrez-le depuis sa fiche."),
-                MafiaCleanCity.I18n.Libelle.De("vente", "geste", "L’achat n’a pas abouti"));
+                MafiaCleanCity.I18n.Libelle.Gabarit("vente.geste.point_de_vente_achete_ouvrez_le_depuis_sa_fiche", "Coin de vente acheté. Reste à l’ouvrir, depuis sa fiche."),
+                MafiaCleanCity.I18n.Libelle.Gabarit("vente.geste.l_achat_n_a_pas_abouti", "L’achat n’a pas abouti"));
             if (resultat != null && resultat.Ok) yield return Recharger();
         }
 
@@ -340,10 +340,10 @@ namespace MafiaCleanCity.Operational.Selling
             if (EtatVide)
             {
                 videTexte.text = DerniereErreur != null
-                    ? "Les points de vente n'ont pas répondu."
+                    ? MafiaCleanCity.I18n.Libelle.Gabarit("vente.vide.les_coins_de_vente_n_ont_pas_repondu", "Les coins de vente n’ont pas répondu.")
                     : sansDealer.Count > 0
-                        ? MafiaCleanCity.I18n.Libelle.De("vente", "vide", "Aucun dealer au travail.")
-                        : "Aucun point de vente.";
+                        ? MafiaCleanCity.I18n.Libelle.Gabarit("vente.vide.aucun_dealer_au_travail", "Aucun dealer au travail.")
+                        : MafiaCleanCity.I18n.Libelle.Gabarit("vente.vide.aucun_coin_de_vente", "Aucun coin de vente.");
                 RendusEffectues++;
                 return;
             }
@@ -433,12 +433,12 @@ namespace MafiaCleanCity.Operational.Selling
         private void RangeeSansDealer(BatimentPossedeDto p)
         {
             GameObject r = CadreDeGeste("SansDealer_" + p.building);
-            Texte(r.transform, "Nom", MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Point de vente sans dealer"), Px(11.5f), Creme,
+            Texte(r.transform, "Nom", MafiaCleanCity.I18n.Libelle.Gabarit("vente.geste.point_de_vente_sans_dealer", "Coin de vente sans dealer"), Px(11.5f), Creme,
                   DesignTokens.Current.hudSerifFont);
             if (!string.IsNullOrEmpty(p.district_name))
                 Texte(r.transform, "Quartier", p.district_name, Px(7.5f), Creme2, DesignTokens.Current.primaryFont);
             BatimentPossedeDto capture = p;
-            BoutonDeGeste(r.transform, "Poster", MafiaCleanCity.I18n.Libelle.De("vente", "geste", "POSTER UN DEALER"),
+            BoutonDeGeste(r.transform, "Poster", MafiaCleanCity.I18n.Libelle.Gabarit("vente.geste.poster_un_dealer", "Poster un dealer"),
                 () => StartCoroutine(PosterUnDealer(capture)), null);
         }
 
@@ -446,12 +446,11 @@ namespace MafiaCleanCity.Operational.Selling
         private void RangeeAchat()
         {
             GameObject r = CadreDeGeste("AcheterPointDeVente");
-            Texte(r.transform, "Nom", MafiaCleanCity.I18n.Libelle.De("vente", "geste", "Vous n’avez aucun point de vente"), Px(11.5f), Creme,
+            Texte(r.transform, "Nom", MafiaCleanCity.I18n.Libelle.Gabarit("vente.geste.vous_n_avez_aucun_point_de_vente", "Vous n’avez aucun coin de vente"), Px(11.5f), Creme,
                   DesignTokens.Current.hudSerifFont);
-            BoutonDeGeste(r.transform, "Acheter", MafiaCleanCity.I18n.Libelle.De("vente", "geste", "ACHETER UN POINT DE VENTE"),
+            BoutonDeGeste(r.transform, "Acheter", MafiaCleanCity.I18n.Libelle.Gabarit("vente.geste.acheter_un_point_de_vente", "Acheter un coin de vente"),
                 () => StartCoroutine(AcheterUnPointDeVente()),
-                MafiaCleanCity.I18n.Libelle.De("vente", "geste",
-                    "coûte de l’argent et la décision de structure de cette session\u00A0; il faudra ensuite l’ouvrir depuis sa fiche"));
+                MafiaCleanCity.I18n.Libelle.Gabarit("vente.geste.coute_de_l_argent_et_la_decision_de_structure_de_cette_session_il_faudra_ensuite_l_ouvrir_depuis_sa_fiche", "Coûte de l’argent et votre décision de structure du jour\u202F; l’ouvrir ensuite, depuis sa fiche, en demandera une autre, demain."));
         }
 
         private GameObject CadreDeGeste(string nom)
@@ -476,7 +475,9 @@ namespace MafiaCleanCity.Operational.Selling
             Button b = g.AddComponent<Button>();
             b.targetGraphic = img;
             b.onClick.AddListener(action);
-            Texte(g.transform, "Lib", libelle, Px(9f), Or, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 14f;
+            TextMeshProUGUI lib = Texte(g.transform, "Lib", libelle, Px(9f), Or, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            lib.characterSpacing = 14f;
+            lib.fontStyle = FontStyles.UpperCase;   // les capitales sont du STYLE (atelier, table 62) : le mot servi est en casse de phrase
             if (!string.IsNullOrEmpty(sousLigne))
                 Texte(g.transform, "Cout", sousLigne, Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
                     .enableWordWrapping = true;
