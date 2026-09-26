@@ -86,6 +86,10 @@ namespace MafiaCleanCity.Operational.Tests
             "demolition.dit.deux_propositions_la_premiere_est_mieux_placee_elles_ne_resteront_pas_sur_la_table",
             // ㉚ : table 63 (tous les maillons silencieux), non servie @5e792a3c. (La réplique du labo, elle, est SERVIE : pas de dette.)
             "appro.vide.rien_ne_circule_encore_vos_maillons_attendent_une_premiere_commande",
+            // ㉘ : table 63 (aucun relais possédé), non servies @5e792a3c.
+            "distribution.vide.pas_encore_de_relais",
+            "distribution.vide.sans_relais_rien_ne_part_c_est_de_la_que_vos_coursiers_livrent",
+            "distribution.vide.un_relais_s_obtient_en_reconvertissant_un_de_vos_locaux_une_decision_de_structure",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
