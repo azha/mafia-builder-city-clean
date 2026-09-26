@@ -86,6 +86,13 @@ namespace MafiaCleanCity.Shell
     public class SessionOpenDto
     {
         public string session_id;
+        /// <summary>B4 — les deux jours de la famille SERVIS (courant, et celui de l'ouverture de CETTE session), lus du corps brut
+        /// par `CycleDeSession.ChampsServis` (noms provisoires). Null tant que le back ne les sert pas ⇒ le repli de 48 min.
+        /// ⚠️ PROPRIÉTÉS, pas champs : la parité de forme C3-F2/C3-F3 (`SessionClientPlayModeTests`) compte les CHAMPS publics du DTO
+        /// contre les clés servies. Quand le back servira ces deux clés, C3-F3 rougira (clés brutes 16 ≠ champs 14) : ce jour-là,
+        /// deux vrais champs remplacent ces propriétés.</summary>
+        public int? JourDeFamille { get; set; }
+        public int? JourDeFamilleALOuverture { get; set; }
         public HlCardDto hl_card;              // nullable — JsonUtility gives a default instance, never null (see C3 tests)
         public ExceptionCardDto[] queue;
         public bool backlog_badge;

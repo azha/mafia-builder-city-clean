@@ -47,6 +47,9 @@ namespace MafiaCleanCity.Shell
                         onErr?.Invoke(req.responseCode, "empty session-open payload");
                         yield break;
                     }
+                    dto.JourDeFamille = CycleDeSession.LireEntier(req.downloadHandler.text, CycleDeSession.ChampsServis.JourDeFamille);
+                    dto.JourDeFamilleALOuverture =
+                        CycleDeSession.LireEntier(req.downloadHandler.text, CycleDeSession.ChampsServis.JourDeFamilleALOuverture);
                     onOk?.Invoke(dto);
                 }
                 else

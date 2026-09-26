@@ -13,24 +13,97 @@ namespace MafiaCleanCity.Shell
     /// arrière-plan rendrait donc une décision de structure à chaque aller-retour. D'où la forme, toute côté client (0 changement
     /// au back) :
     ///   · en arrière-plan : NE PAS fermer ; horodater la sortie et la PERSISTER (elle doit survivre à un kill) ;
-    ///   · au retour au premier plan OU au démarrage à froid : absence ≥ `SeuilDAbsenceMinutes` réelles ⇒ `close` PUIS `open` (une
-    ///     NOUVELLE session, le « demain » de f2-D18), puis le bandeau et l'écran courant se rafraîchissent ; sinon rien au retour
-    ///     (la même session continue), et au démarrage à froid l'ouverture habituelle ;
+    ///   · RÈGLE (forme finale f2, 26/09) : une NOUVELLE session s'ouvre quand le JOUR DE LA FAMILLE a changé depuis l'ouverture
+    ///     de la session courante — les DEUX valeurs sont SERVIES (le jour courant, et celui de l'ouverture), comparées sans rien
+    ///     mémoriser côté client ; différentes ⇒ `close` PUIS `open` (le « demain » de f2-D18), puis bandeau et écran courant.
+    ///     Testée au retour au premier plan, au démarrage à froid, et à chaque lecture de l'horloge légère au premier plan
+    ///     (`AppShell.SurLectureDuJourServi`). Le back applique le rattrapage AVANT : une transition ne donne qu'un close/open ;
+    ///   · REPLI, tant que le jour n'est pas servi : une absence ≥ `SeuilDeRepliMinutes` (la durée réelle d'UNE journée de jeu)
+    ///     ⇒ `close` puis `open` ; sinon rien au retour, l'ouverture habituelle au démarrage à froid ;
     ///   · pas de minuteur en arrière-plan ; horodatage absent (première ouverture) ⇒ ouverture simple.
-    /// ⚠️ La grâce vit côté client EN ATTENDANT que le back dise où elle doit vivre (f2, 26/09).</summary>
+    /// ⛔ Historique du 26/09 : un seuil de 5 min rendait la décision de structure jusqu'à 12 fois par heure (ce que ㉜ dit
+    ///   empêcher), et 5 min ne font pas « demain » ; puis 48 min ne voyaient pas le joueur qui RESTE dans l'app au-delà d'une
+    ///   journée. D'où le jour servi.</summary>
     public static class CycleDeSession
     {
-        /// <summary>LE seuil d'absence, en minutes RÉELLES. Une constante, un seul site.</summary>
-        public const int SeuilDAbsenceMinutes = 5;
+        /// <summary>REPLI SEULEMENT (quand le jour de la famille n'est pas servi) : la durée RÉELLE d'une journée de jeu, dérivée du
+        /// tunable du back `T.tick.real_seconds_per_game_minute = 2` (`citysim-tunables.ts:24`) : 1 440 min de jeu × 2 s = 48 min.
+        /// ⚠️ Recopie d'un tunable : elle sort quand le back sert le jour (demandé par f2), ou sa cadence.</summary>
+        public const int SeuilDeRepliMinutes = 48;
+
+        /// <summary>Les noms des deux champs SERVIS (session/open, horloge légère). ⚠️ PROVISOIRES : à lire dans le design L1 du back
+        /// (`design/boucle-argent`) quand il sera commité — c'est le seul endroit à corriger.</summary>
+        public static class ChampsServis
+        {
+            public const string JourDeFamille = "family_day";
+            public const string JourDeFamilleALOuverture = "session_family_day";
+        }
 
         public enum Decision { Rien, Ouvrir, FermerPuisOuvrir }
 
-        /// <summary>Pure. `sortieUtc` = l'horodatage persisté (null : aucune sortie notée).</summary>
-        public static Decision Decider(DateTime? sortieUtc, DateTime maintenantUtc, bool demarrageAFroid)
+        /// <summary>Pure. `jourServi`/`jourDOuverture` = les deux jours de la famille SERVIS (null : non servis) ; `sortieUtc` =
+        /// l'horodatage persisté (null : aucune sortie notée), lu SEULEMENT en repli.</summary>
+        public static Decision Decider(int? jourServi, int? jourDOuverture, DateTime? sortieUtc, DateTime maintenantUtc, bool demarrageAFroid)
         {
-            bool longue = sortieUtc.HasValue && maintenantUtc - sortieUtc.Value >= TimeSpan.FromMinutes(SeuilDAbsenceMinutes);
-            if (longue) return Decision.FermerPuisOuvrir;
+            bool changement = jourServi.HasValue && jourDOuverture.HasValue
+                ? jourServi.Value != jourDOuverture.Value
+                : sortieUtc.HasValue && maintenantUtc - sortieUtc.Value >= TimeSpan.FromMinutes(SeuilDeRepliMinutes);
+            if (changement) return Decision.FermerPuisOuvrir;
             return demarrageAFroid ? Decision.Ouvrir : Decision.Rien;
+        }
+
+        /// <summary>Un entier de premier niveau ou imbriqué, par son NOM, dans un corps JSON brut — `JsonUtility` ne lie un champ que
+        /// par un nom écrit en dur dans le DTO, et ces noms-ci sont provisoires. Null si absent ou non entier.</summary>
+        public static int? LireEntier(string json, string champ)
+        {
+            if (string.IsNullOrEmpty(json) || string.IsNullOrEmpty(champ)) return null;
+            var m = System.Text.RegularExpressions.Regex.Match(json,
+                "\"" + System.Text.RegularExpressions.Regex.Escape(champ) + "\"\\s*:\\s*(-?\\d+)");
+            return m.Success && int.TryParse(m.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int v) ? v : (int?)null;
+        }
+
+        /// <summary>Au DÉMARRAGE À FROID : l'ouverture habituelle (elle LIT aussi les deux jours servis) ; si le jour a changé — ou, en
+        /// repli, si l'absence notée atteint le seuil — `close` puis `open`. `ouverte` reçoit la session à garder (null : échec).</summary>
+        public static IEnumerator AuDemarrage(string jeton, ITransportDeSession transport, DateTime? sortieUtc, DateTime maintenantUtc,
+                                              Action<SessionOpenDto> ouverte, Action<string> echec)
+        {
+            SessionOpenDto lue = null;
+            yield return transport.Ouvrir(jeton, x => lue = x, (c, m) => echec?.Invoke($"{c}: {m}"));
+            if (lue == null) { ouverte?.Invoke(null); yield break; }
+            if (Decider(lue.JourDeFamille, lue.JourDeFamilleALOuverture, sortieUtc, maintenantUtc, false) != Decision.FermerPuisOuvrir)
+            {
+                ouverte?.Invoke(lue);
+                yield break;
+            }
+            SessionOpenDto neuve = null;
+            yield return Appliquer(Decision.FermerPuisOuvrir, jeton, transport, x => neuve = x, echec);
+            ouverte?.Invoke(neuve);
+        }
+
+        /// <summary>Au RETOUR au premier plan. Jour servi (la dernière ouverture le portait) : on le RELIT par `open` (même session tant
+        /// qu'elle n'est pas fermée) et on compare ; sinon le repli d'absence, SANS requête sous le seuil. `nouvelle` n'est appelé
+        /// qu'avec une NOUVELLE session.</summary>
+        public static IEnumerator AuRetour(string jeton, ITransportDeSession transport, bool jourServi, DateTime? sortieUtc,
+                                           DateTime maintenantUtc, Action<SessionOpenDto> nouvelle, Action<string> echec)
+        {
+            if (!jourServi)
+            {
+                yield return Appliquer(Decider(null, null, sortieUtc, maintenantUtc, false), jeton, transport, nouvelle, echec);
+                yield break;
+            }
+            SessionOpenDto lue = null;
+            yield return transport.Ouvrir(jeton, x => lue = x, (c, m) => echec?.Invoke($"{c}: {m}"));
+            if (lue == null) yield break;
+            yield return SurLecture(jeton, transport, lue.JourDeFamille, lue.JourDeFamilleALOuverture, nouvelle, echec);
+        }
+
+        /// <summary>À chaque lecture des deux jours servis au premier plan (l'horloge légère) : différents ⇒ `close` puis `open`.
+        /// Absents ou égaux ⇒ rien, aucune requête.</summary>
+        public static IEnumerator SurLecture(string jeton, ITransportDeSession transport, int? jourServi, int? jourDOuverture,
+                                             Action<SessionOpenDto> nouvelle, Action<string> echec)
+        {
+            if (!jourServi.HasValue || !jourDOuverture.HasValue || jourServi.Value == jourDOuverture.Value) yield break;
+            yield return Appliquer(Decision.FermerPuisOuvrir, jeton, transport, nouvelle, echec);
         }
 
         /// <summary>Joue la décision sur le transport, dans l'ordre : `close` (si demandé) PUIS `open`. Un `close` qui échoue
