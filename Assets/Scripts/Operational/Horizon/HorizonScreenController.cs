@@ -55,7 +55,20 @@ namespace MafiaCleanCity.Operational
         // jamais posées, et ses textes s'empilent au centre — ce qui RESSEMBLE à un défaut de mise
         // en page. Mesuré sur ㊲, puis reproduit par une autre session sur son propre écran.
         // ⚠️ Le squelette généré met `Awake` : signalé à qui tient le scaffold.
-        private void Start() => EnsureInitialized();
+        // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26, table 63) : AUCUN appel au montage — le shell pose le jeton et rien ne chargeait,
+        // l'écran restait sur son état initial pour tout joueur. Le montage LANCE désormais `Charger()` (mots de l'état vide déjà
+        // servis : horizon.bloc.rien_ne_s_ouvre_pour_l_instant / l_horizon_se_remplit_en_jouant). Sauf si un test a imposé un
+        // corps (`RendrePourTest`) ; et un `Charger()` explicite pendant ce chargement l'ATTEND au lieu d'en lancer un second.
+        private void Start()
+        {
+            EnsureInitialized();
+            if (!corpsImposeParUnTest && !string.IsNullOrEmpty(token)) StartCoroutine(Charger());
+        }
+
+        private bool corpsImposeParUnTest;
+        private bool chargementEnCours;
+        /// <summary>Nombre de chargements RÉELLEMENT lancés (test hook : un seul au montage, même si un test rappelle `Charger`).</summary>
+        public int ChargementsLances { get; private set; }
 
         private void EnsureInitialized()
         {
@@ -71,6 +84,15 @@ namespace MafiaCleanCity.Operational
         /// de chemin (id, etc.) — ajouter les arguments correspondants ici et les faire
         /// remonter depuis l'appelant (le shell, ou un `RendrePourTest`).</summary>
         public IEnumerator Charger()
+        {
+            if (chargementEnCours) { while (chargementEnCours && this != null) yield return null; yield break; }
+            chargementEnCours = true;
+            ChargementsLances++;
+            yield return ChargerCorps();
+            chargementEnCours = false;
+        }
+
+        private IEnumerator ChargerCorps()
         {
             EnsureInitialized();
             DerniereErreur = null;
@@ -106,6 +128,7 @@ namespace MafiaCleanCity.Operational
         /// l'écran EN FAIT.</summary>
         public void RendrePourTest(GetMetaHorizonFeedResponseDto dto)
         {
+            corpsImposeParUnTest = true;
             EnsureInitialized();
             AppliquerEtat(dto);
         }
@@ -388,6 +411,7 @@ namespace MafiaCleanCity.Operational
         /// l'échelle à des paliers que le compte de démo n'atteint pas.</summary>
         public void RendrePourTest(GetMetaHorizonFeedResponseDto dto, Exceptions.ProgressionDto prog)
         {
+            corpsImposeParUnTest = true;
             EnsureInitialized();
             DerniereProgression = prog;
             AppliquerEtat(dto);
