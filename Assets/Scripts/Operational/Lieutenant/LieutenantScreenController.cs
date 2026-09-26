@@ -213,6 +213,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         /// <summary>The (assigned/source/host) building the Recruit action assigns the picked lieutenant to. Settable before SignIn/Recruit.</summary>
         public string AssignedBuildingId { get => assignedBuildingId; set => assignedBuildingId = value; }
+        /// <summary>B7 — le bâtiment RÉSOLU par le dernier recrutement (null quand l'appelant l'avait posé). Test hook.</summary>
+        public string LastRecruitBuildingId { get; private set; }
 
         /// <summary>The TARGET building (dispatch destination / safehouse) for a 2-building archetype
         /// (LOGISTICS/LAUNDERING/DISTRIBUTION). Ignored for the single-building archetypes. Settable before Recruit.</summary>
@@ -264,6 +266,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (client != null) client.BaseUrl = url;
             if (progression != null) progression.BaseUrl = url;
             if (autonomyClient != null) autonomyClient.BaseUrl = url;
+            if (mesBatiments != null) mesBatiments.BaseUrl = url;
         }
 
         private readonly List<string> renderedTexts = new List<string>();
@@ -312,6 +315,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         private AuthClient auth;
         private LieutenantClient client;
+        private MafiaCleanCity.Shell.MesBatimentsClient mesBatiments;   // B7 — le bâtiment d'un recrutement, tiré des bâtiments servis
         private ProgressionClient progression;
         private AutonomyClient autonomyClient; // Phase-21 — budget bands + ceiling decisions
 
@@ -397,6 +401,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             client = new LieutenantClient { BaseUrl = baseUrl };
             progression = new ProgressionClient { BaseUrl = baseUrl };
             autonomyClient = new AutonomyClient { BaseUrl = baseUrl };
+            mesBatiments = new MafiaCleanCity.Shell.MesBatimentsClient { BaseUrl = baseUrl };
             BuildLayout();
             EnsureEventSystem();
         }
@@ -470,7 +475,27 @@ namespace MafiaCleanCity.Operational.Lieutenant
             string errMsg = null;
             // A 2-building archetype sends its target_building_id; a single-building archetype omits it (pass null).
             string target = RuleModel.NeedsTarget(archetype) ? targetBuildingId : null;
-            yield return client.Recruit(archetype, assignedBuildingId, target, Token,
+            string affecte = assignedBuildingId;
+            // B7 (passe UX 2026-09-24) — le shell monte cet écran par `AddComponent` : `assignedBuildingId` y est VIDE, et le back
+            // rendait 422 « must be a UUID (got "") » à tout joueur. Un bâtiment posé (test, appelant) reste prioritaire ; sinon
+            // on le tire de `me/buildings` pour CET archétype (`HoteDeRecrutement`), cible comprise.
+            if (string.IsNullOrEmpty(affecte) || (RuleModel.NeedsTarget(archetype) && string.IsNullOrEmpty(target)))
+            {
+                MafiaCleanCity.Shell.BatimentPossedeDto[] possedes = null;
+                yield return mesBatiments.Lire(Token, b => possedes = b,
+                    (c, m) => Debug.LogWarning($"[Lieutenant] me/buildings indisponible ({c}) : {m}"));
+                if (Destroyed) yield break;
+                (string hote, string cible) = HoteDeRecrutement.Choisir(archetype, possedes);
+                if (string.IsNullOrEmpty(affecte)) affecte = hote;
+                if (RuleModel.NeedsTarget(archetype) && string.IsNullOrEmpty(target)) target = cible;
+                if (string.IsNullOrEmpty(affecte))
+                {
+                    SetOutcome(Lib("Échec du recrutement."), AccentSevere);
+                    yield break;
+                }
+                LastRecruitBuildingId = affecte;
+            }
+            yield return client.Recruit(archetype, affecte, target, Token,
                 ok => id = ok,
                 (code, msg) => { errCode = code; errMsg = msg; });
 
