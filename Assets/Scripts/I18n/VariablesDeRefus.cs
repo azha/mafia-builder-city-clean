@@ -11,7 +11,7 @@ namespace MafiaCleanCity.I18n
     /// `error.production.precursor_missing` avec `{ precursor_type: "pyralin", precursor_key: "building.precursor.pyralin" }` — la phrase
     /// porte `{precursor_type}`, qui doit recevoir le MOT (« la Pyraline »), jamais l'identifiant (`pyralin`).
     /// ⇒ LA FORME GÉNÉRALE : toute variable nommée `<racine>_key` porte une clé i18n SERVIE ; elle est résolue en mot par le catalogue
-    ///   (`Libelle.Gabarit`, le repli compté), et ce mot est injecté dans le paramètre `<racine>`. Le client ne CONCATÈNE jamais une clé
+    ///   (`Libelle.Gabarit`, le repli compté), et ce mot est injecté dans les paramètres de même racine (`<racine>`, `<racine>_type`…). Le client ne CONCATÈNE jamais une clé
     ///   lui-même : il ne lit que celle que le back a écrite. Une variable qui ne finit pas par `_key` passe telle quelle.
     /// ⚠️ `JsonUtility` ne lit pas un objet à clés libres : `Lire` est un petit lecteur d'objet PLAT (chaînes, nombres, booléens) ; une
     ///   valeur imbriquée (objet, tableau) est sautée, jamais devinée.</summary>
@@ -65,9 +65,11 @@ namespace MafiaCleanCity.I18n
             }
         }
 
-        /// <summary>La résolution : pour chaque `<racine>_key`, le mot servi de sa clé va dans `<racine>` (créé s'il manque). Sans mot
-        /// servi, le repli est la valeur déjà présente dans `<racine>` (le back l'y a posée), sinon rien n'est écrit. Pur (lit le
-        /// catalogue par `Libelle`).</summary>
+        /// <summary>La résolution : pour chaque `<racine>_key`, le mot servi de sa clé va dans les paramètres de MÊME RACINE — `<racine>`
+        /// et tout `<racine>_<suffixe>` autre que `_key` (le cas convenu : `precursor_key` → `precursor_type`). S'il n'y en a aucun, dans
+        /// `<racine>`. Sans mot servi, chaque paramètre garde la valeur que le back y a posée (repli compté par `Libelle`). Pur.
+        /// ⛔ Mesuré au créneau du 26/09 : la v1 n'écrivait que `<racine>` — `precursor_type` gardait « pyralin ». *« Même racine »
+        ///   désigne les FRÈRES du nom, pas le nom tronqué.*</summary>
         public static Dictionary<string, string> Resoudre(IDictionary<string, string> vars)
         {
             var r = new Dictionary<string, string>();
@@ -78,9 +80,18 @@ namespace MafiaCleanCity.I18n
                 if (!kv.Key.EndsWith(SuffixeCle, System.StringComparison.Ordinal) || kv.Key.Length == SuffixeCle.Length) continue;
                 if (string.IsNullOrEmpty(kv.Value)) continue;
                 string racine = kv.Key.Substring(0, kv.Key.Length - SuffixeCle.Length);
-                vars.TryGetValue(racine, out string deja);
-                string mot = Libelle.Gabarit(kv.Value, deja);
-                if (!string.IsNullOrEmpty(mot)) r[racine] = mot;
+                var cibles = new List<string>();
+                foreach (string nom in vars.Keys)
+                    if (nom != kv.Key && (nom == racine || nom.StartsWith(racine + "_", System.StringComparison.Ordinal))
+                        && !nom.EndsWith(SuffixeCle, System.StringComparison.Ordinal))
+                        cibles.Add(nom);
+                if (cibles.Count == 0) cibles.Add(racine);
+                foreach (string cible in cibles)
+                {
+                    vars.TryGetValue(cible, out string deja);
+                    string mot = Libelle.Gabarit(kv.Value, deja);
+                    if (!string.IsNullOrEmpty(mot)) r[cible] = mot;
+                }
             }
             return r;
         }

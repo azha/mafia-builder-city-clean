@@ -33,7 +33,8 @@ namespace MafiaCleanCity.Shell.Tests
             var e = Ecran();
             e.AppliquerRevue(new FlagReviewResponseDto { cards = new FlagCardDto[0], routine_pending_count = 0 });
             Assert.IsTrue(e.RienATenir);
-            Assert.AreEqual("Vos lieutenants n’ont encore rien à tenir : donnez-leur une première règle.", e.PlaqueDuMatinTitre.text);
+            // U+00A0 avant « : », à l'octet de la table 63 v2 (mesuré au créneau du 26/09 : l'espace ordinaire du littéral rougissait)
+            Assert.AreEqual("Vos lieutenants n’ont encore rien à tenir\u00A0: donnez-leur une première règle.", e.PlaqueDuMatinTitre.text);
             e.OuvrirLaFamille();
             Assert.AreEqual(1, e.OuverturesDeLaFamille, "le toucher mène à ⑧ (dans la Famille)");
         }
