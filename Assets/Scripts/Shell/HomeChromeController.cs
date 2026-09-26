@@ -116,7 +116,16 @@ namespace MafiaCleanCity.Shell
             RenderPressure();
         }
 
-        public void ClickDailyReviewShortcut() => DailyReviewShortcutClicks++;
+        /// <summary>C7 (passe UX, 2026-09-24) — le raccourci « La revue du jour » ne faisait que compter. Il ouvre désormais la revue
+        /// (`DailyReviewScreenController`) en surimpression, PAR LE SHELL — même mécanisme que « Voir l'ardoise »
+        /// (`ClickExceptionsShortcut`). Hors shell : compté, rien d'ouvert (même repli).</summary>
+        public void ClickDailyReviewShortcut()
+        {
+            DailyReviewShortcutClicks++;
+            IShellNavigator nav = ShellNavigatorLocator.Find();
+            if (nav != null)
+                LastOpenedDailyReview = nav.MonterLocataireEnSurimpression<DailyReviewScreenController>().gameObject;
+        }
 
         /// <summary>ITEM 0.5 §2 — REUSE `IShellNavigator` (même mécanisme que
         /// `DashboardController.OpenExceptions`) : monte `ExceptionQueueController` en

@@ -440,8 +440,8 @@ namespace MafiaCleanCity.Shell.Tests
 
             Debug.Log("[Charpente] F-A — la ville (CityMapController) est atteinte en UN clic de " +
                       "production sur Tab_Empire, l'overlay Accueil ayant réellement disparu de " +
-                      "ContentSlot ; un SECOND chemin, générique, qui coexiste désormais avec " +
-                      "l'action de tête dédiée (F-B, round 7, ci-dessous).");
+                      "ContentSlot ; un chemin générique, qui coexiste avec le retour du système " +
+                      "(F-B, ci-dessous — la flèche du bandeau est retirée, §C.14).");
         }
 
         // F-B — REMPLACÉE round 7 (revue ⊥, BLOQUANT 2) : « une épingle qui documente un trou
@@ -461,8 +461,11 @@ namespace MafiaCleanCity.Shell.Tests
         // (`ProductionClickSupport.Click`, jamais `onClick.Invoke()` nu) démonte l'overlay Accueil
         // et révèle `CityMapController` — MÊME assertion que F-A (overlay disparu, carte montée,
         // confinement sous ContentSlot), MAIS déclenchée par le bouton DÉDIÉ, pas par le dock.
+        // ⛔ AMENDÉ (ARBITRAGES-user-2026-09-07 §C.14, passe UX du 2026-09-24) : la flèche est RETIRÉE du bandeau. Le geste dédié
+        //    devient le retour du SYSTÈME (`AppShell.Depiler`) ; les deux branches prouvent en plus qu'aucune flèche n'est posée.
+        //    Voir `VerifierFermetureParLeRetour`.
         [UnityTest]
-        public IEnumerator FB_LActionDeTeteFermeLOverlayEtRevelaLaVille_BrancheSucces()
+        public IEnumerator FB_LeRetourFermeLOverlayEtRevelaLaVille_BrancheSucces()
         {
             yield return ChargerLaSceneDeDemarrageDuBuild();
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
@@ -478,7 +481,7 @@ namespace MafiaCleanCity.Shell.Tests
             // d'`operational_demo` échoue (back arrêté, compte purgé, 401 transitoire pendant les
             // 2-4 allers-retours réseau) et ce test, nommé « BRANCHE SUCCÈS », empruntait alors le
             // REPLI sans que rien ne le remarque : les six assertions de
-            // `VerifierFermetureParActionDeTete` passent quand même (elles sont IDENTIQUES sur les
+            // `VerifierFermetureParLeRetour` passent quand même (elles sont IDENTIQUES sur les
             // deux branches — `ActivateTab`/`MonterLocataireEnSurimpression`/`SetLeadingAction` sont
             // posés au MÊME endroit relatif sur les deux, dans `AppShell.
             // AcquireSessionThenActivateHome()` (round 11 — revue ⊥, BLOQUANT 1 : citation PAR
@@ -498,7 +501,7 @@ namespace MafiaCleanCity.Shell.Tests
                 "(back arrêté, compte purgé, 401 transitoire) : ce test a glissé sur la branche repli " +
                 "et ne couvre plus le succès. Réparer la précondition serveur, pas l'assertion.");
 
-            yield return VerifierFermetureParActionDeTete(shell, "BRANCHE SUCCÈS");
+            yield return VerifierFermetureParLeRetour(shell, "BRANCHE SUCCÈS");
         }
 
         // round 7 (revue ⊥, BLOQUANT 2) — MÊME garde, sur la branche REPLI-ÉCHEC
@@ -515,7 +518,7 @@ namespace MafiaCleanCity.Shell.Tests
         // `yield return` (même fenêtre synchrone que `Start()`, qui lit ces champs différé d'une
         // frame), avec des identifiants DÉLIBÉRÉMENT invalides.
         [UnityTest]
-        public IEnumerator FB_LActionDeTeteFermeLOverlayEtRevelaLaVille_BrancheEchec()
+        public IEnumerator FB_LeRetourFermeLOverlayEtRevelaLaVille_BrancheEchec()
         {
             // round 9 (revue ⊥, MINEUR m3) — capturé AVANT toute construction : ce test ne charge
             // AUCUNE scène, donc si aucun EventSystem n'existe déjà, `AppShell.EnsureEventSystem()`
@@ -565,7 +568,7 @@ namespace MafiaCleanCity.Shell.Tests
 
                 yield return null; // même marge d'une frame que la branche succès
 
-                yield return VerifierFermetureParActionDeTete(shell, "BRANCHE REPLI-ÉCHEC");
+                yield return VerifierFermetureParLeRetour(shell, "BRANCHE REPLI-ÉCHEC");
             }
             finally
             {
@@ -588,160 +591,42 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         // Corps PARTAGÉ des deux branches ci-dessus — la MÊME assertion positive que F-A (overlay
-        // disparu, carte montée, confinement sous ContentSlot), déclenchée par L'ACTION DE TÊTE
-        // dédiée plutôt que par le dock.
-        private static IEnumerator VerifierFermetureParActionDeTete(AppShell shell, string etiquetteBranche)
+        // disparu, carte montée, confinement sous ContentSlot), déclenchée par LE RETOUR DU SYSTÈME
+        // plutôt que par le dock.
+        // ⛔ AMENDÉ (ARBITRAGES-user-2026-09-07 §C.14, passe UX du 2026-09-24) — la flèche « ← » du bandeau est RETIRÉE (« pas de
+        //    domicile en série 6 »). Ce corps cliquait l'action de tête ; il prouve désormais (a) qu'elle n'est PLUS posée sur l'Accueil,
+        //    (b) que le retour du système (`AppShell.Depiler`, Android/`Escape`) ferme l'overlay et révèle la ville. Les gardes de
+        //    ZONE TACTILE de la flèche (raycast au centre et aux coins, ≥ 48 unités, l'écart connu de 44,1 dp) sortent avec elle ; les
+        //    gardes d'ÉCHELLE du bandeau (`TopBarEchelle`, largeur du Canvas) restent : elles ne dépendaient pas de la flèche.
+        private static IEnumerator VerifierFermetureParLeRetour(AppShell shell, string etiquetteBranche)
         {
             // ⛔ ANTI-VACUITÉ — sans cette précondition, un overlay jamais monté rendrait la
             // fermeture vraie À VIDE (rien à démonter).
             DashboardController overlayAvant = shell.ContentSlot.GetComponentInChildren<DashboardController>(false);
             Assert.IsNotNull(overlayAvant,
                 $"précondition anti-vacuité ({etiquetteBranche}) : l'overlay Accueil doit être " +
-                "RÉELLEMENT monté AVANT le clic sur l'action de tête.");
+                "RÉELLEMENT monté AVANT le retour.");
+            Assert.IsTrue(shell.SurimpressionOuverte,
+                $"({etiquetteBranche}) l'Accueil est une SURIMPRESSION au-dessus de l'Empire — c'est ce qui le rend dépilable.");
 
-            Assert.AreEqual(TopBarController.LeadingAction.BackToMap, shell.TopBar.CurrentLeadingAction,
-                $"round 7 (BLOQUANT 2, {etiquetteBranche}) — l'action de tête doit être BackToMap dès " +
-                "que l'overlay Accueil est monté (posée APRÈS ActivateTab, qui la remet sinon à None).");
-
+            // (a) §C.14 — plus de flèche : l'action de tête reste à None, son bouton est caché.
+            Assert.AreEqual(TopBarController.LeadingAction.None, shell.TopBar.CurrentLeadingAction,
+                $"({etiquetteBranche}) §C.14 — aucune flèche n'est posée sur l'Accueil.");
             Transform boutonTeteT = shell.TopBar.transform.Find("LeadingAction");
-            Assert.IsNotNull(boutonTeteT, $"l'action de tête ('LeadingAction') doit exister sous TopBarController ({etiquetteBranche})");
-            Button boutonTete = boutonTeteT.GetComponent<Button>();
-            Assert.IsNotNull(boutonTete, $"'LeadingAction' doit porter un Button ({etiquetteBranche})");
-            Assert.IsTrue(boutonTete.interactable, $"l'action de tête doit être interactable ({etiquetteBranche})");
+            Assert.IsNotNull(boutonTeteT, $"({etiquetteBranche}) le bouton de tête existe toujours (seule sa visibilité change)");
+            Assert.IsFalse(boutonTeteT.gameObject.activeSelf, $"({etiquetteBranche}) §C.14 — la flèche n'est pas montrée");
 
-            // ⛔⛔ GARDE DE COLLISION SUR LA SORTIE (revue ⊥ round 8, MAJEUR 2). Sans elle, ce lot
-            // livrait la moitié du ruling qui compte pour le joueur — « puis on tombe sur la ville » —
-            // par un bouton posé SOUS un overlay plein écran NEUF, en n'en prouvant que la moitié
-            // « Selectable ». `ProductionClickSupport` le dit lui-même dans sa docstring : il route
-            // directement sur le GameObject et NE COUVRE PAS le hit-testing. Mesuré avant ce round :
-            // `EventSystem.current.RaycastAll` n'apparaissait qu'UNE fois dans tout `Assets/Tests`,
-            // scopé aux 4 bulles du dock — la classe était fermée sur les INSTANCES, pas sur la
-            // POPULATION de ce sur quoi un joueur doit taper.
-            //
-            // ⇒ La propriété qui mord ici n'est pas « le bouton existe » : c'est que **le backdrop
-            // plein écran de l'overlay n'avale PAS le tap de sortie**. `DashboardBackdrop` est
-            // raycastable et couvre tout l'écran ; seul l'ordre de fratrie (ContentSlot < TopBarSlot)
-            // met l'action de tête au-dessus. Cette assertion est ce qui rougirait si cet ordre
-            // changeait — et l'ordre de fratrie, lui, est gardé ailleurs sans jamais tester CE tap.
-            //
-            // ⛔⛔ round 9 (revue ⊥, BLOQUANT 2) — LA PRÉCONDITION DE MODULE, qui manquait ICI alors
-            // que le round 7 l'a rendue OBLIGATOIRE pour cette forme EXACTE (`EventSystem.current.
-            // RaycastAll`) sur le site JUMEAU du dock (`CharpenteMontageLocatairesPlayModeTests.
-            // cs:945-963`). Mesuré par le round 7 : `RaycastAll` (`EventSystem.cs:266-281`) ne
-            // consulte QUE `RaycasterManager.GetRaycasters()` — il ne lit JAMAIS
-            // `currentInputModule`. Un `EventSystem` sans module d'entrée actif rend donc des
-            // résultats de raycast NON VIDES quand même (les raycasters restent enregistrés
-            // indépendamment du module) : la garde ci-dessous certifierait une sortie sur laquelle
-            // AUCUN tap ne pourra jamais être dispatché. Le chemin est OUVERT : `AppShell.
-            // EnsureEventSystem()` ne pose le module QUE si aucun
-            // `EventSystem` n'existe déjà, et `FB_..._BrancheEchec` (ci-dessus) ne charge AUCUNE
-            // scène — c'est le test qui a le plus besoin de cette précondition et qui en avait le
-            // moins. `ProductionClickSupport.HasActiveInputModule` est PROMU (round 9) hors de
-            // `CharpenteMontageLocatairesPlayModeTests` pour être partagé ICI sans dupliquer.
-            GraphicRaycaster raycasterSortie = shell.ShellCanvas.GetComponent<GraphicRaycaster>();
-            Assert.IsNotNull(raycasterSortie,
-                $"({etiquetteBranche}) le Canvas du shell doit porter le GraphicRaycaster qu'un vrai " +
-                "doigt traverse (AppShell.BuildLayout le pose sur ShellCanvas).");
-            Assert.IsNotNull(EventSystem.current,
-                $"({etiquetteBranche}) aucun EventSystem.current — AppShell.EnsureEventSystem() doit avoir tourné.");
-            Assert.IsTrue(ProductionClickSupport.HasActiveInputModule(EventSystem.current, out string diagnosticModuleSortie),
-                $"({etiquetteBranche}) EventSystem.current n'a AUCUN module d'entrée actif " +
-                $"({diagnosticModuleSortie}) — EventSystem.RaycastAll (juste en dessous) ne le voit " +
-                "JAMAIS, donc cette garde de collision resterait VERTE même si AUCUN tap ne pouvait " +
-                "jamais être dispatché en production (round 7, BLOQUANT 1, sur le site jumeau).");
-
-            var rectTete = (RectTransform)boutonTeteT;
-            Vector2 centreTete = RectTransformUtility.WorldToScreenPoint(
-                null, rectTete.TransformPoint(rectTete.rect.center));
-            var donneesTete = new PointerEventData(EventSystem.current) { position = centreTete };
-            var resultatsTete = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(donneesTete, resultatsTete);
-
-            Assert.IsTrue(resultatsTete.Count > 0,
-                $"({etiquetteBranche}) un raycast au centre de l'action de tête ({centreTete}) ne " +
-                "touche RIEN : la sortie est invisible au hit-testing, donc INATTEIGNABLE au doigt " +
-                "même si son Button est interactable.");
-            GameObject touche = resultatsTete[0].gameObject;
-            Assert.IsTrue(touche == boutonTeteT.gameObject || touche.transform.IsChildOf(boutonTeteT),
-                $"({etiquetteBranche}) le PREMIER objet touché au centre de l'action de tête doit " +
-                $"être l'affordance elle-même (ou un de ses enfants graphiques) — trouvé " +
-                $"« {touche.name} » — quel qu'il soit, IL avale le tap de sortie et le joueur reste " +
-                "enfermé sur l'Accueil : la fermeture ne serait plus prouvée que par un clic routé " +
-                "en direct, qu'aucun doigt ne peut reproduire.\n" +
-                "DEUX avaleurs sont possibles et le contrôle négatif du round 8 a rencontré le " +
-                "SECOND, pas celui qu'on attendait : (a) `DashboardBackdrop`, le fond plein écran " +
-                "de l'overlay — c'est l'ordre de fratrie (ContentSlot < TopBarSlot) qui l'écarte ; " +
-                "(b) `TopBarSlot` LUI-MÊME, dont l'Image transparente est raycastable et couvre " +
-                "toute la barre — c'est le `raycastTarget` de l'affordance qui la fait gagner. " +
-                "Armer le (b) rend bien ce message avec « TopBarSlot ». Ne pas conclure du nom " +
-                "trouvé à la cause : les deux mondes produisent le même symptôme.");
-
-            // ⛔⛔ ruling user 2026-08-27 (MAJEUR 4 débloqué, scope borné à CETTE affordance de
-            // SORTIE) — LA GARDE PASSE DU POINT À L'AIRE. Un raycast au CENTRE (ci-dessus) reste
-            // vrai quand les BORDS de la zone tactile sont avalés — c'est très exactement ce que
-            // round 9 a nommé MAJEUR 4 : une garde qui prouve qu'un point mathématique atteint
-            // l'affordance ne prouve jamais qu'un DOIGT (qui a une AIRE, pas un point) l'atteint.
-            // Une garde qui vérifierait seulement que la zone tactile est DÉCLARÉE à ≥48 (un
-            // paramètre) serait une garde sur le PARAMÈTRE, pas sur l'EFFET — socle CLAUDE.md,
-            // « une garde sur les paramètres d'un effet n'est pas une garde sur son effet ».
-            // ⇒ Deux assertions, jamais une seule : (a) la GRANDEUR — la zone tactile mesure ≥48
-            // UNITÉS DE MAQUETTE sur les DEUX axes, lue sur `rectTete.rect` LUI-MÊME (jamais un
-            // pixel d'écran) : ce sous-arbre vit ENTIÈREMENT en coordonnées de maquette
-            // (`EchelleMaquette.LargeurHudBrennar = 392f`), un SEUL `localScale` le porte à
-            // l'écran — dans `AppShell.BuildLayout()`, l'affectation `echelleRt.localScale = new
-            // Vector3(k, k, 1f);` ; (b) l'EFFET — un raycast à CHACUN des 4 coins de cette zone
-            // (retrait d'1 unité LOCALE pour ne jamais tomber pile sur la frontière) doit atterrir
-            // sur l'affordance elle-même ou un de ses enfants — EXACTEMENT la même tolérance
-            // `IsChildOf` que le centre ci-dessus.
-            //
-            // ⚠️⚠️ CORRIGÉ round 11 (revue ⊥, MAJEUR 1) — « (a) » ci-dessus écrivait « ≥48 dp … DANS
-            // LE REPÈRE DE LA MAQUETTE », une contradiction dans les termes : `rect.width`/`height`
-            // sont des UNITÉS DE MAQUETTE, JAMAIS des dp — elles ne le deviennent qu'après
-            // multiplication par (largeurÉcranDp / 392), ET `rect.width` NE PEUT PAS varier avec la
-            // résolution de test puisque `echelleRt` a une largeur locale FIXE de 392 (c'est le
-            // localScale, pas le rect local, qui absorbe la largeur réelle de l'écran) — aucune
-            // résolution de Game View ne peut donc faire rougir un seuil exprimé en dp ici, ce que
-            // la revue a nommé « aggravant ». La conversion est ALGÉBRIQUE (même idiome que
-            // `ChromeMultiResolutionPlayModeTests.cs` : invariants dérivés du modèle du
-            // `CanvasScaler`, jamais un re-rendu Play Mode par résolution — cette API interne est
-            // délibérément non commitée comme mécanisme de test permanent).
-            Assert.GreaterOrEqual(rectTete.rect.width, 48f,
-                $"({etiquetteBranche}) la zone tactile de l'action de tête doit mesurer ≥48 UNITÉS " +
-                $"DE MAQUETTE de large — trouvé {rectTete.rect.width}.");
-            Assert.GreaterOrEqual(rectTete.rect.height, 48f,
-                $"({etiquetteBranche}) la zone tactile de l'action de tête doit mesurer ≥48 UNITÉS " +
-                $"DE MAQUETTE de haut — trouvé {rectTete.rect.height}.");
-
-            // ⚠️⚠️ CORRIGÉ round 13 (revue ⊥, MAJEUR 2) — closure PARTIELLE, et le journal explique
-            // pourquoi (§ MAJEUR 2, « ce qui n'a pas pu être fermé »). Le correctif PRESCRIT
-            // (mesurer via `GetWorldCorners` → `WorldToScreenPoint` → fraction de `Screen.width`) a
-            // été ÉCRIT, EXÉCUTÉ, et a mis au jour une DIVERGENCE non liée à ce lot — hors périmètre
-            // 0.2/0.3/0.3-bis, consignée séparément, PAS devinée ni corrigée ici. Ce qui EST fermé,
-            // et c'est le cœur du MAJEUR 2 : la PRÉMISSE qui fait de « 44,1 dp » un fait physique
-            // (le nœud `TopBarEchelle` existe et porte la largeur locale attendue) est désormais
-            // ASSERTÉE — round 11 ne l'assertait nulle part.
+            // Les gardes d'ÉCHELLE du bandeau (rounds 13-16) — inchangées, voir leur historique dans le contrôle positif plus bas.
             Transform echelleT = shell.TopBarSlot.Find("TopBarEchelle");
             Assert.IsNotNull(echelleT,
                 $"({etiquetteBranche}) `TopBarEchelle` doit exister sous `TopBarSlot` — c'est le " +
-                "SEUL nœud qui porte le `localScale` reliant les unités de maquette à l'écran ; " +
-                "sans lui, « dp physiques » ne décrit RIEN de physique.");
+                "SEUL nœud qui porte le `localScale` reliant les unités de maquette à l'écran.");
             var echelleRect = (RectTransform)echelleT;
             float largeurMaquetteAttendue =
                 ProductionClickSupport.GetPrivateConstFloat(typeof(AppShell), "TopBarLargeurCss");
             Assert.AreEqual(largeurMaquetteAttendue, echelleRect.sizeDelta.x, 0.01f,
                 $"({etiquetteBranche}) `TopBarEchelle.sizeDelta.x` doit valoir `AppShell." +
-                $"TopBarLargeurCss` ({largeurMaquetteAttendue}) — c'est CETTE largeur locale FIXE " +
-                "qui fait que `rect.width` du bouton de tête est une unité de MAQUETTE, jamais une " +
-                "unité d'écran.");
-            // ⛔⛔ CORRIGÉ round 15 (revue ⊥ round 14, BLOQUANT) — `Assert.Greater(…, 0f)` (round
-            // 13) durcissait sur le SIGNE là où le défaut vivait dans la MAGNITUDE : la valeur
-            // FAUTIVE mesurée en production ce jour-là (`Screen.width/392 = 1,632653`) est
-            // STRICTEMENT POSITIVE — l'assertion serait restée VERTE à travers l'événement exact
-            // qu'elle prétendait détecter (socle CLAUDE.md, « l'aiguille inversée »). La MAGNITUDE
-            // attendue est `ReferenceResolutionWidth / TopBarLargeurCss`, lue PAR RÉFLEXION sur
-            // `AppShell` (jamais recopiée — un renommage doit rougir ce test, pas le rendre
-            // silencieusement inerte). Contrôle positif : `TopBarEchelle_LocalScaleMagnitude_
-            // PositiveControl_WrongFactorIsDetected`, plus bas dans ce fichier.
+                $"TopBarLargeurCss` ({largeurMaquetteAttendue}).");
             float referenceResolutionWidthAttendue =
                 ProductionClickSupport.GetPrivateConstFloat(typeof(AppShell), "ReferenceResolutionWidth");
             float facteurEchelleAttendu = referenceResolutionWidthAttendue / largeurMaquetteAttendue;
@@ -749,106 +634,31 @@ namespace MafiaCleanCity.Shell.Tests
                 $"({etiquetteBranche}) `TopBarEchelle.localScale.x` doit valoir `AppShell." +
                 $"ReferenceResolutionWidth / AppShell.TopBarLargeurCss` = {facteurEchelleAttendu:F6} " +
                 $"— trouvé {echelleRect.localScale.x:F6}. Une valeur proche de `Screen.width/392` " +
-                "(round 14 en a mesuré 1,632653 à `Screen.width=640`) signale que `AppShell.Px()` a " +
-                "de nouveau lu la géométrie du Canvas au lieu de la constante de référence.");
-
-            // MAJEUR 2 (revue ⊥ round 16, classe PREUVE) — `Px()` (round 15) ne LIT plus la largeur
-            // du Canvas, elle la SUPPOSE égale à `ReferenceResolutionWidth` (vrai sous
-            // `ScaleWithScreenSize` + `matchWidthOrHeight=0`, mesuré une fois au DIAG round 13, mais
-            // jamais assertée sur le VRAI canvas du shell). `ChromeMultiResolutionPlayModeTests` ne
-            // couvre pas cette hypothèse : c'est de l'algèbre pure sur la constante elle-même, elle
-            // ne construit aucun shell. Remède à 2 lignes, sur le shell VIVANT déjà tenu ici :
+                "signale que `AppShell.Px()` a de nouveau lu la géométrie du Canvas au lieu de la constante de référence.");
             Assert.AreEqual(referenceResolutionWidthAttendue,
                 ((RectTransform)shell.ShellCanvas.transform).rect.width, 0.01f,
                 $"({etiquetteBranche}) le Canvas RÉEL du shell doit avoir une largeur locale == " +
-                $"`AppShell.ReferenceResolutionWidth` ({referenceResolutionWidthAttendue}) — sinon " +
-                "l'hypothèse que `Px()` fait désormais (au lieu de la LIRE) est fausse pour CE canvas, " +
-                "et tout le chrome bâti dessus est faux sans qu'aucune garde de magnitude ci-dessus ne " +
-                "le voie (elles comparent `localScale` à un rapport de CONSTANTES, jamais au canvas).");
+                $"`AppShell.ReferenceResolutionWidth` ({referenceResolutionWidthAttendue}).");
 
-            // ⛔⛔ CORRIGÉ round 15 (revue ⊥ round 14, BLOQUANT 1 + finding « le message livré à
-            // l'user est FAUX sur l'appareil »). Round 11 conservait ici une conversion ALGÉBRIQUE
-            // pure (`rectTete.rect.width × 360/392`, JAMAIS un pixel rendu) — round 13 avait tenté
-            // la mesure RÉELLE prescrite par round 12 (`GetWorldCorners` → `WorldToScreenPoint`), l'a
-            // trouvée EN DÉSACCORD avec l'algèbre (22,0 dp mesuré contre 44,1 dp algébrique) et a
-            // RESTAURÉ l'algèbre en attendant qu'un ⊥ frais tranche la divergence — CE round 14/15
-            // vient de le faire : la divergence était `AppShell.Px()` lisant `Screen.width` au lieu
-            // de `ReferenceResolutionWidth` (BLOQUANT ci-dessus, corrigé). L'algèbre ne mesurait
-            // qu'un PARAMÈTRE (`rectTete.rect.width`, une constante de maquette que `k` ne touche
-            // JAMAIS) — pas l'EFFET rendu (socle CLAUDE.md, « une garde sur les PARAMÈTRES d'un
-            // effet n'est pas une garde sur son EFFET ») ; c'est ce qui la rendait VRAIE EN THÉORIE
-            // et FAUSSE SUR L'APPAREIL tant que `k` restait cuit sur `Screen.width`.
-            // ⇒ La mesure RÉELLE round 12 est donc RESTAURÉE ici — et elle est désormais SÛRE :
-            // `k` n'étant plus lu sur le rect du Canvas, elle ne peut plus diverger de l'algèbre.
-            // Prédiction, vérifiée par le run de ce round (§ notes) : à `Screen.width=640`
-            // (batchmode), `48 × k_juste(3,265306) × scaleFactor(0,5) = 78,367 px` ⇒
-            // `78,367/640 × 360 = 44,08 dp` — CONVERGE avec l'algèbre round 11, et le calcul montre
-            // que cette convergence tient à N'IMPORTE QUEL `Screen.width` (le facteur s'annule :
-            // `k_juste × (Screen.width/1280) / Screen.width` ne dépend plus de `Screen.width`) —
-            // contrairement à AVANT ce round, où seule la coïncidence `Screen.width=1280` aurait
-            // fait converger les deux méthodes.
-            const float LargeurEcranDpModale = 360f; // la plus étroite couramment supportée
-            var coinsMondeTete = new Vector3[4];
-            rectTete.GetWorldCorners(coinsMondeTete); // [0]=bas-gauche, [2]=haut-droit (Unity, sens horaire)
-            Vector2 basGaucheEcranTete = RectTransformUtility.WorldToScreenPoint(null, coinsMondeTete[0]);
-            Vector2 hautDroitEcranTete = RectTransformUtility.WorldToScreenPoint(null, coinsMondeTete[2]);
-            float largeurEcranPxTete = Mathf.Abs(hautDroitEcranTete.x - basGaucheEcranTete.x);
-            float hauteurEcranPxTete = Mathf.Abs(hautDroitEcranTete.y - basGaucheEcranTete.y);
-            float dpLargeurModale = (largeurEcranPxTete / Screen.width) * LargeurEcranDpModale;
-            float dpHauteurModale = (hauteurEcranPxTete / Screen.width) * LargeurEcranDpModale;
-            Assert.AreEqual(44.1f, dpLargeurModale, 0.5f,
-                $"({etiquetteBranche}) ÉCART CONNU, REMONTÉ — à 360 dp de large (largeur modale " +
-                $"Android), la zone tactile RENDUE (mesurée via GetWorldCorners/WorldToScreenPoint, " +
-                $"pas une algèbre sur un paramètre) ne mesure QUE {dpLargeurModale:F1} dp physiques " +
-                "(sous le seuil de 48). Cette assertion épingle la valeur RÉELLEMENT RENDUE : si " +
-                "elle s'écarte de 44,1±0,5, la géométrie a changé — soit l'arbitrage user (grandir " +
-                "la zone) a été rendu (corriger cette assertion), soit `AppShell.Px()` a régressé " +
-                "vers le défaut round 14 (NE PAS corriger cette assertion — corriger `Px()`).");
-            Assert.AreEqual(44.1f, dpHauteurModale, 0.5f,
-                $"({etiquetteBranche}) même écart connu, sur la hauteur, MESURÉ (pas algébrique) — trouvé {dpHauteurModale:F1} dp.");
-
-            var coinsLocauxTete = new[]
-            {
-                new Vector2(rectTete.rect.xMin + 1f, rectTete.rect.yMin + 1f),
-                new Vector2(rectTete.rect.xMax - 1f, rectTete.rect.yMin + 1f),
-                new Vector2(rectTete.rect.xMin + 1f, rectTete.rect.yMax - 1f),
-                new Vector2(rectTete.rect.xMax - 1f, rectTete.rect.yMax - 1f),
-            };
-            foreach (Vector2 coinLocal in coinsLocauxTete)
-            {
-                Vector2 coinEcran = RectTransformUtility.WorldToScreenPoint(null, rectTete.TransformPoint(coinLocal));
-                var donneesCoin = new PointerEventData(EventSystem.current) { position = coinEcran };
-                var resultatsCoin = new List<RaycastResult>();
-                EventSystem.current.RaycastAll(donneesCoin, resultatsCoin);
-                Assert.IsTrue(resultatsCoin.Count > 0,
-                    $"({etiquetteBranche}) un raycast au coin {coinLocal} (local) de la zone tactile " +
-                    $"de l'action de tête (écran {coinEcran}) ne touche RIEN — les BORDS de la zone " +
-                    "sont avalés même si son CENTRE est atteignable.");
-                GameObject toucheCoin = resultatsCoin[0].gameObject;
-                Assert.IsTrue(toucheCoin == boutonTeteT.gameObject || toucheCoin.transform.IsChildOf(boutonTeteT),
-                    $"({etiquetteBranche}) le coin {coinLocal} (local) de la zone tactile doit " +
-                    $"atteindre l'affordance elle-même (ou un de ses enfants graphiques) — trouvé " +
-                    $"« {toucheCoin.name} ». Un coin avalé est un doigt qui rate la cible alors " +
-                    "qu'un raycast au centre seul la certifierait quand même.");
-            }
-
-            // ⛔ LE GESTE DE PRODUCTION — jamais `shell.ExitToCityMap()` ni `.onClick.Invoke()` nu.
-            ProductionClickSupport.Click(boutonTete);
+            // (b) LE GESTE — le retour du système, tel que `AppShell.Update` le déclenche sur `Escape` (le retour d'Android).
+            Assert.AreEqual("surimpression", shell.Depiler(),
+                $"({etiquetteBranche}) le premier retour dépile l'overlay Accueil");
             yield return null; // laisse le Object.Destroy déféré de UnmountCurrentTenant s'exécuter
 
             DashboardController overlayApres = shell.ContentSlot.GetComponentInChildren<DashboardController>(true);
             Assert.IsNull(overlayApres,
-                $"({etiquetteBranche}) après le clic RÉEL sur l'action de tête, l'overlay Accueil ne " +
+                $"({etiquetteBranche}) après le retour, l'overlay Accueil ne " +
                 "doit PLUS être sous ContentSlot (includeInactive:true — une survivance seulement " +
                 "DÉSACTIVÉE compterait encore comme un défaut de démontage, pas comme une réussite).");
             Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType,
-                $"({etiquetteBranche}) après le clic RÉEL sur l'action de tête, la carte doit être le locataire d'onglet monté");
+                $"({etiquetteBranche}) après le retour, la carte doit être le locataire d'onglet monté");
             Assert.IsNotNull(shell.MountedTenantGameObject, $"un GameObject de locataire doit exister ({etiquetteBranche})");
             Assert.IsTrue(shell.MountedTenantGameObject.transform.IsChildOf(shell.ContentSlot),
                 $"({etiquetteBranche}) le locataire remonté doit être un descendant de ContentSlot — confinement, pas juste 'existe quelque part'.");
+            Assert.AreEqual("racine", shell.Depiler(), $"({etiquetteBranche}) sur la carte, le retour ne fait plus rien");
 
-            Debug.Log($"[Charpente] F-B (round 7, {etiquetteBranche}) — le clic RÉEL sur l'action de " +
-                      "tête ('←') ferme l'overlay Accueil et révèle CityMapController.");
+            Debug.Log($"[Charpente] F-B ({etiquetteBranche}) — le retour du système ferme l'overlay Accueil et révèle CityMapController ; " +
+                      "aucune flèche n'est posée (§C.14).");
         }
 
         // ══════════════════════════════════════════════════════════════════════════════════════
@@ -883,7 +693,7 @@ namespace MafiaCleanCity.Shell.Tests
                 "PRÉCONDITION du contrôle : le facteur fautif round 14 (1,632653) et le facteur " +
                 "juste (3,265306) doivent différer largement — sinon ce contrôle ne prouve rien.");
 
-            // La même assertion que `VerifierFermetureParActionDeTete`, appliquée à la valeur
+            // La même assertion que `VerifierFermetureParLeRetour`, appliquée à la valeur
             // FAUTIVE : DOIT rougir (donc on l'enveloppe et on vérifie qu'elle lève).
             Assert.Throws<AssertionException>(() =>
                 Assert.AreEqual(facteurAttendu, facteurFautifMesureRound14, 0.001f),

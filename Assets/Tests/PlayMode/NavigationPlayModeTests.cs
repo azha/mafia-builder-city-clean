@@ -181,16 +181,18 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(testDistrictId, entered.LastFetch.district_id,
                 "nav-F1 — LastFetch.district_id == le district SÉLECTIONNÉ, pas un défaut");
             Assert.AreEqual(testDistrictId, shell.CityTabDistrictId, "AppShell tracks the entered district id");
-            Assert.AreEqual(TopBarController.LeadingAction.BackToMap, shell.TopBar.CurrentLeadingAction,
-                "§3.3 — entering a district wires the leading action to BackToMap");
+            Assert.AreEqual(TopBarController.LeadingAction.None, shell.TopBar.CurrentLeadingAction,
+                "ARBITRAGES-user-2026-09-07 §C.14 — plus de flèche dans le bandeau en district (on revient par l'onglet actif ou le retour du système)");
         }
 
         // ── nav-F2 — retour DÉTRUIT l'écran ────────────────────────────────────────────────
         // Monde dégénéré tué : un écran caché satisferait « la carte est là » ⇒ tué par
         // l'assertion de DESTRUCTION (== null, pas activeSelf==false) (§8).
+        // AMENDÉ (ARBITRAGES-user-2026-09-07 §C.14, passe UX du 2026-09-24) : la flèche « ← » du bandeau est RETIRÉE ; le retour
+        // passe par l'onglet ACTIF du dock (l'Empire, signalé dans un district). Même assertion de destruction, autre geste.
 
         [UnityTest]
-        public IEnumerator NavF2_BackToMap_DestroysDistrictHost_RemountsCityMap()
+        public IEnumerator NavF2_ToucherLEmpire_DetruitLeDistrict_RemonteLaCarte()
         {
             shellGo = new GameObject("AppShell");
             shell = shellGo.AddComponent<AppShell>();
@@ -200,17 +202,18 @@ namespace MafiaCleanCity.Shell.Tests
             GameObject previousDistrictHost = entered.gameObject;
 
             Transform backBtnT = LeadingButtonTransform(shell);
-            Assert.IsNotNull(backBtnT, "'← Carte' exists in the TopBar");
-            Button backBtn = backBtnT.GetComponent<Button>();
-            Assert.IsTrue(backBtnT.gameObject.activeSelf, "leading button is VISIBLE while in a district");
+            Assert.IsNotNull(backBtnT, "le bouton de tête existe toujours dans le TopBar (seule sa visibilité change)");
+            Assert.IsFalse(backBtnT.gameObject.activeSelf, "§C.14 — la flèche n'est PAS montrée dans un district");
 
+            Transform empireT = shell.TabBarRoot.Find("Tab_Empire");
+            Assert.IsNotNull(empireT, "Tab_Empire existe dans le dock");
             // round 4 (revue ⊥, BLOQUANT) — same fix as the "Entrer" site above: go through the
             // EventSystem so Button.Press()'s IsActive()/IsInteractable() gates are honored.
-            ProductionClickSupport.Click(backBtn); // the REAL click path
+            ProductionClickSupport.Click(empireT.GetComponent<Button>()); // the REAL click path
             yield return null;
             yield return null; // let Object.Destroy's deferred destruction actually process
 
-            Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType, "'← Carte' remounts CityMapController");
+            Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType, "toucher l'Empire remonte CityMapController");
             Assert.IsTrue(previousDistrictHost == null,
                 "nav-F2 — the PREVIOUS district host is Unity-DESTROYED (== null), never merely activeSelf==false");
             Assert.AreEqual(-1, shell.CityTabDistrictId, "back to the map — the named -1 state");

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -77,7 +78,7 @@ namespace MafiaCleanCity.Shell
     // jamais sur un joueur qui a déjà navigué ailleurs). Toujours PAS un onglet du dock. CORRIGÉ
     // (item 0.5 §2, C2) — l'énoncé précédent disait que son propre écran (les 4 panneaux orphelins)
     // restait ENTIÈREMENT hors périmètre : FAUX depuis ce chunk — voir `MonterPanneauxAccueil`.
-    public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator, IOuvreurDeFicheOperationnelle, IFermetureDuCoffre
+    public class AppShell : MonoBehaviour, IShellSessionSink, IShellNavigator, IOuvreurDeFicheOperationnelle, IFermetureDuCoffre, IEntreeDeDistrict, IRetourDuShell
     {
         public enum Tab { Empire, Org, Pipeline, More }
 
@@ -229,6 +230,7 @@ namespace MafiaCleanCity.Shell
         {
             EnsureInitialized();
             UnmountCurrentTenant();
+            PoserLaRacine(() => ActivateTab(tab));
             CurrentTab = tab;
             ongletSignale = tab;
             // ⚠️ PLUS AUCUNE destination vide : `Tab.More` monte ㊲ (La réputation) depuis ce
@@ -300,6 +302,10 @@ namespace MafiaCleanCity.Shell
         /// the design's own EnterDistrict(int) signature carries no token parameter and never says
         /// where one comes from; reading it off the outgoing tenant before destroying it is the
         /// only source available in this architecture at chunk 2 (Deviation, consigned).</summary>
+        /// <summary>G4 (passe UX, 2026-09-24) — `IEntreeDeDistrict` : le MÊME geste qu'« Entrer » depuis l'onglet Empire, pour ③ monté
+        /// en surimpression par l'Accueil.</summary>
+        public void EntrerDansLeDistrict(int districtId) => EnterDistrict(districtId);
+
         public void EnterDistrict(int districtId)
         {
             // MESURÉ 2026-08-21 : ce jeton était pris UNIQUEMENT sur le locataire carte — donc
@@ -357,6 +363,7 @@ namespace MafiaCleanCity.Shell
             //    sur `Expected: 16 · But was: -1`.
             UneSurimpressionAEteMontee = true;
             SurimpressionsMontees++;
+            PoserLaRacine(() => EnterDistrict(districtId));   // APRÈS la déclaration au sentinelle : le district est une RACINE, pas une surimpression (Depiler)
             DistrictInteriorScreenController tenant = ConstruireLocataire<DistrictInteriorScreenController>(out GameObject host);
             MountedTenantGameObject = host;
             MountedTenantType = typeof(DistrictInteriorScreenController);
@@ -376,7 +383,7 @@ namespace MafiaCleanCity.Shell
             float topInset = topSafeInset + TopBarSlot.rect.height + TopBar.EffectiveBottomOverhangPx;
             float bottomInset = bottomSafeInset + TabBarRoot.rect.height;
             tenant.SetSafeInsets(topInset, bottomInset); // §3.4
-            TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
+            // ARBITRAGES-user-2026-09-07 §C.14 (appliqué le 24/09) : plus de flèche dans le bandeau — on revient par l'onglet actif ou par Depiler().
             StartCoroutine(EnterDistrictSequence(tenant, token, districtId));
         }
 
@@ -415,6 +422,106 @@ namespace MafiaCleanCity.Shell
         /// items 0.2/0.3) : no special branch, the ordinary remount path resets CityTabDistrictId
         /// to -1 and clears the leading action.</summary>
         public void ExitToCityMap() => ActivateTab(Tab.Empire);
+
+        // ─────────────────────────── « Revenir » en série 6 (ARBITRAGES-user-2026-09-07 §C.14, appliqué le 2026-09-24)
+        // La flèche est RETIRÉE du bandeau (« pas de domicile en série 6 » ; l'ARGENT revient au bord, `RepositionMoneyCluster`).
+        // Le « revenir » vit dans DEUX gestes, sans chrome ni mot :
+        //   (1) toucher l'onglet ACTIF du dock ramène à sa racine — déjà vrai : chaque bouton d'onglet appelle `ActivateTab`, qui démonte
+        //       tout (district, surimpressions, fiche) et remonte la racine ; dans un district, l'onglet signalé est l'Empire (la carte) ;
+        //   (2) le retour du SYSTÈME (Android ; `Escape` dans l'éditeur) DÉPILE, un niveau par appui, dans cet ordre :
+        //       surimpression → la RACINE du contexte, remontée par le geste qui l'avait montée (l'onglet, le district, ou l'entrée du
+        //       menu Plus ; l'Accueil se ferme donc sur la carte) ; fiche du district → fermée ; district → la carte ; entrée du menu
+        //       Plus → le menu ; racine d'un autre onglet → la carte. Sur la carte : rien (`racine`).
+        //   ⇒ Depuis tout écran monté par le shell, des appuis successifs mènent à la carte (garde `RetourSerie6PlayModeTests`).
+        // ⚠️ Limites dites : (a) les surimpressions IMBRIQUÉES (Conflit › Recruter ouvre la Famille) se dépilent ENSEMBLE vers la
+        //    racine — le contenu d'une surimpression est bâti dans `ContentSlot` au `Start()` suivant, mêlé à celui de la racine ; un
+        //    dépilage fin exigerait que chaque locataire range son contenu sous son hôte ; (b) la racine est REMONTÉE, pas conservée :
+        //    un district re-demande son intérieur, un écran du menu recharge.
+
+        /// <summary>Le compteur de surimpressions au dernier montage de RACINE : au-delà, une surimpression est ouverte.</summary>
+        private int surimpressionsALaRacine;
+        /// <summary>Le geste qui a monté la racine courante (onglet, district, entrée du menu Plus) — rejoué pour dépiler une surimpression.</summary>
+        private System.Action remonterLaRacine;
+
+        /// <summary>Vrai si une surimpression est ouverte au-dessus de la racine courante.</summary>
+        public bool SurimpressionOuverte => SurimpressionsMontees > surimpressionsALaRacine;
+
+        /// <summary>Appelé par CHAQUE montage de racine (`ActivateTab`, `EnterDistrict`, `MonterUneEntreeDuMenu`), après son propre
+        /// compte de surimpressions : ce qui se monte ensuite par `MonterLocataireEnSurimpression` est au-dessus d'elle.</summary>
+        private void PoserLaRacine(System.Action remonter)
+        {
+            surimpressionsALaRacine = SurimpressionsMontees;
+            remonterLaRacine = remonter;
+        }
+
+        /// <summary>Une entrée du menu Plus devient la racine du contexte (le menu la remplace, elle ne s'y superpose pas).</summary>
+        private void MonterUneEntreeDuMenu(System.Action monter)
+        {
+            monter();
+            PoserLaRacine(() => MonterUneEntreeDuMenu(monter));
+        }
+
+        /// <summary>G1 (2026-09-26, maquette PROPOSÉE atelier 7380e10, cadres 0-1) — le geste d'une bulle du dock. L'Accueil n'était
+        /// montré qu'UNE fois (à l'ouverture de session) ; sur la carte, sans rien par-dessus, toucher EMPIRE (l'onglet actif) le
+        /// ROUVRE en surimpression. Partout ailleurs, la bulle remonte sa racine (`ActivateTab`, geste (1)). Le retour du système
+        /// referme l'Accueil sur la carte (geste (2), déjà codé).
+        /// ⚠️ Décidé (reco, 26/09) : le geste vit sur la BULLE, pas dans `ActivateTab` — sinon les remontées internes (retour du
+        ///    système, sortie de district, remontée d'une racine) rouvriraient l'Accueil à chaque passage sur la carte.</summary>
+        public void ToucherLOnglet(Tab tab)
+        {
+            if (tab == Tab.Empire && SurLaCarteSansRienDessus) { RouvrirLAccueil(); return; }
+            ActivateTab(tab);
+        }
+
+        /// <summary>La carte, racine d'Empire, sans district, sans surimpression, coffre ouvert.</summary>
+        public bool SurLaCarteSansRienDessus =>
+            !CoffreFermeAffiche && CurrentTab == Tab.Empire && MountedTenantType == typeof(CityMapController)
+            && CityTabDistrictId == -1 && !SurimpressionOuverte;
+
+        private void RouvrirLAccueil()
+        {
+            MonterLocataireEnSurimpression<DashboardController>();
+            StartCoroutine(PanneauxDeLAccueilRouvert(MontagesEffectues));
+        }
+
+        /// <summary>Les quatre panneaux de l'Accueil, une frame APRÈS son fond (même marge et mêmes gardes que l'acquisition de session :
+        /// sinon `DashboardBackdrop`, bâti au `Start()` suivant, les recouvre) — nourris de la même réponse `session/open`.</summary>
+        private IEnumerator PanneauxDeLAccueilRouvert(int generation)
+        {
+            yield return null;
+            if (this == null) yield break;
+            if (MontagesEffectues != generation || !SurimpressionOuverte) yield break;   // le joueur est déjà parti : ne pas l'enterrer
+            MonterPanneauxAccueil(LastSessionOpen);
+        }
+
+        /// <summary>Geste (2) : dépile UN niveau. Rend ce qui a été dépilé — `surimpression`, `fiche`, `district`, `entree` (du menu
+        /// Plus), `onglet` — ou `racine` quand on est déjà sur la carte (et rien n'est fait).</summary>
+        public string Depiler()
+        {
+            EnsureInitialized();
+            if (CoffreFermeAffiche) return "racine";   // la barre d'onglets est éteinte : le seul geste est « Rouvrir le coffre »
+            DistrictInteriorScreenController district = MountedTenantType == typeof(DistrictInteriorScreenController) && MountedTenantGameObject != null
+                ? MountedTenantGameObject.GetComponent<DistrictInteriorScreenController>() : null;
+            if (SurimpressionOuverte)
+            {
+                if (remonterLaRacine != null) remonterLaRacine(); else ExitToCityMap();
+                return "surimpression";
+            }
+            if (district != null && district.FicheOuverte) { district.FermerFiche(); return "fiche"; }
+            if (district != null || CityTabDistrictId >= 0) { ExitToCityMap(); return "district"; }
+            if (CurrentTab == Tab.More && MountedTenantType != null) { ActivateTab(Tab.More); return "entree"; }   // le menu lui-même ne monte aucun locataire
+            // Sentinelle `(Tab)(-1)` : rien n'est encore activé (acquisition en cours) — le retour n'y monte rien, sinon il
+            // court-circuiterait la garde d'acquisition (l'Accueil ne se poserait plus).
+            if (CurrentTab != Tab.Empire && CurrentTab != (Tab)(-1)) { ExitToCityMap(); return "onglet"; }
+            return "racine";
+        }
+
+        private void Update()
+        {
+            // Le retour du système Android arrive en `Escape` (Input System) ; `Escape` au clavier dans l'éditeur.
+            var clavier = UnityEngine.InputSystem.Keyboard.current;
+            if (clavier != null && clavier.escapeKey.wasPressedThisFrame) Depiler();
+        }
 
         /// <summary>nav-hud-design-v1.md §6.1 — reçoit un jeton d'un locataire (DashboardController
         /// ou CityMapController) et ouvre la session côté shell si ce n'est pas déjà fait POUR CE
@@ -547,7 +654,7 @@ namespace MafiaCleanCity.Shell
                     // `TopBarController.LabelFor` (round 8) : la flèche rendue N'A PAS de texte de
                     // destination — la découvrabilité tient au fait que c'est le seul contrôle du
                     // coin gauche, pas à un mot affiché.
-                    TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
+                    // ARBITRAGES-user-2026-09-07 §C.14 (appliqué le 24/09) : plus de flèche dans le bandeau — on revient par l'onglet actif ou par Depiler().
                     // ITEM 0.5 §2 (C2) — CORRIGÉ (mesuré, pas supposé — garde de RAYCAST du
                     // C2_AccueilMonteLes4Panneaux..., rouge à sa première version) : `DashboardController.
                     // BuildLayout()` est différé d'une frame (`Start()`, IShellTenant) et parente SON
@@ -682,7 +789,7 @@ namespace MafiaCleanCity.Shell
                 // ROUND 7 (revue ⊥, BLOQUANT 2) — même geste, même ordre, même raison que la branche
                 // d'échec ci-dessus : `ActivateTab` a déjà remis l'action de tête à `None`, cette
                 // ligne vient donc APRÈS lui et après le montage de l'overlay.
-                TopBar.SetLeadingAction(TopBarController.LeadingAction.BackToMap, ExitToCityMap);
+                // ARBITRAGES-user-2026-09-07 §C.14 (appliqué le 24/09) : plus de flèche dans le bandeau — on revient par l'onglet actif ou par Depiler().
                 // ITEM 0.5 §2 (C2) — les 4 panneaux orphelins de l'Accueil, nourris de LA MÊME
                 // réponse `session/open` que ce shell vient d'obtenir (`dto`, peut être null si
                 // cette étape a échoué alors que le sign-in a réussi — `MonterPanneauxAccueil` gère
@@ -827,13 +934,13 @@ namespace MafiaCleanCity.Shell
         //   contrôle qui mord est un compte de contrôleurs DISTINCTS.
         private (string idStable, string libelle, System.Action monter)[] DestinationsPlus() => new (string, string, System.Action)[]
         {
-            ("la_reputation", "LA RÉPUTATION", () => MountTenant<ReputationScreenController>()),
+            ("la_reputation", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "La réputation"), () => MountTenant<ReputationScreenController>()),
             // ⑯ arrivée par `pilote-F`, qui la montait comme HANDLER de `Tab.More`. Ce contrat a
             // changé le 2026-09-02 (l'onglet est devenu un MENU) : elle descend donc d'un cran, en
             // ENTRÉE. Résoudre le conflit en gardant simplement le menu aurait supprimé en silence
             // le seul chemin joueur de cet écran — *un conflit se résout sur les deux INTENTIONS,
             // pas sur le côté le plus récent.*
-            ("la_revue_du_jour", "LA REVUE DU JOUR", () => MountTenant<DailyReviewScreenController>()),
+            ("la_revue_du_jour", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "La revue du jour"), () => MountTenant<DailyReviewScreenController>()),
 
             // ⛔⛔ LES NEUF SANS PORTE (chantier joignabilité, 2026-09-02). Mesuré sur la POPULATION
             // — les 22 `IShellTenant` du client, obtenus par réflexion, pas par une liste — puis
@@ -845,29 +952,26 @@ namespace MafiaCleanCity.Shell
             // invention — sauf deux, signalés plus bas. Littéraux et non traduits : ce dépôt n'a
             // AUCUN helper i18n (balayage : zéro `I18n.`/`Traduire`/`Localise` dans les écrans), et
             // en introduire un ici serait une décision d'architecture déguisée en ajout de menu.
-            ("la_vente", "LA VENTE", () => MountTenant<SellingScreenController>()),      // ㉟
-            ("la_vitrine", "LA VITRINE", () => MountTenant<ShopScreenController>()),         // ㉓
-            ("les_inspections", "LES INSPECTIONS", () => MountTenant<InspectionScreenController>()),   // ⑮
-            ("le_commissariat", "LE COMMISSARIAT", () => MountTenant<PrecinctScreenController>()),     // ⑰
-            ("la_semaine", "LA SEMAINE", () => MountTenant<CompressionScreenController>()),  // ⑭
-            ("le_dossier", "LE DOSSIER", () => MountTenant<ForensicScreenController>()),     // ㊴
+            ("la_vente", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "La vente"), () => MountTenant<SellingScreenController>()),      // ㉟
+            ("la_vitrine", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "La vitrine"), () => MountTenant<ShopScreenController>()),         // ㉓
+            ("les_inspections", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Les inspections"), () => MountTenant<InspectionScreenController>()),   // ⑮
+            ("le_commissariat", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Le commissariat"), () => MountTenant<PrecinctScreenController>()),     // ⑰
+            ("la_semaine", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "La semaine"), () => MountTenant<CompressionScreenController>()),  // ⑭
+            ("le_dossier", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Le dossier"), () => MountTenant<ForensicScreenController>()),     // ㊴
             // ⚠️ Libellé pris de la maquette ratifiée (cadres 125-130, « Le journal — ce qui se
             // dit ce matin ») et non inventé. « & LA RUE » parce que l'écran porte DEUX flux que
             // le joueur ne distingue pas par leur route : la une (`news/feed`) et les brèves de
             // la rue (`ambient/feed`). Un libellé « LE JOURNAL » seul cacherait la moitié.
-            ("le_journal_la_rue", "LE JOURNAL & LA RUE", () => MountTenant<JournalScreenController>()),      // ㊳
-            // ⚠️ ADDITIF, pas un remplacement. L'onglet « FILIÈRE » du dock monte toujours ⑪
-            // (`LaunderingController`, mono-nœud). ㊵ montre la filière ENTIÈRE et son état de
-            // cassure ; savoir lequel des deux mérite la bulle du dock est une décision de DOCK,
-            // pas un effet de bord d'un ajout de menu. Elle est CONSIGNÉE ici, pas prise.
-            ("la_filiere", "LA FILIÈRE", () => MountTenant<FiliereScreenController>()),      // ㊵
-            ("la_premiere_fois", "LA PREMIÈRE FOIS", () => MountTenant<TutorialScreenController>()),     // ㉕
+            ("le_journal_la_rue", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Le journal & la rue"), () => MountTenant<JournalScreenController>()),      // ㊳
+            // ⛔ « LA FILIÈRE » (㊵) SORT DU MENU (G5, 2026-09-26, maquette atelier 7380e10) : le dock la monte déjà (`Tab.Pipeline`,
+            //    ruling de f2 du 23/09) — deux portes pour un écran. Joignabilité inchangée : l'onglet reste son chemin.
+            ("la_premiere_fois", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "La première fois"), () => MountTenant<TutorialScreenController>()),     // ㉕
 
             // ⚠️ ㉒ — sa planche s'appelle `planche_le_coffre` et l'écran écrit « LE COFFRE » dans
             // son propre corps, MAIS `front.md` donne déjà ce nom à ⑪ Pipeline. Deux écrans pour un
             // nom : c'est une collision du CANON, pas un choix de menu, et je ne la tranche pas en
             // douce. Le menu dit donc « VOTRE PROFIL », sans ambiguïté ; l'arbitrage remonte.
-            ("votre_profil", "VOTRE PROFIL", () => MountTenant<ProfileScreenController>()),      // ㉒
+            ("votre_profil", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Votre profil"), () => MountTenant<ProfileScreenController>()),      // ㉒
 
             // ⑲ — ARRIVÉ SANS PORTE PAR `pilote-F`, ET C'EST LA GARDE QUI L'A DIT. Le matin même,
             // `SettingsScreenController` n'existait pas : je l'avais compté parmi les trois écrans
@@ -875,12 +979,12 @@ namespace MafiaCleanCity.Shell
             // `LocataireJoignabilitePlayModeTests` l'a immédiatement classé orphelin — le DIXIÈME,
             // exactement le cas pour lequel elle a été écrite. *Une garde de classe ne prouve sa
             // valeur qu'en attrapant le membre qu'on n'a pas vu arriver.*
-            ("les_reglages", "LES RÉGLAGES", () => MountTenant<SettingsScreenController>()),     // ⑲
+            ("les_reglages", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Les réglages"), () => MountTenant<SettingsScreenController>()),     // ⑲
 
             // ⚠️ ㊱ — sa liste est VIDE PAR CONSTRUCTION sur le compte de démo : TD-408 mesure
             // qu'au plus UNE carte peut être surfacée pour un joueur. Un écran vide ici n'est donc
             // pas un défaut de montage, et il ne faut pas partir le chercher comme tel.
-            ("l_horizon_des_possibles", "L'HORIZON DES POSSIBLES", () => MountTenant<HorizonScreenController>()),   // ㊱
+            ("l_horizon_des_possibles", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "L’horizon des possibles"), () => MountTenant<HorizonScreenController>()),   // ㊱
 
             // ㉜ — le tableau de service. Le libellé est le TITRE DE LA PLANCHE (m-75), pas le
             // nom de la classe : c'est l'état que le joueur vient consulter (« ce que vous avez
@@ -889,9 +993,9 @@ namespace MafiaCleanCity.Shell
             // ㉞ : les trois doivent en donner la MÊME lecture, sinon le joueur croit avoir trois
             // budgets. La source unique est `structural_budget` de `session/open`, que le shell
             // tient déjà (`LastSessionOpen`) ; aucun des trois ne rouvre de session pour le lire.
-            ("ce_que_vous_avez_confie", "CE QUE VOUS AVEZ CONFIÉ", () => MountTenant<DelegationScreenController>()), // ㉜
+            ("ce_que_vous_avez_confie", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Ce que vous avez confié"), () => MountTenant<DelegationScreenController>()), // ㉜
 
-            ("la_chaine_d_appro", "LA CHAÎNE D'APPRO", () => MountTenant<ChaineDApproScreenController>()), // ㉚
+            ("la_chaine_d_appro", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "La chaîne d’appro"), () => MountTenant<ChaineDApproScreenController>()), // ㉚
 
             // ㊳ — AJOUTÉE AU MERGE DU 2026-09-03 PAR LA GARDE, PAS PAR LECTURE. `pilote-B` a livré
             // `JournalScreenController` sans sa ligne ici : `LocataireJoignabilitePlayModeTests` l'a
@@ -911,18 +1015,18 @@ namespace MafiaCleanCity.Shell
             // ont été prises) : le libellé est le TITRE DU BANDEAU de la maquette de repos
             // (m-54, « L'envoi de ce soir » aurait été trop long pour une entrée de menu — REUSE
             // du nom court déjà porté par le brief et par `Tools/juge-visuel/ecran_distribution/`).
-            ("la_distribution", "LA DISTRIBUTION", () => MountTenant<DistributionScreenController>()), // ㉘
+            ("la_distribution", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "La distribution"), () => MountTenant<DistributionScreenController>()), // ㉘
 
             // ㉛ — « le parloir ». Libellé en CAPITALES, patron des entrées voisines (aucune
             // planche de menu ne nomme cet écran — même situation que ㉘, ajoutée le même jour).
-            ("la_loi", "LA LOI", () => MountTenant<LoiScreenController>()), // ㉛
+            ("la_loi", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "La loi"), () => MountTenant<LoiScreenController>()), // ㉛
 
             // ㉝ — raser un site. Deuxième des trois écrans qui partagent le jeton de structure,
             // et le seul qui le DÉPENSE de façon irréversible : une démolition ne se rejoue pas.
             // Mesuré le 2026-09-03 : après un `decommission` réussi, `structural_budget` passe à
             // `{used:1, cap_reached:true}` — donc ㉜ doit éteindre son geste dans la même session,
             // et il le fait, en lisant la même source (`JetonDeStructure`).
-            ("raser_un_site", "RASER UN SITE", () => MountTenant<DemolitionScreenController>()),           // ㉝
+            ("raser_un_site", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Raser un site"), () => MountTenant<DemolitionScreenController>()),           // ㉝
 
             // ㉞ — « les ordres du soir ». AJOUTÉE PAR LA GARDE, deuxième fois de la journée après
             // ㊳ : `pilote-B` a livré `CarnetScreenController` sans sa ligne ici, et
@@ -934,7 +1038,7 @@ namespace MafiaCleanCity.Shell
             // qu'il ne doit pas avoir de porte. Ce n'est pas le cas ici — il en aura une, autant
             // que ce soit maintenant. Un écran titré et vide est ce que ce régime livre déjà
             // (⑪ et ⑫ sont capturés sans données et consignés) ; un écran sans porte, non.
-            ("les_ordres_du_soir", "LES ORDRES DU SOIR", () => MountTenant<CarnetScreenController>()),         // ㉞
+            ("les_ordres_du_soir", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Les ordres du soir"), () => MountTenant<CarnetScreenController>()),         // ㉞
 
             // ㉞ — les ordres du soir. ⚠️ CET ÉCRAN N'EST PAS DE MOI : il est arrivé par `main`
             // (session B, à qui ㉞ a été réattribué) SANS entrée, et la garde de joignabilité l'a
@@ -946,7 +1050,7 @@ namespace MafiaCleanCity.Shell
 
             // ㉙ — « la table du fond », version 2 dite lisible. Même situation que ㉘/㉛ : aucune
             // planche de menu ne nomme cet écran, le libellé vient du chantier lui-même.
-            ("le_conflit", "LE CONFLIT", () => MountTenant<ConflitScreenController>()), // ㉙
+            ("le_conflit", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Le conflit"), () => MountTenant<ConflitScreenController>()), // ㉙
         };
 
         /// <summary>Monte le menu « Plus » : une entrée par destination, chacune montant son écran.
@@ -1035,33 +1139,103 @@ namespace MafiaCleanCity.Shell
             ContentSizeFitter ajuste = contenu.AddComponent<ContentSizeFitter>();
             ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            foreach ((string idStable, string libelle, System.Action monter) in DestinationsPlus())
+            // G5 (2026-09-26, maquette PROPOSÉE atelier 7380e10, `ecrans-brennar-navigation.html` cadre 2 ; clés de la table 60) —
+            // CINQ GROUPES TITRÉS, entrées sur DEUX colonnes (`.plus5`). Un groupe = son titre (`.grp5` : gras 6,6, .28em, capitales,
+            // laiton) puis des rangées de deux entrées (`.e5` : fond `#0c1320e6`, rayon 7, texte crème 8 à .08em, capitales) ; une
+            // entrée seule sur sa rangée prend toute la largeur (`flex:1 1 calc(50% - 4px)` qui passe à la ligne). Les capitales
+            // sont un STYLE : les valeurs servies sont en casse de phrase.
+            pile.padding = new RectOffset(Mathf.RoundToInt(Px(12f)), Mathf.RoundToInt(Px(12f)), 0, Mathf.RoundToInt(Px(6f)));
+            pile.spacing = Px(4f);
+            var parId = new Dictionary<string, (string libelle, System.Action monter)>();
+            foreach ((string idStable, string libelle, System.Action monter) in DestinationsPlus()) parId[idStable] = (libelle, monter);
+            foreach ((string idGroupe, string titre, string[] ids) in GroupesPlus())
             {
-                GameObject entree = new GameObject($"MenuPlus_{idStable}", typeof(RectTransform));
-                entree.transform.SetParent(contenu.transform, false);
-                Image fond = entree.AddComponent<Image>();
-                fond.color = DesignTokens.Current.surfaceRow;
-                AddLayoutElementLocal(entree, Px(TabDockLabelHeightCss) * 3f);
-                Button b = entree.AddComponent<Button>();
-                b.targetGraphic = fond;
-                System.Action geste = monter;   // capture par valeur : sinon les N entrées montent la DERNIÈRE
-                b.onClick.AddListener(() => geste());
+                GameObject titreGo = new GameObject($"MenuPlusGroupe_{idGroupe}", typeof(RectTransform));
+                titreGo.transform.SetParent(contenu.transform, false);
+                AddLayoutElementLocal(titreGo, Px(9f + 6.6f + 4f));   // `.grp5{margin:9px 2px 4px}` autour d'un corps de 6,6
+                TextMeshProUGUI tt = titreGo.AddComponent<TextMeshProUGUI>();
+                tt.font = DesignTokens.Current.primaryFont;
+                tt.text = titre;
+                tt.fontSize = Px(6.6f);
+                tt.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+                tt.characterSpacing = 28f;   // `.28em` (100 = 1 em)
+                tt.alignment = TextAlignmentOptions.BottomLeft;
+                tt.margin = new Vector4(Px(2f), 0f, Px(2f), Px(4f));
+                tt.color = DesignTokens.Current.hudHairlineGold;   // --laiton #b08d3e
+                tt.raycastTarget = false;
 
-                GameObject textGo = new GameObject("Libelle", typeof(RectTransform));
-                textGo.transform.SetParent(entree.transform, false);
-                TextMeshProUGUI txt = textGo.AddComponent<TextMeshProUGUI>();
-                txt.font = DesignTokens.Current.primaryFont;
-                txt.text = libelle;
-                txt.fontSize = Px(TabDockLabelSizeCss);
-                txt.alignment = TextAlignmentOptions.Center;
-                txt.color = DesignTokens.Current.hudCremeSecondary;
-                txt.raycastTarget = false;
-                RectTransform trt = (RectTransform)textGo.transform;
-                trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-                trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
-                MenuPlusEntrees++;
+                for (int i = 0; i < ids.Length; i += 2)
+                {
+                    GameObject rang = new GameObject("MenuPlusRang", typeof(RectTransform));
+                    rang.transform.SetParent(contenu.transform, false);
+                    HorizontalLayoutGroup h = rang.AddComponent<HorizontalLayoutGroup>();
+                    h.spacing = Px(4f);
+                    h.childControlWidth = true; h.childControlHeight = true;
+                    h.childForceExpandWidth = true; h.childForceExpandHeight = true;
+                    AddLayoutElementLocal(rang, Px(HauteurEntreePlusCss));
+                    for (int j = i; j < i + 2 && j < ids.Length; j++)
+                    {
+                        (string libelle, System.Action monter) = parId[ids[j]];
+                        ConstruireEntreeDuMenu(rang.transform, ids[j], libelle, monter);
+                    }
+                }
             }
         }
+
+        /// <summary>`.e5{padding:7px 6px;font:8px/1.2}` : 7 + 8 × 1,2 + 7 = 23,6 px CSS.</summary>
+        private const float HauteurEntreePlusCss = 23.6f;
+
+        private void ConstruireEntreeDuMenu(Transform rang, string idStable, string libelle, System.Action monter)
+        {
+            GameObject entree = new GameObject($"MenuPlus_{idStable}", typeof(RectTransform));
+            entree.transform.SetParent(rang, false);
+            Image fond = entree.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectMask(Mathf.RoundToInt(Px(7f)));   // `border-radius:7px`
+            fond.type = Image.Type.Sliced;
+            fond.color = DesignTokens.Current.ficheGlassTop;                        // `#0c1320e6`
+            LayoutElement le = entree.AddComponent<LayoutElement>();
+            le.flexibleWidth = 1f;
+            Button b = entree.AddComponent<Button>();
+            b.targetGraphic = fond;
+            System.Action geste = monter;   // capture par valeur : sinon les N entrées montent la DERNIÈRE
+            b.onClick.AddListener(() => MonterUneEntreeDuMenu(geste));
+
+            GameObject textGo = new GameObject("Libelle", typeof(RectTransform));
+            textGo.transform.SetParent(entree.transform, false);
+            TextMeshProUGUI txt = textGo.AddComponent<TextMeshProUGUI>();
+            txt.font = DesignTokens.Current.primaryFont;
+            txt.text = libelle;
+            txt.fontSize = Px(8f);
+            txt.fontStyle = FontStyles.UpperCase;   // capitales en STYLE — la valeur servie est en casse de phrase
+            txt.characterSpacing = 8f;              // `.08em`
+            txt.alignment = TextAlignmentOptions.Center;
+            txt.color = DesignTokens.Current.hudCreme;   // --creme #eae0c8
+            txt.raycastTarget = false;
+            RectTransform trt = (RectTransform)textGo.transform;
+            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+            trt.offsetMin = new Vector2(Px(6f), 0f); trt.offsetMax = new Vector2(-Px(6f), 0f);
+            MenuPlusEntrees++;
+        }
+
+        /// <summary>G5 — les cinq groupes du menu Plus (maquette atelier 7380e10, table 60), par `idStable` de `DestinationsPlus`.
+        /// Chaque entrée de la table est dans UN groupe exactement (garde `RetourSerie6.G5_*`).</summary>
+        private (string idGroupe, string titre, string[] ids)[] GroupesPlus() => new (string, string, string[])[]
+        {
+            ("vos_journees", MafiaCleanCity.I18n.Libelle.De("plus", "groupe", "Vos journées"),
+                new[] { "la_revue_du_jour", "les_ordres_du_soir", "ce_que_vous_avez_confie", "la_semaine" }),
+            ("vos_affaires", MafiaCleanCity.I18n.Libelle.De("plus", "groupe", "Vos affaires"),
+                new[] { "la_chaine_d_appro", "la_distribution", "la_vente", "raser_un_site" }),
+            ("ce_qui_se_dit", MafiaCleanCity.I18n.Libelle.De("plus", "groupe", "Ce qui se dit"),
+                new[] { "le_journal_la_rue", "la_reputation", "le_conflit" }),
+            ("ce_qui_vous_guette", MafiaCleanCity.I18n.Libelle.De("plus", "groupe", "Ce qui vous guette"),
+                new[] { "la_loi", "les_inspections", "le_commissariat", "le_dossier" }),
+            ("vous", MafiaCleanCity.I18n.Libelle.De("plus", "groupe", "Vous"),
+                new[] { "l_horizon_des_possibles", "votre_profil", "la_vitrine", "la_premiere_fois", "les_reglages" }),
+        };
+
+        /// <summary>Crochet de test (G5) : les `idStable` des groupes, dans l'ordre, et ceux de la table des destinations.</summary>
+        public (string[] groupes, string[] destinations) IdsDuMenuPlusPourTest() =>
+            (GroupesPlus().SelectMany(g => g.ids).ToArray(), DestinationsPlus().Select(d => d.idStable).ToArray());
 
         /// <summary>Nombre d'entrées réellement construites au dernier montage du menu « Plus ».
         /// Crochet de test : une garde qui ne lit que « le menu existe » resterait verte sur un
@@ -1944,7 +2118,7 @@ namespace MafiaCleanCity.Shell
 
             Button b = btn.AddComponent<Button>();
             b.targetGraphic = img;
-            b.onClick.AddListener(() => ActivateTab(tab));
+            b.onClick.AddListener(() => ToucherLOnglet(tab));   // G1 : sur la carte, EMPIRE rouvre l'Accueil
 
             // ⚠️ L'INDICATEUR N'EST PLUS UN SOULIGNEMENT PLEINE LARGEUR. Il l'était, déplacé du
             // bord haut au bord bas du bouton après un verdict de juge visuel — mais c'était encore

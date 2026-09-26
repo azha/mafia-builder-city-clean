@@ -44,6 +44,34 @@ namespace MafiaCleanCity.Operational.Tests
         {
             // ⚠️ COUPE du 2026-09-24 contre la pile 66060cc1 : les 22 clés de ⑦ (famille.*) SERVIES (règle 2 rouge au créneau, tête
             // 92bfb1ba ; vérifié sur string_table.ts à 66060cc1 : 22 sur 22, fr et en) — retirées. Dette VIDE : zéro strict.
+            // G5 menu Plus (2026-09-26, ordre de l'orchestrateur, table 60 de l'atelier `60-menu-plus-cles-2026-09-26.tsv`) : 25 clés
+            // PROPOSÉES, le back les servira dans son prochain lot i18n ; d'ici là les replis de la table (à l'octet). Règle (2) : les
+            // retirer quand elles sont servies.
+            "plus.groupe.vos_journees",
+            "plus.groupe.vos_affaires",
+            "plus.groupe.ce_qui_se_dit",
+            "plus.groupe.ce_qui_vous_guette",
+            "plus.groupe.vous",
+            "plus.entree.la_revue_du_jour",
+            "plus.entree.les_ordres_du_soir",
+            "plus.entree.ce_que_vous_avez_confie",
+            "plus.entree.la_semaine",
+            "plus.entree.la_chaine_d_appro",
+            "plus.entree.la_distribution",
+            "plus.entree.la_vente",
+            "plus.entree.raser_un_site",
+            "plus.entree.le_journal_la_rue",
+            "plus.entree.la_reputation",
+            "plus.entree.le_conflit",
+            "plus.entree.la_loi",
+            "plus.entree.les_inspections",
+            "plus.entree.le_commissariat",
+            "plus.entree.le_dossier",
+            "plus.entree.l_horizon_des_possibles",
+            "plus.entree.votre_profil",
+            "plus.entree.la_vitrine",
+            "plus.entree.la_premiere_fois",
+            "plus.entree.les_reglages",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

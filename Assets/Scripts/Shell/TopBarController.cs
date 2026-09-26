@@ -315,9 +315,11 @@ namespace MafiaCleanCity.Shell
         // sur un écran de 392 dp de large (le téléphone canon) ; sur 360 dp (la largeur modale
         // Android, la plus étroite couramment supportée), la même zone mesure ≈44,1 dp — SOUS le
         // seuil. Grandir cette constante est un arbitrage de DA/produit (elle grandirait aussi la
-        // zone à 392 dp, au-delà du minimum) : remonté à l'user, pas tranché ici — voir la garde
-        // `VerifierFermetureParActionDeTete` (épingle la valeur EXACTE, ne masque pas l'écart) et
+        // zone à 392 dp, au-delà du minimum) : remonté à l'user, pas tranché ici — voir
         // `Tools/charpente-item0-2-3-implementation-notes.md` § MAJEUR 1 round 11.
+        // ⚠️ SANS OBJET depuis le 2026-09-26 : la flèche est retirée du bandeau (ARBITRAGES-user-2026-09-07 §C.14), le shell ne
+        //    pose plus `BackToMap` (garde `RetourSerie6PlayModeTests.R3`), et l'épingle des 44,1 dp est sortie avec elle. L'action
+        //    reste dans l'enum : la retirer changerait `LeadingAction` et ses tests de reflow pour aucun gain joueur.
         private const float LeadingTouchZoneDp = 48f; // UNITÉS DE MAQUETTE — PAS des dp, voir ci-dessus
         // ⛔ RATIOS RE-MESURÉS CONTRE LA MAQUETTE (2026-08-22, demande user « traite le menu en haut
         // et en bas, en terme de ratio »). Tout est rapporté à la HAUTEUR DE BARRE, la seule grandeur
