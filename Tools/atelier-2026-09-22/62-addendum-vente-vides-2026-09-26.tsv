@@ -1,0 +1,3 @@
+clé	fr	en	statut	note
+vente.vide.les_coins_de_vente_n_ont_pas_repondu	Les coins de vente n’ont pas répondu.	The corners didn’t answer.	PROPOSÉ	littéral de SellingScreenController.cs:343-346 (1d1ac510), état vide sur erreur ; D12 « coin de vente », D10
+vente.vide.aucun_coin_de_vente	Aucun coin de vente.	No corner.	PROPOSÉ	littéral de SellingScreenController.cs:343-346 (1d1ac510), état vide ; D12
