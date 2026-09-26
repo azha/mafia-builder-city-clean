@@ -199,19 +199,9 @@ namespace MafiaCleanCity.Shell
             };
         }
 
-        /// <summary>Le rang d'une charge servie (EMPTY 0 … FULL 4), -1 hors domaine — pour garder la planque la plus chargée. Pure.</summary>
-        public static int RangDeCharge(string charge)
-        {
-            switch (charge)
-            {
-                case "EMPTY": return 0;
-                case "LOW": return 1;
-                case "NOMINAL": return 2;
-                case "HIGH": return 3;
-                case "FULL": return 4;
-                default: return -1;
-            }
-        }
+        /// <summary>Le rang d'une charge servie — DÉLÈGUE à `ChargeDePlanque.Rang` (ShellContracts), la règle UNIQUE « planque la plus
+        /// chargée » que ㊵ applique aussi (f2 26/09 : une seule définition, garde LaSuite S12).</summary>
+        public static int RangDeCharge(string charge) => ChargeDePlanque.Rang(charge);
 
         // ── D · les règles ──────────────────────────────────────────────────────────────────────────────────────────────────────
         // Tous les lieutenants à `rule_count_band` NONE — et au moins un : sans lieutenant, personne n'attend de consigne.

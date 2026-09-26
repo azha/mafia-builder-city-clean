@@ -21,6 +21,8 @@ namespace MafiaCleanCity.Shell.Tests
     //   S8  une lecture manquée n'affirme rien ; un précurseur hors domaine ne s'écrit jamais brut
     //   S9  les gestes ouvrent PAR LE SHELL : ㉚, ② (avec le labo), ㉟, ⑧
     //   S10 le panneau : premier geste doré, A2 sans bouton, rien de vrai ⇒ rien de rendu et `Rendue(false)`
+    //   S12 UNE seule définition du rang de charge (`ChargeDePlanque.Rang`) dans Assets/Scripts ; LaSuite et ㊵ y délèguent ;
+    //       contrôle positif : une copie fabriquée est vue
     //   S11 table 76, ligne E : planque LOW à HIGH ⇒ « De l'argent attend » ; FULL ⇒ « La planque est pleine » ET la ligne C se retire
     //       (épinglé sur la valeur servie) ; EMPTY, hors domaine, non lue ⇒ rien ; ordre A · B|C · E · D, au plus 3 ; geste ㊵
     [Category("LaSuite")]
@@ -227,6 +229,24 @@ namespace MafiaCleanCity.Shell.Tests
             }
             Assert.AreEqual(4, LaSuite.RangDeCharge("FULL"));
             Assert.AreEqual(-1, LaSuite.RangDeCharge("ZZZ"));
+        }
+
+        /// <summary>Le motif d'une DÉFINITION du rang : un aiguillage qui rend un entier pour « NOMINAL ».</summary>
+        private static readonly System.Text.RegularExpressions.Regex DefinitionDuRang =
+            new System.Text.RegularExpressions.Regex(@"case\s+""NOMINAL""\s*:\s*return\s+\d");
+
+        [Test]
+        public void S12_UneSeuleDefinitionDuRangDeCharge()
+        {
+            Assert.IsTrue(DefinitionDuRang.IsMatch("switch (c) { case \"NOMINAL\": return 2; }"), "contrôle positif : une copie fabriquée est vue");
+            string racine = System.IO.Path.Combine(Application.dataPath, "Scripts");
+            var sites = System.IO.Directory.GetFiles(racine, "*.cs", System.IO.SearchOption.AllDirectories)
+                .Where(f => DefinitionDuRang.IsMatch(System.IO.File.ReadAllText(f)))
+                .Select(System.IO.Path.GetFileName).ToList();
+            CollectionAssert.AreEqual(new[] { "ChargeDePlanque.cs" }, sites,
+                "la règle « planque la plus chargée » n'a qu'UNE définition ; les autres sites délèguent à ChargeDePlanque.Rang");
+            foreach (string v in new[] { "EMPTY", "LOW", "NOMINAL", "HIGH", "FULL", "ZZZ", null })
+                Assert.AreEqual(ChargeDePlanque.Rang(v), LaSuite.RangDeCharge(v), $"LaSuite délègue ({v ?? "null"})");
         }
 
         [Test]
