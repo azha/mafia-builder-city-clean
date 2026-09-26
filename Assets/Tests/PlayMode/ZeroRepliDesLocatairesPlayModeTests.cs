@@ -93,6 +93,7 @@ namespace MafiaCleanCity.Operational.Tests
             // table 63 v2 (client 34beb6e7), non servies @5e792a3c.
             "inspection.vide.rien_a_faire_ici_tant_qu_aucune_file_n_est_ouverte",
             "revue.vide.vos_lieutenants_n_ont_encore_rien_a_tenir_donnez_leur_une_premiere_regle",
+            "autonomie.vide.aucun_rapport_pour_l_instant_il_en_viendra_quand_vous_aurez_confie_une_tache_a_un_lieutenant",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
