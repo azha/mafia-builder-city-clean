@@ -89,8 +89,8 @@ namespace MafiaCleanCity.Operational.Tests
             return res;
         }
 
-        /// <summary>Exceptions EXACTES, nommées : un bouton ÉTEINT qui MONTRE un geste pas encore câblé (décision de f2 attendue).</summary>
-        private static readonly string[] ExceptionsNommees = { "BuildingCardController.cs:faire_sortir_la_marchandise" };
+        /// <summary>Exceptions EXACTES, nommées — AUCUNE : « Faire sortir la marchandise » est câblé vers ㉘ (f2 26/09).</summary>
+        private static readonly string[] ExceptionsNommees = new string[0];
 
         [Test]
         public void O5_AucunBoutonAGesteVide_HorsExceptionsNommees()

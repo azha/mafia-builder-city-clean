@@ -453,6 +453,15 @@ namespace MafiaCleanCity.Operational
                 "Argent injecté", "Impossible d'injecter");
         }
 
+        /// <summary>② « Faire sortir la marchandise » ⇒ ㉘ Distribution, en surimpression (IShellNavigator). Compteur : crochet de test.</summary>
+        public int OuverturesDeLaDistribution { get; private set; }
+
+        public void OuvrirLaDistribution()
+        {
+            OuverturesDeLaDistribution++;
+            MafiaCleanCity.Shell.ShellNavigatorLocator.Find()?.MonterLocataireEnSurimpression<DistributionScreenController>();
+        }
+
         /// <summary>② (f2 26/09) — la planque la plus chargée du quartier de CETTE façade (me/buildings → district_id → district/:id/stash →
         /// FiliereScreenController.PlusChargee, la règle ChargeDePlanque.Rang de ㊵ et de l'Accueil). Null si rien n'est servi.</summary>
         public MafiaCleanCity.CityMap.SafehouseDto PlanqueDuQuartier { get; private set; }
@@ -2552,8 +2561,9 @@ namespace MafiaCleanCity.Operational
                 {
                     AddReplique(Cle("replique",
                         "«\u00A0C’est tiré. Ça ne peut pas dormir ici — chaque nuit que ça reste, c’est une nuit de trop.\u00A0»"));
-                    Button sortir = AddActionButton(actionBar, "faire_sortir_la_marchandise", Cle("action", "Faire sortir la marchandise"), () => { });
-                    SetButtonInteractable(sortir, false);
+                    // ② (f2 26/09) : le bouton était posé ÉTEINT avec un geste vide. Câblé en NAVIGATION vers ㉘ Distribution — l'écran des
+                    // coursiers, qui porte l'envoi — par le navigateur du shell (même chemin que la Famille vers ㉚).
+                    AddActionButton(actionBar, "faire_sortir_la_marchandise", Cle("action", "Faire sortir la marchandise"), OuvrirLaDistribution);
                     AddLigneDuGeste("Bloc", Cle("bloc", "vers les coursiers"));
                     break;
                 }
