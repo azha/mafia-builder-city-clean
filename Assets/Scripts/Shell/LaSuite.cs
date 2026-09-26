@@ -248,22 +248,30 @@ namespace MafiaCleanCity.Shell
                 .GetProgression(jeton, p => e.Palier = p?.vocabulary_tier, Journal("progression"));
             if (e.Palier != LaSuite.PalierDuBloc) { ok?.Invoke(e); yield break; }
 
+            // f1 26/09 (run VPS) : 7 à 8 requêtes ENCHAÎNÉES contre un back distant ⇒ LA SUITE arrivait tard (absente de la planche P1
+            // à 2400) — et c'est le temps pendant lequel le joueur voit un Accueil sans guide. Trois VAGUES parallèles au lieu de huit
+            // allers-retours : (1) le palier, qui décide de tout ; (2) me/buildings · dealers · lieutenants ; (3) lab · precursors ·
+            // stash de chaque quartier (tous dépendent de me/buildings).
             BatimentPossedeDto[] possedes = null;
-            yield return new MesBatimentsClient { BaseUrl = BaseUrl }.Lire(jeton, bs => possedes = bs, Journal("me/buildings"));
+            yield return EnParallele(
+                new MesBatimentsClient { BaseUrl = BaseUrl }.Lire(jeton, bs => possedes = bs, Journal("me/buildings")),
+                new SellingClient { BaseUrl = BaseUrl }.ListDealers(jeton, d => e.Dealers = d ?? new DealerDto[0], Journal("dealers")),
+                new LieutenantClient { BaseUrl = BaseUrl }.ListLieutenants(jeton, r => e.Lieutenants = r ?? new RosterRow[0], Journal("lieutenants")));
+
+            var vague = new List<IEnumerator>();
             BatimentPossedeDto labo = possedes?.FirstOrDefault(b => b != null && !string.IsNullOrEmpty(b.building) && LaSuite.EstUnLabo(b.operational_type));
             if (labo != null)
             {
                 e.LaboId = labo.building;
-                var fiche = new BuildingCardClient { BaseUrl = BaseUrl };
-                yield return fiche.GetLab(labo.building, jeton, l => e.Cuisson = l?.cook_stage_band, Journal("lab"));
-                yield return new ChaineDApproClient { BaseUrl = BaseUrl }.GetOperationalPrecursors(jeton, labo.building, pr =>
+                vague.Add(new BuildingCardClient { BaseUrl = BaseUrl }.GetLab(labo.building, jeton, l => e.Cuisson = l?.cook_stage_band, Journal("lab")));
+                vague.Add(new ChaineDApproClient { BaseUrl = BaseUrl }.GetOperationalPrecursors(jeton, labo.building, pr =>
                 {
                     if (pr == null) return;
                     e.PrecurseurType = pr.precursor_type;
                     e.Stock = pr.stock_band;
                     e.CommandeEnRoute = pr.has_pending_order;
                     e.CommandeArrivee = pr.has_arrived_order;
-                }, Journal("precursors"));
+                }, Journal("precursors")));
             }
             // E · la planque : `district/:id/stash` sur les quartiers du joueur (le chemin de ㊵), la plus chargée.
             if (possedes != null)
@@ -271,16 +279,56 @@ namespace MafiaCleanCity.Shell
                 var projections = new MafiaCleanCity.CityMap.CityProjectionsClient { BaseUrl = BaseUrl };
                 foreach (int quartier in possedes.Where(b => b != null && b.district_id > 0).Select(b => b.district_id).Distinct())
                 {
-                    MafiaCleanCity.CityMap.StashDto stash = null;
-                    yield return projections.Stash(quartier, jeton, x => stash = x, code => UnityEngine.Debug.LogWarning($"[LaSuite] stash {quartier} : {code}"));
-                    if (stash?.safehouses == null) continue;
-                    foreach (MafiaCleanCity.CityMap.SafehouseDto p in stash.safehouses)
-                        if (p != null && LaSuite.RangDeCharge(p.load_bucket) > LaSuite.RangDeCharge(e.ChargePlanque)) e.ChargePlanque = p.load_bucket;
+                    int q = quartier;
+                    vague.Add(projections.Stash(q, jeton, stash =>
+                    {
+                        if (stash?.safehouses == null) return;
+                        foreach (MafiaCleanCity.CityMap.SafehouseDto p in stash.safehouses)
+                            if (p != null && LaSuite.RangDeCharge(p.load_bucket) > LaSuite.RangDeCharge(e.ChargePlanque)) e.ChargePlanque = p.load_bucket;
+                    }, code => UnityEngine.Debug.LogWarning($"[LaSuite] stash {q} : {code}")));
                 }
             }
-            yield return new SellingClient { BaseUrl = BaseUrl }.ListDealers(jeton, d => e.Dealers = d ?? new DealerDto[0], Journal("dealers"));
-            yield return new LieutenantClient { BaseUrl = BaseUrl }.ListLieutenants(jeton, r => e.Lieutenants = r ?? new RosterRow[0], Journal("lieutenants"));
+            yield return EnParallele(vague.ToArray());
             ok?.Invoke(e);
+        }
+
+        /// <summary>Fait avancer PLUSIEURS coroutines ensemble, une étape par frame chacune ; une requête en vol (`AsyncOperation`) ou une
+        /// `CustomYieldInstruction` fait attendre SA coroutine seulement. Les coroutines imbriquées (un client qui en appelle un autre)
+        /// sont suivies par pile. Sans MonoBehaviour : la source reste un objet simple. Public pour la garde (LaSuite S13).</summary>
+        public static IEnumerator EnParallele(params IEnumerator[] taches)
+        {
+            var piles = new List<Stack<IEnumerator>>();
+            var attentes = new List<object>();
+            foreach (IEnumerator t in taches)
+            {
+                if (t == null) continue;
+                var p = new Stack<IEnumerator>(); p.Push(t); piles.Add(p); attentes.Add(null);
+            }
+            while (true)
+            {
+                bool vivante = false;
+                for (int i = 0; i < piles.Count; i++)
+                {
+                    Stack<IEnumerator> p = piles[i];
+                    if (p.Count == 0) continue;
+                    vivante = true;
+                    object a = attentes[i];
+                    if (a is UnityEngine.AsyncOperation op && !op.isDone) continue;
+                    if (a is UnityEngine.CustomYieldInstruction cy && cy.keepWaiting) continue;
+                    attentes[i] = null;
+                    while (p.Count > 0)
+                    {
+                        IEnumerator haut = p.Peek();
+                        if (!haut.MoveNext()) { p.Pop(); continue; }
+                        object c = haut.Current;
+                        if (c is IEnumerator imbriquee) { p.Push(imbriquee); continue; }
+                        attentes[i] = c;   // null : la frame suivante ; une opération : son achèvement
+                        break;
+                    }
+                }
+                if (!vivante) yield break;
+                yield return null;
+            }
         }
 
         private static Action<long, string> Journal(string route) =>

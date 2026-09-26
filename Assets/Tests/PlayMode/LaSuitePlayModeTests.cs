@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -247,6 +248,27 @@ namespace MafiaCleanCity.Shell.Tests
                 "la règle « planque la plus chargée » n'a qu'UNE définition ; les autres sites délèguent à ChargeDePlanque.Rang");
             foreach (string v in new[] { "EMPTY", "LOW", "NOMINAL", "HIGH", "FULL", "ZZZ", null })
                 Assert.AreEqual(ChargeDePlanque.Rang(v), LaSuite.RangDeCharge(v), $"LaSuite délègue ({v ?? "null"})");
+        }
+
+        // S13 (f1 26/09, run VPS : 8 requêtes enchaînées) — l'ordonnanceur parallèle : toutes les tâches finissent, elles AVANCENT ENSEMBLE
+        // (entrelacées, pas l'une après l'autre), les coroutines imbriquées sont suivies, une tâche nulle est ignorée.
+        private static IEnumerator Tache(List<string> journal, string nom, int etapes)
+        {
+            for (int i = 0; i < etapes; i++) { journal.Add(nom + i); yield return null; }
+        }
+        private static IEnumerator Imbriquee(List<string> journal) { journal.Add("i-avant"); yield return Tache(journal, "n", 2); journal.Add("i-apres"); }
+
+        [Test]
+        public void S13_EnParallele_LesTachesAvancentEnsemble()
+        {
+            var j = new List<string>();
+            IEnumerator e = SourceDeLaSuiteReseau.EnParallele(Tache(j, "a", 3), null, Tache(j, "b", 3), Imbriquee(j));
+            int frames = 0;
+            while (e.MoveNext()) frames++;
+            CollectionAssert.IsSubsetOf(new[] { "a0", "a1", "a2", "b0", "b1", "b2", "i-avant", "n0", "n1", "i-apres" }, j, "toutes les étapes ont eu lieu");
+            Assert.Less(j.IndexOf("b0"), j.IndexOf("a1"), "ENTRELACÉES : b commence avant que a ait fini (pas séquentiel)");
+            Assert.Less(j.IndexOf("n1"), j.IndexOf("i-apres"), "l'imbriquée est suivie jusqu'au bout avant de reprendre son parent");
+            Assert.LessOrEqual(frames, 5, $"3 étapes en parallèle ⇒ ~3-4 frames, pas 3+3+4 ({frames})");
         }
 
         [Test]
