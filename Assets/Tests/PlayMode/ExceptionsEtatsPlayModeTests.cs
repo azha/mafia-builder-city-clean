@@ -25,6 +25,7 @@ namespace MafiaCleanCity.Operational.Tests
         public void TearDown()
         {
             I18nCatalog.Oublier();
+            PhaseDeSession.Oublier();
             // l'écran se monte sous le Canvas (`BuildLayout`), pas sous `hostGo` : sa racine part à la main
             if (ecran != null && ecran.Decor != null) Object.DestroyImmediate(ecran.Decor.transform.parent.gameObject);
             foreach (GameObject g in new[] { hostGo, revueGo })
@@ -56,9 +57,11 @@ namespace MafiaCleanCity.Operational.Tests
         [Test]
         public void R15_Personne_LaPlaqueDuSoirEtLesTabouretsRemplacentLaFile()
         {
+            // classe « moment en dur » (1b3fdbe1, table 77) : le surtitre suit day_phase SERVI — au soir, « Ce soir » ; non servie, sans moment
+            PhaseDeSession.Publier("DUSK");
             NouvelEcran();
             Assert.IsTrue(ecran.PlaqueDuSoir.activeSelf, "la plaque du soir (cadre 16)");
-            Assert.AreEqual("Ce soir, au Verge d’Or", ecran.PlaqueDuSoirSurtitre);
+            Assert.AreEqual("Ce soir, au Verge d\u2019Or", ecran.PlaqueDuSoirSurtitre);
             Assert.AreEqual("Personne ne fait la queue", ecran.PlaqueDuSoirTitre,
                 "table 63 v2 (26/09) : « la routine tient » était faux pour un joueur sans routine ; jamais « le comptoir est vide »");
             Assert.IsTrue(ecran.TabouretsVides.activeSelf);

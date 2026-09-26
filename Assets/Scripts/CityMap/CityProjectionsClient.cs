@@ -182,31 +182,47 @@ namespace MafiaCleanCity.CityMap
                         outcome.NodeId = JsonUtility.FromJson<DistrictLaunderEnvelope>(req.downloadHandler.text)
                             ?.payload?.data?.node_id;
                         outcome.Ok = !string.IsNullOrEmpty(outcome.NodeId);
-                        outcome.Message = outcome.Ok ? "ok" : "la réponse ne contient aucun nœud";
+                        outcome.Message = outcome.Ok ? "ok" : RaisonDInject(RaisonReponseVide);
                     }
                     catch
                     {
                         outcome.Ok = false;
-                        outcome.Message = "la réponse du service est illisible";
+                        outcome.Message = RaisonDInject(RaisonReponseIllisible);
                     }
                 }
-                else if ((outcome.Message = MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null)) != null)
-                {
-                    // table 67 (26/09) : la phrase SERVIE du refus (R9, R10, R12…) avant les phrases fixes par code HTTP — C3 : « les
-                    // fonds ou la capacité » ne disait pas QUELS fonds.
-                }
-                else
-                {
-                    switch (req.responseCode)
-                    {
-                        case 401: outcome.Message = "la session a expiré"; break;
-                        case 409: outcome.Message = "les fonds ou la capacité sont insuffisants"; break;
-                        case 422: outcome.Message = "le lot n'est pas accepté"; break;
-                        default: outcome.Message = "le service est indisponible"; break;
-                    }
-                }
+                else outcome.Message = PhraseDuRefusDInject(req.responseCode, req.downloadHandler != null ? req.downloadHandler.text : null);
             }
             done?.Invoke(outcome);
+        }
+
+        // ── BLANCHIR : les raisons d'un échec d'inject (table 84 @1ce62e18, f2 26/09) ─────────────────────────────────────────
+        // Des PHRASES (majuscule, point) : ㊵ les affiche SEULES, ① derrière « Blanchiment refusé. ». Domaine neutre, lu par les deux.
+        internal const string RaisonReponseVide = "reponse_vide";
+        internal const string RaisonReponseIllisible = "reponse_illisible";
+
+        private static string RaisonDInject(string raison)
+        {
+            switch (raison)
+            {
+                case RaisonReponseVide: return MafiaCleanCity.I18n.Libelle.Gabarit("blanchiment.raison.reponse_vide", "La r\u00e9ponse est arriv\u00e9e vide.");
+                case RaisonReponseIllisible: return MafiaCleanCity.I18n.Libelle.Gabarit("blanchiment.raison.reponse_illisible", "La r\u00e9ponse est illisible.");
+                default: throw new ArgumentOutOfRangeException(nameof(raison), raison, "raison d'inject non nommée");
+            }
+        }
+
+        /// <summary>La phrase d'un REFUS d'inject : la phrase SERVIE spécifique d'abord (table 67 — C3 : « les fonds ou la capacité » ne
+        /// disait pas QUELS fonds), sinon la phrase du client par code HTTP (table 84). Jamais le `message` de développeur. Pure.</summary>
+        public static string PhraseDuRefusDInject(long codeHttp, string corps)
+        {
+            string servie = MafiaCleanCity.I18n.RefusServi.Phrase(corps);
+            if (servie != null) return servie;
+            switch (codeHttp)
+            {
+                case 401: return MafiaCleanCity.I18n.Libelle.Gabarit("blanchiment.raison.connexion_expiree", "La connexion a expir\u00e9.");
+                case 409: return MafiaCleanCity.I18n.Libelle.Gabarit("blanchiment.raison.fonds_ou_place", "Il manque de l\u2019argent ou de la place.");
+                case 422: return MafiaCleanCity.I18n.Libelle.Gabarit("blanchiment.raison.lot_refuse", "Ce lot n\u2019est pas accept\u00e9.");
+                default: return MafiaCleanCity.I18n.Libelle.Gabarit("blanchiment.raison.indisponible", "La fili\u00e8re ne r\u00e9pond pas pour l\u2019instant.");
+            }
         }
     }
 }

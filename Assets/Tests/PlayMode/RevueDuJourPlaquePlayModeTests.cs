@@ -25,6 +25,7 @@ namespace MafiaCleanCity.Shell.Tests
         public void TearDown()
         {
             if (hostGo != null) Object.Destroy(hostGo);
+            MafiaCleanCity.Shell.PhaseDeSession.Oublier();
         }
 
         private DailyReviewScreenController NouvelEcran()
@@ -49,6 +50,8 @@ namespace MafiaCleanCity.Shell.Tests
         [Test]
         public void R2_FileVide_LaPlaqueDuMatinPorteLeTexteEtLesSourcesDeV41()
         {
+            // classe « moment en dur » (1b3fdbe1, table 77) : le surtitre suit day_phase SERVI — à l'aube, « Ce matin »
+            MafiaCleanCity.Shell.PhaseDeSession.Publier("DAWN");
             var ecran = NouvelEcran();
             ecran.AppliquerRevue(Revue(0));
 

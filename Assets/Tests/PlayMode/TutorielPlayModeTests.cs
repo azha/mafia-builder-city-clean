@@ -14,8 +14,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   U1  le TEXTE servi du tutoriel, jamais son identifiant (D10-h close, back 4a922bc9 : `next_tutorial_id` EST la clé)
     //   U2  `next_tutorial_id` null ≠ « fini » : un éligible NON VU se montre (C10, 26/09) ; « tout vu » SEULEMENT si plus rien
     //       n'est éligible ; « rien de nouveau pour aujourd’hui » quand tous les éligibles sont vus
-    //   U4  ㉕ T1 (atelier D37) : le préparé n'ouvre JAMAIS sur un nom — « Lt. Hara — » et « {nom} — » (périmés) ⇒ le repli D37 ;
-    //       une valeur à trou {nom} sans nom servi ⇒ rien de nommé ; la valeur D37 se lit telle quelle
+    //   U4  ㉕ T1 (atelier D37, SERVIE depuis 256de0f8) : le préparé n'ouvre JAMAIS sur un nom ; la valeur D37 se lit telle quelle, un nom
+    //       servi ne s'y écrit pas, non servie ⇒ le repli D37 (le pont TD-763 des formes nommées d'avant est retiré, 6b6d0eaa)
     //   U5  TD-761 fermée : `onboarding_preseed_params.nom` (forme G, présence lue dans le corps brut) remplit {nom} ; `{}` ⇒ rien
     //   U3  la bascule « On vous explique encore » dans le sens du JOUEUR, test de VALEUR sur les DEUX états : allumée ⇔ opt-out faux,
     //       et le toucher envoie l'opt-out inverse
@@ -102,29 +102,27 @@ namespace MafiaCleanCity.CityMap.Tests
         [Test]
         public void U4_LePrepare_NOuvreJamaisSurUnNom()
         {
-            // T1 (atelier D37, table 64 @8d9b9e3a) : la valeur n'a PLUS de nom ; les deux formes nommées servies avant sont périmées
+            // T1 (atelier D37, table 64 @8d9b9e3a) : la valeur n'a PLUS de nom — SERVIE telle quelle par le back depuis le lot i18n 3
+            // (256de0f8, fr et en, mesuré à la source). Le pont TD-763 qui réécrivait les formes nommées d'avant est retiré (6b6d0eaa) :
+            // ce test ne les injecte plus, il tient la valeur servie et le repli.
             const string preseed = "tutorial.exception_card.onboarding_preseed";
             Assert.IsTrue(TutorialScreenController.EstNomme(preseed));
             Assert.IsFalse(TutorialScreenController.EstNomme("tutorial.city_map_heat_intro"));
 
-            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, "Lt. Hara — cuisson du soir bloquée : plus de solvant." } });
-            Assert.AreEqual(D37, TutorialScreenController.TexteDuTutoriel(preseed), "bfd194bc « Lt. Hara — … » ⇒ le repli D37");
-            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, "{nom} — cuisson du soir bloquée." } });
-            Assert.IsNull(TutorialScreenController.TexteDuTutoriel(preseed), "cc46166d « {nom} — … » sans nom : rien de nommé");
-            Assert.AreEqual(D37, TutorialScreenController.TexteDuTutoriel(preseed, "Lt. Vesk"), "… avec nom : il se nommerait lui-même ⇒ D37");
             I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, D37 } });
             Assert.AreEqual(D37, TutorialScreenController.TexteDuTutoriel(preseed), "la valeur D37 servie, telle quelle, SANS nom servi");
+            Assert.AreEqual(D37, TutorialScreenController.TexteDuTutoriel(preseed, "Lt. Vesk"), "un nom servi ne s'y écrit pas : pas de {nom}");
             I18nCatalog.Oublier();
             Assert.AreEqual(D37, TutorialScreenController.TexteDuTutoriel(preseed), "non servie : le repli D37");
 
-            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, "Lt. Hara — cuisson du soir bloquée : plus de solvant." } });
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, D37 } });
             foreach (string next in new[] { "", preseed })   // l'éligible (C10) ET le `next` servi : même règle
             {
                 string[] t = Textes(Ecran(new TutorielData
                 {
                     next_tutorial_id = next, eligible_tutorial_ids = new[] { preseed }, shown_tutorial_ids = new string[0],
                 }));
-                Assert.IsFalse(t.Any(x => x.Contains("Hara")), $"next « {next} » : jamais un nom figé — " + string.Join(" | ", t));
+                Assert.IsFalse(t.Any(x => x.StartsWith("Lt. ")), $"next « {next} » : jamais un nom en tête — " + string.Join(" | ", t));
                 CollectionAssert.Contains(t, D37, "la leçon se lit, sans nom");
                 CollectionAssert.Contains(t, "Compris", "montrée, elle se marque vue");
             }

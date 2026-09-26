@@ -97,7 +97,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 { "error.validation.failed", "Une partie de ce que vous avez saisi n’est pas acceptée." },
                 { "error.core_loops.structural_cap_exhausted", "Plus de décision de structure aujourd’hui." },
             });
-            const string ecran = "les fonds ou la capacité sont insuffisants";   // la phrase d'écran de BLANCHIR (①, 409)
+            string ecran = MafiaCleanCity.CityMap.CityProjectionsClient.PhraseDuRefusDInject(409, null);   // la phrase d'écran de BLANCHIR (① ㊵, 409, table 84)
             // le corps mesuré du 409 de BLANCHIR sur le chemin du joueur neuf : la clé générique, servie par le bundle
             string blanchir = @"{""payload"":{""error"":{""code"":""RESOURCE_STATE_CONFLICT"",""http_status"":409,"
                 + @"""user_facing_i18n_key"":""error.resource.state_conflict"",""message"":""safehouse holds less than requested""}}}";
