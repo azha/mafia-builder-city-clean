@@ -14,8 +14,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   U1  le TEXTE servi du tutoriel, jamais son identifiant (D10-h close, back 4a922bc9 : `next_tutorial_id` EST la clé)
     //   U2  `next_tutorial_id` null ≠ « fini » : un éligible NON VU se montre (C10, 26/09) ; « tout vu » SEULEMENT si plus rien
     //       n'est éligible ; « rien de nouveau pour aujourd’hui » quand tous les éligibles sont vus
-    //   U4  ㉕ (§G, 26/09) : un tutoriel NOMMÉ (`tutorial.exception_card.*`) sans nom servi ne se lit pas — la tête seule, ni son
-    //       texte, ni « Compris », ni « rien de nouveau » ; avec le nom servi, le texte le porte
+    //   U4  ㉕ T1 (atelier D37) : le préparé n'ouvre JAMAIS sur un nom — « Lt. Hara — » et « {nom} — » (périmés) ⇒ le repli D37 ;
+    //       une valeur à trou {nom} sans nom servi ⇒ rien de nommé ; la valeur D37 se lit telle quelle
     //   U5  TD-761 fermée : `onboarding_preseed_params.nom` (forme G, présence lue dans le corps brut) remplit {nom} ; `{}` ⇒ rien
     //   U3  la bascule « On vous explique encore » dans le sens du JOUEUR, test de VALEUR sur les DEUX états : allumée ⇔ opt-out faux,
     //       et le toucher envoie l'opt-out inverse
@@ -97,35 +97,36 @@ namespace MafiaCleanCity.CityMap.Tests
             CollectionAssert.Contains(vus, "Rien de nouveau pour aujourd’hui.");
         }
 
+        private const string D37 = "Cuisson du soir bloquée : plus de Pyralin au labo. Il en faut avant de rallumer.";
+
         [Test]
-        public void U4_UnTutorielNomme_SansNomServi_NeSeLitPas()
+        public void U4_LePrepare_NOuvreJamaisSurUnNom()
         {
-            // la VALEUR servie mesurée (string_table.ts, fr) : un nom écrit dans le texte, qui n'est pas le lieutenant du joueur
+            // T1 (atelier D37, table 64 @8d9b9e3a) : la valeur n'a PLUS de nom ; les deux formes nommées servies avant sont périmées
             const string preseed = "tutorial.exception_card.onboarding_preseed";
-            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
-            {
-                { preseed, "Lt. Hara — cuisson du soir bloquée : plus de solvant." },
-                { "tutorial.exception_card.gabarit_test", "{nom} — cuisson du soir bloquée." },
-            });
             Assert.IsTrue(TutorialScreenController.EstNomme(preseed));
             Assert.IsFalse(TutorialScreenController.EstNomme("tutorial.city_map_heat_intro"));
-            Assert.IsNull(TutorialScreenController.TexteDuTutoriel(preseed), "nommé, nom non servi : rien");
-            Assert.AreEqual("Lt. Vesk — cuisson du soir bloquée.",
-                TutorialScreenController.TexteDuTutoriel("tutorial.exception_card.gabarit_test", "Lt. Vesk"), "nom servi : le texte le porte");
-            // EXIGEANT (table 64) : nom servi, mais la valeur servie écrit « Lt. Hara » en dur ⇒ le repli nommé de la 64
-            Assert.AreEqual("Lt. Vesk \u2014 cuisson du soir bloquée\u00A0: plus de solvant. Commander maintenant (coût) ou attendre demain (rendement).",
-                TutorialScreenController.TexteDuTutoriel(preseed, "Lt. Vesk"), "valeur sans {nom} ⇒ repli de la 64 avec le vrai nom");
 
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, "Lt. Hara — cuisson du soir bloquée : plus de solvant." } });
+            Assert.AreEqual(D37, TutorialScreenController.TexteDuTutoriel(preseed), "bfd194bc « Lt. Hara — … » ⇒ le repli D37");
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, "{nom} — cuisson du soir bloquée." } });
+            Assert.IsNull(TutorialScreenController.TexteDuTutoriel(preseed), "cc46166d « {nom} — … » sans nom : rien de nommé");
+            Assert.AreEqual(D37, TutorialScreenController.TexteDuTutoriel(preseed, "Lt. Vesk"), "… avec nom : il se nommerait lui-même ⇒ D37");
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, D37 } });
+            Assert.AreEqual(D37, TutorialScreenController.TexteDuTutoriel(preseed), "la valeur D37 servie, telle quelle, SANS nom servi");
+            I18nCatalog.Oublier();
+            Assert.AreEqual(D37, TutorialScreenController.TexteDuTutoriel(preseed), "non servie : le repli D37");
+
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, "Lt. Hara — cuisson du soir bloquée : plus de solvant." } });
             foreach (string next in new[] { "", preseed })   // l'éligible (C10) ET le `next` servi : même règle
             {
                 string[] t = Textes(Ecran(new TutorielData
                 {
                     next_tutorial_id = next, eligible_tutorial_ids = new[] { preseed }, shown_tutorial_ids = new string[0],
                 }));
-                Assert.IsFalse(t.Any(x => x.Contains("Hara")), $"next « {next} » : rien de nommé — " + string.Join(" | ", t));
-                CollectionAssert.Contains(t, "Une première leçon vous attend.", "une leçon attend : la tête le dit");
-                Assert.IsFalse(t.Contains("Rien de nouveau pour aujourd’hui.") || t.Contains("Vous avez tout vu."), "ni fini ni rien de nouveau");
-                Assert.IsFalse(t.Contains("Compris"), "on ne marque pas vu ce qu'on n'a pas montré");
+                Assert.IsFalse(t.Any(x => x.Contains("Hara")), $"next « {next} » : jamais un nom figé — " + string.Join(" | ", t));
+                CollectionAssert.Contains(t, D37, "la leçon se lit, sans nom");
+                CollectionAssert.Contains(t, "Compris", "montrée, elle se marque vue");
             }
         }
 
@@ -144,15 +145,15 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsFalse(ancien.ParamsDuPreseedServis, "back antérieur : absent");
             Assert.IsNull(TutorialScreenController.NomServi(ancien, preseed));
 
-            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, "{nom} — cuisson du soir bloquée." } });
+            // une valeur qui porte {nom} AILLEURS qu'en tête : le nom servi la remplit
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, "Cuisson bloquée, dit {nom}." } });
             string[] t = Textes(Ecran(lu));
-            CollectionAssert.Contains(t, "Lt. Vesk — cuisson du soir bloquée.", "le nom servi remplit {nom} : " + string.Join(" | ", t));
-            CollectionAssert.Contains(t, "Compris", "montrée, elle se marque vue");
+            CollectionAssert.Contains(t, "Cuisson bloquée, dit Lt. Vesk.", "le nom servi remplit {nom} : " + string.Join(" | ", t));
             Assert.IsFalse(t.Any(x => x.Contains("{nom}")), "jamais l'accolade");
 
-            lu.onboarding_preseed_params = new TutorielParamsDto();   // {} : le préparé n'a pas de nom servi
+            lu.onboarding_preseed_params = new TutorielParamsDto();   // {} : pas de nom servi
             string[] sans = Textes(Ecran(lu));
-            Assert.IsFalse(sans.Any(x => x.Contains("cuisson") || x.Contains("{nom}")), "sans nom : rien de nommé");
+            Assert.IsFalse(sans.Any(x => x.Contains("Cuisson bloquée") || x.Contains("{nom}")), "valeur à trou, sans nom : rien de nommé");
             CollectionAssert.Contains(sans, "Une première leçon vous attend.");
         }
 

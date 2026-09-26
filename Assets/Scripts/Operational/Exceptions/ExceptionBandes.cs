@@ -189,10 +189,15 @@ namespace MafiaCleanCity.Operational.Exceptions
         public static string TexteServeur(ExceptionCardDto c)
         {
             if (c == null) return string.Empty;
-            // la carte PRÉPARÉE (table 64, f2 26/09) : sa valeur servie écrit « Lt. Hara » en dur ; EXIGEANTE sur {nom} = qui parle
+            // la carte PRÉPARÉE (table 64, atelier D37 @8d9b9e3a) : la valeur n'a PLUS de {nom} — l'opt-in exigeant est RETIRÉ (il la
+            // tiendrait pour non servie). {nom} reste fourni : une valeur intermédiaire « {nom} — … » se remplit au lieu de montrer
+            // l'accolade ; et tout rendu qui OUVRE sur un nom (« Lt. Hara — », « Lt. Skeld — ») est périmé ⇒ le repli D37.
             if (c.event_descriptor_i18n != null && c.event_descriptor_i18n.key == CleCartePreparee)
-                return MafiaCleanCity.I18n.Libelle.GabaritExigeant(CleCartePreparee, RepliCartePreparee,
-                    new Dictionary<string, string> { { "nom", Locuteur(c) } }, "nom");
+            {
+                string t = MafiaCleanCity.I18n.Libelle.Gabarit(CleCartePreparee, RepliCartePreparee,
+                    new Dictionary<string, string> { { "nom", Locuteur(c) } });
+                return MafiaCleanCity.I18n.NomsFiges.EstPerime(CleCartePreparee, t) ? RepliCartePreparee : t;   // pont TD-763
+            }
             if (c.event_descriptor_i18n != null
                 && !string.IsNullOrEmpty(c.event_descriptor_i18n.key)
                 && MafiaCleanCity.I18n.I18nCatalog.Connait(c.event_descriptor_i18n.key))
@@ -201,10 +206,9 @@ namespace MafiaCleanCity.Operational.Exceptions
         }
 
         /// <summary>La carte préparée du kit de départ (`ONBOARDING_PRESEED_CARD_I18N_KEY`, onboarding-grant.service.ts:177) et son
-        /// repli nommé, à l'octet de la table 64.</summary>
+        /// repli, à l'octet de la table 64 @8d9b9e3a (D37 : sans nom — l'en-tête de la bulle nomme déjà qui parle).</summary>
         public const string CleCartePreparee = "onboarding.preseed_exception.card";
-        public const string RepliCartePreparee =
-            "{nom} \u2014 cuisson du soir bloquée\u00A0: plus de solvant. Commander maintenant (coût) ou attendre demain (rendement).";
+        public const string RepliCartePreparee = "Cuisson du soir bloquée\u00A0: plus de Pyralin au labo. Il en faut avant de rallumer.";
 
         /// <summary>⑨-0 — QUI parle, UN seul site pour ⑨ et ⑩ (ils l'écrivaient chacun de leur côté).
         /// · la carte porte un lieutenant ⇒ son NOM servi (`lieutenant.name`, C3) ;

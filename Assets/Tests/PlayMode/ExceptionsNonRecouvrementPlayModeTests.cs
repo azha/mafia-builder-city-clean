@@ -15,6 +15,9 @@ namespace MafiaCleanCity.Operational.Tests
     //   N1  ⑨ avec la réplique SERVIE longue (T1, 4 lignes) : aucun texte du comptoir n'en recouvre un autre, aucun n'est tronqué
     //       (cause mesurée : comptoir de hauteur figée ⇒ enfants comprimés sous leur taille)
     //   N2  ⑩ : dans une bulle étirée, les pastilles gardent LEUR hauteur (cause : childForceExpandHeight par défaut ⇒ flexibles)
+    //   N4  ⑨ (atelier D36) : le zinc SUIT le comptoir — le bas de l'étiquette sous le portrait reste AU-DESSUS du haut du plateau,
+    //       avec une réplique d'1 ligne ET de 4 lignes ; l'étiquette tient sur une ligne (« nom · métier », sans les bandes)
+    //   N3  ⑩ : avec EpouserLeTexte, la bulle garde SA hauteur dans une rangée haute (relecture f1 §I.6 : « un grand vide sous la réplique »)
     [Category("EcranFile")]
     public class ExceptionsNonRecouvrementPlayModeTests
     {
@@ -33,12 +36,14 @@ namespace MafiaCleanCity.Operational.Tests
 
         private const string T1 = "Lt. Hara — cuisson du soir bloquée : plus de solvant. Commander maintenant (coût) ou attendre demain (rendement).";
 
-        private static ExceptionCardDto CartePreparee() => new ExceptionCardDto
+        private static ExceptionCardDto CartePreparee() => CarteDisant(T1);
+
+        private static ExceptionCardDto CarteDisant(string replique) => new ExceptionCardDto
         {
             exception_id = "ee5e4798-a892-441a-9066-44574ed4bd6a",
             lieutenant_id = "lt-tull",
             lieutenant = new ExceptionLieutenantDto { id = "lt-tull", name = "Lt. Tull" },
-            event_descriptor = T1,
+            event_descriptor = replique,
             candidate_actions = new[] { new CandidateActionDto { id = "ack", label = "Prendre acte de l'état du labo", method = "ACKNOWLEDGE", effect = new ExceptionEffectDto() } },
             suggested_action = new CandidateActionDto { id = "ack", label = "Prendre acte de l'état du labo", method = "ACKNOWLEDGE", effect = new ExceptionEffectDto() },
             confidence_band = "confident", priority_band = "watch", severity_band = "LOW", resolution_status = "pending",
@@ -120,6 +125,60 @@ namespace MafiaCleanCity.Operational.Tests
                 float voulu = LayoutUtility.GetPreferredHeight(p);
                 Assert.LessOrEqual(p.rect.height, voulu + 1f, $"{nom} : {p.rect.height:0} pour {voulu:0} voulus — étirée");
             }
+        }
+
+        [UnityTest]
+        public IEnumerator N4_LEtiquette_ResteAuDessusDuZinc_UneEtQuatreLignes()
+        {
+            foreach (string replique in new[] { "Rien de neuf.", T1 })
+            {
+                TearDown();
+                hostGo = new GameObject("ExceptionQueue", typeof(RectTransform));
+                ecran = hostGo.AddComponent<ExceptionQueueController>();
+                ExceptionCardDto carte = CarteDisant(replique);
+                ecran.RendrePourTest(new[] { carte });
+                ecran.ClientPourTest.SubstitutFilePourTest = () => new[] { carte };
+                ecran.PoserRosterPourTest(new[] { new MafiaCleanCity.Operational.Lieutenant.RosterRow { lieutenant_id = "lt-tull", name = "Lt. Tull", archetype = "COOK" } });
+                yield return null;
+                Transform comptoir = ecran.ParlePourTest.transform.parent;
+                MiseEnPage(comptoir);
+                ecran.CalerLeZinc();
+                MiseEnPage(ecran.Decor.transform);
+
+                Transform etiquette = comptoir.GetComponentsInChildren<Transform>(false).FirstOrDefault(x => x.name == "Etiquette");
+                Assert.IsNotNull(etiquette, "pas d'étiquette sous le portrait");
+                Assert.IsNull(etiquette.parent.Find("Bandes"), "les bandes ne se répètent plus sous le portrait");
+                var textes = etiquette.GetComponentsInChildren<TextMeshProUGUI>(false);
+                foreach (var t in textes) { t.ForceMeshUpdate(); Assert.AreEqual(1, t.textInfo.lineCount, $"« {t.text} » tient sur une ligne"); }
+                float basEtiquette = textes.Min(t => RectDuTexte(t).yMin);
+
+                var plateau = (RectTransform)ecran.Decor.Zinc.Find("Plateau");
+                Assert.IsNotNull(plateau);
+                var coins = new Vector3[4]; plateau.GetWorldCorners(coins);
+                float hautPlateau = coins[1].y;
+                Assert.GreaterOrEqual(basEtiquette, hautPlateau - 1f,
+                    $"réplique « {replique.Substring(0, System.Math.Min(20, replique.Length))}… » : l'étiquette ({basEtiquette:0}) tombe sur le zinc ({hautPlateau:0})");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator N3_LaBulleDeDix_EpouseSaReplique()
+        {
+            canvasGo = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas));
+            var parent = (RectTransform)new GameObject("Corps", typeof(RectTransform)).transform;
+            parent.SetParent(canvasGo.transform, false);
+            parent.sizeDelta = new Vector2(600f, 900f);
+            var parleur = new ParleurAuComptoir(v => v, v => Mathf.RoundToInt(v), (t, s) => { });
+            RectTransform rangee = parleur.ConstruireRangee(parent, 10f);
+            rangee.anchorMin = Vector2.zero; rangee.anchorMax = Vector2.one; rangee.offsetMin = rangee.offsetMax = Vector2.zero;
+            ParleurAuComptoir.EpouserLeTexte(rangee);
+            GameObject bulle = parleur.Construire(rangee, CartePreparee(), "cuisinier", "« Patron — cuisson du soir bloquée. »", "LÉGÈRE");
+            yield return null;
+            MiseEnPage(parent);
+            var rt = (RectTransform)bulle.transform;
+            float voulu = LayoutUtility.GetPreferredHeight(rt);
+            Assert.Less(voulu, 800f, "la réplique est courte : sa hauteur voulue est loin des 900 de la rangée");
+            Assert.LessOrEqual(rt.rect.height, voulu + 1f, $"bulle de {rt.rect.height:0} pour {voulu:0} voulus — étirée, un vide sous la réplique");
         }
     }
 }

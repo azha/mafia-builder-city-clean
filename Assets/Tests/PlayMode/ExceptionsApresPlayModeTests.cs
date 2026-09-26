@@ -129,7 +129,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("Lt. Kane retourne au travail", ecran.ApresKicker, "atelier §3.5 : le nom servi, pas l'archétype");
             Assert.AreEqual("Le bâtiment se remet en marche, avec le temps", ecran.ApresTitre);
             Transform apres = ecran.ApresBloc.transform;
-            Assert.AreEqual(ecran.FilePourTest.transform.GetSiblingIndex() + 1, apres.GetSiblingIndex(), "juste après la file");
+            // ⑨ (atelier D36, 26/09) : le zinc s'intercale — File, ZincPlace (le plateau), puis l'après
+            Assert.AreEqual("ZincPlace", apres.parent.GetChild(ecran.FilePourTest.transform.GetSiblingIndex() + 1).name, "le zinc sous la file");
+            Assert.AreEqual(ecran.FilePourTest.transform.GetSiblingIndex() + 2, apres.GetSiblingIndex(), "juste après le zinc");
             Assert.AreEqual(apres.GetSiblingIndex() + 1, ecran.ParlePourTest.transform.GetSiblingIndex(), "juste avant la bulle");
             Transform cachet = apres.Find("Cachet");
             Assert.IsNull(cachet.parent.GetComponent<Mask>(), "le cachet déborde (top:-10) : jamais sous le masque du verre");

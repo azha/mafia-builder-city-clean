@@ -64,7 +64,7 @@ namespace MafiaCleanCity.Operational.Tests
     }
 
     // GABARIT EXIGEANT (f2 26/09, table 64) — opt-in par site : une valeur servie qui ne porte pas le trou requis compte comme NON
-    // servie (repli COMPTÉ) ; avec le trou, la valeur servie. Sites : ㉚ Nestor, ㉝ demolition.dit.*, la carte préparée, ㉕.
+    // servie (repli COMPTÉ) ; avec le trou, la valeur servie. Sites : ㉚ Nestor, ㉝ demolition.dit.*. (La carte préparée et ㉕ en sont sortis : D37, E3.)
     [Category("I18n")]
     public class GabaritExigeantTests
     {
@@ -97,19 +97,36 @@ namespace MafiaCleanCity.Operational.Tests
         }
 
         [Test]
-        public void E3_LaCartePreparee_ParleParQuiParle()
+        public void E3_LaCartePreparee_NOuvreJamaisSurUnNom()
         {
-            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
-                { { "onboarding.preseed_exception.card", "Lt. Hara — cuisson du soir bloquée : plus de solvant." } });
+            // T1 (atelier D37, table 64 @8d9b9e3a) : l'opt-in exigeant est RETIRÉ de ce site ; garde : le rendu ne commence JAMAIS par
+            // le nom du lieutenant (ni figé « Lt. Hara — », ni le sien « Lt. Tull — » : l'en-tête de la bulle le nomme déjà)
+            const string D37 = "Cuisson du soir bloquée : plus de Pyralin au labo. Il en faut avant de rallumer.";
             var carte = new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto
             {
                 event_descriptor_i18n = new MafiaCleanCity.Operational.Exceptions.I18nRefDto { key = "onboarding.preseed_exception.card" },
                 lieutenant = new MafiaCleanCity.Operational.Exceptions.ExceptionLieutenantDto { id = "lt", name = "Lt. Tull" },
                 lieutenant_id = "lt",
             };
-            string t = MafiaCleanCity.Operational.Exceptions.ExceptionBandes.TexteServeur(carte);
-            StringAssert.StartsWith("Lt. Tull \u2014 cuisson du soir bloquée", t, "le lieutenant de la CARTE, pas « Lt. Hara »");
-            StringAssert.DoesNotContain("Hara", t);
+            foreach (string servie in new[] { "Lt. Hara — cuisson du soir bloquée : plus de solvant.", "{nom} — cuisson du soir bloquée.", D37, null })
+            {
+                if (servie == null) I18nCatalog.Oublier();
+                else I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { "onboarding.preseed_exception.card", servie } });
+                string t = MafiaCleanCity.Operational.Exceptions.ExceptionBandes.TexteServeur(carte);
+                Assert.IsFalse(t.StartsWith("Lt. Tull") || t.StartsWith("Lt. Hara") || t.StartsWith("{nom}"),
+                    $"servie « {servie} » ⇒ « {t} » ouvre sur un nom");
+                Assert.AreEqual(D37, t, $"servie « {servie} »");
+            }
+        }
+
+        [Test]
+        public void E4_LePont_NeTouchePasUneAutreCle()
+        {
+            // portée du pont TD-763 : les deux clés T1 SEULEMENT (f2) — ailleurs, une réplique qui ouvre sur un nom passe telle quelle
+            Assert.IsTrue(NomsFiges.EstPerime("onboarding.preseed_exception.card", "Lt. Hara — cuisson."));
+            Assert.IsTrue(NomsFiges.EstPerime("tutorial.exception_card.onboarding_preseed", "Lt. Skeld — cuisson."));
+            Assert.IsFalse(NomsFiges.EstPerime("appro.bloc.autre", "Lt. Hara — cuisson."), "autre clé : jamais");
+            Assert.IsFalse(NomsFiges.EstPerime("onboarding.preseed_exception.card", "Cuisson du soir bloquée."), "D37 : pas périmée");
         }
     }
 

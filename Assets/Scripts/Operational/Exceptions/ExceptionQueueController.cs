@@ -271,12 +271,14 @@ namespace MafiaCleanCity.Operational.Exceptions
                     if (c != null && c.exception_id == trancheeCarte.exception_id) { trancheeCarte = null; trancheeIssue = null; break; }
             // ⑨-2 — `.zinc.haut` (66 %) quand la file attend ; `.zinc.haut.vide` (52 %) quand personne (cadre 16).
             if (decor != null) decor.AppliquerZinc(n == 0 ? ZincVide : ZincFile, DosFile);
+            partZincPosee = -1f;   // ⑨ (D36) : la file pleine recale le zinc sur sa place à la prochaine image (`CalerLeZinc`)
             // ⑨-6 — personne (cadre 16) : ni ligne du soir, ni file, ni bulle, ni tampon ; les tabourets vides et la plaque
             // du soir les remplacent. La phrase vit dans la plaque, plus dans la ligne.
             bool vide = n == 0;
             ligneAmbiance.gameObject.SetActive(!vide);
             fileRoot.gameObject.SetActive(!vide);
             parleRoot.gameObject.SetActive(!vide);
+            zincPlace.gameObject.SetActive(!vide);   // ⑨ (D36) : état vide ⇒ le zinc bas du cadre 16, pas de place réservée
             tamponRoot.gameObject.SetActive(!vide);
             tabouretsVides.SetActive(vide);
             plaqueDuSoir.SetActive(vide);
@@ -625,17 +627,32 @@ namespace MafiaCleanCity.Operational.Exceptions
             rail.AddComponent<Image>().color = parti ? EnGris(CouleurRail(c.severity_band)) : CouleurRail(c.severity_band);
             AddLayoutElement(rail, preferredWidth: Px(34f), minWidth: Px(34f), preferredHeight: Px(3f), minHeight: Px(3f));
 
-            TextMeshProUGUI nom = NouveauTexteMaquette(a.transform, "Nom", QuiParle(c), 10f, Creme);
+            // ⑨ (atelier D36, 26/09) : l'étiquette tient sur UNE ligne — « Lt. Skeld · CUISINIER », le nom et le métier seulement.
+            // Les bandes (gravité · priorité) sont déjà dans le comptoir, sous le nom de la bulle : répétées ici, elles passaient
+            // l'étiquette sur 3 lignes et la faisaient tomber sur le zinc (planche A1 de 20260926-044215). `LigneAttendant` reste
+            // (jointure du rôle, testée) ; l'étiquette ne porte que le rôle.
+            GameObject etiquette = NewUI("Etiquette", a.transform);
+            HorizontalLayoutGroup he = etiquette.AddComponent<HorizontalLayoutGroup>();
+            he.spacing = Px(3f);
+            he.childControlWidth = true; he.childControlHeight = true;
+            he.childForceExpandWidth = false; he.childForceExpandHeight = false;
+            he.childAlignment = TextAnchor.LowerCenter;
+            TextMeshProUGUI nom = NouveauTexteMaquette(etiquette.transform, "Nom", QuiParle(c), 10f, Creme);
             nom.font = DesignTokens.Current.hudSerifFont;
             nom.alignment = TextAlignmentOptions.Center;
+            nom.textWrappingMode = TextWrappingModes.NoWrap;
+            nom.overflowMode = TextOverflowModes.Overflow;
             TrackText(nom, nom.text);
-
-            TextMeshProUGUI bandes = NouveauTexteMaquette(a.transform, "Bandes", LigneAttendant(c), 6.5f, Creme2);
-            bandes.fontStyle = FontStyles.UpperCase;
-            bandes.characterSpacing = 10f;                  // `letter-spacing:.1em`
-            bandes.alignment = TextAlignmentOptions.Center;
-            bandes.enableWordWrapping = true;
-            TrackText(bandes, bandes.text);
+            string role = RoleDe(c);
+            if (!string.IsNullOrEmpty(role))
+            {
+                TextMeshProUGUI metier = NouveauTexteMaquette(etiquette.transform, "Metier", "· " + role, 6.5f, Creme2);
+                metier.fontStyle = FontStyles.UpperCase;
+                metier.characterSpacing = 10f;              // `letter-spacing:.1em`
+                metier.textWrappingMode = TextWrappingModes.NoWrap;
+                metier.overflowMode = TextOverflowModes.Overflow;
+                TrackText(metier, metier.text);
+            }
 
             // screen_a8 : la catégorie de couche conflit, EN TOUTES LETTRES (inchangé).
             string cat = CategorieConflit(c);
@@ -1141,6 +1158,11 @@ namespace MafiaCleanCity.Operational.Exceptions
             hf.padding = new RectOffset(PxI(10f), PxI(10f), 0, 0);      // `.file{padding:0 10px}`
             AddLayoutElement(fileRoot.gameObject, minHeight: Px(CssFileHaut));   // plancher : la file grandit avec ses attendants
 
+            // ⑨ (atelier D36, 26/09) : la PLACE du zinc, JUSTE sous la file (au-dessus de l'après et de la réplique) — l'épaisseur du plateau. `CalerLeZinc` y pose le
+            // plateau : le zinc suit le bord haut de la réplique, et la file se pose dessus, quelle que soit la hauteur du comptoir.
+            zincPlace = (RectTransform)NewUI("ZincPlace", comptoirGo.transform).transform;
+            AddLayoutElement(zincPlace.gameObject, preferredHeight: Px(CssPlateauEpais), minHeight: Px(CssPlateauEpais));
+
             BuildApres(comptoirGo.transform);
 
             parleRoot = Parleur().ConstruireRangee(comptoirGo.transform, CssParleEcart);   // ⑩-1 — le code partagé avec ⑩
@@ -1192,7 +1214,32 @@ namespace MafiaCleanCity.Operational.Exceptions
         private DecorAuComptoir decor;
         public DecorAuComptoir Decor => decor;
 
-        private RectTransform racine, comptoir, fileRoot, parleRoot, tamponRoot, lienRoot;
+        private RectTransform racine, comptoir, fileRoot, parleRoot, tamponRoot, lienRoot, zincPlace;
+
+        /// <summary>L'épaisseur du plateau du zinc (`DecorAuComptoir.AppliquerZinc` : plateau de 22 px sous le haut de l'étagère).</summary>
+        private const float CssPlateauEpais = 22f;
+
+        /// <summary>⑨ (atelier D36, 26/09) — le zinc SUIT le comptoir : le haut de son plateau se pose sur le haut de `ZincPlace` (entre la
+        /// file et la réplique). La hauteur du zinc est une part du décor : h × (1 − étagère) = hauteur du haut de la place au-dessus du
+        /// bas du décor. File vide ⇒ rien (le zinc bas de l'état vide, cadre 16, reste). Appelé à chaque LateUpdate (le comptoir grandit
+        /// avec sa réplique, après la mise en page) ; public pour la garde.</summary>
+        public void CalerLeZinc()
+        {
+            if (decor == null || zincPlace == null || Cards == null || Cards.Length == 0 || !zincPlace.gameObject.activeInHierarchy) return;
+            var coinsDecor = new Vector3[4]; ((RectTransform)decor.transform).GetWorldCorners(coinsDecor);
+            var coinsPlace = new Vector3[4]; zincPlace.GetWorldCorners(coinsPlace);
+            float hautDecor = coinsDecor[1].y - coinsDecor[0].y;
+            if (hautDecor <= 0f) return;
+            float part = (coinsPlace[1].y - coinsDecor[0].y) / hautDecor / (1f - DosFile);
+            part = Mathf.Clamp01(part);
+            if (Mathf.Abs(part - partZincPosee) < 0.0005f) return;
+            partZincPosee = part;
+            decor.AppliquerZinc(part, DosFile);
+        }
+
+        private float partZincPosee = -1f;
+
+        private void LateUpdate() => CalerLeZinc();
         private TextMeshProUGUI ligneAmbiance;
 
         // ⑨-6 — l'état vide (cadre 16) : trois grands tabourets vides et la plaque du soir, à la place de la file.

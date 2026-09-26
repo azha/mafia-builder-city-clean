@@ -344,6 +344,24 @@ namespace MafiaCleanCity.Operational.Tests
                 "l'exclure avec sa raison), retirer le disparu.");
         }
 
+        /// <summary>ÉPINGLE QUI SE RETOURNE (f2 26/09) — le pont `NomsFiges` (TD-763) n'a de raison que tant que le bundle sert une forme
+        /// NOMMÉE de T1. Contre le bundle RÉEL : au moins une des deux clés T1 est encore nommée (« Lt. X — » ou {nom}). Le jour où le
+        /// back sert les valeurs D37 (table 64 @8d9b9e3a), ceci ROUGIT : retirer le pont et cette épingle.</summary>
+        [UnityTest]
+        public IEnumerator PontT1_EncoreNecessaire()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("ShellPontT1");
+            shell = shellGo.AddComponent<AppShell>();
+            float t0 = Time.realtimeSinceStartup;
+            while (!I18nCatalog.Charge && Time.realtimeSinceStartup - t0 < 45f) yield return null;
+            Assert.IsTrue(I18nCatalog.Charge, "le shell n'a pas amorcé le bundle réel en 45 s");
+            Assert.Greater(I18nCatalog.NbClesServies, 400, "bundle incomplet : la mesure ne vaudrait rien");
+            bool encoreNommee = NomsFiges.ClesT1.Any(NomsFiges.ValeurServieNommee);
+            Assert.IsTrue(encoreNommee, "le bundle sert T1 SANS nom (" + NomsFiges.PerimeQuand + ") : le pont NomsFiges (TD-763) est "
+                + "périmé — le retirer (ExceptionBandes.TexteServeur, TutorialScreenController.TexteDuTutoriel) avec cette épingle.");
+        }
+
         [UnityTest]
         public IEnumerator ChaqueLocataire_NeRetombeQueSurLaDetteDatee_EtLaDetteNeContientQueDuNonServi()
         {
