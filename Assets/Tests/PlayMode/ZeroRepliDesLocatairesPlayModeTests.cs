@@ -102,6 +102,7 @@ namespace MafiaCleanCity.Operational.Tests
             "profil.etat.active",
             "profil.langue.fr",
             "profil.langue.en",
+            "boutique.bloc.bientot",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
