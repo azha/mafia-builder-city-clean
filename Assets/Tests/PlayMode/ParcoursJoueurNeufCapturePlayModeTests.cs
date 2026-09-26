@@ -65,11 +65,14 @@ namespace MafiaCleanCity.Capture.Tests
         /// voit un joueur sur son téléphone) ; jamais le compte de démo ni le compte de capture.</summary>
         private const string VariableCible = "MAFIA_PARCOURS_BACK_URL";
 
+        private string urlAvant;
+
         [SetUp]
         public void SetUp()
         {
-            string cible = System.Environment.GetEnvironmentVariable(VariableCible);
-            if (!string.IsNullOrWhiteSpace(cible)) MafiaCleanCity.AdresseDuBack.PoserPourTest(cible.Trim().TrimEnd('/'));
+            // gardes (f2 26/09) : la cible est VALIDÉE avant toute pose — donc avant tout `new AuthClient()` ; l'adresse d'avant est
+            // retenue pour être RESTAURÉE (pas seulement effacée) au TearDown
+            urlAvant = CibleDuParcours.Appliquer(System.Environment.GetEnvironmentVariable(VariableCible));
         }
         private static readonly (int largeur, int hauteur)[] Resolutions = { (1080, 2400), (1080, 1920) };
         private static int callsignSeq;
@@ -88,7 +91,7 @@ namespace MafiaCleanCity.Capture.Tests
             shell = null; shellGo = null;
             LogAssert.ignoreFailingMessages = false;
             MafiaCleanCity.I18n.I18nCatalog.Oublier();   // TD-576 : le shell amorce le catalogue, la classe le rend
-            MafiaCleanCity.AdresseDuBack.Oublier();       // la cible posée par MAFIA_PARCOURS_BACK_URL ne survit pas au test
+            CibleDuParcours.Restaurer(urlAvant);            // la cible posée par MAFIA_PARCOURS_BACK_URL ne survit pas au test
         }
 
         [UnityTest]
@@ -110,7 +113,10 @@ namespace MafiaCleanCity.Capture.Tests
             string errSignup = null;
             yield return auth.SignUp(callsign, MotDePasse, _ => { }, e => errSignup = e);
             Assert.IsNull(errSignup, $"P0 : l'inscription du compte neuf a échoué ({errSignup}) — la pile dev répond-elle ?");
-            Noter("P0", "inscription", $"compte neuf {DemoIdentityResolver.Empreinte(callsign)} · back visé {MafiaCleanCity.AdresseDuBack.Url}");
+            // garde (c) : un compte créé AILLEURS qu'en local se DIT en tête — l'hôte EFFECTIVEMENT visé (lu dans AdresseDuBack.Url après la
+            // pose), jamais la variable brute ; l'identité du compte par son EMPREINTE seulement
+            Noter("P0", "inscription", CibleDuParcours.Bandeau(MafiaCleanCity.AdresseDuBack.Url)
+                + $"compte neuf {DemoIdentityResolver.Empreinte(callsign)} · back visé {MafiaCleanCity.AdresseDuBack.Url}");
 
             // ── P1 · lancement ──────────────────────────────────────────────────────────────────────────────────────────────────
             LogAssert.ignoreFailingMessages = true;   // le shell journalise ses replis réseau ; ce test juge ce qu'il VOIT
@@ -451,6 +457,88 @@ namespace MafiaCleanCity.Capture.Tests
             if (repere == null) return dessus;
             for (int k = repere.GetSiblingIndex() + 1; k < slot.childCount; k++) dessus.Add(slot.GetChild(k));
             return dessus;
+        }
+    }
+
+    /// <summary>La CIBLE du parcours (MAFIA_PARCOURS_BACK_URL) et ses trois gardes (f2 26/09, relues par f1). Pur, testé hors réseau.
+    ///   (a) une URL `http://` vers un hôte NON local est REFUSÉE avant toute pose (un exception, le test rougit) ;
+    ///   (b) `Restaurer` rend à `AdresseDuBack.Url` la valeur d'AVANT le SetUp — pas seulement « effacée » ;
+    ///   (c) `Bandeau` : « COMPTE NEUF CRÉÉ SUR <hôte> · » quand l'hôte visé n'est pas local.
+    /// ⚠️ `AdresseDuBack` (la source d'URL de l'APK) n'est PAS modifiée : seules ses coutures de test existantes sont appelées.</summary>
+    public static class CibleDuParcours
+    {
+        public static bool EstLocal(string hote) =>
+            hote == "localhost" || hote == "127.0.0.1" || hote == "::1" || hote == "[::1]";
+
+        /// <summary>Null si l'URL est acceptable ; sinon la raison du refus.</summary>
+        public static string Refus(string url)
+        {
+            if (!System.Uri.TryCreate(url, System.UriKind.Absolute, out System.Uri u)) return $"« {url} » n'est pas une URL absolue";
+            if (u.Scheme != "https" && !EstLocal(u.Host)) return $"« {url} » : hors localhost, seul https est accepté";
+            if (u.Scheme != "https" && u.Scheme != "http") return $"« {url} » : schéma {u.Scheme} refusé";
+            return null;
+        }
+
+        /// <summary>Pose la cible si elle est donnée (après validation) ; rend l'adresse d'AVANT, à passer à `Restaurer`.</summary>
+        public static string Appliquer(string brute)
+        {
+            string avant = MafiaCleanCity.AdresseDuBack.Url;
+            if (string.IsNullOrWhiteSpace(brute)) return avant;
+            string cible = brute.Trim().TrimEnd('/');
+            string refus = Refus(cible);
+            if (refus != null) throw new System.ArgumentException("MAFIA_PARCOURS_BACK_URL refusée : " + refus);
+            MafiaCleanCity.AdresseDuBack.PoserPourTest(cible);
+            return avant;
+        }
+
+        /// <summary>Rend à `AdresseDuBack.Url` sa valeur d'avant : on retire la pose, puis on repose l'ancienne valeur SI elle différait.</summary>
+        public static void Restaurer(string avant)
+        {
+            MafiaCleanCity.AdresseDuBack.Oublier();
+            if (avant != null && MafiaCleanCity.AdresseDuBack.Url != avant) MafiaCleanCity.AdresseDuBack.PoserPourTest(avant);
+        }
+
+        public static string Bandeau(string urlVisee) =>
+            System.Uri.TryCreate(urlVisee, System.UriKind.Absolute, out System.Uri u) && !EstLocal(u.Host)
+                ? $"COMPTE NEUF CRÉÉ SUR {u.Host} · " : "";
+    }
+
+    public class CibleDuParcoursTests
+    {
+        [Test, Category("ClicheParcours")]
+        public void G1_HorsLocalhost_SeulHttps()
+        {
+            Assert.IsNotNull(CibleDuParcours.Refus("http://cleancity.erutheone.eu"), "contrôle positif : http vers le VPS REFUSÉ");
+            Assert.Throws<System.ArgumentException>(() => CibleDuParcours.Appliquer("http://cleancity.erutheone.eu"), "refusé AVANT toute pose");
+            Assert.IsNull(CibleDuParcours.Refus("https://cleancity.erutheone.eu"));
+            Assert.IsNull(CibleDuParcours.Refus("http://localhost:3000"));
+            Assert.IsNull(CibleDuParcours.Refus("http://127.0.0.1"));
+            Assert.IsNotNull(CibleDuParcours.Refus("pas une url"));
+        }
+
+        [Test, Category("ClicheParcours")]
+        public void G2_Restauree_PasSeulementEffacee()
+        {
+            string origine = MafiaCleanCity.AdresseDuBack.Url;
+            try
+            {
+                MafiaCleanCity.AdresseDuBack.PoserPourTest("http://localhost:3999");   // une adresse RÉELLE d'avant, distincte du défaut
+                string avant = CibleDuParcours.Appliquer("https://exemple.invalid/");
+                Assert.AreEqual("http://localhost:3999", avant);
+                Assert.AreEqual("https://exemple.invalid", MafiaCleanCity.AdresseDuBack.Url, "la cible, sans / final");
+                CibleDuParcours.Restaurer(avant);
+                Assert.AreEqual("http://localhost:3999", MafiaCleanCity.AdresseDuBack.Url, "RESTAURÉE à la valeur d'avant, pas effacée");
+            }
+            finally { MafiaCleanCity.AdresseDuBack.Oublier(); }
+            Assert.AreEqual(origine, MafiaCleanCity.AdresseDuBack.Url);
+        }
+
+        [Test, Category("ClicheParcours")]
+        public void G3_LeBandeau_NommeLHoteVise()
+        {
+            Assert.AreEqual("COMPTE NEUF CRÉÉ SUR cleancity.erutheone.eu · ", CibleDuParcours.Bandeau("https://cleancity.erutheone.eu"));
+            Assert.AreEqual("", CibleDuParcours.Bandeau("http://localhost"));
+            Assert.AreEqual("", CibleDuParcours.Bandeau("http://127.0.0.1:3000"));
         }
     }
 }
