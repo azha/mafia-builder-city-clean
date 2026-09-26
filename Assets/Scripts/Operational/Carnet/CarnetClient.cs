@@ -76,6 +76,80 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        // ═══ ㉞ le composeur (26/09) — les sources de cibles et les deux envois ═══════════════════════════════════════════
+
+        /// <summary>⛔ Réservé aux tests : (méthode, chemin, corps envoyé) → (code HTTP, corps rendu). Aucun réseau quand posé.</summary>
+        public static Func<string, string, string, (long code, string corps)> SubstitutPourTest;
+
+        private IEnumerator Echanger(string methode, string chemin, string corps, string bearer, Action<long, string> fin)
+        {
+            if (SubstitutPourTest != null)
+            {
+                (long code, string rendu) = SubstitutPourTest(methode, chemin, corps);
+                fin(code, rendu);
+                yield break;
+            }
+            using (var req = new UnityWebRequest(Url(chemin), methode))
+            {
+                req.downloadHandler = new DownloadHandlerBuffer();
+                if (corps != null)
+                {
+                    req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(corps));
+                    req.SetRequestHeader("Content-Type", "application/json");
+                    req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                }
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+                fin(req.responseCode, req.downloadHandler != null ? req.downloadHandler.text : null);
+            }
+        }
+
+        /// <summary>`GET /v1/operational/routes` — les itinéraires SAUVÉS (le filtre exact de compose). Null sur échec.</summary>
+        public IEnumerator GetRoutesSauvees(string bearer, Action<RouteSauveeDto[]> fin)
+        {
+            RouteSauveeDto[] r = null;
+            yield return Echanger(UnityWebRequest.kHttpVerbGET, "operational/routes", null, bearer, (code, corps) =>
+            {
+                if (code < 200 || code >= 300) return;
+                try { r = JsonUtility.FromJson<RoutesSauveesEnvelope>(corps)?.payload?.data?.routes; } catch { r = null; }
+            });
+            fin?.Invoke(r);
+        }
+
+        /// <summary>`GET /v1/recruitment/candidates` — les candidats `available`. Null sur échec.</summary>
+        public IEnumerator GetCandidats(string bearer, Action<CandidatDto[]> fin)
+        {
+            CandidatDto[] r = null;
+            yield return Echanger(UnityWebRequest.kHttpVerbGET, "recruitment/candidates", null, bearer, (code, corps) =>
+            {
+                if (code < 200 || code >= 300) return;
+                try { r = JsonUtility.FromJson<CandidatsEnvelope>(corps)?.payload?.data?.candidates; } catch { r = null; }
+            });
+            fin?.Invoke(r);
+        }
+
+        /// <summary>Ce que rend un envoi du composeur : le carnet servi (CueStackView) si 2xx, sinon le corps BRUT du refus — l'écran
+        /// le fait parler par `ComposeurDuCarnet.PhraseDuRefus` (jamais le `message` de développeur).</summary>
+        public class Envoi { public bool Ok; public long Code; public string Corps; public CarnetCourantDto Carnet; }
+
+        public IEnumerator Composer(CueStackComposeDto corps, string bearer, Action<Envoi> fin) =>
+            Envoyer("cue-stack/compose", JsonUtility.ToJson(corps), bearer, fin);
+
+        public IEnumerator Lancer(bool acquitter, string bearer, Action<Envoi> fin) =>
+            Envoyer("cue-stack/commit", JsonUtility.ToJson(new CueStackCommitDto { acknowledge_compounding = acquitter }), bearer, fin);
+
+        private IEnumerator Envoyer(string chemin, string corps, string bearer, Action<Envoi> fin)
+        {
+            var e = new Envoi();
+            yield return Echanger(UnityWebRequest.kHttpVerbPOST, chemin, corps, bearer, (code, rendu) =>
+            {
+                e.Code = code; e.Corps = rendu; e.Ok = code >= 200 && code < 300;
+                if (e.Ok) { try { e.Carnet = JsonUtility.FromJson<CarnetCourantEnvelope>(rendu)?.payload?.data; } catch { e.Carnet = null; } }
+            });
+            fin?.Invoke(e);
+        }
+
         /// <summary>C8 — `GET /v1/political-events/calendar` : ce que la ville prépare (en cours, annoncé). Public côté back (la
         /// ville est une pour tous) ; le jeton est envoyé quand même, comme partout.</summary>
         public IEnumerator GetCalendrierPolitique(string bearer, Action<CalendrierPolitiqueDto> onOk, Action<long, string> onErr)

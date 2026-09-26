@@ -102,6 +102,10 @@ namespace MafiaCleanCity.I18n
             return repli;
         }
 
+        /// <summary>Vrai si la clé est SERVIE — une PRÉSENCE, pas un texte (rien à afficher, donc aucun repli à compter). Pour un geste
+        /// qui ne s'ouvre qu'une fois ses mots servis (㉞ « Recruter », décision f2 26/09 : caché tant que le libellé du candidat manque).</summary>
+        public static bool EstServie(string cle) => I18nCatalog.Connait(cle);
+
         /// <summary>UN GABARIT à clé EXPLICITE : la valeur servie de `cle` (paramètres remplis par le catalogue), sinon le `repli`
         /// du client, paramètres remplis de la même façon. Le repli se COMPTE exactement comme dans `De` (`NbReplis`,
         /// `DernierRepli`, `ClesEnRepli`).

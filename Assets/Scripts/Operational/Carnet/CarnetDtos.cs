@@ -7,17 +7,61 @@ namespace MafiaCleanCity.Operational
     /// ⚠️ Les quatre champs arrivent NULS ou VIDES : le carnet existe comme concept, pas encore
     /// comme objet. Déclarés quand même — un champ absent du DTO est jeté en silence par
     /// `JsonUtility`, et c'est ainsi qu'on ne voit jamais arriver une donnée.
-    /// ⚠️ `slots` est déclaré `string[]` : je n'ai vu QUE le tableau vide, donc la forme d'un
-    /// créneau n'est pas mesurable aujourd'hui. La déduire de la maquette (titre + sous-titre)
-    /// ferait passer un dessin pour un contrat.</summary>
+    /// ⛔ `slots` était déclaré `string[]` (seul le tableau vide avait été vu) : ce sont des OBJETS — `CueStackView.toView`
+    /// (cue-stack.service.ts:323-357 @1ffb08b4), lu à la source pour ㉞ le 26/09.</summary>
     [Serializable]
     public class CarnetCourantDto
     {
         public string cue_stack_id;
         public string state;
         public string committed_at;
-        public string[] slots;
+        public CueSlotDto[] slots;
     }
+
+    [Serializable] public class CueCibleDto { public string kind; public string id; }   // route | building | candidate
+
+    /// <summary>Un créneau SERVI (toView) : les champs du composeur, puis l'état d'exécution en bandes.</summary>
+    [Serializable]
+    public class CueSlotDto
+    {
+        public string slot_id;
+        public string slot_type;
+        public CueCibleDto target_ref;
+        public string[] dependencies;
+        public int drag_order;
+        public string status;
+        public string estimated_time_bucket;
+        public string prerequisite_satisfaction_bucket;
+        public string dependency_conflict_bucket;
+    }
+
+    /// <summary>`POST cue-stack/compose` — UNIQUEMENT les 5 champs d'un créneau (le back rejette les champs inconnus).</summary>
+    [Serializable]
+    public class CueSlotComposeDto
+    {
+        public string slot_id;
+        public string slot_type;
+        public CueCibleDto target_ref;
+        public string[] dependencies;
+        public int drag_order;
+    }
+    [Serializable] public class CueStackComposeDto { public CueSlotComposeDto[] slots; }
+    /// <summary>`POST cue-stack/commit` — seul le littéral `true` acquitte (cue-stack.controller.ts:118) ; `false` = sans acquittement.</summary>
+    [Serializable] public class CueStackCommitDto { public bool acknowledge_compounding; }
+
+    /// <summary>`GET /v1/operational/routes` — les itinéraires SAUVÉS du joueur (route.service.ts:227, lignes brutes).</summary>
+    [Serializable] public class RouteSauveeDto { public string route_id; public string route_name; public string destination_building_id; public bool is_saved; }
+    [Serializable] public class RoutesSauveesData { public RouteSauveeDto[] routes; }
+    [Serializable] public class RoutesSauveesPayload { public RoutesSauveesData data; }
+    [Serializable] public class RoutesSauveesEnvelope { public RoutesSauveesPayload payload; }
+
+    /// <summary>`GET /v1/recruitment/candidates` — les candidats `available` (recruitment.repository.ts:165, lignes brutes). ⛔ `profile.name`
+    /// (« Civilian Prospect ») est un placeholder ANGLAIS (TD-046) : jamais lu — le nom vient de la table 83 (pool / rival).</summary>
+    [Serializable] public class ProfilDeCandidatDto { public string district_familiarity; public string experience; public string ask_band; }
+    [Serializable] public class CandidatDto { public string candidate_id; public string pool; public string source_rival_key; public string status; public ProfilDeCandidatDto profile; }
+    [Serializable] public class CandidatsData { public CandidatDto[] candidates; }
+    [Serializable] public class CandidatsPayload { public CandidatsData data; }
+    [Serializable] public class CandidatsEnvelope { public CandidatsPayload payload; }
 
     [Serializable] public class CarnetCourantPayload { public CarnetCourantDto data; }
     [Serializable] public class CarnetCourantEnvelope { public CarnetCourantPayload payload; }

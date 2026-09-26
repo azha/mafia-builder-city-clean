@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -206,9 +207,135 @@ namespace MafiaCleanCity.Operational
             yield return null;
 
             if (DernierChargement == null) { RendreEtatIndisponibleNomme(); RenduTermine = true; yield break; }
+            yield return LireLesCibles();
             AppliquerEtat(DernierChargement);
             RenduTermine = true;
         }
+
+        // ═══ ㉞ LE COMPOSEUR (commande f2 26/09, table 73) ═══════════════════════════════════════════════════════════════════
+        // `compose` exige 4 à 8 ordres D'UN COUP : le carnet se garde ICI jusqu'à 4, puis compose, puis commit.
+
+        /// <summary>Les cibles posables par type (`ComposeurDuCarnet.CiblesEligibles`, TD-764) ; null tant que non lues.</summary>
+        public Dictionary<string, List<CibleDuCarnet>> Cibles { get; private set; }
+        public ComposeurDuCarnet.Brouillon Brouillon { get; } = new ComposeurDuCarnet.Brouillon();
+        /// <summary>null : composeur fermé ; "" : étape 1 (« Quel ordre ? ») ; un type : étape 2 (« Sur quoi ? »).</summary>
+        public string EtapeDuComposeur { get; private set; }
+        public int LigneEnMain { get; private set; } = -1;
+        public string DernierRefus { get; private set; }
+        public bool ConfirmationDemandee { get; private set; }
+        public int Compositions { get; private set; }
+        public int Lancements { get; private set; }
+        private bool envoiEnCours;
+
+        /// <summary>Les 4 sources de cibles (mesure du 26/09, back @1ffb08b4) — lues seulement quand aucun carnet n'est servi.</summary>
+        private IEnumerator LireLesCibles()
+        {
+            if (DernierChargement.slots != null && DernierChargement.slots.Length > 0) yield break;
+            BatimentPossedeDto[] batiments = null;
+            RouteSauveeDto[] routes = null;
+            MafiaCleanCity.Operational.Exceptions.ExceptionCardDto[] ardoises = null;
+            CandidatDto[] candidats = null;
+            yield return new MesBatimentsClient { BaseUrl = baseUrl }.Lire(token, b => batiments = b, (c, m) => { });
+            yield return client.GetRoutesSauvees(token, r => routes = r);
+            yield return new MafiaCleanCity.Operational.Exceptions.ExceptionsClient { BaseUrl = baseUrl }.GetQueue(token, q => ardoises = q, (c, m) => { });
+            if (ComposeurDuCarnet.RecruterOffert) yield return client.GetCandidats(token, k => candidats = k);
+            Cibles = ComposeurDuCarnet.CiblesEligibles(batiments, routes, ardoises, candidats);
+        }
+
+        /// <summary>Rend le composeur sur un carnet vide SERVI et des cibles FABRIQUÉES — réservé aux tests (aucun réseau).</summary>
+        public void RendreComposeurPourTest(Dictionary<string, List<CibleDuCarnet>> cibles)
+        {
+            Cibles = cibles;
+            RendrePourTest(new CarnetCourantDto { slots = new CueSlotDto[0] });
+        }
+
+        public void OuvrirLeComposeur() { if (!Brouillon.Plein) { EtapeDuComposeur = ""; DernierRefus = null; RendreDeNouveau(); } }
+        public void FermerLeComposeur() { EtapeDuComposeur = null; RendreDeNouveau(); }
+
+        /// <summary>Étape 1 → 2. Un type OFFERT et qui a au moins une cible ; sinon rien (aucun geste qui ne peut aboutir).</summary>
+        public void ChoisirType(string slotType)
+        {
+            if (!ComposeurDuCarnet.TypesOfferts().Contains(slotType) || CiblesDe(slotType).Count == 0) return;
+            EtapeDuComposeur = slotType;
+            RendreDeNouveau();
+        }
+
+        public void Choisir(CibleDuCarnet c)
+        {
+            if (!Brouillon.Poser(c)) return;
+            EtapeDuComposeur = null;
+            DernierRefus = null;
+            RendreDeNouveau();
+        }
+
+        public void RetirerLigne(int i) { Brouillon.Retirer(i); LigneEnMain = -1; DernierRefus = null; ConfirmationDemandee = false; RendreDeNouveau(); }
+
+        /// <summary>« appui long pour déplacer » : la ligne est prise en main, puis posée sur la ligne touchée ensuite.</summary>
+        public void PrendreEnMain(int i) { LigneEnMain = i >= 0 && i < Brouillon.Compte ? i : -1; RendreDeNouveau(); }
+        public void PoserIci(int j)
+        {
+            if (LigneEnMain < 0) return;
+            Brouillon.Deplacer(LigneEnMain, j);
+            LigneEnMain = -1;
+            ConfirmationDemandee = false;
+            RendreDeNouveau();
+        }
+
+        private List<CibleDuCarnet> CiblesDe(string t) =>
+            Cibles != null && Cibles.TryGetValue(t, out List<CibleDuCarnet> l) ? l : new List<CibleDuCarnet>();
+
+        /// <summary>« Lancer la soirée » : compose (4 à 8 d'un coup), puis commit. SETTLING_COMPOUND_REQUIRED ⇒ la confirmation
+        /// servie ; « Y aller quand même » renvoie commit avec l'acquittement. Tout autre refus parle par la table 73.</summary>
+        public IEnumerator LancerLaSoiree()
+        {
+            if (!Brouillon.PeutLancer || envoiEnCours) yield break;
+            envoiEnCours = true;
+            DernierRefus = null;
+            CarnetClient.Envoi compose = null;
+            yield return client.Composer(Brouillon.Corps(), token, e => compose = e);
+            Compositions++;
+            if (this == null) yield break;
+            if (compose == null || !compose.Ok) { Refuser(compose); yield break; }
+            yield return Commettre(false);
+        }
+
+        public IEnumerator YAllerQuandMeme()
+        {
+            if (!ConfirmationDemandee || envoiEnCours) yield break;
+            envoiEnCours = true;
+            yield return Commettre(true);
+        }
+
+        private IEnumerator Commettre(bool acquitter)
+        {
+            CarnetClient.Envoi commit = null;
+            yield return client.Lancer(acquitter, token, e => commit = e);
+            Lancements++;
+            if (this == null) yield break;
+            if (commit != null && !commit.Ok && ComposeurDuCarnet.Code(commit.Corps) == ComposeurDuCarnet.CodeConfirmation)
+            {
+                ConfirmationDemandee = true;
+                envoiEnCours = false;
+                RendreDeNouveau();
+                yield break;
+            }
+            if (commit == null || !commit.Ok) { Refuser(commit); yield break; }
+            ConfirmationDemandee = false;
+            Brouillon.Vider();
+            envoiEnCours = false;
+            DernierChargement = commit.Carnet ?? DernierChargement;
+            AppliquerEtat(DernierChargement);
+        }
+
+        private void Refuser(CarnetClient.Envoi e)
+        {
+            DernierRefus = ComposeurDuCarnet.PhraseDuRefus(e?.Corps);
+            ConfirmationDemandee = false;
+            envoiEnCours = false;
+            RendreDeNouveau();
+        }
+
+        private void RendreDeNouveau() { if (DernierChargement != null) AppliquerEtat(DernierChargement); }
 
         /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
         /// `RendrePourTest`). Ne prouve jamais que le back émet ce corps, seulement ce que
@@ -266,21 +393,34 @@ namespace MafiaCleanCity.Operational
 
         private void AppliquerEtat(CarnetCourantDto dto)
         {
-            string[] creneaux = dto != null && dto.slots != null ? dto.slots : new string[0];
+            DernierChargement = dto;
+            CueSlotDto[] servis = dto != null && dto.slots != null ? dto.slots.OrderBy(x => x.drag_order).ToArray() : new CueSlotDto[0];
+            bool composer = servis.Length == 0;
+            int n = composer ? Brouillon.Compte : servis.Length;
 
             titreEcran.text = MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.les_ordres_de_ce_soir", "Les ordres à lancer");   // table 80 @20ceeca0 : la valeur servie réécrite (le geste part tout de suite — mesure back), clé gardée
-            sousTitre.text = creneaux.Length == 0
+            sousTitre.text = n == 0
                 ? Lib("aucun ordre posé — entre quatre et huit, dans l'ordre où ils partiront")
                 : Lib("entre quatre et huit gestes, dans l'ordre où ils partiront");
-            compte.text = creneaux.Length + Lib(" ORDRES SUR 8");
+            compte.text = n + Lib(" ORDRES SUR 8");
 
             ViderCreneaux();
             // ⛔ LES HUIT SONT TOUJOURS DESSINÉS. Le plafond donne sa forme au geste, et masquer
-            // les vides ferait croire le carnet plein. `slots` est mesuré VIDE sur un compte
-            // frais et sa forme n'est pas connue : on n'affiche donc que le RANG, jamais un
-            // titre inventé.
+            // les vides ferait croire le carnet plein. Un créneau SERVI se nomme par son type (`carnet.ordre.*`) ; sa cible, seulement
+            // si elle est connue des sources lues — jamais un nom inventé.
             for (int i = 1; i <= 8; i++)
-                Creneau(i, i <= creneaux.Length ? creneaux[i - 1] : null, null);
+            {
+                if (!composer)
+                {
+                    CueSlotDto sl = i <= servis.Length ? servis[i - 1] : null;
+                    Creneau(i, sl == null ? null : NomServi(sl.slot_type), sl == null ? null : CibleConnue(sl)?.Libelle());
+                    continue;
+                }
+                CibleDuCarnet c = i <= Brouillon.Compte ? Brouillon.Lignes[i - 1] : null;
+                GameObject ligne = Creneau(i, c == null ? null : ComposeurDuCarnet.NomDuType(c.SlotType), c?.Libelle());
+                BrancherLigne(ligne, i - 1, c);
+            }
+            RendreComposeur(composer);
 
             if (CodeSuitesNommees == 403)
             {
@@ -303,6 +443,160 @@ namespace MafiaCleanCity.Operational
 
         }
 
+        private static string NomServi(string slotType) =>
+            ComposeurDuCarnet.TypesLive.Contains(slotType) ? ComposeurDuCarnet.NomDuType(slotType) : null;
+
+        private CibleDuCarnet CibleConnue(CueSlotDto sl) =>
+            sl?.target_ref == null || Cibles == null || !Cibles.TryGetValue(sl.slot_type ?? "", out List<CibleDuCarnet> l)
+                ? null : l.FirstOrDefault(c => c.Id == sl.target_ref.id);
+
+        /// <summary>Les gestes d'une ligne du brouillon : Retirer ; appui long pour prendre en main ; toucher pour poser la ligne en
+        /// main ; la PREMIÈRE ligne vide ouvre le composeur (« — rien — » devient touchable, table 73).</summary>
+        private void BrancherLigne(GameObject ligne, int index, CibleDuCarnet c)
+        {
+            if (ligne == null) return;
+            if (c != null)
+            {
+                // la ligne reçoit les appuis (AppuiLong) : un fond — teinté si elle est en main, transparent sinon
+                AjouterFond(ligne, LigneEnMain == index ? CouleurEnMain : new Color(0f, 0f, 0f, 0f)).raycastTarget = true;
+                if (LigneEnMain >= 0 && LigneEnMain != index) AjouterToucher(ligne, () => PoserIci(index));
+                var appui = ligne.AddComponent<AppuiLong>();
+                appui.Action = () => PrendreEnMain(index);
+                NouveauBouton(ligne.transform, "Retirer", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.composeur.retirer", "Retirer"),
+                    () => RetirerLigne(index), false);
+                return;
+            }
+            if (index == Brouillon.Compte && !Brouillon.Plein && EtapeDuComposeur == null)
+                NouveauBouton(ligne.transform, "Poser", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.composeur.poser_un_ordre", "Poser un ordre"),
+                    OuvrirLeComposeur, false);
+        }
+
+        /// <summary>Le bloc du composeur, sous le carnet : l'état vide, l'étape 1, l'étape 2, le refus, la confirmation, et le pied
+        /// (« Encore n ordres à poser » ou « Lancer la soirée » — ce bouton n'existe qu'à 4).</summary>
+        private void RendreComposeur(bool actif)
+        {
+            if (composeurRoot == null) return;
+            // détachés AVANT la destruction (différée à la fin de la frame) : un rendu relu dans la même frame ne voit que le neuf
+            for (int i = composeurRoot.childCount - 1; i >= 0; i--)
+            {
+                Transform ancien = composeurRoot.GetChild(i);
+                ancien.SetParent(null, false);
+                UnityEngine.Object.Destroy(ancien.gameObject);
+            }
+            composeurRoot.SetAsLastSibling();   // sous les huit lignes, qui sont recréées à chaque rendu
+            composeurRoot.gameObject.SetActive(actif);
+            if (!actif) return;
+            Transform r = composeurRoot;
+
+            if (ConfirmationDemandee)
+            {
+                var (titre, phrase, bouton, sous) = ComposeurDuCarnet.PhrasesDeConfirmation();
+                Ligne(r, "ConfirmationTitre", titre, true);
+                Ligne(r, "ConfirmationPhrase", phrase, false);
+                NouveauBouton(r, "YAllerQuandMeme", bouton, () => StartCoroutine(YAllerQuandMeme()), true);
+                Ligne(r, "ConfirmationSous", sous, false);
+                return;
+            }
+            if (!string.IsNullOrEmpty(DernierRefus)) Ligne(r, "Refus", DernierRefus, false);
+
+            if (EtapeDuComposeur == "")
+            {
+                Ligne(r, "QuelOrdre", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.composeur.quel_ordre", "Quel ordre\u202f?"), true);
+                foreach (string t in ComposeurDuCarnet.TypesOfferts())
+                {
+                    string type = t;
+                    int nb = CiblesDe(t).Count;
+                    if (nb == 0)
+                        Ligne(r, "Type_" + t, ComposeurDuCarnet.NomDuType(t) + " — " + MafiaCleanCity.I18n.Libelle.Gabarit(
+                            "carnet.composeur.rien_a_viser_pour_l_instant", "rien \u00e0 viser pour l\u2019instant"), false);
+                    else
+                        NouveauBouton(r, "Type_" + t, ComposeurDuCarnet.NomDuType(t), () => ChoisirType(type), false);
+                }
+                return;
+            }
+            if (!string.IsNullOrEmpty(EtapeDuComposeur))
+            {
+                Ligne(r, "SurQuoi", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.composeur.sur_quoi", "Sur quoi\u202f?"), true);
+                foreach (CibleDuCarnet c in CiblesDe(EtapeDuComposeur))
+                {
+                    CibleDuCarnet cible = c;
+                    string nom = c.Kind == "candidate" && c.Bandes != null && c.Bandes.Length > 0
+                        ? c.Libelle() + "\n" + string.Join("\n", c.Bandes) : c.Libelle();
+                    if (Brouillon.Contient(c))
+                        Ligne(r, "Cible_" + c.Id, nom + " — " + MafiaCleanCity.I18n.Libelle.Gabarit("carnet.composeur.deja_dans_le_carnet", "d\u00e9j\u00e0 dans le carnet"), false);
+                    else
+                    {
+                        Ligne(r, "Cible_" + c.Id, nom, false);
+                        NouveauBouton(r, "Choisir_" + c.Id, MafiaCleanCity.I18n.Libelle.Gabarit("carnet.composeur.choisir", "Choisir"), () => Choisir(cible), false);
+                    }
+                }
+                return;
+            }
+
+            if (Brouillon.Compte == 0)
+            {
+                Ligne(r, "IlFaut", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.vide.il_faut_au_moins_quatre_ordres_pour_une_soiree",
+                    "Il faut au moins quatre ordres pour une soir\u00e9e."), true);
+                if (ComposeurDuCarnet.TotalDesCibles(Cibles) < ComposeurDuCarnet.Minimum)
+                    Ligne(r, "PasEncore", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.vide.pas_encore_de_quoi_remplir_une_soiree",
+                        "Pas encore de quoi remplir une soir\u00e9e\u00a0: il faudra d\u2019autres locaux, des itin\u00e9raires ou des candidats."), false);
+                var posables = ComposeurDuCarnet.TypesOfferts().Where(t => CiblesDe(t).Count > 0).ToList();
+                if (posables.Count > 0)
+                {
+                    Ligne(r, "VousPouvez", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.vide.vous_pouvez_deja_poser", "Vous pouvez d\u00e9j\u00e0 poser"), false);
+                    foreach (string t in posables)
+                        Ligne(r, "Posable_" + t, ComposeurDuCarnet.NomDuType(t) + " — " + MafiaCleanCity.I18n.Libelle.Gabarit("carnet.vide.n_cibles",
+                            "{n, plural, one {# cible} other {# cibles}}", new Dictionary<string, string> { { "n", CiblesDe(t).Count.ToString() } }), false);
+                }
+                return;
+            }
+            if (Brouillon.Compte >= 2)
+                Ligne(r, "AppuiLong", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.composeur.appui_long_pour_deplacer", "appui long pour d\u00e9placer"), false);
+            if (!Brouillon.PeutLancer)
+            {
+                Ligne(r, "Encore", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.composeur.encore_n_ordres_a_poser",
+                    "{n, plural, one {Encore un ordre \u00e0 poser} other {Encore # ordres \u00e0 poser}}",
+                    new Dictionary<string, string> { { "n", Brouillon.EncoreAPoser.ToString() } }), false);
+                return;
+            }
+            NouveauBouton(r, "Lancer", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.lancer_la_soiree", "Lancer la soir\u00e9e"),
+                () => StartCoroutine(LancerLaSoiree()), true);
+            Ligne(r, "SansRetour", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.une_fois_partie_on_ne_la_reprend_pas",
+                "une fois partie, on ne la reprend pas"), false);
+        }
+
+        private void Ligne(Transform parent, string nom, string texte, bool titre) =>
+            NouveauTexte(parent, nom, texte, Px(titre ? 11f : 9f), titre ? CouleurEncre : CouleurEncreFaible,
+                titre ? DesignTokens.Current.hudSerifFont : DesignTokens.Current.primaryFont);
+
+        /// <summary>Un bouton RÉEL (Image + Button + libellé) : jamais un bouton sans geste (garde O4/O5 de ②, même règle ici).</summary>
+        private GameObject NouveauBouton(Transform parent, string nom, string texte, UnityEngine.Events.UnityAction action, bool principal)
+        {
+            GameObject go = NouveauUI("Bouton" + nom, parent);
+            Image fond = AjouterImage(go);
+            fond.color = principal ? CouleurEncre : CouleurPapierFonce;
+            var b = go.AddComponent<Button>();
+            b.targetGraphic = fond;
+            b.onClick.AddListener(action);
+            var le = go.AddComponent<LayoutElement>();
+            le.minHeight = Px(20f); le.minWidth = Px(44f); le.flexibleWidth = 0f;
+            TextMeshProUGUI t = NouveauTexte(go.transform, "Libelle", texte, Px(8.5f), principal ? CouleurPapier : CouleurEncre,
+                DesignTokens.Current.primaryFont);
+            t.alignment = TextAlignmentOptions.Center;
+            Etirer((RectTransform)t.transform, Px(3f));
+            return go;
+        }
+
+        private static void AjouterToucher(GameObject ligne, UnityEngine.Events.UnityAction action)
+        {
+            Image img = ligne.GetComponent<Image>();
+            if (img == null) img = AjouterFond(ligne, new Color(0f, 0f, 0f, 0f));
+            img.raycastTarget = true;
+            var b = ligne.AddComponent<Button>();
+            b.targetGraphic = img;
+            b.onClick.AddListener(action);
+        }
+
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
         /// (patron ㊲ : `Render(null)` a fait planter un autre écran de ce dépôt à la première
         /// ligne qui lisait le payload).</summary>
@@ -322,6 +616,10 @@ namespace MafiaCleanCity.Operational
         private static readonly Color CouleurPapier      = new Color(0.898f, 0.878f, 0.816f);
         private static readonly Color CouleurEncre       = new Color(0.129f, 0.106f, 0.075f);
         private static readonly Color CouleurEncreFaible = new Color(0.404f, 0.365f, 0.302f);
+        private static readonly Color CouleurPapierFonce = new Color(0.820f, 0.796f, 0.722f);   // un geste secondaire, sur le papier
+        private static readonly Color CouleurEnMain      = new Color(0.851f, 0.824f, 0.741f);   // la ligne prise en main
+
+        private RectTransform composeurRoot;
 
         private RectTransform listeRoot;
         private TextMeshProUGUI titreEcran, sousTitre, compte;
@@ -408,7 +706,7 @@ namespace MafiaCleanCity.Operational
             for (int i = listeRoot.childCount - 1; i >= 0; i--)
             {
                 GameObject e = listeRoot.GetChild(i).gameObject;
-                if (e.name != "EnteteCarnet") UnityEngine.Object.Destroy(e);
+                if (e.name != "EnteteCarnet" && e.name != "Composeur") UnityEngine.Object.Destroy(e);
             }
         }
 
@@ -416,7 +714,7 @@ namespace MafiaCleanCity.Operational
         /// un numéro plein et un titre pour les remplis, un numéro pâle et « — rien — » pour les
         /// vides. Les huit sont TOUJOURS dessinés : c'est le plafond qui donne sa forme au
         /// geste, et masquer les vides ferait croire que le carnet est plein.</summary>
-        private void Creneau(int rang, string titre, string sous)
+        private GameObject Creneau(int rang, string titre, string sous)
         {
             GameObject go = NouveauUI("Creneau" + rang, listeRoot);
             var le = go.AddComponent<LayoutElement>();
@@ -453,13 +751,14 @@ namespace MafiaCleanCity.Operational
                 // VERT 2/2. *Mes deux tests comptaient des textes ; compter du texte ne dit
                 // jamais où il est.* Le vide et le plein doivent partager une seule colonne.
                 rien.alignment = TextAlignmentOptions.Left;
-                return;
+                return go;
             }
             NouveauTexte(corps.transform, "Titre", titre, Px(11f), CouleurEncre,
                 DesignTokens.Current.hudSerifFont).fontStyle = TMPro.FontStyles.Bold;
             if (!string.IsNullOrEmpty(sous))
                 NouveauTexte(corps.transform, "Sous", sous, Px(8f), CouleurEncreFaible,
                     DesignTokens.Current.primaryFont);
+            return go;
         }
 
 
@@ -545,6 +844,16 @@ namespace MafiaCleanCity.Operational
             compte = NouveauTexte(entete.transform, "Compte", "", Px(8f),
                 CouleurEncreFaible, DesignTokens.Current.primaryFont);
             compte.alignment = TextAlignmentOptions.Right;
+
+            // ㉞ le composeur : sur le PAPIER (c'est le carnet du joueur qui s'écrit), sous les huit lignes
+            GameObject compo = NouveauUI("Composeur", contenu.transform);
+            var vcp = compo.AddComponent<VerticalLayoutGroup>();
+            vcp.padding = new RectOffset(0, 0, (int)Px(6f), 0);
+            vcp.spacing = Px(3f);
+            vcp.childControlWidth = true; vcp.childControlHeight = true;
+            vcp.childForceExpandWidth = true; vcp.childForceExpandHeight = false;
+            composeurRoot = (RectTransform)compo.transform;
+            compo.SetActive(false);
 
             ConstruirePanneau(racine.transform);
             RendreEtatInitial();

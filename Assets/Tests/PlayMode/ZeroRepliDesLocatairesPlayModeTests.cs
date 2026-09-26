@@ -78,6 +78,13 @@ namespace MafiaCleanCity.Operational.Tests
             "decision.moment.vide.dusk",
             "decision.moment.vide.night",
             "decision.moment.vide.inconnu",
+            // ㉞ le composeur (f2 26/09) : table 73 @a2c0b2e4, non servie @1ffb08b4 — l'ARRIVÉE sur un carnet vide rend l'état vide
+            // (les 4 phrases, selon le compte de cibles du compte mesuré) et la première ligne touchable.
+            "carnet.vide.il_faut_au_moins_quatre_ordres_pour_une_soiree",
+            "carnet.vide.vous_pouvez_deja_poser",
+            "carnet.vide.n_cibles",
+            "carnet.vide.pas_encore_de_quoi_remplir_une_soiree",
+            "carnet.composeur.poser_un_ordre",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
