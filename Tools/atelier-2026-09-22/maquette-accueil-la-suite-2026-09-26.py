@@ -4,13 +4,14 @@
 Ajoute à `ecrans-brennar-accueil.html` un cadre 4 (les cadres 0-3 gardent leurs index), dérivé du cadre 0 (même tête, même scène,
 même dock) : au plus 3 lignes, chacune un état SERVI du compte neuf + son geste vers l'écran qui le porte, au-dessus de la file.
 L'état dessiné est celui du compte neuf mesuré (corps ux_vide_2609, pile 66060cc1) : labo IDLE + Pyralin NONE sans commande (A1),
-aucun dealer (B), aucun lieutenant avec une règle (D) ; la file porte la carte d'accueil de Lt. Tull (session/open, corps 002).
+aucun dealer (B), planque non vide (E, table 76) ; D (aucune règle) est vraie mais tombe au plafond de 3. Ordre réel du jeu, décidé par
+f2 le 26/09 sur le juge ④ r1 (F19) : A · B|C · E · D. La file porte l'état capturé : Lt. Ilm, gravité « légère » en gris chaud (F17).
 Mots lus dans `72-accueil-la-suite-2026-09-26.tsv` ({precurseur} résolu en « Pyralin », building.precursor.pyralin servi).
 Pas d'icône. Comptes exigés, idempotent (le cadre 4 est réécrit s'il existe). Usage : [--controle | --ecrire]"""
 import csv, os, re, sys
 ICI = os.path.dirname(os.path.abspath(__file__))
 PAGE = os.path.expanduser('~/project/atelier3d-mafia/ecrans-brennar-accueil.html')
-ETIQ = '④ L’ouverture — un joueur neuf, sans carte de tête : la suite (PROPOSÉ)'
+ETIQ = '④ L’ouverture — un joueur neuf, planque non vide : la suite, ordre réel A · B|C · E · D plafonné à 3 (PROPOSÉ)'
 CSS_ANCRE = '/* le dock du canon HUD'
 CSS = """/* « la suite » d'un joueur neuf (cadre 4, PROPOSÉ le 2026-09-26 ; mots : client 72-accueil-la-suite-2026-09-26.tsv) — sans icône */
 .acc4 .suite4 .sur{margin-bottom:4px}
@@ -22,6 +23,8 @@ CSS = """/* « la suite » d'un joueur neuf (cadre 4, PROPOSÉ le 2026-09-26 ; m
 .acc4 .suite4 .g4{font:700 8px/1 'DejaVu Sans';letter-spacing:.14em;text-transform:uppercase;padding:8px 10px;border-radius:8px;
   border:1px solid #ffffff2a;background:#ffffff0a;color:#eae0c8;white-space:nowrap}
 .acc4 .suite4 .g4.or{background:linear-gradient(180deg,#e9c56b,#c99a37);color:#241804;border-color:#8a611c}
+/* gravité de la file (exceptions.gravite.*) : gris chaud, du plus éteint (légère) au plus clair (grave) ; la couleur est réservée à l'alarme — arbitrage f2 du 26/09 (juge ④ r1, F17) */
+.acc4 .suivant .qui small.g-mild{color:#8c8272}
 
 """
 
@@ -30,6 +33,10 @@ def mots():
     for r in csv.DictReader(open(os.path.join(ICI, '72-accueil-la-suite-2026-09-26.tsv'), encoding='utf-8'), delimiter='\t',
                             quoting=csv.QUOTE_NONE):
         if r['clé'] != '—': t[(r['ligne'], r['clé'])] = r['fr']
+    # ligne E (table 76, n° 1, 2, 5 : load_bucket ∈ {LOW, NOMINAL, HIGH}) — décidée par f2 le 26/09 : le jeu la place avant D
+    for r in csv.DictReader(open(os.path.join(ICI, '76-planque-et-la-suite-2026-09-26.tsv'), encoding='utf-8'), delimiter='\t',
+                            quoting=csv.QUOTE_NONE):
+        if r['n°'] in ('1', '2', '5'): t[('E planque', r['clé'])] = r['fr']
     par = {}
     for (ligne, cle), fr in t.items(): par.setdefault(ligne, []).append(fr.replace('{precurseur}', 'Pyralin'))
     return par
@@ -40,8 +47,8 @@ def cadre(base, par):
         return (f'<div class="r4"><div class="t4"><b class="prop">{titre}</b><span class="prop">{phrase}</span></div>'
                 f'<div class="g4{" or" if primaire else ""} prop">{geste}</div></div>')
     suite = (f'<div class="verre suite4"><div class="sur prop">{par["bloc"][0]}</div>' + ligne('A1 labo', True) + ligne('B vente') +
-             ligne('D règles') + '</div>')
-    file_ = ('<div class="suivant"><div class="qui">Lt. Tull attend vos ordres<small>grave</small></div>'
+             ligne('E planque') + '</div>')   # A · B|C · E · D, plafonné à 3 : D ne montre pas
+    file_ = ('<div class="suivant"><div class="qui">Lt. Ilm attend vos ordres<small class="g-mild">légère</small></div>'   # l'état capturé (juge ④ r1)
              '<span class="act">trancher</span></div>')
     a = base.index('<div class="acc4" style="height:406px">'); b = base.index('<div class="dock9">')
     neuf = base[:a] + '<div class="acc4" style="height:406px">' + suite + file_ + '</div></div>' + base[b:]   # ferme acc4 et panneau — PAS l'écran (payé le 26/09 : le dock sortait du cadre)
@@ -63,6 +70,8 @@ def main():
         print(f'⛔ {len(C)} cadres'); return 1
     if CSS not in t:
         if t.count(CSS_ANCRE) != 1: print('⛔ ancre de style'); return 1
+        tete = "/* « la suite » d'un joueur neuf (cadre 4"                     # un bloc d'une version antérieure : remplacé, pas doublé
+        if tete in t: t = t[:t.index(tete)] + t[t.index(CSS_ANCRE):]
         t = t.replace(CSS_ANCRE, CSS + CSS_ANCRE, 1)
     ok_div = nouveau.count('<div') == nouveau.count('</div>') and base.count('<div') == base.count('</div>')
     comptes = {'div équilibrées': ok_div, 'cadres': t.count('<div class="cadre">'), 'lignes': nouveau.count('class="r4"'), 'gestes': nouveau.count('class="g4'),
