@@ -118,8 +118,11 @@ namespace MafiaCleanCity.Shell.Tests
             Transform contenu = menu.Find("MenuPlus_Contenu");
             Assert.IsNotNull(contenu, "la pile d'entrées n'est plus dans une fenêtre : `MenuPlus_Contenu` a " +
                                       "disparu, donc la fenêtre de défilement du correctif (2) aussi");
-            var entrees = new List<RectTransform>();
-            for (int i = 0; i < contenu.childCount; i++) entrees.Add((RectTransform)contenu.GetChild(i));
+            // G5 (2026-09-26) : les entrées vivent sous des groupes et des rangées — on les lit par leur NOM (`MenuPlus_<idStable>`,
+            // un `Button`), dans l'ordre de la hiérarchie, jamais comme enfants directs de la pile.
+            var entrees = contenu.GetComponentsInChildren<Button>(true)
+                .Where(b => b.gameObject.name.StartsWith("MenuPlus_", System.StringComparison.Ordinal))
+                .Select(b => (RectTransform)b.transform).ToList();
             return (menu, contenu, entrees);
         }
 

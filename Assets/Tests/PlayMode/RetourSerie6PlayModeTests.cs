@@ -107,12 +107,15 @@ namespace MafiaCleanCity.Shell.Tests
             return null;
         }
 
-        private Button EntreeDuMenu(int rang)
+        /// <summary>Les entrées du menu courant, dans l'ordre de la hiérarchie (G5 : sous des groupes et des rangées).</summary>
+        private List<Button> EntreesDuMenu()
         {
-            Transform contenu = MenuCourant()?.Find("MenuPlus_Contenu");
-            Assert.IsNotNull(contenu, "le menu Plus n'est pas monté");
-            return contenu.GetChild(rang).GetComponent<Button>();
+            Transform menu = MenuCourant();
+            Assert.IsNotNull(menu, "le menu Plus n'est pas monté");
+            return menu.GetComponentsInChildren<Button>(true).Where(b => b.gameObject.name.StartsWith("MenuPlus_", StringComparison.Ordinal)).ToList();
         }
+
+        private Button EntreeDuMenu(int rang) => EntreesDuMenu()[rang];
 
         private Button BoutonDOnglet(AppShell.Tab onglet)
         {
@@ -170,7 +173,7 @@ namespace MafiaCleanCity.Shell.Tests
             for (int i = 0; i < entrees; i++)
             {
                 int rang = i;
-                string nom = MenuCourant().Find("MenuPlus_Contenu").GetChild(rang).name;
+                string nom = EntreesDuMenu()[rang].gameObject.name;
                 Action arriver = () =>
                 {
                     shell.ActivateTab(AppShell.Tab.More);
@@ -211,9 +214,11 @@ namespace MafiaCleanCity.Shell.Tests
                     ecarts.Add($"{nom} : retours [{string.Join(", ", retours)}], attendus [{string.Join(", ", attendus)}]");
                 if (!SurLaCarte) ecarts.Add($"{nom} : après les retours, pas sur la carte ({Etat()})");
 
-                // (1) le dock : l'Empire, en un geste de production
+                // (1) le dock : l'Empire, en un geste de production. G1 : DÉJÀ sur la carte, il rouvre l'Accueil — que le retour referme.
                 arriver();
+                bool dejaSurLaCarte = SurLaCarte;
                 ProductionClickSupport.Click(BoutonDOnglet(AppShell.Tab.Empire));
+                if (dejaSurLaCarte && shell.Depiler() != "surimpression") ecarts.Add($"{nom} : sur la carte, l'Empire n'a pas rouvert l'Accueil");
                 if (!SurLaCarte) ecarts.Add($"{nom} : le toucher de l'Empire ne mène pas à la carte ({Etat()})");
             }
             Assert.IsEmpty(ecarts, $"{ecarts.Count} état(s) sur {etats.Count} sans chemin vers la carte :\n" + string.Join("\n", ecarts));
@@ -313,6 +318,112 @@ namespace MafiaCleanCity.Shell.Tests
             string corps = fin > debut ? sansCommentaires.Substring(debut, fin - debut) : sansCommentaires.Substring(debut);
             Assert.AreEqual(1, Regex.Matches(corps, @"BrancherRetourDuShell\s*\(").Count,
                 "l'en-tête Famille doit brancher son « ‹ » sur le retour du shell (sinon il redevient décoratif)");
+        }
+
+        // ── G1 ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+        [Test]
+        public void G1_SurLaCarte_LEmpireRouvreLAccueil_EtLeRetourLeReferme()
+        {
+            NouveauShell();
+            shell.ActivateTab(AppShell.Tab.Empire);
+            Assert.IsTrue(SurLaCarte, "précondition : sur la carte, rien par-dessus");
+            int avant = shell.SurimpressionsMontees;
+
+            ProductionClickSupport.Click(BoutonDOnglet(AppShell.Tab.Empire));
+            Assert.IsTrue(shell.SurimpressionOuverte, "G1 : toucher EMPIRE sur la carte rouvre l'Accueil en surimpression");
+            Assert.AreEqual(avant + 1, shell.SurimpressionsMontees, "une surimpression, pas une remontée de l'onglet");
+            Assert.AreEqual(typeof(CityMapController), shell.MountedTenantType, "la carte reste la racine sous l'Accueil");
+            Assert.IsTrue(shell.ContentSlot.GetComponentsInChildren<DashboardController>(true).Any(), "l'Accueil est monté");
+
+            Assert.AreEqual("surimpression", shell.Depiler(), "le retour referme l'Accueil");
+            Assert.IsTrue(SurLaCarte, "… sur la carte");
+
+            // contrôle : l'Accueil ouvert, EMPIRE ne le rouvre pas — il remonte la carte (geste (1))
+            ProductionClickSupport.Click(BoutonDOnglet(AppShell.Tab.Empire));
+            ProductionClickSupport.Click(BoutonDOnglet(AppShell.Tab.Empire));
+            Assert.IsTrue(SurLaCarte, "Accueil ouvert + EMPIRE ⇒ la carte (pas un second Accueil)");
+            // contrôle : une remontée interne sur la carte (ActivateTab) n'ouvre jamais l'Accueil
+            shell.ActivateTab(AppShell.Tab.Empire);
+            Assert.IsTrue(SurLaCarte, "ActivateTab(Empire) sur la carte ne rouvre pas l'Accueil : le geste est celui de la bulle");
+        }
+
+        // ── G5 ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+        [Test]
+        public void G5_LeMenuPlus_CinqGroupes_ChaqueDestinationUneFois_SansLaFiliere()
+        {
+            NouveauShell();
+            (string[] groupes, string[] destinations) = shell.IdsDuMenuPlusPourTest();
+            Assert.AreEqual(20, destinations.Length, "vingt destinations (maquette atelier 7380e10)");
+            CollectionAssert.AllItemsAreUnique(groupes, "une destination n'est que dans UN groupe");
+            CollectionAssert.AreEquivalent(destinations, groupes, "chaque destination est dans un groupe, et aucun groupe ne nomme un absent");
+            CollectionAssert.DoesNotContain(destinations, "la_filiere", "« La Filière » sort du menu : le dock la porte");
+
+            shell.ActivateTab(AppShell.Tab.More);
+            Assert.AreEqual(20, shell.MenuPlusEntrees);
+            Transform contenu = MenuCourant().Find("MenuPlus_Contenu");
+            var rangs = contenu.Cast<Transform>().Where(t => t.name == "MenuPlusRang").ToList();
+            var titres = contenu.Cast<Transform>().Where(t => t.name.StartsWith("MenuPlusGroupe_", StringComparison.Ordinal)).ToList();
+            Assert.AreEqual(5, titres.Count, "cinq titres de groupe");
+            Assert.AreEqual(11, rangs.Count, "deux colonnes : 2 + 2 + 2 + 2 + 3 rangées");
+            Assert.IsTrue(rangs.All(r => r.childCount >= 1 && r.childCount <= 2), "au plus deux entrées par rangée");
+        }
+
+        /// <summary>Les 25 clés de la table 60 (atelier, 2026-09-26) — les libellés sont DÉRIVÉS (`Libelle.De`) : ce test prouve que la
+        /// clé dérivée de chaque repli EST la clé de la table, en servant une valeur marquée par clé.</summary>
+        private static readonly string[] ClesTable60 =
+        {
+            "plus.groupe.vos_journees",
+            "plus.groupe.vos_affaires",
+            "plus.groupe.ce_qui_se_dit",
+            "plus.groupe.ce_qui_vous_guette",
+            "plus.groupe.vous",
+            "plus.entree.la_revue_du_jour",
+            "plus.entree.les_ordres_du_soir",
+            "plus.entree.ce_que_vous_avez_confie",
+            "plus.entree.la_semaine",
+            "plus.entree.la_chaine_d_appro",
+            "plus.entree.la_distribution",
+            "plus.entree.la_vente",
+            "plus.entree.raser_un_site",
+            "plus.entree.le_journal_la_rue",
+            "plus.entree.la_reputation",
+            "plus.entree.le_conflit",
+            "plus.entree.la_loi",
+            "plus.entree.les_inspections",
+            "plus.entree.le_commissariat",
+            "plus.entree.le_dossier",
+            "plus.entree.l_horizon_des_possibles",
+            "plus.entree.votre_profil",
+            "plus.entree.la_vitrine",
+            "plus.entree.la_premiere_fois",
+            "plus.entree.les_reglages"
+        };
+
+        [Test]
+        public void G5_ChaqueLibelleDuMenu_LitSaCleDeLaTable60()
+        {
+            var servi = ClesTable60.ToDictionary(k => k, k => "§" + k);
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", servi);
+            NouveauShell();
+            shell.ActivateTab(AppShell.Tab.More);
+            Transform menu = MenuCourant();
+            var ecarts = new List<string>();
+            foreach (Button b in EntreesDuMenu())
+            {
+                string cle = "plus.entree." + b.gameObject.name.Substring("MenuPlus_".Length);
+                string lu = b.GetComponentInChildren<TMPro.TextMeshProUGUI>(true).text;
+                if (lu != "§" + cle) ecarts.Add($"{b.gameObject.name} affiche « {lu} », attendu la valeur de {cle}");
+            }
+            foreach (Transform t in menu.Find("MenuPlus_Contenu").Cast<Transform>().Where(t => t.name.StartsWith("MenuPlusGroupe_", StringComparison.Ordinal)))
+            {
+                string cle = "plus.groupe." + t.name.Substring("MenuPlusGroupe_".Length);
+                string lu = t.GetComponent<TMPro.TextMeshProUGUI>().text;
+                if (lu != "§" + cle) ecarts.Add($"{t.name} affiche « {lu} », attendu la valeur de {cle}");
+            }
+            Assert.AreEqual(25, EntreesDuMenu().Count + 5, "anti-vacuité : 20 entrées + 5 titres lus");
+            Assert.IsEmpty(ecarts, string.Join("\n", ecarts));
         }
 
         // ── G2 ─────────────────────────────────────────────────────────────────────────────────────────────────────────

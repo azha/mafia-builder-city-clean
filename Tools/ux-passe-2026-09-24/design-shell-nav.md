@@ -93,3 +93,18 @@ transition sur le disque déjà dessiné (`LieutenantScreenController.BrancherRe
 (contrat neuf de `ShellContracts`, implémenté par `AppShell`). Famille racine d'onglet → carte ; en surimpression → l'écran
 d'en dessous ; hors shell → rien. Gardes `RetourSerie6.G3_*` (effet sur un faux shell + contrôle négatif ; garde de source).
 Les choix « Décidé (reco, 26/09) » ci-dessus sont validés par l'orchestrateur.
+
+MàJ 2026-09-26 (ter) — **G1 et G5 CODÉS** (maquettes PROPOSÉES atelier 7380e10, `ecrans-brennar-navigation.html` cadres 0-2 ;
+générateur client 864ee188 ; clés table 60 `60-menu-plus-cles-2026-09-26.tsv`, commit client 9a17e7bf).
+- **G1** : sur la carte, sans rien par-dessus, toucher EMPIRE rouvre l'Accueil en surimpression (`AppShell.ToucherLOnglet`), ses
+  quatre panneaux une frame plus tard (mêmes gardes que l'acquisition) ; le retour du système le referme sur la carte.
+- **G5** : le menu Plus en CINQ groupes titrés, entrées sur deux colonnes (une entrée seule prend la rangée), 20 entrées ; « La
+  Filière » sort (le dock la porte). Titres et entrées par `Libelle.De("plus", "groupe"|"entree", repli)` — replis à l'octet de la
+  table 60 (casse de phrase), capitales en STYLE ; les 25 clés en DETTE DATÉE de ZeroRepli jusqu'au lot i18n du back.
+
+Décidé (reco, 26/09) :
+- G1 vit sur la BULLE (`ToucherLOnglet`), pas dans `ActivateTab` : les remontées internes (retour, sortie de district, racine
+  remontée) ne rouvrent jamais l'Accueil.
+- G5 : la pile reste ANCRÉE EN HAUT sous le bandeau (garde `MenuPlusGeometrie` (1)) quand la maquette la pose en bas ; la fenêtre
+  défilante reste (elle ne défile pas quand tout tient). Géométrie de la maquette (entrée 23,6 px CSS, rayon 7, écarts 4) ; le
+  filet `#ffffff17` des entrées est omis (aucun token, garde Palette) ; fond `ficheGlassTop`, texte `hudCreme`, titres `hudHairlineGold`.
