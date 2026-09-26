@@ -18,7 +18,7 @@ git = lambda d, r: subprocess.run(['git', '-C', d, 'show', r], capture_output=Tr
 LIEUX = ['Outillage Halde', 'Cellier Marrek', 'Photo Ilm', 'Garde-meubles Sallo']   # enseignes servies du kit (corps 003)
 CSS = """
 /* ═══ ㉞ le composeur du carnet du soir, PROPOSÉ le 2026-09-26 — sans icône ═══ */
-.cmp34{height:406px;display:flex;flex-direction:column;justify-content:flex-end;padding:0 12px 6px;font-family:'DejaVu Sans',sans-serif;color:#eae0c8}
+.cmp34{display:flex;flex-direction:column;justify-content:flex-end;padding:0 12px 6px;font-family:'DejaVu Sans',sans-serif;color:#eae0c8}
 .cmp34 *{box-sizing:border-box}
 .cmp34 .verre{margin:0}
 .cmp34 .cpt{font:700 6.6px/1 'DejaVu Sans';letter-spacing:.22em;color:#b9ad92;text-align:center;margin-top:5px}
@@ -93,7 +93,8 @@ def main():
     a = base.index('<div class="panneau">'); b = base.index('<div class="dock9">')
     cadres = []
     for etq, contenu in construire():
-        c = base[:a] + '<div class="panneau"><div class="cmp34">' + contenu + '</div></div>' + base[b:]
+        # acc4 : les styles de ④ (verre, sur, titre) sont SCOPÉS à .acc4 — payé le 26/09
+        c = base[:a] + '<div class="panneau"><div class="acc4 cmp34" style="height:406px">' + contenu + '</div></div>' + base[b:]
         c = re.sub(r'<div class="etiquette">[^<]*</div>', f'<div class="etiquette">{etq}</div>', c, count=1)
         cadres.append(c)
     tete = acc[:acc.index('<div class="page">')]
@@ -108,6 +109,13 @@ def main():
     classes = {c for x in re.finditer(r'class="([^"]*)"', ''.join(cadres)) for c in x.group(1).split()}
     regles = set(re.findall(r'\.([a-zA-Z][\w-]*)', '\n'.join(re.findall(r'<style[^>]*>(.*?)</style>', page, re.S))))
     perdues = classes & (set(re.findall(r'\.([a-zA-Z][\w-]*)', '\n'.join(re.findall(r'<style[^>]*>(.*?)</style>', acc, re.S)))) | set(re.findall(r'\.([a-zA-Z][\w-]*)', CSS))) - regles
+    # garde de PORTÉE : chaque classe du panneau doit avoir une règle dont le sélecteur s'applique ICI (.acc4 ou .cmp34 en tête de sélecteur)
+    css = '\n'.join(re.findall(r'<style[^>]*>(.*?)</style>', page, re.S))
+    sel = [x.split('{')[0] for x in re.findall(r'[^{}]+\{[^{}]*\}', css)]
+    panneau = ''.join(c[c.index('<div class="panneau">'):c.index('<div class="dock9">')] for c in cadres)
+    hors = sorted(k for k in {c for x in re.finditer(r'class="([^"]*)"', panneau) for c in x.group(1).split()} - {'acc4', 'cmp34', 'panneau', 'prop', 'eteint', 'vide', 'or'}
+                  if not any(('.acc4' in s_ or '.cmp34' in s_) and re.search(r'\.' + re.escape(k) + r'\b', s_) for s_ in sel))
+    if hors: print('⛔ classes sans règle APPLICABLE dans le panneau :', hors); return 1
     comptes = {'cadres': page.count('<div class="cadre">'), 'div équilibrées': all(c.count('<div') == c.count('</div>') for c in cadres),
                'icônes': sum(len(re.findall(r'<svg|<img', c[c.index('cmp34'):c.index('dock9')])) for c in cadres),
                'lancer': page.count('class="lancer"'), 'plus actif': sum(c.count('<div class="db actif">') for c in cadres)}
