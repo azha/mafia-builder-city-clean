@@ -10,6 +10,7 @@ namespace MafiaCleanCity.CityMap.Tests
     //   H2  LAUNDERING → la façade, cible = la planque ; LOGISTICS → source et cible DISTINCTES
     //   H3  aucun hôte du bon type (DISTRIBUTION sans point de vente) → un bâtiment possédé quand même (le back nomme le refus),
     //       cible = la planque ; rien possédé → (null, null)
+    //   H4  ⑳ (table 63 v2) : le retour d'un recrutement nomme l'archétype par son MOT servi, jamais l'identifiant brut (« COOK recruté. »)
     [Category("HoteDeRecrutement")]
     public class HoteDeRecrutementPlayModeTests
     {
@@ -48,5 +49,17 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(((string)null, (string)null), HoteDeRecrutement.Choisir("COOK", new BatimentPossedeDto[0]));
             Assert.AreEqual(((string)null, (string)null), HoteDeRecrutement.Choisir("COOK", null));
         }
-    }
+    
+        [Test]
+        public void H4_LeRetourDuRecrutement_NommeLArchetypeParSonMot()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            string mot = FamilleLabels.Archetype("COOK");
+            string retour = LieutenantScreenController.RetourDeRecrutement("COOK");
+            StringAssert.StartsWith("Nouvelle recrue", retour);
+            StringAssert.Contains(mot, retour, "le mot SERVI de l'archétype");
+            StringAssert.DoesNotContain("COOK", retour, "jamais l'identifiant brut");
+            StringAssert.DoesNotContain("recruté", retour, "jamais accordé à la personne (D13)");
+        }
+}
 }

@@ -506,7 +506,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (!string.IsNullOrEmpty(id))
             {
                 LastRecruitedId = id;
-                SetOutcome($"{archetype} recruté.", AccentMild);
+                SetOutcome(RetourDeRecrutement(archetype), AccentMild);
                 // Pull the fresh lieutenant bands so the Status section reflects the just-recruited lieutenant (CurrentBands
                 // .archetype set → the rule-builder palette switches to this archetype's fields).
                 yield return RefreshBands();
@@ -1531,7 +1531,17 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
 
         // The Recruit button caption for an archetype ("Recruit Cook" / "Recruit Security" …).
-        private static string RecruitButtonText(string archetype) => "Recruit " + FamilleLabels.Archetype(archetype);
+        // ⑳ (passe UX 2026-09-26, table 63 v2) : « Recruit Cook » (anglais, brut) → « Recruter — {archetype} » ; {archetype} = le mot SERVI
+        // de l'archétype (`FamilleLabels.Archetype`, clés famille.archetype.*).
+        private static string RecruitButtonText(string archetype) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("famille.ecran.recruter_archetype", "Recruter — {archetype}",
+                new Dictionary<string, string> { { "archetype", FamilleLabels.Archetype(archetype) } });
+
+        /// <summary>⑳ — le retour d'un recrutement réussi : « Nouvelle recrue : {archetype}. » (jamais « COOK recruté. » : brut, et accordé à
+        /// la personne, D13).</summary>
+        public static string RetourDeRecrutement(string archetype) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("famille.ecran.nouvelle_recrue_archetype", "Nouvelle recrue\u00A0: {archetype}.",
+                new Dictionary<string, string> { { "archetype", FamilleLabels.Archetype(archetype) } });
 
         // The Status section (T2): a section label + a Refresh button (re-fetch the bands) + the player-authored script
         // text block. The band ROWS render into statusRows (above); this section holds the controls + the script. The
