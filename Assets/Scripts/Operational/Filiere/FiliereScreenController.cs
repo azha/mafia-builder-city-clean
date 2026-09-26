@@ -169,6 +169,39 @@ namespace MafiaCleanCity.Operational
             yield return Charger();
         }
 
+        /// <summary>État vide (passe UX 2026-09-26) : la planque SERVIE du joueur — `district/:id/stash` sur ses quartiers — et son
+        /// enseigne, servie par `me/buildings` pour le bâtiment de la planque. Null tant que non trouvée.</summary>
+        public bool PlanqueTrouvee { get; private set; }
+        public string EnseigneDeLaPlanque { get; private set; }
+
+        private IEnumerator TrouverLaPlanque()
+        {
+            PlanqueTrouvee = false; EnseigneDeLaPlanque = null;
+            MafiaCleanCity.Shell.BatimentPossedeDto[] possedes = null;
+            yield return new MafiaCleanCity.Shell.MesBatimentsClient { BaseUrl = baseUrl }.Lire(token, b => possedes = b, (c, m) => { });
+            if (possedes == null) yield break;
+            var projections = new MafiaCleanCity.CityMap.CityProjectionsClient { BaseUrl = baseUrl };
+            foreach (int quartier in possedes.Where(b => b != null && b.district_id > 0).Select(b => b.district_id).Distinct())
+            {
+                MafiaCleanCity.CityMap.StashDto stash = null;
+                yield return projections.Stash(quartier, token, x => stash = x, _ => { });
+                var planque = stash?.safehouses?.FirstOrDefault(x => x != null && !string.IsNullOrEmpty(x.safehouse_id));
+                if (planque == null) continue;
+                PlanqueTrouvee = true;
+                EnseigneDeLaPlanque = EnseigneDe(possedes, planque.building_id);
+                yield break;
+            }
+        }
+
+        /// <summary>L'enseigne SERVIE du bâtiment (`name_i18n.params.enseigne`) ; null si le bâtiment ou l'enseigne manquent. Pure.</summary>
+        public static string EnseigneDe(MafiaCleanCity.Shell.BatimentPossedeDto[] possedes, string buildingId)
+        {
+            if (possedes == null || string.IsNullOrEmpty(buildingId)) return null;
+            var b = possedes.FirstOrDefault(x => x != null && x.building == buildingId);
+            string e = b?.name_i18n?.@params?.enseigne;
+            return string.IsNullOrWhiteSpace(e) ? null : e;
+        }
+
         private void EnsureInitialized()
         {
             if (initialise) return;
@@ -233,6 +266,7 @@ namespace MafiaCleanCity.Operational
                 if (liste == null) { RendreEtatIndisponible(); RenduTermine = true; yield break; }
                 if (liste.nodes == null || liste.nodes.Length == 0)
                 {
+                    yield return TrouverLaPlanque();   // état vide (table 63) : la planque du kit existe-t-elle ?
                     RendreAucunNoeud();
                     RenduTermine = true;
                     yield break;
@@ -571,20 +605,33 @@ namespace MafiaCleanCity.Operational
             MajCompteur(1, 0, Lib("PROPRE AU BOUT"));
             MajCompteur(2, 0, Lib("ÉCARTS"));
 
-            Maillon("1", Lib("Obtenir une planque"),
-                Lib("le premier maillon : sans elle, rien n'entre dans la filière — et rien ne se "
-                    + "ramasse chez les dealers non plus."));
+            // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26) : « Obtenir une planque » et « il faut une planque » étaient dits à TOUT joueur
+            // sans nœud — or le kit de départ DONNE une planque (welcome grant). Quand elle est servie : ce qui est VRAI (table 63,
+            // client 8979d626, à l'octet) — elle est vide, et comment l'argent y entre ; la phrase « il faut une planque » se tait.
+            string entree = MafiaCleanCity.I18n.Libelle.Gabarit("filiere.vide.l_argent_y_entre_quand_vous_ramassez_la_caisse_d_un_dealer",
+                "L’argent y entre quand vous ramassez la caisse d’un dealer.");
+            if (PlanqueTrouvee && EnseigneDeLaPlanque != null)
+                Maillon("1", MafiaCleanCity.I18n.Libelle.Gabarit("filiere.vide.votre_planque_enseigne_est_vide",
+                    "Votre planque, {enseigne}, est vide.", new Dictionary<string, string> { { "enseigne", EnseigneDeLaPlanque } }),
+                    entree, manquant: false);
+            else if (PlanqueTrouvee)
+                Maillon("1", entree, "", manquant: false);   // enseigne non servie : on ne la nomme pas, on n'en invente pas
+            else
+                Maillon("1", Lib("Obtenir une planque"),
+                    Lib("le premier maillon : sans elle, rien n'entre dans la filière — et rien ne se "
+                        + "ramasse chez les dealers non plus."));
             Maillon("2", Lib("Dire combien il y a dans la filière"),
                 Lib("on ne vous dira que si c'est propre : ni combien, ni depuis quand, ni à quel prix. C'est voulu."));
 
             MajPanneau(Lib("CE QUE LA FILIÈRE NE DIT PAS"),
                 Lib("Vous n'avez encore aucun nœud"),
-                Lib("ce n'est pas une panne, c'est un état : il n'y a rien à montrer tant qu'il n'y a "
+                PlanqueTrouvee ? ""
+                : Lib("ce n'est pas une panne, c'est un état : il n'y a rien à montrer tant qu'il n'y a "
                     + "rien de monté. Il faut une planque pour que la filière commence quelque part."));
         }
 
         /// <summary>Un maillon manquant — le patron du cadre 142.</summary>
-        private void Maillon(string rang, string titre, string explication)
+        private void Maillon(string rang, string titre, string explication, bool manquant = true)
         {
             GameObject go = NouveauUI("Maillon" + rang, listeRoot);
             AjouterFond(go, DesignTokens.Current.surfaceCard);
@@ -596,8 +643,9 @@ namespace MafiaCleanCity.Operational
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
-            NouveauTexte(go.transform, "Rang", Lib("MAILLON MANQUANT") + "   " + rang, Px(7f),
-                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            if (manquant)   // une planque vide n'est pas un maillon MANQUANT : on ne le dit pas
+                NouveauTexte(go.transform, "Rang", Lib("MAILLON MANQUANT") + "   " + rang, Px(7f),
+                    DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             NouveauTexte(go.transform, "Titre", titre, Px(12f),
                 DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
             NouveauTexte(go.transform, "Texte", explication, Px(8f),

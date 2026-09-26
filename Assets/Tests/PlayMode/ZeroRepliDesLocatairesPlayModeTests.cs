@@ -74,6 +74,8 @@ namespace MafiaCleanCity.Operational.Tests
             // non servis @5e792a3c. Retirées par la règle (2) dès qu'elles sont servies.
             "police.vide.le_commissariat_n_a_encore_rien_sur_vous",
             "police.vide.tant_que_vous_ne_faites_pas_de_bruit_ca_peut_durer",
+            "filiere.vide.votre_planque_enseigne_est_vide",
+            "filiere.vide.l_argent_y_entre_quand_vous_ramassez_la_caisse_d_un_dealer",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
