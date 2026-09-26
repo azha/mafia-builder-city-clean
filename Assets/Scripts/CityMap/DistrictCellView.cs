@@ -88,5 +88,59 @@ namespace MafiaCleanCity.CityMap
         {
             if (HeatBadge != null) HeatBadge.SetActive(visible && Heat != HeatBucket.Unknown);
         }
+
+        // ③ LA PRÉSENCE DU JOUEUR (ruling user du 24/09, ARBITRAGES D21 ; maquette PROPOSÉE `ecrans-brennar-3-presence.html`, atelier
+        // 8616acc ; table 58). Un district où le joueur a des bâtiments porte l'état RATIFIÉ `mien` de la série 6 — nom en or, plus
+        // grand (`.q.mien .nomq` : #f2c96b, 7,4 au lieu de 6,6), sol chaud — et, sous le nom, le NOMBRE en mots (`carte.presence.
+        // batiments`, ICU). Sans icône : le pin « VOUS ÊTES ICI · ⌂ » de la maquette n'a jamais existé côté client.
+        // ⚠️ Le sol du district est CUIT dans la texture : le « sol chaud » est un voile or SÉPARÉ (`SolMien`), sous le halo — le
+        //    halo porte l'état de contrôle et le garde (Décidé (reco, 26/09)).
+
+        /// <summary>Le nombre de bâtiments du joueur dans ce district (compté par le client sur `GET /v1/me/buildings`) ; 0 = pas à lui.</summary>
+        public int BatimentsPossedes { get; private set; }
+        public bool Mien => BatimentsPossedes > 0;
+        public Image SolMien { get; private set; }
+        public TextMeshProUGUI LignePresence { get; private set; }
+        public const float EchelleNomMien = 7.4f / 6.6f;   // `.q.mien .nomq{font-size:7.4px}` contre `.nomq{font-size:6.6px}`
+        private Color couleurNomRepos;
+        private float tailleNomRepos;
+        private bool nomAuReposMemorise;
+
+        /// <summary>Branche les deux objets de la présence (bâtis par le contrôleur), cachés jusqu'à `PoserPresence`.</summary>
+        public void AttachPresence(Image solMien, TextMeshProUGUI lignePresence)
+        {
+            SolMien = solMien;
+            LignePresence = lignePresence;
+            if (SolMien != null) SolMien.gameObject.SetActive(false);
+            if (LignePresence != null) LignePresence.gameObject.SetActive(false);
+        }
+
+        /// <summary>Pose (n &gt; 0) ou retire (0) l'état `mien`. `ligne` null (clé non servie) ⇒ l'état `mien` SANS le nombre — le
+        /// repli ordonné par l'orchestrateur, jamais un nombre composé par le client.</summary>
+        public void PoserPresence(int n, string ligne)
+        {
+            BatimentsPossedes = n > 0 ? n : 0;
+            if (Label != null)
+            {
+                if (!nomAuReposMemorise) { couleurNomRepos = Label.color; tailleNomRepos = Label.fontSize; nomAuReposMemorise = true; }
+                Label.color = Mien ? MafiaCleanCity.Theme.DesignTokens.Current.hudMoneyGold : couleurNomRepos;
+                Label.fontSize = Mien ? tailleNomRepos * EchelleNomMien : tailleNomRepos;
+            }
+            if (SolMien != null) SolMien.gameObject.SetActive(Mien);
+            bool nombre = Mien && !string.IsNullOrEmpty(ligne);
+            if (LignePresence != null)
+            {
+                LignePresence.text = nombre ? ligne : string.Empty;
+                LignePresence.gameObject.SetActive(nombre);
+            }
+            // Le badge de chaleur descend sous la ligne du nombre quand elle est là (sinon ils se chevauchent).
+            if (HeatBadge != null && LignePresence != null)   // le marqueur peint seulement : la tuile en colonnes a sa propre mise en page
+            {
+                var rt = (RectTransform)HeatBadge.transform;
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, nombre ? -4f - LignePresenceHauteur : -4f);
+            }
+        }
+
+        public const float LignePresenceHauteur = 18f;
     }
 }

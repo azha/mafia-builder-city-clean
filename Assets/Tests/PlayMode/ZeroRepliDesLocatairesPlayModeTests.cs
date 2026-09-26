@@ -44,6 +44,10 @@ namespace MafiaCleanCity.Operational.Tests
         {
             // ⚠️ COUPE du 2026-09-24 contre la pile 66060cc1 : les 22 clés de ⑦ (famille.*) SERVIES (règle 2 rouge au créneau, tête
             // 92bfb1ba ; vérifié sur string_table.ts à 66060cc1 : 22 sur 22, fr et en) — retirées. Dette VIDE : zéro strict.
+            // ③ présence (2026-09-26, ordre de l'orchestrateur, table 58 de l'atelier `58-carte-presence-2026-09-26.tsv`) : la clé est
+            // PROPOSÉE, le back la servira ; d'ici là la carte montre l'état `mien` SANS le nombre (repli ordonné). La règle (2) rougit
+            // le jour où elle est servie : la retirer alors.
+            "carte.presence.batiments",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
