@@ -32,6 +32,7 @@ namespace MafiaCleanCity.Shell.Tests
     //   A9  (f2, 26/09, après les arrondis et liserés de 1562d6fa) garde STRUCTURELLE du socle sur ④ monté en entier (suite, file, fond
     //       de ville) : tout Graphic porte son CanvasRenderer, tout Graphic sous un Mask / RectMask2D est un MaskableGraphic ; plancher
     //       anti-vacuité (les liserés arrondis sont là)
+    //   A10 contrôle POSITIF de A9 : un Graphic nu sous le RectMask2D la fait rougir ; un renderer arraché aussi (ou Unity le refuse)
     //   A7  « La suite » (cadre 4, table 72) : sans carte, au palier 1, elle PREND le milieu (le calme s'efface), la file reste en bas ;
     //       au palier 2, rien ne change
     //   A3  G1 (suivi ⊥ UX §I, 26/09) : l'Accueil rouvert RELIT la tête et la file (session/open recalcule hl_card) — une carte
@@ -443,10 +444,22 @@ namespace MafiaCleanCity.Shell.Tests
             yield return RouvrirParEmpire();
             Assert.IsTrue(shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).Any(s => s.Visible), "précondition : la suite est montrée");
 
+            (List<string> sansRenderer, List<string> nonMaskable, int graphiques, int sousMasque) = Balayer(shell.ContentSlot);
+            int liseres = shell.ContentSlot.GetComponentsInChildren<Transform>(true).Count(x => x.name == "Lisere");
+            Assert.GreaterOrEqual(liseres, 5, $"anti-vacuité : le bloc, 3 gestes et la ligne portent leur liseré (vus : {liseres})");
+            Assert.Greater(sousMasque, 0, "anti-vacuité : le fond de ville est sous son RectMask2D");
+            Assert.Greater(graphiques, 20, $"anti-vacuité : ④ monté en entier ({graphiques} Graphic)");
+            Assert.IsEmpty(sansRenderer, "Graphic sans CanvasRenderer : " + string.Join(", ", sansRenderer));
+            Assert.IsEmpty(nonMaskable, "Graphic NON maskable sous un masque : " + string.Join(", ", nonMaskable));
+        }
+
+        /// <summary>Le balayage de A9, partagé avec son contrôle positif (A10) : la MÊME fonction voit le défaut fabriqué.</summary>
+        internal static (List<string> sansRenderer, List<string> nonMaskable, int graphiques, int sousMasque) Balayer(Transform racine)
+        {
             var sansRenderer = new List<string>();
             var nonMaskable = new List<string>();
             int graphiques = 0, sousMasque = 0;
-            foreach (UnityEngine.UI.Graphic g in shell.ContentSlot.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+            foreach (UnityEngine.UI.Graphic g in racine.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
             {
                 graphiques++;
                 if (g.GetComponent<CanvasRenderer>() == null) sansRenderer.Add(g.name);
@@ -456,12 +469,46 @@ namespace MafiaCleanCity.Shell.Tests
                 sousMasque++;
                 if (!(g is UnityEngine.UI.MaskableGraphic)) nonMaskable.Add(g.name);
             }
-            int liseres = shell.ContentSlot.GetComponentsInChildren<Transform>(true).Count(x => x.name == "Lisere");
-            Assert.GreaterOrEqual(liseres, 5, $"anti-vacuité : le bloc, 3 gestes et la ligne portent leur liseré (vus : {liseres})");
-            Assert.Greater(sousMasque, 0, "anti-vacuité : le fond de ville est sous son RectMask2D");
-            Assert.Greater(graphiques, 20, $"anti-vacuité : ④ monté en entier ({graphiques} Graphic)");
-            Assert.IsEmpty(sansRenderer, "Graphic sans CanvasRenderer : " + string.Join(", ", sansRenderer));
-            Assert.IsEmpty(nonMaskable, "Graphic NON maskable sous un masque : " + string.Join(", ", nonMaskable));
+            return (sansRenderer, nonMaskable, graphiques, sousMasque);
+        }
+
+        /// <summary>Un Graphic NU : dérive de `Graphic`, PAS de `MaskableGraphic` — le défaut que A9 prétend voir.</summary>
+        private sealed class GraphicNu : UnityEngine.UI.Graphic { }
+
+        /// <summary>A10 — CONTRÔLE POSITIF de A9 (f2, 26/09) : sur le même Accueil monté, un Graphic nu posé SOUS le RectMask2D du fond
+        /// de ville la fait rougir, nommément ; un Graphic privé de son CanvasRenderer aussi. ⚠️ `Graphic` porte
+        /// `[RequireComponent(typeof(CanvasRenderer))]` : si Unity refuse d'arracher le renderer, le défaut est IMPOSSIBLE par
+        /// construction — le test le constate (le renderer est toujours là) au lieu de le supposer.</summary>
+        [UnityTest]
+        public IEnumerator A10_ControlePositif_A9VoitLeGraphicNu_EtLeRendererArrache()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_ControleA9");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            DashboardController accueil = shell.ContentSlot.GetComponentsInChildren<DashboardController>(true).LastOrDefault();
+            Assert.IsNotNull(accueil?.FondDeVille, "précondition : le fond de ville (sous RectMask2D) est posé");
+            Assert.IsEmpty(Balayer(shell.ContentSlot).nonMaskable, "précondition : propre avant la faute");
+
+            // (1) un Graphic nu SOUS le masque ⇒ A9 le nomme.
+            var nu = new GameObject("GraphicNu_Faute", typeof(RectTransform));
+            nu.transform.SetParent(accueil.FondDeVille.transform.parent, false);
+            nu.AddComponent<GraphicNu>();
+            CollectionAssert.Contains(Balayer(shell.ContentSlot).nonMaskable, "GraphicNu_Faute", "A9 voit un Graphic non maskable sous le masque");
+            Object.DestroyImmediate(nu);
+
+            // (2) un Graphic privé de son CanvasRenderer ⇒ A9 le nomme — ou Unity le rend impossible.
+            var img = new GameObject("SansRenderer_Faute", typeof(RectTransform));
+            img.transform.SetParent(shell.ContentSlot, false);
+            img.AddComponent<UnityEngine.UI.Image>();
+            Object.DestroyImmediate(img.GetComponent<CanvasRenderer>());
+            if (img.GetComponent<CanvasRenderer>() == null)
+                CollectionAssert.Contains(Balayer(shell.ContentSlot).sansRenderer, "SansRenderer_Faute", "A9 voit un Graphic sans CanvasRenderer");
+            else
+                Debug.Log("[A10] CanvasRenderer non arrachable (RequireComponent de Graphic) : le défaut est impossible par construction ; " +
+                          "la branche « sans renderer » de A9 ne peut pas rougir sur un Graphic.");
+            Object.DestroyImmediate(img);
+            yield return null;
         }
 
         [UnityTest]
