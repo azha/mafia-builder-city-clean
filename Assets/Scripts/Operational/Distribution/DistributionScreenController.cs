@@ -191,6 +191,7 @@ namespace MafiaCleanCity.Operational
             BatimentPossedeDto[] possedes = null;
             string errMes = null;
             yield return mes.Lire(token, bs => possedes = bs, (c, m) => errMes = $"{c} {m}");
+            PossedesLus = possedes;
             if (possedes == null)
             {
                 Debug.LogWarning($"[㉘] me/buildings indisponible : {errMes}");
@@ -299,6 +300,7 @@ namespace MafiaCleanCity.Operational
                 yield return I18nCatalog.Amorcer(new I18nClient { BaseUrl = baseUrl }, token);
                 if (renduExpliciteDemande) yield break;
                 RendreAucunRelais();
+                yield return ProposerAchatDeRelais();
                 yield break;
             }
             if (string.IsNullOrEmpty(FromBuildingId))
@@ -805,6 +807,95 @@ namespace MafiaCleanCity.Operational
             foreach (BatimentPossedeDto b in possedes)
                 if (b != null && !string.IsNullOrEmpty(b.building) && b.operational_type == "distribution_hub") return b;
             return null;
+        }
+
+        /// <summary>`me/buildings` tel que lu au dernier chargement (null : non lu).</summary>
+        public BatimentPossedeDto[] PossedesLus { get; private set; }
+
+        // ═══ Le geste « ACHETER UN RELAIS » (f2 26/09, table 71 client 5354fa88) ═══════════════════════════════════
+
+        /// <summary>Le bloc libre proposé à l'achat (-1 : aucun geste offert) et son district — crochets de test.</summary>
+        public int BlocDAchatDeRelais { get; private set; } = -1;
+        public int QuartierDAchatDeRelais { get; private set; } = -1;
+        public int AchatsDeRelaisTentes { get; private set; }
+        public ActionOutcome DernierAchatDeRelais { get; private set; }
+
+        /// <summary>Dans l'état « aucun relais » : cherche un bloc LIBRE dans un district où un relais peut s'OUVRIR
+        /// (`RelaisAAcheter`, TD-762) ; trouvé ⇒ la ligne de coût (dite AVANT l'appui) et le bouton ; sinon, PAS de geste. Un relais
+        /// déjà acheté et pas encore ouvert ⇒ pas de geste (on ne rachète pas).</summary>
+        private IEnumerator ProposerAchatDeRelais()
+        {
+            BlocDAchatDeRelais = -1; QuartierDAchatDeRelais = -1;
+            if (string.IsNullOrEmpty(token) || MafiaCleanCity.Operational.Distribution.RelaisAAcheter.DejaUnRelaisAOuvrir(PossedesLus))
+                yield break;
+            List<DistrictDto> districts = null;
+            yield return new WorldApiClient { BaseUrl = baseUrl }.GetDistricts(d => districts = d, _ => { });
+            if (this == null) yield break;
+            var proj = new CityProjectionsClient { BaseUrl = baseUrl };
+            foreach (int quartier in MafiaCleanCity.Operational.Distribution.RelaisAAcheter.QuartiersOuvrables(districts))
+            {
+                DistrictInteriorDto interieur = null;
+                yield return proj.Interior(quartier, token, i => interieur = i, _ => { });
+                if (this == null) yield break;
+                int bloc = MafiaCleanCity.Operational.Selling.PointsDeVente.BlocLibre(interieur, PossedesLus);
+                if (bloc < 0) continue;
+                BlocDAchatDeRelais = bloc; QuartierDAchatDeRelais = quartier;
+                break;
+            }
+            if (BlocDAchatDeRelais < 0 || piedRoot == null || !AucunRelais) yield break;
+            RendreGesteAchatDeRelais();
+        }
+
+        private void RendreGesteAchatDeRelais()
+        {
+            // le coût, dit AVANT l'appui (table 71 ; D18 « demain »), sans montant
+            TextMeshProUGUI cout = NouveauTexteFiche(piedRoot, "CoutAchatRelais", Libelle.Gabarit(
+                "distribution.geste.coute_de_l_argent_et_votre_decision_de_structure_du_jour_il_s_ouvre_ensuite_depuis_sa_fiche_sur_le_port_ou_dans_les_cheminees_seulement_et_en_demandera_une_autre_demain",
+                "Coûte de l\u2019argent et votre décision de structure du jour\u202f; il s\u2019ouvre ensuite depuis sa fiche \u2014 sur le port ou dans les cheminées seulement \u2014 et en demandera une autre, demain."),
+                8f, DesignTokens.Current.onSurfaceSecondary, false);
+            cout.enableWordWrapping = true;
+            TrackText(cout.text);
+
+            GameObject bouton = NouveauUI("BoutonAcheterRelais", piedRoot);
+            AjouterFond(bouton, DesignTokens.Current.surfaceRaised);
+            Button b = bouton.AddComponent<Button>();
+            b.targetGraphic = bouton.GetComponent<Image>();
+            b.onClick.AddListener(() => StartCoroutine(AcheterUnRelais()));
+            HorizontalLayoutGroup h = bouton.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(8f), PxTrait(8f));
+            h.childAlignment = TextAnchor.MiddleCenter;
+            h.childControlWidth = true; h.childControlHeight = true;
+            AddLayoutElement(bouton, preferredHeight: Px(26f), flexibleHeight: 0);
+            TextMeshProUGUI lib = NouveauTexteFiche(bouton.transform, "Libelle",
+                Libelle.Gabarit("distribution.geste.acheter_un_relais", "Acheter un relais"), 8.5f,
+                DesignTokens.Current.onSurfacePrimary, true);
+            TrackText(lib.text);
+        }
+
+        /// <summary>L'achat, sur le bloc proposé. Réussi ⇒ « Relais acheté. Reste à l'ouvrir, depuis sa fiche. » et le geste se retire
+        /// (relecture : le relais acheté se voit, `DejaUnRelaisAOuvrir`) ; échoué ⇒ la phrase servie du refus (spécifique), sinon
+        /// « L'achat n'a pas abouti. » (`LigneDAction`, filtre générique).</summary>
+        public IEnumerator AcheterUnRelais()
+        {
+            if (BlocDAchatDeRelais < 0 || string.IsNullOrEmpty(token)) yield break;
+            AchatsDeRelaisTentes++;
+            ActionOutcome resultat = null;
+            yield return new BuildingCardClient { BaseUrl = baseUrl }.AcheterBatiment(BlocDAchatDeRelais,
+                MafiaCleanCity.Operational.Distribution.RelaisAAcheter.TypeRelais, token, o => resultat = o);
+            if (this == null) yield break;
+            DernierAchatDeRelais = resultat;
+            if (resultat != null && resultat.Ok)
+            {
+                ViderEnfants(piedRoot);
+                BlocDAchatDeRelais = -1;
+            }
+            if (piedRoot == null) yield break;
+            TextMeshProUGUI ligne = NouveauTexteFiche(piedRoot, "ResultatAchatRelais", BuildingCardController.LigneDAction(resultat,
+                    Libelle.Gabarit("distribution.geste.relais_achete_reste_a_l_ouvrir_depuis_sa_fiche", "Relais acheté. Reste à l\u2019ouvrir, depuis sa fiche."),
+                    Libelle.Gabarit("distribution.geste.l_achat_n_a_pas_abouti", "L\u2019achat n\u2019a pas abouti")),
+                8.5f, DesignTokens.Current.onSurfacePrimary, false);
+            ligne.enableWordWrapping = true;
+            TrackText(ligne.text);
         }
 
         /// <summary>État vide (table 63, client 8979d626) : aucun `distribution_hub` possédé. Ce qui est vrai, et ce qu'on peut faire.</summary>
