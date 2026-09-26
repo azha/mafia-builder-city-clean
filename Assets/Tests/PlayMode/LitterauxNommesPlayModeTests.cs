@@ -61,7 +61,7 @@ namespace MafiaCleanCity.CityMap.Tests
             { "ExceptionDetailController.cs", 1 },
             { "HomeChromeController.cs", 1 },
             { "HorizonScreenController.cs", 1 },
-            { "InspectionScreenController.cs", 3 },
+            { "InspectionScreenController.cs", 2 },   // 3 → 2 le 2026-09-26 (état vide de ⑮ : la seconde ligne passe par Libelle)
             { "LieutenantScreenController.cs", 1 },
             { "LoiScreenController.cs", 4 },
             { "RuleModel.cs", 2 },

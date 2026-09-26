@@ -124,53 +124,36 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
 
         // ═══ D3 — le dépôt ══════════════════════════════════════════════════════════════════════
 
+        /// <summary>⛔ RÈGLE INVERSÉE LE 2026-09-26 (passe UX, table 63 v2, consigne f2) : « ne jamais cibler un bâtiment du joueur ».
+        /// Les deux tests d'avant prouvaient l'inverse (D3 du 22/09 : la cible = le premier bâtiment du joueur, dépôt FONDÉ qui passe).
+        /// La route n'accepte QUE les bâtiments du joueur (contrôle d'appartenance) : le geste n'a plus aucune cible légitime, il est
+        /// CACHÉ, et aucune requête ne part. Le dépôt lui-même reste éprouvé côté back (suite E2E de la route).</summary>
         [UnityTest]
-        public IEnumerator Depot_CompteSeme_LePrixEstCeluiDeLaReponse()
+        public IEnumerator Depot_CompteSeme_JamaisUnBatimentDuJoueur_LeDepotEstCache()
         {
             yield return SeConnecterAuCompteSeme();
             var ecran = Monter();
             ecran.SetToken(token);
             yield return AttendreLeRendu(ecran);
 
-            Assert.IsNotNull(ecran.Cible, "le compte semé possède des bâtiments (17 mesurés) : la cible du dépôt doit exister");
-            Assert.IsTrue(ecran.PeutDeposer, "avec une cible et un jeton, le geste doit être ouvert");
-            int rendusAvant = ecran.RendusEffectues;
-
-            // un signalement FONDÉ, pas le faux du bouton : voir `DeposerPourTest` — le registre des
-            // signalements n'est pas purgé par le seeder, et 8 faux pour 1 fondé retournent la police.
+            Assert.IsNull(ecran.Cible, "jamais un bâtiment du joueur : pas de cible");
+            Assert.IsFalse(ecran.PeutDeposer, "sans cible, le geste est fermé");
+            Assert.IsFalse(ecran.DepotVisible, "et CACHÉ — un geste sans cible légitime ne se montre pas");
             yield return ecran.DeposerPourTest("GENUINE_REPORT");
-
-            Assert.IsNull(ecran.DerniereErreurDepot, $"le dépôt a échoué : {ecran.DerniereErreurDepot}");
-            Assert.IsNotNull(ecran.DernierRapport, "la réponse à 4 clés n'est pas arrivée");
-            Assert.AreEqual("GENUINE_REPORT", ecran.DernierRapport.entry_type, "le type déposé revient tel quel");
-            Assert.Greater(ecran.DernierRapport.cost_resolved, 0, "le prix est SERVI (50 mesuré), jamais deviné");
-            Assert.IsFalse(ecran.DernierRapport.backlash_triggered, "un signalement fondé ne retourne jamais la police");
-            StringAssert.Contains(ecran.DernierRapport.cost_resolved.ToString(), ecran.TexteDuPrix,
-                "le prix affiché est celui de la réponse, pas un littéral");
-            Assert.AreEqual("", ecran.TexteDuBaton, "sans retour de bâton, la ligne du bâton reste éteinte");
-            Assert.Greater(ecran.RendusEffectues, rendusAvant, "après le dépôt, le registre est relu et redessiné");
+            Assert.IsNull(ecran.DernierRapport, "aucune requête ne part");
         }
 
         [UnityTest]
-        public IEnumerator Depot_CompteFrais_LeKitDeDepartEstLaCible_EtLeDepotPasse()
+        public IEnumerator Depot_CompteFrais_AucuneFileOuverte_LeDepotEstCache()
         {
-            // ⛔ PRÉMISSE FAUSSE, PAYÉE AU PREMIER RUN (créneau du 22/09, 13:32) : « un compte frais ne
-            //    possède rien ». Faux — la planque est donnée à l'arrivée (㊵·142), donc `me/buildings`
-            //    n'est jamais vide et la cible existe dès le signup. L'état « aucun bâtiment à vous »
-            //    n'est atteignable par aucun compte réel ; il reste une garde de code, exercée ci-dessous
-            //    SANS jeton. Ce test prouve l'inverse de ce que je croyais : le dépôt passe sur un
-            //    compte frais (le juge l'avait mesuré : 201 sur son compte frais, 07/09).
             yield return OuvrirUnCompteFrais();
             var ecran = Monter();
             ecran.SetToken(token);
             yield return AttendreLeRendu(ecran);
 
-            Assert.IsNotNull(ecran.Cible, "un compte frais possède son kit de départ : la cible du dépôt existe dès le signup");
-            Assert.IsTrue(ecran.PeutDeposer, "avec une cible et un jeton, le geste est ouvert — même le premier jour");
-            yield return ecran.DeposerPourTest("GENUINE_REPORT");
-            Assert.IsNull(ecran.DerniereErreurDepot, $"le dépôt du premier jour a échoué : {ecran.DerniereErreurDepot}");
-            Assert.IsNotNull(ecran.DernierRapport, "la réponse à 4 clés n'est pas arrivée");
-            Assert.Greater(ecran.DernierRapport.cost_resolved, 0, "le prix est servi, même à un compte frais");
+            Assert.IsTrue(ecran.EtatVide, "compte frais : aucune file ouverte");
+            Assert.IsFalse(ecran.DepotVisible, "table 63 v2 : le dépôt est caché tant qu'aucune file n'est ouverte");
+            Assert.IsNull(ecran.Cible, "et jamais un bâtiment du joueur");
         }
 
         [UnityTest]
