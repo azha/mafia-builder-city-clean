@@ -32,7 +32,7 @@ namespace MafiaCleanCity.Shell.Tests
     //   A9  (f2, 26/09, après les arrondis et liserés de 1562d6fa) garde STRUCTURELLE du socle sur ④ monté en entier (suite, file, fond
     //       de ville) : tout Graphic porte son CanvasRenderer, tout Graphic sous un Mask / RectMask2D est un MaskableGraphic ; plancher
     //       anti-vacuité (les liserés arrondis sont là)
-    //   A10 contrôle POSITIF de A9 : un Graphic nu sous le RectMask2D la fait rougir ; un renderer arraché aussi (ou Unity le refuse)
+    //   A10 contrôle POSITIF de A9 : un Graphic nu sous le RectMask2D la fait rougir ; un Graphic dérivé ajouté sans son renderer aussi
     //   A7  « La suite » (cadre 4, table 72) : sans carte, au palier 1, elle PREND le milieu (le calme s'efface), la file reste en bas ;
     //       au palier 2, rien ne change
     //   A3  G1 (suivi ⊥ UX §I, 26/09) : l'Accueil rouvert RELIT la tête et la file (session/open recalcule hl_card) — une carte
@@ -474,6 +474,8 @@ namespace MafiaCleanCity.Shell.Tests
 
         /// <summary>Un Graphic NU : dérive de `Graphic`, PAS de `MaskableGraphic` — le défaut que A9 prétend voir.</summary>
         private sealed class GraphicNu : UnityEngine.UI.Graphic { }
+        /// <summary>Une classe DÉRIVÉE de MaskableGraphic (forme de `VerticalGradientImage`) — pour la faute du renderer manquant.</summary>
+        private sealed class GraphicDerive : UnityEngine.UI.MaskableGraphic { }
 
         /// <summary>A10 — CONTRÔLE POSITIF de A9 (f2, 26/09) : sur le même Accueil monté, un Graphic nu posé SOUS le RectMask2D du fond
         /// de ville la fait rougir, nommément ; un Graphic privé de son CanvasRenderer aussi. ⚠️ `Graphic` porte
@@ -497,17 +499,18 @@ namespace MafiaCleanCity.Shell.Tests
             CollectionAssert.Contains(Balayer(shell.ContentSlot).nonMaskable, "GraphicNu_Faute", "A9 voit un Graphic non maskable sous le masque");
             Object.DestroyImmediate(nu);
 
-            // (2) un Graphic privé de son CanvasRenderer ⇒ A9 le nomme — ou Unity le rend impossible.
-            var img = new GameObject("SansRenderer_Faute", typeof(RectTransform));
-            img.transform.SetParent(shell.ContentSlot, false);
-            img.AddComponent<UnityEngine.UI.Image>();
-            Object.DestroyImmediate(img.GetComponent<CanvasRenderer>());
-            if (img.GetComponent<CanvasRenderer>() == null)
+            // (2) LA FAUTE TELLE QU'ELLE A EU LIEU (socle, VerticalGradientImage, 2026-08-22) : `AddComponent<T>()` à l'exécution
+            //     d'une classe DÉRIVÉE n'honore pas le [RequireComponent(CanvasRenderer)] de sa base — le Graphic ne dessine rien, sans
+            //     erreur. Un GameObject neuf, une classe dérivée de MaskableGraphic : pas de renderer ⇒ A9 le nomme.
+            var derive = new GameObject("SansRenderer_Faute", typeof(RectTransform));
+            derive.transform.SetParent(shell.ContentSlot, false);
+            derive.AddComponent<GraphicDerive>();
+            if (derive.GetComponent<CanvasRenderer>() == null)
                 CollectionAssert.Contains(Balayer(shell.ContentSlot).sansRenderer, "SansRenderer_Faute", "A9 voit un Graphic sans CanvasRenderer");
             else
-                Debug.Log("[A10] CanvasRenderer non arrachable (RequireComponent de Graphic) : le défaut est impossible par construction ; " +
-                          "la branche « sans renderer » de A9 ne peut pas rougir sur un Graphic.");
-            Object.DestroyImmediate(img);
+                Debug.Log("[A10] AddComponent d'une classe dérivée a reçu son CanvasRenderer : la faute du 22/08 ne se reproduit pas sur " +
+                          "cette version d'Unity ; la branche « sans renderer » de A9 ne peut pas rougir ainsi.");
+            Object.DestroyImmediate(derive);
             yield return null;
         }
 
