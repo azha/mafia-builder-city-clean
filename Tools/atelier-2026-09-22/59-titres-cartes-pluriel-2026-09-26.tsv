@@ -1,0 +1,4 @@
+clé	fr	en	statut
+decision.type.DAMAGED_BUILDING_REPAIR	{n, plural, one {Un local à remettre en état} other {Des locaux à remettre en état}}	{n, plural, one {A building needs repair} other {Buildings need repair}}	PROPOSÉ (valeur changée, clé gardée ; n = target_count)
+decision.type.SEVERED_ROUTE_REBUILD	{n, plural, one {Une route coupée} other {Des routes coupées}}	{n, plural, one {A route is cut} other {Routes are cut}}	PROPOSÉ (valeur changée, clé gardée ; n = target_count)
+decision.type.MYCELIAL_STRESSED_LEG	{n, plural, one {Un maillon sous tension} other {Des maillons sous tension}}	{n, plural, one {A link under strain} other {Links under strain}}	PROPOSÉ (valeur changée, clé gardée ; n = target_count)
