@@ -25,6 +25,15 @@ namespace MafiaCleanCity.Shell
             "JetonDeStructure.PlafondAtteint",
         };
 
+        /// <summary>Les statiques mutables de `Shell` que cette assembly NE PEUT PAS rendre (`ShellContracts` ne voit pas `AppShell` :
+        /// ce serait un cycle) — des SEAMS d'entrée que les tests posent, rendus par `MafiaCI.TestFinished` à la sortie de CHAQUE
+        /// classe (garde `EtatDuShellPlayModeTests.S2`). Trouvé par S1 au créneau du 26/09 : `AppShell.SafeAreaProvider` (21/08),
+        /// posé par ChromeSafeArea et RedimensionnementSondeSeam, qui le rendent à leur TearDown — une classe qui oublierait fuirait.</summary>
+        public static readonly IReadOnlyList<string> RendusParMafiaCI = new[]
+        {
+            "AppShell.SafeAreaProvider",
+        };
+
         /// <summary>Vrai quand rien n'a été publié : l'état d'un processus où aucun shell n'a tourné.</summary>
         public static bool Vierge =>
             ShellChrome.TopInsetPx == 0f && ShellChrome.BottomInsetPx == 0f

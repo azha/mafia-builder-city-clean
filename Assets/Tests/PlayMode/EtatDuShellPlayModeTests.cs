@@ -52,7 +52,7 @@ namespace MafiaCleanCity.Operational.Tests
         {
             List<string> reels = StatiquesMutables(typeof(ShellChrome).Assembly, typeof(AppShell).Assembly);
             Assert.GreaterOrEqual(reels.Count, 2, "anti-vacuité : la réflexion voit au moins les marges du chrome");
-            CollectionAssert.AreEquivalent(EtatPublieParLeShell.Couverts, reels,
+            CollectionAssert.AreEquivalent(EtatPublieParLeShell.Couverts.Concat(EtatPublieParLeShell.RendusParMafiaCI).ToList(), reels,
                 "les statiques MUTABLES de ShellContracts/Shell ont divergé de EtatPublieParLeShell.Couverts — un statique neuf publié " +
                 "par le shell fuit d'une classe de test à la suivante tant qu'il n'est pas rendu par RendrePourTest. Réels : " +
                 string.Join(", ", reels));
@@ -66,6 +66,9 @@ namespace MafiaCleanCity.Operational.Tests
             int appel = ci.IndexOf("EtatPublieParLeShell.RendrePourTest()", StringComparison.Ordinal);
             Assert.GreaterOrEqual(crochet, 0, "MafiaCI.TestFinished introuvable : le crochet de sortie de classe a disparu");
             Assert.Greater(appel, crochet, "MafiaCI ne rend plus l'état du shell dans TestFinished : la fuite revient entre les classes");
+            foreach (string seam in EtatPublieParLeShell.RendusParMafiaCI)
+                Assert.Greater(ci.IndexOf(seam + " = ", StringComparison.Ordinal), crochet,
+                    $"{seam} est déclaré rendu par MafiaCI, mais TestFinished ne le remet pas : la fuite revient entre les classes");
         }
 
         // ── S3 : le contrôle positif ────────────────────────────────────────────────────────────────────────────────────

@@ -555,6 +555,10 @@ public static class MafiaCI
                               $"({MafiaCleanCity.Shell.EtatPublieParLeShell.Decrire()}) — rendu maintenant.");
                     MafiaCleanCity.Shell.EtatPublieParLeShell.RendrePourTest();
                 }
+                // Les seams de `Shell` que `ShellContracts` ne peut pas rendre (`EtatPublieParLeShell.RendusParMafiaCI`), TOUJOURS à la
+                // sortie d'une classe : la valeur par défaut est celle de la production.
+                if (result.Test.TypeInfo != null && result.Test.Method == null)
+                    MafiaCleanCity.Shell.AppShell.SafeAreaProvider = () => Screen.safeArea;
                 return;
             }
             if (result.TestStatus == TestStatus.Failed)
