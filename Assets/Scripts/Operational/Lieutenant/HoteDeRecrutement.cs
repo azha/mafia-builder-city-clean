@@ -11,6 +11,8 @@ namespace MafiaCleanCity.Operational
     /// (got "") » à tout joueur (mesuré sur le serveur, `corps/144` de la passe), et ㉙ « Il vous en manque un » menait au même
     /// mur. Ce résolveur choisit, parmi les bâtiments du joueur, celui que l'archétype peut occuper.
     ///
+    /// ⛔ TD-750 (dette client, 26/09) : correspondance de domaine DUPLIQUÉE hors de son résolveur — elle dérivera en silence quand
+    /// un binding changera. Repli provisoire : elle sort le jour où le back SERT l'hôte éligible (demandé par f2).
     /// ⚠️ La table recopie les gardes du back @5e792a3c (`operational/lieutenant/*-binding.ts`), qui ne la SERT pas :
     ///   COOK → `lab` (COOK_HOST_OPERATIONAL_TYPES) · LAUNDERING → `front_shop`, cible = une planque · BOOKKEEPER →
     ///   `money_holding` puis `front_shop` · DISTRIBUTION → `dealer_spot_front`, cible = une planque · LOGISTICS → une source et
