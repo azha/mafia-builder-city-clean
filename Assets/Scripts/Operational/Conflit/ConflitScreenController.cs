@@ -654,10 +654,11 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Le résultat de l'envoi est un badge compact bordé par sa propre couleur (`.env .res`), pas un texte gris
         /// occupant une colonne entière.</summary>
-        private void AjouterBadgeIssue(Transform parent, string nomTexte, string texte, string bucket)
+        private void AjouterBadgeIssue(Transform parent, string nomObjet,   // un NOM D'OBJET (« Droite », « Issue »), jamais le texte affiché (`texte`) — garde IdentiteNonDeriveeDuTexte
+                                        string texte, string bucket)
         {
             Color couleur = CouleurIssue(bucket);
-            GameObject badge = NouveauUI(nomTexte + "Cadre", parent);
+            GameObject badge = NouveauUI(nomObjet + "Cadre", parent);
             Image filet = AjouterImage(badge);
             filet.sprite = ProceduralUI.RoundedRectOutline(Mathf.Max(1, PxTrait(2f)), Mathf.Max(1f, Px(1f)), couleur);
             filet.type = Image.Type.Sliced;
@@ -667,7 +668,7 @@ namespace MafiaCleanCity.Operational
             hb.childAlignment = TextAnchor.MiddleCenter;
             hb.childControlWidth = true; hb.childControlHeight = true;
             hb.childForceExpandWidth = false; hb.childForceExpandHeight = false;
-            TextMeshProUGUI libelle = NouveauTexteFiche(badge.transform, nomTexte, texte, 8f, couleur, true);
+            TextMeshProUGUI libelle = NouveauTexteFiche(badge.transform, nomObjet, texte, 8f, couleur, true);
             libelle.alignment = TextAlignmentOptions.Center;
             libelle.enableWordWrapping = false;
             TrackText(libelle.text);
