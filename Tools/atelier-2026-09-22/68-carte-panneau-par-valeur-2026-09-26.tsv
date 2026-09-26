@@ -1,0 +1,46 @@
+champ servi	type (18dfa633)	clé	fr	en	statut	note
+control_state	ControlStateBucket	carte.controle.uncontested	Libre	Free	PROPOSÉ	rangée « Contrôle » ; mêmes mots que carte.bloc.libre (servie, clé de maquette) — casse de phrase
+control_state	ControlStateBucket	carte.controle.contested	Disputé	Contested	PROPOSÉ	rangée « Contrôle » ; mêmes mots que carte.bloc.dispute (servie, clé de maquette) — casse de phrase
+control_state	ControlStateBucket	carte.controle.player_held	À vous	Yours	PROPOSÉ	rangée « Contrôle » ; mêmes mots que carte.bloc.a_vous (servie, clé de maquette) — casse de phrase
+control_state	ControlStateBucket	carte.controle.rival_held	Rival	Rival	PROPOSÉ	rangée « Contrôle » ; mêmes mots que carte.bloc.rival (servie, clé de maquette) — casse de phrase
+heat.district_bucket / heat.citywide_bucket	HeatBucket	heat.bucket.<valeur>	—	—	SERVIE (réutiliser)	déjà au format ParValeur : burning, cold, hot, warm ; rangée « Chaleur — le quartier / la ville »
+flow.backpressure	BackpressureBucket	carte.refoulement.normal	fluide	flowing	PROPOSÉ	rangée « Refoulement »
+flow.backpressure	BackpressureBucket	carte.refoulement.congested	engorgé	congested	PROPOSÉ	rangée « Refoulement »
+flow.backpressure	BackpressureBucket	carte.refoulement.saturated	saturé	saturated	PROPOSÉ	rangée « Refoulement »
+thr.exposure_band	ExposureBand	carte.exposition.minimal	minime	minimal	PROPOSÉ	rangée « Exposition »
+thr.exposure_band	ExposureBand	carte.exposition.low	faible	low	PROPOSÉ	rangée « Exposition »
+thr.exposure_band	ExposureBand	carte.exposition.elevated	élevée	high	PROPOSÉ	rangée « Exposition »
+thr.exposure_band	ExposureBand	carte.exposition.critical	critique	critical	PROPOSÉ	rangée « Exposition »
+thr.network_cleanliness	CleanlinessBucket	filiere.proprete.<valeur>	—	—	SERVIE (réutiliser)	déjà au format ParValeur : clean, dirty, mostly_clean, partial ; rangée « Propreté du réseau »
+stash.district_blocking_band	StashBlockingBand	carte.reserve.low	à peine	barely	PROPOSÉ	rangée « Réserve qui bloque »
+stash.district_blocking_band	StashBlockingBand	carte.reserve.moderate	en partie	partly	PROPOSÉ	rangée « Réserve qui bloque »
+stash.district_blocking_band	StashBlockingBand	carte.reserve.high	beaucoup	a lot	PROPOSÉ	rangée « Réserve qui bloque »
+stash.district_blocking_band	StashBlockingBand	carte.reserve.saturated	à saturation	completely	PROPOSÉ	rangée « Réserve qui bloque »
+buf.district_load_band	BufferLoadBucket	carte.tampon_charge.empty	vide	empty	PROPOSÉ	rangée « Tampon — charge »
+buf.district_load_band	BufferLoadBucket	carte.tampon_charge.low	faible	light	PROPOSÉ	rangée « Tampon — charge »
+buf.district_load_band	BufferLoadBucket	carte.tampon_charge.nominal	normale	normal	PROPOSÉ	rangée « Tampon — charge »
+buf.district_load_band	BufferLoadBucket	carte.tampon_charge.high	forte	heavy	PROPOSÉ	rangée « Tampon — charge »
+buf.district_load_band	BufferLoadBucket	carte.tampon_charge.critical	critique	critical	PROPOSÉ	rangée « Tampon — charge »
+buf.district_tail_band	TailPercentileState	carte.tampon_traine.low	courte	short	PROPOSÉ	rangée « Tampon — traîne »
+buf.district_tail_band	TailPercentileState	carte.tampon_traine.moderate	moyenne	medium	PROPOSÉ	rangée « Tampon — traîne »
+buf.district_tail_band	TailPercentileState	carte.tampon_traine.high	longue	long	PROPOSÉ	rangée « Tampon — traîne »
+buf.district_tail_band	TailPercentileState	carte.tampon_traine.critical	critique	critical	PROPOSÉ	rangée « Tampon — traîne »
+insp.queue_load	QueueLoadBucket	inspection.charge.<valeur>	—	—	SERVIE (réutiliser)	déjà au format ParValeur : empty, heavy, light, moderate, saturated ; rangée « File d’inspection »
+insp.dispatcher_regime	DispatcherRegime	inspection.regime.<valeur>	—	—	SERVIE (réutiliser)	déjà au format ParValeur : backlogged, budget_cut, nominal, surge ; rangée « Régime du dispatch »
+unc.audit_pin_presence	AuditPinPresence	carte.epingles.none	aucune	none	PROPOSÉ	rangée « Épingles d’audit »
+unc.audit_pin_presence	AuditPinPresence	carte.epingles.some	quelques-unes	a few	PROPOSÉ	rangée « Épingles d’audit »
+unc.audit_pin_presence	AuditPinPresence	carte.epingles.widespread	partout	everywhere	PROPOSÉ	rangée « Épingles d’audit »
+coh.cohesion_state	CohesionState	carte.cohesion.stable	solide	solid	PROPOSÉ	rangée « Cohésion »
+coh.cohesion_state	CohesionState	carte.cohesion.fragile	fragile	fragile	PROPOSÉ	rangée « Cohésion »
+coh.cohesion_state	CohesionState	carte.cohesion.thawed	rompue	broken	PROPOSÉ	rangée « Cohésion »
+bel.belief	PoliceBeliefBucket	police.croyance.dormant	en sommeil	dormant	PROPOSÉ	rangée « Ce qu’ils croient » ; mêmes mots que police.bloc.en_sommeil (servie, clé de maquette) — casse de phrase
+bel.belief	PoliceBeliefBucket	police.croyance.watchful	en veille	watchful	PROPOSÉ	rangée « Ce qu’ils croient » ; mêmes mots que police.bloc.en_veille (servie, clé de maquette) — casse de phrase
+bel.belief	PoliceBeliefBucket	police.croyance.suspicious	soupçon	suspicious	PROPOSÉ	rangée « Ce qu’ils croient » ; mêmes mots que police.bloc.soupcon (servie, clé de maquette) — casse de phrase
+bel.belief	PoliceBeliefBucket	police.croyance.hunting	en chasse	hunting	PROPOSÉ	rangée « Ce qu’ils croient » ; mêmes mots que police.bloc.en_chasse (servie, clé de maquette) — casse de phrase
+pat.patrol_heat	PatrolHeatBucket	police.patrouille.quiet	rien dans les rues	nothing on the streets	PROPOSÉ	rangée « La patrouille » ; mêmes mots que police.bloc.rien_dans_les_rues (servie, clé de maquette) — casse de phrase
+pat.patrol_heat	PatrolHeatBucket	police.patrouille.low	clairsemée	sparse	PROPOSÉ	rangée « La patrouille » ; mêmes mots que police.bloc.clairsemee (servie, clé de maquette) — casse de phrase
+pat.patrol_heat	PatrolHeatBucket	police.patrouille.medium	présente	present	PROPOSÉ	rangée « La patrouille » ; mêmes mots que police.bloc.presente (servie, clé de maquette) — casse de phrase
+pat.patrol_heat	PatrolHeatBucket	police.patrouille.high	partout	everywhere	PROPOSÉ	rangée « La patrouille » ; mêmes mots que police.bloc.partout (servie, clé de maquette) — casse de phrase
+whi.whisper_index	WhisperIndexBucket	carte.rumeur.calm	rien de spécial	nothing much	PROPOSÉ	rangée « Ce qui se dit (la ville) »
+whi.whisper_index	WhisperIndexBucket	carte.rumeur.stirring	ça murmure	murmurs	PROPOSÉ	rangée « Ce qui se dit (la ville) »
+whi.whisper_index	WhisperIndexBucket	carte.rumeur.alert	ça s’agite	buzzing	PROPOSÉ	rangée « Ce qui se dit (la ville) »
