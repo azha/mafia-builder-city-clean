@@ -397,6 +397,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private static string ReadableError(UnityWebRequest req)
         {
             string text = req.downloadHandler != null ? req.downloadHandler.text : null;
+            // table 67 (26/09) : la phrase SERVIE du refus d'abord (clé + payload_vars résolues) ; le message de développeur n'est plus
+            // qu'un repli quand le bundle ne sert pas la clé.
+            string servie = MafiaCleanCity.I18n.RefusServi.Phrase(text);
+            if (servie != null) return servie;
             if (!string.IsNullOrEmpty(text))
             {
                 try

@@ -42,6 +42,8 @@ namespace MafiaCleanCity.Operational
             /// <summary>`payload_vars.reason` (déclaré, pas encore servi) : ce qui distingue le verrou d'une charge qui a changé.</summary>
             public string raison;
             public string message;
+            /// <summary>Table 67 (26/09) — les `payload_vars` du refus, RÉSOLUES (`VariablesDeRefus`) : les trous de la phrase servie.</summary>
+            public System.Collections.Generic.Dictionary<string, string> variables;
 
             public bool EstMetier => !string.IsNullOrEmpty(code);
         }
@@ -223,6 +225,7 @@ namespace MafiaCleanCity.Operational
                 code = err != null ? err.code : null,
                 cle = err != null ? err.user_facing_i18n_key : null,
                 raison = err?.payload_vars?.reason,
+                variables = MafiaCleanCity.I18n.VariablesDeRefus.Resoudre(MafiaCleanCity.I18n.VariablesDeRefus.Lire(texte)),
                 message = err != null && !string.IsNullOrEmpty(err.message)
                     ? err.message
                     : $"{req.url} — {req.error}",

@@ -301,9 +301,9 @@ namespace MafiaCleanCity.Operational.Selling
 
             if (resultat == null)
             {
-                DerniereErreur = code == 409
-                    ? "Cette caisse est vide ou la planque est pleine."
-                    : "La collecte n'a pas abouti.";
+                // table 67 (26/09) : la phrase SERVIE du refus d'abord ; les phrases fixes par code ne sont plus qu'un repli
+                DerniereErreur = client.DernierePhraseDeRefus
+                    ?? (code == 409 ? "Cette caisse est vide ou la planque est pleine." : "La collecte n'a pas abouti.");
                 if (actionTexte != null) actionTexte.text = DerniereErreur;
                 yield break;
             }

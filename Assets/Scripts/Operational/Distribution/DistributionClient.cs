@@ -62,6 +62,9 @@ namespace MafiaCleanCity.Operational
                                    $"GET /v1/operational/distribution/projection a échoué ({req.responseCode}) {req.error}");
             }
         }
+        /// <summary>Table 67 (26/09) — la phrase SERVIE du dernier refus d'envoi (clé + payload_vars résolues) ; null sans clé servie.</summary>
+        public string DernierePhraseDeRefus { get; private set; }
+
         /// <summary>`POST /v1/operational/distribution/dispatch` — corps mesuré (422 successifs,
         /// 2026-09-03) : `{from_building_id, to_building_id, cargo_grams}`. Réponse de succès
         /// JAMAIS atteinte sur le compte de démo (stock source à zéro — voir
@@ -92,6 +95,7 @@ namespace MafiaCleanCity.Operational
                 else
                 {
                     string corpsErr = req.downloadHandler != null ? req.downloadHandler.text : null;
+                    DernierePhraseDeRefus = MafiaCleanCity.I18n.RefusServi.Phrase(corpsErr);   // table 67 : R6, R7, R16…
                     onErr?.Invoke(req.responseCode,
                                   $"POST /v1/operational/distribution/dispatch a échoué ({req.responseCode}) {req.error} {corpsErr}");
                 }

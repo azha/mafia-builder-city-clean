@@ -12,6 +12,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   V2  NÉGATIF : une variable sans `_key` passe telle quelle ; `precursor_type` seul n'est JAMAIS changé en clé fabriquée
     //   V3  NÉGATIF : `_key` non servie ⇒ repli = la valeur que le back a posée dans la racine (comptée en repli), jamais la clé
     //   V4  lecture : objet plat, échappements, nombres ; l'imbriqué est sauté ; pas de payload_vars ⇒ vide
+    //   V5  RefusServi (table 67) : la clé de l'enveloppe → la phrase servie, trous remplis ; pas de clé, ou clé non servie ⇒ null
+    //       (l'appelant garde sa phrase d'avant, jamais le message de développeur)
     [Category("VariablesDeRefus")]
     public class VariablesDeRefusPlayModeTests
     {
@@ -68,5 +70,20 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsEmpty(VariablesDeRefus.Lire("{\"payload\":{}}"));
             Assert.IsEmpty(VariablesDeRefus.Lire(null));
         }
-    }
+    
+        [Test]
+        public void V5_RefusServi_LaPhraseDeLaCle_OuRien()
+        {
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                { "building.precursor.pyralin", "Pyraline" },
+                { "error.production.precursor_missing", "Pas assez de {precursor_type} au labo pour cuire." },
+            });
+            Assert.AreEqual("error.production.precursor_missing", RefusServi.Cle(Corps));
+            Assert.AreEqual("Pas assez de Pyraline au labo pour cuire.", RefusServi.Phrase(Corps), "positif : la phrase servie, trou résolu");
+            Assert.IsNull(RefusServi.Phrase("{\"payload\":{\"error\":{\"code\":\"X\",\"message\":\"dev\"}}}"), "sans clé : null, jamais le message");
+            Assert.IsNull(RefusServi.Phrase("{\"payload\":{\"error\":{\"user_facing_i18n_key\":\"error.inconnue\"}}}"), "clé non servie : null");
+            Assert.IsNull(RefusServi.Phrase(null));
+        }
+}
 }

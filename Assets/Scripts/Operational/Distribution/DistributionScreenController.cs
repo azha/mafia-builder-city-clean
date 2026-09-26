@@ -862,6 +862,14 @@ namespace MafiaCleanCity.Operational
             if (erreur != null)
             {
                 DerniereErreur = erreur;
+                // table 67 (26/09) : le refus était SILENCIEUX pour le joueur (diagnostic seulement). Sa phrase servie se pose sous le geste.
+                if (client.DernierePhraseDeRefus != null && piedRoot != null)
+                {
+                    TextMeshProUGUI refus = NouveauTexteFiche(piedRoot, "RefusDuGeste", client.DernierePhraseDeRefus, 8.5f,
+                        DesignTokens.Current.onSurfaceSecondary, false);
+                    refus.enableWordWrapping = true;
+                    TrackText(refus.text);
+                }
                 yield break;
             }
             yield return RechargerCouriers();

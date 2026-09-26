@@ -1006,7 +1006,7 @@ namespace MafiaCleanCity.Operational
             Rendre();
             yield return client.GetFrictionNodes(token, b.building,
                 d => DerniereFiche = d,
-                r => refusAffiche = r.message);
+                r => refusAffiche = r.AAfficher);
             Rendre();
         }
 
@@ -1020,7 +1020,7 @@ namespace MafiaCleanCity.Operational
             PostFrictionNodesDecommissionResponseDto r = null;
             yield return client.PostFrictionNodesDecommission(token, batimentVise.building, true,
                 d => r = d,
-                refus => refusAffiche = refus.message);
+                refus => refusAffiche = refus.AAfficher);
 
             if (r != null && r.decommissioned)
             {
@@ -1043,7 +1043,7 @@ namespace MafiaCleanCity.Operational
             bool ok = false;
             yield return client.PostFrictionReplacementOptionsPick(token, o.id,
                 _ => ok = true,
-                refus => refusAffiche = refus.message);
+                refus => refusAffiche = refus.AAfficher);
 
             // L'état réel se relit sur les offres, jamais sur ce qu'on croit que `pick` a rendu :
             // le corps de succès de cette route n'a jamais été observé (TD-533).

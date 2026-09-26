@@ -131,6 +131,11 @@ namespace MafiaCleanCity.CityMap
                         outcome.Message = "la réponse du service est illisible";
                     }
                 }
+                else if ((outcome.Message = MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null)) != null)
+                {
+                    // table 67 (26/09) : la phrase SERVIE du refus (R9, R10, R12…) avant les phrases fixes par code HTTP — C3 : « les
+                    // fonds ou la capacité » ne disait pas QUELS fonds.
+                }
                 else
                 {
                     switch (req.responseCode)
@@ -184,6 +189,11 @@ namespace MafiaCleanCity.CityMap
                         outcome.Ok = false;
                         outcome.Message = "la réponse du service est illisible";
                     }
+                }
+                else if ((outcome.Message = MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null)) != null)
+                {
+                    // table 67 (26/09) : la phrase SERVIE du refus (R9, R10, R12…) avant les phrases fixes par code HTTP — C3 : « les
+                    // fonds ou la capacité » ne disait pas QUELS fonds.
                 }
                 else
                 {

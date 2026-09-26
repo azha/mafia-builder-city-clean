@@ -62,6 +62,9 @@ namespace MafiaCleanCity.Operational.Selling
             }
         }
 
+        /// <summary>Table 67 (26/09) — la phrase SERVIE du dernier refus de ramassage (clé + payload_vars résolues) ; null sans clé servie.</summary>
+        public string DernierePhraseDeRefus { get; private set; }
+
         /// <summary>POST /v1/operational/dealer/:id/collect — ramasser la caisse.
         ///
         /// Le corps contient obligatoirement la poignée de planque découverte par le client. La
@@ -81,6 +84,7 @@ namespace MafiaCleanCity.Operational.Selling
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
                 {
+                    DernierePhraseDeRefus = MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
                     onErr?.Invoke(req.responseCode, req.error ?? "network error");
                     yield break;
                 }
