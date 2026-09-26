@@ -17,6 +17,7 @@ namespace MafiaCleanCity.Operational.Tests
     //   N2  ⑩ : dans une bulle étirée, les pastilles gardent LEUR hauteur (cause : childForceExpandHeight par défaut ⇒ flexibles)
     //   N4  ⑨ (atelier D36) : le zinc SUIT le comptoir — le bas de l'étiquette sous le portrait reste AU-DESSUS du haut du plateau,
     //       avec une réplique d'1 ligne ET de 4 lignes ; l'étiquette tient sur une ligne (« nom · métier », sans les bandes)
+    //   N5  ⑩ : aucune carte de l'éventail (tournée ±5°, descendue de 6) ne sort de sa main — le tampon dessous n'est jamais recouvert
     //   N3  ⑩ : avec EpouserLeTexte, la bulle garde SA hauteur dans une rangée haute (relecture f1 §I.6 : « un grand vide sous la réplique »)
     [Category("EcranFile")]
     public class ExceptionsNonRecouvrementPlayModeTests
@@ -159,6 +160,42 @@ namespace MafiaCleanCity.Operational.Tests
                 Assert.GreaterOrEqual(basEtiquette, hautPlateau - 1f,
                     $"réplique « {replique.Substring(0, System.Math.Min(20, replique.Length))}… » : l'étiquette ({basEtiquette:0}) tombe sur le zinc ({hautPlateau:0})");
             }
+        }
+
+        [UnityTest]
+        public IEnumerator N5_LEventailDeDix_ResteDansSaMain()
+        {
+            // ⑩ (relevé f1 §K.6, planche A2 1080×1920) : le coin bas de la carte ♠ tournée sortait de la main et passait SOUS le tampon
+            hostGo = new GameObject("ExceptionQueue", typeof(RectTransform));
+            ecran = hostGo.AddComponent<ExceptionQueueController>();
+            var carte = CartePreparee();
+            carte.candidate_actions = new[]
+            {
+                new CandidateActionDto { id = "esc", label = "Escalader pour relecture", method = "ESCALATE", effect = new ExceptionEffectDto { type = "ESCALATE" } },
+                carte.suggested_action,
+                new CandidateActionDto { id = "teach", label = "Lui apprendre", method = "ONE_TIME", add_rule_dsl = "WHEN raid THEN repair" },
+            };
+            ecran.RendrePourTest(new[] { carte });
+            ecran.ClientPourTest.SubstitutFilePourTest = () => new[] { carte };
+            ecran.OpenDetail(ecran.Cards[0]);
+            yield return null;
+            var canvas = Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+            Transform main = canvas.SelectMany(c => c.GetComponentsInChildren<Transform>(false))
+                .FirstOrDefault(t => t.name == "Main" && t.Cast<Transform>().Any(x => x.name.StartsWith("Carte_")));
+            Assert.IsNotNull(main, "la main de ⑩ n'est pas rendue");
+            MiseEnPage(main.root);
+            var coinsMain = new Vector3[4]; ((RectTransform)main).GetWorldCorners(coinsMain);
+            float basMain = coinsMain[0].y;
+            int vues = 0;
+            foreach (Transform c in main)
+            {
+                if (!c.name.StartsWith("Carte_")) continue;
+                vues++;
+                var coins = new Vector3[4]; ((RectTransform)c).GetWorldCorners(coins);
+                float basCarte = coins.Min(v => v.y);
+                Assert.GreaterOrEqual(basCarte, basMain - 1f, $"{c.name} : son coin bas ({basCarte:0}) sort de la main ({basMain:0}) — il passerait sous le tampon");
+            }
+            Assert.GreaterOrEqual(vues, 2, "l'éventail a au moins deux cartes");
         }
 
         [UnityTest]
