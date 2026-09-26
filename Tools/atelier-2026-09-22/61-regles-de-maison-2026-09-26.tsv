@@ -5,3 +5,4 @@ reputation.etat.le_reflexe_de_faire_remonter	le réflexe de faire remonter	passi
 reputation.etat.la_force_mesuree	la force mesurée	force kept in check	PROPOSÉ	restraint_with_force	canon 3.4 : n’accepte pas les ordres durs sans question
 reputation.etat.le_reglement_a_la_loyale	le règlement à la loyale	settling fair	PROPOSÉ	settle_fair	PRÉFIXE (startsWith) ; canon 3.1/3.2 « I always settle fair » — enfreinte écrite par restraint-index.service.ts
 reputation.etat.la_juste_indemnite_de_depart	la juste indemnité de départ	fair severance	PROPOSÉ	recall_severance_fair	PRÉFIXE (startsWith) ; promotion_lock : l’indemnité du lieutenant rappelé — enfreinte écrite par promotion-lock.service.ts
+(source)	—	—	SOURCE	—	tri du back, back/s5-revue-du-jour @ 9760b40a, docs/superpowers/specs/2026-09-24-file-demandes-ecrans-tri.md §4.h (:639 ; « 8 en égalité exacte » CANONICAL_NORM_NAMES :666 ; les 2 préfixes :671 ; « 4 sur 10 existent, 6 manquent » :687) — ancres relues au SHA le 26/09
