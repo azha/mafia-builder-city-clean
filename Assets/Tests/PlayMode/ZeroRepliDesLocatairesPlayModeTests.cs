@@ -94,6 +94,10 @@ namespace MafiaCleanCity.Operational.Tests
             // PROPOSÉE, le back la servira ; d'ici là la carte montre l'état `mien` SANS le nombre (repli ordonné). La règle (2) rougit
             // le jour où elle est servie : la retirer alors.
             "carte.presence.batiments",
+            // Bandeau de l'Accueil (2026-09-26, tâche 3, décision de l'orchestrateur) : le mot de `week_state` par la clé de sa valeur ;
+            // l'atelier écrit les mots. Les deux valeurs qui ALLUMENT le bandeau (`none` l'éteint, sans lecture). Règle (2) : retirer.
+            "compression.week_state.warning",
+            "compression.week_state.active",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

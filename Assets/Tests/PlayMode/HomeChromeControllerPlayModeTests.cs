@@ -36,8 +36,10 @@ namespace MafiaCleanCity.Shell.Tests
 
             chrome.SetCompressionGlance(new CompressionGlanceDto { stress_bucket = "mounting", week_state = "active", forced = true });
             Assert.IsTrue(chrome.BannerActive);
-            Assert.AreEqual("active", chrome.BannerWeekStateRendered);
-            Assert.IsTrue(chrome.RenderedTexts.Any(t => t.Contains("active")));
+            Assert.AreEqual("active", chrome.BannerWeekStateRendered, "la VALEUR servie est gardée (donnée)");
+            // Passe UX 26/09 (tâche 3) : jamais l'identifiant brut à l'écran — clé non servie ⇒ « La chaufferie » seule.
+            Assert.IsTrue(chrome.RenderedTexts.Any(t => t == "La chaufferie"), "bandeau actif, mot masqué tant que la clé n'est pas servie");
+            Assert.IsFalse(chrome.RenderedTexts.Any(t => t.Contains("active")), "l'identifiant servi `active` n'atteint pas l'écran");
 
             chrome.SetCompressionGlance(new CompressionGlanceDto { stress_bucket = "calm", week_state = "none", forced = false });
             Assert.IsFalse(chrome.BannerActive);
@@ -46,6 +48,20 @@ namespace MafiaCleanCity.Shell.Tests
             // ne subsiste (un bandeau permanent rougirait ici).
             Assert.IsFalse(chrome.RenderedTexts.Any(t => t.Contains("chaufferie")),
                 "l'état INACTIF ne porte aucun texte de bandeau (atelier ④ : « pas de bandeau, pas de texte »)");
+        }
+
+        /// <summary>Passe UX 26/09 (tâche 3) — clé servie : le MOT de la valeur, sous « La chaufferie ».</summary>
+        [Test]
+        public void C7F1b_Banner_CleServie_LeMotDeLaValeur()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { "compression.week_state.active", "§semaine" } });
+            try
+            {
+                var chrome = NewBareChrome();
+                chrome.SetCompressionGlance(new CompressionGlanceDto { stress_bucket = "mounting", week_state = "active", forced = true });
+                Assert.IsTrue(chrome.RenderedTexts.Any(t => t == "La chaufferie — §semaine"), string.Join(" | ", chrome.RenderedTexts));
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
         }
 
         // C7-F2 (les 5 états) — chacun atteint et asserté PAR SA VALEUR. Cible : compte d'états

@@ -153,9 +153,16 @@ namespace MafiaCleanCity.Shell
             RebuildTracked();
         }
 
+        private const string Chaufferie = "La chaufferie";
+
         private void RenderBanner()
         {
-            bannerText.text = BannerActive ? $"La chaufferie — {BannerWeekStateRendered}" : "";
+            // ⛔ PASSE UX 26/09 (tâche 3, décision de l'orchestrateur) — le bandeau rendait `week_state` BRUT (« La chaufferie —
+            //    active ») : un identifiant servi affiché tel quel. Le mot passe par la clé de sa VALEUR (`compression.week_state.<v>`,
+            //    mots à venir de l'atelier) ; repli VIDE ⇒ tant que la clé n'est pas servie, le bandeau ne dit que « La chaufferie ».
+            //    Jamais l'identifiant.
+            string mot = MafiaCleanCity.I18n.Libelle.ParValeur("compression", "week_state", BannerWeekStateRendered, "");
+            bannerText.text = !BannerActive ? "" : string.IsNullOrEmpty(mot) ? Chaufferie : $"{Chaufferie} — {mot}";
             RebuildTracked();
         }
 
