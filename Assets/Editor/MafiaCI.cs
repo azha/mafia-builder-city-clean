@@ -304,6 +304,10 @@ public static class MafiaCI
         // (cumul c4889d71 : LaSuite+AccueilCanon+EcranAccueil+BundleReel+Charpente = 69/70, 1 ignoré déclaré, déclarés = comptés ; LaSuite
         // 10/10). Hors réseau, aucune capture : PARTIE 1. Aucune relation de préfixe (compteur : PORTÉES = prises). Validé par l'orchestrateur.
         "LaSuite",         // 10 — la décision par état (A1/A2/A3/B/C/D), l'ordre, les disparitions, les gestes, le premier geste doré
+        // ⑥ CuisinierAuRepos (CLIENT-2) — catégorie portée, jamais inscrite : verte au créneau CLIENT-1 du 26/09 (cumul 5632e6db, pile
+        // 1ffb08b4) dans le run de liste (2/2, 241/243, seul rouge la dette ZeroRepli coupée en 1c51baf8), pas lancée seule. Aucune relation
+        // de préfixe (compteur : PORTÉES = prises). Validé par l'orchestrateur.
+        "CuisinierAuRepos", //  2
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
