@@ -109,6 +109,8 @@ namespace MafiaCleanCity.Operational.Tests
             "lieutenant.diagnostic.priority_out_of_bounds",
             "lieutenant.diagnostic.condition_depth_exceeded",
             "lieutenant.diagnostic.tenure_peer_scope_violation",
+            // Table 63 v2 (atelier, 2026-09-26) : ① BLANCHIR, planque vide.
+            "building.vide.rien_a_blanchir_la_planque_est_vide",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

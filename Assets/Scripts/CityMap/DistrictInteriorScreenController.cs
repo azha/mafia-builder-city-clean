@@ -2719,6 +2719,12 @@ namespace MafiaCleanCity.CityMap
                 blanchimentEnCours = false;
                 yield break;
             }
+            if (FichePlanqueVide)
+            {
+                if (ficheSortie != null) ficheSortie.text = MessagePlanqueVide();
+                blanchimentEnCours = false;
+                yield break;
+            }
 
             string frontShopId = FicheBuildingId;
             DistrictLaunderOutcome outcome = null;
@@ -2744,6 +2750,8 @@ namespace MafiaCleanCity.CityMap
         private IEnumerator TrouverPlanquePourFiche()
         {
             FicheSafehouseId = null;
+            FichePlanqueVide = false;
+            planqueVideVue = null;
             int districtAffiche = LastFetch != null ? LastFetch.district_id : 0;
             if (districtAffiche > 0)
                 yield return LirePlanqueDuDistrict(districtAffiche);
@@ -2758,19 +2766,44 @@ namespace MafiaCleanCity.CityMap
                 yield return LirePlanqueDuDistrict(district.id);
                 if (!string.IsNullOrEmpty(FicheSafehouseId)) yield break;
             }
+            // Aucune planque qui tienne de l'argent : la première VIDE vue, déclarée comme telle (table 63, ①).
+            if (!string.IsNullOrEmpty(planqueVideVue)) { FicheSafehouseId = planqueVideVue; FichePlanqueVide = true; }
         }
+
+        // Table 63 (atelier, 2026-09-26), ① « BLANCHIR alors que la planque est vide » — la planque se lit dans `load_bucket` servi
+        // (`StashLoadBucket` : EMPTY | LOW | NOMINAL | HIGH | FULL). Une planque NON vide passe avant une vide ; si toutes sont vides,
+        // la fiche le DIT sans envoyer l'injection (qui rendrait un 409 dont la cause, fonds ou capacité, ne se lit pas).
+        private string planqueVideVue;
+        /// <summary>Vrai si la seule planque trouvée est VIDE (`load_bucket` EMPTY).</summary>
+        public bool FichePlanqueVide { get; private set; }
+
+        /// <summary>La planque à utiliser parmi celles d'un district : la première qui tient de l'argent ; sinon la première vide
+        /// (`vide` = true) ; sinon rien.</summary>
+        public static (string id, bool vide) ChoisirPlanque(IEnumerable<SafehouseDto> planques)
+        {
+            string videVue = null;
+            if (planques != null)
+                foreach (SafehouseDto p in planques)
+                {
+                    if (p == null || string.IsNullOrEmpty(p.safehouse_id)) continue;
+                    if (p.load_bucket == "EMPTY") { if (videVue == null) videVue = p.safehouse_id; continue; }
+                    return (p.safehouse_id, false);
+                }
+            return (videVue, videVue != null);
+        }
+
+        public static string MessagePlanqueVide() =>
+            MafiaCleanCity.I18n.Libelle.De("building", "vide", "Rien à blanchir : la planque est vide.");
 
         private IEnumerator LirePlanqueDuDistrict(int districtId)
         {
             StashDto stash = null;
             yield return projections.Stash(districtId, sessionBearer, s => stash = s, _ => { });
             if (stash?.safehouses == null) yield break;
-            foreach (SafehouseDto safehouse in stash.safehouses)
-            {
-                if (safehouse == null || string.IsNullOrEmpty(safehouse.safehouse_id)) continue;
-                FicheSafehouseId = safehouse.safehouse_id;
-                yield break;
-            }
+            (string id, bool vide) = ChoisirPlanque(stash.safehouses);
+            if (id == null) yield break;
+            if (!vide) { FicheSafehouseId = id; yield break; }
+            if (planqueVideVue == null) planqueVideVue = id;
         }
 
         private static GameObject NewUI(string name, Transform parent)
