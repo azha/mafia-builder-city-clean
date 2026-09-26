@@ -62,13 +62,22 @@ namespace MafiaCleanCity.Onboarding
         public static string TexteDuTutoriel(string id, string nomServi = null)
         {
             if (string.IsNullOrWhiteSpace(id)) return "—";
-            if (EstNomme(id) && string.IsNullOrWhiteSpace(nomServi)) return null;
-            string t = EstNomme(id)
-                // EXIGEANT (f2 26/09, table 64) : une valeur servie sans {nom} compte comme NON servie ⇒ le repli nommé de la 64
-                ? MafiaCleanCity.I18n.Libelle.GabaritExigeant(id.Trim(), id.Trim() == ClePreseed ? RepliPreseed : null,
-                    new System.Collections.Generic.Dictionary<string, string> { { "nom", nomServi } }, "nom")
-                : MafiaCleanCity.I18n.Libelle.Gabarit(id.Trim(), null);
-            return string.IsNullOrWhiteSpace(t) ? "—" : t;
+            if (!EstNomme(id))
+            {
+                string simple = MafiaCleanCity.I18n.Libelle.Gabarit(id.Trim(), null);
+                return string.IsNullOrWhiteSpace(simple) ? "—" : simple;
+            }
+            // T1 (atelier D37, table 64 @8d9b9e3a) : la valeur du préparé n'a PLUS de {nom} — l'opt-in exigeant est RETIRÉ. Une valeur qui
+            // porte encore le trou exige le nom servi (sinon rien de nommé) ; tout rendu qui OUVRE sur un nom (« Lt. Hara — »,
+            // « Lt. X — ») est périmé ⇒ le repli D37 (préparé) ou rien.
+            string cle = id.Trim();
+            bool trou = MafiaCleanCity.I18n.I18nCatalog.PorteLeTrou(cle, "nom");
+            if (trou && string.IsNullOrWhiteSpace(nomServi)) return null;
+            string repli = cle == ClePreseed ? RepliPreseed : null;
+            string t = MafiaCleanCity.I18n.Libelle.Gabarit(cle, repli, string.IsNullOrWhiteSpace(nomServi) ? null
+                : new System.Collections.Generic.Dictionary<string, string> { { "nom", nomServi } });
+            if (MafiaCleanCity.I18n.NomsFiges.EstPerime(cle, t)) t = repli;   // pont TD-763
+            return string.IsNullOrWhiteSpace(t) ? null : t;
         }
 
         /// <summary>TD-761 fermée : le nom SERVI pour un tutoriel nommé — `onboarding_preseed_params.nom` pour le tutoriel préparé
@@ -86,9 +95,8 @@ namespace MafiaCleanCity.Onboarding
         /// servi, le client n'affiche RIEN de nommé. TD-761 FERMÉE : le nom est servi par `onboarding_preseed_params` (`NomServi`).</summary>
         public const string EspaceNomme = "tutorial.exception_card.";
         public const string ClePreseed = "tutorial.exception_card.onboarding_preseed";
-        /// <summary>Le repli nommé de la table 64, à l'octet.</summary>
-        public const string RepliPreseed =
-            "{nom} \u2014 cuisson du soir bloquée\u00A0: plus de solvant. Commander maintenant (coût) ou attendre demain (rendement).";
+        /// <summary>Le repli de la table 64 @8d9b9e3a (D37 : sans nom), à l'octet.</summary>
+        public const string RepliPreseed = "Cuisson du soir bloquée\u00A0: plus de Pyralin au labo. Il en faut avant de rallumer.";
 
         public static bool EstNomme(string id) =>
             !string.IsNullOrWhiteSpace(id) && id.Trim().StartsWith(EspaceNomme, System.StringComparison.Ordinal);
