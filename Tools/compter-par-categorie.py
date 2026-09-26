@@ -107,7 +107,10 @@ def feuilles(texte):
             mc = re.search(r'\bclass\s+(\w+)', code)
             mm = re.search(r'\b(?:IEnumerator|void)\s+(\w+)\s*\(', code)
             if mc:
-                pile.append([mc.group(1), [c for a in attrs for c in CAT.findall(a)], prof, False]); attrs = []
+                # `'{' in code` : une classe d'UNE ligne (`class X : Graphic { }`) ouvre et ferme ses accolades sur sa ligne — la
+                # profondeur ne bouge pas, elle n'était jamais « entrée » et restait sur la pile : les tests suivants lui étaient
+                # attribués SANS catégorie (AccueilCanon A10 et A4 manqués, 26/09 : 8 comptés pour 10 exécutés, MafiaCI 584 vs 582)
+                pile.append([mc.group(1), [c for a in attrs for c in CAT.findall(a)], prof, '{' in code]); attrs = []
             elif mm:
                 blob = ' '.join(attrs)
                 if re.search(r'\b(Test|UnityTest|TestCase|TestCaseSource)\b', blob) and pile:
