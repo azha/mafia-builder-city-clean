@@ -907,7 +907,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
                     for (int i = 0; i < n; i++)
                     {
                         DslDiagnostic d = LastDiagnostics[i];
-                        string line = $"Line {d.line}:{d.col} — {d.message} [{d.kind}]";
+                        // ⛔ PASSE UX 26/09 (tâche 3) : `[{d.kind}]` (code interne du serveur, SCREAMING_SNAKE_CASE, entre crochets) sort de
+                        //    l'écran ; il reste dans `LastDiagnostics` (la donnée que les tests lisent).
+                        string line = $"Line {d.line}:{d.col} — {d.message}";
                         AddDiagnosticLine(line, AccentSevere);
                     }
                 }
