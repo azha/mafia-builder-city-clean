@@ -116,12 +116,12 @@ namespace MafiaCleanCity.Operational
         // éteinte) : sa feuille propre garde son ardoise. Sans la ressource : l'ardoise, comme avant (jamais un trou).
         // ⛔ REMPLACÉ le 26/09 (juge ⊥ r1 de ④, F3 et F1 ; arbitrage f2) : la maquette pose un quartier PEINT en isométrie, pas la carte
         //    vectorielle de ③ (rues, « LE PORT », rose des vents — 40 taches claires sous le dock contre 1). Le quartier peint EXISTE :
-        //    le diorama du district (`DistrictBackgroundSlots`, profil « verge », seul rendu), jour ou nuit selon la phase SERVIE
-        //    (`PhaseDeSession` : DAY/DAWN ⇒ jour, DUSK/NIGHT/inconnue ⇒ nuit — la table de `ResolveArtPhase`). Sans texte cuit, il
-        //    remonte jusqu'en HAUT derrière le bandeau translucide (F1 : plus de bande de 90 px sous l'inset).
+        //    le diorama du district (`DistrictBackgroundSlots`, profil « verge », seul rendu), de NUIT : la maquette le pose de nuit dans
+        //    les CINQ cadres, même sous « Plein jour » — mesuré au créneau du 26/09, le diorama de JOUR (proposé « selon la phase ») cassait
+        //    l'écran (ciel clair, nuages sous le bandeau). Sans texte cuit, il remonte jusqu'en HAUT derrière le bandeau (F1).
         public const string ProfilDuFond = "verge";
-        /// <summary>Le mode du diorama pour une phase servie. Pur.</summary>
-        public static string ModeDuFond(string dayPhase) => dayPhase == "DAY" || dayPhase == "DAWN" ? "jour" : "nuit";
+        /// <summary>Le mode du diorama de l'Accueil : la NUIT, quelle que soit la phase (la maquette, cadres 0-4). Pur.</summary>
+        public static string ModeDuFond(string dayPhase) => "nuit";
         private GameObject fondDeVille;
         /// <summary>Le fond de ville posé (garde) ; null sans la ressource.</summary>
         public Image FondDeVille { get; private set; }

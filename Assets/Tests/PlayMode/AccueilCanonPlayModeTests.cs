@@ -401,10 +401,10 @@ namespace MafiaCleanCity.Shell.Tests
             DashboardController accueil = shell.ContentSlot.GetComponentsInChildren<DashboardController>(true).LastOrDefault();
             Assert.IsNotNull(accueil?.FondDeVille, "le fond est posé (DistrictBackgroundSlots, profil verge)");
             Assert.IsTrue(accueil.FondDeVille.gameObject.activeInHierarchy, "il est visible derrière l'Accueil");
-            Assert.AreEqual("jour", DashboardController.ModeDuFond("DAY"));
-            Assert.AreEqual("nuit", DashboardController.ModeDuFond(null), "phase inconnue : la nuit");
-            Assert.AreSame(MafiaCleanCity.CityMap.DistrictBackgroundSlots.Current.Resolve(DashboardController.ProfilDuFond, "jour").fond,
-                accueil.FondDeVille.sprite, "le diorama de JOUR, pour la phase DAY servie");
+            Assert.AreEqual("nuit", DashboardController.ModeDuFond("DAY"), "la maquette : la NUIT même sous « Plein jour »");
+            Assert.AreEqual("nuit", DashboardController.ModeDuFond(null));
+            Assert.AreSame(MafiaCleanCity.CityMap.DistrictBackgroundSlots.Current.Resolve(DashboardController.ProfilDuFond, "nuit").fond,
+                accueil.FondDeVille.sprite, "le diorama de NUIT, même pour la phase DAY servie");
             Canvas.ForceUpdateCanvases();
             var coins = new Vector3[4];
             ((RectTransform)accueil.FondDeVille.transform.parent).GetWorldCorners(coins);

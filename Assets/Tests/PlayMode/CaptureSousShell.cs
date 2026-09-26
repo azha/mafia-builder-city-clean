@@ -920,8 +920,13 @@ namespace MafiaCleanCity.Shell.Tests
             bool EstNu(int x)
             {
                 Color c = tex.GetPixel(x, ligneBandeau);
-                return Mathf.Abs(c.r - fondNu.r) < 0.02f && Mathf.Abs(c.g - fondNu.g) < 0.02f
-                    && Mathf.Abs(c.b - fondNu.b) < 0.02f;
+                // ⛔ 0,02 (5,1/255) → 2/255, créneau du 26/09 : la BARRE rend (31,37,46) sur la ligne mesurée, le fond nu vaut (33,40,51)
+                //    — 2, 3 et 5 niveaux d'écart, sous l'ancien seuil : la barre elle-même était comptée « nue » à droite (83 px), à un
+                //    cheveu près, dès que l'art sous le bandeau a changé. Un fond NU est la couleur EXACTE du jeton (aplat), à l'anti-
+                //    crénelage près : la tolérance se lit sur ce qu'il est, pas sur ce qui l'entoure.
+                const float Tol = 2f / 255f;
+                return Mathf.Abs(c.r - fondNu.r) <= Tol && Mathf.Abs(c.g - fondNu.g) <= Tol
+                    && Mathf.Abs(c.b - fondNu.b) <= Tol;
             }
             int nuGauche = 0; while (nuGauche < largeur && EstNu(nuGauche)) nuGauche++;
             int nuDroite = 0; while (nuDroite < largeur && EstNu(largeur - 1 - nuDroite)) nuDroite++;
