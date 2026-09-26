@@ -393,6 +393,9 @@ namespace MafiaCleanCity.Operational
         public string ResultId;     // order_id / cook_session_id / node_id when present
         public string Message;      // DIAGNOSTIC : le `message` de développeur de l'enveloppe (jamais montré au joueur, atelier c2-bis)
         public string CleI18n;      // `user_facing_i18n_key` de l'enveloppe d'erreur — ce que le joueur lit, via le bundle
+        /// <summary>Lot des refus (26/09) — `payload_vars` du refus, RÉSOLUES (`VariablesDeRefus` : tout `<racine>_key` servi devient le
+        /// MOT injecté dans `<racine>`). Les trous de la phrase servie. Null sur un succès.</summary>
+        public System.Collections.Generic.Dictionary<string, string> Variables;
 
         public override string ToString() =>
             $"ActionOutcome(ok={Ok}, http={HttpStatus}, endpoint={Endpoint}, id={ResultId}, msg={Message})";

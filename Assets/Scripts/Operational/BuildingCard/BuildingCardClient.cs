@@ -149,6 +149,8 @@ namespace MafiaCleanCity.Operational
                     outcome.Ok = false;
                     outcome.Message = ReadableError(req);
                     outcome.CleI18n = CleUtilisateur(req);
+                    outcome.Variables = MafiaCleanCity.I18n.VariablesDeRefus.Resoudre(
+                        MafiaCleanCity.I18n.VariablesDeRefus.Lire(req.downloadHandler != null ? req.downloadHandler.text : null));
                 }
             }
             done?.Invoke(outcome);
