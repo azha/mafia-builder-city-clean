@@ -300,5 +300,27 @@ namespace MafiaCleanCity.I18nTests
                 I18nCatalog.Oublier();
             }
         }
+
+        /// <summary>Planche M7 ㉓ (f1, 26/09) : le `#` d'un `plural` est un NOMBRE FORMATÉ, groupé comme le back sert ses nombres
+        /// (« Liasse de 1 400 Marks », U+202F) — jamais « 1400 ». Français par défaut (repli), virgule en anglais.</summary>
+        [Test]
+        public void Diese_DUnPluriel_EstGroupeSelonLaLocale()
+        {
+            try
+            {
+                I18nCatalog.Oublier();
+                var p = new Dictionary<string, string> { { "n", "1400" } };
+                Assert.AreEqual("donne 1\u202f400 Marks", Libelle.Gabarit("test.cle.absente", "donne {n, plural, one {# Mark} other {# Marks}}", p),
+                    "repli français : espace fine insécable U+202F, la forme servie par le back");
+                Assert.AreEqual("donne 1 Mark", Libelle.Gabarit("test.cle.absente", "donne {n, plural, one {# Mark} other {# Marks}}",
+                    new Dictionary<string, string> { { "n", "1" } }));
+                Assert.AreEqual("12\u202f345\u202f678", IcuFormat.Nombre(12345678));
+                Assert.AreEqual("999", IcuFormat.Nombre(999));
+                Assert.AreEqual("-3\u202f500", IcuFormat.Nombre(-3500));
+                I18nCatalog.ChargerPourTest("en", new Dictionary<string, string> { { "x", "{n, plural, one {# Mark} other {# Marks}}" } });
+                Assert.AreEqual("1,400 Marks", Libelle.Gabarit("x", null, p), "anglais : la virgule");
+            }
+            finally { I18nCatalog.Oublier(); }
+        }
 }
 }

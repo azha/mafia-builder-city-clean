@@ -242,9 +242,24 @@ namespace MafiaCleanCity.I18n
                 else if (!branches.TryGetValue("other", out corps)) return string.Empty;
             }
             string rendu = Formater(corps, p);
-            return n.HasValue
-                ? rendu.Replace("#", n.Value.ToString(System.Globalization.CultureInfo.InvariantCulture))
-                : rendu;
+            return n.HasValue ? rendu.Replace("#", Nombre(n.Value)) : rendu;
+        }
+
+        /// <summary>Le `#` d'un `plural` ICU est un NOMBRE FORMATÉ selon la locale, pas l'entier brut (planche M7 ㉓, f1 26/09 :
+        /// « Liasse de 1 400 Marks » servi, puis « donne 1400 Marks » rendu par `#`). Groupement par milliers : l'espace fine
+        /// insécable U+202F en français (la forme que le back sert, `boutique.sku.*`), la virgule en anglais. Le client parle français
+        /// tant qu'aucune locale « en » n'est chargée (ses replis sont français). Public pour les gardes.</summary>
+        public static string Nombre(long n)
+        {
+            string brut = System.Math.Abs(n).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string sep = I18nCatalog.Locale == "en" ? "," : " ";   // U+202F réel
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < brut.Length; i++)
+            {
+                if (i > 0 && (brut.Length - i) % 3 == 0) sb.Append(sep);
+                sb.Append(brut[i]);
+            }
+            return (n < 0 ? "-" : "") + sb;
         }
     }
 }
