@@ -331,7 +331,9 @@ namespace MafiaCleanCity.Operational.Tests
 
             // ⚠️ Et sous le suivant, AUCUNE promesse : ce qui manque pour l'atteindre est un
             // prédicat de capacité que le back ne projette pas sur la surface joueur.
-            Assert.IsTrue(vus[4].Contains("ne dit pas"),
+            // 0bd5d3d8 (22/09, lot C) a réécrit la ligne « le serveur ne dit pas… » en « on ne sait pas encore ce qui manque pour y
+            // arriver » sans rebaser cette assertion : rouge depuis. L'intention est la même — dire qu'on ne sait pas.
+            Assert.IsTrue(vus[4].Contains("ne sait pas"),
                 $"sous le palier suivant l'écran doit dire qu'il ne sait pas, jamais promettre " +
                 $"une marche proche — « {vus[4]} »");
             foreach (string ligne in vus)
