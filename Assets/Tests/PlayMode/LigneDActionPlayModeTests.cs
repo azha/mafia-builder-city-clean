@@ -45,6 +45,17 @@ namespace MafiaCleanCity.Operational.Tests
         }
 
         [Test]
+        public void CleGenerique_LEchecSeul()
+        {
+            // T3 (suivi ⊥ UX §I, f2 26/09) : le 422 de StartCook sert error.validation.failed, présente au bundle
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+                { { "error.validation.failed", "Une partie de ce que vous avez saisi n’est pas acceptée." } });
+            var o = new ActionOutcome { Ok = false, HttpStatus = 422, Message = "validation failed", CleI18n = "error.validation.failed" };
+            Assert.AreEqual("Impossible de lancer la cuisson.",
+                BuildingCardController.LigneDAction(o, "Cuisson lancée", "Impossible de lancer la cuisson"));
+        }
+
+        [Test]
         public void Succes_LeTexteDeSucces()
         {
             var o = new ActionOutcome { Ok = true, HttpStatus = 200, Message = "ok" };
