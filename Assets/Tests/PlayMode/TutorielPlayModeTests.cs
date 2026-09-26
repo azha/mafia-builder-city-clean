@@ -16,6 +16,7 @@ namespace MafiaCleanCity.CityMap.Tests
     //       n'est éligible ; « rien de nouveau pour aujourd’hui » quand tous les éligibles sont vus
     //   U4  ㉕ (§G, 26/09) : un tutoriel NOMMÉ (`tutorial.exception_card.*`) sans nom servi ne se lit pas — la tête seule, ni son
     //       texte, ni « Compris », ni « rien de nouveau » ; avec le nom servi, le texte le porte
+    //   U5  TD-761 fermée : `onboarding_preseed_params.nom` (forme G, présence lue dans le corps brut) remplit {nom} ; `{}` ⇒ rien
     //   U3  la bascule « On vous explique encore » dans le sens du JOUEUR, test de VALEUR sur les DEUX états : allumée ⇔ opt-out faux,
     //       et le toucher envoie l'opt-out inverse
     [Category("Tutoriel")]
@@ -126,6 +127,33 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.IsFalse(t.Contains("Rien de nouveau pour aujourd’hui.") || t.Contains("Vous avez tout vu."), "ni fini ni rien de nouveau");
                 Assert.IsFalse(t.Contains("Compris"), "on ne marque pas vu ce qu'on n'a pas montré");
             }
+        }
+
+        [Test]
+        public void U5_LeNomServi_ParOnboardingPreseedParams()
+        {
+            // TD-761 fermée : lot i18n du back cc46166d, `onboarding_preseed_params` = { nom } si le préparé est éligible, sinon {}
+            const string preseed = "tutorial.exception_card.onboarding_preseed";
+            TutorielData lu = TutorialClient.Lire(@"{""payload"":{""data"":{""tutorials_opt_out"":false,""shown_tutorial_ids"":[],"
+                + @"""eligible_tutorial_ids"":[""tutorial.exception_card.onboarding_preseed""],""next_tutorial_id"":null,"
+                + @"""onboarding_preseed_params"":{""nom"":""Lt. Vesk""}}}}");
+            Assert.IsTrue(lu.ParamsDuPreseedServis, "forme G : le champ est dans le corps");
+            Assert.AreEqual("Lt. Vesk", TutorialScreenController.NomServi(lu, preseed));
+            Assert.IsNull(TutorialScreenController.NomServi(lu, "tutorial.city_map_heat_intro"), "le nom ne vaut que pour le préparé");
+            TutorielData ancien = TutorialClient.Lire(@"{""payload"":{""data"":{""eligible_tutorial_ids"":[],""shown_tutorial_ids"":[]}}}");
+            Assert.IsFalse(ancien.ParamsDuPreseedServis, "back antérieur : absent");
+            Assert.IsNull(TutorialScreenController.NomServi(ancien, preseed));
+
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { preseed, "{nom} — cuisson du soir bloquée." } });
+            string[] t = Textes(Ecran(lu));
+            CollectionAssert.Contains(t, "Lt. Vesk — cuisson du soir bloquée.", "le nom servi remplit {nom} : " + string.Join(" | ", t));
+            CollectionAssert.Contains(t, "Compris", "montrée, elle se marque vue");
+            Assert.IsFalse(t.Any(x => x.Contains("{nom}")), "jamais l'accolade");
+
+            lu.onboarding_preseed_params = new TutorielParamsDto();   // {} : le préparé n'a pas de nom servi
+            string[] sans = Textes(Ecran(lu));
+            Assert.IsFalse(sans.Any(x => x.Contains("cuisson") || x.Contains("{nom}")), "sans nom : rien de nommé");
+            CollectionAssert.Contains(sans, "Une première leçon vous attend.");
         }
 
         [Test]
