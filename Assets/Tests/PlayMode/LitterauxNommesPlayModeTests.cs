@@ -46,7 +46,7 @@ namespace MafiaCleanCity.CityMap.Tests
         {
             { "BandeauEphemere.cs", 1 },
             { "BuildingCardController.cs", 9 },
-            { "ChaineDApproScreenController.cs", 3 },
+            { "ChaineDApproScreenController.cs", 1 },   // 3 → 1 le 2026-09-26 (états vides : « Nestor » et le texte de chantier passent par Libelle)
             { "CityMapController.cs", 1 },
             { "CityProjectionsClient.cs", 2 },
             { "CompressionScreenController.cs", 2 },
@@ -61,12 +61,11 @@ namespace MafiaCleanCity.CityMap.Tests
             { "ExceptionDetailController.cs", 1 },
             { "HomeChromeController.cs", 1 },
             { "HorizonScreenController.cs", 1 },
-            { "InspectionScreenController.cs", 3 },
+            { "InspectionScreenController.cs", 2 },   // 3 → 2 le 2026-09-26 (état vide de ⑮ : la seconde ligne passe par Libelle)
             { "LieutenantScreenController.cs", 1 },
             { "LoiScreenController.cs", 4 },
-            { "PrecinctScreenController.cs", 1 },
             { "RuleModel.cs", 2 },
-            { "SellingScreenController.cs", 6 },
+            { "SellingScreenController.cs", 5 },   // 6 → 5 le 2026-09-26 (1d0937fc : l'état vide de ㉟ passe par Libelle, table 62)
             { "ShopScreenController.cs", 2 },
             { "TopBarController.cs", 1 },
             { "TutorialScreenController.cs", 1 },

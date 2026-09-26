@@ -193,11 +193,10 @@ namespace MafiaCleanCity.Operational
                 onErr?.Invoke(null);   // null = panne : le sous-titre retombe sur la formule maison
                 yield break;
             }
-            BatimentPossedeDto hub = null, destination = null;
-            foreach (BatimentPossedeDto b in possedes)
-                if (b != null && !string.IsNullOrEmpty(b.building) && b.operational_type == "distribution_hub") { hub = b; break; }
+            BatimentPossedeDto hub = PremierRelais(possedes), destination = null;
             if (hub == null)
             {
+                AucunRelais = true;   // réponse VIDE, pas une erreur : l'état vide de la table 63 le dit
                 onErr?.Invoke("aucun distribution_hub trouvé parmi les districts possédés — la " +
                               "prémisse de cet écran (un hub de distribution) ne tient pas ici");
                 yield break;
@@ -263,7 +262,7 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le nom du lieutenant assigné au bâtiment, joint via `lieutenant_ids[0]` →
         /// `district.lieutenants[].lieutenant_id` (forme mesurée : `Lt. Hara` sur le hub du
         /// compte de démo). `null` si le bâtiment n'a aucun lieutenant assigné — `RendrePied`
-        /// retombe alors sur le pis-aller littéral de la maquette (« Dima »).</summary>
+        /// n'affiche alors AUCUN nom (le pis-aller « Dima » de la maquette est retiré, table 64).</summary>
         private static string LabelLieutenant(string[] lieutenantIds, DistrictInteriorDto district)
         {
             if (lieutenantIds == null || lieutenantIds.Length == 0 || district == null || district.lieutenants == null)
@@ -283,8 +282,20 @@ namespace MafiaCleanCity.Operational
             DernierCodeErreur = 0;
 
             string errRoute = null;
+            AucunRelais = false;
             yield return DecouvrirRoute(() => { }, e => errRoute = e);
             if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
+            if (string.IsNullOrEmpty(FromBuildingId) && AucunRelais)
+            {
+                // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26, table 63) : sans relais possédé (le joueur neuf), l'écran disait « La distribution
+                // n'a pas répondu » + une phrase de DÉVELOPPEUR (« la prémisse de cet écran… ne tient pas ici »). Ce n'est pas une panne :
+                // la réponse est VIDE. Le catalogue s'amorce ICI (plus bas, il ne l'est qu'après la route) : sinon les mots retomberaient.
+                DerniereErreur = errRoute;   // le DIAGNOSTIC nommé reste (EcranDistributionP1) ; il n'est pas affiché dans cet état
+                yield return I18nCatalog.Amorcer(new I18nClient { BaseUrl = baseUrl }, token);
+                if (renduExpliciteDemande) yield break;
+                RendreAucunRelais();
+                yield break;
+            }
             if (string.IsNullOrEmpty(FromBuildingId))
             {
                 DerniereErreur = errRoute;   // null = panne : le sous-titre dit la formule maison
@@ -667,8 +678,8 @@ namespace MafiaCleanCity.Operational
             TrackText(libAchat.text);
         }
 
-        /// <summary>Le pied : portrait + nom (RÉEL si `LieutenantLabel` a été découvert, sinon
-        /// pis-aller « Dima » — littéral de la maquette) + réplique (verbatim par état, aucune
+        /// <summary>Le pied : portrait + nom (RÉEL si `LieutenantLabel` a été découvert, sinon AUCUN —
+        /// le pis-aller « Dima » est retiré, table 64) + réplique (verbatim par état, aucune
         /// source dynamique) + bouton — gated en 3 façons, dans cet ordre :
         /// (1) `boutonVisible == false` (un courrier `IN_TRANSIT`) → note, PAS de bouton (brief
         ///     §2, correctif payé sur l'écran précédent : le DIRE, pas seulement griser) ;
@@ -679,7 +690,9 @@ namespace MafiaCleanCity.Operational
         {
             ViderEnfants(piedRoot);
 
-            string lieutenantAffiche = LieutenantLabel ?? "Dima"; // pis-aller EXACT de la maquette
+            // ⛔ NOM INVENTÉ RETIRÉ (table 64, NOTE) : le repli « Dima » de la maquette nommait un lieutenant que le joueur n'a pas.
+            // Nom réel découvert, ou AUCUN nom : la réplique reste, sans locuteur.
+            string lieutenantAffiche = LieutenantLabel;
             string replique;
             if (enTransit)
                 replique = "Il est parti à la nuit. Ça serpente, mais c'est la seule qui évite le pont du Threnny."; // m-55
@@ -709,9 +722,12 @@ namespace MafiaCleanCity.Operational
 
             // `lieutenantAffiche` = nom RÉEL découvert ou pis-aller littéral — jamais `Libelle.De`
             // (ce n'est pas une phrase fermée d'interface).
-            TextMeshProUGUI nom = NouveauTexteFiche(texteBloc.transform, "Nom", lieutenantAffiche, 10.5f,
-                DesignTokens.Current.onSurfacePrimary, true);
-            TrackText(nom.text);
+            if (!string.IsNullOrEmpty(lieutenantAffiche))
+            {
+                TextMeshProUGUI nom = NouveauTexteFiche(texteBloc.transform, "Nom", lieutenantAffiche, 10.5f,
+                    DesignTokens.Current.onSurfacePrimary, true);
+                TrackText(nom.text);
+            }
 
             // « LA RÉGULATION · J9 » — aucune source dans les 4 corps mesurés, pis-aller verbatim.
             TextMeshProUGUI roleTexte = NouveauTexteFiche(texteBloc.transform, "Role",
@@ -774,6 +790,32 @@ namespace MafiaCleanCity.Operational
                 Libelle.De("distribution", "bloc", "à pied · ça vide le stock du labo"), 7f,
                 DesignTokens.Current.onSurfaceMuted, false);
             TrackText(sousBouton.text);
+        }
+
+        /// <summary>Le premier `distribution_hub` possédé (le relais d'où partent les coursiers) ; null s'il n'y en a pas. Pure.</summary>
+        public static BatimentPossedeDto PremierRelais(BatimentPossedeDto[] possedes)
+        {
+            if (possedes == null) return null;
+            foreach (BatimentPossedeDto b in possedes)
+                if (b != null && !string.IsNullOrEmpty(b.building) && b.operational_type == "distribution_hub") return b;
+            return null;
+        }
+
+        /// <summary>État vide (table 63, client 8979d626) : aucun `distribution_hub` possédé. Ce qui est vrai, et ce qu'on peut faire.</summary>
+        public bool AucunRelais { get; private set; }
+
+        private void RendreAucunRelais()
+        {
+            ViderEnfants(corkboardRoot);
+            ViderEnfants(couriersRoot);
+            ViderEnfants(piedRoot);
+            titreTexte.text = Libelle.Gabarit("distribution.vide.pas_encore_de_relais", "Pas encore de relais.");
+            sousTitreTexte.text = Libelle.Gabarit("distribution.vide.sans_relais_rien_ne_part_c_est_de_la_que_vos_coursiers_livrent",
+                                      "Sans relais, rien ne part\u00A0: c’est de là que vos coursiers livrent.")
+                                  + "\n" + Libelle.Gabarit("distribution.vide.un_relais_s_obtient_en_reconvertissant_un_de_vos_locaux_une_decision_de_structure",
+                                      "Un relais s’obtient en reconvertissant un de vos locaux — une décision de structure.");
+            TrackText(titreTexte.text);
+            TrackText(sousTitreTexte.text);
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau ou prémisse non remplie — jamais une exception,

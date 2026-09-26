@@ -33,4 +33,17 @@ namespace MafiaCleanCity.Operational
 
     [Serializable] public class SuitesNommeesPayload { public SuitesNommeesDto data; }
     [Serializable] public class SuitesNommeesEnvelope { public SuitesNommeesPayload payload; }
+    // C8 (passe UX 2026-09-24) — `GET /v1/political-events/calendar`, route JOUEUR publique (political.controller.ts:37, e40f4142),
+    // mesurée 200 sur un compte neuf (corps/079 de la passe). Clés camelCase telles que servies. Les `name` sont des littéraux ANGLAIS
+    // sans clé (K2, routé au back) : le client les keye par `eventId` (`Libelle.ParValeur`), le nom servi en repli.
+    [Serializable] public class EvenementPolitiqueDto { public string eventId; public string name; public string category; public int scheduledGameDay; }
+    [Serializable] public class CalendrierPolitiqueDto
+    {
+        public string politicalClimate;                 // silent | minor | major | dramatic
+        public EvenementPolitiqueDto[] active;          // en cours
+        public EvenementPolitiqueDto[] upcoming;        // annoncés (les 3 événements du calendrier)
+        public EvenementPolitiqueDto[] recentlyEnded;   // non montré (m-91 : « seulement ce qui est en cours et ce qui est annoncé »)
+    }
+    [Serializable] public class CalendrierPolitiquePayload { public CalendrierPolitiqueDto data; }
+    [Serializable] public class CalendrierPolitiqueEnvelope { public CalendrierPolitiquePayload payload; }
 }

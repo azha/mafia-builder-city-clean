@@ -92,6 +92,10 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le `building_id` trouvé par `DecouvrirBuildingId` — crochet de test (§4/§5 du
         /// brief : « écris ton choix et son coût »).</summary>
         public string BuildingIdDecouvert { get; private set; }
+        /// <summary>Table 64 (passe UX 2026-09-26) — les lieutenants SERVIS du labo (`me/buildings`) et le roster (`GET /v1/lieutenants`) :
+        /// c'est là qu'est le nom de qui parle. « Nestor » était figé.</summary>
+        public string[] LieutenantsDuLabo { get; private set; }
+        public MafiaCleanCity.Operational.Lieutenant.RosterRow[] Roster { get; private set; }
         /// <summary>Les textes RÉELLEMENT rendus, dans l'ordre — crochet de test (patron
         /// `ExceptionQueueController.RenderedTexts`), pour asserter le contenu sans dépendre de la
         /// hiérarchie d'objets.</summary>
@@ -201,10 +205,33 @@ namespace MafiaCleanCity.Operational
             foreach (BatimentPossedeDto b in possedes)
             {
                 if (b == null || string.IsNullOrEmpty(b.building) || !EstUnLabo(b.operational_type)) continue;
+                LieutenantsDuLabo = b.lieutenant_ids;   // table 64 : qui parle au pied de la fiche
                 onOk?.Invoke(b.building);
                 yield break;
             }
             onErr?.Invoke(Libelle.De("appro", "etat", "Rien à commander — vous ne tenez pas encore de labo."));
+        }
+
+        /// <summary>Table 64 — la clé de la réplique du labo à court de Pyralin, FIGÉE : elle naissait du texte, et le texte porte désormais
+        /// {nom}. Même valeur que la clé que le back sert (`string_table.ts`), jamais redérivée.</summary>
+        public const string CleRepliqueNestor = "appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas";
+
+        /// <summary>Qui parle au pied de la fiche : le premier des lieutenants SERVIS du labo présent au roster ; aucun ⇒ null. Pure.</summary>
+        public static string LieutenantDuLabo(MafiaCleanCity.Operational.Lieutenant.RosterRow[] roster, string[] lieutenantsDuLabo)
+        {
+            if (roster == null || lieutenantsDuLabo == null) return null;
+            foreach (string id in lieutenantsDuLabo)
+                foreach (MafiaCleanCity.Operational.Lieutenant.RosterRow r in roster)
+                    if (r != null && r.lieutenant_id == id && !string.IsNullOrWhiteSpace(r.name)) return r.name;
+            return null;
+        }
+
+        /// <summary>Table 63 — tous les nœuds servis sont `silent` (et il y en a au moins un). Pure.</summary>
+        public static bool ToutSilencieux(GetSupplyChainGraphResponseDto g)
+        {
+            if (g == null || g.nodes == null || g.nodes.Length == 0) return false;
+            foreach (SupplyChainNodeDto n in g.nodes) if (n == null || n.bucket != "silent") return false;
+            return true;
         }
 
         /// <summary>Les deux types qui cuisinent, dans le domaine `building_operational_type`.</summary>
@@ -224,6 +251,9 @@ namespace MafiaCleanCity.Operational
             string buildingId = null;
             string errBuilding = null;
             yield return DecouvrirBuildingId(id => buildingId = id, e => errBuilding = e);
+            // table 64 : le nom de qui parle vient du roster servi
+            yield return new MafiaCleanCity.Operational.Lieutenant.LieutenantClient { BaseUrl = baseUrl }.ListLieutenants(token, r => Roster = r,
+                (c, m) => Debug.LogWarning($"[㉚] roster indisponible : {c} {m}"));
             if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
             if (string.IsNullOrEmpty(buildingId))
             {
@@ -519,14 +549,26 @@ namespace MafiaCleanCity.Operational
                 // ne porte de nom ni de réplique de lieutenant). Nom et texte VERBATIM de m-48,
                 // valables seulement pour Pyralin/Nestor ; générique sinon.
                 bool estPyralin = string.Equals(dto.precursor_type, "PYRALIN", StringComparison.OrdinalIgnoreCase);
-                string replique = estPyralin
-                    ? "Nestor : « L'étagère est vide. Sans pyralin, je ne rallume pas. »"
-                    : "Votre lieutenant : « On en a besoin, et il n'y en a plus. »";
-                TextMeshProUGUI q = NouveauTexteFiche(piedRoot, "Replique",
-                    Libelle.De("appro", "bloc", replique), 9.5f, DesignTokens.Current.onSurfaceSecondary, false);
-                q.fontStyle = FontStyles.Italic;
-                q.enableWordWrapping = true;
-                TrackText(q.text);
+                // ⛔ NOM FIGÉ (table 64, atelier 82a3d473) : « Nestor » parlait pour tout joueur, et la clé était FABRIQUÉE depuis ce texte —
+                // y mettre {nom} aurait changé la clé. Elle est donc FIGÉE (`CleRepliqueNestor`), et {nom} = le lieutenant RÉEL du labo
+                // (le premier de ses lieutenants servis présent au roster) ; aucun ⇒ la réplique ne s'affiche pas.
+                string replique = null;
+                if (estPyralin)
+                {
+                    string nom = LieutenantDuLabo(Roster, LieutenantsDuLabo);
+                    if (nom != null)
+                        replique = Libelle.Gabarit(CleRepliqueNestor, "{nom}\u00A0: «\u00A0L’étagère est vide. Sans Pyralin, je ne rallume pas.\u00A0»",
+                            new System.Collections.Generic.Dictionary<string, string> { { "nom", nom } });
+                }
+                else
+                    replique = Libelle.De("appro", "bloc", "Votre lieutenant : « On en a besoin, et il n'y en a plus. »");
+                if (replique != null)
+                {
+                    TextMeshProUGUI q = NouveauTexteFiche(piedRoot, "Replique", replique, 9.5f, DesignTokens.Current.onSurfaceSecondary, false);
+                    q.fontStyle = FontStyles.Italic;
+                    q.enableWordWrapping = true;
+                    TrackText(q.text);
+                }
             }
 
             GameObject bouton = NouveauUI("BoutonCommander", piedRoot);
@@ -572,17 +614,22 @@ namespace MafiaCleanCity.Operational
             TrackText(label.text);
 
             bool vide = dto == null || dto.nodes == null || dto.nodes.Length == 0;
+            // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26, table 63) : « Des maillons existent, mais cet écran ne sait pas encore les afficher »
+            // était un texte de CHANTIER, montré au joueur neuf dont les maillons sont tous `silent`. Ce qui est vrai alors : rien ne
+            // circule. Des nœuds non silencieux : l'écran n'a pas de rendu dédié — il se TAIT plutôt que de parler de lui.
             string message = vide
                 // MESURÉ (2026-09-03, compte `operational_demo@example.test`) : `nodes: []`.
-                ? "Rien à remonter pour l’instant — la chaîne ne connaît aucun maillon sur ce compte."
-                // Jamais observé non vide ici : pas de rendu dédié cette passe (aucune maquette
-                // pour un nœud réel, et backpressure/trace-step/resolve restent inatteignables
-                // sans id de nœud) — voir implementation-notes.md § Deviations.
-                : "Des maillons existent, mais cet écran ne sait pas encore les afficher.";
-            TextMeshProUGUI msg = NouveauTexteFiche(chaineRoot, "ChaineMessage",
-                Libelle.De("appro", "bloc", message), 9f, DesignTokens.Current.onSurfaceMuted, false);
-            msg.enableWordWrapping = true;
-            TrackText(msg.text);
+                ? Libelle.De("appro", "bloc", "Rien à remonter pour l’instant — la chaîne ne connaît aucun maillon sur ce compte.")
+                : ToutSilencieux(dto)
+                    ? Libelle.Gabarit("appro.vide.rien_ne_circule_encore_vos_maillons_attendent_une_premiere_commande",
+                        "Rien ne circule encore\u00A0: vos maillons attendent une première commande.")
+                    : null;
+            if (message != null)
+            {
+                TextMeshProUGUI msg = NouveauTexteFiche(chaineRoot, "ChaineMessage", message, 9f, DesignTokens.Current.onSurfaceMuted, false);
+                msg.enableWordWrapping = true;
+                TrackText(msg.text);
+            }
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir

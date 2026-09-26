@@ -277,7 +277,9 @@ namespace MafiaCleanCity.Economy.Shop
             else if (argentReel)
             {
                 libelle = "DERRIÈRE LA VITRE";
-                raison = "aucun vérificateur de reçu n'est câblé — cet achat ne peut aboutir";
+                // ㉓ (passe UX 2026-09-26, table 63 v2 ; R3/D24 « les garder, marqués bientôt ») : « aucun vérificateur de reçu n'est
+                // câblé » était une phrase TECHNIQUE montrée au joueur. Le pack en argent réel reste visible, marqué « Bientôt ».
+                raison = MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.bientot", "Bientôt");
                 teinte = Eteint;
             }
             else if (!abordable)

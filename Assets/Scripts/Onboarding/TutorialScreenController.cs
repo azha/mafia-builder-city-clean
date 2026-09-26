@@ -65,10 +65,28 @@ namespace MafiaCleanCity.Onboarding
             return string.IsNullOrWhiteSpace(t) ? "—" : t;
         }
 
-        /// <summary>Ce que dit l'écran quand `next_tutorial_id` est null : « tout vu » SEULEMENT si plus rien n'est éligible ; sinon
-        /// « rien de nouveau pour aujourd’hui » (null = rien de nouveau pour CETTE session — atelier 33 §4, mot proposé).</summary>
+        /// <summary>Ce que dit l'écran quand il n'a RIEN à montrer (ni `next_tutorial_id`, ni éligible non vu — C10) : « tout vu »
+        /// SEULEMENT si plus rien n'est éligible ; sinon « rien de nouveau pour aujourd’hui » (atelier 33 §4, mot proposé).</summary>
         public static string PhraseSansSuivant(string[] eligibles) =>
             eligibles == null || eligibles.Length == 0 ? Lib("Vous avez tout vu.") : Lib("Rien de nouveau pour aujourd’hui.");
+
+        /// <summary>C10 (passe UX 2026-09-24) — le premier tutoriel ÉLIGIBLE que le joueur n'a pas encore vu ; null sinon. Pure.
+        /// ⛔ Mesuré sur le serveur (corps/012, 072 de la passe) : un joueur neuf reçoit `eligible_tutorial_ids =
+        /// [tutorial.exception_card.onboarding_preseed]` et `next_tutorial_id = null` — AVANT comme APRÈS sa première décision : cet
+        /// éligible n'est pas un id du calendrier de divulgation, le back ne le choisit jamais. « Rien de nouveau pour aujourd’hui »
+        /// était donc FAUX à vie pour lui. L'écran montre ce que le back déclare éligible et que le joueur n'a pas vu.</summary>
+        public static string PremierEligibleNonVu(string[] eligibles, string[] vus)
+        {
+            if (eligibles == null) return null;
+            var dejaVus = new System.Collections.Generic.HashSet<string>(vus ?? new string[0]);
+            foreach (string id in eligibles) if (!string.IsNullOrWhiteSpace(id) && !dejaVus.Contains(id)) return id;
+            return null;
+        }
+
+        /// <summary>Table 63 v2 — le joueur NEUF : rien de vu (`shown` vide) et au moins un éligible. Pure.</summary>
+        public static bool PremiereLecon(TutorielData e) =>
+            e != null && (e.shown_tutorial_ids == null || e.shown_tutorial_ids.Length == 0)
+            && e.eligible_tutorial_ids != null && e.eligible_tutorial_ids.Length > 0;
 
         /// <summary>Couture de test : rend un état fabriqué, sans réseau.</summary>
         public void RendrePourTest(TutorielData etat)
@@ -197,15 +215,25 @@ namespace MafiaCleanCity.Onboarding
             string suivant = Etat.next_tutorial_id;
             if (string.IsNullOrEmpty(suivant))
             {
+                // C10 — `next` null n'épuise pas l'éligible : un tutoriel éligible, pas encore vu, et dont le texte est SERVI, se montre.
+                string eligible = PremierEligibleNonVu(Etat.eligible_tutorial_ids, Etat.shown_tutorial_ids);
+                if (eligible != null && TexteDuTutoriel(eligible) != "—") suivant = eligible;
+            }
+            if (string.IsNullOrEmpty(suivant))
+            {
                 Texte(corps, "Fini", PhraseSansSuivant(Etat.eligible_tutorial_ids), Px(13f), Creme,
                       DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center).enableWordWrapping = true;
             }
             else
             {
-                TextMeshProUGUI sur = Texte(corps, "Titre2", Lib("À découvrir"), Px(7.5f), Eteint,
-                      DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
-                sur.characterSpacing = 14f;
-                sur.fontStyle = FontStyles.UpperCase;
+                // table 63 v2 : le joueur NEUF (rien vu, un éligible) lit « Une première leçon vous attend. » en tête — une phrase, pas un
+                // surtitre : casse normale. Sinon le surtitre « À découvrir », en capitales de style.
+                bool premiereLecon = PremiereLecon(Etat);
+                TextMeshProUGUI sur = Texte(corps, "Titre2",
+                      premiereLecon ? MafiaCleanCity.I18n.Libelle.Gabarit("tutoriel.vide.une_premiere_lecon_vous_attend", "Une première leçon vous attend.") : Lib("À découvrir"),
+                      Px(7.5f), Eteint, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+                sur.characterSpacing = premiereLecon ? 0f : 14f;
+                sur.fontStyle = premiereLecon ? FontStyles.Normal : FontStyles.UpperCase;
                 // Le TEXTE servi du tutoriel (D10-h close) — jamais l'identifiant.
                 Texte(corps, "Texte", TexteDuTutoriel(suivant), Px(14f), Or,
                       DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center)

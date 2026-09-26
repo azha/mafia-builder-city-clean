@@ -13,6 +13,8 @@ namespace MafiaCleanCity.Operational
     ///                                               "committed_at":null,"slots":[]}
     ///     GET /v1/cue-stack/named-sequences-> 403  (existe, droit manquant)
     ///     …/political-events/*             -> 404  sur les quatre chemins joueur essayés
+    ///   ⛔ PÉRIMÉ (C8, 2026-09-26) : `GET /v1/political-events/calendar` rend 200, route joueur publique depuis e40f4142
+    ///   (2026-07-06) — aucun des quatre chemins essayés le 03/09 n'était celui-là. Branché ci-dessous.
     /// ★ Le 403 est une INFORMATION, pas un échec : c'est le
     ///   `NAMED_SEQUENCE_UNLOCK_REQUIRED` que la maquette m-89 demande de montrer VERROUILLÉ.
     ///   Le traiter comme une erreur cacherait la seule chose que ce cadre existe pour dire.
@@ -71,6 +73,28 @@ namespace MafiaCleanCity.Operational
                 }
                 else onErr?.Invoke(req.responseCode,
                                    $"GET /v1/cue-stack/named-sequences a échoué ({req.responseCode})");
+            }
+        }
+
+        /// <summary>C8 — `GET /v1/political-events/calendar` : ce que la ville prépare (en cours, annoncé). Public côté back (la
+        /// ville est une pour tous) ; le jeton est envoyé quand même, comme partout.</summary>
+        public IEnumerator GetCalendrierPolitique(string bearer, Action<CalendrierPolitiqueDto> onOk, Action<long, string> onErr)
+        {
+            using (UnityWebRequest req = UnityWebRequest.Get(Url("political-events/calendar")))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    CalendrierPolitiqueDto dto = null;
+                    try { dto = JsonUtility.FromJson<CalendrierPolitiqueEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                    catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+                    if (dto == null) { onErr?.Invoke(0, "corps vide (GetCalendrierPolitique)"); yield break; }
+                    onOk?.Invoke(dto);
+                }
+                else onErr?.Invoke(req.responseCode,
+                                   $"GET /v1/political-events/calendar a échoué ({req.responseCode}) {req.error}");
             }
         }
     }

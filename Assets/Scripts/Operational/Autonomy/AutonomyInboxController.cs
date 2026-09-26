@@ -236,7 +236,10 @@ namespace MafiaCleanCity.Operational.Autonomy
 
             if (Reports.Length == 0)
             {
-                TextMeshProUGUI empty = NewText("Empty", rowsArea, "Aucun rapport d'autonomie en attente", 14, TextAlignmentOptions.Left);
+                // ÉTAT VIDE (passe UX 2026-09-26, table 63 v2) : ce qui est vrai, et d'où viendront les rapports (« confier » = le verbe de ㉜)
+                TextMeshProUGUI empty = NewText("Empty", rowsArea, MafiaCleanCity.I18n.Libelle.Gabarit("autonomie.vide.aucun_rapport_pour_l_instant_il_en_viendra_quand_vous_aurez_confie_une_tache_a_un_lieutenant",
+                    "Aucun rapport pour l’instant\u00A0: il en viendra quand vous aurez confié une tâche à un lieutenant."), 14, TextAlignmentOptions.Left);
+                empty.enableWordWrapping = true;
                 empty.color = TextSecondary;
                 AddLayoutElement(empty.gameObject, minHeight: 24, flexibleHeight: 0);
                 TrackText(empty, empty.text);

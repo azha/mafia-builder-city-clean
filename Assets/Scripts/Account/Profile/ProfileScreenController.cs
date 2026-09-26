@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using MafiaCleanCity.Shell;
@@ -156,14 +157,14 @@ namespace MafiaCleanCity.Account.Profile
             // le nom, en grand — c'est l'identité, pas une ligne de tableau
             Texte(corps, "Handle", string.IsNullOrEmpty(Profil.handle) ? "—" : Profil.handle,
                   Px(18f), Or, DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
-            Texte(corps, "Etat", Lisible(Profil.lifecycle_state), Px(8.5f), Creme2,
+            Texte(corps, "Etat", EtatDuCompte(Profil.lifecycle_state), Px(8.5f), Creme2,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 12f;
 
             Champ("Adresse", Masquer(Profil.email), null);
             // 23/09 (atelier 35) : « réglée le jour où vous avez ouvert le compte — elle ne se change pas encore » était FAUX depuis
             // `PATCH /v1/me/settings` (L8, fermé) : la langue se change dans les réglages. La sous-ligne sort.
-            Champ("Langue", Profil.locale, null);
-            Champ("Compte", Court(Profil.account_id), null);
+            Champ("Langue", LangueDuCompte(Profil.locale), null);
+            // ⛔ La ligne « Compte » (8 caractères de l'identifiant) est RETIRÉE (table 63 v2) : jamais l'identifiant du compte à l'écran.
 
             Manque("Changer le mot de passe", "pas encore : la clé est celle du premier jour");
             Manque("Double authentification", "pas encore : la maison ne demande qu'une clé");
@@ -222,8 +223,19 @@ namespace MafiaCleanCity.Account.Profile
             return email.Substring(0, 1) + new string('•', System.Math.Min(a - 1, 6)) + email.Substring(a);
         }
 
-        private static string Court(string id) =>
-            string.IsNullOrEmpty(id) ? "—" : (id.Length > 8 ? id.Substring(0, 8) : id);
+        // ㉒ (passe UX 2026-09-26, table 63 v2) : l'état et la langue en MOTS — `ParValeur` sur la valeur SERVIE (clés profil.etat.*,
+        // profil.langue.*), replis à l'octet de la table. Seul ACTIVE est visible (la connexion refuse les autres, auth.service.ts:229).
+        private static readonly Dictionary<string, string> ReplisDEtat = new Dictionary<string, string> { { "ACTIVE", "en règle" } };
+        private static readonly Dictionary<string, string> ReplisDeLangue = new Dictionary<string, string>
+            { { "fr", "Français" }, { "en", "Anglais" } };
+
+        public static string EtatDuCompte(string v) =>
+            string.IsNullOrEmpty(v) ? "—"
+            : MafiaCleanCity.I18n.Libelle.ParValeur("profil", "etat", v, ReplisDEtat.TryGetValue(v, out string mot) ? mot : Lisible(v));
+
+        public static string LangueDuCompte(string v) =>
+            string.IsNullOrEmpty(v) ? "—"
+            : MafiaCleanCity.I18n.Libelle.ParValeur("profil", "langue", v, ReplisDeLangue.TryGetValue(v, out string mot) ? mot : v);
 
         private static string Lisible(string v)
         {

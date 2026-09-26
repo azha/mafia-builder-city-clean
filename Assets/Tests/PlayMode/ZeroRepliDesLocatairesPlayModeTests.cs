@@ -179,6 +179,47 @@ namespace MafiaCleanCity.Operational.Tests
             "carte.panneau.ce_qu_ils_croient",
             "carte.panneau.la_patrouille",
             "carte.panneau.ce_qui_se_dit",
+            // ⚠️ RALLONGÉE le 2026-09-26 — C8 (CLIENT-2) : ㉞ montre « Ce qui arrive » (calendrier politique servi). Les 5 mots du panneau,
+            // table 65 de l'atelier (20d9be5f), NON servis @5e792a3c. Les noms d'événements sont SERVIS (`political.event.E-POL-*`) :
+            // aucune dette pour eux.
+            "carnet.bloc.ce_qui_arrive",
+            "carnet.bloc.le_calendrier_n_a_pas_repondu",
+            "carnet.bloc.rien_n_est_annonce",
+            "carnet.bloc.en_cours",
+            "carnet.bloc.annonce",
+            // ⚠️ RALLONGÉE le 2026-09-26 — états vides de la passe UX (CLIENT-2), mots de l'atelier table 63 (client 8979d626), PROPOSÉS,
+            // non servis @5e792a3c. Retirées par la règle (2) dès qu'elles sont servies.
+            "police.vide.le_commissariat_n_a_encore_rien_sur_vous",
+            "police.vide.tant_que_vous_ne_faites_pas_de_bruit_ca_peut_durer",
+            "filiere.vide.votre_planque_enseigne_est_vide",
+            "filiere.vide.l_argent_y_entre_quand_vous_ramassez_la_caisse_d_un_dealer",
+            // ㉝ : tables 63 (état light, compte accordé) et 64 (les 4 répliques, {nom} = le lieutenant réel), non servies @5e792a3c.
+            "demolition.vide.rien_ne_se_gene_vos_sites_tournent_sans_se_marcher_dessus",
+            "demolition.vide.rien_a_raser_pour_l_instant",
+            "demolition.ecran.n_endroits_se_genent",
+            "demolition.dit.on_a_trop_de_choses_au_meme_endroit_il_va_falloir_en_enlever_une",
+            "demolition.dit.celui_la_on_le_garde_par_habitude_il_gene_les_voisins_et_il_ne_rend_presque_rien",
+            "demolition.dit.trop_tard_pour_celle_la",
+            "demolition.dit.deux_propositions_la_premiere_est_mieux_placee_elles_ne_resteront_pas_sur_la_table",
+            // ㉚ : table 63 (tous les maillons silencieux), non servie @5e792a3c. (La réplique du labo, elle, est SERVIE : pas de dette.)
+            "appro.vide.rien_ne_circule_encore_vos_maillons_attendent_une_premiere_commande",
+            // ㉘ : table 63 (aucun relais possédé), non servies @5e792a3c.
+            "distribution.vide.pas_encore_de_relais",
+            "distribution.vide.sans_relais_rien_ne_part_c_est_de_la_que_vos_coursiers_livrent",
+            "distribution.vide.un_relais_s_obtient_en_reconvertissant_un_de_vos_locaux_une_decision_de_structure",
+            // table 63 v2 (client 34beb6e7), non servies @5e792a3c.
+            "inspection.vide.rien_a_faire_ici_tant_qu_aucune_file_n_est_ouverte",
+            "revue.vide.vos_lieutenants_n_ont_encore_rien_a_tenir_donnez_leur_une_premiere_regle",
+            "autonomie.vide.aucun_rapport_pour_l_instant_il_en_viendra_quand_vous_aurez_confie_une_tache_a_un_lieutenant",
+            "famille.vide.au_repos_rien_a_cuire_pour_l_instant",
+            "famille.vide.commandez_de_la_matiere_depuis_la_chaine_d_appro",
+            "tutoriel.vide.une_premiere_lecon_vous_attend",
+            "famille.ecran.recruter_archetype",
+            "famille.ecran.nouvelle_recrue_archetype",
+            "profil.etat.active",
+            "profil.langue.fr",
+            "profil.langue.en",
+            "boutique.bloc.bientot",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

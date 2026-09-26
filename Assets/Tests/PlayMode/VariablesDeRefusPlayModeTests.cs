@@ -1,0 +1,72 @@
+using System.Collections.Generic;
+using NUnit.Framework;
+using MafiaCleanCity.I18n;
+using MafiaCleanCity.Operational;
+
+namespace MafiaCleanCity.CityMap.Tests
+{
+    // LOT DES REFUS (f2, 2026-09-26) — `payload_vars` d'un refus servi : tout `<racine>_key` est une clé SERVIE, résolue en MOT, injecté
+    // dans `<racine>` ; le client ne concatène jamais une clé. Hors réseau, catalogue fabriqué, corps de la forme convenue avec le back.
+    //   V1  POSITIF : error.production.precursor_missing + { precursor_type: "pyralin", precursor_key: "building.precursor.pyralin" }
+    //       ⇒ « … la Pyraline … », de bout en bout jusqu'à la ligne d'action de ②
+    //   V2  NÉGATIF : une variable sans `_key` passe telle quelle ; `precursor_type` seul n'est JAMAIS changé en clé fabriquée
+    //   V3  NÉGATIF : `_key` non servie ⇒ repli = la valeur que le back a posée dans la racine (comptée en repli), jamais la clé
+    //   V4  lecture : objet plat, échappements, nombres ; l'imbriqué est sauté ; pas de payload_vars ⇒ vide
+    [Category("VariablesDeRefus")]
+    public class VariablesDeRefusPlayModeTests
+    {
+        [TearDown] public void Oublier() => I18nCatalog.Oublier();
+
+        private const string Corps =
+            "{\"payload\":{\"error\":{\"code\":\"RESOURCE_STATE_CONFLICT\",\"user_facing_i18n_key\":\"error.production.precursor_missing\"," +
+            "\"payload_vars\":{\"precursor_type\":\"pyralin\",\"precursor_key\":\"building.precursor.pyralin\"}}}}";
+
+        [Test]
+        public void V1_LaCleEstResolueEnMot_JusquALaLigneDAction()
+        {
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                { "building.precursor.pyralin", "la Pyraline" },
+                { "error.production.precursor_missing", "Il manque {precursor_type} au labo." },
+            });
+            Dictionary<string, string> v = VariablesDeRefus.Resoudre(VariablesDeRefus.Lire(Corps));
+            Assert.AreEqual("la Pyraline", v["precursor_type"], "le MOT servi, pas l'identifiant");
+            var o = new ActionOutcome { Ok = false, CleI18n = "error.production.precursor_missing", Variables = v };
+            Assert.AreEqual("La cuisson n’a pas démarré — Il manque la Pyraline au labo.",
+                BuildingCardController.LigneDAction(o, "ok", "La cuisson n’a pas démarré"));
+        }
+
+        [Test]
+        public void V2_SansSuffixeCle_RienNeBouge()
+        {
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { "building.precursor.pyralin", "la Pyraline" } });
+            var brut = new Dictionary<string, string> { { "precursor_type", "pyralin" }, { "reason", "building.precursor.pyralin" } };
+            Dictionary<string, string> v = VariablesDeRefus.Resoudre(brut);
+            Assert.AreEqual("pyralin", v["precursor_type"], "sans precursor_key, la racine n'est pas touchée (aucune clé fabriquée)");
+            Assert.AreEqual("building.precursor.pyralin", v["reason"], "une variable sans `_key` passe telle quelle");
+        }
+
+        [Test]
+        public void V3_CleNonServie_ReplisSurLaValeurDuBack()
+        {
+            I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>());
+            Libelle.RemettreLesCompteurs();
+            Dictionary<string, string> v = VariablesDeRefus.Resoudre(VariablesDeRefus.Lire(Corps));
+            Assert.AreEqual("pyralin", v["precursor_type"], "clé non servie : la valeur posée par le back, jamais la clé");
+            Assert.AreEqual(1, Libelle.NbReplis, "et le repli est COMPTÉ (garde zéro repli)");
+        }
+
+        [Test]
+        public void V4_Lecture()
+        {
+            var v = VariablesDeRefus.Lire("{\"payload_vars\":{\"a\":\"x \\\"y\\\"\",\"n\":3,\"o\":{\"b\":\"c\"},\"z\":\"\\u00e9\",\"t\":[1,2],\"f\":true}}");
+            Assert.AreEqual("x \"y\"", v["a"]);
+            Assert.AreEqual("3", v["n"]);
+            Assert.AreEqual("é", v["z"]);
+            Assert.AreEqual("true", v["f"]);
+            Assert.IsFalse(v.ContainsKey("o") || v.ContainsKey("t"), "l'imbriqué est sauté, jamais deviné");
+            Assert.IsEmpty(VariablesDeRefus.Lire("{\"payload\":{}}"));
+            Assert.IsEmpty(VariablesDeRefus.Lire(null));
+        }
+    }
+}

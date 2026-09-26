@@ -390,7 +390,8 @@ namespace MafiaCleanCity.Operational.Exceptions
         }
 
         /// <summary>La phrase de l'état vide. Le back sert `exceptions.file.ambiance` en pluriel ICU, dont la branche `=0` a
-        /// été réalignée sur la maquette (« … — la routine tient », atelier §3.4 ; servie à `aea5ef7c`). ⚠️ Seule la branche
+        /// été réalignée sur la maquette (« … — la routine tient », atelier §3.4 ; servie à `aea5ef7c`), puis RÉDUITE à « Personne ne
+        /// fait la queue » (table 63 v2, 26/09 : « la routine tient » est faux pour un joueur sans routine). ⚠️ Seule la branche
         /// `=0` est lue ici : `other` pose `#` en CHIFFRES, et un texte suivi ne porte pas de chiffre isolé (R2.2) — la ligne
         /// de la file garde ses nombres en lettres. Repli : le mot de la maquette.</summary>
         public static string AmbianceVide() => LigneAmbiance(0);
@@ -400,7 +401,8 @@ namespace MafiaCleanCity.Operational.Exceptions
         /// (l'ancienne branche `other {# …}`). Repli : la composition du client, le nombre en lettres.</summary>
         public static string LigneAmbiance(int n) =>
             ExceptionBandes.CompteEnLettres("exceptions.file.ambiance", n,
-                n == 0 ? "Personne ne fait la queue — la routine tient"
+                // =0 (table 63 v2, 34beb6e7) : « — la routine tient » était FAUX pour un joueur sans routine ; les autres branches inchangées
+                n == 0 ? "Personne ne fait la queue"
                        : (n == 1 ? "Un seul attend vos ordres" : EnLettres(n) + " attendent vos ordres") + " — la file est calme");
 
         // ================================================================ ⑨-6 après le tampon

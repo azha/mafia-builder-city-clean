@@ -634,23 +634,41 @@ namespace MafiaCleanCity.Shell
             HorodatageDeSortie.Ecrire(Horloge());
         }
 
-        /// <summary>B4 — au retour au premier plan : sous le seuil, rien (la même session continue) ; au-delà, `close` puis `open`,
-        /// puis le bandeau et l'écran courant se rafraîchissent. Public : le test hors réseau le joue sans mettre l'app en pause.</summary>
+        /// <summary>B4 — au retour au premier plan : le jour servi décide (relu par `open`), sinon le repli d'absence ; une NOUVELLE
+        /// session ⇒ bandeau et écran courant. Public : le test hors réseau le joue sans mettre l'app en pause.</summary>
         public IEnumerator AuRetourAuPremierPlan()
         {
             if (retourEnCours || string.IsNullOrEmpty(Token)) yield break;
-            CycleDeSession.Decision d = CycleDeSession.Decider(HorodatageDeSortie.Lire(), Horloge(), demarrageAFroid: false);
+            System.DateTime? sortie = HorodatageDeSortie.Lire();
             HorodatageDeSortie.Effacer();
-            if (d == CycleDeSession.Decision.Rien) yield break;
+            bool jourServi = LastSessionOpen != null && LastSessionOpen.JourDeFamille.HasValue && LastSessionOpen.JourDeFamilleALOuverture.HasValue;
             retourEnCours = true;
-            SessionOpenDto dto = null; string err = null;
+            SessionOpenDto neuve = null; string err = null;
             string t = Token;
-            yield return CycleDeSession.Appliquer(d, t, Transport(), x => dto = x, e => err = e);
+            yield return CycleDeSession.AuRetour(t, Transport(), jourServi, sortie, Horloge(), x => neuve = x, e => err = e);
             retourEnCours = false;
+            yield return ApresNouvelleSession(t, neuve, err);
+        }
+
+        /// <summary>B4 — à chaque lecture de l'horloge légère au premier plan (30 à 60 s) : ses deux jours servis. Différents ⇒ close
+        /// puis open, bandeau et écran courant. ⚠️ L'horloge légère est le lot C4 (CLIENT-1) : ce point d'entrée l'attend.</summary>
+        public IEnumerator SurLectureDuJourServi(int? jourServi, int? jourDOuverture)
+        {
+            if (retourEnCours || string.IsNullOrEmpty(Token)) yield break;
+            retourEnCours = true;
+            SessionOpenDto neuve = null; string err = null;
+            string t = Token;
+            yield return CycleDeSession.SurLecture(t, Transport(), jourServi, jourDOuverture, x => neuve = x, e => err = e);
+            retourEnCours = false;
+            yield return ApresNouvelleSession(t, neuve, err);
+        }
+
+        private IEnumerator ApresNouvelleSession(string t, SessionOpenDto neuve, string err)
+        {
             if (this == null) yield break;
-            if (dto == null) { Debug.LogError($"[AppShell] session/open au retour : {err}"); yield break; }
+            if (neuve == null) { if (err != null) Debug.LogError($"[AppShell] session (B4) : {err}"); yield break; }
             SessionsRouvertesAuRetour++;
-            yield return PublierOuverture(t, dto);
+            yield return PublierOuverture(t, neuve);
             if (this == null) yield break;
             RemonterLEcranCourant();
         }
@@ -795,11 +813,11 @@ namespace MafiaCleanCity.Shell
             Token = t;
             SessionOpenDto dto = null;
             string sessionErr = null;
-            // B4 — au démarrage à froid : une absence ≥ seuil ferme la session d'avant PUIS ouvre (le « demain ») ; sinon l'ouverture
-            // habituelle. L'heure de sortie est consommée ici, une fois.
-            CycleDeSession.Decision auLancement = CycleDeSession.Decider(HorodatageDeSortie.Lire(), Horloge(), demarrageAFroid: true);
+            // B4 — au démarrage à froid : l'ouverture habituelle, puis, si le jour de la famille a changé (ou, en repli, si l'absence
+            // notée atteint une journée de jeu), close PUIS open. L'heure de sortie est consommée ici, une fois.
+            System.DateTime? sortie = HorodatageDeSortie.Lire();
             HorodatageDeSortie.Effacer();
-            yield return CycleDeSession.Appliquer(auLancement, t, Transport(), d => dto = d, e => sessionErr = e);
+            yield return CycleDeSession.AuDemarrage(t, Transport(), sortie, Horloge(), d => dto = d, e => sessionErr = e);
             if (this == null) yield break;
 
             // ⛔⛔ LE DICTIONNAIRE S'AMORCE ICI, UNE FOIS, AVANT TOUT RENDU — et c'est une mesure du

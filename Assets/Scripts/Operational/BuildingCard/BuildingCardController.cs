@@ -677,7 +677,8 @@ namespace MafiaCleanCity.Operational
             if (outcome != null && outcome.Ok) return succes;
             // par `Libelle` (2026-09-23) : une clé servie mais absente du bundle retombe sur « {échec}. » — ce repli est désormais
             // COMPTÉ (garde « zéro repli »). Même rendu qu'avant ; clé vide ⇒ ni lecture ni compte.
-            string raison = MafiaCleanCity.I18n.Libelle.Gabarit(outcome?.CleI18n, null);
+            // lot des refus (26/09) : les trous de la phrase servie viennent de `payload_vars`, déjà RÉSOLUS en mots (`*_key` → `<racine>`)
+            string raison = MafiaCleanCity.I18n.Libelle.Gabarit(outcome?.CleI18n, null, outcome?.Variables);
             return raison != null ? $"{echec} — {raison}" : $"{echec}.";
         }
 

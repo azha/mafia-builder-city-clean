@@ -506,7 +506,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (!string.IsNullOrEmpty(id))
             {
                 LastRecruitedId = id;
-                SetOutcome($"{archetype} recruté.", AccentMild);
+                SetOutcome(RetourDeRecrutement(archetype), AccentMild);
                 // Pull the fresh lieutenant bands so the Status section reflects the just-recruited lieutenant (CurrentBands
                 // .archetype set → the rule-builder palette switches to this archetype's fields).
                 yield return RefreshBands();
@@ -1548,7 +1548,17 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
 
         // The Recruit button caption for an archetype ("Recruit Cook" / "Recruit Security" …).
-        private static string RecruitButtonText(string archetype) => "Recruit " + FamilleLabels.Archetype(archetype);
+        // ⑳ (passe UX 2026-09-26, table 63 v2) : « Recruit Cook » (anglais, brut) → « Recruter — {archetype} » ; {archetype} = le mot SERVI
+        // de l'archétype (`FamilleLabels.Archetype`, clés famille.archetype.*).
+        private static string RecruitButtonText(string archetype) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("famille.ecran.recruter_archetype", "Recruter — {archetype}",
+                new Dictionary<string, string> { { "archetype", FamilleLabels.Archetype(archetype) } });
+
+        /// <summary>⑳ — le retour d'un recrutement réussi : « Nouvelle recrue : {archetype}. » (jamais « COOK recruté. » : brut, et accordé à
+        /// la personne, D13).</summary>
+        public static string RetourDeRecrutement(string archetype) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("famille.ecran.nouvelle_recrue_archetype", "Nouvelle recrue\u00A0: {archetype}.",
+                new Dictionary<string, string> { { "archetype", FamilleLabels.Archetype(archetype) } });
 
         // The Status section (T2): a section label + a Refresh button (re-fetch the bands) + the player-authored script
         // text block. The band ROWS render into statusRows (above); this section holds the controls + the script. The
@@ -2100,7 +2110,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             for (int i = 0; i < CurrentRoster.Length; i++)
             {
                 BuildFamilyLieutenantRow(CurrentRoster[i], i);
-                BuildEquipeSlot(arbre.transform, i);
+                BuildEquipeSlot(arbre.transform, i, CurrentRoster[i]);
             }
             BuildRecruitCta(rosterRows);
             RefreshFamilySubtitle();
@@ -2728,7 +2738,20 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// colonne `name`, ni FK `lieutenant_id` sur `dealer`/`courier`, ni table de roster nommé —
         /// mesure Phase 1). La maquette montre des noms d'hommes ; les afficher serait inventer.
         /// Le slot est là, dimensionné, prêt pour le jour où la donnée existera.</summary>
-        private void BuildEquipeSlot(Transform parent, int index)
+        /// <summary>Table 63 v2 — un cuisinier AU REPOS (servi : `archetype = COOK`, `op_state_band = IDLE`). Pure.</summary>
+        public static bool EstCuisinierAuRepos(RosterRow row) =>
+            row != null && row.archetype == "COOK" && row.op_state_band == "IDLE";
+
+        /// <summary>Test hook : combien de fois la case d'un cuisinier au repos a mené à ㉚.</summary>
+        public int RenvoisALaChaineDAppro { get; private set; }
+
+        private void OuvrirLaChaineDAppro()
+        {
+            RenvoisALaChaineDAppro++;
+            MafiaCleanCity.Shell.ShellNavigatorLocator.Find()?.MonterLocataireEnSurimpression<ChaineDApproScreenController>();
+        }
+
+        private void BuildEquipeSlot(Transform parent, int index, RosterRow row)
         {
             // ⚠️ CORRIGÉ (juge ⊥) : `.equipe{margin-left:48,53}` est une MARGE, comptée depuis le
             // bord du contenu de `.arbre` — c'est-à-dire depuis le même bord que le rang, pas EN
@@ -2767,10 +2790,26 @@ namespace MafiaCleanCity.Operational.Lieutenant
             img.raycastTarget = false;
             AddLayoutElement(vide, minHeight: FX(71), flexibleHeight: 0);   // .vide mesuré 71,1 u par le juge ⊥
 
-            TextMeshProUGUI t = NewText("Texte", vide.transform, Lib("Aucune équipe rattachée"), FamilleVideTaille, TextAlignmentOptions.Center);
+            // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26, table 63 v2) : « Aucune équipe rattachée » s'écrivait SANS donnée. Pour un cuisinier
+            // au repos (servi), ce qui est vrai — et ce qu'on peut faire, avec le RENVOI à ㉚ (la case se touche). Ailleurs : inchangé.
+            bool auRepos = EstCuisinierAuRepos(row);
+            string texte = auRepos
+                ? MafiaCleanCity.I18n.Libelle.Gabarit("famille.vide.au_repos_rien_a_cuire_pour_l_instant", "Au repos\u00A0: rien à cuire pour l’instant.")
+                  + "\n" + MafiaCleanCity.I18n.Libelle.Gabarit("famille.vide.commandez_de_la_matiere_depuis_la_chaine_d_appro", "Commandez de la matière depuis la chaîne d’appro.")
+                : Lib("Aucune équipe rattachée");
+            TextMeshProUGUI t = NewText("Texte", vide.transform, texte, FamilleVideTaille, TextAlignmentOptions.Center);
             t.color = DesignTokens.Current.hudCremeSecondary;
+            t.enableWordWrapping = true;
             Stretch((RectTransform)t.transform);
-            TrackText(t, Lib("Aucune équipe rattachée"));
+            TrackText(t, texte);
+            if (auRepos)
+            {
+                img.raycastTarget = true;
+                Button versAppro = vide.AddComponent<Button>();
+                versAppro.transition = Selectable.Transition.None;
+                versAppro.targetGraphic = img;
+                versAppro.onClick.AddListener(OuvrirLaChaineDAppro);
+            }
         }
 
         /// <summary>L'appel à l'action du bas — la maquette le montre en pointillés, pleine largeur.</summary>

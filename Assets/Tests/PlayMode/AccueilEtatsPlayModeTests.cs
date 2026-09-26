@@ -8,7 +8,7 @@ namespace MafiaCleanCity.Shell.Tests
 {
     /// <summary>④ L'ACCUEIL — la MÉCANIQUE des états de la maquette (atelier 25 §2.2, `ecrans-brennar-accueil.html`), sans figer le visuel
     /// (non ratifiée). Gardes de VALEUR par état, sur des corps fabriqués (pas de réseau) :
-    /// 1. rien à trancher — « Rien à signaler », « Aucune décision en attente », l'ambiance « Personne ne fait la queue — la routine tient » ;
+    /// 1. rien à trancher — « Rien à signaler », « Aucune décision en attente », l'ambiance « Personne ne fait la queue » (63 v2) ;
     /// 2. une carte de tête — ses deux options SERVIES en TEXTE sous « Ce qu’on peut faire », JAMAIS sur un bouton (mesuré par le back :
     ///    descriptives, commit ne fait aucun effet — `hl-card-types.ts:99-102`) ; boutons [Prendre acte] / [Pas maintenant] (table 45) ;
     /// 3. des rapports à lire — [Lire maintenant] OUVRE les rapports sans tampon, [Laisser en attente] = skip (table 45) ;
