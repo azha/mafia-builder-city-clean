@@ -154,6 +154,15 @@ namespace MafiaCleanCity.Shell
         public string Token { get; private set; }
         public SessionOpenDto LastSessionOpen { get; private set; }
 
+        // B4 (passe UX 2026-09-24, f2-D18) — le cycle de vie de la session : voir `CycleDeSession`. Injectables pour les tests hors
+        // réseau ; par défaut, l'heure de sortie vit dans `PlayerPrefs` et les requêtes partent par `SessionClient`.
+        public IHorodatageDeSortie HorodatageDeSortie = new HorodatageDeSortiePlayerPrefs();
+        public System.Func<System.DateTime> Horloge = () => System.DateTime.UtcNow;
+        public ITransportDeSession TransportDeSessionPourTest;
+        /// <summary>B4 — nombre de retours au premier plan qui ont rouvert une session (test hook).</summary>
+        public int SessionsRouvertesAuRetour { get; private set; }
+        private bool retourEnCours;
+
         /// <summary>F14 — la phase affichée HORS district : celle que `session/open` projette (`day_phase`, figée à
         /// l'ouverture), jamais dérivée côté client (§6.3), jamais celle d'un district quitté. `null` (pas de session, ou
         /// back qui ne la sert pas encore) ⇒ `DayPhaseResolver` rend l'état nommé « — ».</summary>
@@ -470,6 +479,77 @@ namespace MafiaCleanCity.Shell
             if (district != null) district.CederLaPlaceAuBandeau(bandeauVisible);
         }
 
+        /// <summary>Ce qu'une ouverture de session publie : le corps, le jeton de structure, le bandeau. Au lancement ET au retour
+        /// au premier plan (B4) — un seul site, deux appelants.</summary>
+        private IEnumerator PublierOuverture(string t, SessionOpenDto dto)
+        {
+            LastSessionOpen = dto;
+            // ⛔ LE JETON DE STRUCTURE SE PUBLIE ICI, ET C'EST LE SEUL ENDROIT. Trois écrans du
+            // canon (㉜ le tableau de service, ㉝ raser un site, et toute graduation) partagent
+            // le plafond « une décision de structure par journée » : ils doivent en donner la
+            // MÊME lecture, sinon le joueur croit avoir trois budgets et découvre la contrainte
+            // par un 409. Ils ne peuvent pas lire `LastSessionOpen` — `StructuralBudgetDto` vit
+            // dans CETTE assembly, et `Shell` référence déjà `Operational` : la lecture inverse
+            // serait un cycle qu'asmdef refuse (mesuré, CS0246). `JetonDeStructure` vit donc
+            // dans `ShellContracts`, la seule assembly que le shell et ses locataires voient
+            // tous les deux — même patron et même raison que `ShellChrome.PublierInsets`.
+            // ⚠️ Publié seulement quand le corps le porte : sans lui, `Connu` reste faux et les
+            // écrans se rendent comme avant que ce champ existe, plutôt que de supposer un zéro.
+            if (dto.structural_budget != null)
+                JetonDeStructure.Publier(dto.structural_budget.used, dto.structural_budget.cap_reached);
+            yield return TopBar.Load(t, dto.backlog_badge, dto.opened_game_day);
+        }
+
+        /// <summary>B4 — le transport des deux requêtes du cycle : le double de test s'il est posé, sinon HTTP.</summary>
+        private ITransportDeSession Transport() =>
+            TransportDeSessionPourTest ?? new TransportDeSessionHttp(new SessionClient { BaseUrl = baseUrl });
+
+        // ── B4 — arrière-plan et retour ───────────────────────────────────────────────────────────────────────────────
+        // En arrière-plan on NE FERME PAS (un close pose `ended_at`, et `open` ne réutilise jamais une session fermée) : on note
+        // l'heure, persistée. Au retour : `CycleDeSession`. Android signale aussi la perte de FOCUS (et les deux arrivent au
+        // retour) : l'heure est consommée au premier, le second trouve null et ne fait rien. Pas de minuteur en arrière-plan.
+        private void OnApplicationPause(bool enPause)
+        {
+            if (enPause) NoterSortie();
+            else StartCoroutine(AuRetourAuPremierPlan());
+        }
+
+        private void OnApplicationFocus(bool focus)
+        {
+            if (Application.platform != RuntimePlatform.Android) return;   // l'éditeur perd le focus à chaque clic ailleurs
+            if (!focus) NoterSortie();
+            else StartCoroutine(AuRetourAuPremierPlan());
+        }
+
+        private void NoterSortie()
+        {
+            if (string.IsNullOrEmpty(Token)) return;   // pas de session : rien à reprendre
+            HorodatageDeSortie.Ecrire(Horloge());
+        }
+
+        /// <summary>B4 — au retour au premier plan : sous le seuil, rien (la même session continue) ; au-delà, `close` puis `open`,
+        /// puis le bandeau et l'écran courant se rafraîchissent. Public : le test hors réseau le joue sans mettre l'app en pause.</summary>
+        public IEnumerator AuRetourAuPremierPlan()
+        {
+            if (retourEnCours || string.IsNullOrEmpty(Token)) yield break;
+            CycleDeSession.Decision d = CycleDeSession.Decider(HorodatageDeSortie.Lire(), Horloge(), demarrageAFroid: false);
+            HorodatageDeSortie.Effacer();
+            if (d == CycleDeSession.Decision.Rien) yield break;
+            retourEnCours = true;
+            SessionOpenDto dto = null; string err = null;
+            string t = Token;
+            yield return CycleDeSession.Appliquer(d, t, Transport(), x => dto = x, e => err = e);
+            retourEnCours = false;
+            if (this == null) yield break;
+            if (dto == null) { Debug.LogError($"[AppShell] session/open au retour : {err}"); yield break; }
+            SessionsRouvertesAuRetour++;
+            yield return PublierOuverture(t, dto);
+            if (this == null) yield break;
+            // l'écran courant : le district où l'on était, sinon la racine de l'onglet (les surimpressions partent avec)
+            if (CityTabDistrictId >= 0) EnterDistrict(CityTabDistrictId);
+            else if (CurrentTab != (Tab)(-1)) ActivateTab(CurrentTab);
+        }
+
         /// <summary>B1 (hud-session-arbitrages-design.md §1.2) — LE shell signe UNE fois (son
         /// identité, `demoIdentifier`/`demoPassword`, remplaçable via `SetIdentity` avant `Start()`),
         /// ouvre SA session (`SessionClient.OpenSession` → `TopBar.Load`), sonde citywide_bucket avec
@@ -597,10 +677,13 @@ namespace MafiaCleanCity.Shell
             }
 
             Token = t;
-            var sessionClient = new SessionClient { BaseUrl = baseUrl };
             SessionOpenDto dto = null;
             string sessionErr = null;
-            yield return sessionClient.OpenSession(t, Application.version, d => dto = d, (c, m) => sessionErr = $"{c}: {m}");
+            // B4 — au démarrage à froid : une absence ≥ seuil ferme la session d'avant PUIS ouvre (le « demain ») ; sinon l'ouverture
+            // habituelle. L'heure de sortie est consommée ici, une fois.
+            CycleDeSession.Decision auLancement = CycleDeSession.Decider(HorodatageDeSortie.Lire(), Horloge(), demarrageAFroid: true);
+            HorodatageDeSortie.Effacer();
+            yield return CycleDeSession.Appliquer(auLancement, t, Transport(), d => dto = d, e => sessionErr = e);
             if (this == null) yield break;
 
             // ⛔⛔ LE DICTIONNAIRE S'AMORCE ICI, UNE FOIS, AVANT TOUT RENDU — et c'est une mesure du
@@ -630,21 +713,7 @@ namespace MafiaCleanCity.Shell
 
             if (dto != null)
             {
-                LastSessionOpen = dto;
-                // ⛔ LE JETON DE STRUCTURE SE PUBLIE ICI, ET C'EST LE SEUL ENDROIT. Trois écrans du
-                // canon (㉜ le tableau de service, ㉝ raser un site, et toute graduation) partagent
-                // le plafond « une décision de structure par journée » : ils doivent en donner la
-                // MÊME lecture, sinon le joueur croit avoir trois budgets et découvre la contrainte
-                // par un 409. Ils ne peuvent pas lire `LastSessionOpen` — `StructuralBudgetDto` vit
-                // dans CETTE assembly, et `Shell` référence déjà `Operational` : la lecture inverse
-                // serait un cycle qu'asmdef refuse (mesuré, CS0246). `JetonDeStructure` vit donc
-                // dans `ShellContracts`, la seule assembly que le shell et ses locataires voient
-                // tous les deux — même patron et même raison que `ShellChrome.PublierInsets`.
-                // ⚠️ Publié seulement quand le corps le porte : sans lui, `Connu` reste faux et les
-                // écrans se rendent comme avant que ce champ existe, plutôt que de supposer un zéro.
-                if (dto.structural_budget != null)
-                    JetonDeStructure.Publier(dto.structural_budget.used, dto.structural_budget.cap_reached);
-                yield return TopBar.Load(t, dto.backlog_badge, dto.opened_game_day);
+                yield return PublierOuverture(t, dto);
                 if (this == null) yield break;
             }
             else
