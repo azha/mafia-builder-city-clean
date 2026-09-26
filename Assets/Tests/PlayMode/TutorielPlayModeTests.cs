@@ -80,6 +80,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsFalse(t.Contains("Vous avez tout vu."), "le joueur neuf ne lit pas « tout vu » avant d'avoir rien vu");
             Assert.IsFalse(t.Contains("Rien de nouveau pour aujourd’hui."), "C10 : ni « rien de nouveau » — un éligible l'attend");
             CollectionAssert.Contains(t, "Une carte vous attend : c’est ici que tout commence.", "l'éligible non vu, par son texte servi");
+            CollectionAssert.Contains(t, "Une première leçon vous attend.", "table 63 v2 : le joueur neuf lit la tête de sa première leçon");
             Assert.IsFalse(t.Any(x => x.Contains(preseed)), "jamais l'identifiant");
             Assert.AreEqual(preseed, TutorialScreenController.PremierEligibleNonVu(new[] { preseed }, new string[0]));
 

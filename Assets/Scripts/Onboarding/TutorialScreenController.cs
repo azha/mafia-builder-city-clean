@@ -83,6 +83,11 @@ namespace MafiaCleanCity.Onboarding
             return null;
         }
 
+        /// <summary>Table 63 v2 — le joueur NEUF : rien de vu (`shown` vide) et au moins un éligible. Pure.</summary>
+        public static bool PremiereLecon(TutorielData e) =>
+            e != null && (e.shown_tutorial_ids == null || e.shown_tutorial_ids.Length == 0)
+            && e.eligible_tutorial_ids != null && e.eligible_tutorial_ids.Length > 0;
+
         /// <summary>Couture de test : rend un état fabriqué, sans réseau.</summary>
         public void RendrePourTest(TutorielData etat)
         {
@@ -221,10 +226,14 @@ namespace MafiaCleanCity.Onboarding
             }
             else
             {
-                TextMeshProUGUI sur = Texte(corps, "Titre2", Lib("À découvrir"), Px(7.5f), Eteint,
-                      DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
-                sur.characterSpacing = 14f;
-                sur.fontStyle = FontStyles.UpperCase;
+                // table 63 v2 : le joueur NEUF (rien vu, un éligible) lit « Une première leçon vous attend. » en tête — une phrase, pas un
+                // surtitre : casse normale. Sinon le surtitre « À découvrir », en capitales de style.
+                bool premiereLecon = PremiereLecon(Etat);
+                TextMeshProUGUI sur = Texte(corps, "Titre2",
+                      premiereLecon ? MafiaCleanCity.I18n.Libelle.Gabarit("tutoriel.vide.une_premiere_lecon_vous_attend", "Une première leçon vous attend.") : Lib("À découvrir"),
+                      Px(7.5f), Eteint, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+                sur.characterSpacing = premiereLecon ? 0f : 14f;
+                sur.fontStyle = premiereLecon ? FontStyles.Normal : FontStyles.UpperCase;
                 // Le TEXTE servi du tutoriel (D10-h close) — jamais l'identifiant.
                 Texte(corps, "Texte", TexteDuTutoriel(suivant), Px(14f), Or,
                       DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center)
