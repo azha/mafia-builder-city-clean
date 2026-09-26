@@ -12,6 +12,11 @@ namespace MafiaCleanCity.Operational.Exceptions
     // the mutation, readable error mapping (F2 — never a raw HTTP code to the player).
     public class ExceptionsClient
     {
+        /// <summary>Garde de classe des refus (f2 2026-09-26) — la phrase SERVIE du DERNIER refus de ce client (clé + payload_vars
+        /// résolues, `RefusServi`), posée après CHAQUE requête : null sur un 2xx, ou quand le corps ne porte pas de clé servie.
+        /// ⛔ C'est la SEULE phrase de refus qu'un écran montre au joueur (sinon la sienne) ; le `message` d'onErr est TECHNIQUE.</summary>
+        public string DernierePhraseDeRefus { get; private set; }
+
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = 10;
 
@@ -64,6 +69,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 req.timeout = TimeoutSeconds;
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
 
                 if (req.result != UnityWebRequest.Result.Success) { onErr?.Invoke(req.responseCode, ReadableError(req)); yield break; }
                 string texte = req.downloadHandler.text ?? string.Empty;
@@ -90,6 +96,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 req.timeout = TimeoutSeconds;
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
 
                 if (req.result == UnityWebRequest.Result.Success)
                 {
@@ -131,6 +138,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
                 req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString()); // UUID v4 — backend mandate
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
 
                 if (req.result == UnityWebRequest.Result.Success)
                 {

@@ -63,6 +63,9 @@ namespace MafiaCleanCity.Operational.Autonomy
         public AutonomyReportDto[] Reports { get; private set; } = Array.Empty<AutonomyReportDto>();
         public string LastOutcome { get; private set; }
         public string LastError { get; private set; }
+        /// <summary>Garde de classe des refus (f2 2026-09-26) — la phrase MONTRÉE quand le geste échoue : la phrase SERVIE du refus
+        /// (`client.DernierePhraseDeRefus`), sinon celle de l'écran. `LastError` reste TECHNIQUE (code + message), jamais affiché.</summary>
+        public string PhraseDuRefus { get; private set; }
         /// <summary>Closed-label + static-caption strings shown to the player — the no-raw-scalar scan corpus.</summary>
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
 
@@ -191,6 +194,7 @@ namespace MafiaCleanCity.Operational.Autonomy
             if (resolving) yield break;
             resolving = true;
             LastError = null;
+            PhraseDuRefus = null;
             ResolveIssueResponse dto = null;
             string err = null;
             yield return client.ResolveIssue(report.report_id, issue.issue_id, chosen, Token,
@@ -200,6 +204,8 @@ namespace MafiaCleanCity.Operational.Autonomy
             if (err != null)
             {
                 LastError = err;
+                PhraseDuRefus = client.DernierePhraseDeRefus
+                    ?? MafiaCleanCity.I18n.Libelle.De("autonomie", "refus", "Le choix n'est pas passé.");
                 Render();
                 resolving = false;
                 yield break;
@@ -225,10 +231,10 @@ namespace MafiaCleanCity.Operational.Autonomy
                 // CHROME: not TrackText'd — outcome is producer free text
             }
 
-            // Error line (CHROME — error message is runtime text, may carry digits/codes).
-            if (!string.IsNullOrEmpty(LastError))
+            // Error line — la phrase du refus (servie, sinon celle de l'écran), jamais `LastError` (garde de classe des refus).
+            if (!string.IsNullOrEmpty(PhraseDuRefus))
             {
-                TextMeshProUGUI errLine = NewText("Error", rowsArea, LastError, 13, TextAlignmentOptions.Left);
+                TextMeshProUGUI errLine = NewText("Error", rowsArea, PhraseDuRefus, 13, TextAlignmentOptions.Left);
                 errLine.color = AccentSevere;
                 AddLayoutElement(errLine.gameObject, minHeight: 20, flexibleHeight: 0);
                 // CHROME: not TrackText'd — error carries status codes

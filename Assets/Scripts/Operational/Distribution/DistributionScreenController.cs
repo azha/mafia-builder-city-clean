@@ -83,6 +83,10 @@ namespace MafiaCleanCity.Operational
         public GetOperationalCouriersResponseDto DernierChargementCouriers { get; private set; }
         public GetOperationalDistributionProjectionResponseDto DernierChargementProjection { get; private set; }
         public string DerniereErreur { get; private set; }
+        /// <summary>Garde de classe des refus (f2 2026-09-26) — la phrase SERVIE du refus de la route qui a échoué
+        /// (`client.DernierePhraseDeRefus`, lue dans son onErr), montrée au sous-titre de l'état indisponible ; sinon la phrase
+        /// de l'écran. `DerniereErreur` reste TECHNIQUE (crochet de test), jamais affiché.</summary>
+        public string PhraseDuRefus { get; private set; }
         public long DernierCodeErreur { get; private set; }
         /// <summary>Le hub de distribution découvert par `DecouvrirRoute` — crochet de test.</summary>
         public string FromBuildingId { get; private set; }
@@ -279,6 +283,7 @@ namespace MafiaCleanCity.Operational
         {
             EnsureInitialized();
             DerniereErreur = null;
+            PhraseDuRefus = null;
             DernierCodeErreur = 0;
 
             string errRoute = null;
@@ -323,11 +328,12 @@ namespace MafiaCleanCity.Operational
         private IEnumerator RechargerCouriers()
         {
             DerniereErreur = null;
+            PhraseDuRefus = null;
             DernierCodeErreur = 0;
             DernierChargementCouriers = null;
             yield return client.GetOperationalCouriers(token,
                 dto => DernierChargementCouriers = dto,
-                (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
+                (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; PhraseDuRefus = client.DernierePhraseDeRefus; });
             // La frame de création rend des rects non résolus : on attend le layout AVANT de
             // rendre quoi que ce soit qui lise une géométrie.
             yield return null;
@@ -338,7 +344,7 @@ namespace MafiaCleanCity.Operational
             DernierChargementProjection = null;
             yield return client.GetOperationalDistributionProjection(token,
                 dto => DernierChargementProjection = dto,
-                (code, msg) => DerniereErreur = DerniereErreur ?? $"projection : {code} {msg}");
+                (code, msg) => { DerniereErreur = DerniereErreur ?? $"projection : {code} {msg}"; PhraseDuRefus = PhraseDuRefus ?? client.DernierePhraseDeRefus; });
             yield return null;
         }
 
@@ -826,9 +832,8 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(couriersRoot);
             ViderEnfants(piedRoot);
             titreTexte.text = Libelle.De("distribution", "titre", "La distribution n'a pas répondu");
-            sousTitreTexte.text = string.IsNullOrEmpty(DerniereErreur)
-                ? Libelle.De("distribution", "sous_titre", "Réessayez dans un instant.")
-                : DerniereErreur;
+            // la phrase SERVIE du refus, sinon celle de l'écran — jamais `DerniereErreur` (garde de classe des refus)
+            sousTitreTexte.text = PhraseDuRefus ?? Libelle.De("distribution", "sous_titre", "Réessayez dans un instant.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }

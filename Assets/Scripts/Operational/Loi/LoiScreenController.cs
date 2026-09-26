@@ -76,6 +76,10 @@ namespace MafiaCleanCity.Operational
         // ---- crochets de test ---------------------------------------------------------------
         public GetLegalResponseDto DernierChargement { get; private set; }
         public string DerniereErreur { get; private set; }
+        /// <summary>Garde de classe des refus (f2 2026-09-26) — la phrase SERVIE du refus de la route qui a échoué
+        /// (`client.DernierePhraseDeRefus`, lue dans son onErr), montrée au sous-titre de l'état indisponible ; sinon la phrase
+        /// de l'écran. `DerniereErreur` reste TECHNIQUE (crochet de test), jamais affiché.</summary>
+        public string PhraseDuRefus { get; private set; }
         public long DernierCodeErreur { get; private set; }
         public bool DernierRecrutementOk { get; private set; }
         public bool DernierBasculementRetainerOk { get; private set; }
@@ -152,6 +156,7 @@ namespace MafiaCleanCity.Operational
         {
             EnsureInitialized();
             DerniereErreur = null;
+            PhraseDuRefus = null;
             DernierCodeErreur = 0;
 
             // ⛔ SANS CETTE LIGNE, LES RÉSOLVEURS SONT MUETS (patron ㉘/㉚/⑨) : `Libelle.De` rend
@@ -161,7 +166,7 @@ namespace MafiaCleanCity.Operational
 
             yield return client.GetLegal(token,
                 dto => DernierChargement = dto,
-                (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
+                (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; PhraseDuRefus = client.DernierePhraseDeRefus; });
             if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
 
             // La frame de création rend des rects non résolus : on attend le layout AVANT de
@@ -440,8 +445,9 @@ namespace MafiaCleanCity.Operational
         private void RendreMessageErreur()
         {
             ViderEnfants(erreurRoot);
-            if (string.IsNullOrEmpty(DerniereErreur)) return;
-            TextMeshProUGUI msg = NouveauTexteFiche(erreurRoot, "Erreur", DerniereErreur, 7.5f,
+            // la phrase du refus (servie, sinon celle de l'écran), jamais `DerniereErreur` (garde de classe des refus)
+            if (string.IsNullOrEmpty(PhraseDuRefus)) return;
+            TextMeshProUGUI msg = NouveauTexteFiche(erreurRoot, "Erreur", PhraseDuRefus, 7.5f,
                 RougeMauvais, false);
             msg.enableWordWrapping = true;
             TrackText(msg.text);
@@ -457,9 +463,8 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(affairesRoot);
             ViderEnfants(erreurRoot);
             titreTexte.text = Libelle.De("loi", "titre", "Le parloir n'a pas répondu");
-            sousTitreTexte.text = string.IsNullOrEmpty(DerniereErreur)
-                ? Libelle.De("loi", "sous_titre", "Réessayez dans un instant.")
-                : DerniereErreur;
+            // la phrase SERVIE du refus, sinon celle de l'écran — jamais `DerniereErreur` (garde de classe des refus)
+            sousTitreTexte.text = PhraseDuRefus ?? Libelle.De("loi", "sous_titre", "Réessayez dans un instant.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }
@@ -486,11 +491,13 @@ namespace MafiaCleanCity.Operational
             if (erreur != null)
             {
                 DerniereErreur = erreur;
+                PhraseDuRefus = client.DernierePhraseDeRefus ?? Libelle.De("loi", "refus", "Le recrutement n'est pas passé.");
                 RendreMessageErreur();
                 yield break;
             }
             DernierRecrutementOk = true;
             DerniereErreur = null;
+            PhraseDuRefus = null;
             DernierChargement = new GetLegalResponseDto
             {
                 activeCases = rep.activeCases,
@@ -522,11 +529,13 @@ namespace MafiaCleanCity.Operational
             if (erreur != null)
             {
                 DerniereErreur = erreur;
+                PhraseDuRefus = client.DernierePhraseDeRefus ?? Libelle.De("loi", "refus", "Le changement n'est pas passé.");
                 RendreMessageErreur();
                 yield break;
             }
             DernierBasculementRetainerOk = true;
             DerniereErreur = null;
+            PhraseDuRefus = null;
             DernierChargement = new GetLegalResponseDto
             {
                 activeCases = rep.activeCases,

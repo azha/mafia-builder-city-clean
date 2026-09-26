@@ -88,6 +88,10 @@ namespace MafiaCleanCity.Operational
         public GetOperationalPrecursorsResponseDto DernierChargement { get; private set; }
         public GetSupplyChainGraphResponseDto DernierGraphe { get; private set; }
         public string DerniereErreur { get; private set; }
+        /// <summary>Garde de classe des refus (f2 2026-09-26) — la phrase SERVIE du refus de la route qui a échoué
+        /// (`client.DernierePhraseDeRefus`, lue dans son onErr), montrée au sous-titre de l'état indisponible ; sinon la phrase
+        /// de l'écran. `DerniereErreur` reste TECHNIQUE (crochet de test), jamais affiché.</summary>
+        public string PhraseDuRefus { get; private set; }
         public long DernierCodeErreur { get; private set; }
         /// <summary>Le `building_id` trouvé par `DecouvrirBuildingId` — crochet de test (§4/§5 du
         /// brief : « écris ton choix et son coût »).</summary>
@@ -246,6 +250,7 @@ namespace MafiaCleanCity.Operational
         {
             EnsureInitialized();
             DerniereErreur = null;
+            PhraseDuRefus = null;
             DernierCodeErreur = 0;
 
             string buildingId = null;
@@ -279,6 +284,7 @@ namespace MafiaCleanCity.Operational
         private IEnumerator RechargerPrecurseurs()
         {
             DerniereErreur = null;
+            PhraseDuRefus = null;
             DernierCodeErreur = 0;
             // ⛔ REMIS À NULL AVANT L'APPEL : sans ça, un échec réseau sur un RECHARGEMENT (après
             // une commande) laisserait `DernierChargement` porter l'ancien état pré-commande, et
@@ -287,7 +293,7 @@ namespace MafiaCleanCity.Operational
             DernierChargement = null;
             yield return client.GetOperationalPrecursors(token, BuildingIdDecouvert,
                 dto => DernierChargement = dto,
-                (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
+                (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; PhraseDuRefus = client.DernierePhraseDeRefus; });
             if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
 
             // La frame de création rend des rects non résolus : on attend le layout AVANT de
@@ -306,7 +312,7 @@ namespace MafiaCleanCity.Operational
                 dto => graphe = dto,
                 // Non bloquant : la section chaîne se contente d'un état vide honnête même sans
                 // le graphe (§3 du brief) — un 4xx/5xx ici ne doit pas casser le bon de commande.
-                (code, msg) => DerniereErreur = DerniereErreur ?? $"graphe : {code} {msg}");
+                (code, msg) => { DerniereErreur = DerniereErreur ?? $"graphe : {code} {msg}"; PhraseDuRefus = PhraseDuRefus ?? client.DernierePhraseDeRefus; });
             if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
             DernierGraphe = graphe;
             AppliquerChaine(graphe);
@@ -641,9 +647,8 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(piedRoot);
             ViderEnfants(chaineRoot);
             titreTexte.text = Libelle.De("appro", "titre", "La chaîne d'appro n'a pas répondu");
-            sousTitreTexte.text = string.IsNullOrEmpty(DerniereErreur)
-                ? Libelle.De("appro", "sous_titre", "Réessayez dans un instant.")
-                : DerniereErreur;
+            // la phrase SERVIE du refus, sinon celle de l'écran — jamais `DerniereErreur` (garde de classe des refus)
+            sousTitreTexte.text = PhraseDuRefus ?? Libelle.De("appro", "sous_titre", "Réessayez dans un instant.");
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }
