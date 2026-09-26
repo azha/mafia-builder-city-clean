@@ -46,6 +46,9 @@ namespace MafiaCleanCity.Shell
             if (CurrentCard != null) OnOuvrirDetail?.Invoke();
         }
 
+        /// <summary>B6 — le bouton de la SURFACE de la carte (racine), qui appelle `DemanderDetail()`.</summary>
+        public Button SurfaceButton { get; private set; }
+
         public HlCardDto CurrentCard { get; private set; }
         public bool CapReached { get; private set; }
         public int CommitRequestCount { get; private set; }
@@ -322,6 +325,20 @@ namespace MafiaCleanCity.Shell
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
+
+            // B6 (passe UX 2026-09-24) — la SURFACE de la carte ouvre ⑤. `DemanderDetail()` n'avait qu'un appelant, un test :
+            // le shell écoutait `OnOuvrirDetail` (AppShell) et rien ne le levait. Le bouton est posé sur la racine, pour qu'un
+            // toucher sur un texte REMONTE jusqu'à lui ; les boutons Tamponner/Pas maintenant/Lire, plus profonds, gardent le leur.
+            // Le graphique est transparent : il reçoit le toucher sur les blancs, il ne peint rien.
+            Image surface = gameObject.GetComponent<Image>();
+            if (surface == null) surface = gameObject.AddComponent<Image>();   // jamais `??` sur un objet Unity (faux null)
+            Color transparente = Color.white; transparente.a = 0f;
+            surface.color = transparente;
+            surface.raycastTarget = true;
+            SurfaceButton = gameObject.AddComponent<Button>();
+            SurfaceButton.transition = Selectable.Transition.None;
+            SurfaceButton.targetGraphic = surface;
+            SurfaceButton.onClick.AddListener(DemanderDetail);
 
             titleText = NewText("Title", 18, FontStyles.Bold);
             impactText = NewText("Impact", 14, FontStyles.Normal);

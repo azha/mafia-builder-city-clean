@@ -57,6 +57,29 @@ namespace MafiaCleanCity.Shell
         }
 
         // Mirrors DashboardClient.ReadableError — surfaces the error envelope's human `message`.
+        public string CloseUrl => BaseUrl.TrimEnd('/') + "/v1/session/close";
+
+        /// <summary>B4 — `POST /v1/session/close` : sans corps côté back (`{}` envoyé), idempotent (aucune session active ⇒
+        /// `{ closed: false }`, toujours 200). `onOk(closed)`.</summary>
+        public IEnumerator CloseSession(string bearer, Action<bool> onOk, Action<long, string> onErr)
+        {
+            using (var req = new UnityWebRequest(CloseUrl, UnityWebRequest.kHttpVerbPOST))
+            {
+                req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes("{}"));
+                req.downloadHandler = new DownloadHandlerBuffer();
+                req.SetRequestHeader("Content-Type", "application/json");
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                req.timeout = TimeoutSeconds;
+
+                yield return req.SendWebRequest();
+
+                if (req.result == UnityWebRequest.Result.Success)
+                    onOk?.Invoke(req.downloadHandler.text.Contains("\"closed\":true"));
+                else
+                    onErr?.Invoke(req.responseCode, ReadableError(req));
+            }
+        }
+
         private static string ReadableError(UnityWebRequest req)
         {
             string text = req.downloadHandler != null ? req.downloadHandler.text : null;

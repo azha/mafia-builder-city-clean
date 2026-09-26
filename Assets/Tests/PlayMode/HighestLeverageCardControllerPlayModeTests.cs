@@ -65,6 +65,27 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsTrue(ctrl.RenderedTexts.Count > 0, "the empty state itself carries rendered text (not a blank screen)");
         }
 
+        // B6 (passe UX 2026-09-24) — toucher la SURFACE de la carte lève `OnOuvrirDetail` (que le shell écoute pour monter ⑤) ;
+        // sans carte, rien. Aucune requête : la carte est synthétique, sans jeton.
+        [Test]
+        public void B6_ToucherLaSurface_DemandeLeDetail_SeulementAvecUneCarte()
+        {
+            var ctrl = NewBareController();
+            int demandes = 0;
+            ctrl.OnOuvrirDetail += () => demandes++;
+            Assert.IsNotNull(ctrl.SurfaceButton, "la surface porte un bouton");
+
+            ctrl.SetPayload(null, null, new StructuralBudgetDto { cap_reached = false });
+            ctrl.SurfaceButton.onClick.Invoke();
+            Assert.AreEqual(0, demandes, "sans carte, le toucher n'ouvre rien");
+
+            ctrl.SetPayload(null, new HlCardDto { card_id = "synthetic-card", decision_type_key = "hl.test", impact_bucket = "minor",
+                                                  urgency_bucket = "low", options = new DecisionOptionDto[0] },
+                            new StructuralBudgetDto { cap_reached = false });
+            ctrl.SurfaceButton.onClick.Invoke();
+            Assert.AreEqual(1, demandes, "avec une carte, le toucher de la surface demande le détail ⑤");
+        }
+
         // C4-F3 — cap atteint ⇒ Commit refusé (côté client, ZÉRO requête tentée) et l'état
         // correspondant est porté. Scénario : les DEUX polarités du cap, sur le MÊME contrôleur.
         // Testé au niveau de la logique de décision cliente (DTOs synthétiques, contrôlés) — produire

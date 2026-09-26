@@ -72,6 +72,24 @@ namespace MafiaCleanCity.Operational.Tests
             "plus.entree.la_vitrine",
             "plus.entree.la_premiere_fois",
             "plus.entree.les_reglages",
+            // ⚠️ RALLONGÉE le 2026-09-26 — B3 de la passe UX (CLIENT-2) : les 11 mots des gestes de ㉟ (mots de l'atelier, table 62,
+            // client 2648d19d — replis alignés à l'octet) (poster un dealer, acheter un
+            // point de vente), NEUFS, non servis à la tête back 5e792a3c. Table : `Tools/juge-donnees/i18n/cles-neuves-b3-2026-09-26.md`
+            // (fr ; en et mots définitifs à l'atelier et au back). La règle (2) les retire dès qu'elles sont servies.
+            "vente.geste.un_dealer_tient_ce_point_de_vente",
+            "vente.geste.le_dealer_n_a_pas_ete_poste",
+            "vente.geste.aucun_bloc_libre_dans_votre_quartier",
+            "vente.geste.point_de_vente_achete_ouvrez_le_depuis_sa_fiche",
+            "vente.geste.l_achat_n_a_pas_abouti",
+            "vente.vide.aucun_dealer_au_travail",
+            "vente.geste.point_de_vente_sans_dealer",
+            "vente.geste.poster_un_dealer",
+            "vente.geste.vous_n_avez_aucun_point_de_vente",
+            "vente.geste.acheter_un_point_de_vente",
+            "vente.geste.coute_de_l_argent_et_la_decision_de_structure_de_cette_session_il_faudra_ensuite_l_ouvrir_depuis_sa_fiche",
+            // + 2 le 2026-09-26 : l'addendum de l'atelier (table 62) keye les deux littéraux bruts de l'état vide de ㉟.
+            "vente.vide.les_coins_de_vente_n_ont_pas_repondu",
+            "vente.vide.aucun_coin_de_vente",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

@@ -320,6 +320,32 @@ namespace MafiaCleanCity.Shell.Tests
                 "l'en-tête Famille doit brancher son « ‹ » sur le retour du shell (sinon il redevient décoratif)");
         }
 
+        // ── F1 (fusion du 26/09 avec B4 de CLIENT-2) ────────────────────────────────────────────────────────────────────
+
+        [Test]
+        public void F1_AuRetourAuPremierPlan_LEcranCourantEstRemonte_UneEntreeDePlusResteElleMeme()
+        {
+            NouveauShell();
+            shell.ActivateTab(AppShell.Tab.More);
+            Button entree = EntreesDuMenu().First(b => b.gameObject.name == "MenuPlus_le_dossier");
+            ProductionClickSupport.Click(entree);
+            Type ecran = shell.MountedTenantType;
+            Assert.IsNotNull(ecran, "précondition : l'entrée a monté son écran");
+            shell.MonterLocataireEnSurimpression<DailyReviewScreenController>();
+
+            shell.RemonterLEcranCourant();
+            Assert.AreEqual(AppShell.Tab.More, shell.CurrentTab);
+            Assert.AreEqual(ecran, shell.MountedTenantType, "l'entrée de Plus est REMONTÉE elle-même, pas le menu");
+            Assert.IsFalse(shell.SurimpressionOuverte, "les surimpressions partent avec (comme avant)");
+
+            shell.EnterDistrict(16);
+            shell.RemonterLEcranCourant();
+            Assert.AreEqual(16, shell.CityTabDistrictId, "dans un district : le même district");
+            shell.ActivateTab(AppShell.Tab.Org);
+            shell.RemonterLEcranCourant();
+            Assert.AreEqual(AppShell.Tab.Org, shell.CurrentTab, "sur un onglet : sa racine");
+        }
+
         // ── G1 ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 
         [Test]

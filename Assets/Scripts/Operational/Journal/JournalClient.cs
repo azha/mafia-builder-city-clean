@@ -122,6 +122,28 @@ namespace MafiaCleanCity.Operational
         /// <summary>`GET /v1/random-world/active` → TODO(MÉTIER ICI) : corps de réponse réel non mesuré —
         /// dériver `GetRandomWorldActiveResponseDto` du CORPS RÉEL (juge-données), jamais de l'interface
         /// TypeScript back lue seule.</summary>
+        /// <summary>C2 — `GET /v1/world/districts` : les noms de fiction des 18 quartiers (« La Lisière »), pour que le journal
+        /// n'écrive plus un slug (`district-16`). REUSE des DTO de la démolition (même assembly, même namespace).</summary>
+        public IEnumerator GetWorldDistricts(string bearer,
+                                     Action<GetWorldDistrictsResponseDto> onOk, Action<long, string> onErr)
+        {
+            using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/world/districts"))
+            {
+                req.timeout = TimeoutSeconds;
+                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                yield return req.SendWebRequest();
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    GetWorldDistrictsResponseDto dto =
+                        JsonUtility.FromJson<GetWorldDistrictsEnvelope>(req.downloadHandler.text)?.payload?.data;
+                    if (dto == null) { onErr?.Invoke(0, "corps vide (GetWorldDistricts)"); yield break; }
+                    onOk?.Invoke(dto);
+                }
+                else onErr?.Invoke(req.responseCode,
+                                   $"GET /v1/world/districts a échoué ({req.responseCode}) {req.error}");
+            }
+        }
+
         public IEnumerator GetRandomWorldActive(string bearer,
                                      Action<GetRandomWorldActiveResponseDto> onOk, Action<long, string> onErr)
         {

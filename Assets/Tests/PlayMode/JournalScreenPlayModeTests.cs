@@ -295,5 +295,93 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("settling", JournalScreenController.PhaseEnMots("settling"),
                 "« settling » n'est PAS une phase (c'est une récence) : il doit sortir brut, pas passer pour « ça retombe »");
         }
+
+        // ═══ C2 (passe UX 2026-09-24) — le journal écrit ses brèves ═════════════════════════════
+        // Les titres étaient des CLÉS, et le panneau disait « aucune de ces brèves n'a de texte » alors que le bundle fr porte les
+        // 25 clés servies. Corps fabriqués sur le corps réel (`corps/014`, pile dev @66060cc1) ; bundle injecté, aucun réseau.
+
+        private static NewsBeatDto BreveTilbey(string cleTitre) => new NewsBeatDto
+        {
+            beat_id = "b-1", headline_i18n_key = cleTitre, outlet_i18n_key = "press.outlet.tilbey_weekly.name",
+            category = "brennar_local", district = "district-16", recency_band = "fresh",
+            headline_params = new HeadlineParamsDto
+            {
+                outlet = "press.outlet.tilbey_weekly.name", subject = "ambient.micro_event.noisy_block", district = "district-16",
+            },
+        };
+
+        private static List<string> TextesRendus(GameObject racine)
+        {
+            var t = new List<string>();
+            foreach (TMPro.TextMeshProUGUI x in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (x.gameObject.activeInHierarchy && !string.IsNullOrEmpty(x.text)) t.Add(x.text);
+            return t;
+        }
+
+        [Test]
+        [Category("ScreenC1")]
+        public void C2_LesTitresServisSontEcrits_LeQuartierNomme_EtLePanneauSeTait()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                { "news_beat.digest.ambient_micro.tilbey_weekly.headline", "Petites nouvelles de {district}, qui restent des nouvelles" },
+                { "press.outlet.tilbey_weekly.name", "The Tilbey Weekly" },
+                { "ambient.micro_event.noisy_block", "un pâté de maisons bruyant" },
+            });
+            JournalScreenController ecran = MonterEcran();
+            ecran.PoserQuartiersPourTest(new[] { new WorldDistrictDto { id = 16, name = "La Lisière", name_canonical = "Verge-A" } });
+            ecran.RendrePourTest(new GetNewsFeedResponseDto
+                { beats = new[] { BreveTilbey("news_beat.digest.ambient_micro.tilbey_weekly.headline") } });
+
+            List<string> textes = TextesRendus(RacineEcran());
+            CollectionAssert.Contains(textes, "Petites nouvelles de La Lisière, qui restent des nouvelles", string.Join(" | ", textes));
+            CollectionAssert.Contains(textes, "The Tilbey Weekly", "le journal par son nom, pas par sa clé");
+            Assert.IsTrue(textes.Exists(x => x.StartsWith("La Lisière", System.StringComparison.Ordinal)),
+                "sous le titre, le quartier par son nom de fiction");
+            Assert.IsFalse(textes.Exists(x => x.Contains("news_beat.") || x.Contains("press.outlet.") || x.Contains("district-16")),
+                "aucune clé ni slug à l'écran : " + string.Join(" | ", textes));
+            Assert.AreEqual(0, ecran.LignesSansTexte);
+            Assert.IsFalse(textes.Exists(x => x.Contains("n'a de texte") || x.Contains("sans leur texte") || x.Contains("sans son texte")),
+                "tout est écrit : le panneau ne prétend plus le contraire");
+        }
+
+        [Test]
+        [Category("ScreenC1")]
+        public void C2_UneCleSansTexte_EstMontree_EtLePanneauLaCompte()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                { "news_beat.digest.ambient_micro.tilbey_weekly.headline", "Petites nouvelles de {district}, qui restent des nouvelles" },
+                { "press.outlet.tilbey_weekly.name", "The Tilbey Weekly" },
+            });
+            JournalScreenController ecran = MonterEcran();
+            ecran.RendrePourTest(new GetNewsFeedResponseDto
+            {
+                beats = new[]
+                {
+                    BreveTilbey("news_beat.digest.ambient_micro.tilbey_weekly.headline"),
+                    BreveTilbey("news_beat.cle_que_le_bundle_ne_porte_pas.headline"),
+                },
+            });
+
+            List<string> textes = TextesRendus(RacineEcran());
+            Assert.AreEqual(1, ecran.LignesSansTexte);
+            CollectionAssert.Contains(textes, "news_beat.cle_que_le_bundle_ne_porte_pas.headline", "sans texte, la clé reste la seule vérité");
+            CollectionAssert.Contains(textes, "Petites nouvelles de quartier 16, qui restent des nouvelles",
+                "sans les quartiers (route non arrivée), « quartier 16 » plutôt que le slug");
+            CollectionAssert.Contains(textes, "Une brève est arrivée sans son texte", "le panneau compte le trou, il ne le généralise pas");
+        }
+
+        [Test]
+        [Category("ScreenC1")]
+        public void C2_NomDuQuartier_SlugNomDeCodeEtTexteLibre()
+        {
+            var q = new[] { new WorldDistrictDto { id = 3, name = "", name_canonical = "Stack-2" }, new WorldDistrictDto { id = 16, name = "La Lisière" } };
+            Assert.AreEqual("La Lisière", JournalScreenController.NomDuQuartier("district-16", q));
+            Assert.AreEqual("Stack-2", JournalScreenController.NomDuQuartier("district-3", q), "sans nom de fiction, le nom de code");
+            Assert.AreEqual("quartier 7", JournalScreenController.NomDuQuartier("district-7", q));
+            Assert.AreEqual("Brennar", JournalScreenController.NomDuQuartier("Brennar", q), "pas un slug : rendu tel quel");
+            Assert.AreEqual("district-x", JournalScreenController.NomDuQuartier("district-x", null));
+        }
     }
 }

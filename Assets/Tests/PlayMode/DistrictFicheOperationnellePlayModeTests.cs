@@ -23,6 +23,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   D3     garde de source : `BuildingCardController` ne se monte QUE par `OuvertureFicheOperationnelle` (avec son bâtiment) —
     //          le bouton « La fiche » de l'Accueil, qui la montait vide, est retiré (ruling A du 25/08) ; contrôle positif sur une
     //          source fabriquée
+    //   D4     B1 (passe UX 2026-09-24) — la TÊTE de la fiche ouvre ② pour TOUT bâtiment affiché, types du kit d'un joueur neuf
+    //          compris (le labo y trouve sa cuisson) ; fiche fermée, rien ne part
     [Category("EcranDistrict")]
     public class DistrictFicheOperationnellePlayModeTests
     {
@@ -107,6 +109,37 @@ namespace MafiaCleanCity.CityMap.Tests
             ameliorer.onClick.Invoke();
             CollectionAssert.AreEqual(new[] { "b-hub" }, ouvreur.Demandes, "le bâtiment AFFICHÉ, pas un autre");
             Assert.AreEqual("b-hub", ecran.DerniereFicheOperationnelleDemandee);
+        }
+
+        [Test]
+        public void D4_LaTeteDeLaFiche_OuvreLaFicheOperationnelle_DeToutBatiment()
+        {
+            var host = new GameObject("DistrictHost", typeof(RectTransform));
+            montes.Add(host);
+            var ecran = host.AddComponent<DistrictInteriorScreenController>();
+            // Le kit de départ d'un joueur neuf (corps/006 de la passe UX), plus un type à palier en témoin.
+            var kit = new[]
+            {
+                Batiment("b-lab", 0, "lab"), Batiment("b-stash", 1, "stash"), Batiment("b-shop", 2, "front_shop"),
+                Batiment("b-safe", 3, "cash_safehouse"), Batiment("b-hub", 4, "distribution_hub"),
+            };
+            ecran.Render(District(kit));
+            if (ecran.ScreenRoot != null) montes.Add(ecran.ScreenRoot.gameObject);
+            var ouvreur = new OuvreurFactice();
+            ecran.OuvreurPourTest = ouvreur;
+
+            ecran.OuvrirFicheOperationnelle();
+            Assert.AreEqual(0, ouvreur.Demandes.Count, "fiche fermée : la tête ne transmet rien");
+
+            Button tete = ecran.ScreenRoot.GetComponentsInChildren<Button>(true).Single(b => b.gameObject.name == "Tete_OuvrirFiche");
+            foreach (var b in kit)
+            {
+                ecran.OuvrirFiche(b);
+                tete.onClick.Invoke();
+                Assert.AreEqual(b.building, ecran.DerniereFicheOperationnelleDemandee, b.operational_type);
+            }
+            CollectionAssert.AreEqual(kit.Select(b => b.building).ToArray(), ouvreur.Demandes,
+                "chaque toucher transmet le bâtiment AFFICHÉ — le labo du kit compris, que AMÉLIORER n'atteint pas");
         }
 
         [UnityTest]
