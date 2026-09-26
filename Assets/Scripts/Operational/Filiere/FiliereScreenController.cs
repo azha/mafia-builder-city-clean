@@ -621,7 +621,8 @@ namespace MafiaCleanCity.Operational
                     Lib("le premier maillon : sans elle, rien n'entre dans la filière — et rien ne se "
                         + "ramasse chez les dealers non plus."));
             Maillon("2", Lib("Dire combien il y a dans la filière"),
-                Lib("on ne vous dira que si c'est propre : ni combien, ni depuis quand, ni à quel prix. C'est voulu."));
+                Lib("on ne vous dira que si c'est propre : ni combien, ni depuis quand, ni à quel prix. C'est voulu."),
+                manquants: PlanqueTrouvee ? 1 : 2);
 
             MajPanneau(Lib("CE QUE LA FILIÈRE NE DIT PAS"),
                 Lib("Vous n'avez encore aucun nœud"),
@@ -630,8 +631,14 @@ namespace MafiaCleanCity.Operational
                     + "rien de monté. Il faut une planque pour que la filière commence quelque part."));
         }
 
+        /// <summary>㊵ (§G de la passe UX, 26/09) : l'étiquette d'un maillon manquant. Numérotée seulement quand il y en a PLUSIEURS —
+        /// avec la planque servie, le maillon 1 n'est plus manquant et « MAILLON MANQUANT 2 » restait seul (une numérotation qui
+        /// commence à 2). Décidé (reco, 26/09). Pur.</summary>
+        public static string EtiquetteDeRang(string rang, int manquants) =>
+            manquants >= 2 && !string.IsNullOrEmpty(rang) ? Lib("MAILLON MANQUANT") + "   " + rang : Lib("MAILLON MANQUANT");
+
         /// <summary>Un maillon manquant — le patron du cadre 142.</summary>
-        private void Maillon(string rang, string titre, string explication, bool manquant = true)
+        private void Maillon(string rang, string titre, string explication, bool manquant = true, int manquants = 2)
         {
             GameObject go = NouveauUI("Maillon" + rang, listeRoot);
             AjouterFond(go, DesignTokens.Current.surfaceCard);
@@ -644,7 +651,7 @@ namespace MafiaCleanCity.Operational
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
             if (manquant)   // une planque vide n'est pas un maillon MANQUANT : on ne le dit pas
-                NouveauTexte(go.transform, "Rang", Lib("MAILLON MANQUANT") + "   " + rang, Px(7f),
+                NouveauTexte(go.transform, "Rang", EtiquetteDeRang(rang, manquants), Px(7f),
                     DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             NouveauTexte(go.transform, "Titre", titre, Px(12f),
                 DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
