@@ -25,6 +25,7 @@ CSS = """/* « la suite » d'un joueur neuf (cadre 4, PROPOSÉ le 2026-09-26 ; m
 .acc4 .suite4 .g4.or{background:linear-gradient(180deg,#e9c56b,#c99a37);color:#241804;border-color:#8a611c}
 /* gravité de la file (exceptions.gravite.*) : gris chaud, du plus éteint (légère) au plus clair (grave) ; la couleur est réservée à l'alarme — arbitrage f2 du 26/09 (juge ④ r1, F17) */
 .acc4 .suivant .qui small.g-mild{color:#8c8272}
+.acc4 .suivant .qui small.g-moderate{color:#a39985}   /* dessinée au cadre 2 (« des rapports à lire ») */
 
 """
 
