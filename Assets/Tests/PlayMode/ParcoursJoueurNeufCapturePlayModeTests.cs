@@ -26,6 +26,17 @@ namespace MafiaCleanCity.Capture.Tests
     //   P3  district     — « Entrer » dans le district du KIT, lu dans `me/buildings` (jamais un numéro supposé)
     //   P4  bâtiment     — le toucher d'un bâtiment du kit (le labo d'abord : la cuisson est le premier maillon de la boucle) ⇒ la fiche
     //   P5  fiche ②      — le toucher de la TÊTE de la fiche (B1, 3fc84fbf), le seul chemin du kit vers la cuisson
+    // Ajouts demandés par la session UX (f1, 26/09 ; ids du RAPPORT.md §4 de la passe), SOUPLES : un échec s'écrit au journal et le
+    // parcours continue — un écran récalcitrant ne coûte pas les planches suivantes (les gardes de rendu, elles, restent dures) :
+    //   A1-A4  tant que l'Accueil est là (G1) : « Voir l'ardoise » → ⑨ ; la carte d'accueil → ⑩ (C1) ; « Prendre acte » → ce qui
+    //          reste à l'écran (l'Accueil revient-il ?) ; « Les télégrammes » → ㉔ s'il est encore joignable
+    //   B1     dans ② : le geste du pupitre. « Allumer le feu » est touché s'il est offert (le back refuse sans stock : B2) ;
+    //          « Commander » ne l'est JAMAIS (il dépense, et changerait le compte que les planches suivantes montrent)
+    //   F1-F2  onglets FAMILLE ⑥ et FILIÈRE ㊵ · M0 menu PLUS ⑱, en haut puis défilé en bas (G5)
+    //   M1-M7  depuis PLUS : ㊳ Journal (C2), ㉞ Carnet (C8), ⑰ Commissariat (C5), ㉕ La première fois (C10), ㉚ Chaîne d'appro,
+    //          ⑯ Revue du jour, ㉓ boutique
+    //   (6)    au journal de P1 et P3 : JOUR, phase du bandeau et phase servie du district (C4)
+    // « Recruter » n'est PAS joué : il brûlerait la seule décision de structure de la session (C9).
     // Chaque pas écrit une ligne dans `journal.tsv` (ce qui a été VU : chargé, compté, nommé) ; les planches et le journal vont dans
     // `MAFIA_PARCOURS_SORTIE` si elle est posée, sinon dans `Logs/cliche-parcours/<horodatage>/` — JAMAIS dans `Assets/` : ces images
     // sont une preuve pour la passe UX, pas des planches du dépôt, et un PNG neuf sous `Assets/` y ferait naître un `.meta`.
@@ -108,6 +119,7 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.IsTrue(accueil.DashboardLoaded, "P1 : l'Accueil n'a pas chargé — la planche montrerait un écran vide qui a l'air fini");
             yield return Photographier("p1_lancement", rebatirAccueil: true);
             Noter("P1", "lancement", $"Accueil chargé · bandeau {Bandeau()}");
+            yield return DepuisLAccueil(accueil);
 
             // ── P2 · carte ──────────────────────────────────────────────────────────────────────────────────────────────────────
             shell.ActivateTab(AppShell.Tab.Empire);   // le toucher de l'onglet EMPIRE
@@ -160,7 +172,8 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.AreEqual(vise.district_id, shell.CityTabDistrictId, "P3 : on doit être DANS le district du kit au moment de la planche");
             for (int i = 0; i < 20; i++) yield return null;
             yield return Photographier("p3_district");
-            Noter("P3", $"Entrer · district {vise.district_id}", $"{district.RenderedBuildingCount} bâtiment(s) rendu(s)");
+            Noter("P3", $"Entrer · district {vise.district_id}", $"{district.RenderedBuildingCount} bâtiment(s) rendu(s) · "
+                + $"bandeau {Bandeau()} · phase servie du district «{district.LastFetch.day_phase}»");
 
             // ── P4 · bâtiment ───────────────────────────────────────────────────────────────────────────────────────────────────
             var idsPossedes = new HashSet<string>(possedes.Where(b => b != null).Select(b => b.building));
@@ -213,6 +226,173 @@ namespace MafiaCleanCity.Capture.Tests
             Noter("P5", "toucher la tête de la fiche (B1)",
                   $"② chargée · {fiche2.CurrentCard?.operational_type ?? touche.operational_type}"
                   + (fiche2.CurrentLab != null ? " · labo servi" : ""));
+            yield return PupitreDeLaFiche(fiche2, auDessus);
+
+            // ── F · onglets du dock ─────────────────────────────────────────────────────────────────────────────────────────────
+            yield return Onglet("F1", AppShell.Tab.Org, "f1_famille", "FAMILLE ⑥");
+            yield return Onglet("F2", AppShell.Tab.Pipeline, "f2_filiere", "FILIÈRE ㊵");
+
+            // ── M · menu PLUS et ses écrans ─────────────────────────────────────────────────────────────────────────────────────
+            yield return MenuPlus();
+            foreach ((string pas, string id, string ecran) in EcransDuPlus)
+                yield return EntreeDuPlus(pas, id, ecran);
+        }
+
+        /// <summary>Les écrans du PLUS que la passe UX veut, dans SON ordre de valeur (f1, 26/09).</summary>
+        private static readonly (string pas, string id, string ecran)[] EcransDuPlus =
+        {
+            ("M1", "le_journal_la_rue", "㊳ Journal"), ("M2", "les_ordres_du_soir", "㉞ Carnet"), ("M3", "le_commissariat", "⑰ Commissariat"),
+            ("M4", "la_premiere_fois", "㉕ La première fois"), ("M5", "la_chaine_d_appro", "㉚ Chaîne d'appro"),
+            ("M6", "la_revue_du_jour", "⑯ Revue du jour"), ("M7", "la_vitrine", "㉓ boutique"),
+        };
+
+        /// <summary>A1-A4 — les gestes de l'Accueil, tant qu'il est là (G1 : il part au premier geste de dock).</summary>
+        private IEnumerator DepuisLAccueil(DashboardController accueil)
+        {
+            // A1 · « Voir l'ardoise › » (panneau de file de l'Accueil)
+            Transform panneau = shell.ContentSlot.Find("AccueilExceptionQueue");
+            Button voir = panneau != null ? Descendant(panneau, "ViewAll")?.GetComponent<Button>() : null;
+            if (voir == null) { Noter("A1", "Voir l'ardoise", "ÉCHEC : bouton « ViewAll » introuvable sous AccueilExceptionQueue"); yield break; }
+            if (!ProductionClickSupport.Click(voir)) { Noter("A1", "Voir l'ardoise", "ÉCHEC : le bouton refuse le clic de production"); yield break; }
+            MafiaCleanCity.Operational.Exceptions.ExceptionQueueController file = null;
+            yield return Attendre(() => file = shell.ContentSlot.GetComponentInChildren<MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>(true), 20f);
+            if (file == null) { Noter("A1", "Voir l'ardoise", "ÉCHEC : ⑨ non monté"); yield break; }
+            string etat = null;
+            yield return Charger(file, e => etat = e);
+            yield return Photographier("a1_ardoise");
+            Noter("A1", "Voir l'ardoise", $"⑨ · {etat} · {file.Cards.Length} carte(s)");
+
+            // A2 · toucher la carte d'accueil (ce que le bouton de la carte appelle)
+            if (file.Cards.Length == 0) { Noter("A2", "toucher la carte", "aucune carte en file — ⑩ non atteint"); yield break; }
+            file.OpenDetail(file.Cards[0]);
+            MafiaCleanCity.Operational.Exceptions.ExceptionDetailController detail = null;
+            yield return Attendre(() => detail = shell.ContentSlot.GetComponentInChildren<MafiaCleanCity.Operational.Exceptions.ExceptionDetailController>(true), 20f);
+            if (detail == null) { Noter("A2", "toucher la carte", "ÉCHEC : ⑩ non monté"); yield break; }
+            yield return Attendre(() => detail.CurrentCard != null ? detail : null, 20f);
+            for (int i = 0; i < 30; i++) yield return null;
+            yield return Photographier("a2_detail");
+            var carte = detail.CurrentCard;
+            string gestes = carte?.candidate_actions == null ? "∅"
+                : string.Join(" | ", carte.candidate_actions.Where(a => a != null).Select(a => $"{a.method} «{a.label}»"));
+            Noter("A2", "toucher la carte", $"⑩ · gestes servis : {gestes} · suggéré : {carte?.suggested_action?.method ?? "∅"}");
+
+            // A3 · « Prendre acte » = le geste suggéré (sinon le premier) — une résolution RÉELLE, sur ce compte jetable
+            var geste = carte?.suggested_action ?? carte?.candidate_actions?.FirstOrDefault(a => a != null);
+            if (geste == null) { Noter("A3", "Prendre acte", "aucun geste servi — rien à toucher"); yield break; }
+            yield return detail.ResolveWith(geste);
+            for (int i = 0; i < 60; i++) yield return null;
+            bool accueilLa = accueil != null && accueil.isActiveAndEnabled;
+            yield return Photographier("a3_retour");
+            Noter("A3", $"Prendre acte ({geste.method})", $"erreur={detail.LastError ?? "aucune"} · Accueil encore actif : {(accueilLa ? "oui" : "non")} · "
+                + $"locataire monté : {shell.MountedTenantType?.Name ?? "aucun"}");
+
+            // A4 · « Les télégrammes » (barre ALLER À de l'Accueil), s'il est encore joignable
+            Button tele = Descendant(shell.ContentSlot, "Nav_Autonomy")?.GetComponent<Button>();
+            if (tele == null || !tele.isActiveAndEnabled) { Noter("A4", "Les télégrammes", "INJOIGNABLE : « Nav_Autonomy » absent ou éteint après A3"); yield break; }
+            if (!ProductionClickSupport.Click(tele)) { Noter("A4", "Les télégrammes", "ÉCHEC : le bouton refuse le clic de production"); yield break; }
+            MafiaCleanCity.Operational.Autonomy.AutonomyInboxController boite = null;
+            yield return Attendre(() => boite = shell.ContentSlot.GetComponentInChildren<MafiaCleanCity.Operational.Autonomy.AutonomyInboxController>(true), 20f);
+            if (boite == null) { Noter("A4", "Les télégrammes", "ÉCHEC : ㉔ non monté"); yield break; }
+            yield return Charger(boite, e => etat = e);
+            yield return Photographier("a4_telegrammes");
+            Noter("A4", "Les télégrammes", $"㉔ · {etat}");
+        }
+
+        /// <summary>B1 — le geste du pupitre de ②. « Allumer le feu » est touché s'il est offert ; « Commander » ne l'est jamais.</summary>
+        private IEnumerator PupitreDeLaFiche(BuildingCardController fiche2, List<Transform> auDessus)
+        {
+            var geste = fiche2.GesteDuPupitreAffiche;
+            Button allumer = Descendant(shell.ContentSlot, "Action_allumer_le_feu")?.GetComponent<Button>();
+            if (allumer == null)
+            {
+                Noter("B1", "Cuire", $"geste du pupitre = {geste} · aucun « Allumer le feu » offert"
+                    + (geste == BuildingCardController.GesteDuPupitre.Commander ? " · « Commander » NON touché (il dépense) — la planche P5 le montre" : ""));
+                yield break;
+            }
+            if (!ProductionClickSupport.Click(allumer)) { Noter("B1", "Cuire", "ÉCHEC : « Allumer le feu » refuse le clic de production"); yield break; }
+            for (int i = 0; i < 180; i++) yield return null;   // la requête part et le message se pose (aucun drapeau public)
+            yield return Photographier("b1_cuire", avantRendu: () => { foreach (Transform t in auDessus) if (t != null) t.SetAsLastSibling(); });
+            Noter("B1", "Cuire (« Allumer le feu »)", $"geste avant = {geste} · après = {fiche2.GesteDuPupitreAffiche} · erreur carte={fiche2.CardError ?? "aucune"}");
+        }
+
+        private IEnumerator Onglet(string pas, AppShell.Tab onglet, string planche, string ecran)
+        {
+            shell.ActivateTab(onglet);
+            yield return null;
+            for (int i = 0; i < 10; i++) yield return null;
+            MonoBehaviour monte = shell.MountedTenantGameObject != null
+                ? shell.MountedTenantGameObject.GetComponent(shell.MountedTenantType) as MonoBehaviour : null;
+            if (monte == null) { Noter(pas, ecran, "ÉCHEC : aucun locataire monté"); yield break; }
+            string etat = null;
+            yield return Charger(monte, e => etat = e);
+            yield return Photographier(planche);
+            Noter(pas, ecran, $"{shell.MountedTenantType.Name} · {etat}");
+        }
+
+        /// <summary>M0 — le menu PLUS, en haut puis défilé tout en bas (G5 : 21 entrées à plat).</summary>
+        private IEnumerator MenuPlus()
+        {
+            shell.ActivateTab(AppShell.Tab.More);
+            for (int i = 0; i < 10; i++) yield return null;
+            ScrollRect defile = Descendant(shell.ContentSlot, "MenuPlus")?.GetComponent<ScrollRect>();
+            yield return Photographier("m0_plus_haut", avantRendu: () => { if (defile != null) defile.verticalNormalizedPosition = 1f; });
+            yield return Photographier("m0_plus_bas", avantRendu: () => { if (defile != null) defile.verticalNormalizedPosition = 0f; });
+            Noter("M0", "PLUS ⑱", $"{shell.MenuPlusEntrees} entrée(s) · défilement {(defile != null ? "présent" : "ABSENT — planche basse = planche haute")}");
+        }
+
+        private IEnumerator EntreeDuPlus(string pas, string id, string ecran)
+        {
+            shell.ActivateTab(AppShell.Tab.More);
+            for (int i = 0; i < 5; i++) yield return null;
+            Button entree = Descendant(shell.ContentSlot, "MenuPlus_" + id)?.GetComponent<Button>();
+            if (entree == null) { Noter(pas, ecran, $"ÉCHEC : entrée « MenuPlus_{id} » introuvable"); yield break; }
+            if (!ProductionClickSupport.Click(entree)) { Noter(pas, ecran, "ÉCHEC : l'entrée refuse le clic de production"); yield break; }
+            for (int i = 0; i < 5; i++) yield return null;
+            MonoBehaviour monte = shell.MountedTenantGameObject != null
+                ? shell.MountedTenantGameObject.GetComponent(shell.MountedTenantType) as MonoBehaviour : null;
+            if (monte == null) { Noter(pas, ecran, "ÉCHEC : cliquée, aucun locataire monté"); yield break; }
+            string etat = null;
+            yield return Charger(monte, e => etat = e);
+            yield return Photographier($"{pas.ToLowerInvariant()}_{id}");
+            Noter(pas, ecran, $"{shell.MountedTenantType.Name} · {etat}");
+        }
+
+        /// <summary>Attend qu'un écran dise qu'il a fini — par les drapeaux publics que CES écrans portent (lus par réflexion : ils
+        /// n'ont pas d'interface commune) — ou qu'il porte une erreur. Sans aucun drapeau connu : attente fixe, DÉCLARÉE au journal.
+        /// Non abouti en 20 s : la planche est prise quand même et le journal le DIT (c'est ce que le joueur a sous les yeux).</summary>
+        private static IEnumerator Charger(MonoBehaviour ecran, System.Action<string> etat)
+        {
+            string[] finis = { "RenduTermine", "QueueLoaded", "DashboardLoaded", "CardLoaded", "IsLoaded", "ReportsLoaded", "RenderedEmptyState" };
+            string[] comptes = { "RendusEffectues", "RenderedCardCount" };
+            string[] objets = { "LastLoadedReview" };
+            string[] erreurs = { "DerniereErreur", "LastError", "QueueError", "CardError", "AuthError" };
+            System.Type t = ecran.GetType();
+            System.Func<string, object> lire = n => { var p = t.GetProperty(n); try { return p?.GetValue(ecran); } catch { return null; } };
+            bool connu = finis.Concat(comptes).Concat(objets).Any(n => t.GetProperty(n) != null);
+            if (!connu)
+            {
+                for (float f = Time.realtimeSinceStartup + 6f; Time.realtimeSinceStartup < f;) yield return null;
+                etat("attente fixe de 6 s (l'écran n'expose aucun drapeau de chargement)");
+                yield break;
+            }
+            string Verdict()
+            {
+                foreach (string n in erreurs) if (lire(n) is string e && !string.IsNullOrEmpty(e)) return $"erreur {n}=«{e}»";
+                foreach (string n in finis) if (lire(n) is bool b && b) return $"chargé ({n})";
+                foreach (string n in comptes) if (lire(n) is int k && k > 0) return $"rendu ({n}={k})";
+                foreach (string n in objets) if (lire(n) != null) return $"chargé ({n})";
+                return null;
+            }
+            string v = null;
+            for (float f = Time.realtimeSinceStartup + 20f; v == null && Time.realtimeSinceStartup < f;) { v = Verdict(); yield return null; }
+            if (v != null && lire("EtatVide") is bool vide && vide) v += " · état vide";
+            for (int i = 0; i < 20; i++) yield return null;
+            etat(v ?? "⚠️ NON ABOUTI en 20 s — la planche montre l'écran tel qu'il est à 20 s");
+        }
+
+        private static IEnumerator Attendre<T>(System.Func<T> trouver, float delai) where T : class
+        {
+            for (float f = Time.realtimeSinceStartup + delai; trouver() == null && Time.realtimeSinceStartup < f;) yield return null;
         }
 
         /// <summary>Les deux résolutions portrait, par le rendu partagé du shell entier.</summary>
@@ -230,7 +410,7 @@ namespace MafiaCleanCity.Capture.Tests
         }
 
         private string Bandeau() => shell.TopBar == null ? "absent"
-            : $"montant=«{shell.TopBar.RenderedCashText}» jour={shell.TopBar.OpenedGameDay} chaleur=«{shell.TopBar.CitywideHeatBucket}»";
+            : $"montant=«{shell.TopBar.RenderedCashText}» jour={shell.TopBar.OpenedGameDay} phase=«{shell.TopBar.DayPhaseText}» chaleur=«{shell.TopBar.CitywideHeatBucket}»";
 
         /// <summary>Le labo d'abord (la cuisson ouvre la boucle), sinon le premier de la liste — jamais null sur une liste non vide.</summary>
         private static T PremierParType<T>(IEnumerable<T> liste, System.Func<T, string> type) where T : class
