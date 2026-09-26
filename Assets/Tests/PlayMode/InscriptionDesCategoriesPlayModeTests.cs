@@ -41,9 +41,10 @@ namespace MafiaCleanCity.Tests
         /// puis s'inscrit si elle est verte (ou sort avec sa raison). Ne fait que rétrécir.</summary>
         internal static readonly HashSet<string> NonInscritesConnues = new HashSet<string>
         {
-            "CeQuiArrive", "ChaineSilencieuse", "CommissariatDuJoueur", "EtatDuShell", "FicheLabo", "GestesDeVente", "HorizonAuMontage",
-            "HoteDeRecrutement", "LocuteurReel", "ManometreOracle", "MenuPlus", "ProfilEnMots", "RevueSansRoutine", "SansRelais",
-            "SessionAuRetour", "VariablesDeRefus",
+            // 16 → 1 le 26/09 (créneau CLIENT-1, pile 256de0f8) : les 15 autres lancées et inscrites vertes (EtatDuShell verte après
+            // de887d7d). Reste ManometreOracle : Oracle1_Ring_… GÈLE le fil principal (reproduit au même créneau : RC=5, 180 s de journal
+            // muet) — la forme exacte que SondeGelVolontaire imite. Elle sortira de la dette quand le gel sera corrigé.
+            "ManometreOracle",
         };
 
         private static readonly Regex Categorie = new Regex(@"Category\(""([^""]+)""\)", RegexOptions.Compiled);

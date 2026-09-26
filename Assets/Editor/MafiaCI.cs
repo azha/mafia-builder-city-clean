@@ -314,6 +314,11 @@ public static class MafiaCI
         "AccueilCanon",     // 10 — ④ canon : mise en page, la suite, la file au-dessus du dock, le fond, A9/A10 structure
         "PlanqueVide",      //  6 — ① / ㊵ la planque vide ou non (table 63)
         "ConflitReel",      //  1 — ㉙ contre le back réel
+        // La DETTE DATÉE de la garde « catégorie jamais inscrite » (dba0b20e) rétrécit : les 15 autres catégories fonctionnelles, lancées au créneau
+        // CLIENT-1 du 26/09 (pile 256de0f8), vertes — EtatDuShell après de887d7d (S1 avait vu, à raison, un statique mutable de B5).
+        // ManometreOracle reste HORS filtre : Oracle1 GÈLE (reproduit : RC=5, chien de garde à 180 s). Validé par l'orchestrateur.
+        "CeQuiArrive", "ChaineSilencieuse", "CommissariatDuJoueur", "EtatDuShell", "FicheLabo", "GestesDeVente", "HorizonAuMontage",
+        "HoteDeRecrutement", "LocuteurReel", "MenuPlus", "ProfilEnMots", "RevueSansRoutine", "SansRelais", "SessionAuRetour", "VariablesDeRefus",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
