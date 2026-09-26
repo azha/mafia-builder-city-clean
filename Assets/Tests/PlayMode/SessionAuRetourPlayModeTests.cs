@@ -16,6 +16,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   J4  jour absent ⇒ le repli : 47 min 59 ⇒ aucune requête ; 48 min 01 ⇒ close PUIS open ; borne incluse, 48 = 1 440 × 2 s
     //   J5  démarrage à froid : open seul ; jour changé, ou repli atteint ⇒ open, close, open
     //   J6  les deux jours se lisent dans le corps brut PAR LEUR NOM (noms provisoires, une seule source)
+    //   J7  minuit du joueur passé au premier plan (family_day = jour du joueur − jour d'inscription + 1, back 26/09) ⇒ UN SEUL close
+    //       puis open : les lectures suivantes portent la nouvelle session (jours égaux) et ne relancent rien
     [Category("SessionAuRetour")]
     public class SessionAuRetourPlayModeTests
     {
@@ -137,5 +139,21 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNull(CycleDeSession.LireEntier("{\"" + CycleDeSession.ChampsServis.JourDeFamilleALOuverture + "\":43}",
                 CycleDeSession.ChampsServis.JourDeFamille), "un nom qui en CONTIENT un autre ne le lit pas à sa place");
         }
-    }
+    
+        [Test]
+        public void J7_MinuitPasseAuPremierPlan_UnSeulCloseOpen()
+        {
+            var t = new TransportTemoin((44, 44));
+            SessionOpenDto courante = new SessionOpenDto { session_id = "s0", JourDeFamille = 43, JourDeFamilleALOuverture = 43 };
+            // l'horloge légère lit, toutes les 30 à 60 s : 43/43 … puis minuit passé : 44 contre l'ouverture 43 … puis la nouvelle session
+            foreach ((int jour, int ouverture) in new[] { (43, 43), (44, 43), (44, 44), (44, 44) })
+            {
+                SessionOpenDto neuve = null;
+                Derouler(CycleDeSession.SurLecture("j", t, jour, ouverture, x => neuve = x, Assert.Fail));
+                if (neuve != null) courante = neuve;
+            }
+            CollectionAssert.AreEqual(new[] { "close", "open" }, t.Requetes, "un seul close puis open pour une transition de minuit");
+            Assert.AreEqual("s1", courante.session_id, "la session gardée est la NOUVELLE");
+        }
+}
 }
