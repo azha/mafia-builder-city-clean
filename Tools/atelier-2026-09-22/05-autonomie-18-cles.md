@@ -84,7 +84,7 @@ autonomy.facility.wait
 | `sec.defer` | Repousser / Put it off | Remettre à plus tard / Put it off | « repousser » seul se lit « repousser une attaque » sur une ligne LCD |
 | `log.dispatch` | Expédier maintenant / Dispatch now | idem / Send it now | l'EN parlé ; « dispatch » est le mot du registre de police (㉔·32) |
 | `dist.collect` | Collecter maintenant / Collect now | Ramasser maintenant / Collect now | « ramasser » est le verbe de la caisse des dealers (㉟·109) ; « collecter » est celui du bâtiment (HUD) |
-| `muscle.assault` | Passer à l’action / Move on them | Leur tomber dessus / Move on them | le gros bras ne « passe pas à l'action », il leur tombe dessus |
+| `muscle.assault` | Passer à l'action / Move on them | Leur tomber dessus / Move on them | le gros bras ne « passe pas à l'action », il leur tombe dessus |
 | `muscle.wait` | Attendre un meilleur moment / a better moment | Attendre le bon moment / the right moment | idiomatique |
 | `intel.observe` | Observer de près | Les observer de près | l'objet manquait |
 | `facility.schedule_now` | Programmer maintenant / Schedule it now | Faire l'entretien maintenant / Do the upkeep now | « programmer » est le mot du système ; l'intendant fait l'entretien (fiche ② « Entretien ») |

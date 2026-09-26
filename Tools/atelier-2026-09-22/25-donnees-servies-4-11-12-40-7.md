@@ -61,7 +61,7 @@ Données **lues** (47) et **non lues** (136) : `25-annexe-04-accueil.md`. Le cœ
 
 | donnée servie | ce qu'elle dit au joueur | question |
 |---|---|---|
-| `backlog_badge` | des cartes s’accumulent au-delà de ce que la file montre | passé à côté ? (c'est aussi un candidat au point or de Famille, `22-…` §7.3) |
+| `backlog_badge` | des cartes s'accumulent au-delà de ce que la file montre | passé à côté ? (c'est aussi un candidat au point or de Famille, `22-…` §7.3) |
 | `queue_pressure_band` (normal · tendue · saturée — mots servis `exceptions.queue_pressure.*`) | la file est-elle calme ? | passé à côté ? |
 | `queue[].priority_band`, `queue[].confidence_band` | l'urgence d'une carte, l'assurance du lieutenant | passé à côté ? (la gravité, elle, est lue) |
 | `queue[].event_descriptor_i18n` | la réplique traduite de la carte | ⚠️ **non lue** : `ExceptionQueuePanelController.cs:161-163` affiche `card.event_descriptor` — la chaîne brute du serveur (prose anglaise « Citywide heat is high… », ou un identifiant `exc_demo_…`) — au lieu de la clé servie. Défaut de langue, pas une question. (Les gestes de la carte ne sont pas affichés ici : le « label » que l'instrument compte comme lu est une variable locale, pas le champ.) |

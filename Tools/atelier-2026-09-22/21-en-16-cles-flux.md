@@ -11,9 +11,9 @@
 | clé | fr (à servir) | en | méthode |
 |---|---|---|---|
 | `appro.bloc.la_commande` | LA COMMANDE | THE ORDER | `ConstruireLigne` |
-| `appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas` | Nestor : « L’étagère est vide. Sans pyralin, je ne rallume pas. » | Nestor: “The shelf is empty. Without pyralin, I’m not firing back up.” | `RendrePied` |
+| `appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas` | Nestor : « L’étagère est vide. Sans pyralin, je ne rallume pas. » | Nestor: “The shelf is empty. Without pyralin, I’m not firing back up.” | `RendrePied` |
 | `appro.bloc.rien_a_remonter_pour_l_instant_la_chaine_ne_connait_aucun_maillon_sur_ce_compte` | Rien à remonter pour l’instant — la chaîne ne connaît aucun maillon sur ce compte. | Nothing to trace upstream yet — the chain doesn’t know a single link on this account. | `AppliquerChaine` |
-| `appro.bloc.votre_lieutenant_on_en_a_besoin_et_il_n_y_en_a_plus` | Votre lieutenant : « On en a besoin, et il n’y en a plus. » | Your lieutenant: “We need it, and there’s none left.” | `RendrePied` |
+| `appro.bloc.votre_lieutenant_on_en_a_besoin_et_il_n_y_en_a_plus` | Votre lieutenant : « On en a besoin, et il n’y en a plus. » | Your lieutenant: “We need it, and there’s none left.” | `RendrePied` |
 | `appro.sous_titre.elle_est_payee_et_partie_il_n_y_a_plus_qu_a_attendre` | Elle est payée et partie. Il n’y a plus qu’à attendre. | It’s paid and on its way. All that’s left is to wait. | `RendreTitre` |
 | `appro.sous_titre.sans_elle_aucun_labo_ne_rallume_le_fournisseur_lui_a_ses_humeurs` | Sans elle, aucun labo ne rallume. Le fournisseur, lui, a ses humeurs. | Without it, no lab fires back up. The supplier, meanwhile, has its moods. | `RendreTitre` |
 | `appro.titre.commander_de_la_matiere_premiere` | Commander de la matière première | Order raw materials | `RendreTitre` |

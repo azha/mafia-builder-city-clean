@@ -3,7 +3,9 @@
 """Point 5 de la file f2 du 26/09 — la typographie des tables de l'atelier, alignée sur les QUATRE règles de la garde de classe du back
 (`tests/unit/i18n/typographie_fr_classe_unit.spec.ts`, lot/i18n-2026-09-24) : R1 aucune apostrophe droite · R2 U+00A0 devant « : » ·
 R3 U+00A0 à l'intérieur de « » · R4 U+202F devant « ; ? ! ». ARBITRAGES D10 et D17.
-Population : la colonne `fr` des TSV de ce dossier, et la cellule fr (2ᵉ colonne) des lignes `| `clé` | fr | en |` des .md de ce dossier.
+Population : la colonne `fr` des TSV de ce dossier — et PAS les .md. ⛔ Payé le 26/09 (b43eda8e, annulé au commit suivant) : dans les .md,
+la 2ᵉ colonne est souvent un RELEVÉ daté (« fr servi (tutoie) », « le littéral du client »), pas une valeur proposée ; la corriger
+falsifie le relevé, et verifier-21 / verifier-vouvoiement l'ont vu. L'option --md reste pour une lecture (--controle), jamais pour écrire.
 Ne touche QUE cette cellule, hors ancres de code entre backticks : ni la clé, ni l'anglais, ni le texte courant. Idempotent (un second passage rend 0).
 Usage : typographie-tables-2026-09-26.py [--controle | --ecrire]"""
 import csv, glob, io, os, re, sys
@@ -42,7 +44,7 @@ def main():
         if n:
             par_fichier[os.path.basename(f)] = n; total += n
             a_ecrire[f] = ''.join('\t'.join(r) + '\n' for r in rows)
-    for f in sorted(glob.glob(os.path.join(ICI, '*.md'))):
+    for f in (sorted(glob.glob(os.path.join(ICI, '*.md'))) if '--md' in sys.argv else []):
         lignes = open(f, encoding='utf-8').read().split('\n'); n = 0
         for j, l in enumerate(lignes):
             m = LIGNE_MD.match(l)
@@ -53,6 +55,7 @@ def main():
             a_ecrire[f] = '\n'.join(lignes)
     for k, v in par_fichier.items(): print(f'  {v:3d}  {k}')
     print(f'{total} valeur(s) fr à aligner' + (' — écrites' if mode == '--ecrire' and total else ''))
+    if mode == '--ecrire' and '--md' in sys.argv: print('⛔ --md ne s’écrit pas'); return 1
     if mode == '--ecrire':
         for f, t in a_ecrire.items(): open(f, 'w', encoding='utf-8', newline='\n').write(t)
     return 0

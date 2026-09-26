@@ -201,7 +201,7 @@ Les trois gestes de `POST /v1/lieutenants/:id/autonomy/decision` prennent les mo
 mesurés sur `gate/cumul-client-2026-09-22` (`bb47e048`) : **3, tous dans `LieutenantScreenController.cs`** ; aucun autre littéral du client
 ne nomme ces gestes, et aucun test ne cite leur libellé ni leur identifiant d'objet.
 
-| `kind` | site ⑥ (aujourd’hui) | clé servie aujourd'hui (fr / en) | mot de ㉔ (fr) | en | clé dérivée neuve |
+| `kind` | site ⑥ (aujourd'hui) | clé servie aujourd'hui (fr / en) | mot de ㉔ (fr) | en | clé dérivée neuve |
 |---|---|---|---|---|---|
 | `reset_budget` | `:2974` `Lib("Remettre le budget à zéro")` | `famille.ecran.remettre_le_budget_a_zero` — Remettre le budget à zéro / Reset budget | **Lui rendre sa marge** | Give them their margin back | `famille.ecran.lui_rendre_sa_marge` |
 | `raise_ceiling` | `:2975` `Lib("Relever le plafond")` | `famille.ecran.relever_le_plafond` — Relever le plafond / Raise ceiling | **Lui élargir sa marge** | Widen their margin | `famille.ecran.lui_elargir_sa_marge` |

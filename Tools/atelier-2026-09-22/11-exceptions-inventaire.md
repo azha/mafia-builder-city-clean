@@ -251,7 +251,7 @@ en anglais « issue » est un **problème**, et c'est ce sens qui a été tradui
 
 | clé | fr | en |
 |---|---|---|
-| `exception_detail.bloc.resultat` | Résultat : | Outcome: |
+| `exception_detail.bloc.resultat` | Résultat : | Outcome: |
 
 **Les 10 issues que ⑩ peut afficher** (lues dans les effets, back `4841d7ad`) — écrites comme un **cachet**, en capitales, sur le modèle du
 seul que la maquette dessine (« EN RÉPARATION », cadre 17) :
@@ -344,12 +344,12 @@ projeté.
 |---|---|---|---|
 | `exceptions.apres.repairing` | le bâtiment passe en réparation | Le bâtiment se remet en marche, avec le temps | The building is coming back, in its own time |
 | `exceptions.apres.repairing_slow` | réparation au rabais, plus longue | Le bâtiment se remet en marche, lentement — c'est moins cher | The building is coming back slowly — it costs less |
-| `exceptions.apres.bribe_succeeded` | le pot-de-vin a marché : bâtiment remis, chaleur en baisse | La descente n'a pas eu lieu : le bâtiment repart, la chaleur baisse | The raid never happened: the building is back up, the heat eases |
-| `exceptions.apres.bribe_failed` | l’argent est parti, le bâtiment reste touché, la chaleur monte | L'argent est parti, et ça s'est retourné : la chaleur monte | The money's gone and it backfired: the heat is rising |
-| `exceptions.apres.laid_low` | on se fait oublier ; le bâtiment reste touché | On se fait oublier : la chaleur retombe, le bâtiment reste touché | Lying low: the heat eases, the building stays damaged |
+| `exceptions.apres.bribe_succeeded` | le pot-de-vin a marché : bâtiment remis, chaleur en baisse | La descente n'a pas eu lieu : le bâtiment repart, la chaleur baisse | The raid never happened: the building is back up, the heat eases |
+| `exceptions.apres.bribe_failed` | l'argent est parti, le bâtiment reste touché, la chaleur monte | L'argent est parti, et ça s'est retourné : la chaleur monte | The money's gone and it backfired: the heat is rising |
+| `exceptions.apres.laid_low` | on se fait oublier ; le bâtiment reste touché | On se fait oublier : la chaleur retombe, le bâtiment reste touché | Lying low: the heat eases, the building stays damaged |
 | `exceptions.apres.taught` | une règle ajoutée au script du lieutenant | C'est une règle, désormais : la prochaine fois, ça se règle sans vous | It's a rule now: next time, it's handled without you |
-| `exceptions.apres.deferred` | réparation remise, bâtiment à l’arrêt | Réparation remise : le bâtiment reste à l'arrêt | Repair put off: the building stays shut |
-| `exceptions.apres.demolished` | le bâtiment est rasé, l’îlot se libère | Le bâtiment est rasé ; l'îlot est libre | The building is razed; the block is free |
+| `exceptions.apres.deferred` | réparation remise, bâtiment à l'arrêt | Réparation remise : le bâtiment reste à l'arrêt | Repair put off: the building stays shut |
+| `exceptions.apres.demolished` | le bâtiment est rasé, l'îlot se libère | Le bâtiment est rasé ; l'îlot est libre | The building is razed; the block is free |
 | `exceptions.apres.escalated` | archivée pour relecture | Archivé : à relire à tête reposée | Archived: to go over with a clear head |
 | `exceptions.apres.resolved` | traitée une fois, sans effet | C'est réglé, pour cette fois | Handled, this once |
 
@@ -421,7 +421,7 @@ Même patron que `exceptions.apres.<issue>` (§3.10 A), avec un segment `.enseig
 |---|---|---|
 | `exceptions.apres.repairing.enseigne` | {enseigne} se remet en marche, avec le temps | {enseigne} is coming back, in its own time |
 | `exceptions.apres.repairing_slow.enseigne` | {enseigne} se remet en marche, lentement — c’est moins cher | {enseigne} is coming back slowly — it costs less |
-| `exceptions.apres.deferred.enseigne` | Réparation remise : {enseigne} reste à l’arrêt | Repair put off: {enseigne} stays shut |
+| `exceptions.apres.deferred.enseigne` | Réparation remise : {enseigne} reste à l’arrêt | Repair put off: {enseigne} stays shut |
 
 - Les trois phrases de §3.10 qui disent « le bâtiment », à un mot près. Le nom est le sujet, et aucun mot ne s'accorde avec lui : « se
   remet », « reste » ne varient pas (« Laverie du Quai se remet en marche », « Pressing Varne reste à l’arrêt »).
@@ -435,7 +435,7 @@ Clés dérivées par `Libelle.De("exception_detail", "bloc", …)` (`:641-642`) 
 
 | clé | fr (le littéral du client) | en |
 |---|---|---|
-| `exception_detail.bloc.appui_long_la_carte_se_ferme_le_batiment_lui_se_repare_avec_le_temps` | appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps | long press — the card closes; the building mends in its own time |
+| `exception_detail.bloc.appui_long_la_carte_se_ferme_le_batiment_lui_se_repare_avec_le_temps` | appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps | long press — the card closes; the building mends in its own time |
 | `exception_detail.bloc.appui_long_la_carte_se_ferme` | appui long — la carte se ferme | long press — the card closes |
 
 - Le premier est déjà au §3.5 (cadre 15) : même en, mot pour mot.

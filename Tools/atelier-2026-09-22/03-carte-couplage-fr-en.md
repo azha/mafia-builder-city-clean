@@ -17,7 +17,7 @@ Atelier / DA, 2026-09-22. Clé émise par le back (`random-world-exception-produ
 
 | clé | FR | EN |
 |---|---|---|
-| `random_world.coupling_discovery.card` | Un quartier a bougé, et le quartier d’à côté a suivi — ces deux-là tiennent ensemble, maintenant vous le savez. | One district moved, and the district next door followed — those two hold together, and now you know it. |
+| `random_world.coupling_discovery.card` | Un quartier a bougé, et le quartier d'à côté a suivi — ces deux-là tiennent ensemble, maintenant vous le savez. | One district moved, and the district next door followed — those two hold together, and now you know it. |
 
 - « quartier » est le mot de la carte (cadre 22 : « deux rives, dix-huit quartiers ») ; l'EN garde `district`, le nom propre du canon.
 - Même forme que la carte du cadre 12 : un constat (le primaire puis le secondaire, dans l'ordre du temps), un tiret, ce que ça change pour le joueur (« maintenant vous le savez » — c'est l'overlay des couplages connus, §6.1, qui « grandit au fil de la campagne »).

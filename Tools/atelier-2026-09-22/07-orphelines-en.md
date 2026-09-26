@@ -50,7 +50,7 @@ La table fixe le `fr` au littéral de `75ac1001` : « [~] conséquence minime »
 |---|---|---|
 | `autonomie.etat.consequence_minime` | conséquence minime | minor consequence |
 | `autonomie.etat.un_compromis` | un compromis | a trade-off |
-| `autonomie.etat.on_s_expose` | on s’expose | we're exposed |
+| `autonomie.etat.on_s_expose` | on s'expose | we're exposed |
 | `autonomie.etat.on_laisse_passer_quelque_chose` | on laisse passer quelque chose | we let something slip by |
 
 ⇒ À trancher par l'orchestrateur avant la passe de f7 : c4 appliqué (`fr` et `en` sans glyphe, ci-dessus) ou pas (`fr` de la table, et l'`en` prend le même glyphe devant : `[~] minor consequence`…). L'`en` de ce fichier est écrit SANS glyphe, parce que c4 est la décision de l'atelier.
@@ -114,7 +114,7 @@ Les 43 lignes ci-dessus ne changent pas. Contrôle fait à l'écriture : l'ensem
 
 | clé | fr (table) | en |
 |---|---|---|
-| `accueil.vitals.cohesion_indisponible_pour_l_ensemble_de_la_ville` | Cohésion : indisponible pour l’ensemble de la ville | Cohesion: unavailable for the city as a whole |
+| `accueil.vitals.cohesion_indisponible_pour_l_ensemble_de_la_ville` | Cohésion : indisponible pour l'ensemble de la ville | Cohesion: unavailable for the city as a whole |
 
 - Proposition de f7 : « Cohesion: unavailable for the whole city ». **Ratifiée avec un mot de plus** : en anglais, *unavailable for the
   whole city* se lit aussi « indisponible pour toute la ville », c'est-à-dire pour tout le monde — alors que la mesure existe PAR
