@@ -108,7 +108,8 @@ namespace MafiaCleanCity.Operational.Tests
                 lieutenant = new MafiaCleanCity.Operational.Exceptions.ExceptionLieutenantDto { id = "lt", name = "Lt. Tull" },
                 lieutenant_id = "lt",
             };
-            foreach (string servie in new[] { "Lt. Hara — cuisson du soir bloquée : plus de solvant.", "{nom} — cuisson du soir bloquée.", D37, null })
+            // les formes nommées d'avant (« Lt. Hara — », « {nom} — ») ne sont plus servies : le pont TD-763 est retiré (lot i18n 3, 256de0f8)
+            foreach (string servie in new[] { D37, null })
             {
                 if (servie == null) I18nCatalog.Oublier();
                 else I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { "onboarding.preseed_exception.card", servie } });
@@ -117,16 +118,6 @@ namespace MafiaCleanCity.Operational.Tests
                     $"servie « {servie} » ⇒ « {t} » ouvre sur un nom");
                 Assert.AreEqual(D37, t, $"servie « {servie} »");
             }
-        }
-
-        [Test]
-        public void E4_LePont_NeTouchePasUneAutreCle()
-        {
-            // portée du pont TD-763 : les deux clés T1 SEULEMENT (f2) — ailleurs, une réplique qui ouvre sur un nom passe telle quelle
-            Assert.IsTrue(NomsFiges.EstPerime("onboarding.preseed_exception.card", "Lt. Hara — cuisson."));
-            Assert.IsTrue(NomsFiges.EstPerime("tutorial.exception_card.onboarding_preseed", "Lt. Skeld — cuisson."));
-            Assert.IsFalse(NomsFiges.EstPerime("appro.bloc.autre", "Lt. Hara — cuisson."), "autre clé : jamais");
-            Assert.IsFalse(NomsFiges.EstPerime("onboarding.preseed_exception.card", "Cuisson du soir bloquée."), "D37 : pas périmée");
         }
     }
 
