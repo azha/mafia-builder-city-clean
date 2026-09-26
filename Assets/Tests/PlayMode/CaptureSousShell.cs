@@ -1309,9 +1309,14 @@ namespace MafiaCleanCity.Shell.Tests
                            + $"(montant=«{montant}» jour={jour} chaleur=«{chaleur}») — la planche "
                            + "montrerait un shell vide et un juge l'attribuerait à l'écran");
 
-            if (!enDistrict && phase != PlaceholderVide)
-                echecs.Add($"{nom} : phase «{phase}» hors district — §6.3 exige l'état nommé "
-                           + $"«{PlaceholderVide}» partout sauf en district ; cette valeur est le "
+            // ⛔ DATÉE PAR F14 (mesuré au créneau du 26/09, ClicheParcours P1 : « Aube » hors district) : le shell affiche désormais HORS
+            //    district la phase que `session/open` projette (`AppShell.PhaseHorsDistrict`, `TopBar.SetDayPhase` au lancement et à la
+            //    sortie du district). Hors district, la phase juste est donc « — » OU le mot de CETTE phase servie — jamais celle d'un
+            //    district quitté (ce que la garde attrape toujours).
+            string phaseDeSession = MafiaCleanCity.Shell.DayPhaseResolver.Label(shell.PhaseHorsDistrict());
+            if (!enDistrict && phase != PlaceholderVide && phase != phaseDeSession)
+                echecs.Add($"{nom} : phase «{phase}» hors district — seules «{PlaceholderVide}» et la phase de SESSION "
+                           + $"«{phaseDeSession}» (F14) sont justes ici ; cette valeur est le "
                            + "reste d'un écran quitté, arrivé après le reset de `ActivateTab`");
             if (enDistrict && phase == PlaceholderVide)
                 echecs.Add($"{nom} : en district {shell.CityTabDistrictId} et phase «{phase}» — "
