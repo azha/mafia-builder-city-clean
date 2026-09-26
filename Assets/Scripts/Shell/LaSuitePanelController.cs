@@ -65,8 +65,9 @@ namespace MafiaCleanCity.Shell
             bloc.offsetMin = new Vector2(40f, 0f);
             bloc.offsetMax = new Vector2(-40f, 0f);
             Image fond = go.AddComponent<Image>();
-            fond.color = DesignTokens.Current.surfaceCard;
+            Arrondir(fond, RayonBloc, DesignTokens.Current.surfaceCard);
             fond.raycastTarget = false;
+            Lisere(go.transform, RayonBloc, LisereClair);
             VerticalLayoutGroup vlg = go.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset(56, 56, 40, 48);
             vlg.spacing = 28;
@@ -171,8 +172,10 @@ namespace MafiaCleanCity.Shell
             GameObject geste = new GameObject("Geste_" + l.Geste, typeof(RectTransform));
             geste.transform.SetParent(row.transform, false);
             Image im = geste.AddComponent<Image>();
-            if (premierGeste) im.color = DesignTokens.Current.ficheCtaOrBas;               // le premier geste : l'or plein
-            else { Color c = DesignTokens.Current.surfaceRow; im.color = c; }              // les suivants : sombres
+            // Arrondis et liserés de la maquette (cadre 4) : le premier geste en or plein bordé d'or sombre, les suivants sombres bordés
+            // d'un filet clair.
+            Arrondir(im, RayonGeste, premierGeste ? DesignTokens.Current.ficheCtaOrBas : DesignTokens.Current.surfaceRow);
+            Lisere(geste.transform, RayonGeste, premierGeste ? DesignTokens.Current.ficheCtaOrBord : LisereClair);
             Button b = geste.AddComponent<Button>();
             b.targetGraphic = im;
             GesteDeLaSuite g = l.Geste;
@@ -190,6 +193,35 @@ namespace MafiaCleanCity.Shell
             mot.GetComponent<LayoutElement>().ignoreLayout = true;
             RectTransform mrt = (RectTransform)mot.transform;
             mrt.anchorMin = Vector2.zero; mrt.anchorMax = Vector2.one; mrt.offsetMin = mrt.offsetMax = Vector2.zero;
+        }
+
+        // ─────────────────────────────────────────────────────────────── arrondis et liserés (cosmétique f1, 26/09)
+        // ⚠️ PAS de pointillés sous les textes : dans la maquette, ils soulignent TOUS les mots du cadre 4 (titres, phrases, boutons,
+        //    « LA SUITE ») et AUCUN du cadre 0 ratifié — c'est la marque de l'atelier pour une copie PROPOSÉE, pas un ornement.
+        public const int RayonBloc = 28, RayonGeste = 22;
+        private static Color LisereClair => new Color(1f, 1f, 1f, 0.16f);
+
+        /// <summary>Une surface pleine aux coins arrondis (sprite découpé de `ProceduralUI`, le même que la bulle de ⑨).</summary>
+        public static void Arrondir(Image im, int rayon, Color couleur)
+        {
+            im.sprite = ProceduralUI.RoundedRectMask(rayon);
+            im.type = Image.Type.Sliced;
+            im.color = couleur;
+        }
+
+        /// <summary>Un liseré arrondi posé sur toute la surface, hors mise en page, sans toucher.</summary>
+        public static void Lisere(Transform parent, int rayon, Color couleur)
+        {
+            GameObject go = new GameObject("Lisere", typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = rt.offsetMax = Vector2.zero;
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image im = go.AddComponent<Image>();
+            im.sprite = ProceduralUI.RoundedRectOutline(rayon, 2f, Color.white);
+            im.type = Image.Type.Sliced;
+            im.color = couleur;
+            im.raycastTarget = false;
         }
 
         private static TextMeshProUGUI Texte(Transform parent, string valeur, float taille, Color couleur, TMP_FontAsset police)

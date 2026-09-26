@@ -269,8 +269,9 @@ namespace MafiaCleanCity.Shell
             GameObject row = new GameObject("Row_" + card.exception_id, typeof(RectTransform));
             row.transform.SetParent(rowsRoot, false);
             Image fond = row.AddComponent<Image>();
-            fond.color = DesignTokens.Current.surfaceCard;
+            LaSuitePanelController.Arrondir(fond, LaSuitePanelController.RayonBloc, DesignTokens.Current.surfaceCard);   // la maquette : arrondie, bordée
             fond.raycastTarget = false;                               // le toucher passe à la surface « ViewAll », dessous
+            LaSuitePanelController.Lisere(row.transform, LaSuitePanelController.RayonBloc, new Color(1f, 1f, 1f, 0.16f));
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.padding = new RectOffset(36, 36, 18, 18);
             hlg.spacing = 16;
