@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -96,6 +97,8 @@ namespace MafiaCleanCity.Operational
         public long CodeSuitesNommees { get; private set; }
         /// <summary>Vrai dès que l'écran a FINI de se rendre — succès, vide ou repli.</summary>
         public bool RenduTermine { get; private set; }
+        /// <summary>C8 — le calendrier politique servi ; null tant que non lu, ou si la route n'a pas répondu.</summary>
+        public CalendrierPolitiqueDto DernierCalendrier { get; private set; }
         public string DerniereErreur { get; private set; }
         public long DernierCodeErreur { get; private set; }
 
@@ -194,6 +197,10 @@ namespace MafiaCleanCity.Operational
                 _ => CodeSuitesNommees = 200,
                 (code, msg) => CodeSuitesNommees = code);
 
+            // C8 — ce que la ville prépare : servi (200 mesuré), plus jamais « personne ne vous le rapporte ».
+            DernierCalendrier = null;
+            yield return client.GetCalendrierPolitique(token, c => DernierCalendrier = c, (code, msg) => { });
+
             // La frame de création rend des rects non résolus : on attend le layout AVANT de
             // rendre quoi que ce soit qui lise une géométrie.
             yield return null;
@@ -288,15 +295,11 @@ namespace MafiaCleanCity.Operational
                 return;
             }
 
-            // ⚠️ CE QUE CET ÉCRAN NE PEUT PAS MONTRER, et qui est MESURÉ : le calendrier
-            // politique (cadre m-91, « Ce qui arrive »). Les quatre chemins joueur essayés
-            // rendent 404 et la documentation ne porte que `/v1/admin/political-events/*`.
-            // ★ Le dire plutôt que d'omettre le cadre : un écran amputé sans explication se lit
-            //   comme un écran fini.
-            MajPanneau(Lib("CE QUE LA VILLE NE DIT PAS"),
-                Lib("Ce que la ville prépare"),
-                Lib("ce que la ville prépare, personne ne vous le rapporte encore. Ce sera ici "
-                    + "le jour où quelqu'un le fera."));
+            // C8 (passe UX 2026-09-24) — le cadre m-91 « Ce qui arrive ». ⛔ L'ÉNONCÉ D'AVANT ÉTAIT DATÉ : « personne ne vous le
+            // rapporte » reposait sur quatre chemins en 404 le 03/09 ; `political-events/calendar` rend 200 (route joueur depuis
+            // e40f4142). Il désarmait l'information qu'il prétendait absente. Désormais : ce qui est EN COURS, puis ce qui est
+            // ANNONCÉ, par leur nom — et AUCUNE date (m-91 : « le calendrier ne donne aucune date »).
+            RendreCeQuiArrive();
 
         }
 
@@ -348,6 +351,42 @@ namespace MafiaCleanCity.Operational
                 DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
             pannTexte = NouveauTexte(go.transform, "Texte", "", Px(8.5f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+        }
+
+        /// <summary>C8 — les lignes de « Ce qui arrive » : (id, nom servi, en cours ?) — en cours d'abord, puis annoncé. Pure.</summary>
+        public static List<(string id, string nom, bool enCours)> LignesCeQuiArrive(CalendrierPolitiqueDto c)
+        {
+            var lignes = new List<(string, string, bool)>();
+            if (c == null) return lignes;
+            foreach (EvenementPolitiqueDto e in c.active ?? new EvenementPolitiqueDto[0])
+                if (e != null && !string.IsNullOrEmpty(e.eventId)) lignes.Add((e.eventId, e.name, true));
+            foreach (EvenementPolitiqueDto e in c.upcoming ?? new EvenementPolitiqueDto[0])
+                if (e != null && !string.IsNullOrEmpty(e.eventId)) lignes.Add((e.eventId, e.name, false));
+            return lignes;
+        }
+
+        private void RendreCeQuiArrive()
+        {
+            if (DernierCalendrier == null)
+            {
+                MajPanneau(Lib("CE QUI ARRIVE"), Lib("Ce que la ville prépare"), Lib("Le calendrier n’a pas répondu."));
+                return;
+            }
+            var lignes = LignesCeQuiArrive(DernierCalendrier);
+            if (lignes.Count == 0)
+            {
+                MajPanneau(Lib("CE QUI ARRIVE"), Lib("Ce que la ville prépare"), Lib("Rien n’est annoncé."));
+                return;
+            }
+            var corps = new System.Text.StringBuilder();
+            foreach (var (id, nom, enCours) in lignes)
+            {
+                if (corps.Length > 0) corps.Append('\n');
+                // le nom : keyé par l'id servi (le back sert un littéral anglais sans clé, K2) — le nom servi en repli
+                corps.Append(MafiaCleanCity.I18n.Libelle.ParValeur("politique", "evenement", id, nom))
+                     .Append(" — ").Append(enCours ? Lib("en cours") : Lib("annoncé"));
+            }
+            MajPanneau(Lib("CE QUI ARRIVE"), Lib("Ce que la ville prépare"), corps.ToString());
         }
 
         private void MajPanneau(string sur, string titre, string texte)
