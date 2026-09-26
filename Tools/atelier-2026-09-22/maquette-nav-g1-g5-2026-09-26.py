@@ -74,8 +74,18 @@ def construire():
     # cadre 2 : G5, le panneau de ④ cadre 0 remplacé par le menu, Plus actif
     base = acc_c[0]
     a = base.index('<div class="panneau">'); b = base.index('<div class="dock9">', a)
+    # ⛔ les MOTS affichés sont ceux de la table 60 (servis demain), pas les littéraux du client (apostrophe droite) — relecture du 26/09
+    import csv
+    t60 = {r['clé']: r['fr'] for r in csv.DictReader(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+           '60-menu-plus-cles-2026-09-26.tsv'), encoding='utf-8'), delimiter='\t', quoting=csv.QUOTE_NONE)}
+    ids = {lib: i for i, lib in re.findall(r'\("([a-z_]+)", "([^"]+)", \(\) => MountTenant', shell)}
+    gid = {'Vos journées': 'vos_journees', 'Vos affaires': 'vos_affaires', 'Ce qui se dit': 'ce_qui_se_dit',
+           'Ce qui vous guette': 'ce_qui_vous_guette', 'Vous': 'vous'}
+    comptes['mots de la 60'] = sum(1 for _, es in GROUPES for e in es if 'plus.entree.' + ids[e] in t60) + sum(
+        1 for g, _ in GROUPES if 'plus.groupe.' + gid[g] in t60)
     menu = '<div class="panneau"><div class="plus5">' + ''.join(
-        f'<div class="grp5 prop">{g}</div><div class="ent5">' + ''.join(f'<div class="e5">{e}</div>' for e in es) + '</div>'
+        f'<div class="grp5 prop">{t60["plus.groupe." + gid[g]]}</div><div class="ent5">' + ''.join(
+            f'<div class="e5">{t60["plus.entree." + ids[e]]}</div>' for e in es) + '</div>'
         for g, es in GROUPES) + '</div></div>'
     c2 = base[:a] + menu + base[b:]
     c2 = c2.replace('<div class="db actif">', '<div class="db">', 1)
@@ -93,7 +103,7 @@ def main():
     page, comptes, manque, inventees, perdues = construire()
     print(comptes)
     attendu = {'entrées servies': 21, 'styles de ④': 1, 'dock empire actif': 1, 'étiquette 0': 1, 'étiquette 1': 1, 'étiquette 2': 1, 'plus actif': 1,
-               'entrées dessinées': 20}
+               'entrées dessinées': 20, 'mots de la 60': 25}
     if comptes != attendu: print(f'⛔ comptes ≠ {attendu}'); return 1
     if manque or inventees: print(f'⛔ entrées manquantes {manque} / inventées {inventees}'); return 1
     if perdues: print(f'⛔ classes sans règle : {sorted(perdues)}'); return 1
