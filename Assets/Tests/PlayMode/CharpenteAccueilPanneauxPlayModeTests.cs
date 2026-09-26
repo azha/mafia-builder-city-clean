@@ -196,7 +196,7 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         [UnityTest]
-        public IEnumerator C2_AccueilMonteLes4PanneauxNommes_SEEDE_OperationalDemo_ChacunDeclareSonMonde()
+        public IEnumerator C2_AccueilMonteSaTeteEtSaFile_SEEDE_OperationalDemo_UneSeuleMiseEnPage()
         {
             yield return ChargerLaSceneDeDemarrageDuBuild();
             AppShell shell = SondeShellDansLaScene(sceneDeDemarrage);
@@ -211,36 +211,31 @@ namespace MafiaCleanCity.Shell.Tests
             // n'ont pas d'ordre relatif garanti) — on ATTEND le signal réel : les 4 panneaux existent.
             HighestLeverageCardController hlCard = null;
             ExceptionQueuePanelController exceptionQueue = null;
-            OrgVitalsPanelController orgVitals = null;
-            HomeChromeController homeChrome = null;
             float ecouleMontage = 0f;
-            while (ecouleMontage < 10f &&
-                   (hlCard == null || exceptionQueue == null || orgVitals == null || homeChrome == null))
+            while (ecouleMontage < 10f && (hlCard == null || exceptionQueue == null))
             {
                 hlCard = shell.ContentSlot.GetComponentInChildren<HighestLeverageCardController>(false);
                 exceptionQueue = shell.ContentSlot.GetComponentInChildren<ExceptionQueuePanelController>(false);
-                orgVitals = shell.ContentSlot.GetComponentInChildren<OrgVitalsPanelController>(false);
-                homeChrome = shell.ContentSlot.GetComponentInChildren<HomeChromeController>(false);
                 ecouleMontage += Time.deltaTime;
                 yield return null;
             }
+            yield return null;   // une frame de plus : un panneau de trop monté après les deux attendus serait vu
 
             // ── 1. Les 4, NOMMÉS — égalité d'ENSEMBLES, jamais un compte (§2, 1ère puce de la
             //      falsifiable : « l'Accueil monte les 4, nommés »). ──
             // ⛔ NE FABRIQUE AUCUN panneau — ils doivent être trouvés MONTÉS PAR LA PRODUCTION.
 
-            var attendus = new HashSet<string>
-            {
-                nameof(HighestLeverageCardController), nameof(ExceptionQueuePanelController),
-                nameof(OrgVitalsPanelController), nameof(HomeChromeController),
-            };
+            // ⛔ AMENDÉ (passe UX du 26/09, §G P1 : « deux mises en page superposées ») — l'Accueil est ramené au CANON ④
+            //    (`ecrans-brennar-accueil.html`, cadres 0-2) : UNE zone de tête (la carte à fort levier) et la ligne de file. La
+            //    feuille du tableau de bord, les vitaux (OrgVitals) et le chrome (HomeChrome) SORTENT de la surimpression.
+            var attendus = new HashSet<string> { nameof(HighestLeverageCardController), nameof(ExceptionQueuePanelController) };
             var trouves = new HashSet<string>();
             if (hlCard != null) trouves.Add(nameof(HighestLeverageCardController));
             if (exceptionQueue != null) trouves.Add(nameof(ExceptionQueuePanelController));
-            if (orgVitals != null) trouves.Add(nameof(OrgVitalsPanelController));
-            if (homeChrome != null) trouves.Add(nameof(HomeChromeController));
+            if (shell.ContentSlot.GetComponentInChildren<OrgVitalsPanelController>(true) != null) trouves.Add(nameof(OrgVitalsPanelController));
+            if (shell.ContentSlot.GetComponentInChildren<HomeChromeController>(true) != null) trouves.Add(nameof(HomeChromeController));
             CollectionAssert.AreEquivalent(attendus, trouves,
-                $"l'Accueil doit monter les 4 panneaux NOMMÉS — trouvé {{{string.Join(", ", trouves)}}} sur " +
+                $"l'Accueil doit monter EXACTEMENT sa zone de tête et sa file — trouvé {{{string.Join(", ", trouves)}}} sur " +
                 $"{{{string.Join(", ", attendus)}}}.");
 
             // ── I2 (revue ⊥ item05-C2, IMPORTANT-PREUVE) — garde STRUCTURELLE d'ordre de fratrie,
@@ -263,8 +258,6 @@ namespace MafiaCleanCity.Shell.Tests
                      {
                          (nameof(HighestLeverageCardController), hlCard.transform),
                          (nameof(ExceptionQueuePanelController), exceptionQueue.transform),
-                         (nameof(OrgVitalsPanelController), orgVitals.transform),
-                         (nameof(HomeChromeController), homeChrome.transform),
                      })
             {
                 Assert.Greater(hote.GetSiblingIndex(), indexBackdrop,
@@ -307,8 +300,6 @@ namespace MafiaCleanCity.Shell.Tests
                      {
                          (nameof(HighestLeverageCardController), (RectTransform)hlCard.transform),
                          (nameof(ExceptionQueuePanelController), (RectTransform)exceptionQueue.transform),
-                         (nameof(OrgVitalsPanelController), (RectTransform)orgVitals.transform),
-                         (nameof(HomeChromeController), (RectTransform)homeChrome.transform),
                      })
             {
                 hote.GetWorldCorners(coinsMonde);
@@ -392,179 +383,20 @@ namespace MafiaCleanCity.Shell.Tests
                 "précédent maison : \"Card_\" + exception_id (CharpenteOuvertureSessionOverlayPlayModeTests).");
             Assert.IsNotNull(ligneRendue.Find("Resolve"), "chaque ligne doit porter un bouton 'Resolve' (ExceptionQueuePanelController.AddRow)");
 
-            // ── 4. OrgVitals — Cohesion : l'état vide DÉCLARÉ (D5), TOUJOURS vrai — imité, pas corrigé.
-            //      Friction/Stress : MONDE RÉEL, comparé au ground-truth. Heat : sa PROPRE requête,
-            //      best-effort — on ATTEND sa résolution (succès OU échec, jamais indéfiniment). ──
-            Assert.IsTrue(orgVitals.CohesionDeclaredUnavailable,
-                "D5 — Cohesion est déclarée indisponible EN PERMANENCE (aucune agrégation citywide " +
-                "n'existe côté back pour elle) : ce n'est PAS un défaut à corriger ici, c'est le MODÈLE " +
-                "du trou déclaré que ce chunk imite pour les 3 autres panneaux.");
-            // ⚠️ FRANÇAIS depuis la conversion i18n du 2026-09-03 : le panneau rend désormais
-            // « Cohésion : indisponible (pas d'agrégat pour la ville) ». Cette assertion épinglait
-            // le mot ANGLAIS « Unavailable » — elle certifiait donc un libellé anglais sur un écran
-            // français, et elle était la SEULE de ce test sans message : un « Expected: True / But
-            // was: False » nu, qui ne dit pas ce qu'il cherchait.
-            // ★ Attribution mesurée avant de la toucher : `Charpente` AVEC la conversion rend 34/2,
-            //   SANS elle 35/1 — ce rouge-ci est le mien, l'autre (`BLOQUANT2_Dashboard…`) ne l'est
-            //   pas et tombait déjà. *Deux rouges dans le même run n'ont pas forcément la même
-            //   cause, et le seul moyen de le savoir est de faire varier UNE chose.*
-            // ⛔ AMENDÉ (table 63 v2, 2026-09-26) : la phrase écrite en dur (« indisponible pour l'ensemble de la ville ») était fausse
-            //    dès que la sonde répondait ; l'écran ne dit plus que « pas encore mesurée », sur 404 seulement. L'état reste la VALEUR.
-            Assert.IsFalse(orgVitals.RenderedTexts.Any(t => t.Contains("indisponible pour l")),
-                "la cohésion ne se déclare plus « indisponible pour l'ensemble de la ville » en dur — "
-                + $"textes vus : [{string.Join(" | ", orgVitals.RenderedTexts)}]");
+            // ── 4. UNE seule mise en page (§G P1) : la feuille du tableau de bord est ÉTEINTE (le fond reste, il cache la carte), et
+            //      aucun texte de développeur ni d'anglais n'atteint l'Accueil au lancement. ──
+            Transform feuille = TrouverDescendant(shell.ContentSlot, "DashboardSheet");
+            Assert.IsTrue(feuille == null || !feuille.gameObject.activeInHierarchy,
+                "la feuille du tableau de bord (« ACCUEIL · Portefeuille · Chaleur · Alertes ») ne doit PAS être visible sous la zone de tête");
+            var textes = new List<string>();
+            foreach (Transform hote in new[] { hlCard.transform, exceptionQueue.transform })
+                foreach (TMPro.TextMeshProUGUI t in hote.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false))
+                    if (!string.IsNullOrEmpty(t.text)) textes.Add(t.text);
+            var fautifs = textes.Where(AccueilCanonPlayModeTests.TexteDeDeveloppeur).ToList();
+            Assert.IsEmpty(fautifs, "texte de développeur ou anglais sur l'Accueil : [" + string.Join(" | ", fautifs) + "]");
 
-            // I4 (revue ⊥ item05-C2, IMPORTANT-PREUVE) — ANTI-VACUITÉ D'ABORD : sans elle, un
-            // ground-truth qui rendrait ces deux clés null satisferait l'égalité ci-dessous À VIDE
-            // (null==null), pendant que le test DÉCLARE "MONDE RÉEL". Mesuré côté back (revue ⊥) :
-            // ce n'est PAS vide aujourd'hui — session-open-sequence.service.ts:412 rend
-            // `{ friction_bucket: 'light', penalty_active: false }` PAR DÉFAUT — même discipline que
-            // l'anti-vacuité déjà posée sur la jambe ExceptionQueue (`Assert.Greater(verite.queue?.
-            // Length ?? 0, 0, …)` ci-dessus).
-            Assert.IsFalse(string.IsNullOrEmpty(verite.friction_glance?.friction_bucket),
-                "PRÉCONDITION du ground-truth : session/open doit porter un friction_bucket non-vide " +
-                "— sans lui cette jambe serait vraie À VIDE (null==null) alors que le test déclare " +
-                "MONDE RÉEL.");
-            Assert.IsFalse(string.IsNullOrEmpty(verite.compression_glance?.stress_bucket),
-                "PRÉCONDITION du ground-truth : idem pour stress_bucket.");
-
-            Assert.AreEqual(verite.friction_glance?.friction_bucket, orgVitals.FrictionBucketRendered,
-                "Friction vient du MÊME payload session/open que ce shell a reçu (design : \"Friction et " +
-                "Stress viennent, eux, du payload que C3 fournit\") — comparé au ground-truth, jamais " +
-                "supposé stable d'une exécution à l'autre.");
-            Assert.AreEqual(verite.compression_glance?.stress_bucket, orgVitals.StressBucketRendered);
-            // I4 — et le test hook n'est pas le RENDU : sans ça, un panneau qui stockerait la valeur
-            // sans jamais l'écrire dans un TextMeshProUGUI passerait quand même (précédent maison :
-            // l'assertion équivalente sur HighestLeverageCard, plus haut, "le texte RENDU doit
-            // porter…", pas seulement le test hook).
-            Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.StartsWith(OrgVitalsPanelController.NomFriction + ":")),
-                "Friction doit avoir été RENDU (un TextMeshProUGUI assigné), pas seulement stocké " +
-                "dans le test hook FrictionBucketRendered.");
-            // Le nom vient du PANNEAU (une source) : « Stress: » en dur a rougi le 2026-09-22, quand 8166447a l'a traduit en « Tension ».
-            Assert.IsTrue(orgVitals.RenderedTexts.Any(t => t.StartsWith(OrgVitalsPanelController.NomTension + ":")),
-                "la tension doit avoir été RENDUE, pas seulement stockée dans le test hook StressBucketRendered.");
-
-            float ecoule = 0f;
-            while (orgVitals.HeatBucketRendered == null && orgVitals.LastHeatError == null && ecoule < 15f)
-            { ecoule += Time.deltaTime; yield return null; }
-            Assert.IsNull(orgVitals.LastHeatError, $"la sonde Heat (C6-F3, déclenchée par AppShell) a échoué : {orgVitals.LastHeatError}");
-            Assert.IsFalse(string.IsNullOrEmpty(orgVitals.HeatBucketRendered),
-                "AppShell doit avoir déclenché FetchHeat — sans lui la barre Heat resterait BLANCHE " +
-                "(aucun état nommé de repli n'existe pour elle, contrairement à Cohesion — consigné).");
-
-            ecoule = 0f;
-            while (!orgVitals.LastCohesionSucceeded && orgVitals.LastCohesionErrorCode == 0 && ecoule < 15f)
-            { ecoule += Time.deltaTime; yield return null; }
-            Assert.IsTrue(orgVitals.LastCohesionSucceeded || orgVitals.LastCohesionErrorCode != 0,
-                "AppShell doit avoir déclenché FetchCohesion — une VRAIE requête a dû être tentée " +
-                "(succès OU échec nommé), jamais rien.");
-
-            // ── 5. HomeChrome — bandeau/pression : MONDE RÉEL, comparé au ground-truth. ──
-            Assert.AreEqual(verite.queue_pressure_band, homeChrome.PressureBandRendered);
-            Assert.IsTrue(homeChrome.RenderedTexts.Any(t =>
-                    t.IndexOf(homeChrome.PressureBandRendered, StringComparison.OrdinalIgnoreCase) >= 0),
-                "le texte rendu doit porter la bande de pression reçue du back");
-            bool bandeauAttendu = verite.compression_glance != null &&
-                (verite.compression_glance.forced ||
-                 (verite.compression_glance.week_state != null && verite.compression_glance.week_state != "none"));
-            Assert.AreEqual(bandeauAttendu, homeChrome.BannerActive,
-                "le bandeau doit refléter EXACTEMENT compression_glance du ground-truth (forced OU " +
-                "week_state != 'none') — jamais une valeur supposée à l'avance.");
-
-            // m5 (revue ⊥ item05-C2) — le détecteur de péremption a servi : C7 (passe UX du 2026-09-24) CÂBLE Shortcut_DailyReview
-            //      comme Shortcut_Second. Sa consigne est suivie : « écrire la même garde de clic+raycast, ne pas juste retirer la
-            //      ligne ». ⇒ ICI, tant que l'Accueil n'est pas recouvert : les 4 coins sont atteints au raycast. Le CLIC de
-            //      production et ce qu'il monte sont assertés APRÈS la section 6 (le clic monte une surimpression qui recouvrirait
-            //      Shortcut_Second).
-            Transform raccourciRevue = TrouverDescendant(homeChrome.transform, "Shortcut_DailyReview");
-            Assert.IsNotNull(raccourciRevue, "Shortcut_DailyReview doit exister sous HomeChromeController");
-            var rectRevue = (RectTransform)raccourciRevue;
-            foreach (Vector2 coinLocal in new[]
-                     {
-                         new Vector2(rectRevue.rect.xMin + 1f, rectRevue.rect.yMin + 1f), new Vector2(rectRevue.rect.xMax - 1f, rectRevue.rect.yMin + 1f),
-                         new Vector2(rectRevue.rect.xMin + 1f, rectRevue.rect.yMax - 1f), new Vector2(rectRevue.rect.xMax - 1f, rectRevue.rect.yMax - 1f),
-                     })
-            {
-                Vector2 coinEcran = RectTransformUtility.WorldToScreenPoint(null, rectRevue.TransformPoint(coinLocal));
-                var resultats = new List<RaycastResult>();
-                EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = coinEcran }, resultats);
-                Assert.IsTrue(resultats.Count > 0, $"un raycast au coin {coinLocal} (local) de Shortcut_DailyReview ne touche RIEN.");
-                Assert.IsTrue(resultats[0].gameObject == raccourciRevue.gameObject || resultats[0].gameObject.transform.IsChildOf(raccourciRevue),
-                    $"le coin {coinLocal} (local) doit atteindre Shortcut_DailyReview — trouvé « {resultats[0].gameObject.name} ».");
-            }
-
-            // ── I6 (revue ⊥ v4) — la machine à 5 états : la branche "tout est chargé" rend LA MÊME
-            //      valeur que le défaut jamais câblé (`:19`/`:56`, indiscriminante) — on ne l'asserte
-            //      donc JAMAIS depuis le chemin réel. On DÉCLARE et exerce DIRECTEMENT la SEULE
-            //      branche assertable (EmptyState) sur ce MÊME panneau MONTÉ PAR LA PRODUCTION. ──
-            homeChrome.SetLoadCircumstances(isLoading: false, hasError: false, isOffline: false,
-                hasAnyData: false, hasAllExpectedData: false);
-            Assert.AreEqual(HomeChromeController.HomeState.EmptyState, homeChrome.CurrentState,
-                "monde DÉCLARÉ (I6) : sans donnée, la machine à 5 états doit rendre EmptyState — jamais " +
-                "LoadingState, indiscriminant du défaut jamais câblé.");
-
-            // ── 6. Le raccourci "Exceptions" (§2, point (b), CORRIGÉ dans ce chunk) — touchable ET
-            //      mène RÉELLEMENT à ExceptionQueueController (IShellNavigator, REUSE). ──
-            Transform raccourciExceptions = TrouverDescendant(homeChrome.transform, "Shortcut_Second");
-            Assert.IsNotNull(raccourciExceptions, "Shortcut_Second doit exister sous HomeChromeController");
-            var rectRaccourci = (RectTransform)raccourciExceptions;
-            Assert.IsNotNull(EventSystem.current, "aucun EventSystem.current — AppShell.EnsureEventSystem() doit avoir tourné.");
-            Assert.IsTrue(ProductionClickSupport.HasActiveInputModule(EventSystem.current, out string diagModule),
-                $"EventSystem.current n'a AUCUN module d'entrée actif ({diagModule}) — un tap réel ne serait " +
-                "jamais dispatché, et un raycast seul certifierait quand même une cible morte au doigt.");
-            // ⚠️ Rect.Contains est DEMI-OUVERT : tirer sur les 4 coins EXACTS en rate 3 sur 4 (m3,
-            // revue ⊥ item05-C2 : cette note vit au §5 du design, pas "§2 point 7" — corrigé). On
-            // tire sur des points EN RETRAIT des coins.
-            var coinsLocaux = new[]
-            {
-                new Vector2(rectRaccourci.rect.xMin + 1f, rectRaccourci.rect.yMin + 1f),
-                new Vector2(rectRaccourci.rect.xMax - 1f, rectRaccourci.rect.yMin + 1f),
-                new Vector2(rectRaccourci.rect.xMin + 1f, rectRaccourci.rect.yMax - 1f),
-                new Vector2(rectRaccourci.rect.xMax - 1f, rectRaccourci.rect.yMax - 1f),
-            };
-            foreach (Vector2 coinLocal in coinsLocaux)
-            {
-                Vector2 coinEcran = RectTransformUtility.WorldToScreenPoint(null, rectRaccourci.TransformPoint(coinLocal));
-                var donneesCoin = new PointerEventData(EventSystem.current) { position = coinEcran };
-                var resultatsCoin = new List<RaycastResult>();
-                EventSystem.current.RaycastAll(donneesCoin, resultatsCoin);
-                Assert.IsTrue(resultatsCoin.Count > 0,
-                    $"un raycast au coin {coinLocal} (local) de Shortcut_Second (écran {coinEcran}) ne touche RIEN.");
-                GameObject toucheCoin = resultatsCoin[0].gameObject;
-                Assert.IsTrue(toucheCoin == raccourciExceptions.gameObject || toucheCoin.transform.IsChildOf(raccourciExceptions),
-                    $"le coin {coinLocal} (local) doit atteindre Shortcut_Second lui-même (ou un enfant " +
-                    $"graphique) — trouvé « {toucheCoin.name} ». Un coin avalé est un doigt qui rate la " +
-                    "cible alors qu'un raycast au centre seul la certifierait quand même.");
-            }
-
-            Button boutonRaccourci = raccourciExceptions.GetComponent<Button>();
-            Assert.IsNotNull(boutonRaccourci);
-            int clicsAvant = homeChrome.ExceptionsShortcutClicks;
-            ProductionClickSupport.Click(boutonRaccourci); // ⛔ LE GESTE DE PRODUCTION — jamais .onClick.Invoke()
-            Assert.AreEqual(clicsAvant + 1, homeChrome.ExceptionsShortcutClicks);
-            Assert.IsNotNull(homeChrome.LastOpenedExceptions,
-                "le clic RÉEL sur Shortcut_Second doit monter ExceptionQueueController (IShellNavigator, REUSE)");
-            Assert.IsNotNull(homeChrome.LastOpenedExceptions.GetComponent<ExceptionQueueController>(),
-                "la cible montée doit être ExceptionQueueController — mène RÉELLEMENT quelque part (§2, " +
-                "point (b) : \"un bouton branché sur rien est un défaut joueur\").");
-            Assert.IsTrue(homeChrome.LastOpenedExceptions.transform.IsChildOf(shell.ContentSlot),
-                "l'écran monté doit être un descendant de ContentSlot — confinement, pas juste 'existe quelque part'.");
-
-            // ── 7. C7 (passe UX, 2026-09-24) — « La revue du jour » : le clic de PRODUCTION monte RÉELLEMENT la revue (il ne faisait
-            //      que compter). Ses 4 coins ont été assertés plus haut, Accueil découvert. ──
-            Button boutonRevue = raccourciRevue.GetComponent<Button>();
-            Assert.IsNotNull(boutonRevue);
-            int clicsRevueAvant = homeChrome.DailyReviewShortcutClicks;
-            ProductionClickSupport.Click(boutonRevue); // ⛔ LE GESTE DE PRODUCTION — jamais .onClick.Invoke()
-            Assert.AreEqual(clicsRevueAvant + 1, homeChrome.DailyReviewShortcutClicks);
-            Assert.IsNotNull(homeChrome.LastOpenedDailyReview, "le clic RÉEL sur « La revue du jour » doit monter la revue (C7)");
-            Assert.IsNotNull(homeChrome.LastOpenedDailyReview.GetComponent<DailyReviewScreenController>(),
-                "la cible montée doit être DailyReviewScreenController — le raccourci mène RÉELLEMENT à la revue");
-            Assert.IsTrue(homeChrome.LastOpenedDailyReview.transform.IsChildOf(shell.ContentSlot),
-                "la revue montée doit être un descendant de ContentSlot — confinement.");
-
-            Debug.Log("[Charpente] C2 — les 4 panneaux orphelins de l'Accueil sont montés PAR LA " +
-                      "PRODUCTION, nommés, et chacun a rendu le monde qu'il déclarait (SEEDE_OperationalDemo).");
+            Debug.Log("[Charpente] C2 — l'Accueil monte sa zone de tête et sa file PAR LA PRODUCTION, sans feuille ni vitaux ni " +
+                      "chrome, et chacun a rendu le monde qu'il déclarait (SEEDE_OperationalDemo).");
         }
 
         // ══════════════════════════════════════════════════════════════════════════════════════
@@ -590,7 +422,7 @@ namespace MafiaCleanCity.Shell.Tests
         // propriété reste celle du `[UnityTest]` ci-dessus (montage RÉEL, par la production).
         // ══════════════════════════════════════════════════════════════════════════════════════
         [Test]
-        public void ControlePositif_HomeChromeDebranche_FaitRougirLaGardeDes4PanneauxNommes()
+        public void ControlePositif_FileDebranchee_OuPanneauDeTrop_FontRougirLaGardeDeLAccueil()
         {
             // Monde dégénéré n°1 (I3) : la méthode que ce contrôle prétend défendre a disparu
             // (supprimée ou renommée) — sans cette précondition, le contrôle restait vert.
@@ -609,23 +441,14 @@ namespace MafiaCleanCity.Shell.Tests
                 "— une signature qui a dérivé doit rougir ICI avant d'être découverte ailleurs.");
             Assert.AreEqual(typeof(SessionOpenDto), parametres[0].ParameterType);
 
-            var attendus = new HashSet<string>
-            {
-                nameof(HighestLeverageCardController), nameof(ExceptionQueuePanelController),
-                nameof(OrgVitalsPanelController), nameof(HomeChromeController),
-            };
-            // Le monde DÉGÉNÉRÉ à tuer : exactement ce que rendrait `MonterPanneauxAccueil` si
-            // `HomeChromeController` (nommé) n'était jamais instancié.
-            var troisSeulement = new HashSet<string>
-            {
-                nameof(HighestLeverageCardController), nameof(ExceptionQueuePanelController),
-                nameof(OrgVitalsPanelController),
-            };
-            Assert.Throws<AssertionException>(() =>
-                CollectionAssert.AreEquivalent(attendus, troisSeulement),
-                "CONTRÔLE POSITIF : débrancher HomeChromeController (nommément) DOIT faire rougir la " +
-                "garde d'ensemble des 4 panneaux — sinon elle ne détecterait pas un panneau manquant, " +
-                "et certifierait le défaut qu'elle existe pour attraper.");
+            var attendus = new HashSet<string> { nameof(HighestLeverageCardController), nameof(ExceptionQueuePanelController) };
+            // Les deux mondes DÉGÉNÉRÉS à tuer (§G P1, 26/09) : la file débranchée, et un panneau de TROP remonté (la superposition).
+            var teteSeule = new HashSet<string> { nameof(HighestLeverageCardController) };
+            var unDeTrop = new HashSet<string> { nameof(HighestLeverageCardController), nameof(ExceptionQueuePanelController), nameof(OrgVitalsPanelController) };
+            Assert.Throws<AssertionException>(() => CollectionAssert.AreEquivalent(attendus, teteSeule),
+                "CONTRÔLE POSITIF : la file débranchée DOIT faire rougir la garde d'ensemble");
+            Assert.Throws<AssertionException>(() => CollectionAssert.AreEquivalent(attendus, unDeTrop),
+                "CONTRÔLE POSITIF : un panneau de TROP (la superposition du §G) DOIT faire rougir la garde d'ensemble");
         }
 
         // ══════════════════════════════════════════════════════════════════════════════════════
@@ -654,30 +477,22 @@ namespace MafiaCleanCity.Shell.Tests
 
             HighestLeverageCardController hlCard = null;
             ExceptionQueuePanelController exceptionQueue = null;
-            OrgVitalsPanelController orgVitals = null;
-            HomeChromeController homeChrome = null;
             float ecouleMontage = 0f;
-            while (ecouleMontage < 10f &&
-                   (hlCard == null || exceptionQueue == null || orgVitals == null || homeChrome == null))
+            while (ecouleMontage < 10f && (hlCard == null || exceptionQueue == null))
             {
                 hlCard = shell.ContentSlot.GetComponentInChildren<HighestLeverageCardController>(false);
                 exceptionQueue = shell.ContentSlot.GetComponentInChildren<ExceptionQueuePanelController>(false);
-                orgVitals = shell.ContentSlot.GetComponentInChildren<OrgVitalsPanelController>(false);
-                homeChrome = shell.ContentSlot.GetComponentInChildren<HomeChromeController>(false);
                 ecouleMontage += Time.deltaTime;
                 yield return null;
             }
+            yield return null;   // une frame de plus : un panneau de trop monté après les deux attendus serait vu
             Assert.IsNotNull(hlCard, "HighestLeverageCardController doit être monté avant de le mesurer");
             Assert.IsNotNull(exceptionQueue, "ExceptionQueuePanelController doit être monté avant de le mesurer");
-            Assert.IsNotNull(orgVitals, "OrgVitalsPanelController doit être monté avant de le mesurer");
-            Assert.IsNotNull(homeChrome, "HomeChromeController doit être monté avant de le mesurer");
 
             var panneaux = new (string nom, RectTransform rt)[]
             {
                 (nameof(HighestLeverageCardController), (RectTransform)hlCard.transform),
                 (nameof(ExceptionQueuePanelController), (RectTransform)exceptionQueue.transform),
-                (nameof(OrgVitalsPanelController), (RectTransform)orgVitals.transform),
-                (nameof(HomeChromeController), (RectTransform)homeChrome.transform),
             };
 
             // MÊME idiome que la garde B2 plus haut (`GetWorldCorners` + `InverseTransformPoint`,
@@ -792,16 +607,17 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotNull(shell, $"aucun AppShell dans la scène de démarrage du build ({sceneDeDemarrage.path})");
             yield return WaitForEmpireMounted(shell);
 
-            HomeChromeController homeChrome = null;
+            // AMENDÉ (26/09) : le chrome a quitté l'Accueil — on sabote la FILE, panneau tracké du canon.
+            ExceptionQueuePanelController file = null;
             float ecouleMontage = 0f;
-            while (ecouleMontage < 10f && homeChrome == null)
+            while (ecouleMontage < 10f && file == null)
             {
-                homeChrome = shell.ContentSlot.GetComponentInChildren<HomeChromeController>(false);
+                file = shell.ContentSlot.GetComponentInChildren<ExceptionQueuePanelController>(false);
                 ecouleMontage += Time.deltaTime;
                 yield return null;
             }
-            Assert.IsNotNull(homeChrome, "HomeChromeController doit être monté avant de le saboter");
-            var rt = (RectTransform)homeChrome.transform;
+            Assert.IsNotNull(file, "ExceptionQueuePanelController doit être monté avant de le saboter");
+            var rt = (RectTransform)file.transform;
 
             const float valeurSaboteeMin = 999f;
             const float valeurSaboteeMax = 1000f;

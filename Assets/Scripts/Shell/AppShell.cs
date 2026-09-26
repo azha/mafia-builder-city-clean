@@ -487,9 +487,20 @@ namespace MafiaCleanCity.Shell
             !CoffreFermeAffiche && CurrentTab == Tab.Empire && MountedTenantType == typeof(CityMapController)
             && CityTabDistrictId == -1 && !SurimpressionOuverte;
 
+        /// <summary>L'Accueil ④ — UNE seule mise en page (passe UX du 26/09, §G P1 ; canon `ecrans-brennar-accueil.html`, cadres 0-2) :
+        /// le `DashboardController` est monté en surimpression pour son FOND (qui cache la carte) et ses chemins de navigation, mais sa
+        /// FEUILLE (« ACCUEIL · Portefeuille · Chaleur · Alertes ») est éteinte ; la zone de tête et la file sont posées par
+        /// `MonterPanneauxAccueil`. Les trois sites qui montent l'Accueil passent ici.</summary>
+        private DashboardController MonterLAccueil()
+        {
+            DashboardController accueil = MonterLocataireEnSurimpression<DashboardController>();
+            accueil.MasquerLaFeuille();
+            return accueil;
+        }
+
         private void RouvrirLAccueil()
         {
-            MonterLocataireEnSurimpression<DashboardController>();
+            MonterLAccueil();
             StartCoroutine(PanneauxDeLAccueilRouvert(MontagesEffectues));
         }
 
@@ -747,7 +758,7 @@ namespace MafiaCleanCity.Shell
                 if (pasEncoreActiveEchec)
                 {
                     ActivateTab(Tab.Empire); // repli : le locataire signera lui-même
-                    MonterLocataireEnSurimpression<DashboardController>();
+                    MonterLAccueil();
                     int generationEchec = MontagesEffectues; // capturée APRÈS la nôtre — garde plus bas
                     // ROUND 7 (revue ⊥, BLOQUANT 2 — je change de décision, la mesure me le fait
                     // faire) — la seconde moitié du ruling (« puis on tombe sur la ville ») livrée
@@ -880,7 +891,7 @@ namespace MafiaCleanCity.Shell
             if (pasEncoreActive)
             {
                 ActivateTab(Tab.Empire);
-                MonterLocataireEnSurimpression<DashboardController>();
+                MonterLAccueil();
                 int generation = MontagesEffectues; // capturée APRÈS la nôtre — garde plus bas
                 // ROUND 7 (revue ⊥, BLOQUANT 2) — même geste, même ordre, même raison que la branche
                 // d'échec ci-dessus : `ActivateTab` a déjà remis l'action de tête à `None`, cette
@@ -1528,6 +1539,11 @@ namespace MafiaCleanCity.Shell
         /// entreraient en collision de composants), parenté directement sous `ContentSlot` — comme
         /// tout host de locataire, donc recyclé GRATUITEMENT par `UnmountCurrentTenant` (qui vide
         /// TOUT `ContentSlot` au prochain changement d'onglet) sans mécanisme de teardown dédié.</summary>
+        /// <summary>Les bandes de l'Accueil canon, en fraction de la zone sûre : la zone de tête en haut, la ligne de file en bas, et un
+        /// JOUR entre les deux — plus aucune bande ne touche sa voisine (la ligne « Lt. Tull attend vos ordres » posée sur le texte de la
+        /// carte, §G P1).</summary>
+        internal static readonly (float min, float max) BandeTete = (0.30f, 1.00f), BandeFile = (0.00f, 0.26f);
+
         private void MonterPanneauxAccueil(SessionOpenDto dto)
         {
             // Défensif (jamais exercé en production — `MonterPanneauxAccueil` n'est appelée
@@ -1543,7 +1559,7 @@ namespace MafiaCleanCity.Shell
             // reçoit donc une BANDE fractionnaire distincte par panneau — un empilement STRUCTUREL
             // (chacun occupe toute la largeur, un quart de la hauteur), pas une composition visuelle
             // finale (celle-ci reste un travail ultérieur, DA/juge-visuel — consigné en Deviation).
-            HighestLeverageCardController hlCard = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", 0.75f, 1.00f);
+            HighestLeverageCardController hlCard = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", BandeTete.min, BandeTete.max);
             // ⑤ `screen_1a` — le DÉTAIL de la carte, en surimpression. L'écran existe (maquette
             // ratifiée « ok top on garde comme ça »), et sans ce fil il ne serait montable par
             // personne : les quatre onglets sont pris, et un écran de détail n'a pas vocation à en
@@ -1554,49 +1570,12 @@ namespace MafiaCleanCity.Shell
 
             hlCard.SetPayload(Token, dto?.hl_card, dto?.structural_budget);
 
-            ExceptionQueuePanelController exceptions = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", 0.50f, 0.75f);
+            ExceptionQueuePanelController exceptions = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", BandeFile.min, BandeFile.max);
             exceptions.SetQueue(Token, dto?.queue);
-
-            OrgVitalsPanelController orgVitals = NouveauPanneauAccueil<OrgVitalsPanelController>("AccueilOrgVitals", 0.25f, 0.50f);
-            orgVitals.SetFrictionStress(dto?.friction_glance, dto?.compression_glance);
-            // m7 (revue ⊥ item05-C2, mineur — CONSIGNÉ, non fermé ici) : ce shell interroge DÉJÀ
-            // `GET /v1/city/district/16/heat` plus bas (sonde citywide, §6.2) et `DashboardController`
-            // aussi (`:232`) — celui-ci ferait un 3ᵉ appelant simultané au démarrage, alors que
-            // `DashboardController.cs:236-238` s'interdit VERBATIM un "3e appelant" en réutilisant
-            // CET appel-là plutôt que d'en refaire un. Non fermé ici (repointer `orgVitals` vers un
-            // appel partagé changerait le contrat "chaque panneau pilote SA propre requête" — hors
-            // périmètre C2) : ouvert pour un futur lot de partage de sonde citywide.
-            if (!string.IsNullOrEmpty(Token)) orgVitals.FetchHeatAndCohesion(Token); // best-effort — voir le docstring de la méthode
-
-            HomeChromeController homeChrome = NouveauPanneauAccueil<HomeChromeController>("AccueilHomeChrome", 0.00f, 0.25f);
-            homeChrome.SetCompressionGlance(dto?.compression_glance);
-            homeChrome.SetPressureBand(dto?.queue_pressure_band);
-            homeChrome.SetBacklogBadge(dto?.backlog_badge == true);   // ④ (2026-09-23) : backlog_badge sur l'Accueil, plus seulement au TopBar
-            // Le générique "5 états" (design §2, I6 — la revue ⊥ v4) : `hasAnyData` reflète ce que
-            // CE MVP surface réellement sur l'Accueil (une carte à haut levier OU une file
-            // d'exceptions) — jamais un flag inventé. ⚠️ MESURÉ (I6) : quand une session/open RÉELLE
-            // porte l'un ou l'autre (le cas courant), cette ligne retombe dans la branche "tout est
-            // chargé" de `SetLoadCircumstances` (`HomeChromeController.cs:56`), qui rend LA MÊME
-            // valeur que son défaut jamais câblé (`:19`) — un défaut PRÉEXISTANT de ce contrôleur
-            // (C7, hors périmètre de C2), pas quelque chose que ce chunk introduit ou peut réparer
-            // par un choix de flag différent. ⇒ AUCUNE assertion de ce lot ne lit `CurrentState`
-            // depuis CE chemin — seule la branche EmptyState (déclarée, mesurée séparément) est
-            // testée (voir Tools/charpente-item05-design.md §2, I6).
-            bool hasCard = dto?.hl_card != null && !string.IsNullOrEmpty(dto.hl_card.card_id);
-            bool hasQueue = dto?.queue != null && dto.queue.Length > 0;
-            bool hasAnyData = hasCard || hasQueue;
-            // m1 (revue ⊥ item05-C2, mineur, frontière PRODUCTION/PREUVE — CONSIGNÉ, non fermé ici) —
-            // `hasAllExpectedData` vaut toujours `hasAnyData` ⇒ dans `HomeChromeController.
-            // SetLoadCircumstances` (`!hasAnyData → EmptyState`, sinon `!hasAllExpectedData` est
-            // TOUJOURS faux) le 5ᵉ état canonique `PartialState` devient structurellement
-            // INATTEIGNABLE depuis CE site — la machine à 5 états n'en produit que 3 (Empty/Error/
-            // Offline + la branche "chargé" indiscriminante, I6). Aucun joueur ne perd de fonction
-            // aujourd'hui (ce MVP ne surface qu'UNE carte OU une file, jamais un sous-ensemble
-            // partiel des deux à distinguer) — mais un état du canon meurt en silence. Option
-            // conservatrice : laissé tel quel (le fermer exigerait de définir ce que "partiel"
-            // signifie pour CE panneau, hors périmètre C2) — ouvert pour l'écran/juge-donnees.
-            homeChrome.SetLoadCircumstances(isLoading: false, hasError: dto == null, isOffline: false,
-                hasAnyData: hasAnyData, hasAllExpectedData: hasAnyData);
+            // ⛔ PASSE UX 26/09 (§G P1, « deux mises en page superposées ») — les VITAUX (OrgVitals : « Friction: Light · Tension: Calm »,
+            //    cohésion) et le CHROME (HomeChrome : bandeau de chaufferie, raccourcis, machine à 5 états « [LoadingState] ») ne sont plus
+            //    montés sur l'Accueil : le canon ④ n'a qu'une zone de tête et la ligne de file. Leurs contrôleurs restent (tests W3U1) ; « La
+            //    revue du jour » reste joignable par le menu Plus, l'ardoise par la ligne de file et le bandeau.
         }
 
         private T NouveauPanneauAccueil<T>(string nom, float yMin, float yMax) where T : Component

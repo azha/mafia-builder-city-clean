@@ -116,9 +116,10 @@ namespace MafiaCleanCity.Shell.Tests
             // que le joueur a effectivement sous les yeux à l'ouverture de session.
             yield return CaptureSousShell.CapturerLocataire<DashboardController>(
                 shell, "l_accueil", (e, _) => e.DashboardLoaded, echecs, monter: false,
-                nomFeuille: "DashboardSheet",
-                freresAttendusAuDessus: new[] { "AccueilHlCard", "AccueilExceptionQueue",
-                                                "AccueilOrgVitals", "AccueilHomeChrome" });
+                // AMENDÉ (passe UX du 26/09, §G P1) : l'Accueil canon n'a plus de feuille (éteinte) ni de vitaux ni de chrome — la
+                // feuille mesurée est la ZONE DE TÊTE, et la file est son seul frère attendu au-dessus.
+                nomFeuille: "AccueilHlCard",
+                freresAttendusAuDessus: new[] { "AccueilExceptionQueue" });
 
             // ㉔ L'AUTONOMIE — se charge seule (signin + rapports).
             yield return CaptureSousShell.CapturerLocataire<AutonomyInboxController>(

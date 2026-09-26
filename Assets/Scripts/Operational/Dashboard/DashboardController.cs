@@ -97,6 +97,17 @@ namespace MafiaCleanCity.Operational
         private Transform mountParent;
         public void SetMountParent(Transform parent) => mountParent = parent;
 
+        /// <summary>Passe UX du 26/09 (§G P1) — monté comme l'Accueil ④, ce contrôleur ne montre QUE son fond : sa feuille (« ACCUEIL ·
+        /// Portefeuille · Chaleur · Alertes · Aller à ») est éteinte, la zone de tête et la file du shell sont la seule mise en page. La
+        /// feuille reste construite (ses champs vivent), seulement inactive. Appelé avant ou après `BuildLayout`.</summary>
+        public void MasquerLaFeuille()
+        {
+            FeuilleMasquee = true;
+            if (feuille != null) feuille.SetActive(false);
+        }
+        public bool FeuilleMasquee { get; private set; }
+        private GameObject feuille;
+
         // ⛔ `BuildingCard` RETIRÉ (2026-09-23, ruling A du 25/08 « un bouton qui ment est pire qu'un bouton absent ») : le bouton
         //    « La fiche » montait `BuildingCardController` SANS bâtiment — `Boot()` n'y chargeait rien, l'écran restait vide
         //    (écart ① `e2bd7681` §0.2). La fiche opérationnelle ne s'ouvre plus que par `OuvertureFicheOperationnelle`, AVEC le
@@ -548,6 +559,8 @@ namespace MafiaCleanCity.Operational
 
             // The dashboard card, anchored top-centre (portrait landing column).
             GameObject card = NewUI("DashboardSheet", root);
+            feuille = card;
+            if (FeuilleMasquee) card.SetActive(false);
             RectTransform cardRt = (RectTransform)card.transform;
             cardRt.anchorMin = new Vector2(0.5f, 1f);
             cardRt.anchorMax = new Vector2(0.5f, 1f);

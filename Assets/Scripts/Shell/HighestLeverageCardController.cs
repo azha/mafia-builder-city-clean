@@ -212,9 +212,13 @@ namespace MafiaCleanCity.Shell
             if (surtitreText != null) surtitreText.text = "";
             if (noteText != null) noteText.text = "";
             bool rapports = RenderedState == CardState.Available && EstCarteDesRapports;
+            // ⛔ PASSE UX 26/09 (§G P1) — sans carte (« Rien à signaler »), l'Accueil montrait QUAND MÊME le bloc « Tamponner — appui
+            //    long », « Skip » et la rangée « Type "COMMIT" » : des gestes sur rien. Les gestes n'existent que s'il y a une carte.
+            bool carte = RenderedState != CardState.NoCard;
             if (lireButton != null) lireButton.gameObject.SetActive(rapports);
-            if (CommitButton != null) CommitButton.gameObject.SetActive(!rapports);   // la carte des rapports ne se tamponne pas d'ici
-            if (typedRowGo != null) typedRowGo.SetActive(!rapports);
+            if (CommitButton != null) CommitButton.gameObject.SetActive(carte && !rapports);   // la carte des rapports ne se tamponne pas d'ici
+            if (skipButton != null) skipButton.gameObject.SetActive(carte);
+            if (typedRowGo != null) typedRowGo.SetActive(carte && !rapports);
             switch (RenderedState)
             {
                 case CardState.NoCard:
@@ -366,7 +370,7 @@ namespace MafiaCleanCity.Shell
             commitGo.AddComponent<Image>().color = CtaColor;
             CommitButton = commitGo.AddComponent<LongPressButton>();
             CommitButton.OnLongPressCompleted += () => StartCoroutine(RequestCommit());
-            commitLabel = NewChildText(commitGo.transform, "Tamponner — appui long", 15);
+            commitLabel = NewChildText(commitGo.transform, Lib("carte", "Prendre acte"), 15);   // table 45 (servie) — plus « Tamponner — appui long »
             commitLabel.color = DesignTokens.Current.surfaceBase;
 
             GameObject skipGo = new GameObject("SkipButton", typeof(RectTransform));
@@ -376,7 +380,7 @@ namespace MafiaCleanCity.Shell
             skipButton = skipGo.AddComponent<Button>();
             skipButton.targetGraphic = skipImg;
             skipButton.onClick.AddListener(() => StartCoroutine(RequestSkip()));
-            skipLabel = NewChildText(skipGo.transform, "Skip", 15);
+            skipLabel = NewChildText(skipGo.transform, Lib("carte", "Pas maintenant"), 15);   // table 45 (servie) — plus « Skip »
             skipLabel.color = DesignTokens.Current.onSurfacePrimary;
 
             // Accessible typed-confirm ALTERNATIVE to the long press (canon:129-138, F2 — obligatoire,

@@ -236,25 +236,19 @@ namespace MafiaCleanCity.Shell.Tests
 
             HighestLeverageCardController hlCard = null;
             ExceptionQueuePanelController exceptions = null;
-            OrgVitalsPanelController orgVitals = null;
-            HomeChromeController homeChrome = null;
             float ecouleMontage = 0f;
             while (ecouleMontage < 10f &&
-                   (hlCard == null || exceptions == null || orgVitals == null || homeChrome == null))
+                   (hlCard == null || exceptions == null))
             {
                 hlCard = shell.ContentSlot.GetComponentInChildren<HighestLeverageCardController>(false);
                 exceptions = shell.ContentSlot.GetComponentInChildren<ExceptionQueuePanelController>(false);
-                orgVitals = shell.ContentSlot.GetComponentInChildren<OrgVitalsPanelController>(false);
-                homeChrome = shell.ContentSlot.GetComponentInChildren<HomeChromeController>(false);
                 ecouleMontage += Time.deltaTime;
                 yield return null;
             }
-            // Anti-mensonge : sans les 4, toute mesure qui suit porterait sur un sous-ensemble et
+            // Anti-mensonge (Accueil canon du 26/09 : la zone de tête et la file) : sans les 2, toute mesure qui suit porterait sur un sous-ensemble et
             // le rapporterait comme complet.
             Assert.IsNotNull(hlCard, "HighestLeverageCardController doit être monté avant de le mesurer");
             Assert.IsNotNull(exceptions, "ExceptionQueuePanelController doit être monté avant de le mesurer");
-            Assert.IsNotNull(orgVitals, "OrgVitalsPanelController doit être monté avant de le mesurer");
-            Assert.IsNotNull(homeChrome, "HomeChromeController doit être monté avant de le mesurer");
 
             // Diagnostic (pas une assertion) : ContentSlot AVANT tout basculement de résolution —
             // c'est CETTE valeur (et celle de `ShellChrome.Top/BottomInsetPx`, dérivées de
@@ -279,9 +273,9 @@ namespace MafiaCleanCity.Shell.Tests
 
             // ⛔ `Temp/`, plus `Assets/Screenshots/` (2026-09-24, garde K3) : ces images sont des SONDES DE MESURE (« une mesure de bords »,
             // jamais photographiée pour un juge) — écrites dans l'arbre, elles le salissaient à CHAQUE run de `Charpente`.
-            yield return MesurerEtCapturer(shell, hlCard, exceptions, orgVitals, homeChrome,
+            yield return MesurerEtCapturer(shell, hlCard, exceptions,
                 1080, 1920, "Temp/accueil_panneaux_geometrie_1080x1920.png", constats);
-            yield return MesurerEtCapturer(shell, hlCard, exceptions, orgVitals, homeChrome,
+            yield return MesurerEtCapturer(shell, hlCard, exceptions,
                 1080, 2400, "Temp/accueil_panneaux_geometrie_1080x2400.png", constats);
 
             Debug.Log("[Charpente] MESURE géométrique + photographique des 4 panneaux de l'Accueil " +
@@ -381,23 +375,17 @@ namespace MafiaCleanCity.Shell.Tests
 
             HighestLeverageCardController hlCard = null;
             ExceptionQueuePanelController exceptions = null;
-            OrgVitalsPanelController orgVitals = null;
-            HomeChromeController homeChrome = null;
             float ecouleMontage = 0f;
             while (ecouleMontage < 10f &&
-                   (hlCard == null || exceptions == null || orgVitals == null || homeChrome == null))
+                   (hlCard == null || exceptions == null))
             {
                 hlCard = shell.ContentSlot.GetComponentInChildren<HighestLeverageCardController>(false);
                 exceptions = shell.ContentSlot.GetComponentInChildren<ExceptionQueuePanelController>(false);
-                orgVitals = shell.ContentSlot.GetComponentInChildren<OrgVitalsPanelController>(false);
-                homeChrome = shell.ContentSlot.GetComponentInChildren<HomeChromeController>(false);
                 ecouleMontage += Time.deltaTime;
                 yield return null;
             }
             Assert.IsNotNull(hlCard, "HighestLeverageCardController doit être monté avant de le mesurer");
             Assert.IsNotNull(exceptions, "ExceptionQueuePanelController doit être monté avant de le mesurer");
-            Assert.IsNotNull(orgVitals, "OrgVitalsPanelController doit être monté avant de le mesurer");
-            Assert.IsNotNull(homeChrome, "HomeChromeController doit être monté avant de le mesurer");
 
             Canvas.ForceUpdateCanvases();
             yield return null;
@@ -429,8 +417,6 @@ namespace MafiaCleanCity.Shell.Tests
             {
                 (nameof(HighestLeverageCardController), (RectTransform)hlCard.transform),
                 (nameof(ExceptionQueuePanelController), (RectTransform)exceptions.transform),
-                (nameof(OrgVitalsPanelController), (RectTransform)orgVitals.transform),
-                (nameof(HomeChromeController), (RectTransform)homeChrome.transform),
             };
             foreach ((string nom, RectTransform panelRt) in panneaux)
             {
@@ -469,8 +455,7 @@ namespace MafiaCleanCity.Shell.Tests
         /// est bien le no-op géométrique que son docstring promet, sur CETTE bascule de résolution
         /// précise : sinon toute mesure qui suit daterait d'un monde que la photo ne montre pas.</summary>
         private IEnumerator MesurerEtCapturer(AppShell shell,
-            HighestLeverageCardController hlCard, ExceptionQueuePanelController exceptions,
-            OrgVitalsPanelController orgVitals, HomeChromeController homeChrome,
+            HighestLeverageCardController hlCard, ExceptionQueuePanelController exceptions, 
             int largeur, int hauteur, string chemin, List<string> constats)
         {
             Canvas canvas = shell.ShellCanvas;
@@ -567,8 +552,6 @@ namespace MafiaCleanCity.Shell.Tests
             {
                 (nameof(HighestLeverageCardController), (RectTransform)hlCard.transform),
                 (nameof(ExceptionQueuePanelController), (RectTransform)exceptions.transform),
-                (nameof(OrgVitalsPanelController), (RectTransform)orgVitals.transform),
-                (nameof(HomeChromeController), (RectTransform)homeChrome.transform),
             };
 
             // Tolérance pour l'anti-crénelage/arrondi de bord — pas une marge de confort sur le
