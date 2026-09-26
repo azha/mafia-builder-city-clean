@@ -294,7 +294,7 @@ namespace MafiaCleanCity.Operational.Tests
                 ProjectionFabrique(RouteFabrique()));
             yield return null;
 
-            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.De("distribution", "titre", "L’envoi de ce soir"), "titre repos absent");
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.Cle("distribution.titre.l_envoi_de_ce_soir", "Le prochain envoi"), "titre repos absent (table 80 : clé gardée, valeur réécrite)");
             CollectionAssert.Contains(ecran.RenderedTexts, "ça serpente — plus long, plus discret",
                 "résolveur LE CHEMIN muet (meandering)");
             CollectionAssert.Contains(ecran.RenderedTexts, "un pont",
@@ -360,7 +360,7 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.DoesNotContain(ecran.RenderedTexts, "ENVOYER CE SOIR",
                 "sans destination découverte, aucun bouton ne doit être fabriqué sur un id inventé");
             CollectionAssert.Contains(ecran.RenderedTexts,
-                ValeurAttendue.De("distribution", "bloc", "Aucune destination connue pour l’envoi de ce soir."),
+                ValeurAttendue.Cle("distribution.bloc.aucune_destination_connue_pour_l_envoi_de_ce_soir", "Aucune destination connue pour le prochain envoi."),   // table 80
                 "la note honnête d'absence de destination est absente");
         }
 
