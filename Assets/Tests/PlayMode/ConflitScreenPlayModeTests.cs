@@ -314,14 +314,14 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
 
             Assert.AreEqual(0, ecran.MuscleLieutenants.Count);
-            CollectionAssert.Contains(ecran.RenderedTexts, "Le coup de ce soir");
+            CollectionAssert.Contains(ecran.RenderedTexts, MafiaCleanCity.Tests.ValeurAttendue.Cle("conflit.bloc.le_coup_de_ce_soir", "Le prochain coup"));   // table 80 : clé gardée, valeur réécrite
             CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.De("conflit", "bloc", "Aucun de vos lieutenants n’est du genre Gros bras."));
             Assert.IsNull(GameObject.Find("LEnvoyerCeSoir"), "sans gros bras, aucun bouton d'envoi");
             // `TryGetComponent`, pas `GetComponent == null` sous NUnit : dans l'éditeur, un composant absent rend un « faux null ».
             Assert.IsFalse(RacineEcran().transform.Find("Corps/Contenu/Table/Famille_coil").TryGetComponent<Button>(out _),
                 "sans gros bras, la famille ne se choisit pas");
             CollectionAssert.DoesNotContain(ecran.RenderedTexts,
-                "« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »",
+                MafiaCleanCity.Tests.ValeurAttendue.Cle("conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain", "\u00AB\u00A0Dites-moi seulement chez qui. J\u2019y vais, on saura demain.\u00A0\u00BB"),
                 "la réplique n'apparaît QUE s'il y a un gros bras");
         }
 
@@ -346,11 +346,11 @@ namespace MafiaCleanCity.Operational.Tests
             foreach (string mot in new[] { "leurs gros bras", "leur argent", "leurs informateurs", "leurs installations", "leur tête" })
                 CollectionAssert.Contains(ecran.RenderedTexts, mot, "les 5 axes, mots de la table 40");
             CollectionAssert.Contains(ecran.RenderedTexts,
-                "« Dites-moi seulement chez qui. Je pars ce soir, on saura demain. »",
+                MafiaCleanCity.Tests.ValeurAttendue.Cle("conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain", "\u00AB\u00A0Dites-moi seulement chez qui. J\u2019y vais, on saura demain.\u00A0\u00BB"),
                 "la réplique SANS orateur (arbitrage 5 du 23/09)");
             foreach (string t in ecran.RenderedTexts)
                 StringAssert.DoesNotContain("Lt. Vasca :", t, "aucun orateur composé devant la réplique");
-            CollectionAssert.Contains(ecran.RenderedTexts, "L’envoyer ce soir");
+            CollectionAssert.Contains(ecran.RenderedTexts, MafiaCleanCity.Tests.ValeurAttendue.Cle("conflit.bloc.l_envoyer_ce_soir", "L\u2019envoyer"));   // table 80
             CollectionAssert.Contains(ecran.RenderedTexts, "pas de rappel possible");   // 40 v3
             CollectionAssert.DoesNotContain(ecran.RenderedTexts,
                 "Vous avez l'homme. Personne pour lui dire où frapper — on ne sait pas encore où ils sont.",
@@ -361,7 +361,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(ecran.ChoixAxe, "aucun axe présélectionné");
             Assert.IsFalse(ecran.EnvoiPossible);
             Assert.IsFalse(GameObject.Find("LEnvoyerCeSoir").GetComponent<Button>().interactable, "inactif tant que rien n'est choisi");
-            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "Ce soir", "aucune famille marquée");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, MafiaCleanCity.Tests.ValeurAttendue.Cle("conflit.bloc.ce_soir", "En cours"), "aucune famille marquée");   // table 80 : le marqueur réécrit
         }
 
         [UnityTest]
@@ -380,7 +380,7 @@ namespace MafiaCleanCity.Operational.Tests
             RacineEcran().transform.Find("Corps/Contenu/Table/Famille_tarcum").GetComponent<Button>().onClick.Invoke();
             yield return null;
             Assert.AreEqual("tarcum", ecran.ChoixFamille);
-            Assert.AreEqual("Ce soir", TexteSous("Famille_tarcum", "CeSoir"), "la famille choisie porte « Ce soir »");
+            Assert.AreEqual(MafiaCleanCity.Tests.ValeurAttendue.Cle("conflit.bloc.ce_soir", "En cours"), TexteSous("Famille_tarcum", "CeSoir"), "la famille choisie porte le marqueur (table 80 : « En cours »)");
             Assert.AreEqual(4, CompterNoms(RacineEcran().transform, "Ecu"), "un écusson par famille, jamais un cinquième");
             Assert.IsNotNull(RacineEcran().transform.Find("Corps/Contenu/Table/Famille_tarcum/BordChoisi"),
                 "la ligne visée porte le filet chaud de la maquette");

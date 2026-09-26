@@ -84,7 +84,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreSame(MafiaCleanCity.Theme.DesignTokens.Current.hudSerifFont,
                 GameObject.Find("PhraseDEnvoi").GetComponent<TMPro.TextMeshProUGUI>().font,
                 "l'ordre résumé emploie la serif de la maquette");
-            Assert.AreEqual("Ce soir", GameObject.Find("CeSoir").GetComponent<TMPro.TextMeshProUGUI>().text);
+            Assert.AreEqual(MafiaCleanCity.Tests.ValeurAttendue.Cle("conflit.bloc.ce_soir", "En cours"), GameObject.Find("CeSoir").GetComponent<TMPro.TextMeshProUGUI>().text);   // table 80
             yield return Capturer(racine, "Assets/Screenshots/conflit_coup_choisi_deterministe.png");
         }
 
