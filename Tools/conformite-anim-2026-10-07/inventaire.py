@@ -97,7 +97,7 @@ residu = [r for r in rows if id(r) not in mapped]
 
 P("# Inventaire des animations — maquettes ↔ Unity (CLIENT-3, 07/10/2026)\n")
 P("Méthode : chaque maquette est chargée dans Chromium (Playwright) ; `document.getAnimations()` énumère les animations RÉELLES, rattachées à leur cadre (`.cadre`). Rien n'est lu à l'œil. Unité = une paire (écran, `@keyframes`) appliquée à ≥ 1 élément ; « instances » = éléments animés, tous cadres de l'écran réunis.\n")
-P("## A. ecrans-brennar-6.html (atelier `b7d8c1a`, 146 cadres) — %d animations réelles mesurées\n" % len(rows))
+P("## A. ecrans-brennar-6.html (atelier `d84c6eb`, 146 cadres) — %d animations réelles mesurées\n" % len(rows))
 P("| écran | @keyframes | instances | cadres animés / cadres de l'écran | gelées (paused) | cause dans la fiction | état Unity |")
 P("|---|---|---:|---:|---:|---|---|")
 for g, name, n, nc, ncad, np_, cause, un in tab:
@@ -110,10 +110,10 @@ for g, name, n, *_ in tab:
 P("Somme de contrôle A (paires, instances) par écran : " + " ; ".join("%s = %d, %d" % (g, a, b) for g, (a, b) in par_ecran.items()) + " ⇒ Σ paires = %d, Σ instances = %d." % (sum(a for a, b in par_ecran.values()), sum(b for a, b in par_ecran.values())))
 anim_cad = sorted({r["cadre"] for r in rows})
 P("Cadres portant ≥ 1 animation : %d sur %d. Les %d autres sont STATIQUES." % (len(anim_cad), d["ncadres"], d["ncadres"] - len(anim_cad)))
-gel_inst = sum(n for g, name, n, *_ in tab if g in GEL)
-P("Dont GELÉES par `figer.py` (ruling du 27/08 13h42, bloc `.serre6/.ecrin6/.labo6{animation-play-state:paused !important}`, que le ruling du soir « animé le truc » n'a pas levé dans le fichier) : %d instances, %d paires." % (gel_inst, sum(1 for t in tab if t[0] in GEL)))
+gel_inst = sum(1 for r in rows if r["state"] == "paused")
+P("Animations en PAUSE dans ce fichier : %d (avant le dégel du 07/10, atelier b7d8c1a : 491 sur 554, bloc `.serre6/.ecrin6/.labo6{animation-play-state:paused !important}` du ruling 27/08 13h42 ; levé par d84c6eb, ruling du soir « animé le truc »)." % gel_inst)
 P("")
-P("## B. hud-brennar-canon.html (atelier `b7d8c1a`) — ① Intérieur de district, lu dans le CSS (états `.tel.descente` / `.tel.jour` : le fichier ne les exerce qu'au clic)\n")
+P("## B. hud-brennar-canon.html (atelier `d84c6eb`) — ① Intérieur de district, lu dans le CSS (états `.tel.descente` / `.tel.jour` : le fichier ne les exerce qu'au clic)\n")
 P("| # | écran | type | élément | cause dans la fiction | état Unity | preuve |")
 P("|---:|---|---|---|---|---|---|")
 HUD = [
@@ -136,7 +136,7 @@ P("**Total B : %d lignes (4 @keyframes + 6 transitions) = %d présentes + %d par
 P("")
 P("## C. Maquettes à animation DÉFINIE mais NON APPLIQUÉE (0 instance mesurée)\n")
 P("- ④ `ecrans-brennar-accueil.html` : 6 `@keyframes` définis (goutte, derive, respire, osc, pulseRose, clign), **0 animation en cours** sur les 5 cadres → ④ est statique en maquette.")
-P("- `ecrans-brennar-6.html` : **13 `@keyframes` morts**. (a) `vnt6/hrz6/rep6/jrn6/dos6/bln6-lampe` ×6 : aucune règle ne les référence. (b) `vnt6/hrz6/rep6/jrn6/dos6/bln6-veille` ×6 : la règle `.X6 .veille6{animation:…}` existe mais AUCUN élément ne porte la classe `veille6` (0 `class=\"…veille6…\"`). (c) `mk-eclat` : la règle `.mar6 .prod .eclat` existe, 0 élément `.eclat` ⇒ sur le marché, des cinq animations annoncées par front.md (lampe, buée, éclat, veille, balayage) **quatre tournent, l'éclat des prismes n'est posé nulle part**.")
+P("- `ecrans-brennar-6.html` : 13 `@keyframes` étaient morts avant d84c6eb : 12 RETIRÉS (6 `*6-lampe` sans règle, 6 `*6-veille` sans élément `.veille6`, pages + chassis6.py + 6 générateurs) ; **`mk-eclat` RESTE** (hôte = grappe de prismes de la tuile Ash du marché, `generateur-marche.py:294`, qu'aucun cadre ne montre) : sur le marché, 4 des 5 animations annoncées tournent.")
 P("- `ecrans-brennar-conflit-proposes-2026-09-24.html` : 33 noms définis, 0 animation en cours (㉙ statique).")
 P("- Série 4 (`ecrans-brennar-4.html`), `-3`, `-5`, `-navigation`, `-7-lieutenant`, `-25-tutoriel`, `-34-composeur`, `-porte` : 0 animation en cours.")
 P("")

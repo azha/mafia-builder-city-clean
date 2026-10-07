@@ -2,34 +2,34 @@
 
 Méthode : chaque maquette est chargée dans Chromium (Playwright) ; `document.getAnimations()` énumère les animations RÉELLES, rattachées à leur cadre (`.cadre`). Rien n'est lu à l'œil. Unité = une paire (écran, `@keyframes`) appliquée à ≥ 1 élément ; « instances » = éléments animés, tous cadres de l'écran réunis.
 
-## A. ecrans-brennar-6.html (atelier `b7d8c1a`, 146 cadres) — 554 animations réelles mesurées
+## A. ecrans-brennar-6.html (atelier `d84c6eb`, 146 cadres) — 554 animations réelles mesurées
 
 | écran | @keyframes | instances | cadres animés / cadres de l'écran | gelées (paused) | cause dans la fiction | état Unity |
 |---|---|---:|---:|---:|---|---|
 | ③ Carte | `hl` | 3 | 3 / 3 | 0 | le halo doré du pin « VOUS ÊTES ICI » respire (6 s) : le district du joueur veille | absente — l'hôte (le pin « VOUS ÊTES ICI ») n'existe pas côté client (DistrictCellView.cs:95) |
-| ② Fiche — la serre | `sf` | 202 | 3 / 3 | 202 | chaque feuille pivote sur son pétiole (amplitude = santé : une plante qui souffre PEND) | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
-| ② Fiche — la serre | `drip` | 18 | 3 / 3 | 18 | le goutte-à-goutte tombe | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
-| ② Fiche — la serre | `derive` | 15 | 3 / 3 | 15 | la brume de la serre dérive | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
-| ② Fiche — la serre | `led` | 9 | 3 / 3 | 9 | les rampes de culture (LED) pulsent | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
-| ② Fiche — la serre | `spl` | 9 | 3 / 3 | 9 | la goutte éclabousse dans le godet | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
-| ② Fiche — la serre | `respire` | 9 | 3 / 3 | 9 | le pot respire (balancement lent) | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
-| ② Fiche — la serre | `tg` | 9 | 3 / 3 | 9 | la plante entière tangue | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
-| ② Fiche — la serre | `clign` | 5 | 2 / 3 | 5 | l'étiquette « à soigner » clignote (alerte) | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
-| ② Fiche — le labo | `bl` | 52 | 2 / 6 | 52 | les bulles de l'ébullition (nucléation → éclatement) | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
-| ② Fiche — le labo | `vp` | 14 | 2 / 6 | 14 | la vapeur monte dans la colonne | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
-| ② Fiche — le labo | `cd` | 8 | 2 / 6 | 8 | le condensat glisse dans le réfrigérant | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
-| ② Fiche — le labo | `fl` | 6 | 6 / 6 | 6 | l'eau du réfrigérant circule (stroke-dashoffset) | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
-| ② Fiche — le labo | `rl` | 4 | 2 / 6 | 4 | la surface du ballon roule | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
-| ② Fiche — le labo | `ch` | 4 | 2 / 6 | 4 | la résistance du chauffe-ballon / le témoin chauffe | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
-| ② Fiche — le labo | `ec` | 2 | 2 / 6 | 2 | l'écume ondule en surface | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
-| ② Fiche — le labo | `rd` | 2 | 2 / 6 | 2 | la goutte ride le collecteur | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
-| ② Fiche — le labo | `gt` | 2 | 2 / 6 | 2 | la goutte tombe du collecteur | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
-| ② Fiche — Ash (l'écrin) | `po` | 78 | 3 / 3 | 78 | la poussière flotte dans le faisceau | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
-| ② Fiche — Ash (l'écrin) | `sc` | 18 | 2 / 3 | 18 | les prismes d'Ash scintillent | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
-| ② Fiche — Ash (l'écrin) | `pe` | 18 | 3 / 3 | 18 | les pétales du lys de verre bougent | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
-| ② Fiche — Ash (l'écrin) | `am` | 3 | 3 / 3 | 3 | l'ampoule d'établi vacille | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
-| ② Fiche — Ash (l'écrin) | `ci` | 3 | 3 / 3 | 3 | la cire (bougie) respire | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
-| ② Fiche — Ash (l'écrin) | `cl` | 1 | 1 / 3 | 1 | le voyant clignote | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
+| ② Fiche — la serre | `sf` | 202 | 3 / 3 | 0 | chaque feuille pivote sur son pétiole (amplitude = santé : une plante qui souffre PEND) | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
+| ② Fiche — la serre | `drip` | 18 | 3 / 3 | 0 | le goutte-à-goutte tombe | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
+| ② Fiche — la serre | `derive` | 15 | 3 / 3 | 0 | la brume de la serre dérive | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
+| ② Fiche — la serre | `led` | 9 | 3 / 3 | 0 | les rampes de culture (LED) pulsent | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
+| ② Fiche — la serre | `spl` | 9 | 3 / 3 | 0 | la goutte éclabousse dans le godet | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
+| ② Fiche — la serre | `respire` | 9 | 3 / 3 | 0 | le pot respire (balancement lent) | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
+| ② Fiche — la serre | `tg` | 9 | 3 / 3 | 0 | la plante entière tangue | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
+| ② Fiche — la serre | `clign` | 5 | 2 / 3 | 0 | l'étiquette « à soigner » clignote (alerte) | absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte) |
+| ② Fiche — le labo | `bl` | 52 | 2 / 6 | 0 | les bulles de l'ébullition (nucléation → éclatement) | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
+| ② Fiche — le labo | `vp` | 14 | 2 / 6 | 0 | la vapeur monte dans la colonne | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
+| ② Fiche — le labo | `cd` | 8 | 2 / 6 | 0 | le condensat glisse dans le réfrigérant | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
+| ② Fiche — le labo | `fl` | 6 | 6 / 6 | 0 | l'eau du réfrigérant circule (stroke-dashoffset) | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
+| ② Fiche — le labo | `rl` | 4 | 2 / 6 | 0 | la surface du ballon roule | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
+| ② Fiche — le labo | `ch` | 4 | 2 / 6 | 0 | la résistance du chauffe-ballon / le témoin chauffe | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
+| ② Fiche — le labo | `ec` | 2 | 2 / 6 | 0 | l'écume ondule en surface | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
+| ② Fiche — le labo | `rd` | 2 | 2 / 6 | 0 | la goutte ride le collecteur | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
+| ② Fiche — le labo | `gt` | 2 | 2 / 6 | 0 | la goutte tombe du collecteur | absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur |
+| ② Fiche — Ash (l'écrin) | `po` | 78 | 3 / 3 | 0 | la poussière flotte dans le faisceau | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
+| ② Fiche — Ash (l'écrin) | `sc` | 18 | 2 / 3 | 0 | les prismes d'Ash scintillent | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
+| ② Fiche — Ash (l'écrin) | `pe` | 18 | 3 / 3 | 0 | les pétales du lys de verre bougent | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
+| ② Fiche — Ash (l'écrin) | `am` | 3 | 3 / 3 | 0 | l'ampoule d'établi vacille | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
+| ② Fiche — Ash (l'écrin) | `ci` | 3 | 3 / 3 | 0 | la cire (bougie) respire | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
+| ② Fiche — Ash (l'écrin) | `cl` | 1 | 1 / 3 | 0 | le voyant clignote | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
 | ㉑ Marché | `mk-veille` | 12 | 4 / 6 | 0 | la veille des voyants allumés | absente — écran NON MONTÉ (INDEX : « Market (non monté) ») |
 | ㉑ Marché | `mk-buee` | 6 | 2 / 6 | 0 | la buée du froid (marchandise réfrigérée) | absente — écran NON MONTÉ (INDEX : « Market (non monté) ») |
 | ㉑ Marché | `mk-scan` | 5 | 5 / 6 | 0 | le balayage du tablo (ligne cyan 2 px, 7,5 s) | absente — écran NON MONTÉ (INDEX : « Market (non monté) ») |
@@ -44,9 +44,9 @@ Méthode : chaque maquette est chargée dans Chromium (Playwright) ; `document.g
 **Total A : 34 paires (écran, @keyframes) · 554 instances · 554 animations mesurées dans le fichier · résidu non rattaché à un écran : 0.**
 Somme de contrôle A (paires, instances) par écran : ③ Carte = 1, 3 ; ② Fiche — la serre = 8, 276 ; ② Fiche — le labo = 9, 94 ; ② Fiche — Ash (l'écrin) = 6, 121 ; ㉑ Marché = 4, 26 ; ㉟ La vente = 1, 5 ; ㊱ L'horizon = 1, 5 ; ㊲ La réputation = 1, 7 ; ㊳ Le journal = 1, 6 ; ㊴ Le dossier = 1, 6 ; ㊵ La filière = 1, 5 ⇒ Σ paires = 34, Σ instances = 554.
 Cadres portant ≥ 1 animation : 54 sur 146. Les 92 autres sont STATIQUES.
-Dont GELÉES par `figer.py` (ruling du 27/08 13h42, bloc `.serre6/.ecrin6/.labo6{animation-play-state:paused !important}`, que le ruling du soir « animé le truc » n'a pas levé dans le fichier) : 491 instances, 23 paires.
+Animations en PAUSE dans ce fichier : 0 (avant le dégel du 07/10, atelier b7d8c1a : 491 sur 554, bloc `.serre6/.ecrin6/.labo6{animation-play-state:paused !important}` du ruling 27/08 13h42 ; levé par d84c6eb, ruling du soir « animé le truc »).
 
-## B. hud-brennar-canon.html (atelier `b7d8c1a`) — ① Intérieur de district, lu dans le CSS (états `.tel.descente` / `.tel.jour` : le fichier ne les exerce qu'au clic)
+## B. hud-brennar-canon.html (atelier `d84c6eb`) — ① Intérieur de district, lu dans le CSS (états `.tel.descente` / `.tel.jour` : le fichier ne les exerce qu'au clic)
 
 | # | écran | type | élément | cause dans la fiction | état Unity | preuve |
 |---:|---|---|---|---|---|---|
@@ -66,7 +66,7 @@ Dont GELÉES par `figer.py` (ruling du 27/08 13h42, bloc `.serre6/.ecrin6/.labo6
 ## C. Maquettes à animation DÉFINIE mais NON APPLIQUÉE (0 instance mesurée)
 
 - ④ `ecrans-brennar-accueil.html` : 6 `@keyframes` définis (goutte, derive, respire, osc, pulseRose, clign), **0 animation en cours** sur les 5 cadres → ④ est statique en maquette.
-- `ecrans-brennar-6.html` : **13 `@keyframes` morts**. (a) `vnt6/hrz6/rep6/jrn6/dos6/bln6-lampe` ×6 : aucune règle ne les référence. (b) `vnt6/hrz6/rep6/jrn6/dos6/bln6-veille` ×6 : la règle `.X6 .veille6{animation:…}` existe mais AUCUN élément ne porte la classe `veille6` (0 `class="…veille6…"`). (c) `mk-eclat` : la règle `.mar6 .prod .eclat` existe, 0 élément `.eclat` ⇒ sur le marché, des cinq animations annoncées par front.md (lampe, buée, éclat, veille, balayage) **quatre tournent, l'éclat des prismes n'est posé nulle part**.
+- `ecrans-brennar-6.html` : 13 `@keyframes` étaient morts avant d84c6eb : 12 RETIRÉS (6 `*6-lampe` sans règle, 6 `*6-veille` sans élément `.veille6`, pages + chassis6.py + 6 générateurs) ; **`mk-eclat` RESTE** (hôte = grappe de prismes de la tuile Ash du marché, `generateur-marche.py:294`, qu'aucun cadre ne montre) : sur le marché, 4 des 5 animations annoncées tournent.
 - `ecrans-brennar-conflit-proposes-2026-09-24.html` : 33 noms définis, 0 animation en cours (㉙ statique).
 - Série 4 (`ecrans-brennar-4.html`), `-3`, `-5`, `-navigation`, `-7-lieutenant`, `-25-tutoriel`, `-34-composeur`, `-porte` : 0 animation en cours.
 
