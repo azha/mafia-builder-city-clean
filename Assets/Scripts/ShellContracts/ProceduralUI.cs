@@ -1158,6 +1158,343 @@ namespace MafiaCleanCity.Shell
             return sprite;
         }
 
+        // ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+        // DÉCOR DE SCÈNE — les primitives du design `Tools/decor-de-scene-2026-10-07/DESIGN.md` (§3.3, §6 « Primitives »).
+        // Les briques de `DecorDeScene.Poser`. Aucune ne connaît une couleur : les arrêts arrivent RÉSOLUS (la `Teinte`
+        // du catalogue a déjà été lue par l'appelant) sous la forme `(float pos, Color c)` déjà employée par
+        // `DecorAuComptoir.DegradeVertical`. Toutes mettent en cache par une clé DÉRIVÉE DU CONTENU (revue ⊥ n°1, m1) :
+        // deux spécifications égales partagent une texture, deux spécifications différentes n'en partagent jamais une.
+        // ⚠️ Ce fichier reste sous la garde de provenance DA3 : aucune Color n'y est construite par un littéral — on part
+        //    d'une couleur NOMMÉE (`Color.clear`, `Color.white`, le paramètre) et on écrit ses canaux.
+        // ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+
+        /// <summary>La couleur d'un dégradé CSS à la position `t` de sa ligne : interpolation LINÉAIRE entre les deux
+        /// arrêts qui l'encadrent (comme CSS, revue ⊥ n°1 M4 — pas le cosinus de `VoileRadial`) ; avant le premier
+        /// arrêt sa couleur, après le dernier la sienne — c'est ce `t &gt; 1 ⇒ dernier arrêt` qui remplit les coins
+        /// d'un `DegradeRadialCercle`. Deux arrêts à la MÊME position font un bord dur (⑱ : `#3a1c0e 18px, #2b120c 18px`).
+        ///
+        /// ⚠️ Interpolation en alpha PRÉMULTIPLIÉ, comme les navigateurs (CSS Images 4 §3.4.2) : `#4a5057 → transparent`
+        /// (les points de la tôle ⑭) garde la teinte `#4a5057` en s'éteignant, au lieu de virer au noir à mi-course,
+        /// ce qu'un `Color.Lerp` direct ferait.</summary>
+        public static Color EchantillonDeDegrade((float pos, Color c)[] arrets, float t)
+        {
+            if (arrets == null || arrets.Length == 0) return Color.clear;
+            if (t <= arrets[0].pos) return arrets[0].c;
+            for (int i = 1; i < arrets.Length; i++)
+            {
+                if (t <= arrets[i].pos)
+                {
+                    float span = arrets[i].pos - arrets[i - 1].pos;
+                    float u = span <= 0f ? 1f : (t - arrets[i - 1].pos) / span;
+                    return MelangePremultiplie(arrets[i - 1].c, arrets[i].c, u);
+                }
+            }
+            return arrets[arrets.Length - 1].c;
+        }
+
+        private static Color MelangePremultiplie(Color a, Color b, float u)
+        {
+            float alpha = Mathf.Lerp(a.a, b.a, u);
+            Color m = Color.clear;   // couleur NOMMÉE puis ses canaux : le patron du fichier (garde DA3)
+            if (alpha <= 1e-6f)
+            {
+                m.r = Mathf.Lerp(a.r, b.r, u);
+                m.g = Mathf.Lerp(a.g, b.g, u);
+                m.b = Mathf.Lerp(a.b, b.b, u);
+                m.a = 0f;
+                return m;
+            }
+            m.r = Mathf.Lerp(a.r * a.a, b.r * b.a, u) / alpha;
+            m.g = Mathf.Lerp(a.g * a.a, b.g * b.a, u) / alpha;
+            m.b = Mathf.Lerp(a.b * a.a, b.b * b.a, u) / alpha;
+            m.a = alpha;
+            return m;
+        }
+
+        /// <summary>La longueur de la LIGNE d'un `linear-gradient(θ)` sur une boîte W×H — CSS Images 3 §3.1.1 :
+        /// `|W·sin θ| + |H·cos θ|` (la ligne passe par le centre et ses deux bouts sont sur les perpendiculaires qui
+        /// touchent les coins). C'est sur ELLE que se résolvent les `%` et les `px` des arrêts : un arrêt écrit en px
+        /// (⑱ : `18px`) devient la fraction `18 / LongueurLigneDeDegrade(θ, Wcss, Hcss)` — c'est l'appelant qui
+        /// convertit, parce que lui seul connaît la boîte en px CSS (la mesure du cadre), et la primitive ne reçoit que
+        /// des fractions.</summary>
+        public static float LongueurLigneDeDegrade(float angleDeg, float largeur, float hauteur)
+        {
+            float rad = angleDeg * Mathf.Deg2Rad;
+            return Mathf.Abs(largeur * Mathf.Sin(rad)) + Mathf.Abs(hauteur * Mathf.Cos(rad));
+        }
+
+        /// <summary>Un `linear-gradient(θ, arrêts…)` à N arrêts — ce que `LinearGradient` (2 arrêts) et
+        /// `DecorAuComptoir.DegradeVertical` (180° seulement) ne savent pas faire ensemble : la famille A du décor écrit
+        /// `178deg` à 3 arrêts, ㉒ `158deg`, ⑭ `90deg` (revue ⊥ n°1 B1).
+        ///
+        /// Convention CSS : 0° monte, 90° va à droite, 180° descend, les degrés tournent dans le sens horaire. En espace
+        /// de TEXTURE (y vers le HAUT) la direction vaut donc (sin θ, +cos θ) — signe vérifié sur 180° (vers le bas de la
+        /// texture) et 90° (vers la droite), comme `LinearGradient` l'avait payé (un 160° rendu en 20°).
+        ///
+        /// ⚠️ LA BOÎTE COMPTE : à 178° sur un cadre 300×583, les deux bords d'une même ligne ne sont PAS à la même
+        /// position de la ligne (c'est l'oblique que le juge voit). La texture est donc générée À L'ASPECT DE LA BOÎTE
+        /// (`largeurTexturePx` × `largeurTexturePx·H/W`) et étirée dessus : l'angle reste celui du CSS. Hauteur bornée
+        /// à 1024 px (Q3 du design : coût mémoire à mesurer au code).</summary>
+        public static Sprite DegradeLineaire(float angleDeg, (float pos, Color c)[] arrets,
+                                             float largeurBoite, float hauteurBoite, int largeurTexturePx = 128)
+        {
+            float W = Mathf.Max(1f, largeurBoite), H = Mathf.Max(1f, hauteurBoite);
+            int w = Mathf.Max(4, largeurTexturePx);
+            int h = Mathf.Clamp(Mathf.RoundToInt(w * H / W), 4, 1024);
+            string key = $"deglin:{angleDeg:F2}:{W:F1}x{H:F1}:{w}x{h}:{CleArrets(arrets)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            var tex = NewTexture(w, h);
+            var pixels = new Color[w * h];
+            float rad = angleDeg * Mathf.Deg2Rad;
+            var axe = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad));
+            float longueur = Mathf.Max(1e-4f, LongueurLigneDeDegrade(angleDeg, W, H));
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    // Coordonnées de la BOÎTE, centrées : la projection sur l'axe, rapportée à la longueur de la ligne,
+                    // vaut exactement −½ au coin de départ et +½ au coin d'arrivée (c'est la définition CSS).
+                    float bx = ((x + 0.5f) / w - 0.5f) * W, by = ((y + 0.5f) / h - 0.5f) * H;
+                    float t = (bx * axe.x + by * axe.y) / longueur + 0.5f;
+                    pixels[y * w + x] = EchantillonDeDegrade(arrets, t);
+                }
+            }
+            return Terminer(tex, pixels, key);
+        }
+
+        /// <summary>Un `radial-gradient(rx ry at cx cy, arrêts…)` à N arrêts, ELLIPTIQUE, linéaire par arrêt.
+        ///
+        /// `cx`, `cy` : le foyer en FRACTIONS de la boîte, **y depuis le HAUT comme en CSS** (revue ⊥ n°1 M4 : le
+        /// constructeur n'a plus de conversion à faire, la primitive porte la convention) ; `rx`, `ry` : les demi-axes en
+        /// fraction de la LARGEUR et de la HAUTEUR de la boîte (`radial-gradient(72% 40% at 50% 22%)` ⇒ .72, .40, .5,
+        /// .22). Les `%` d'un dégradé CSS se résolvent sur la boîte de l'élément qui le PORTE (revue n°3 B1) : la texture
+        /// est CARRÉE et en fractions, l'Image l'étire sur le support, et chaque `%` reste exact à l'étirement.
+        /// `t &gt; 1` (hors de l'ellipse) ⇒ dernier arrêt, comme CSS.</summary>
+        public static Sprite DegradeRadial(float cx, float cy, float rx, float ry,
+                                           (float pos, Color c)[] arrets, int taillePx = 128)
+        {
+            int d = Mathf.Max(8, taillePx);
+            string key = $"degrad:{d}:{cx:F4},{cy:F4}:{rx:F4},{ry:F4}:{CleArrets(arrets)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            var tex = NewTexture(d, d);
+            var pixels = new Color[d * d];
+            float ex = Mathf.Max(1e-4f, rx), ey = Mathf.Max(1e-4f, ry);
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    float u = (x + 0.5f) / d;          // fraction de largeur, depuis la gauche
+                    float v = 1f - (y + 0.5f) / d;     // fraction de hauteur depuis le HAUT : y de texture monte, y CSS descend
+                    float nx = (u - cx) / ex, ny = (v - cy) / ey;
+                    pixels[y * d + x] = EchantillonDeDegrade(arrets, Mathf.Sqrt(nx * nx + ny * ny));
+                }
+            }
+            return Terminer(tex, pixels, key);
+        }
+
+        /// <summary>Le rayon d'un `radial-gradient(circle farthest-corner at cx cy)` sur un rect RÉEL W×H : la distance
+        /// du foyer au coin le plus éloigné, `√(max(cx·W, (1−cx)·W)² + max(cy·H, (1−cy)·H)²)`. Pure, et c'est voulu :
+        /// `CercleDeSupport` la rappelle à CHAQUE changement de rect du support (revue ⊥ n°5 A) — mesuré sur ⑮ ⑰
+        /// (`mesurer-cercle.cjs`) : corkboard 298×504,05 → 454,0 px ; 298×400 → 382,0 px.</summary>
+        public static float RayonCoinLePlusLoin(float largeur, float hauteur, float cx, float cy)
+        {
+            float dx = Mathf.Max(cx * largeur, (1f - cx) * largeur);
+            float dy = Mathf.Max(cy * hauteur, (1f - cy) * hauteur);
+            return Mathf.Sqrt(dx * dx + dy * dy);
+        }
+
+        /// <summary>Le disque d'un `circle farthest-corner` : sprite CARRÉ, foyer au centre, **r = 1 au milieu de
+        /// chaque bord** (t = distance au centre / demi-côté), les coins (t = √2) au dernier arrêt. Il se pose sur une
+        /// Image carrée de côté `2·RayonCoinLePlusLoin(…)` centrée sur le foyer et clippée par le `RectMask2D` de
+        /// `Decor/Support` (§3.3) — un vrai cercle, sans étirement, quel que soit le rect du support. 128 px suffisent :
+        /// l'Image est étirée et le filtrage bilinéaire lisse un dégradé à 3 arrêts.</summary>
+        public static Sprite DegradeRadialCercle((float pos, Color c)[] arrets, int taillePx = 128)
+        {
+            int d = Mathf.Max(8, taillePx);
+            string key = $"degcercle:{d}:{CleArrets(arrets)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            var tex = NewTexture(d, d);
+            var pixels = new Color[d * d];
+            float r = d / 2f;
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    float dx = x + 0.5f - r, dy = y + 0.5f - r;
+                    pixels[y * d + x] = EchantillonDeDegrade(arrets, Mathf.Sqrt(dx * dx + dy * dy) / r);
+                }
+            }
+            return Terminer(tex, pixels, key);
+        }
+
+        /// <summary>Le masque d'un rectangle arrondi À QUATRE RAYONS (`border-radius: tl tr br bl`), 9-slice, bordure =
+        /// le plus grand rayon. `RoundedRectMask(int)` n'en a qu'un : ⑤ écrit 26/26/0/0 — sa base touche le bas du
+        /// cadre (revue ⊥ n°3 B2). Un rayon nul laisse le coin CARRÉ. Avec quatre rayons égaux, le résultat est pixel
+        /// pour pixel celui de la surcharge à un rayon (même taille de texture, même rampe) — la surcharge existante
+        /// ne bouge pas, et le test le mesure.
+        ///
+        /// Ordre des rayons : celui du CSS (haut-gauche, haut-droit, bas-droit, bas-gauche), le HAUT étant le haut de
+        /// l'écran — en espace de texture (y vers le haut) le haut est `y ≥ d − R`.</summary>
+        public static Sprite RoundedRectMask(int rayonHautGauche, int rayonHautDroit, int rayonBasDroit, int rayonBasGauche)
+        {
+            int tl = Mathf.Max(0, rayonHautGauche), tr = Mathf.Max(0, rayonHautDroit);
+            int br = Mathf.Max(0, rayonBasDroit), bl = Mathf.Max(0, rayonBasGauche);
+            string key = $"roundmask4:{tl}:{tr}:{br}:{bl}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int R = Mathf.Max(1, Mathf.Max(Mathf.Max(tl, tr), Mathf.Max(br, bl)));
+            int d = R * 2 + 3;   // comme `RoundedRectMask(int)` : 1 px de marge autour du centre pour l'anti-crénelage
+            var tex = NewTexture(d);
+            var pixels = new Color[d * d];
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    float alpha = 1f;
+                    bool gauche = x < R, droite = x >= d - R, bas = y < R, haut = y >= d - R;
+                    if (gauche && haut) alpha = AlphaDeCoin(x, y, tl, tl, d - tl);
+                    else if (droite && haut) alpha = AlphaDeCoin(x, y, tr, d - tr, d - tr);
+                    else if (droite && bas) alpha = AlphaDeCoin(x, y, br, d - br, br);
+                    else if (gauche && bas) alpha = AlphaDeCoin(x, y, bl, bl, bl);
+                    Color px = Color.white;
+                    px.a = alpha;
+                    pixels[y * d + x] = px;
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sprite = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f,
+                0, SpriteMeshType.FullRect, new Vector4(R, R, R, R));
+            sprite.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sprite;
+            return sprite;
+        }
+
+        /// <summary>L'alpha d'un pixel dans la zone d'influence d'UN coin de rayon `r` dont le centre de courbure est
+        /// en (`ccx`, `ccy`) : la même rampe que `RoundedRectMask(int)` (`(r − dist) + ½`, bornée), et 1 hors du carré
+        /// r×r du coin — un rayon nul ne touche donc à rien.</summary>
+        private static float AlphaDeCoin(int x, int y, int r, float ccx, float ccy)
+        {
+            if (r <= 0) return 1f;
+            float px = x + 0.5f, py = y + 0.5f;
+            bool dansLeCarre = Mathf.Abs(px - ccx) <= r && Mathf.Abs(py - ccy) <= r;
+            if (!dansLeCarre) return 1f;
+            float dist = Mathf.Sqrt((px - ccx) * (px - ccx) + (py - ccy) * (py - ccy));
+            return Mathf.Clamp01((r - dist) + 0.5f);
+        }
+
+        /// <summary>Une TUILE de points — `radial-gradient(circle, teinte r1, transparent r2)` répété en
+        /// `background-size: pas pas` avec `background-position: dx dy` (la tôle ⑭ : pas 26, r 1,4 → 1,9 ; la planche ㉘ :
+        /// pas 9 et 13, décalages 0,0 et 4,6). À poser en `Image.Type.Tiled`.
+        ///
+        /// Le point est au CENTRE de la tuile, déplacé de (dx, dy) — dx vers la droite, dy vers le BAS comme en CSS — et
+        /// ENROULÉ : la tuile reste périodique, un point poussé hors d'un bord rentre par l'autre. Bord DOUX de r1 à r2
+        /// (plein → transparent, linéaire : revue n°2 m3) ; seule l'opacité varie, la teinte reste.
+        /// `surEchantillonnage` = px de texture par px CSS : un rayon de 1,1 px n'existe pas dans une texture au px —
+        /// l'appelant règle `Image.pixelsPerUnitMultiplier` pour que la tuile mesure `pas` px CSS à l'écran.</summary>
+        public static Sprite TuilePoints(float pasPx, float rayonPleinPx, float rayonFinPx, Color teinte,
+                                         Vector2 decalagePx, int surEchantillonnage = 4)
+        {
+            int k = Mathf.Max(1, surEchantillonnage);
+            int n = Mathf.Max(2, Mathf.RoundToInt(pasPx * k));
+            string key = $"tuilepts:{pasPx:F2}:{rayonPleinPx:F2}:{rayonFinPx:F2}:{decalagePx.x:F2},{decalagePx.y:F2}:{k}:{ColorKey(teinte)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            float r1 = Mathf.Max(0f, rayonPleinPx) * k;
+            float r2 = Mathf.Max(rayonFinPx * k, r1 + 1e-3f);
+            float cx = Mathf.Repeat(n * 0.5f + decalagePx.x * k, n);
+            float cy = Mathf.Repeat(n * 0.5f - decalagePx.y * k, n);   // y CSS descend, y de texture monte
+            var tex = NewTexture(n, n);
+            tex.wrapMode = TextureWrapMode.Repeat;
+            var pixels = new Color[n * n];
+            for (int y = 0; y < n; y++)
+            {
+                for (int x = 0; x < n; x++)
+                {
+                    float dx = DistanceEnroulee(x + 0.5f, cx, n), dy = DistanceEnroulee(y + 0.5f, cy, n);
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = dist <= r1 ? 1f : dist >= r2 ? 0f : (r2 - dist) / (r2 - r1);
+                    Color c = teinte;
+                    c.a *= a;
+                    pixels[y * n + x] = c;
+                }
+            }
+            return Terminer(tex, pixels, key);
+        }
+
+        /// <summary>Une TUILE de rayures — `repeating-linear-gradient(θ, teinte 0 e, transparent e pas)`, à poser en
+        /// `Image.Type.Tiled`. Même convention d'angle que `DegradeLineaire`.
+        ///
+        /// ⚠️ Une tuile CARRÉE n'est périodique que si le motif l'est le long de x ET de y : exact pour 0°/90° (côté =
+        /// pas) et ±45° (côté = pas·√2) ; pour un autre angle la tuile est APPROCHÉE — une couture au raccord — et on
+        /// le dit ici plutôt que de le cacher. Le catalogue (§4) n'emploie aucune rayure : la primitive existe parce que
+        /// le vocabulaire (§2) la nomme.</summary>
+        public static Sprite TuileRayures(float angleDeg, float pasPx, float epaisseurPx, Color teinte, int surEchantillonnage = 4)
+        {
+            int k = Mathf.Max(1, surEchantillonnage);
+            float rad = angleDeg * Mathf.Deg2Rad;
+            float s = Mathf.Sin(rad), co = Mathf.Cos(rad);
+            bool axial = Mathf.Abs(s) < 1e-3f || Mathf.Abs(co) < 1e-3f;
+            bool diagonal = Mathf.Abs(Mathf.Abs(s) - Mathf.Abs(co)) < 1e-3f;
+            float cote = diagonal && !axial ? pasPx * Mathf.Sqrt(2f) : pasPx;
+            int n = Mathf.Max(2, Mathf.RoundToInt(cote * k));
+            string key = $"tuileray:{angleDeg:F2}:{pasPx:F2}:{epaisseurPx:F2}:{k}:{ColorKey(teinte)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            float pas = Mathf.Max(1e-3f, pasPx), e = Mathf.Clamp(epaisseurPx, 0f, pas);
+            var tex = NewTexture(n, n);
+            tex.wrapMode = TextureWrapMode.Repeat;
+            var pixels = new Color[n * n];
+            for (int y = 0; y < n; y++)
+            {
+                for (int x = 0; x < n; x++)
+                {
+                    float bx = (x + 0.5f) / k, by = (y + 0.5f) / k;   // px CSS depuis le coin bas-gauche de la tuile
+                    float phase = Mathf.Repeat(bx * s + by * co, pas);
+                    Color c = teinte;
+                    c.a *= phase < e ? 1f : 0f;
+                    pixels[y * n + x] = c;
+                }
+            }
+            return Terminer(tex, pixels, key);
+        }
+
+        private static float DistanceEnroulee(float a, float b, float periode)
+        {
+            float d = Mathf.Abs(a - b);
+            return Mathf.Min(d, periode - d);
+        }
+
+        private static string CleArrets((float pos, Color c)[] arrets)
+        {
+            if (arrets == null) return "-";
+            var sb = new System.Text.StringBuilder();
+            foreach (var a in arrets) sb.Append(a.pos.ToString("F4")).Append('@').Append(ColorKey(a.c)).Append(';');
+            return sb.ToString();
+        }
+
+        /// <summary>Écrit les pixels, crée le sprite (`FullRect`, sans bordure), le met en cache sous `key`.</summary>
+        private static Sprite Terminer(Texture2D tex, Color[] pixels, string key)
+        {
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            Sprite sp = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect);
+            sp.hideFlags = HideFlags.HideAndDontSave;
+            cache[key] = sp;
+            return sp;
+        }
+
+        private static Texture2D NewTexture(int w, int h) => new Texture2D(w, h, TextureFormat.RGBA32, false)
+        {
+            wrapMode = TextureWrapMode.Clamp,
+            filterMode = FilterMode.Bilinear,
+            hideFlags = HideFlags.HideAndDontSave,
+        };
+
         private static Texture2D NewTexture(int d) => new Texture2D(d, d, TextureFormat.RGBA32, false)
         {
             wrapMode = TextureWrapMode.Clamp,
