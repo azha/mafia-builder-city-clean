@@ -1,0 +1,81 @@
+== images lues ==
+   ouvre s6-137.png                                                                                       1080x2102
+   ouvre s6-140.png                                                                                       1080x2102
+   ouvre s6-141.png                                                                                       1080x2102
+   ouvre E10_Filire_1080x2400.png                                                                         1080x2400
+   ouvre E10_Filire_1080x1920.png                                                                         1080x1920
+   ouvre E10_Filire_bas_1080x1920.png                                                                     1080x1920
+
+== CONTRÔLE POSITIF — ce que l instrument trouve ÉGAL ==
+ 1. largeur ref 1080 = largeur capture 1080 → facteur 1.000
+ 2. la plaque de titre « La filière » + sa ligne de sous-titre espacée + le FILET D OR
+    en dessous existent des deux côtés
+    or du titre      ref (242, 201, 107)  capt (242, 201, 106)
+ 3. TROIS tuiles de compteur côte à côte des deux côtés, valeurs « 00 » en CYAN :
+    cyan ref (127, 212, 217)  capt (127, 212, 217)
+ 4. l ordre des tuiles est le même : ÉTAPES · (propres) · ÉCARTS
+ 5. un geste doré bordé en filet, libellé en capitales espacées, des deux côtés
+    or du geste      ref (242, 201, 107)  capt (242, 201, 106)
+ 6. une plaque d explication titrée (sur-titre gris espacé + titre sérif + corps) des deux côtés
+ 7. contraste du titre / fond  ref 11.92:1  capt 11.44:1
+ 8. tous les contrastes de texte de la capture ≥ 5:1 (détail en fin de sortie)
+ 9. aucune chaîne anglaise en jeu — la ref 137 en porte (« node · dirty », « node · partial »)
+10. CONTRÔLE NÉGATIF du détecteur de filet d or : il rend 0 px sur une colonne de fond nu
+
+== A1 · le CADRE D OR qui enferme tout le panneau — ABSENT ==
+  ref140 ligne y=1200 : le montant GAUCHE du cadre est à x 21..23, valeur de gris 142
+         (le fond immédiatement à côté vaut 15 à 25)
+  ref 137  colonne x 18..28, y 440..2080 : 1627 lignes portent un montant clair sur 1640
+  ref 140  colonne x 18..28, y 440..2080 : 1627 lignes portent un montant clair sur 1640
+  ref 141  colonne x 18..28, y 440..2080 : 1627 lignes portent un montant clair sur 1640
+  capt2400 colonne x 18..28, même rôle               :    0 lignes
+  capt1920 colonne x 18..28, même rôle               :    0 lignes
+  → le panneau de la maquette est CERNÉ d un filet d or continu sur ses 4 côtés ;
+    en jeu il n y a aucun cerne : les blocs flottent sur le fond.
+
+== A2 · l ORDRE DE LECTURE : le geste a quitté le bas de l écran ==
+  (bandes repérées par le FILET doré : >150 px dorés sur la ligne)
+  ref 140 : filet du geste à y 1952..1954   → le geste est le DERNIER bloc, à 92.9 % de la hauteur
+  ref 137 : filets du geste à y 1902..1904 et 1993..1995 → boîte y 1902..1995, centre à 92.7 %
+  capt    : filets du geste à y 885..887 et 977..979 → boîte y 885..979, centre à 38.8 % (2400) / 48.5 % (1920)
+  RANG dans la colonne de contenu : ref = 5ᵉ et DERNIER bloc · capture = 3ᵉ sur 5,
+  suivi de DEUX plaques d explication. Le bas de l écran n est plus une action.
+
+== A3 · la boîte de la CHAÎNE (le cœur de l écran) ==
+  ref 137 : la chaîne est une boîte bordée contenant 4 maillons reliés, y 785..1540
+  ref 140 : la MÊME boîte, vide, avec une phrase italique CENTRÉE en son milieu
+            (« Votre planque est prête. / La filière, elle, reste à monter. ») — y 785..1555
+            hauteur 770 px = 36.6 % de l écran
+  ref 141 : la même boîte, autre phrase
+  capt    : aucune boîte de chaîne. Le message d état est une plaque ORDINAIRE,
+            texte à GAUCHE, non italique, y 648..720 (h=72 px = 3,0 %% de l écran)
+  → le contenant de la chaîne disparaît avec son contenu : rien ne dit où ira la filière.
+
+== B1 · le libellé de la tuile du milieu ==
+  ref 137 / 140 / 141 : « PROPRES »      capt : « PROPRE AU BOUT »
+
+== B2 · le vide ==
+  ref 140   plus longue bande SANS encre :   17 px (y 2085..2101) =  0.8 %
+  ref 137   plus longue bande SANS encre :   17 px (y 2085..2101) =  0.8 %
+  capt2400  plus longue bande SANS encre :  528 px (y 1253..1780) = 22.0 %
+  capt1920  plus longue bande SANS encre :   60 px (y 1639..1698) =  3.1 %
+
+== C · indicateur de défilement (attendu : LISEZMOI, cause 7) ==
+  capt2400     colonne x=1026 :   37 px allumés  plages longues []  teinte -
+  capt1920     colonne x=1026 :  626 px allumés  plages longues [(665, 1259, 595)]  teinte (129, 122, 102)
+  capt_bas1920 colonne x=1026 :  626 px allumés  plages longues [(670, 1264, 595)]  teinte (129, 122, 102)
+  → ascenseur PRÉSENT à 1920 (le contenu déborde), ABSENT à 2400 (il tient) : conforme.
+    Il est tracé à x 1024..1028, soit 16 px À L INTÉRIEUR du bord droit des plaques (x=1044) :
+    il passe SUR elles, sans masquer de texte.
+
+== contrastes des textes de la capture ==
+  titre « La filière »         encre (242, 201, 106)  fond (22, 22, 28)     → 11.44:1
+  sous-titre AUCUN NŒUD        encre (242, 201, 106)  fond (22, 22, 28)     → 11.44:1
+  valeur 00 (cyan)             encre (127, 212, 217)  fond (22, 22, 28)     → 10.57:1
+  libellé ÉTAPES               encre (138, 151, 156)  fond (22, 22, 28)     →  5.99:1
+  phrase d état                encre (234, 224, 200)  fond (22, 22, 28)     → 13.72:1
+  libellé BLANCHIR             encre (242, 201, 106)  fond (22, 22, 28)     → 11.44:1
+  indice sous le geste         encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1
+  sur-titre MAILLON MANQUANT   encre (185, 173, 146)  fond (22, 22, 28)     →  8.11:1
+  titre de plaque              encre (234, 224, 200)  fond (22, 22, 28)     → 13.72:1
+  corps de plaque              encre (185, 173, 146)  fond (22, 22, 28)     →  8.11:1

@@ -1,0 +1,5 @@
+cadre-54.png	Envoyer — la ficelle à tendre
+cadre-55.png	En route — ça serpente
+cadre-56.png	Livré — mais la route s’use
+cadre-57.png	La route est coupée
+cadre-58.png	Ils ont pris Lt. Tull

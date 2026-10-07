@@ -1,0 +1,37 @@
+㉝ demolition  ecran_demolition/reference-1080x2102.png  1080x2102
+     vs cadre 79   diff moyenne  52.811   px>8 :  32.99 %  
+     vs cadre 80   diff moyenne   1.283   px>8 :   1.65 %    <<< IDENTIQUE
+     vs cadre 81   diff moyenne   3.177   px>8 :   3.13 %  
+     vs cadre 82   diff moyenne   5.006   px>8 :   8.41 %  
+     vs cadre 83   diff moyenne  53.321   px>8 :  35.87 %  
+     vs cadre 84   diff moyenne  54.233   px>8 :  41.44 %  
+㉓ boutique    compte/reference-㉓-1080x2102.png  1080x2102
+     vs cadre 98   diff moyenne   0.627   px>8 :   0.65 %    <<< IDENTIQUE
+     vs cadre 99   diff moyenne  15.220   px>8 :  20.99 %  
+     vs cadre 100  diff moyenne   3.864   px>8 :   3.53 %  
+⑮ police       police/reference-⑮-1080x2102.png  1080x2102
+     vs cadre 31   diff moyenne  72.903   px>8 :  89.53 %  
+     vs cadre 32   diff moyenne   0.165   px>8 :   0.13 %    <<< IDENTIQUE
+     vs cadre 33   diff moyenne  85.764   px>8 :  81.17 %  
+     vs cadre 34   diff moyenne  83.475   px>8 :  81.14 %  
+     vs cadre 35   diff moyenne  99.792   px>8 :  81.05 %  
+⑰ police       police/reference-⑰-1080x2102.png  1080x2102
+     vs cadre 31   diff moyenne   0.166   px>8 :   0.13 %    <<< IDENTIQUE
+     vs cadre 32   diff moyenne  72.902   px>8 :  89.53 %  
+     vs cadre 33   diff moyenne  65.885   px>8 :  76.06 %  
+     vs cadre 34   diff moyenne  70.195   px>8 :  73.27 %  
+     vs cadre 35   diff moyenne  71.889   px>8 :  77.54 %  
+㊵ filiere     screen_c2/reference-1080x2102.png  1080x2102
+     vs cadre 137  diff moyenne   0.904   px>8 :   1.82 %    <<< IDENTIQUE
+     vs cadre 138  diff moyenne   6.341   px>8 :   8.01 %  
+     vs cadre 139  diff moyenne  14.576   px>8 :  23.57 %  
+     vs cadre 140  diff moyenne  12.881   px>8 :  26.58 %  
+     vs cadre 141  diff moyenne  13.458   px>8 :  30.48 %  
+     vs cadre 142  diff moyenne  15.711   px>8 :  20.52 %  
+⑭ compression  compression/reference-1080x2102.png  1080x2102
+     vs cadre 25   diff moyenne   0.316   px>8 :   0.25 %    <<< IDENTIQUE
+     vs cadre 26   diff moyenne  54.088   px>8 :  47.61 %  
+     vs cadre 27   diff moyenne  51.445   px>8 :  48.06 %  
+     vs cadre 28   diff moyenne  22.727   px>8 :  24.94 %  
+     vs cadre 29   diff moyenne  21.052   px>8 :  19.49 %  
+     vs cadre 30   diff moyenne  48.898   px>8 :  44.86 %  

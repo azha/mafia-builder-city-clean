@@ -1,0 +1,48 @@
+== images lues ==
+   ouvre s4-25.png                                                                                        1080x2102
+   ouvre s4-29.png                                                                                        1080x2102
+   ouvre E08_Lasemaine_1080x2400.png                                                                      1080x2400
+   ouvre E08_Lasemaine_1080x1920.png                                                                      1080x1920
+
+== CONTRÔLE POSITIF — ce que l instrument trouve ÉGAL ==
+ 1. largeur ref 1080 = largeur capture 1080 → facteur 1.000
+ 2. la plaque « OÙ EN EST LA TENSION » existe des deux côtés, même rôle, même place relative
+ 3. or du titre de plaque       ref (242, 201, 107)  capt (242, 201, 106)
+ 4. gris du corps de plaque     ref (185, 173, 146)  capt (185, 173, 146)  (IDENTIQUE)
+ 5. le corps de plaque porte le MÊME TEXTE, sur 3 lignes des deux côtés
+ 6. le titre de plaque porte le MÊME TEXTE : « Rien ne presse — aucune semaine en vue »
+ 7. contraste titre de plaque / fond  ref 11.31:1  capt 12.34:1
+ 8. le chrome haut (ARGENT · manomètre de CHALEUR · JOUR + moment) a la même structure
+ 9. tous les contrastes de texte de la capture ≥ 8,7:1 (détail en fin de sortie)
+10. CONTRÔLE NÉGATIF du détecteur de teintes : « or » rend 25 930 px côté ref ET 7 339 côté
+    capture — il n est donc PAS aveugle à la capture ; seuls teal et rouge y rendent 0.
+
+== A1 · le MANOMÈTRE DE TENSION, héros de l écran — ABSENT ==
+  géométrie dans la référence (bbox des px dorés, bande y 230..760) :
+    ref 25 : x 168..908 (l=740 px = 68.5 % de la largeur), y 250..759 (h=509 px = 24.2 % de la hauteur)
+    ref 29 : x 187..892 (l=705 px = 65.3 % de la largeur), y 250..759 (h=509 px = 24.2 % de la hauteur)
+  les deux grandeurs qui ne peuvent venir QUE du cadran, bande y 300..720, x 150..930 :
+    secteur TEAL   ref29   8378  ref25   8378  |  capt2400      0  capt1920      0
+    secteur ROUGE  ref29   8448  ref25   8448  |  capt2400      0  capt1920      0
+    (témoin) OR   ref29  25930  ref25  25929  |  capt2400   7339  capt1920   7339
+  → 0 px teal et 0 px rouge aux DEUX résolutions : ni arc, ni secteurs, ni aiguille.
+    La grandeur « tension » n est plus rendue que par deux mots.
+
+== B1 · la ligne d état sous le cadran ==
+  ref 29  « Calme — vos affaires respirent » : sérif DORÉ, bbox x 205..874 y 744..789, encre (229, 190, 101)
+  capt    « TENSION CALME · AUCUNE SEMAINE » : sans-sérif GRIS capitales, encre (185, 173, 146), px dorés = 0
+
+== B2 · le vide (conséquence de A1 + du décor assumé) ==
+  ref 29    plus longue bande SANS encre :   17 px (y 2085..2101) =  0.8 % de la hauteur
+  ref 25    plus longue bande SANS encre :   17 px (y 2085..2101) =  0.8 % de la hauteur
+  capt2400  plus longue bande SANS encre : 1458 px (y  721..2178) = 60.8 % de la hauteur
+  capt1920  plus longue bande SANS encre :  978 px (y  721..1698) = 50.9 % de la hauteur
+  la dernière encre de contenu de la capture est à y=720 (2400) et y=720 (1920)
+  dans la référence, le contenu descend jusqu à y=1195 (bas de la plaque), le reste est l ART PEINT
+
+== contrastes des textes de la capture ==
+  titre LA SEMAINE         encre (242, 201, 106)  fond (13, 13, 13)     → 12.34:1
+  sous-titre gris          encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1
+  intitulé de plaque       encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1
+  titre de plaque (or)     encre (242, 201, 106)  fond (13, 13, 13)     → 12.34:1
+  corps de plaque          encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1

@@ -1,0 +1,12 @@
+   ouvre E06_Dmolition_1080x2400.png            1080x2400   et E06_Dmolition_bas_1080x2400.png        1080x2400
+      diff moyenne   0.000   px>8   0.00 %   → IDENTIQUES → rien n a défilé
+   ouvre E06_Dmolition_1080x1920.png            1080x1920   et E06_Dmolition_bas_1080x1920.png        1080x1920
+      diff moyenne   0.000   px>8   0.00 %   → IDENTIQUES → rien n a défilé
+   ouvre E07_Boutique_1080x2400.png             1080x2400   et E07_Boutique_bas_1080x2400.png         1080x2400
+      diff moyenne   9.837   px>8   9.26 %   → différentes → la liste a bien défilé
+   ouvre E07_Boutique_1080x1920.png             1080x1920   et E07_Boutique_bas_1080x1920.png         1080x1920
+      diff moyenne   8.445   px>8   8.14 %   → différentes → la liste a bien défilé
+   ouvre E10_Filire_1080x2400.png               1080x2400   et E10_Filire_bas_1080x2400.png           1080x2400
+      diff moyenne   0.000   px>8   0.00 %   → IDENTIQUES → rien n a défilé
+   ouvre E10_Filire_1080x1920.png               1080x1920   et E10_Filire_bas_1080x1920.png           1080x1920
+      diff moyenne   3.781   px>8   3.42 %   → différentes → la liste a bien défilé

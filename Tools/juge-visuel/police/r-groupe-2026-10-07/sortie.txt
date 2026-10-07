@@ -1,0 +1,73 @@
+== images lues ==
+   ouvre s6-31.png                                                                                        1080x2102
+   ouvre s6-32.png                                                                                        1080x2102
+   ouvre s6-33.png                                                                                        1080x2102
+   ouvre E09_Inspections_1080x2400.png                                                                    1080x2400
+   ouvre E09_Inspections_1080x1920.png                                                                    1080x1920
+
+== CONTRÔLE POSITIF — ce que l instrument trouve ÉGAL ==
+ 1. largeur ref 1080 = largeur capture 1080 → facteur 1.000
+ 2. le chrome haut (ARGENT · manomètre de CHALEUR · JOUR + moment) a la même structure
+ 3. le NOMBRE DE DISTRICTS est le même : la ref écrit « 18 DISTRICTS » en pied,
+    la capture écrit « 18 districts » sous le titre
+ 4. « DÉPOSER UN SIGNALEMENT », « SUR », « EFFET · une entrée de plus dans leur file »
+    et l avertissement « au bout de plusieurs, la police se retourne » sont présents
+    des deux côtés (ref cadre 33, capture) — MÊME texte, même ordre
+ 5. le geste s appelle « DÉPOSER » des deux côtés
+ 6. or du titre d écran capt (217, 171, 77) — même famille que l or du corpus (217,171,77)
+ 7. contraste du titre / fond : 9.15:1
+ 8. CONTRÔLE POSITIF du détecteur de papier : il rend 92,27 %% sur la ref 32, 52,24 %% sur
+    la ref 31 et 31,20 %% sur la ref 33 — trois valeurs DISTINCTES, donc il mesure bien
+    la surface de papier et non une constante. Sur la capture il rend 0,04 %%.
+
+== A1 · le REGISTRE DE DISPATCH (listing sur papier à bandes) — ABSENT ==
+  La référence est un LISTING : papier crème plein cadre, perforations latérales,
+  monospace capitales, en-tête BPD, 5 colonnes, 18 lignes de district, pied de page.
+  ref 32    px « papier crème » sous le chrome (y  399..2102) : 1697039 / 1839240 = 92.27 %
+  ref 31    px « papier crème » sous le chrome (y  399..2102) :  960780 / 1839240 = 52.24 %
+  ref 33    px « papier crème » sous le chrome (y  399..2102) :  573892 / 1839240 = 31.20 %
+  capt2400  px « papier crème » sous le chrome (y  456..2400) :     794 / 2099520 =  0.04 %
+  capt1920  px « papier crème » sous le chrome (y  364..1920) :     794 / 1680480 =  0.05 %
+  → la référence ⑮ est à 92,27 %% de papier ; la capture à 0,04 %% — rapport 2 300:1.
+  mediane au centre du contenu : ref32 (233, 230, 216)   capt2400 (13, 13, 13)
+  AUCUNE ligne de district n est affichée : la capture dit « 18 districts » et n en montre 0.
+  (le LISEZMOI de la série annonce pourtant « ⑮ colonnes Charge/Régime « — » » : ces
+   colonnes n existent pas à l écran, donc le « — » de TD-846 n y est pas visible non plus)
+
+== A2 · une ILLUSTRATION PHOTOGRAPHIQUE, sans homologue dans les 5 cadres police ==
+  capt2400 : bbox de l image = x 324..755, y 920..1298  → 431 × 378 px (39.9 % de la largeur)
+  palette de la zone (6 teintes dominantes) : [(24.4, (40, 48, 50)), (19.2, (95, 82, 62)), (18.8, (136, 104, 65)), (17.1, (187, 134, 69)), (11.0, (234, 187, 100)), (9.5, (95, 61, 35))]
+  → teintes photographiques (ocre chaud + bleu-vert délavé), aucune des 5 planches police
+    n emploie ce registre : elles sont en aplats imprimés (papier, liège, encre).
+  ref 31 : aucune illustration photographique (inventaire visuel)
+  ref 32 : aucune illustration photographique (inventaire visuel)
+  ref 33 : aucune illustration photographique (inventaire visuel)
+
+== A3 · le geste « DÉPOSER » : fiche de papier → barre pleine ==
+  ref 33 : le formulaire est une FICHE DE PAPIER crème posée sur un fond de liège,
+           punaisée (pastille rouge), et le bouton est un double filet ROUGE sur le papier.
+           médiane de la fiche (227, 214, 184) · médiane du fond de liège (106, 79, 40)
+  capt   : barre PLEINE olive, sans filet, sans arrondi.
+           bbox mesurée : x 35..1044 (l=1010), y 600..678 (h=79)
+           largeur des 5 premières lignes : [1010, 1010, 1010, 1010, 1010] → PLEINE dès la 1ʳᵉ ⇒ ANGLE DROIT, rayon 0
+           remplissage (74, 57, 26) (aplat olive) · encre du libellé (217, 171, 77) · contraste 5.23:1
+   ouvre E06_Dmolition_1080x2400.png                                                                      1080x2400
+           TÉMOIN ㉝ (même lot, même shell) : sur la colonne x=540 du CTA, 7 px allumés
+           sur 151 lignes, et un intérieur à (34, 28, 13) → c est un FILET, pas un aplat.
+  → tous les autres gestes du corpus sont des CADRES dorés à filet (㉝ : x 50..1029, filet ;
+    ㊵ : BLANCHIR, filet doré). Ici seul geste du lot rendu en APLAT plein.
+
+== A4 · le vide ==
+  ref 32    plus longue bande SANS encre :   17 px (y 2085..2101) =  0.8 %
+  capt2400  plus longue bande SANS encre :  827 px (y 1352..2178) = 34.5 %
+  capt1920  plus longue bande SANS encre :  347 px (y 1352..1698) = 18.1 %
+
+== contrastes des textes de la capture ==
+  titre LES INSPECTIONS      encre (217, 171, 77)   fond (13, 13, 13)     →  9.15:1
+  « 18 districts »           encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1
+  DÉPOSER UN SIGNALEMENT     encre (217, 171, 77)   fond (13, 13, 13)     →  9.15:1
+  SUR · Atelier Vesk         encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1
+  EFFET ·                    encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1
+  libellé DÉPOSER            encre (217, 171, 77)   fond (74, 57, 26)     →  5.23:1
+  avertissement ⚠            encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1
+  texte d état vide          encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1

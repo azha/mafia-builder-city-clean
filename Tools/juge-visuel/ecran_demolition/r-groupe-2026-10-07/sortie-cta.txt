@@ -1,0 +1,10 @@
+   ouvre s6-79.png                                                                                        1080x2102
+   ouvre E06_Dmolition_1080x2400.png                                                                      1080x2400
+   ouvre E06_Dmolition_1080x1920.png                                                                      1080x1920
+ligne dans le CADRE du CTA → (x min, x max, nb px dorés) :
+  ref 79    y=1941 (bord haut) : (53, 1026, 12)
+  capt2400  y=1956 (bord haut) : (50, 1029, 980)
+  capt1920  y=1476 (bord haut) : (50, 1029, 980)
+CONTRÔLE NÉGATIF du même test : une ligne de fond nu
+  capt2400  y=1700 (vide)      : None
+hauteur du CTA : ref 105 px (y 1938..2042) · capture 144 px — le libellé passe à DEUX lignes

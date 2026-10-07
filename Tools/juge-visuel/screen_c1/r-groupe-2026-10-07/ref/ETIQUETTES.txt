@@ -1,0 +1,7 @@
+cadre-125.png	Le journal — ce qui se dit ce matin
+cadre-126.png	Ce qui arrive à la ville
+cadre-127.png	La rivière ne se retirera pas
+cadre-128.png	Ce que vous avez compris
+cadre-129.png	Rien ce matin
+cadre-130.png	Ce qui manque encore
+cadre-145.png	Les onze crans, tous

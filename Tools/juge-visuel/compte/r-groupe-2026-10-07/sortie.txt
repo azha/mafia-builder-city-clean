@@ -1,0 +1,80 @@
+== images lues ==
+   ouvre s6-98.png                                                                                        1080x2102
+   ouvre s6-99.png                                                                                        1080x2102
+   ouvre E07_Boutique_1080x2400.png                                                                       1080x2400
+   ouvre E07_Boutique_1080x1920.png                                                                       1080x1920
+   ouvre E07_Boutique_bas_1080x2400.png                                                                   1080x2400
+
+== CONTRÔLE POSITIF — ce que l instrument trouve ÉGAL ==
+ 1. largeur ref 1080 = largeur capture 1080 → facteur 1.000
+ 2. or du titre « LA VITRINE »     ref (217, 171, 78)  capt (217, 171, 77)
+ 3. contraste du titre / son fond  ref 7.81:1  capt 9.15:1
+ 4. une pastille de SOLDE bordée d or en tête, des deux côtés (ref y 452..535 · capt y 352..464)
+ 5. or de la pastille de solde     ref (217, 171, 78)  capt (217, 171, 77)
+ 6. quatre liasses des deux côtés : 100 / 600 / 1400 / 3500, dans cet ordre
+ 7. les trois bonus +20 %% / +40 %% / +75 %% sont écrits des deux côtés
+ 8. le catalogue d EXTRAS existe des deux côtés (ref cadre 98 · capt planche `_bas`) :
+    couleurs · thème nuit au sodium · 2ᵉ dossier/partie · 3ᵉ dossier/partie, aux prix 50/80/100/200
+ 9. tous les contrastes de texte de la capture ≥ 4,3:1 (détail en fin de sortie)
+10. CONTRÔLE NÉGATIF du compteur d encre : 0,00 %% là où il n y a rien, 8,30 %% sur une carte
+
+== A1 · la grille 2 × 2 de la vitrine est devenue une COLONNE de lignes ==
+  ref 99  ligne y=900 : bords clairs des cartes x = 40, 524 | 555, 1039
+          → 2 colonnes de 484 px (44.8 % de la largeur), gouttière centrale de 30 px
+  capt    carte 1 : bord supérieur y 494..498 ; flancs mesurés à y=560 : (35, 1044, 1010)
+          → 1 colonne de 1010 px (93.5 % de la largeur), aucune gouttière centrale
+  delta : la carte de produit passe de 44,8 %% à 93,5 %% de la largeur (×2,09)
+
+== A2 · la MATIÈRE de la carte : plaque teintée → simple filet ==
+  ref 99  médiane DANS la carte 1 (28, 22, 28)   médiane dans la gouttière (22, 27, 33)  (la carte est une PLAQUE)
+  capt    médiane DANS la carte 1 (13, 13, 13)   médiane hors carte          (13, 13, 13)  (la carte n a AUCUN fond)
+
+== A3 · les pictogrammes de produit ==
+  ref 99 : une pile de jetons dessinée dans chaque carte — px de la famille OR :
+     carte 1 (100)      1230 px dorés /  30000  =   4.1 %
+     carte 2 (600)      4999 px dorés /  26000  =  19.2 %
+     carte 3 (1400)    10032 px dorés /  33000  =  30.4 %
+     carte 4 (3500)     9281 px dorés /  28600  =  32.5 %
+  capt   : une pastille ronde unie de ~28 px, identique pour les quatre produits :
+     carte 1             784 px dorés /  30000  =   2.6 %
+     carte 2             784 px dorés /  30000  =   2.6 %
+     carte 3             779 px dorés /  30000  =   2.6 %
+     carte 4             778 px dorés /  30000  =   2.6 %
+  → les quatre comptes de la capture sont IDENTIQUES à 6 px près (784/784/779/778) :
+    un même disque, aucun dessin propre au produit. Côté ref, ils vont de 1230 à 10032.
+
+== A4 · la bande du personnage (Wexler, « DERRIÈRE LE COMPTOIR ») ==
+  ref 99  bande y 1834..2085 (h=251 px = 11.9 % de l écran) : encre 7.03 %
+  ref 98  même bande, même composition (portrait rond + nom + rôle + citation italique)
+  capt2400 : rien entre la fin de la liste et la barre d onglets du shell (y 2179..2341).
+  capt_bas : la liste se termine sur la carte « Soutien au studio » (y 1743..2120),
+             puis la barre d onglets. Encre y 2121..2178 = 3.33 % (bande vide)
+
+== B1 · l intitulé de section ==
+  ref 99 : « LES JETONS — PAYÉS AU MAGASIN » y 648..668, encre 25.16 %
+  ref 98 : « LES EXTRAS — PAYÉS EN JETONS »  y 648..668
+  capt   : encre entre la pastille de solde et la 1ʳᵉ carte (y 465..493) = 0.00 %
+           CONTRÔLE NÉGATIF : encre sur la 1ʳᵉ carte (y 494..700) = 8.30 %
+
+== B2 · le bonus : médaillon d angle → ligne de texte ==
+  ref 99 : plaque dorée pleine en haut à droite de la carte, 3 lignes — px OR mesurés
+           6221 px dorés / 15990 = 38.9 %
+  capt   : une ligne de texte dorée dans le flux — px OR de la même zone relative
+           1817 px dorés / 14400 = 12.6 %
+
+== contrastes des textes de la capture (planchers : 3:1 grands, 4,5:1 petits) ==
+  titre LA VITRINE           encre (217, 171, 77)   fond (13, 13, 13)     →  9.15:1
+  pastille 50 Marks          encre (217, 171, 77)   fond (13, 13, 13)     →  9.15:1
+  titre de liasse            encre (234, 224, 200)  fond (13, 13, 13)     → 14.80:1
+  « en boutique »            encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1
+  « donne 100 Marks »        encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1
+  bonus +20 %                encre (217, 171, 77)   fond (13, 13, 13)     →  9.15:1
+  bouton DERRIÈRE LA VITRE   encre (119, 119, 119)  fond (13, 13, 13)     →  4.34:1
+  « Bientôt »                encre (185, 173, 146)  fond (13, 13, 13)     →  8.75:1
+
+== B3 · le bandeau de comptoir ==
+  ref 99  bande « LA VITRINE » y 420..545 : médiane (38, 32, 28) (bronze), filet d or dessous
+  capt    même rôle, y 260..320 : médiane (13, 13, 13) (fond nu, titre centré, pas de bandeau)
+  ref : le titre est à GAUCHE et la pastille de solde à DROITE sur la MÊME ligne ;
+  capt: le titre est CENTRÉ, la pastille est en dessous et prend toute la largeur
+        (pastille ref x 697..1035 = 31,3 %% de la largeur · capt x 36..1044 = 93,3 %%)

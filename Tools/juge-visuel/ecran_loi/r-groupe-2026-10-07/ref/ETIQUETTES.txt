@@ -1,0 +1,6 @@
+cadre-67.png	Ils ont arrêté un de vos coursiers
+cadre-68.png	Lui trouver un avocat
+cadre-69.png	Il commence à parler
+cadre-70.png	Il a tout dit
+cadre-71.png	Il y a un arrangement
+cadre-72.png	Votre avocat est nerveux

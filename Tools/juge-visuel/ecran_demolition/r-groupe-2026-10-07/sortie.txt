@@ -1,0 +1,46 @@
+== images lues ==
+   ouvre s6-79.png                                                                                        1080x2102
+   ouvre s6-80.png                                                                                        1080x2102
+   ouvre E06_Dmolition_1080x2400.png                                                                      1080x2400
+   ouvre E06_Dmolition_1080x1920.png                                                                      1080x1920
+
+== CONTRÔLE POSITIF — ce que l instrument trouve ÉGAL ==
+ 1. largeur ref 1080 = largeur capture 1080 → facteur 1.000 (comparaison px DIRECTE en X)
+ 2. encre du grand titre      ref (238, 243, 249)  capt (238, 243, 249)
+ 3. or du texte de CTA        ref (217, 171, 78)  capt (217, 171, 77)
+ 4. fond d écran (médiane)    ref (25, 26, 23)  capt (24, 25, 22)
+ 5. contraste titre/fond      ref 14.86:1  capt 15.28:1
+ 6. la carte-compteur existe des DEUX côtés : ref y 612..787 / capt y 485..633
+ 7. le CTA existe des DEUX côtés : ref y 1938..2042 (h=105) / capt y 1954..2097 (h=144)
+ 8. CONTRÔLE NÉGATIF de l instrument d encre : encre du titre capt = 22.87 % (≠ 0)
+
+== ÉCART ASSUMÉ (lot décor en cours — inventorié, NON classé) ==
+  ref 79    lignes PLATES (écart max-min < 8 sur la ligne) :   17/2102 =  1 %
+  capt 2400 lignes PLATES (écart max-min < 8 sur la ligne) : 1105/2400 = 46 %
+  capt 1920 lignes PLATES (écart max-min < 8 sur la ligne) :  625/1920 = 33 %
+  bande de scène (y 0..420) : ref 0 ligne plate, capture 110 → l art peint est remplacé par un aplat
+
+== A1 · la voix du lieutenant au-dessus du CTA — ABSENTE ==
+  ref 79  encre y 1815..1925 (110 px juste au-dessus du CTA) = 8.43 %
+  ref 80  encre y 1815..1925                                  = 10.79 %
+  capt2400 encre y 1844..1954 (110 px juste au-dessus du CTA) = 0.00 %
+  capt1920 encre y 1364..1474                                  = 0.00 %
+  bbox mesurée de la voix dans la ref 79 : y 1825..1893 (2 lignes, h=69 px = 3,3 %% de l écran)
+
+== A2 · la liste « VOS 4 SITES » — EN TROP (aucun des 6 cadres 79-84 ne porte de liste de sites) ==
+  capt2400 : libellé y 681..699 + 4 rangées y 748..877 / 896..1024 / 1043..1172 / 1191..1320
+             bloc y 681..1320 = 639 px = 26.6 % de la hauteur
+  capt1920 : même bloc = 640 px = 33.3 % de la hauteur
+
+== B1 · le vide entre la liste et le CTA ==
+  capt2400 : y 1321..1953 = 633 px sans encre = 26.4 % de la hauteur
+  capt1920 : y ~1321..1473 = 153 px (le vide se résorbe à 1920)
+
+== contrastes des textes de la capture (planchers : 3:1 grands, 4,5:1 petits) ==
+  titre                  encre (238, 243, 249)  fond (28, 28, 28)     → 15.28:1
+  sous-titre             encre (143, 146, 133)  fond (28, 28, 28)     →  5.37:1
+  « VOS 4 SITES »        encre (143, 146, 133)  fond (28, 29, 26)     →  5.34:1
+  nom de site            encre (238, 243, 249)  fond (34, 38, 34)     → 13.76:1
+  ligne grise de site    encre (143, 146, 133)  fond (34, 38, 34)     →  4.84:1
+  étiquette « libre »    encre (143, 146, 133)  fond (34, 38, 34)     →  4.84:1
+  texte du CTA           encre (217, 171, 77)   fond (34, 28, 13)     →  7.97:1

@@ -1,0 +1,6 @@
+cadre-48.png	Commander — et il n’y a plus rien
+cadre-49.png	La commande est en route
+cadre-50.png	Ça coince — un cran remonté
+cadre-51.png	Ça coince — deux crans remontés
+cadre-52.png	On a trouvé où ça coince
+cadre-53.png	Commander ne vous appartient plus

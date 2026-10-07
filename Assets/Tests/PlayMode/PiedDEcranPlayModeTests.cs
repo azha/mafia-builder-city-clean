@@ -17,6 +17,9 @@ namespace MafiaCleanCity.CityMap.Tests
     [Category("PiedDEcran")]
     public class PiedDEcranPlayModeTests
     {
+        // TD-576 : P4b monte ㉛ (qui amorce le catalogue i18n) — rendu à chaque test, la garde de sortie de MafiaCI nomme toute classe qui le laisserait chargé
+        [TearDown] public void OublierLeCatalogue() => MafiaCleanCity.I18n.I18nCatalog.Oublier();
+
         private static (int, int, int) Trio(Color c) { Color32 k = c; return (k.r, k.g, k.b); }
 
         [Test]

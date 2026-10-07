@@ -1,0 +1,7 @@
+cadre-85.png	Les ordres de ce soir
+cadre-86.png	Deux ordres s’attendent
+cadre-87.png	Un endroit n’a pas fini de se poser
+cadre-88.png	Rejouer une soirée — pas encore
+cadre-89.png	Rejouer une soirée
+cadre-90.png	Ce qui s’est passé en ville
+cadre-91.png	Ce qui arrive
