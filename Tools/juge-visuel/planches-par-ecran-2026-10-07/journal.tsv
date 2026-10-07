@@ -1,0 +1,12 @@
+pas	écran	état	référence
+P0	inscription	compte neuf sha256:5a83479b · back visé http://localhost	—
+E01	㊳ Journal	JournalScreenController · chargé (DernierChargement) · liste défilante : le contenu DÉBORDE — planche _bas prise	screen_c1/reference-1080x2102.png (cadre 125 de ecrans-brennar-6.html) ; vocabulaire : cadre 145
+E02	㉞ Carnet	CarnetScreenController · chargé (DernierChargement) · liste défilante : le contenu DÉBORDE — planche _bas prise	carnet/reference-1080x2102.png (cadres 85-91 de ecrans-brennar-6.html)
+E03	㉚ Chaîne d'appro	ChaineDApproScreenController · chargé (DernierChargement) · aucune liste ne déborde	ecran_appro/reference-1080x2102.png (cadres 48-53 de ecrans-brennar-6.html)
+E04	㉘ Distribution	DistributionScreenController · attente fixe de 6 s (l'écran n'expose aucun drapeau de chargement) · aucune liste ne déborde	ecran_distribution/reference-1080x2102.png (cadres 54-58 de ecrans-brennar-6.html)
+E05	㉛ Loi	LoiScreenController · chargé (DernierChargement) · liste défilante : le contenu DÉBORDE — planche _bas prise	ecran_loi/reference-1080x2102.png (cadre 67) + reference-avocat-1080x2102.png (cadre 68) — AUCUN cadre « parloir vide »
+E06	㉝ Démolition	DemolitionScreenController · rendu (RendusEffectues=1) · liste défilante : le contenu DÉBORDE — planche _bas prise	ecran_demolition/reference-1080x2102.png (cadres 79-84 de ecrans-brennar-6.html)
+E07	㉓ Boutique	ShopScreenController · rendu (RendusEffectues=1) · liste défilante : le contenu DÉBORDE — planche _bas prise	compte/reference-㉓-1080x2102.png (cadres 98-100 de ecrans-brennar-6.html)
+E08	⑭ La semaine	CompressionScreenController · rendu (RendusEffectues=1) · état vide · aucune liste ne déborde	compression/reference-1080x2102.png (cadre NOMINAL 25) ; états v4-25..v4-30 (cadres 25-30 de ecrans-brennar-4.html) ; « au calme » = cadre 29
+E09	⑮ Inspections	InspectionScreenController · rendu (RendusEffectues=1) · état vide · aucune liste ne déborde	police/reference-⑮-1080x2102.png (cadres 31-35 de ecrans-brennar-6.html)
+E10	㊵ Filière	FiliereScreenController · chargé (RenduTermine) · liste défilante : le contenu DÉBORDE — planche _bas prise	screen_c2/reference-1080x2102.png (cadres 137-142 de ecrans-brennar-6.html)
