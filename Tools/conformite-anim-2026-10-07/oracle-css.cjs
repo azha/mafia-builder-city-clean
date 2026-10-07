@@ -39,7 +39,8 @@ const pw = require(process.argv.find(a => a.includes('playwright-core')) || '/ho
           brightness: br ? +br[1] : null, hue: hue ? +hue[1] : null,
           dash: cs.strokeDashoffset, shadow: cs.boxShadow === 'none' ? null : cs.boxShadow });
       }
-      res[name] = { durS: dur / 1000, easing: tm.easing, origin: cs0.transformOrigin, tag: el.tagName + (ps || ''), cls: (el.getAttribute('class') || '').slice(0, 40), vars, samples };
+      const kfs = a.effect.getKeyframes ? a.effect.getKeyframes().map(k => ({ offset: k.offset, easing: k.easing })) : [];
+      res[name] = { durS: dur / 1000, easing: tm.easing, easing_cles: kfs, origin: cs0.transformOrigin, tag: el.tagName + (ps || ''), cls: (el.getAttribute('class') || '').slice(0, 40), vars, samples };
     }
     return res;
   });

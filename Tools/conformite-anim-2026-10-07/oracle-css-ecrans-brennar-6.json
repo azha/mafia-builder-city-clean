@@ -2,6 +2,20 @@
  "hl": {
   "durS": 6,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "0px 0px",
   "tag": "circle",
   "cls": "halo",
@@ -233,6 +247,24 @@
  "led": {
   "durS": 4.6,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.38,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.64,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "33.7344px 2px",
   "tag": "DIV::after",
   "cls": "rampe",
@@ -492,6 +524,24 @@
  "derive": {
   "durS": 10,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "linear"
+   },
+   {
+    "offset": 0.14,
+    "easing": "linear"
+   },
+   {
+    "offset": 0.8,
+    "easing": "linear"
+   },
+   {
+    "offset": 1,
+    "easing": "linear"
+   }
+  ],
   "origin": "106.5px 42.5px",
   "tag": "DIV",
   "cls": "brume",
@@ -752,6 +802,24 @@
  "drip": {
   "durS": 1.5,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "cubic-bezier(0.4, 0, 0.9, 0.5)"
+   },
+   {
+    "offset": 0.08,
+    "easing": "cubic-bezier(0.4, 0, 0.9, 0.5)"
+   },
+   {
+    "offset": 0.92,
+    "easing": "cubic-bezier(0.4, 0, 0.9, 0.5)"
+   },
+   {
+    "offset": 1,
+    "easing": "cubic-bezier(0.4, 0, 0.9, 0.5)"
+   }
+  ],
   "origin": "3.5px 5.5px",
   "tag": "DIV",
   "cls": "drip",
@@ -1013,6 +1081,24 @@
  "spl": {
   "durS": 1.5,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-out"
+   },
+   {
+    "offset": 0.86,
+    "easing": "ease-out"
+   },
+   {
+    "offset": 0.92,
+    "easing": "ease-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-out"
+   }
+  ],
   "origin": "11px 4px",
   "tag": "DIV",
   "cls": "splash",
@@ -1273,6 +1359,20 @@
  "respire": {
   "durS": 7,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "40.3047px 276.797px",
   "tag": "DIV",
   "cls": "pot",
@@ -1504,6 +1604,20 @@
  "tg": {
   "durS": 4.6,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "75px 242px",
   "tag": "g",
   "cls": "tangue",
@@ -1735,6 +1849,20 @@
  "sf": {
   "durS": 2,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "74.8px 211.6px",
   "tag": "g",
   "cls": "souffle",
@@ -1970,6 +2098,20 @@
  "clign": {
   "durS": 1.7,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "35.4062px 7.5px",
   "tag": "DIV",
   "cls": "tag due",
@@ -2201,6 +2343,16 @@
  "fl": {
   "durS": 1.1,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "linear"
+   },
+   {
+    "offset": 1,
+    "easing": "linear"
+   }
+  ],
   "origin": "0px 0px",
   "tag": "path",
   "cls": "eau",
@@ -2432,6 +2584,20 @@
  "rl": {
   "durS": 1.3,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "30px 8.125px",
   "tag": "path",
   "cls": "roul",
@@ -2666,6 +2832,24 @@
  "bl": {
   "durS": 2.05,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in"
+   },
+   {
+    "offset": 0.14,
+    "easing": "ease-in"
+   },
+   {
+    "offset": 0.8,
+    "easing": "ease-in"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in"
+   }
+  ],
   "origin": "1.4px 1.4px",
   "tag": "circle",
   "cls": "bul",
@@ -2927,6 +3111,20 @@
  "ec": {
   "durS": 1.1,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "24px 2.4px",
   "tag": "ellipse",
   "cls": "ecume",
@@ -3161,6 +3359,20 @@
  "ch": {
   "durS": 2,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "0px 0px",
   "tag": "rect",
   "cls": "resist",
@@ -3392,6 +3604,20 @@
  "vp": {
   "durS": 2.7,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-out"
+   },
+   {
+    "offset": 0.22,
+    "easing": "ease-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-out"
+   }
+  ],
   "origin": "4px 4.4px",
   "tag": "ellipse",
   "cls": "vap",
@@ -3640,6 +3866,20 @@
  "cd": {
   "durS": 2.8,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in"
+   },
+   {
+    "offset": 0.18,
+    "easing": "ease-in"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in"
+   }
+  ],
   "origin": "1.6px 1.6px",
   "tag": "circle",
   "cls": "cond",
@@ -3888,6 +4128,16 @@
  "rd": {
   "durS": 1.8,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-out"
+   }
+  ],
   "origin": "3px 1.2px",
   "tag": "ellipse",
   "cls": "ride",
@@ -4122,6 +4372,20 @@
  "gt": {
   "durS": 1.7,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in"
+   },
+   {
+    "offset": 0.09,
+    "easing": "ease-in"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in"
+   }
+  ],
   "origin": "2.6px 2.6px",
   "tag": "circle",
   "cls": "goutte",
@@ -4369,6 +4633,24 @@
  "am": {
   "durS": 3.4,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.42,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.68,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "7px 3.6px",
   "tag": "ellipse",
   "cls": "ampoule",
@@ -4626,6 +4908,24 @@
  "po": {
   "durS": 10.2,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "linear"
+   },
+   {
+    "offset": 0.15,
+    "easing": "linear"
+   },
+   {
+    "offset": 0.85,
+    "easing": "linear"
+   },
+   {
+    "offset": 1,
+    "easing": "linear"
+   }
+  ],
   "origin": "1.1px 1.1px",
   "tag": "circle",
   "cls": "poussiere",
@@ -4887,6 +5187,24 @@
  "sc": {
   "durS": 4.1,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.86,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.93,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "1.8px 1.8px",
   "tag": "circle",
   "cls": "scint",
@@ -5147,6 +5465,20 @@
  "pe": {
   "durS": 5.5,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "5.95px 2.78352px",
   "tag": "path",
   "cls": "petale",
@@ -5380,6 +5712,20 @@
  "cl": {
   "durS": 1.8,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "25.9px 6.5px",
   "tag": "rect",
   "cls": "tampon clign",
@@ -5611,6 +5957,20 @@
  "ci": {
   "durS": 4,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "10px 10px",
   "tag": "circle",
   "cls": "cire",
@@ -5842,6 +6202,24 @@
  "mk-scan": {
   "durS": 7.5,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "linear"
+   },
+   {
+    "offset": 0.12,
+    "easing": "linear"
+   },
+   {
+    "offset": 0.88,
+    "easing": "linear"
+   },
+   {
+    "offset": 1,
+    "easing": "linear"
+   }
+  ],
   "origin": "135px 1px",
   "tag": "DIV::after",
   "cls": "tablo",
@@ -6099,6 +6477,20 @@
  "mk-veille": {
   "durS": 3.2,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "24.5px 3.94531px",
   "tag": "DIV",
   "cls": "vy on",
@@ -6330,6 +6722,20 @@
  "mk-lampe": {
   "durS": 4.6,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.5,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "42px 33.5px",
   "tag": "svg",
   "cls": "prod",
@@ -6561,6 +6967,20 @@
  "mk-buee": {
   "durS": 3.6,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-out"
+   },
+   {
+    "offset": 0.28,
+    "easing": "ease-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-out"
+   }
+  ],
   "origin": "0px 0px",
   "tag": "path",
   "cls": "buee b0",
@@ -6805,6 +7225,24 @@
  "mk-eclat": {
   "durS": 5.2,
   "easing": "linear",
+  "easing_cles": [
+   {
+    "offset": 0,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.72,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 0.82,
+    "easing": "ease-in-out"
+   },
+   {
+    "offset": 1,
+    "easing": "ease-in-out"
+   }
+  ],
   "origin": "0px 0px",
   "tag": "path",
   "cls": "eclat e0",

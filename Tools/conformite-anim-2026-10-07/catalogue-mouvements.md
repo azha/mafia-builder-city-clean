@@ -6,7 +6,7 @@ doit l'être (§III) ; `coder` n'écrit rien avant. Ce fichier est la table `Cat
 rendue en prose : **une ligne de tableau = une `Entree`**, et rien de ce fichier ne vit hors de ce modèle.
 
 Entrées lues : `design-couche-mouvement.md` (le mécanisme, les plafonds, §4 mouvement réduit, gardes
-G1-G9) · `inventaire-animations.md` (les 44 paires de maquette : **référencées, jamais redéfinies**) ·
+G1-G9) · `inventaire-animations.md` (les 40 paires de maquette (44 à la rédaction, recalé le 08/10 : −6 balayages retirés, +1 `mk-eclat` désormais hébergé, +1 B11 l'aiguille de ⑭) : **référencées, jamais redéfinies**) ·
 `Tools/juge-visuel/INDEX.md` (les 35 écrans, 26 contrôleurs montés) · `~/project/mafia-clean-city/front.md`
 (la fiction, écran par écran) · le canon `docs/tech/08_ui_screens/` (25 fichiers — il spécifie déjà du
 mouvement : §0.6) · les 24 contrôleurs eux-mêmes (ce qui existe RÉELLEMENT à l'écran).
@@ -207,7 +207,9 @@ survient, jamais passée sous silence.
    toutes suspendues au verdict d'E0.
 8. **Le premier montage de la session n'est pas animé** (`global_conventions_core.md:126`, F4).
 
-### I.3 Les 44 paires de l'inventaire : référencées, pas redéfinies
+### I.3 Les paires de l'inventaire : référencées, pas redéfinies
+
+> ⚠️ **Recalé le 08/10** : cette table a été écrite sur 44 paires. Aujourd'hui l'inventaire en compte **40** (`inventaire-animations.md` §F : 29 maquette + 11 HUD/⑭ ; 2 présentes, 1 partielle, 37 absentes) : les six lignes `*6-scan` (㉟ ㊱ ㊲ ㊳ ㊴ ㊵) sont RETIRÉES (atelier 9469d5a), `mk-eclat` a son hôte (cadre 146), B11 (aiguille de ⑭) est ajoutée. Lire la table ci-dessous sans ces six lignes.
 
 Elles sont **déjà au catalogue** (garde G2 : « une paire de `inventaire-animations.md` sans entrée »
 rougit). Je ne les réécris pas ; je constate leur état d'hôte, parce que c'est ce qui décide si elles
@@ -232,7 +234,7 @@ sont câblables ou différées.
 `inventaire-animations.md:69`) parce qu'aucun cadre ne montre son hôte. Il n'entre au catalogue que
 par la demande **A1**.
 
-⇒ Le `Catalogue` final comptera **42 entrées de ce fichier + 44 paires d'inventaire = 86 lignes**,
+⇒ Le `Catalogue` final comptera **42 entrées de ce fichier + 40 paires d'inventaire = 82 lignes**,
 dont **38 non câblables aujourd'hui** : 28 des 44 sans aucun hôte (serre 8 · labo 9 · Ash 6 · ③ 1 ·
 marché 4), 6 à hôte **non vérifié** (les `*6-scan`), et **4 des miennes** — 3 suspendues à un hôte à
 dessiner (`semaine.aiguille` → A2, `vitrine.reflet` → A3, `distribution.photo` → A4) et 1 à un trou
@@ -1096,7 +1098,7 @@ d'un fait mesuré, pas d'une préférence.
    balayage, qui décide si 6 paires restent au catalogue).
 3. **l'atelier** prend les 9 demandes du §III ; **A5** (la ligne de ⑲) et **A2** (le manomètre de ⑭)
    sont les deux qui débloquent le plus.
-4. **ensuite seulement** : `coder` écrit E1 avec un `Catalogue` de **86 lignes** (42 d'ici + 44 de
+4. **ensuite seulement** : `coder` écrit E1 avec un `Catalogue` de **82 lignes** (42 d'ici + 40 de
    l'inventaire), dont **48 câblables** — et les gardes G1 à G9 peuvent être vertes le premier jour,
    parce que chaque ligne porte déjà sa `Cause`, sa `Source`, son `Ecran`, son budget et son dégradé.
 
