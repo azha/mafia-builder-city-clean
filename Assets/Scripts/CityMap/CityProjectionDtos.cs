@@ -216,6 +216,10 @@ namespace MafiaCleanCity.CityMap
         public string dealer;
         public string dealer_spot_id;
         public string cash_band;
+        /// <summary>TD-757 : le nom SERVI est un objet `{key, params:{prenom}}` (corps réel du 22/09), jamais une chaîne.</summary>
+        public DistrictCollectNomI18nDto name_i18n;
+        public string Prenom => name_i18n != null && name_i18n.@params != null && !string.IsNullOrWhiteSpace(name_i18n.@params.prenom)
+            ? name_i18n.@params.prenom : null;
     }
 
     [Serializable] public class DistrictDealerListData { public DistrictDealerDto[] dealers; }

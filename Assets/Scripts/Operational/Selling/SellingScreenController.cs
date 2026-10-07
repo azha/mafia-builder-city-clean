@@ -282,6 +282,15 @@ namespace MafiaCleanCity.Operational.Selling
                 DerniereErreur = worldError;
         }
 
+        /// <summary>Le prénom servi d'un dealer de la liste lue, ou null (jamais une valeur par défaut : la forme SANS nom existe).</summary>
+        private string PrenomDuDealer(string dealerId)
+        {
+            if (Dealers == null) return null;
+            foreach (DealerDto d in Dealers)
+                if (d != null && d.dealer == dealerId) return d.Prenom;
+            return null;
+        }
+
         /// <summary>Ramasse toute la caisse du dealer vers la planque découverte, puis relit les
         /// bandes afin que l'écran montre le résultat de la mutation plutôt qu'un succès optimiste.</summary>
         public IEnumerator Collecter(string dealerId)
@@ -307,9 +316,10 @@ namespace MafiaCleanCity.Operational.Selling
                 // message technique de `ListDealers`, et un texte joueur ne le lit jamais
                 // COLLECTE (07/10) : sans phrase servie, la phrase PAR CODE (`SELLING_SAFEHOUSE_FULL`, `SELLING_CASH_EMPTY`, tables 75 n° 3-4) —
                 // le statut ne suffit pas, trois codes partagent le 409 ; tout le reste (un 409 sans code spécifique compris) dit la table 85
-                // n° 7. Le nom du dealer n'est pas lu ici : `DealerDto.name_i18n` est déclaré `string` alors que le corps sert `{key, params}`.
+                // n° 7. Le prénom est celui de la LISTE servie (`name_i18n.params.prenom`, TD-757 : il était déclaré `string` et n'arrivait jamais) :
+                // « La caisse de Dov est vide. » ; sans prénom servi, la forme SANS nom.
                 string phrase = client.DernierePhraseDeRefus
-                    ?? MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(client.DernierCodeDeRefus, null);
+                    ?? MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(client.DernierCodeDeRefus, PrenomDuDealer(dealerId));
                 DerniereErreur = phrase;
                 if (actionTexte != null) actionTexte.text = phrase;
                 yield break;
@@ -319,7 +329,8 @@ namespace MafiaCleanCity.Operational.Selling
             DerniereErreur = null;
             // COLLECTE : « Ramassé : une grosse somme. Encore chez Dov : une petite somme. » (table 75 n° 1-2) ; un back antérieur au lot
             // ne sert pas les bandes ⇒ la phrase d'avant, SANS clé (table 85 : un libellé orphelin dès le câblage de la 75).
-            string phraseDeSucces = MafiaCleanCity.I18n.CollecteMots.PhraseDeSucces(resultat.collected_band, resultat.remaining_band, resultat.Prenom)
+            string phraseDeSucces = MafiaCleanCity.I18n.CollecteMots.PhraseDeSucces(resultat.collected_band, resultat.remaining_band,
+                                        resultat.Prenom ?? PrenomDuDealer(dealerId))
                                     ?? "La caisse a rejoint votre planque.";
             if (actionTexte != null) actionTexte.text = phraseDeSucces;
 

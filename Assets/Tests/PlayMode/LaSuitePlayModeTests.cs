@@ -29,6 +29,10 @@ namespace MafiaCleanCity.Shell.Tests
     [Category("LaSuite")]
     public class LaSuitePlayModeTests
     {
+        /// <summary>Le nom d'un dealer TEL QUE LE BACK LE SERT : un objet `{key, params:{prenom}}` (TD-757 — les tests posaient une chaîne à la main).</summary>
+        private static DealerNomI18nDto Nom(string prenom) =>
+            new DealerNomI18nDto { key = "game.fiction.dealer.name", @params = new DealerNomParamsDto { prenom = prenom } };
+
         [SetUp] public void SetUp() => MafiaCleanCity.I18n.I18nCatalog.Oublier();
         [TearDown] public void TearDown() => MafiaCleanCity.I18n.I18nCatalog.Oublier();
 
@@ -103,8 +107,8 @@ namespace MafiaCleanCity.Shell.Tests
             EtatDeLaSuite e = Neuf();
             e.Dealers = new[]
             {
-                new DealerDto { dealer = "d1", name_i18n = "Mirko", activity_band = "WORKING", cash_band = "MODERATE" },
-                new DealerDto { dealer = "d2", name_i18n = "Sacha", activity_band = "IDLE", cash_band = "FULL" },
+                new DealerDto { dealer = "d1", name_i18n = Nom("Mirko"), activity_band = "WORKING", cash_band = "MODERATE" },
+                new DealerDto { dealer = "d2", name_i18n = Nom("Sacha"), activity_band = "IDLE", cash_band = "FULL" },
             };
             List<LigneDeLaSuite> l = LaSuite.Lignes(e);
             Assert.IsFalse(l.Any(x => x.Id == "B"), "C remplace B");
@@ -211,7 +215,7 @@ namespace MafiaCleanCity.Shell.Tests
 
             // FULL : la variante, ET la caisse (C) se retire — « Ramassez-la » pousserait vers un refus.
             EtatDeLaSuite plein = Neuf();
-            plein.Dealers = new[] { new DealerDto { dealer = "d1", name_i18n = "Sacha", activity_band = "WORKING", cash_band = "FULL" } };
+            plein.Dealers = new[] { new DealerDto { dealer = "d1", name_i18n = Nom("Sacha"), activity_band = "WORKING", cash_band = "FULL" } };
             Assert.Contains("C", Ids(plein), "précondition : une caisse à ramasser, planque non lue");
             plein.ChargePlanque = "FULL";
             List<LigneDeLaSuite> l = LaSuite.Lignes(plein);

@@ -99,7 +99,7 @@ namespace MafiaCleanCity.CityMap
 
         /// <summary>POST /v1/operational/dealer/:id/collect depuis le CTA de la fiche.</summary>
         public IEnumerator CollectDealer(string dealerId, string safehouseId, string token,
-            Action<DistrictCollectOutcome> done)
+            Action<DistrictCollectOutcome> done, string prenomDuDealer = null)
         {
             string url = $"{BaseUrl.TrimEnd('/')}/v1/operational/dealer/{dealerId}/collect";
             string body = JsonUtility.ToJson(new DistrictCollectRequestDto { safehouse_id = safehouseId });
@@ -152,7 +152,7 @@ namespace MafiaCleanCity.CityMap
                             switch (req.responseCode)
                             {
                                 case 401: outcome.Message = MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.connexion_expiree", "La connexion a expir\u00e9."); break;
-                                case 409: outcome.Message = MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(outcome.Code, null); break;
+                                case 409: outcome.Message = MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(outcome.Code, prenomDuDealer); break;
                                 case 422: outcome.Message = MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.collecte_non_acceptee", "Cette collecte n\u2019est pas accept\u00e9e."); break;
                                 default: outcome.Message = MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.indisponible", "Le point de vente ne r\u00e9pond pas pour l\u2019instant."); break;
                             }

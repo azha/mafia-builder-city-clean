@@ -147,13 +147,13 @@ namespace MafiaCleanCity.Shell
             if (dealers == null) return null;   // lecture manquée : on n'affirme pas « personne ne vend »
             foreach (string bande in CaissesARamasser)
             {
-                DealerDto plein = dealers.FirstOrDefault(d => d != null && !d.withdrawn && d.cash_band == bande && !string.IsNullOrWhiteSpace(d.name_i18n));
+                DealerDto plein = dealers.FirstOrDefault(d => d != null && !d.withdrawn && d.cash_band == bande && !string.IsNullOrWhiteSpace(d.Prenom));
                 if (plein == null) continue;
                 return new LigneDeLaSuite
                 {
                     Id = "C",
                     Titre = Libelle.Gabarit("accueil.suite.la_caisse_de_prenom_se_remplit", "La caisse de {prenom} se remplit",
-                        new Dictionary<string, string> { { "prenom", plein.name_i18n } }),
+                        new Dictionary<string, string> { { "prenom", plein.Prenom } }),
                     Phrase = Libelle.Gabarit("accueil.suite.ramassez_la_elle_rejoint_la_planque", "Ramassez-la : elle rejoint la planque."),
                     Geste = GesteDeLaSuite.Ramasser,
                     MotDuGeste = Libelle.Gabarit("accueil.suite.ramasser", "Ramasser"),

@@ -144,6 +144,26 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("{\"safehouse_id\":\"s1\"}", JsonUtility.ToJson(new DistrictCollectRequestDto { safehouse_id = "s1" }));
         }
 
+        // ── C9 — TD-757 ───────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+        [Test]
+        public void C9_LePrenomDuDealer_ArriveDepuisLeCorpsReelDuBack()
+        {
+            // l'entrée `dealers[0]` du corps réel commité (22/09, back 03cf564c, compte operational_demo) : `name_i18n` y est un OBJET
+            const string corps = "{\"payload\":{\"data\":{\"dealers\":[{\"dealer\":\"51844b17\",\"dealer_spot_id\":\"9ceece4a\"," +
+                                 "\"name_i18n\":{\"key\":\"game.fiction.dealer.name\",\"params\":{\"prenom\":\"Dov\"}},\"activity_band\":\"WORKING\"," +
+                                 "\"cash_band\":\"MODERATE\",\"substance\":\"BRINDLE\",\"margin_band\":\"STANDARD\",\"addiction_loyalty_status\":null," +
+                                 "\"withdrawn\":false,\"district_name\":\"La Lisi\u00e8re\",\"lek_band\":\"HIGH\",\"lane_band\":\"FAST\"}]}}}";
+            DealerDto d = JsonUtility.FromJson<DealerListEnvelope>(corps).payload.data.dealers[0];
+            Assert.AreEqual("Dov", d.Prenom, "le prénom ARRIVE : `name_i18n` est un objet, plus une chaîne que JsonUtility ne sait pas remplir");
+            Assert.AreEqual("game.fiction.dealer.name", d.name_i18n.key);
+            Assert.AreEqual("MODERATE", d.cash_band, "le reste du corps passe toujours");
+            Assert.IsNull(JsonUtility.FromJson<DealerListEnvelope>(corps.Replace("\"prenom\":\"Dov\"", "\"prenom\":\"\"")).payload.data.dealers[0].Prenom,
+                "un prénom vide n'est pas un nom");
+            var d2 = JsonUtility.FromJson<DealerListEnvelope>("{\"payload\":{\"data\":{\"dealers\":[{\"dealer\":\"x\"}]}}}").payload.data.dealers[0];
+            Assert.IsNull(d2.Prenom, "sans `name_i18n` servi : pas de nom, la forme sans nom");
+        }
+
         // ── C8 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
         [Test]

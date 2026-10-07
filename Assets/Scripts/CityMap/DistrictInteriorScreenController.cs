@@ -2678,6 +2678,8 @@ namespace MafiaCleanCity.CityMap
 
         /// <summary>Action réelle du CTA canonique « COLLECTER ». La jointure ne repose sur aucun
         /// id de démo : elle compare le bâtiment ouvert au `dealer_spot_id` servi au joueur.</summary>
+        private string ficheDealerPrenom;   // TD-757 : le prénom SERVI du dealer de la liste lue, pour « La caisse de Dov est vide. »
+
         public IEnumerator CollecterDepuisFiche()
         {
             if (collecteEnCours) yield break;
@@ -2687,6 +2689,7 @@ namespace MafiaCleanCity.CityMap
             collecteEnCours = true;
             FicheCollecteTentatives++;
             FicheDealerId = null;
+            ficheDealerPrenom = null;
             DerniereCollecte = null;
             string dealerSpotId = FicheBuildingId;
             if (ficheSortie != null) ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.recherche_du_dealer_et_de_la_planque", "On cherche le dealer et la planque\u2026");
@@ -2710,6 +2713,7 @@ namespace MafiaCleanCity.CityMap
                 {
                     if (dealer == null || dealer.dealer_spot_id != dealerSpotId) continue;
                     FicheDealerId = dealer.dealer;
+                    ficheDealerPrenom = dealer.Prenom;
                     break;
                 }
             }
@@ -2727,14 +2731,14 @@ namespace MafiaCleanCity.CityMap
 
             DistrictCollectOutcome outcome = null;
             yield return projections.CollectDealer(FicheDealerId, FicheSafehouseId, sessionBearer,
-                r => outcome = r);
+                r => outcome = r, ficheDealerPrenom);
             DerniereCollecte = outcome;
             if (outcome != null && outcome.Ok)
             {
                 FicheCollecteReussites++;
                 // table 75 n° 1-2 : « Ramassé : … Encore chez … : … » ; un back antérieur au lot ne sert pas les bandes ⇒ la phrase d'avant
                 if (ficheSortie != null)
-                    ficheSortie.text = MafiaCleanCity.I18n.CollecteMots.PhraseDeSucces(outcome.CollectedBand, outcome.RemainingBand, outcome.Prenom)
+                    ficheSortie.text = MafiaCleanCity.I18n.CollecteMots.PhraseDeSucces(outcome.CollectedBand, outcome.RemainingBand, outcome.Prenom ?? ficheDealerPrenom)
                                        ?? "La caisse a rejoint votre planque.";
             }
             else if (ficheSortie != null)
