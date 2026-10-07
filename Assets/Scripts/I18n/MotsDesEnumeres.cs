@@ -63,14 +63,15 @@ namespace MafiaCleanCity.I18n
             { "minor", null }, { "moderate", null }, { "critical", null },
         }, estUneSorte: true);
 
-        // ⑮ — la charge de la file et le régime du répartiteur : AUCUN mot écrit par l'atelier.
+        // ⑮ — la charge de la file et le régime du répartiteur : les mots du cadre 32 (« VIDE », « LEGERE », « NOMINAL », « ARRIERE » — en capitales de listing, sans accent : le registre les écrit en police à chasse fixe) ;
+        // les accents sont rétablis (légère) ; « ARRIERE » est lu « arriéré » (BACKLOGGED : un retard accumulé) — À CONFIRMER par l'atelier. MODERATE, HEAVY, SATURATED, BUDGET_CUT, SURGE : aucun cadre ne les dessine → attendus.
         public static readonly Domaine ChargeDeLaFile = new Domaine("inspection", "charge", new Dictionary<string, string>
         {
-            { "EMPTY", null }, { "LIGHT", null }, { "MODERATE", null }, { "HEAVY", null }, { "SATURATED", null },
+            { "EMPTY", "vide" }, { "LIGHT", "légère" }, { "MODERATE", null }, { "HEAVY", null }, { "SATURATED", null },
         });
         public static readonly Domaine Regime = new Domaine("inspection", "regime", new Dictionary<string, string>
         {
-            { "NOMINAL", null }, { "BACKLOGGED", null }, { "BUDGET_CUT", null }, { "SURGE", null },
+            { "NOMINAL", "nominal" }, { "BACKLOGGED", "arriéré" }, { "BUDGET_CUT", null }, { "SURGE", null },
         });
 
         /// <summary>Tous les domaines (la garde et le rapport les parcourent).</summary>

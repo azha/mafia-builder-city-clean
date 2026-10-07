@@ -42,10 +42,10 @@ namespace MafiaCleanCity.CityMap.Tests
         public void M2_UnMotQueLAtelierN_ApasEcrit_SeDitTiret_EtSeNomme()
         {
             Assert.AreEqual("—", MotsDesEnumeres.Dire(MotsDesEnumeres.ChargeDeLaFile, "MODERATE"));
-            Assert.AreEqual("—", MotsDesEnumeres.Dire(MotsDesEnumeres.Regime, "BACKLOGGED"));
+            Assert.AreEqual("—", MotsDesEnumeres.Dire(MotsDesEnumeres.Regime, "SURGE"));
             Assert.AreEqual("—", MotsDesEnumeres.Dire(MotsDesEnumeres.Tension, "compression_active"));
             Assert.AreEqual("—", MotsDesEnumeres.Dire(MotsDesEnumeres.Palier, "critical"));
-            CollectionAssert.AreEquivalent(new[] { "inspection.charge.MODERATE", "inspection.regime.BACKLOGGED", "compression.tension.compression_active", "compression.palier.critical" },
+            CollectionAssert.AreEquivalent(new[] { "inspection.charge.MODERATE", "inspection.regime.SURGE", "compression.tension.compression_active", "compression.palier.critical" },
                 MotsDesEnumeres.MotsManquants.ToArray(), "chaque valeur sans mot est NOMMÉE, une fois");
             // la table elle-même : tout mot présent est du français (aucune des valeurs anglaises du domaine ne sert de mot), et les valeurs sans mot sont celles qu'on a déclarées
             var sansMot = new List<string>();
@@ -55,7 +55,7 @@ namespace MafiaCleanCity.CityMap.Tests
                     if (kv.Value == null) { sansMot.Add(d.Nom + "." + d.Role + "." + kv.Key); continue; }
                     Assert.AreNotEqual(kv.Key.Replace('_', ' '), kv.Value.ToLowerInvariant(), d.Nom + "." + d.Role + "." + kv.Key + " : un mot qui n'est que l'enum dé-sluggé n'est pas un mot");
                 }
-            Assert.AreEqual(18, sansMot.Count, "18 mots attendus de l'atelier : ⑮ 9 (5 charges + 4 régimes) ; ⑭ 9 (compression_active, active, 4 genres, 3 paliers) — si ce nombre baisse, l'atelier a écrit des mots : mettre à jour la dette");
+            Assert.AreEqual(14, sansMot.Count, "14 mots attendus de l'atelier : ⑮ 5 (MODERATE, HEAVY, SATURATED ; BUDGET_CUT, SURGE — le cadre 32 ne dessine que VIDE, LEGERE, NOMINAL, ARRIERE) ; ⑭ 9 (compression_active, active, 4 genres, 3 paliers) — si ce nombre baisse, l'atelier a écrit des mots : mettre à jour la dette");
         }
 
         [Test]

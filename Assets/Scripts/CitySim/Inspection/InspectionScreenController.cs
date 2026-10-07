@@ -82,6 +82,14 @@ namespace MafiaCleanCity.CitySim.Inspection
         private static Color Braise => DesignTokens.Current.hudGaugeArcHot;
         private static readonly Color Eteint = new Color(1f, 1f, 1f, 0.18f);
 
+        // A1 (juge groupé du 07/10, f2) : le REGISTRE DE DISPATCH de la maquette (cadre 32) — un PAPIER de listing (233,230,216 en médiane), l'encre sombre, le zébrage vert pâle (207,224,205), deux filets épais,
+        // deux rails de perforations. Aucune encre claire sur ce papier : les couleurs du registre sont ICI, une fois.
+        private static Color Papier => new Color32(0xe9, 0xe6, 0xd8, 255);
+        private static Color EncreDuRegistre => new Color32(0x2b, 0x2a, 0x26, 255);
+        private static Color EncreFaibleDuRegistre => new Color32(0x6b, 0x69, 0x5e, 255);
+        private static Color ZebrageDuRegistre => new Color32(0xcf, 0xe0, 0xcd, 255);
+        private static Color RougeDuRegistre => new Color32(0x93, 0x40, 0x2c, 255);
+
         private static Color Hex(string h)
         {
             ColorUtility.TryParseHtmlString(h, out Color c);
@@ -218,8 +226,8 @@ namespace MafiaCleanCity.CitySim.Inspection
             int n = Districts != null && Districts.Length > 0 ? Districts.Length : NombreDeDistricts;
             sousTitre.text = $"{n} districts";
             videTexte.gameObject.SetActive(EtatVide);
-            if (videIllustration != null) videIllustration.gameObject.SetActive(EtatVide);
-            piedTexte.gameObject.SetActive(!EtatVide);
+            piedTexte.gameObject.SetActive(true);
+            piedTexte.text = $"{n} DISTRICTS · TOUT OU RIEN : LA POLICE OUVRE SES FILES PARTOUT À LA FOIS";
             if (EtatVide)
             {
                 // table 63 v2 : la phrase de la police, PUIS l'état. Addendum 63 (client 33b422c5, 26/09) : « Rien à faire ici tant
@@ -233,7 +241,6 @@ namespace MafiaCleanCity.CitySim.Inspection
                 RendusEffectues++;
                 return;
             }
-            EnTete(corps);
             for (int id = 1; id <= NombreDeDistricts; id++)
             {
                 Ligne(corps, id, NomDuDistrict(id), Files[id - 1]);
@@ -290,10 +297,12 @@ namespace MafiaCleanCity.CitySim.Inspection
             g.childForceExpandWidth = false;
             g.childAlignment = TextAnchor.MiddleLeft;
             Espace(l.transform, Px(9f));
-            Colonne(l.transform, "Nom", "DISTRICT", Px(6.5f), Eteint, 1.2f, 0f);
-            Colonne(l.transform, "Charge", "CHARGE", Px(6.5f), Eteint, 0f, Px(46f));
-            Colonne(l.transform, "Regime", "RÉGIME", Px(6.5f), Eteint, 0f, Px(52f));
-            Colonne(l.transform, "Origines", "ORIGINES", Px(6.5f), Eteint, 1.6f, 0f);
+            foreach (TextMeshProUGUI col in new[] {
+                Colonne(l.transform, "Nom", "DISTRICT", Px(6.5f), EncreFaibleDuRegistre, 1.2f, 0f),
+                Colonne(l.transform, "Charge", "CHARGE", Px(6.5f), EncreFaibleDuRegistre, 0f, Px(46f)),
+                Colonne(l.transform, "Regime", "RÉGIME", Px(6.5f), EncreFaibleDuRegistre, 0f, Px(52f)),
+                Colonne(l.transform, "Origines", "ORIGINES", Px(6.5f), EncreFaibleDuRegistre, 1.6f, 0f) })
+            { col.fontStyle = FontStyles.Bold; col.characterSpacing = 10f; }
         }
 
         /// <summary>Une ligne du registre : le glyphe du régime, le nom, la charge, le régime, les
@@ -306,6 +315,11 @@ namespace MafiaCleanCity.CitySim.Inspection
             g.childForceExpandWidth = false;
             g.childAlignment = TextAnchor.MiddleLeft;
             bool tendu = f != null && (f.dispatcher_regime == "SURGE" || f.dispatcher_regime == "BACKLOGGED");
+            // zébrage : la ligne dont la file n'est pas VIDE est teintée (les lignes pleines du cadre 32 : 207,224,205)
+            if (f != null && f.queue_load != "EMPTY")
+            {
+                Image zebre = l.AddComponent<Image>(); zebre.color = ZebrageDuRegistre; zebre.raycastTarget = false;
+            }
 
             var glGo = new GameObject("Regime", typeof(RectTransform));
             glGo.transform.SetParent(l.transform, false);
@@ -315,19 +329,19 @@ namespace MafiaCleanCity.CitySim.Inspection
             Sprite sp = f != null ? DispatcherIcons.Pour(f.dispatcher_regime) : null;
             gl.sprite = sp;
             gl.enabled = sp != null;
-            gl.color = tendu ? Braise : Creme2;   // le glyphe suit l'encre du libellé qu'il accompagne
+            gl.color = tendu ? RougeDuRegistre : EncreFaibleDuRegistre;   // le glyphe suit l'encre du libellé qu'il accompagne
             LayoutElement le = glGo.AddComponent<LayoutElement>();
             le.preferredWidth = Px(9f); le.minWidth = Px(9f);
             le.preferredHeight = Px(9f); le.minHeight = Px(9f);
             le.flexibleWidth = 0f; le.flexibleHeight = 0f;
 
-            Colonne(l.transform, "Nom", nom, Px(8f), f == null ? Creme2 : Creme, 1.2f, 0f);
+            Colonne(l.transform, "Nom", nom.ToUpperInvariant(), Px(8f), f == null ? EncreFaibleDuRegistre : EncreDuRegistre, 1.2f, 0f);
             Colonne(l.transform, "Charge", f == null ? "—" : MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.ChargeDeLaFile, f.queue_load), Px(7f),
-                    f == null ? Eteint : Creme2, 0f, Px(46f));
+                    f == null ? EncreFaibleDuRegistre : EncreDuRegistre, 0f, Px(46f)).fontStyle |= FontStyles.UpperCase;
             Colonne(l.transform, "Regime", f == null ? "—" : MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.Regime, f.dispatcher_regime), Px(7f),
-                    f == null ? Eteint : tendu ? Braise : Creme2, 0f, Px(52f));
+                    f == null ? EncreFaibleDuRegistre : tendu ? RougeDuRegistre : EncreDuRegistre, 0f, Px(52f)).fontStyle |= FontStyles.UpperCase;
             Colonne(l.transform, "Origines", f == null ? "—" : Origines(f.type_distribution), Px(6.5f),
-                    f == null ? Eteint : Creme2, 1.6f, 0f);
+                    f == null ? EncreFaibleDuRegistre : EncreDuRegistre, 1.6f, 0f).fontStyle |= FontStyles.UpperCase;
         }
 
         /// <summary>Les six origines qui remplissent la file, celles qui sont PRÉSENTES seulement,
@@ -336,12 +350,13 @@ namespace MafiaCleanCity.CitySim.Inspection
         {
             if (b == null) return "—";
             var parts = new List<string>(6);
+            // les mots du cadre 32 (« PROGRAMMEE », « INDIC », « CASCADE », « FORENSIQUE ») ; les deux autres origines (faux rapport, rapport fondé) n'y sont pas dessinées : leurs mots restent
             Ajouter(parts, "Programmée", b.SCHEDULED);
-            Ajouter(parts, "Indicateur", b.INFORMANT);
+            Ajouter(parts, "Indic", b.INFORMANT);
             Ajouter(parts, "Faux rapport", b.FALSE_REPORT);
             Ajouter(parts, "Rapport fondé", b.GENUINE_REPORT);
             Ajouter(parts, "Cascade", b.CASCADE);
-            Ajouter(parts, "Médico-légal", b.FORENSIC);
+            Ajouter(parts, "Forensique", b.FORENSIC);
             return parts.Count == 0 ? "—" : string.Join(" · ", parts);
         }
 
@@ -374,19 +389,39 @@ namespace MafiaCleanCity.CitySim.Inspection
             v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.UpperCenter;
 
+            // A1 : le registre est le PREMIER objet de l'écran (la maquette n'a ni « LES INSPECTIONS » ni sous-titre : le papier porte « BPD · REGISTRE DE DISPATCH »). Titre et sous-titre restent construits (le texte
+            // est écrit par `Rendre`) mais ne se montrent pas.
             TextMeshProUGUI titre = Texte(transform, "Titre", "LES INSPECTIONS", Px(13f), Or,
                                           DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             titre.characterSpacing = 18f;
+            titre.gameObject.SetActive(false);
             sousTitre = Texte(transform, "Sous", $"{NombreDeDistricts} districts", Px(8.5f), Creme2,
                               DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            sousTitre.gameObject.SetActive(false);
 
-            GameObject c = Bloc("Corps", transform, false, Px(3f));
+            // le PAPIER : la feuille pleine largeur (déborde des marges de l'écran), ses rails de perforations, puis en-tête, filet, colonnes, lignes, filet, pied
+            GameObject papier = Bloc("Papier", transform, false, Px(2f));
+            papier.GetComponent<VerticalLayoutGroup>().padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(9f), (int)Px(9f));
+            GameObject feuille = new GameObject("Feuille", typeof(RectTransform));
+            feuille.transform.SetParent(papier.transform, false);
+            feuille.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform fr = (RectTransform)feuille.transform;
+            fr.anchorMin = Vector2.zero; fr.anchorMax = Vector2.one; fr.offsetMin = new Vector2(-Px(10f), 0f); fr.offsetMax = new Vector2(Px(10f), 0f);
+            Image fi = feuille.AddComponent<Image>(); fi.color = Papier; fi.raycastTarget = false;
+            Perforations(feuille.transform, true); Perforations(feuille.transform, false);
+            TextMeshProUGUI enteteRegistre = Texte(papier.transform, "EnteteRegistre", "BPD · REGISTRE DE DISPATCH", Px(10f), EncreDuRegistre,
+                                                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Left);
+            enteteRegistre.fontStyle = FontStyles.Bold; entereRegistreEspacement(enteteRegistre);
+            Regle(papier.transform, Px(1.2f));
+            EnTete(papier.transform);
+            GameObject c = Bloc("Corps", papier.transform, false, Px(1f));
             corps = (RectTransform)c.transform;
+            Regle(papier.transform, Px(1.2f));
 
-            piedTexte = Texte(transform, "Pied", "", Px(6.5f), Eteint,
+            piedTexte = Texte(papier.transform, "Pied", "", Px(6.5f), EncreFaibleDuRegistre,
                               DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             piedTexte.enableWordWrapping = true;
-            piedTexte.gameObject.SetActive(false);
+            piedTexte.characterSpacing = 8f;
 
             // ── le dépôt (#33) ──
             TextMeshProUGUI depotTitre = Texte(transform, "DepotTitre", "DÉPOSER UN SIGNALEMENT", Px(9f), Or,
@@ -404,15 +439,30 @@ namespace MafiaCleanCity.CitySim.Inspection
 
             var bGo = new GameObject("Deposer", typeof(RectTransform));
             bGo.transform.SetParent(transform, false);
+            // A3 (juge groupé du 07/10, f2) : DÉPOSER est une PLAQUE crème à double filet rouge (cadre 33 : la fiche de papier), pas l'aplat olive pleine largeur sans arrondi ni filet — la même grammaire crème que le CTA de ⑤
             Image fondBouton = bGo.AddComponent<Image>();
-            fondBouton.color = new Color(Or.r, Or.g, Or.b, 0.18f);
+            fondBouton.sprite = ProceduralUI.RoundedRectMask((int)Px(5f));
+            fondBouton.type = Image.Type.Sliced;
+            fondBouton.color = PiedDEcran.PlaqueCreme;
+            Color rougeDuDepot = PiedDEcran.EncreDeLaPlaque;
+            foreach ((string nom, float retrait, float epaisseur) in new[] { ("Filet1", 0f, 1.6f), ("Filet2", 3f, 0.8f) })
+            {
+                var fgo = new GameObject(nom, typeof(RectTransform));
+                fgo.transform.SetParent(bGo.transform, false);
+                fgo.AddComponent<LayoutElement>().ignoreLayout = true;
+                RectTransform frt = (RectTransform)fgo.transform;
+                frt.anchorMin = Vector2.zero; frt.anchorMax = Vector2.one; frt.offsetMin = new Vector2(Px(retrait), Px(retrait)); frt.offsetMax = new Vector2(-Px(retrait), -Px(retrait));
+                Image fim = fgo.AddComponent<Image>();
+                fim.sprite = ProceduralUI.RoundedRectOutline((int)Px(5f), Px(epaisseur), rougeDuDepot);
+                fim.type = Image.Type.Sliced; fim.raycastTarget = false;
+            }
             deposerBouton = bGo.AddComponent<Button>();
             deposerBouton.targetGraphic = fondBouton;
             deposerBouton.interactable = false;
             deposerBouton.onClick.AddListener(Deposer);
             LayoutElement leBouton = bGo.AddComponent<LayoutElement>();
             leBouton.preferredHeight = Px(22f); leBouton.minHeight = Px(22f);
-            TextMeshProUGUI libBouton = Texte(bGo.transform, "Lib", "DÉPOSER", Px(9f), Or,
+            TextMeshProUGUI libBouton = Texte(bGo.transform, "Lib", "DÉPOSER", Px(9f), rougeDuDepot,
                                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             libBouton.characterSpacing = 12f;
             RectTransform libRt = (RectTransform)libBouton.transform;
@@ -428,12 +478,55 @@ namespace MafiaCleanCity.CitySim.Inspection
             batonTexte.enableWordWrapping = true;
             batonTexte.gameObject.SetActive(false);
 
-            videTexte = Texte(transform, "Vide", "", Px(11f), Creme2,
+            // l'état vide se dit SUR LE PAPIER (le registre est là, ses lignes n'y sont pas : « tout ou rien »), à l'encre ; A2 : plus d'illustration photographique (aucune dans les cadres 31-35)
+            videTexte = Texte(papier.transform, "Vide", "", Px(10f), EncreDuRegistre,
                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             videTexte.enableWordWrapping = true;
             videTexte.gameObject.SetActive(false);
-            videIllustration = MafiaCleanCity.Shell.EtatsVidesIllustres.Monter(transform, "police", Px(120f));
-            if (videIllustration != null) videIllustration.gameObject.SetActive(false);
+            videTexte.transform.SetSiblingIndex(corps.transform.GetSiblingIndex() + 1);
+            videIllustration = null;
+        }
+
+        private static void entereRegistreEspacement(TextMeshProUGUI t) { t.characterSpacing = 14f; }
+
+        /// <summary>Un filet épais du registre : une barre d'encre pleine largeur de la colonne.</summary>
+        private static void Regle(Transform parent, float epaisseur)
+        {
+            GameObject go = new GameObject("Regle", typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            Image im = go.AddComponent<Image>(); im.color = EncreDuRegistre; im.raycastTarget = false;
+            LayoutElement le = go.AddComponent<LayoutElement>();
+            le.minHeight = le.preferredHeight = epaisseur; le.flexibleHeight = 0f;
+        }
+
+        private static Sprite spritePerforation;
+        /// <summary>Un rail de perforations (les trous de la bande de listing) : un sprite 16×44 portant UN trou, répété en hauteur (`Image.Type.Tiled`) — 23 u de large, 63 u de pas.</summary>
+        private static Sprite Perforation()
+        {
+            if (spritePerforation != null) return spritePerforation;
+            var tex = new Texture2D(16, 44, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Bilinear };
+            var px = new Color[16 * 44];
+            for (int y = 0; y < 44; y++)
+                for (int x = 0; x < 16; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(8f, 22f));
+                    px[y * 16 + x] = new Color(0.42f, 0.41f, 0.37f, 0.35f * Mathf.Clamp01(7f - d));
+                }
+            tex.SetPixels(px); tex.Apply(false, true);
+            spritePerforation = Sprite.Create(tex, new Rect(0, 0, 16, 44), new Vector2(0.5f, 0.5f), 69.6f, 0, SpriteMeshType.FullRect);
+            spritePerforation.hideFlags = HideFlags.HideAndDontSave;
+            return spritePerforation;
+        }
+
+        private static void Perforations(Transform feuille, bool gauche)
+        {
+            GameObject go = new GameObject(gauche ? "PerfGauche" : "PerfDroite", typeof(RectTransform));
+            go.transform.SetParent(feuille, false);
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(gauche ? 0f : 1f, 0f); rt.anchorMax = new Vector2(gauche ? 0f : 1f, 1f);
+            rt.pivot = new Vector2(gauche ? 0f : 1f, 0.5f);
+            rt.sizeDelta = new Vector2(Px(7f), 0f); rt.anchoredPosition = new Vector2(gauche ? Px(2f) : -Px(2f), 0f);
+            Image im = go.AddComponent<Image>(); im.sprite = Perforation(); im.type = Image.Type.Tiled; im.raycastTarget = false;
         }
 
         private static void Espace(Transform parent, float largeur)

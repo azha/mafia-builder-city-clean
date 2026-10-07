@@ -69,7 +69,7 @@ namespace MafiaCleanCity.Shell
         // CRÈME à encre sombre (ni `.cta6` ni `.geste`), documenté dans `Tools/juge-visuel/decision-du-jour/DECISION-F4-F5-2026-10-07.md`.
         /// <summary>La matière de la carte : REF (219,206,171) ; la plaque du tampon : REF (216,202,167). Aplats opaques (aucune conversion sRGB → linéaire).</summary>
         public static Color MatiereDeLaCarte => new Color32(219, 206, 171, 255);
-        public static Color PlaqueDuTampon => new Color32(216, 202, 167, 255);
+        public static Color PlaqueDuTampon => PiedDEcran.PlaqueCreme;
         /// <summary>L'encre sombre sur la matière crème (le titre) et sa version affaiblie (les libellés) — l'encre de la carte de la maquette.</summary>
         private static Color Encre => Hex("#2a1c12");
         private static Color EncreFaible => Hex("#6f5f4d");

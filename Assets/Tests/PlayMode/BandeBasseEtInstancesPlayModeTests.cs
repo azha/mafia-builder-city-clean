@@ -50,6 +50,24 @@ namespace MafiaCleanCity.CityMap.Tests
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, libelle, PiedDEcran.Forme.Geste)", s, "forme `.geste` : bord #5a4a2a, fond #241c11, libellé #d9ab4e");
         }
 
+        [Test]
+        public void B4_Inspection_LeRegistreDeDispatchSurPapier_SansIllustration_DeposerEnPlaqueCreme()
+        {
+            string s = Source("CitySim", "Inspection", "InspectionScreenController.cs");
+            StringAssert.Contains("Bloc(\"Papier\", transform", s, "A1 : le registre est une feuille de papier pleine largeur");
+            StringAssert.Contains("BPD · REGISTRE DE DISPATCH", s, "l'en-tête de listing du cadre 32");
+            StringAssert.Contains("Perforations(feuille.transform, true)", s); StringAssert.Contains("Perforations(feuille.transform, false)", s);
+            StringAssert.DoesNotContain("EtatsVidesIllustres.Monter(", s, "A2 : aucune illustration photographique dans les cadres 31-35");
+            StringAssert.Contains("fondBouton.color = PiedDEcran.PlaqueCreme;", s, "A3 : DÉPOSER, la plaque crème au double filet rouge — plus d'aplat olive");
+            Assert.AreEqual((216, 202, 167), ((int)((Color32)PiedDEcran.PlaqueCreme).r, (int)((Color32)PiedDEcran.PlaqueCreme).g, (int)((Color32)PiedDEcran.PlaqueCreme).b));
+            // les mots du cadre 32, par la valeur servie
+            Assert.AreEqual("vide", MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.ChargeDeLaFile, "EMPTY"));
+            Assert.AreEqual("légère", MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.ChargeDeLaFile, "LIGHT"));
+            Assert.AreEqual("nominal", MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.Regime, "NOMINAL"));
+            Assert.AreEqual("arriéré", MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.Regime, "BACKLOGGED"));
+            MafiaCleanCity.I18n.MotsDesEnumeres.OublierLesManquants();
+        }
+
         private GameObject hote;
 
         [UnityTest]
