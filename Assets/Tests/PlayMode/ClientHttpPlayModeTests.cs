@@ -187,7 +187,7 @@ namespace MafiaCleanCity.CityMap.Tests
         /// <summary>Les LECTURES légitimes d'en-têtes (GetRequestHeader), par fichier : HorlogeLegere H3 lit « X-Mafia-Background » ×2 et « Authorization » ×1 ; ce fichier-ci est le témoin.</summary>
         private static readonly Dictionary<string, int> LecturesLegitimes = new Dictionary<string, int>
         {
-            { "HorlogeLegerePlayModeTests.cs", 3 },
+            { "HorlogeLegerePlayModeTests.cs", 1 },   // 3 → 1 le 07/10 : H3 lit le nom par UNE constante (`EnTeteLu`), plus par trois littéraux
             { "ClientHttpPlayModeTests.cs", -1 },
         };
 

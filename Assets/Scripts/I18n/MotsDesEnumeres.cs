@@ -38,11 +38,11 @@ namespace MafiaCleanCity.I18n
             { "calm", "Calme" }, { "mounting", "Montante" }, { "crushing", "Écrasante" }, { "compression_active", null },
         });
 
-        // ⑭ — la semaine (cadre 29 : « Rien ne presse — aucune semaine en vue » ; cadre 25 : « la semaine s'annonce »). `active` : le mot varie avec le cadre (« s'est ouverte toute seule »,
+        // ⑭ — la semaine (canon de la série 2 : « JOUR 1 · TENSION CALME · AUCUNE SEMAINE » ; cadre 25 : « la semaine s'annonce »). `active` : le mot varie avec le cadre (« s'est ouverte toute seule »,
         // « 2 jours avant la fin », « est close ») et dépend d'un compte de jours → à écrire.
         public static readonly Domaine Semaine = new Domaine("compression", "semaine", new Dictionary<string, string>
         {
-            { "none", "aucune semaine en vue" }, { "warning", "la semaine s’annonce" }, { "active", null },
+            { "none", "aucune semaine" }, { "warning", "la semaine s’annonce" }, { "active", null },
         });
 
         // ⑭ — le genre d'un problème du tableau (cadre 26 : les cinq phrases dessinées). Les quatre autres genres (`severed_route`, `cue_cascade_card`, `settling_overload`, `friction_penalty`)

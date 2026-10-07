@@ -81,8 +81,9 @@ namespace MafiaCleanCity.CityMap.Tests
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)", appro, "㉚ : la forme `.geste` de `.appr6`");
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)", distrib, "㉘ : la forme `.geste` de `.lieg6`");
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, libelleBlanchir)", filiere, "㊵ : la forme `.cta6` (Cta6 par défaut)");
-            StringAssert.DoesNotContain("fond.color = Or;", appro, "㉚ : plus d'aplat or plein sur le bouton (« gros bouton jaune »)");
-            StringAssert.DoesNotContain("AjouterFond(bouton, Or);", distrib, "㉘ : plus de pavé or plein");
+            // le fond d'or de construction est REPEINT par le Styler (l'EFFET est prouvé par P2) : l'appel doit venir APRÈS la pose de l'or, jamais avant
+            Assert.Greater(appro.IndexOf("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)"), appro.IndexOf("fond.color = Or;"), "㉚ : le Styler repeint APRÈS la pose du fond (plus de « gros bouton jaune »)");
+            Assert.Greater(distrib.IndexOf("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)"), distrib.IndexOf("AjouterFond(bouton, Or);"), "㉘ : le Styler repeint APRÈS le pavé or");
             string journal = File.ReadAllText(Path.Combine(racine, "Journal", "JournalScreenController.cs"));
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, lib, PiedDEcran.Forme.Cta6, PiedDEcran.Etat.Eteint)", journal, "㊳ : le pied `.cta6` ÉTEINT (aucune route « assister » : TD-848)");
             StringAssert.Contains("b.interactable = false;", journal, "㊳ : le bouton éteint n'est pas cliquable — il ne ment pas");

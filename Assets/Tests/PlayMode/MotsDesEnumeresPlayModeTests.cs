@@ -26,7 +26,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("Calme", MotsDesEnumeres.Dire(MotsDesEnumeres.Tension, "calm"));
             Assert.AreEqual("Montante", MotsDesEnumeres.Dire(MotsDesEnumeres.Tension, "mounting"));
             Assert.AreEqual("Écrasante", MotsDesEnumeres.Dire(MotsDesEnumeres.Tension, "crushing"));
-            Assert.AreEqual("aucune semaine en vue", MotsDesEnumeres.Dire(MotsDesEnumeres.Semaine, "none"));
+            Assert.AreEqual("aucune semaine", MotsDesEnumeres.Dire(MotsDesEnumeres.Semaine, "none"));
             Assert.AreEqual("la semaine s’annonce", MotsDesEnumeres.Dire(MotsDesEnumeres.Semaine, "warning"));
             Assert.AreEqual("Un nœud de la chaîne sature", MotsDesEnumeres.Dire(MotsDesEnumeres.GenreDeProbleme, "backpressure_node"));
             I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { "compression.tension.calm", "§Tranquille" }, { "inspection.charge.heavy", "§Lourde" } });

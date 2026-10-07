@@ -28,6 +28,8 @@ namespace MafiaCleanCity.CityMap.Tests
             // Le REPLI de `building.type.*` (clés servies) : `LibellesBatiment.Type` passe par `Libelle.ParValeur(…, MotDuType(t))`.
             { "LibellesBatiment.cs::MotDuType", "repli de ParValeur sur une clé servie — dans Libelle, pas hors" },
             // Les ENDONYMES : le nom d'une langue dans cette langue ne se traduit pas (« Français » reste « Français » pour un anglophone).
+            // Le REPLI des bandes de caisse (COLLECTE, tables 75/85) : `CollecteMots.Bande` passe par `Libelle.ParValeur(…, RepliDeLaBande(valeur))` — le mot est le repli d'une clé dérivée de la VALEUR servie.
+            { "CollecteMots.cs::RepliDeLaBande", "repli de ParValeur sur la clé `vente.caisse.bande.<valeur>` — dans Libelle, pas hors" },
             { "SettingsScreenController.cs::*", "endonymes « Français » / « English » (décision f2 du 23/09)" },
         };
 
@@ -48,15 +50,15 @@ namespace MafiaCleanCity.CityMap.Tests
             { "BuildingCardController.cs", 9 },
             { "ChaineDApproScreenController.cs", 1 },   // 3 → 1 le 2026-09-26 (états vides : « Nestor » et le texte de chantier passent par Libelle)
             { "CityMapController.cs", 1 },
-            { "CityProjectionsClient.cs", 1 },   // 2 → 1 le 2026-09-26 (table 84 : « aucun nœud » passe par Libelle)
-            { "CompressionScreenController.cs", 2 },
+            { "CityProjectionsClient.cs", 0 },   // 2 → 1 le 2026-09-26 (table 84 : « aucun nœud » passe par Libelle)
+            { "CompressionScreenController.cs", 1 },   // 2 → 1 le 2026-10-07 (cause 4 : « Moderate »/« Standard » sortent par MotsDesEnumeres)
             { "ConflitScreenController.cs", 1 },
             { "DashboardController.cs", 2 },
             { "DecisionDetailScreenController.cs", 3 },
             { "DelegationScreenController.cs", 3 },
             { "DemoIdentityResolver.cs", 1 },
             { "DemolitionScreenController.cs", 8 },
-            { "DistrictInteriorScreenController.cs", 4 },
+            { "DistrictInteriorScreenController.cs", 3 },
             { "ExceptionDetailController.cs", 1 },
             // HomeChromeController.cs : 1 → 0 le 2026-09-26 (bandeau de chaufferie par Gabarit/ParValeur, 342f5c83 + b7d499f2 : le ternaire
             // « … — {week_state} » : "" est sorti) — entrée RETIRÉE, la dette est exacte dans les deux sens.
@@ -65,7 +67,7 @@ namespace MafiaCleanCity.CityMap.Tests
             { "LieutenantScreenController.cs", 1 },
             { "LoiScreenController.cs", 4 },
             { "RuleModel.cs", 2 },
-            { "SellingScreenController.cs", 5 },   // 6 → 5 le 2026-09-26 (1d0937fc : l'état vide de ㉟ passe par Libelle, table 62)
+            { "SellingScreenController.cs", 4 },   // 6 → 5 le 2026-09-26 (1d0937fc : l'état vide de ㉟ passe par Libelle, table 62)
             { "ShopScreenController.cs", 1 },   // 2 → 1 le 2026-09-26 (㉓, table 69 : les deux refus d'achat passent par Libelle)
             { "TopBarController.cs", 1 },
             { "TutorialScreenController.cs", 1 },

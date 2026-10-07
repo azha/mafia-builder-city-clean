@@ -70,10 +70,13 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNull(HorlogeLegere.Lire(null));
         }
 
+        /// <summary>LE nom de l'en-tête, lu par les assertions de H3 — UN littéral (la liste blanche de `ClientHttpPlayModeTests.G5` : 1 lecture permise).</summary>
+        private const string EnTeteLu = "X-Mafia-Background";
+
         [Test]
         public void H3_LEnTeteDeFond_SePoseEnArrierePlanSeulement_ValantExactementUn()
         {
-            Assert.AreEqual("X-Mafia-Background", EnTetesDuClient.Fond);
+            Assert.AreEqual(EnTeteLu, EnTetesDuClient.Fond);
             Assert.AreEqual("1", EnTetesDuClient.ValeurFond, "« 1 » à l'octet");
             Assert.AreEqual(1, EnTetesDuClient.ValeurFond.Length);
             Assert.IsNull(EnTetesDuClient.MarquerFond(null), "null en, null out : pas d'exception");
@@ -83,20 +86,20 @@ namespace MafiaCleanCity.CityMap.Tests
             {
                 Assert.AreEqual("http://hote:3000/v1/me/clock", req.url);
                 Assert.AreEqual("GET", req.method);
-                Assert.AreEqual("", req.GetRequestHeader("X-Mafia-Background") ?? "", "PAR DÉFAUT (aucun plan posé) : premier plan, SANS l'en-tête — la lecture de l'horloge est de l'activité");
+                Assert.AreEqual("", req.GetRequestHeader(EnTeteLu) ?? "", "PAR DÉFAUT (aucun plan posé) : premier plan, SANS l'en-tête — la lecture de l'horloge est de l'activité");
                 Assert.AreEqual("Bearer jeton-x", req.GetRequestHeader("Authorization"));
             }
             // la RÈGLE (f2 07/10, revue du design L1 B-5) : l'en-tête suit le PLAN de l'application, pas le caractère périodique de la requête
             using (var premierPlan = client.Construire("jeton-x", enArrierePlan: false))
-                Assert.IsTrue(string.IsNullOrEmpty(premierPlan.GetRequestHeader("X-Mafia-Background")), "premier plan ⇒ PAS d'en-tête (sinon le monde du joueur qui LIT s'arrêterait au bout de 240 min)");
+                Assert.IsTrue(string.IsNullOrEmpty(premierPlan.GetRequestHeader(EnTeteLu)), "premier plan ⇒ PAS d'en-tête (sinon le monde du joueur qui LIT s'arrêterait au bout de 240 min)");
             using (var arrierePlan = client.Construire("jeton-x", enArrierePlan: true))
-                Assert.AreEqual("1", arrierePlan.GetRequestHeader("X-Mafia-Background"), "arrière-plan (pause ou perte de focus) ⇒ « 1 » à l'octet");
+                Assert.AreEqual("1", arrierePlan.GetRequestHeader(EnTeteLu), "arrière-plan (pause ou perte de focus) ⇒ « 1 » à l'octet");
             // le plan se lit au moment de la construction (le client suit l'état du shell)
             bool fond = false;
             client.EnArrierePlan = () => fond;
-            using (var a = client.Construire("j")) Assert.IsTrue(string.IsNullOrEmpty(a.GetRequestHeader("X-Mafia-Background")));
+            using (var a = client.Construire("j")) Assert.IsTrue(string.IsNullOrEmpty(a.GetRequestHeader(EnTeteLu)));
             fond = true;
-            using (var b = client.Construire("j")) Assert.AreEqual("1", b.GetRequestHeader("X-Mafia-Background"));
+            using (var b = client.Construire("j")) Assert.AreEqual("1", b.GetRequestHeader(EnTeteLu));
             // l'helper lui-même
             Assert.IsNull(EnTetesDuClient.MarquerSelonLePlan(null, true));
             Assert.IsNull(EnTetesDuClient.MarquerSelonLePlan(null, false));
