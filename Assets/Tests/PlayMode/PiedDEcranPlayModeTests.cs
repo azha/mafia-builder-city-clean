@@ -38,7 +38,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(Trio(DesignTokens.Current.hudHairlineGold), Trio(cc), ".cta6 : border #b08d3e (--laiton)");
             Assert.AreEqual(Trio(DesignTokens.Current.hudMoneyGold), Trio(cl), ".cta6 : color #f2c96b (--or-vif)");
             var (ef, ec, el) = PiedDEcran.Couleurs(PiedDEcran.Forme.Cta6, PiedDEcran.Etat.Eteint);
-            Assert.AreEqual((0x11, 0x18, 0x23), Trio(ef)); Assert.AreEqual((0x2a, 0x36, 0x48), Trio(ec)); Assert.AreEqual((0x7a, 0x83, 0x8d), Trio(el), ".cta6.eteint");
+            Assert.AreEqual(Trio(DesignTokens.Current.lieutenantMedallionOuter), Trio(ef), ".cta6.eteint : `#111823` à 3/255 du jeton — le jeton (garde Palette)"); Assert.AreEqual((0x2a, 0x36, 0x48), Trio(ec)); Assert.AreEqual((0x7a, 0x83, 0x8d), Trio(el), ".cta6.eteint");
             Assert.AreEqual((0x9a, 0x8a, 0x6a), Trio(PiedDEcran.Legende(PiedDEcran.Etat.Allume)), "la légende small du geste");
             Assert.AreEqual((0x14, 0x1a, 0x21), Trio(PiedDEcran.PlaqueDuBas), "la plaque .bas");
             foreach (PiedDEcran.Forme forme in new[] { PiedDEcran.Forme.Cta6, PiedDEcran.Forme.Geste })

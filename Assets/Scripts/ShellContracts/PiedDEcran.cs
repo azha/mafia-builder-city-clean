@@ -31,13 +31,14 @@ namespace MafiaCleanCity.Shell
         {
             if (forme == Forme.Cta6)
                 return etat == Etat.Eteint
-                    ? ((Color)new Color32(0x11, 0x18, 0x23, 255), new Color32(0x2a, 0x36, 0x48, 255), new Color32(0x7a, 0x83, 0x8d, 255))
+                    // `#111823` est à 3/255 de lieutenantMedallionOuter : le jeton (garde Palette, seuil 4) ; `#2a3648` et `#7a838d` n'ont aucun jeton à moins de 4
+                    ? (DesignTokens.Current.lieutenantMedallionOuter, (Color)new Color32(0x2a, 0x36, 0x48, 255), new Color32(0x7a, 0x83, 0x8d, 255))
                     : (DesignTokens.Current.surfaceCard, DesignTokens.Current.hudHairlineGold, DesignTokens.Current.hudMoneyGold);
             switch (etat)
             {
                 case Etat.Mort: return (new Color32(0x1c, 0x14, 0x14, 255), new Color32(0x4a, 0x3a, 0x3a, 255), new Color32(0x98, 0x79, 0x79, 255));
                 case Etat.Rouge: return (new Color32(0x24, 0x12, 0x14, 255), new Color32(0x5c, 0x2a, 0x2a, 255), new Color32(0xd9, 0x7a, 0x6a, 255));
-                default: return (new Color32(0x24, 0x1c, 0x11, 255), new Color32(0x5a, 0x4a, 0x2a, 255), new Color32(0xd9, 0xab, 0x4e, 255));
+                default: return (new Color32(0x24, 0x1c, 0x11, 255), new Color32(0x5a, 0x4a, 0x2a, 255), (Color32)DesignTokens.Current.hudMoneyUnderlineGold);   // `#d9ab4e` EST le jeton (garde Palette)
             }
         }
 
@@ -104,6 +105,36 @@ namespace MafiaCleanCity.Shell
             fr.offsetMin = new Vector2(-debordGauche, -px(2f)); fr.offsetMax = new Vector2(debordDroite, 0f);
             UnityEngine.UI.Image fi = filet.AddComponent<UnityEngine.UI.Image>();
             fi.color = FiletDuBas; fi.raycastTarget = false;
+            return bas;
+        }
+
+        /// <summary>LA BANDE DE VOIX `.voix` (㉓ la vitrine, cadres 98-100 : plaque `#12100e`, filet HAUT de 1 CSS px `#3a2e24`, padding `9 12 16`, les éléments en ligne à `gap:9px` alignés en haut — A4 du juge groupé du 07/10) : la plaque
+        /// et son filet se posent par l'écran ; la VOIX elle-même (portrait, nom, réplique du lieutenant) n'est pas servie — TD-823, décision de f2 du 08/10 « bande basse sans voix » — et RIEN n'est posé à sa place. `plaque` et `filet` :
+        /// les aplats mesurés sur le cadre de l'écran (par le jeton quand il est à moins de 4/255). Rend la plaque (le contenu — portrait, colonne — s'y range). Idempotent par nom (« Bas »).</summary>
+        public static GameObject BandeDeVoix(Transform parent, System.Func<float, float> px, Color plaque, Color filet)
+        {
+            Transform existant = parent.Find("Bas");
+            if (existant != null) return existant.gameObject;
+            GameObject bas = new GameObject("Bas", typeof(RectTransform));
+            bas.transform.SetParent(parent, false);
+            Image fond = bas.AddComponent<Image>();
+            fond.color = plaque;
+            fond.raycastTarget = false;
+            HorizontalLayoutGroup h = bas.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)px(12f), (int)px(12f), (int)px(9f) + (int)px(1f), (int)px(16f));
+            h.spacing = px(9f);
+            h.childAlignment = TextAnchor.UpperLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            bas.AddComponent<LayoutElement>().flexibleHeight = 0f;
+            GameObject f = new GameObject("Filet", typeof(RectTransform));
+            f.transform.SetParent(bas.transform, false);
+            f.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform fr = (RectTransform)f.transform;
+            fr.anchorMin = new Vector2(0f, 1f); fr.anchorMax = new Vector2(1f, 1f); fr.pivot = new Vector2(0.5f, 1f);
+            fr.offsetMin = new Vector2(0f, -px(1f)); fr.offsetMax = Vector2.zero;
+            Image fi = f.AddComponent<Image>();
+            fi.color = filet; fi.raycastTarget = false;
             return bas;
         }
 

@@ -57,6 +57,9 @@ namespace MafiaCleanCity.Operational.Tests
             // « à confirmer par le back » (atelier). La règle (2) rougit le jour où l'une est servie : la retirer alors. 6 entrées.
             "vente.caisse.bande.none", "vente.caisse.bande.low", "vente.caisse.bande.moderate", "vente.caisse.bande.high", "vente.caisse.bande.full",
             "vente.caisse.bande.full_il_ne_vend_plus_tant_qu_on_ne_ramasse_pas",
+            // ㉓ LA VITRINE (CLIENT-1, 08/10 ; juge groupé du 07/10, B1 « la règle de paiement n'est plus écrite ») : les deux intitulés d'étagère des cadres 98-99 (atelier 7159e54, re-rendus en Marks), clés dérivées par
+            // `Libelle.De` ; table demandée au back via f2 le 08/10 — FR « Les extras — payés en Marks » / « Les Marks — payés au magasin ». La règle (2) les retire le jour où elles sont servies. 2 entrées.
+            "boutique.bloc.les_extras_payes_en_marks", "boutique.bloc.les_marks_payes_au_magasin",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

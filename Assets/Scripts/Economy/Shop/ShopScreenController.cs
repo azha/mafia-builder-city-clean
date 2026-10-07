@@ -14,34 +14,38 @@ namespace MafiaCleanCity.Economy.Shop
     // `iap/catalogue` · `me/iap/balance` · `me/iap/items/purchase` · `me/iap/entitlements`.
     // Les formes sont RECOPIÉES de `iap-catalogue.service.ts:36-45`, pas reformulées.
     //
+    // FORME — la maquette fait foi : `ecrans-brennar-6.html` cadres 98 (les extras, le cadre NOMINAL), 99 (la caisse — les Marks), 100 (zéro Mark), atelier 7159e54 (re-rendus en MARKS : le back n'a qu'une
+    // monnaie, décision de f2 du 08/10 ; le « jeton » n'y est plus que l'OBJET dessiné — la pièce au T). Le juge groupé du 07/10 (`Tools/juge-visuel/compte/r-groupe-2026-10-07/rapport.md`) : « la vitrine n'est
+    // plus une vitrine » — cinq A, trois B, corrigés ici fidèlement (ruling user 07/10) :
+    //   A1 la GRILLE 2 × 2 (`.planche`) : deux cartes par rangée, gouttière de 8 CSS px — plus une colonne de bandes pleine largeur ;
+    //   A2 la carte est une PLAQUE teintée (`.art` : #221a20 → #1a141a, bord #3a2530, rayon 4) — plus un filet sur le fond de page ;
+    //   A3 un DESSIN par article (`VitrinePictogrammes` : la pile de pièces par rang, la plaque aux couleurs, le tableau de bord, la clé, l'enveloppe) — plus le même disque quatre fois ;
+    //   A4 la BANDE BASSE `.voix` (`PiedDEcran.BandeDeVoix`) en pied de la pile ; SANS la voix (Wexler, « derrière le comptoir », sa réplique) : TD-823, registre back — rien n'est inventé à sa place ;
+    //   A5 une seule monnaie, les Marks, partout (les clés de la table 69) ;
+    //   B1 l'INTITULÉ d'étagère qui dit par quoi on paie (« Les extras — payés en Marks » / « Les Marks — payés au magasin ») ;
+    //   B2 le MÉDAILLON de bonus (`.bonus`) : plaque or collée dans l'angle de la carte, hors mise en page ;
+    //   B3 le COMPTOIR (`.compt`) : plaque bronze, enseigne à GAUCHE, solde en pastille à DROITE sur la même ligne, filet de laiton.
+    // Ordre des étagères : le cadre nominal (98) montre les extras — ils ouvrent l'écran ; la caisse (99) suit, puis le soutien sur une planche large.
+    // Le GESTE d'achat : la maquette ne dessine aucun bouton — la carte EST l'article, son étiquette de prix dit l'état (`.etiq`, `.etiq.hors` + « hors d'atteinte » en rouge, `.acquis`) ; une carte à portée se prend
+    // d'un appui (le `Button` est la carte). Les mots de l'état restent ceux que le back sert (table 69) : « pas assez de Marks », « plus aucun Mark, et rien n'en redonne », « Bientôt ».
+    // Consigné (C, ni correctif ni tour de juge) : le dégradé de la plaque et des pièces (aplat médian), les reflets de la vitre, « donne N Marks » (clé servie) là où le cadre écrit « + N Marks », le sous-titre
+    // anglais `.en` (aucune source : absent), « DERRIÈRE LA VITRE / Bientôt » là où le cadre écrit « PRIX DU MAGASIN » (le magasin n'est pas branché : cohérent avec l'état, dit le juge).
+    //
     // ⛔⛔ CE QUE CET ÉCRAN REND VISIBLE, ET QUI EST LE VRAI SUJET : *pour un joueur non payeur,
     // la vitrine est terminale.* Les TROIS écrivains de `economy_states.marks` sont le don de
     // bienvenue (50, une fois), un reçu vérifié, une subvention staff. Et **le don vaut exactement
     // le prix du seul article atteignable** : un achat, puis les autres sont hors d'atteinte pour
-    // toujours. Ce n'est pas un cas limite à cacher au fond d'un état vide — c'est l'état dans
-    // lequel finit tout joueur qui ne paie pas.
-    // ⇒ L'écran l'ÉCRIT, sous le solde, en une ligne. *Une vitrine qui laisse croire qu'on
-    // pourrait revenir demain avec plus de Marks ment sur l'économie qu'elle présente.*
+    // toujours. ⇒ L'écran l'ÉCRIT, dans la bande du bas (`.pied p.mort` de la maquette), en une ligne, quand le solde est à zéro.
     //
     // ⛔ ET LE SECOND MUR, MESURÉ : les MARKS_PACK et SUPPORT sont en argent réel et passent par
     // `iap/purchase/validate`, qui **ne peut créditer dans AUCUN environnement** — la production
     // câble `NullIapReceiptVerifier` (rend toujours null), et l'allow-list du faux vérificateur
     // est VIDE par défaut. Ces articles sont donc montrés DERRIÈRE LA VITRE, sans geste, avec la
-    // raison écrite. Un bouton qui ne peut pas aboutir est pire qu'un article qu'on ne peut pas
-    // prendre : il fait porter l'échec au joueur.
-    //
-    // ⚠️ DEUX ASSUMÉS, contre la convention du lot 0, écrits plutôt que masqués :
-    // · `display_name` est servi en **littéral ANGLAIS** — ㉓ (table 69) : le nom passe par `boutique.sku.<sku_id>`, et ce
-    //   littéral n'est plus que le repli compté tant que la clé n'est pas servie.
-    // · les sous-titres descriptifs de la maquette **n'ont aucune source** ; il n'y en a pas ici.
+    // raison écrite (« Bientôt »). Un bouton qui ne peut pas aboutir est pire qu'un article qu'on ne peut pas prendre.
     //
     // ⚠️ `bonus_pct` compare le **ratio Marks/euro** au pack de base — l'étiquette dit donc
     // « +N % de Marks par euro », jamais « +N % » collé au nombre de Marks : « 600 Marks +20 % »
     // se lit « 720 », et c'est faux. Défaut relevé par le juge sur la maquette, corrigé ici aussi.
-    //
-    // ⚠️ MAQUETTE v6 « LA VITRINE » (cadres 48-50) NON RATIFIÉE par l'user au 2026-09-02 — cet
-    // écran est bâti sur la SURFACE MESURÉE. À re-confronter dès ratification.
-    // ⛔ NON REVU — jalon 2026-09-05.
     public class ShopScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
@@ -62,21 +66,38 @@ namespace MafiaCleanCity.Economy.Shop
 
         private const float K = 1280f / 300f;
         private static float Px(float cssPx) => cssPx * K;
+        /// <summary>La largeur d'une carte de la grille, en unités : (300 − 2 × 10 − 8) / 2 px CSS — la maquette est dessinée pour 300 px CSS = la largeur du canvas.</summary>
+        private static float LargeurDeCarte => (Px(300f) - 2f * Px(10f) - Px(8f)) / 2f;
 
-        private static Color Creme => DesignTokens.Current.hudCreme;
-        private static Color Creme2 => DesignTokens.Current.hudCremeSecondary;
-        private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;
-        private static Color Braise => DesignTokens.Current.hudGaugeArcHot;
-        // `#d9ab4e40` — l'or du canon à l'opacité PROPRE à ce site (0x40) : la teinte suit la palette
-        // (TD-612), l'opacité reste un choix de composition du site, donc elle reste ici.
-        private static Color OrLisere { get { Color c = DesignTokens.Current.hudMoneyUnderlineGold; c.a = 0x40 / 255f; return c; } }
-        private static readonly Color Eteint = new Color(1f, 1f, 1f, 0.18f);
+        private static TMP_FontAsset Serif => DesignTokens.Current.hudSerifFont;
+        private static TMP_FontAsset Sans => DesignTokens.Current.primaryFont;
 
-        private static Color Hex(string h)
-        {
-            ColorUtility.TryParseHtmlString(h, out Color c);
-            return c;
-        }
+        // ═══ La palette de ㉓, lue sur `.vitr6` (ecrans-brennar-6.html @7159e54) — aplats opaques posés tels quels (la maquette ne pose ici aucune opacité : rien à convertir). Les valeurs à moins de 4/255 d'un jeton
+        // passent par le jeton (garde Palette) : `#12100e` → nightSocle, `#0c1015` → hudGaugeFaceOuter, `#8d93a0` → onSurfaceSecondaryAlt, `#b9ac92` → hudCremeSecondary, `#d9ab4e` → hudMoneyUnderlineGold. ═══
+        private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;          // `#d9ab4e` — l'enseigne, l'accordé, le médaillon
+        private static Color Creme2 => DesignTokens.Current.hudCremeSecondary;          // `#b9ac92` — le bord de l'étiquette de prix
+        private static Color Socle => DesignTokens.Current.nightSocle;                  // `#12100e` — la pastille du solde, la bande du bas
+        private static Color VitreBas => DesignTokens.Current.hudGaugeFaceOuter;        // `#0c1015` — le bas du fond de la vitre
+        private static Color GrisDEtagere => DesignTokens.Current.onSurfaceSecondaryAlt; // `#8d93a0` — l'intitulé d'étagère, la note « Bientôt »
+        private static readonly Color32 ComptoirHaut = new Color32(0x2a, 0x23, 0x1f, 255), ComptoirBas = new Color32(0x1b, 0x16, 0x13, 255);
+        private static readonly Color32 Laiton = new Color32(0x6b, 0x4f, 0x14, 255);          // le filet du comptoir, le bord de la pastille
+        private static readonly Color32 CremeDuTitre = new Color32(0xf0, 0xdf, 0xc4, 255);    // le montant du solde
+        private static readonly Color32 VitreHaut = new Color32(0x15, 0x1b, 0x23, 255);
+        private static readonly Color32 Rebord = new Color32(0x3a, 0x2e, 0x24, 255);          // le rebord de la planche, le filet de la bande
+        private static readonly Color32 OmbreDuRebord = new Color32(0x16, 0x11, 0x0d, 255);
+        private static readonly Color32 PlaqueDArticle = new Color32(0x1e, 0x17, 0x1d, 255);  // la médiane du dégradé #221a20 → #1a141a
+        private static readonly Color32 BordDArticle = new Color32(0x3a, 0x25, 0x30, 255);
+        private static readonly Color32 Papier = new Color32(0xef, 0xe6, 0xd4, 255);          // le nom de l'article, l'étiquette de prix
+        private static readonly Color32 PapierTerni = new Color32(0xe6, 0xdb, 0xc9, 255);     // `.etiq.hors`
+        private static readonly Color32 EncreDuPapier = new Color32(0x24, 0x1f, 0x1c, 255);   // le montant, le médaillon ; le fond du portrait
+        private static readonly Color32 EncreTernie = new Color32(0x75, 0x59, 0x59, 255);
+        private static readonly Color32 MagasinFond = new Color32(0x1b, 0x23, 0x2c, 255), MagasinBord = new Color32(0x3f, 0x4a, 0x57, 255), MagasinEncre = new Color32(0x9f, 0xb0, 0xc0, 255);
+        private static readonly Color32 VertAcquis = new Color32(0x7f, 0xc9, 0x9a, 255);
+        private static readonly Color32 RougeDuManque = new Color32(0xd9, 0x7a, 0x6a, 255);
+        private static readonly Color32 BordDuPortrait = new Color32(0x4a, 0x3a, 0x2a, 255);
+        private static readonly Color32 EncreMorte = new Color32(0xd0, 0xa8, 0xa0, 255);      // `.mort`
+
+        private enum EtatDEtiquette { Papier, Hors, Magasin }
 
         private ShopClient client;
         private string token;
@@ -84,7 +105,7 @@ namespace MafiaCleanCity.Economy.Shop
         private Transform mountParent;
         private RectTransform etageres;
         private TextMeshProUGUI soldeTexte;
-        private TextMeshProUGUI terminalTexte;
+        private GameObject terminalBloc;
         private TextMeshProUGUI videTexte;
 
         private void Awake() => Init();
@@ -106,47 +127,24 @@ namespace MafiaCleanCity.Economy.Shop
             Init();
             // ⛔ Sans ces quatre lignes le rect reste à 100x100 — la taille par défaut d'un
             // RectTransform neuf — et l'écran ne dessine RIEN, sans erreur console. Mesuré sur ㉟
-            // le 2026-09-02, capture à l'appui : la garde anti-vacuité était verte quand même,
-            // parce qu'elle comptait les teintes de TOUTE l'image et que les écrans du dessous
-            // rendaient. Une garde qui mesure le cadre ne peut pas voir qu'un locataire est absent.
+            // le 2026-09-02, capture à l'appui.
             RectTransform rt = (RectTransform)transform;
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
-            // ⛔⛔ ET L'ORDRE DE FRATRIE DÉCIDE DE CE QU'ON VOIT. Mesuré le 2026-09-02 sur deux
-            // captures : `rect=1280x960`, `frere=1/8` — l'écran était de la BONNE taille, au BON
-            // endroit, sous le BON canvas, et SIX frères se dessinaient par-dessus. La capture
-            // montrait la carte de la ville, l'autonomie et le dock ; l'écran, nulle part.
-            // ⇒ Un locataire monté en surimpression doit être le DERNIER enfant, sinon il est
-            // rendu dessous. C'est une propriété STRUCTURELLE — elle ne dépend d'aucun pixel,
-            // d'aucune résolution, d'aucune couleur — et c'est la seule classe de garde qui ait
-            // fermé ce genre de défaut ici.
+            // ⛔⛔ ET L'ORDRE DE FRATRIE DÉCIDE DE CE QU'ON VOIT. Mesuré le 2026-09-02 : l'écran était de la BONNE taille, au BON endroit, sous le BON canvas, et SIX frères se dessinaient par-dessus.
+            // ⇒ Un locataire monté en surimpression doit être le DERNIER enfant, sinon il est rendu dessous. Propriété STRUCTURELLE — la seule classe de garde qui ait fermé ce genre de défaut ici.
             transform.SetAsLastSibling();
         }
 
-
-        /// <summary>⛔⛔ CE HOOK-CI EST LE BON, ET LES DEUX PRÉCÉDENTS ÉTAIENT DÉCORATIFS.
-        /// Lu dans le corps du shell (`AppShell.ConstruireLocataire`), pas déduit :
-        ///   1. `host = new GameObject(...)`      — créé à la racine, SANS parent
-        ///   2. `host.transform.SetParent(slot)`  — le parent change ICI
-        ///   3. `host.AddComponent&lt;T&gt;()`         — le composant naît APRÈS
-        ///   4. `tenant.SetMountParent(slot)`     — puis `SetToken`, même frame
-        /// ⇒ `OnTransformParentChanged` ne pouvait JAMAIS tirer : au moment du re-parentage,
-        /// ce composant n'existait pas. Un dispositif qui nomme un mécanisme réel et ne
-        /// s'exécute jamais — et il a survécu deux runs en passant pour un correctif, parce que
-        /// six écrans sur sept étaient déjà derniers SANS lui.
-        /// ⇒ Et poser l'ordre en (4) ne suffit pas non plus : la mesure dit `frère 6 sur 11`,
-        /// donc des frères s'ajoutent APRÈS la fenêtre synchrone du montage.
-        /// ⇒ `Start()` s'exécute à la frame SUIVANTE — après tout ce que le shell fait en
-        /// synchrone. C'est le premier instant où « être dernier » est stable.
-        /// ★ La leçon vaut plus que la ligne : *avant d'écrire un hook, lire le CORPS de ce qui
-        /// l'appelle, et se demander si l'événement qu'il observe peut seulement se produire.*</summary>
+        /// <summary>⛔⛔ CE HOOK-CI EST LE BON. Lu dans le corps du shell (`AppShell.ConstruireLocataire`) : le composant naît APRÈS le re-parentage, donc `OnTransformParentChanged` ne tirait jamais ; et poser
+        /// l'ordre au montage ne suffit pas (des frères s'ajoutent après la fenêtre synchrone). `Start()` s'exécute à la frame SUIVANTE — le premier instant où « être dernier » est stable.
+        /// ★ Avant d'écrire un hook, lire le CORPS de ce qui l'appelle, et se demander si l'événement qu'il observe peut seulement se produire.</summary>
         private void Start()
         {
             if (transform.parent != null) transform.SetAsLastSibling();
         }
-
 
         public void SetToken(string bearer)
         {
@@ -166,6 +164,16 @@ namespace MafiaCleanCity.Economy.Shop
             Rendre();
         }
 
+        /// <summary>HORS RÉSEAU — pour la garde de classe (`Vitrine`) et les harnais : pose le catalogue, le solde et les possessions, puis dessine. Même chemin que `Charger` après ses trois requêtes.</summary>
+        public void RendrePourTest(SkuDto[] catalogue, int solde, string[] possedes)
+        {
+            Init();
+            Catalogue = catalogue;
+            Solde = solde;
+            Possedes = possedes;
+            Rendre();
+        }
+
         private void Rendre()
         {
             for (int i = etageres.childCount - 1; i >= 0; i--)
@@ -175,12 +183,10 @@ namespace MafiaCleanCity.Economy.Shop
             // afficher « 0 Mark » à un joueur dont la route a simplement échoué.
             // ㉓ (table 69, client 06a500d4, f2 2026-09-26) : la monnaie s'appelle « Marks » (canon). Le solde connu passe par le
             // gabarit ICU `boutique.bloc.n_marks` ; « — Marks » garde la clé `boutique.bloc.jetons` (valeur changée, clé gardée).
-            //   Il clôt l'ancien arbitrage (« le gabarit à trou n'existe pas, je laisse la composition visible ») : il existe.
             soldeTexte.text = Solde < 0 ? SoldeInconnu() : NMarks(Solde);
-            soldeTexte.color = Solde == 0 ? Braise : Or;
+            terminalBloc.SetActive(Solde == 0);
 
             var possedes = new HashSet<string>(Possedes ?? new string[0]);
-            terminalTexte.gameObject.SetActive(Solde == 0);
 
             EtatVide = Catalogue == null || Catalogue.Length == 0;
             videTexte.gameObject.SetActive(EtatVide);
@@ -192,136 +198,225 @@ namespace MafiaCleanCity.Economy.Shop
                 RendusEffectues++;
                 return;
             }
-            foreach (SkuDto s in Catalogue) Article(s, possedes.Contains(s.sku_id));
+
+            // Deux étagères, dans l'ordre de la maquette : les extras (cadre 98, le NOMINAL — ce qu'on peut prendre avec ses Marks), puis la caisse (cadre 99 : les liasses en 2 × 2, le soutien sur une planche large).
+            var extras = new List<SkuDto>();
+            var liasses = new List<SkuDto>();
+            var soutiens = new List<SkuDto>();
+            foreach (SkuDto s in Catalogue)
+            {
+                if (s.kind == "MARKS_PACK") liasses.Add(s);
+                else if (s.kind == "SUPPORT") soutiens.Add(s);
+                else extras.Add(s);
+            }
+            // le rang d'une liasse parmi les siennes (par ce qu'elle donne) fait la hauteur de sa pile de pièces (A3)
+            var rangs = new Dictionary<string, int>();
+            var parTaille = new List<SkuDto>(liasses);
+            parTaille.Sort((a, b) => a.marks_granted.CompareTo(b.marks_granted));
+            for (int i = 0; i < parTaille.Count; i++) rangs[parTaille[i].sku_id] = i;
+
+            if (extras.Count > 0) Etagere(Lib("Les extras — payés en Marks"), extras, possedes, rangs, false);
+            if (liasses.Count > 0) Etagere(Lib("Les Marks — payés au magasin"), liasses, possedes, rangs, false);
+            if (soutiens.Count > 0) Etagere(liasses.Count > 0 ? null : Lib("Les Marks — payés au magasin"), soutiens, possedes, rangs, true);
             RendusEffectues++;
         }
 
-        private void Article(SkuDto s, bool possede)
+        /// <summary>Une ÉTAGÈRE `.etag` : l'intitulé `h3` (qui dit par quoi on paie — B1), la planche, son rebord de bois (3 px) et l'ombre portée (3 px). `titre` nul : une planche de suite (le soutien) sans intitulé.</summary>
+        private void Etagere(string titre, List<SkuDto> articles, HashSet<string> possedes, Dictionary<string, int> rangs, bool large)
+        {
+            GameObject etag = Bloc("Etagere", etageres, false, 0f);
+            etag.GetComponent<VerticalLayoutGroup>().padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(9f), 0);
+            etag.AddComponent<LayoutElement>().flexibleHeight = 0f;
+            if (titre != null)
+            {
+                TextMeshProUGUI h3 = Ligne(etag.transform, "Titre", titre, 7.5f, GrisDEtagere, Sans, true);
+                h3.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+                h3.characterSpacing = 21f;   // 1,6 px sur 7,5 px ≈ .21em
+                Espace(etag.transform, Px(7f));
+            }
+            Planche(etag.transform, articles, possedes, rangs, large);
+            Filet(etag.transform, "Rebord", Px(3f), Rebord);
+            Filet(etag.transform, "Ombre", Px(3f), OmbreDuRebord);
+        }
+
+        /// <summary>LA PLANCHE `.planche` (A1) : la grille à DEUX colonnes (`1fr 1fr`, gouttière 8 CSS px), rangée par rangée ; les deux cartes d'une rangée ont la hauteur de la plus haute (comme la grille CSS) et la même largeur.
+        /// Une rangée incomplète garde sa case vide. `large` : une colonne (`.planche.large`, le soutien).</summary>
+        private void Planche(Transform etag, List<SkuDto> articles, HashSet<string> possedes, Dictionary<string, int> rangs, bool large)
+        {
+            GameObject planche = Bloc("Planche", etag, false, Px(8f));
+            planche.GetComponent<VerticalLayoutGroup>().padding = new RectOffset(0, 0, 0, (int)Px(9f));
+            int parRangee = large ? 1 : 2;
+            for (int i = 0; i < articles.Count; i += parRangee)
+            {
+                GameObject rangee = Bloc("Rangee", planche.transform, true, Px(8f));
+                rangee.GetComponent<HorizontalLayoutGroup>().childForceExpandHeight = true;
+                for (int j = 0; j < parRangee; j++)
+                {
+                    if (i + j < articles.Count) Article(rangee.transform, articles[i + j], possedes.Contains(articles[i + j].sku_id), rangs);
+                    else CaseVide(rangee.transform);
+                }
+            }
+        }
+
+        /// <summary>UNE CARTE `.art` (A2, A3) : la plaque teintée au bord fin et au rayon 4, le dessin, le nom en serif, ce que la liasse donne, l'étiquette de prix et l'état ; le médaillon de bonus (B2) et l'étiquette ACQUIS
+        /// collés dans les angles, hors mise en page. Un article à portée se prend d'un appui sur la carte.</summary>
+        private void Article(Transform rangee, SkuDto s, bool possede, Dictionary<string, int> rangs)
         {
             bool argentReel = s.kind == "MARKS_PACK" || s.kind == "SUPPORT";
             bool abordable = !argentReel && Solde >= s.price_marks && s.price_marks > 0;
 
-            GameObject r = Bloc("Sku_" + s.sku_id, etageres, false, Px(4f));
-            Image fond = r.AddComponent<Image>();
-            fond.sprite = ProceduralUI.RoundedRectOutline((int)Px(12f), Px(1f),
-                possede ? OrLisere : Hex("#ffffff24"));
+            GameObject art = new GameObject("Sku_" + s.sku_id, typeof(RectTransform));
+            art.transform.SetParent(rangee, false);
+            Image fond = art.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectMask((int)Px(4f));
             fond.type = Image.Type.Sliced;
-            r.GetComponent<VerticalLayoutGroup>().padding =
-                new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(9f));
+            fond.color = PlaqueDArticle;
+            VerticalLayoutGroup v = art.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(7f), (int)Px(7f), (int)Px(7f), (int)Px(6f));
+            v.spacing = Px(4f);
+            v.childAlignment = TextAnchor.UpperCenter;
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = false; v.childForceExpandHeight = false;
+            // deux colonnes ÉGALES : la carte ne réclame aucune largeur propre, la rangée partage la sienne
+            LayoutElement le = art.AddComponent<LayoutElement>();
+            le.minWidth = 0f; le.preferredWidth = 0f; le.flexibleWidth = 1f;
+            Bord(art.transform, ProceduralUI.RoundedRectOutline((int)Px(4f), Px(1f), BordDArticle), Image.Type.Sliced);
+            if (possede) art.AddComponent<CanvasGroup>().alpha = 0.62f;   // `.art.pris`
 
-            GameObject tete = Bloc("Tete", r.transform, true, Px(6f));
-            // ⛔ Le bloc de tête déclare SA hauteur : un groupe horizontal enfant d'un groupe
-            // vertical ne la déduit pas de ses textes, et une hauteur nulle fait empiler tous les
-            // frères au même Y.
-            LayoutElement teteLe = tete.AddComponent<LayoutElement>();
-            teteLe.preferredHeight = Px(13f);
-            var htete = tete.GetComponent<HorizontalLayoutGroup>();
-            htete.childForceExpandWidth = false;
-            htete.childAlignment = TextAnchor.MiddleLeft;
+            VitrinePictogrammes.Dessiner(art.transform, VitrinePictogrammes.MotifDe(s.kind, s.sku_id),
+                                         rangs.TryGetValue(s.sku_id, out int rang) ? rang : 0, s.sku_id, Px, Serif);
 
-            // l'objet, en pastille : sa forme dit sa nature avant qu'on lise son nom
-            GameObject pastille = new GameObject("Objet", typeof(RectTransform));
-            pastille.transform.SetParent(tete.transform, false);
-            pastille.AddComponent<Image>().sprite =
-                ProceduralUI.RadialDisc((int)Px(11f), argentReel ? Creme2 : Or, Hex("#7a5a14"));
-            LayoutElement pl = pastille.AddComponent<LayoutElement>();
-            pl.preferredWidth = Px(11f); pl.preferredHeight = Px(11f); pl.flexibleWidth = 0f;
+            // ㉓ (table 69) : le nom se lit par la clé COMPOSÉE depuis l'id servi, `boutique.sku.<sku_id>` ; repli compté sur ce que le back sert.
+            Colonne(art.transform, "Nom", NomDuSku(s), 9f, Papier, Serif, true);
 
-            // ㉓ (table 69) : le nom se lit par la clé COMPOSÉE depuis l'id servi, `boutique.sku.<sku_id>`. Sans valeur servie, le
-            // repli (compté) est ce que le back sert — `display_name`, littéral anglais, sinon l'id : la phrase d'avant, jamais un nom
-            // que le client inventerait.
-            Texte(tete.transform, "Nom", NomDuSku(s),
-                  Px(11.5f), Creme, DesignTokens.Current.hudSerifFont);
-
-            GameObject espace = new GameObject("Espace", typeof(RectTransform));
-            espace.transform.SetParent(tete.transform, false);
-            espace.AddComponent<LayoutElement>().flexibleWidth = 1f;
-
-            if (possede)
-                Texte(tete.transform, "Possede", "ACQUIS", Px(7.5f), Or, DesignTokens.Current.primaryFont);
-
-            // le prix : en Marks, ou en argent réel — jamais les deux dans la même unité
-            if (s.price_marks > 0)
-                Texte(r.transform, "Prix", NMarks(s.price_marks), Px(9f),
-                      abordable || possede ? Creme : Eteint, DesignTokens.Current.primaryFont);
-            else if (!string.IsNullOrEmpty(s.price_store_product_id))
-                Texte(r.transform, "Prix", "en boutique", Px(9f), Creme2, DesignTokens.Current.primaryFont);
-
-            // ce que le pack DONNE, écrit sur l'objet — le pack de soutien était le seul des cinq
-            // à ne pas le dire (défaut du juge, corrigé dans la maquette et ici).
+            // ce que la liasse DONNE (`.accorde`) — par la clé servie (le cadre écrit « + N Marks » : consigné)
             if (s.marks_granted > 0)
-                Texte(r.transform, "Donne", MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.donne_n_marks",
-                          "donne {n, plural, one {# Mark} other {# Marks}}", N(s.marks_granted)), Px(7.5f), Creme2,
-                      DesignTokens.Current.primaryFont);
+            {
+                TextMeshProUGUI accorde = Colonne(art.transform, "Donne",
+                    MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.donne_n_marks", "donne {n, plural, one {# Mark} other {# Marks}}", N(s.marks_granted)),
+                    7f, Or, Sans, true);
+                accorde.characterSpacing = 6f;
+            }
+
+            // l'étiquette de prix, et l'état qu'elle dit
+            if (possede)
+            {
+                EtiquetteAcquis(art.transform);   // `.acquis` — et plus d'étiquette de prix (cadre 100)
+            }
+            else if (argentReel)
+            {
+                Etiquette(art.transform, "DERRIÈRE LA VITRE", EtatDEtiquette.Magasin);
+                Colonne(art.transform, "Note", Bientot(), 6.5f, GrisDEtagere, Sans);
+            }
+            else if (s.price_marks > 0)
+            {
+                Etiquette(art.transform, NMarks(s.price_marks), abordable ? EtatDEtiquette.Papier : EtatDEtiquette.Hors);
+                // `.manque` : la raison, en rouge, sous l'étiquette — les deux refus disent « Marks » (table 69)
+                if (!abordable) Colonne(art.transform, "Manque", Solde == 0 ? PlusAucunMark() : PasAssezDeMarks(), 6.5f, RougeDuManque, Sans);
+            }
 
             // ⚠️ `bonus_pct` porte sur le RATIO Marks/euro, pas sur le nombre de Marks.
             if (s.bonus_pct > 0)
-                Texte(r.transform, "Bonus", MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.bonus_de_marks_par_euro",
-                          "+{bonus}\u202f% de Marks par euro",
-                          new Dictionary<string, string> { { "bonus", s.bonus_pct.ToString(System.Globalization.CultureInfo.InvariantCulture) } }),
-                      Px(7.5f), Or,
-                      DesignTokens.Current.primaryFont);
+                Medaillon(art.transform, MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.bonus_de_marks_par_euro", "+{bonus} % de Marks par euro",
+                    new Dictionary<string, string> { { "bonus", s.bonus_pct.ToString(System.Globalization.CultureInfo.InvariantCulture) } }));
 
-            Geste(r.transform, s, possede, argentReel, abordable);
-        }
-
-        /// <summary>Le geste — et sa raison quand il est impossible. Jamais masqué : *un geste
-        /// impossible qu'on masque devient un geste qu'on croit ne pas exister.*</summary>
-        private void Geste(Transform parent, SkuDto s, bool possede, bool argentReel, bool abordable)
-        {
-            string libelle, raison;
-            Color teinte;
-            if (possede) { libelle = "ACQUIS"; raison = null; teinte = Or; }
-            else if (argentReel)
+            if (abordable)
             {
-                libelle = "DERRIÈRE LA VITRE";
-                // ㉓ (passe UX 2026-09-26, table 63 v2 ; R3/D24 « les garder, marqués bientôt ») : « aucun vérificateur de reçu n'est
-                // câblé » était une phrase TECHNIQUE montrée au joueur. Le pack en argent réel reste visible, marqué « Bientôt ».
-                raison = MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.bientot", "Bientôt");
-                teinte = Eteint;
-            }
-            else if (!abordable)
-            {
-                libelle = "ACHETER";
-                // ㉓ (table 69) : les deux refus d'achat disent « Marks ».
-                raison = Solde == 0
-                    ? MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.plus_aucun_mark_et_rien_n_en_redonne",
-                                                          "plus aucun Mark, et rien n\u2019en redonne")
-                    : MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.pas_assez_de_marks", "pas assez de Marks");
-                teinte = Eteint;
-            }
-            else { libelle = "ACHETER"; raison = null; teinte = Or; }
-
-            GameObject b = Bloc("Geste", parent, false, Px(1f));
-            var vb = b.GetComponent<VerticalLayoutGroup>();
-            vb.childAlignment = TextAnchor.MiddleCenter;
-            vb.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(6f), (int)Px(6f));
-            Image bf = b.AddComponent<Image>();
-            bf.sprite = teinte == Or
-                ? ProceduralUI.RoundedRectOutline((int)Px(9f), Px(1f), Or)
-                : ProceduralUI.RoundedRectDashedOutline((int)Px(9f), Px(1f), (int)Px(4f), (int)Px(3f), Eteint);
-            // ⛔ LE TYPE SUIT LE SPRITE, PAS LE SITE — et c'est ce que la correction de classe a
-            //    failli manquer. Ce site pose DEUX contours selon l'état : un trait CONTINU
-            //    (`RoundedRectOutline`, qui veut `Sliced` : l'étirement préserve un trait plein)
-            //    et un POINTILLÉ (`RoundedRectDashedOutline`, qui veut `Tiled` : sa section
-            //    centrale porte UNE période, et `Sliced` l'étirerait en une longue barre).
-            //    ⇒ Basculer le site entier en `Tiled` aurait réparé le pointillé en cassant le
-            //      trait plein. *Une correction de classe posée sur le SITE au lieu de l'OBJET
-            //      échange un défaut contre un autre.*
-            bf.type = teinte == Or ? Image.Type.Sliced : Image.Type.Tiled;
-            Texte(b.transform, "Lib", libelle, Px(9f), teinte,
-                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 14f;
-            if (raison != null)
-                Texte(b.transform, "Raison", raison, Px(6.8f), Creme2,
-                      DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
-                    .enableWordWrapping = true;
-
-            if (teinte == Or && !possede)
-            {
-                Button bouton = b.AddComponent<Button>();
+                Button bouton = art.AddComponent<Button>();
+                bouton.targetGraphic = fond;
                 string skuId = s.sku_id;
                 bouton.onClick.AddListener(() => StartCoroutine(Acheter(skuId)));
             }
+        }
+
+        /// <summary>L'ÉTIQUETTE DE PRIX `.etiq`, pendue sous le nom : plaque de papier au bord fin (rayon 2), le jeton et le montant ; `.hors` = papier terni, bord POINTILLÉ, encre éteinte ; `.magasin` = plaque sombre
+        /// bleutée, sans jeton, lettrée en petites capitales.</summary>
+        private void Etiquette(Transform art, string texte, EtatDEtiquette etat)
+        {
+            GameObject e = new GameObject("Etiquette", typeof(RectTransform));
+            e.transform.SetParent(art, false);
+            Image fond = e.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectMask((int)Px(2f));
+            fond.type = Image.Type.Sliced;
+            fond.color = etat == EtatDEtiquette.Magasin ? (Color)MagasinFond : etat == EtatDEtiquette.Hors ? (Color)PapierTerni : (Color)Papier;
+            fond.raycastTarget = false;
+            HorizontalLayoutGroup h = e.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(6f), (int)Px(6f), (int)Px(2f), (int)Px(2f));
+            h.spacing = Px(4f);
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            e.AddComponent<LayoutElement>().flexibleWidth = 0f;
+            // ⛔ LE TYPE SUIT LE SPRITE : le trait continu veut `Sliced`, le pointillé veut `Tiled` (sa section centrale porte UNE période, `Sliced` l'étirerait en barre).
+            if (etat == EtatDEtiquette.Hors)
+                Bord(e.transform, ProceduralUI.RoundedRectDashedOutline((int)Px(2f), Px(1f), (int)Px(3f), (int)Px(2f), Creme2), Image.Type.Tiled);
+            else
+                Bord(e.transform, ProceduralUI.RoundedRectOutline((int)Px(2f), Px(1f), etat == EtatDEtiquette.Magasin ? (Color)MagasinBord : Creme2), Image.Type.Sliced);
+            if (etat != EtatDEtiquette.Magasin) VitrinePictogrammes.Jeton(e.transform, 11f, Px);
+            TextMeshProUGUI montant = Ligne(e.transform, "Montant", texte,
+                etat == EtatDEtiquette.Magasin ? 7.5f : 9f,
+                etat == EtatDEtiquette.Magasin ? (Color)MagasinEncre : etat == EtatDEtiquette.Hors ? (Color)EncreTernie : (Color)EncreDuPapier,
+                Sans, true);
+            if (etat == EtatDEtiquette.Magasin) montant.characterSpacing = 4f;
+        }
+
+        /// <summary>LE MÉDAILLON DE BONUS `.bonus` (B2) : plaque or collée dans l'angle HAUT-DROIT de la carte (5 px), encre sombre, texte à droite plié dans 60 % de la carte — la plaque épouse les lignes pliées
+        /// (mesurées par TMP), pas la largeur du pli.</summary>
+        private void Medaillon(Transform art, string texte)
+        {
+            GameObject m = new GameObject("Bonus", typeof(RectTransform));
+            m.transform.SetParent(art, false);
+            m.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)m.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.anchoredPosition = new Vector2(-Px(5f), -Px(5f));
+            Image fond = m.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectMask((int)Px(2f));
+            fond.type = Image.Type.Sliced;
+            fond.color = Or;
+            fond.raycastTarget = false;
+            VerticalLayoutGroup v = m.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(4f), (int)Px(4f), (int)Px(1f), (int)Px(1f));
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = false; v.childForceExpandHeight = false;
+            ContentSizeFitter fitter = m.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            TextMeshProUGUI t = Ligne(m.transform, "Texte", texte, 6.5f, EncreDuPapier, Sans, true, TextAlignmentOptions.Right);
+            t.enableWordWrapping = true;
+            float plafond = 0.6f * LargeurDeCarte - 2f * Px(4f);
+            Vector2 libre = t.GetPreferredValues(texte);
+            Vector2 mesure = libre.x > plafond ? t.GetPreferredValues(texte, plafond, Mathf.Infinity) : libre;
+            if (float.IsNaN(mesure.x) || mesure.x <= 0f || float.IsNaN(mesure.y) || mesure.y <= 0f) mesure = new Vector2(plafond, 3f * Px(6.5f) * 1.35f);
+            LayoutElement le = t.GetComponent<LayoutElement>();
+            le.preferredWidth = Mathf.Ceil(Mathf.Min(mesure.x, plafond)) + 1f;
+            le.preferredHeight = Mathf.Ceil(mesure.y);
+        }
+
+        /// <summary>L'ÉTIQUETTE « ACQUIS » `.acquis` : cerne vert fin, lettres vertes espacées, collée dans l'angle HAUT-GAUCHE (6 px), légèrement tournée (−6° CSS = +6° écran). Hors mise en page.</summary>
+        private void EtiquetteAcquis(Transform art)
+        {
+            GameObject a = new GameObject("Acquis", typeof(RectTransform));
+            a.transform.SetParent(art, false);
+            a.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)a.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.anchoredPosition = new Vector2(Px(6f), -Px(6f));
+            rt.localEulerAngles = new Vector3(0f, 0f, 6f);
+            Image cerne = a.AddComponent<Image>();
+            cerne.sprite = ProceduralUI.RoundedRectOutline((int)Px(2f), Px(1.4f), VertAcquis);
+            cerne.type = Image.Type.Sliced;
+            cerne.raycastTarget = false;
+            HorizontalLayoutGroup h = a.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(5f), (int)Px(5f), (int)Px(1f), (int)Px(1f));
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            ContentSizeFitter fitter = a.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            Ligne(a.transform, "Texte", "ACQUIS", 6.5f, VertAcquis, Sans, true).characterSpacing = 12f;
         }
 
         private IEnumerator Acheter(string skuId)
@@ -343,106 +438,138 @@ namespace MafiaCleanCity.Economy.Shop
             voile.color = DesignTokens.Current.surfaceBase;
             voile.raycastTarget = true;
 
-            VerticalLayoutGroup v = gameObject.AddComponent<VerticalLayoutGroup>();
-            v.padding = new RectOffset((int)Px(10f), (int)Px(10f),
-                                       (int)ShellChrome.TopInsetPx + (int)Px(8f),
-                                       (int)ShellChrome.BottomInsetPx + (int)Px(8f));
-            v.spacing = Px(8f);
-            v.childControlWidth = true;
-            v.childControlHeight = true;
-            v.childForceExpandWidth = true;
-            v.childForceExpandHeight = false;
-            v.childAlignment = TextAnchor.UpperCenter;
+            // B3 + A4 : la racine est une PILE (gabarit `EnteteDEcran.PoserLaPile`, marges d'écran haut/bas du shell) : le comptoir en tête, la vitre qui défile et prend le reste, la bande basse en pied.
+            EnteteDEcran.PoserLaPile(gameObject, (int)ShellChrome.TopInsetPx, (int)ShellChrome.BottomInsetPx);
+            ConstruireLeComptoir();
+            ConstruireLaVitre();
+            ConstruireLaBande();
+        }
 
-            TextMeshProUGUI titre = Texte(transform, "Titre", "LA VITRINE", Px(13f), Or,
-                                          DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
-            titre.characterSpacing = 18f;
+        /// <summary>LE COMPTOIR `.compt` (B3) : plaque bronze en dégradé (#2a231f → #1b1613), fermée par un filet de laiton de 2 px ; l'enseigne « LA VITRINE » en serif or lettrée à GAUCHE, le solde en pastille à DROITE
+        /// (`.solde` : socle sombre, bord de laiton, rayon 4, le jeton et le montant en crème) — sur la MÊME ligne.</summary>
+        private void ConstruireLeComptoir()
+        {
+            GameObject comptoir = new GameObject("Comptoir", typeof(RectTransform));
+            comptoir.transform.SetParent(transform, false);
+            Image fond = comptoir.AddComponent<Image>();
+            fond.sprite = ProceduralUI.VerticalGradient((int)Px(32f), ComptoirHaut, ComptoirBas);
+            fond.type = Image.Type.Simple;
+            fond.raycastTarget = false;
+            HorizontalLayoutGroup h = comptoir.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(9f), (int)Px(9f) + (int)Px(2f));
+            h.spacing = Px(8f);
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            comptoir.AddComponent<LayoutElement>().flexibleHeight = 0f;
 
-            // le comptoir : le solde en Marks, et ce que ça veut dire
-            GameObject comptoir = Bloc("Comptoir", transform, false, Px(2f));
-            var vc = comptoir.GetComponent<VerticalLayoutGroup>();
-            vc.childAlignment = TextAnchor.MiddleCenter;
-            vc.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(6f), (int)Px(7f));
-            Image cf = comptoir.AddComponent<Image>();
-            cf.sprite = ProceduralUI.RoundedRectOutline((int)Px(10f), Px(1f), OrLisere);
-            cf.type = Image.Type.Sliced;
-            soldeTexte = Texte(comptoir.transform, "Solde", SoldeInconnu(), Px(14f), Or,
-                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
-            terminalTexte = Texte(comptoir.transform, "Terminal",
-                                  "le don de bienvenue ne se reçoit qu'une fois — rien ne recrédite en jouant",
-                                  Px(6.8f), Braise, DesignTokens.Current.primaryFont,
-                                  TextAlignmentOptions.Center);
-            terminalTexte.enableWordWrapping = true;
-            terminalTexte.gameObject.SetActive(false);
+            TextMeshProUGUI enseigne = Ligne(comptoir.transform, "Titre", "LA VITRINE", 11f, Or, Serif, true);
+            enseigne.characterSpacing = 22f;   // 2,4 px sur 11 px ≈ .22em
+            enseigne.GetComponent<LayoutElement>().flexibleWidth = 1f;   // pousse la pastille à droite
 
-            // ⛔⛔ NEUF ARTICLES NE TIENNENT PAS DANS 569 px, ET SANS DÉFILEMENT LE GROUPE LES
-            // ÉCRASE AU LIEU DE DÉBORDER. Mesuré par sonde géométrique, pas déduit — les quatre
-            // enfants de la première rangée sont bien placés et espacés (y = -36,7 / -58,9 /
-            // -80,6 / -131,3, le groupe vertical FONCTIONNE), mais leur hauteur RÉELLE tombe à
-            // ~5 px pour une hauteur PRÉFÉRÉE de ~55 :
-            //     rangée h=200,8 · [0] Tete h=5,4 prefH=55,5 · [1] Prix h=5,0 prefH=51,8
-            //                     · [2] Donne h=4,2 prefH=43,2 · [3] Geste h=63,1
-            // TMP dessine son texte HORS de sa boîte quand la boîte est trop petite : d'où neuf
-            // articles superposés et illisibles, sans une seule erreur.
-            // ⇒ Trois hypothèses fausses avaient précédé cette mesure (hauteur des textes, hauteur
-            // du bloc de tête, imbrication), et un correctif posé sur la deuxième n'avait RIEN
-            // changé. *Une explication qui n'explique qu'une partie des occurrences est fausse,
-            // pas partielle* — le comptoir superposait aussi, sans bloc imbriqué.
-            // ⇒ La vraie cause n'est pas la géométrie d'une rangée, c'est que le CONTENU dépasse
-            // le cadre. Une boutique à neuf articles a besoin de DÉFILER ; comprimer était le
-            // symptôme, pas le sujet. ㉒ et ⑲ rendent juste parce qu'ils tiennent, pas parce
-            // qu'ils sont mieux construits.
+            GameObject solde = new GameObject("Solde", typeof(RectTransform));
+            solde.transform.SetParent(comptoir.transform, false);
+            Image sf = solde.AddComponent<Image>();
+            sf.sprite = ProceduralUI.RoundedRectMask((int)Px(4f));
+            sf.type = Image.Type.Sliced;
+            sf.color = Socle;
+            sf.raycastTarget = false;
+            HorizontalLayoutGroup hs = solde.AddComponent<HorizontalLayoutGroup>();
+            hs.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(4f), (int)Px(4f));
+            hs.spacing = Px(5f);
+            hs.childAlignment = TextAnchor.MiddleLeft;
+            hs.childControlWidth = true; hs.childControlHeight = true;
+            hs.childForceExpandWidth = false; hs.childForceExpandHeight = false;
+            solde.AddComponent<LayoutElement>().flexibleWidth = 0f;
+            Bord(solde.transform, ProceduralUI.RoundedRectOutline((int)Px(4f), Px(1f), Laiton), Image.Type.Sliced);
+            VitrinePictogrammes.Jeton(solde.transform, 13f, Px);
+            soldeTexte = Ligne(solde.transform, "Montant", SoldeInconnu(), 13f, CremeDuTitre, Sans, true);
+
+            // le filet de laiton, hors mise en page, collé au bord bas de la plaque
+            GameObject filet = new GameObject("Filet", typeof(RectTransform));
+            filet.transform.SetParent(comptoir.transform, false);
+            filet.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform fr = (RectTransform)filet.transform;
+            fr.anchorMin = new Vector2(0f, 0f); fr.anchorMax = new Vector2(1f, 0f); fr.pivot = new Vector2(0.5f, 0f);
+            fr.sizeDelta = new Vector2(0f, Px(2f)); fr.anchoredPosition = Vector2.zero;
+            Image fi = filet.AddComponent<Image>();
+            fi.color = Laiton; fi.raycastTarget = false;
+        }
+
+        /// <summary>LA VITRE `.vitre` : le fond en dégradé (#151b23 → #0c1015), la fenêtre qui prend toute la hauteur restante et DÉFILE (cause 7 : fondu + ascenseur par `ListeDefilante`), les étagères empilées dedans.
+        /// ⛔ `RectMask2D` découpe par RECTANGLE (un `Mask` découpe par le canal alpha de son Graphic : le pochoir quasi transparent posé autrefois écartait ce qu'il devait garder).
+        /// ⛔ Un RectTransform NEUF a un sizeDelta de (100, 100) et des ancres étirées s'y AJOUTENT : la liste débordait de 50 px de chaque côté — mesuré, pas supposé.</summary>
+        private void ConstruireLaVitre()
+        {
             GameObject vue = new GameObject("Defilement", typeof(RectTransform));
             vue.transform.SetParent(transform, false);
-            // ⛔ `Mask` DÉCOUPE PAR LE CANAL ALPHA de son Graphic, pas par son rectangle. Le
-            // masque quasi transparent que j'avais posé (alpha 0,004) est donc un pochoir presque
-            // VIDE : il pouvait écarter ce qu'il devait garder. Symptôme sur la capture — rangées
-            // débordant à gauche et bordures arrondies disparues.
-            // ⇒ `RectMask2D` découpe par RECTANGLE, n'exige aucun Graphic et n'a pas de seuil
-            // d'alpha. Il n'y a rien à régler et donc rien à régler de travers.
-            // ★ Ce n'est pas une 4e hypothèse à l'aveugle : c'est le remplacement d'un mécanisme
-            // dont le paramètre décisif était douteux par un mécanisme qui n'en a pas. Et la sonde
-            // ci-dessous mesure le résultat au lieu de me laisser dire « ça a l'air mieux ».
+            Image fond = vue.AddComponent<Image>();
+            fond.sprite = ProceduralUI.VerticalGradient((int)Px(200f), VitreHaut, VitreBas);
+            fond.type = Image.Type.Simple;
+            fond.raycastTarget = true;   // le glissement se prend sur la vitre
             vue.AddComponent<RectMask2D>();
             LayoutElement vueLe = vue.AddComponent<LayoutElement>();
-            vueLe.flexibleHeight = 1f;                      // prend toute la hauteur restante
+            vueLe.flexibleHeight = 1f; vueLe.minHeight = 0f;
             ScrollRect defil = vue.AddComponent<ScrollRect>();
             defil.horizontal = false;
             defil.movementType = ScrollRect.MovementType.Clamped;
             defil.scrollSensitivity = Px(20f);
 
-            GameObject liste = Bloc("Etageres", vue.transform, false, Px(8f));
+            GameObject liste = Bloc("Etageres", vue.transform, false, 0f);
             RectTransform listeRt = (RectTransform)liste.transform;
             listeRt.anchorMin = new Vector2(0f, 1f);
             listeRt.anchorMax = new Vector2(1f, 1f);
             listeRt.pivot = new Vector2(0.5f, 1f);
-            // ⛔ UN RectTransform NEUF A UN sizeDelta DE (100, 100), ET DES ANCRES ÉTIRÉES NE LE
-            // REMPLACENT PAS : ELLES S'Y AJOUTENT. Mesuré, pas supposé — la sonde a rendu
-            //     vue w=1196,0 · liste w=1296,0 · ancres=[0,0 → 1,0]
-            // et 1296 − 1196 = 100, exactement la valeur par défaut. La liste débordait donc de
-            // 50 px de CHAQUE côté (pivot centré), ce qui coupait le début des libellés et
-            // poussait les bordures arrondies hors du masque.
-            // ⇒ Avec des ancres étirées, `sizeDelta` est un DELTA sur la taille du parent, pas une
-            // taille. Le laisser à sa valeur par défaut, c'est demander « parent + 100 ».
-            // ★ Trois hypothèses avaient précédé cette mesure sur le défaut voisin ; ici le nombre
-            // a tranché du premier coup parce que la sonde regardait enfin la bonne GRANDEUR — la
-            // largeur. Une sonde qui ne mesure que la hauteur ne peut pas voir un débordement
-            // horizontal, et j'avais passé deux runs avec exactement cette sonde-là.
-            listeRt.sizeDelta = new Vector2(0f, listeRt.sizeDelta.y);
-            // ⚠️ Sans ce fitter, le contenu garde la hauteur du cadre et le groupe écrase de
-            // nouveau : c'est LUI qui laisse la liste grandir au-delà de ce qui est visible.
-            var fitter = liste.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            listeRt.sizeDelta = new Vector2(0f, 0f);
+            liste.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             defil.content = listeRt;
             defil.viewport = (RectTransform)vue.transform;
-            // cause 7 (CLIENT-3, ㉓ m3) : « défilement coupé net, ligne tronquée, sans fondu ni indicateur — on ne devine pas qu'on peut défiler » : fondu en fin de course + ascenseur
-            ListeDefilante.Indiquer(defil, DesignTokens.Current.surfaceBase);
+            ListeDefilante.Indiquer(defil, VitreBas);
             etageres = listeRt;
 
-            videTexte = Texte(transform, "Vide", "", Px(11f), Creme2,
-                              DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
+            // l'état vide, dans la vitre, hors du contenu qui se rebâtit
+            videTexte = Colonne(vue.transform, "Vide", "", 11f, Papier, Serif);
+            RectTransform vr = (RectTransform)videTexte.transform;
+            vr.anchorMin = new Vector2(0f, 1f); vr.anchorMax = new Vector2(1f, 1f); vr.pivot = new Vector2(0.5f, 1f);
+            vr.offsetMin = new Vector2(Px(16f), -Px(60f)); vr.offsetMax = new Vector2(-Px(16f), -Px(24f));
             videTexte.gameObject.SetActive(false);
         }
+
+        /// <summary>LA BANDE BASSE `.voix` (A4) : la plaque et son filet par `PiedDEcran.BandeDeVoix` ; le cadre rond du portrait `.av` ; la colonne de la voix — VIDE : la voix du lieutenant (Wexler, « derrière le
+        /// comptoir », sa réplique) n'est pas servie (TD-823) et rien n'est posé à sa place. La seule ligne qu'elle porte : la note de l'état terminal (`.pied p.mort`), quand le solde est à zéro.</summary>
+        private void ConstruireLaBande()
+        {
+            GameObject bas = PiedDEcran.BandeDeVoix(transform, Px, Socle, Rebord);
+
+            GameObject portrait = new GameObject("Portrait", typeof(RectTransform));
+            portrait.transform.SetParent(bas.transform, false);
+            LayoutElement pl = portrait.AddComponent<LayoutElement>();
+            pl.preferredWidth = Px(32f); pl.preferredHeight = Px(32f); pl.minWidth = Px(32f); pl.flexibleWidth = 0f;
+            Image pf = portrait.AddComponent<Image>();
+            pf.sprite = ProceduralUI.RadialDisc((int)Px(32f), EncreDuPapier, EncreDuPapier);
+            pf.raycastTarget = false;
+            Bord(portrait.transform, ProceduralUI.Ring((int)Px(32f), Px(1f), BordDuPortrait), Image.Type.Simple);
+
+            GameObject colonne = Bloc("Voix", bas.transform, false, Px(3f));
+            colonne.AddComponent<LayoutElement>().flexibleWidth = 1f;
+
+            // `.mort` : filet gauche rouge de 2 px, retrait de 6 px, encre rosée
+            terminalBloc = Bloc("Terminal", colonne.transform, false, 0f);
+            terminalBloc.GetComponent<VerticalLayoutGroup>().padding = new RectOffset((int)Px(8f), 0, 0, 0);
+            GameObject filet = new GameObject("Filet", typeof(RectTransform));
+            filet.transform.SetParent(terminalBloc.transform, false);
+            filet.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform fr = (RectTransform)filet.transform;
+            fr.anchorMin = new Vector2(0f, 0f); fr.anchorMax = new Vector2(0f, 1f); fr.pivot = new Vector2(0f, 0.5f);
+            fr.sizeDelta = new Vector2(Px(2f), 0f); fr.anchoredPosition = Vector2.zero;
+            Image fi = filet.AddComponent<Image>();
+            fi.color = RougeDuManque; fi.raycastTarget = false;
+            Colonne(terminalBloc.transform, "Note", "le don de bienvenue ne se reçoit qu'une fois — rien ne recrédite en jouant",
+                    7f, EncreMorte, Sans, false, TextAlignmentOptions.Left);
+            terminalBloc.SetActive(false);
+        }
+
+        // ═══ outillage de mise en page ═══
 
         private static GameObject Bloc(string nom, Transform parent, bool horizontal, float espace)
         {
@@ -459,35 +586,88 @@ namespace MafiaCleanCity.Economy.Shop
             return go;
         }
 
-        private static TextMeshProUGUI Texte(Transform parent, string nom, string valeur, float taille,
-            Color couleur, TMP_FontAsset police, TextAlignmentOptions alignement = TextAlignmentOptions.Left)
+        /// <summary>Un cerne (ou un contour) posé sur tout le pourtour du parent, hors mise en page : la couleur est CUITE dans le sprite. ⛔ Le `CanvasRenderer` d'abord (sans lui rien ne dessine).</summary>
+        private static Image Bord(Transform parent, Sprite sprite, Image.Type type)
+        {
+            GameObject go = new GameObject("Bord", typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = rt.offsetMax = Vector2.zero;
+            if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
+            Image im = go.AddComponent<Image>();
+            im.sprite = sprite; im.type = type; im.raycastTarget = false;
+            return im;
+        }
+
+        private static void Filet(Transform parent, string nom, float hauteur, Color couleur)
         {
             GameObject go = new GameObject(nom, typeof(RectTransform));
             go.transform.SetParent(parent, false);
+            LayoutElement le = go.AddComponent<LayoutElement>();
+            le.preferredHeight = hauteur; le.minHeight = hauteur; le.flexibleHeight = 0f;
+            if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
+            Image im = go.AddComponent<Image>();
+            im.color = couleur; im.raycastTarget = false;
+        }
+
+        private static void Espace(Transform parent, float hauteur)
+        {
+            GameObject go = new GameObject("Espace", typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            LayoutElement le = go.AddComponent<LayoutElement>();
+            le.preferredHeight = hauteur; le.minHeight = hauteur; le.flexibleHeight = 0f;
+        }
+
+        private static void CaseVide(Transform rangee)
+        {
+            GameObject go = new GameObject("CaseVide", typeof(RectTransform));
+            go.transform.SetParent(rangee, false);
+            LayoutElement le = go.AddComponent<LayoutElement>();
+            le.minWidth = 0f; le.preferredWidth = 0f; le.flexibleWidth = 1f;
+        }
+
+        /// <summary>Un texte d'UNE ligne qui ÉPOUSE sa largeur (l'enseigne, un montant, un intitulé) : TMP dit sa largeur, la hauteur de ligne est DÉCLARÉE (⛔ sans hauteur déclarée, un texte imbriqué ne prend pas de
+        /// place et tout se superpose — mesuré à la capture du 2026-09-02 : neuf articles dessinés au même endroit, sans une erreur).</summary>
+        private static TextMeshProUGUI Ligne(Transform parent, string nom, string valeur, float tailleCss, Color couleur, TMP_FontAsset police,
+                                             bool gras = false, TextAlignmentOptions alignement = TextAlignmentOptions.Left)
+        {
+            TextMeshProUGUI t = NouveauTexte(parent, nom, valeur, tailleCss, couleur, police, gras, alignement);
+            t.enableWordWrapping = false;
+            t.GetComponent<LayoutElement>().preferredHeight = Px(tailleCss) * 1.35f;
+            return t;
+        }
+
+        /// <summary>Un texte qui prend TOUTE la largeur de sa colonne et se PLIE (le nom d'un article, une raison, une note) : la hauteur est celle que TMP mesure au pli, à la largeur que la colonne lui donne.</summary>
+        private static TextMeshProUGUI Colonne(Transform parent, string nom, string valeur, float tailleCss, Color couleur, TMP_FontAsset police,
+                                               bool gras = false, TextAlignmentOptions alignement = TextAlignmentOptions.Center)
+        {
+            TextMeshProUGUI t = NouveauTexte(parent, nom, valeur, tailleCss, couleur, police, gras, alignement);
+            t.enableWordWrapping = true;
+            LayoutElement le = t.GetComponent<LayoutElement>();
+            le.preferredWidth = 0f; le.flexibleWidth = 1f;
+            return t;
+        }
+
+        private static TextMeshProUGUI NouveauTexte(Transform parent, string nom, string valeur, float tailleCss, Color couleur, TMP_FontAsset police,
+                                                    bool gras, TextAlignmentOptions alignement)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
             TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
             t.font = police;
-            t.fontSize = taille;
+            t.fontSize = Px(tailleCss);
             t.color = couleur;
             t.text = valeur;
             t.alignment = alignement;
-            t.enableWordWrapping = false;
-            // ⚠️ Sans ceci TMP réclame la largeur du texte NON COUPÉ et fait déborder la rangée.
-            LayoutElement le = go.AddComponent<LayoutElement>();
-            le.preferredWidth = 0f;
-            le.flexibleWidth = 1f;
-            // ⛔ SANS HAUTEUR DÉCLARÉE, UN TEXTE IMBRIQUÉ NE PREND PAS DE PLACE ET TOUT SE
-            // SUPERPOSE. Mesuré à la capture du 2026-09-02 : les neuf articles rendaient leurs
-            // vraies données — nom, prix, bonus, raison — TOUS DESSINÉS AU MÊME ENDROIT, illisibles.
-            // Cause : `preferredWidth = 0` empêche TMP de calculer une hauteur utile quand il est
-            // sous un groupe HORIZONTAL lui-même enfant d'un groupe vertical ; le bloc de tête
-            // remontait donc une hauteur nulle et ses frères se plaçaient par-dessus.
-            // ⇒ On déclare la hauteur de ligne au lieu de la laisser déduire. ⚠️ Correctif SCOPÉ à
-            // cet écran : ㉒ le profil emploie les mêmes helpers et rend juste — il n'a pas de bloc
-            // horizontal imbriqué. *Le défaut est dans l'imbrication, pas dans le helper*, et
-            // toucher les huit écrans pour réparer celui-ci en casserait sept qui vont bien.
-            le.preferredHeight = taille * 1.35f;
+            t.raycastTarget = false;
+            if (gras) t.fontStyle = FontStyles.Bold;
+            go.AddComponent<LayoutElement>();
             return t;
         }
+
+        // ═══ les mots ═══
 
         /// <summary>Item 0.6 — les littéraux STATIQUES passent par `boutique.bloc.<slug>`, repli
         /// sur le littéral.
@@ -508,6 +688,16 @@ namespace MafiaCleanCity.Economy.Shop
         private static Dictionary<string, string> N(int n) =>
             new Dictionary<string, string> { { "n", n.ToString(System.Globalization.CultureInfo.InvariantCulture) } };
 
+        /// <summary>㉓ (passe UX 2026-09-26, table 63 v2 ; R3/D24 « les garder, marqués bientôt ») : le pack en argent réel reste visible, marqué « Bientôt » — plus la phrase technique du vérificateur de reçu.</summary>
+        private static string Bientot() => MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.bientot", "Bientôt");
+
+        /// <summary>㉓ (table 69) : les deux refus d'achat disent « Marks ».</summary>
+        private static string PlusAucunMark() =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.plus_aucun_mark_et_rien_n_en_redonne", "plus aucun Mark, et rien n’en redonne");
+
+        private static string PasAssezDeMarks() =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.pas_assez_de_marks", "pas assez de Marks");
+
         /// <summary>㉓ (table 69) : le nom d'un article, par `boutique.sku.<sku_id>` (clé composée depuis l'id SERVI, telle quelle) ;
         /// repli compté sur ce que le back sert.</summary>
         private static string NomDuSku(SkuDto s)
@@ -515,6 +705,5 @@ namespace MafiaCleanCity.Economy.Shop
             string servi = string.IsNullOrEmpty(s.display_name) ? s.sku_id : s.display_name;
             return string.IsNullOrEmpty(s.sku_id) ? servi : MafiaCleanCity.I18n.Libelle.Gabarit("boutique.sku." + s.sku_id, servi);
         }
-
     }
 }
