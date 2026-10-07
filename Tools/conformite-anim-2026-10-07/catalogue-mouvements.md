@@ -12,11 +12,13 @@ G1-G9) · `inventaire-animations.md` (les 44 paires de maquette : **référencé
 mouvement : §0.6) · les 24 contrôleurs eux-mêmes (ce qui existe RÉELLEMENT à l'écran).
 
 Rulings qui cadrent : 27/08 soir, user — « animé le truc, tout en restant dans un univers dark/mafieux »,
-animations **DIÉGÉTIQUES** seulement ; 07/10, user — « il y a 0 animation » ; 07/10, brief — ère
-**fin 80s – début 90s**, ton sombre / napolitain / mafieux (⚠️ voir Q7 : front.md:343 porte encore
-la décision O ⛔ ouverte).
+animations **DIÉGÉTIQUES** seulement ; 07/10, user — « il y a 0 animation » ; 07/10, f2 — l'ÈRE est **2000-2010** (tranchée par l'user le 02/09, mémoire « DA silhouettes contemporaines » ; canon gdd/02 §Forbidden et gdd/01 « Not Scarface »), ton sombre / mafieux ; vocabulaire de matière : lampe de bureau, néon, écran LCD ou cathodique de fin de vie, pager, téléphone à clapet — PAS de bakélite, de standard à fiches ni de lampe d'époque, sauf objet ancien assumé dans le décor.
 
 ---
+
+
+> ## Décisions de f2 du 07/10 (22h, reco) — ce fichier est mis à jour en conséquence
+> **Q7 L'ÈRE** : tranchée, 2000-2010 (ci-dessus) — vocabulaire repassé au filtre. **Q10** : ㊳ ㊴ sont des papiers ; ㉟ ㊱ ㊲ ㊵ ne dessinent pas de terminal (mesuré : `.elast` = panneau de texte) → **les six `*6-scan` sont sortis de la maquette ET du catalogue** (atelier 9469d5a). **Q9** : la fermeture de ⑤ est ordonnée APRÈS les 180 ms du tampon (non bloquant). **Q8, Q11, Q6** ratifiés tels quels. **Q12** : `UiTimingTunables.AppuiLongDeplacementMs = 500`. **Q4** : ligne « Mouvement réduit » de ⑲ = REUSE du canon (demande A5, faite par CLIENT-3 sur la branche atelier), `PlayerPrefs` en attendant le lot back. **Q1-Q3** : intégrés au design v2.1 (entrée multi-écrans, drapeau `Fonctionnelle` — l'arc d'appui long ne se gèle pas —, puits `Parametre`). Aucune ligne de ce catalogue ne cite plus d'objet 1930-1990.
 
 ## 0. Ce qu'il faut accepter avant de lire les tableaux
 
@@ -121,7 +123,7 @@ t0 à 0,90/2,30 = 39 % de la montée, soit Alpha ≈ 0,87 ≠ 1,00 — G3 passe,
 
 ### 0.5 La forme « lampe » est un REUSE mesuré, pas un nombre inventé
 
-Cinq entrées partagent une seule cause physique — **une lampe à abat-jour sur un vieux circuit, dont
+Cinq entrées partagent une seule cause physique — **une lampe de bureau sur un vieux circuit, dont
 le filament ne tient pas une intensité fixe** — et donc une seule forme. Cette forme n'est pas
 choisie par moi : c'est celle de la lampe de l'atelier, mesurée.
 
@@ -261,7 +263,7 @@ Ce lieu, c'est le doigt sur la matière : rien ne se passe à l'écran avant qu'
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `retour.appui` | `PointerDown` sur n'importe quel `Button` créé par le client (67 sites) ; relâchement ou sortie du doigt | **appui** : `Echelle` 1,00 → 0,97 et `Teinte` 1,00 → 0,85, **90 ms**, `ease-out`, une fois · **relâchement** : retour aux valeurs de repos, **140 ms**, `ease-out`, une fois. Total ≤ 230 ms. Le `onClick` reste émis au relâchement, inchangé | Un bouton est une pièce de bakélite montée sur ressort : il s'enfonce sous le pouce et remonte quand on le lâche — sans rebond, sans lueur. | `Retour` | 1 | `Teinte` seule, **sans échelle** (design §4) | `REUSE design §9` (`Retour.Poser(Button)`) | **Q6** : 10 des 15 sites sont des **cartes/rangées/panneaux entiers** (la racine de `HighestLeverageCard`, tout le bandeau, une rangée de ⑥, une plaque de ㉜, un bloc de ㉝, une cellule de bâtiment de ①, le texte vide de ⑯…). Un −3 % sur une feuille de 560 u déplace son bord de 8,4 u = 7 px : l'écran a l'air de sauter |
+| `retour.appui` | `PointerDown` sur n'importe quel `Button` créé par le client (67 sites) ; relâchement ou sortie du doigt | **appui** : `Echelle` 1,00 → 0,97 et `Teinte` 1,00 → 0,85, **90 ms**, `ease-out`, une fois · **relâchement** : retour aux valeurs de repos, **140 ms**, `ease-out`, une fois. Total ≤ 230 ms. Le `onClick` reste émis au relâchement, inchangé | Un bouton est une pièce de plastique dur (touche, bouton de pager) montée sur ressort : il s'enfonce sous le pouce et remonte quand on le lâche — sans rebond, sans lueur. | `Retour` | 1 | `Teinte` seule, **sans échelle** (design §4) | `REUSE design §9` (`Retour.Poser(Button)`) | **Q6** : 10 des 15 sites sont des **cartes/rangées/panneaux entiers** (la racine de `HighestLeverageCard`, tout le bandeau, une rangée de ⑥, une plaque de ㉜, un bloc de ㉝, une cellule de bâtiment de ①, le texte vide de ⑯…). Un −3 % sur une feuille de 560 u déplace son bord de 8,4 u = 7 px : l'écran a l'air de sauter |
 | `retour.appui-long` | `LongPressButton.IsPressing` (`ShellContracts/LongPressButton.cs:20`) ; 4 instances aujourd'hui : `Shell/DecisionDetailScreenController.cs:428`, `Shell/HighestLeverageCardController.cs:371`, `Shell/DailyReviewScreenController.cs:583` et `:1276` | `Remplissage` 0,00 → 1,00 sur **1 000 ms** (= `UiTimingTunables.DestructiveLongpressMs`, `ShellContracts/UiTimingTunables.cs:19`), `linear`, une fois · relâchement avant le seuil : retour à 0,00 en **120 ms**, `ease-out`. Hôte : un `ProceduralUI.Ring` (`ShellContracts/ProceduralUI.cs:241`) posé sur l'objet pressé, `Image.type = Filled`, `fillMethod = Radial360`. **Non bloquant** : le doigt n'est jamais retardé | On n'abat pas un tampon d'un coup de doigt : on appuie, l'encre prend, et c'est au bout de la seconde que la mention est portée. | `Retour` | 1 | **PAS un gel** : indicateur statique + compteur textuel de secondes (canon `screen_2a:314`, `screen_13:308`), et l'alternative saisie reste offerte (F2) | `REUSE canon global_conventions_core.md:136` + `screen_2a:279`, `:300` (`role="progressbar"`, `aria-valuenow` 0→100) + `UiTimingTunables.cs:19` | **Q2** : 1 000 ms > 250 ms ⇒ G8 rougit. Aujourd'hui `LongPressButton` **ne montre RIEN** pendant la seconde d'appui (aucun `Image`, aucun `fillAmount`) : le joueur maintient le doigt à l'aveugle sur une action irréversible |
 
 ### II.0.b Le shell — montage d'un écran, et le bandeau
@@ -334,7 +336,7 @@ tampon, pips, coin ♦. Tout existe réellement : `Shell/DecisionDetailScreenCon
 |---|---|---|---|---|---:|---|---|---|
 | `decision.distribuee` | ouverture de l'écran avec une carte servie : `EtatSabot == false` (`DecisionDetailScreenController.cs:174`, `:179-184`) | `carteRoot` (`:302-328`) : `TranslationX` **−34 u → 0** (= −28,7 px), `Rotation` **+7,0° → +2,0°** (la rotation de repos, posée `:311`), `Alpha` 0,00 → 1,00. **220 ms**, `cubic-bezier(.2,.8,.3,1)`, une fois. Le point le plus éloigné de la carte parcourt ≈ 34 px | Une carte n'apparaît pas sur le zinc : elle est distribuée — elle glisse de la main vers vous et s'arrête de travers. | `Transition` | 1 | durée 0 | `PROPOSÉ` · l'angle de repos (+2°) est **lu dans le code**, pas choisi (`:82`, `:311`) | — |
 | `decision.cachet` | `BoutonLire.OnLongPressCompleted` (le `LongPressButton` du tampon, `:428-429`) | sur `Tampon/Bord` (`RoundedRectOutline` rouge `#93402c`, trait `Px(2)` = **8,5 u = 7,2 px**, `:412-419`) : `Echelle` 1,00 → 1,06 → 1,00 et `Teinte` 1,00 → 1,35 → 1,00, **180 ms** (`ease-out` puis `ease-in`), une fois | Le tampon s'abat : le caoutchouc écrase l'encre une fraction de seconde, puis se relève — et la mention reste. | `Transition` | 1 | durée 0 | `PROPOSÉ` · précédé de `retour.appui-long` (§II.0.a), qui est le REUSE canon | **Q9** : le geste **referme l'écran**. Il faut ordonner la fermeture APRÈS les 180 ms (non bloquant), sinon la frappe n'est jamais vue et l'entrée doit être **retirée** — une transition qu'on ne voit pas est une dette, pas une animation |
-| `decision.jeton` | `pris == false`, soit `budget.cap_reached` faux (`:198-201`) : la décision de structure du jour est encore libre | `Jeton` (`ProceduralUI.RadialDisc`, `Px(40)` = **170,7 u = 144 px** de laiton, `:356-363`) : `Teinte` **0,88 → 1,00 → 0,88**, **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 2,300 s` | La lampe à abat-jour du bureau est sur un vieux circuit : son filament bat lentement, et le laiton du jeton est la seule chose de la table qui le rende. | `Alerte` | 1 | `Alerte` + `Teinte` ⇒ **conservé** : tant qu'il reste une décision, on doit le voir même en mouvement réduit | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` (§0.5) | Pourquoi `Alerte` et non `Ambiance` : la cause est la lampe, mais **l'information est de jeu** (il reste une décision aujourd'hui). Un `Ambiance` serait gelé en mouvement réduit et l'information disparaîtrait |
+| `decision.jeton` | `pris == false`, soit `budget.cap_reached` faux (`:198-201`) : la décision de structure du jour est encore libre | `Jeton` (`ProceduralUI.RadialDisc`, `Px(40)` = **170,7 u = 144 px** de laiton, `:356-363`) : `Teinte` **0,88 → 1,00 → 0,88**, **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 2,300 s` | La lampe de bureau du bureau est sur un vieux circuit : son filament bat lentement, et le laiton du jeton est la seule chose de la table qui le rende. | `Alerte` | 1 | `Alerte` + `Teinte` ⇒ **conservé** : tant qu'il reste une décision, on doit le voir même en mouvement réduit | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` (§0.5) | Pourquoi `Alerte` et non `Ambiance` : la cause est la lampe, mais **l'information est de jeu** (il reste une décision aujourd'hui). Un `Ambiance` serait gelé en mouvement réduit et l'information disparaîtrait |
 
 ---
 
@@ -353,7 +355,7 @@ Recrutement aussi (`front.md:1441` → `:117`, `:173`).
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `famille.lampe-du-don` | en continu, tant que la rangée du Don est montée | `Halo` (le voile radial d'or du Don, **225 × 225 u = 190 × 190 px**) : `Alpha` **0,82 → 1,00 → 0,82** sur un `CanvasGroup` posé dessus, **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 2,300 s` | Le Don reçoit sous une lampe à abat-jour ; son halo est la lumière de cette lampe, et un vieux filament ne tient pas une intensité fixe. | `Ambiance` | 1 | figé à `PoseDeReposS` (α 1,00) | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` | ⚠️ L'hôte est **sous le `RectMask2D`** du défilement (`:1331`) : canal `Alpha` par `CanvasGroup`, donc hors du plafond de 6 pistes de transformation, mais le **coût** de `CanvasGroup.alpha` sous un masque est l'objet du **spike E0** (design §3) |
+| `famille.lampe-du-don` | en continu, tant que la rangée du Don est montée | `Halo` (le voile radial d'or du Don, **225 × 225 u = 190 × 190 px**) : `Alpha` **0,82 → 1,00 → 0,82** sur un `CanvasGroup` posé dessus, **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 2,300 s` | Le Don reçoit sous une lampe de bureau ; son halo est la lumière de cette lampe, et un vieux filament ne tient pas une intensité fixe. | `Ambiance` | 1 | figé à `PoseDeReposS` (α 1,00) | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` | ⚠️ L'hôte est **sous le `RectMask2D`** du défilement (`:1331`) : canal `Alpha` par `CanvasGroup`, donc hors du plafond de 6 pistes de transformation, mais le **coût** de `CanvasGroup.alpha` sous un masque est l'objet du **spike E0** (design §3) |
 | `famille.rang-ouvre` | tap sur une rangée de lieutenant → `OpenLieutenant(id)` (`:2733`) ; aujourd'hui `MajVisibiliteDetail` pose `CanvasGroup.alpha = 0 ou 1` **en une affectation** (`:1849`, `:1860`) | le **même** `CanvasGroup` : `Alpha` 0,00 → 1,00, **160 ms**, `ease-out`, une fois | On ouvre la chemise d'un homme : les pages ne sautent pas sous la main, elles viennent. | `Transition` | 1 | durée 0 (= le comportement d'aujourd'hui, à l'identique) | `REUSE canon screen_3:451` (« transitions arbre + `SplitFlapReadout` ≤ 250 ms ») · **l'hôte existe déjà** (`:1847-1848`) : zéro objet neuf | — |
 
 **Écarté** : une `Alerte` sur `EstCuisinierAuRepos` (`:2742-2743` — un cuisinier à vous ne fait rien,
@@ -472,8 +474,8 @@ teinté `Braise` si tendu, `:310-322`). Les « barres de présence » des origin
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `police.dispatch` | `tendu` (`dispatcher_regime == "SURGE"` ou `"BACKLOGGED"`, `:308`) — le répartiteur du secteur déborde | le glyphe `Regime` de chaque ligne tendue (**32 × 32 px**) : `Teinte` **1,28 → 1,00 → 1,28**, **période 1,600 s**, `ease-in-out`, **infini**, **phase −0,600 s**, `PoseDeReposS = 0,800 s`. **Même phase pour toutes les lignes** : c'est le même tableau | Un tableau de dispatch est un standard : quand un secteur déborde, son voyant n'est pas allumé fixe — il bat, et c'est comme ça qu'un répartiteur le repère d'un coup d'œil. | `Alerte` | **6** | `Alerte` + `Teinte` ⇒ **conservé** (G5 : 1,6 s ≥ 0,4 s, soit 1,25 variation/s) | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-veille` (la veille des voyants : `filter:brightness(1 → 1.35)`, **3 200 ms** mesurés, `generateur-marche.py:116`, `inventaire-animations.md:33`) — **période raccourcie à 1,6 s** et c'est un écart assumé : un voyant de dispatch qui déborde bat plus vite qu'un voyant de veille | Budget plafonné à **6** voyants, dans l'ordre de la liste : c'est le compte réel mesuré par la fiction (`front.md:1768` : « `belief` **mesuré HUNTING ×6 dès le J1** »). Au-delà, la régie refuse (design §3) : **pas de voyant**, jamais un voyant à moitié |
-| `police.baton` | `baton` = `DernierRapport.backlash_triggered` (`:263`) | `batonTexte` (`TMP_Text`, `Px(9)` = **38 u = 32 px**, `Braise`, `:433-436`) : `Alpha` 0,00 → 1,00, **200 ms**, `ease-out`, une fois. **`Alpha` seul** (G6) | C'est une ligne qu'on vient d'ajouter au registre : l'encre paraît sous la plume, elle n'était pas là avant le geste. | `Transition` | 1 | durée 0 | `PROPOSÉ` | — |
+| `police.dispatch` | `tendu` (`dispatcher_regime == "SURGE"` ou `"BACKLOGGED"`, `:308`) — le répartiteur du secteur déborde | le glyphe `Regime` de chaque ligne tendue (**32 × 32 px**) : `Teinte` **1,28 → 1,00 → 1,28**, **période 1,600 s**, `ease-in-out`, **infini**, **phase −0,600 s**, `PoseDeReposS = 0,800 s`. **Même phase pour toutes les lignes** : c'est le même tableau | Un tableau de dispatch est une console de répartition (voyants LED) : quand un secteur déborde, son voyant n'est pas allumé fixe — il bat, et c'est comme ça qu'un répartiteur le repère d'un coup d'œil. | `Alerte` | **6** | `Alerte` + `Teinte` ⇒ **conservé** (G5 : 1,6 s ≥ 0,4 s, soit 1,25 variation/s) | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-veille` (la veille des voyants : `filter:brightness(1 → 1.35)`, **3 200 ms** mesurés, `generateur-marche.py:116`, `inventaire-animations.md:33`) — **période raccourcie à 1,6 s** et c'est un écart assumé : un voyant de dispatch qui déborde bat plus vite qu'un voyant de veille | Budget plafonné à **6** voyants, dans l'ordre de la liste : c'est le compte réel mesuré par la fiction (`front.md:1768` : « `belief` **mesuré HUNTING ×6 dès le J1** »). Au-delà, la régie refuse (design §3) : **pas de voyant**, jamais un voyant à moitié |
+| `police.baton` | `baton` = `DernierRapport.backlash_triggered` (`:263`) | `batonTexte` (`TMP_Text`, `Px(9)` = **38 u = 32 px**, `Braise`, `:433-436`) : `Alpha` 0,00 → 1,00, **200 ms**, `ease-out`, une fois. **`Alpha` seul** (G6) | C'est une ligne qu'on vient d'ajouter au registre : l'encre paraît sous le stylo, elle n'était pas là avant le geste. | `Transition` | 1 | durée 0 | `PROPOSÉ` | — |
 
 ---
 
@@ -591,7 +593,7 @@ En revanche l'état de jeu y est le plus riche du périmètre : `issue.decided` 
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `autonomie.appel` | le rapport **le plus vieux** par `backlog_age_cycles` (`AutonomyDtos.cs:26`), tant qu'au moins une de ses questions n'est pas décidée (`issue.decided` vide, `:316`) | son `ReportHeader` (`TMP_Text`, fontSize **24 u = 20 px**, `Bold`, `:285-289`) : `Alpha` **1,00 → 0,62 → 1,00**, **période 1,600 s**, `ease-in-out`, **infini**, **phase −0,600 s**, `PoseDeReposS = 0,800 s`. **`Alpha` seul** (G6) | Un bippeur ne dit pas une seule fois qu'un message attend : il répète son appel tant que personne n'a répondu, et c'est le plus vieux des rapports qu'il répète. | `Alerte` | 1 | `Alerte` + `Alpha` ⇒ **conservé** (G5 : 1,6 s = 1,25 variation/s) | `PROPOSÉ` | **Q8** : quel âge compte comme « qui traîne » ? Ma recommandation : **le plus vieux seulement, quel que soit son âge** — un standard n'allume pas douze voyants à la fois, et `backlog_age_cycles` n'a pas de seuil servi |
+| `autonomie.appel` | le rapport **le plus vieux** par `backlog_age_cycles` (`AutonomyDtos.cs:26`), tant qu'au moins une de ses questions n'est pas décidée (`issue.decided` vide, `:316`) | son `ReportHeader` (`TMP_Text`, fontSize **24 u = 20 px**, `Bold`, `:285-289`) : `Alpha` **1,00 → 0,62 → 1,00**, **période 1,600 s**, `ease-in-out`, **infini**, **phase −0,600 s**, `PoseDeReposS = 0,800 s`. **`Alpha` seul** (G6) | Un bippeur ne dit pas une seule fois qu'un message attend : il répète son appel tant que personne n'a répondu, et c'est le plus vieux des rapports qu'il répète. | `Alerte` | 1 | `Alerte` + `Alpha` ⇒ **conservé** (G5 : 1,6 s = 1,25 variation/s) | `PROPOSÉ` | **Q8** : quel âge compte comme « qui traîne » ? Ma recommandation : **le plus vieux seulement, quel que soit son âge** — une console de répartition n'allume pas douze voyants à la fois, et `backlog_age_cycles` n'a pas de seuil servi |
 | `autonomie.reponse` | `Resolve` aboutit (`:192-215`) : `issue.decided` devient non vide | les deux blocs `Option_A`/`Option_B` (`:339-345`) : `Alpha` 1,00 → 0,00 en **120 ms** `ease-in` · puis `Decided` (« ✓ Décidé », `:319-322`) : `Alpha` 0,00 → 1,00 en **120 ms** `ease-out`. Total **240 ms**, une fois | On tape le chiffre sur le clavier : l'afficheur efface les deux choix et ne garde que la réponse — un bippeur n'affiche qu'une ligne à la fois. | `Transition` | 2 | durée 0 | `PROPOSÉ` | ⚠️ `ClearRows()` détruit tout (`:463-469`) : s'attache au rendu **qui suit** la réponse (§VI.2) |
 
 ---
@@ -718,7 +720,7 @@ Défilement : `RectMask2D` `:979`, `ScrollRect` `:980`.
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `service.jeton` | `JetonDisponible` (`:735`, dérivé de `JetonDeStructure.Connu`/`PlafondAtteint`, `:360-362`) : la décision de structure du jour n'est pas prise | le `Rond` du jeton (**58 px** de laiton) : `Teinte` **0,88 → 1,00 → 0,88**, **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 2,300 s` | Le tableau de service est éclairé par une seule lampe à abat-jour, et le laiton du jeton est le seul objet de la planche qui la rende : tant que la décision du jour n'est pas prise, on la voit bouger dessus. | `Alerte` | 1 | `Alerte` + `Teinte` ⇒ **conservé** : l'information (il reste une décision) doit survivre au mouvement réduit | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` | ⚠️ Hôte **sous le `RectMask2D`** (`:979`) et canal de **couleur** ⇒ compte dans le plafond de 6 et dépend du **spike E0** (design §3). Le jeton dépensé **ne bat pas** : `Detacher`, et retour au `Repos` (`#2a2320`) |
+| `service.jeton` | `JetonDisponible` (`:735`, dérivé de `JetonDeStructure.Connu`/`PlafondAtteint`, `:360-362`) : la décision de structure du jour n'est pas prise | le `Rond` du jeton (**58 px** de laiton) : `Teinte` **0,88 → 1,00 → 0,88**, **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 2,300 s` | Le tableau de service est éclairé par une seule lampe de bureau, et le laiton du jeton est le seul objet de la planche qui la rende : tant que la décision du jour n'est pas prise, on la voit bouger dessus. | `Alerte` | 1 | `Alerte` + `Teinte` ⇒ **conservé** : l'information (il reste une décision) doit survivre au mouvement réduit | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` | ⚠️ Hôte **sous le `RectMask2D`** (`:979`) et canal de **couleur** ⇒ compte dans le plafond de 6 et dépend du **spike E0** (design §3). Le jeton dépensé **ne bat pas** : `Detacher`, et retour au `Repos` (`#2a2320`) |
 | `service.cartel` | `Confier` aboutit (`:534`) : `delegation_state` passe de `SELF` au nom d'un homme | le `cro` de la plaque (**38 × 85 u = 32 × 72 px**) : `Teinte` de `CroLibre` `#46515c` à `OrSombre`, **200 ms**, `ease-out` · le `TMP_Text` `Qui` (`:1164`) : `Alpha` 0,00 → 1,00, **160 ms**, `ease-out`. Une fois | On glisse un cartel au nom de l'homme dans la fente de la plaque : le laiton remplace le vide, et le nom est écrit dessus. | `Transition` | 2 | durée 0 | `PROPOSÉ` · les deux couleurs de cartel sont **dans le code** (`:1131-1140`) | ⚠️ Sous le masque (canal de couleur) ⇒ même dépendance E0 |
 
 ---
@@ -752,7 +754,7 @@ l'étiquette « FICHE DU SITE » (`:708`) et le bloc `Verdict`. Je n'en invente 
 
 ## ㉞ Les ordres du soir — le carnet réglé
 
-Ce lieu, c'est un carnet d'ordres ouvert sur la table, huit créneaux numérotés, et une plume. —
+Ce lieu, c'est un carnet d'ordres ouvert sur la table, huit créneaux numérotés, et un stylo. —
 Fiction : `front.md:1113`, verbatim : « le **carnet d'ordres réglé** (créneaux numérotés), puis le fil
 des quartiers et le calendrier » ; et `front.md:1115` : « **ON NE DONNE PAS UN ORDRE : ON COMPOSE UNE
 SOIRÉE.** `POST /v1/cue-stack/compose` valide **4 à 8 créneaux** ».
@@ -767,7 +769,7 @@ CSS entre les créneaux (`:819`). Les 8 créneaux sont **toujours** dessinés (`
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `carnet.encre` | un créneau passe de « — rien — » (`:745-746`) à un ordre posé (`Titre` + `Sous`, `:756-760`) — le composeur vient de l'écrire | les `TMP_Text` `Titre` (11 px CSS serif gras) et `Sous` (8 px CSS) de la ligne : `Alpha` 0,00 → 1,00, **220 ms**, `cubic-bezier(.3,.7,.2,1)`, une fois. **`Alpha` seul** (G6) | On écrit l'ordre sur la ligne : l'encre prend sur le papier le temps d'un trait de plume, elle n'est pas là avant le geste. | `Transition` | 1 | durée 0 | `PROPOSÉ` | — |
+| `carnet.encre` | un créneau passe de « — rien — » (`:745-746`) à un ordre posé (`Titre` + `Sous`, `:756-760`) — le composeur vient de l'écrire | les `TMP_Text` `Titre` (11 px CSS serif gras) et `Sous` (8 px CSS) de la ligne : `Alpha` 0,00 → 1,00, **220 ms**, `cubic-bezier(.3,.7,.2,1)`, une fois. **`Alpha` seul** (G6) | On écrit l'ordre sur la ligne : l'encre prend sur le papier le temps d'un trait de stylo, elle n'est pas là avant le geste. | `Transition` | 1 | durée 0 | `PROPOSÉ` | — |
 | `carnet.en-main` | `AppuiLong` sur une ligne (`:463-464` ; `Operational/Carnet/AppuiLong.cs:15-20`, `Duree = 0.5f` `:10`) | le fond de la ligne (`Image`, transparente au repos, `CouleurEnMain` `(0,851 ; 0,824 ; 0,741)` en main, `:461`) : `Alpha` 0,00 → 1,00 sur **500 ms**, `linear`, une fois ; maintenu tant que la ligne est en main ; retour à 0,00 en **120 ms** si le doigt part avant le seuil | On appuie sur la ligne pour la décoller du carnet : le papier marque sous le pouce avant de céder. | `Retour` | 1 | **PAS un gel** : même règle que `retour.appui-long` — la marque apparaît d'un coup au seuil, et l'alternative reste accessible | `PROPOSÉ` · la couleur d'arrivée est **dans le code** (`:461`, `:620`) | **Q2** (500 ms > 250 ms) et **Q12** : le client porte **deux** durées d'appui long, `1 000 ms` nommée (`ShellContracts/UiTimingTunables.cs:19`) et **`0.5f` en littéral** (`AppuiLong.cs:10`) — R2.3 « tunables jamais inline » |
 
 ⚠️ Une demande d'atelier existe ici, mais elle ne bloque rien : le carnet **n'a pas ses lignes réglées**
@@ -914,21 +916,9 @@ un bloc de ㉝ (`DemolitionScreenController.cs:1460`), une cellule de bâtiment 
 > **`Scrollbar`** : il sort de la liste des 15 pour le retour d'appui, et doit rejoindre les
 > exclusions nommées de G9.)
 
-### Q7 — L'ère : la décision O est toujours ouverte, et tout ce catalogue repose dessus
+### Q7 — L'ère — RÉSOLUE (f2, 07/10)
 
-`front.md:343` porte encore « **⛔ à trancher — impacte toute la DA** ». Le ruling du 26/08 dit « dans
-ma tête on est dans les mêmes années que *The Wire* » (2000s) et **recommande de retraduire les
-matières 1930** (`front.md:351` : « Les matières 1930 que j'ai dessinées (registre à plume, feutrine,
-**laiton**, chaufferie, télégramme) tirent vers le pulp d'époque que le canon interdit »). Le brief de
-ce catalogue (07/10) pose « **fin 80s – début 90s** » et nomme **laiton, bakélite, voyants de standard
-téléphonique**.
-> **Reco** : **la fin des années 80 réconcilie les deux**, et c'est pour cela qu'elle doit être
-> consignée. Un commissariat de 1988 a du laiton au comptoir, de la bakélite aux boutons, un standard
-> à voyants et un bar enfumé — sans glisser vers le pulp que `tone_bible.md` interdit (« Not Scarface,
-> Not Godfather »), et sans contredire `art_direction.md:1` (« Brennar **industrial noir-adjacent** »).
-> ⇒ **écrire « fin 80s – début 90s » dans front.md §O et clore la décision.** Les 42 entrées de ce
-> fichier reposent sur cette réponse : la lampe à abat-jour, le laiton du plateau, les voyants de
-> dispatch et le bippeur de ㉔ n'ont pas le même sens dans les trois ères.
+Tranchée par l'user le 02/09 : **2000-2010** (mémoire « DA silhouettes contemporaines » ; canon gdd/02 §Forbidden, gdd/01 « Not Scarface »). `front.md` §O était périmé (BACK-1 le réécrit). **Nuance de f2** : l'ère vaut pour les OBJETS du décor et de la fiction (lampes, écrans, téléphones, papiers). Le **laiton et l'or du CHROME d'interface** (cerne laiton, filets, boutons cernés d'or) sont la direction artistique ratifiée de l'interface et RESTENT ; ce catalogue n'y touche pas. Vocabulaire de ce fichier repassé : lampe de bureau, néon, console de répartition à voyants LED, stylo, plastique dur, pager ; plus de bakélite, de standard à fiches ni de lampe d'époque.
 
 ### Q8 — Quel rapport « traîne » ? (㉔)
 
@@ -946,15 +936,9 @@ n'est servi**. La fiction dit seulement « **un rapport qui traîne** » (`front
 > l'ordonnancement, **retirer l'entrée** : une transition qu'on ne voit jamais est une dette, pas une
 > animation. Le même examen vaut pour `revue.cachet` (⑯), qui n'a pas ce problème (l'écran reste).
 
-### Q10 — La cause diégétique du balayage `*6-scan` (6 paires)
+### Q10 — Balayage `*6-scan` — RÉSOLUE (f2 07/10 + mesure)
 
-L'inventaire la marque « **cause diégétique À CONFIRMER (écran de contrôle ?)** » sur les six lignes
-(`inventaire-animations.md:37-42`). Mesuré : 7,500 s, `linear`, délai −2,600 s, barre cyan de 2 px.
-> **Reco** : la seule cause honnête est **un tube** — un moniteur à balayage lent, au poste de
-> contrôle. Si f2 refuse l'écran cathodique dans ces six fictions (㊳ « ce qui se dit ce matin », ㊴
-> « ce qu'ils ont sur vous » : ce sont des **papiers**, pas des terminaux), alors **les 6 paires
-> sortent du catalogue** au lieu d'être expliquées après coup. G1 exige une `Cause` ≥ 20 caractères
-> non « TODO » : « écran de contrôle ? » ne la satisfait pas.
+`.elast` est le panneau de TEXTE du châssis (mesuré : conteneur de liste, pas un écran dessiné) ; ㊳ ㊴ sont des papiers ; ㉟ ㊱ ㊲ ㊵ ne dessinent pas de terminal. **Les six paires sont retirées de la maquette (atelier 9469d5a) et du catalogue.** Seul `mk-scan` du marché reste (hôte : `.tablo`, le tableau de voyants).
 
 ### Q11 — La durée du bandeau (5,000 s + 0,400 s) est-elle ratifiée ?
 
