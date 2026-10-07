@@ -325,9 +325,19 @@ namespace MafiaCleanCity.Shell
             mot.characterSpacing = 10;
             mot.color = DesignTokens.Current.ficheCtaOrHaut;   // F13 : UN or sur ④ (cadre 4 : (231,192,102)) ; la liste garde OrDuGeste
             mot.alignment = TextAlignmentOptions.MidlineRight;
+            // R2 → r5 : à 36 u, gras, interlettrage 10, « TRANCHER » est plus large que la boîte FIXE de 220 u et le retour à la ligne le coupait lettre par lettre (« TRANCHE / R », planche
+            // « après r4 », relevé par 86 AVANT la capture). Plus de retour à la ligne, et la boîte est celle du MOT MESURÉ avec la vraie police (jamais moins de 220 u).
+            mot.enableWordWrapping = false;
+            mot.overflowMode = TextOverflowModes.Overflow;
+            float largeurDuMot = mot.GetPreferredValues(mot.text).x;
+            btnLe.minWidth = btnLe.preferredWidth = LargeurDuTrancher(largeurDuMot);
             RectTransform motRt = (RectTransform)mot.transform;
             motRt.anchorMin = Vector2.zero; motRt.anchorMax = Vector2.one; motRt.offsetMin = motRt.offsetMax = Vector2.zero;
         }
+
+        /// <summary>La boîte de TRANCHER pour un mot mesuré de `mesure` u : jamais moins que les 220 u d'avant, jamais moins que le mot plus sa marge. Pure.</summary>
+        public const float MargeDuMot = 12f;
+        public static float LargeurDuTrancher(float mesure) => Mathf.Max(220f, Mathf.Ceil(mesure) + MargeDuMot);
 
         /// <summary>R2 (juge ⊥ r4, 07/10) : les tailles de « Lt. … attend vos ordres » et de TRANCHER (×1,19 et ×1,21 : mêmes polices, la maquette est plus grande).</summary>
         public const float TailleDuQui = 40f, TailleDuTrancher = 36f;

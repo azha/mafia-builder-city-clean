@@ -169,6 +169,39 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(55f, LaSuitePanelController.RetraitDuFilet, "14 CSS px × 3,6 = 46 px = 55 u de chaque côté");
         }
 
+        /// <summary>Le mot, mesuré avec la VRAIE police du client (TMP), comme le fait le code de production. Pure côté réseau.</summary>
+        private static float Mesure(string mot, float taille)
+        {
+            var go = new GameObject("MesureDuMot", typeof(RectTransform));
+            try
+            {
+                var t = go.AddComponent<TMPro.TextMeshProUGUI>();
+                t.font = DesignTokens.Current.primaryFont;
+                t.fontSize = taille;
+                t.fontStyle = TMPro.FontStyles.Bold;
+                t.characterSpacing = 10;
+                t.enableWordWrapping = false;
+                return t.GetPreferredValues(mot).x;
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
+        [Test]
+        public void V11_R5_LesMots_TiennentDansLeurBoite_MesuresAvecLaVraiePolice()
+        {
+            float trancher = Mesure("TRANCHER", ExceptionQueuePanelController.TailleDuTrancher);
+            Assert.Greater(trancher, 0f, "anti-vacuité : la police a mesuré quelque chose");
+            Assert.GreaterOrEqual(ExceptionQueuePanelController.LargeurDuTrancher(trancher), trancher + ExceptionQueuePanelController.MargeDuMot, "la boîte de TRANCHER contient son mot mesuré, plus sa marge");
+            Assert.GreaterOrEqual(ExceptionQueuePanelController.LargeurDuTrancher(0f), 220f, "jamais moins que les 220 u d'avant");
+            Debug.Log($"[V11-MESURE] TRANCHER à {ExceptionQueuePanelController.TailleDuTrancher} u : {trancher:0.#} u ; boîte {ExceptionQueuePanelController.LargeurDuTrancher(trancher):0.#} u (l'ancienne : 220)");
+            foreach (string mot in new[] { "COMMANDER", "VOIR LA VENTE", "BLANCHIR" })
+            {
+                float w = Mesure(mot, LaSuitePanelController.TailleDuMot);
+                float bouton = LaSuitePanelController.LargeurDuGeste(w);
+                Assert.GreaterOrEqual(bouton, w + 2f * LaSuitePanelController.RembourrageDuGeste, $"{mot} : le bouton ({bouton:0.#} u) contient son libellé ({w:0.#} u) et ses deux rembourrages");
+            }
+        }
+
         [Test]
         public void V7_LeRayonDuBouton_EtLeLisere()
         {

@@ -227,7 +227,7 @@ namespace MafiaCleanCity.Shell
             // VOIR LA VENTE 373, BLANCHIR 273 ; le jeu les faisait TOUS à 324 (385 u fixes) : un bord gauche rectiligne et BLANCHIR flottant dans 51 px de vide. La largeur est
             // maintenant celle du libellé + 2 × 10 px CSS (36 px = 43 u) ; la hauteur reste 100 u. Le libellé PARTICIPE à la mise en page (il ne la quitte plus).
             HorizontalLayoutGroup bh = geste.AddComponent<HorizontalLayoutGroup>();
-            bh.padding = new RectOffset(43, 43, 0, 0);
+            bh.padding = new RectOffset(RembourrageDuGeste, RembourrageDuGeste, 0, 0);
             bh.childAlignment = TextAnchor.MiddleCenter;
             bh.childControlWidth = true; bh.childControlHeight = true;
             bh.childForceExpandWidth = false; bh.childForceExpandHeight = false;   // R1 : un groupe qui FORCE l'expansion se déclare flexible, et le parent étire le bouton à la hauteur de sa rangée
@@ -243,6 +243,10 @@ namespace MafiaCleanCity.Shell
             mot.alignment = TextAlignmentOptions.Center;
             mot.enableWordWrapping = false;
             mot.overflowMode = TextOverflowModes.Overflow;
+            // R1 → r5 : sur une rangée chargée (texte long), le groupe de la rangée RÉTRÉCIT le bouton vers son minimum (le minimum d'un libellé TMP est 0) : « VOIR LA VENTE » (271 px)
+            // sortait de son bouton (255 px) sur la planche « après r4 ». La largeur MINIMALE est celle du libellé MESURÉ avec la vraie police + les deux rembourrages : le bouton épouse
+            // son libellé, et c'est le TEXTE de la rangée qui reflue.
+            le.minWidth = le.preferredWidth = LargeurDuGeste(mot.GetPreferredValues(mot.text).x);
         }
 
         // ─────────────────────────────────────────────────────────────── arrondis et liserés (cosmétique f1, 26/09)
@@ -255,11 +259,15 @@ namespace MafiaCleanCity.Shell
         /// <summary>R1 : les trois boutons ont la MÊME hauteur (réf 92 px = 110 u pour `.g4{font:8px/1;padding:8px 10px;border:1px}` ⇒ 26 CSS × 3,6 ≈ 93) ; le jeu étirait les deux fantômes à la
         /// hauteur de leur RANGÉE (119 et 133 px) — un groupe de mise en page qui force l'expansion se déclare « flexible » et le parent l'étire. Hauteur FIXE, largeur au contenu (G6).</summary>
         public const float HauteurDuGeste = 110f;
+        /// <summary>Le rembourrage horizontal du bouton : `padding:8px 10px` ⇒ 10 CSS px = 36 px = 43 u.</summary>
+        public const int RembourrageDuGeste = 43;
+        /// <summary>La largeur du bouton pour un libellé mesuré de `mesure` u : le libellé plus les deux rembourrages, jamais moins. Pure.</summary>
+        public static float LargeurDuGeste(float mesure) => Mathf.Ceil(mesure) + 2f * RembourrageDuGeste;
         /// <summary>R2 : les sans-sérif secondaires étaient 14 à 21 % trop petits (même famille de police : c'est la TAILLE) — hauteurs de capitale sous-ligne 24 → 19, libellé de bouton 21 → 18 :
         /// 30 → 38 u (×1,26) et 28 → 33 u (×1,17). Le serif des titres (29 → 28) et « LA SUITE » (17 → 16) sont justes, non touchés.</summary>
         public const float TaillePhrase = 38f, TailleDuMot = 33f;
-        /// <summary>R3 : le filet laiton est un plateau avec rampes — `linear-gradient(90deg, transparent, #b08d3e 30%, #b08d3e 70%, transparent)` sur `left:14px; right:14px` : 14 CSS px × 3,6
-        /// = 46 px = 55 u de retrait de chaque côté. Plateau de 30 % à 70 % de ce segment.</summary>
+        /// <summary>R3 : le filet laiton est un plateau avec rampes — `linear-gradient(90deg, transparent, #b08d3e 30%, #b08d3e 70%, transparent)` sur `left:14px; right:14px`. Le retrait de 55 u
+        /// (≈ 46 px) est celui MESURÉ sur la référence (plateau de x ≈ 360 à 720) ; l'échelle implicite n'est pas 3,6 px par px CSS mais ≈ 3,3 (50 px aurait été faux). Plateau de 30 % à 70 %.</summary>
         public const float RetraitDuFilet = 55f;
         /// <summary>R5 : le verre du panneau est éclairé du haut — `linear-gradient(180deg,#0c1320ef,#080d17f6)` ; médianes mesurées sur la référence, haut (13,19,31) → bas (9,14,24).</summary>
         public static Color VerreHaut => new Color32(13, 19, 31, 255);

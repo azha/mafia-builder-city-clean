@@ -275,6 +275,34 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.LessOrEqual(frames, 5, $"3 étapes en parallèle ⇒ ~3-4 frames, pas 3+3+4 ({frames})");
         }
 
+        // R1 (juge ⊥ r4) — l'EFFET, hors réseau (demandé par la relecture de 86 : V10 épinglait des valeurs et restait vert si on remettait `childForceExpandHeight = true`) :
+        // une rangée chargée, puis les TROIS boutons ont la MÊME hauteur de 110 u, ne sont pas étirés à la hauteur de leur rangée, et chacun CONTIENT son libellé.
+        [Test]
+        public void S14_R1_LesTroisBoutons_MemeHauteur_ContiennentLeurLibelle()
+        {
+            var hote = new GameObject("LaSuiteEffet", typeof(RectTransform));
+            try
+            {
+                ((RectTransform)hote.transform).sizeDelta = new Vector2(1288f, 1700f);
+                LaSuitePanelController p = hote.AddComponent<LaSuitePanelController>();
+                p.Rendre(Neuf());
+                Canvas.ForceUpdateCanvases();
+                foreach (var g in hote.GetComponentsInChildren<UnityEngine.UI.LayoutGroup>(true).Reverse())
+                    UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)g.transform);
+                var gestes = hote.GetComponentsInChildren<Transform>(true).Where(t => t.name.StartsWith("Geste_")).Select(t => (RectTransform)t).ToList();
+                Assert.GreaterOrEqual(gestes.Count, 3, $"anti-vacuité : trois gestes rendus ({gestes.Count})");
+                foreach (RectTransform g in gestes)
+                {
+                    Assert.AreEqual(LaSuitePanelController.HauteurDuGeste, g.rect.height, 0.5f, $"{g.name} : 110 u FIXES, pas la hauteur de sa rangée (119 et 133 px au r4)");
+                    var mot = g.GetComponentInChildren<TMPro.TextMeshProUGUI>(true);
+                    float besoin = mot.GetPreferredValues(mot.text).x + 2f * LaSuitePanelController.RembourrageDuGeste;
+                    Assert.GreaterOrEqual(g.rect.width + 0.5f, besoin, $"{g.name} : le bouton ({g.rect.width:0.#} u) contient « {mot.text} » + rembourrages ({besoin:0.#} u)");
+                }
+                Assert.AreEqual(1, gestes.Select(g => Mathf.Round(g.rect.height)).Distinct().Count(), "les trois ont la MÊME hauteur");
+            }
+            finally { Object.DestroyImmediate(hote); }
+        }
+
         [Test]
         public void S10_LePanneau_PremierGesteDore_A2SansBouton_RienDeVraiRienDeRendu()
         {
