@@ -33,6 +33,10 @@ namespace MafiaCleanCity.Shell.Tests
         {
             { "DistrictInteriorScreenController.cs", (5, "inventaires de hiérarchie, d'ancrage et d'identité des badges (`pile`, `ancrages`, " +
                 "`identitesBadges`, `horsCadre`) : bâtis pour les `Debug.Log` de `Render`, jamais rendus dans un TMP") },
+            { "CompteDeLAppareil.cs", (1, "`Regex CodeServi` : la classe de caractères `[A-Z0-9_]` d'une EXPRESSION RÉGULIÈRE qui lit le code servi dans le corps " +
+                "d'une réponse — jamais un texte, jamais rendu dans un TMP") },
+            { "ComposeurDuCarnet.cs", (1, "`Regex CodeServi` : la classe de caractères `[A-Z_]` d'une EXPRESSION RÉGULIÈRE qui lit le code servi dans le corps " +
+                "d'une réponse — jamais un texte, jamais rendu dans un TMP") },
         };
 
         private static List<string> Instructions(string source) =>

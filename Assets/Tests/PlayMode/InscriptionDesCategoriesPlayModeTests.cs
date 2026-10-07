@@ -75,7 +75,7 @@ namespace MafiaCleanCity.Tests
         public void I0_ControlePositif_UneCategorieNeuveEstVue_UneExclueNon()
         {
             var inscrites = new List<string> { "EcranFile" };
-            CollectionAssert.AreEqual(new[] { "ZzzNeuve" }, NonCouvertes(new[] { "ZzzNeuve", "EcranFile", "CaptureZzz", "SondeGelVolontaire", "FicheLabo" }, inscrites),
+            CollectionAssert.AreEqual(new[] { "ZzzNeuve" }, NonCouvertes(new[] { "ZzzNeuve", "EcranFile", "CaptureZzz", "SondeGelVolontaire", "ManometreOracle" }, inscrites),
                 "la neuve est VUE ; l'inscrite, la famille exclue, la sonde et la dette ne le sont pas");
             Assert.IsEmpty(NonCouvertes(new[] { "EcranFileN5" }, inscrites), "règle d'Unity : préfixe NON ancré — « EcranFile » prend « EcranFileN5 »");
             Assert.AreEqual(3, Declarees("[Category(\"A\")] x; // [Category(\"B\")]\n[UnityTest, Category(\"C\")] [Category(\"D\")]").Count(),
