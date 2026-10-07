@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using MafiaCleanCity.I18n;
 using MafiaCleanCity.Operational;
 using MafiaCleanCity.Operational.Lieutenant;
 using Object = UnityEngine.Object;
@@ -75,6 +76,61 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsFalse(LieutenantScreenController.EstCuisinierAuRepos(new RosterRow { archetype = "COOK", op_state_band = "ACTIVE" }));
             Assert.IsFalse(LieutenantScreenController.EstCuisinierAuRepos(new RosterRow { archetype = "MUSCLE", op_state_band = "IDLE" }));
             Assert.IsFalse(LieutenantScreenController.EstCuisinierAuRepos(null));
+        }
+
+        // ── ⑥ (L2 client, 07/10) — la phrase SUIT le stock du labo servi au roster : `precursor_stock_band` ───────────────────────────
+        //   S1  une phrase par valeur ; NONE garde les deux phrases d'avant ; bande absente ou valeur inconnue ⇒ la phrase d'avant
+        //   S2  GARDE épinglée sur la valeur SERVIE : MEDIUM, pas MODERATE (≠ `DealerCashBand`) — un MODERATE servi n'est pas un stock moyen
+        //   S3  la clé se lit dans le corps du roster (type fermé, jamais null) ; le DTO la déclare AVANT qu'elle soit servie (forme G)
+
+        private static string Texte(string bande) =>
+            LieutenantScreenController.TexteDuCuisinierAuRepos(new RosterRow { archetype = "COOK", op_state_band = "IDLE", precursor_stock_band = bande });
+
+        [Test]
+        public void S1_UnePhraseParValeur_NoneEtAbsenteGardentLaPhraseDAvant()
+        {
+            Libelle.RemettreLesCompteurs();
+            string avant = Texte(null);
+            StringAssert.Contains("rien \u00e0 cuire", avant);
+            StringAssert.Contains("d\u2019appro", avant, "NONE et « sans stock » : « rien à cuire » et le renvoi à ㉚, comme avant");
+            Assert.AreEqual(avant, Texte("NONE"), "NONE = zéro stock au labo d'un cuisinier au repos : « rien à cuire » est vrai");
+            Assert.AreEqual(avant, Texte(""), "une bande vide n'est pas un stock");
+
+            string peu = Texte("LOW"), moyen = Texte("MEDIUM"), plein = Texte("HIGH");
+            foreach (string phrase in new[] { peu, moyen, plein })
+            {
+                StringAssert.DoesNotContain("rien \u00e0 cuire", phrase, "avec du stock, « rien à cuire » serait FAUX");
+                StringAssert.StartsWith("Au repos", phrase);
+            }
+            Assert.AreEqual(3, new[] { peu, moyen, plein }.Distinct().Count(), "une phrase par valeur");
+            Assert.AreNotEqual(avant, peu);
+            StringAssert.Contains("famille.vide.au_repos_stock.low", string.Join(",", Libelle.ClesEnRepli), "clé adressée par la VALEUR servie");
+            StringAssert.Contains("famille.vide.au_repos_stock.medium", string.Join(",", Libelle.ClesEnRepli));
+            StringAssert.Contains("famille.vide.au_repos_stock.high", string.Join(",", Libelle.ClesEnRepli));
+        }
+
+        [Test]
+        public void S2_Garde_LaValeurServieEstMedium_PasModerate()
+        {
+            CollectionAssert.AreEqual(new[] { "NONE", "LOW", "MEDIUM", "HIGH" }, LieutenantScreenController.BandesDeStock,
+                "`StockBand` du back (precursor-stock-band.ts:16), recopié : MEDIUM, pas MODERATE");
+            string avant = Texte(null);
+            Assert.AreEqual(avant, Texte("MODERATE"), "MODERATE est une valeur de `DealerCashBand` : pour un stock, une valeur INCONNUE ⇒ la phrase d'avant");
+            Assert.AreEqual(avant, Texte("FULL"));
+            Assert.AreNotEqual(avant, Texte("MEDIUM"));
+            Assert.AreEqual(avant, LieutenantScreenController.TexteDuCuisinierAuRepos(null));
+        }
+
+        [Test]
+        public void S3_LaCleSeLitDansLeRoster_CleDeRosterSeulement()
+        {
+            const string corps = "{\"payload\":{\"data\":{\"lieutenants\":[{\"lieutenant_id\":\"lt\",\"name\":\"Lt. Tull\",\"archetype\":\"COOK\"," +
+                                 "\"op_state_band\":\"IDLE\",\"rule_count_band\":\"NONE\",\"precursor_stock_band\":\"MEDIUM\",\"tenure_bucket\":\"FRESH\"}]}}}";
+            RosterRow r = JsonUtility.FromJson<RosterListEnvelope>(corps).payload.data.lieutenants[0];
+            Assert.AreEqual("MEDIUM", r.precursor_stock_band);
+            Assert.AreEqual("FRESH", r.tenure_bucket, "les autres clés passent toujours");
+            Assert.IsNull(JsonUtility.FromJson<RosterListEnvelope>(corps.Replace("\"precursor_stock_band\":\"MEDIUM\",", ""))
+                .payload.data.lieutenants[0].precursor_stock_band, "un back antérieur au lot ne la sert pas : null ⇒ la phrase d'avant");
         }
     }
 }

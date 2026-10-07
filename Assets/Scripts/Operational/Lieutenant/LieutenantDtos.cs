@@ -182,6 +182,13 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public string archetype;        // COOK | SECURITY | BOOKKEEPER | LOGISTICS | LAUNDERING | DISTRIBUTION | UNKNOWN
         public string op_state_band;    // PAUSED | ACTIVE | IDLE — the delegated operational state band
         public string rule_count_band;  // NONE | FEW | MANY — the behavior-script rule count as a band (never the raw count)
+        /// <summary>⑥ (C9, 07/10) — le STOCK de précurseurs du bâtiment ASSIGNÉ du lieutenant, en bande : `StockBand = 'NONE' | 'LOW' | 'MEDIUM' |
+        /// 'HIGH'` (`precursor-stock-band.ts:16`, back lot/boucle-argent @615ca764, PAS déployé). Clé de ROSTER seulement (le détail ne la
+        /// porte pas), toujours présente, jamais null. Coupes en unités ABSOLUES : 0 → NONE ; 1..10 → LOW ; 11..50 → MEDIUM ; > 50 → HIGH.
+        /// ⚠️ MEDIUM, pas MODERATE (≠ `DealerCashBand`). NONE = TROIS cas fusionnés côté back (aucun bâtiment assigné · bâtiment qui ne source
+        /// aucun précurseur · stock à zéro) : « rien à cuire » n'est sûr que pour un cuisinier AU REPOS, qui a donc un labo. Null tant que le
+        /// back ne la sert pas ⇒ la phrase d'avant.</summary>
+        public string precursor_stock_band;
         public string tenure_bucket;    // FRESH | ACCLIMATED | SEASONED | SENIOR | ENTRENCHED — the roster's tenure band (Phase-11; the filter-by-bucket teaser surface). The roster carries ONLY the bucket (NOT the 3 effect bands — those live on the detail GET /:id).
     }
 

@@ -2752,6 +2752,25 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public static bool EstCuisinierAuRepos(RosterRow row) =>
             row != null && row.archetype == "COOK" && row.op_state_band == "IDLE";
 
+        /// <summary>Les valeurs de `StockBand` (anti-tautologie : recopiées du back, `precursor-stock-band.ts:16`).</summary>
+        public static readonly string[] BandesDeStock = { "NONE", "LOW", "MEDIUM", "HIGH" };
+
+        /// <summary>⑥ — le texte de la case d'un cuisinier AU REPOS, qui SUIT le stock du labo servi au roster (`precursor_stock_band`).
+        /// NONE (zéro) : « rien à cuire », et le renvoi à ㉚ (les deux phrases d'avant, clés servies). LOW / MEDIUM / HIGH : UNE phrase par valeur,
+        /// clé `famille.vide.au_repos_stock.<valeur>`. Bande absente (un back antérieur) ou valeur inconnue : la phrase d'avant, jamais une phrase
+        /// inventée. ⚠️ MOTS PROVISOIRES des trois dernières : dérivés du ton de la phrase d'avant, À RATIFIER par l'atelier (commande à f2) ;
+        /// déclarés ici pour être réfutables. Pure.</summary>
+        public static string TexteDuCuisinierAuRepos(RosterRow row)
+        {
+            string bande = row != null ? row.precursor_stock_band : null;
+            string repli = bande == "LOW" ? "Au repos\u00A0: il reste peu de mati\u00e8re."
+                         : bande == "MEDIUM" ? "Au repos\u00A0: il y a de la mati\u00e8re en r\u00e9serve."
+                         : bande == "HIGH" ? "Au repos\u00A0: la r\u00e9serve de mati\u00e8re est pleine." : null;
+            if (repli != null) return MafiaCleanCity.I18n.Libelle.ParValeur("famille", "vide.au_repos_stock", bande, repli);
+            return MafiaCleanCity.I18n.Libelle.Gabarit("famille.vide.au_repos_rien_a_cuire_pour_l_instant", "Au repos\u00A0: rien à cuire pour l’instant.")
+                   + "\n" + MafiaCleanCity.I18n.Libelle.Gabarit("famille.vide.commandez_de_la_matiere_depuis_la_chaine_d_appro", "Commandez de la matière depuis la chaîne d’appro.");
+        }
+
         /// <summary>Test hook : combien de fois la case d'un cuisinier au repos a mené à ㉚.</summary>
         public int RenvoisALaChaineDAppro { get; private set; }
 
@@ -2804,8 +2823,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // au repos (servi), ce qui est vrai — et ce qu'on peut faire, avec le RENVOI à ㉚ (la case se touche). Ailleurs : inchangé.
             bool auRepos = EstCuisinierAuRepos(row);
             string texte = auRepos
-                ? MafiaCleanCity.I18n.Libelle.Gabarit("famille.vide.au_repos_rien_a_cuire_pour_l_instant", "Au repos\u00A0: rien à cuire pour l’instant.")
-                  + "\n" + MafiaCleanCity.I18n.Libelle.Gabarit("famille.vide.commandez_de_la_matiere_depuis_la_chaine_d_appro", "Commandez de la matière depuis la chaîne d’appro.")
+                ? TexteDuCuisinierAuRepos(row)   // ⑥ : suit le stock du labo servi (NONE ⇒ « rien à cuire » + renvoi à ㉚, comme avant)
                 : Lib("Aucune équipe rattachée");
             // ⑥ (§G de la passe UX, 26/09 — planche F1) : « …depuis la chaî » COUPÉ. Le texte était ÉTIRÉ dans un cadre de hauteur
             // FIGÉE (71 u) en `Truncate` : deux phrases longues reviennent à la ligne sur TROIS lignes, la troisième était tronquée.
