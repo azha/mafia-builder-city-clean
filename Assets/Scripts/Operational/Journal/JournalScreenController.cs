@@ -647,6 +647,9 @@ namespace MafiaCleanCity.Operational
         }
 
         /// <summary>Le cadre de la liste — un CADRE borné, et dedans un CONTENU libre d'être haut.
+        /// ⛔ CAUSE 7 (CLIENT-3, 07/10, ㊳ B2) : « liste coupée au pixel par le bas (à 1920 : 3 cartes, la 3ᵉ tranchée) ; aucun défilement » — le manque « ASSUMÉ » ci-dessous n'était pas une
+        /// décision de f2. Le cadre est maintenant une FENÊTRE défilante (`ListeDefilante.Equiper` : ScrollRect + fondu en fin de course + ascenseur) : les brèves du bas sont atteignables et le
+        /// joueur voit qu'il y a une suite.
         ///
         /// ⛔ MESURÉ le 2026-09-03, et les deux symptômes n'avaient QU'UNE cause. Ma première
         /// version mettait le `VerticalLayoutGroup` directement sur le cadre : sa hauteur
@@ -661,10 +664,7 @@ namespace MafiaCleanCity.Operational
         ///   reste et ne peut jamais le dépasser.
         ///   CONTENU : ancré en haut, sa propre pile, libre de mesurer ce qu'il veut — il déborde
         ///   du cadre, et c'est le masque qui décide de ce qui se voit.
-        /// ⚠️ Ce n'est PAS un défilement : les brèves du bas ne sont pas atteignables. C'est un
-        /// manque ASSUMÉ — la maquette ne dessine aucune barre, et son propre cadre des manques
-        /// (130) n'en parle pas. Un masque qui cache proprement vaut mieux qu'un débordement qui
-        /// recouvre le dock ; les deux valent mieux qu'une barre qui ne défilerait pas.</summary>
+        /// (Historique : ce n'était PAS un défilement — « manque ASSUMÉ », la maquette ne dessine aucune barre. Remplacé : une liste qu'on ne peut pas atteindre n'est pas assumable.)</summary>
         private RectTransform ConstruireListe(Transform parent)
         {
             GameObject cadre = NouveauUI("Liste", parent);
@@ -688,6 +688,7 @@ namespace MafiaCleanCity.Operational
             v.childAlignment = TextAnchor.UpperCenter;
             var fit = contenu.AddComponent<ContentSizeFitter>();
             fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            ListeDefilante.Equiper((RectTransform)cadre.transform, rt, DesignTokens.Current.surfaceBase);   // cause 7 : défilement + fondu + ascenseur
             return rt;
         }
 

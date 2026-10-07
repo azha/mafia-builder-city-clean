@@ -822,6 +822,7 @@ namespace MafiaCleanCity.Operational
             var fit = contenu.AddComponent<ContentSizeFitter>();
             fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             listeRoot = rtc;
+            ListeDefilante.Equiper((RectTransform)carnet.transform, rtc, CouleurPapier);   // cause 7 : le papier est coupé par un masque sans défilement ; le fondu se fond dans le papier
 
             // L'en-tête du carnet : « Carnet du soir » + « N ORDRES SUR 8 »
             GameObject entete = NouveauUI("EnteteCarnet", contenu.transform);

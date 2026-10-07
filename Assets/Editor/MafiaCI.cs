@@ -334,6 +334,9 @@ public static class MafiaCI
         // hors du client). Verte 4/4 au créneau de CLIENT-1 du 07/10 nuit (HEAD 2de97eb4, run par FILTRE de catégories avec CollecteMots, AccueilCanon, HorlogeLegere, LaSuite, SessionAuRetour,
         // GardeCategories, EcranFile : 137 déclarés = 137 comptés). PAS dans l'ordre d'un run complet : le prochain gate complet le dira. Filtre : 101 → 102 catégories, 981 → 985 tests.
         "ClientHttp",
+        // ListeDefilante (CLIENT-1, 07/10, cause 7 du rapport de conformité de CLIENT-3) — le défilement + le fondu + l'ascenseur communs : calcul pur, effet sur une fenêtre, garde de classe
+        // (tout RectMask2D passe par lui ou est une exception nommée). Catégorie NEUVE inscrite le jour où elle naît (garde I1) ; PAS ENCORE JOUÉE : verte au créneau, jamais déclarée avant.
+        "ListeDefilante",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

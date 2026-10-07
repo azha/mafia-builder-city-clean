@@ -1198,6 +1198,8 @@ namespace MafiaCleanCity.Operational
             rtc.offsetMax = Vector2.zero;
             sr.viewport = (RectTransform)fenetre.transform;
             sr.content = rtc;
+            // cause 7 (CLIENT-3, ㉝ B1) : « liste VOS N SITES tranchée par le bas, aucun indice de défilement » — le ScrollRect existait sans affordance : fondu en fin de course + ascenseur
+            ListeDefilante.Indiquer(sr, DemolitionResolvers.FondBas);
 
             VerticalLayoutGroup v = contenu.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset(PxTrait(CssMargeH), PxTrait(CssMargeH), PxTrait(CssBodyPadHaut), 0);

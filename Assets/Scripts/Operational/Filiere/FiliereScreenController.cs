@@ -904,6 +904,7 @@ namespace MafiaCleanCity.Operational
             var fit = contenu.AddComponent<ContentSizeFitter>();
             fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             listeRoot = rtc;
+            ListeDefilante.Equiper((RectTransform)cadre.transform, rtc, DesignTokens.Current.surfaceBase);   // cause 7 : même cadre-masque que ㊳, même défaut (rien d'atteignable sous la coupe)
 
             // Le panneau
             GameObject pan = NouveauUI("Panneau", racine.transform);

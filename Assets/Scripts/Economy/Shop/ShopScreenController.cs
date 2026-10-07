@@ -435,6 +435,8 @@ namespace MafiaCleanCity.Economy.Shop
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             defil.content = listeRt;
             defil.viewport = (RectTransform)vue.transform;
+            // cause 7 (CLIENT-3, ㉓ m3) : « défilement coupé net, ligne tronquée, sans fondu ni indicateur — on ne devine pas qu'on peut défiler » : fondu en fin de course + ascenseur
+            ListeDefilante.Indiquer(defil, DesignTokens.Current.surfaceBase);
             etageres = listeRt;
 
             videTexte = Texte(transform, "Vide", "", Px(11f), Creme2,
