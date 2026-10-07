@@ -1,0 +1,8 @@
+# Planches du parcours d'un joueur neuf — APRÈS le lot r4 de ④ (2026-10-07 soir)
+
+- **Tip du run** : `3d295d18546f0408a6405d0baae0df892f7c754c` (branche `gate/cumul-client-2026-09-22`) : R1 (hauteur fixe 110 u des boutons), R2 (tailles 38/33/40/36), R3 (filet en plateau), R4 (plancher +5/255 : alpha 252/255 sur un gris), R5 (verre dégradé), R9 (rayon 38), R10 (marges 58/62).
+- **Run** : `ClicheParcours` 4/4, VERDICT code=0, 230 s, compte NEUF, pile dev. P1 : `p1_lancement_1080x1920.png`, `p1_lancement_1080x2400.png`, prises APRÈS la lecture de LA SUITE.
+- **Mesures** (scripts m19 / m39 du r4 rejoués sur ces planches : `sortie-m19-r5.txt`, `sortie-m39-r5.txt`) : part du décor sous la luminance 10 : **0,9 %** (r4 : 18,8 % ; référence 1,2 %) ; luminance moyenne du décor 22,29 contre 24,61 (**0,906**, r4 : 0,812) ; p1 → p10 à 1,03 → 0,94 ; **déficit restant dans les tons moyens** (p50 0,83, p75 0,87) : le plancher additif ne le ferme pas ; la simulation (A) gain ×1,095 donnerait encore |dLum| 2,23 contre 3,38 aujourd'hui.
+- **P1·mesure** : le bloc veut 827,3 u ; bande 1 011,7 u (1920) / 1 349,1 u (2400) ; marge 184,4 / 521,8 u ; échelle 1.
+- **DEUX DÉFAUTS VISIBLES sur ces planches, corrigés APRÈS la capture (commit suivant) : « TRANCHER » se coupe lettre par lettre (« TRANCHE / R » : 36 u dans une boîte fixe de 220 u) et le libellé « VOIR LA VENTE » (271 px) dépasse de son bouton (255 px : le groupe de la rangée rétrécit le bouton vers son minimum). Ces planches les MONTRENT : le r5 se juge sur les planches du créneau suivant.**
+- Les trois boutons ont désormais la même hauteur (R1 fermé à l'œil) ; le filet laiton est un plateau.

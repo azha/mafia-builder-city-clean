@@ -1,0 +1,20 @@
+REF (1080, 2102) JEU1920 (1080, 1920)   homographie REF = 1.0910*JEU + (-48,3)
+  n=92160 points apparies, zone JEU y 170..745 (= REF y 188..816) — DECOR des deux cotes
+  luminance moyenne : REF 24.61   JEU 22.29   rapport 0.906
+  RGB moyen         : REF (20,25,32)   JEU (18,22,29)
+   perc        REF      JEU  JEU/REF
+   p1         9.80    10.08    1.029
+   p5        11.58    11.66    1.006
+   p10       12.44    11.73    0.943
+   p25       13.51    12.80    0.947
+   p50       22.23    18.51    0.833
+   p75       34.09    29.58    0.868
+   p90       36.02    32.02    0.889
+   p95       37.70    35.16    0.933
+   p99       60.90    64.08    1.052
+   part des pixels sous lum  6 : REF   0.1 %   JEU   0.0 %
+   part des pixels sous lum  8 : REF   0.4 %   JEU   0.0 %
+   part des pixels sous lum 10 : REF   1.2 %   JEU   0.9 %
+   part des pixels sous lum 12 : REF   7.5 %   JEU  11.6 %
+   part des pixels sous lum 16 : REF  30.6 %   JEU  35.0 %
+  ecart-type (etendue tonale) : REF 11.98   JEU 11.74   rapport 0.980
