@@ -28,4 +28,8 @@ rows=re.findall(r'^\| (\S+) \| [^|]+ \| (Posé|DéjàLivré|NonMonté) \|',d,re.
 c=collections.Counter(s for _,s in rows)
 chk('§4 : 26 lignes, 22 Posé / 3 DéjàLivré / 1 NonMonté',(len(rows),c['Posé'],c['DéjàLivré'],c['NonMonté']),(26,22,3,1))
 chk('§4 : symboles = écrans de l\'INDEX avec cadres série 6',{s for s,_ in rows},{x[0] for x in idx if x[3]})
+# 4. cohérence textuelle des décisions de la revue n°5 (greps)
+chk('clip : RectMask2D exigé sur Decor/Support (§3.3 et D0)',d.count('RectMask2D')>=3,True)
+chk('plus de « calculé au montage » du rayon',len(re.findall(r'(?i)calculé au montage',d)),0)
+chk('composant CercleDeSupport présent, pas de « composant `RadialCercle` »',('CercleDeSupport' in d) and ('composant `RadialCercle`' not in d),True)
 sys.exit(1 if ko else 0)
