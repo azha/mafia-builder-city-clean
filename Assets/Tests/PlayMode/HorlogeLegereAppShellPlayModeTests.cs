@@ -106,7 +106,7 @@ namespace MafiaCleanCity.CityMap.Tests
         {
             var horloge = new HorlogeTemoin();
             AppShell shell = Monter(horloge);
-            yield return Attendre(() => horloge.Appels >= 1, 20f);
+            yield return Attendre(() => horloge.Appels >= 1 && shell.LecturesDeLHorloge >= 1, 20f);   // la lecture est COMPTÉE au tour suivant l'appel (énumérateur imbriqué)
             Assert.GreaterOrEqual(horloge.Appels, 1, "la boucle part d'elle-même après l'ouverture de la session (transport de test posé)");
             Assert.AreEqual(AuthTemoin.Jeton, horloge.Jetons[0], "la lecture porte le jeton QUE LE SHELL a acquis, pas un autre");
             Assert.AreEqual(shell.Token, horloge.Jetons[0]);

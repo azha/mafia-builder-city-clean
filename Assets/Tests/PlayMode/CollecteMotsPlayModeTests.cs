@@ -231,7 +231,7 @@ namespace MafiaCleanCity.CityMap.Tests
             string clientFiche = File.ReadAllText(Path.Combine(racine, "CityMap", "CityProjectionsClient.cs"));
             StringAssert.Contains("CollecteMots.PhraseDeSucces(", vente);
             StringAssert.Contains("CollecteMots.PhraseDeSucces(", fiche);
-            StringAssert.Contains("CollecteMots.PhraseDeRefus(", vente);
+            StringAssert.Contains("CollecteMots.PhraseFinaleDeRefus(", vente, "n1 : ㉟ passe par la phrase finale (409 générique forcé, prénom, servie, code)");
             StringAssert.Contains("CollecteMots.PhraseDeRefus(", clientFiche);
             StringAssert.Contains("ReessayerEnSilence(", clientFiche, "① réessaie le 409 générique, comme ㉟");
             foreach (string mort in new[] { "Cette caisse est vide ou la planque est pleine", "la caisse est vide ou la planque est pleine", "\"Collecte indisponible : \" + raison" })
