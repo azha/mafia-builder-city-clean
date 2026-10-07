@@ -159,23 +159,98 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsEmpty(Requetes("null", "null"));
         }
 
-        // ── H6 — la boucle d'AppShell, lue dans la source ─────────────────────────────────────────────────────────────────────────
+        // ── H6 — la boucle, par son COMPORTEMENT (revue ⊥ de CLIENT-2, m6 : plus de StringAssert sur le source d'AppShell) ─────────
+
+        /// <summary>Un transport qui REND, lecture après lecture, ce que la file lui donne : un DTO, ou un code d'erreur HTTP.</summary>
+        private sealed class TransportDeLHorlogeTemoin : ITransportDeLHorloge
+        {
+            public int Appels;
+            public readonly List<string> Jetons = new List<string>();
+            private readonly Queue<object> reponses;
+            public TransportDeLHorlogeTemoin(params object[] reponses) { this.reponses = new Queue<object>(reponses); }
+            public IEnumerator Lire(string jeton, Action<HorlogeLegereDto> ok, Action<long, string> echec)
+            {
+                Appels++; Jetons.Add(jeton);
+                object r = reponses.Count > 0 ? reponses.Dequeue() : 404L;
+                if (r is HorlogeLegereDto d) ok(d); else echec((long)r, "erreur");
+                yield break;
+            }
+        }
+
+        private static HorlogeLegereDto Jours(int? famille, int? ouverture) => HorlogeLegere.Lire(
+            CorpsPlat.Replace("\"family_day\":44", "\"family_day\":" + (famille.HasValue ? famille.ToString() : "null"))
+                     .Replace("\"opened_family_day\":43", "\"opened_family_day\":" + (ouverture.HasValue ? ouverture.ToString() : "null")));
+
+        private static HorlogeLegereBoucle Boucle(ITransportDeLHorloge transport, Func<bool> arrierePlan, List<string> decisions, string jeton = "tok",
+                                                  Func<float, object> attente = null) =>
+            new HorlogeLegereBoucle(transport, () => jeton, arrierePlan,
+                (j, o) => { decisions.Add(j + "/" + o); return Vide(); }, attente ?? (_ => null));
+
+        private static IEnumerator Vide() { yield break; }
 
         [Test]
-        public void H6_LaBoucle_Cadence30a60s_ArreteeEnArrierePlan_DemarreeApresLOuverture()
+        public void H6_LaCadenceParDefaut_EstDe30a60s()
         {
-            string app = File.ReadAllText(Path.Combine(Application.dataPath, "Scripts", "Shell", "AppShell.cs"));
-            var cadence = Regex.Match(app, @"CadenceDeLHorlogeS\s*=\s*(\d+)f");
-            Assert.IsTrue(cadence.Success, "la cadence est lue dans la source");
-            int s = int.Parse(cadence.Groups[1].Value);
-            Assert.That(s, Is.InRange(30, 60), "30 à 60 s au premier plan (contrat de f2)");
-            StringAssert.Contains("WaitForSecondsRealtime(CadenceDeLHorlogeS)", app, "la cadence est en secondes RÉELLES");
-            StringAssert.Contains("enArrierePlan = enPause;", app, "la pause du jeu arrête la lecture");
-            StringAssert.Contains("enArrierePlan = !focus;", app, "la perte de focus Android aussi");
-            StringAssert.Contains("if (string.IsNullOrEmpty(Token) || enArrierePlan) yield break;", app, "pas de lecture sans jeton ni en arrière-plan");
-            StringAssert.Contains("yield return SurLectureDuJourServi(lue.JourDeFamille, lue.JourDOuvertureDeFamille);", app,
-                "les DEUX jours lus décident, rien n'est mémorisé côté client");
-            Assert.AreEqual(1, Regex.Matches(app, @"\bDemarrerLaBoucleDeLHorloge\(\);").Count, "la boucle part UNE fois, après l'ouverture");
+            Assert.That(HorlogeLegereBoucle.CadenceParDefautS, Is.InRange(30f, 60f), "30 à 60 s au premier plan (contrat de f2)");
+        }
+
+        [Test]
+        public void H6a_UneLecture_RendLesDeuxJours_AuCycleDeSession()
+        {
+            var transport = new TransportDeLHorlogeTemoin(Jours(44, 43));
+            var decisions = new List<string>();
+            var boucle = Boucle(transport, () => false, decisions);
+            Derouler(boucle.UneLecture());
+            CollectionAssert.AreEqual(new[] { "44/43" }, decisions, "les DEUX jours lus décident ; rien n'est mémorisé côté client");
+            Assert.AreEqual(1, boucle.Lectures);
+            Assert.AreEqual(44, boucle.Derniere.JourDeFamille);
+            CollectionAssert.AreEqual(new[] { "tok" }, transport.Jetons, "la lecture porte le jeton du joueur");
+            decisions.Clear();
+            Derouler(Boucle(new TransportDeLHorlogeTemoin(Jours(null, null)), () => false, decisions).UneLecture());
+            CollectionAssert.AreEqual(new[] { "/" }, decisions, "les deux null sont PASSÉS tels quels (null ≠ 0) : c'est le cycle de session qui ne fait rien");
+        }
+
+        [Test]
+        public void H6b_EnArrierePlan_OuSansJeton_AucuneRequete()
+        {
+            var transport = new TransportDeLHorlogeTemoin(Jours(44, 43));
+            var decisions = new List<string>();
+            Derouler(Boucle(transport, () => true, decisions).UneLecture());
+            Assert.AreEqual(0, transport.Appels, "en arrière-plan : pas de minuteur, pas de requête");
+            Derouler(Boucle(transport, () => false, decisions, jeton: "").UneLecture());
+            Derouler(Boucle(transport, () => false, decisions, jeton: null).UneLecture());
+            Assert.AreEqual(0, transport.Appels, "sans jeton : aucune requête");
+            Assert.IsEmpty(decisions);
+        }
+
+        [Test]
+        public void H6c_La404_ArreteLaBoucle_PourLaSession_UneAutreErreurNon()
+        {
+            // 1re : lue ; 2e : arrière-plan (sautée) ; 3e : 500 (réessayée plus tard) ; 4e : lue ; 5e : 404 ⇒ la boucle s'ARRÊTE, la 6e n'existe pas
+            var transport = new TransportDeLHorlogeTemoin(Jours(44, 44), 500L, Jours(44, 44), 404L, Jours(99, 1));
+            var decisions = new List<string>();
+            // le passage en arrière-plan se pose À L'ATTENTE (une fois par tour de boucle) : le 2e tour est en arrière-plan, les autres au premier plan
+            int tour = 0; bool arriere = false;
+            var boucle = Boucle(transport, () => arriere, decisions, attente: _ => { arriere = ++tour == 2; return null; });
+            Derouler(boucle.Executer());   // se termine : Indisponible
+            Assert.IsTrue(boucle.Indisponible, "404 : la route n'est pas déployée, la boucle s'arrête pour la session");
+            Assert.AreEqual(4, transport.Appels, "lue, [arrière-plan : rien], 500, lue, 404 — et plus rien après (la 5e réponse n'est jamais demandée)");
+            Assert.AreEqual(2, boucle.Lectures, "le 500 et le 404 ne comptent pas comme des lectures");
+            CollectionAssert.AreEqual(new[] { "44/44", "44/44" }, decisions);
+            int avant = transport.Appels;
+            Derouler(boucle.UneLecture());
+            Assert.AreEqual(avant, transport.Appels, "une fois indisponible, même une lecture directe ne part plus");
+        }
+
+        [Test]
+        public void H6d_UneErreurDeReseau_NArretePasLaBoucle()
+        {
+            var transport = new TransportDeLHorlogeTemoin(0L, 503L, Jours(44, 43), 404L);
+            var decisions = new List<string>();
+            var boucle = Boucle(transport, () => false, decisions);
+            Derouler(boucle.Executer());
+            Assert.AreEqual(4, transport.Appels, "réseau (0), 503, lue, puis 404 : seul le 404 arrête");
+            CollectionAssert.AreEqual(new[] { "44/43" }, decisions);
         }
     }
 }

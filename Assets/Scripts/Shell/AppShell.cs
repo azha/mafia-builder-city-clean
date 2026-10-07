@@ -691,47 +691,34 @@ namespace MafiaCleanCity.Shell
         // de la famille ; différents ⇒ `SurLectureDuJourServi` (close puis open) ; l'un des deux null ⇒ rien. En batchmode (les gates), la
         // boucle ne part PAS d'elle-même : un test qui l'exerce pose son transport.
         public ITransportDeLHorloge TransportDeLHorlogePourTest;
-        /// <summary>Cadence de la boucle, en secondes RÉELLES (30 à 60 s — au milieu).</summary>
-        public float CadenceDeLHorlogeS = 45f;
+        /// <summary>Cadence de la boucle, en secondes RÉELLES (30 à 60 s — `HorlogeLegereBoucle.CadenceParDefautS`).</summary>
+        public float CadenceDeLHorlogeS = HorlogeLegereBoucle.CadenceParDefautS;
         /// <summary>C4 — nombre de lectures de l'horloge qui ont abouti (test hook).</summary>
-        public int LecturesDeLHorloge { get; private set; }
+        public int LecturesDeLHorloge => boucleHorloge != null ? boucleHorloge.Lectures : 0;
         /// <summary>C4 — la dernière horloge lue ; null tant qu'aucune lecture n'a abouti.</summary>
-        public HorlogeLegereDto DerniereHorloge { get; private set; }
+        public HorlogeLegereDto DerniereHorloge => boucleHorloge != null ? boucleHorloge.Derniere : null;
+        /// <summary>C4 — la route légère a répondu 404 : la boucle est arrêtée pour la session.</summary>
+        public bool HorlogeLegereIndisponible => boucleHorloge != null && boucleHorloge.Indisponible;
         private bool enArrierePlan;
-        private Coroutine boucleDeLHorloge;
+        private HorlogeLegereBoucle boucleHorloge;
+        private Coroutine coroutineHorloge;
 
         private ITransportDeLHorloge TransportDeLHorloge() =>
             TransportDeLHorlogePourTest ?? new TransportDeLHorlogeHttp(new HorlogeLegereClient { BaseUrl = baseUrl });
 
+        private HorlogeLegereBoucle BoucleDeLHorloge() =>
+            boucleHorloge ?? (boucleHorloge = new HorlogeLegereBoucle(TransportDeLHorloge(), () => Token, () => enArrierePlan,
+                SurLectureDuJourServi, s => new WaitForSecondsRealtime(s)) { CadenceS = CadenceDeLHorlogeS });
+
         /// <summary>C4 — UNE lecture de l'horloge légère, puis la décision de session sur ses deux jours. Sans jeton, ou en arrière-plan : rien.
         /// Public : le test hors réseau la joue sans attendre la cadence.</summary>
-        public IEnumerator UneLectureDeLHorloge()
-        {
-            if (string.IsNullOrEmpty(Token) || enArrierePlan) yield break;
-            HorlogeLegereDto lue = null;
-            yield return TransportDeLHorloge().Lire(Token, d => lue = d, (c, m) => Debug.LogWarning($"[AppShell] horloge légère : {c} {m}"));
-            if (this == null || lue == null) yield break;
-            LecturesDeLHorloge++;
-            DerniereHorloge = lue;
-            yield return SurLectureDuJourServi(lue.JourDeFamille, lue.JourDOuvertureDeFamille);
-        }
-
-        private IEnumerator BoucleDeLHorloge()
-        {
-            while (true)
-            {
-                yield return new WaitForSecondsRealtime(CadenceDeLHorlogeS);
-                if (this == null) yield break;
-                if (enArrierePlan) continue;
-                yield return UneLectureDeLHorloge();
-            }
-        }
+        public IEnumerator UneLectureDeLHorloge() => BoucleDeLHorloge().UneLecture();
 
         private void DemarrerLaBoucleDeLHorloge()
         {
-            if (boucleDeLHorloge != null) return;
+            if (coroutineHorloge != null) return;
             if (Application.isBatchMode && TransportDeLHorlogePourTest == null) return;
-            boucleDeLHorloge = StartCoroutine(BoucleDeLHorloge());
+            coroutineHorloge = StartCoroutine(BoucleDeLHorloge().Executer());
         }
 
         // ── B4 — arrière-plan et retour ───────────────────────────────────────────────────────────────────────────────

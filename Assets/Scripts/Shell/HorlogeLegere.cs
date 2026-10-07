@@ -132,6 +132,61 @@ namespace MafiaCleanCity.Shell
         }
     }
 
+    /// <summary>LA BOUCLE de l'horloge légère, hors de tout MonoBehaviour pour se TESTER par son comportement (revue ⊥ de CLIENT-2, m6). Toutes les
+    /// `CadenceS` secondes (30 à 60) AU PREMIER PLAN : lit la route, puis `surLecture(family_day, opened_family_day)` décide close/open. Pas de jeton ou en
+    /// arrière-plan : aucune requête. ⛔ Si la route répond 404 (le back n'a pas déployé L1), la boucle S'ARRÊTE pour la session : un appel d'un 404 toutes
+    /// les 45 s ne dirait rien de neuf. Toute autre erreur (réseau, 5xx) se réessaie à la cadence suivante.</summary>
+    public sealed class HorlogeLegereBoucle
+    {
+        public const float CadenceParDefautS = 45f;
+        public float CadenceS = CadenceParDefautS;
+        public int Lectures { get; private set; }
+        public HorlogeLegereDto Derniere { get; private set; }
+        /// <summary>La route a répondu 404 : plus aucune lecture jusqu'à la prochaine session.</summary>
+        public bool Indisponible { get; private set; }
+
+        private readonly ITransportDeLHorloge transport;
+        private readonly Func<string> jeton;
+        private readonly Func<bool> enArrierePlan;
+        private readonly Func<int?, int?, IEnumerator> surLecture;
+        private readonly Func<float, object> attente;
+
+        /// <param name="attente">ce que la boucle `yield return` entre deux lectures : en production `WaitForSecondsRealtime`, en test `null`.</param>
+        public HorlogeLegereBoucle(ITransportDeLHorloge transport, Func<string> jeton, Func<bool> enArrierePlan,
+                                   Func<int?, int?, IEnumerator> surLecture, Func<float, object> attente)
+        {
+            this.transport = transport; this.jeton = jeton; this.enArrierePlan = enArrierePlan;
+            this.surLecture = surLecture; this.attente = attente;
+        }
+
+        /// <summary>UNE lecture, puis la décision de session sur ses deux jours.</summary>
+        public IEnumerator UneLecture()
+        {
+            string t = jeton();
+            if (Indisponible || string.IsNullOrEmpty(t) || enArrierePlan()) yield break;
+            HorlogeLegereDto lue = null; long code = 0;
+            yield return transport.Lire(t, d => lue = d, (c, m) => code = c);
+            if (lue == null)
+            {
+                if (code == 404) Indisponible = true;
+                yield break;
+            }
+            Lectures++;
+            Derniere = lue;
+            yield return surLecture(lue.JourDeFamille, lue.JourDOuvertureDeFamille);
+        }
+
+        public IEnumerator Executer()
+        {
+            while (!Indisponible)
+            {
+                yield return attente(CadenceS);
+                if (enArrierePlan()) continue;
+                yield return UneLecture();
+            }
+        }
+    }
+
     /// <summary>La lecture de l'horloge — l'interface permet de la CAPTURER hors réseau.</summary>
     public interface ITransportDeLHorloge
     {
