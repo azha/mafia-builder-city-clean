@@ -1958,17 +1958,7 @@ namespace MafiaCleanCity.Operational
 
         private void BuildLayout()
         {
-            Canvas canvas = FindFirstObjectByType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject canvasGo = new GameObject("Canvas",
-                    typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-                canvas = canvasGo.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                CanvasScaler scaler = canvasGo.GetComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1280, 720);
-            }
+            Canvas canvas = MafiaCleanCity.Shell.CanvasRacine.Resoudre(transform, mountParent);
             Transform root = mountParent != null ? mountParent : canvas.transform; // W3.U1 D2
 
             // Dim backdrop (the City Map would sit behind in-game).

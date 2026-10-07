@@ -322,6 +322,10 @@ public static class MafiaCI
         // C4 (CLIENT-1, 07/10) — l'horloge légère `GET /v1/me/clock` en appel de FOND (`X-Mafia-Background: 1`) : 6 tests hors réseau, sans
         // paire. Catégorie NEUVE, inscrite le jour où elle naît (la garde I1 l'exige) ; verte au créneau suivant, jamais déclarée verte avant.
         "HorlogeLegere",
+        // CANVAS RACINE (CLIENT-2, 07/10) — la résolution partagée du Canvas d'un écran (`CanvasRacine.Resoudre`) + la garde de classe « 0
+        // `FindFirstObjectByType<Canvas>` hors AppShell » : 5 tests, sans paire. Catégorie NEUVE inscrite le jour où elle naît (garde I1) ; verte
+        // au créneau suivant, jamais déclarée verte avant.
+        "CanvasRacine",
         // COLLECTE (CLIENT-1, 07/10) — les bandes et les codes du ramassage de la caisse (tables 75/85 de l'atelier), 8 tests hors réseau, sans
         // paire. Catégorie NEUVE inscrite le jour où elle naît (garde I1) ; verte au créneau suivant, jamais déclarée verte avant.
         "CollecteMots",

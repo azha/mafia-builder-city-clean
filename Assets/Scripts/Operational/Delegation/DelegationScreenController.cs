@@ -846,17 +846,7 @@ namespace MafiaCleanCity.Operational
 
         private void BuildLayout()
         {
-            Canvas canvas = FindFirstObjectByType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject go = new GameObject("Canvas",
-                    typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-                canvas = go.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                CanvasScaler sc = go.GetComponent<CanvasScaler>();
-                sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                sc.referenceResolution = new Vector2(1280, 720);
-            }
+            Canvas canvas = MafiaCleanCity.Shell.CanvasRacine.Resoudre(transform, mountParent);
             // ⛔ SOUS L'HÔTE, PAS SOUS `mountParent` — voir `SetMountParent`. Monté dans le shell,
             // `transform` EST déjà l'enfant de `ContentSlot` que le shell gouverne : y bâtir garde
             // l'écran d'un seul tenant, mesurable et déplaçable en un geste. Hors shell (test

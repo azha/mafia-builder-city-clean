@@ -522,17 +522,9 @@ namespace MafiaCleanCity.Operational
 
         private void BuildLayout()
         {{
-            Canvas canvas = FindFirstObjectByType<Canvas>();
-            if (canvas == null)
-            {{
-                GameObject go = new GameObject("Canvas",
-                    typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-                canvas = go.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                CanvasScaler sc = go.GetComponent<CanvasScaler>();
-                sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                sc.referenceResolution = new Vector2(1280, 720);
-            }}
+            // « le mountParent, sinon le Canvas racine de MON parent, sinon j'en crée un » — JAMAIS « le premier Canvas de la scène »
+            // (garde de classe CanvasRacinePlayModeTests).
+            Canvas canvas = MafiaCleanCity.Shell.CanvasRacine.Resoudre(transform, mountParent);
             // ⛔ SOUS L'HÔTE, PAS SOUS `mountParent` — voir `SetMountParent`. Monté dans le shell,
             // `transform` EST déjà l'enfant de `ContentSlot` que le shell gouverne. Hors shell
             // (test isolé), l'hôte n'est sous aucun canvas : on retombe sur le canvas découvert.
