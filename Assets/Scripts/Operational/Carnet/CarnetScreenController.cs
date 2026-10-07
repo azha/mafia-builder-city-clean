@@ -738,7 +738,7 @@ namespace MafiaCleanCity.Operational
             var lePast = pastille.AddComponent<LayoutElement>();
             lePast.minWidth = lePast.preferredWidth = Px(15f); lePast.minHeight = lePast.preferredHeight = Px(15f); lePast.flexibleWidth = 0f; lePast.flexibleHeight = 0f;
             TextMeshProUGUI num = NouveauTexte(pastille.transform, "Rang", rang.ToString(), Px(8.5f),
-                vide ? new Color32(0x7a, 0x6f, 0x55, 255) : new Color32(0xea, 0xe0, 0xc8, 255), DesignTokens.Current.primaryFont);
+                vide ? new Color32(0x7a, 0x6f, 0x55, 255) : (Color32)DesignTokens.Current.hudCreme, DesignTokens.Current.primaryFont);   // `#eae0c8` EST hudCreme (garde Palette)
             num.alignment = TextAlignmentOptions.Center;
             num.fontStyle = FontStyles.Bold;
             RectTransform nr = (RectTransform)num.transform;

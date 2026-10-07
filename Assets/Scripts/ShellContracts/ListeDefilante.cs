@@ -64,7 +64,7 @@ namespace MafiaCleanCity.Shell
         public Image Fondu { get; private set; }
         public RectTransform Pouce { get; private set; }
 
-        private Color fond = new Color(0.05f, 0.06f, 0.07f, 1f);
+        private Color fond = Color.black;   // toujours remplacée par `Equiper`/`Indiquer` (la couleur du fond de l'écran) : un défaut neutre, pas une recopie de surfaceBase (garde Palette)
         private RectTransform piste;
         private static Sprite spriteDuFondu;
 
@@ -130,7 +130,9 @@ namespace MafiaCleanCity.Shell
                 Pouce = (RectTransform)t.transform;
                 Pouce.anchorMin = new Vector2(0f, 1f); Pouce.anchorMax = new Vector2(1f, 1f); Pouce.pivot = new Vector2(0.5f, 1f);
                 Image pi = t.AddComponent<Image>();
-                pi.color = new Color(0.72f, 0.68f, 0.57f, 0.45f);   // le crème secondaire, discret (un indice, pas un contrôle)
+                Color pouce = MafiaCleanCity.Theme.DesignTokens.Current.hudCremeSecondary;   // le crème secondaire (le jeton : garde Palette), discret (un indice, pas un contrôle)
+                pouce.a = 0.45f;
+                pi.color = pouce;
                 pi.raycastTarget = false;
                 piste.gameObject.SetActive(false);
             }

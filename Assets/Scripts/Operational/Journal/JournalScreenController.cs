@@ -753,7 +753,9 @@ namespace MafiaCleanCity.Operational
             // `.note6` : 6,4 px, centrée, #8a979c ; le mot « assister » en or vif gras
             string phrase = MafiaCleanCity.I18n.Libelle.De("journal", "bloc", "on peut assister à ce qui se passe — c’est le seul geste que la rue accepte");
             TextMeshProUGUI note = NouveauTexte(pied.transform, "Note",
-                phrase.Replace("assister", "<b><color=#f2c96b>assister</color></b>"), Px(6.4f), new Color32(0x8a, 0x97, 0x9c, 255), DesignTokens.Current.primaryFont);
+                // `#f2c96b` EST hudMoneyGold et `#8a979c` EST onSurfaceSecondary (garde Palette) : les jetons, dans la balise aussi
+                phrase.Replace("assister", "<b><color=#" + ColorUtility.ToHtmlStringRGB(DesignTokens.Current.hudMoneyGold) + ">assister</color></b>"), Px(6.4f),
+                DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.primaryFont);
             note.alignment = TextAlignmentOptions.Center;
             note.enableWordWrapping = true;
         }

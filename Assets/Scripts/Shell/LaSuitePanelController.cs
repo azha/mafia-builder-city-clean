@@ -270,8 +270,9 @@ namespace MafiaCleanCity.Shell
         /// (≈ 46 px) est celui MESURÉ sur la référence (plateau de x ≈ 360 à 720) ; l'échelle implicite n'est pas 3,6 px par px CSS mais ≈ 3,3 (50 px aurait été faux). Plateau de 30 % à 70 %.</summary>
         public const float RetraitDuFilet = 55f;
         /// <summary>R5 : le verre du panneau est éclairé du haut — `linear-gradient(180deg,#0c1320ef,#080d17f6)` ; médianes mesurées sur la référence, haut (13,19,31) → bas (9,14,24).</summary>
-        public static Color VerreHaut => new Color32(13, 19, 31, 255);
-        public static Color VerreBas => new Color32(9, 14, 24, 255);
+        // `#0d131f` est à 1/255 de hudBarGlassBottom et `#090e18` EST lieutenantGlassBottom (garde Palette, seuil 4) : les jetons, opaques (le verre de LA SUITE ne porte pas l'alpha du HUD)
+        public static Color VerreHaut { get { Color c = DesignTokens.Current.hudBarGlassBottom; c.a = 1f; return c; } }
+        public static Color VerreBas { get { Color c = DesignTokens.Current.lieutenantGlassBottom; c.a = 1f; return c; } }
         /// <summary>R10 : marges intérieures du panneau — réf 49 px à gauche et 53 px à droite (encre du texte à x 99, bord droit des boutons à x 979) ; le jeu rendait 47 / 48 :
         /// +2 et +5 px ⇒ 56 → 58 et 56 → 62 u.</summary>
         public const int RembourrageGauche = 58, RembourrageDroite = 62;

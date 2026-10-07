@@ -179,7 +179,9 @@ namespace MafiaCleanCity.Operational
             for (int y = 0; y < n; y++)   // la ligne 0 est le BAS de la texture
             {
                 float t = 1f - y / (n - 1f);
-                px[y] = new Color32(0x0a, 0x0f, 0x18, (byte)Mathf.RoundToInt(AlphaLineaireDuVoile(AlphaCssDuVoile(t)) * 255f));
+                Color32 teinte = DesignTokens.Current.lieutenantGlassBottom;   // `#0a0f18` est à 1,4/255 du jeton (garde Palette, seuil 4) : le jeton, l'alpha reste celui du voile
+                teinte.a = (byte)Mathf.RoundToInt(AlphaLineaireDuVoile(AlphaCssDuVoile(t)) * 255f);
+                px[y] = teinte;
             }
             tex.SetPixels32(px);
             tex.Apply(false, true);

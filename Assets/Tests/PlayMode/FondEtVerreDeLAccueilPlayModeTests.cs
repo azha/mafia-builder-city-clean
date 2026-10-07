@@ -156,8 +156,9 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(36f, ExceptionQueuePanelController.TailleDuTrancher, "R2 : TRANCHER 30 → 36");
             Assert.AreEqual((58, 62), (LaSuitePanelController.RembourrageGauche, LaSuitePanelController.RembourrageDroite), "R10 : marges intérieures 47/48 → 49/53 px");
             Color32 haut = LaSuitePanelController.VerreHaut, bas = LaSuitePanelController.VerreBas;
-            Assert.AreEqual((13, 19, 31), Trio(haut), "R5 : le verre éclairé du haut");
-            Assert.AreEqual((9, 14, 24), Trio(bas));
+            Assert.AreEqual(Trio(DesignTokens.Current.hudBarGlassBottom), Trio(haut), "R5 : le verre éclairé du haut — `#0d131f` à 1/255 du jeton (garde Palette)");
+            Assert.AreEqual(Trio(DesignTokens.Current.lieutenantGlassBottom), Trio(bas));
+            Assert.AreEqual(1f, LaSuitePanelController.VerreHaut.a, "le verre de LA SUITE est opaque : le jeton prête sa teinte, pas son alpha");
             Assert.Greater(LuminanceRelative(haut), LuminanceRelative(bas), "plus clair en haut qu'en bas (−26 % dans la référence)");
             // R3 : le filet est un plateau (30 % → 70 %) avec rampes jusqu'à 0
             Assert.AreEqual(0f, LaSuitePanelController.AlphaCssDuFilet(0f), 1e-6f);
