@@ -13,7 +13,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   V2  le mot de la table 63 porte l'enseigne en paramètre (repli à l'octet)
     //   V4-V6 ㊵ (f2 26/09) : la planque la plus chargée (règle unique avec l'Accueil), le geste BLANCHIR suit la charge SERVIE, la tête ne
     //       dit jamais « vide » quand la planque tient de quoi blanchir
-    //   V3  ㊵ (§G, 26/09) : un SEUL maillon manquant ne porte pas de numéro (« MAILLON MANQUANT 2 » seul) ; plusieurs, si
+    //   (V3, l'étiquette « MAILLON MANQUANT », est RETIRÉE le 08/10 avec les maillons eux-mêmes : A2 du juge groupé du 07/10 — la
+    //    chaîne vide se dit dans sa boîte, en une phrase centrée, cadres 140-141 ; voir FiliereOrdreEtEcartPlayModeTests)
     [Category("PlanqueVide")]
     public class PlanqueVidePlayModeTests
     {
@@ -43,13 +44,6 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("Votre planque, Dépôt Oster, est vide.", t);
         }
 
-        [Test]
-        public void V3_UnSeulMaillonManquant_SansNumero()
-        {
-            I18nCatalog.Oublier();
-            Assert.AreEqual("MAILLON MANQUANT", FiliereScreenController.EtiquetteDeRang("2", 1), "planque servie : un seul manquant");
-            Assert.AreEqual("MAILLON MANQUANT   2", FiliereScreenController.EtiquetteDeRang("2", 2), "sans planque : deux, numérotés");
-        }
     
         // ── ㊵ planque non vide + BLANCHIR (f2 26/09, relevé f1 §K.5) ──────────────────────────────────────────────────────────────
         private static MafiaCleanCity.CityMap.SafehouseDto P(string id, string charge) =>

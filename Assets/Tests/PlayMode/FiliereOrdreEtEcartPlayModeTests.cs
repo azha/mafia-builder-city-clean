@@ -131,9 +131,14 @@ namespace MafiaCleanCity.Operational.Tests
                 Transform etape = tous.First(t => t.name == "Etape" + i);
                 Transform niveau = etape.Find("Cuve/Niveau");
                 Assert.IsNotNull(niveau, $"Etape{i} porte le niveau de sa cuve");
-                Assert.AreEqual(niveauxAttendus[i - 1], niveau.GetComponent<UnityEngine.UI.LayoutElement>().flexibleWidth, 0.001f,
-                    $"Etape{i} : la bande qualitative porte son cran, sans scalaire brut");
+                Assert.AreEqual(niveauxAttendus[i - 1], niveau.GetComponent<UnityEngine.UI.LayoutElement>().flexibleHeight, 0.001f,
+                    $"Etape{i} : la bande qualitative porte son cran, sans scalaire brut — la cuve se remplit par le BAS (`.cuve u`)");
+                Assert.IsNotNull(etape.Find("Cerne"), $"Etape{i} est une plaque cernée (`.et6`, bord 1 px)");
             }
+            Assert.AreEqual((Color32)MafiaCleanCity.Theme.DesignTokens.Current.accentWarning,
+                (Color32)tous.First(t => t.name == "Etape3").Find("Cerne/Haut").GetComponent<UnityEngine.UI.Image>().color,
+                "l'étape qui s'écarte est cernée d'orange (`.et6.alerte`)");
+            Assert.IsFalse(racine.transform.Find("Chaine/Rien").gameObject.activeSelf, "des étapes servies : la phrase de la chaîne vide se tait");
 
             Transform compteurs = tous.First(t => t.name == "Compteurs");
             for (int i = 0; i < 3; i++)
@@ -147,8 +152,47 @@ namespace MafiaCleanCity.Operational.Tests
             StringAssert.Contains("/4", comptePropres, "le dénominateur vient du nombre d'étapes servi");
             Assert.AreEqual("PROPRE AU BOUT", compteurs.Find("Compteur1/Libelle").GetComponent<TMPro.TextMeshProUGUI>().text);
             Assert.IsNotNull(tous.First(t => t.name == "Enseigne").Find("FiletOr"), "le filet or ferme l'enseigne");
-            Assert.AreEqual(9, racine.GetComponentsInChildren<UnityEngine.UI.Outline>(true).Length,
-                "enseigne + 3 compteurs + 4 étapes + panneau portent leur liseré");
+            Assert.AreEqual(5, racine.GetComponentsInChildren<UnityEngine.UI.Outline>(true).Length,
+                "enseigne + 3 compteurs + panneau portent leur liseré ; les étapes, elles, sont CERNÉES (A2 du 07/10)");
+        }
+
+        /// <summary>㊵ A2 + A3 du juge groupé du 07/10 (`Tools/juge-visuel/screen_c2/r-groupe-2026-10-07/rapport.md`) — État FABRIQUÉ :
+        /// aucune étape, aucune planque. (1) La BOÎTE DE LA CHAÎNE garde sa place (`.elast`, `flex:1`) : elle prend ce que la pile
+        /// laisse — mesuré, pas seulement réglé — et porte son cerne ; (2) elle y CENTRE une phrase en italique (`.rien`, cadres 140-141),
+        /// pas une plaque ni des « maillons » ; (3) l'ordre de la pile est celui de la maquette : enseigne, compteurs, chaîne, panneau,
+        /// PIED (le geste, dernier) ; sans planque, le pied est vide et éteint (le geste est ABSENT, jamais éteint).</summary>
+        [UnityTest]
+        public IEnumerator Fabrique_ChaineVide_LaBoiteGardeSaPlace_LaPhraseEstCentree_LePiedEstDernier()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(new LaunderingPipelineDto { stages = new LaunderingStageDto[0] });
+            yield return null;
+            yield return null;
+            GameObject racine = GameObject.Find("FiliereRoot");
+            Assert.IsNotNull(racine, "FiliereRoot introuvable");
+            Transform r = racine.transform;
+
+            int ens = r.Find("Enseigne").GetSiblingIndex(), cpt = r.Find("Compteurs").GetSiblingIndex(),
+                ch = r.Find("Chaine").GetSiblingIndex(), pan = r.Find("Panneau").GetSiblingIndex(), pied = r.Find("Pied").GetSiblingIndex();
+            Assert.IsTrue(ens < cpt && cpt < ch && ch < pan && pan < pied,
+                $"l'ordre de la maquette : enseigne {ens} < compteurs {cpt} < chaîne {ch} < panneau {pan} < pied {pied}");
+            Assert.IsFalse(r.Find("Pied").gameObject.activeSelf, "sans planque, aucun geste : le pied est éteint");
+
+            Transform chaine = r.Find("Chaine");
+            Assert.AreEqual(1f, chaine.GetComponent<UnityEngine.UI.LayoutElement>().flexibleHeight, 0.001f, "`.elast { flex:1 }`");
+            Assert.IsNotNull(chaine.Find("Cerne"), "la boîte est cernée (1 px `#2a3648`)");
+            // EFFET, pas réglage : la boîte occupe une vraie part de l'écran (maquette : 36,6 % ; avant : 3,0 %).
+            float hRacine = ((RectTransform)r).rect.height, hChaine = ((RectTransform)chaine).rect.height;
+            Assert.Greater(hRacine, 400f, $"anti-vacuité : la racine a une hauteur ({hRacine:F0})");
+            Assert.Greater(hChaine / hRacine, 0.20f, $"la boîte de la chaîne tient {hChaine / hRacine:P1} de la hauteur (maquette 36,6 %)");
+
+            var rien = chaine.Find("Rien").GetComponent<TMPro.TextMeshProUGUI>();
+            Assert.IsTrue(rien.gameObject.activeSelf, "la chaîne vide se DIT, dans sa boîte");
+            Assert.IsTrue((rien.fontStyle & TMPro.FontStyles.Italic) != 0, "`.rien` : en italique");
+            Assert.AreEqual(TMPro.TextAlignmentOptions.Center, rien.alignment, "`.rien` : centrée");
+            StringAssert.StartsWith("Obtenir une planque", rien.text, "sans planque : le premier maillon à obtenir");
+            Assert.IsFalse(r.GetComponentsInChildren<Transform>(true).Any(t => t.name.StartsWith("Maillon")),
+                "plus de « maillons » en plaques (patron du cadre 142, une planche d'état de l'atelier)");
         }
 
         /// <summary>État FABRIQUÉ : une étape du pipeline n'a pas de `stage_index` dans la liste ⇒ l'ordre du SERVEUR est gardé

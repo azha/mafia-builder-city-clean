@@ -492,49 +492,81 @@ namespace MafiaCleanCity.Operational
                         + "pas d'argent, seulement une file d'attente."));
         }
 
-        /// <summary>Une étape RÉELLE de la chaîne — à ne pas confondre avec `Maillon`, qui dessine
-        /// un maillon MANQUANT. Les deux se ressemblent à l'écran et disent le contraire.</summary>
+        /// <summary>Une étape RÉELLE de la chaîne — la rangée `.et6` des cadres 137-138 (A2 du juge groupé du 07/10) : la CUVE à gauche, la
+        /// colonne (le rang en gras crème, ce que l'étape tient en gris éteint), la PROPRETÉ à droite dans la couleur de sa bande ; plaque
+        /// `#111823` cernée de `#2a3648` (de `#ff9e3d` quand le nœud s'écarte, `.et6.alerte`, avec « écart » en bas à droite, `.dv`).
+        /// ⚠️ La maquette écrit le NOM du nœud en tête (« Le comptoir ») : aucun nom de nœud n'est servi (cadre 142 : « zéro libellé
+        /// servi ») ⇒ le rang, jamais un nom inventé. Sa seconde ligne (« node · dirty ») est de l'anglais de maquette : on dit ce
+        /// que l'étape tient (`has_cash`, un drapeau de présence).</summary>
         private void Etape(int rang, LaunderingStageDto e, bool enEcart = false)
         {
             GameObject go = NouveauUI("Etape" + rang, listeRoot);
-            AjouterFond(go, DesignTokens.Current.surfaceCard);
-            AjouterLisere(go);
+            AjouterFond(go, DesignTokens.Current.lieutenantMedallionOuter);   // `.et6` #111823 — par le jeton à 3/255 (garde Palette)
             var le = go.AddComponent<LayoutElement>();
-            le.minHeight = Px(66f); le.preferredHeight = -1f; le.flexibleHeight = 0f;
-            var v = go.AddComponent<VerticalLayoutGroup>();
-            v.padding = new RectOffset((int)Px(9f), (int)Px(9f), (int)Px(7f), (int)Px(7f));
-            v.spacing = Px(2f);
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            le.flexibleHeight = 0f;
+            var h = go.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(9f), (int)Px(9f), (int)Px(6f), (int)Px(6f));
+            h.spacing = Px(8f);
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
 
             // ⛔ Le libellé de propreté vient du PRODUCTEUR UNIQUE (`PureteResolvers`, table 48 : `filiere.proprete.*`), jamais
             // d'un `switch` local.
-            string bande = PureteResolvers.Libelle(e != null ? e.cleanliness_band : null);
+            string bandeServie = e != null ? e.cleanliness_band : null;
+            string bande = PureteResolvers.Libelle(bandeServie);
             string rangTexte = Lib("ÉTAPE") + "   " + rang.ToString("00");
             if (e != null && e.terminal) rangTexte += "   ·   " + Lib("LA SORTIE");
 
-            // Cadres 137-141 : chaque étape est d'abord une CUVE, pas seulement trois lignes de texte. Le serveur ne livre
-            // aucun volume : le remplissage représente donc exclusivement la BANDE qualitative (1/4…4/4), jamais un montant.
-            // Les quatre couleurs sont celles de la référence ratifiée ; hors domaine, une cuve neutre évite d'inventer un rang.
-            Cuve(go.transform, e != null ? e.cleanliness_band : null);
-            NouveauTexte(go.transform, "Rang", rangTexte, Px(7f),
-                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
-            NouveauTexte(go.transform, "Titre", bande, Px(12f),
-                DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
-            // Cadre 138 : l'étape dont le nœud s'écarte de son profil porte « écart » — un voyant, jamais une mesure.
-            if (enEcart)
-                NouveauTexte(go.transform, "Ecart", Lib("écart"), Px(8f),
-                    DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
-            // ⚠️ `has_cash` est un DRAPEAU DE PRÉSENCE, jamais un montant — le serveur ne projette
-            // pas les centimes ici. On écrit donc ce qu'on sait, et pas un chiffre inventé.
-            NouveauTexte(go.transform, "Texte",
+            // Le serveur ne livre aucun volume : le remplissage de la cuve représente exclusivement la BANDE qualitative (1/4…4/4),
+            // jamais un montant.
+            Cuve(go.transform, bandeServie);
+
+            GameObject corps = NouveauUI("Corps", go.transform);
+            corps.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            var v = corps.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(2f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            TextMeshProUGUI tete = NouveauTexte(corps.transform, "Rang", rangTexte, Px(8.2f),
+                DesignTokens.Current.hudCreme, DesignTokens.Current.primaryFont);
+            tete.fontStyle = FontStyles.Bold;
+            // ⚠️ `has_cash` est un DRAPEAU DE PRÉSENCE, jamais un montant — le serveur ne projette pas les centimes ici.
+            NouveauTexte(corps.transform, "Texte",
                 e != null && e.has_cash ? Lib("de l'argent attend à cette étape")
                                         : Lib("rien n'attend à cette étape"),
-                Px(8f), DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+                Px(5.8f), EncreEteinte, DesignTokens.Current.primaryFont);
+
+            // `.pr` : la propreté, en capitales grasses interlettrées, dans la couleur de sa bande
+            TextMeshProUGUI proprete = NouveauTexte(go.transform, "Titre", bande, Px(6.4f),
+                EncreDeBande(bandeServie), DesignTokens.Current.primaryFont);
+            proprete.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+            proprete.characterSpacing = 9f;   // `.09em`
+            proprete.alignment = TextAlignmentOptions.MidlineRight;
+            proprete.enableWordWrapping = false;
+
+            // Cadre 138 : l'étape dont le nœud s'écarte de son profil porte « écart » — un voyant, jamais une mesure (`.dv`, hors flux).
+            if (enEcart)
+            {
+                TextMeshProUGUI dv = NouveauTexte(go.transform, "Ecart", Lib("écart"), Px(5.2f),
+                    DesignTokens.Current.accentWarning, DesignTokens.Current.primaryFont);
+                dv.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+                dv.characterSpacing = 10f;
+                dv.alignment = TextAlignmentOptions.BottomRight;
+                dv.enableWordWrapping = false;
+                dv.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                RectTransform rdv = (RectTransform)dv.transform;
+                rdv.anchorMin = rdv.anchorMax = rdv.pivot = new Vector2(1f, 0f);
+                rdv.sizeDelta = new Vector2(Px(60f), Px(7f));
+                rdv.anchoredPosition = new Vector2(-Px(9f), Px(5f));
+            }
+            PiedDEcran.Cerner(go.transform, enEcart ? DesignTokens.Current.accentWarning : (Color)BordDeChaine, Mathf.Max(1f, PxTrait(1f)));
         }
 
-        /// <summary>La jauge qualitative d'une étape. Les quarts codent uniquement le membre de bande servi ; ils ne prétendent
-        /// jamais représenter les centimes présents, une durée ou un pourcentage brut (R2.2).</summary>
+        /// <summary>`.cuve` : la jauge qualitative d'une étape, VERTICALE (22×26, cerne 1,4 `#2a3648`, fond `#0a0e16`, remplie par le
+        /// bas). Les quarts codent uniquement le membre de bande servi ; ils ne prétendent jamais représenter les centimes présents, une
+        /// durée ou un pourcentage brut (R2.2). Le remplissage est la couleur de la bande à `opacity:.85` sur le fond de la cuve, composée
+        /// en sRGB comme la maquette et posée OPAQUE (pas d'alpha recopié : Unity compose en linéaire).</summary>
         private void Cuve(Transform parent, string bande)
         {
             int niveau;
@@ -549,47 +581,55 @@ namespace MafiaCleanCity.Operational
             }
 
             GameObject cuve = NouveauUI("Cuve", parent);
-            AjouterFond(cuve, DesignTokens.Current.surfaceRaised);
+            AjouterFond(cuve, DesignTokens.Current.hudGaugeFaceOuter);   // #0a0e16
             LayoutElement le = cuve.AddComponent<LayoutElement>();
-            le.minHeight = Px(12f); le.preferredHeight = Px(12f); le.flexibleHeight = 0f;
-            HorizontalLayoutGroup h = cuve.AddComponent<HorizontalLayoutGroup>();
-            int bord = Mathf.Max(1, (int)PxTrait(2f));
-            h.padding = new RectOffset(bord, bord, bord, bord);
-            h.spacing = 0f;
-            h.childControlWidth = true; h.childControlHeight = true;
-            h.childForceExpandWidth = true; h.childForceExpandHeight = true;
+            le.minWidth = Px(22f); le.preferredWidth = Px(22f); le.flexibleWidth = 0f;
+            le.minHeight = Px(26f); le.preferredHeight = Px(26f); le.flexibleHeight = 0f;
+            VerticalLayoutGroup v = cuve.AddComponent<VerticalLayoutGroup>();
+            int bord = Mathf.Max(1, PxTrait(1.4f));
+            v.padding = new RectOffset(bord, bord, bord, bord);
+            v.spacing = 0f;
+            v.childControlWidth = true; v.childControlHeight = true;
+            // ⚠️ PAS de `childForceExpandHeight` : il hisse tout flexible à 1, et une bande inconnue (niveau 0) se remplirait d'un cinquième.
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            GameObject vide = NouveauUI("Reste", cuve.transform);   // le haut, vide : le fond de la cuve
+            vide.AddComponent<LayoutElement>().flexibleHeight = 4 - niveau;
+            if (niveau == 4) vide.SetActive(false);
 
             GameObject plein = NouveauUI("Niveau", cuve.transform);
             AjouterFond(plein, couleur);
-            LayoutElement lp = plein.AddComponent<LayoutElement>();
-            lp.flexibleWidth = niveau;
+            plein.AddComponent<LayoutElement>().flexibleHeight = niveau;
 
-            GameObject vide = NouveauUI("Reste", cuve.transform);
-            AjouterFond(vide, DesignTokens.Current.surfaceBase);
-            LayoutElement lv = vide.AddComponent<LayoutElement>();
-            lv.flexibleWidth = 4 - niveau;
-            if (niveau == 4) vide.SetActive(false);
+            PiedDEcran.Cerner(cuve.transform, BordDeChaine, bord);
         }
 
-        /// <summary>Le tuyau entre deux cuves : pur dessin de chaîne, sans donnée ni action implicite.</summary>
+        /// <summary>L'encre de la propreté (`.pr`) : la couleur pleine de sa bande — les mêmes quatre que la cuve, sans opacité.</summary>
+        private static Color EncreDeBande(string bande)
+        {
+            switch (bande)
+            {
+                case "DIRTY":        return DesignTokens.Current.accentDanger;    // #ff5a4d
+                case "PARTIAL":      return DesignTokens.Current.accentWarning;   // #ff9e3d
+                case "MOSTLY_CLEAN": return DesignTokens.Current.hudMoneyGold;    // #f2c96b
+                case "CLEAN":        return DesignTokens.Current.accentCalm;      // #7db36a
+                default:              return DesignTokens.Current.onSurfaceMuted;
+            }
+        }
+
+        /// <summary>`.lien` : le trait qui relie deux cuves — 2 px de large, 11 de haut, à 26 px du bord de la boîte, `#2a3648`. Pur
+        /// dessin de chaîne, sans donnée ni action implicite.</summary>
         private void Connecteur(int apresRang)
         {
-            GameObject ligne = NouveauUI("Connecteur" + apresRang, listeRoot);
-            LayoutElement le = ligne.AddComponent<LayoutElement>();
-            le.minHeight = Px(6f); le.preferredHeight = Px(6f); le.flexibleHeight = 0f;
-            HorizontalLayoutGroup h = ligne.AddComponent<HorizontalLayoutGroup>();
-            h.childControlWidth = true; h.childControlHeight = true;
-            h.childForceExpandWidth = false; h.childForceExpandHeight = true;
-            GameObject gauche = NouveauUI("MargeGauche", ligne.transform);
-            LayoutElement lg = gauche.AddComponent<LayoutElement>();
-            lg.flexibleWidth = 1f;
-            GameObject tuyau = NouveauUI("Tuyau", ligne.transform);
-            AjouterFond(tuyau, DesignTokens.Current.surfaceRaised);
-            LayoutElement lt = tuyau.AddComponent<LayoutElement>();
-            lt.minWidth = PxTrait(2f); lt.preferredWidth = PxTrait(2f); lt.flexibleWidth = 0f;
-            GameObject droite = NouveauUI("MargeDroite", ligne.transform);
-            LayoutElement ld = droite.AddComponent<LayoutElement>();
-            ld.flexibleWidth = 1f;
+            GameObject lien = NouveauUI("Connecteur" + apresRang, listeRoot);
+            LayoutElement le = lien.AddComponent<LayoutElement>();
+            le.minHeight = Px(11f); le.preferredHeight = Px(11f); le.flexibleHeight = 0f;
+            GameObject tuyau = NouveauUI("Tuyau", lien.transform);
+            AjouterFond(tuyau, BordDeChaine);
+            RectTransform rt = (RectTransform)tuyau.transform;
+            rt.anchorMin = new Vector2(0f, 0f); rt.anchorMax = new Vector2(0f, 1f); rt.pivot = new Vector2(0f, 0.5f);
+            rt.sizeDelta = new Vector2(Mathf.Max(1, PxTrait(2f)), 0f);
+            rt.anchoredPosition = new Vector2(Px(26f), 0f);
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
@@ -660,55 +700,38 @@ namespace MafiaCleanCity.Operational
             // ⛔ ㊵ FAUX (relevé f1 §K.5, f2 26/09) : « est vide » s'affichait dès la planque trouvée, SANS lire sa charge — or le kit donne
             // une amorce (NOMINAL mesuré sur le VPS) et ① propose BLANCHIR. La tête suit désormais `load_bucket` SERVI (TeteDeLaPlanque),
             // et le geste BLANCHIR est offert quand la planque tient de quoi blanchir (GesteBlanchirOffert).
+            // ㊵ A2 du juge groupé du 07/10 : la chaîne vide garde SA BOÎTE et y centre une phrase en italique (cadres 140, 141) — ce n'est
+            // plus une plaque de 72 px, ni deux « maillons » (le patron du cadre 142, une planche d'état de l'atelier, pas un écran joueur).
             string tete = PlanqueTrouvee ? TeteDeLaPlanque(ChargeDeLaPlanque, EnseigneDeLaPlanque) : null;
             bool pleineOuChargee = ChargeDePlanque.TientDeQuoiBlanchir(ChargeDeLaPlanque);
             if (PlanqueTrouvee && tete != null)
-                Maillon("1", tete, pleineOuChargee ? "" : entree, manquant: false);
+                DireLaChaineVide(pleineOuChargee ? tete : tete + "\n" + entree);
             else if (PlanqueTrouvee)
-                Maillon("1", entree, "", manquant: false);   // vide, enseigne non servie : on ne la nomme pas, on n'en invente pas
+                DireLaChaineVide(entree);   // vide, enseigne non servie : on ne la nomme pas, on n'en invente pas
+            else
+                DireLaChaineVide(Lib("Obtenir une planque") + "\n"
+                    + Lib("le premier maillon : sans elle, rien n'entre dans la filière — et rien ne se "
+                        + "ramasse chez les dealers non plus."));
+            // ㊵ A3 : le geste vit au PIED, sous le panneau — le dernier bloc lu (cadres 137, 138, 140).
             if (PlanqueTrouvee && GesteBlanchirOffert(ChargeDeLaPlanque, FacadeId, SafehouseIdDeLaPlanque))
                 RendreGesteBlanchir();
-            else
-                Maillon("1", Lib("Obtenir une planque"),
-                    Lib("le premier maillon : sans elle, rien n'entre dans la filière — et rien ne se "
-                        + "ramasse chez les dealers non plus."));
-            Maillon("2", Lib("Dire combien il y a dans la filière"),
-                Lib("on ne vous dira que si c'est propre : ni combien, ni depuis quand, ni à quel prix. C'est voulu."),
-                manquants: PlanqueTrouvee ? 1 : 2);
 
+            // Le panneau dit ce que la filière NE dit PAS : sous la planque servie, c'est la phrase de l'ancien second maillon (« on ne vous
+            // dira que si c'est propre… ») — un seul panneau, comme la maquette (cadre 140).
             MajPanneau(Lib("CE QUE LA FILIÈRE NE DIT PAS"),
                 Lib("Vous n'avez encore aucun nœud"),
-                PlanqueTrouvee ? ""
+                PlanqueTrouvee
+                ? Lib("on ne vous dira que si c'est propre : ni combien, ni depuis quand, ni à quel prix. C'est voulu.")
                 : Lib("ce n'est pas une panne, c'est un état : il n'y a rien à montrer tant qu'il n'y a "
                     + "rien de monté. Il faut une planque pour que la filière commence quelque part."));
         }
 
-        /// <summary>㊵ (§G de la passe UX, 26/09) : l'étiquette d'un maillon manquant. Numérotée seulement quand il y en a PLUSIEURS —
-        /// avec la planque servie, le maillon 1 n'est plus manquant et « MAILLON MANQUANT 2 » restait seul (une numérotation qui
-        /// commence à 2). Décidé (reco, 26/09). Pur.</summary>
-        public static string EtiquetteDeRang(string rang, int manquants) =>
-            manquants >= 2 && !string.IsNullOrEmpty(rang) ? Lib("MAILLON MANQUANT") + "   " + rang : Lib("MAILLON MANQUANT");
-
-        /// <summary>Un maillon manquant — le patron du cadre 142.</summary>
-        private void Maillon(string rang, string titre, string explication, bool manquant = true, int manquants = 2)
+        /// <summary>`.rien` : la chaîne vide, dite dans SA boîte — italique sérif, gris éteint, centrée (cadres 140, 141).</summary>
+        private void DireLaChaineVide(string phrase)
         {
-            GameObject go = NouveauUI("Maillon" + rang, listeRoot);
-            AjouterFond(go, DesignTokens.Current.surfaceCard);
-            var le = go.AddComponent<LayoutElement>();
-            le.minHeight = Px(58f); le.preferredHeight = -1f; le.flexibleHeight = 0f;
-            var v = go.AddComponent<VerticalLayoutGroup>();
-            v.padding = new RectOffset((int)Px(9f), (int)Px(9f), (int)Px(7f), (int)Px(7f));
-            v.spacing = Px(2f);
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-
-            if (manquant)   // une planque vide n'est pas un maillon MANQUANT : on ne le dit pas
-                NouveauTexte(go.transform, "Rang", EtiquetteDeRang(rang, manquants), Px(7f),
-                    DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
-            NouveauTexte(go.transform, "Titre", titre, Px(12f),
-                DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
-            NouveauTexte(go.transform, "Texte", explication, Px(8f),
-                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            if (rien == null) return;
+            rien.text = phrase;
+            rien.gameObject.SetActive(!string.IsNullOrEmpty(phrase));
         }
 
         // ═══ ㊵ le geste BLANCHIR (f2 26/09 ; mots table 77 @6ed61816) — le même appel que ① (CityProjectionsClient.InjectLaundering) ═══
@@ -719,7 +742,8 @@ namespace MafiaCleanCity.Operational
 
         private void RendreGesteBlanchir()
         {
-            GameObject bouton = NouveauUI("BoutonBlanchir", listeRoot);
+            pied.gameObject.SetActive(true);
+            GameObject bouton = NouveauUI("BoutonBlanchir", pied);
             AjouterFond(bouton, DesignTokens.Current.surfaceRaised);
             Button b = bouton.AddComponent<Button>();
             b.targetGraphic = bouton.GetComponent<Image>();
@@ -733,17 +757,18 @@ namespace MafiaCleanCity.Operational
             var libelleBlanchir = NouveauTexte(bouton.transform, "Libelle", Lib("Blanchir").ToUpperInvariant(), Px(9f),
                 DesignTokens.Current.onSurfacePrimary, DesignTokens.Current.primaryFont);
             // cause 3 (CLIENT-3 ㊵ F3, 07/10) : le geste du pied est la forme `.cta6` de la maquette — fond sombre, cerne de laiton, libellé or vif, capitales grasses interlettrées
-            // (la maquette l'appelle INJECTER ; les mots ratifiés de la table 77 disent BLANCHIR : on garde le mot ratifié). Sa PLACE (le pied fixe sous le panneau) reste à tenir : il vit encore
-            // dans la liste, sous le dernier groupe.
+            // (la maquette l'appelle INJECTER ; les mots ratifiés de la table 77 disent BLANCHIR : on garde le mot ratifié). Sa PLACE : le pied, sous le panneau (A3 du juge groupé du 07/10).
             libelleBlanchir.fontStyle = FontStyles.Bold;
             libelleBlanchir.characterSpacing = 11f;
             PiedDEcran.StylerLeBouton(bouton, libelleBlanchir);
-            // sous BLANCHIR (table 77, ligne 5) : ce que le geste fait
-            NouveauTexte(listeRoot, "SousBlanchir", MafiaCleanCity.I18n.Libelle.Gabarit("filiere.etat.l_argent_passe_de_la_planque_a_la_filiere",
-                "l\u2019argent passe de la planque \u00E0 la fili\u00E8re"), Px(8f),
-                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
-            resultatBlanchir = NouveauTexte(listeRoot, "ResultatBlanchir", "", Px(8f),
+            // sous BLANCHIR (table 77, ligne 5) : ce que le geste fait — `.note6`, centrée, gris
+            TextMeshProUGUI note = NouveauTexte(pied, "SousBlanchir", MafiaCleanCity.I18n.Libelle.Gabarit("filiere.etat.l_argent_passe_de_la_planque_a_la_filiere",
+                "l\u2019argent passe de la planque \u00E0 la fili\u00E8re"), Px(6.4f),
+                DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.primaryFont);
+            note.alignment = TextAlignmentOptions.Center;
+            resultatBlanchir = NouveauTexte(pied, "ResultatBlanchir", "", Px(8f),
                 DesignTokens.Current.hudCreme, DesignTokens.Current.primaryFont);
+            resultatBlanchir.alignment = TextAlignmentOptions.Center;
         }
 
         /// <summary>BLANCHIR depuis ㊵ : `inject` de la planque retenue vers la façade, SANS montant (TD-765 : le back décide ce qui part de la planque).
@@ -779,6 +804,12 @@ namespace MafiaCleanCity.Operational
             if (listeRoot == null) return;
             for (int i = listeRoot.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(listeRoot.GetChild(i).gameObject);
+            DireLaChaineVide(null);
+            if (pied == null) return;
+            for (int i = pied.childCount - 1; i >= 0; i--)
+                UnityEngine.Object.Destroy(pied.GetChild(i).gameObject);
+            pied.gameObject.SetActive(false);
+            resultatBlanchir = null;
         }
 
         private void MajCompteur(int i, int valeur, string libelle)
@@ -795,7 +826,15 @@ namespace MafiaCleanCity.Operational
         }
 
         private RectTransform listeRoot;
+        private TextMeshProUGUI rien;   // `.rien` : la phrase de la chaîne vide, dans la boîte
+        private RectTransform pied;     // `.pied` : le geste et sa note, sous le panneau
         private TextMeshProUGUI sousTitre;
+
+        /// <summary>Le bord de la boîte, des étapes, des cuves et le trait qui les relie (`#2a3648`) : aucun jeton à moins de 4/255
+        /// (`hudGaugeFaceInner` à 7,5) — un littéral nommé, pas une recopie.</summary>
+        private static readonly Color32 BordDeChaine = new Color32(0x2A, 0x36, 0x48, 0xFF);
+        /// <summary>L'encre éteinte de la chaîne (`.rien`, `.et6 span`, `#7a838d`) : `mapConditionalGrey` est à 6,8 — un littéral nommé.</summary>
+        private static readonly Color32 EncreEteinte = new Color32(0x7A, 0x83, 0x8D, 0xFF);
         private readonly TextMeshProUGUI[] compteurNombre = new TextMeshProUGUI[3];
         private readonly TextMeshProUGUI[] compteurLibelle = new TextMeshProUGUI[3];
         private TextMeshProUGUI pannSur, pannTitre, pannTexte;
@@ -890,12 +929,22 @@ namespace MafiaCleanCity.Operational
                 compteurLibelle[i].characterSpacing = 16f;
             }
 
-            // Le cadre de la liste — CADRE borné (min 0, masqué) / CONTENU libre.
+            // ㊵ A2 du juge groupé du 07/10 — LA BOÎTE DE LA CHAÎNE (`.elast` des cadres 137-141) : tout l'espace que la pile laisse
+            // (`flex:1`), fond `#0d0f10`, cerne 1 px `#2a3648`, intérieur `7 8`. Mesuré par le juge : 36,6 % de la hauteur de la maquette,
+            // 3,0 % en jeu — le message vide était une plaque ordinaire, et rien ne montrait OÙ la filière se construit.
+            // L'ombre intérieure (`inset 0 0 22px #00000099`) n'est pas posée : noir sur `#0d0f10`, une nuance (C).
+            GameObject chaine = NouveauUI("Chaine", racine.transform);
+            var lch = chaine.AddComponent<LayoutElement>();
+            lch.minHeight = 0f; lch.preferredHeight = 0f; lch.flexibleHeight = 1f;
+            AjouterFond(chaine, DesignTokens.Current.surfaceBase);
+
+            // Le cadre de la liste — CADRE borné (masqué) / CONTENU libre, DANS la boîte, à son retrait intérieur.
             // ⚠️ Structure reprise de ㊳ où elle a été mesurée : mettre la pile sur le CADRE fait
             // de sa hauteur minimale la somme de ses lignes, tout retombe aux minimums et déborde.
-            GameObject cadre = NouveauUI("Liste", racine.transform);
-            var lec = cadre.AddComponent<LayoutElement>();
-            lec.minHeight = 0f; lec.preferredHeight = 0f; lec.flexibleHeight = 1f;
+            GameObject cadre = NouveauUI("Liste", chaine.transform);
+            RectTransform rcadre = (RectTransform)cadre.transform;
+            rcadre.anchorMin = Vector2.zero; rcadre.anchorMax = Vector2.one;
+            rcadre.offsetMin = new Vector2(Px(8f), Px(7f)); rcadre.offsetMax = new Vector2(-Px(8f), -Px(7f));
             cadre.AddComponent<RectMask2D>();
             GameObject contenu = NouveauUI("Contenu", cadre.transform);
             var rtc = (RectTransform)contenu.transform;
@@ -903,14 +952,25 @@ namespace MafiaCleanCity.Operational
             rtc.pivot = new Vector2(0.5f, 1f);
             rtc.offsetMin = Vector2.zero; rtc.offsetMax = Vector2.zero;
             var vco = contenu.AddComponent<VerticalLayoutGroup>();
-            vco.spacing = Px(5f);
+            vco.spacing = 0f;   // `.flt { gap:0 }` : les étapes se touchent par leurs liens
             vco.childControlWidth = true; vco.childControlHeight = true;
             vco.childForceExpandWidth = true; vco.childForceExpandHeight = false;
             vco.childAlignment = TextAnchor.UpperCenter;
             var fit = contenu.AddComponent<ContentSizeFitter>();
             fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             listeRoot = rtc;
-            ListeDefilante.Equiper((RectTransform)cadre.transform, rtc, DesignTokens.Current.surfaceBase);   // cause 7 : même cadre-masque que ㊳, même défaut (rien d'atteignable sous la coupe)
+            ListeDefilante.Equiper(rcadre, rtc, DesignTokens.Current.surfaceBase);   // cause 7 : même cadre-masque que ㊳, même défaut (rien d'atteignable sous la coupe)
+
+            // `.rien` : la chaîne vide — italique sérif 8 px, `#7a838d`, centrée dans la boîte, retrait latéral 22 px
+            rien = NouveauTexte(chaine.transform, "Rien", "", Px(8f), EncreEteinte, DesignTokens.Current.hudSerifFont);
+            rien.fontStyle = FontStyles.Italic;
+            rien.alignment = TextAlignmentOptions.Center;
+            rien.enableWordWrapping = true;
+            RectTransform rr = (RectTransform)rien.transform;
+            rr.anchorMin = Vector2.zero; rr.anchorMax = Vector2.one;
+            rr.offsetMin = new Vector2(Px(8f + 22f), Px(7f)); rr.offsetMax = new Vector2(-Px(8f + 22f), -Px(7f));
+            rien.gameObject.SetActive(false);
+            PiedDEcran.Cerner(chaine.transform, BordDeChaine, Mathf.Max(1f, PxTrait(1f)));   // dernier enfant : par-dessus le contenu
 
             // Le panneau
             GameObject pan = NouveauUI("Panneau", racine.transform);
@@ -929,6 +989,17 @@ namespace MafiaCleanCity.Operational
                 DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
             pannTexte = NouveauTexte(pan.transform, "Texte", "", Px(9f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+
+            // ㊵ A3 — LE PIED (`.pied`) : le geste et sa note, DERNIER bloc de la pile, sous le panneau (cadres 137, 138, 140). Vide et
+            // éteint tant que le geste n'est pas offert (il est ABSENT, jamais éteint : `GesteBlanchirOffert`).
+            GameObject piedGo = NouveauUI("Pied", racine.transform);
+            piedGo.AddComponent<LayoutElement>().flexibleHeight = 0f;
+            var vpied = piedGo.AddComponent<VerticalLayoutGroup>();
+            vpied.spacing = Px(5f);
+            vpied.childControlWidth = true; vpied.childControlHeight = true;
+            vpied.childForceExpandWidth = true; vpied.childForceExpandHeight = false;
+            pied = (RectTransform)piedGo.transform;
+            piedGo.SetActive(false);
 
             RendreEtatInitial();
             // MÉTIER ICI — le reste de la mise en page (enseigne, blocs, listes…) se construit
