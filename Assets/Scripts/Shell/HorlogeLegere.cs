@@ -31,6 +31,13 @@ namespace MafiaCleanCity.Shell
         public bool JourDOuvertureServi;
         /// <summary>Combien des SEPT clés du contrat sont dans le corps (7 attendu).</summary>
         public int ClesServies;
+
+        /// <summary>m4 — la durée RÉELLE d'une journée de jeu, en minutes, SERVIE par la route : `in_game_day_length_minutes` ×
+        /// `real_seconds_per_game_minute` ÷ 60 (1 440 × 2 ÷ 60 = 48). Elle remplace le repli codé en dur (`CycleDeSession.SeuilDeRepliMinutes`)
+        /// dès que la route a été lue. Null si l'une des deux manque ou n'est pas positive.</summary>
+        public double? SeuilDeRepliMinutes =>
+            MinutesParJourDeJeu.HasValue && SecondesParMinuteDeJeu.HasValue && MinutesParJourDeJeu.Value > 0 && SecondesParMinuteDeJeu.Value > 0
+                ? MinutesParJourDeJeu.Value * SecondesParMinuteDeJeu.Value / 60.0 : (double?)null;
     }
 
     public static class HorlogeLegere

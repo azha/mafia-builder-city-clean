@@ -140,6 +140,77 @@ namespace MafiaCleanCity.CityMap.Tests
                 CycleDeSession.ChampsServis.JourDeFamille), "un nom qui en CONTIENT un autre ne le lit pas à sa place");
         }
     
+        // ── J8 — « servi null » ≠ « absent » (revue ⊥ de CLIENT-2, M1, 07/10) ──────────────────────────────────────────────────────
+
+        /// <summary>Un transport dont les `open` rendent des DTO COMPLETS (drapeaux de présence compris) : la forme de ce que le back servira.</summary>
+        private sealed class TransportDeDto : ITransportDeSession
+        {
+            public readonly List<string> Requetes = new List<string>();
+            private readonly SessionOpenDto ouverture;
+            public TransportDeDto(SessionOpenDto ouverture) { this.ouverture = ouverture; }
+            public IEnumerator Fermer(string jeton, Action<long, string> echec) { Requetes.Add("close"); yield break; }
+            public IEnumerator Ouvrir(string jeton, Action<SessionOpenDto> ok, Action<long, string> echec) { Requetes.Add("open"); ok(ouverture); yield break; }
+        }
+
+        private static SessionOpenDto Servi(int? jour, int? ouverture) => new SessionOpenDto
+        {
+            session_id = "s", JourDeFamille = jour, JourDeFamilleALOuverture = ouverture, JourDeFamilleServi = true, JourDOuvertureServi = true,
+        };
+
+        [Test]
+        public void J8_FamilyDayNullServi_PasDAncre_NeDeclencheRien_MemeApresUneLongueAbsence()
+        {
+            var sortieLointaine = Sortie + TimeSpan.FromHours(3);
+            // démarrage à froid : l'ouverture habituelle SEULE, jamais close+open — l'absence (3 h ≥ 48 min) ne compte pas
+            var froid = new TransportDeDto(Servi(null, null));
+            SessionOpenDto gardee = null;
+            Derouler(CycleDeSession.AuDemarrage("j", froid, Sortie, sortieLointaine, x => gardee = x, Assert.Fail));
+            CollectionAssert.AreEqual(new[] { "open" }, froid.Requetes, "family_day servi null ⇒ RIEN : ni close ni open de plus");
+            Assert.IsNotNull(gardee);
+            // retour au premier plan : la lecture seule
+            var retour = new TransportDeDto(Servi(null, null));
+            Derouler(CycleDeSession.AuRetour("j", retour, jourServi: true, Sortie, sortieLointaine, _ => Assert.Fail("pas de nouvelle session"), Assert.Fail));
+            CollectionAssert.AreEqual(new[] { "open" }, retour.Requetes, "au retour : la lecture, et rien d'autre");
+            Assert.AreEqual(CycleDeSession.Decision.Rien, CycleDeSession.Decider(null, null, Sortie, sortieLointaine, false, jourEstServi: true));
+            Assert.AreEqual(CycleDeSession.Decision.FermerPuisOuvrir, CycleDeSession.Decider(null, null, Sortie, sortieLointaine, false, jourEstServi: false),
+                "contrôle : la clé ABSENTE (un back antérieur) garde le repli");
+            Assert.IsTrue(CycleDeSession.JoursServis(Servi(null, null)), "un jour servi à null compte comme servi");
+            Assert.IsFalse(CycleDeSession.JoursServis(new SessionOpenDto()), "clé absente, rien posé : non servi");
+        }
+
+        [Test]
+        public void J9_OpenedFamilyDayNull_AvecUneAncre_LeRepliEstLegitime()
+        {
+            // session ouverte AVANT la migration 0171 : le jour est servi, celui de l'ouverture non — rien à comparer, le repli d'absence vaut
+            var longue = new TransportDeDto(Servi(44, null));
+            SessionOpenDto neuve = null;
+            Derouler(CycleDeSession.AuRetour("j", longue, jourServi: true, Sortie, Sortie + TimeSpan.FromHours(3), x => neuve = x, Assert.Fail));
+            CollectionAssert.AreEqual(new[] { "open", "close", "open" }, longue.Requetes, "absence ≥ 48 min : la lecture, puis close PUIS open");
+            Assert.IsNotNull(neuve);
+            var courte = new TransportDeDto(Servi(44, null));
+            Derouler(CycleDeSession.AuRetour("j", courte, jourServi: true, Sortie, Sortie + TimeSpan.FromMinutes(10), _ => Assert.Fail(), Assert.Fail));
+            CollectionAssert.AreEqual(new[] { "open" }, courte.Requetes, "absence courte : la lecture seule");
+        }
+
+        [Test]
+        public void J10_LaDureeServie_RemplaceLeRepliDe48Minutes()
+        {
+            // 1 440 minutes de jeu × 2 s ÷ 60 = 48 : la durée servie par l'horloge légère
+            const string corps = "{\"game_minute\":10,\"game_day\":1,\"day_phase\":\"DAY\",\"family_day\":1,\"opened_family_day\":1," +
+                                 "\"real_seconds_per_game_minute\":2,\"in_game_day_length_minutes\":1440}";
+            Assert.AreEqual(48.0, HorlogeLegere.Lire(corps).SeuilDeRepliMinutes);
+            Assert.AreEqual(24.0, HorlogeLegere.Lire(corps.Replace("\"real_seconds_per_game_minute\":2", "\"real_seconds_per_game_minute\":1")).SeuilDeRepliMinutes,
+                "si le back accélère la journée, le seuil la suit : plus aucune copie du tunable côté client");
+            Assert.IsNull(HorlogeLegere.Lire("{\"game_day\":1}").SeuilDeRepliMinutes, "une clé manque : le repli codé en dur");
+            var t = new TransportTemoin();
+            SessionOpenDto neuve = null;
+            Derouler(CycleDeSession.AuRetour("j", t, jourServi: false, Sortie, Sortie + TimeSpan.FromMinutes(30), x => neuve = x, Assert.Fail, seuilMinutes: 24.0));
+            CollectionAssert.AreEqual(new[] { "close", "open" }, t.Requetes, "30 min d'absence ≥ 24 min servies : close PUIS open (le 48 codé n'aurait rien fait)");
+            var sans = new TransportTemoin();
+            Derouler(CycleDeSession.AuRetour("j", sans, jourServi: false, Sortie, Sortie + TimeSpan.FromMinutes(30), _ => Assert.Fail(), Assert.Fail));
+            Assert.IsEmpty(sans.Requetes, "sans durée servie : le repli de 48 min, 30 min ne suffisent pas");
+        }
+
         [Test]
         public void J7_MinuitPasseAuPremierPlan_UnSeulCloseOpen()
         {

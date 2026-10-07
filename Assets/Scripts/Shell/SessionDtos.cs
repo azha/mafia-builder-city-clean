@@ -87,12 +87,20 @@ namespace MafiaCleanCity.Shell
     {
         public string session_id;
         /// <summary>B4 — les deux jours de la famille SERVIS (courant, et celui de l'ouverture de CETTE session), lus du corps brut
-        /// par `CycleDeSession.ChampsServis` (`family_day`, `opened_family_day`, noms CONFIRMÉS par le back le 07/10). Null tant que le back ne les sert pas ⇒ le repli de 48 min.
-        /// ⚠️ PROPRIÉTÉS, pas champs : la parité de forme C3-F2/C3-F3 (`SessionClientPlayModeTests`) compte les CHAMPS publics du DTO
-        /// contre les clés servies. Quand le back servira ces deux clés, C3-F3 rougira (clés brutes 16 ≠ champs 14) : ce jour-là,
-        /// deux vrais champs remplacent ces propriétés.</summary>
+        /// par `CycleDeSession.ChampsServis` (`family_day`, `opened_family_day`, noms CONFIRMÉS par le back le 07/10). Null tant que le
+        /// back ne les sert pas ⇒ le repli de 48 min ; servis à null (`JourDeFamilleServi`), ils disent « pas d'ancre » / « pas de session ».
+        /// ⛔⛔ AU DÉPLOIEMENT DE L1 (session/open : 14 → 16 clés) : GARDER ces PROPRIÉTÉS NULLABLES, lues dans le corps brut. NE JAMAIS les
+        /// remplacer par deux champs `int` : `JsonUtility` ne porte pas `int?`, un champ rend 0 pour un null servi — et « jour 0 » ≠ « pas
+        /// d'ancre » (revue ⊥ de CLIENT-2, M2, 07/10 ; le plan du commit caf210dc disait le contraire, il est RETIRÉ). Les gardes de parité
+        /// (C3-F2, C3-F3, W3U1 C9F2) rougiront alors à 14 ≠ 16 : les CORRIGER pour compter ces deux propriétés en plus des champs
+        /// (14 champs + 2 propriétés = 16) — jamais en ajoutant des champs. Liste dans `Tools/CRENEAU-2026-09-22.md` (« Au déploiement de L1 »).
+        /// ⚠️ Aujourd'hui : PROPRIÉTÉS parce que la parité de forme compte les CHAMPS publics du DTO.</summary>
         public int? JourDeFamille { get; set; }
         public int? JourDeFamilleALOuverture { get; set; }
+        /// <summary>La clé `family_day` / `opened_family_day` est DANS le corps (même à null) — la différence entre « pas d'ancre » (servi null : on ne
+        /// déclenche RIEN) et « le back ne la sert pas » (le repli de 48 min).</summary>
+        public bool JourDeFamilleServi { get; set; }
+        public bool JourDOuvertureServi { get; set; }
         public HlCardDto hl_card;              // nullable — JsonUtility gives a default instance, never null (see C3 tests)
         public ExceptionCardDto[] queue;
         public bool backlog_badge;

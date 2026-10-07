@@ -44,14 +44,25 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>Pure. `jourServi`/`jourDOuverture` = les deux jours de la famille SERVIS (null : non servis) ; `sortieUtc` =
         /// l'horodatage persisté (null : aucune sortie notée), lu SEULEMENT en repli.</summary>
-        public static Decision Decider(int? jourServi, int? jourDOuverture, DateTime? sortieUtc, DateTime maintenantUtc, bool demarrageAFroid)
+        /// <summary>⛔ « SERVI NULL » ≠ « ABSENT » (revue ⊥ de CLIENT-2, M1, 07/10). `jourEstServi` = la clé `family_day` est DANS le corps. Servie à
+        /// null, elle dit « pas d'ancre de naissance » : le back demande de ne RIEN déclencher, donc ni close ni open — pas même au repli. Le
+        /// repli d'absence ne vaut que si la clé est ABSENTE (un back antérieur), ou si `family_day` est servi et `opened_family_day` null (une
+        /// session ouverte avant la migration 0171 : rien à comparer, le repli est alors légitime — tranché par f2). `seuilMinutes` : la durée
+        /// d'une journée de jeu SERVIE par l'horloge légère quand elle a été lue (m4), sinon `SeuilDeRepliMinutes`.</summary>
+        public static Decision Decider(int? jourServi, int? jourDOuverture, DateTime? sortieUtc, DateTime maintenantUtc, bool demarrageAFroid,
+                                       bool jourEstServi = false, double? seuilMinutes = null)
         {
-            bool changement = jourServi.HasValue && jourDOuverture.HasValue
-                ? jourServi.Value != jourDOuverture.Value
-                : sortieUtc.HasValue && maintenantUtc - sortieUtc.Value >= TimeSpan.FromMinutes(SeuilDeRepliMinutes);
+            bool changement;
+            if (jourEstServi && !jourServi.HasValue) changement = false;
+            else if (jourServi.HasValue && jourDOuverture.HasValue) changement = jourServi.Value != jourDOuverture.Value;
+            else changement = sortieUtc.HasValue && maintenantUtc - sortieUtc.Value >= TimeSpan.FromMinutes(seuilMinutes ?? SeuilDeRepliMinutes);
             if (changement) return Decision.FermerPuisOuvrir;
             return demarrageAFroid ? Decision.Ouvrir : Decision.Rien;
         }
+
+        /// <summary>Les jours de la famille ont-ils été SERVIS (la clé `family_day` est dans le corps de la dernière ouverture, même à null) ?
+        /// Les valeurs posées à la main (tests, DTO sans le drapeau) comptent aussi.</summary>
+        public static bool JoursServis(SessionOpenDto d) => d != null && (d.JourDeFamilleServi || d.JourDeFamille.HasValue);
 
         /// <summary>Un entier de premier niveau ou imbriqué, par son NOM, dans un corps JSON brut — `JsonUtility` ne lie un champ que
         /// par un nom écrit en dur dans le DTO, et ces deux noms-ci sont des clés SERVIES, nullables. Null si absent, `null` ou non entier.</summary>
@@ -71,7 +82,7 @@ namespace MafiaCleanCity.Shell
             SessionOpenDto lue = null;
             yield return transport.Ouvrir(jeton, x => lue = x, (c, m) => echec?.Invoke($"{c}: {m}"));
             if (lue == null) { ouverte?.Invoke(null); yield break; }
-            if (Decider(lue.JourDeFamille, lue.JourDeFamilleALOuverture, sortieUtc, maintenantUtc, false) != Decision.FermerPuisOuvrir)
+            if (Decider(lue.JourDeFamille, lue.JourDeFamilleALOuverture, sortieUtc, maintenantUtc, false, lue.JourDeFamilleServi) != Decision.FermerPuisOuvrir)
             {
                 ouverte?.Invoke(lue);
                 yield break;
@@ -85,17 +96,19 @@ namespace MafiaCleanCity.Shell
         /// qu'elle n'est pas fermée) et on compare ; sinon le repli d'absence, SANS requête sous le seuil. `nouvelle` n'est appelé
         /// qu'avec une NOUVELLE session.</summary>
         public static IEnumerator AuRetour(string jeton, ITransportDeSession transport, bool jourServi, DateTime? sortieUtc,
-                                           DateTime maintenantUtc, Action<SessionOpenDto> nouvelle, Action<string> echec)
+                                           DateTime maintenantUtc, Action<SessionOpenDto> nouvelle, Action<string> echec, double? seuilMinutes = null)
         {
             if (!jourServi)
             {
-                yield return Appliquer(Decider(null, null, sortieUtc, maintenantUtc, false), jeton, transport, nouvelle, echec);
+                yield return Appliquer(Decider(null, null, sortieUtc, maintenantUtc, false, false, seuilMinutes), jeton, transport, nouvelle, echec);
                 yield break;
             }
             SessionOpenDto lue = null;
             yield return transport.Ouvrir(jeton, x => lue = x, (c, m) => echec?.Invoke($"{c}: {m}"));
             if (lue == null) yield break;
-            yield return SurLecture(jeton, transport, lue.JourDeFamille, lue.JourDeFamilleALOuverture, nouvelle, echec);
+            // « servi null » ⇒ rien ; `opened_family_day` null avec une ancre ⇒ le repli (session d'avant 0171) ; deux jours ⇒ on compare.
+            yield return Appliquer(Decider(lue.JourDeFamille, lue.JourDeFamilleALOuverture, sortieUtc, maintenantUtc, false, lue.JourDeFamilleServi, seuilMinutes),
+                                   jeton, transport, nouvelle, echec);
         }
 
         /// <summary>À chaque lecture des deux jours servis au premier plan (l'horloge légère) : différents ⇒ `close` puis `open`.

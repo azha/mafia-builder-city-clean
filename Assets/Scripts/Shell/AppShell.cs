@@ -766,11 +766,12 @@ namespace MafiaCleanCity.Shell
             if (retourEnCours || string.IsNullOrEmpty(Token)) yield break;
             System.DateTime? sortie = HorodatageDeSortie.Lire();
             HorodatageDeSortie.Effacer();
-            bool jourServi = LastSessionOpen != null && LastSessionOpen.JourDeFamille.HasValue && LastSessionOpen.JourDeFamilleALOuverture.HasValue;
+            bool jourServi = CycleDeSession.JoursServis(LastSessionOpen);   // « servi null » compte comme servi : il dit « rien », pas « repli »
             retourEnCours = true;
             SessionOpenDto neuve = null; string err = null;
             string t = Token;
-            yield return CycleDeSession.AuRetour(t, Transport(), jourServi, sortie, Horloge(), x => neuve = x, e => err = e);
+            yield return CycleDeSession.AuRetour(t, Transport(), jourServi, sortie, Horloge(), x => neuve = x, e => err = e,
+                DerniereHorloge != null ? DerniereHorloge.SeuilDeRepliMinutes : null);   // m4 : la durée servie remplace les 48 min si l'horloge a été lue
             retourEnCours = false;
             yield return ApresNouvelleSession(t, neuve, err);
         }
