@@ -300,6 +300,12 @@
   "regle": "littéral"
  },
  {
+  "hex": "#8a6a42",
+  "jeton": "ficheCtaOrBord",
+  "d": 39.03,
+  "regle": "littéral"
+ },
+ {
   "hex": "#9a774b",
   "jeton": "hudHairlineGold",
   "d": 33.71,
@@ -321,6 +327,12 @@
   "hex": "#efe4c6",
   "jeton": "hudCreme",
   "d": 6.68,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#ffffff",
+  "jeton": "onSurfacePrimary",
+  "d": 25.65,
   "regle": "littéral"
  }
 ]

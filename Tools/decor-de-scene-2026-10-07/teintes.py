@@ -13,7 +13,7 @@ for r in sup:
 # + TOUTES les couleurs écrites dans le catalogue (DESIGN.md §3.2 à §4, hors la table §4.1 elle-même) : zones dominantes ㉓ ㉘, cerne, enseigne, voile…
 design=open(os.path.join(D,'DESIGN.md'),encoding='utf-8').read()
 a=design.index('### 3.2'); b=design.index('### 4.1')
-for h in set(re.findall(r'#([0-9a-fA-F]{6})(?![0-9a-fA-F])',design[a:b])) | {'0a0f18','b08d3e','2a3648','d9ab4e','7fd4d9','0b111b','0d131e','0b1016','0d0f10'}:
+for h in set(re.findall(r'#([0-9a-fA-F]{6})(?:[0-9a-fA-F]{2})?(?![0-9a-fA-F])',design[a:b])) | {'0a0f18','b08d3e','2a3648','d9ab4e','7fd4d9','0b111b','0d131e','0b1016','0d0f10','ffffff'}:
     cols.add(tuple(int(h[i:i+2],16) for i in (0,2,4)))
 out=[]
 for c in sorted(cols):
