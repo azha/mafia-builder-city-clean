@@ -2729,7 +2729,7 @@ namespace MafiaCleanCity.CityMap
                 // table 75 n° 1-2 : « Ramassé : … Encore chez … : … » ; un back antérieur au lot ne sert pas les bandes ⇒ la phrase d'avant
                 if (ficheSortie != null)
                     ficheSortie.text = MafiaCleanCity.I18n.CollecteMots.PhraseDeSucces(outcome.CollectedBand, outcome.RemainingBand, outcome.Prenom ?? ficheDealerPrenom)
-                                       ?? "La caisse a rejoint votre planque.";
+                                       ?? MafiaCleanCity.I18n.CollecteMots.PhraseDeSuccesSansBandes();
             }
             else if (ficheSortie != null)
             {

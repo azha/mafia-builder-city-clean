@@ -68,6 +68,13 @@ namespace MafiaCleanCity.I18n
                 new Dictionary<string, string> { { "collecte", collecte }, { "prenom", prenom }, { "reste", reste } });
         }
 
+        /// <summary>Le succès SANS bandes (TD-840, 07/10) : un back antérieur au lot COLLECTE ne sert ni `collected_band` ni `remaining_band`, l'écran dit alors la phrase
+        /// d'avant. Elle passe maintenant par `Libelle` (clé `vente.geste.la_caisse_a_rejoint_votre_planque`, repli = le texte d'avant, octet pour octet) : elle se COMPTE
+        /// comme un repli et le cliquet la voit. ⚠️ La table 85 n'en donne pas de clé (« libellé orphelin dès le câblage de la 75 ») : la clé est celle que le slug du
+        /// littéral produirait, À DEMANDER À L'ATELIER ; elle sort avec le déploiement de COLLECTE (les bandes sont alors toujours servies).</summary>
+        public static string PhraseDeSuccesSansBandes() =>
+            Libelle.Gabarit("vente.geste.la_caisse_a_rejoint_votre_planque", "La caisse a rejoint votre planque.");
+
         /// <summary>La phrase d'un REFUS, quand le corps n'a servi AUCUNE phrase (`RefusServi.Phrase` null) : par CODE, jamais par statut
         /// (trois codes partagent le 409). Table 75 n° 3, 4, 4b ; table 85 n° 7 pour tout le reste, y compris un 409 SANS code spécifique
         /// et le 409 générique. Le 409 générique est réessayé UNE fois : si le second essai rend ENCORE `RESOURCE_STATE_CONFLICT`, c'est cette

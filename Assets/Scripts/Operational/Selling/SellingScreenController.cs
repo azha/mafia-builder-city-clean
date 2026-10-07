@@ -332,7 +332,7 @@ namespace MafiaCleanCity.Operational.Selling
             // ne sert pas les bandes ⇒ la phrase d'avant, SANS clé (table 85 : un libellé orphelin dès le câblage de la 75).
             string phraseDeSucces = MafiaCleanCity.I18n.CollecteMots.PhraseDeSucces(resultat.collected_band, resultat.remaining_band,
                                         resultat.Prenom ?? PrenomDuDealer(dealerId))
-                                    ?? "La caisse a rejoint votre planque.";
+                                    ?? MafiaCleanCity.I18n.CollecteMots.PhraseDeSuccesSansBandes();
             if (actionTexte != null) actionTexte.text = phraseDeSucces;
 
             yield return client.ListDealers(token, d => Dealers = d,

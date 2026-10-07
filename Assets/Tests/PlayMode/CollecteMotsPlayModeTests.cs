@@ -148,6 +148,18 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
+        public void C12_LeSuccesSansBandes_PasseParLibelle_TD840()
+        {
+            Libelle.RemettreLesCompteurs();
+            Assert.AreEqual("La caisse a rejoint votre planque.", CollecteMots.PhraseDeSuccesSansBandes(), "le repli est le texte d'avant, octet pour octet");
+            Assert.IsTrue(Libelle.ClesEnRepli.Contains("vente.geste.la_caisse_a_rejoint_votre_planque"),
+                "la phrase se COMPTE comme un repli : elle n'est plus un littéral que le cliquet et la garde zéro-repli ne voient pas");
+            string racine = Path.Combine(Application.dataPath, "Scripts");
+            foreach (string f in new[] { Path.Combine("Operational", "Selling", "SellingScreenController.cs"), Path.Combine("CityMap", "DistrictInteriorScreenController.cs") })
+                StringAssert.DoesNotContain("\"La caisse a rejoint votre planque.\"", File.ReadAllText(Path.Combine(racine, f)), f + " : plus de littéral, la phrase passe par CollecteMots");
+        }
+
+        [Test]
         public void C6_LeConflitGenerique_SeReessaieUneFois_Seul()
         {
             Assert.IsTrue(CollecteMots.ReessayerEnSilence(409, CollecteMots.CodeConflitGenerique));
