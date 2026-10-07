@@ -207,6 +207,75 @@ namespace MafiaCleanCity.Operational
             RendreRecrutement();
             RendreAffaires(dto.activeCases);
             RendreMessageErreur();
+            RendreBande(dto.lawyerRoster);
+        }
+
+        // ═══ ㉛ B1 — la bande basse : le geste « LUI TROUVER UN AVOCAT » (cause 3, CLIENT-3 ; décision de f2 07/10) ═══════════════════════════
+
+        /// <summary>Le geste du pied est offert tant qu'AUCUN avocat n'est retenu (aucun `retainer` : roster vide, ou tous libérés). Pure.</summary>
+        public static bool GesteDeBasOffert(LawyerDto[] roster)
+        {
+            if (roster == null) return true;
+            foreach (LawyerDto a in roster) if (a != null && a.retainer) return false;
+            return true;
+        }
+
+        /// <summary>Le bouton du pied, s'il existe (crochet de test).</summary>
+        public Button BoutonDuPied { get; private set; }
+
+        /// <summary>La bande basse de la maquette (`.pl-bas`, cadres #67-#72) : la plaque, puis le geste `.geste` — « LUI TROUVER UN AVOCAT », légende « le commis d'office fait ce qu'il peut » (mots
+        /// du cadre #67). ⚠️ SANS LA VOIX du lieutenant (`.dit`) : quel lieutenant parle et quelle phrase est une donnée que le back ne sert pas (TD-848) — rien n'est inventé. Le geste NE RECRUTE PAS :
+        /// les trois façons de défendre (commis, cabinet, filière) sont les cartes de l'écran, et c'est ELLES qui engagent ; le geste y CONDUIT (le corps défile jusqu'à elles). Un geste qui paierait
+        /// un cabinet sans le dire serait un bouton qui ment.</summary>
+        private void RendreBande(LawyerDto[] roster)
+        {
+            ViderEnfants(basRoot, garder: "Filet");
+            BoutonDuPied = null;
+            if (!GesteDeBasOffert(roster)) return;
+
+            GameObject bouton = NouveauUI("BoutonDuPied", basRoot);
+            AjouterFond(bouton, PiedDEcran.Couleurs(PiedDEcran.Forme.Geste, PiedDEcran.Etat.Allume).fond);
+            Button b = bouton.AddComponent<Button>();
+            b.targetGraphic = bouton.GetComponent<Image>();
+            b.onClick.AddListener(AllerAuRecrutement);
+            HorizontalLayoutGroup h = bouton.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(PxTrait(11f), PxTrait(11f), PxTrait(9f), PxTrait(9f));
+            h.spacing = Px(8f);
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            AddLayoutElement(bouton, minHeight: Px(26f), flexibleHeight: 0);
+
+            TextMeshProUGUI lib = NouveauTexteFiche(bouton.transform, "Libelle",
+                Libelle.De("loi", "bouton", "LUI TROUVER UN AVOCAT"), 9.5f, DesignTokens.Current.hudMoneyGold, true);
+            lib.characterSpacing = 0.7f * 4.2f;
+            lib.enableWordWrapping = true;
+            AddLayoutElement(lib.gameObject, flexibleWidth: 1);
+            TrackText(lib.text);
+
+            TextMeshProUGUI legende = NouveauTexteFiche(bouton.transform, "Legende",
+                Libelle.De("loi", "bloc", "le commis d’office fait ce qu’il peut"), 6.5f,
+                PiedDEcran.Legende(PiedDEcran.Etat.Allume), false);
+            legende.alignment = TextAlignmentOptions.MidlineRight;
+            legende.enableWordWrapping = true;
+            AddLayoutElement(legende.gameObject, flexibleWidth: 1);
+            TrackText(legende.text);
+
+            PiedDEcran.StylerLeBouton(bouton, lib, PiedDEcran.Forme.Geste);
+            BoutonDuPied = b;
+        }
+
+        /// <summary>Le geste du pied : fait défiler le corps jusqu'aux trois façons de défendre. Sans défilement possible (tout tient), il ne fait rien — les cartes sont déjà là.</summary>
+        public void AllerAuRecrutement()
+        {
+            if (listeDefilante == null || listeDefilante.Defilement == null || recruteRoot == null) return;
+            ScrollRect sr = listeDefilante.Defilement;
+            Canvas.ForceUpdateCanvases();
+            RectTransform contenu = sr.content;
+            RectTransform cible = (RectTransform)recruteRoot;
+            float yHaut = contenu.InverseTransformPoint(cible.TransformPoint(new Vector3(0f, cible.rect.yMax, 0f))).y;   // le pivot du contenu est EN HAUT : 0 en haut, négatif en bas
+            float maxDecalage = Mathf.Max(0f, contenu.rect.height - sr.viewport.rect.height);
+            sr.verticalNormalizedPosition = maxDecalage <= 0f ? 1f : 1f - Mathf.Clamp01((-yHaut - Px(6f)) / maxDecalage);
         }
 
         /// <summary>Titre/sous-titre — AUCUN cadre de la maquette (m-67..m-72) ne montre cet écran
@@ -566,35 +635,45 @@ namespace MafiaCleanCity.Operational
             // pas encore son `rect` résolu.
             Canvas.ForceUpdateCanvases();
 
-            // ⚠️ PAS de `ScrollRect`/`Mask` — AUCUN écran de ce dépôt n'emploie ce patron (mesuré
-            // sur ㉘/㊲/㉚) : un contenu qui déborde reste une limite PARTAGÉE par tous les écrans
-            // opérationnels, pas un défaut propre à celui-ci. L'introduire ici sans pouvoir le
-            // vérifier en Play Mode cette semaine (éditeur non lancé) serait le risque inverse de
-            // « coller au code environnant ».
-            GameObject corpsGo = NouveauUI("Corps", racine.transform);
-            RectTransform corps = (RectTransform)corpsGo.transform;
-            corps.anchorMin = Vector2.zero;
-            corps.anchorMax = Vector2.one;
-            corps.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
-            corps.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
+            // ㉛ B1 + cause 7 (CLIENT-3, 07/10) : la racine est une PILE — le CORPS (masque + défilement : `ListeDefilante`, un fondu et un ascenseur quand le contenu déborde) puis la
+            // BANDE BASSE `.bas` de la maquette (plaque #141a21, filet 2 px #2c3640, le geste), qui reste en PIED quoi que le corps contienne. Les marges d'écran (haut, bas) sont celles
+            // de la pile ; l'ancien « PAS de ScrollRect » (écran jamais lancé) est levé par la classe : la garde ListeDefilante le sait.
+            VerticalLayoutGroup pilePage = racine.AddComponent<VerticalLayoutGroup>();
+            pilePage.padding = new RectOffset(0, 0, (int)ShellChrome.TopInsetPx, (int)ShellChrome.BottomInsetPx);
+            pilePage.spacing = 0f;
+            pilePage.childControlWidth = true; pilePage.childControlHeight = true;
+            pilePage.childForceExpandWidth = true; pilePage.childForceExpandHeight = false;
 
-            VerticalLayoutGroup pile = corpsGo.AddComponent<VerticalLayoutGroup>();
+            GameObject corpsGo = NouveauUI("Corps", racine.transform);
+            corpsGo.AddComponent<RectMask2D>();
+            LayoutElement corpsLe = corpsGo.AddComponent<LayoutElement>();
+            corpsLe.flexibleHeight = 1f; corpsLe.minHeight = 0f;
+
+            GameObject contenuGo = NouveauUI("Contenu", corpsGo.transform);
+            RectTransform contenuRt = (RectTransform)contenuGo.transform;
+            contenuRt.anchorMin = new Vector2(0f, 1f); contenuRt.anchorMax = new Vector2(1f, 1f);
+            contenuRt.pivot = new Vector2(0.5f, 1f);
+            contenuRt.offsetMin = Vector2.zero; contenuRt.offsetMax = Vector2.zero;
+            VerticalLayoutGroup pile = contenuGo.AddComponent<VerticalLayoutGroup>();
             pile.padding = new RectOffset(PxTrait(16f), PxTrait(16f), PxTrait(14f), PxTrait(14f));
             pile.spacing = Px(12f);
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
             pile.childAlignment = TextAnchor.UpperCenter;
+            ContentSizeFitter ajuste = contenuGo.AddComponent<ContentSizeFitter>();
+            ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            listeDefilante = ListeDefilante.Equiper((RectTransform)corpsGo.transform, contenuRt, DesignTokens.Current.surfaceBase);
 
-            titreTexte = NouveauTexteFiche(corpsGo.transform, "Titre", "",
+            titreTexte = NouveauTexteFiche(contenuGo.transform, "Titre", "",
                 17f, DesignTokens.Current.onSurfacePrimary, true);
             titreTexte.enableWordWrapping = true;
 
-            sousTitreTexte = NouveauTexteFiche(corpsGo.transform, "SousTitre", "",
+            sousTitreTexte = NouveauTexteFiche(contenuGo.transform, "SousTitre", "",
                 10f, DesignTokens.Current.onSurfaceSecondary, false);
             sousTitreTexte.enableWordWrapping = true;
             AddLayoutElement(sousTitreTexte.gameObject, flexibleHeight: 0);
 
-            GameObject rosterGo = NouveauUI("Roster", corpsGo.transform);
+            GameObject rosterGo = NouveauUI("Roster", contenuGo.transform);
             VerticalLayoutGroup vr = rosterGo.AddComponent<VerticalLayoutGroup>();
             vr.spacing = Px(4f);
             vr.childControlWidth = true; vr.childControlHeight = true;
@@ -602,7 +681,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(rosterGo, flexibleHeight: 0);
             rosterRoot = rosterGo.transform;
 
-            GameObject recruteGo = NouveauUI("Recrutement", corpsGo.transform);
+            GameObject recruteGo = NouveauUI("Recrutement", contenuGo.transform);
             VerticalLayoutGroup vc2 = recruteGo.AddComponent<VerticalLayoutGroup>();
             vc2.spacing = Px(6f);
             vc2.childControlWidth = true; vc2.childControlHeight = true;
@@ -610,7 +689,7 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(recruteGo, flexibleHeight: 0);
             recruteRoot = recruteGo.transform;
 
-            GameObject affairesGo = NouveauUI("Affaires", corpsGo.transform);
+            GameObject affairesGo = NouveauUI("Affaires", contenuGo.transform);
             VerticalLayoutGroup va = affairesGo.AddComponent<VerticalLayoutGroup>();
             va.spacing = Px(4f);
             va.childControlWidth = true; va.childControlHeight = true;
@@ -618,15 +697,34 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(affairesGo, flexibleHeight: 0);
             affairesRoot = affairesGo.transform;
 
-            GameObject erreurGo = NouveauUI("Erreur", corpsGo.transform);
+            GameObject erreurGo = NouveauUI("Erreur", contenuGo.transform);
             VerticalLayoutGroup ve = erreurGo.AddComponent<VerticalLayoutGroup>();
             ve.childControlWidth = true; ve.childControlHeight = true;
             ve.childForceExpandWidth = true; ve.childForceExpandHeight = false;
             AddLayoutElement(erreurGo, flexibleHeight: 0);
             erreurRoot = erreurGo.transform;
+
+            // ㉛ B1 — la bande basse `.bas` : filet haut 2 px #2c3640, plaque #141a21, padding 9/13/15 CSS ; le geste y est posé par `RendreBande` (état servi)
+            GameObject basGo = NouveauUI("Bas", racine.transform);
+            AjouterFond(basGo, PiedDEcran.PlaqueDuBas);
+            VerticalLayoutGroup bas = basGo.AddComponent<VerticalLayoutGroup>();
+            bas.padding = new RectOffset(PxTrait(13f), PxTrait(13f), PxTrait(9f) + PxTrait(2f), PxTrait(15f));
+            bas.spacing = Px(5f);
+            bas.childControlWidth = true; bas.childControlHeight = true;
+            bas.childForceExpandWidth = true; bas.childForceExpandHeight = false;
+            AddLayoutElement(basGo, flexibleHeight: 0);
+            GameObject filet = NouveauUI("Filet", basGo.transform);
+            filet.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform filetRt = (RectTransform)filet.transform;
+            filetRt.anchorMin = new Vector2(0f, 1f); filetRt.anchorMax = new Vector2(1f, 1f);
+            filetRt.pivot = new Vector2(0.5f, 1f); filetRt.sizeDelta = new Vector2(0f, Px(2f));
+            filetRt.anchoredPosition = Vector2.zero;
+            filet.AddComponent<Image>().color = PiedDEcran.FiletDuBas;
+            basRoot = basGo.transform;
         }
 
-        private Transform rosterRoot, recruteRoot, affairesRoot, erreurRoot;
+        private Transform rosterRoot, recruteRoot, affairesRoot, erreurRoot, basRoot;
+        private ListeDefilante listeDefilante;
         private TextMeshProUGUI titreTexte, sousTitreTexte;
 
         // ═══ Palette — locale, patron ㉘ (aucun token `DesignTokens` dédié n'existe pour ce
@@ -681,11 +779,12 @@ namespace MafiaCleanCity.Operational
             if (!string.IsNullOrEmpty(texte)) renderedTexts.Add(texte);
         }
 
-        private static void ViderEnfants(Transform parent)
+        private static void ViderEnfants(Transform parent, string garder = null)
         {
             if (parent == null) return;
             for (int i = parent.childCount - 1; i >= 0; i--)
-                UnityEngine.Object.Destroy(parent.GetChild(i).gameObject);
+                if (garder == null || parent.GetChild(i).name != garder)
+                    UnityEngine.Object.Destroy(parent.GetChild(i).gameObject);
         }
 
         private static void AddLayoutElement(GameObject go, float minHeight = -1, float preferredHeight = -1,

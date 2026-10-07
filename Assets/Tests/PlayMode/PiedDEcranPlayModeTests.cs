@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
 using MafiaCleanCity.Shell;
+using MafiaCleanCity.Operational;
 using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.CityMap.Tests
@@ -11,6 +12,7 @@ namespace MafiaCleanCity.CityMap.Tests
     // CAUSE 3 (CLIENT-3, 07/10 : « pied d'écran / geste principal absent ou de mauvaise forme » — ㊳ B4, ㊵ F3, ㉛ B1, ㉚ M4, ㉘ M2, ⑤ F5) : `PiedDEcran`, les DEUX grammaires de la maquette. HORS RÉSEAU.
     //   P1  les couleurs sont celles de la maquette (`.cta6`, `.geste`, leurs états) et AUCUN fond de bouton n'est l'or plein
     //   P2  l'EFFET : un bouton construit prend le fond, le cerne (quatre filets) et le libellé de sa forme ; l'éteint change les trois ; un second appel ne double rien
+    //   P4  ㉛ Loi B1 : le geste du pied est offert tant qu'aucun avocat n'est retenu (pure) ; la bande basse porte la plaque #141a21 et le geste `.geste`, SANS voix ; le corps défile (cause 7)
     //   P3  GARDE : ㉚ Appro et ㉘ Distribution n'ont plus d'aplat or sur leur bouton (forme `.geste`), ㊵ Filière porte la forme `.cta6`, chacun appelle `PiedDEcran.StylerLeBouton`
     [Category("PiedDEcran")]
     public class PiedDEcranPlayModeTests
@@ -82,6 +84,51 @@ namespace MafiaCleanCity.CityMap.Tests
             StringAssert.DoesNotContain("fond.color = Or;", appro, "㉚ : plus d'aplat or plein sur le bouton (« gros bouton jaune »)");
             StringAssert.DoesNotContain("AjouterFond(bouton, Or);", distrib, "㉘ : plus de pavé or plein");
             StringAssert.Contains("PiedDEcran.Legende(", distrib, "㉘ : la légende est DANS le bouton, à droite (`.geste small`)");
+        }
+
+        [Test]
+        public void P4a_LeGesteDuPied_EstOffertTantQuAucunAvocatNEstRetenu()
+        {
+            Assert.IsTrue(LoiScreenController.GesteDeBasOffert(null));
+            Assert.IsTrue(LoiScreenController.GesteDeBasOffert(new LawyerDto[0]));
+            Assert.IsTrue(LoiScreenController.GesteDeBasOffert(new[] { new LawyerDto { lawyerId = "a", retainer = false } }), "un avocat libéré n'est pas un avocat retenu");
+            Assert.IsFalse(LoiScreenController.GesteDeBasOffert(new[] { new LawyerDto { lawyerId = "a", retainer = false }, new LawyerDto { lawyerId = "b", retainer = true } }));
+        }
+
+        [UnityEngine.TestTools.UnityTest]
+        public System.Collections.IEnumerator P4b_LaBandeBasse_PlaqueFiletGeste_SansVoix_EtLeCorpsDefile()
+        {
+            var host = new GameObject("LoiPied", typeof(RectTransform));
+            LoiScreenController ecran = host.AddComponent<LoiScreenController>();
+            try
+            {
+                yield return null;
+                ecran.RendrePourTest(new GetLegalResponseDto { lawyerRoster = new LawyerDto[0], activeCases = new LegalCaseDto[0] });
+                yield return null; yield return null;
+                GameObject racine = GameObject.Find("LoiRoot");
+                Assert.IsNotNull(racine);
+                Transform bas = racine.transform.Find("Bas");
+                Assert.IsNotNull(bas, "la bande basse existe");
+                Assert.AreEqual((0x14, 0x1a, 0x21), Trio(bas.GetComponent<Image>().color), "plaque `.bas` #141a21");
+                Assert.IsNotNull(bas.Find("Filet"), "le filet haut de 2 px");
+                Assert.IsNotNull(ecran.BoutonDuPied, "aucun avocat retenu : le geste est offert");
+                Assert.AreEqual((0x24, 0x1c, 0x11), Trio(ecran.BoutonDuPied.GetComponent<Image>().color), "forme `.geste` : fond #241c11 (pas l'or plein)");
+                Assert.IsNotNull(ecran.BoutonDuPied.transform.Find("Cerne"), "le cerne #5a4a2a");
+                Assert.IsFalse(PiedDEcran.EstUnAplatOr(ecran.BoutonDuPied.GetComponent<Image>().color));
+                Assert.IsNull(bas.Find("Voix"), "SANS la voix du lieutenant : aucune donnée servie (TD-848)");
+                Assert.IsNotNull(racine.transform.Find("Corps").GetComponent<ScrollRect>(), "le corps est une liste défilante (cause 7)");
+                ecran.AllerAuRecrutement();   // ne lève rien, tout tienne ou non
+                // un avocat retenu : le pied n'a plus de geste
+                ecran.RendrePourTest(new GetLegalResponseDto { lawyerRoster = new[] { new LawyerDto { lawyerId = "x", lawyerLabel = "Maître", tier = "boutique", retainer = true } }, activeCases = new LegalCaseDto[0] });
+                yield return null; yield return null;
+                Assert.IsNull(ecran.BoutonDuPied, "un avocat est retenu : plus de geste « lui trouver un avocat »");
+            }
+            finally
+            {
+                GameObject r = GameObject.Find("LoiRoot");
+                if (r != null) Object.DestroyImmediate(r);
+                Object.DestroyImmediate(host);
+            }
         }
     }
 }
