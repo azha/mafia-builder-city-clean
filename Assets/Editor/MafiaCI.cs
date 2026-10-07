@@ -325,6 +325,11 @@ public static class MafiaCI
         // COLLECTE (CLIENT-1, 07/10) — les bandes et les codes du ramassage de la caisse (tables 75/85 de l'atelier), 8 tests hors réseau, sans
         // paire. Catégorie NEUVE inscrite le jour où elle naît (garde I1) ; verte au créneau suivant, jamais déclarée verte avant.
         "CollecteMots",
+        // CanvasRacine (CLIENT-2, 07/10) — la résolution partagée du Canvas racine d'un écran (fin de B3H1 « photographie le Canvas d'un test précédent ») :
+        // 5 tests. Verte 5/5 au créneau de CLIENT-1 du 07/10 (HEAD fccb633c, run par FILTRE de catégories avec ScreenB3, CuisinierAuRepos, IconesArchetype,
+        // EcranFile, … : 142 déclarés = 142 comptés, VERDICT 0), PAS dans l'ordre d'un run complet — le prochain gate complet le dira. Inscrite le jour où
+        // elle est verte, sortie de la dette datée de la garde I1. Filtre : 100 → 101 catégories, 963 → 968 tests au compteur.
+        "CanvasRacine",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

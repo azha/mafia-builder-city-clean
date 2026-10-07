@@ -45,10 +45,7 @@ namespace MafiaCleanCity.Tests
             // de887d7d). Reste ManometreOracle : Oracle1_Ring_… GÈLE le fil principal (reproduit au même créneau : RC=5, 180 s de journal
             // muet) — la forme exacte que SondeGelVolontaire imite. Elle sortira de la dette quand le gel sera corrigé.
             "ManometreOracle",
-            // 07/10 (CLIENT-2) : CanvasRacine — la résolution partagée du Canvas d'un écran (5 tests). Portée, JAMAIS inscrite tant qu'elle n'a pas
-            // tourné verte : au créneau, dans l'ORDRE du run complet (pas isolée), avec CuisinierAuRepos, IconesArchetype, ExceptionsNonRecouvrement
-            // et ScreenB3. Verte ⇒ elle s'inscrit et sort d'ici.
-            "CanvasRacine",
+            // CanvasRacine (CLIENT-2, 07/10) est SORTIE de la dette le 07/10 : verte 5/5 au créneau de CLIENT-1, inscrite au filtre de MafiaCI.
         };
 
         private static readonly Regex Categorie = new Regex(@"Category\(""([^""]+)""\)", RegexOptions.Compiled);
