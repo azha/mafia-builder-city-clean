@@ -73,17 +73,15 @@ namespace MafiaCleanCity.Capture.Tests
             CibleDuParcours.Restaurer(urlAvant);
         }
 
-        [UnityTest]
-        [Category("ClichePlanchesParEcran")]
-        [Timeout(900000)]
-        public IEnumerator Planches_DesDixEcrans_CompteNeuf_DeuxResolutions()
+        /// <summary>P0 + P1 : le dossier de sortie, un compte NEUF, le shell ouvert et calme. Commun aux deux tests de la classe.</summary>
+        private IEnumerator Ouvrir()
         {
             string sortie = System.Environment.GetEnvironmentVariable(VariableSortie);
             dossier = !string.IsNullOrWhiteSpace(sortie) ? sortie.Trim()
                 : Path.Combine("Logs", "planches-par-ecran", System.DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"));
             Directory.CreateDirectory(dossier);
             journal = Path.Combine(dossier, "journal.tsv");
-            File.WriteAllText(journal, "pas\técran\tétat\tréférence\n");
+            if (!File.Exists(journal)) File.WriteAllText(journal, "pas\técran\tétat\tréférence\n");
             Debug.Log($"[PLANCHES] planches et journal → {Path.GetFullPath(dossier)}");
 
             // P0 · inscription d'un compte NEUF (jamais le compte de démo ni le compte de capture gelé)
@@ -106,10 +104,84 @@ namespace MafiaCleanCity.Capture.Tests
             var echecs = new List<string>();
             yield return CaptureSousShell.AttendreUnShellCalme(shell, echecs);
             Assert.IsEmpty(echecs, "P1 : " + string.Join(" · ", echecs));
+        }
 
+        [UnityTest]
+        [Category("ClichePlanchesParEcran")]
+        [Timeout(900000)]
+        public IEnumerator Planches_DesDixEcrans_CompteNeuf_DeuxResolutions()
+        {
+            yield return Ouvrir();
             // E01-E10 · les dix écrans — un échec s'écrit au journal et le parcours CONTINUE (un écran récalcitrant ne coûte pas les planches suivantes)
             foreach (Ecran e in Ecrans)
                 yield return Photographier(e);
+        }
+
+        /// <summary>⑤ « la décision du jour » (F4/F5, plaque crème) : compte NEUF, le shell, ⑤ monté en surimpression, une carte FABRIQUÉE (`Afficher`) — le compte neuf n'a pas de carte de tête servie et la capture
+        /// gelée exige la paire de capture. ⚠️ L'état est DIT au journal : la carte n'est PAS servie, c'est la mise en scène de la matière et du CTA, pas la balance du jeu.</summary>
+        [UnityTest]
+        [Category("ClichePlanchesParEcran")]
+        [Timeout(600000)]
+        public IEnumerator Planche_DecisionDetail_PlaqueCreme_CarteFabriquee()
+        {
+            yield return Ouvrir();
+            shell.MonterLocataireEnSurimpression<DecisionDetailScreenController>();
+            DecisionDetailScreenController ecran = null;
+            for (float f = Time.realtimeSinceStartup + 15f; ecran == null && Time.realtimeSinceStartup < f;)
+            {
+                ecran = shell.ContentSlot.GetComponentInChildren<DecisionDetailScreenController>(true);
+                yield return null;
+            }
+            if (ecran == null) { Noter("E11", "⑤ Decision Detail", "ÉCHEC : ⑤ non monté", "decision-du-jour/reference-1080x2102.png (cadre 4 de ecrans-brennar-4.html)"); yield break; }
+            for (int i = 0; i < 10; i++) yield return null;
+            ecran.Afficher(new HlCardDto { card_id = "carte-fabriquee", decision_type_key = "AUTONOMY_REPORTS_PENDING", impact_bucket = "moderate", urgency_bucket = "low", structural = false },
+                           new StructuralBudgetDto { used = 0, cap_reached = false });
+            for (int i = 0; i < 20; i++) yield return null;
+            foreach ((int largeur, int hauteur) in Resolutions)
+                yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"E11_DecisionDetail_{largeur}x{hauteur}.png"), false, null);
+            Noter("E11", "⑤ Decision Detail", "DecisionDetailScreenController · carte FABRIQUÉE (tactique, portée modérée, urgence faible, jeton libre) — NON servie ; plaque crème F4/F5",
+                  "decision-du-jour/reference-1080x2102.png (cadre nominal 4 de ecrans-brennar-4.html ; rapport r1 F4/F5)");
+        }
+
+        /// <summary>④ P1 AVEC DEUX CARTES EN FILE (f2 07/10) : un compte NEUF n'a qu'une carte (ou aucune), donc la ligne de pluriel n'existerait pas. Le shell ouvert, la ligne de l'Accueil est RÉ-ALIMENTÉE par deux cartes FABRIQUÉES
+        /// (`SetQueue`), photographiée aux deux résolutions, et MESURÉE : la colonne « qui » (nom, gravité, raison, pluriel) tient-elle dans la ligne ? Un débordement est un A (le journal le dit : DÉBORDE).
+        /// ⚠️ Les cartes sont FABRIQUÉES (une réplique de lieutenant et une carte de la ville) : c'est la mise en page des deux lignes, pas un état servi.</summary>
+        [UnityTest]
+        [Category("ClichePlanchesParEcran")]
+        [Timeout(600000)]
+        public IEnumerator Planche_AccueilFile_DeuxCartes_MesureDuDebordement()
+        {
+            yield return Ouvrir();
+            ExceptionQueuePanelController file = null;
+            for (float f = Time.realtimeSinceStartup + 20f; file == null && Time.realtimeSinceStartup < f;)
+            {
+                file = shell.ContentSlot.GetComponentInChildren<ExceptionQueuePanelController>(true);
+                yield return null;
+            }
+            const string Ref = "04-accueil/r2-2026-10-07/reference/cadre-4-la-suite.png ; atelier master 0dd516e (la raison + « Plusieurs attendent encore »)";
+            if (file == null) { Noter("A01", "④ Accueil — la file", "ÉCHEC : le panneau de la file n'est pas monté sur l'Accueil", Ref); yield break; }
+            var cartes = new[]
+            {
+                new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "fab-1", lieutenant_id = "lt-fab", severity_band = "MODERATE",
+                    event_descriptor = "L’étagère est vide. Sans pyralin, je ne rallume pas.", lieutenant = new MafiaCleanCity.Operational.Exceptions.ExceptionLieutenantDto { name = "Lt. Kane" } },
+                new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "fab-2", lieutenant_id = "", severity_band = "MILD", event_descriptor = "Il fait chaud en ville" },
+            };
+            file.SetQueue(shell.Token, cartes);
+            for (int i = 0; i < 20; i++) yield return null;
+            foreach ((int largeur, int hauteur) in Resolutions)
+            {
+                yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"A01_AccueilFile2Cartes_{largeur}x{hauteur}.png"), false, null);
+                Transform row = null;
+                foreach (Transform c in file.transform.GetComponentsInChildren<Transform>(true)) if (c.name == "Row_fab-1") { row = c; break; }
+                Transform col = row != null ? row.Find("QuiAttend") : null;
+                if (row == null || col == null) { Noter("A01", $"④ file {largeur}x{hauteur}", "ÉCHEC : ligne ou colonne « qui » introuvable", Ref); continue; }
+                float bandeH = ((RectTransform)row).rect.height, voulue = LayoutUtility.GetPreferredHeight((RectTransform)col);
+                var coins = new Vector3[4]; ((RectTransform)row).GetWorldCorners(coins); float basLigne = coins[0].y;
+                ((RectTransform)col).GetWorldCorners(coins); float basColonne = coins[0].y;
+                bool deborde = voulue > bandeH + 0.5f || basColonne < basLigne - 0.5f;
+                Noter("A01", $"④ file {largeur}x{hauteur}",
+                    $"ligne={bandeH:0.#} u · colonne voulue={voulue:0.#} u · bas colonne−bas ligne={basColonne - basLigne:0.#} u · raison=«{file.RaisonRendue}» · pluriel=«{file.PlusieursRendu}» · {(deborde ? "DÉBORDE (A)" : "tient")}", Ref);
+            }
         }
 
         private IEnumerator Photographier(Ecran e)

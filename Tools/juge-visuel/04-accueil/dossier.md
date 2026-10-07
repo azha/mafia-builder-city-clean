@@ -65,3 +65,9 @@ Rapport : `r4-2026-10-07/rapport.md` (NON APPROUVÉ, 0 BLOQUANT, 3 MAJEUR, 7 min
 ### R7 et R8 — ASSUMÉS (f2, 07/10)
 - **R7 (le diorama rendu à 91,7 % du zoom de la maquette)** : ASSUMÉ. La maquette (1080×2102) et le jeu (1080×1920 et 1080×2400) n'ont pas le même rapport d'aspect : le décor est en COVER, le cadrage suit l'écran ; rien ne le donne pour un défaut.
 - **R8 (la gouttière panneau → plaque TRANCHER : 37 px à 1920, 49 px à 2400, réf 52)** : ASSUMÉ, élastique PAR CONSTRUCTION. Raison : l'aspect varie, et le panneau suit son contenu (ancré en bas, il pousse vers le haut) ; une gouttière constante exigerait de figer la hauteur de la bande, donc de rogner ou d'étirer l'un des deux.
+
+## Dérogation du 07/10 — la raison de la file sur l'Accueil (décision de f2, acceptée)
+
+Le cadre 4 (atelier master 0dd516e) porte, dans le bloc `.qui` de la ligne de file, la RAISON en réplique de lieutenant puis « Plusieurs attendent encore » (seulement s'il y a plusieurs cartes). La raison suit `ExceptionBandes.Replique`
+(« … » seulement dans la bouche d'un lieutenant), **sauf sur un point : un texte servi SANS espace est un identifiant technique (`exc_demo_…`), et sur l'Accueil on se TAIT** (`ExceptionQueuePanelController.RaisonDeLaCarte` rend null — aucune ligne ; atelier 28 : jamais
+une valeur machine brute à l'écran). `Replique` montre ce même identifiant nu dans ⑨, « pour que le trou se voie » : il reste visible là et dans la dette back **TD-453**. Dérogation tranchée par f2 le 07/10.
