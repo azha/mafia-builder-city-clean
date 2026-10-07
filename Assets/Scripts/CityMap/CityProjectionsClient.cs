@@ -147,8 +147,10 @@ namespace MafiaCleanCity.CityMap
                         // capacité » ne disait pas QUELS fonds. Table 85 (07/10) : les raisons sont des PHRASES (clés `vente.raison.*`),
                         // le 409 se dit PAR CODE (table 75 n° 3-4), et tout 409 sans code spécifique tombe sur « La collecte n'a pas abouti ».
                         // m1 : la phrase AVEC prénom (« La caisse de Dov est vide. ») gagne sur la servie, qui est sans nom
-                        outcome.Message = MafiaCleanCity.I18n.CollecteMots.PhraseAvecPrenom(outcome.Code, prenomDuDealer)
-                                          ?? MafiaCleanCity.I18n.RefusServi.Phrase(corps);
+                        // n1 : sur le 409 générique (déjà réessayé) la n° 7 est FORCÉE, la phrase servie est sautée
+                        outcome.Message = outcome.Code == MafiaCleanCity.I18n.CollecteMots.CodeConflitGenerique
+                            ? MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(outcome.Code, null)
+                            : MafiaCleanCity.I18n.CollecteMots.PhraseAvecPrenom(outcome.Code, prenomDuDealer) ?? MafiaCleanCity.I18n.RefusServi.Phrase(corps);
                         if (outcome.Message == null)
                         {
                             switch (req.responseCode)

@@ -133,44 +133,56 @@ namespace MafiaCleanCity.Shell
     }
 
     /// <summary>LA BOUCLE de l'horloge légère, hors de tout MonoBehaviour pour se TESTER par son comportement (revue ⊥ de CLIENT-2, m6). Toutes les
-    /// `CadenceS` secondes (30 à 60) AU PREMIER PLAN : lit la route, puis `surLecture(family_day, opened_family_day)` décide close/open. Pas de jeton ou en
-    /// arrière-plan : aucune requête. ⛔ Si la route répond 404 (le back n'a pas déployé L1), la boucle S'ARRÊTE pour la session : un appel d'un 404 toutes
-    /// les 45 s ne dirait rien de neuf. Toute autre erreur (réseau, 5xx) se réessaie à la cadence suivante.</summary>
+    /// `Cadence()` secondes (30 à 60, relue à CHAQUE tour) AU PREMIER PLAN : lit la route, puis `surLecture(family_day, opened_family_day)` décide
+    /// close/open. Pas de jeton ou en arrière-plan : aucune requête.
+    /// ⛔ UN 404 NE VERROUILLE PLUS RIEN (revue ⊥, n2) : la route n'est pas déployée (L1), ou le contrôleur répond « no player profile » — deux 404 qui ne
+    /// se distinguent pas ici, et un joueur resté au premier plan pendant le déploiement ne devait jamais perdre sa boucle. Après un 404 la boucle ATTEND
+    /// <see cref="AttenteApres404S"/> (10 min) avant de relire, au lieu d'appeler un 404 toutes les 45 s ; `Rearmer()` (une nouvelle session) la remet à
+    /// la cadence normale. Toute autre erreur (réseau, 5xx) se réessaie à la cadence suivante.</summary>
     public sealed class HorlogeLegereBoucle
     {
         public const float CadenceParDefautS = 45f;
-        public float CadenceS = CadenceParDefautS;
+        /// <summary>L'attente après un 404 : un réessai ESPACÉ de 10 minutes.</summary>
+        public const float AttenteApres404S = 600f;
         public int Lectures { get; private set; }
         public HorlogeLegereDto Derniere { get; private set; }
-        /// <summary>La route a répondu 404 : plus aucune lecture jusqu'à la prochaine session.</summary>
+        /// <summary>La DERNIÈRE lecture a reçu un 404 : la boucle espace ses réessais (10 min). Se lève à la prochaine lecture réussie, ou par `Rearmer()`.</summary>
         public bool Indisponible { get; private set; }
+        /// <summary>Test : arrête la boucle (en production elle s'arrête avec son MonoBehaviour).</summary>
+        public bool Arret;
 
         private readonly ITransportDeLHorloge transport;
         private readonly Func<string> jeton;
         private readonly Func<bool> enArrierePlan;
         private readonly Func<int?, int?, IEnumerator> surLecture;
         private readonly Func<float, object> attente;
+        private readonly Func<float> cadence;
 
         /// <param name="attente">ce que la boucle `yield return` entre deux lectures : en production `WaitForSecondsRealtime`, en test `null`.</param>
+        /// <param name="cadence">la cadence, RELUE à chaque tour (changer `AppShell.CadenceDeLHorlogeS` en cours de route compte).</param>
         public HorlogeLegereBoucle(ITransportDeLHorloge transport, Func<string> jeton, Func<bool> enArrierePlan,
-                                   Func<int?, int?, IEnumerator> surLecture, Func<float, object> attente)
+                                   Func<int?, int?, IEnumerator> surLecture, Func<float, object> attente, Func<float> cadence = null)
         {
             this.transport = transport; this.jeton = jeton; this.enArrierePlan = enArrierePlan;
-            this.surLecture = surLecture; this.attente = attente;
+            this.surLecture = surLecture; this.attente = attente; this.cadence = cadence ?? (() => CadenceParDefautS);
         }
+
+        /// <summary>Une nouvelle session (`session/open` réussi) : la route est relue à la cadence normale, sans attendre les 10 minutes d'un 404.</summary>
+        public void Rearmer() => Indisponible = false;
 
         /// <summary>UNE lecture, puis la décision de session sur ses deux jours.</summary>
         public IEnumerator UneLecture()
         {
             string t = jeton();
-            if (Indisponible || string.IsNullOrEmpty(t) || enArrierePlan()) yield break;
+            if (string.IsNullOrEmpty(t) || enArrierePlan()) yield break;
             HorlogeLegereDto lue = null; long code = 0;
             yield return transport.Lire(t, d => lue = d, (c, m) => code = c);
             if (lue == null)
             {
-                if (code == 404) Indisponible = true;
+                Indisponible = code == 404;
                 yield break;
             }
+            Indisponible = false;
             Lectures++;
             Derniere = lue;
             yield return surLecture(lue.JourDeFamille, lue.JourDOuvertureDeFamille);
@@ -178,9 +190,10 @@ namespace MafiaCleanCity.Shell
 
         public IEnumerator Executer()
         {
-            while (!Indisponible)
+            while (!Arret)
             {
-                yield return attente(CadenceS);
+                yield return attente(Indisponible ? AttenteApres404S : cadence());
+                if (Arret) yield break;
                 if (enArrierePlan()) continue;
                 yield return UneLecture();
             }

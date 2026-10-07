@@ -224,33 +224,55 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
-        public void H6c_La404_ArreteLaBoucle_PourLaSession_UneAutreErreurNon()
+        public void H6c_Un404_NeVerrouillePas_LaBoucleEspaceSesReessaisDe10Minutes()
         {
-            // 1re : lue ; 2e : arrière-plan (sautée) ; 3e : 500 (réessayée plus tard) ; 4e : lue ; 5e : 404 ⇒ la boucle s'ARRÊTE, la 6e n'existe pas
+            // 1 lue · 2 arrière-plan (sautée) · 3 : 500 · 4 lue · 5 : 404 ⇒ la boucle ATTEND 10 min · 6 lue (99/1 : elle n'est PAS verrouillée) · 7 : arrêt
             var transport = new TransportDeLHorlogeTemoin(Jours(44, 44), 500L, Jours(44, 44), 404L, Jours(99, 1));
             var decisions = new List<string>();
-            // le passage en arrière-plan se pose À L'ATTENTE (une fois par tour de boucle) : le 2e tour est en arrière-plan, les autres au premier plan
+            var attentes = new List<float>();
             int tour = 0; bool arriere = false;
-            var boucle = Boucle(transport, () => arriere, decisions, attente: _ => { arriere = ++tour == 2; return null; });
-            Derouler(boucle.Executer());   // se termine : Indisponible
-            Assert.IsTrue(boucle.Indisponible, "404 : la route n'est pas déployée, la boucle s'arrête pour la session");
-            Assert.AreEqual(4, transport.Appels, "lue, [arrière-plan : rien], 500, lue, 404 — et plus rien après (la 5e réponse n'est jamais demandée)");
-            Assert.AreEqual(2, boucle.Lectures, "le 500 et le 404 ne comptent pas comme des lectures");
-            CollectionAssert.AreEqual(new[] { "44/44", "44/44" }, decisions);
-            int avant = transport.Appels;
-            Derouler(boucle.UneLecture());
-            Assert.AreEqual(avant, transport.Appels, "une fois indisponible, même une lecture directe ne part plus");
+            HorlogeLegereBoucle boucle = null;
+            boucle = Boucle(transport, () => arriere, decisions,
+                attente: s => { attentes.Add(s); arriere = ++tour == 2; if (tour == 7) boucle.Arret = true; return null; });
+            Derouler(boucle.Executer());
+            CollectionAssert.AreEqual(new[] { 45f, 45f, 45f, 45f, 45f, HorlogeLegereBoucle.AttenteApres404S, 45f }, attentes,
+                "cadence normale, puis 10 min APRÈS le 404, puis la cadence normale dès qu'une lecture a réussi");
+            Assert.AreEqual(600f, HorlogeLegereBoucle.AttenteApres404S, "un réessai espacé de 10 minutes");
+            Assert.AreEqual(5, transport.Appels, "tours 1, 3, 4, 5 et 6 : le tour 2 était en arrière-plan");
+            Assert.AreEqual(3, boucle.Lectures, "le 500 et le 404 ne comptent pas comme des lectures");
+            CollectionAssert.AreEqual(new[] { "44/44", "44/44", "99/1" }, decisions, "après le 404 la boucle a relu : un joueur resté au premier plan retrouve L1");
+            Assert.IsFalse(boucle.Indisponible, "la lecture réussie a levé l'état « 404 »");
         }
 
         [Test]
-        public void H6d_UneErreurDeReseau_NArretePasLaBoucle()
+        public void H6d_UneErreurDeReseau_NEspacePas_UneNouvelleSessionRearme()
         {
-            var transport = new TransportDeLHorlogeTemoin(0L, 503L, Jours(44, 43), 404L);
+            var transport = new TransportDeLHorlogeTemoin(0L, 503L, Jours(44, 43), 404L, 404L);
             var decisions = new List<string>();
-            var boucle = Boucle(transport, () => false, decisions);
+            var attentes = new List<float>();
+            int tour = 0;
+            HorlogeLegereBoucle boucle = null;
+            boucle = Boucle(transport, () => false, decisions, attente: s => { attentes.Add(s); if (++tour == 6) boucle.Arret = true; return null; });
             Derouler(boucle.Executer());
-            Assert.AreEqual(4, transport.Appels, "réseau (0), 503, lue, puis 404 : seul le 404 arrête");
+            CollectionAssert.AreEqual(new[] { 45f, 45f, 45f, 45f, HorlogeLegereBoucle.AttenteApres404S, HorlogeLegereBoucle.AttenteApres404S }, attentes,
+                "réseau (0) et 503 : la cadence normale ; deux 404 de suite : 10 min chaque fois");
             CollectionAssert.AreEqual(new[] { "44/43" }, decisions);
+            Assert.IsTrue(boucle.Indisponible);
+            boucle.Rearmer();
+            Assert.IsFalse(boucle.Indisponible, "une nouvelle session (session/open réussi) rend la cadence normale sans attendre les 10 min");
+        }
+
+        [Test]
+        public void H6e_LaCadence_EstRelueAChaqueTour()
+        {
+            float cadence = 45f;
+            var attentes = new List<float>();
+            int tour = 0;
+            HorlogeLegereBoucle boucle = null;
+            boucle = new HorlogeLegereBoucle(new TransportDeLHorlogeTemoin(Jours(1, 1), Jours(1, 1), Jours(1, 1)), () => "tok", () => false,
+                (j, o) => Vide(), s => { attentes.Add(s); if (++tour == 1) cadence = 30f; if (tour == 3) boucle.Arret = true; return null; }, () => cadence);
+            Derouler(boucle.Executer());
+            CollectionAssert.AreEqual(new[] { 45f, 30f, 30f }, attentes, "changer la cadence en cours de route compte : elle n'est pas copiée à la construction");
         }
     }
 }

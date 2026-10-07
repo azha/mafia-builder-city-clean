@@ -58,7 +58,6 @@ namespace MafiaCleanCity.Shell
                         CycleDeSession.LireEntier(req.downloadHandler.text, CycleDeSession.ChampsServis.JourDeFamilleALOuverture);
                     // « servi null » ≠ « absent » : la PRÉSENCE de la clé, lue dans le corps brut (M1)
                     dto.JourDeFamilleServi = HorlogeLegere.Brut(req.downloadHandler.text, CycleDeSession.ChampsServis.JourDeFamille) != null;
-                    dto.JourDOuvertureServi = HorlogeLegere.Brut(req.downloadHandler.text, CycleDeSession.ChampsServis.JourDeFamilleALOuverture) != null;
                     onOk?.Invoke(dto);
                 }
                 else

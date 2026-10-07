@@ -94,6 +94,15 @@ namespace MafiaCleanCity.I18n
         public static string PhraseAvecPrenom(string code, string prenom) =>
             code == CodeCaisseVide && !string.IsNullOrWhiteSpace(prenom) ? PhraseDeRefus(code, prenom) : null;
 
+        /// <summary>LA phrase d'un refus, tout compris (revue ⊥ de CLIENT-2, n1) : sur un `RESOURCE_STATE_CONFLICT` — le 409 générique, déjà réessayé UNE
+        /// fois — on FORCE la table 85 n° 7 et la phrase servie est SAUTÉE (même si le bundle sert `error.resource.state_conflict`, de la famille
+        /// générique : aucune cause à dire). Sinon : la phrase AVEC prénom, puis la servie, puis la phrase par code.</summary>
+        public static string PhraseFinaleDeRefus(string code, string phraseServie, string prenom)
+        {
+            if (code == CodeConflitGenerique) return PhraseDeRefus(code, null);
+            return PhraseAvecPrenom(code, prenom) ?? phraseServie ?? PhraseDeRefus(code, prenom);
+        }
+
         /// <summary>La conséquence du PLAFOND, dite sur la fiche du dealer quand la caisse est FULL (table 75, ligne B-plafond) : la caisse y est
         /// au plafond, le dealer cesse de vendre tant qu'on ne ramasse pas. Épicène (« il » = le dealer, le nom du rôle).</summary>
         public static string DitLePlafond() =>

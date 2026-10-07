@@ -154,7 +154,7 @@ namespace MafiaCleanCity.CityMap.Tests
 
         private static SessionOpenDto Servi(int? jour, int? ouverture) => new SessionOpenDto
         {
-            session_id = "s", JourDeFamille = jour, JourDeFamilleALOuverture = ouverture, JourDeFamilleServi = true, JourDOuvertureServi = true,
+            session_id = "s", JourDeFamille = jour, JourDeFamilleALOuverture = ouverture, JourDeFamilleServi = true,
         };
 
         [Test]

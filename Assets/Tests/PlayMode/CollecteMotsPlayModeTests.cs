@@ -132,6 +132,22 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
+        public void C11_Le409Generique_ForceLaN7_LaPhraseServieEstSautee()
+        {
+            const string servie = "Un conflit de ressource est survenu.";   // ce que le bundle servirait pour error.resource.state_conflict
+            string n7 = "La collecte n\u2019a pas abouti.";
+            Assert.AreEqual(n7, CollecteMots.PhraseFinaleDeRefus(CollecteMots.CodeConflitGenerique, servie, "Dov"),
+                "n1 : sur un RESOURCE_STATE_CONFLICT (déjà réessaye une fois) la n° 7 est forcée, la servie ET le prénom sont sautés");
+            Assert.AreEqual(servie, CollecteMots.PhraseFinaleDeRefus(CollecteMots.CodePlanquePleine, servie, "Dov"), "un autre code : la servie passe avant le repli par code");
+            Assert.AreEqual("La caisse de Dov est vide.", CollecteMots.PhraseFinaleDeRefus(CollecteMots.CodeCaisseVide, "La caisse est vide.", "Dov"),
+                "caisse vide + prénom : la phrase avec prénom gagne sur la servie sans nom (m1)");
+            Assert.AreEqual("La caisse est vide.", CollecteMots.PhraseFinaleDeRefus(CollecteMots.CodeCaisseVide, "La caisse est vide.", null));
+            Assert.AreEqual("La planque est pleine" + Nbsp + ": blanchissez d\u2019abord, pour faire de la place.",
+                CollecteMots.PhraseFinaleDeRefus(CollecteMots.CodePlanquePleine, null, null), "rien de servi : la phrase par code");
+            Assert.AreEqual(n7, CollecteMots.PhraseFinaleDeRefus(null, null, null));
+        }
+
+        [Test]
         public void C6_LeConflitGenerique_SeReessaieUneFois_Seul()
         {
             Assert.IsTrue(CollecteMots.ReessayerEnSilence(409, CollecteMots.CodeConflitGenerique));

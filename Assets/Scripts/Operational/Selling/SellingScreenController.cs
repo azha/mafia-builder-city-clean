@@ -319,9 +319,8 @@ namespace MafiaCleanCity.Operational.Selling
                 // n° 7. Le prénom est celui de la LISTE servie (`name_i18n.params.prenom`, TD-757 : il était déclaré `string` et n'arrivait jamais) :
                 // « La caisse de Dov est vide. » ; sans prénom servi, la forme SANS nom.
                 // m1 : la phrase AVEC prénom gagne quand le prénom est connu (la servie `error.selling.cash_empty` est sans nom), puis la servie.
-                string phrase = MafiaCleanCity.I18n.CollecteMots.PhraseAvecPrenom(client.DernierCodeDeRefus, PrenomDuDealer(dealerId))
-                    ?? client.DernierePhraseDeRefus
-                    ?? MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(client.DernierCodeDeRefus, null);
+                // n1 : un 409 générique (déjà réessayé) dit la n° 7, la servie est sautée.
+                string phrase = MafiaCleanCity.I18n.CollecteMots.PhraseFinaleDeRefus(client.DernierCodeDeRefus, client.DernierePhraseDeRefus, PrenomDuDealer(dealerId));
                 DerniereErreur = phrase;
                 if (actionTexte != null) actionTexte.text = phrase;
                 yield break;

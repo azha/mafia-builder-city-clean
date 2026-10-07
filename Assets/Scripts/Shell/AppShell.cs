@@ -697,7 +697,7 @@ namespace MafiaCleanCity.Shell
         public int LecturesDeLHorloge => boucleHorloge != null ? boucleHorloge.Lectures : 0;
         /// <summary>C4 — la dernière horloge lue ; null tant qu'aucune lecture n'a abouti.</summary>
         public HorlogeLegereDto DerniereHorloge => boucleHorloge != null ? boucleHorloge.Derniere : null;
-        /// <summary>C4 — la route légère a répondu 404 : la boucle est arrêtée pour la session.</summary>
+        /// <summary>C4 — la dernière lecture de la route légère a reçu un 404 : la boucle espace ses réessais (10 min), elle ne s'arrête jamais.</summary>
         public bool HorlogeLegereIndisponible => boucleHorloge != null && boucleHorloge.Indisponible;
         private bool enArrierePlan;
         private HorlogeLegereBoucle boucleHorloge;
@@ -708,7 +708,7 @@ namespace MafiaCleanCity.Shell
 
         private HorlogeLegereBoucle BoucleDeLHorloge() =>
             boucleHorloge ?? (boucleHorloge = new HorlogeLegereBoucle(TransportDeLHorloge(), () => Token, () => enArrierePlan,
-                SurLectureDuJourServi, s => new WaitForSecondsRealtime(s)) { CadenceS = CadenceDeLHorlogeS });
+                SurLectureDuJourServi, s => new WaitForSecondsRealtime(s), () => CadenceDeLHorlogeS));
 
         /// <summary>C4 — UNE lecture de l'horloge légère, puis la décision de session sur ses deux jours. Sans jeton, ou en arrière-plan : rien.
         /// Public : le test hors réseau la joue sans attendre la cadence.</summary>
@@ -781,6 +781,7 @@ namespace MafiaCleanCity.Shell
             if (this == null) yield break;
             if (neuve == null) { if (err != null) Debug.LogError($"[AppShell] session (B4) : {err}"); yield break; }
             SessionsRouvertesAuRetour++;
+            boucleHorloge?.Rearmer();   // une nouvelle session : la route légère est relue à la cadence normale, sans attendre les 10 min d'un 404
             yield return PublierOuverture(t, neuve);
             if (this == null) yield break;
             RemonterLEcranCourant();

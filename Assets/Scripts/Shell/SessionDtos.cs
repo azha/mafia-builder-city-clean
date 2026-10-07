@@ -97,10 +97,9 @@ namespace MafiaCleanCity.Shell
         /// ⚠️ Aujourd'hui : PROPRIÉTÉS parce que la parité de forme compte les CHAMPS publics du DTO.</summary>
         public int? JourDeFamille { get; set; }
         public int? JourDeFamilleALOuverture { get; set; }
-        /// <summary>La clé `family_day` / `opened_family_day` est DANS le corps (même à null) — la différence entre « pas d'ancre » (servi null : on ne
-        /// déclenche RIEN) et « le back ne la sert pas » (le repli de 48 min).</summary>
+        /// <summary>La clé `family_day` est DANS le corps (même à null) — la différence entre « pas d'ancre » (servi null : on ne déclenche RIEN) et « le
+        /// back ne la sert pas » (le repli de 48 min). `opened_family_day` n'a pas de drapeau : null avec une ancre = le repli, quelle que soit la raison.</summary>
         public bool JourDeFamilleServi { get; set; }
-        public bool JourDOuvertureServi { get; set; }
         public HlCardDto hl_card;              // nullable — JsonUtility gives a default instance, never null (see C3 tests)
         public ExceptionCardDto[] queue;
         public bool backlog_badge;

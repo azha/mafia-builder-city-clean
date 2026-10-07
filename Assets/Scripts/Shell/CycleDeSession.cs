@@ -42,9 +42,9 @@ namespace MafiaCleanCity.Shell
 
         public enum Decision { Rien, Ouvrir, FermerPuisOuvrir }
 
-        /// <summary>Pure. `jourServi`/`jourDOuverture` = les deux jours de la famille SERVIS (null : non servis) ; `sortieUtc` =
-        /// l'horodatage persisté (null : aucune sortie notée), lu SEULEMENT en repli.</summary>
-        /// <summary>⛔ « SERVI NULL » ≠ « ABSENT » (revue ⊥ de CLIENT-2, M1, 07/10). `jourEstServi` = la clé `family_day` est DANS le corps. Servie à
+        /// <summary>Pure. `jourServi`/`jourDOuverture` = les deux jours de la famille SERVIS (null : non servis) ; `sortieUtc` = l'horodatage persisté
+        /// (null : aucune sortie notée), lu SEULEMENT en repli.
+        /// ⛔ « SERVI NULL » ≠ « ABSENT » (revue ⊥ de CLIENT-2, M1, 07/10). `jourEstServi` = la clé `family_day` est DANS le corps. Servie à
         /// null, elle dit « pas d'ancre de naissance » : le back demande de ne RIEN déclencher, donc ni close ni open — pas même au repli. Le
         /// repli d'absence ne vaut que si la clé est ABSENTE (un back antérieur), ou si `family_day` est servi et `opened_family_day` null (une
         /// session ouverte avant la migration 0171 : rien à comparer, le repli est alors légitime — tranché par f2). `seuilMinutes` : la durée
