@@ -71,7 +71,7 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
-        public void H3_LaRequete_PorteLEnTeteDeFond_ValantExactementUn()
+        public void H3_LEnTeteDeFond_SePoseEnArrierePlanSeulement_ValantExactementUn()
         {
             Assert.AreEqual("X-Mafia-Background", EnTetesDuClient.Fond);
             Assert.AreEqual("1", EnTetesDuClient.ValeurFond, "« 1 » à l'octet");
@@ -83,16 +83,30 @@ namespace MafiaCleanCity.CityMap.Tests
             {
                 Assert.AreEqual("http://hote:3000/v1/me/clock", req.url);
                 Assert.AreEqual("GET", req.method);
-                Assert.AreEqual("1", req.GetRequestHeader("X-Mafia-Background"), "l'appel de fond se déclare, valeur EXACTE");
+                Assert.AreEqual("", req.GetRequestHeader("X-Mafia-Background") ?? "", "PAR DÉFAUT (aucun plan posé) : premier plan, SANS l'en-tête — la lecture de l'horloge est de l'activité");
                 Assert.AreEqual("Bearer jeton-x", req.GetRequestHeader("Authorization"));
             }
+            // la RÈGLE (f2 07/10, revue du design L1 B-5) : l'en-tête suit le PLAN de l'application, pas le caractère périodique de la requête
+            using (var premierPlan = client.Construire("jeton-x", enArrierePlan: false))
+                Assert.IsTrue(string.IsNullOrEmpty(premierPlan.GetRequestHeader("X-Mafia-Background")), "premier plan ⇒ PAS d'en-tête (sinon le monde du joueur qui LIT s'arrêterait au bout de 240 min)");
+            using (var arrierePlan = client.Construire("jeton-x", enArrierePlan: true))
+                Assert.AreEqual("1", arrierePlan.GetRequestHeader("X-Mafia-Background"), "arrière-plan (pause ou perte de focus) ⇒ « 1 » à l'octet");
+            // le plan se lit au moment de la construction (le client suit l'état du shell)
+            bool fond = false;
+            client.EnArrierePlan = () => fond;
+            using (var a = client.Construire("j")) Assert.IsTrue(string.IsNullOrEmpty(a.GetRequestHeader("X-Mafia-Background")));
+            fond = true;
+            using (var b = client.Construire("j")) Assert.AreEqual("1", b.GetRequestHeader("X-Mafia-Background"));
+            // l'helper lui-même
+            Assert.IsNull(EnTetesDuClient.MarquerSelonLePlan(null, true));
+            Assert.IsNull(EnTetesDuClient.MarquerSelonLePlan(null, false));
         }
 
         // ── H4 — la garde de classe ───────────────────────────────────────────────────────────────────────────────────────────────
 
         /// <summary>Les fichiers qui nomment la route légère mais ne marquent pas la requête. Pure.</summary>
         internal static List<string> SitesSansMarquerFond(IEnumerable<(string nom, string source)> sources) =>
-            sources.Where(s => s.source.Contains("/v1/me/clock") && !s.source.Contains("EnTetesDuClient.MarquerFond("))
+            sources.Where(s => s.source.Contains("/v1/me/clock") && !s.source.Contains("EnTetesDuClient.MarquerSelonLePlan("))
                    .Select(s => s.nom).OrderBy(n => n).ToList();
 
         [Test]
@@ -102,7 +116,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 SitesSansMarquerFond(new[]
                 {
                     ("Oublie.cs", "var u = base + \"/v1/me/clock\"; UnityWebRequest.Get(u);"),
-                    ("Marque.cs", "var u = base + \"/v1/me/clock\"; return EnTetesDuClient.MarquerFond(UnityWebRequest.Get(u));"),
+                    ("Marque.cs", "var u = base + \"/v1/me/clock\"; return EnTetesDuClient.MarquerSelonLePlan(UnityWebRequest.Get(u), fond);"),
                     ("Autre.cs", "var u = base + \"/v1/me/wallet\";"),
                 }), "contrôle positif : l'oubli est vu ; le site marqué et l'autre route non");
 
@@ -110,7 +124,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 .Select(f => (Path.GetFileName(f), File.ReadAllText(f))).ToList();
             var nommeurs = sources.Where(s => s.Item2.Contains("/v1/me/clock")).Select(s => s.Item1).ToList();
             CollectionAssert.AreEqual(new[] { "HorlogeLegere.cs" }, nommeurs, "anti-vacuité : la route légère n'est nommée qu'à UN endroit");
-            Assert.IsEmpty(SitesSansMarquerFond(sources), "un appel de la route légère sans `MarquerFond` serait compté comme de l'ACTIVITÉ");
+            Assert.IsEmpty(SitesSansMarquerFond(sources), "un appel de la route légère sans `MarquerSelonLePlan` serait traité sans règle de plan (activité comptée en arrière-plan)");
         }
 
         // ── H5 — les deux jours décident ──────────────────────────────────────────────────────────────────────────────────────────

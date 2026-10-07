@@ -704,7 +704,7 @@ namespace MafiaCleanCity.Shell
         private Coroutine coroutineHorloge;
 
         private ITransportDeLHorloge TransportDeLHorloge() =>
-            TransportDeLHorlogePourTest ?? new TransportDeLHorlogeHttp(new HorlogeLegereClient { BaseUrl = baseUrl });
+            TransportDeLHorlogePourTest ?? new TransportDeLHorlogeHttp(new HorlogeLegereClient { BaseUrl = baseUrl, EnArrierePlan = () => enArrierePlan });
 
         private HorlogeLegereBoucle BoucleDeLHorloge() =>
             boucleHorloge ?? (boucleHorloge = new HorlogeLegereBoucle(TransportDeLHorloge(), () => Token, () => enArrierePlan,

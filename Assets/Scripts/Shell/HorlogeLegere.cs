@@ -12,8 +12,9 @@ namespace MafiaCleanCity.Shell
     /// `opened_family_day` (NULLABLES : null = pas d'ancre de naissance / pas de session active), `real_seconds_per_game_minute`,
     /// `in_game_day_length_minutes`. Le client la lit toutes les 30 à 60 s au PREMIER PLAN et compare les deux jours de la famille :
     /// différents ⇒ `close` puis `open` (`CycleDeSession.SurLecture`, via `AppShell.SurLectureDuJourServi`) ; l'un des deux null ⇒ rien.
-    /// ⛔ L'appel est un appel de FOND : il porte `X-Mafia-Background: 1` (`EnTetesDuClient.MarquerFond`, valeur « 1 » à l'octet — « true »,
-    /// « 0 », vide ou « yes » comptent comme de l'ACTIVITÉ côté back, et la minuterie ferait vivre la session à elle seule).
+    /// ⛔ L'en-tête `X-Mafia-Background: 1` (`EnTetesDuClient.MarquerSelonLePlan`, valeur « 1 » à l'octet — « true », « 0 », vide ou « yes » comptent comme de l'ACTIVITÉ côté back) ne se pose
+    /// QU'EN ARRIÈRE-PLAN (pause ou perte de focus), jamais parce que l'appel est périodique (f2 07/10, B-5) : au premier plan, cette lecture est la seule requête d'un joueur qui LIT un écran,
+    /// et c'est elle qui tient son monde en vie (sans cela, il s'arrêterait au bout de 240 min les yeux dessus).
     /// Forme G : les deux nullables sont lus dans le corps BRUT — ni `JsonUtility` ni un 0 par défaut ne distinguent « null » d'un jour 0.</summary>
     public sealed class HorlogeLegereDto
     {
@@ -97,8 +98,8 @@ namespace MafiaCleanCity.Shell
         }
     }
 
-    /// <summary>Le client de la route légère. UNE seule requête, un GET ; l'en-tête de fond y est posé par `MarquerFond`, à un seul endroit
-    /// (<see cref="Construire"/>) — la garde de classe lit CE fichier.</summary>
+    /// <summary>Le client de la route légère. UNE seule requête, un GET ; l'en-tête de fond y est posé par `MarquerSelonLePlan`, à un seul endroit
+    /// (<see cref="Construire"/>) — la garde de classe lit CE fichier. ⛔ Il se pose SEULEMENT en arrière-plan (f2 07/10, B-5) : au premier plan, la lecture de l'horloge est la preuve que le joueur est là.</summary>
     public sealed class HorlogeLegereClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
@@ -106,13 +107,19 @@ namespace MafiaCleanCity.Shell
 
         public string ClockUrl => BaseUrl.TrimEnd('/') + "/v1/me/clock";
 
+        /// <summary>L'application est-elle en arrière-plan (pause ou perte de focus) ? Posé par le shell ; absent ⇒ premier plan (le défaut SÛR : sans en-tête, le monde du joueur continue).</summary>
+        public Func<bool> EnArrierePlan;
+
         /// <summary>La requête, NON ENVOYÉE : un test lit son en-tête sans réseau.</summary>
-        public UnityWebRequest Construire(string bearer)
+        public UnityWebRequest Construire(string bearer) => Construire(bearer, EnArrierePlan != null && EnArrierePlan());
+
+        /// <summary>La même, avec le plan DONNÉ — la couture de test de la règle (premier plan ⇒ pas d'en-tête ; arrière-plan ⇒ « 1 »).</summary>
+        public UnityWebRequest Construire(string bearer, bool enArrierePlan)
         {
             var req = UnityWebRequest.Get(ClockUrl);
             MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
             MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
-            return EnTetesDuClient.MarquerFond(req);
+            return EnTetesDuClient.MarquerSelonLePlan(req, enArrierePlan);
         }
 
         public IEnumerator Lire(string bearer, Action<HorlogeLegereDto> ok, Action<long, string> echec)
