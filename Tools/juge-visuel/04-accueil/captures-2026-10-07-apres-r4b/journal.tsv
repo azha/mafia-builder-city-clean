@@ -1,0 +1,27 @@
+pas	geste	vu
+P0	inscription	compte neuf sha256:850e078e · back visé http://localhost
+P1·mesure	1080x2400	la suite : voulue=827.3 u · bande=1349.1 u · marge=521.8 u · échelle=1 · scaleFactor=0.5
+P1·mesure	1080x1920	la suite : voulue=827.3 u · bande=1011.7 u · marge=184.4 u · échelle=1 · scaleFactor=0.5
+P1	lancement	Accueil chargé · la suite lue en 0 ms après l'Accueil chargé · 3 ligne(s) · bandeau montant=«10 000 €» jour=1 phase=«Aube» chaleur=«COLD»
+A1	Voir l'ardoise	⑨ · chargé (QueueLoaded) · 1 carte(s)
+A2	toucher la carte	⑩ · gestes servis : ONE_TIME «Acknowledge the lab status» | ESCALATE «Escalate for review» · suggéré : ONE_TIME
+A3	Prendre acte (ONE_TIME)	retour vu en 0.0 s · erreur=aucune · Accueil encore actif : oui · locataire monté : CityMapController
+A4	Les télégrammes	NON APPLICABLE : « Nav_Autonomy » est dans la feuille de l'Accueil, éteinte par `MasquerLaFeuille` depuis dbf8e71b (« l'Accueil ramené au canon ») ; un compte NEUF n'a aucun rapport d'autonomie — le joueur y va par le « lire » du bandeau ou la carte de tête, qui n'existent que s'il y en a un
+A4b	Les télégrammes par la carte de tête	NON JOUÉ : aucun rapport d'autonomie servi (la carte de tête n'est pas une carte de rapports)
+P2	onglet EMPIRE	carte chargée · 151 nœuds
+P3	me/buildings	4 bâtiment(s) : lab@16 (La Lisière), stash@16 (La Lisière), front_shop@16 (La Lisière), cash_safehouse@16 (La Lisière)
+P3	Entrer · district 16	4 bâtiment(s) rendu(s) · bandeau montant=«10 000 €» jour=1 phase=«Aube» chaleur=«COLD» · phase servie du district «DAWN»
+P4	toucher le bâtiment (lab)	fiche ouverte · actions visibles : COLLECTER · BLANCHIR
+P4b	BLANCHIR (façade)	HTTP 200 · RÉUSSI · réussites=1
+P5	toucher la tête de la fiche (B1)	② chargée · lab · labo servi
+B1	Cuire	geste du pupitre = Commander · aucun « Allumer le feu » offert · « Commander » NON touché (il dépense) — la planche P5 le montre
+F1	FAMILLE ⑥	LieutenantScreenController · attente fixe de 6 s (l'écran n'expose aucun drapeau de chargement)
+F2	FILIÈRE ㊵	FiliereScreenController · chargé (RenduTermine)
+M0	PLUS ⑱	20 entrée(s) · défilement présent
+M1	㊳ Journal	JournalScreenController · chargé (RenduTermine)
+M2	㉞ Carnet	CarnetScreenController · chargé (RenduTermine)
+M3	⑰ Commissariat	PrecinctScreenController · rendu (RendusEffectues=1) · état vide · ÉCHEC : aucun tick en 120 s (patrol 6 toujours 404) — la planche montre l'état d'AVANT le monde
+M4	㉕ La première fois	TutorialScreenController · rendu (RendusEffectues=1)
+M5	㉚ Chaîne d'appro	ChaineDApproScreenController · attente fixe de 6 s (l'écran n'expose aucun drapeau de chargement)
+M6	⑯ Revue du jour	DailyReviewScreenController · chargé (RenderedEmptyState)
+M7	㉓ boutique	ShopScreenController · rendu (RendusEffectues=1)
