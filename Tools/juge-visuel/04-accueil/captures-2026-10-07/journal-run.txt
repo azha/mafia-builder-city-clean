@@ -1,0 +1,16 @@
+MafiaCI: RUN MafiaCleanCity.Capture.Tests.CibleDuParcoursTests.G1_HorsLocalhost_SeulHttps
+MafiaCI: RUN MafiaCleanCity.Capture.Tests.CibleDuParcoursTests.G2_Restauree_PasSeulementEffacee
+MafiaCI: RUN MafiaCleanCity.Capture.Tests.CibleDuParcoursTests.G3_LeBandeau_NommeLHoteVise
+MafiaCI: RUN MafiaCleanCity.Capture.Tests.ParcoursJoueurNeufCapturePlayModeTests.Parcours_JoueurNeuf_Inscription_Carte_District_Batiment_FicheOperationnelle
+[CONTRASTE-ART] /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/9aefe3f7-8c8f-4569-a473-faf5cc1280ef/scratchpad/parcours-10/p1_lancement_1080x2400.png · ContentSlot/Titre «LA SUITE» : encre=#b9ad92 (667 px) fond médian=#12141d ⇒ **8.27:1** · fond le plus clair (p95)=#181b21 
+[CONTRASTE-ART] /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/9aefe3f7-8c8f-4569-a473-faf5cc1280ef/scratchpad/parcours-10/p1_lancement_1080x1920.png · ContentSlot/Titre «LA SUITE» : encre=#b9ad92 (729 px) fond médian=#14161f ⇒ **8.12:1** · fond le plus clair (p95)=#292523 
+[PARCOURS] P1 · lancement · Accueil chargé · la suite lue en 0 ms après l'Accueil chargé · 3 ligne(s) · bandeau montant=«10 000 €» jour=1 phase=«Aube» chaleur=«COLD»
+[CONTRASTE-ART] /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/9aefe3f7-8c8f-4569-a473-faf5cc1280ef/scratchpad/parcours-10/a1_ardoise_1080x2400.png · ContentSlot/Titre «LA SUITE» : encre=#b9ad92 (198 px) fond médian=#182233 ⇒ **7.19:1** · fond le plus clair (p95)=#1f2a3f �
+[CONTRASTE-ART] /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/9aefe3f7-8c8f-4569-a473-faf5cc1280ef/scratchpad/parcours-10/a1_ardoise_1080x1920.png · ContentSlot/Titre «LA SUITE» : encre=#b9ad92 (198 px) fond médian=#182233 ⇒ **7.19:1** · fond le plus clair (p95)=#1f2a3f �
+[CONTRASTE-ART] /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/9aefe3f7-8c8f-4569-a473-faf5cc1280ef/scratchpad/parcours-10/a2_detail_1080x2400.png · ContentSlot/Titre «LA SUITE» : encre=#beb499 (435 px) fond médian=#39352f ⇒ **5.90:1** · fond le plus clair (p95)=#eadfc0 ⇒
+[CONTRASTE-ART] /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/9aefe3f7-8c8f-4569-a473-faf5cc1280ef/scratchpad/parcours-10/a2_detail_1080x1920.png · ContentSlot/Titre «LA SUITE» : encre=#beb499 (435 px) fond médian=#39352f ⇒ **5.90:1** · fond le plus clair (p95)=#eadfc0 ⇒
+[CONTRASTE-ART] /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/9aefe3f7-8c8f-4569-a473-faf5cc1280ef/scratchpad/parcours-10/a3_retour_1080x2400.png · ContentSlot/Titre «LA SUITE» : HORS SUJET — 0 px d'encre trouvés, trop peu pour une médiane (le libellé est absent, ou d'une
+[CONTRASTE-ART] /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/9aefe3f7-8c8f-4569-a473-faf5cc1280ef/scratchpad/parcours-10/a3_retour_1080x1920.png · ContentSlot/Titre «LA SUITE» : HORS SUJET — 0 px d'encre trouvés, trop peu pour une médiane (le libellé est absent, ou d'une
+MafiaCI: RunPlayModeTests finished — passed=4 failed=0 skipped=0 inconclusive=0 declares=4 comptes=4
+MafiaCI: catégories RÉELLEMENT exécutées = [ClicheParcours]
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
