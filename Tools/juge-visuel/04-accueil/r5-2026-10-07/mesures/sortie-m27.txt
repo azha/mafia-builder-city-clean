@@ -1,0 +1,29 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+  --- REF (fond lum 15.9) ---
+    objet x 150..919 (l=770)  y 1870..2049 (h=180)  centre x=534.5
+    EMPIRE: x 197..321 l=125  y 1965..2048 h=84  couleur (180, 168, 142)
+    FAMILLE: x 384..508 l=125  y 1965..2048 h=84  couleur (181, 169, 142)
+    FILIERE: x 571..695 l=125  y 1965..2048 h=84  couleur (179, 168, 142)
+    PLUS: x 758..882 l=125  y 1965..2049 h=85  couleur (171, 160, 135)
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  --- JEU1920 (fond lum 19.0) ---
+    objet x 196..321 (l=126)  y 1699..1861 (h=163)  centre x=258.5
+    objet x 383..509 (l=127)  y 1699..1861 (h=163)  centre x=446.0
+    objet x 570..696 (l=127)  y 1699..1861 (h=163)  centre x=633.0
+    objet x 758..883 (l=126)  y 1699..1861 (h=163)  centre x=820.5
+    pas entre centres : [187.5, 187.0, 187.5]
+    EMPIRE: x 198..319 l=122  y 1775..1861 h=87  couleur (185, 173, 146)
+    FAMILLE: x 385..506 l=122  y 1775..1861 h=87  couleur (185, 173, 146)
+    FILIERE: x 573..694 l=122  y 1775..1861 h=87  couleur (185, 173, 146)
+    PLUS: x 760..881 l=122  y 1775..1861 h=87  couleur (185, 173, 146)
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  --- JEU2400 (fond lum 18.9) ---
+    objet x 196..321 (l=126)  y 2179..2341 (h=163)  centre x=258.5
+    objet x 383..509 (l=127)  y 2179..2341 (h=163)  centre x=446.0
+    objet x 570..696 (l=127)  y 2179..2341 (h=163)  centre x=633.0
+    objet x 758..883 (l=126)  y 2179..2341 (h=163)  centre x=820.5
+    pas entre centres : [187.5, 187.0, 187.5]
+    EMPIRE: x 198..319 l=122  y 2255..2341 h=87  couleur (185, 173, 146)
+    FAMILLE: x 385..506 l=122  y 2255..2341 h=87  couleur (185, 173, 146)
+    FILIERE: x 573..694 l=122  y 2255..2341 h=87  couleur (185, 173, 146)
+    PLUS: x 760..881 l=122  y 2255..2341 h=87  couleur (185, 173, 146)

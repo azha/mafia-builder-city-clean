@@ -1,0 +1,20 @@
+== recalage utilise : REF = 1.0930*JEU + (-50,2) ==
+OUVERT cadre-4-la-suite.png (1080, 2102)
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  decor apparie: n=60800  moy REF 24.59  JEU 22.21  rapport 0.903
+    terciles de la REF : t1=17.23  t2=32.09
+    BAS   (ref<t1)       n=  20263  REF  12.95  JEU  13.38  JEU/REF 1.034  manque -0.43
+    MOYEN (t1<=ref<t2)   n=  20195  REF  23.24  JEU  19.99  JEU/REF 0.860  manque +3.25
+    HAUT  (ref>=t2)      n=  20342  REF  37.52  JEU  33.20  JEU/REF 0.885  manque +4.32
+  --- simulation du gain multiplicatif (sur la teinte, plancher additif conserve) ---
+      (rapports JEU/REF par percentile ; 1.000 = egal)
+    g=1.000            moy  22.21/ 24.59=0.903  p10=0.943  p25=0.947  p50=0.824  p75=0.862  p90=0.885  p99=1.033  | p99 JEU=62.9 REF=60.9  satures(>250)=0.000%
+    g=1.050            moy  22.79/ 24.59=0.927  p10=0.966  p25=0.972  p50=0.846  p75=0.885  p90=0.908  p99=1.058  | p99 JEU=64.4 REF=60.9  satures(>250)=0.000%
+    g=1.100            moy  23.37/ 24.59=0.950  p10=0.990  p25=0.996  p50=0.868  p75=0.907  p90=0.931  p99=1.082  | p99 JEU=65.9 REF=60.9  satures(>250)=0.000%
+    g=1.150            moy  23.93/ 24.59=0.973  p10=1.013  p25=1.020  p50=0.890  p75=0.929  p90=0.954  p99=1.106  | p99 JEU=67.4 REF=60.9  satures(>250)=0.000%
+    g=1.200            moy  24.48/ 24.59=0.996  p10=1.036  p25=1.044  p50=0.911  p75=0.950  p90=0.975  p99=1.129  | p99 JEU=68.8 REF=60.9  satures(>250)=0.000%
+    g=1.250            moy  25.02/ 24.59=1.017  p10=1.058  p25=1.067  p50=0.932  p75=0.971  p90=0.997  p99=1.152  | p99 JEU=70.2 REF=60.9  satures(>250)=0.000%
+    g=1.300            moy  25.55/ 24.59=1.039  p10=1.081  p25=1.090  p50=0.952  p75=0.992  p90=1.017  p99=1.174  | p99 JEU=71.5 REF=60.9  satures(>250)=0.000%
+    g=1.400            moy  26.57/ 24.59=1.081  p10=1.124  p25=1.135  p50=0.992  p75=1.032  p90=1.058  p99=1.217  | p99 JEU=74.2 REF=60.9  satures(>250)=0.000%
+    g=1.600            moy  28.52/ 24.59=1.160  p10=1.208  p25=1.221  p50=1.068  p75=1.107  p90=1.134  p99=1.298  | p99 JEU=79.1 REF=60.9  satures(>250)=0.000%
+    g=2.000            moy  32.08/ 24.59=1.305  p10=1.365  p25=1.380  p50=1.207  p75=1.244  p90=1.273  p99=1.445  | p99 JEU=88.0 REF=60.9  satures(>250)=0.000%

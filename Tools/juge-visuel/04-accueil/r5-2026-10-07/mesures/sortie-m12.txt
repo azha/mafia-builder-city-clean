@@ -1,0 +1,27 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  LA SUITE
+    REF      LA SUITE                   encre x 456..617 (l=162)  y 871..889 (h=19)
+    JEU1920  LA SUITE                   encre x 465..611 (l=147)  y 797..813 (h=17)
+    JEU2400  LA SUITE                   encre x 465..611 (l=147)  y 1203..1219 (h=17)
+  TITRE 1 (Le labo attend du Pyralin) — capitale L
+    REF      titre1                     encre x 99..599 (l=501)  y 947..987 (h=41)   CAP h=40 (y 948..987)
+    JEU1920  titre1                     encre x 98..570 (l=473)  y 869..904 (h=36)   CAP h=27 (y 870..896)
+    JEU2400  titre1                     encre x 98..570 (l=473)  y 1275..1311 (h=37)   CAP h=28 (y 1276..1303)
+  SOUS-LIGNE 1 (Sans lui, rien ne cuit.) — capitale S
+    REF      sous1                      encre x 101..414 (l=314)  y 1007..1033 (h=27)   CAP h=24 (y 1007..1030)
+    JEU1920  sous1                      encre x 98..430 (l=333)  y 928..955 (h=28)   CAP h=25 (y 928..952)
+    JEU2400  sous1                      encre x 98..430 (l=333)  y 1334..1362 (h=29)   CAP h=24 (y 1335..1358)
+  TITRE 2 (Personne ne vend...) — capitale P
+    REF      titre2 l.1                 encre x 101..455 (l=355)  y 1116..1146 (h=31)   CAP h=29 (y 1117..1145)
+    JEU1920  titre2                     encre x 98..568 (l=471)  y 1035..1063 (h=29)   CAP h=28 (y 1036..1063)
+    JEU2400  titre2                     encre x 98..568 (l=471)  y 1442..1470 (h=29)   CAP h=27 (y 1443..1469)
+  TITRE 3 (De l argent...) — capitale D
+    REF      titre3 l.1                 encre x 99..598 (l=500)  y 1375..1415 (h=41)   CAP h=40 (y 1376..1415)
+    JEU1920  titre3 l.1                 encre x 98..586 (l=489)  y 1239..1275 (h=37)   CAP h=28 (y 1240..1267)
+    JEU2400  titre3 l.1                 encre x 98..586 (l=489)  y 1646..1681 (h=36)   CAP h=27 (y 1647..1673)
+  SOUS-LIGNE 3 (Blanchissez-le...) — capitale B
+    REF      sous3 l.1                  encre x 99..599 (l=501)  y 1484..1516 (h=33)   CAP h=32 (y 1485..1516)
+    JEU1920  sous3 l.1                  encre x 99..599 (l=501)  y 1341..1372 (h=32)   CAP h=24 (y 1342..1365)
+    JEU2400  sous3 l.1                  encre x 99..599 (l=501)  y 1748..1778 (h=31)   CAP h=24 (y 1749..1772)

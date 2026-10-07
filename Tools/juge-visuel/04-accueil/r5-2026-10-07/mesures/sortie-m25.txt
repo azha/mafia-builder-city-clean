@@ -1,0 +1,21 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+  --- REF plaque y1674..1825 h=152, x 46..1033 ---
+    bande y 1680..1687 h=8  x 55..63 l=9  marge G=9  encre None
+    bande y 1712..1739 h=28  x 88..506 l=419  marge G=42  encre (221, 212, 189)
+    bande y 1758..1784 h=27  x 88..209 l=122  marge G=42  encre (139, 129, 113)
+    bande y 1812..1819 h=8  x 55..63 l=9  marge G=9  encre (42, 54, 72)
+    TRANCHER x 772..989 l=218 CAPh=24 margeD=44
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  --- JEU1920 plaque y1487..1635 h=149, x 47..1032 ---
+    bande y 1493..1496 h=4  x 55..59 l=5  marge G=8  encre (42, 52, 71)
+    bande y 1534..1560 h=27  x 81..532 l=452  marge G=34  encre (218, 209, 188)
+    bande y 1573..1590 h=18  x 79..156 l=78  marge G=32  encre (140, 130, 114)
+    bande y 1625..1629 h=5  x 55..59 l=5  marge G=8  encre (42, 53, 71)
+    TRANCHER x 796..1001 l=206 CAPh=23 margeD=31
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  --- JEU2400 plaque y1906..2103 h=198, x 47..1032 ---
+    bande y 1912..1915 h=4  x 55..58 l=4  marge G=8  encre (42, 52, 70)
+    bande y 1977..2003 h=27  x 81..532 l=452  marge G=34  encre (218, 209, 188)
+    bande y 2016..2033 h=18  x 79..156 l=78  marge G=32  encre (140, 130, 114)
+    bande y 2093..2097 h=5  x 55..59 l=5  marge G=8  encre (42, 53, 71)
+    TRANCHER x 796..1001 l=206 CAPh=23 margeD=31

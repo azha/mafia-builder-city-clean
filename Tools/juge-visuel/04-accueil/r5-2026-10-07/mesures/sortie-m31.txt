@@ -1,0 +1,21 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  --- REF ---
+    titre1           encre (242, 201, 107)  fond (11, 18, 29)  contraste 11.93:1
+    sous1            encre (185, 173, 146)  fond (11, 17, 29)  contraste 8.50:1
+    LA SUITE         encre (185, 173, 146)  fond (12, 18, 30)  contraste 8.44:1
+    lib fantome      encre (234, 224, 200)  fond (17, 22, 32)  contraste 13.80:1
+    LEGERE           encre (139, 129, 113)  fond (10, 17, 27)  contraste 4.94:1
+  --- JEU1920 ---
+    titre1           encre (242, 201, 106)  fond (12, 18, 29)  contraste 11.91:1
+    sous1            encre (185, 173, 146)  fond (12, 18, 29)  contraste 8.44:1
+    LA SUITE         encre (185, 173, 146)  fond (13, 19, 30)  contraste 8.37:1
+    lib fantome      encre (234, 224, 200)  fond (22, 28, 34)  contraste 13.07:1
+    LEGERE           encre (140, 130, 114)  fond (13, 13, 22)  contraste 5.11:1
+  --- JEU2400 ---
+    titre1           encre (242, 201, 106)  fond (12, 18, 29)  contraste 11.91:1
+    sous1            encre (185, 173, 146)  fond (12, 18, 29)  contraste 8.44:1
+    LA SUITE         encre (185, 173, 146)  fond (13, 19, 30)  contraste 8.37:1
+    lib fantome      encre (234, 224, 200)  fond (22, 28, 34)  contraste 13.07:1
+    LEGERE           encre (140, 130, 114)  fond (13, 13, 22)  contraste 5.11:1

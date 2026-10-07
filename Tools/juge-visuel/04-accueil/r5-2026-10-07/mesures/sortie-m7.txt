@@ -1,0 +1,45 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+  --- REF : runs clairs x560..1030 ---
+    y=  945  run= 287  x0=672  DEBUT
+    y= 1037  run=   0  x0=None  fin
+    y= 1074  run= 420  x0=560  DEBUT
+    y= 1077  run=   1  x0=576  fin
+    y= 1159  run= 331  x0=627  DEBUT
+    y= 1251  run=   0  x0=None  fin
+    y= 1333  run= 420  x0=560  DEBUT
+    y= 1336  run=   0  x0=None  fin
+    y= 1418  run= 231  x0=727  DEBUT
+    y= 1510  run=   0  x0=None  fin
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  --- JEU1920 : runs clairs x560..1030 ---
+    y=  865  run= 260  x0=699  DEBUT
+    y=  957  run=   1  x0=1029  fin
+    y=  994  run= 420  x0=560  DEBUT
+    y=  995  run=   1  x0=1029  fin
+    y= 1050  run= 300  x0=658  DEBUT
+    y= 1143  run=   1  x0=1029  fin
+    y= 1197  run= 420  x0=560  DEBUT
+    y= 1199  run=   1  x0=1029  fin
+    y= 1275  run= 202  x0=754  DEBUT
+    y= 1368  run=   1  x0=1029  fin
+    y= 1448  run= 461  x0=560  DEBUT
+    y= 1491  run=  16  x0=1014  fin
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  --- JEU2400 : runs clairs x560..1030 ---
+    y= 1160  run= 457  x0=560  DEBUT
+    y= 1163  run=  20  x0=1010  fin
+    y= 1271  run= 254  x0=702  DEBUT
+    y= 1364  run=   1  x0=1029  fin
+    y= 1400  run= 420  x0=560  DEBUT
+    y= 1402  run=   1  x0=1029  fin
+    y= 1456  run= 295  x0=661  DEBUT
+    y= 1549  run=   1  x0=1029  fin
+    y= 1604  run= 420  x0=560  DEBUT
+    y= 1606  run=   1  x0=1029  fin
+    y= 1682  run= 205  x0=752  DEBUT
+    y= 1775  run=   1  x0=1029  fin
+    y= 1854  run= 462  x0=560  DEBUT
+    y= 1858  run=  73  x0=957  fin
+    y= 1862  run= 137  x0=893  DEBUT
+    y= 1866  run= 120  x0=910  fin
+    y= 1871  run= 123  x0=562  DEBUT

@@ -1,0 +1,21 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  « LEGERE » — hauteur de capitale sur le L (pas d accent)
+    REF      L de LEGERE    y1752..1795  ............####################...........  -> bloc y 1764..1783  h=20
+    JEU1920  L de LEGERE    y1568..1600  ........##############..........  -> bloc y 1576..1589  h=14
+    JEU2400  L de LEGERE    y2011..2043  ........###############.........  -> bloc y 2019..2033  h=15
+  « LEGERE » — largeur du mot entier (meme mot des deux cotes)
+    REF      LEGERE         encre x 88..209  largeur=122
+    JEU1920  LEGERE         encre x 79..156  largeur=78
+    JEU2400  LEGERE         encre x 79..156  largeur=78
+    rapport JEU/REF : 1920=0.639  2400=0.639
+  « Lt. ... attend vos ordres » — hauteur de capitale sur le L
+    REF      L de Lt.       y1706..1748  .......##########################.........  -> bloc y 1713..1738  h=26
+    JEU1920  L de Lt.       y1528..1570  .......#########################..........  -> bloc y 1535..1559  h=25
+    JEU2400  L de Lt.       y1971..2013  .......##########################.........  -> bloc y 1978..2003  h=26
+  « TRANCHER » — largeur et capitale (meme mot des deux cotes)
+    REF      TRANCHER       encre x 771..989  largeur=219
+    JEU1920  TRANCHER       encre x 796..1001  largeur=206
+    JEU2400  TRANCHER       encre x 796..1001  largeur=206
+    rapport JEU/REF : 1920=0.941  2400=0.941

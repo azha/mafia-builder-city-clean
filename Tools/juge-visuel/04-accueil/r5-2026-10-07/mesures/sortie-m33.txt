@@ -1,0 +1,18 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+  REF: cotes droits du panneau y 854..1697 (hauteur droite=844)
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  JEU1920: cotes droits du panneau y 767..1437 (hauteur droite=671)
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  JEU2400: cotes droits du panneau y 1130..1851 (hauteur droite=722)
+
+  ecarts internes (px) :
+  grandeur                               REF    1920    2400    1920/REF  2400/REF
+  cotes droits (hauteur panneau)         844     671     722       0.795     0.855
+  haut panneau -> LA SUITE                17      30      73       1.765     4.294
+  LA SUITE -> titre 1                     59      57      57       0.966     0.966
+  titre 1 -> sous-ligne 1                 31      32      32       1.032     1.032
+  bas bouton 1 -> separateur 1            39      38      38       0.974     0.974
+  separateur 1 -> titre 2                 42      42      42       1.000     1.000
+  pas separateur 1 -> 2                  259     204     204       0.788     0.788
+  dernier texte -> bas panneau           140      28      35       0.200     0.250
+  bas bouton 3 -> bas panneau            188      70      77       0.372     0.410

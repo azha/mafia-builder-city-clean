@@ -1,0 +1,6 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+    REF      rond EMPIRE : corde max=127 a y=1944 (x 196..322)  fond lum=23.5
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+    JEU1920  rond EMPIRE : corde max=126 a y=1754 (x 196..321)  fond lum=23.5
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+    JEU2400  rond EMPIRE : corde max=126 a y=2234 (x 196..321)  fond lum=23.5

@@ -1,0 +1,12 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+  --- REF ---
+    plaque (cotes droits) y 1699..1801 hauteur droite=103
+    liseré horizontal au centre x=540 : y [29, 30, 31, 57, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 1823, 1824, 1825]
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  --- JEU1920 ---
+    plaque (cotes droits) y 1504..1618 hauteur droite=115
+    liseré horizontal au centre x=540 : y [64, 71, 72, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 671, 1487, 1488, 1489, 1633, 1634, 1635]
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  --- JEU2400 ---
+    plaque (cotes droits) y 1923..2086 hauteur droite=164
+    liseré horizontal au centre x=540 : y [64, 71, 72, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 839, 1906, 1907, 1908, 2101, 2102, 2103]

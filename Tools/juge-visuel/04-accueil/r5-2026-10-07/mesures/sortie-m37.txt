@@ -1,0 +1,26 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  n=60800 paires, recalage REF = 1.0916*JEU + (-49,3)
+
+  (a) par BANDE VERTICALE de la capture (8 bandes egales)
+    y  170.. 241  n=  7680   REF  17.31  JEU  17.71  JEU/REF 1.023
+    y  241.. 312  n=  7680   REF  16.29  JEU  14.75  JEU/REF 0.905
+    y  312.. 383  n=  7680   REF  20.10  JEU  17.76  JEU/REF 0.884
+    y  383.. 455  n=  7360   REF  25.27  JEU  22.08  JEU/REF 0.874
+    y  455.. 526  n=  7680   REF  30.29  JEU  26.52  JEU/REF 0.876
+    y  526.. 597  n=  7680   REF  29.63  JEU  26.29  JEU/REF 0.887
+    y  597.. 668  n=  7680   REF  30.86  JEU  27.58  JEU/REF 0.894
+    y  668.. 740  n=  7360   REF  26.88  JEU  25.09  JEU/REF 0.933
+    CONTROLE effectifs : 8 bandes = 60800, n = 60800  (EGAL)
+
+  (b) par DECILE de la luminance de la REFERENCE
+    d1  REF   1.86.. 12.44  n=  5905   REF  11.24  JEU  13.78  JEU/REF 1.226  manque  -2.54
+    d2  REF  12.44.. 13.23  n=  6243   REF  12.56  JEU  12.85  JEU/REF 1.023  manque  -0.29
+    d3  REF  13.23.. 15.51  n=  5984   REF  13.81  JEU  13.08  JEU/REF 0.948  manque  +0.72
+    d4  REF  15.51.. 19.59  n=  6029   REF  17.74  JEU  15.92  JEU/REF 0.897  manque  +1.82
+    d5  REF  19.59.. 22.23  n=  6225   REF  20.99  JEU  17.55  JEU/REF 0.836  manque  +3.44
+    d6  REF  22.23.. 27.59  n=  6093   REF  24.28  JEU  20.52  JEU/REF 0.845  manque  +3.76
+    d7  REF  27.59.. 33.09  n=  5278   REF  30.56  JEU  26.67  JEU/REF 0.873  manque  +3.89
+    d8  REF  33.09.. 34.30  n=  6661   REF  33.77  JEU  29.46  JEU/REF 0.872  manque  +4.31
+    d9  REF  34.30.. 36.02  n=  6140   REF  35.05  JEU  30.91  JEU/REF 0.882  manque  +4.14
+    d10 REF  36.02..142.74  n=  6242   REF  44.70  JEU  40.59  JEU/REF 0.908  manque  +4.10

@@ -1,0 +1,41 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+  --- REF colonne x100..640 ---
+    bande y 871..889  h=19  x 456..618  larg=163
+    bande y 894..897  h=4  x 453..625  larg=173
+    bande y 947..987  h=41  x 100..606  larg=507
+    bande y 1007..1033  h=27  x 101..414  larg=314
+    bande y 1037..1039  h=3  x 100..417  larg=318
+    bande y 1116..1146  h=31  x 101..455  larg=355
+    bande y 1153..1156  h=4  x 100..455  larg=356
+    bande y 1159..1250  h=92  x 100..639  larg=540
+    bande y 1255..1257  h=3  x 100..467  larg=368
+    bande y 1266..1298  h=33  x 100..556  larg=457
+    bande y 1375..1415  h=41  x 100..621  larg=522
+    bande y 1425..1464  h=40  x 100..259  larg=160
+    bande y 1484..1516  h=33  x 100..615  larg=516
+    bande y 1525..1557  h=33  x 100..315  larg=216
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  --- JEU1920 colonne x85..640 ---
+    bande y 797..813  h=17  x 465..611  larg=147
+    bande y 869..904  h=36  x 98..570  larg=473
+    bande y 928..955  h=28  x 98..430  larg=333
+    bande y 1035..1063  h=29  x 98..568  larg=471
+    bande y 1070..1122  h=53  x 99..639  larg=541
+    bande y 1132..1162  h=31  x 98..466  larg=369
+    bande y 1239..1275  h=37  x 98..586  larg=489
+    bande y 1282..1317  h=36  x 97..245  larg=149
+    bande y 1341..1372  h=32  x 99..639  larg=541
+    bande y 1379..1409  h=31  x 97..322  larg=226
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  --- JEU2400 colonne x85..640 ---
+    bande y 1203..1219  h=17  x 465..611  larg=147
+    bande y 1275..1311  h=37  x 98..570  larg=473
+    bande y 1334..1362  h=29  x 98..430  larg=333
+    bande y 1442..1470  h=29  x 98..568  larg=471
+    bande y 1476..1528  h=53  x 99..639  larg=541
+    bande y 1538..1569  h=32  x 98..466  larg=369
+    bande y 1646..1681  h=36  x 98..586  larg=489
+    bande y 1689..1724  h=36  x 97..245  larg=149
+    bande y 1748..1778  h=31  x 99..639  larg=541
+    bande y 1785..1816  h=32  x 97..322  larg=226
+    bande y 1858..1859  h=2  x 594..614

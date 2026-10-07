@@ -1,0 +1,24 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+  --- REF ---
+    COMMANDER      encre l=246  CAP h=22  x 691..936
+      padding G=40 D=43 dx=-3  fond lum=173  libelle sombre (36, 24, 4)  n=2633
+    VOIR LA VENTE  encre l=297  CAP h=32  x 643..939
+      padding G=38 D=40 dx=-2  fond lum=25  libelle clair (234, 224, 200)  n=3166
+    BLANCHIR       encre l=195  CAP h=32  x 744..938
+      padding G=39 D=41 dx=-2  fond lum=23  libelle clair (234, 224, 200)  n=2384
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  --- JEU1920 ---
+    COMMANDER      encre l=228  CAP h=21  x 715..942
+      padding G=37 D=37 dx=0  fond lum=173  libelle sombre (34, 22, 0)  n=2275
+    VOIR LA VENTE  encre l=269  CAP h=21  x 673..941
+      padding G=37 D=38 dx=-1  fond lum=27  libelle clair (234, 224, 200)  n=2505
+    BLANCHIR       encre l=176  CAP h=21  x 768..943
+      padding G=39 D=36 dx=3  fond lum=27  libelle clair (234, 224, 200)  n=1834
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  --- JEU2400 ---
+    COMMANDER      encre l=228  CAP h=20  x 715..942
+      padding G=37 D=37 dx=0  fond lum=173  libelle sombre (34, 22, 0)  n=2222
+    VOIR LA VENTE  encre l=269  CAP h=21  x 673..941
+      padding G=37 D=38 dx=-1  fond lum=27  libelle clair (234, 224, 200)  n=2501
+    BLANCHIR       encre l=175  CAP h=22  x 768..942
+      padding G=39 D=37 dx=2  fond lum=27  libelle clair (234, 224, 200)  n=1791

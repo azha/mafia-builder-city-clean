@@ -1,0 +1,21 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+  --- REF (hauteur 2102) ---
+    panneau (825, 1636)  plaque (1674, 1825)  bas des libelles du dock 2049  marge basse=52
+      y=2062 couleur mediane sur x200..880 : (7, 12, 19)
+      y=2082 couleur mediane sur x200..880 : (7, 13, 20)
+      y=2096 couleur mediane sur x200..880 : (11, 16, 22)
+      y=2101 couleur mediane sur x200..880 : (11, 16, 22)
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  --- JEU1920 (hauteur 1920) ---
+    panneau (754, 1450)  plaque (1487, 1635)  bas des libelles du dock 1861  marge basse=58
+      y=1880 couleur mediane sur x200..880 : (13, 19, 30)
+      y=1900 couleur mediane sur x200..880 : (13, 19, 30)
+      y=1914 couleur mediane sur x200..880 : (13, 19, 30)
+      y=1919 couleur mediane sur x200..880 : (13, 19, 30)
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  --- JEU2400 (hauteur 2400) ---
+    panneau (1162, 1857)  plaque (1906, 2103)  bas des libelles du dock 2341  marge basse=58
+      y=2360 couleur mediane sur x200..880 : (13, 19, 30)
+      y=2380 couleur mediane sur x200..880 : (13, 19, 30)
+      y=2394 couleur mediane sur x200..880 : (13, 19, 30)
+      y=2399 couleur mediane sur x200..880 : (13, 19, 30)

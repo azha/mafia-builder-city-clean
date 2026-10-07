@@ -1,0 +1,12 @@
+== CONTROLE POSITIF de la procedure elargie : 1080x1920 ==
+OUVERT cadre-4-la-suite.png (1080, 2102)
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  JEU1920 grossier : s=1.1006 dx=-55 dy=0 r=0.6596
+  JEU1920: MEILLEUR s=1.0916 dx=-49 dy=3  r=0.7999
+    CONTROLE NEGATIF dx+60 -> 0.3119  dy+60 -> 0.2628
+== 1080x2400 ==
+OUVERT cadre-4-la-suite.png (1080, 2102)
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  JEU2400 grossier : s=0.8501 dx=80 dy=15 r=0.3612
+  JEU2400: MEILLEUR s=0.8521 dx=78 dy=19  r=0.3516
+    CONTROLE NEGATIF dx+60 -> 0.2199  dy+60 -> 0.1911

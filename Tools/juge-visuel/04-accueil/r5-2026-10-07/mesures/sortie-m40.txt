@@ -1,0 +1,19 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+  --- REF ---
+    PANNEAU cotes droits y 878..1611 (734 lignes)
+    PLAQUE  cotes droits y 1703..1797 (95 lignes)
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  --- JEU1920 ---
+    PANNEAU cotes droits y 765..1438 (674 lignes)
+    PANNEAU cotes droits y 1508..1614 (107 lignes)
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  --- JEU2400 ---
+    PANNEAU cotes droits y 1150..1845 (696 lignes)
+    PANNEAU cotes droits y 1926..2082 (157 lignes)
+
+  rayon des coins = (bord exterieur - debut des cotes droits) ; on le prend sur la PLAQUE
+  GOUTTIERE = debut des cotes droits de la plaque - fin des cotes droits du panneau
+              + (rayon bas du panneau) + (rayon haut de la plaque) -> on donne les DEUX lectures
+  REF      cotes droits : panneau finit y=1611, plaque commence y=1703  -> ecart brut = 92 px
+  JEU1920 : classes manquantes ['P']
+  JEU2400 : classes manquantes ['P']

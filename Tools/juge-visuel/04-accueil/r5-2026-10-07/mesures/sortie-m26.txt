@@ -1,0 +1,54 @@
+OUVERT cadre-4-la-suite.png (1080, 2102)
+  --- REF dock, ligne y=1953 ---
+    arc x 196..311  centre=253.5  diametre=116
+    arc x 319..322  centre=320.5  diametre=4
+    arc x 383..498  centre=440.5  diametre=116
+    arc x 506..509  centre=507.5  diametre=4
+    arc x 570..685  centre=627.5  diametre=116
+    arc x 693..696  centre=694.5  diametre=4
+    arc x 757..872  centre=814.5  diametre=116
+    arc x 880..883  centre=881.5  diametre=4
+    OR x 208..208 (l=1)  y 2034..2046 (h=13)
+    OR x 217..217 (l=1)  y 2032..2048 (h=17)
+    OR x 227..279 (l=53)  y 2017..2048 (h=32)
+    OR x 286..290 (l=5)  y 2033..2048 (h=16)
+    OR x 299..299 (l=1)  y 2034..2046 (h=13)
+    OR x 308..308 (l=1)  y 2032..2048 (h=17)
+    OR x 390..416 (l=27)  y 2032..2048 (h=17)
+    OR x 424..438 (l=15)  y 2033..2048 (h=16)
+    OR x 448..448 (l=1)  y 2037..2048 (h=12)
+    OR x 459..459 (l=1)  y 2032..2046 (h=15)
+    OR x 467..467 (l=1)  y 2047..2048 (h=2)
+    OR x 476..476 (l=1)  y 2037..2046 (h=10)
+    OR x 484..484 (l=1)  y 2047..2048 (h=2)
+    OR x 492..508 (l=17)  y 1890..2048 (h=159)
+    OR x 581..581 (l=1)  y 2034..2048 (h=15)
+    OR x 588..589 (l=2)  y 2032..2040 (h=9)
+    OR x 599..599 (l=1)  y 2035..2048 (h=14)
+    OR x 609..609 (l=1)  y 2032..2046 (h=15)
+    OR x 617..617 (l=1)  y 2047..2048 (h=2)
+    OR x 626..626 (l=1)  y 2032..2048 (h=17)
+    OR x 637..637 (l=1)  y 2043..2046 (h=4)
+    OR x 645..645 (l=1)  y 2032..2048 (h=17)
+    OR x 655..666 (l=12)  y 2032..2048 (h=17)
+    OR x 675..675 (l=1)  y 2034..2046 (h=13)
+    OR x 683..684 (l=2)  y 2032..2048 (h=17)
+    OR x 788..797 (l=10)  y 2034..2048 (h=15)
+    OR x 806..806 (l=1)  y 2032..2046 (h=15)
+    OR x 814..814 (l=1)  y 2047..2048 (h=2)
+    OR x 821..832 (l=12)  y 2032..2048 (h=17)
+    OR x 842..851 (l=10)  y 2032..2048 (h=17)
+OUVERT p1_lancement_1080x1920.png (1080, 1920)
+  --- JEU1920 dock, ligne y=1763 ---
+    arc x 215..301  centre=258.0  diametre=87
+    arc x 403..489  centre=446.0  diametre=87
+    arc x 590..676  centre=633.0  diametre=87
+    arc x 778..864  centre=821.0  diametre=87
+    OR x 240..277 (l=38)  y 1832..1836 (h=5)
+OUVERT p1_lancement_1080x2400.png (1080, 2400)
+  --- JEU2400 dock, ligne y=2243 ---
+    arc x 215..301  centre=258.0  diametre=87
+    arc x 403..489  centre=446.0  diametre=87
+    arc x 590..676  centre=633.0  diametre=87
+    arc x 778..864  centre=821.0  diametre=87
+    OR x 240..277 (l=38)  y 2312..2316 (h=5)
