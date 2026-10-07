@@ -14,7 +14,7 @@ namespace MafiaCleanCity.CityMap.Tests
     //       Tools/nouvel-ecran.py ; le contrôle positif voit un site qui l'oublie, et ignore un commentaire qui le nomme
     //   R2  le mountParent sous un canvas ⇒ le canvas RACINE de ce parent, même quand un AUTRE canvas est le premier de la scène
     //   R3  sans mountParent, l'hôte sous un canvas ⇒ le canvas racine de son parent (pas le premier de la scène)
-    //   R4  sans mountParent et hôte à la racine ⇒ un canvas NEUF, jamais celui du voisin
+    //   R4  sans mountParent et hôte à la racine ⇒ un canvas NEUF sous l'hôte (racine, meurt avec lui), jamais celui du voisin
     //   R5  monté (mountParent posé) : rien n'est créé, même sans canvas au-dessus
     [Category("CanvasRacine")]
     public class CanvasRacinePlayModeTests
@@ -107,12 +107,15 @@ namespace MafiaCleanCity.CityMap.Tests
             crees.Add(hote.gameObject);
             int avant = NombreDeCanvas();
             Canvas cree = CanvasRacine.Resoudre(hote, null);
-            crees.Add(cree.gameObject);
             Assert.AreNotSame(voisin, cree, "le canvas du voisin n'est pas pris");
+            Assert.AreSame(hote, cree.transform.parent, "parenté SOUS l'hôte : il meurt avec lui, aucun canvas orphelin");
+            Assert.IsTrue(cree.isRootCanvas, "reste canvas racine (l'hôte n'est sous aucun canvas)");
             Assert.AreEqual(avant + 1, NombreDeCanvas(), "un canvas neuf, un seul");
             Assert.AreEqual(RenderMode.ScreenSpaceOverlay, cree.renderMode);
             Assert.AreEqual(new Vector2(1280, 720), cree.GetComponent<CanvasScaler>().referenceResolution);
             Assert.IsNotNull(cree.GetComponent<GraphicRaycaster>());
+            Object.DestroyImmediate(hote.gameObject);
+            Assert.AreEqual(avant, NombreDeCanvas(), "l'hôte détruit, son canvas l'est avec lui : le « premier canvas » d'un test ne change pas");
         }
 
         [Test]

@@ -8,15 +8,19 @@ namespace MafiaCleanCity.Shell
     /// Canvas d'un AUTRE écran ou du shell : en test (B3H1) un écran se construisait dans le canvas du voisin, et en jeu, sur le chemin de repli
     /// hors shell (`DashboardController`, `ExceptionQueueController`), un écran se construisait PAR-DESSUS le shell. Les contrôleurs d'écran et le
     /// gabarit `Tools/nouvel-ecran.py` l'appellent ; la garde de classe `CanvasRacinePlayModeTests` exige 0 `FindFirstObjectByType&lt;Canvas&gt;`
-    /// hors `AppShell.BuildLayout` (seul à DÉCOUVRIR le canvas du shell, par nom).</summary>
+    /// hors `AppShell.BuildLayout` (seul à DÉCOUVRIR le canvas du shell, par nom).
+    /// ⚠️ CE QUI N'EST PAS CORRIGÉ : le repli hors shell reste VISUELLEMENT par-dessus le shell — un hôte à la racine de la scène reçoit son
+    /// propre Canvas overlay plein écran, qui s'affiche au-dessus de celui du shell. Seule la POLLUTION du canvas du shell (un écran qui s'y
+    /// construit en le prenant pour le sien) et l'ordre « premier de la scène » sont supprimés.</summary>
     public static class CanvasRacine
     {
         /// <summary>Le Canvas dont `canvas.transform` sert de racine de repli à l'écran hôte.
-        ///   · `mountParent` posé (monté dans le shell) : le Canvas racine de `mountParent`, ou null — l'appelant n'utilise PAS ce canvas dans ce
-        ///     cas (il construit sous `mountParent` ou sous son hôte) ; rien n'est créé.
-        ///   · sinon, l'hôte a un parent : le Canvas RACINE de ce parent (`rootCanvas`), même s'il est inactif ; null s'il n'est sous aucun.
-        ///   · sinon (hôte à la racine de la scène, hors shell, test isolé) : un Canvas NEUF, ScreenSpaceOverlay, 1280×720, dont l'écran est le
-        ///     seul occupant — jamais celui d'un voisin.</summary>
+        ///   · `mountParent` posé (monté dans le shell) : le Canvas racine de `mountParent`, ou null s'il n'est sous aucun — l'appelant
+        ///     n'utilise PAS ce canvas dans ce cas (il construit sous `mountParent` ou sous son hôte) ; rien n'est créé.
+        ///   · sinon, l'hôte a un parent : le Canvas RACINE de ce parent (`rootCanvas`), même inactif ; à défaut, un Canvas NEUF (ci-dessous).
+        ///   · sinon (hôte à la racine de la scène, hors shell, test isolé) : un Canvas NEUF, ScreenSpaceOverlay, 1280×720, PARENTÉ SOUS
+        ///     l'hôte (il reste canvas racine, puisque l'hôte n'est sous aucun canvas, et meurt avec lui : aucun canvas orphelin).
+        ///     Jamais celui d'un voisin.</summary>
         public static Canvas Resoudre(Transform hote, Transform mountParent)
         {
             if (mountParent != null) return RacineDe(mountParent);
@@ -25,7 +29,7 @@ namespace MafiaCleanCity.Shell
                 Canvas trouve = RacineDe(hote.parent);
                 if (trouve != null) return trouve;
             }
-            return Creer();
+            return Creer(hote);
         }
 
         private static Canvas RacineDe(Transform t)
@@ -34,9 +38,10 @@ namespace MafiaCleanCity.Shell
             return c != null ? c.rootCanvas : null;
         }
 
-        private static Canvas Creer()
+        private static Canvas Creer(Transform hote)
         {
             GameObject go = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            if (hote != null) go.transform.SetParent(hote, false);   // meurt avec l'hôte ; reste canvas racine (l'hôte n'est sous aucun canvas)
             Canvas canvas = go.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             CanvasScaler sc = go.GetComponent<CanvasScaler>();
