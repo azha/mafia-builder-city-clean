@@ -181,7 +181,7 @@ namespace MafiaCleanCity.Operational.Tests
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + "/v1/economy/wallet"))
             {
                 req.timeout = 10;
-                req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success) { onErr($"wallet GET failed ({req.responseCode})"); yield break; }
                 var dto = JsonUtility.FromJson<WalletEnvelope>(req.downloadHandler.text)?.payload?.data;
@@ -194,7 +194,7 @@ namespace MafiaCleanCity.Operational.Tests
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + $"/v1/city/district/{HeatProbeDistrict}/heat"))
             {
                 req.timeout = 10;
-                req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success) { onErr($"heat GET failed ({req.responseCode})"); yield break; }
                 var dto = JsonUtility.FromJson<MafiaCleanCity.CityMap.HeatEnvelope>(req.downloadHandler.text)?.payload?.data;

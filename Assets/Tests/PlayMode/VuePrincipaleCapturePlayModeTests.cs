@@ -720,7 +720,7 @@ namespace MafiaCleanCity.Capture.Tests
                 using (var req = UnityEngine.Networking.UnityWebRequest.Get(
                            BaseUrl + $"/v1/city/district/{district}/interior"))
                 {
-                    req.SetRequestHeader("Authorization", "Bearer " + token);
+                    MafiaCleanCity.ClientHttp.Authentifier(req, token);
                     yield return req.SendWebRequest();
                     codeVu = req.responseCode;
                     // LE CODE D'ABORD, le corps ensuite — c'est toute la leçon ci-dessus.
@@ -1001,7 +1001,7 @@ namespace MafiaCleanCity.Capture.Tests
                 using (var req = UnityEngine.Networking.UnityWebRequest.Get(
                            BaseUrl + $"/v1/city/district/{district}/interior"))
                 {
-                    req.SetRequestHeader("Authorization", "Bearer " + shell.Token);
+                    MafiaCleanCity.ClientHttp.Authentifier(req, shell.Token);
                     yield return req.SendWebRequest();
                     codeVu = req.responseCode;
                     if (codeVu != 200) continue;               // LE CODE D'ABORD
