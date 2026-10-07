@@ -189,7 +189,7 @@ namespace MafiaCleanCity.Operational
         private void Preparer(UnityWebRequest req, string bearer)
         {
             req.timeout = TimeoutSeconds;
-            if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+            MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
         }
 
         private UnityWebRequest Poster(string chemin, object corps, string bearer)
@@ -201,7 +201,7 @@ namespace MafiaCleanCity.Operational
             req.SetRequestHeader("Content-Type", "application/json");
             // Une clé NEUVE par appel : réutiliser celle d'un appel précédent ferait rejouer sa
             // réponse — donc afficher « rasé » pour une démolition jamais tentée.
-            req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+            MafiaCleanCity.ClientHttp.Idempotent(req);
             Preparer(req, bearer);
             return req;
         }

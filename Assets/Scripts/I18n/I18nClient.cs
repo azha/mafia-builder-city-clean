@@ -32,7 +32,7 @@ namespace MafiaCleanCity.I18n
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + "/v1/i18n/bundle?locale=" + Locale))
             {
-                if (!string.IsNullOrEmpty(token)) req.SetRequestHeader("Authorization", "Bearer " + token);
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 yield return req.SendWebRequest();
 
                 // ⛔ LE CODE D'ABORD. Un corps d'erreur a la même forme qu'un corps vide : deux

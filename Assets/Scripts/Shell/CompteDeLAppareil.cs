@@ -83,7 +83,7 @@ namespace MafiaCleanCity.Shell
                 req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(corps));
                 req.downloadHandler = new DownloadHandlerBuffer();
                 req.SetRequestHeader("Content-Type", "application/json");
-                if (cle != null) req.SetRequestHeader("Idempotency-Key", cle);
+                if (cle != null) MafiaCleanCity.ClientHttp.IdempotentAvec(req, cle);
                 req.timeout = TimeoutSeconds;
                 yield return req.SendWebRequest();
                 var r = new ReponseDAuth { Http = req.responseCode, Corps = req.downloadHandler?.text };

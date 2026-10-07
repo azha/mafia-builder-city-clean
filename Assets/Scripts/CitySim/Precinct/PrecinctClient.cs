@@ -36,7 +36,7 @@ namespace MafiaCleanCity.CitySim.Precinct
             using (UnityWebRequest req = UnityWebRequest.Get(Url($"city/precinct/{precinctId}/belief")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
                 { onErr?.Invoke(req.responseCode, req.error ?? "network error"); yield break; }
@@ -55,7 +55,7 @@ namespace MafiaCleanCity.CitySim.Precinct
             using (UnityWebRequest req = UnityWebRequest.Get(Url($"city/precinct/{precinctId}/patrol")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
                 { onErr?.Invoke(req.responseCode, req.error ?? "network error"); yield break; }

@@ -35,7 +35,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
             using (UnityWebRequest req = UnityWebRequest.Get(Url("compression/state")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
                 EtatData dto = null;
@@ -52,7 +52,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
             using (UnityWebRequest req = UnityWebRequest.Get(Url("compression/board")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
                 BoardData dto = null;
@@ -75,7 +75,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
                 Url($"compression/board/problems/{problemeId}/decide"), corps, "application/json"))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
                 DecisionData dto = null;
@@ -92,7 +92,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
             using (UnityWebRequest req = UnityWebRequest.Post(Url("compression/engage"), "{}", "application/json"))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
                 onOk?.Invoke();
@@ -107,7 +107,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
             using (UnityWebRequest req = UnityWebRequest.Post(Url("compression/defer"), "{}", "application/json"))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
                 onOk?.Invoke();

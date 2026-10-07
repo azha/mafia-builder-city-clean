@@ -26,7 +26,7 @@ namespace MafiaCleanCity.Onboarding
             req.downloadHandler = new DownloadHandlerBuffer();
             req.SetRequestHeader("Content-Type", "application/json");
             req.timeout = TimeoutSeconds;
-            if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+            MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
             return req;
         }
 
@@ -37,7 +37,7 @@ namespace MafiaCleanCity.Onboarding
             using (UnityWebRequest req = UnityWebRequest.Get(Url("ui/tutorial-state")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
                 { onErr?.Invoke(req.responseCode, req.error ?? "network error"); yield break; }

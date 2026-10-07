@@ -73,10 +73,7 @@ namespace MafiaCleanCity.CityMap
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearerToken))
-                {
-                    req.SetRequestHeader("Authorization", "Bearer " + bearerToken);
-                }
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearerToken);
 
                 yield return req.SendWebRequest();
 

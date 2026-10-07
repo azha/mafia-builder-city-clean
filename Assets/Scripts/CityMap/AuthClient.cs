@@ -82,7 +82,7 @@ namespace MafiaCleanCity.CityMap
                 req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
                 req.downloadHandler = new DownloadHandlerBuffer();
                 req.SetRequestHeader("Content-Type", "application/json");
-                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                MafiaCleanCity.ClientHttp.Idempotent(req);
                 req.timeout = TimeoutSeconds;
 
                 yield return req.SendWebRequest();
