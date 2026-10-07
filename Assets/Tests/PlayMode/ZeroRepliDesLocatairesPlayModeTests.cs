@@ -57,9 +57,6 @@ namespace MafiaCleanCity.Operational.Tests
             // « à confirmer par le back » (atelier). La règle (2) rougit le jour où l'une est servie : la retirer alors. 6 entrées.
             "vente.caisse.bande.none", "vente.caisse.bande.low", "vente.caisse.bande.moderate", "vente.caisse.bande.high", "vente.caisse.bande.full",
             "vente.caisse.bande.full_il_ne_vend_plus_tant_qu_on_ne_ramasse_pas",
-            // ⑥ (CLIENT-1, 07/10) — la phrase du cuisinier au repos suit `precursor_stock_band` : MOTS PROVISOIRES, à ratifier par l'atelier (commande
-            // à f2). Ces clés ne se demandent que lorsque le back SERT la bande (lot C9, pas déployé) ; 3 entrées, jamais servies.
-            "famille.vide.au_repos_stock.low", "famille.vide.au_repos_stock.medium", "famille.vide.au_repos_stock.high",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

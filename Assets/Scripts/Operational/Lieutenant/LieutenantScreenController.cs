@@ -2755,21 +2755,25 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// <summary>Les valeurs de `StockBand` (anti-tautologie : recopiées du back, `precursor-stock-band.ts:16`).</summary>
         public static readonly string[] BandesDeStock = { "NONE", "LOW", "MEDIUM", "HIGH" };
 
-        /// <summary>⑥ — le texte de la case d'un cuisinier AU REPOS, qui SUIT le stock du labo servi au roster (`precursor_stock_band`).
-        /// NONE (zéro) : « rien à cuire », et le renvoi à ㉚ (les deux phrases d'avant, clés servies). LOW / MEDIUM / HIGH : UNE phrase par valeur,
-        /// clé `famille.vide.au_repos_stock.<valeur>`. Bande absente (un back antérieur) ou valeur inconnue : la phrase d'avant, jamais une phrase
-        /// inventée. ⚠️ MOTS PROVISOIRES des trois dernières : dérivés du ton de la phrase d'avant, À RATIFIER par l'atelier (commande à f2) ;
-        /// déclarés ici pour être réfutables. Pure.</summary>
+        /// <summary>⑥ — le texte de la case d'un cuisinier AU REPOS, qui doit SUIVRE le stock du labo servi au roster (`precursor_stock_band`).
+        /// ⛔ REVUE ⊥ DE CLIENT-2 (M3, 07/10) : les trois phrases LOW / MEDIUM / HIGH que j'avais dérivées étaient INVENTÉES, et « HIGH ⇒ la réserve est
+        /// pleine » refaisait la faute de ㉟ (HIGH = stock > 50 en ABSOLU, pas plein) sans le renvoi à ㉚. Décision de f2 : tant que l'ATELIER n'a pas
+        /// ratifié une phrase par valeur, TOUTE bande (NONE, LOW, MEDIUM, HIGH, absente, inconnue) dit les deux phrases d'avant — « rien à cuire » +
+        /// le renvoi à ㉚ ; la bande est LUE et sa valeur est épinglée (S1-S3), le mécanisme attend les mots : <see cref="PhraseDeLAtelier"/>
+        /// rend null partout (TD-759). Pure.</summary>
         public static string TexteDuCuisinierAuRepos(RosterRow row)
         {
             string bande = row != null ? row.precursor_stock_band : null;
-            string repli = bande == "LOW" ? "Au repos\u00A0: il reste peu de mati\u00e8re."
-                         : bande == "MEDIUM" ? "Au repos\u00A0: il y a de la mati\u00e8re en r\u00e9serve."
-                         : bande == "HIGH" ? "Au repos\u00A0: la r\u00e9serve de mati\u00e8re est pleine." : null;
-            if (repli != null) return MafiaCleanCity.I18n.Libelle.ParValeur("famille", "vide.au_repos_stock", bande, repli);
+            string ratifiee = PhraseDeLAtelier(bande);
+            if (ratifiee != null) return MafiaCleanCity.I18n.Libelle.ParValeur("famille", "vide.au_repos_stock", bande, ratifiee);
             return MafiaCleanCity.I18n.Libelle.Gabarit("famille.vide.au_repos_rien_a_cuire_pour_l_instant", "Au repos\u00A0: rien à cuire pour l’instant.")
                    + "\n" + MafiaCleanCity.I18n.Libelle.Gabarit("famille.vide.commandez_de_la_matiere_depuis_la_chaine_d_appro", "Commandez de la matière depuis la chaîne d’appro.");
         }
+
+        /// <summary>La phrase RATIFIÉE par l'atelier pour une bande de stock (LOW / MEDIUM / HIGH ; clé `famille.vide.au_repos_stock.<valeur>`), ou null
+        /// tant qu'il n'en a pas écrit. NONE n'en a pas besoin : c'est la phrase d'avant. Le jour où les mots arrivent : les poser ici avec leur clé, retirer
+        /// la dette TD-759, et l'écran suit sans autre changement.</summary>
+        public static string PhraseDeLAtelier(string bande) => null;
 
         /// <summary>Test hook : combien de fois la case d'un cuisinier au repos a mené à ㉚.</summary>
         public int RenvoisALaChaineDAppro { get; private set; }

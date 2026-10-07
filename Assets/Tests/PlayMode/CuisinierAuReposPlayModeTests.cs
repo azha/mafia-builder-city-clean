@@ -79,7 +79,7 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         // ── ⑥ (L2 client, 07/10) — la phrase SUIT le stock du labo servi au roster : `precursor_stock_band` ───────────────────────────
-        //   S1  une phrase par valeur ; NONE garde les deux phrases d'avant ; bande absente ou valeur inconnue ⇒ la phrase d'avant
+        //   S1  M3 (revue ⊥, f2) : aucune phrase ratifiée par l'atelier ⇒ TOUTES les bandes disent la phrase d'avant (jamais « pleine » pour HIGH)
         //   S2  GARDE épinglée sur la valeur SERVIE : MEDIUM, pas MODERATE (≠ `DealerCashBand`) — un MODERATE servi n'est pas un stock moyen
         //   S3  la clé se lit dans le corps du roster (type fermé, jamais null) ; le DTO la déclare AVANT qu'elle soit servie (forme G)
 
@@ -87,26 +87,18 @@ namespace MafiaCleanCity.CityMap.Tests
             LieutenantScreenController.TexteDuCuisinierAuRepos(new RosterRow { archetype = "COOK", op_state_band = "IDLE", precursor_stock_band = bande });
 
         [Test]
-        public void S1_UnePhraseParValeur_NoneEtAbsenteGardentLaPhraseDAvant()
+        public void S1_TantQueLAtelierNAPasRatifie_ToutesLesBandesDisentLaPhraseDAvant()
         {
             Libelle.RemettreLesCompteurs();
             string avant = Texte(null);
             StringAssert.Contains("rien \u00e0 cuire", avant);
-            StringAssert.Contains("d\u2019appro", avant, "NONE et « sans stock » : « rien à cuire » et le renvoi à ㉚, comme avant");
-            Assert.AreEqual(avant, Texte("NONE"), "NONE = zéro stock au labo d'un cuisinier au repos : « rien à cuire » est vrai");
-            Assert.AreEqual(avant, Texte(""), "une bande vide n'est pas un stock");
-
-            string peu = Texte("LOW"), moyen = Texte("MEDIUM"), plein = Texte("HIGH");
-            foreach (string phrase in new[] { peu, moyen, plein })
-            {
-                StringAssert.DoesNotContain("rien \u00e0 cuire", phrase, "avec du stock, « rien à cuire » serait FAUX");
-                StringAssert.StartsWith("Au repos", phrase);
-            }
-            Assert.AreEqual(3, new[] { peu, moyen, plein }.Distinct().Count(), "une phrase par valeur");
-            Assert.AreNotEqual(avant, peu);
-            StringAssert.Contains("famille.vide.au_repos_stock.low", string.Join(",", Libelle.ClesEnRepli), "clé adressée par la VALEUR servie");
-            StringAssert.Contains("famille.vide.au_repos_stock.medium", string.Join(",", Libelle.ClesEnRepli));
-            StringAssert.Contains("famille.vide.au_repos_stock.high", string.Join(",", Libelle.ClesEnRepli));
+            StringAssert.Contains("d\u2019appro", avant, "« rien à cuire » et le renvoi à ㉚");
+            foreach (string bande in new[] { "NONE", "LOW", "MEDIUM", "HIGH", "", "INCONNUE" })
+                Assert.AreEqual(avant, Texte(bande), $"bande « {bande} » : aucune phrase ratifiée, donc celle d'avant — jamais une phrase inventée");
+            StringAssert.DoesNotContain("pleine", string.Join("|", new[] { "LOW", "MEDIUM", "HIGH" }.Select(Texte)),
+                "HIGH = plus de 50 unités en ABSOLU, pas une réserve pleine (la faute de ㉟)");
+            Assert.IsEmpty(Libelle.ClesEnRepli.Where(k => k.StartsWith("famille.vide.au_repos_stock.")), "aucune clé neuve n'est demandée au back");
+            Assert.IsNull(LieutenantScreenController.PhraseDeLAtelier("LOW"), "le mécanisme attend les mots de l'atelier (TD-759)");
         }
 
         [Test]
@@ -117,7 +109,6 @@ namespace MafiaCleanCity.CityMap.Tests
             string avant = Texte(null);
             Assert.AreEqual(avant, Texte("MODERATE"), "MODERATE est une valeur de `DealerCashBand` : pour un stock, une valeur INCONNUE ⇒ la phrase d'avant");
             Assert.AreEqual(avant, Texte("FULL"));
-            Assert.AreNotEqual(avant, Texte("MEDIUM"));
             Assert.AreEqual(avant, LieutenantScreenController.TexteDuCuisinierAuRepos(null));
         }
 
