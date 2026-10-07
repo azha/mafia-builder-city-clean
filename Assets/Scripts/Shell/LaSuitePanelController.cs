@@ -115,10 +115,16 @@ namespace MafiaCleanCity.Shell
             LayoutRebuilder.ForceRebuildLayoutImmediate(bloc);
             float h = LayoutUtility.GetPreferredHeight(bloc);
             float dispo = ((RectTransform)transform).rect.height;
+            HauteurVoulue = h; HauteurDeLaBande = dispo;   // mesure (G9/G10, f2 07/10) : de quelle marge le bloc dispose-t-il avant d'être réduit ?
             float k = h > 0f && dispo > 0f && h > dispo ? dispo / h : 1f;
             bloc.localScale = new Vector3(k, k, 1f);
             Echelle = k;
         }
+
+        /// <summary>MESURE (juge ⊥ r3 G9/G10, f2 07/10) — la hauteur que le bloc VEUT (mise en page) et celle de sa bande, en unités du canvas, à la dernière `Ajuster`.
+        /// `HauteurDeLaBande − HauteurVoulue` est la marge dont on dispose pour allonger le panneau SANS le réduire à l'échelle (et donc sans rétrécir ses marges exactes).</summary>
+        public float HauteurVoulue { get; private set; }
+        public float HauteurDeLaBande { get; private set; }
 
         /// <summary>L'échelle posée par `Ajuster` (1 = le bloc tient dans sa bande) — garde.</summary>
         public float Echelle { get; private set; } = 1f;

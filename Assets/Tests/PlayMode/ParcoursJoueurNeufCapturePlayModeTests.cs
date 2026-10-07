@@ -519,8 +519,22 @@ namespace MafiaCleanCity.Capture.Tests
         private IEnumerator Photographier(string pas, bool rebatirAccueil = false, System.Action avantRendu = null)
         {
             foreach ((int largeur, int hauteur) in Resolutions)
+            {
                 yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur,
                     Path.Combine(dossier, $"{pas}_{largeur}x{hauteur}.png"), rebatirAccueil, avantRendu);
+                if (pas.StartsWith("p1")) MesurerLaBandeDeLaSuite(largeur, hauteur);
+            }
+        }
+
+        /// <summary>MESURE G9/G10 (f2, 07/10) : la bande de « La suite » et la hauteur que son bloc veut, à CHAQUE résolution de la planche P1. Si `voulue` + l'allongement (~118 u)
+        /// dépasse `bande`, `Ajuster` réduirait le bloc à l'échelle (et ses marges, aujourd'hui exactes) : on s'arrête et on donne les chiffres.</summary>
+        private void MesurerLaBandeDeLaSuite(int largeur, int hauteur)
+        {
+            LaSuitePanelController suite = shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).LastOrDefault();
+            if (suite == null) { Noter("P1·mesure", $"{largeur}x{hauteur}", "la suite : absente"); return; }
+            Noter("P1·mesure", $"{largeur}x{hauteur}",
+                $"la suite : voulue={suite.HauteurVoulue:0.#} u · bande={suite.HauteurDeLaBande:0.#} u · marge={suite.HauteurDeLaBande - suite.HauteurVoulue:0.#} u · échelle={suite.Echelle:0.###} · "
+                + $"scaleFactor={(shell.ShellCanvas != null ? shell.ShellCanvas.scaleFactor : 0f):0.###}");
         }
 
         private void Noter(string pas, string geste, string vu)
