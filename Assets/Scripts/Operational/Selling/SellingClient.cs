@@ -22,7 +22,7 @@ namespace MafiaCleanCity.Operational.Selling
             using (UnityWebRequest req = UnityWebRequest.Get(Url("dealers")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
                 {
@@ -47,7 +47,7 @@ namespace MafiaCleanCity.Operational.Selling
             using (UnityWebRequest req = UnityWebRequest.Get(Url($"dealer/{dealerId}")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
                 {
@@ -86,7 +86,7 @@ namespace MafiaCleanCity.Operational.Selling
                     req.downloadHandler = new DownloadHandlerBuffer();
                     req.SetRequestHeader("Content-Type", "application/json");
                     req.timeout = TimeoutSeconds;
-                    if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                    MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                     yield return req.SendWebRequest();
                     if (req.result != UnityWebRequest.Result.Success)
                     {

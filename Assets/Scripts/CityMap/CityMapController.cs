@@ -232,7 +232,7 @@ namespace MafiaCleanCity.CityMap
             Token = token;
             IsAuthenticated = true;
             RefreshEnterInteractable(); // §3.2 — 2e point : le panneau peut avoir été ouvert AVANT l'auth (Populate à :98, signature à :102)
-            Debug.Log("[CityMap] Signed in — Bearer token acquired.");
+            Debug.Log("[CityMap] Signed in — session token acquired.");
 
             yield return LoadPresence();
             yield return LoadHeat();

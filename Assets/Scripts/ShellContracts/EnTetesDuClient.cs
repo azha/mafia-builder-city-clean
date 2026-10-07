@@ -10,14 +10,13 @@ namespace MafiaCleanCity.Shell
     /// Population au 26/09 : 0 site (l'horloge légère C4, seul site périodique prévu, l'appellera dès son premier commit).</summary>
     public static class EnTetesDuClient
     {
-        public const string Fond = "X-Mafia-Background";
-        public const string ValeurFond = "1";
+        public const string Fond = MafiaCleanCity.ClientHttp.EnTeteDeFond;   // TD-767 : le littéral vit dans le client commun
+        public const string ValeurFond = MafiaCleanCity.ClientHttp.ValeurDeFond;
 
         /// <summary>Marque la requête comme un appel de FOND. Rend la requête (chaînable).</summary>
         public static UnityWebRequest MarquerFond(UnityWebRequest req)
         {
-            req?.SetRequestHeader(Fond, ValeurFond);
-            return req;
+            return MafiaCleanCity.ClientHttp.Fond(req);
         }
     }
 }

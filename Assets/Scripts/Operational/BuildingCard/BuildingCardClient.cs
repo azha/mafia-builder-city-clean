@@ -38,7 +38,7 @@ namespace MafiaCleanCity.Operational
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 
                 if (req.result == UnityWebRequest.Result.Success)
@@ -69,7 +69,7 @@ namespace MafiaCleanCity.Operational
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 
                 if (req.result == UnityWebRequest.Result.Success)
@@ -97,7 +97,7 @@ namespace MafiaCleanCity.Operational
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 
                 if (req.result == UnityWebRequest.Result.Success)
@@ -131,8 +131,8 @@ namespace MafiaCleanCity.Operational
                 req.downloadHandler = new DownloadHandlerBuffer();
                 req.timeout = TimeoutSeconds;
                 req.SetRequestHeader("Content-Type", "application/json");
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
-                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString()); // UUID v4 — backend mandate
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
+                MafiaCleanCity.ClientHttp.Idempotent(req); // UUID v4 — backend mandate
 
                 yield return req.SendWebRequest();
                 outcome.HttpStatus = req.responseCode;
@@ -386,7 +386,7 @@ namespace MafiaCleanCity.Operational
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 
                 if (req.result == UnityWebRequest.Result.Success)
@@ -446,7 +446,7 @@ namespace MafiaCleanCity.Operational
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 
                 if (req.result == UnityWebRequest.Result.Success)
@@ -478,7 +478,7 @@ namespace MafiaCleanCity.Operational
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 
                 if (req.result == UnityWebRequest.Result.Success)

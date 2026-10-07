@@ -32,7 +32,7 @@ namespace MafiaCleanCity.Economy.Shop
             using (UnityWebRequest req = UnityWebRequest.Get(Url("iap/catalogue")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
                 SkuDto[] dto = null;
@@ -55,7 +55,7 @@ namespace MafiaCleanCity.Economy.Shop
             using (UnityWebRequest req = UnityWebRequest.Get(Url("me/iap/balance")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
                 BalanceData dto = null;
@@ -72,7 +72,7 @@ namespace MafiaCleanCity.Economy.Shop
             using (UnityWebRequest req = UnityWebRequest.Get(Url("me/iap/entitlements")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
                 string[] dto = null;
@@ -107,8 +107,8 @@ namespace MafiaCleanCity.Economy.Shop
             using (UnityWebRequest req = UnityWebRequest.Post(Url("me/iap/items/purchase"), corps, "application/json"))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
-                req.SetRequestHeader("Idempotency-Key", $"vitrine-{skuId}-{DateTime.UtcNow.Ticks}");
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
+                MafiaCleanCity.ClientHttp.IdempotentAvec(req, $"vitrine-{skuId}-{DateTime.UtcNow.Ticks}");
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
                 PurchaseData dto = null;

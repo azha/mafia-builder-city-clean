@@ -32,7 +32,7 @@ namespace MafiaCleanCity.CityMap
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(token)) req.SetRequestHeader("Authorization", "Bearer " + token);
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 yield return req.SendWebRequest();
 
                 if (req.result == UnityWebRequest.Result.Success)
@@ -114,8 +114,8 @@ namespace MafiaCleanCity.CityMap
                     req.downloadHandler = new DownloadHandlerBuffer();
                     req.timeout = TimeoutSeconds;
                     req.SetRequestHeader("Content-Type", "application/json");
-                    if (!string.IsNullOrEmpty(token)) req.SetRequestHeader("Authorization", "Bearer " + token);
-                    req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                    MafiaCleanCity.ClientHttp.Authentifier(req, token);
+                    MafiaCleanCity.ClientHttp.Idempotent(req);
                     yield return req.SendWebRequest();
 
                     outcome.HttpStatus = req.responseCode;
@@ -186,8 +186,8 @@ namespace MafiaCleanCity.CityMap
                 req.downloadHandler = new DownloadHandlerBuffer();
                 req.timeout = TimeoutSeconds;
                 req.SetRequestHeader("Content-Type", "application/json");
-                if (!string.IsNullOrEmpty(token)) req.SetRequestHeader("Authorization", "Bearer " + token);
-                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
+                MafiaCleanCity.ClientHttp.Idempotent(req);
                 yield return req.SendWebRequest();
 
                 outcome.HttpStatus = req.responseCode;

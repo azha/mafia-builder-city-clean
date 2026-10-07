@@ -36,7 +36,7 @@ namespace MafiaCleanCity.Shell
                 req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(body));
                 req.downloadHandler = new DownloadHandlerBuffer();
                 req.SetRequestHeader("Content-Type", "application/json");
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 req.timeout = TimeoutSeconds;
 
                 yield return req.SendWebRequest();
@@ -79,7 +79,7 @@ namespace MafiaCleanCity.Shell
                 req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes("{}"));
                 req.downloadHandler = new DownloadHandlerBuffer();
                 req.SetRequestHeader("Content-Type", "application/json");
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 req.timeout = TimeoutSeconds;
 
                 yield return req.SendWebRequest();

@@ -25,7 +25,7 @@ namespace MafiaCleanCity.CitySim.Inspection
             using (UnityWebRequest req = UnityWebRequest.Get(Url($"city/district/{districtId}/inspection")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
                 {
@@ -49,7 +49,7 @@ namespace MafiaCleanCity.CitySim.Inspection
             using (UnityWebRequest req = UnityWebRequest.Get(Url("world/districts")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
                 {
@@ -77,7 +77,7 @@ namespace MafiaCleanCity.CitySim.Inspection
             using (UnityWebRequest req = UnityWebRequest.Post(Url("city/inspection/report"), corps, "application/json"))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
                 {

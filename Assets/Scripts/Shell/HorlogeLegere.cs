@@ -110,7 +110,7 @@ namespace MafiaCleanCity.Shell
         public UnityWebRequest Construire(string bearer)
         {
             var req = UnityWebRequest.Get(ClockUrl);
-            if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+            MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
             req.timeout = TimeoutSeconds;
             return EnTetesDuClient.MarquerFond(req);
         }

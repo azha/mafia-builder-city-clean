@@ -45,6 +45,9 @@ namespace MafiaCleanCity.Tests
             // de887d7d). Reste ManometreOracle : Oracle1_Ring_… GÈLE le fil principal (reproduit au même créneau : RC=5, 180 s de journal
             // muet) — la forme exacte que SondeGelVolontaire imite. Elle sortira de la dette quand le gel sera corrigé.
             "ManometreOracle",
+            // 07/10 (CLIENT-2) : ClientHttp — le client HTTP commun (TD-767), 4 tests. Portée, JAMAIS inscrite tant qu'elle n'a pas tourné verte
+            // dans l'ORDRE du run complet ; verte ⇒ elle s'inscrit dans MafiaCI et sort d'ici.
+            "ClientHttp",
             // CanvasRacine (CLIENT-2, 07/10) est SORTIE de la dette le 07/10 : verte 5/5 au créneau de CLIENT-1, inscrite au filtre de MafiaCI.
         };
 

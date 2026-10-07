@@ -37,7 +37,7 @@ namespace MafiaCleanCity.Operational
             using (UnityWebRequest req = UnityWebRequest.Get(Url("cue-stack/current")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
                 {
@@ -62,7 +62,7 @@ namespace MafiaCleanCity.Operational
             using (UnityWebRequest req = UnityWebRequest.Get(Url("cue-stack/named-sequences")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
                 {
@@ -96,10 +96,10 @@ namespace MafiaCleanCity.Operational
                 {
                     req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(corps));
                     req.SetRequestHeader("Content-Type", "application/json");
-                    req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                    MafiaCleanCity.ClientHttp.Idempotent(req);
                 }
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 fin(req.responseCode, req.downloadHandler != null ? req.downloadHandler.text : null);
             }
@@ -157,7 +157,7 @@ namespace MafiaCleanCity.Operational
             using (UnityWebRequest req = UnityWebRequest.Get(Url("political-events/calendar")))
             {
                 req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
                 {

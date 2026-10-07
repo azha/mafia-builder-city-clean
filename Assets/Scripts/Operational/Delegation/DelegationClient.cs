@@ -188,7 +188,7 @@ namespace MafiaCleanCity.Operational
         private void Preparer(UnityWebRequest req, string bearer)
         {
             req.timeout = TimeoutSeconds;
-            if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+            MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
         }
 
         private UnityWebRequest Poster(string chemin, object corps, string bearer)
@@ -202,7 +202,7 @@ namespace MafiaCleanCity.Operational
             // `@Idempotent` explicite soit posé ou non sur le contrôleur (patron `DailyReviewClient`).
             // Une clé NEUVE par appel : réutiliser celle d'un appel précédent ferait rejouer sa
             // réponse, donc afficher un succès pour un geste jamais tenté.
-            req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+            MafiaCleanCity.ClientHttp.Idempotent(req);
             Preparer(req, bearer);
             return req;
         }
