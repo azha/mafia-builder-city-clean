@@ -70,7 +70,8 @@ namespace MafiaCleanCity.I18n
 
         /// <summary>La phrase d'un REFUS, quand le corps n'a servi AUCUNE phrase (`RefusServi.Phrase` null) : par CODE, jamais par statut
         /// (trois codes partagent le 409). Table 75 n° 3, 4, 4b ; table 85 n° 7 pour tout le reste, y compris un 409 SANS code spécifique
-        /// et le 409 générique (la phrase générique n'est jamais montrée : le client a réessayé une fois).</summary>
+        /// et le 409 générique. Le 409 générique est réessayé UNE fois : si le second essai rend ENCORE `RESOURCE_STATE_CONFLICT`, c'est cette
+        /// n° 7 qui se dit (« La collecte n'a pas abouti. ») — la phrase servie `error.resource.*` est de la famille générique, jamais montrée.</summary>
         public static string PhraseDeRefus(string code, string prenom)
         {
             if (code == CodePlanquePleine)
@@ -85,6 +86,13 @@ namespace MafiaCleanCity.I18n
             }
             return Libelle.Gabarit("vente.refus.la_collecte_n_a_pas_abouti", "La collecte n’a pas abouti.");
         }
+
+        /// <summary>La phrase AVEC PRÉNOM, quand elle existe : la caisse est vide (`SELLING_CASH_EMPTY`) ET le prénom du dealer est connu. Elle GAGNE
+        /// sur la phrase servie `error.selling.cash_empty`, qui est sans nom (revue ⊥ de CLIENT-2, m1 ; table 75 n° 4 contre 4b) : « La caisse de Dov est
+        /// vide. » Sinon null, et l'appelant retombe sur la phrase servie, puis sur <see cref="PhraseDeRefus"/>. La clé servie
+        /// `vente.refus.la_caisse_de_prenom_est_vide` + le paramètre `prenom` ; son repli est le texte de l'atelier.</summary>
+        public static string PhraseAvecPrenom(string code, string prenom) =>
+            code == CodeCaisseVide && !string.IsNullOrWhiteSpace(prenom) ? PhraseDeRefus(code, prenom) : null;
 
         /// <summary>La conséquence du PLAFOND, dite sur la fiche du dealer quand la caisse est FULL (table 75, ligne B-plafond) : la caisse y est
         /// au plafond, le dealer cesse de vendre tant qu'on ne ramasse pas. Épicène (« il » = le dealer, le nom du rôle).</summary>

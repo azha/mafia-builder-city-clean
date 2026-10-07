@@ -318,8 +318,10 @@ namespace MafiaCleanCity.Operational.Selling
                 // le statut ne suffit pas, trois codes partagent le 409 ; tout le reste (un 409 sans code spécifique compris) dit la table 85
                 // n° 7. Le prénom est celui de la LISTE servie (`name_i18n.params.prenom`, TD-757 : il était déclaré `string` et n'arrivait jamais) :
                 // « La caisse de Dov est vide. » ; sans prénom servi, la forme SANS nom.
-                string phrase = client.DernierePhraseDeRefus
-                    ?? MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(client.DernierCodeDeRefus, PrenomDuDealer(dealerId));
+                // m1 : la phrase AVEC prénom gagne quand le prénom est connu (la servie `error.selling.cash_empty` est sans nom), puis la servie.
+                string phrase = MafiaCleanCity.I18n.CollecteMots.PhraseAvecPrenom(client.DernierCodeDeRefus, PrenomDuDealer(dealerId))
+                    ?? client.DernierePhraseDeRefus
+                    ?? MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(client.DernierCodeDeRefus, null);
                 DerniereErreur = phrase;
                 if (actionTexte != null) actionTexte.text = phrase;
                 yield break;

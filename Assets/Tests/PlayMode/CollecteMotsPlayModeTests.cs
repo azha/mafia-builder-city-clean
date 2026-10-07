@@ -104,6 +104,34 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
+        public void C5b_LeCode_SeLitSurLeCorpsComplet_QuelQueSoitLOrdreDesCles()
+        {
+            // le corps d'erreur COMPLET, les 9 clés de `payload.error` (protocol/envelope.ts:113-123), `code` en tête
+            const string complet = "{\"payload\":{\"error\":{\"code\":\"SELLING_SAFEHOUSE_FULL\",\"http_status\":409,\"user_facing_i18n_key\":\"error.selling.safehouse_full\"," +
+                                   "\"payload_vars\":{},\"details\":{\"code\":\"LEURRE\",\"liste\":[{\"code\":\"AUTRE\"}]},\"message\":\"la planque est pleine\"," +
+                                   "\"trace\":\"x\",\"retryable_class\":\"AFTER_USER_ACTION\",\"retry_after_s\":null}},\"response_meta\":{\"code\":\"META\"}}";
+            Assert.AreEqual("SELLING_SAFEHOUSE_FULL", RefusServi.Code(complet));
+            // les MÊMES clés dans un autre ordre : `details` (avec son `code` imbriqué) et `message` (avec des guillemets échappés) AVANT `code`
+            const string melange = "{\"payload\":{\"error\":{\"details\":{\"code\":\"LEURRE\",\"x\":{\"code\":\"PIRE\"}},\"message\":\"dit \\\"code\\\": X\"," +
+                                   "\"retry_after_s\":null,\"http_status\":409,\"code\":\"RESOURCE_STATE_CONFLICT\",\"trace\":\"t\"}}}";
+            Assert.AreEqual("RESOURCE_STATE_CONFLICT", RefusServi.Code(melange), "le `code` de premier niveau, jamais celui d'un `details` imbriqué, où qu'il soit");
+            Assert.IsNull(RefusServi.Code("{\"payload\":{\"error\":{\"details\":{\"code\":\"LEURRE\"},\"http_status\":409}}}"),
+                "pas de `code` de premier niveau : null (le `code` imbriqué d'un `details` n'est pas le refus)");
+            Assert.IsNull(RefusServi.Code("{\"payload\":{\"error\":{\"code\":\"\"}}}"), "un code vide n'est pas un code");
+        }
+
+        [Test]
+        public void C10_LaPhraseAvecPrenom_Gagne_QuandLePrenomEstConnu()
+        {
+            Assert.AreEqual("La caisse de Dov est vide.", CollecteMots.PhraseAvecPrenom(CollecteMots.CodeCaisseVide, "Dov"),
+                "m1 : la phrase servie `error.selling.cash_empty` est sans nom ; avec le prénom, celle de la table 75 n° 4 gagne");
+            Assert.IsNull(CollecteMots.PhraseAvecPrenom(CollecteMots.CodeCaisseVide, null), "sans prénom : la phrase servie, puis la 4b");
+            Assert.IsNull(CollecteMots.PhraseAvecPrenom(CollecteMots.CodeCaisseVide, " "));
+            Assert.IsNull(CollecteMots.PhraseAvecPrenom(CollecteMots.CodePlanquePleine, "Dov"), "seule la caisse vide porte un nom");
+            Assert.IsNull(CollecteMots.PhraseAvecPrenom(null, "Dov"));
+        }
+
+        [Test]
         public void C6_LeConflitGenerique_SeReessaieUneFois_Seul()
         {
             Assert.IsTrue(CollecteMots.ReessayerEnSilence(409, CollecteMots.CodeConflitGenerique));

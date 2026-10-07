@@ -34,15 +34,56 @@ namespace MafiaCleanCity.I18n
             return false;
         }
 
-        private static readonly Regex CodeServi = new Regex("\"error\"\\s*:\\s*\\{[^{}]*?\"code\"\\s*:\\s*\"([^\"\\\\]*)\"");
+        private static readonly Regex DebutErreur = new Regex("\"error\"\\s*:\\s*\\{");
 
         /// <summary>Le `code` du refus (`payload.error.code`) — c'est LUI qui discrimine, pas le statut : trois codes différents partagent
-        /// le 409 (`SELLING_CASH_EMPTY`, `SELLING_SAFEHOUSE_FULL`, `RESOURCE_STATE_CONFLICT`). Null si le corps n'en porte pas.</summary>
+        /// le 409 (`SELLING_CASH_EMPTY`, `SELLING_SAFEHOUSE_FULL`, `RESOURCE_STATE_CONFLICT`). Null si le corps n'en porte pas.
+        /// ⛔ INDÉPENDANT DE L'ORDRE DES CLÉS (revue ⊥ de CLIENT-2, m3) : on parcourt l'objet `error` en comptant les accolades et en sautant les
+        /// chaînes, et on ne retient que la clé `code` de PREMIER niveau — jamais celle d'un `details` imbriqué, quelle que soit sa place.</summary>
         public static string Code(string corps)
         {
             if (string.IsNullOrEmpty(corps)) return null;
-            Match m = CodeServi.Match(corps);
-            return m.Success && m.Groups[1].Value.Length > 0 ? m.Groups[1].Value : null;
+            Match debut = DebutErreur.Match(corps);
+            if (!debut.Success) return null;
+            int i = debut.Index + debut.Length, profondeur = 1, n = corps.Length;
+            while (i < n && profondeur > 0)
+            {
+                char c = corps[i];
+                if (c == '"')
+                {
+                    int fin = FinDeChaine(corps, i);
+                    if (fin < 0) return null;
+                    int k = fin + 1;
+                    while (k < n && char.IsWhiteSpace(corps[k])) k++;
+                    if (profondeur == 1 && k < n && corps[k] == ':' && corps.Substring(i + 1, fin - i - 1) == "code")
+                    {
+                        k++;
+                        while (k < n && char.IsWhiteSpace(corps[k])) k++;
+                        if (k >= n || corps[k] != '"') return null;
+                        int finValeur = FinDeChaine(corps, k);
+                        if (finValeur < 0) return null;
+                        string valeur = corps.Substring(k + 1, finValeur - k - 1);
+                        return valeur.Length > 0 ? valeur : null;
+                    }
+                    i = fin + 1;
+                    continue;
+                }
+                if (c == '{' || c == '[') profondeur++;
+                else if (c == '}' || c == ']') profondeur--;
+                i++;
+            }
+            return null;
+        }
+
+        /// <summary>L'indice du guillemet fermant de la chaîne qui s'ouvre en `debut` (les échappements `\"` sont sautés), ou -1.</summary>
+        private static int FinDeChaine(string s, int debut)
+        {
+            for (int i = debut + 1; i < s.Length; i++)
+            {
+                if (s[i] == '\\') { i++; continue; }
+                if (s[i] == '"') return i;
+            }
+            return -1;
         }
 
         private static readonly Regex CleServie = new Regex("\"user_facing_i18n_key\"\\s*:\\s*\"([^\"\\\\]*)\"");

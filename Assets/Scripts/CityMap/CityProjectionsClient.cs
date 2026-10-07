@@ -146,13 +146,15 @@ namespace MafiaCleanCity.CityMap
                         // table 67 (26/09) : la phrase SERVIE du refus (R9, R10, R12…) avant les phrases par code — C3 : « les fonds ou la
                         // capacité » ne disait pas QUELS fonds. Table 85 (07/10) : les raisons sont des PHRASES (clés `vente.raison.*`),
                         // le 409 se dit PAR CODE (table 75 n° 3-4), et tout 409 sans code spécifique tombe sur « La collecte n'a pas abouti ».
-                        outcome.Message = MafiaCleanCity.I18n.RefusServi.Phrase(corps);
+                        // m1 : la phrase AVEC prénom (« La caisse de Dov est vide. ») gagne sur la servie, qui est sans nom
+                        outcome.Message = MafiaCleanCity.I18n.CollecteMots.PhraseAvecPrenom(outcome.Code, prenomDuDealer)
+                                          ?? MafiaCleanCity.I18n.RefusServi.Phrase(corps);
                         if (outcome.Message == null)
                         {
                             switch (req.responseCode)
                             {
                                 case 401: outcome.Message = MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.connexion_expiree", "La connexion a expir\u00e9."); break;
-                                case 409: outcome.Message = MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(outcome.Code, prenomDuDealer); break;
+                                case 409: outcome.Message = MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(outcome.Code, null); break;
                                 case 422: outcome.Message = MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.collecte_non_acceptee", "Cette collecte n\u2019est pas accept\u00e9e."); break;
                                 default: outcome.Message = MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.indisponible", "Le point de vente ne r\u00e9pond pas pour l\u2019instant."); break;
                             }
