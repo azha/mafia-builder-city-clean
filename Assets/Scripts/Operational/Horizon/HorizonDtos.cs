@@ -19,10 +19,11 @@ namespace MafiaCleanCity.Operational
     /// <summary>Une carte du flux — les 9 clés, lues à la source (`horizon-feed.service.ts:74-84`)
     /// et confirmées par le corps mesuré sur le compte de démo.
     ///
-    /// ⚠️ `adoption_cost` est un NOMBRE et il a le droit de l'être : c'est un coût en jetons, pas
-    /// un scalaire de simulation. R2.2 interdit d'exposer les grandeurs internes (heat, cents,
-    /// grammes, ticks) — pas les prix qu'un joueur doit pouvoir comparer. Ne pas confondre la règle
-    /// avec « aucun chiffre nulle part ».
+    /// ⚠️ `adoption_cost` est un NOMBRE : le back le sanctionne comme l'un des seuls nombres affichables de ce lot
+    /// (`horizon-feed.service.ts:12,42`, R2.2), et il est débité des `free_units` du BUDGET DE COMPLEXITÉ du joueur
+    /// (`affordable = freeUnits >= required`, `:226-239` ; `GET /v1/meta/complexity-budget`). Ce n'est PAS un coût en
+    /// jetons ni en Marks : aucune monnaie. Le bundle n'en donne aucun nom de fiction, donc l'écran ne l'affiche pas
+    /// (décision f2, 08/10) ; seule `affordable` se lit, la carte non abordable est éteinte.
     ///
     /// ★ `predicate_regressed` est le champ qui porte cet écran : une capacité dont les conditions
     ///   ont RECULÉ — elle était à portée, elle ne l'est plus. Le back le calcule depuis toujours

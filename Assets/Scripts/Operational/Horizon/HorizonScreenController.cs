@@ -207,8 +207,8 @@ namespace MafiaCleanCity.Operational
                     + "d'ordre. Ce qui s'ouvre se lit à ses conditions et à son prix.");
         }
 
-        /// <summary>Les cartes du flux. Chacune porte son titre (une CLÉ), son statut, son coût en
-        /// jetons et ses conditions — et, si elle a reculé, son cadre rouge et sa phrase.
+        /// <summary>Les cartes du flux. Chacune porte son titre (une CLÉ), son statut, ses conditions (son coût n'est PAS
+        /// affiché : aucun nom de fiction pour la grandeur débitée, décision f2 08/10) — et, si elle a reculé, son cadre rouge et sa phrase.
         ///
         /// ⚠️ Les conditions sont des PHRASES, jamais des jauges : le service back interdit
         /// explicitement de projeter un seuil ou une valeur atteinte. Dessiner « 7 sur 10 »
