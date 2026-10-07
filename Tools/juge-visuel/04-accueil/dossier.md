@@ -50,3 +50,14 @@ Rapport : `r3-2026-10-07/rapport.md` (NON APPROUVÉ, 1 bloquant, 4 majeurs, 10 m
   sa bande ; l'allonger pourrait le réduire, donc rétrécir ses marges latérales aujourd'hui EXACTES (49/49 px, #3) : à tenter avec une mesure de la bande à 1920 et à 2400.
   **G11 / G12 / G13** (interlettrage d'ARGENT, médaillon, losange) — chrome COMMUN du HUD v3.1, épinglé par les gardes `HUDv31` : à traiter avec elles, pas depuis ④.
 - Tests purs : `FondEtVerreDeLAccueilPlayModeTests` (V1-V7, catégorie AccueilCanon). Planches au même endroit, puis r4 par un juge FRAIS.
+
+## Juge ⊥ r4 (07/10) — décisions de f2 et état du code (écriture, typecheck 0 erreur, PAS ENCORE joué ni mesuré)
+
+Rapport : `r4-2026-10-07/rapport.md` (NON APPROUVÉ, 0 BLOQUANT, 3 MAJEUR, 7 mineurs ; 8 écarts du r3 fermés, bouton or 1er aux deux résolutions, contraste des fantômes 2,81 → 13,07).
+- **R1 MAJEUR** — hauteur fixe de 110 u (92 px) pour les trois boutons ; CAUSE : le groupe de mise en page du bouton forçait l'expansion en hauteur, donc se déclarait « flexible » et le parent l'étirait à la hauteur de sa rangée (119 / 133 px) — introduit par le correctif de G6.
+- **R2 MAJEUR** — tailles : sous-ligne 30 → 38 u, libellé de bouton 28 → 33, « Lt. … » 34 → 40, TRANCHER 30 → 36 (mêmes polices : c'est la taille).
+- **R3 MAJEUR** — le filet laiton est un PLATEAU (30 % → 70 %) avec rampes, sur `left:14px; right:14px` (55 u de retrait) ; sprite d'alpha converti pour le mélange linéaire.
+- **R4 mineur** — PLANCHER additif de +5/255 (la mesure du juge : monter la teinte à 0,46 ne ferme que 28 %) : le diorama à l'alpha 252/255 sur un gris dont la luminance linéaire vaut lin(5/255)/(1 − a) ; la teinte reste 0,42.
+- **R5** — verre dégradé (13,19,31) → (9,14,24). **R9** — rayon 38 u. **R10** — marges intérieures 58 / 62 u.
+- **NON FAITS** : **R6** (conséquence de R2 et du reflux : se re-mesure), **R7** (zoom 91,7 % du diorama : aspect différent, rien ne dit que ce soit un défaut), **R8** (gouttière 37 / 49 px : élastique par construction, à trancher par f2).
+- À MESURER au créneau (m18/m19/m39 du r4) : la part du décor sous la luminance 10 (cible 1,1 %), les hauteurs des trois boutons, les hauteurs de capitale, la loi du filet. Planches au même endroit, puis juge r5 frais.

@@ -132,8 +132,28 @@ namespace MafiaCleanCity.Operational
         //        `a' = 1 − (1−a)^2,2` (`AlphaDuVoile`). Le gradient est interpolé par morceaux EN alpha CSS, puis converti ligne à ligne.
         //    ⚠️ MODÈLE, PAS MESURE : la luminance par tiers de bande contre la référence se mesure au créneau (les scripts m2/m19/m25 du r3).
         public const float EclaircissementDuFond = 0.42f;
-        /// <summary>La teinte qui rend `filter:brightness(.42)` : (0,42 ; 0,42 ; 0,42), opaque. Pure.</summary>
-        public static Color TeinteDuFond => new Color(EclaircissementDuFond, EclaircissementDuFond, EclaircissementDuFond, 1f);
+
+        // ⛔ R4 (juge ⊥ r4, 07/10) : le diorama est un peu TROP SOMBRE et perd ses ombres (la part du décor sous la luminance 10 passe de 1,2 % à 18,8 %). La mesure TRANCHE le sens : ce n'est pas le gain
+        //    (monter la teinte à 0,46 ne ferme que 28 % de l'écart et laisse 14 % de la peinture dans le quasi-noir) mais un PLANCHER — `REF = 0,749·JEU + 8,52` (ordonnée à l'origine positive) :
+        //    +5/255 sur les trois canaux, à gain inchangé (écart absolu moyen 5,48 → 2,23 ; part sous 10 : 18,8 % → 0,3 %, la référence en a 1,1 %).
+        //    ⇒ Unity n'a pas de « + constante » sur une Image ; on le fait par un MÉLANGE : le diorama à l'alpha `AlphaDuFond` (252/255, représentable en 8 bits) sur un aplat gris `CouleurDuPlancher`
+        //      dont la luminance LINÉAIRE vaut `lin(5/255) / (1 − AlphaDuFond)` : un pixel noir rend alors exactement 5/255 en sRGB ; le gain perd 1,2 % du linéaire (≈ 0,5 % du sRGB), négligeable.
+        //    ⚠️ MODÈLE (additif LINÉAIRE) : +5 sur les noirs, +3 à +4 vers 20-40 ; la part sous 10 et l'écart se MESURENT au créneau (m19 / m39 du r4).
+        public const float PlancherSrgb = 5f / 255f;
+        /// <summary>L'alpha du diorama sur son plancher : 252/255, une valeur que le canal alpha 8 bits représente EXACTEMENT. Pure.</summary>
+        public const float AlphaDuFond = 252f / 255f;
+        /// <summary>Le gris du plancher (sRGB), tel que `(1 − AlphaDuFond) × lin(gris) = lin(PlancherSrgb)`. Pure.</summary>
+        public static Color CouleurDuPlancher
+        {
+            get
+            {
+                float gris = Mathf.LinearToGammaSpace(Mathf.GammaToLinearSpace(PlancherSrgb) / (1f - AlphaDuFond));
+                return new Color(gris, gris, gris, 1f);
+            }
+        }
+
+        /// <summary>La teinte qui rend `filter:brightness(.42)` : (0,42 ; 0,42 ; 0,42) ET l'alpha `AlphaDuFond` du plancher. Pure.</summary>
+        public static Color TeinteDuFond => new Color(EclaircissementDuFond, EclaircissementDuFond, EclaircissementDuFond, AlphaDuFond);
 
         /// <summary>L'alpha CSS du `voile-scene` à la position `t` (0 = haut de l'écran, 1 = bas) : `#0a0f18` à 0xcc (0,8) en haut, 0x22 (0,133) à 18 %, 0 à 40 %,
         /// 0x66 (0,4) en bas — interpolation linéaire par morceaux, comme le navigateur. Pure.</summary>
@@ -617,6 +637,12 @@ namespace MafiaCleanCity.Operational
                 GameObject zone = NewUI("ZoneDuFond", backdrop.transform);
                 Stretch((RectTransform)zone.transform, Vector2.zero, Vector2.zero);   // tout l'écran, derrière le bandeau et le dock
                 zone.AddComponent<RectMask2D>();
+                // R4 : le PLANCHER (gris sous la ville, voir `CouleurDuPlancher`) — rend 5/255 au noir sans toucher aux hautes lumières
+                GameObject plancher = NewUI("PlancherDuFond", zone.transform);
+                Stretch((RectTransform)plancher.transform, Vector2.zero, Vector2.zero);
+                Image pi = plancher.AddComponent<Image>();
+                pi.color = CouleurDuPlancher;
+                pi.raycastTarget = false;
                 fondDeVille = NewUI("FondDeVille", zone.transform);
                 Stretch((RectTransform)fondDeVille.transform, Vector2.zero, Vector2.zero);
                 Image img = fondDeVille.AddComponent<Image>();

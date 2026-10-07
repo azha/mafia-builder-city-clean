@@ -40,7 +40,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(0.42f, DashboardController.EclaircissementDuFond);
             Color t = DashboardController.TeinteDuFond;
             Assert.AreEqual(0.42f, t.r); Assert.AreEqual(0.42f, t.g); Assert.AreEqual(0.42f, t.b);
-            Assert.AreEqual(1f, t.a, "opaque : l'assombrissement est une teinte, pas une transparence");
+            Assert.AreEqual(252f / 255f, t.a, 1e-6f, "R4 : l'alpha du PLANCHER (252/255, exactement représentable) — le diorama se mélange au gris du plancher");
         }
 
         [Test]
@@ -130,9 +130,49 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
+        public void V9_R4_LePlancher_RendCinqSurCinqCentCinquanteCinq_AuNoir_SansToucherLesHautesLumieres()
+        {
+            float a = DashboardController.AlphaDuFond;
+            Assert.AreEqual(252, Mathf.RoundToInt(a * 255f), "représentable EXACTEMENT sur 8 bits");
+            Color p = DashboardController.CouleurDuPlancher;
+            Assert.AreEqual(p.r, p.g); Assert.AreEqual(p.g, p.b, "un gris");
+            // un pixel NOIR de la ville : rend (1 − a)·lin(gris) = lin(5/255)  ⇒ 5/255 en sRGB
+            float noir = (1f - a) * Mathf.GammaToLinearSpace(p.r);
+            Assert.AreEqual(5f, Mathf.LinearToGammaSpace(noir) * 255f, 0.6f, "un pixel noir de la ville rend 5/255 : le plancher du juge ⊥ r4");
+            // une haute lumière (la ville teintée à 200 → ≈ 84) ne bouge presque pas : < 1 niveau sRGB de perte de gain... et le plancher y ajoute < 4
+            float lin = a * Mathf.GammaToLinearSpace(0.42f * 200f / 255f) + (1f - a) * Mathf.GammaToLinearSpace(p.r);
+            float sans = Mathf.GammaToLinearSpace(0.42f * 200f / 255f);
+            Assert.AreEqual(Mathf.LinearToGammaSpace(sans) * 255f, Mathf.LinearToGammaSpace(lin) * 255f, 3f, "le gain des hautes lumières est tel quel (≤ 3/255)");
+            Assert.AreNotEqual(0.46f, DashboardController.EclaircissementDuFond, "R4 : on ne monte PAS la teinte à 0,46 (28 % de l'écart seulement)");
+        }
+
+        [Test]
+        public void V10_R1_R2_R3_R5_LesConstantesDuR4()
+        {
+            Assert.AreEqual(110f, LaSuitePanelController.HauteurDuGeste, "R1 : hauteur FIXE des trois boutons (92 px)");
+            Assert.AreEqual(38f, LaSuitePanelController.TaillePhrase, "R2 : sous-ligne 30 → 38");
+            Assert.AreEqual(33f, LaSuitePanelController.TailleDuMot, "R2 : libellé de bouton 28 → 33");
+            Assert.AreEqual(40f, ExceptionQueuePanelController.TailleDuQui, "R2 : « Lt. … attend vos ordres » 34 → 40");
+            Assert.AreEqual(36f, ExceptionQueuePanelController.TailleDuTrancher, "R2 : TRANCHER 30 → 36");
+            Assert.AreEqual((58, 62), (LaSuitePanelController.RembourrageGauche, LaSuitePanelController.RembourrageDroite), "R10 : marges intérieures 47/48 → 49/53 px");
+            Color32 haut = LaSuitePanelController.VerreHaut, bas = LaSuitePanelController.VerreBas;
+            Assert.AreEqual((13, 19, 31), Trio(haut), "R5 : le verre éclairé du haut");
+            Assert.AreEqual((9, 14, 24), Trio(bas));
+            Assert.Greater(LuminanceRelative(haut), LuminanceRelative(bas), "plus clair en haut qu'en bas (−26 % dans la référence)");
+            // R3 : le filet est un plateau (30 % → 70 %) avec rampes jusqu'à 0
+            Assert.AreEqual(0f, LaSuitePanelController.AlphaCssDuFilet(0f), 1e-6f);
+            Assert.AreEqual(1f, LaSuitePanelController.AlphaCssDuFilet(0.30f), 1e-6f);
+            Assert.AreEqual(1f, LaSuitePanelController.AlphaCssDuFilet(0.50f), 1e-6f);
+            Assert.AreEqual(1f, LaSuitePanelController.AlphaCssDuFilet(0.70f), 1e-6f);
+            Assert.AreEqual(0f, LaSuitePanelController.AlphaCssDuFilet(1f), 1e-6f);
+            Assert.AreEqual(0.5f, LaSuitePanelController.AlphaCssDuFilet(0.15f), 1e-6f, "rampe linéaire");
+            Assert.AreEqual(55f, LaSuitePanelController.RetraitDuFilet, "14 CSS px × 3,6 = 46 px = 55 u de chaque côté");
+        }
+
+        [Test]
         public void V7_LeRayonDuBouton_EtLeLisere()
         {
-            Assert.AreEqual(34, LaSuitePanelController.RayonGeste, "border-radius:8px × 3,6 = 28,8 px ↔ 34 u (323 px = 385 u)");
+            Assert.AreEqual(38, LaSuitePanelController.RayonGeste, "R9 (r4) : 34 → 38 u : or et fantômes restaient 4-5 px sous la maquette (20-21 px)");
             Assert.AreEqual(3.6f, LaSuitePanelController.EpaisseurDuLisere, "3 px dans la référence (2 px en jeu)");
         }
     }

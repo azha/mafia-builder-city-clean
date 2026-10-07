@@ -295,7 +295,7 @@ namespace MafiaCleanCity.Shell
             gauche.AddComponent<LayoutElement>().flexibleWidth = 1f;
 
             TextMeshProUGUI qui = NewText(gauche.transform, QuiAttend(card), -1);
-            qui.fontSize = 34;
+            qui.fontSize = TailleDuQui;   // R2 : 34 → 40 (hauteur de capitale 25 → 21 contre la maquette : −16 %)
             // F10 : le crème CHAUD (cadre 4 : (205,196,175)) — plus le blanc froid.
             qui.color = LaSuitePanelController.Melange(DesignTokens.Current.hudCreme, DesignTokens.Current.ficheGlassBottom, 0.87f);
             qui.overflowMode = TextOverflowModes.Ellipsis;
@@ -320,7 +320,7 @@ namespace MafiaCleanCity.Shell
             btnLe.minWidth = 220; btnLe.preferredWidth = 220;
             btnLe.flexibleWidth = 0f;
             TextMeshProUGUI mot = NewText(trancherGo.transform, MafiaCleanCity.I18n.Libelle.De("chrome", "bandeau", "trancher").ToUpperInvariant(), -1);
-            mot.fontSize = 30;
+            mot.fontSize = TailleDuTrancher;   // R2 : 30 → 36 (TRANCHER : capitale 23 → 19 contre la maquette : −17 %)
             mot.fontStyle = FontStyles.Bold;
             mot.characterSpacing = 10;
             mot.color = DesignTokens.Current.ficheCtaOrHaut;   // F13 : UN or sur ④ (cadre 4 : (231,192,102)) ; la liste garde OrDuGeste
@@ -328,6 +328,9 @@ namespace MafiaCleanCity.Shell
             RectTransform motRt = (RectTransform)mot.transform;
             motRt.anchorMin = Vector2.zero; motRt.anchorMax = Vector2.one; motRt.offsetMin = motRt.offsetMax = Vector2.zero;
         }
+
+        /// <summary>R2 (juge ⊥ r4, 07/10) : les tailles de « Lt. … attend vos ordres » et de TRANCHER (×1,19 et ×1,21 : mêmes polices, la maquette est plus grande).</summary>
+        public const float TailleDuQui = 40f, TailleDuTrancher = 36f;
 
         /// <summary>F17 (arbitrage f2, 26/09 ; cadres 2 et 4 re-rendus @65be0216) — sur l'Accueil, la gravité n'est PAS une couleur : la
         /// couleur est réservée à l'alarme. LÉGÈRE en gris chaud éteint (140,130,114 = `#8c8272`), MODÉRÉE en gris intermédiaire (`#a39985`), GRAVE

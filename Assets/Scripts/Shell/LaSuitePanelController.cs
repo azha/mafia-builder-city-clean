@@ -69,12 +69,23 @@ namespace MafiaCleanCity.Shell
             Image fond = go.AddComponent<Image>();
             Arrondir(fond, RayonBloc, DesignTokens.Current.ficheGlassBottom);
             fond.raycastTarget = false;
+            // R5 : le verre est éclairé du haut (13,19,31) → (9,14,24) — la plaque le masque (même patron que la pilule or : la forme arrondie sert de masque, le dégradé la remplit)
+            go.AddComponent<Mask>().showMaskGraphic = false;
+            GameObject verre = new GameObject("VerreDegrade", typeof(RectTransform));
+            verre.transform.SetParent(go.transform, false);
+            verre.transform.SetAsFirstSibling();
+            verre.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform vrt = (RectTransform)verre.transform;
+            vrt.anchorMin = Vector2.zero; vrt.anchorMax = Vector2.one; vrt.offsetMin = vrt.offsetMax = Vector2.zero;
+            Image vi = verre.AddComponent<Image>();
+            vi.sprite = ProceduralUI.VerticalGradient(64, VerreHaut, VerreBas);
+            vi.raycastTarget = false;
             Lisere(go.transform, RayonBloc, BordDePlaque);
             VerticalLayoutGroup vlg = go.AddComponent<VerticalLayoutGroup>();
             // G9/G10 (juge ⊥ r3, 07/10) : le rythme vertical du panneau était comprimé de 22 à 35 % sur trois gouttières indépendantes (réf → jeu : haut → « LA SUITE » 43 → 37 px,
             // « LA SUITE » → 1ᵉʳ titre 58 → 38, titre → corps 30 → 20, corps → titre suivant 93 → 72). MESURE du créneau du 07/10 (P1·mesure) : le bloc veut 636,7 u pour une bande de
             // 1 011,7 u (1920) et 1 349,1 u (2400), échelle 1 — l'allongement (≈ 115 u) tient, `Ajuster` ne le réduit pas, les marges latérales restent exactes. (px ÷ 0,839 = u.)
-            vlg.padding = new RectOffset(56, 56, RembourrageHaut, 48);
+            vlg.padding = new RectOffset(RembourrageGauche, RembourrageDroite, RembourrageHaut, 48);
             vlg.spacing = EspaceEntreLignes;
             vlg.childControlWidth = true; vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true; vlg.childForceExpandHeight = false;
@@ -87,10 +98,13 @@ namespace MafiaCleanCity.Shell
             lisereOr.transform.SetParent(go.transform, false);
             lisereOr.AddComponent<LayoutElement>().ignoreLayout = true;
             RectTransform lrt = (RectTransform)lisereOr.transform;
-            lrt.anchorMin = new Vector2(0.17f, 1f); lrt.anchorMax = new Vector2(0.83f, 1f); lrt.pivot = new Vector2(0.5f, 1f);
-            lrt.sizeDelta = new Vector2(0f, 3.6f); lrt.anchoredPosition = Vector2.zero;
+            // R3 (juge ⊥ r4) : un segment PLAT à bouts francs (115 constant de x 215 à 864) là où la maquette pose un PLATEAU avec RAMPES (112-114 de x ≈ 360 à ≈ 720, puis 0 vers 170 et 950) :
+            // le gradient CSS `transparent → #b08d3e 30 % → #b08d3e 70 % → transparent` sur `left:14px;right:14px`. Le sprite porte l'alpha, converti pour le mélange linéaire.
+            lrt.anchorMin = new Vector2(0f, 1f); lrt.anchorMax = new Vector2(1f, 1f); lrt.pivot = new Vector2(0.5f, 1f);
+            lrt.offsetMin = new Vector2(RetraitDuFilet, -3.6f); lrt.offsetMax = new Vector2(-RetraitDuFilet, 0f);
             Image li = lisereOr.AddComponent<Image>();
-            li.color = DesignTokens.Current.hudHairlineGold;
+            li.sprite = FiletLaiton();
+            li.color = Color.white;
             li.raycastTarget = false;
 
             // F10 : le crème CHAUD du bandeau (hudCremeSecondary, le jeton de « ARGENT ») — plus le gris froid. F16 : interlettrage rendu.
@@ -179,7 +193,7 @@ namespace MafiaCleanCity.Shell
             textes.AddComponent<LayoutElement>().flexibleWidth = 1f;
             TextMeshProUGUI t = Texte(textes.transform, l.Titre, 44, DesignTokens.Current.hudMoneyGold, DesignTokens.Current.hudSerifFont != null ? DesignTokens.Current.hudSerifFont : DesignTokens.Current.primaryFont);
             t.name = "TitreDeLigne";
-            TextMeshProUGUI p = Texte(textes.transform, l.Phrase, 30, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            TextMeshProUGUI p = Texte(textes.transform, l.Phrase, TaillePhrase, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             p.name = "Phrase";
 
             if (l.Geste == GesteDeLaSuite.Aucun || string.IsNullOrEmpty(l.MotDuGeste)) return;
@@ -216,12 +230,13 @@ namespace MafiaCleanCity.Shell
             bh.padding = new RectOffset(43, 43, 0, 0);
             bh.childAlignment = TextAnchor.MiddleCenter;
             bh.childControlWidth = true; bh.childControlHeight = true;
-            bh.childForceExpandWidth = false; bh.childForceExpandHeight = true;
+            bh.childForceExpandWidth = false; bh.childForceExpandHeight = false;   // R1 : un groupe qui FORCE l'expansion se déclare flexible, et le parent étire le bouton à la hauteur de sa rangée
             LayoutElement le = geste.AddComponent<LayoutElement>();
-            le.minHeight = le.preferredHeight = 100f;
+            le.minHeight = le.preferredHeight = HauteurDuGeste;
+            le.flexibleHeight = 0f;
             le.flexibleWidth = 0f;
             // G4 : le libellé du bouton fantôme est le CRÈME CHAUD `--creme` (234,224,200), pas le blanc froid (238,241,242) qui tombait à 2,81:1 sur la plaque.
-            TextMeshProUGUI mot = Texte(geste.transform, l.MotDuGeste.ToUpperInvariant(), 28,
+            TextMeshProUGUI mot = Texte(geste.transform, l.MotDuGeste.ToUpperInvariant(), TailleDuMot,
                 premierGeste ? DesignTokens.Current.ficheCtaOrEncre : DesignTokens.Current.hudCreme, DesignTokens.Current.primaryFont);
             mot.fontStyle = FontStyles.Bold;
             mot.characterSpacing = 10;
@@ -235,7 +250,23 @@ namespace MafiaCleanCity.Shell
         //    « LA SUITE ») et AUCUN du cadre 0 ratifié — c'est la marque de l'atelier pour une copie PROPOSÉE, pas un ornement.
         // G7 : `border-radius:8px` de `.g4` × 3,6 (cadre 4) = 28,8 px = 34 u (323 px ↔ 385 u) — le jeu rendait ≈ 6-7 px au critère du juge (22 u). G8 : le liseré est de
         // 3 px dans la référence (2 px en jeu) ⇒ 3,6 u.
-        public const int RayonBloc = 28, RayonGeste = 34;
+        // ⛔ JUGE ⊥ r4 (07/10, 0 BLOQUANT · 3 MAJEUR · 7 mineurs). R9 : le rayon du bouton or (17/16) comme celui des fantômes (18/19) restait 4-5 px sous la maquette (20-21 pour `border-radius:8px`) : 34 → 38 u.
+        public const int RayonBloc = 28, RayonGeste = 38;
+        /// <summary>R1 : les trois boutons ont la MÊME hauteur (réf 92 px = 110 u pour `.g4{font:8px/1;padding:8px 10px;border:1px}` ⇒ 26 CSS × 3,6 ≈ 93) ; le jeu étirait les deux fantômes à la
+        /// hauteur de leur RANGÉE (119 et 133 px) — un groupe de mise en page qui force l'expansion se déclare « flexible » et le parent l'étire. Hauteur FIXE, largeur au contenu (G6).</summary>
+        public const float HauteurDuGeste = 110f;
+        /// <summary>R2 : les sans-sérif secondaires étaient 14 à 21 % trop petits (même famille de police : c'est la TAILLE) — hauteurs de capitale sous-ligne 24 → 19, libellé de bouton 21 → 18 :
+        /// 30 → 38 u (×1,26) et 28 → 33 u (×1,17). Le serif des titres (29 → 28) et « LA SUITE » (17 → 16) sont justes, non touchés.</summary>
+        public const float TaillePhrase = 38f, TailleDuMot = 33f;
+        /// <summary>R3 : le filet laiton est un plateau avec rampes — `linear-gradient(90deg, transparent, #b08d3e 30%, #b08d3e 70%, transparent)` sur `left:14px; right:14px` : 14 CSS px × 3,6
+        /// = 46 px = 55 u de retrait de chaque côté. Plateau de 30 % à 70 % de ce segment.</summary>
+        public const float RetraitDuFilet = 55f;
+        /// <summary>R5 : le verre du panneau est éclairé du haut — `linear-gradient(180deg,#0c1320ef,#080d17f6)` ; médianes mesurées sur la référence, haut (13,19,31) → bas (9,14,24).</summary>
+        public static Color VerreHaut => new Color32(13, 19, 31, 255);
+        public static Color VerreBas => new Color32(9, 14, 24, 255);
+        /// <summary>R10 : marges intérieures du panneau — réf 49 px à gauche et 53 px à droite (encre du texte à x 99, bord droit des boutons à x 979) ; le jeu rendait 47 / 48 :
+        /// +2 et +5 px ⇒ 56 → 58 et 56 → 62 u.</summary>
+        public const int RembourrageGauche = 58, RembourrageDroite = 62;
         /// <summary>G9 : haut du panneau → « LA SUITE » : 43 px (réf) = 51 u (37 px = 47 u + les 4 u de marge de la plaque).</summary>
         public const int RembourrageHaut = 47;
         /// <summary>G9 : l'espace entre deux enfants du panneau (titre, rangées, séparateurs) : 28 → 40 u (+12 u sur les cinq gouttières).</summary>
@@ -311,6 +342,36 @@ namespace MafiaCleanCity.Shell
         }
 
         // ─────────────────────────────────────────────────────────────── gestes
+
+        /// <summary>L'alpha CSS du filet à la position `t` (0 = bord gauche du segment, 1 = bord droit) : 0 → 1 sur les 30 premiers %, plateau jusqu'à 70 %, puis 1 → 0. Pure.</summary>
+        public static float AlphaCssDuFilet(float t)
+        {
+            t = Mathf.Clamp01(t);
+            if (t <= 0.30f) return t / 0.30f;
+            if (t >= 0.70f) return (1f - t) / 0.30f;
+            return 1f;
+        }
+
+        private static Sprite filetLaiton;
+        /// <summary>Le filet laiton : une ligne de pixels du laiton `hudHairlineGold`, alpha = <see cref="AlphaCssDuFilet"/> converti pour le mélange linéaire sur la plaque (`AlphaSrgbVersLineaire`).</summary>
+        private static Sprite FiletLaiton()
+        {
+            if (filetLaiton != null) return filetLaiton;
+            const int n = 256;
+            Color laiton = DesignTokens.Current.hudHairlineGold, fond = DesignTokens.Current.ficheGlassBottom;
+            var tex = new Texture2D(n, 1, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear, name = "FiletLaiton" };
+            var px = new Color32[n];
+            Color32 rgb = laiton;
+            for (int x = 0; x < n; x++)
+            {
+                float a = ProceduralUI.AlphaSrgbVersLineaire(laiton, fond, AlphaCssDuFilet(x / (n - 1f)));
+                px[x] = new Color32(rgb.r, rgb.g, rgb.b, (byte)Mathf.RoundToInt(Mathf.Clamp01(a) * 255f));
+            }
+            tex.SetPixels32(px);
+            tex.Apply(false, true);
+            filetLaiton = Sprite.Create(tex, new Rect(0, 0, n, 1), new Vector2(0.5f, 0.5f), 100f);
+            return filetLaiton;
+        }
 
         /// <summary>Le geste d'une ligne, PAR LE SHELL (en surimpression) : ㉚ la chaîne d'appro, ② la fiche du labo, ㉟ la vente, ⑧ les règles,
         /// ㊵ la filière (blanchir).</summary>
