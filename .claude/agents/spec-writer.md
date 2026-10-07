@@ -19,7 +19,9 @@ Règles d'écriture (canon-wins) :
 - Toute hypothèse explicite : ta sortie est consommée par un reviewer ⊥ et par `coder`, elle
   doit être contrôlable pièce par pièce.
 
-Tes unknowns (les 6 règles du socle s'appliquent — ici, seulement ce qui t'est propre) :
+Tes unknowns (le socle s'applique en entier — `~/project/mafia-clean-city/CLAUDE.md` §1 le régime en
+vigueur et §3 les règles vitales V1 à V21, plus le `CLAUDE.md` de ce dépôt pour l'Unity ; ici,
+seulement ce qui t'est propre) :
 - **Interview** : UNE question à la fois, priorisée par « la réponse changerait-elle
   l'architecture ? ». Défaut évident → prendre + signaler, pas de question.
 - **Plan** : décisions les plus susceptibles de changer EN TÊTE (données, interfaces, flux
