@@ -144,7 +144,7 @@ namespace MafiaCleanCity.Shell
             GameObject s = new GameObject("Separateur", typeof(RectTransform));
             s.transform.SetParent(parent, false);
             Image im = s.AddComponent<Image>();
-            im.color = BordDePlaque;
+            im.color = SeparateurDeRangee;   // (29,34,44), pas le liseré du panneau (G2)
             im.raycastTarget = false;
             LayoutElement le = s.AddComponent<LayoutElement>();
             le.minHeight = le.preferredHeight = 2f;
@@ -199,25 +199,34 @@ namespace MafiaCleanCity.Shell
             b.targetGraphic = im;
             GesteDeLaSuite g = l.Geste;
             b.onClick.AddListener(() => Ouvrir(g));
+            // G6 : la maquette fait ÉPOUSER son libellé à chaque bouton (`padding:8px 10px`, `white-space:nowrap`) et les cale à DROITE (bord droit commun) — COMMANDER 329 px,
+            // VOIR LA VENTE 373, BLANCHIR 273 ; le jeu les faisait TOUS à 324 (385 u fixes) : un bord gauche rectiligne et BLANCHIR flottant dans 51 px de vide. La largeur est
+            // maintenant celle du libellé + 2 × 10 px CSS (36 px = 43 u) ; la hauteur reste 100 u. Le libellé PARTICIPE à la mise en page (il ne la quitte plus).
+            HorizontalLayoutGroup bh = geste.AddComponent<HorizontalLayoutGroup>();
+            bh.padding = new RectOffset(43, 43, 0, 0);
+            bh.childAlignment = TextAnchor.MiddleCenter;
+            bh.childControlWidth = true; bh.childControlHeight = true;
+            bh.childForceExpandWidth = false; bh.childForceExpandHeight = true;
             LayoutElement le = geste.AddComponent<LayoutElement>();
             le.minHeight = le.preferredHeight = 100f;
-            le.minWidth = le.preferredWidth = 385f;   // 323 px à 1080 (cadre 4) — il en faisait 283
             le.flexibleWidth = 0f;
+            // G4 : le libellé du bouton fantôme est le CRÈME CHAUD `--creme` (234,224,200), pas le blanc froid (238,241,242) qui tombait à 2,81:1 sur la plaque.
             TextMeshProUGUI mot = Texte(geste.transform, l.MotDuGeste.ToUpperInvariant(), 28,
-                premierGeste ? DesignTokens.Current.ficheCtaOrEncre : DesignTokens.Current.onSurfacePrimary, DesignTokens.Current.primaryFont);
+                premierGeste ? DesignTokens.Current.ficheCtaOrEncre : DesignTokens.Current.hudCreme, DesignTokens.Current.primaryFont);
             mot.fontStyle = FontStyles.Bold;
             mot.characterSpacing = 10;
             mot.alignment = TextAlignmentOptions.Center;
             mot.enableWordWrapping = false;
-            mot.GetComponent<LayoutElement>().ignoreLayout = true;
-            RectTransform mrt = (RectTransform)mot.transform;
-            mrt.anchorMin = Vector2.zero; mrt.anchorMax = Vector2.one; mrt.offsetMin = mrt.offsetMax = Vector2.zero;
+            mot.overflowMode = TextOverflowModes.Overflow;
         }
 
         // ─────────────────────────────────────────────────────────────── arrondis et liserés (cosmétique f1, 26/09)
         // ⚠️ PAS de pointillés sous les textes : dans la maquette, ils soulignent TOUS les mots du cadre 4 (titres, phrases, boutons,
         //    « LA SUITE ») et AUCUN du cadre 0 ratifié — c'est la marque de l'atelier pour une copie PROPOSÉE, pas un ornement.
-        public const int RayonBloc = 28, RayonGeste = 22;
+        // G7 : `border-radius:8px` de `.g4` × 3,6 (cadre 4) = 28,8 px = 34 u (323 px ↔ 385 u) — le jeu rendait ≈ 6-7 px au critère du juge (22 u). G8 : le liseré est de
+        // 3 px dans la référence (2 px en jeu) ⇒ 3,6 u.
+        public const int RayonBloc = 28, RayonGeste = 34;
+        public const float EpaisseurDuLisere = 3.6f;
         public const float MargeLaterale = 56f;   // 47 px à 1080 (cadre 4 : marges 47/46)
 
         // ⛔ Projet en espace LINÉAIRE : une opacité CSS recopiée telle quelle rend trop clair (le socle l'a payé 5 fois). Les teintes
@@ -230,10 +239,20 @@ namespace MafiaCleanCity.Shell
             c.a = 1f;
             return c;
         }
-        /// <summary>Le bord de plaque (32,37,47) sur la nuit de la plaque.</summary>
-        public static Color BordDePlaque => Melange(DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.ficheGlassBottom, 0.18f);
-        private static Color FondGesteSombre => Melange(DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.ficheGlassTop, 0.055f);
-        private static Color BordDeGesteSombre => Melange(DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.ficheGlassTop, 0.37f);
+        // ⛔ LES QUATRE VERRES GRADUÉS DE LA MAQUETTE (juge ⊥ r3 de ④, G2/G3/G4/G8, 07/10). `Melange` rend la couleur `C'` à poser AVEC l'opacité CSS pour qu'un mélange
+        //    linéaire retombe sur la cible ; ces trois jetons l'utilisaient en aplat OPAQUE, sans l'opacité — le « C' » (ici ×2,3 à ×3,3) s'affichait tel quel, et
+        //    quatre rôles distincts sont devenus UN gris-ardoise (73,85,96). Un aplat opaque se rend à sa valeur sRGB, EXACTEMENT : on pose donc la valeur mesurée de la
+        //    référence, par rôle (les mêmes que le juge a lues sur le cadre 4 re-rendu), et plus un calcul.
+        /// <summary>Le liseré du panneau (32,37,47) : le verre le plus discret, sur la nuit de la plaque. Mesuré 36,7 de luminance sur la référence.</summary>
+        public static Color BordDePlaque => new Color32(32, 37, 47, 255);
+        /// <summary>Le séparateur de rangée (29,34,44) — un cran SOUS le liseré du panneau.</summary>
+        public static Color SeparateurDeRangee => new Color32(29, 34, 44, 255);
+        /// <summary>Le liseré de la carte de file / de la barre TRANCHER (41,53,70) = le CSS `#2a3648` : le verre le plus clair des quatre.</summary>
+        public static Color BordDeLaFile => new Color32(41, 53, 70, 255);
+        /// <summary>Le fond du bouton fantôme (20,26,36) : un voile blanc à 4 % sur la plaque, PAS une plaque pleine (le bouton or est le seul aplat lumineux).</summary>
+        public static Color FondGesteSombre => new Color32(20, 26, 36, 255);
+        /// <summary>Le filet du bouton fantôme (58,63,72) : `#ffffff2a` sur (20,26,36).</summary>
+        public static Color BordDeGesteSombre => new Color32(58, 63, 72, 255);
 
         /// <summary>Une surface pleine aux coins arrondis (sprite découpé de `ProceduralUI`, le même que la bulle de ⑨).</summary>
         public static void Arrondir(Image im, int rayon, Color couleur)
@@ -252,7 +271,7 @@ namespace MafiaCleanCity.Shell
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = rt.offsetMax = Vector2.zero;
             go.AddComponent<LayoutElement>().ignoreLayout = true;
             Image im = go.AddComponent<Image>();
-            im.sprite = ProceduralUI.RoundedRectOutline(rayon, 2f, Color.white);
+            im.sprite = ProceduralUI.RoundedRectOutline(rayon, EpaisseurDuLisere, Color.white);
             im.type = Image.Type.Sliced;
             im.color = couleur;
             im.raycastTarget = false;

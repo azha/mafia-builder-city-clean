@@ -30,3 +30,23 @@ titres hudMoneyGold, TRANCHER ficheCtaOrHaut), F15 (marges 47 px), F16 (interlet
 ## Instrument (planches)
 
 P1 est photographiée APRÈS que LA SUITE soit lue (ClicheParcours, bcccdf7d) ; le délai est noté au journal.
+
+## Juge ⊥ r3 (07/10) — décisions de f2 et état du code (écriture seule, NON COMPILÉ, rien mesuré sous Unity)
+
+Rapport : `r3-2026-10-07/rapport.md` (NON APPROUVÉ, 1 bloquant, 4 majeurs, 10 mineurs ; 10 écarts du r1 fermés, LA SUITE à la maquette au bit près).
+- **G1 BLOQUANT, G5 (même cause)** — le diorama de nuit n'était pas assombri : teinte (0,42 ; 0,42 ; 0,42) (`filter:brightness(.42)`) + le `voile-scene` de la maquette
+  (`#0a0f18cc → 22 à 18 % → 00 à 40 % → 66`), l'alpha converti pour le mélange linéaire (`1 − (1−a)^2,2`). `DashboardController.TeinteDuFond`, `AlphaCssDuVoile`,
+  `AlphaLineaireDuVoile`. **À MESURER** au créneau : luminance par tiers de bande contre la référence (cible ×1,0 ; le jeu était ×2,57 à ×3,01) et le rang du bouton or à 1080×2400 (cible 1/…).
+- **G2, G3, G8** — la cause : `LaSuitePanelController.Melange` rend la couleur `C'` à poser AVEC l'opacité CSS ; ces jetons l'utilisaient en aplat OPAQUE, sans l'opacité, et
+  quatre rôles sont devenus (73,85,96). Quatre valeurs mesurées sur la référence, par rôle : fond du bouton fantôme (20,26,36), séparateur (29,34,44), liseré du panneau (32,37,47),
+  liseré de la file (41,53,70) ; liseré de 3 px (3,6 u).
+- **G4** — le libellé des boutons fantômes : `hudCreme` (234,224,200), plus `onSurfacePrimary`.
+- **G6** — les boutons épousent leur libellé (+ 2 × 10 px CSS), plus de largeur fixe de 385 u ; ils restent calés à droite (bord droit commun).
+- **G7** — rayon du bouton : 34 u (28,8 px = 8 CSS px × 3,6) au lieu de 22 u.
+- **G14** — LÉGÈRE `#8c8272`, MODÉRÉE `#a39985`, GRAVE `--creme-2` : jetons CSS en aplats exacts (même cause que G2).
+- **G15 (pastille FAMILLE absente) : PAS UN DÉFAUT pour un compte neuf.** La pastille est « allumée par ≥ 1 rapport d'autonomie servi » (F7) ; un compte neuf n'en a aucun ; la maquette du cadre 4
+  la dessine parce qu'elle montre un état avec un rapport. C'est un arbitrage de DONNÉE (juge-donnees), pas de rendu.
+- **NON FAITS dans ce lot, avec la raison** : **G9 / G10** (rythme vertical −22 à −35 %, panneau −30 %) — `LaSuitePanelController.Ajuster` RÉDUIT À L'ÉCHELLE le bloc dès qu'il dépasse
+  sa bande ; l'allonger pourrait le réduire, donc rétrécir ses marges latérales aujourd'hui EXACTES (49/49 px, #3) : à tenter avec une mesure de la bande à 1920 et à 2400.
+  **G11 / G12 / G13** (interlettrage d'ARGENT, médaillon, losange) — chrome COMMUN du HUD v3.1, épinglé par les gardes `HUDv31` : à traiter avec elles, pas depuis ④.
+- Tests purs : `FondEtVerreDeLAccueilPlayModeTests` (V1-V7, catégorie AccueilCanon). Planches au même endroit, puis r4 par un juge FRAIS.

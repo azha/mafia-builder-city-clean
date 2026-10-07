@@ -272,7 +272,7 @@ namespace MafiaCleanCity.Shell
             // Juge ⊥ r1 de ④ (26/09) — F12 : la plaque de file en bleu nuit (ficheGlassBottom), son bord discret (le même que LA SUITE).
             LaSuitePanelController.Arrondir(fond, LaSuitePanelController.RayonBloc, DesignTokens.Current.ficheGlassBottom);
             fond.raycastTarget = false;                               // le toucher passe à la surface « ViewAll », dessous
-            LaSuitePanelController.Lisere(row.transform, LaSuitePanelController.RayonBloc, LaSuitePanelController.BordDePlaque);
+            LaSuitePanelController.Lisere(row.transform, LaSuitePanelController.RayonBloc, LaSuitePanelController.BordDeLaFile);   // G2 : (41,53,70), le plus clair des quatre verres
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.padding = new RectOffset(36, 36, 18, 18);
             hlg.spacing = 16;
@@ -330,19 +330,18 @@ namespace MafiaCleanCity.Shell
         }
 
         /// <summary>F17 (arbitrage f2, 26/09 ; cadres 2 et 4 re-rendus @65be0216) — sur l'Accueil, la gravité n'est PAS une couleur : la
-        /// couleur est réservée à l'alarme. LÉGÈRE en gris chaud éteint (139,129,113), MODÉRÉE en gris intermédiaire, GRAVE en gris chaud
-        /// (182,170,144) — le crème secondaire à trois intensités, rendues en couleur EXACTE (espace linéaire). Hors domaine : la plus éteinte.</summary>
+        /// couleur est réservée à l'alarme. LÉGÈRE en gris chaud éteint (140,130,114 = `#8c8272`), MODÉRÉE en gris intermédiaire (`#a39985`), GRAVE
+        /// en crème secondaire (185,173,146 = `#b9ad92`) — trois jetons CSS, en aplats exacts (07/10, juge ⊥ r3 G14). Hors domaine : la plus éteinte.</summary>
         public static Color GraviteSurLAccueil(string bande)
         {
-            float intensite;
+            // G14 (juge ⊥ r3, 07/10) : LÉGÈRE rendait (157,149,129), 19/255 plus clair que le gris chaud de la maquette — même cause que les verres (le `C'` d'un mélange
+            // rendu en aplat opaque). Les trois gris sont les JETONS CSS de la maquette, en aplats exacts : `.g-mild #8c8272`, `.g-moderate #a39985`, GRAVE = `--creme-2`.
             switch (MafiaCleanCity.Operational.Exceptions.ExceptionBandes.RangGravite(bande))
             {
-                case 2: intensite = 1f; break;
-                case 1: intensite = 0.86f; break;
-                default: intensite = 0.72f; break;
+                case 2: return DesignTokens.Current.hudCremeSecondary;   // #b9ad92
+                case 1: return new Color32(0xa3, 0x99, 0x85, 255);
+                default: return new Color32(0x8c, 0x82, 0x72, 255);
             }
-            return intensite >= 1f ? DesignTokens.Current.hudCremeSecondary
-                : LaSuitePanelController.Melange(DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.ficheGlassBottom, intensite);
         }
 
         /// <summary>QUI attend : le lieutenant NOMMÉ, ou la ville — les deux clés du bandeau, servies (la première partie de `Suivante`).</summary>

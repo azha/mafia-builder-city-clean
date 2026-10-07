@@ -120,6 +120,52 @@ namespace MafiaCleanCity.Operational
         //    les CINQ cadres, même sous « Plein jour » — mesuré au créneau du 26/09, le diorama de JOUR (proposé « selon la phase ») cassait
         //    l'écran (ciel clair, nuages sous le bandeau). Sans texte cuit, il remonte jusqu'en HAUT derrière le bandeau (F1).
         public const string ProfilDuFond = "verge";
+
+        // ⛔ LE DIORAMA DE NUIT EST ASSOMBRI (juge ⊥ r3 de ④, G1 BLOQUANT + G5, 07/10). La maquette (`ecrans-brennar-accueil.html`, cadre 4) pose la ville sous
+        //    `filter:brightness(.42)` PUIS un `voile-scene` : `linear-gradient(180deg, #0a0f18cc 0, #0a0f1822 18%, #0a0f1800 40%, #0a0f1866 100%)`. Le jeu posait la
+        //    texture BLANCHE, sans l'un ni l'autre : la ville rendue ×2,57 à ×3,01 trop claire, et à 1080×2400 le bouton or tombait du 1ᵉʳ au 13ᵉ rang des blocs les
+        //    plus clairs (l'ordre de lecture inversé) ; l'eau du quai sortait en bleu-pétrole sous TRANCHER (G5, même cause).
+        //    ⇒ Projet en espace LINÉAIRE, la maquette en sRGB :
+        //      · `brightness(.42)` MULTIPLIE les valeurs sRGB par 0,42. `Image.color` est lu par Unity en sRGB puis converti (les aplats opaques de ce dépôt
+        //        tombent au bit près) : teinter par (0,42 ; 0,42 ; 0,42) multiplie le LINÉAIRE par 0,42^2,2 ≈ 0,147, soit exactement ×0,42 sur le sRGB rendu.
+        //      · le voile est un noir quasi pur à alpha variable : un noir à alpha `a` rend `(1−a)·src` en sRGB dans le navigateur ; en mélange linéaire, il faut
+        //        `a' = 1 − (1−a)^2,2` (`AlphaDuVoile`). Le gradient est interpolé par morceaux EN alpha CSS, puis converti ligne à ligne.
+        //    ⚠️ MODÈLE, PAS MESURE : la luminance par tiers de bande contre la référence se mesure au créneau (les scripts m2/m19/m25 du r3).
+        public const float EclaircissementDuFond = 0.42f;
+        /// <summary>La teinte qui rend `filter:brightness(.42)` : (0,42 ; 0,42 ; 0,42), opaque. Pure.</summary>
+        public static Color TeinteDuFond => new Color(EclaircissementDuFond, EclaircissementDuFond, EclaircissementDuFond, 1f);
+
+        /// <summary>L'alpha CSS du `voile-scene` à la position `t` (0 = haut de l'écran, 1 = bas) : `#0a0f18` à 0xcc (0,8) en haut, 0x22 (0,133) à 18 %, 0 à 40 %,
+        /// 0x66 (0,4) en bas — interpolation linéaire par morceaux, comme le navigateur. Pure.</summary>
+        public static float AlphaCssDuVoile(float t)
+        {
+            t = Mathf.Clamp01(t);
+            if (t <= 0.18f) return Mathf.Lerp(0xcc / 255f, 0x22 / 255f, t / 0.18f);
+            if (t <= 0.40f) return Mathf.Lerp(0x22 / 255f, 0f, (t - 0.18f) / 0.22f);
+            return Mathf.Lerp(0f, 0x66 / 255f, (t - 0.40f) / 0.60f);
+        }
+
+        /// <summary>L'alpha À POSER pour que le mélange LINÉAIRE d'un noir quasi pur retombe sur le mélange sRGB du navigateur : `1 − (1−a)^2,2`. Pure.</summary>
+        public static float AlphaLineaireDuVoile(float alphaCss) => 1f - Mathf.Pow(1f - Mathf.Clamp01(alphaCss), 2.2f);
+
+        /// <summary>Le voile de scène : une colonne de pixels `#0a0f18`, l'alpha converti pour le mélange linéaire. Construit une fois.</summary>
+        private static Sprite voileDeScene;
+        private static Sprite VoileDeScene()
+        {
+            if (voileDeScene != null) return voileDeScene;
+            const int n = 256;
+            var tex = new Texture2D(1, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear, name = "VoileDeScene" };
+            var px = new Color32[n];
+            for (int y = 0; y < n; y++)   // la ligne 0 est le BAS de la texture
+            {
+                float t = 1f - y / (n - 1f);
+                px[y] = new Color32(0x0a, 0x0f, 0x18, (byte)Mathf.RoundToInt(AlphaLineaireDuVoile(AlphaCssDuVoile(t)) * 255f));
+            }
+            tex.SetPixels32(px);
+            tex.Apply(false, true);
+            voileDeScene = Sprite.Create(tex, new Rect(0, 0, 1, n), new Vector2(0.5f, 0.5f), 100f);
+            return voileDeScene;
+        }
         /// <summary>Le mode du diorama de l'Accueil : la NUIT, quelle que soit la phase (la maquette, cadres 0-4). Pur.</summary>
         public static string ModeDuFond(string dayPhase) => "nuit";
         private GameObject fondDeVille;
@@ -575,12 +621,19 @@ namespace MafiaCleanCity.Operational
                 Stretch((RectTransform)fondDeVille.transform, Vector2.zero, Vector2.zero);
                 Image img = fondDeVille.AddComponent<Image>();
                 img.sprite = ville;
-                img.color = Color.white;
+                img.color = TeinteDuFond;   // brightness(.42) de la maquette (G1) — plus la texture BLANCHE
                 img.raycastTarget = false;
                 AspectRatioFitter fit = fondDeVille.AddComponent<AspectRatioFitter>();
                 fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
                 fit.aspectRatio = ville.rect.width / ville.rect.height;
                 FondDeVille = img;
+                // le `voile-scene` de la maquette PAR-DESSUS la ville (G1/G5) : sombre en haut, nul au milieu, moyen en bas ; sous l'écran entier, sans toucher
+                GameObject voile = NewUI("VoileDeScene", zone.transform);
+                Stretch((RectTransform)voile.transform, Vector2.zero, Vector2.zero);
+                Image vi = voile.AddComponent<Image>();
+                vi.sprite = VoileDeScene();
+                vi.color = Color.white;
+                vi.raycastTarget = false;
                 fondDeVille = zone;                                    // on active/éteint la zone entière
                 fondDeVille.SetActive(FeuilleMasquee);
             }
