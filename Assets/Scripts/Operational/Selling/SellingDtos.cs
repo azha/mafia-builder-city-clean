@@ -49,7 +49,32 @@ namespace MafiaCleanCity.Operational.Selling
     [System.Serializable] public class DealerPayload { public DealerDto data; }
     [System.Serializable] public class DealerEnvelope { public DealerPayload payload; }
 
-    [System.Serializable] public class CollectData { public string safehouse_id; }
+    /// <summary>Le CORPS de `POST …/dealer/:id/collect` — rien d'autre : le back REJETTE tout champ inconnu (`rejectUnknownFields`).
+    /// Les clés de la RÉPONSE vivent dans `CollectData` ; ne jamais envoyer celui-ci.</summary>
+    [System.Serializable] public class CollectRequestDto { public string safehouse_id; }
+
+    /// <summary>COLLECTE — `dealer_name_i18n` : `{key, params}` ; le corps réel d'un dealer (`GET /v1/operational/dealers`, 22/09) porte
+    /// `{"key":"game.fiction.dealer.name","params":{"prenom":"Dov"}}`. Seul `prenom` est lu.</summary>
+    [System.Serializable] public class CollectNomParamsDto { public string prenom; }
+    [System.Serializable] public class CollectNomI18nDto { public string key; public CollectNomParamsDto @params; }
+
+    /// <summary>La RÉPONSE de la collecte — EXACTEMENT 5 clés (BACK-1, `selling.controller.ts:125-131`, `lot/boucle-argent` @615ca764,
+    /// PAS déployé au 07/10) : `dealer_id`, `safehouse_id`, `collected_band`, `remaining_band` (`DealerCashBand`, liste fermée
+    /// NONE|LOW|MODERATE|HIGH|FULL, FRACTIONS DU PLAFOND DU DEALER, jamais un montant — R2.2), `dealer_name_i18n`. Forme G : déclarées
+    /// AVANT d'être servies ; un back antérieur au lot ne sert que `safehouse_id` — les bandes arrivent alors à null et l'écran garde
+    /// sa phrase d'avant.</summary>
+    [System.Serializable] public class CollectData
+    {
+        public string dealer_id;
+        public string safehouse_id;
+        public string collected_band;
+        public string remaining_band;
+        public CollectNomI18nDto dealer_name_i18n;
+
+        /// <summary>Le prénom servi du dealer, ou null.</summary>
+        public string Prenom => dealer_name_i18n != null && dealer_name_i18n.@params != null && !string.IsNullOrWhiteSpace(dealer_name_i18n.@params.prenom)
+            ? dealer_name_i18n.@params.prenom : null;
+    }
     [System.Serializable] public class CollectPayload { public CollectData data; }
     [System.Serializable] public class CollectEnvelope { public CollectPayload payload; }
 }

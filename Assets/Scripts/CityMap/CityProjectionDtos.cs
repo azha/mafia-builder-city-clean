@@ -223,7 +223,20 @@ namespace MafiaCleanCity.CityMap
     [Serializable] public class DistrictDealerListEnvelope { public DistrictDealerListPayload payload; }
 
     [Serializable] public class DistrictCollectRequestDto { public string safehouse_id; }
-    [Serializable] public class DistrictCollectResultDto { public string safehouse_id; }
+    /// <summary>COLLECTE — les clés de la RÉPONSE de la collecte (BACK-1, 07/10, `selling.controller.ts:125-131`, PAS déployé) : `dealer_id`,
+    /// `safehouse_id`, `collected_band` / `remaining_band` (`DealerCashBand`, fractions du plafond du dealer, jamais un montant),
+    /// `dealer_name_i18n` (`{key, params:{prenom}}`). Déclarées AVANT d'être servies (forme G) : un back antérieur ne sert que
+    /// `safehouse_id`, les bandes restent null et l'écran garde sa phrase d'avant.</summary>
+    [Serializable] public class DistrictCollectNomParamsDto { public string prenom; }
+    [Serializable] public class DistrictCollectNomI18nDto { public string key; public DistrictCollectNomParamsDto @params; }
+    [Serializable] public class DistrictCollectResultDto
+    {
+        public string dealer_id;
+        public string safehouse_id;
+        public string collected_band;
+        public string remaining_band;
+        public DistrictCollectNomI18nDto dealer_name_i18n;
+    }
     [Serializable] public class DistrictCollectResultPayload { public DistrictCollectResultDto data; }
     [Serializable] public class DistrictCollectEnvelope { public DistrictCollectResultPayload payload; }
 
@@ -233,6 +246,12 @@ namespace MafiaCleanCity.CityMap
         public long HttpStatus;
         public string SafehouseId;
         public string Message;
+        /// <summary>COLLECTE — les bandes servies de la réponse (null : back antérieur au lot) et le prénom du dealer (null : non servi).</summary>
+        public string CollectedBand;
+        public string RemainingBand;
+        public string Prenom;
+        /// <summary>`payload.error.code` du refus (null sur un succès, ou sans code servi) — trois codes partagent le 409.</summary>
+        public string Code;
     }
 
     /// <summary>Un lieutenant du district, tel que servi par `…/interior`. Mesuré en direct le

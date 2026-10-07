@@ -73,27 +73,44 @@ namespace MafiaCleanCity.Operational.Selling
         public IEnumerator Collect(string dealerId, string safehouseId, string bearer,
             Action<CollectData> onOk, Action<long, string> onErr)
         {
-            string body = JsonUtility.ToJson(new CollectData { safehouse_id = safehouseId });
-            using (var req = new UnityWebRequest(Url($"dealer/{dealerId}/collect"), UnityWebRequest.kHttpVerbPOST))
+            string body = JsonUtility.ToJson(new CollectRequestDto { safehouse_id = safehouseId });
+            DernierCodeDeRefus = null;
+            // Le 409 GÉNÉRIQUE (`RESOURCE_STATE_CONFLICT` : un changement concurrent pendant la collecte) se réessaie UNE fois, en
+            // silence — décision du back, 26/09. Les deux 409 SPÉCIFIQUES (`SELLING_CASH_EMPTY`, `SELLING_SAFEHOUSE_FULL`) ne se
+            // réessaient pas : rien n'a changé à attendre, c'est une phrase à dire.
+            for (int tentative = 0; tentative < 2; tentative++)
             {
-                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
-                req.downloadHandler = new DownloadHandlerBuffer();
-                req.SetRequestHeader("Content-Type", "application/json");
-                req.timeout = TimeoutSeconds;
-                if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
-                yield return req.SendWebRequest();
-                if (req.result != UnityWebRequest.Result.Success)
+                using (var req = new UnityWebRequest(Url($"dealer/{dealerId}/collect"), UnityWebRequest.kHttpVerbPOST))
                 {
-                    DernierePhraseDeRefus = MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
-                    onErr?.Invoke(req.responseCode, req.error ?? "network error");
+                    req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                    req.downloadHandler = new DownloadHandlerBuffer();
+                    req.SetRequestHeader("Content-Type", "application/json");
+                    req.timeout = TimeoutSeconds;
+                    if (!string.IsNullOrEmpty(bearer)) req.SetRequestHeader("Authorization", "Bearer " + bearer);
+                    yield return req.SendWebRequest();
+                    if (req.result != UnityWebRequest.Result.Success)
+                    {
+                        string corps = req.downloadHandler != null ? req.downloadHandler.text : null;
+                        string codeServi = MafiaCleanCity.I18n.RefusServi.Code(corps);
+                        if (tentative == 0 && MafiaCleanCity.I18n.CollecteMots.ReessayerEnSilence(req.responseCode, codeServi)) continue;
+                        DernierCodeDeRefus = codeServi;
+                        DernierePhraseDeRefus = MafiaCleanCity.I18n.RefusServi.Phrase(corps);
+                        onErr?.Invoke(req.responseCode, req.error ?? "network error");
+                        yield break;
+                    }
+                    CollectData dto = null;
+                    try { dto = JsonUtility.FromJson<CollectEnvelope>(req.downloadHandler.text)?.payload?.data; }
+                    catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
+                    if (dto == null) { onErr?.Invoke(req.responseCode, "corps sans `payload.data`"); yield break; }
+                    DernierePhraseDeRefus = null;
+                    onOk?.Invoke(dto);
                     yield break;
                 }
-                CollectData dto = null;
-                try { dto = JsonUtility.FromJson<CollectEnvelope>(req.downloadHandler.text)?.payload?.data; }
-                catch (Exception ex) { onErr?.Invoke(req.responseCode, "parse error: " + ex.Message); yield break; }
-                if (dto == null) { onErr?.Invoke(req.responseCode, "corps sans `payload.data`"); yield break; }
-                onOk?.Invoke(dto);
             }
         }
+
+        /// <summary>COLLECTE — le `code` du DERNIER refus de ramassage (`payload.error.code`), null sur un succès ou sans code servi. Le
+        /// statut ne suffit pas : trois codes partagent le 409.</summary>
+        public string DernierCodeDeRefus { get; private set; }
     }
 }

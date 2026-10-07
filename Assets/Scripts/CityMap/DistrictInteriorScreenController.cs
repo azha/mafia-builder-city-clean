@@ -2621,12 +2621,12 @@ namespace MafiaCleanCity.CityMap
                 case "COLLECTER":
                     if (ficheOperationalType != "dealer_spot_front")
                     {
-                        ficheSortie.text = "Collecte : choisissez un point de vente.";
+                        ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.collecte_choisissez_un_point_de_vente", "Pour ramasser, choisissez d\u2019abord un point de vente.");
                         break;
                     }
                     if (string.IsNullOrEmpty(sessionBearer) || string.IsNullOrEmpty(FicheBuildingId))
                     {
-                        ficheSortie.text = "Collecte indisponible : session absente.";
+                        ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.collecte_indisponible_session_absente", "Collecte impossible\u00a0: la connexion au jeu est perdue.");
                         break;
                     }
                     if (!collecteEnCours)
@@ -2689,14 +2689,14 @@ namespace MafiaCleanCity.CityMap
             FicheDealerId = null;
             DerniereCollecte = null;
             string dealerSpotId = FicheBuildingId;
-            if (ficheSortie != null) ficheSortie.text = "Recherche du vendeur et de la planque…";
+            if (ficheSortie != null) ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.recherche_du_dealer_et_de_la_planque", "On cherche le dealer et la planque\u2026");
 
             if (string.IsNullOrEmpty(FicheSafehouseId))
                 yield return TrouverPlanquePourFiche();
 
             if (string.IsNullOrEmpty(FicheSafehouseId))
             {
-                if (ficheSortie != null) ficheSortie.text = "Collecte indisponible : aucune planque.";
+                if (ficheSortie != null) ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("vente.refus.collecte_impossible_aucune_planque", "Collecte impossible\u00a0: vous n\u2019avez aucune planque.");
                 collecteEnCours = false;
                 yield break;
             }
@@ -2718,8 +2718,9 @@ namespace MafiaCleanCity.CityMap
             {
                 if (ficheSortie != null)
                     ficheSortie.text = dealersStatus == 401
-                        ? "Collecte indisponible : la session a expiré."
-                        : "Rien à ramasser : personne ne tient ce point de vente.";
+                        ? MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.collecte_indisponible_raison", "Collecte refus\u00e9e. {raison}",
+                            new Dictionary<string, string> { { "raison", MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.connexion_expiree", "La connexion a expir\u00e9.") } })
+                        : MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.rien_a_ramasser_personne_ne_tient_ce_point_de_vente", "Rien \u00e0 ramasser\u00a0: personne ne tient ce point de vente.");
                 collecteEnCours = false;
                 yield break;
             }
@@ -2731,13 +2732,19 @@ namespace MafiaCleanCity.CityMap
             if (outcome != null && outcome.Ok)
             {
                 FicheCollecteReussites++;
-                if (ficheSortie != null) ficheSortie.text = "La caisse a rejoint votre planque.";
+                // table 75 n° 1-2 : « Ramassé : … Encore chez … : … » ; un back antérieur au lot ne sert pas les bandes ⇒ la phrase d'avant
+                if (ficheSortie != null)
+                    ficheSortie.text = MafiaCleanCity.I18n.CollecteMots.PhraseDeSucces(outcome.CollectedBand, outcome.RemainingBand, outcome.Prenom)
+                                       ?? "La caisse a rejoint votre planque.";
             }
             else if (ficheSortie != null)
             {
+                // table 85 n° 1 : « Collecte refusée. {raison} » — la raison est une PHRASE (servie, ou `vente.raison.*`, ou la 75), jamais un
+                // fragment ; sans réponse du tout, la phrase de la table 84 n° 6 (même sens, même écran)
                 string raison = outcome != null && !string.IsNullOrEmpty(outcome.Message)
-                    ? outcome.Message : "réponse absente";
-                ficheSortie.text = "Collecte indisponible : " + raison;
+                    ? outcome.Message : MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.reponse_absente", "Aucune r\u00e9ponse n\u2019est arriv\u00e9e.");
+                ficheSortie.text = MafiaCleanCity.I18n.Libelle.Gabarit("district.fiche.collecte_indisponible_raison", "Collecte refus\u00e9e. {raison}",
+                    new Dictionary<string, string> { { "raison", raison } });
             }
             collecteEnCours = false;
         }

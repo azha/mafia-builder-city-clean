@@ -104,47 +104,61 @@ namespace MafiaCleanCity.CityMap
             string url = $"{BaseUrl.TrimEnd('/')}/v1/operational/dealer/{dealerId}/collect";
             string body = JsonUtility.ToJson(new DistrictCollectRequestDto { safehouse_id = safehouseId });
             var outcome = new DistrictCollectOutcome();
-            using (var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+            // COLLECTE : le 409 GÉNÉRIQUE (`RESOURCE_STATE_CONFLICT`, un changement concurrent) se réessaie UNE fois, en silence (décision
+            // du back, 26/09) ; les deux 409 spécifiques (`SELLING_CASH_EMPTY`, `SELLING_SAFEHOUSE_FULL`) se DISENT.
+            for (int tentative = 0; tentative < 2; tentative++)
             {
-                req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
-                req.downloadHandler = new DownloadHandlerBuffer();
-                req.timeout = TimeoutSeconds;
-                req.SetRequestHeader("Content-Type", "application/json");
-                if (!string.IsNullOrEmpty(token)) req.SetRequestHeader("Authorization", "Bearer " + token);
-                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
-                yield return req.SendWebRequest();
+                using (var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+                {
+                    req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                    req.downloadHandler = new DownloadHandlerBuffer();
+                    req.timeout = TimeoutSeconds;
+                    req.SetRequestHeader("Content-Type", "application/json");
+                    if (!string.IsNullOrEmpty(token)) req.SetRequestHeader("Authorization", "Bearer " + token);
+                    req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                    yield return req.SendWebRequest();
 
-                outcome.HttpStatus = req.responseCode;
-                outcome.Ok = req.result == UnityWebRequest.Result.Success;
-                if (outcome.Ok)
-                {
-                    try
+                    outcome.HttpStatus = req.responseCode;
+                    outcome.Ok = req.result == UnityWebRequest.Result.Success;
+                    string corps = req.downloadHandler != null ? req.downloadHandler.text : null;
+                    if (outcome.Ok)
                     {
-                        outcome.SafehouseId = JsonUtility.FromJson<DistrictCollectEnvelope>(req.downloadHandler.text)
-                            ?.payload?.data?.safehouse_id;
-                        outcome.Ok = !string.IsNullOrEmpty(outcome.SafehouseId);
-                        outcome.Message = outcome.Ok ? "ok" : "la réponse ne contient aucune planque";
+                        try
+                        {
+                            DistrictCollectResultDto lu = JsonUtility.FromJson<DistrictCollectEnvelope>(corps)?.payload?.data;
+                            outcome.SafehouseId = lu?.safehouse_id;
+                            outcome.CollectedBand = lu?.collected_band;
+                            outcome.RemainingBand = lu?.remaining_band;
+                            outcome.Prenom = lu?.dealer_name_i18n?.@params?.prenom;
+                            outcome.Ok = !string.IsNullOrEmpty(outcome.SafehouseId);
+                            outcome.Message = outcome.Ok ? "ok" : MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.reponse_vide", "La r\u00e9ponse est arriv\u00e9e vide.");
+                        }
+                        catch
+                        {
+                            outcome.Ok = false;
+                            outcome.Message = MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.reponse_illisible", "La r\u00e9ponse est illisible.");
+                        }
                     }
-                    catch
+                    else
                     {
-                        outcome.Ok = false;
-                        outcome.Message = "la réponse du service est illisible";
+                        outcome.Code = MafiaCleanCity.I18n.RefusServi.Code(corps);
+                        if (tentative == 0 && MafiaCleanCity.I18n.CollecteMots.ReessayerEnSilence(req.responseCode, outcome.Code)) continue;
+                        // table 67 (26/09) : la phrase SERVIE du refus (R9, R10, R12…) avant les phrases par code — C3 : « les fonds ou la
+                        // capacité » ne disait pas QUELS fonds. Table 85 (07/10) : les raisons sont des PHRASES (clés `vente.raison.*`),
+                        // le 409 se dit PAR CODE (table 75 n° 3-4), et tout 409 sans code spécifique tombe sur « La collecte n'a pas abouti ».
+                        outcome.Message = MafiaCleanCity.I18n.RefusServi.Phrase(corps);
+                        if (outcome.Message == null)
+                        {
+                            switch (req.responseCode)
+                            {
+                                case 401: outcome.Message = MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.connexion_expiree", "La connexion a expir\u00e9."); break;
+                                case 409: outcome.Message = MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(outcome.Code, null); break;
+                                case 422: outcome.Message = MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.collecte_non_acceptee", "Cette collecte n\u2019est pas accept\u00e9e."); break;
+                                default: outcome.Message = MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.indisponible", "Le point de vente ne r\u00e9pond pas pour l\u2019instant."); break;
+                            }
+                        }
                     }
-                }
-                else if ((outcome.Message = MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null)) != null)
-                {
-                    // table 67 (26/09) : la phrase SERVIE du refus (R9, R10, R12…) avant les phrases fixes par code HTTP — C3 : « les
-                    // fonds ou la capacité » ne disait pas QUELS fonds.
-                }
-                else
-                {
-                    switch (req.responseCode)
-                    {
-                        case 401: outcome.Message = "la session a expiré"; break;
-                        case 409: outcome.Message = "la caisse est vide ou la planque est pleine"; break;
-                        case 422: outcome.Message = "la collecte n'est pas acceptée"; break;
-                        default: outcome.Message = "le service est indisponible"; break;
-                    }
+                    break;
                 }
             }
             done?.Invoke(outcome);

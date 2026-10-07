@@ -34,6 +34,17 @@ namespace MafiaCleanCity.I18n
             return false;
         }
 
+        private static readonly Regex CodeServi = new Regex("\"error\"\\s*:\\s*\\{[^{}]*?\"code\"\\s*:\\s*\"([^\"\\\\]*)\"");
+
+        /// <summary>Le `code` du refus (`payload.error.code`) — c'est LUI qui discrimine, pas le statut : trois codes différents partagent
+        /// le 409 (`SELLING_CASH_EMPTY`, `SELLING_SAFEHOUSE_FULL`, `RESOURCE_STATE_CONFLICT`). Null si le corps n'en porte pas.</summary>
+        public static string Code(string corps)
+        {
+            if (string.IsNullOrEmpty(corps)) return null;
+            Match m = CodeServi.Match(corps);
+            return m.Success && m.Groups[1].Value.Length > 0 ? m.Groups[1].Value : null;
+        }
+
         private static readonly Regex CleServie = new Regex("\"user_facing_i18n_key\"\\s*:\\s*\"([^\"\\\\]*)\"");
 
         /// <summary>La clé servie du refus, ou null.</summary>

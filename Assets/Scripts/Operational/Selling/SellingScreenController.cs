@@ -288,7 +288,7 @@ namespace MafiaCleanCity.Operational.Selling
         {
             if (string.IsNullOrEmpty(dealerId) || string.IsNullOrEmpty(SafehouseId) || string.IsNullOrEmpty(token))
             {
-                string sansPlanque = "Aucune planque n'est disponible pour cette collecte.";
+                string sansPlanque = MafiaCleanCity.I18n.Libelle.Gabarit("vente.refus.collecte_impossible_aucune_planque", "Collecte impossible\u00a0: vous n\u2019avez aucune planque.");
                 DerniereErreur = sansPlanque;
                 if (actionTexte != null) actionTexte.text = sansPlanque;
                 yield break;
@@ -305,8 +305,11 @@ namespace MafiaCleanCity.Operational.Selling
                 // table 67 (26/09) : la phrase SERVIE du refus d'abord ; les phrases fixes par code ne sont plus qu'un repli
                 // garde de classe des refus : la phrase montrée est écrite dans une LOCALE — `DerniereErreur` porte aussi le
                 // message technique de `ListDealers`, et un texte joueur ne le lit jamais
+                // COLLECTE (07/10) : sans phrase servie, la phrase PAR CODE (`SELLING_SAFEHOUSE_FULL`, `SELLING_CASH_EMPTY`, tables 75 n° 3-4) —
+                // le statut ne suffit pas, trois codes partagent le 409 ; tout le reste (un 409 sans code spécifique compris) dit la table 85
+                // n° 7. Le nom du dealer n'est pas lu ici : `DealerDto.name_i18n` est déclaré `string` alors que le corps sert `{key, params}`.
                 string phrase = client.DernierePhraseDeRefus
-                    ?? (code == 409 ? "Cette caisse est vide ou la planque est pleine." : "La collecte n'a pas abouti.");
+                    ?? MafiaCleanCity.I18n.CollecteMots.PhraseDeRefus(client.DernierCodeDeRefus, null);
                 DerniereErreur = phrase;
                 if (actionTexte != null) actionTexte.text = phrase;
                 yield break;
@@ -314,7 +317,11 @@ namespace MafiaCleanCity.Operational.Selling
 
             CollectReussites++;
             DerniereErreur = null;
-            if (actionTexte != null) actionTexte.text = "La caisse a rejoint votre planque.";
+            // COLLECTE : « Ramassé : une grosse somme. Encore chez Dov : une petite somme. » (table 75 n° 1-2) ; un back antérieur au lot
+            // ne sert pas les bandes ⇒ la phrase d'avant, SANS clé (table 85 : un libellé orphelin dès le câblage de la 75).
+            string phraseDeSucces = MafiaCleanCity.I18n.CollecteMots.PhraseDeSucces(resultat.collected_band, resultat.remaining_band, resultat.Prenom)
+                                    ?? "La caisse a rejoint votre planque.";
+            if (actionTexte != null) actionTexte.text = phraseDeSucces;
 
             yield return client.ListDealers(token, d => Dealers = d,
                 (c, m) => DerniereErreur = $"{c}: {m}");
@@ -385,6 +392,11 @@ namespace MafiaCleanCity.Operational.Selling
 
             // la caisse : cinq CRANS, jamais une barre continue
             Crans(r.transform, "Caisse", Caisse(d.cash_band), 5, CaisseRang(d.cash_band));
+            // table 75, B-plafond : au PLAFOND (FULL) le dealer cesse de vendre — la fiche le dit, sous la jauge, dans la même ligne de style
+            // que la raison du bouton éteint
+            if (d.cash_band == "FULL")
+                Texte(r.transform, "Plafond", MafiaCleanCity.I18n.CollecteMots.DitLePlafond(),
+                      Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).enableWordWrapping = true;
             // la marge : quatre traits
             Crans(r.transform, "Marge", Marge(d.margin_band), 4, MargeRang(d.margin_band));
 
@@ -520,7 +532,13 @@ namespace MafiaCleanCity.Operational.Selling
         private static int MargeRang(string b) =>
             b == "HIGH_PREMIUM" ? 4 : b == "PREMIUM" ? 3 : b == "ELEVATED" ? 2 : b == "STANDARD" ? 1 : 0;
 
-        /// <summary>La caisse du dealer, en français. Domaine LU À L'ANCRE, jamais recopié d'un
+        /// <summary>COLLECTE (07/10, tables 75/85 de l'atelier) — la jauge se dit PAR LA VALEUR SERVIE : `vente.caisse.bande.<valeur>`
+        /// (`CollecteMots.Bande`). Les mots d'avant (VIDE / PEU / MOYENNE / PLEINE / DÉBORDE, `vente.bloc.<mot>`) n'ont plus de lecteur :
+        /// « PLEINE » était donné à HIGH, où la caisse n'est pas pleine, et « DÉBORDE » est faux pour FULL (le dealer S'ARRÊTE de vendre).
+        /// Les clés `vente.bloc.*` restent servies (contrat additif), jamais lues pour la caisse — garde `CollecteMotsPlayModeTests` C4.
+        /// L'ancien commentaire, gardé pour l'ANCRE du domaine :
+        ///
+        /// La caisse du dealer, en français. Domaine LU À L'ANCRE, jamais recopié d'un
         /// commentaire : `selling.projection.service.ts:45` — `DealerCashBand = 'NONE' | 'LOW' |
         /// 'MODERATE' | 'HIGH' | 'FULL'`.
         ///
@@ -532,9 +550,7 @@ namespace MafiaCleanCity.Operational.Selling
         /// « AUTONOMY REPORTS PENDING » au centre d'une interface française.
         /// ⚠️ Et le repli reste NOMMÉ (`—`) plutôt que dé-sluggé : une valeur neuve doit se voir
         /// comme inconnue, pas se déguiser en mot anglais plausible.</summary>
-        private static string Caisse(string b) =>
-            b == "NONE" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "VIDE") : b == "LOW" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "PEU") : b == "MODERATE" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "MOYENNE")
-            : b == "HIGH" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "PLEINE") : b == "FULL" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "DÉBORDE") : "—";
+        private static string Caisse(string b) => MafiaCleanCity.I18n.CollecteMots.Bande(b);
 
         /// <summary>La marge, en français. Domaine LU À L'ANCRE : `selling.projection.service.ts:59`
         /// — `DealerMarginBand = 'STANDARD' | 'ELEVATED' | 'PREMIUM' | 'HIGH_PREMIUM'`.

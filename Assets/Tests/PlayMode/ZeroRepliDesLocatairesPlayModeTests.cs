@@ -52,6 +52,11 @@ namespace MafiaCleanCity.Operational.Tests
             "demarrage.echec.la_ville_ne_repond_pas_verifiez_votre_connexion_puis_reessayez",
             "demarrage.echec.reessayer",
             "reglages.bloc.votre_partie_vit_sur_cet_appareil_desinstaller_l_appli_l_efface",
+            // COLLECTE (CLIENT-1, 07/10) — la jauge de ㉟ se dit PAR LA VALEUR SERVIE (`CollecteMots.Bande`) : table 75, lignes B-*. Le back
+            // (lot/boucle-argent @615ca764) ne les sert pas AVANT le déploiement du lot COLLECTE ; le préfixe `vente.caisse.bande.` est
+            // « à confirmer par le back » (atelier). La règle (2) rougit le jour où l'une est servie : la retirer alors. 6 entrées.
+            "vente.caisse.bande.none", "vente.caisse.bande.low", "vente.caisse.bande.moderate", "vente.caisse.bande.high", "vente.caisse.bande.full",
+            "vente.caisse.bande.full_il_ne_vend_plus_tant_qu_on_ne_ramasse_pas",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
