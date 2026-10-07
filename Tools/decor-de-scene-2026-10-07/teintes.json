@@ -1,5 +1,11 @@
 [
  {
+  "hex": "#0a0d10",
+  "jeton": "scrimBackdrop",
+  "d": 2.85,
+  "regle": "JETON"
+ },
+ {
   "hex": "#0a0f18",
   "jeton": "lieutenantGlassBottom",
   "d": 1.45,
@@ -88,6 +94,12 @@
   "jeton": "surfaceCard",
   "d": 9.17,
   "regle": "littéral"
+ },
+ {
+  "hex": "#14171a",
+  "jeton": "surfaceCard",
+  "d": 2.96,
+  "regle": "JETON"
  },
  {
   "hex": "#14181d",
@@ -180,6 +192,24 @@
   "regle": "littéral"
  },
  {
+  "hex": "#1f2a24",
+  "jeton": "surfaceRow",
+  "d": 9.71,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#1f2a3a",
+  "jeton": "nightBackground",
+  "d": 5.01,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#1f6f74",
+  "jeton": "nightFloorAlt",
+  "d": 53.21,
+  "regle": "littéral"
+ },
+ {
   "hex": "#20211d",
   "jeton": "autonomyBlockBg",
   "d": 7.98,
@@ -192,9 +222,21 @@
   "regle": "littéral"
  },
  {
+  "hex": "#22301f",
+  "jeton": "surfaceRow",
+  "d": 15.12,
+  "regle": "littéral"
+ },
+ {
   "hex": "#23272b",
   "jeton": "surfaceRow",
   "d": 3.6,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#232a2d",
+  "jeton": "surfaceRow",
+  "d": 0.16,
   "regle": "JETON"
  },
  {
@@ -228,9 +270,51 @@
   "regle": "littéral"
  },
  {
+  "hex": "#2b2622",
+  "jeton": "mapPanelSouth",
+  "d": 7.74,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#2b2f3a",
+  "jeton": "surfaceRaised",
+  "d": 3.11,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#2c3640",
+  "jeton": "hudGaugeFaceInner",
+  "d": 4.51,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#2c4a1e",
+  "jeton": "surfaceRow",
+  "d": 36.37,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#2e2114",
+  "jeton": "ficheCtaOrEncre",
+  "d": 20.88,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#2f6b2a",
+  "jeton": "nightBase",
+  "d": 55.33,
+  "regle": "littéral"
+ },
+ {
   "hex": "#2f6e4c",
   "jeton": "controlUnknown",
   "d": 44.99,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#303a44",
+  "jeton": "hudGaugeFaceInner",
+  "d": 9.12,
   "regle": "littéral"
  },
  {
@@ -240,9 +324,63 @@
   "regle": "littéral"
  },
  {
+  "hex": "#33404b",
+  "jeton": "mapChipBg",
+  "d": 6.01,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#38434e",
+  "jeton": "mapChipBg",
+  "d": 5.99,
+  "regle": "littéral"
+ },
+ {
   "hex": "#3a1c0e",
   "jeton": "ficheCtaOrEncre",
   "d": 24.51,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3a2530",
+  "jeton": "mapPanelSouth",
+  "d": 14.14,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3a2a12",
+  "jeton": "mapPanelSouth",
+  "d": 26.57,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3a2a18",
+  "jeton": "mapPanelSouth",
+  "d": 21.64,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3a2e24",
+  "jeton": "mapPanelSouth",
+  "d": 16.6,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3a2f14",
+  "jeton": "mapPanelSouth",
+  "d": 26.58,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3a352c",
+  "jeton": "nightBase",
+  "d": 15.66,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3a3c34",
+  "jeton": "nightBase",
+  "d": 16.0,
   "regle": "littéral"
  },
  {
@@ -252,9 +390,123 @@
   "regle": "littéral"
  },
  {
+  "hex": "#3b352c",
+  "jeton": "nightBase",
+  "d": 14.73,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3b4650",
+  "jeton": "mapChipBg",
+  "d": 9.9,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3c3e35",
+  "jeton": "nightBase",
+  "d": 15.03,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3d3024",
+  "jeton": "nightBase",
+  "d": 18.36,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3e382d",
+  "jeton": "nightBase",
+  "d": 10.92,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3f4a57",
+  "jeton": "controlUnknown",
+  "d": 14.75,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3f6b28",
+  "jeton": "nightBase",
+  "d": 50.16,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#414d59",
+  "jeton": "controlUnknown",
+  "d": 13.68,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#46515c",
+  "jeton": "nightFloorAlt",
+  "d": 10.91,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#47535f",
+  "jeton": "nightFloorAlt",
+  "d": 7.6,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#4a1008",
+  "jeton": "ficheCtaOrEncre",
+  "d": 39.07,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#4a3722",
+  "jeton": "nightBase",
+  "d": 12.38,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#4a3a12",
+  "jeton": "nightBase",
+  "d": 27.93,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#4a3a2a",
+  "jeton": "nightBase",
+  "d": 4.12,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#4a3a3a",
+  "jeton": "mapCloseButtonBg",
+  "d": 10.51,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#4a443a",
+  "jeton": "nightBase",
+  "d": 15.66,
+  "regle": "littéral"
+ },
+ {
   "hex": "#4a5057",
   "jeton": "controlUnknown",
   "d": 6.9,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#4b463c",
+  "jeton": "nightBase",
+  "d": 18.57,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#4b5763",
+  "jeton": "nightFloorAlt",
+  "d": 5.21,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#4f7f3f",
+  "jeton": "heatUnknown",
+  "d": 51.76,
   "regle": "littéral"
  },
  {
@@ -264,9 +516,51 @@
   "regle": "littéral"
  },
  {
+  "hex": "#574433",
+  "jeton": "nightBase",
+  "d": 18.12,
+  "regle": "littéral"
+ },
+ {
   "hex": "#5a2e16",
   "jeton": "nightBase",
   "d": 31.92,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#5a3a1a",
+  "jeton": "nightBase",
+  "d": 26.39,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#5a4a2a",
+  "jeton": "nightBase",
+  "d": 23.81,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#5a544a",
+  "jeton": "controlUnknown",
+  "d": 17.21,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#5a5c4e",
+  "jeton": "heatUnknown",
+  "d": 19.11,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#5a616a",
+  "jeton": "heatUnknown",
+  "d": 11.98,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#5c2a2a",
+  "jeton": "mapCloseButtonBg",
+  "d": 19.7,
   "regle": "littéral"
  },
  {
@@ -276,9 +570,45 @@
   "regle": "littéral"
  },
  {
+  "hex": "#6b2a20",
+  "jeton": "mapCloseButtonBg",
+  "d": 36.15,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#6b3a38",
+  "jeton": "mapCloseButtonBg",
+  "d": 26.35,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#6b4a12",
+  "jeton": "ficheCtaOrBord",
+  "d": 39.79,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#6b4f14",
+  "jeton": "ficheCtaOrBord",
+  "d": 36.65,
+  "regle": "littéral"
+ },
+ {
   "hex": "#6b4f28",
   "jeton": "ficheCtaOrBord",
   "d": 37.7,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#6fae44",
+  "jeton": "accentCalm",
+  "d": 40.86,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#7a4a22",
+  "jeton": "ficheCtaOrBord",
+  "d": 28.54,
   "regle": "littéral"
  },
  {
@@ -288,10 +618,40 @@
   "regle": "littéral"
  },
  {
+  "hex": "#7db36a",
+  "jeton": "accentCalm",
+  "d": 0.09,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#7fc99a",
+  "jeton": "onSurfaceSecondary",
+  "d": 51.27,
+  "regle": "littéral"
+ },
+ {
   "hex": "#7fd4d9",
   "jeton": "hudGaugeArcCold",
   "d": 0.1,
   "regle": "JETON"
+ },
+ {
+  "hex": "#8a2a18",
+  "jeton": "ficheCtaOrBord",
+  "d": 55.05,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#8a5a12",
+  "jeton": "ficheCtaOrBord",
+  "d": 12.19,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#8a6a22",
+  "jeton": "ficheCtaOrBord",
+  "d": 10.87,
+  "regle": "littéral"
  },
  {
   "hex": "#8a6a3a",
@@ -303,6 +663,36 @@
   "hex": "#8a6a42",
   "jeton": "ficheCtaOrBord",
   "d": 39.03,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#8c2f36",
+  "jeton": "ficheCtaOrBord",
+  "d": 56.28,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#8d99a6",
+  "jeton": "onSurfaceSecondaryAlt",
+  "d": 5.97,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#8f9285",
+  "jeton": "controlUncontested",
+  "d": 16.21,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#93402c",
+  "jeton": "ficheCtaOrBord",
+  "d": 37.66,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#987979",
+  "jeton": "mapConditionalGrey",
+  "d": 31.83,
   "regle": "littéral"
  },
  {
@@ -318,9 +708,81 @@
   "regle": "JETON"
  },
  {
+  "hex": "#b3362a",
+  "jeton": "controlRivalHeld",
+  "d": 40.59,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#b9ac92",
+  "jeton": "hudCremeSecondary",
+  "d": 0.91,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#b9b6a8",
+  "jeton": "hudCremeSecondary",
+  "d": 23.71,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#bfb39a",
+  "jeton": "hudCremeSecondary",
+  "d": 11.71,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#c2bda4",
+  "jeton": "hudCremeSecondary",
+  "d": 25.74,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#c3b79e",
+  "jeton": "hudCremeSecondary",
+  "d": 18.6,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#c9a8e0",
+  "jeton": "accentPremium",
+  "d": 32.8,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#cbbfa4",
+  "jeton": "hudCremeSecondary",
+  "d": 31.25,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#d4f08a",
+  "jeton": "nightLieutenantMarker",
+  "d": 43.51,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#d97a6a",
+  "jeton": "hudGaugeArcHot",
+  "d": 38.4,
+  "regle": "littéral"
+ },
+ {
   "hex": "#d9ab4e",
   "jeton": "hudMoneyUnderlineGold",
   "d": 0.11,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#d9cca9",
+  "jeton": "nightLieutenantMarker",
+  "d": 36.74,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#e0664a",
+  "jeton": "hudGaugeArcHot",
+  "d": 0.12,
   "regle": "JETON"
  },
  {
@@ -328,6 +790,36 @@
   "jeton": "hudCreme",
   "d": 6.68,
   "regle": "littéral"
+ },
+ {
+  "hex": "#efe9da",
+  "jeton": "hudCreme",
+  "d": 20.83,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#f1ecdc",
+  "jeton": "onSurfacePrimary",
+  "d": 22.76,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#f2c96b",
+  "jeton": "hudMoneyGold",
+  "d": 0.12,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#ff5a4d",
+  "jeton": "accentDanger",
+  "d": 0.02,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#ff9e3d",
+  "jeton": "accentWarning",
+  "d": 0.11,
+  "regle": "JETON"
  },
  {
   "hex": "#ffffff",

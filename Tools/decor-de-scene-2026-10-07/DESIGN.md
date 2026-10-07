@@ -1,6 +1,6 @@
-# Décor de scène — DESIGN du mécanisme commun (CLIENT-2, 07/10/2026) — v4
+# Décor de scène — DESIGN du mécanisme commun (CLIENT-2, 07/10/2026) — v5
 
-**Statut : v4 = v3 + « filets et bords d'état » (§3.4, demande de f2 du 07/10 : classe mesurée par un juge groupé) ; v3 = revue n°3 traitée (§0 ter) ; historique : v2 après revue ⊥ n°1 (4 BLOCKING, 5 MAJOR, 7 MINOR — toutes traitées ci-dessous). Aucun code écrit.** Entrées : `INVENTAIRE.md` (mesures de la maquette série 6), décisions f2 du 07/10 (périmètre = les 26 écrans qui ont une maquette série 6 ; objets de la famille C = contenu d'écran, seuls leurs FONDS entrent ici ; verge nuit en repli temporaire ; le décor se pose par le gabarit, de façon déclarative ; ruling user « le gros, fidèle, les nuances à la fin »).
+**Statut : v5 = v4 corrigée de la revue n°4 (§0 quinquies) ; v4 = v3 + « filets et bords d'état » (§3.4, demande de f2 du 07/10 : classe mesurée par un juge groupé) ; v3 = revue n°3 traitée (§0 ter) ; historique : v2 après revue ⊥ n°1 (4 BLOCKING, 5 MAJOR, 7 MINOR — toutes traitées ci-dessous). Aucun code écrit.** Entrées : `INVENTAIRE.md` (mesures de la maquette série 6), décisions f2 du 07/10 (périmètre = les 26 écrans qui ont une maquette série 6 ; objets de la famille C = contenu d'écran, seuls leurs FONDS entrent ici ; verge nuit en repli temporaire ; le décor se pose par le gabarit, de façon déclarative ; ruling user « le gros, fidèle, les nuances à la fin »).
 
 ## 0. Réponses à la revue ⊥ n°1 (puis n°2 : voir §0 bis) (chaque point : décision, et la commande ou mesure qui l'établit)
 | # | constat | décision v2 |
@@ -46,6 +46,16 @@
 | M4 | `AlphaVoileSurFondQuelconque` optimisé sur d'autres fonds | voile de scène : oui ; halos/enseigne/cerne : fonds du support (`FondsDeReferenceSupport`), sonde D4 ±6/255 |
 | min | v2/v3 ; `Bande` bas du cadre (corkboard −18 px, burner +12 px) ; colonne Enseigne ; ⑭ pas 26 ; clé de `DegradeVertical` | en-tête v3 ; §9 `Bande` ±18 px consigné ; colonne cerne = cerne+enseigne ; ⑭ pas 26 en §4 ; clé dérivée passée à `DegradeVertical` |
 
+### 0 quinquies. Revue ⊥ n°4 (3 BLOCKING, 2 MAJOR, 4 MINOR) — réponses (07-08/10 ; comptes AVANT → APRÈS collés)
+| # | constat | décision et preuve |
+|---|---|---|
+| B1 | `circle farthest-corner` de ⑮ ⑰ : rayon différent selon le cadre ; pas un (rx, ry) | **`RadialCercle(cx, cy, Arret[])`** : rayon calculé sur le rect réel, Image carrée (§2, §3.3). Mesuré (`mesurer-cercle.cjs`) : cadre 31 corkboard 298×504,05 → r 454,0 ; cadres 33-35 298×400 → r 382,0 ; cadre 32 = `listing` (autre objet, §9). UNE revue n°5 limitée à ce delta. |
+| B2 | 6 couleurs de bord à d ≤ 4 en littéral | `teintes.py` lit désormais `mesure-filets.json` : **56 → 138 couleurs ; jetons 20 → 30 ; littéraux 36 → 108** ; les six (`#0a0d10` scrimBackdrop 2,85 · `#14171a` surfaceCard 2,96 · `#2b2f3a` surfaceRaised 3,11 · `#b9ac92` hudCremeSecondary 0,91 · `#f2c96b` hudMoneyGold 0,12 · `#ff5a4d` accentDanger 0,02) sont PAR JETON |
+| B3 | états de ㉛ hors mesure (cadres 68/71) | mesure étendue à **tous les cadres des 26 écrans : 25 → 128 cadres ; 312 → 1560 éléments ; 1083 → 5403 côtés ; 85 → 137 recettes ; 55 → 87 couleurs de bord** ; `#4f7f3f` : 0 → présent (cadre 68) ; `#8a6a22` : 80 côtés ; D6(a) porte sur ces 128 cadres |
+| M1 | `K = 1280/300` inventé | supprimé : `EchelleMaquette.PxTrait(valeurCss, racine, LargeurEcransBrennar6)` (§3.4, D6c) |
+| M2 | `teintes.json` périmé, comptes divergents | régénéré ; §4.1 entre marqueurs, **`verifier-design.py` compare §4.1/§3.4/§4 aux JSON (exit 1 sinon)** |
+| min | 34+6 inversé ; `.cerne` 1 px ; nom des nœuds ; 50 % non établi pour `Tirete` | corrigés (§3.4, D6c) : tireté 140, pointillé 45 ; `.cerne` 1 px rayon 3 ; `Filets/Haut|Droite|Bas|Gauche` ; remplissage 50 % = mesure du juge pour `#c3b79e` seulement |
+
 ### 0 quater. Demande de f2 (07/10) : « filets et bords d'état » (couche L5) — intégrée §3.4 et D6
 | point | décision |
 |---|---|
@@ -75,8 +85,10 @@ public enum StyleFilet { Plein, Pointille, Tirete, Double }  [Flags] public enum
 public sealed class EtatDeBloc { public Teinte Fond; public SpecFilet Bord; }   // « bord d'état » : vert / or / neutre … (㉛ : pris, risque, neutre)
 public static class Filets { public static GameObject Poser(RectTransform bloc, SpecFilet spec); public static void Etat(RectTransform bloc, Image fond, EtatDeBloc e); }
 // SpecCouche, de la plus HAUTE à la plus basse (ordre CSS) :
-//   Lineaire(angleDeg, Arret[]) | Radial(cx, cy, rx, ry, Arret[])   (cx, cy, rx, ry en fractions de la boîte du SUPPORT — celle qui PORTE le dégradé, comme les `%` de CSS —,
-//     y depuis le HAUT ; les `%` mesurés se recopient tels quels ; un `circle farthest-corner` est écrit en rx, ry CALCULÉS sur la boîte mesurée du support, voir ⑮ ⑰)
+//   Lineaire(angleDeg, Arret[]) | Radial(cx, cy, rx, ry, Arret[]) | RadialCercle(cx, cy, Arret[])   (RadialCercle = `circle farthest-corner` : le rayon est CALCULÉ au montage)
+//   Radial : (cx, cy, rx, ry en fractions de la boîte du SUPPORT — celle qui PORTE le dégradé, comme les `%` de CSS —,
+//     y depuis le HAUT ; les `%` mesurés se recopient tels quels ; un `circle farthest-corner` n'est PAS un (rx, ry) constant : voir `RadialCercle`, ⑮ ⑰)
+//   `RadialCercle(cx, cy, Arret[])` : rayon r = √(max(cx·W, (1−cx)·W)² + max(cy·H, (1−cy)·H)²) sur le rect RÉEL (W×H) du support, recalculé quand il change ; rendu = UNE Image CARRÉE 2r×2r centrée en (cx·W, cy·H), clippée par le support — un vrai cercle, sans étirement)
 //   | Plein(Teinte) | Points(pasPx, rayonPlein, rayonFin, Teinte, decalage)   (bord doux : plein → transparent) | Rayures(angleDeg, pasPx, epaisseurPx, Teinte)
 public readonly struct Arret { float Pos; bool EnPx; Teinte Couleur; }        // Pos fraction, ou px CSS si EnPx (⑱)
 public readonly struct Teinte { /* jeton NOMMÉ (lambda sur DesignTokens) OU "#rrggbb" + opacité CSS (alpha sRGB) */ }
@@ -105,23 +117,23 @@ Découpe « cover » : `DecorAuComptoir.UvCouverture` (public, éprouvée) RÉUT
 - **A (×7, fond propre à la racine)** : `Radial(0,5 ; 0,22 ; 0,72 ; 0,40 ; or@.15 → or@0 à 66 %)` · `Radial(0,5 ; 0,96 ; 0,90 ; 0,60 ; cyan@.07 → 0 à 70 %)` · `Lineaire(178°, #111823 0 % → #0b1016 54 % → #0d0f10 100 %)` ; teintes par jetons (§4.1). **Cerne** : trait 1 px laiton à 5 px du bord, rayon 3, liseré intérieur `#0b1016`, lueur `0 0 12px laiton@.15`. **Enseigne** : plaque `Lineaire(178°, #0b111b@.91 → #0d131e@.85)`, bordure 1 px `#2a3648`, filet bas 2 px laiton, liseré haut blanc@.06, marges 13/13/0 (le TEXTE reste à l'écran).
 - **B (×9)** : 7 à fond propre à la racine (`Lineaire` 3 arrêts : ㉜ ㉚ ㉛ ㉝ ㉞ ㉙ ㉒) ; **㉓ et ㉘** (racine sans fond, enfants opaques) prennent le fond de leur zone la plus GRANDE (mesuré : `vitre` = 74,3 % de l'aire de ㉓, `planche` = 48,9 % de ㉘) : la meilleure approximation « au gros » ; les zones sœurs (`entete`, `lecture`, `bas`, `compt`, `voix`) restent du contenu d'écran avec leurs propres fonds, et un interstice montre ce support.
 - **C (×10)** : le fond de l'objet, qui EST le fond de la racine (⑤ feutre radial opaque, ⑮⑰ liège radial opaque, ⑭ tôle `Points`+`Lineaire` 90°, ㉔ `Lineaire` 3 arrêts, ⑱ bureau à arrêt en px, ⑨ ⑩ ardoise `Plein`, ⑯ feuille `Plein`, ③ aucun) ; l'objet lui-même (punaises, vis, cadrans, abat-jour) reste dans le contrôleur.
-- **Primitives (NEUVES, `ProceduralUI`)** : `DegradeLineaire(angleDeg, Arret[], texture à l'aspect du cadre de référence 300×583)` — convention CSS (0° monte, 180° descend, sens horaire), N arrêts, arrêts en px convertis à la taille de la texture ; `DegradeRadial(cx, cy, rx, ry, Arret[])` — N arrêts opaques OU transparents, interpolation LINÉAIRE par arrêt (comme CSS), centre en coordonnées CSS ; `Points`/`Rayures` = tuile en `Image.Type.Tiled`. Cache unique, clé dérivée du contenu de la spec. `Rayon` : `Mask` + **`ProceduralUI.RoundedRectMask(tl, tr, br, bl)` — primitive NEUVE** (l'existante, `RoundedRectMask(int)`, `ProceduralUI.cs:1100`, n'a qu'UN rayon : ⑤ a 26/26/0/0, sa base touche le bas du cadre) ; 9-slice, bordure = le plus grand rayon. **Opacités** : le VOILE de scène (fond inconnu : la scène) passe par `AlphaVoileSurFondQuelconque` ; les halos de A, la plaque d'enseigne et la lueur du cerne se mélangent sur un fond CONNU (les arrêts du support lui-même) : leur alpha est ajusté pour ces fonds-là (`FondsDeReferenceSupport` = `#111823`, `#0b1016`, `#0d0f10`, via `CouleurPourMelangeLineaire`), et la sonde D4 mesure le pixel du foyer à ±6/255 du mélange CSS attendu (calculé en sRGB dans le test). Revue n°3 M4 : la docstring de `AlphaVoileSurFondQuelconque` l'optimise sur les fonds de l'écran principal, pas sur les supports.
+- **Primitives (NEUVES, `ProceduralUI` / `ShellContracts`)** — pure `RayonCoinLePlusLoin(W, H, cx, cy)` ; `DegradeRadialCercle(Arret[])` (sprite carré, r = 1 au bord) ; composant `RadialCercle` (recalcule position et taille de l'Image carrée à chaque changement de rect, comme `DecorAuComptoir.OnRectTransformDimensionsChange`) ; : `DegradeLineaire(angleDeg, Arret[], texture à l'aspect du cadre de référence 300×583)` — convention CSS (0° monte, 180° descend, sens horaire), N arrêts, arrêts en px convertis à la taille de la texture ; `DegradeRadial(cx, cy, rx, ry, Arret[])` — N arrêts opaques OU transparents, interpolation LINÉAIRE par arrêt (comme CSS), centre en coordonnées CSS ; `Points`/`Rayures` = tuile en `Image.Type.Tiled`. Cache unique, clé dérivée du contenu de la spec. `Rayon` : `Mask` + **`ProceduralUI.RoundedRectMask(tl, tr, br, bl)` — primitive NEUVE** (l'existante, `RoundedRectMask(int)`, `ProceduralUI.cs:1100`, n'a qu'UN rayon : ⑤ a 26/26/0/0, sa base touche le bas du cadre) ; 9-slice, bordure = le plus grand rayon. **Opacités** : le VOILE de scène (fond inconnu : la scène) passe par `AlphaVoileSurFondQuelconque` ; les halos de A, la plaque d'enseigne et la lueur du cerne se mélangent sur un fond CONNU (les arrêts du support lui-même) : leur alpha est ajusté pour ces fonds-là (`FondsDeReferenceSupport` = `#111823`, `#0b1016`, `#0d0f10`, via `CouleurPourMelangeLineaire`), et la sonde D4 mesure le pixel du foyer à ±6/255 du mélange CSS attendu (calculé en sRGB dans le test). Revue n°3 M4 : la docstring de `AlphaVoileSurFondQuelconque` l'optimise sur les fonds de l'écran principal, pas sur les supports.
 
 ### 3.4 L5 — Filets et bords d'état (classe mesurée par un juge groupé, 07/10)
 **Le constat (juge, rapports `screen_c1`, `ecran_loi`, `ecran_appro` / `r-groupe-2026-10-07`)** : les FILETS du canon ne sont pas tracés — ㊳ : 0 bord `#2a3648` sur 9 blocs (référence ×3) ; ㉛ : les bords d'état vert `#4f7f3f` et or `#8a6a22` sont égaux au fond ; ㉚ : 4 filets pointillés du bon → 0. Les CTA et gestes, eux, portent leur bord à 1/255 (`PiedDEcran.Cerner`) : le client SAIT tracer un bord, il ne le fait pas sur les blocs.
-**La mesure (Chromium, `mesurer-filets.cjs` → `mesure-filets.json`, 25 cadres nominaux)** : **312 éléments bordés, 1083 côtés** (plein 1039 · pointillé/tireté 34+6 · double 4), **85 recettes distinctes** (côtés, style, couleur, épaisseur). Les plus fréquentes : 
+**La mesure (Chromium, `mesurer-filets.cjs` → `mesure-filets.json`, TOUS les cadres des 26 écrans de l'INDEX — nominaux ET d'état —, 128 cadres)** : **1560 éléments bordés, 5403 côtés** (plein 5194 · tireté 140 · pointillé 45 · double 24), **137 recettes distinctes** (côtés, style, couleur, épaisseur), **87 couleurs de bord** distinctes. (Sur les seuls 25 cadres nominaux : 312 / 1083 / 85 — chiffres de la v4, remplacés parce que les bords d'ÉTAT, p. ex. `#4f7f3f` de ㉛, ne sont que sur les cadres d'état.) Les plus fréquentes :
 | côtés | style | couleur | épaisseur | éléments |
 |---|---|---|---|---|
-| 4 côté(s) | solid | `#2a3648` | 1 px | 69 |
-| 4 côté(s) | solid | `#b08d3e` | 2 px | 25 |
-| 4 côté(s) | solid | `#b08d3e` | 1 px | 18 |
-| 4 côté(s) | solid | `#14171a` | 1 px | 15 |
-| 4 côté(s) | solid | `#1f2a3a` | 1 px | 12 |
-| 4 côté(s) | solid | `#1f2a3a@0.4` | 1 px | 9 |
-| 4 côté(s) | solid | `#5a4a2a` | 1 px | 9 |
-| 1 côté(s) | solid | `#2c3640` | 2 px | 7 |
-(la couleur `#2a3648` à elle seule porte 270 côtés ; les filets pointillés de ㉚ = `#c3b79e` 1 px haut ×4 ; `.cerne` laiton = 4 côtés 1-2 px). Les bords d'ÉTAT de ㉛ : `.pris` fond `#22301f` bord `#4f7f3f`, `.risque` fond `#2e2114` bord `#8a6a22`, neutre bord `#303a44`.
-**Mécanisme** : `Filets.Poser(bloc, SpecFilet)` ajoute au bloc 1 à 4 `Image` de côté (enfants, `ignoreLayout`, `raycastTarget = false`, **ni `CanvasGroup` ni `Canvas`**), épaisseur = `EpaisseurCss × K` (K = 1280/300, même échelle que `PiedDEcran.EpaisseurDuCerne` = 4 u pour 1 CSS px), couleur par `Teinte` (jeton si d ≤ 4, §4.1) ; `Pointille`/`Tirete` = tuile `Tiled` (50 % de remplissage mesuré par le juge) ; `Rayon > 0` sur 4 côtés = `ProceduralUI.RoundedRectOutline` / `RoundedRectDashedOutline` (existants) ; `Double` = deux traits ; `Inset`/`Lueur` = le cerne (A). `Filets.Etat(bloc, fond, EtatDeBloc)` pose fond ET bord ENSEMBLE (c'est ce qui rend « bord = fond » impossible : un état sans bord distinct est refusé à la construction). `PiedDEcran.Cerner` (CLIENT-1) reste son propriétaire ; on lui proposera de DÉLÉGUER à `Filets` après sa fusion (une seule implémentation du trait).
+| 4 côté(s) | solid | `#2a3648` | 1 px | 357 |
+| 4 côté(s) | solid | `#b08d3e` | 2 px | 143 |
+| 4 côté(s) | solid | `#14171a` | 1 px | 99 |
+| 4 côté(s) | solid | `#b08d3e` | 1 px | 77 |
+| 1 côté(s) | solid | `#2c3640` | 2 px | 44 |
+| 4 côté(s) | solid | `#5a4a2a` | 1 px | 44 |
+| 4 côté(s) | solid | `#1f2a3a` | 1 px | 27 |
+| 4 côté(s) | solid | `#1f2a3a@0.4` | 1 px | 27 |
+(la couleur `#2a3648` à elle seule porte 1403 côtés ; les filets pointillés de ㉚ = `#c3b79e` 1 px haut ×4 ; `.cerne` laiton = 4 côtés, 1 px, rayon 3 : mesuré sur les 7 `.cerne`). Les bords d'ÉTAT de ㉛ : `.pris` fond `#22301f` bord `#4f7f3f`, `.risque` fond `#2e2114` bord `#8a6a22`, neutre bord `#303a44`.
+**Mécanisme** : `Filets.Poser(bloc, SpecFilet)` ajoute au bloc un conteneur `Filets` (nom figé, distinct du `Cerne` de `PiedDEcran.Cerner`) portant 1 à 4 `Image` de côté `Filets/Haut|Droite|Bas|Gauche` (`ignoreLayout`, `raycastTarget = false`, **ni `CanvasGroup` ni `Canvas`**, `CanvasRenderer` ajouté EXPLICITEMENT), épaisseur = `EchelleMaquette.PxTrait(EpaisseurCss, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar6)` (l'échelle EXISTANTE du dépôt : largeur du canvas / 300 ; 1280 n'en est que le repli — plus de constante K), couleur par `Teinte` (jeton si d ≤ 4, §4.1) ; `Pointille`/`Tirete` = tuile `Tiled` (50 % de remplissage mesuré par le juge) ; `Rayon > 0` sur 4 côtés = `ProceduralUI.RoundedRectOutline` / `RoundedRectDashedOutline` (existants) ; `Double` = deux traits ; `Inset`/`Lueur` = le cerne (A). `Filets.Etat(bloc, fond, EtatDeBloc)` pose fond ET bord ENSEMBLE (c'est ce qui rend « bord = fond » impossible : un état sans bord distinct est refusé à la construction). `PiedDEcran.Cerner` (CLIENT-1) reste son propriétaire ; on lui proposera de DÉLÉGUER à `Filets` après sa fusion (une seule implémentation du trait).
 **Déclaration** : les recettes de chaque écran sont GÉNÉRÉES de la mesure (`generer-filets.py` → `DecorsDeSceneFilets.cs`, partie du catalogue, régénérable) sous des noms par écran ; un contrôleur ne porte ni couleur ni épaisseur de bord, il appelle `Filets.Poser(bloc, DecorsDeScene.Filets.<Ecran>.<Nom>)`.
 
 ## 4. Catalogue (26 entrées ; ⑰ = ⑮, même cadre) — `#hex{jeton}` = la couleur est écrite PAR LE JETON nommé (d ≤ 4, §4.1) ; les autres hex sont des littéraux admis ; colonne cerne = cerne + enseigne (A)
@@ -133,8 +145,8 @@ Découpe « cover » : `DecorAuComptoir.UvCouverture` (public, éprouvée) RÉUT
 | ㊲ | Reputation | Posé | district | 0.24 | 21 % | rep6 | oui | **A** (§3.3) |
 | ㉟ | Selling | Posé | district | 0.24 | 21 % | vnt6 | oui | **A** (§3.3) |
 | ㉓ | Shop | Posé | district | 0.24 | 21 % | vitr6 | — | `linear-gradient(168deg, #151b23 0%, #0f141a{mapDialogBg} 46%, #0c1015{hudGaugeFaceOuter} 100%)` (la `vitre`, zone dominante ; racine sans fond) |
-| ⑮ | Inspection | Posé | district | 0.45 | 10 % | corkboard | — | `Radial(0,30 ; 0,20 ; rx 1,523 ; ry 0,901 ; #8a6a3a 0 → #6b4f28 60 % → #513a1c 100 %)` (= `circle farthest-corner` sur la boîte mesurée du `corkboard`, 298 × 504,05 : rayon √((0,7·298)²+(0,8·504,05)²) = 454,0 px ⇒ rx = 454,0/298 = 1,523, ry = 454,0/504,05 = 0,901) |
-| ⑰ | Precinct (même cadre que ⑮) | Posé | district | 0.45 | 10 % | corkboard | — | `Radial(0,30 ; 0,20 ; rx 1,523 ; ry 0,901 ; mêmes arrêts que ⑮)` |
+| ⑮ | Inspection | Posé | district | 0.45 | 10 % | corkboard | — | `RadialCercle(0,30 ; 0,20 ; #8a6a3a 0 → #6b4f28 60 % → #513a1c 100 %)` (`circle farthest-corner`, rayon calculé au montage : mesuré 454,0 px au cadre 31 [298×504,05], 382,0 px aux cadres 33-35 [298×400]) |
+| ⑰ | Precinct (même cadre que ⑮) | Posé | district | 0.45 | 10 % | corkboard | — | `RadialCercle(0,30 ; 0,20 ; mêmes arrêts que ⑮)` |
 | ⑭ | Compression | Posé | district | 0.62 | 35 % | tole | — | `radial-gradient(circle, #4a5057 1.4px, #000000@0 1.9px), linear-gradient(90deg, #2a2e33 0px, #23272b{surfaceRow} 50%, #2a2e33 100%)` — `Points` : pas 26 px, décalage 0 (mesuré `background-size: 26px 26px`) |
 | ㊴ | Forensic | Posé | district | 0.24 | 21 % | dos6 | oui | **A** (§3.3) |
 | ㊳ | Journal | Posé | district | 0.24 | 21 % | jrn6 | oui | **A** (§3.3) |
@@ -156,10 +168,12 @@ Découpe « cover » : `DecorAuComptoir.UvCouverture` (public, éprouvée) RÉUT
 
 Comptes : 26 entrées — **Posé 22 · DéjàLivré 3 (⑨ ⑩ ⑯ : zinc de `DecorAuComptoir`, non migrés ici) · NonMonté 1 (㉑)**. Hors catalogue (décision f2) : ④ ⑥ ⑪ ㉕ ⑲ ① ② ⑬ ⑳.
 
-### 4.1 Teintes — la garde TD-612 tranchée (`teintes.py` → `teintes.json` ; lit les 75 jetons de `DesignTokens.asset` ET toutes les couleurs écrites au catalogue, zones dominantes comprises)
-20 couleurs du catalogue sont à d ≤ 4 d'un jeton et passent donc PAR le jeton (dérive ≤ 3,62/255 — « le prix de la règle », précédent `DecorAuComptoir`) ; 34 sont des littéraux admis (d > 4) : `#0a2318`, `#101317`, `#111014`, `#131211`, `#141014`, `#141513`, `#151310`, `#151b23`, `#161a20`, `#17402d`, `#181614`, `#1d1610`, `#1d2124`, `#1d2229`, `#1e1c19`, `#20211d`, `#22262b`, `#2a1e14`, `#2a2e33`, `#2a3648`, `#2b120c`, `#2f6e4c`, `#333c46`, `#3a1c0e`, `#3a3f47`, `#4a5057`, `#513a1c`, `#5a2e16`, `#654a2c`, `#6b4f28`, `#7b5c37`, `#8a6a3a`, `#9a774b`, `#efe4c6`.
+### 4.1 Teintes — la garde TD-612 tranchée (`teintes.py` → `teintes.json` ; lit les 75 jetons de `DesignTokens.asset`, TOUTES les couleurs écrites au catalogue (§3.2-§4) et TOUTES les couleurs de bord mesurées)
+<!-- 4.1:DEBUT (régénéré par maj-design.py ; vérifié par verifier-design.py) -->
+**138 couleurs : 30 à d ≤ 4 d'un jeton (écrites PAR le jeton ; dérive ≤ 3,62/255, « le prix de la règle », précédent `DecorAuComptoir`) · 108 littéraux admis (d > 4)** — la liste complète des littéraux est dans `teintes.json` (`regle = littéral`).
 | couleur | jeton | d |
 |---|---|---|
+| `#0a0d10` | `scrimBackdrop` | 2.85 |
 | `#0a0f18` | `lieutenantGlassBottom` | 1.45 |
 | `#0b1016` | `hudGaugeFaceOuter` | 2.24 |
 | `#0b111b` | `hudBarGlassTop` | 0.1 |
@@ -169,6 +183,7 @@ Comptes : 26 entrées — **Posé 22 · DéjàLivré 3 (⑨ ⑩ ⑯ : zinc de `D
 | `#0f141a` | `mapDialogBg` | 3.53 |
 | `#111823` | `lieutenantMedallionOuter` | 3.05 |
 | `#121519` | `mapDialogBg` | 3.11 |
+| `#14171a` | `surfaceCard` | 2.96 |
 | `#14181d` | `surfaceCard` | 2.93 |
 | `#15181c` | `surfaceCard` | 1.67 |
 | `#191a17` | `readableTextDark` | 2.6 |
@@ -176,10 +191,19 @@ Comptes : 26 entrées — **Posé 22 · DéjàLivré 3 (⑨ ⑩ ⑯ : zinc de `D
 | `#1b1f24` | `lieutenantMutedDeep` | 1.58 |
 | `#1c1a17` | `readableTextDark` | 3.57 |
 | `#23272b` | `surfaceRow` | 3.6 |
+| `#232a2d` | `surfaceRow` | 0.16 |
 | `#232a32` | `nightOutOfDistrictMuted` | 3.08 |
+| `#2b2f3a` | `surfaceRaised` | 3.11 |
+| `#7db36a` | `accentCalm` | 0.09 |
 | `#7fd4d9` | `hudGaugeArcCold` | 0.1 |
 | `#b08d3e` | `hudHairlineGold` | 0.06 |
+| `#b9ac92` | `hudCremeSecondary` | 0.91 |
 | `#d9ab4e` | `hudMoneyUnderlineGold` | 0.11 |
+| `#e0664a` | `hudGaugeArcHot` | 0.12 |
+| `#f2c96b` | `hudMoneyGold` | 0.12 |
+| `#ff5a4d` | `accentDanger` | 0.02 |
+| `#ff9e3d` | `accentWarning` | 0.11 |
+<!-- 4.1:FIN -->
 
 ## 5. Pose par le gabarit
 1. `DecorDeScene.Poser(racine, DecorsDeScene.X)` : `Decor` = PREMIER enfant de la racine d'écran, `ignoreLayout`, étiré (contrat de `DecorAuComptoir.Construire`). Le décor s'étire sur la RACINE qu'il reçoit. Pour 21 des 22 écrans `Posé` c'est `ContentSlot`, plein canvas SOUS les barres (`AppShell.cs:2011-2016`) : les fractions de `Bande` mesurées sur le cadre valent telles quelles. **Exception ⑱** : `MonterMenuPlus` inset `MenuPlus` de `ShellChrome.BottomInsetPx`/`TopInsetPx` (`AppShell.cs:1337-1344`) : la `Bande` de ⑱ s'applique à CE rect (consigné §9).
@@ -188,12 +212,13 @@ Comptes : 26 entrées — **Posé 22 · DéjàLivré 3 (⑨ ⑩ ⑯ : zinc de `D
 4. Hors shell (tests isolés), `Poser` fonctionne sous un canvas quelconque (`CanvasRacine`) ; sans ressource de scène la scène reste NOIRE, jamais blanche (règle de `DecorAuComptoir`).
 5. `Tools/nouvel-ecran.py` émet `DecorDeScene.Poser(racine, DecorsDeScene.<Pascal>)` ; un écran neuf ajoute UNE entrée au catalogue (ou un statut nommé).
 
-## 6. Gardes
+## 6. Gardes (structurelles AVANT les gardes de valeur — socle CLIENT)
+- **D0 structurelle** : tout `Graphic` du décor porte son `CanvasRenderer` (ajouté EXPLICITEMENT : `AddComponent` à l'exécution n'honore pas `[RequireComponent]` ; sans lui rien ne dessine et la console est muette) ; tout `Graphic` sous un `Mask`/`RectMask2D` est un `MaskableGraphic` (`Image`, `RawImage`) ; l'ordre de fratrie `Capteur` → `Scene` → `Voile` → `Support` est celui déclaré. Rendre et COMPTER les pixels (une garde de paramètres n'est pas une garde d'effet).
 - **D1 catalogue = périmètre** : exactement les écrans de `Tools/juge-visuel/INDEX.md` qui ont des cadres de `ecrans-brennar-6.html` (26) ; chacun a une entrée avec son Statut ; contrôle positif (écran retiré ⇒ rouge).
 - **D2 pose** : pour chaque entrée `Statut = Pose`, le contrôleur appelle `DecorDeScene.Poser` et ne garde aucun fond plat à la racine (balayage de code chaînes/commentaires, comme `ClientHttpPlayModeTests` G1) ; `DejaLivre`/`NonMonte` : aucune exigence ; contrôle positif.
 - **D3 valeurs** : aucune de ces FORMES dans un contrôleur : `"Scenes/…"`, `brightness`, `"#rrggbb"`, `0xRRGGBB`, `new Color(` à flottants dans un appel de décor ; le catalogue lui-même : aucun littéral à d ≤ 4 (la garde TD-612 le voit déjà ; D3 le dit à voix haute avec `teintes.json`).
 - **D4 comportement (PlayMode, hors réseau, 540×960 portrait, RenderTexture + Canvas ScreenSpace-Camera du test)** : `Poser` crée les couches déclarées sous leurs noms ; **luminosité** : pixel de scène × b à ±2/255 ; **A** : haut-centre plus chaud que le bord (halo or), bas-centre plus froid (halo cyan), centre ≠ `surfaceBase` plat, cerne à 5 px du bord ; **radial** : pixel du foyer à la bonne hauteur (convention Y) ; **B** : arrêts attendus ; **raycast** : `RaycastAll` au centre rend `Capteur` (ou un élément au-dessus) ; verge nuit : repli chargé. Juge le décor SEUL (le bandeau se juge sur planche).
-- **D6 filets (classe)** : (a) *données* : le nombre de recettes de `DecorsDeSceneFilets` par écran = les recettes distinctes de `mesure-filets.json` (régénération sans écart) ; (b) *statique* : tout contrôleur `Posé` référence CHAQUE recette de son écran (aucun orphelin) et ne dessine aucun bord de bloc hors de `Filets` (balayage de code comme G1 : pas d'`AjouterFond` de couleur de bord, pas de `RoundedRectOutline` direct pour un bloc du catalogue) ; contrôle positif ; (c) *comportement* : `Filets.Poser` sur un rect de test : pixel de bord = couleur déclarée **et ≠ fond** (la mesure du juge : « bord = fond »), épaisseur = `EpaisseurCss × K` ± 1 px, pointillé : > 0 transition sur le bord (juge : 4 → 0) avec 50 % ± 10 % de remplissage, `Etat` refuse un bord égal au fond.
+- **D6 filets (classe)** : (a) *données* : les recettes de `DecorsDeSceneFilets` par écran = les recettes distinctes de `mesure-filets.json`, mesurées sur TOUS les cadres de l'écran dans l'INDEX (nominal + états : ㉛ `.pris` cadre 68, `.risque` cadres 68/71…), régénération sans écart ; (b) *statique* : tout contrôleur `Posé` référence CHAQUE recette de son écran (aucun orphelin) et ne dessine aucun bord de bloc hors de `Filets` (balayage de code comme G1 : pas d'`AjouterFond` de couleur de bord, pas de `RoundedRectOutline` direct pour un bloc du catalogue) ; contrôle positif ; (c) *comportement* : `Filets.Poser` sur un rect de test : pixel de bord = couleur déclarée **et ≠ fond** (la mesure du juge : « bord = fond »), épaisseur = `PxTrait(EpaisseurCss, …)` ± 1 px sur la racine de test, pointillé : > 0 transition sur le bord (juge : 4 → 0) ; remplissage 50 % ± 10 % mesuré pour `#c3b79e` (le juge), PAS supposé pour `Tirete`, `Etat` refuse un bord égal au fond.
 - **D5 assets** : chaque `SceneDeFond` a sa ressource (verge nuit marquée PROVISOIRE : dette datée).
 - Primitives : un test de pixels chacune (`DegradeLineaire` 178°/158°/90° à 3 arrêts ; `DegradeRadial` opaque à 3 arrêts, foyer et rayon).
 
@@ -204,7 +229,7 @@ Ce lot est STATIQUE. Mesure de CLIENT-3 (Chromium, `inventaire-animations.md` @e
 CLIENT-1 tient liste, pied et défilement des mêmes contrôleurs (`ListeDefilante`, `PiedDEcran`). Le décor ne touche que la RACINE (une ligne d'appel + suppression du fond plat) : je fusionne après lui, contrôleur par contrôleur, en l'annonçant avant ; aucun fichier n'est écrit sans son feu vert.
 
 ## 9. Hors de ce lot (consigné, pas traité — ruling « nuances à la fin »)
-`blur(1px)` de ③ et `sepia(.18)` de ⑭ ; inclinaison de la feuille ⑯ (−0,6°) ; `perspective/rotateX` du plateau ; ombres portées et `inset` ; liseré/ombre interne de `planche` ; textures bitmap de `Tools/fal` (non utilisées par la série 6) ; états vides/erreur non mesurés un par un ; écran paysage/tablette (`PositionVerticale` y agirait) ; `Bande` ancrée au HAUT du support : `corkboard` finit 18 px avant le bas du cadre, `burner` 12 px après (consigné) ; effet du bandeau sur la bande (la barre du haut mange 10,3 % du cadre : ⑮ ⑰ ㉔ ne laissent que ≈ 0,2 pt de scène libre, ⑩ 0,6 pt, ⑱ 2,1 pt (et ⑱ sur un rect inset)) — à juger sur la première planche ; dédoublonnage de la copie `scene_district_nuit` (+2,8 Mo).
+`blur(1px)` de ③ et `sepia(.18)` de ⑭ ; inclinaison de la feuille ⑯ (−0,6°) ; `perspective/rotateX` du plateau ; ombres portées et `inset` ; liseré/ombre interne de `planche` ; textures bitmap de `Tools/fal` (non utilisées par la série 6) ; états : 103 cadres d'état comparés au nominal (`inv3`), support IDENTIQUE sur 99 ; 4 DIFFÈRENT — ⑮ cadre 32 (`listing`, papier), ㉒ cadre 97 (`cofr6.dense`), ㉙ cadres 65-66 (`tabl6`, cadres « v1 ») : consignés, non traités (classe C) ; écran paysage/tablette (`PositionVerticale` y agirait) ; `Bande` ancrée au HAUT du support : `corkboard` finit 18 px avant le bas du cadre, `burner` 12 px après (consigné) ; effet du bandeau sur la bande (la barre du haut mange 10,3 % du cadre : ⑮ ⑰ ㉔ ne laissent que ≈ 0,2 pt de scène libre, ⑩ 0,6 pt, ⑱ 2,1 pt (et ⑱ sur un rect inset)) — à juger sur la première planche ; dédoublonnage de la copie `scene_district_nuit` (+2,8 Mo).
 
 ## 10. Questions ouvertes
 Q1 catalogue statique C# (garde TD-612 et tests lisent le code) plutôt que `ScriptableObject` : retenu. Q3 coût mémoire (~40 sprites générés, textures 128×256 pour les dégradés angulaires) : à mesurer au code, borne à fixer.
