@@ -319,6 +319,9 @@ public static class MafiaCI
         // ManometreOracle reste HORS filtre : Oracle1 GÈLE (reproduit : RC=5, chien de garde à 180 s). Validé par l'orchestrateur.
         "CeQuiArrive", "ChaineSilencieuse", "CommissariatDuJoueur", "EtatDuShell", "FicheLabo", "GestesDeVente", "HorizonAuMontage",
         "HoteDeRecrutement", "LocuteurReel", "MenuPlus", "ProfilEnMots", "RevueSansRoutine", "SansRelais", "SessionAuRetour", "VariablesDeRefus",
+        // C4 (CLIENT-1, 07/10) — l'horloge légère `GET /v1/me/clock` en appel de FOND (`X-Mafia-Background: 1`) : 6 tests hors réseau, sans
+        // paire. Catégorie NEUVE, inscrite le jour où elle naît (la garde I1 l'exige) ; verte au créneau suivant, jamais déclarée verte avant.
+        "HorlogeLegere",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

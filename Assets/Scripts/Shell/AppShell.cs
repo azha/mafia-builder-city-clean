@@ -686,12 +686,61 @@ namespace MafiaCleanCity.Shell
         private ITransportDeSession Transport() =>
             TransportDeSessionPourTest ?? new TransportDeSessionHttp(new SessionClient { BaseUrl = baseUrl });
 
+        // ── C4 — l'horloge légère (la route légère de L1, appel de FOND `X-Mafia-Background: 1`) ───────────────────────────────────
+        // Toutes les 30 à 60 s AU PREMIER PLAN, jamais en arrière-plan (« pas de minuteur en arrière-plan », B4). Elle lit les deux jours
+        // de la famille ; différents ⇒ `SurLectureDuJourServi` (close puis open) ; l'un des deux null ⇒ rien. En batchmode (les gates), la
+        // boucle ne part PAS d'elle-même : un test qui l'exerce pose son transport.
+        public ITransportDeLHorloge TransportDeLHorlogePourTest;
+        /// <summary>Cadence de la boucle, en secondes RÉELLES (30 à 60 s — au milieu).</summary>
+        public float CadenceDeLHorlogeS = 45f;
+        /// <summary>C4 — nombre de lectures de l'horloge qui ont abouti (test hook).</summary>
+        public int LecturesDeLHorloge { get; private set; }
+        /// <summary>C4 — la dernière horloge lue ; null tant qu'aucune lecture n'a abouti.</summary>
+        public HorlogeLegereDto DerniereHorloge { get; private set; }
+        private bool enArrierePlan;
+        private Coroutine boucleDeLHorloge;
+
+        private ITransportDeLHorloge TransportDeLHorloge() =>
+            TransportDeLHorlogePourTest ?? new TransportDeLHorlogeHttp(new HorlogeLegereClient { BaseUrl = baseUrl });
+
+        /// <summary>C4 — UNE lecture de l'horloge légère, puis la décision de session sur ses deux jours. Sans jeton, ou en arrière-plan : rien.
+        /// Public : le test hors réseau la joue sans attendre la cadence.</summary>
+        public IEnumerator UneLectureDeLHorloge()
+        {
+            if (string.IsNullOrEmpty(Token) || enArrierePlan) yield break;
+            HorlogeLegereDto lue = null;
+            yield return TransportDeLHorloge().Lire(Token, d => lue = d, (c, m) => Debug.LogWarning($"[AppShell] horloge légère : {c} {m}"));
+            if (this == null || lue == null) yield break;
+            LecturesDeLHorloge++;
+            DerniereHorloge = lue;
+            yield return SurLectureDuJourServi(lue.JourDeFamille, lue.JourDOuvertureDeFamille);
+        }
+
+        private IEnumerator BoucleDeLHorloge()
+        {
+            while (true)
+            {
+                yield return new WaitForSecondsRealtime(CadenceDeLHorlogeS);
+                if (this == null) yield break;
+                if (enArrierePlan) continue;
+                yield return UneLectureDeLHorloge();
+            }
+        }
+
+        private void DemarrerLaBoucleDeLHorloge()
+        {
+            if (boucleDeLHorloge != null) return;
+            if (Application.isBatchMode && TransportDeLHorlogePourTest == null) return;
+            boucleDeLHorloge = StartCoroutine(BoucleDeLHorloge());
+        }
+
         // ── B4 — arrière-plan et retour ───────────────────────────────────────────────────────────────────────────────
         // En arrière-plan on NE FERME PAS (un close pose `ended_at`, et `open` ne réutilise jamais une session fermée) : on note
         // l'heure, persistée. Au retour : `CycleDeSession`. Android signale aussi la perte de FOCUS (et les deux arrivent au
         // retour) : l'heure est consommée au premier, le second trouve null et ne fait rien. Pas de minuteur en arrière-plan.
         private void OnApplicationPause(bool enPause)
         {
+            enArrierePlan = enPause;
             if (enPause) NoterSortie();
             else StartCoroutine(AuRetourAuPremierPlan());
         }
@@ -699,6 +748,7 @@ namespace MafiaCleanCity.Shell
         private void OnApplicationFocus(bool focus)
         {
             if (Application.platform != RuntimePlatform.Android) return;   // l'éditeur perd le focus à chaque clic ailleurs
+            enArrierePlan = !focus;
             if (!focus) NoterSortie();
             else StartCoroutine(AuRetourAuPremierPlan());
         }
@@ -726,7 +776,7 @@ namespace MafiaCleanCity.Shell
         }
 
         /// <summary>B4 — à chaque lecture de l'horloge légère au premier plan (30 à 60 s) : ses deux jours servis. Différents ⇒ close
-        /// puis open, bandeau et écran courant. ⚠️ L'horloge légère est le lot C4 (CLIENT-1) : ce point d'entrée l'attend.</summary>
+        /// puis open, bandeau et écran courant. L'horloge légère (C4, `UneLectureDeLHorloge`) l'appelle avec ses deux jours servis.</summary>
         public IEnumerator SurLectureDuJourServi(int? jourServi, int? jourDOuverture)
         {
             if (retourEnCours || string.IsNullOrEmpty(Token)) yield break;
@@ -953,6 +1003,7 @@ namespace MafiaCleanCity.Shell
             {
                 Debug.LogError($"[AppShell] session/open failed: {sessionErr}");
             }
+            DemarrerLaBoucleDeLHorloge();   // C4 — l'horloge légère, au premier plan
 
             // ActivateTab(Empire) juste APRÈS TopBar.Load — mesuré (pas supposé) : un appelant qui
             // attend `TopBar.Loaded` (poll par frame) doit trouver `MountedTenantGameObject` déjà
