@@ -199,17 +199,7 @@ namespace MafiaCleanCity.Operational
 
         private void BuildLayout()
         {
-            Canvas canvas = FindFirstObjectByType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject go = new GameObject("Canvas",
-                    typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-                canvas = go.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                CanvasScaler sc = go.GetComponent<CanvasScaler>();
-                sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                sc.referenceResolution = new Vector2(1280, 720);
-            }
+            Canvas canvas = MafiaCleanCity.Shell.CanvasRacine.Resoudre(transform, mountParent);
             Transform root = mountParent != null ? mountParent : canvas.transform;
 
             // La racine PLEIN ÉCRAN — jamais un panneau intermédiaire : c'est elle qui sert de

@@ -1014,17 +1014,7 @@ namespace MafiaCleanCity.Operational
 
         private void BuildLayout()
         {
-            Canvas canvas = FindFirstObjectByType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject go = new GameObject("Canvas",
-                    typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-                canvas = go.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                CanvasScaler sc = go.GetComponent<CanvasScaler>();
-                sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                sc.referenceResolution = new Vector2(1280, 720);
-            }
+            Canvas canvas = MafiaCleanCity.Shell.CanvasRacine.Resoudre(transform, mountParent);
             // ⛔ SOUS L'HÔTE, PAS SOUS `mountParent` (patron ㉚ / gabarit corrigé) : bâtir sous
             // `mountParent` fait naître la feuille en FRÈRE de l'hôte — toute garde en
             // `GetComponentsInChildren` mesurerait alors un sous-arbre VIDE.

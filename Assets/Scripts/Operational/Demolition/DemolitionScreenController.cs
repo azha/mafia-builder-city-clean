@@ -1086,17 +1086,7 @@ namespace MafiaCleanCity.Operational
 
         private void BuildLayout()
         {
-            Canvas canvas = FindFirstObjectByType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject go = new GameObject("Canvas",
-                    typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-                canvas = go.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                CanvasScaler sc = go.GetComponent<CanvasScaler>();
-                sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                sc.referenceResolution = new Vector2(1280, 720);
-            }
+            Canvas canvas = MafiaCleanCity.Shell.CanvasRacine.Resoudre(transform, mountParent);
             // Sous l'hôte quand on est monté dans le shell (il est déjà l'enfant de `ContentSlot`
             // que le shell gouverne) ; sous le canvas découvert hors shell.
             Transform root = mountParent != null ? transform : canvas.transform;

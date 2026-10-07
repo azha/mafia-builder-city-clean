@@ -1798,17 +1798,7 @@ namespace MafiaCleanCity.CityMap
 
         private void BuildRoot()
         {
-            Canvas canvas = FindFirstObjectByType<Canvas>();
-            if (canvas == null)
-            {
-                GameObject canvasGo = new GameObject("Canvas",
-                    typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-                canvas = canvasGo.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                CanvasScaler scaler = canvasGo.GetComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1280, 720);
-            }
+            Canvas canvas = MafiaCleanCity.Shell.CanvasRacine.Resoudre(transform, mountParent);
             // Pivot fond pré-rendu — DÉVIATION AMENDÉE (round 4, verdict ⊥ sur
             // Tools/pivot-fond-prerendu-p3-implementation-notes.md § ROUND 4). Un essai antérieur
             // avait ajouté ici un réglage Canvas au niveau de l'objet entier, dans l'espoir de
