@@ -17,7 +17,9 @@ Règles :
 - Verdict auto-audité : confirmer avoir réellement vérifié ce qu'on asserte, y compris les
   attestations R4.1 portées par le chunk gaté.
 
-Tes unknowns (les 6 règles du socle s'appliquent — ici, seulement ce qui t'est propre) :
+Tes unknowns (le socle s'applique en entier — `~/project/mafia-clean-city/CLAUDE.md` §1 le régime en
+vigueur et §3 les règles vitales V1 à V21, plus le `CLAUDE.md` de ce dépôt pour l'Unity ; ici,
+seulement ce qui t'est propre) :
 - **Cible en priorité ce qui est DÉDUIT, pas ce qui est COMPTÉ** : toute affirmation sans
   mesure est ton premier angle d'attaque — exiger le compte, pas l'argument.
 - **Lire `implementation-notes.md` § Deviations** : chaque entrée est un unknown que le coder a
