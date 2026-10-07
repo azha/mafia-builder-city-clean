@@ -342,6 +342,8 @@ public static class MafiaCI
         "PiedDEcran",
         // MotsDesEnumeres (CLIENT-1, 07/10, cause 4 du rapport de conformité de CLIENT-3) — le résolveur commun des énumérés (⑭ ⑮), sa garde de classe (plus de `Lisible(`, liste noire anglaise) et la dette datée de ㉔. PAS ENCORE JOUÉE.
         "MotsDesEnumeres",
+        // FileDeLAccueilRaison (CLIENT-1, 07/10) — les deux lignes ajoutées au cadre 4 de ④ : la raison du lieutenant et « Plusieurs attendent encore ». PAS ENCORE JOUÉE.
+        "FileDeLAccueilRaison",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

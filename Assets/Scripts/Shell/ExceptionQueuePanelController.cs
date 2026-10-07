@@ -306,6 +306,32 @@ namespace MafiaCleanCity.Shell
             gravite.color = GraviteSurLAccueil(card.severity_band);
             renderedSeverityLabels.Add(SeverityLabel(card.severity_band));
 
+            // Les DEUX lignes du cadre 4 (atelier master 0dd516e, décision de f2 07/10 : le juge de données de ④ les a trouvées SERVIES et NON rendues) — dans le bloc `.qui`, APRÈS nom + gravité :
+            //   · la RAISON, en réplique de lieutenant (`.rep` : 8,4 px, #b9ad92 — le ton du second texte des rangées de LA SUITE) ;
+            //   · « Plusieurs attendent encore » SEULEMENT s'il y a plusieurs cartes (`.plus` : 7,6 px, #8c8272) — un MOT, jamais un chiffre : le back ne sert aucun compte.
+            // Rien d'inventé : une réplique absente (ou un identifiant sans espace) ne laisse AUCUNE ligne.
+            RaisonRendue = RaisonDeLaCarte(card);
+            if (RaisonRendue != null)
+            {
+                TextMeshProUGUI raison = NewText(gauche.transform, RaisonRendue, -1);
+                raison.name = "Raison";
+                raison.fontSize = TailleDeLaRaison;
+                raison.color = DesignTokens.Current.hudCremeSecondary;   // #b9ad92
+                raison.enableWordWrapping = true;
+                raison.maxVisibleLines = 2;
+                raison.overflowMode = TextOverflowModes.Ellipsis;
+            }
+            PlusieursRendu = LignePlusieurs(currentCards.Length);
+            if (PlusieursRendu != null)
+            {
+                TextMeshProUGUI plus = NewText(gauche.transform, PlusieursRendu, -1);
+                plus.name = "Plusieurs";
+                plus.fontSize = TailleDuPlusieurs;
+                plus.color = new Color32(0x8c, 0x82, 0x72, 255);   // #8c8272
+                plus.enableWordWrapping = false;
+                plus.overflowMode = TextOverflowModes.Ellipsis;
+            }
+
             GameObject trancherGo = new GameObject("Trancher", typeof(RectTransform));
             trancherGo.transform.SetParent(row.transform, false);
             Image zone = trancherGo.AddComponent<Image>();
@@ -334,6 +360,27 @@ namespace MafiaCleanCity.Shell
             RectTransform motRt = (RectTransform)mot.transform;
             motRt.anchorMin = Vector2.zero; motRt.anchorMax = Vector2.one; motRt.offsetMin = motRt.offsetMax = Vector2.zero;
         }
+
+        /// <summary>Tailles des deux lignes ajoutées au cadre 4 : `.rep` 8,4 px et `.plus` 7,6 px, à l'échelle de « Lt. X attend vos ordres » (9,6 px = 40 u : 4,17 u par px CSS). Pures.</summary>
+        public const float TailleDeLaRaison = 35f, TailleDuPlusieurs = 32f;
+
+        /// <summary>Ce que la dernière ligne de l'Accueil a rendu : la réplique (null : aucune) et la ligne de pluriel (null : aucune) — crochets de test.</summary>
+        public string RaisonRendue { get; private set; }
+        public string PlusieursRendu { get; private set; }
+
+        /// <summary>LA RAISON d'une carte, en RÉPLIQUE (règle `ExceptionBandes.Replique` : « … » seulement dans la bouche d'un lieutenant), source `event_descriptor_i18n` puis `event_descriptor` (`TexteServeur`). Rien d'inventé :
+        /// texte absent ⇒ null ; un texte SANS espace est un identifiant (`exc_demo_…`), pas une phrase — il n'est PAS montré sur l'Accueil (atelier 28 : jamais une valeur machine brute à l'écran). Pure.</summary>
+        public static string RaisonDeLaCarte(ExceptionCardDto c)
+        {
+            if (c == null) return null;
+            string texte = MafiaCleanCity.Operational.Exceptions.ExceptionBandes.TexteServeur(c);
+            if (string.IsNullOrWhiteSpace(texte) || !texte.Trim().Contains(" ")) return null;
+            return MafiaCleanCity.Operational.Exceptions.ExceptionBandes.Replique(texte, MafiaCleanCity.Operational.Exceptions.ExceptionBandes.ParleUnLieutenant(c));
+        }
+
+        /// <summary>« Plusieurs attendent encore » — clé servie `accueil.file.plusieurs_attendent_encore` : un MOT, pas un chiffre. Une carte (ou aucune) ⇒ null ; deux et plus ⇒ la ligne. Pure.</summary>
+        public static string LignePlusieurs(int nombreDeCartes) =>
+            nombreDeCartes > 1 ? MafiaCleanCity.I18n.Libelle.De("accueil", "file", "Plusieurs attendent encore") : null;
 
         /// <summary>La boîte de TRANCHER pour un mot mesuré de `mesure` u : jamais moins que les 220 u d'avant, jamais moins que le mot plus sa marge. Pure.</summary>
         public const float MargeDuMot = 12f;
