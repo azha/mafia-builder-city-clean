@@ -42,6 +42,10 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.AreEqual(2.0, h.SecondesParMinuteDeJeu);
                 Assert.AreEqual(1440, h.MinutesParJourDeJeu);
             }
+            Assert.AreEqual("family_day", CycleDeSession.ChampsServis.JourDeFamille, "noms CONFIRMÉS par le back (07/10), recopiés : session/open et horloge");
+            Assert.AreEqual("opened_family_day", CycleDeSession.ChampsServis.JourDeFamilleALOuverture);
+            Assert.AreEqual(HorlogeLegere.Cles.JourDeFamille, CycleDeSession.ChampsServis.JourDeFamille, "une seule orthographe pour les deux routes");
+            Assert.AreEqual(HorlogeLegere.Cles.JourDOuverture, CycleDeSession.ChampsServis.JourDeFamilleALOuverture);
             Assert.AreEqual(0, HorlogeLegere.Lire(CorpsPlat.Replace("\"family_day\":44", "\"family_day\":0")).JourDeFamille,
                 "le jour 0 est un jour, pas un null");
             Assert.AreEqual(2, HorlogeLegere.Lire(CorpsPlat).GameDay, "`game_day` n'est pas pris dans `in_game_day_length_minutes`");

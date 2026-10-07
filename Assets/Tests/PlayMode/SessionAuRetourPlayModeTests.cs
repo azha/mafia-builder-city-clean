@@ -15,7 +15,7 @@ namespace MafiaCleanCity.CityMap.Tests
     //   J3  jour +1 au retour ⇒ la lecture, puis close PUIS open
     //   J4  jour absent ⇒ le repli : 47 min 59 ⇒ aucune requête ; 48 min 01 ⇒ close PUIS open ; borne incluse, 48 = 1 440 × 2 s
     //   J5  démarrage à froid : open seul ; jour changé, ou repli atteint ⇒ open, close, open
-    //   J6  les deux jours se lisent dans le corps brut PAR LEUR NOM (noms provisoires, une seule source)
+    //   J6  les deux jours se lisent dans le corps brut PAR LEUR NOM (`family_day`, `opened_family_day` : noms confirmés par le back le 07/10, une seule source)
     //   J7  minuit du joueur passé au premier plan (family_day = jour du joueur − jour d'inscription + 1, back 26/09) ⇒ UN SEUL close
     //       puis open : les lectures suivantes portent la nouvelle session (jours égaux) et ne relancent rien
     [Category("SessionAuRetour")]

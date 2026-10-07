@@ -31,12 +31,13 @@ namespace MafiaCleanCity.Shell
         /// ⚠️ Recopie d'un tunable : elle sort quand le back sert le jour (demandé par f2), ou sa cadence.</summary>
         public const int SeuilDeRepliMinutes = 48;
 
-        /// <summary>Les noms des deux champs SERVIS (session/open, horloge légère). ⚠️ PROVISOIRES : à lire dans le design L1 du back
-        /// (`design/boucle-argent`) quand il sera commité — c'est le seul endroit à corriger.</summary>
+        /// <summary>Les noms des deux champs SERVIS, CONFIRMÉS par le back (BACK-2, lot/l1, 07/10) : `family_day` et `opened_family_day`, dans
+        /// `session/open` (14 → 16 clés) comme dans l'horloge légère (`HorlogeLegere.Cles`), TOUJOURS présents et nullables (null = pas
+        /// d'ancre de naissance / pas de session active). Pas encore déployés au 07/10 : tant que le back ne les sert pas, le repli joue.</summary>
         public static class ChampsServis
         {
             public const string JourDeFamille = "family_day";
-            public const string JourDeFamilleALOuverture = "session_family_day";
+            public const string JourDeFamilleALOuverture = "opened_family_day";
         }
 
         public enum Decision { Rien, Ouvrir, FermerPuisOuvrir }
@@ -53,7 +54,7 @@ namespace MafiaCleanCity.Shell
         }
 
         /// <summary>Un entier de premier niveau ou imbriqué, par son NOM, dans un corps JSON brut — `JsonUtility` ne lie un champ que
-        /// par un nom écrit en dur dans le DTO, et ces noms-ci sont provisoires. Null si absent ou non entier.</summary>
+        /// par un nom écrit en dur dans le DTO, et ces deux noms-ci sont des clés SERVIES, nullables. Null si absent, `null` ou non entier.</summary>
         public static int? LireEntier(string json, string champ)
         {
             if (string.IsNullOrEmpty(json) || string.IsNullOrEmpty(champ)) return null;

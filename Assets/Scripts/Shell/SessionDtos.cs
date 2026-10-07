@@ -87,7 +87,7 @@ namespace MafiaCleanCity.Shell
     {
         public string session_id;
         /// <summary>B4 — les deux jours de la famille SERVIS (courant, et celui de l'ouverture de CETTE session), lus du corps brut
-        /// par `CycleDeSession.ChampsServis` (noms provisoires). Null tant que le back ne les sert pas ⇒ le repli de 48 min.
+        /// par `CycleDeSession.ChampsServis` (`family_day`, `opened_family_day`, noms CONFIRMÉS par le back le 07/10). Null tant que le back ne les sert pas ⇒ le repli de 48 min.
         /// ⚠️ PROPRIÉTÉS, pas champs : la parité de forme C3-F2/C3-F3 (`SessionClientPlayModeTests`) compte les CHAMPS publics du DTO
         /// contre les clés servies. Quand le back servira ces deux clés, C3-F3 rougira (clés brutes 16 ≠ champs 14) : ce jour-là,
         /// deux vrais champs remplacent ces propriétés.</summary>
