@@ -18,6 +18,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   G5  TD-768 : MÊME MÉTHODE que G1 (balayage de chaînes/commentaires, garde de VALEUR) sur Assets/Tests — 0 littéral de nom d'en-tête (Authorization,
     //       Idempotency-Key, X-Mafia-Background) et 0 SetRequestHeader au 1er argument non littéral, sauf liste blanche EXACTE des lectures (GetRequestHeader) ;
     //       contrôles positifs par forme (littéral, constante, helper, casse, // dans une chaîne, non littéral, verbatim) et liste blanche rougissant en trop comme en moins
+    //       « Bearer » n'est PAS cherché dans les tests (décision f2, 07/10) : la pose d'un jeton passe par le NOM d'en-tête, qui est cherché ; et le mot est dans la
+    //       prose d'une vingtaine de messages d'assertion (« controller signed in (Bearer acquired) »), qui n'est pas une pose
     //   G2  Authentifier : « Bearer <jeton> » ; jeton vide ou null ⇒ AUCUN en-tête (comme chacun des 103 anciens sites)
     //   G3  Idempotent : un UUID v4 NEUF à chaque appel, posé et rendu ; IdempotentAvec pose la clé telle quelle
     //   G4  Fond : « 1 » à l'octet, par le client commun ET par `EnTetesDuClient.MarquerFond` (qui lui délègue) ; null en, null out
