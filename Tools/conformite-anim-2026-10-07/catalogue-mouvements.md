@@ -924,7 +924,7 @@ Tranchée par l'user le 02/09 : **2000-2010** (mémoire « DA silhouettes contem
 
 `report.backlog_age_cycles` est servi (`AutonomyDtos.cs:26`) et affiché (`:285`), mais **aucun seuil
 n'est servi**. La fiction dit seulement « **un rapport qui traîne** » (`front.md:1594`).
-> **Reco** : **le plus vieux seulement**, quel que soit son âge. Un standard n'allume pas douze
+> **Reco** : **le plus vieux seulement**, quel que soit son âge. Une console de répartition n'allume pas douze
 > voyants : s'il y a trois rapports, c'est le plus vieux qui appelle, et il cesse quand on l'a traité.
 > Pas de seuil ⇒ pas de nombre inventé (R2.2), et la garde est triviale : exactement 1 piste.
 
