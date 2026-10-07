@@ -1339,6 +1339,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             contenuRt.offsetMax = new Vector2(0f, 0f);
             scroll.viewport = vueRt;
             scroll.content = contenuRt;
+            MafiaCleanCity.Shell.ListeDefilante.Indiquer(scroll, DesignTokens.Current.surfaceBase);   // cause 7 (f2) : fondu en fin de course + ascenseur — un ScrollRect sans indice cache du contenu
             var ajuste = contenu.AddComponent<ContentSizeFitter>();
             ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             card = contenu;   // tout ce qui suit se construit DANS le contenu défilant

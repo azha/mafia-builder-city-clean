@@ -1232,6 +1232,7 @@ namespace MafiaCleanCity.Operational
             contenu.offsetMax = Vector2.zero;
             defilement.viewport = corps;
             defilement.content = contenu;
+            ListeDefilante.Indiquer(defilement, DesignTokens.Current.surfaceBase);   // cause 7 (f2) : fondu en fin de course + ascenseur — un ScrollRect sans indice cache du contenu
             ContentSizeFitter ajuste = contenuGo.AddComponent<ContentSizeFitter>();
             ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 

@@ -840,6 +840,7 @@ namespace MafiaCleanCity.Operational
             contenuRt.offsetMax = Vector2.zero;
             defilement.viewport = (RectTransform)corpsGo.transform;
             defilement.content = contenuRt;
+            ListeDefilante.Indiquer(defilement, DesignTokens.Current.surfaceBase);   // cause 7 (f2) : fondu en fin de course + ascenseur — un ScrollRect sans indice cache du contenu
             // ⛔⛔⛔ PAS DE `ContentSizeFitter` — ET C'EST LE CORRECTIF DE ㊲ M3, une régression que
             //    j'ai produite en posant le défilement.
             // MESURÉ par le juge : le panneau élastique perd **89 px** (765 → 676) pendant que le

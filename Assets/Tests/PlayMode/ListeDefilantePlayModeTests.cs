@@ -112,17 +112,12 @@ namespace MafiaCleanCity.CityMap.Tests
 
         // ── L3 — la garde de classe ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
-        /// <summary>Les écrans qui posent un `RectMask2D` SANS `ListeDefilante`, chacun avec sa RAISON. Un masque de DÉCOR n'est pas une liste ; un `ScrollRect` interactif sans indice reste à équiper
-        /// quand un juge le relève (cause 7 : trois écrans nommés par CLIENT-3 + ㊵ et ㉞ qui portaient le même cadre-masque).</summary>
+        /// <summary>Les fichiers qui posent un `RectMask2D` SANS `ListeDefilante`, chacun avec sa RAISON : seuls restent DEUX masques de DÉCOR (une zone de peinture n'est pas une liste). Décision de f2 (07/10) :
+        /// les cinq ScrollRect interactifs (㉜ ㉙ ⑥ ㊲ menu PLUS) sont équipés d'office — un défilement sans indice cache du contenu.</summary>
         internal static readonly Dictionary<string, string> MasquesSansIndice = new Dictionary<string, string>
         {
             { "DashboardController.cs", "décor : la zone du fond de ville de l'Accueil, pas une liste" },
             { "ReputationPortrait.cs", "décor : la zone du portrait de ㊲, pas une liste" },
-            { "DelegationScreenController.cs", "ScrollRect INTERACTIF (㉜) sans indice : à équiper si un juge le relève (aucun écart A/B ouvert à ce jour)" },
-            { "ConflitScreenController.cs", "ScrollRect INTERACTIF (㉙) sans indice : idem" },
-            { "LieutenantScreenController.cs", "ScrollRect INTERACTIF (⑥ / liste de ⑦) sans indice : idem" },
-            { "ReputationScreenController.cs", "ScrollRect INTERACTIF (㊲, corps) sans indice : idem" },
-            { "AppShell.cs", "ScrollRect INTERACTIF (le menu PLUS ⑱) sans indice : idem" },
         };
 
         private static readonly Regex Masque = new Regex(@"AddComponent<RectMask2D>\(\)");
@@ -152,7 +147,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsEmpty(perimees, "exception(s) devenue(s) inutile(s) (le fichier est équipé, ou n'a plus de masque) — les retirer : " + string.Join(", ", perimees));
             foreach (string equipe in new[] { "JournalScreenController.cs", "FiliereScreenController.cs", "CarnetScreenController.cs" })
                 Assert.IsTrue(sources.Any(s => s.Item1 == equipe && s.Item2.Contains("ListeDefilante.Equiper(")), equipe + " : la liste de l'écran est équipée");
-            foreach (string indique in new[] { "DemolitionScreenController.cs", "ShopScreenController.cs" })
+            foreach (string indique in new[] { "DemolitionScreenController.cs", "ShopScreenController.cs", "DelegationScreenController.cs", "ConflitScreenController.cs", "LieutenantScreenController.cs", "ReputationScreenController.cs", "AppShell.cs" })
                 Assert.IsTrue(sources.Any(s => s.Item1 == indique && s.Item2.Contains("ListeDefilante.Indiquer(")), indique + " : le ScrollRect existant porte l'indice");
         }
     }

@@ -992,6 +992,7 @@ namespace MafiaCleanCity.Operational
             rtc.offsetMax = Vector2.zero;
             sr.viewport = (RectTransform)fenetre.transform;
             sr.content = rtc;
+            ListeDefilante.Indiquer(sr, DesignTokens.Current.surfaceBase);   // cause 7 (f2) : fondu en fin de course + ascenseur — un ScrollRect sans indice cache du contenu
 
             VerticalLayoutGroup v = contenu.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset(PxTrait(CssMargeH), PxTrait(CssMargeH), PxTrait(CssBodyPadHaut), 0);
