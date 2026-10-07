@@ -32,6 +32,11 @@ namespace MafiaCleanCity.I18n
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + "/v1/i18n/bundle?locale=" + Locale))
             {
+                // TD-843 : un délai, parce que sur mobile une requête SANS délai peut bloquer le démarrage pour toujours — et 30 s, pas les 10 s
+                // des autres clients (`ClientHttp.DelaiParDefautS`) : c'est le plus gros corps servi au démarrage (le paquet de TOUTES les phrases du
+                // jeu), pris sur le réseau du téléphone au lancement ; 10 s l'aurait coupé sur une connexion lente alors que les autres corps sont petits.
+                // Borné quand même : passé 30 s, l'échec est dit (`onError`) et le jeu retombe sur ses phrases de repli.
+                MafiaCleanCity.ClientHttp.Delai(req, 30);
                 MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 yield return req.SendWebRequest();
 

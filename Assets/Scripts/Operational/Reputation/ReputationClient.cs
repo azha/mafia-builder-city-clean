@@ -96,6 +96,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/lieutenants"))
             {
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);   // TD-843 : sur mobile, une requête SANS délai peut bloquer un écran pour toujours
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success) { onErr?.Invoke(req.responseCode); yield break; }
@@ -129,6 +130,7 @@ namespace MafiaCleanCity.Operational
                          + UnityWebRequest.EscapeURL(lieutenantId);
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);   // TD-843 : idem
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)

@@ -20,7 +20,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //       contrôles positifs par forme (littéral, constante, helper, casse, // dans une chaîne, non littéral, verbatim) et liste blanche rougissant en trop comme en moins
     //       « Bearer » n'est PAS cherché dans les tests (décision f2, 07/10) : la pose d'un jeton passe par le NOM d'en-tête, qui est cherché ; et le mot est dans la
     //       prose d'une vingtaine de messages d'assertion (« controller signed in (Bearer acquired) »), qui n'est pas une pose
-    //   G1 (TD-843) couvre aussi : 0 littéral `Content-Type` / `application/json`, 0 affectation de `.timeout`, 0 `TimeoutSeconds = <nombre>` hors du client commun
+    //   G1 (TD-843) couvre aussi : 0 littéral `Content-Type` / `application/json`, 0 affectation de `.timeout`, 0 `TimeoutSeconds = <nombre>` hors du client commun,
+    //       et « toute requête a un délai » (RequetesSansDelai : chaque requête construite l'est dans une méthode qui appelle `ClientHttp.Delai(` ou une aide de la classe qui le fait)
     //   G2  Authentifier : « Bearer <jeton> » ; jeton vide ou null ⇒ AUCUN en-tête (comme chacun des 103 anciens sites)
     //   G3  Idempotent : un UUID v4 NEUF à chaque appel, posé et rendu ; IdempotentAvec pose la clé telle quelle
     //   G4  Fond : « 1 » à l'octet, par le client commun ET par `EnTetesDuClient.MarquerFond` (qui lui délègue) ; null en, null out
@@ -30,6 +31,37 @@ namespace MafiaCleanCity.CityMap.Tests
         private static readonly Regex Valeurs = new Regex(@"authorization|idempotency-key|x-mafia-background|bearer\b|content-type|application/json", RegexOptions.IgnoreCase);
         /// <summary>TD-843 : une AFFECTATION du délai (`x.timeout = …`, pas `==`) ou un délai par défaut recopié (`TimeoutSeconds = 10`), dans le code (hors chaînes et commentaires).</summary>
         private static readonly Regex DelaiAMain = new Regex(@"\.timeout\s*=(?!=)|TimeoutSeconds\s*=\s*\d");
+        private static readonly Regex Construction = new Regex(@"UnityWebRequest\s*\.\s*(Get|Post|Put|Delete|Head)\w*\s*\(|new\s+UnityWebRequest\s*\(");
+        private static readonly Regex TeteDeMethode = new Regex(@"(\w+)\s*(?:<[^>]*>)?\s*\([^;(){}]*(?:\([^()]*\)[^;(){}]*)*\)\s*(?:where [^{]*)?\{");
+        private static readonly HashSet<string> MotsCles = new HashSet<string>
+            { "if", "for", "foreach", "while", "switch", "using", "catch", "lock", "fixed", "get", "set", "else", "try", "finally", "do", "return", "new" };
+
+        /// <summary>TD-843 — « toute requête a un délai » : le nombre de requêtes CONSTRUITES (`UnityWebRequest.Get/Post/…(`, `new UnityWebRequest(`) dont la méthode
+        /// englobante ne contient pas `Delai(` et n'appelle pas une aide de la MÊME classe qui, elle, le contient (`Preparer(req, …)`). Sur le code balayé
+        /// (chaînes et commentaires retirés, accolades fiables). Limite assumée : un homonyme d'aide ou une requête construite hors de toute méthode (initialiseur
+        /// de champ) est jugé sur le nom ou compté sans délai ; mesuré le 07/10 sur Assets/Scripts : 116 constructions, 3 sans délai avant ce lot, 0 après. Pure.</summary>
+        internal static int RequetesSansDelai(string code)
+        {
+            var methodes = new List<(string nom, int a, int b)>();
+            foreach (Match m in TeteDeMethode.Matches(code))
+            {
+                if (MotsCles.Contains(m.Groups[1].Value)) continue;
+                int i = m.Index + m.Length, profondeur = 1;
+                while (i < code.Length && profondeur > 0) { if (code[i] == '{') profondeur++; else if (code[i] == '}') profondeur--; i++; }
+                methodes.Add((m.Groups[1].Value, m.Index, i));
+            }
+            var aides = methodes.Where(x => code.Substring(x.a, x.b - x.a).Contains("Delai(")).Select(x => x.nom).ToList();
+            int sans = 0;
+            foreach (Match c in Construction.Matches(code))
+            {
+                var englobantes = methodes.Where(x => x.a <= c.Index && c.Index < x.b).OrderBy(x => x.b - x.a).ToList();
+                if (englobantes.Count == 0) { sans++; continue; }
+                string corps = code.Substring(englobantes[0].a, englobantes[0].b - englobantes[0].a);
+                if (!corps.Contains("Delai(") && !aides.Any(h => Regex.IsMatch(corps, @"\b" + Regex.Escape(h) + @"\s*\("))) sans++;
+            }
+            return sans;
+        }
+
         private static readonly Regex PremierArgNonLitteral = new Regex(@"SetRequestHeader\s*\(\s*(?!"")");
 
         /// <summary>Balayage C# : les contenus de chaînes (régulières, verbatim `@"…"`, interpolées `$"…"`), et le code restant — commentaires retirés, chaque
@@ -85,6 +117,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 if (lit.Any(l => Valeurs.IsMatch(l))) v.Add(nom + " [littéral]");
                 if (PremierArgNonLitteral.IsMatch(code)) v.Add(nom + " [1er argument non littéral]");
                 if (DelaiAMain.IsMatch(code)) v.Add(nom + " [délai posé à la main]");
+                if (RequetesSansDelai(code) > 0) v.Add(nom + " [requête sans délai]");
             }
             return v.OrderBy(x => x).ToList();
         }
@@ -110,9 +143,12 @@ namespace MafiaCleanCity.CityMap.Tests
                 ("M_json_post.cs", "UnityWebRequest.Post(u, corps, \"application/json\");"),
                 ("N_delai.cs", "req.timeout = 5;"),
                 ("O_delai_defaut.cs", "public int TimeoutSeconds = 10;"),
+                ("P_sans_delai.cs", "class C { IEnumerator Lire() { using (UnityWebRequest req = UnityWebRequest.Get(u)) { ClientHttp.Authentifier(req, t); yield return req.SendWebRequest(); } } }"),
+                ("Q_avec_delai.cs", "class C { IEnumerator Lire() { using (UnityWebRequest req = UnityWebRequest.Get(u)) { ClientHttp.Delai(req, 5); yield return req.SendWebRequest(); } } }"),
+                ("R_par_une_aide.cs", "class C { void Preparer(UnityWebRequest r) { ClientHttp.Delai(r, 5); } IEnumerator Lire() { using (var req = new UnityWebRequest(u)) { Preparer(req); yield return req.SendWebRequest(); } } }"),
             }).Select(x => x.Substring(0, 1)).Distinct().OrderBy(x => x).ToArray();
-            CollectionAssert.AreEqual(new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "L", "M", "N", "O" }, temoin,
-                "chaque forme (directe, constante, helper, espaces, casse, // dans une chaîne, verbatim, interpolée, 1er argument non littéral, Content-Type, application/json, délai à la main, TimeoutSeconds recopié) est VUE ; " +
+            CollectionAssert.AreEqual(new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "L", "M", "N", "O", "P" }, temoin,
+                "chaque forme (directe, constante, helper, espaces, casse, // dans une chaîne, verbatim, interpolée, 1er argument non littéral, Content-Type, application/json, délai à la main, TimeoutSeconds recopié, requête sans délai) est VUE ; " +
                 "le commentaire, un `==` sur le délai, les appels du client commun et un // dans une chaîne innocente ne le sont pas");
 
             var sources = Directory.GetFiles(Path.Combine(Application.dataPath, "Scripts"), "*.cs", SearchOption.AllDirectories)
