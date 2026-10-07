@@ -344,6 +344,8 @@ public static class MafiaCI
         "MotsDesEnumeres",
         // FileDeLAccueilRaison (CLIENT-1, 07/10) — les deux lignes ajoutées au cadre 4 de ④ : la raison du lieutenant et « Plusieurs attendent encore ». PAS ENCORE JOUÉE.
         "FileDeLAccueilRaison",
+        // EnteteDEcran (CLIENT-1, 08/10) — classes C-a/C-b du juge groupé : le bandeau de titre en gabarit, la police et l'échelle des titres. PAS ENCORE JOUÉE.
+        "EnteteDEcran",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

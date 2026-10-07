@@ -1036,12 +1036,13 @@ namespace MafiaCleanCity.Operational
             // pas encore son `rect` résolu.
             Canvas.ForceUpdateCanvases();
 
+            // C-a + C-b (juge groupé du 07/10, f2) : pile + BANDEAU DE TITRE de la maquette (`EnteteDEcran`), le corps prend le reste
+            EnteteDEcran.PoserLaPile(racine, (int)ShellChrome.TopInsetPx, (int)ShellChrome.BottomInsetPx);
+            var (titreDuBandeau, sousTitreDuBandeau) = EnteteDEcran.Construire(racine.transform, EnteteDEcran.Distribution, Px,
+                DesignTokens.Current.hudSerifFont, DesignTokens.Current.primaryFont, DesignTokens.Current.onSurfaceSecondary, 10f);
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
-            RectTransform corps = (RectTransform)corpsGo.transform;
-            corps.anchorMin = Vector2.zero;
-            corps.anchorMax = Vector2.one;
-            corps.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
-            corps.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
+            LayoutElement corpsLe = corpsGo.AddComponent<LayoutElement>();
+            corpsLe.flexibleHeight = 1f; corpsLe.minHeight = 0f;
 
             VerticalLayoutGroup pile = corpsGo.AddComponent<VerticalLayoutGroup>();
             pile.padding = new RectOffset(PxTrait(16f), PxTrait(16f), PxTrait(14f), PxTrait(14f));
@@ -1050,14 +1051,8 @@ namespace MafiaCleanCity.Operational
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
             pile.childAlignment = TextAnchor.UpperCenter;
 
-            titreTexte = NouveauTexteFiche(corpsGo.transform, "Titre", "",
-                17f, DesignTokens.Current.onSurfacePrimary, true);
-            titreTexte.enableWordWrapping = true;
-
-            sousTitreTexte = NouveauTexteFiche(corpsGo.transform, "SousTitre", "",
-                10f, DesignTokens.Current.onSurfaceSecondary, false);
-            sousTitreTexte.enableWordWrapping = true;
-            AddLayoutElement(sousTitreTexte.gameObject, flexibleHeight: 0);
+            titreTexte = titreDuBandeau;
+            sousTitreTexte = sousTitreDuBandeau;
 
             GameObject corkboardGo = NouveauUI("Corkboard", corpsGo.transform);
             VerticalLayoutGroup vcb = corkboardGo.AddComponent<VerticalLayoutGroup>();

@@ -644,6 +644,9 @@ namespace MafiaCleanCity.Operational
             pilePage.childControlWidth = true; pilePage.childControlHeight = true;
             pilePage.childForceExpandWidth = true; pilePage.childForceExpandHeight = false;
 
+            // C-a + C-b (juge groupé du 07/10, f2) : le BANDEAU DE TITRE de la maquette (`.pl-tete`, `EnteteDEcran`) est le premier élément de la pile, pleine largeur, et NE DÉFILE PAS (`flex:none` : B1, le fragment de titre coupé)
+            var (titreDuBandeau, sousTitreDuBandeau) = EnteteDEcran.Construire(racine.transform, EnteteDEcran.Loi, Px,
+                DesignTokens.Current.hudSerifFont, DesignTokens.Current.primaryFont, DesignTokens.Current.onSurfaceSecondary, 10f);
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
             corpsGo.AddComponent<RectMask2D>();
             LayoutElement corpsLe = corpsGo.AddComponent<LayoutElement>();
@@ -664,14 +667,8 @@ namespace MafiaCleanCity.Operational
             ajuste.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             listeDefilante = ListeDefilante.Equiper((RectTransform)corpsGo.transform, contenuRt, DesignTokens.Current.surfaceBase);
 
-            titreTexte = NouveauTexteFiche(contenuGo.transform, "Titre", "",
-                17f, DesignTokens.Current.onSurfacePrimary, true);
-            titreTexte.enableWordWrapping = true;
-
-            sousTitreTexte = NouveauTexteFiche(contenuGo.transform, "SousTitre", "",
-                10f, DesignTokens.Current.onSurfaceSecondary, false);
-            sousTitreTexte.enableWordWrapping = true;
-            AddLayoutElement(sousTitreTexte.gameObject, flexibleHeight: 0);
+            titreTexte = titreDuBandeau;
+            sousTitreTexte = sousTitreDuBandeau;
 
             GameObject rosterGo = NouveauUI("Roster", contenuGo.transform);
             VerticalLayoutGroup vr = rosterGo.AddComponent<VerticalLayoutGroup>();

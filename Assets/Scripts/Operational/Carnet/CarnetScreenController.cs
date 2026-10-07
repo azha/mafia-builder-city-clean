@@ -794,8 +794,10 @@ namespace MafiaCleanCity.Operational
             ve.spacing = Px(2f);
             ve.childControlWidth = true; ve.childControlHeight = true;
             ve.childForceExpandWidth = true; ve.childForceExpandHeight = false;
-            titreEcran = NouveauTexte(ens.transform, "Titre", "", Px(17f),
-                DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
+            // C-a + C-b (juge groupé du 07/10, f2) : la PLAQUE pleine largeur + son filet (`.cn-tete`, `EnteteDEcran.Carnet`) ; le titre à l'échelle UNIQUE de la maquette, DejaVu Serif crème `#f0dfc4`
+            EnteteDEcran.Habiller(ens, EnteteDEcran.Carnet, Px(13f), Px(13f), Px(10f) + MafiaCleanCity.Shell.ShellChrome.TopInsetPx, Px(1f));
+            titreEcran = NouveauTexte(ens.transform, "Titre", "", Px(EnteteDEcran.TitreCss),
+                EnteteDEcran.TitreEncre, DesignTokens.Current.hudSerifFont);
             sousTitre = NouveauTexte(ens.transform, "SousTitre", "", Px(9f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
 

@@ -3,7 +3,8 @@
     "rootNamespace": "MafiaCleanCity.Shell",
     "references": [
         "Theme",
-        "I18n"
+        "I18n",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

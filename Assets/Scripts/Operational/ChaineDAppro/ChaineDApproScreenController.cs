@@ -728,12 +728,14 @@ namespace MafiaCleanCity.Operational
             // Le corps vit SOUS le bandeau haut ET AU-DESSUS du dock bas — LES DEUX insets,
             // publiés par le shell (`ShellChrome`). Hors shell (tests isolés) les deux valent 0 et
             // le corps remplit tout l'écran : le comportement d'avant que ces champs existent.
+            // C-a + C-b (juge groupé du 07/10, f2) : la racine est une PILE (marges d'écran haut/bas du shell) dont le premier élément est le BANDEAU DE TITRE de la maquette (`EnteteDEcran` : plaque pleine largeur +
+            // filet, titre DejaVu Serif crème à l'échelle de la maquette) ; le corps prend ce qui reste.
+            EnteteDEcran.PoserLaPile(racine, (int)ShellChrome.TopInsetPx, (int)ShellChrome.BottomInsetPx);
+            var (titreDuBandeau, sousTitreDuBandeau) = EnteteDEcran.Construire(racine.transform, EnteteDEcran.Appro, Px,
+                DesignTokens.Current.hudSerifFont, DesignTokens.Current.primaryFont, DesignTokens.Current.onSurfaceSecondary, 10.5f);
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
-            RectTransform corps = (RectTransform)corpsGo.transform;
-            corps.anchorMin = Vector2.zero;
-            corps.anchorMax = Vector2.one;
-            corps.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
-            corps.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
+            LayoutElement corpsLe = corpsGo.AddComponent<LayoutElement>();
+            corpsLe.flexibleHeight = 1f; corpsLe.minHeight = 0f;
 
             VerticalLayoutGroup pile = corpsGo.AddComponent<VerticalLayoutGroup>();
             pile.padding = new RectOffset(PxTrait(16f), PxTrait(16f), PxTrait(14f), PxTrait(14f));
@@ -742,14 +744,8 @@ namespace MafiaCleanCity.Operational
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
             pile.childAlignment = TextAnchor.UpperCenter;
 
-            titreTexte = NouveauTexteFiche(corpsGo.transform, "Titre", "",
-                18f, DesignTokens.Current.onSurfacePrimary, true);
-            titreTexte.enableWordWrapping = true;
-
-            sousTitreTexte = NouveauTexteFiche(corpsGo.transform, "SousTitre", "",
-                10.5f, DesignTokens.Current.onSurfaceSecondary, false);
-            sousTitreTexte.enableWordWrapping = true;
-            AddLayoutElement(sousTitreTexte.gameObject, flexibleHeight: 0);
+            titreTexte = titreDuBandeau;
+            sousTitreTexte = sousTitreDuBandeau;
 
             // La fiche crème « BON DE COMMANDE » — un fond, un layout, contenu rempli par
             // `RendreFiche` (appelée à chaque `AppliquerEtat`).
