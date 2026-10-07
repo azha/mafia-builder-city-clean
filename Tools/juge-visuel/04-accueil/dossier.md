@@ -61,3 +61,7 @@ Rapport : `r4-2026-10-07/rapport.md` (NON APPROUVÉ, 0 BLOQUANT, 3 MAJEUR, 7 min
 - **R5** — verre dégradé (13,19,31) → (9,14,24). **R9** — rayon 38 u. **R10** — marges intérieures 58 / 62 u.
 - **NON FAITS** : **R6** (conséquence de R2 et du reflux : se re-mesure), **R7** (zoom 91,7 % du diorama : aspect différent, rien ne dit que ce soit un défaut), **R8** (gouttière 37 / 49 px : élastique par construction, à trancher par f2).
 - À MESURER au créneau (m18/m19/m39 du r4) : la part du décor sous la luminance 10 (cible 1,1 %), les hauteurs des trois boutons, les hauteurs de capitale, la loi du filet. Planches au même endroit, puis juge r5 frais.
+
+### R7 et R8 — ASSUMÉS (f2, 07/10)
+- **R7 (le diorama rendu à 91,7 % du zoom de la maquette)** : ASSUMÉ. La maquette (1080×2102) et le jeu (1080×1920 et 1080×2400) n'ont pas le même rapport d'aspect : le décor est en COVER, le cadrage suit l'écran ; rien ne le donne pour un défaut.
+- **R8 (la gouttière panneau → plaque TRANCHER : 37 px à 1920, 49 px à 2400, réf 52)** : ASSUMÉ, élastique PAR CONSTRUCTION. Raison : l'aspect varie, et le panneau suit son contenu (ancré en bas, il pousse vers le haut) ; une gouttière constante exigerait de figer la hauteur de la bande, donc de rogner ou d'étirer l'un des deux.
