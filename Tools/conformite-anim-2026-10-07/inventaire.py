@@ -119,12 +119,13 @@ HUD = [
  ("transition `box-shadow .6s` (.lunette)", "la lunette s'éclaire", "absente", "idem"),
  ("transition `opacity .5s` (.gyro)", "la lueur du gyrophare s'allume en fondu", "absente", "Gyrophare.Poser : posé plein d'un coup"),
  ("transition `transform .7s` (aiguille)", "l'aiguille du manomètre balaie jusqu'à sa nouvelle bande", "absente", "SetCitywideHeatBucket:703 : localEulerAngles posé d'un coup"),
+ ("transition `transform .7s` (aiguille du cadran TENSION, 6 cadres 14-19)", "⑭ : l'aiguille de « la ville serre » balaie d'une graduation à l'autre quand le stress change", "absente", "CompressionScreenController:194-204 : `stress_bucket` rendu en TEXTE, 0 cadran, 0 aiguille (déclaré par atelier 07/10, demande A2 : la maquette porte maintenant la transition)"),
 ]
 nb = {"présente": 0, "partielle": 0, "absente": 0}
 for i, (t, c, e, p) in enumerate(HUD, 1):
-    P("| B%d | ① HUD | %s | | %s | **%s** | %s |" % (i, t, c, e, p)); nb[e] += 1
+    P("| B%d | %s | %s | | %s | **%s** | %s |" % (i, "⑭ La semaine" if "⑭" in c else "① HUD", t, c, e, p)); nb[e] += 1
 P("")
-P("**Total B : %d lignes (4 @keyframes + 6 transitions) = %d présentes + %d partielles + %d absentes.**" % (len(HUD), nb["présente"], nb["partielle"], nb["absente"]))
+P("**Total B : %d lignes (4 @keyframes + 7 transitions : 6 du HUD + l'aiguille de ⑭) = %d présentes + %d partielles + %d absentes.**" % (len(HUD), nb["présente"], nb["partielle"], nb["absente"]))
 P("")
 P("## C. Maquettes à animation DÉFINIE mais NON APPLIQUÉE (0 instance mesurée)\n")
 P("- ④ `ecrans-brennar-accueil.html` : 6 `@keyframes` définis (goutte, derive, respire, osc, pulseRose, clign), **0 animation en cours** sur les 5 cadres → ④ est statique en maquette.")

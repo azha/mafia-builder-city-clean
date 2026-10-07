@@ -55,8 +55,9 @@ Animations en PAUSE dans ce fichier : 0 (avant le dégel du 07/10, atelier b7d8c
 | B8 | ① HUD | transition `box-shadow .6s` (.lunette) | | la lunette s'éclaire | **absente** | idem |
 | B9 | ① HUD | transition `opacity .5s` (.gyro) | | la lueur du gyrophare s'allume en fondu | **absente** | Gyrophare.Poser : posé plein d'un coup |
 | B10 | ① HUD | transition `transform .7s` (aiguille) | | l'aiguille du manomètre balaie jusqu'à sa nouvelle bande | **absente** | SetCitywideHeatBucket:703 : localEulerAngles posé d'un coup |
+| B11 | ⑭ La semaine | transition `transform .7s` (aiguille du cadran TENSION, 6 cadres 14-19) | | ⑭ : l'aiguille de « la ville serre » balaie d'une graduation à l'autre quand le stress change | **absente** | CompressionScreenController:194-204 : `stress_bucket` rendu en TEXTE, 0 cadran, 0 aiguille (déclaré par atelier 07/10, demande A2 : la maquette porte maintenant la transition) |
 
-**Total B : 10 lignes (4 @keyframes + 6 transitions) = 2 présentes + 1 partielles + 7 absentes.**
+**Total B : 11 lignes (4 @keyframes + 7 transitions : 6 du HUD + l'aiguille de ⑭) = 2 présentes + 1 partielles + 8 absentes.**
 
 ## C. Maquettes à animation DÉFINIE mais NON APPLIQUÉE (0 instance mesurée)
 
@@ -80,5 +81,5 @@ Mécanismes visuels : **4** (3 méthodes `Update` + 1 coroutine) pour **5 effets
 Retour d'appui : 15 sites `Selectable.Transition.None` sur 67 créations de `Button` ; aucune animation d'appui écrite.
 
 ## F. Bilan
-- **Maquette → Unity, paires comptées (A + B) : 39.** Présentes 2 · partielles 1 · absentes 36.
-- A : 29 paires, toutes absentes. B : 10 lignes, 2 présentes, 1 partielle, 7 absentes. Contrôle : 29 + 10 = 39.
+- **Maquette → Unity, paires comptées (A + B) : 40.** Présentes 2 · partielles 1 · absentes 37.
+- A : 29 paires, toutes absentes. B : 11 lignes, 2 présentes, 1 partielle, 8 absentes. Contrôle : 29 + 11 = 40.
