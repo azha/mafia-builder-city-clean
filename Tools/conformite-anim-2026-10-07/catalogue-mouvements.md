@@ -895,7 +895,7 @@ en demande **un second** : `settings.game.disable_autoplay` (`:78`, `:212`).
 ### Q5 — G5 (période ≥ 0,4 s) contre le canon de ③
 
 `screen_2_city_map.md:434` demande un flash d'`AuditPin` « **toutes les `T.ui.anim_max_block_ms`** »,
-soit une période de **250 ms = 4 Hz**. G5 plafonne à 3 variations par seconde (période ≥ 0,4 s). C'est
+soit une période de **250 ms = 4 Hz**. G5 plafonne à 3 extrema par seconde (période ≥ 0,667 s). C'est
 le **seul endroit du canon** où ce tunable sert de *période* au lieu de *plafond*.
 > **Reco** : garder G5 (c'est un plancher de confort et de photosensibilité) et lire le « toutes les
 > 250 ms » comme un **mésusage** du plafond. ③ est hors de ce lot : rien n'est bloqué aujourd'hui,
