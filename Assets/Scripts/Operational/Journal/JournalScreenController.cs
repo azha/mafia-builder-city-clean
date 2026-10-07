@@ -719,6 +719,45 @@ namespace MafiaCleanCity.Operational
                 DesignTokens.Current.primaryFont);
         }
 
+        /// <summary>Le pied de la maquette (`.jrn6 .pied` : cadres du Journal, « Y PRÊTER ATTENTION » + sa note) — cause 3, ㊳ B4 (CLIENT-3, 07/10). Grammaire `.cta6` (`PiedDEcran.Forme.Cta6`), ÉTEINT :
+        /// AUCUNE route « assister » côté back (TD-848), donc aucun geste actif — décision de f2 07/10 : poser le pied fidèle au cadre et SANS MENTIR. Le bouton est un `Button` non interactif.</summary>
+        private void ConstruirePied(Transform parent)
+        {
+            GameObject pied = NouveauUI("Pied", parent);
+            var v = pied.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)Px(13f), (int)Px(13f), (int)Px(9f), (int)Px(14f));
+            v.spacing = Px(5f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            pied.AddComponent<LayoutElement>().flexibleHeight = 0f;
+
+            GameObject bouton = NouveauUI("BoutonAssister", pied.transform);
+            AjouterImage(bouton);
+            Button b = bouton.AddComponent<Button>();
+            b.targetGraphic = bouton.GetComponent<Image>();
+            b.interactable = false;
+            var h = bouton.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(8f), (int)Px(8f));
+            h.childAlignment = TextAnchor.MiddleCenter;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            bouton.AddComponent<LayoutElement>().flexibleHeight = 0f;
+            TextMeshProUGUI lib = NouveauTexte(bouton.transform, "Libelle",
+                MafiaCleanCity.I18n.Libelle.De("journal", "bouton", "Y PRÊTER ATTENTION"), Px(8.5f), Color.white, DesignTokens.Current.primaryFont);
+            lib.fontStyle = FontStyles.Bold;
+            lib.characterSpacing = 11f;   // `.cta6` letter-spacing .11em
+            lib.alignment = TextAlignmentOptions.Center;
+            lib.enableWordWrapping = false;
+            PiedDEcran.StylerLeBouton(bouton, lib, PiedDEcran.Forme.Cta6, PiedDEcran.Etat.Eteint);
+
+            // `.note6` : 6,4 px, centrée, #8a979c ; le mot « assister » en or vif gras
+            string phrase = MafiaCleanCity.I18n.Libelle.De("journal", "bloc", "on peut assister à ce qui se passe — c’est le seul geste que la rue accepte");
+            TextMeshProUGUI note = NouveauTexte(pied.transform, "Note",
+                phrase.Replace("assister", "<b><color=#f2c96b>assister</color></b>"), Px(6.4f), new Color32(0x8a, 0x97, 0x9c, 255), DesignTokens.Current.primaryFont);
+            note.alignment = TextAlignmentOptions.Center;
+            note.enableWordWrapping = true;
+        }
+
         /// <summary>Un contour, en QUATRE BANDES d'un pixel — jamais un enfant plein rect.
         ///
         /// ⛔ MESURÉ sur ㊱ le 2026-09-02 : un enfant qui couvre tout le rect de son parent est
@@ -802,6 +841,7 @@ namespace MafiaCleanCity.Operational
             ConstruireCompteurs(racine.transform);
             listeRoot = ConstruireListe(racine.transform);
             ConstruirePanneau(racine.transform);
+            ConstruirePied(racine.transform);
             RendreEtatInitial();
         }
 

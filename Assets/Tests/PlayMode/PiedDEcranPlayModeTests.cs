@@ -83,6 +83,9 @@ namespace MafiaCleanCity.CityMap.Tests
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, libelleBlanchir)", filiere, "㊵ : la forme `.cta6` (Cta6 par défaut)");
             StringAssert.DoesNotContain("fond.color = Or;", appro, "㉚ : plus d'aplat or plein sur le bouton (« gros bouton jaune »)");
             StringAssert.DoesNotContain("AjouterFond(bouton, Or);", distrib, "㉘ : plus de pavé or plein");
+            string journal = File.ReadAllText(Path.Combine(racine, "Journal", "JournalScreenController.cs"));
+            StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, lib, PiedDEcran.Forme.Cta6, PiedDEcran.Etat.Eteint)", journal, "㊳ : le pied `.cta6` ÉTEINT (aucune route « assister » : TD-848)");
+            StringAssert.Contains("b.interactable = false;", journal, "㊳ : le bouton éteint n'est pas cliquable — il ne ment pas");
             StringAssert.Contains("PiedDEcran.Legende(", distrib, "㉘ : la légende est DANS le bouton, à droite (`.geste small`)");
         }
 

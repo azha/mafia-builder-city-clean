@@ -248,7 +248,7 @@ namespace MafiaCleanCity.Operational
 
             TextMeshProUGUI lib = NouveauTexteFiche(bouton.transform, "Libelle",
                 Libelle.De("loi", "bouton", "LUI TROUVER UN AVOCAT"), 9.5f, DesignTokens.Current.hudMoneyGold, true);
-            lib.characterSpacing = 0.7f * 4.2f;
+            lib.characterSpacing = 7f;   // `.geste` letter-spacing .7 px sur 9,5 px ≈ .074em
             lib.enableWordWrapping = true;
             AddLayoutElement(lib.gameObject, flexibleWidth: 1);
             TrackText(lib.text);
