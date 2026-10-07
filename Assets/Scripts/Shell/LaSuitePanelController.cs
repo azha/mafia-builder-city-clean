@@ -71,8 +71,11 @@ namespace MafiaCleanCity.Shell
             fond.raycastTarget = false;
             Lisere(go.transform, RayonBloc, BordDePlaque);
             VerticalLayoutGroup vlg = go.AddComponent<VerticalLayoutGroup>();
-            vlg.padding = new RectOffset(56, 56, 40, 48);
-            vlg.spacing = 28;
+            // G9/G10 (juge ⊥ r3, 07/10) : le rythme vertical du panneau était comprimé de 22 à 35 % sur trois gouttières indépendantes (réf → jeu : haut → « LA SUITE » 43 → 37 px,
+            // « LA SUITE » → 1ᵉʳ titre 58 → 38, titre → corps 30 → 20, corps → titre suivant 93 → 72). MESURE du créneau du 07/10 (P1·mesure) : le bloc veut 636,7 u pour une bande de
+            // 1 011,7 u (1920) et 1 349,1 u (2400), échelle 1 — l'allongement (≈ 115 u) tient, `Ajuster` ne le réduit pas, les marges latérales restent exactes. (px ÷ 0,839 = u.)
+            vlg.padding = new RectOffset(56, 56, RembourrageHaut, 48);
+            vlg.spacing = EspaceEntreLignes;
             vlg.childControlWidth = true; vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true; vlg.childForceExpandHeight = false;
             ContentSizeFitter fit = go.AddComponent<ContentSizeFitter>();
@@ -100,7 +103,7 @@ namespace MafiaCleanCity.Shell
             for (int i = 0; i < lignesRendues.Count; i++)
             {
                 if (i > 0) Separateur(go.transform);
-                Ligne(go.transform, lignesRendues[i], premierGeste: i == PremierGeste());
+                Ligne(go.transform, lignesRendues[i], premierGeste: i == PremierGeste(), premiereLigne: i == 0);
             }
             Ajuster();
         }
@@ -156,12 +159,13 @@ namespace MafiaCleanCity.Shell
             le.minHeight = le.preferredHeight = 2f;
         }
 
-        private void Ligne(Transform parent, LigneDeLaSuite l, bool premierGeste)
+        private void Ligne(Transform parent, LigneDeLaSuite l, bool premierGeste, bool premiereLigne = false)
         {
             GameObject row = new GameObject("Ligne_" + l.Id, typeof(RectTransform));
             row.transform.SetParent(parent, false);
             HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.spacing = 32;
+            hlg.padding = new RectOffset(0, 0, premiereLigne ? SurplusPremiereLigne : 0, 0);
             hlg.childAlignment = TextAnchor.MiddleLeft;
             hlg.childControlWidth = true; hlg.childControlHeight = true;
             hlg.childForceExpandWidth = false; hlg.childForceExpandHeight = false;
@@ -169,7 +173,7 @@ namespace MafiaCleanCity.Shell
             GameObject textes = new GameObject("Textes", typeof(RectTransform));
             textes.transform.SetParent(row.transform, false);
             VerticalLayoutGroup col = textes.AddComponent<VerticalLayoutGroup>();
-            col.spacing = 8;
+            col.spacing = EspaceTitreCorps;
             col.childControlWidth = true; col.childControlHeight = true;
             col.childForceExpandWidth = true; col.childForceExpandHeight = false;
             textes.AddComponent<LayoutElement>().flexibleWidth = 1f;
@@ -232,6 +236,14 @@ namespace MafiaCleanCity.Shell
         // G7 : `border-radius:8px` de `.g4` × 3,6 (cadre 4) = 28,8 px = 34 u (323 px ↔ 385 u) — le jeu rendait ≈ 6-7 px au critère du juge (22 u). G8 : le liseré est de
         // 3 px dans la référence (2 px en jeu) ⇒ 3,6 u.
         public const int RayonBloc = 28, RayonGeste = 34;
+        /// <summary>G9 : haut du panneau → « LA SUITE » : 43 px (réf) = 51 u (37 px = 47 u + les 4 u de marge de la plaque).</summary>
+        public const int RembourrageHaut = 47;
+        /// <summary>G9 : l'espace entre deux enfants du panneau (titre, rangées, séparateurs) : 28 → 40 u (+12 u sur les cinq gouttières).</summary>
+        public const int EspaceEntreLignes = 40;
+        /// <summary>G9 : titre de rangée → corps : 30 px (réf) contre 20 : 8 → 20 u.</summary>
+        public const int EspaceTitreCorps = 20;
+        /// <summary>G9 : surplus au-dessus de la PREMIÈRE rangée (« LA SUITE » → 1ᵉʳ titre : 58 px contre 38 ⇒ +24 u : 12 par l'espace commun, 12 ici).</summary>
+        public const int SurplusPremiereLigne = 12;
         public const float EpaisseurDuLisere = 3.6f;
         public const float MargeLaterale = 56f;   // 47 px à 1080 (cadre 4 : marges 47/46)
 

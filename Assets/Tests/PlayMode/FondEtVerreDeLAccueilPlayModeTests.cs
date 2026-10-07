@@ -111,6 +111,20 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
+        public void V8_LeRythmeVertical_G9_AllongeLePanneau_SansDepasserLaBande()
+        {
+            Assert.AreEqual(47, LaSuitePanelController.RembourrageHaut, "haut → « LA SUITE » : 37 → 43 px");
+            Assert.AreEqual(40, LaSuitePanelController.EspaceEntreLignes, "corps → titre suivant : 72 → 93 px (+12 u sur chaque gouttière)");
+            Assert.AreEqual(20, LaSuitePanelController.EspaceTitreCorps, "titre → corps : 20 → 30 px");
+            Assert.AreEqual(12, LaSuitePanelController.SurplusPremiereLigne);
+            // le gain total visé : +7 (haut) + 5 gouttières × 12 + 12 (1ᵉʳ titre) + 3 rangées × 12 (titre → corps) = 115 u, mesuré < la marge de la bande (375 u à 1920, 712 u à 2400)
+            int gain = (LaSuitePanelController.RembourrageHaut - 40) + 5 * (LaSuitePanelController.EspaceEntreLignes - 28) + LaSuitePanelController.SurplusPremiereLigne
+                       + 3 * (LaSuitePanelController.EspaceTitreCorps - 8);
+            Assert.AreEqual(115, gain);
+            Assert.Less(gain, 375, "l'allongement tient dans la plus petite marge mesurée : Ajuster ne réduit pas le bloc, les marges restent exactes");
+        }
+
+        [Test]
         public void V7_LeRayonDuBouton_EtLeLisere()
         {
             Assert.AreEqual(34, LaSuitePanelController.RayonGeste, "border-radius:8px × 3,6 = 28,8 px ↔ 34 u (323 px = 385 u)");
