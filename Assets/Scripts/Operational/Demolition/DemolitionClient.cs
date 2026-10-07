@@ -27,7 +27,7 @@ namespace MafiaCleanCity.Operational
     public class DemolitionClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         /// <summary>Ce qu'un refus rend à l'appelant. `code` vaut `null` quand l'échec est
         /// TRANSPORT (réseau, délai) — un cas qui ne se confond alors jamais avec un refus métier,
@@ -188,7 +188,7 @@ namespace MafiaCleanCity.Operational
 
         private void Preparer(UnityWebRequest req, string bearer)
         {
-            req.timeout = TimeoutSeconds;
+            MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
             MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
         }
 
@@ -198,7 +198,7 @@ namespace MafiaCleanCity.Operational
             var req = new UnityWebRequest(Url(chemin), "POST");
             req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
             req.downloadHandler = new DownloadHandlerBuffer();
-            req.SetRequestHeader("Content-Type", "application/json");
+            MafiaCleanCity.ClientHttp.Json(req);
             // Une clé NEUVE par appel : réutiliser celle d'un appel précédent ferait rejouer sa
             // réponse — donc afficher « rasé » pour une démolition jamais tentée.
             MafiaCleanCity.ClientHttp.Idempotent(req);

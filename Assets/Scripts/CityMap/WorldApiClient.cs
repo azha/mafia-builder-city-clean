@@ -19,7 +19,7 @@ namespace MafiaCleanCity.CityMap
         // Public game API base. /v1 is part of the route (URI versioning),
         // not a global prefix. GET /v1/world/districts needs no auth.
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         public string DistrictsUrl => BaseUrl.TrimEnd('/') + "/v1/world/districts";
 
@@ -31,7 +31,7 @@ namespace MafiaCleanCity.CityMap
         {
             using (UnityWebRequest req = UnityWebRequest.Get(DistrictsUrl))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 yield return req.SendWebRequest();
 
                 if (req.result != UnityWebRequest.Result.Success)
@@ -72,7 +72,7 @@ namespace MafiaCleanCity.CityMap
             string url = DistrictHeatUrl(districtId);
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearerToken);
 
                 yield return req.SendWebRequest();

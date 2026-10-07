@@ -24,7 +24,7 @@ namespace MafiaCleanCity.Operational
     public class CarnetClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         private string Url(string suffixe) => BaseUrl.TrimEnd('/') + "/v1/" + suffixe;
 
@@ -36,7 +36,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(Url("cue-stack/current")))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
@@ -61,7 +61,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(Url("cue-stack/named-sequences")))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
@@ -95,10 +95,10 @@ namespace MafiaCleanCity.Operational
                 if (corps != null)
                 {
                     req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(corps));
-                    req.SetRequestHeader("Content-Type", "application/json");
+                    MafiaCleanCity.ClientHttp.Json(req);
                     MafiaCleanCity.ClientHttp.Idempotent(req);
                 }
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 fin(req.responseCode, req.downloadHandler != null ? req.downloadHandler.text : null);
@@ -156,7 +156,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(Url("political-events/calendar")))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)

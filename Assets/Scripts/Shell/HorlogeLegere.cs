@@ -102,7 +102,7 @@ namespace MafiaCleanCity.Shell
     public sealed class HorlogeLegereClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         public string ClockUrl => BaseUrl.TrimEnd('/') + "/v1/me/clock";
 
@@ -111,7 +111,7 @@ namespace MafiaCleanCity.Shell
         {
             var req = UnityWebRequest.Get(ClockUrl);
             MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
-            req.timeout = TimeoutSeconds;
+            MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
             return EnTetesDuClient.MarquerFond(req);
         }
 

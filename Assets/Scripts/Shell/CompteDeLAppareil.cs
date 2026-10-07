@@ -65,7 +65,7 @@ namespace MafiaCleanCity.Shell
     public sealed class AuthDuCompteHttp : IAuthDuCompte
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
         private static readonly Regex CodeServi = new Regex("\"code\"\\s*:\\s*\"([A-Z0-9_]+)\"");
 
         public IEnumerator SeConnecter(string identifiant, string secret, Action<ReponseDAuth> fin) =>
@@ -82,9 +82,9 @@ namespace MafiaCleanCity.Shell
             {
                 req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(corps));
                 req.downloadHandler = new DownloadHandlerBuffer();
-                req.SetRequestHeader("Content-Type", "application/json");
+                MafiaCleanCity.ClientHttp.Json(req);
                 if (cle != null) MafiaCleanCity.ClientHttp.IdempotentAvec(req, cle);
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 yield return req.SendWebRequest();
                 var r = new ReponseDAuth { Http = req.responseCode, Corps = req.downloadHandler?.text };
                 if (req.result == UnityWebRequest.Result.Success)

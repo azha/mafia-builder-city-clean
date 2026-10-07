@@ -20,13 +20,16 @@ namespace MafiaCleanCity.CityMap.Tests
     //       contrôles positifs par forme (littéral, constante, helper, casse, // dans une chaîne, non littéral, verbatim) et liste blanche rougissant en trop comme en moins
     //       « Bearer » n'est PAS cherché dans les tests (décision f2, 07/10) : la pose d'un jeton passe par le NOM d'en-tête, qui est cherché ; et le mot est dans la
     //       prose d'une vingtaine de messages d'assertion (« controller signed in (Bearer acquired) »), qui n'est pas une pose
+    //   G1 (TD-843) couvre aussi : 0 littéral `Content-Type` / `application/json`, 0 affectation de `.timeout`, 0 `TimeoutSeconds = <nombre>` hors du client commun
     //   G2  Authentifier : « Bearer <jeton> » ; jeton vide ou null ⇒ AUCUN en-tête (comme chacun des 103 anciens sites)
     //   G3  Idempotent : un UUID v4 NEUF à chaque appel, posé et rendu ; IdempotentAvec pose la clé telle quelle
     //   G4  Fond : « 1 » à l'octet, par le client commun ET par `EnTetesDuClient.MarquerFond` (qui lui délègue) ; null en, null out
     [Category("ClientHttp")]
     public class ClientHttpPlayModeTests
     {
-        private static readonly Regex Valeurs = new Regex(@"authorization|idempotency-key|x-mafia-background|bearer\b", RegexOptions.IgnoreCase);
+        private static readonly Regex Valeurs = new Regex(@"authorization|idempotency-key|x-mafia-background|bearer\b|content-type|application/json", RegexOptions.IgnoreCase);
+        /// <summary>TD-843 : une AFFECTATION du délai (`x.timeout = …`, pas `==`) ou un délai par défaut recopié (`TimeoutSeconds = 10`), dans le code (hors chaînes et commentaires).</summary>
+        private static readonly Regex DelaiAMain = new Regex(@"\.timeout\s*=(?!=)|TimeoutSeconds\s*=\s*\d");
         private static readonly Regex PremierArgNonLitteral = new Regex(@"SetRequestHeader\s*\(\s*(?!"")");
 
         /// <summary>Balayage C# : les contenus de chaînes (régulières, verbatim `@"…"`, interpolées `$"…"`), et le code restant — commentaires retirés, chaque
@@ -81,6 +84,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 var (lit, code) = Balayer(source);
                 if (lit.Any(l => Valeurs.IsMatch(l))) v.Add(nom + " [littéral]");
                 if (PremierArgNonLitteral.IsMatch(code)) v.Add(nom + " [1er argument non littéral]");
+                if (DelaiAMain.IsMatch(code)) v.Add(nom + " [délai posé à la main]");
             }
             return v.OrderBy(x => x).ToList();
         }
@@ -101,11 +105,15 @@ namespace MafiaCleanCity.CityMap.Tests
                 ("H_interpole.cs", "var h = $\"Bearer {t}\";"),
                 ("I_non_litteral.cs", "req.SetRequestHeader(nom, valeur);"),
                 ("J_commentaire.cs", "// req.SetRequestHeader(\"Authorization\", t)\n/* \"Bearer \" */ ClientHttp.Authentifier(req, t);"),
-                ("K_content_type.cs", "req.SetRequestHeader(\"Content-Type\", \"application/json\"); var s = \"a // b\";"),
+                ("K_innocent.cs", "ClientHttp.Json(req); ClientHttp.Delai(req, TimeoutSeconds); var s = \"a // b\"; if (req.timeout == 3) { } // req.timeout = 5;"),
+                ("L_content_type.cs", "req.SetRequestHeader(\"Content-Type\", \"text/plain\");"),
+                ("M_json_post.cs", "UnityWebRequest.Post(u, corps, \"application/json\");"),
+                ("N_delai.cs", "req.timeout = 5;"),
+                ("O_delai_defaut.cs", "public int TimeoutSeconds = 10;"),
             }).Select(x => x.Substring(0, 1)).Distinct().OrderBy(x => x).ToArray();
-            CollectionAssert.AreEqual(new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I" }, temoin,
-                "chaque forme (directe, constante, helper, espaces, casse, // dans une chaîne, verbatim, interpolée, 1er argument non littéral) est VUE ; " +
-                "le commentaire, Content-Type et un // dans une chaîne innocente ne le sont pas");
+            CollectionAssert.AreEqual(new[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "L", "M", "N", "O" }, temoin,
+                "chaque forme (directe, constante, helper, espaces, casse, // dans une chaîne, verbatim, interpolée, 1er argument non littéral, Content-Type, application/json, délai à la main, TimeoutSeconds recopié) est VUE ; " +
+                "le commentaire, un `==` sur le délai, les appels du client commun et un // dans une chaîne innocente ne le sont pas");
 
             var sources = Directory.GetFiles(Path.Combine(Application.dataPath, "Scripts"), "*.cs", SearchOption.AllDirectories)
                 .Where(f => !f.Replace('\\', '/').EndsWith("/I18n/ClientHttp.cs"))
@@ -210,6 +218,23 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.AreEqual("vitrine-sku-1", b.GetRequestHeader("Idempotency-Key"), "posée telle quelle");
             }
             Assert.DoesNotThrow(() => ClientHttp.Idempotent(null));
+        }
+
+        [Test]
+        public void G6_Json_PoseLeTypeDeContenu_Delai_PoseLeDelaiExplicite()
+        {
+            using (var req = UnityWebRequest.Get("http://hote/x"))
+            {
+                Assert.AreSame(req, ClientHttp.Json(req), "chaînable");
+                Assert.AreEqual("application/json", req.GetRequestHeader("Content-Type"));
+                Assert.AreSame(req, ClientHttp.Delai(req, 7));
+                Assert.AreEqual(7, req.timeout, "le délai EXPLICITE du site est celui posé");
+                ClientHttp.Delai(req, ClientHttp.DelaiParDefautS);
+                Assert.AreEqual(10, req.timeout, "le défaut des clients était 10 s");
+            }
+            Assert.IsNull(ClientHttp.Json(null));
+            Assert.IsNull(ClientHttp.Delai(null, 5));
+            Assert.AreEqual(ClientHttp.DelaiParDefautS, new MafiaCleanCity.Operational.ReputationClient().TimeoutSeconds, "un client prend son défaut du client commun");
         }
 
         [Test]

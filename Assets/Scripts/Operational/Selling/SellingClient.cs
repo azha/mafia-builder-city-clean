@@ -12,7 +12,7 @@ namespace MafiaCleanCity.Operational.Selling
     public class SellingClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/operational/{leaf}";
 
@@ -21,7 +21,7 @@ namespace MafiaCleanCity.Operational.Selling
         {
             using (UnityWebRequest req = UnityWebRequest.Get(Url("dealers")))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
@@ -46,7 +46,7 @@ namespace MafiaCleanCity.Operational.Selling
         {
             using (UnityWebRequest req = UnityWebRequest.Get(Url($"dealer/{dealerId}")))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
@@ -84,8 +84,8 @@ namespace MafiaCleanCity.Operational.Selling
                 {
                     req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
                     req.downloadHandler = new DownloadHandlerBuffer();
-                    req.SetRequestHeader("Content-Type", "application/json");
-                    req.timeout = TimeoutSeconds;
+                    MafiaCleanCity.ClientHttp.Json(req);
+                    MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                     MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                     yield return req.SendWebRequest();
                     if (req.result != UnityWebRequest.Result.Success)

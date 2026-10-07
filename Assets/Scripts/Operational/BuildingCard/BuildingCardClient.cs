@@ -17,7 +17,7 @@ namespace MafiaCleanCity.Operational
     public class BuildingCardClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/operational/{leaf}";
 
@@ -37,7 +37,7 @@ namespace MafiaCleanCity.Operational
             DerniereUrlDemandee = url;   // ①-0 : la garde lit la requête ÉMISE (quel bâtiment l'écran a demandé)
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 
@@ -68,7 +68,7 @@ namespace MafiaCleanCity.Operational
             string url = Url($"storage/{buildingId}");
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 
@@ -96,7 +96,7 @@ namespace MafiaCleanCity.Operational
             string url = Url($"lab/{buildingId}");
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 
@@ -129,8 +129,8 @@ namespace MafiaCleanCity.Operational
             {
                 req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body ?? "{}"));
                 req.downloadHandler = new DownloadHandlerBuffer();
-                req.timeout = TimeoutSeconds;
-                req.SetRequestHeader("Content-Type", "application/json");
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
+                MafiaCleanCity.ClientHttp.Json(req);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 MafiaCleanCity.ClientHttp.Idempotent(req); // UUID v4 — backend mandate
 
@@ -385,7 +385,7 @@ namespace MafiaCleanCity.Operational
             string url = Url($"appointment/{appointmentId}");
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 
@@ -445,7 +445,7 @@ namespace MafiaCleanCity.Operational
             string url = Url($"grow-session/{growSessionId}");
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 
@@ -477,7 +477,7 @@ namespace MafiaCleanCity.Operational
             string url = $"{BaseUrl.TrimEnd('/')}/v1/economy/wallet";
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
 

@@ -18,7 +18,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
     public class CompressionClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/{leaf}";
 
@@ -34,7 +34,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
         {
             using (UnityWebRequest req = UnityWebRequest.Get(Url("compression/state")))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
@@ -51,7 +51,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
         {
             using (UnityWebRequest req = UnityWebRequest.Get(Url("compression/board")))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
@@ -72,9 +72,9 @@ namespace MafiaCleanCity.CoreLoops.Compression
         {
             string corps = "{\"choice\":\"" + choix + "\"}";
             using (UnityWebRequest req = UnityWebRequest.Post(
-                Url($"compression/board/problems/{problemeId}/decide"), corps, "application/json"))
+                Url($"compression/board/problems/{problemeId}/decide"), corps, MafiaCleanCity.ClientHttp.TypeJson))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
@@ -89,9 +89,9 @@ namespace MafiaCleanCity.CoreLoops.Compression
         /// <summary>POST /v1/compression/engage — ouvrir la semaine.</summary>
         public IEnumerator Engager(string bearer, Action onOk, Action<long, string> onErr)
         {
-            using (UnityWebRequest req = UnityWebRequest.Post(Url("compression/engage"), "{}", "application/json"))
+            using (UnityWebRequest req = UnityWebRequest.Post(Url("compression/engage"), "{}", MafiaCleanCity.ClientHttp.TypeJson))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;
@@ -104,9 +104,9 @@ namespace MafiaCleanCity.CoreLoops.Compression
         /// PROPOSÉ, jamais s'il aboutira.</summary>
         public IEnumerator Reporter(string bearer, Action onOk, Action<long, string> onErr)
         {
-            using (UnityWebRequest req = UnityWebRequest.Post(Url("compression/defer"), "{}", "application/json"))
+            using (UnityWebRequest req = UnityWebRequest.Post(Url("compression/defer"), "{}", MafiaCleanCity.ClientHttp.TypeJson))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (!Recu(req, onErr)) yield break;

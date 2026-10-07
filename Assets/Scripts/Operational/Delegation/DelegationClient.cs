@@ -26,7 +26,7 @@ namespace MafiaCleanCity.Operational
     public class DelegationClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         /// <summary>Ce qu'un refus rend à l'appelant : le code métier du back (stable, décidable),
         /// son message (montrable), et le statut HTTP. `code` vaut `null` quand l'échec est
@@ -187,7 +187,7 @@ namespace MafiaCleanCity.Operational
 
         private void Preparer(UnityWebRequest req, string bearer)
         {
-            req.timeout = TimeoutSeconds;
+            MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
             MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
         }
 
@@ -197,7 +197,7 @@ namespace MafiaCleanCity.Operational
             var req = new UnityWebRequest(Url(chemin), "POST");
             req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
             req.downloadHandler = new DownloadHandlerBuffer();
-            req.SetRequestHeader("Content-Type", "application/json");
+            MafiaCleanCity.ClientHttp.Json(req);
             // L'`IdempotencyInterceptor` global du back l'honore sur toute mutation, qu'un
             // `@Idempotent` explicite soit posé ou non sur le contrôleur (patron `DailyReviewClient`).
             // Une clé NEUVE par appel : réutiliser celle d'un appel précédent ferait rejouer sa

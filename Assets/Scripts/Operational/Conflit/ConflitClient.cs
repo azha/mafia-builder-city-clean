@@ -22,7 +22,7 @@ namespace MafiaCleanCity.Operational
         public string DernierePhraseDeRefus { get; private set; }
 
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         /// <summary>`GET /v1/me/engagements` — `{engagements: EngagementView[]}` (7 clés, voir `EngagementDto`) ; mesuré
         /// VIDE sur les comptes sondés le 2026-09-03.</summary>
@@ -31,7 +31,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/me/engagements"))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
@@ -55,7 +55,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/lieutenants"))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
@@ -114,10 +114,10 @@ namespace MafiaCleanCity.Operational
             {
                 req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
                 req.downloadHandler = new DownloadHandlerBuffer();
-                req.SetRequestHeader("Content-Type", "application/json");
+                MafiaCleanCity.ClientHttp.Json(req);
                 if (string.IsNullOrEmpty(cleIdempotence)) MafiaCleanCity.ClientHttp.Idempotent(req); else MafiaCleanCity.ClientHttp.IdempotentAvec(req, cleIdempotence);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 yield return req.SendWebRequest();
                 DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
                 if (req.result == UnityWebRequest.Result.Success)
