@@ -148,7 +148,7 @@ P("| D2 | Shell, BandeauEphemere | coroutine `Effacement` (fondu de sortie) | le
 P("")
 P("## E. Totaux — Unity réellement animé, compté dans Assets/Scripts (182 .cs)\n")
 P("Recherche exhaustive de `Animator|.anim|DOTween|LeanTween|ParticleSystem|AnimationCurve|IEnumerator qui écrit couleur/alpha/position|Update/LateUpdate qui écrit couleur, alpha, rotation, échelle, position`. 0 `.anim`, 0 `.controller`, 0 `Animator`, 0 `ParticleSystem`, 0 bibliothèque de tween dans le projet.")
-P("Mécanismes visuels : **5** — (1) TopBarController.Update [pouls + tremble, 2 effets], (2) Gyrophare.Update, (3) AmbientPulseLoop.Update [3 sources], (4) BandeauEphemere.Effacement. Les autres `Update`/`LateUpdate`/coroutines (AppShell.Update = touche retour, LongPressButton/AppuiLong = minuterie d'appui long, DistrictMapNavigation = pan/zoom au doigt, ReputationScreenController/LaSuitePanelController/ExceptionQueueController.LateUpdate = mise en page, HorlogeLegere = scrutation) ne bougent rien à l'écran.")
+P("Mécanismes visuels : **4** (3 méthodes `Update` + 1 coroutine) pour **5 effets** — (1) TopBarController.Update [pouls + tremble, 2 effets], (2) Gyrophare.Update, (3) AmbientPulseLoop.Update [3 sources, ≤ 4 instances], (4) BandeauEphemere.Effacement. Les autres `Update`/`LateUpdate`/coroutines (AppShell.Update = touche retour, LongPressButton/AppuiLong = minuterie d'appui long, DistrictMapNavigation = pan/zoom au doigt, ReputationScreenController/LaSuitePanelController/ExceptionQueueController.LateUpdate = mise en page, HorlogeLegere = scrutation) ne bougent rien à l'écran.")
 P("Retour d'appui : 15 sites `Selectable.Transition.None` sur 67 créations de `Button` ; aucune animation d'appui écrite.")
 P("")
 P("## F. Bilan")
