@@ -19,7 +19,7 @@ namespace MafiaCleanCity.Operational
     public class JournalClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         /// <summary>`GET /v1/news/feed` → TODO(MÉTIER ICI) : corps de réponse réel non mesuré —
         /// dériver `GetNewsFeedResponseDto` du CORPS RÉEL (juge-données), jamais de l'interface
@@ -29,7 +29,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/news/feed"))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
@@ -51,7 +51,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/news/beats/" + UnityWebRequest.EscapeURL(id)))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
@@ -73,7 +73,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/ambient/feed"))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
@@ -99,10 +99,10 @@ namespace MafiaCleanCity.Operational
             {
                 req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
                 req.downloadHandler = new DownloadHandlerBuffer();
-                req.SetRequestHeader("Content-Type", "application/json");
+                MafiaCleanCity.ClientHttp.Json(req);
                 MafiaCleanCity.ClientHttp.Idempotent(req);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
                 {
@@ -129,7 +129,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/world/districts"))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
@@ -149,7 +149,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/random-world/active"))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
@@ -171,7 +171,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/random-world/known-couplings"))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
@@ -197,10 +197,10 @@ namespace MafiaCleanCity.Operational
             {
                 req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
                 req.downloadHandler = new DownloadHandlerBuffer();
-                req.SetRequestHeader("Content-Type", "application/json");
+                MafiaCleanCity.ClientHttp.Json(req);
                 MafiaCleanCity.ClientHttp.Idempotent(req);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
                 {

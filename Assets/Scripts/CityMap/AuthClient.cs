@@ -14,7 +14,7 @@ namespace MafiaCleanCity.CityMap
     public class AuthClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         public string SigninUrl => BaseUrl.TrimEnd('/') + "/v1/auth/signin";
         public string SignupUrl => BaseUrl.TrimEnd('/') + "/v1/auth/signup";
@@ -32,8 +32,8 @@ namespace MafiaCleanCity.CityMap
             {
                 req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
                 req.downloadHandler = new DownloadHandlerBuffer();
-                req.SetRequestHeader("Content-Type", "application/json");
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Json(req);
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
 
                 yield return req.SendWebRequest();
 
@@ -81,9 +81,9 @@ namespace MafiaCleanCity.CityMap
             {
                 req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
                 req.downloadHandler = new DownloadHandlerBuffer();
-                req.SetRequestHeader("Content-Type", "application/json");
+                MafiaCleanCity.ClientHttp.Json(req);
                 MafiaCleanCity.ClientHttp.Idempotent(req);
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
 
                 yield return req.SendWebRequest();
 

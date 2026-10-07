@@ -12,7 +12,7 @@ namespace MafiaCleanCity.Operational
     public class ReputationClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         /// <summary>`GET /v1/me/reputation?lieutenant_id=…[&counterparty_id=…]`
         /// (`reputation.controller.ts:126`).
@@ -47,7 +47,7 @@ namespace MafiaCleanCity.Operational
 
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
@@ -96,6 +96,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/lieutenants"))
             {
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);   // TD-843 : sur mobile, une requête SANS délai peut bloquer un écran pour toujours
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success) { onErr?.Invoke(req.responseCode); yield break; }
@@ -129,6 +130,7 @@ namespace MafiaCleanCity.Operational
                          + UnityWebRequest.EscapeURL(lieutenantId);
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);   // TD-843 : idem
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
@@ -151,10 +153,10 @@ namespace MafiaCleanCity.Operational
             {
                 req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(body));
                 req.downloadHandler = new DownloadHandlerBuffer();
-                req.SetRequestHeader("Content-Type", "application/json");
+                MafiaCleanCity.ClientHttp.Json(req);
                 MafiaCleanCity.ClientHttp.Idempotent(req);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
                 {

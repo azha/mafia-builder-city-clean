@@ -13,7 +13,7 @@ namespace MafiaCleanCity.Operational
     public class ForensicClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         /// <summary>`GET /v1/me/forensic` → TODO(MÉTIER ICI) : corps de réponse réel non mesuré —
         /// dériver `GetForensicResponseDto` du CORPS RÉEL (juge-données), jamais de l'interface
@@ -23,7 +23,7 @@ namespace MafiaCleanCity.Operational
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/me/forensic"))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)

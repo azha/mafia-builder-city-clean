@@ -254,7 +254,7 @@ namespace MafiaCleanCity.Shell.Tests
                 req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(body));
                 req.downloadHandler = new DownloadHandlerBuffer();
                 req.SetRequestHeader("Content-Type", "application/json");
-                req.SetRequestHeader("Authorization", "Bearer " + token);
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 req.timeout = 10;
                 yield return req.SendWebRequest();
                 Assert.AreEqual(UnityWebRequest.Result.Success, req.result, $"session/open failed: {req.error}");

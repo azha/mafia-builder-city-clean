@@ -12,7 +12,7 @@ namespace MafiaCleanCity.CitySim.Inspection
     public class InspectionClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/{leaf}";
 
@@ -24,7 +24,7 @@ namespace MafiaCleanCity.CitySim.Inspection
         {
             using (UnityWebRequest req = UnityWebRequest.Get(Url($"city/district/{districtId}/inspection")))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
@@ -48,7 +48,7 @@ namespace MafiaCleanCity.CitySim.Inspection
         {
             using (UnityWebRequest req = UnityWebRequest.Get(Url("world/districts")))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
@@ -74,9 +74,9 @@ namespace MafiaCleanCity.CitySim.Inspection
             Action<RapportData> onOk, Action<long, string> onErr)
         {
             string corps = "{\"building_id\":\"" + Echapper(buildingId) + "\",\"entry_type\":\"" + Echapper(typeEntree) + "\"}";
-            using (UnityWebRequest req = UnityWebRequest.Post(Url("city/inspection/report"), corps, "application/json"))
+            using (UnityWebRequest req = UnityWebRequest.Post(Url("city/inspection/report"), corps, MafiaCleanCity.ClientHttp.TypeJson))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)

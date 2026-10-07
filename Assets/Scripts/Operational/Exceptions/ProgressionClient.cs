@@ -69,7 +69,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         public string DernierePhraseDeRefus { get; private set; }
 
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         /// <summary>GET /v1/progression — { vocabulary_tier: 1..6, progress_to_next: LOCKED|IN_PROGRESS|UNLOCKED }.</summary>
         public IEnumerator GetProgression(string bearer, Action<ProgressionDto> onOk, Action<long, string> onErr)
@@ -77,7 +77,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             string url = $"{BaseUrl.TrimEnd('/')}/v1/progression";
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);

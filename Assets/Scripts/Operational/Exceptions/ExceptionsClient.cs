@@ -18,7 +18,7 @@ namespace MafiaCleanCity.Operational.Exceptions
         public string DernierePhraseDeRefus { get; private set; }
 
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         /// <summary>⑨-1 — une requête de résolution TELLE QU'ELLE PART : la route et le corps. Construite par UNE fonction
         /// (`ConstruireResolve`), celle que l'envoi réel emploie — une garde qui la lit lit donc ce qui part sur le fil.</summary>
@@ -66,7 +66,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             }
             using (UnityWebRequest req = UnityWebRequest.Get(ConstruireEscalations(BaseUrl)))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
@@ -93,7 +93,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             string url = $"{BaseUrl.TrimEnd('/')}/v1/exceptions/queue";
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
@@ -133,8 +133,8 @@ namespace MafiaCleanCity.Operational.Exceptions
             {
                 req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
                 req.downloadHandler = new DownloadHandlerBuffer();
-                req.timeout = TimeoutSeconds;
-                req.SetRequestHeader("Content-Type", "application/json");
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
+                MafiaCleanCity.ClientHttp.Json(req);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 MafiaCleanCity.ClientHttp.Idempotent(req); // UUID v4 — backend mandate
                 yield return req.SendWebRequest();

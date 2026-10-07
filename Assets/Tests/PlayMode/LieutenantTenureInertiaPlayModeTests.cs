@@ -298,7 +298,7 @@ namespace MafiaCleanCity.Operational.Tests
                 req.downloadHandler = new DownloadHandlerBuffer();
                 req.timeout = 60;
                 req.SetRequestHeader("Content-Type", "application/json");
-                req.SetRequestHeader("Idempotency-Key", Guid.NewGuid().ToString());
+                MafiaCleanCity.ClientHttp.Idempotent(req);
                 yield return req.SendWebRequest();
                 Assert.AreEqual(UnityWebRequest.Result.Success, req.result,
                     $"advance harness failed (http={req.responseCode}) {req.error}");

@@ -50,7 +50,7 @@ namespace MafiaCleanCity.Shell
     public class MesBatimentsClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         /// <summary>Le corps brut de `me/buildings` → les données ; `TypesOuvrablesServis` posé sur CHAQUE bâtiment si
         /// `convertible_types` est dans le corps (forme G, lot back achat-ouvrable). Pur.</summary>
@@ -67,7 +67,7 @@ namespace MafiaCleanCity.Shell
         {
             using (UnityWebRequest req = UnityWebRequest.Get($"{BaseUrl.TrimEnd('/')}/v1/me/buildings"))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)

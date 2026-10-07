@@ -19,7 +19,7 @@ namespace MafiaCleanCity.Shell
     public class HlCardClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         public IEnumerator Commit(string bearer, string cardId, Action<CommitResponseDto> onOk, Action<long, string> onErr)
         {
@@ -52,9 +52,9 @@ namespace MafiaCleanCity.Shell
             {
                 req.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes("{}"));
                 req.downloadHandler = new DownloadHandlerBuffer();
-                req.SetRequestHeader("Content-Type", "application/json");
+                MafiaCleanCity.ClientHttp.Json(req);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 yield return req.SendWebRequest();
 
                 if (req.result == UnityWebRequest.Result.Success) onOk?.Invoke(req.downloadHandler.text);

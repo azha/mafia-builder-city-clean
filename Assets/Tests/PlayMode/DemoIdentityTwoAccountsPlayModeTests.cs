@@ -144,7 +144,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes("{}"));
                 req.downloadHandler = new DownloadHandlerBuffer();
                 req.SetRequestHeader("Content-Type", "application/json");
-                req.SetRequestHeader("Authorization", "Bearer " + token);
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 req.timeout = 15;
                 yield return req.SendWebRequest();
                 Assert.AreEqual(UnityWebRequest.Result.Success, req.result,
@@ -185,7 +185,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
                 req.downloadHandler = new DownloadHandlerBuffer();
                 req.SetRequestHeader("Content-Type", "application/json");
-                req.SetRequestHeader("Authorization", "Bearer " + token);
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 req.timeout = 15;
                 yield return req.SendWebRequest();
 

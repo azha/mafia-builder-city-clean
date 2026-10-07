@@ -27,7 +27,7 @@ namespace MafiaCleanCity.Account.Settings
     public class SettingsClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         /// <summary>Les DEUX seules langues servies — `SUPPORTED_LOCALES` vaut `['en','fr']`
         /// (i18n/string_table.ts). Toute autre valeur rend 422, pas 400 : la convention du lot 0
@@ -46,8 +46,8 @@ namespace MafiaCleanCity.Account.Settings
             req.uploadHandler = new UploadHandlerRaw(
                 System.Text.Encoding.UTF8.GetBytes("{\"locale\":\"" + locale + "\"}"));
             req.downloadHandler = new DownloadHandlerBuffer();
-            req.SetRequestHeader("Content-Type", "application/json");
-            req.timeout = TimeoutSeconds;
+            MafiaCleanCity.ClientHttp.Json(req);
+            MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
             MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
             using (req)
             {
@@ -71,8 +71,8 @@ namespace MafiaCleanCity.Account.Settings
             req.uploadHandler = new UploadHandlerRaw(
                 System.Text.Encoding.UTF8.GetBytes("{\"enabled\":" + (enabled ? "true" : "false") + "}"));
             req.downloadHandler = new DownloadHandlerBuffer();
-            req.SetRequestHeader("Content-Type", "application/json");
-            req.timeout = TimeoutSeconds;
+            MafiaCleanCity.ClientHttp.Json(req);
+            MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
             MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
             using (req)
             {
@@ -95,7 +95,7 @@ namespace MafiaCleanCity.Account.Settings
             var req = new UnityWebRequest($"{BaseUrl.TrimEnd('/')}/v1/auth/signout", "POST");
             req.uploadHandler = new UploadHandlerRaw(new byte[0]);
             req.downloadHandler = new DownloadHandlerBuffer();
-            req.timeout = TimeoutSeconds;
+            MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
             MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
             using (req)
             {

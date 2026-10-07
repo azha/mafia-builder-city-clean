@@ -146,7 +146,7 @@ namespace MafiaCleanCity.Shell.Tests
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + "/v1/city/district/16/heat"))
             {
                 req.timeout = 10;
-                req.SetRequestHeader("Authorization", "Bearer " + token);
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 yield return req.SendWebRequest();
                 Assert.AreEqual(UnityWebRequest.Result.Success, req.result, $"live heat GET failed: {req.error}");
                 liveHeat = JsonUtility.FromJson<HeatEnvelope>(req.downloadHandler.text)?.payload?.data;

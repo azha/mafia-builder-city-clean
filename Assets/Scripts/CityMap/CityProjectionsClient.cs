@@ -13,7 +13,7 @@ namespace MafiaCleanCity.CityMap
     public class CityProjectionsClient
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
-        public int TimeoutSeconds = 10;
+        public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
         private string D(int id, string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/city/district/{id}/{leaf}";
         private string P(int precinct, string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/city/precinct/{precinct}/{leaf}";
@@ -31,7 +31,7 @@ namespace MafiaCleanCity.CityMap
         {
             using (UnityWebRequest req = UnityWebRequest.Get(url))
             {
-                req.timeout = TimeoutSeconds;
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 yield return req.SendWebRequest();
 
@@ -112,8 +112,8 @@ namespace MafiaCleanCity.CityMap
                 {
                     req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
                     req.downloadHandler = new DownloadHandlerBuffer();
-                    req.timeout = TimeoutSeconds;
-                    req.SetRequestHeader("Content-Type", "application/json");
+                    MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
+                    MafiaCleanCity.ClientHttp.Json(req);
                     MafiaCleanCity.ClientHttp.Authentifier(req, token);
                     MafiaCleanCity.ClientHttp.Idempotent(req);
                     yield return req.SendWebRequest();
@@ -184,8 +184,8 @@ namespace MafiaCleanCity.CityMap
             {
                 req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
                 req.downloadHandler = new DownloadHandlerBuffer();
-                req.timeout = TimeoutSeconds;
-                req.SetRequestHeader("Content-Type", "application/json");
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
+                MafiaCleanCity.ClientHttp.Json(req);
                 MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 MafiaCleanCity.ClientHttp.Idempotent(req);
                 yield return req.SendWebRequest();

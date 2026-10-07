@@ -82,7 +82,7 @@ namespace MafiaCleanCity.Shell.Tests
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + "/v1/economy/wallet"))
             {
                 req.timeout = 10;
-                req.SetRequestHeader("Authorization", "Bearer " + token);
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 yield return req.SendWebRequest();
                 Assert.AreEqual(UnityWebRequest.Result.Success, req.result, $"live wallet GET failed: {req.error}");
                 WalletDto wallet = JsonUtility.FromJson<WalletEnvelope>(req.downloadHandler.text)?.payload?.data;
@@ -99,7 +99,7 @@ namespace MafiaCleanCity.Shell.Tests
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + "/v1/me"))
             {
                 req.timeout = 10;
-                req.SetRequestHeader("Authorization", "Bearer " + token);
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 yield return req.SendWebRequest();
                 Assert.AreEqual(UnityWebRequest.Result.Success, req.result, $"GET /v1/me a échoué pour {MafiaCleanCity.CityMap.DemoIdentityResolver.Empreinte(identifier)}: {req.error}");
                 MeDto me = JsonUtility.FromJson<MeEnvelope>(req.downloadHandler.text)?.payload?.data;
@@ -276,7 +276,7 @@ namespace MafiaCleanCity.Shell.Tests
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + "/v1/city/district/16/heat"))
             {
                 req.timeout = 10;
-                req.SetRequestHeader("Authorization", "Bearer " + token);
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 yield return req.SendWebRequest();
                 Assert.AreEqual(UnityWebRequest.Result.Success, req.result, $"heat GET failed: {req.error}");
                 Assert.AreEqual(200, req.responseCode,

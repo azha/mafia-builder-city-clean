@@ -52,7 +52,7 @@ namespace MafiaCleanCity.CityMap.Tests
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + $"/v1/city/district/{VergeADistrictId}/interior"))
             {
                 req.timeout = 10;
-                req.SetRequestHeader("Authorization", "Bearer " + token);
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 yield return req.SendWebRequest();
                 Assert.AreEqual(UnityWebRequest.Result.Success, req.result, $"ground-truth interior GET failed: {req.error}");
                 live = JsonUtility.FromJson<DistrictInteriorEnvelope>(req.downloadHandler.text)?.payload?.data;

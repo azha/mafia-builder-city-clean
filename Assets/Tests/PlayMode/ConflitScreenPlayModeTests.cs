@@ -236,8 +236,8 @@ namespace MafiaCleanCity.Operational.Tests
                     System.Text.Encoding.UTF8.GetBytes("{}"));
                 req.downloadHandler = new UnityEngine.Networking.DownloadHandlerBuffer();
                 req.SetRequestHeader("Content-Type", "application/json");
-                req.SetRequestHeader("Authorization", "Bearer " + token);
-                req.SetRequestHeader("Idempotency-Key", System.Guid.NewGuid().ToString());
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
+                MafiaCleanCity.ClientHttp.Idempotent(req);
                 yield return req.SendWebRequest();
                 // Un 404/409 est normal si aucune session n'est ouverte : on ferme, on n'exige pas.
             }
@@ -1116,8 +1116,8 @@ namespace MafiaCleanCity.Operational.Tests
                 req.uploadHandler = new UnityEngine.Networking.UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes("{}"));
                 req.downloadHandler = new UnityEngine.Networking.DownloadHandlerBuffer();
                 req.SetRequestHeader("Content-Type", "application/json");
-                req.SetRequestHeader("Authorization", "Bearer " + token);
-                req.SetRequestHeader("Idempotency-Key", System.Guid.NewGuid().ToString());
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
+                MafiaCleanCity.ClientHttp.Idempotent(req);
                 yield return req.SendWebRequest();
             }
         }

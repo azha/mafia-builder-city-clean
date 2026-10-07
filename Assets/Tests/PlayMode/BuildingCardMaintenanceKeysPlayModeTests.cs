@@ -74,7 +74,7 @@ namespace MafiaCleanCity.Operational.Tests
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl + $"/v1/operational/building/{buildingId}"))
             {
                 req.timeout = 10;
-                req.SetRequestHeader("Authorization", "Bearer " + token);
+                MafiaCleanCity.ClientHttp.Authentifier(req, token);
                 yield return req.SendWebRequest();
                 Assert.AreEqual(UnityWebRequest.Result.Success, req.result, $"ground-truth building-card GET failed: {req.error}");
                 rawJson = req.downloadHandler.text;
