@@ -598,6 +598,9 @@ namespace MafiaCleanCity.Operational
             TrackText(libBouton.text);
             boutonCommanderTexte = libBouton;
             boutonCommander = b;
+            // cause 3 (CLIENT-3 ㉚ M4, 07/10) : « CTA sombre cerné d'or, libellé or / aplat or plein, encre sombre — gros bouton jaune » : la forme `.geste` de SON cadre (`.appr6 .geste` : fond #241c11,
+            // cerne #5a4a2a, libellé #d9ab4e) — pas la `.cta6` des écrans de lecture
+            PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste);
         }
 
         // ═══ §3 — La chaîne, en état vide honnête ═══════════════════════════════════════════════

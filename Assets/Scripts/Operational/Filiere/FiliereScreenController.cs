@@ -730,8 +730,14 @@ namespace MafiaCleanCity.Operational
             h.childControlWidth = true; h.childControlHeight = true;
             var le = bouton.AddComponent<LayoutElement>();
             le.minHeight = Px(26f); le.flexibleHeight = 0f;
-            NouveauTexte(bouton.transform, "Libelle", Lib("Blanchir"), Px(9f),
+            var libelleBlanchir = NouveauTexte(bouton.transform, "Libelle", Lib("Blanchir").ToUpperInvariant(), Px(9f),
                 DesignTokens.Current.onSurfacePrimary, DesignTokens.Current.primaryFont);
+            // cause 3 (CLIENT-3 ㊵ F3, 07/10) : le geste du pied est la forme `.cta6` de la maquette — fond sombre, cerne de laiton, libellé or vif, capitales grasses interlettrées
+            // (la maquette l'appelle INJECTER ; les mots ratifiés de la table 77 disent BLANCHIR : on garde le mot ratifié). Sa PLACE (le pied fixe sous le panneau) reste à tenir : il vit encore
+            // dans la liste, sous le dernier groupe.
+            libelleBlanchir.fontStyle = FontStyles.Bold;
+            libelleBlanchir.characterSpacing = 11f;
+            PiedDEcran.StylerLeBouton(bouton, libelleBlanchir);
             // sous BLANCHIR (table 77, ligne 5) : ce que le geste fait
             NouveauTexte(listeRoot, "SousBlanchir", MafiaCleanCity.I18n.Libelle.Gabarit("filiere.etat.l_argent_passe_de_la_planque_a_la_filiere",
                 "l\u2019argent passe de la planque \u00E0 la fili\u00E8re"), Px(8f),

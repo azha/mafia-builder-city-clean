@@ -799,12 +799,18 @@ namespace MafiaCleanCity.Operational
             TrackText(libBouton.text);
             boutonEnvoyerTexte = libBouton;
             boutonEnvoyer = b;
+            // cause 3 (CLIENT-3 ㉘ M2, 07/10) : « bouton sombre à liseré, texte or / pavé or plein, texte sombre — bouton criard » : la forme `.geste` de SON cadre (`.lieg6 .geste`)
+            PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste);
 
             // « à pied · ça vide le stock du labo » (m-54, verbatim) — pis-aller conservé même en
             // état « livré » : aucun sous-texte alternatif n'est sourcé pour m-56.
-            TextMeshProUGUI sousBouton = NouveauTexteFiche(piedRoot, "SousBouton",
+            // cause 3 (㉘ M2) : dans la maquette (`.lieg6 .geste small`) la LÉGENDE est DANS le bouton, à droite (6,5 px, #9a8a6a) — le jeu la posait en dessous, hors du geste.
+            LayoutElement lel = libBouton.gameObject.GetComponent<LayoutElement>() ?? libBouton.gameObject.AddComponent<LayoutElement>();
+            lel.flexibleWidth = 1f;   // le libellé prend la place : la légende se range à droite (`justify-content:space-between`)
+            TextMeshProUGUI sousBouton = NouveauTexteFiche(bouton.transform, "SousBouton",
                 Libelle.De("distribution", "bloc", "à pied · ça vide le stock du labo"), 7f,
-                DesignTokens.Current.onSurfaceMuted, false);
+                PiedDEcran.Legende(PiedDEcran.Etat.Allume), false);
+            sousBouton.alignment = TextAlignmentOptions.MidlineRight;
             TrackText(sousBouton.text);
         }
 

@@ -337,6 +337,9 @@ public static class MafiaCI
         // ListeDefilante (CLIENT-1, 07/10, cause 7 du rapport de conformité de CLIENT-3) — le défilement + le fondu + l'ascenseur communs : calcul pur, effet sur une fenêtre, garde de classe
         // (tout RectMask2D passe par lui ou est une exception nommée). Catégorie NEUVE inscrite le jour où elle naît (garde I1) ; PAS ENCORE JOUÉE : verte au créneau, jamais déclarée avant.
         "ListeDefilante",
+        // PiedDEcran (CLIENT-1, 07/10, cause 3 du rapport de conformité de CLIENT-3) — les DEUX grammaires du geste principal de la maquette (`.cta6` des écrans de lecture, `.geste` des écrans de commande) :
+        // couleurs, effet sur un bouton construit, garde (㉚ ㉘ ㊵). Catégorie NEUVE inscrite le jour où elle naît (garde I1) ; PAS ENCORE JOUÉE.
+        "PiedDEcran",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
