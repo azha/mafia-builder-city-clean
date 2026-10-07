@@ -166,21 +166,24 @@ namespace MafiaCleanCity.Capture.Tests
                     event_descriptor = "L’étagère est vide. Sans pyralin, je ne rallume pas.", lieutenant = new MafiaCleanCity.Operational.Exceptions.ExceptionLieutenantDto { name = "Lt. Kane" } },
                 new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "fab-2", lieutenant_id = "", severity_band = "MILD", event_descriptor = "Il fait chaud en ville" },
             };
-            file.SetQueue(shell.Token, cartes);
-            for (int i = 0; i < 20; i++) yield return null;
             foreach ((int largeur, int hauteur) in Resolutions)
             {
-                yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"A01_AccueilFile2Cartes_{largeur}x{hauteur}.png"), false, null);
+                // `rebatirAccueil` : les quatre panneaux sont rebâtis À LA RÉSOLUTION (sans lui, la ligne de l'Accueil reste à sa hauteur de montage : 40 u) ; la file est ALORS ré-alimentée (le rebâtissage la recrée)
+                yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"A01_AccueilFile2Cartes_{largeur}x{hauteur}.png"), true, () =>
+                {
+                    file = shell.ContentSlot.GetComponentInChildren<ExceptionQueuePanelController>(true);
+                    file?.SetQueue(shell.Token, cartes);
+                });
                 Transform row = null;
-                foreach (Transform c in file.transform.GetComponentsInChildren<Transform>(true)) if (c.name == "Row_fab-1") { row = c; break; }
+                if (file != null) foreach (Transform c in file.transform.GetComponentsInChildren<Transform>(true)) if (c.name == "Row_fab-1") { row = c; break; }
                 Transform col = row != null ? row.Find("QuiAttend") : null;
                 if (row == null || col == null) { Noter("A01", $"④ file {largeur}x{hauteur}", "ÉCHEC : ligne ou colonne « qui » introuvable", Ref); continue; }
                 float bandeH = ((RectTransform)row).rect.height, voulue = LayoutUtility.GetPreferredHeight((RectTransform)col);
-                var coins = new Vector3[4]; ((RectTransform)row).GetWorldCorners(coins); float basLigne = coins[0].y;
-                ((RectTransform)col).GetWorldCorners(coins); float basColonne = coins[0].y;
-                bool deborde = voulue > bandeH + 0.5f || basColonne < basLigne - 0.5f;
+                var coins = new Vector3[4]; ((RectTransform)row).GetWorldCorners(coins); float basLigne = coins[0].y, hautLigne = coins[1].y;
+                ((RectTransform)col).GetWorldCorners(coins); float basColonne = coins[0].y, hautColonne = coins[1].y;
+                bool deborde = basColonne < basLigne - 0.5f || hautColonne > hautLigne + 0.5f;
                 Noter("A01", $"④ file {largeur}x{hauteur}",
-                    $"ligne={bandeH:0.#} u · colonne voulue={voulue:0.#} u · bas colonne−bas ligne={basColonne - basLigne:0.#} u · raison=«{file.RaisonRendue}» · pluriel=«{file.PlusieursRendu}» · {(deborde ? "DÉBORDE (A)" : "tient")}", Ref);
+                    $"ligne={bandeH:0.#} u · colonne voulue={voulue:0.#} u · bas colonne−bas ligne={basColonne - basLigne:0.#} u · haut colonne−haut ligne={hautColonne - hautLigne:0.#} u · raison=«{file.RaisonRendue}» · pluriel=«{file.PlusieursRendu}» · {(deborde ? "DÉBORDE (A)" : "tient")}", Ref);
             }
         }
 
@@ -202,15 +205,26 @@ namespace MafiaCleanCity.Capture.Tests
             yield return Charger(monte, s => etat = s);
             foreach ((int largeur, int hauteur) in Resolutions)
                 yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"{e.Pas}_{Ascii(e.Nom)}_{largeur}x{hauteur}.png"), false, null);
-            // cause 7 : une liste dont le contenu déborde est photographiée AUSSI défilée jusqu'au bout
-            ListeDefilante deborde = shell.ContentSlot.GetComponentsInChildren<ListeDefilante>(false).FirstOrDefault(l => l.ContenuDepasse);
-            string defil = "aucune liste ne déborde";
+            // cause 7 : une liste dont le contenu déborde est photographiée AUSSI défilée jusqu'au bout.
+            // ⛔ Détection corrigée (juge groupé du 07/10 : sur ㉝ les planches `_bas` étaient identiques au bit près aux hautes alors que `ContenuDepasse` disait vrai) : on exige un débordement MESURÉ
+            // (contenu − fenêtre ≥ 12 u), et APRÈS la planche basse on compare les octets des deux PNG — identiques ⇒ le journal le DIT, il ne prétend pas que la liste défile.
+            ListeDefilante deborde = shell.ContentSlot.GetComponentsInChildren<ListeDefilante>(false)
+                .FirstOrDefault(l => l.ContenuDepasse && l.Defilement != null && l.Defilement.content != null && l.Defilement.viewport != null
+                                     && l.Defilement.content.rect.height - l.Defilement.viewport.rect.height >= 12f);
+            string defil = "aucune liste ne déborde (mesure : contenu − fenêtre < 12 u)";
             if (deborde != null)
             {
+                float excedent = deborde.Defilement.content.rect.height - deborde.Defilement.viewport.rect.height;
+                int identiques = 0;
                 foreach ((int largeur, int hauteur) in Resolutions)
-                    yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"{e.Pas}_{Ascii(e.Nom)}_bas_{largeur}x{hauteur}.png"), false,
+                {
+                    string haut = Path.Combine(dossier, $"{e.Pas}_{Ascii(e.Nom)}_{largeur}x{hauteur}.png"), bas = Path.Combine(dossier, $"{e.Pas}_{Ascii(e.Nom)}_bas_{largeur}x{hauteur}.png");
+                    yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, bas, false,
                         () => { deborde.Defilement.verticalNormalizedPosition = 0f; deborde.Rafraichir(); });
-                defil = "liste défilante : le contenu DÉBORDE — planche _bas prise";
+                    if (File.Exists(haut) && File.Exists(bas) && File.ReadAllBytes(haut).SequenceEqual(File.ReadAllBytes(bas))) identiques++;
+                }
+                defil = identiques == 0 ? $"liste défilante : le contenu DÉBORDE de {excedent:0.#} u — planche _bas prise"
+                    : $"⚠️ ContenuDepasse vrai (+{excedent:0.#} u) mais {identiques}/2 planches _bas IDENTIQUES aux hautes : le défilement ne déplace rien — à instruire";
             }
             Noter(e.Pas, e.Nom, $"{shell.MountedTenantType.Name} · {etat} · {defil}", e.Reference);
         }
@@ -222,7 +236,10 @@ namespace MafiaCleanCity.Capture.Tests
         {
             string[] finis = { "RenduTermine", "QueueLoaded", "DashboardLoaded", "CardLoaded", "IsLoaded", "ReportsLoaded", "RenderedEmptyState" };
             string[] comptes = { "RendusEffectues", "RenderedCardCount" };
-            string[] objets = { "LastLoadedReview", "DernierChargement" };
+            string[] objets = { "LastLoadedReview", "DernierChargement", "DernierChargementProjection" };
+            // ⛔ Les écrans à PLUSIEURS chargements (juge groupé du 07/10) : ㊳ rend `DernierChargement` AVANT ses deux autres listes (la planche à 2400 n'était pas dans l'état de celle à 1920), ㉘ n'avait AUCUN
+            // drapeau reconnu (attente fixe de 6 s). On attend TOUS ceux que l'écran expose : `RenduTermine` (㊳), `DernierChargementCouriers` ET `DernierChargementProjection` (㉘).
+            string[] tousRequis = { "RenduTermine", "DernierChargementCouriers", "DernierChargementProjection" };
             string[] erreurs = { "DerniereErreur", "LastError", "QueueError", "CardError", "AuthError" };
             System.Type t = ecran.GetType();
             System.Func<string, object> lire = n => { var p = t.GetProperty(n); try { return p?.GetValue(ecran); } catch { return null; } };
@@ -243,6 +260,16 @@ namespace MafiaCleanCity.Capture.Tests
             }
             string v = null;
             for (float f = Time.realtimeSinceStartup + 20f; v == null && Time.realtimeSinceStartup < f;) { v = Verdict(); yield return null; }
+            if (v != null && !v.StartsWith("erreur"))
+                for (float f = Time.realtimeSinceStartup + 20f; Time.realtimeSinceStartup < f;)
+                {
+                    bool manque = false;
+                    foreach (string n in tousRequis)
+                        if (t.GetProperty(n) != null) { object x = lire(n); if (x == null || (x is bool bx && !bx)) manque = true; }
+                    foreach (string n in erreurs) if (lire(n) is string e && !string.IsNullOrEmpty(e)) manque = false;
+                    if (!manque) break;
+                    yield return null;
+                }
             if (v != null && lire("EtatVide") is bool vide && vide) v += " · état vide";
             for (int i = 0; i < 20; i++) yield return null;
             etat(v ?? "⚠️ NON ABOUTI en 20 s — la planche montre l'écran tel qu'il est à 20 s");
