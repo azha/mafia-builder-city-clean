@@ -1,0 +1,22 @@
+{
+ "response_meta": {
+  "request_id_echo": "0fd22602-dc21-480f-913c-084b69229a9a",
+  "server_processed_at": "2026-10-07T20:43:41.303Z",
+  "api_version": 1,
+  "correlation_id_echo": null,
+  "server_build_ref": null
+ },
+ "payload": {
+  "data": {
+   "access_token": "<<retiré du dépôt>>",
+   "token_type": "Bearer",
+   "account_kind": "PLAYER",
+   "session_id": "01a1181b-8d9e-74dd-b9ab-a6e330c5e940",
+   "expires_in_s": 900,
+   "refresh_token": "<<retiré du dépôt>>",
+   "refresh_expires_in_s": 2592000,
+   "game_back_access_token": null,
+   "game_back_session_id": null
+  }
+ }
+}

@@ -1,0 +1,1 @@
+{"response_meta":{"request_id_echo":"865bfd2c-db55-4572-9e31-b2ba6427e050","server_processed_at":"2026-10-07T20:50:59.586Z","api_version":1,"correlation_id_echo":null,"server_build_ref":null},"payload":{"data":{"district":"district-5","district_bucket":"COLD","citywide_bucket":"COLD","escalated":false,"buildings":[]}}}

@@ -15,7 +15,7 @@ Référence qui fait foi : `ecrans-brennar-accueil.html`, cinq cadres re-rendus 
 | F4 « ornement gris » | **PAS un écart** : c'est la VOLUTE du canon HUD (opacité 0,28) | Mesurée le 26/09 : encre de la référence re-rendue **(74,75,76)**, du jeu **(73,75,76)** ; boîte x 16..104 (réf) contre 12..104 (jeu). Même objet, même encre. |
 | F19 3ᵉ suggestion (BLANCHIR au lieu d'ÉCRIRE UNE RÈGLE) | **le JEU a raison** | Ligne E de LA SUITE (table 76), décidée sur mesure UX ; le cadre 4 re-rendu (65be0216) montre labo · vente · planque. |
 | F17 « LÉGÈRE » | **gris chaud éteint** ; la couleur est réservée à l'alarme | Cadre 4 re-rendu : LÉGÈRE (139,129,113) ; cadre 2 : MODÉRÉE gris intermédiaire ; GRAVE (182,170,144). |
-| F3 le fond | **le quartier PEINT** (diorama du district, profil verge, jour/nuit selon la phase servie) | Mieux que la carte vectorielle de ③ ; aucun art neuf. |
+| F3 le fond | **le quartier PEINT** (diorama du district, profil verge, NUIT dans tous les cas, comme les 5 cadres de la maquette — `DashboardController.ModeDuFond` renvoie « nuit » quelle que soit la phase servie ; D1 du juge de données r1 du 07/10 : la RAISON écrite est corrigée, pas le code) | Mieux que la carte vectorielle de ③ ; aucun art neuf. |
 
 ## Corrigés dans le jeu (lot du 26/09, CLIENT-1)
 
