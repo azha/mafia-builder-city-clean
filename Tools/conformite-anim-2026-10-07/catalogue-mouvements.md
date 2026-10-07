@@ -2,7 +2,7 @@
 
 Statut : **PROPOSITION**. Rien n'est tranché ici. f2 puis l'user valident ; l'atelier dessine ce qui
 doit l'être (§III) ; `coder` n'écrit rien avant. Ce fichier est la table `Catalogue` du design
-(`design-couche-mouvement.md` §1 : `Entree { Id, Ecran, Source, Cause, G, M, Pistes, DegradeReduit }`)
+(`design-couche-mouvement.md` v3 §2 : `Entree { Id, Ecrans[], Source, Cause, Genre, MouvementDefini, Pistes, Bloquante, Hote }` ; le dégradé réduit suit la règle par genre du §5 du design ; les entrées sans hôte dans le client portent `Hote = SansHote:<raison>` ; gardes G1-G13)
 rendue en prose : **une ligne de tableau = une `Entree`**, et rien de ce fichier ne vit hors de ce modèle.
 
 Entrées lues : `design-couche-mouvement.md` (le mécanisme, les plafonds, §4 mouvement réduit, gardes

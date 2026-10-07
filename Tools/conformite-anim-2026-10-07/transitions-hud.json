@@ -1,0 +1,32 @@
+[
+ {
+  "selecteur": ".fond",
+  "propriete": "opacity",
+  "duree": "0.5s"
+ },
+ {
+  "selecteur": ".barre::after",
+  "propriete": "background",
+  "duree": "0.6s"
+ },
+ {
+  "selecteur": ".medaillon .boitier",
+  "propriete": "border-color",
+  "duree": "0.6s"
+ },
+ {
+  "selecteur": ".medaillon .lunette",
+  "propriete": "box-shadow",
+  "duree": "0.6s"
+ },
+ {
+  "selecteur": ".gyro",
+  "propriete": "opacity",
+  "duree": "0.5s"
+ },
+ {
+  "selecteur": "inline line#aiguille",
+  "propriete": "transform",
+  "duree": ".7s"
+ }
+]

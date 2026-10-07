@@ -1,5 +1,5 @@
 // Oracle CSS : échantillonne, DANS CHROMIUM, la valeur calculée de chaque @keyframes appliqué d'une maquette,
-// à 33 instants de la période (bornes incluses). Sert de vérité au test pur qui évalue Courbe.Evaluer côté Unity.
+// sur l'UNION de 17 points uniformes et de tous les pourcentages d'images clés (les coudes sont échantillonnés). Sert de vérité au test pur qui évalue Courbe.Evaluer côté Unity.
 // Usage : node oracle-css.cjs <maquette.html> <sortie.json> [--etat=descente] [chemin/playwright-core]
 // --etat=<classe> : classe posée sur .tel avant mesure (hud-brennar-canon : descente, jour, chaud).
 const fs = require('fs');
@@ -13,7 +13,10 @@ const pw = require(process.argv.find(a => a.includes('playwright-core')) || '/ho
   await p.waitForTimeout(800);
   const out = await p.evaluate(() => {
     const res = {};
-    const N = 32;
+    // Pourcentages d'images clés de chaque @keyframes (lus dans les feuilles de style) : les coudes sont échantillonnés.
+    const coudes = {};
+    const lire = rs => { for (const r of rs) { if (r.type === 7) { const o = new Set([0, 1]); for (const k of r.cssRules) for (const t of k.keyText.split(',')) o.add(parseFloat(t) / 100); coudes[r.name] = [...o]; } else if (r.cssRules && r.type !== 1) lire(r.cssRules); } };
+    for (const ss of document.styleSheets) { try { lire(ss.cssRules); } catch (e) {} }
     for (const a of document.getAnimations()) {
       const name = a.animationName; if (!name || res[name]) continue;
       const el = a.effect.target; const tm = a.effect.getTiming();
@@ -24,14 +27,15 @@ const pw = require(process.argv.find(a => a.includes('playwright-core')) || '/ho
       a.pause();
       a.effect.updateTiming({ delay: 0, endDelay: 0, iterations: 1, direction: 'normal', fill: 'both' });
       const samples = [];
-      for (let i = 0; i <= N; i++) {
-        a.currentTime = dur * i / N;
+      const grille = [...new Set([...Array.from({ length: 17 }, (_, i) => i / 16), ...(coudes[name] || [])])].sort((x, y) => x - y);
+      for (const p of grille) {
+        a.currentTime = dur * p;
         const cs = getComputedStyle(el, ps);
         const m = new DOMMatrix(cs.transform === 'none' ? undefined : cs.transform);
         const sx = Math.hypot(m.a, m.b), rot = Math.atan2(m.b, m.a) * 180 / Math.PI;
         const sy = sx ? (m.a * m.d - m.b * m.c) / sx : 0;
         const br = /brightness\(([-\d.]+)\)/.exec(cs.filter), hue = /hue-rotate\(([-\d.]+)deg\)/.exec(cs.filter);
-        samples.push({ p: i / N, opacity: +cs.opacity, tx: m.e, ty: m.f, rot, sx, sy,
+        samples.push({ p, opacity: +cs.opacity, tx: m.e, ty: m.f, rot, sx, sy,
           brightness: br ? +br[1] : null, hue: hue ? +hue[1] : null,
           dash: cs.strokeDashoffset, shadow: cs.boxShadow === 'none' ? null : cs.boxShadow });
       }
