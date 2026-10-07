@@ -15,8 +15,9 @@ namespace MafiaCleanCity.CityMap.Tests
     //       dans Assets/Scripts hors de I18n/ClientHttp.cs — quelle que soit la forme (constante intermédiaire, helper local, espaces, casse) ;
     //       le balayage lit VRAIMENT les chaînes (régulières, verbatim, interpolées), les caractères et les commentaires (// et /* */) : un `//`
     //       dans une chaîne n'est pas un commentaire. Contrôle positif par forme. En bonus : 0 SetRequestHeader dont le 1er argument n'est pas un littéral.
-    //   G5  TD-768 : la même garde sur Assets/Tests — 0 `SetRequestHeader("Authorization"` / `("Idempotency-Key"` posé à la main (le littéral EST le 1er
-    //       argument ; lire un en-tête par GetRequestHeader reste permis, et un littéral cité dans une chaîne ou un commentaire n'est pas une pose)
+    //   G5  TD-768 : MÊME MÉTHODE que G1 (balayage de chaînes/commentaires, garde de VALEUR) sur Assets/Tests — 0 littéral de nom d'en-tête (Authorization,
+    //       Idempotency-Key, X-Mafia-Background) et 0 SetRequestHeader au 1er argument non littéral, sauf liste blanche EXACTE des lectures (GetRequestHeader) ;
+    //       contrôles positifs par forme (littéral, constante, helper, casse, // dans une chaîne, non littéral, verbatim) et liste blanche rougissant en trop comme en moins
     //   G2  Authentifier : « Bearer <jeton> » ; jeton vide ou null ⇒ AUCUN en-tête (comme chacun des 103 anciens sites)
     //   G3  Idempotent : un UUID v4 NEUF à chaque appel, posé et rendu ; IdempotentAvec pose la clé telle quelle
     //   G4  Fond : « 1 » à l'octet, par le client commun ET par `EnTetesDuClient.MarquerFond` (qui lui délègue) ; null en, null out
@@ -28,7 +29,7 @@ namespace MafiaCleanCity.CityMap.Tests
 
         /// <summary>Balayage C# : les contenus de chaînes (régulières, verbatim `@"…"`, interpolées `$"…"`), et le code restant — commentaires retirés, chaque
         /// chaîne réduite à `""`, chaque caractère littéral à `''`. Pure.</summary>
-        internal static (List<string> litteraux, string code) Balayer(string src, List<(string litteral, string avant)> contexte = null)
+        internal static (List<string> litteraux, string code) Balayer(string src)
         {
             var lit = new List<string>();
             var code = new StringBuilder();
@@ -56,13 +57,13 @@ namespace MafiaCleanCity.CityMap.Tests
                         if (src[i] == '"') break;
                         i++;
                     }
-                    lit.Add(src.Substring(debut, System.Math.Min(i, n) - debut)); contexte?.Add((lit[lit.Count - 1], code.ToString(System.Math.Max(0, code.Length - 40), System.Math.Min(40, code.Length)))); i++; code.Append("\"\"");
+                    lit.Add(src.Substring(debut, System.Math.Min(i, n) - debut)); i++; code.Append("\"\"");
                 }
                 else if (c == '"')
                 {
                     i++; int debut = i;
                     while (i < n && src[i] != '"') i += src[i] == '\\' ? 2 : 1;
-                    lit.Add(src.Substring(debut, System.Math.Min(i, n) - debut)); contexte?.Add((lit[lit.Count - 1], code.ToString(System.Math.Max(0, code.Length - 40), System.Math.Min(40, code.Length)))); i++; code.Append("\"\"");
+                    lit.Add(src.Substring(debut, System.Math.Min(i, n) - debut)); i++; code.Append("\"\"");
                 }
                 else { code.Append(c); i++; }
             }
@@ -114,42 +115,65 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.GreaterOrEqual(appelants, 30, "anti-vacuité : les clients passent par Authentifier (34 fichiers au 07/10)");
         }
 
-        /// <summary>Les poses à la main de `Authorization` / `Idempotency-Key` : un littéral de chaîne qui est le 1er argument d'un `SetRequestHeader(`. Pure.</summary>
-        internal static List<string> PosesALaMain(IEnumerable<(string nom, string source)> sources)
+        private static readonly Regex NomsDEnTete = new Regex(@"authorization|idempotency-key|x-mafia-background", RegexOptions.IgnoreCase);
+
+        /// <summary>TD-768 — la garde de VALEUR de G1 appliquée à Assets/Tests, MÊME MÉTHODE (balayage de chaînes/commentaires, valeur et non forme) : un fichier qui
+        /// porte un littéral de nom d'en-tête (`Authorization`, `Idempotency-Key`, `X-Mafia-Background`) — pose directe, constante, alias, helper, casse, `//` dans
+        /// une chaîne — ou un `SetRequestHeader` au 1er argument non littéral, est un contrevenant, SAUF liste blanche EXACTE : nom de fichier → nombre de
+        /// littéraux permis (un de plus ET un de moins rougissent : une liste blanche périmée ne couvre rien). `-1` = le fichier est le TÉMOIN de la garde
+        /// (ses littéraux sont des chaînes d'exemple) ; son code n'a quand même pas le droit de poser un en-tête dont le 1er argument n'est pas un littéral. Pure.
+        /// Le mot « Bearer » n'est PAS cherché ici : il est dans la prose de dizaines de messages d'assertion (« controller signed in (Bearer acquired) ») ; tout
+        /// moyen de le poser passe par le NOM de l'en-tête, qui est cherché.</summary>
+        internal static List<string> ContrevenantsDesTests(IEnumerable<(string nom, string source)> sources, IDictionary<string, int> listeBlanche)
         {
             var v = new List<string>();
-            var pose = new Regex(@"SetRequestHeader\s*\(\s*$");
             foreach (var (nom, source) in sources)
             {
-                var contexte = new List<(string litteral, string avant)>();
-                Balayer(source, contexte);
-                int n = contexte.Count(c => pose.IsMatch(c.avant) &&
-                    (string.Equals(c.litteral, "Authorization", System.StringComparison.OrdinalIgnoreCase) ||
-                     string.Equals(c.litteral, "Idempotency-Key", System.StringComparison.OrdinalIgnoreCase)));
-                if (n > 0) v.Add(nom + "×" + n);
+                var (lit, code) = Balayer(source);
+                int n = lit.Count(l => NomsDEnTete.IsMatch(l));
+                int permis = listeBlanche.TryGetValue(nom, out int p) ? p : 0;
+                if (permis >= 0 && n != permis) v.Add(nom + " [" + n + " littéral(aux) d'en-tête, " + permis + " permis]");
+                if (PremierArgNonLitteral.IsMatch(code)) v.Add(nom + " [1er argument non littéral]");
             }
             return v.OrderBy(x => x).ToList();
         }
 
-        [Test]
-        public void G5_TD768_ZeroEnTeteAuthPoseALaMainDansLesTests()
+        /// <summary>Les LECTURES légitimes d'en-têtes (GetRequestHeader), par fichier : HorlogeLegere H3 lit « X-Mafia-Background » ×2 et « Authorization » ×1 ; ce fichier-ci est le témoin.</summary>
+        private static readonly Dictionary<string, int> LecturesLegitimes = new Dictionary<string, int>
         {
-            var temoin = PosesALaMain(new[]
+            { "HorlogeLegerePlayModeTests.cs", 3 },
+            { "ClientHttpPlayModeTests.cs", -1 },
+        };
+
+        [Test]
+        public void G5_TD768_GardeDeValeur_ZeroEnTeteAuthPoseALaMainDansLesTests()
+        {
+            // contrôles POSITIFS par forme (mêmes formes que G1) + la liste blanche exacte, dans les deux sens
+            var blanche = new Dictionary<string, int> { { "Lecteur.cs", 1 }, { "Perime.cs", 1 }, { "Temoin.cs", -1 }, { "H_trop.cs", 1 } };
+            var temoin = ContrevenantsDesTests(new[]
             {
-                ("A_auth.cs", "req.SetRequestHeader(\"Authorization\", \"Bearer \" + t);"),
-                ("B_idem.cs", "req.SetRequestHeader( \"Idempotency-Key\", k);"),
-                ("C_lecture.cs", "Assert.AreEqual(\"x\", req.GetRequestHeader(\"Authorization\"));"),
-                ("D_chaine.cs", "var s = \"req.SetRequestHeader(\\\"Authorization\\\", t)\"; // req.SetRequestHeader(\"Authorization\", t)"),
-                ("E_content_type.cs", "req.SetRequestHeader(\"Content-Type\", \"application/json\");"),
-            });
-            CollectionAssert.AreEqual(new[] { "A_auth.cs×1", "B_idem.cs×1" }, temoin,
-                "contrôle positif : la pose directe (et avec espaces) est vue ; la LECTURE, une citation en chaîne/commentaire et Content-Type non");
+                ("A_litteral.cs", "req.SetRequestHeader(\"Authorization\", \"Bearer \" + t);"),
+                ("B_constante.cs", "const string H = \"Idempotency-Key\"; req.SetRequestHeader(H, k);"),
+                ("C_helper.cs", "Poser(req, \"Authorization\", t);"),
+                ("D_casse.cs", "var h = \"authorization\";"),
+                ("E_slashes_dans_une_chaine.cs", "var u = Get(\"http://x\"); req.SetRequestHeader(\"X-Mafia-Background\", \"1\");"),
+                ("F_non_litteral.cs", "req.SetRequestHeader(nom, valeur);"),
+                ("G_verbatim.cs", "var h = @\"a\"\"Authorization\";"),
+                ("H_trop.cs", "Assert.AreEqual(1, r.GetRequestHeader(\"Authorization\")); var x = r.GetRequestHeader(\"Idempotency-Key\");"),
+                ("Lecteur.cs", "Assert.AreEqual(\"x\", req.GetRequestHeader(\"Authorization\"));"),
+                ("Perime.cs", "var rien = 1;"),
+                ("Temoin.cs", "var s = \"req.SetRequestHeader(\\\"Authorization\\\", t)\"; // Authorization\n req.SetRequestHeader(\"Content-Type\", \"x\");"),
+                ("Innocent.cs", "// req.SetRequestHeader(\"Authorization\", t)\nClientHttp.Authentifier(req, t); var m = \"controller signed in (Bearer acquired)\";"),
+            }, blanche).Select(x => x.Substring(0, 1)).Distinct().OrderBy(x => x).ToArray();
+            CollectionAssert.AreEqual(new[] { "A", "B", "C", "D", "E", "F", "G", "H", "P" }, temoin,
+                "chaque forme (littéral, constante, helper, casse, // dans une chaîne, non littéral, verbatim) est VUE ; la liste blanche rougit en trop (H) et en moins (Perime, « P ») ; " +
+                "la lecture permise (Lecteur), le témoin, la citation en commentaire et la prose « Bearer » ne sont pas vus");
 
             var sources = Directory.GetFiles(Path.Combine(Application.dataPath, "Tests"), "*.cs", SearchOption.AllDirectories)
                 .Select(f => (Path.GetFileName(f), File.ReadAllText(f))).ToList();
             Assert.Greater(sources.Count, 100, "anti-vacuité : les sources d'Assets/Tests sont lues");
-            var poseurs = PosesALaMain(sources);
-            Assert.IsEmpty(poseurs, "un test pose l'en-tête à la main au lieu de passer par ClientHttp : " + string.Join(", ", poseurs));
+            var poseurs = ContrevenantsDesTests(sources, LecturesLegitimes);
+            Assert.IsEmpty(poseurs, "un test porte un nom d'en-tête hors client commun ni lecture permise : " + string.Join(", ", poseurs));
             Assert.GreaterOrEqual(sources.Count(s => s.Item2.Contains("ClientHttp.Authentifier(")), 10, "anti-vacuité : les tests passent par Authentifier (17 fichiers au 07/10)");
         }
 
