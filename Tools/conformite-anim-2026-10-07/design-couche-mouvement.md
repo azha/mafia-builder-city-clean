@@ -148,7 +148,7 @@ Ce qui prouve quoi : le typecheck hors Unity prouve syntaxe et types ; **toute e
 | E1 | `Mouvements/` : modèle, courbes, régie, politique, registre, catalogue (HUD), `oracle`, gardes | OUI |
 | E2 | `AppShell` publie la régie ; migration des 4 existants (§9) ; `RetourAppui` (§8) ; ligne « Mouvement réduit » de ⑲ ; G2 G6 G9 G10 G11 | OUI |
 | E3 | ① HUD : flotteur (R2.2 d'abord), fondus B5/B9 (hôte de fondu croisé), virages B6/B7/B8, balayage B10 | planche multi-images + juge |
-| E4 | ④, puis les écrans montés du catalogue | planches + juge, UN créneau groupé |
+| E4 | ④, puis **le manomètre de tension de ⑭** (élément A construit, à nous : cadran, arcs teal/ambre/rouge, aiguille et pivot d'après les cadres 14-19 — six angles 12, 64, 60, 20, −60, 64 ; géométrie réutilisée du chrome, `TopBarController` face/arcs ; le juge groupé a mesuré secteurs teal 8 378 px et rouge 8 448 px → 0 en jeu ; son balayage de 0,7 s est `chrome.aiguille.balayage`/`semaine.aiguille`), puis les écrans montés du catalogue | planches + juge, UN créneau groupé |
 | E5 | scènes serre/labo/Ash : ART d'abord ; `sf`, `po`, `bl`, `fl` : shader d'UI ou rien | — |
 
 Décisions déjà prises par f2/l'user : ligne ⑲ = REUSE du canon ; `RetourAppui` partout ; l'ère des objets est 2000-2010. Reste ouvert : le flotteur « + $ » (montant exact, R2.2).
