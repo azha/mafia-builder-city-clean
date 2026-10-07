@@ -364,16 +364,42 @@ namespace MafiaCleanCity.Capture.Tests
             Noter("A3", $"Prendre acte ({geste.method})", $"{attente} · erreur={detail.LastError ?? "aucune"} · Accueil encore actif : {(accueilLa ? "oui" : "non")} · "
                 + $"locataire monté : {shell.MountedTenantType?.Name ?? "aucun"}");
 
-            // A4 · « Les télégrammes » (barre ALLER À de l'Accueil), s'il est encore joignable
+            // A4 · « Les télégrammes » (barre ALLER À de la FEUILLE de l'Accueil), s'il est encore joignable.
+            // ⛔ NON APPLICABLE depuis dbf8e71b (26/09, « l'Accueil ramené au canon ») : `AppShell.MonterLAccueil` appelle `MasquerLaFeuille()`, qui ÉTEINT la
+            // feuille — « Nav_Autonomy » existe mais est inactif. Le journal du 26/09 (r1) disait déjà « INJOIGNABLE » : ce n'est pas une régression, c'est un
+            // pas PÉRIMÉ (relevé f2 / CLIENT-1, 07/10). Le joueur lit ses rapports par le « lire » du bandeau ou la carte de tête (voie A4b), qui n'existent que
+            // s'il y a un rapport d'autonomie à lire : un compte NEUF n'en a pas.
             Button tele = Descendant(shell.ContentSlot, "Nav_Autonomy")?.GetComponent<Button>();
-            if (tele == null || !tele.isActiveAndEnabled) { Noter("A4", "Les télégrammes", "INJOIGNABLE : « Nav_Autonomy » absent ou éteint après A3"); yield break; }
-            if (!ProductionClickSupport.Click(tele)) { Noter("A4", "Les télégrammes", "ÉCHEC : le bouton refuse le clic de production"); yield break; }
+            if (tele != null && tele.isActiveAndEnabled)
+            {
+                if (!ProductionClickSupport.Click(tele)) { Noter("A4", "Les télégrammes", "ÉCHEC : le bouton refuse le clic de production"); yield break; }
+                yield return OuvrirLesTelegrammes("a4_telegrammes", "A4", "Les télégrammes");
+                yield break;
+            }
+            Noter("A4", "Les télégrammes", "NON APPLICABLE : « Nav_Autonomy » est dans la feuille de l'Accueil, éteinte par `MasquerLaFeuille` depuis dbf8e71b (« l'Accueil ramené "
+                + "au canon ») ; un compte NEUF n'a aucun rapport d'autonomie — le joueur y va par le « lire » du bandeau ou la carte de tête, qui n'existent que s'il y en a un");
+
+            // A4b · la voie du joueur, SEULEMENT si un rapport est servi : [Lire maintenant] de la carte de tête quand c'est une carte de RAPPORTS
+            var carteDeTete = Object.FindFirstObjectByType<HighestLeverageCardController>();
+            if (carteDeTete == null || !carteDeTete.EstCarteDesRapports)
+            {
+                Noter("A4b", "Les télégrammes par la carte de tête", "NON JOUÉ : aucun rapport d'autonomie servi (la carte de tête n'est pas une carte de rapports)");
+                yield break;
+            }
+            carteDeTete.OuvrirLesRapports();
+            yield return OuvrirLesTelegrammes("a4b_telegrammes", "A4b", "Les télégrammes par la carte de tête");
+        }
+
+        /// <summary>A4 / A4b — ㉔ vient d'être demandé : on attend son montage (borné), on le charge, on le photographie, on le note.</summary>
+        private IEnumerator OuvrirLesTelegrammes(string planche, string pas, string geste)
+        {
             MafiaCleanCity.Operational.Autonomy.AutonomyInboxController boite = null;
             yield return Attendre(() => boite = shell.ContentSlot.GetComponentInChildren<MafiaCleanCity.Operational.Autonomy.AutonomyInboxController>(true), 20f);
-            if (boite == null) { Noter("A4", "Les télégrammes", "ÉCHEC : ㉔ non monté"); yield break; }
-            yield return Charger(boite, e => etat = e);
-            yield return Photographier("a4_telegrammes");
-            Noter("A4", "Les télégrammes", $"㉔ · {etat}");
+            if (boite == null) { Noter(pas, geste, "ÉCHEC : ㉔ non monté"); yield break; }
+            string etatBoite = null;
+            yield return Charger(boite, e => etatBoite = e);
+            yield return Photographier(planche);
+            Noter(pas, geste, $"㉔ · {etatBoite}");
         }
 
         /// <summary>B1 — le geste du pupitre de ②. « Allumer le feu » est touché s'il est offert ; « Commander » ne l'est jamais.</summary>
