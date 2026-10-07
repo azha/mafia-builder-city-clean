@@ -1,0 +1,20 @@
+LU REF (1080, 2102) | JEU (1080, 1920) | homographie REF = 1.0910*JEU + (-48,3)
+  276480 paires appariees (zone de decor commune)
+
+=== REF = a x JEU + b, PAR BANDE (si b>0 : la reference a un PLANCHER que le jeu n'a pas) ===
+  bande JEU y  170.. 266 (n= 46080) : R a=0.145 b=+10.31  G a=0.155 b=+14.94  B a=0.395 b=+16.63   | lum REF 16.87 JEU 15.45 rapport 0.915
+  bande JEU y  266.. 362 (n= 46080) : R a=1.308 b=+1.47  G a=1.204 b=+1.58  B a=1.206 b=-0.74   | lum REF 17.73 JEU 13.42 rapport 0.757
+  bande JEU y  362.. 458 (n= 46080) : R a=1.150 b=+3.56  G a=1.053 b=+4.64  B a=1.062 b=+3.38   | lum REF 24.77 JEU 19.13 rapport 0.772
+  bande JEU y  458.. 554 (n= 46080) : R a=0.918 b=+7.60  G a=0.940 b=+7.34  B a=0.985 b=+5.82   | lum REF 30.25 JEU 24.42 rapport 0.807
+  bande JEU y  554.. 650 (n= 46080) : R a=0.869 b=+8.70  G a=0.899 b=+8.34  B a=0.931 b=+7.41   | lum REF 30.37 JEU 24.58 rapport 0.809
+  bande JEU y  650.. 746 (n= 46080) : R a=0.831 b=+8.30  G a=0.849 b=+8.21  B a=0.869 b=+7.93   | lum REF 27.68 JEU 22.98 rapport 0.830
+
+=== SIMULATION DE CORRECTIFS : ecart absolu moyen au reference, par canal et en luminance ===
+  (controle positif) JEU tel quel                      |dR|= 5.64 |dG|= 5.51 |dB|= 4.89  |dLum|= 5.48   pixels sous lum 10 : 18.8 %
+  (A) GAIN x1,095  (teinte 0,42 -> 0,46)               |dR|= 4.65 |dG|= 3.89 |dB|= 2.77  |dLum|= 3.94   pixels sous lum 10 : 14.0 %
+  (A') GAIN x1,230 (cale sur la luminance moyenne)     |dR|= 3.57 |dG|= 2.87 |dB|= 3.19  |dLum|= 2.82   pixels sous lum 10 :  8.7 %
+  (B) PLANCHER +5/255                                  |dR|= 2.66 |dG|= 2.19 |dB|= 2.11  |dLum|= 2.23   pixels sous lum 10 :  0.3 %
+  (B') PLANCHER +7/255                                 |dR|= 3.22 |dG|= 2.91 |dB|= 3.13  |dLum|= 2.95   pixels sous lum 10 :  0.0 %
+  (C) GAIN x1,05 + PLANCHER +5/255                     |dR|= 2.59 |dG|= 2.34 |dB|= 2.70  |dLum|= 2.32   pixels sous lum 10 :  0.2 %
+  (D) l'ajustement affine global du m20 (borne basse de l'erreur) |dR|= 3.83 |dG|= 3.06 |dB|= 2.38  |dLum|= 3.10   pixels sous lum 10 :  0.0 %
+  REFERENCE (cible)                                                                           pixels sous lum 10 :  1.1 %

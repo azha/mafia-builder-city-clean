@@ -1,0 +1,18 @@
+
+=== REF cadre-4-la-suite.png (1080, 2102) ===
+  filet or (R-B max) 3 meilleures lignes : [('y=829', 'R-B=92.3'), ('y=827', 'R-B=92.2'), ('y=828', 'R-B=92.1')]
+  filet or y=829 : x 198..1036  largeur=839px  couleur centre=(176, 141, 62)
+  epaisseur du filet a x=617 : 3 px  (y 827..829)
+  ligne interieure y=1000 : lum x=0..1079 (echantillon tous les 60) : 0:66 60:18 120:18 180:18 240:21 300:18 360:18 420:19 480:17 540:19 600:20 660:172 720:172 780:172 840:172 900:172 960:172 1020:18
+
+=== J1920 p1_lancement_1080x1920.png (1080, 1920) ===
+  filet or (R-B max) 3 meilleures lignes : [('y=824', 'R-B=105.9'), ('y=823', 'R-B=105.9'), ('y=822', 'R-B=105.9')]
+  filet or y=824 : x 215..1065  largeur=851px  couleur centre=(176, 141, 61)
+  epaisseur du filet a x=640 : 3 px  (y 822..824)
+  ligne interieure y=1060 : lum x=0..1079 (echantillon tous les 60) : 0:16 60:13 120:14 180:13 240:13 300:13 360:14 420:14 480:15 540:14 600:13 660:15 720:13 780:15 840:14 900:15 960:14 1020:14
+
+=== J2400 p1_lancement_1080x2400.png (1080, 2400) ===
+  filet or (R-B max) 3 meilleures lignes : [('y=1231', 'R-B=106.0'), ('y=1230', 'R-B=105.9'), ('y=1229', 'R-B=105.9')]
+  filet or y=1231 : x 215..864  largeur=650px  couleur centre=(176, 141, 61)
+  epaisseur du filet a x=539 : 3 px  (y 1229..1231)
+  ligne interieure y=1460 : lum x=0..1079 (echantillon tous les 60) : 0:23 60:15 120:16 180:15 240:14 300:14 360:14 420:14 480:14 540:13 600:14 660:13 720:13 780:13 840:13 900:14 960:14 1020:13

@@ -1,0 +1,20 @@
+
+=== REF cadre-4-la-suite.png (1080, 2102) ===
+  BOUTON OR bbox=(600,827)..(979,1506)  l=380 h=680
+     remplissage haut=(13, 19, 31)  centre=(20, 26, 36)  bas=(17, 22, 33)
+  boutons fantomes : lignes de bord detectees (col la plus claire par bande)
+   colonnes a fort compte de bord : [(977, 129), (1031, 784), (1032, 778), (1033, 771), (1034, 121), (1035, 123), (1036, 124), (1037, 138), (1038, 128), (1039, 141), (1040, 130), (1041, 130)]
+
+=== J1920 p1_lancement_1080x1920.png (1080, 1920) ===
+  BOUTON OR bbox=(718,931)..(984,1020)  l=267 h=90
+     remplissage haut=(231, 194, 102)  centre=(199, 161, 74)  bas=(205, 159, 61)
+     rayon approx = 16 px (retrait du bord gauche a 1px du haut)
+  boutons fantomes : lignes de bord detectees (col la plus claire par bande)
+   colonnes a fort compte de bord : [(1029, 577), (1030, 620), (1031, 617), (1032, 616), (1033, 317), (1034, 312), (1035, 318), (1036, 315), (1037, 301), (1042, 307), (1043, 305), (1044, 311)]
+
+=== J2400 p1_lancement_1080x2400.png (1080, 2400) ===
+  BOUTON OR bbox=(718,1338)..(984,1426)  l=267 h=89
+     remplissage haut=(230, 193, 102)  centre=(205, 166, 77)  bas=(205, 159, 61)
+     rayon approx = 16 px (retrait du bord gauche a 1px du haut)
+  boutons fantomes : lignes de bord detectees (col la plus claire par bande)
+   colonnes a fort compte de bord : [(929, 262), (930, 262), (931, 262), (950, 262), (951, 262), (1029, 514), (1030, 620), (1031, 618), (1032, 615), (1033, 262), (1034, 263), (1038, 262)]

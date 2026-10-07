@@ -1,0 +1,31 @@
+=== ENCRE DES TEXTES ===
+ -- REF
+  LA SUITE                                 [(1080, 2102)] encre(5% plus clairs)=(185, 173, 146)  pic=(185, 173, 146)  n=2952
+  titre 1 serif (or)                       [(1080, 2102)] encre(5% plus clairs)=(242, 201, 107)  pic=(242, 201, 107)  n=14529
+  sous-titre 1                             [(1080, 2102)] encre(5% plus clairs)=(185, 173, 146)  pic=(185, 173, 146)  n=7560
+  COMMANDER (texte sur or)                 [(1080, 2102)] encre(5% plus clairs)=(223, 183, 90)  pic=(223, 183, 91)  n=10500
+  VOIR LA VENTE                            [(1080, 2102)] encre(5% plus clairs)=(234, 224, 200)  pic=(234, 224, 200)  n=6237
+  BLANCHIR                                 [(1080, 2102)] encre(5% plus clairs)=(234, 224, 200)  pic=(234, 224, 200)  n=4116
+  plaque: Lt. Ilm attend vos ordres        [(1080, 2102)] encre(5% plus clairs)=(218, 209, 185)  pic=(223, 213, 190)  n=10200
+  TRANCHER                                 [(1080, 2102)] encre(5% plus clairs)=(236, 196, 104)  pic=(237, 197, 104)  n=4324
+  LEGERE                                   [(1080, 2102)] encre(5% plus clairs)=(139, 129, 112)  pic=(139, 129, 113)  n=3450
+ -- J1920
+  LA SUITE                                 [(1080, 1920)] encre(5% plus clairs)=(185, 173, 146)  pic=(185, 173, 146)  n=2448
+  titre 1 serif (or)                       [(1080, 1920)] encre(5% plus clairs)=(242, 201, 106)  pic=(242, 201, 106)  n=13244
+  sous-titre 1                             [(1080, 1920)] encre(5% plus clairs)=(185, 173, 146)  pic=(185, 173, 146)  n=4978
+  COMMANDER (texte sur or)                 [(1080, 1920)] encre(5% plus clairs)=(222, 183, 90)  pic=(223, 183, 90)  n=9200
+  VOIR LA VENTE                            [(1080, 1920)] encre(5% plus clairs)=(234, 224, 200)  pic=(234, 224, 200)  n=4194
+  BLANCHIR                                 [(1080, 1920)] encre(5% plus clairs)=(234, 224, 200)  pic=(234, 224, 200)  n=2682
+  plaque: Lt. Marr attend vos ordres       [(1080, 1920)] encre(5% plus clairs)=(218, 209, 188)  pic=(218, 209, 188)  n=8211
+  TRANCHER                                 [(1080, 1920)] encre(5% plus clairs)=(233, 197, 106)  pic=(233, 197, 106)  n=3401
+  LEGERE                                   [(1080, 1920)] encre(5% plus clairs)=(140, 130, 114)  pic=(140, 130, 114)  n=1274
+ -- J2400
+
+=== APLATS ===
+  REF  fond du panneau (bande sans texte)  [(1080, 2102)] mediane=(11, 16, 28)
+  J1920 fond du panneau (bande sans texte) [(1080, 1920)] mediane=(13, 13, 22)
+  J2400 fond du panneau (bande sans texte) [(1080, 2400)] mediane=(12, 13, 22)
+  REF  separateur 1                        [(1080, 2102)] mediane=(29, 34, 44)
+  J1920 separateur 1                       [(1080, 1920)] mediane=(28, 34, 42)
+  REF  bord haut du panneau                [(1080, 2102)] mediane=(31, 35, 44)
+  J1920 bord haut du panneau               [(1080, 1920)] mediane=(13, 13, 22)

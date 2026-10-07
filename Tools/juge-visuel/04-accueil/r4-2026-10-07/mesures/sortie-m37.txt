@@ -1,0 +1,22 @@
+CSS de la maquette : .acc4 .suite4 .g4{border-radius:8px} => 8 x 3,6 = 28,8 px pour les TROIS boutons
+  REF   COMMANDER (or)               [(1080, 2102)] retrait dy0..12 = [28, 21, 18, 16, 14, 13, 11, 10, 9, 8, 7, 7, 6]  -> RAYON ~ 21 px
+  J1920 COMMANDER (or)               [(1080, 1920)] retrait dy0..12 = [19, 16, 14, 13, 12, 10, 8, 8, 7, 6, 5, 4, 3]  -> RAYON ~ 17 px
+  J2400 COMMANDER (or)               [(1080, 2400)] retrait dy0..12 = [18, 16, 14, 12, 10, 9, 8, 8, 6, 5, 4, 4, 3]  -> RAYON ~ 16 px
+  REF   VOIR LA VENTE (controle +)   [(1080, 2102)] retrait dy0..12 = [24, 20, 17, 16, 14, 12, 11, 10, 8, 8, 7, 6, 5]  -> RAYON ~ 20 px
+  REF   BLANCHIR      (controle +)   [(1080, 2102)] retrait dy0..12 = [24, 20, 18, 16, 14, 12, 11, 10, 9, 8, 7, 6, 5]  -> RAYON ~ 20 px
+  J1920 VOIR LA VENTE                [(1080, 1920)] retrait dy0..12 = [22, 18, 16, 14, 13, 11, 10, 9, 8, 7, 6, 5, 5]  -> RAYON ~ 18 px
+  J1920 BLANCHIR                     [(1080, 1920)] retrait dy0..12 = [23, 20, 17, 15, 13, 12, 10, 9, 8, 7, 6, 6, 5]  -> RAYON ~ 19 px
+  J2400 VOIR LA VENTE                [(1080, 2400)] retrait dy0..12 = [23, 20, 17, 15, 13, 12, 11, 9, 8, 7, 6, 6, 5]  -> RAYON ~ 19 px
+  J2400 BLANCHIR                     [(1080, 2400)] retrait dy0..12 = [21, 18, 16, 14, 13, 11, 10, 9, 8, 7, 6, 5, 5]  -> RAYON ~ 19 px
+
+RAYON DU PANNEAU — mesure au coin BAS-GAUCHE (decor sombre), bord (33,38,47)+-12
+  REF   panneau, coin bas-gauche     [(1080, 2102)] retrait (depuis le bas) dy0..14 = [7, 6, 5, 5, 4, 3, 3, 2, 2, 1, 1, 1, 0, 0, 0] -> RAYON ~ 9 px
+  J1920 panneau, coin bas-gauche     [(1080, 1920)] retrait (depuis le bas) dy0..14 = [13, 11, 10, 8, 7, 6, 5, 4, 3, 3, 2, 2, 1, 1, 0] -> RAYON ~ 12 px
+  J2400 panneau, coin bas-gauche     [(1080, 2400)] retrait (depuis le bas) dy0..14 = [7, 3, 1, -1, -2, -5, -5, -6, -6, -6, -6, -6, -6, -6, -6] -> RAYON ~ 2 px
+
+RAYON DU PANNEAU, 2e methode : abscisse ou commence la DERNIERE ligne du bord bas
+  REF   ligne du bas du panneau      [(1080, 2102)] y=1620 : bord present de x=55  -> rayon ~ 7 px
+  J1920 ligne du bas du panneau      [(1080, 1920)] y=1449 : bord present de x=61  -> rayon ~ 13 px
+  J2400 ligne du bas du panneau      [(1080, 2400)] y=1856 : bord present de x=55  -> rayon ~ 7 px
+  REF   ligne du bas de la plaque    [(1080, 2102)] y=1824 : bord present de x=68  -> rayon ~ 20 px
+  J1920 ligne du bas de la plaque    [(1080, 1920)] y=1634 : bord present de x=63  -> rayon ~ 15 px

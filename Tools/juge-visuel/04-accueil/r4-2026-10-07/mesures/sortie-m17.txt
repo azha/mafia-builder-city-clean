@@ -1,0 +1,14 @@
+REF (1080, 2102) JEU (1080, 1920)
+reduit REF (270, 525)
+  echelle 0.85 : meilleure correlation 0.474 a (x=224, y=224) dans la REF
+  echelle 0.90 : meilleure correlation 0.459 a (x=216, y=224) dans la REF
+  echelle 0.95 : meilleure correlation 0.505 a (x=400, y=664) dans la REF
+  echelle 1.00 : meilleure correlation 0.707 a (x=392, y=664) dans la REF
+  echelle 1.05 : meilleure correlation 0.852 a (x=392, y=656) dans la REF
+  echelle 1.10 : meilleure correlation 0.895 a (x=384, y=656) dans la REF
+  echelle 1.15 : meilleure correlation 0.740 a (x=384, y=648) dans la REF
+  echelle 1.20 : meilleure correlation 0.635 a (x=376, y=648) dans la REF
+  echelle 1.25 : meilleure correlation 0.586 a (x=376, y=640) dans la REF
+  echelle 1.30 : meilleure correlation 0.462 a (x=376, y=640) dans la REF
+
+  MEILLEUR : (0.8954382771904815, 1.1, 384, 656)

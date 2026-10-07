@@ -1,0 +1,26 @@
+REFERENCE
+  LA SUITE : 'L'                       [(1080, 2102)] bandes: [(872, 888, 17), (895, 896, 2)]
+  titre1 serif : fut du 'L'            [(1080, 2102)] bandes: [(948, 976, 29), (984, 987, 4)]
+  sous-titre1 : 'S'                    [(1080, 2102)] bandes: [(1007, 1030, 24), (1037, 1039, 3)]
+  COMMANDER : 'C'                      [(1080, 2102)] bandes: [(965, 1019, 55)]
+  VOIR LA VENTE : 'V'                  [(1080, 2102)] bandes: [(1193, 1213, 21), (1221, 1223, 3)]
+  BLANCHIR : 'B'                       [(1080, 2102)] bandes: [(1453, 1473, 21), (1481, 1483, 3)]
+  plaque 'Lt.' : fut du 'L'            [(1080, 2102)] bandes: [(1714, 1738, 25), (1764, 1769, 6)]
+  TRANCHER : 'T'                       [(1080, 2102)] bandes: [(1736, 1758, 23)]
+  LEGERE : 'L'                         [(1080, 2102)] bandes: [(1782, 1783, 2)]
+
+JEU 1080x1920
+  LA SUITE : 'L'                       [(1080, 1920)] bandes: [(866, 881, 16)]
+  titre1 serif : fut du 'L'            [(1080, 1920)] bandes: [(938, 965, 28)]
+  sous-titre1 : 'S'                    [(1080, 1920)] bandes: [(996, 1014, 19)]
+  COMMANDER : 'C'                      [(1080, 1920)] bandes: [(950, 1009, 60)]
+  VOIR LA VENTE : 'V'                  [(1080, 1920)] bandes: [(1140, 1157, 18)]
+  BLANCHIR : 'B'                       [(1080, 1920)] bandes: [(1335, 1352, 18)]
+  plaque 'Lt.' : fut du 'L'            [(1080, 1920)] bandes: [(1537, 1557, 21)]
+  TRANCHER : 'T'                       [(1080, 1920)] bandes: [(1552, 1570, 19)]
+  LEGERE : 'L'                         [(1080, 1920)] bandes: [(1573, 1586, 14)]
+
+JEU 1080x2400
+  LA SUITE : 'L'                       [(1080, 2400)] bandes: [(1272, 1288, 17)]
+  titre1 serif : fut du 'L'            [(1080, 2400)] bandes: [(1345, 1371, 27)]
+  sous-titre1 : 'S'                    [(1080, 2400)] bandes: [(1402, 1421, 20)]

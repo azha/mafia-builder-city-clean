@@ -1,0 +1,24 @@
+
+  REF [(1080, 2102)] panneau y 832..1615, colonne x 58..90 (hors texte)
+    tranche 1/6 y 832..962 : RGB (13, 19, 31)  lum=18.59
+    tranche 2/6 y 962..1093 : RGB (11, 18, 30)  lum=17.38
+    tranche 3/6 y 1093..1223 : RGB (11, 17, 28)  lum=16.52
+    tranche 4/6 y 1223..1354 : RGB (10, 16, 27)  lum=15.52
+    tranche 5/6 y 1354..1484 : RGB (10, 15, 26)  lum=14.73
+    tranche 6/6 y 1484..1615 : RGB (9, 14, 24)  lum=13.66
+
+  J1920 [(1080, 1920)] panneau y 835..1443, colonne x 58..90 (hors texte)
+    tranche 1/6 y 835..936 : RGB (14, 14, 22)  lum=14.58
+    tranche 2/6 y 936..1037 : RGB (13, 13, 22)  lum=13.65
+    tranche 3/6 y 1037..1139 : RGB (13, 13, 22)  lum=13.65
+    tranche 4/6 y 1139..1240 : RGB (13, 13, 22)  lum=13.65
+    tranche 5/6 y 1240..1341 : RGB (13, 14, 23)  lum=14.44
+    tranche 6/6 y 1341..1443 : RGB (13, 13, 22)  lum=13.65
+
+  J2400 [(1080, 2400)] panneau y 1240..1850, colonne x 58..90 (hors texte)
+    tranche 1/6 y 1240..1341 : RGB (13, 13, 22)  lum=13.65
+    tranche 2/6 y 1341..1443 : RGB (12, 13, 22)  lum=13.44
+    tranche 3/6 y 1443..1545 : RGB (13, 13, 22)  lum=13.65
+    tranche 4/6 y 1545..1646 : RGB (13, 13, 22)  lum=13.65
+    tranche 5/6 y 1646..1748 : RGB (13, 13, 22)  lum=13.65
+    tranche 6/6 y 1748..1850 : RGB (16, 16, 23)  lum=16.51

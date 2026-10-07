@@ -1,0 +1,16 @@
+REFERENCE
+  titre 1 (serif or) / verre               encre=(242, 201, 107)  fond=(13, 19, 31)     contraste=11.81:1
+  sous-titre 1 / verre                     encre=(185, 173, 146)  fond=(12, 18, 29)     contraste=8.44:1
+  LA SUITE / verre                         encre=(185, 173, 146)  fond=(13, 19, 30)     contraste=8.37:1
+  VOIR LA VENTE / fond du bouton           encre=(234, 224, 200)  fond=(19, 25, 36)     contraste=13.42:1
+  COMMANDER / or                           encre=(223, 183, 90)   fond=(227, 189, 97)   contraste=1.06:1
+  plaque: Lt. / plaque                     encre=(218, 209, 186)  fond=(8, 14, 20)      contraste=12.75:1
+  LEGERE / plaque                          encre=(139, 129, 113)  fond=(10, 18, 27)     contraste=4.91:1
+JEU 1080x1920
+  titre 1 (serif or) / verre               encre=(242, 201, 106)  fond=(13, 13, 22)     contraste=12.28:1
+  sous-titre 1 / verre                     encre=(185, 173, 146)  fond=(12, 13, 22)     contraste=8.72:1
+  LA SUITE / verre                         encre=(185, 173, 146)  fond=(14, 14, 23)     contraste=8.64:1
+  VOIR LA VENTE / fond du bouton           encre=(234, 224, 200)  fond=(22, 28, 34)     contraste=13.07:1
+  COMMANDER / or                           encre=(222, 183, 90)   fond=(226, 188, 96)   contraste=1.05:1
+  plaque: Lt. / plaque                     encre=(218, 209, 188)  fond=(12, 13, 22)     contraste=12.75:1
+  LEGERE / plaque                          encre=(140, 130, 114)  fond=(12, 13, 22)     contraste=5.12:1

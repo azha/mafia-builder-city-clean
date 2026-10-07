@@ -1,0 +1,3 @@
+REF (1080, 2102) JEU (1080, 1920)
+  REF crop (1047, 480)   JEU crop (remis a l'echelle) (1047, 480)
+  duo_decor.png (523, 484)

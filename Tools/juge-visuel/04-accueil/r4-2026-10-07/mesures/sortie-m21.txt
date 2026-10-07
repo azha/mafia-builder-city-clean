@@ -1,0 +1,19 @@
+REFERENCE — bandes situees 5..14 px SOUS la ligne de base
+  sous LA SUITE (base 888)                     [(1080, 2102)] ligne la plus alternee y=894 : 88 transitions, 87 px d'encre sur 220
+  sous le titre 1 (base 976)                   [(1080, 2102)] ligne la plus alternee y=984 : 123 transitions, 221 px d'encre sur 500
+  sous le sous-titre 1 (base 1030)             [(1080, 2102)] ligne la plus alternee y=1037 : 103 transitions, 155 px d'encre sur 310
+  sous COMMANDER (base 1009)                   [(1080, 2102)] ligne la plus alternee y=1016 : 0 transitions, 290 px d'encre sur 290
+  sous VOIR LA VENTE (base 1213)               [(1080, 2102)] ligne la plus alternee y=1221 : 98 transitions, 148 px d'encre sur 295
+  sous BLANCHIR (base 1473)                    [(1080, 2102)] ligne la plus alternee y=1481 : 65 transitions, 98 px d'encre sur 195
+  sous TRANCHER (base 1758)                    [(1080, 2102)] ligne la plus alternee y=1762 : 0 transitions, 0 px d'encre sur 185
+JEU 1080x1920 — memes bandes relatives
+  sous LA SUITE (base 881)                     [(1080, 1920)] ligne la plus alternee y=884 : 0 transitions, 0 px d'encre sur 220
+  sous le titre 1 (base 965)                   [(1080, 1920)] ligne la plus alternee y=969 : 4 transitions, 6 px d'encre sur 480
+  sous le sous-titre 1 (base 1014)             [(1080, 1920)] ligne la plus alternee y=1017 : 2 transitions, 2 px d'encre sur 265
+  sous COMMANDER (base 999)                    [(1080, 1920)] ligne la plus alternee y=1013 : 2 transitions, 251 px d'encre sur 255
+  sous VOIR LA VENTE (base 1157)               [(1080, 1920)] ligne la plus alternee y=1160 : 0 transitions, 0 px d'encre sur 232
+  sous BLANCHIR (base 1352)                    [(1080, 1920)] ligne la plus alternee y=1355 : 0 transitions, 0 px d'encre sur 148
+  sous TRANCHER (base 1570)                    [(1080, 1920)] ligne la plus alternee y=1573 : 0 transitions, 0 px d'encre sur 183
+JEU 1080x2400
+  sous LA SUITE                                [(1080, 2400)] ligne la plus alternee y=1291 : 0 transitions, 0 px d'encre sur 220
+  sous le titre 1                              [(1080, 2400)] ligne la plus alternee y=1376 : 4 transitions, 6 px d'encre sur 480

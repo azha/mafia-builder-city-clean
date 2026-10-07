@@ -1,0 +1,29 @@
+REF (1080, 2102) | J1920 (1080, 1920) | J2400 (1080, 2400)
+
+=== REF cadre-4 ===
+   LA SUITE  (L)                      glyphe x 456..468 (l=13)  encre y 872..888  HAUTEUR=17
+   titre 1 serif  (L de Le labo)      glyphe x 99..150 (l=52)  encre y 948..987  HAUTEUR=40
+   sous-titre 1 sans (S de Sans)      glyphe x 99..137 (l=39)  encre y 1007..1039  HAUTEUR=33
+   COMMANDER (C)                      glyphe x 655..979 (l=325)  encre y 975..1009  HAUTEUR=35
+   VOIR LA VENTE (V)                  glyphe x 643..665 (l=23)  encre y 1193..1223  HAUTEUR=31
+   BLANCHIR (B)                       glyphe x 744..764 (l=21)  encre y 1453..1483  HAUTEUR=31
+   plaque: Lt. Ilm... (L)             glyphe x 92..117 (l=26)  encre y 1714..1759  HAUTEUR=46
+   TRANCHER (T)                       glyphe x 772..792 (l=21)  encre y 1736..1758  HAUTEUR=23
+   LEGERE (L)                         glyphe x 92..99 (l=8)  encre y 1782..1783  HAUTEUR=2
+
+=== JEU 1080x1920 ===
+   LA SUITE  (L)                      glyphe x 467..477 (l=11)  encre y 866..881  HAUTEUR=16
+   titre 1 serif  (L de Le labo)      glyphe x 97..117 (l=21)  encre y 938..965  HAUTEUR=28
+   sous-titre 1 sans (S de Sans)      glyphe x 96..108 (l=13)  encre y 996..1014  HAUTEUR=19
+   COMMANDER (C)                      glyphe x 720..984 (l=265)  encre y 960..999  HAUTEUR=40
+   VOIR LA VENTE (V)                  glyphe x 737..754 (l=18)  encre y 1140..1157  HAUTEUR=18
+   BLANCHIR (B)                       glyphe x 801..814 (l=14)  encre y 1335..1352  HAUTEUR=18
+   plaque: Lt. Marr... (L)            glyphe x 80..103 (l=24)  encre y 1537..1557  HAUTEUR=21
+   TRANCHER (T)                       glyphe x 831..847 (l=17)  encre y 1552..1570  HAUTEUR=19
+   LEGERE (L)                         glyphe x 79..87 (l=9)  encre y 1573..1586  HAUTEUR=14
+
+=== JEU 1080x2400 ===
+   LA SUITE  (L)                      glyphe x 467..477 (l=11)  encre y 1272..1288  HAUTEUR=17
+   titre 1 serif  (L de Le labo)      glyphe x 97..117 (l=21)  encre y 1345..1371  HAUTEUR=27
+   sous-titre 1 sans (S de Sans)      glyphe x 96..108 (l=13)  encre y 1402..1421  HAUTEUR=20
+   COMMANDER (C)                      glyphe x 720..984 (l=265)  encre y 1367..1406  HAUTEUR=40

@@ -1,0 +1,57 @@
+
+=== REF (1080, 2102) ===
+  COMMANDER bbox=(651,945)..(979,1036) l=329 h=92
+   remplissage : haut(y=953)=(231, 194, 104)  milieu=(217, 175, 81)  bas=(203, 157, 59)
+   y=945: x 679..951 (retrait gauche 28)
+   y=947: x 669..961 (retrait gauche 18)
+   y=949: x 665..965 (retrait gauche 14)
+   y=951: x 662..968 (retrait gauche 11)
+   y=953: x 660..970 (retrait gauche 9)
+   y=955: x 658..972 (retrait gauche 7)
+   y=957: x 657..973 (retrait gauche 6)
+   y=959: x 655..975 (retrait gauche 4)
+   y=961: x 654..976 (retrait gauche 3)
+   y=963: x 653..977 (retrait gauche 2)
+   y=965: x 653..977 (retrait gauche 2)
+   y=967: x 652..978 (retrait gauche 1)
+   y=969: x 652..978 (retrait gauche 1)
+   bord haut au centre :  [(11, 18, 30), (12, 18, 30), (138, 97, 28), (138, 97, 28), (138, 97, 28), (233, 197, 107), (232, 196, 106)]
+   bord gauche au milieu:  [(12, 18, 29), (13, 18, 30), (12, 19, 29), (138, 97, 28), (138, 97, 28), (138, 97, 28), (217, 175, 81), (218, 176, 82)]
+
+=== J1920 (1080, 1920) ===
+  COMMANDER bbox=(718,931)..(984,1020) l=267 h=90
+   remplissage : haut(y=939)=(231, 194, 103)  milieu=(217, 176, 82)  bas=(204, 158, 60)
+   y=931: x 737..965 (retrait gauche 19)
+   y=933: x 732..970 (retrait gauche 14)
+   y=935: x 730..972 (retrait gauche 12)
+   y=937: x 726..976 (retrait gauche 8)
+   y=939: x 725..977 (retrait gauche 7)
+   y=941: x 723..979 (retrait gauche 5)
+   y=943: x 721..981 (retrait gauche 3)
+   y=945: x 721..982 (retrait gauche 3)
+   y=947: x 720..982 (retrait gauche 2)
+   y=949: x 718..984 (retrait gauche 0)
+   y=951: x 718..984 (retrait gauche 0)
+   y=953: x 718..984 (retrait gauche 0)
+   y=955: x 718..984 (retrait gauche 0)
+   bord haut au centre :  [(14, 14, 22), (13, 13, 22), (138, 96, 28), (138, 96, 28), (158, 119, 50), (213, 177, 92), (232, 195, 105)]
+   bord gauche au milieu:  [(18, 17, 23), (18, 17, 23), (18, 17, 23), (138, 96, 28), (138, 96, 28), (173, 134, 56), (217, 176, 82), (217, 176, 82)]
+
+=== J2400 (1080, 2400) ===
+  COMMANDER bbox=(718,1338)..(984,1426) l=267 h=89
+   remplissage : haut(y=1346)=(231, 194, 103)  milieu=(217, 175, 82)  bas=(204, 158, 60)
+   y=1338: x 736..966 (retrait gauche 18)
+   y=1340: x 732..970 (retrait gauche 14)
+   y=1342: x 728..974 (retrait gauche 10)
+   y=1344: x 726..976 (retrait gauche 8)
+   y=1346: x 724..978 (retrait gauche 6)
+   y=1348: x 722..980 (retrait gauche 4)
+   y=1350: x 721..981 (retrait gauche 3)
+   y=1352: x 720..982 (retrait gauche 2)
+   y=1354: x 719..983 (retrait gauche 1)
+   y=1356: x 718..984 (retrait gauche 0)
+   y=1358: x 718..984 (retrait gauche 0)
+   y=1360: x 718..984 (retrait gauche 0)
+   y=1362: x 718..984 (retrait gauche 0)
+   bord haut au centre :  [(13, 13, 22), (13, 13, 22), (138, 96, 28), (138, 96, 28), (180, 143, 68), (232, 196, 105), (232, 195, 105)]
+   bord gauche au milieu:  [(12, 13, 22), (12, 13, 22), (12, 13, 22), (138, 96, 28), (138, 96, 28), (173, 133, 56), (217, 175, 82), (217, 175, 82)]

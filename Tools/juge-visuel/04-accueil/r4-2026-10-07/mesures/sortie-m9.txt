@@ -1,0 +1,90 @@
+
+=== REF (1080, 2102) ===
+  zone 1080..1250 : bbox=(608,1159)..(1039,1249) l=432 h=91
+     bord gauche RGB x=607..611 a y=1204 : [(58, 63, 72), (19, 25, 35), (20, 25, 35), (19, 25, 35), (20, 26, 36)]
+     interieur (hors texte) = (20, 26, 37)   fond du panneau a gauche = (20, 26, 37)
+       dy=0 : x 627..1039 retrait=19
+       dy=2 : x 622..1039 retrait=14
+       dy=4 : x 618..1039 retrait=10
+       dy=6 : x 615..1039 retrait=7
+       dy=8 : x 613..1039 retrait=5
+       dy=10 : x 611..1039 retrait=3
+       dy=12 : x 610..1039 retrait=2
+       dy=14 : x 609..1039 retrait=1
+       dy=16 : x 607..1039 retrait=-1
+       dy=18 : x 607..1039 retrait=-1
+       dy=20 : x 606..1033 retrait=-2
+  zone 1340..1500 : bbox=(706,1418)..(1033,1499) l=328 h=82
+     bord gauche RGB x=705..709 a y=1458 : [(58, 62, 70), (57, 62, 70), (58, 62, 70), (18, 24, 34), (19, 23, 34)]
+     interieur (hors texte) = (18, 23, 34)   fond du panneau a gauche = (10, 15, 25)
+       dy=0 : x 727..1033 retrait=21
+       dy=2 : x 722..1033 retrait=16
+       dy=4 : x 718..1033 retrait=12
+       dy=6 : x 715..1033 retrait=9
+       dy=8 : x 713..1033 retrait=7
+       dy=10 : x 711..1033 retrait=5
+       dy=12 : x 710..1033 retrait=4
+       dy=14 : x 709..1033 retrait=3
+       dy=16 : x 707..1033 retrait=1
+       dy=18 : x 707..1033 retrait=1
+       dy=20 : x 706..1033 retrait=0
+
+=== J1920 (1080, 1920) ===
+  zone 1060..1240 : bbox=(720,1092)..(1039,1206) l=320 h=115
+     bord gauche RGB x=719..723 a y=1149 : [(59, 64, 73), (51, 56, 65), (26, 31, 37), (22, 28, 34), (22, 28, 34)]
+     interieur (hors texte) = (22, 28, 34)   fond du panneau a gauche = (13, 13, 22)
+       dy=0 : x 733..1037 retrait=13
+       dy=2 : x 730..1035 retrait=10
+       dy=4 : x 727..1032 retrait=7
+       dy=6 : x 725..1032 retrait=5
+       dy=8 : x 723..1032 retrait=3
+       dy=10 : x 722..1032 retrait=2
+       dy=12 : x 721..1032 retrait=1
+       dy=14 : x 720..1039 retrait=0
+       dy=16 : x 719..1039 retrait=-1
+       dy=18 : x 718..1039 retrait=-2
+       dy=20 : x 718..1039 retrait=-2
+  zone 1250..1440 : bbox=(766,1280)..(1039,1408) l=274 h=129
+     bord gauche RGB x=765..769 a y=1344 : [(59, 64, 73), (54, 59, 68), (34, 39, 46), (22, 28, 34), (22, 28, 34)]
+     interieur (hors texte) = (22, 28, 34)   fond du panneau a gauche = (14, 13, 21)
+       dy=0 : x 779..1039 retrait=13
+       dy=2 : x 776..1039 retrait=10
+       dy=4 : x 774..1039 retrait=8
+       dy=6 : x 771..1039 retrait=5
+       dy=8 : x 770..1039 retrait=4
+       dy=10 : x 768..1039 retrait=2
+       dy=12 : x 767..1039 retrait=1
+       dy=14 : x 766..1039 retrait=0
+       dy=16 : x 765..1039 retrait=-1
+       dy=18 : x 765..1039 retrait=-1
+       dy=20 : x 764..1039 retrait=-2
+
+=== J2400 (1080, 2400) ===
+  zone 1465..1645 : bbox=(720,1499)..(1039,1612) l=320 h=114
+     bord gauche RGB x=719..723 a y=1555 : [(59, 64, 73), (51, 56, 65), (26, 31, 37), (22, 28, 34), (22, 28, 34)]
+     interieur (hors texte) = (22, 28, 34)   fond du panneau a gauche = (13, 13, 22)
+       dy=0 : x 732..1032 retrait=12
+       dy=2 : x 729..1032 retrait=9
+       dy=4 : x 727..1039 retrait=7
+       dy=6 : x 725..1039 retrait=5
+       dy=8 : x 723..1039 retrait=3
+       dy=10 : x 722..1039 retrait=2
+       dy=12 : x 720..1039 retrait=0
+       dy=14 : x 719..1039 retrait=-1
+       dy=16 : x 719..1039 retrait=-1
+       dy=18 : x 718..1039 retrait=-2
+       dy=20 : x 718..1037 retrait=-2
+  zone 1655..1845 : bbox=(766,1687)..(1039,1814) l=274 h=128
+     bord gauche RGB x=765..769 a y=1750 : [(59, 64, 73), (54, 59, 68), (34, 39, 46), (22, 28, 34), (22, 28, 34)]
+     interieur (hors texte) = (22, 28, 34)   fond du panneau a gauche = (13, 13, 21)
+       dy=0 : x 779..1039 retrait=13
+       dy=2 : x 775..1039 retrait=9
+       dy=4 : x 773..1039 retrait=7
+       dy=6 : x 771..1039 retrait=5
+       dy=8 : x 769..1039 retrait=3
+       dy=10 : x 768..1039 retrait=2
+       dy=12 : x 767..1039 retrait=1
+       dy=14 : x 766..1039 retrait=0
+       dy=16 : x 765..1038 retrait=-1
+       dy=18 : x 765..1038 retrait=-1
+       dy=20 : x 764..1037 retrait=-2

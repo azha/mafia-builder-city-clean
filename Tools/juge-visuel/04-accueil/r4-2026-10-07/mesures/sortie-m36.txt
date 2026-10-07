@@ -1,0 +1,17 @@
+LU texture (720, 1280) | REF (1080, 2102) | JEU (1080, 1920)
+
+=== appariement a la texture source ===
+  REFERENCE : r=+0.739  s=1.604 dx=-40 dy=17   [controle negatif, texture retournee : r=-0.209]
+  CAPTURE   : r=+0.744  s=1.500 dx=0 dy=0   [controle negatif, texture retournee : r=-0.105]
+
+  REFERENCE (brightness declare : 0,420) — ajustement  image = gain x texture + plancher, par bande :
+    bande y  170.. 331 :  R gain=0.205 plancher=+5.6  G gain=0.206 plancher=+7.7  B gain=0.211 plancher=+11.2
+    bande y  331.. 493 :  R gain=0.360 plancher=+2.1  G gain=0.360 plancher=+2.8  B gain=0.351 plancher=+4.8
+    bande y  493.. 654 :  R gain=0.233 plancher=+11.0  G gain=0.234 plancher=+12.9  B gain=0.263 plancher=+13.1
+    bande y  654.. 816 :  R gain=0.270 plancher=+8.2  G gain=0.277 plancher=+8.6  B gain=0.294 plancher=+8.8
+
+  CAPTURE   — ajustement  image = gain x texture + plancher, par bande :
+    bande y  170.. 313 :  R gain=0.137 plancher=+6.0  G gain=0.158 plancher=+8.1  B gain=0.169 plancher=+12.4
+    bande y  313.. 457 :  R gain=0.308 plancher=-1.4  G gain=0.338 plancher=-1.8  B gain=0.336 plancher=+0.6
+    bande y  457.. 601 :  R gain=0.386 plancher=-5.2  G gain=0.378 plancher=-4.0  B gain=0.358 plancher=-0.8
+    bande y  601.. 745 :  R gain=0.428 plancher=-7.0  G gain=0.419 plancher=-6.4  B gain=0.405 plancher=-4.7

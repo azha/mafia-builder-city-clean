@@ -1,0 +1,42 @@
+
+--- REF  VOIR LA VENTE  [cadre-4-la-suite.png (1080, 2102)]
+   bbox bord=(649,1161)..(821,1222)  largeur=173 hauteur=62
+   bord G=(234, 224, 200) D=(234, 224, 200) H=(59, 63, 73) B=(185, 173, 146)
+   interieur (coin haut-gauche, hors texte)=(20, 26, 36)
+   fond du panneau a x=500 meme y          =(11, 17, 29)
+   retrait du bord gauche dy=1..20 : [-6, -5, -6, 1, 4, 7, 8, 17, 20, 27, 30, 35, 40, 43, -6, -5, -6, -5, -6, -5]
+
+--- REF  BLANCHIR  [cadre-4-la-suite.png (1080, 2102)]
+   bbox bord=(748,1418)..(876,1482)  largeur=129 hauteur=65
+   bord G=(234, 224, 200) D=(234, 224, 200) H=(58, 62, 70) B=(185, 173, 146)
+   interieur (coin haut-gauche, hors texte)=(18, 23, 34)
+   fond du panneau a x=500 meme y          =(9, 14, 25)
+   retrait du bord gauche dy=1..20 : [18, 17, 18, -6, -6, -5, -6, 1, -4, 9, -6, 15, -4, 15, -6, 15, -4, 25, -6, 25]
+
+--- J1920 VOIR LA VENTE  [p1_lancement_1080x1920.png (1080, 1920)]
+   bbox bord=(741,1141)..(851,1152)  largeur=111 hauteur=12
+   bord G=(234, 224, 200) D=(234, 224, 200) H=(234, 224, 200) B=(234, 224, 200)
+   interieur (coin haut-gauche, hors texte)=(22, 28, 34)
+   fond du panneau a x=660 meme y          =(12, 12, 22)
+   retrait du bord gauche dy=1..20 : [-3, -3, -2, -2, -2, -1, -1, 0, 0, 0, 1, 1, 1, 2, 2, 26, -6, -6, -6, -6]
+
+--- J1920 BLANCHIR  [p1_lancement_1080x1920.png (1080, 1920)]
+   bbox bord=(801,1278)..(881,1409)  largeur=81 hauteur=132
+   bord G=(234, 224, 200) D=(234, 224, 200) H=(59, 64, 73) B=(59, 64, 73)
+   interieur (coin haut-gauche, hors texte)=(22, 28, 34)
+   fond du panneau a x=700 meme y          =(13, 13, 21)
+   retrait du bord gauche dy=1..20 : [-6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6]
+
+--- J2400 VOIR LA VENTE  [p1_lancement_1080x2400.png (1080, 2400)]
+   bbox bord=(741,1547)..(851,1558)  largeur=111 hauteur=12
+   bord G=(234, 224, 200) D=(234, 224, 200) H=(234, 224, 200) B=(234, 224, 200)
+   interieur (coin haut-gauche, hors texte)=(22, 28, 34)
+   fond du panneau a x=660 meme y          =(12, 13, 21)
+   retrait du bord gauche dy=1..20 : [-3, -3, -2, -2, -2, -1, -1, -1, 0, 0, 0, 1, 1, 2, 2, 2, 26, -6, -6, -6]
+
+--- J2400 BLANCHIR  [p1_lancement_1080x2400.png (1080, 2400)]
+   bbox bord=(801,1685)..(881,1815)  largeur=81 hauteur=131
+   bord G=(234, 224, 200) D=(234, 224, 200) H=(59, 64, 73) B=(59, 64, 73)
+   interieur (coin haut-gauche, hors texte)=(22, 28, 34)
+   fond du panneau a x=700 meme y          =(15, 15, 22)
+   retrait du bord gauche dy=1..20 : [-6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6, -6]

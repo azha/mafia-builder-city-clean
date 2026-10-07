@@ -1,0 +1,21 @@
+REF (1080, 2102)   JEU (1080, 1920)
+  grossier : r=0.9542 s=1.095 dx=-50 dy=0
+  AFFINE  : r=0.9727  s=1.0910  dx=-48  dy=3   (REF = s*JEU + offset)
+  CONTROLE NEGATIF (reference retournee) : r=-0.0595
+  => le jeu rend le diorama a 91.7 % du zoom de la reference
+
+  zone (coord. JEU)                 REF lum  JEU lum  rapport  REF p90  JEU p90
+  decor haut  (y 300..450 du jeu)     21.87    16.67    0.762     34.1     27.9   n=24000
+  decor milieu (y 450..620)           30.02    24.19    0.806     36.1     29.9   n=27200
+  decor bas   (y 620..800)            28.33    24.97    0.882     40.2     39.5   n=28800
+
+  percentiles de luminance sur le MEME contenu (zone de decor entiere) :
+   perc        REF      JEU  JEU/REF
+   p5        12.15     7.73    0.636
+   p10       12.51     8.01    0.640
+   p25       17.59    12.08    0.687
+   p50       26.23    22.88    0.872
+   p75       34.16    28.88    0.845
+   p90       36.09    32.23    0.893
+   p95       42.36    40.43    0.954
+   p99       80.80    67.90    0.840

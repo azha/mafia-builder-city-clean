@@ -1,0 +1,5 @@
+REF (1080, 2102) JEU (1080, 1920)
+  canal R : REF = 0.749 * JEU + +8.52   (residu 8.04/255, n=92160)
+     controle positif (JEU sur lui-meme) : a=1.000 b=+0.000
+  canal G : REF = 0.812 * JEU + +8.51   (residu 6.59/255, n=92160)
+  canal B : REF = 0.949 * JEU + +5.73   (residu 4.22/255, n=92160)

@@ -1,0 +1,15 @@
+=== MEDAILLON (chrome commun, ASSUME) ===
+  REF     [(1080, 2102)] anneau or bbox=(380,22)..(699,226) D=320x205 centre=(539,124)
+  J1920   [(1080, 1920)] anneau or bbox=(380,17)..(699,231) D=320x215 centre=(539,124)
+  J2400   [(1080, 2400)] anneau or bbox=(380,17)..(699,231) D=320x215 centre=(539,124)
+=== CADRAGE : rien ne doit toucher les bords ===
+  REF     [(1080, 2102)] luminance MAX et % d'encre (lum>70) sur chaque bord : haut: max=66 encre=0.0%  bas: max=15 encre=0.0%  gauche: max=66 encre=0.0%  droite: max=66 encre=0.0%
+  J1920   [(1080, 1920)] luminance MAX et % d'encre (lum>70) sur chaque bord : haut: max=14 encre=0.0%  bas: max=19 encre=0.0%  gauche: max=99 encre=1.4%  droite: max=53 encre=0.0%
+  J2400   [(1080, 2400)] luminance MAX et % d'encre (lum>70) sur chaque bord : haut: max=14 encre=0.0%  bas: max=19 encre=0.0%  gauche: max=63 encre=0.0%  droite: max=89 encre=1.9%
+=== ARGENT / JOUR : position de l'encre du bandeau ===
+  REF     bloc ARGENT : x 47..205  y 40..103
+  REF     bloc JOUR   : x 842..1031  y 40..112
+  J1920   bloc ARGENT : x 44..191  y 27..97
+  J1920   bloc JOUR   : x 935..1033  y 28..98
+  J2400   bloc ARGENT : x 44..191  y 27..97
+  J2400   bloc JOUR   : x 935..1033  y 28..98

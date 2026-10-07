@@ -1,0 +1,3 @@
+REF (1080, 2102) JEU (1080, 1920)
+   duo_filet.png (1080, 150) (haut=REFERENCE, bas=JEU, 1:1, separes par une ligne rouge)
+   duo_boutons.png (1080, 330) (haut=REFERENCE, bas=JEU, 1:1, separes par une ligne rouge)

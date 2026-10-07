@@ -1,0 +1,19 @@
+chaines IDENTIQUES des deux cotes :
+  REF   VOIR LA VENTE                        [(1080, 2102)] x 644..979  chasse=336  capitale=21  chasse/capitale=16.00
+  J1920 VOIR LA VENTE                        [(1080, 1920)] x 718..984  chasse=267  capitale=18  chasse/capitale=14.83
+     -> interlettrage relatif jeu/ref = 0.927
+  REF   BLANCHIR                             [(1080, 2102)] x 746..979  chasse=234  capitale=21  chasse/capitale=11.14
+  J1920 BLANCHIR                             [(1080, 1920)] x 801..984  chasse=184  capitale=18  chasse/capitale=10.22
+     -> interlettrage relatif jeu/ref = 0.917
+  REF   LA SUITE                             [(1080, 2102)] x 456..617  chasse=162  capitale=17  chasse/capitale=9.53
+  J1920 LA SUITE                             [(1080, 1920)] x 467..613  chasse=147  capitale=16  chasse/capitale=9.19
+     -> interlettrage relatif jeu/ref = 0.964
+  REF   Le labo attend du Pyralin            [(1080, 2102)] x 101..606  chasse=506  capitale=29  chasse/capitale=17.45
+  J1920 Le labo attend du Pyralin            [(1080, 1920)] x 97..569  chasse=473  capitale=28  chasse/capitale=16.89
+     -> chasse relative jeu/ref = 0.968
+  REF   Sans lui, rien ne cuit.              [(1080, 2102)] x 101..414  chasse=314  capitale=24  chasse/capitale=13.08
+  J1920 Sans lui, rien ne cuit.              [(1080, 1920)] x 96..358  chasse=263  capitale=19  chasse/capitale=13.84
+     -> chasse relative jeu/ref = 1.058
+  REF   TRANCHER                             [(1080, 2102)] x 772..989  chasse=218  capitale=23  chasse/capitale=9.48
+  J1920 TRANCHER                             [(1080, 1920)] x 831..1001  chasse=171  capitale=19  chasse/capitale=9.00
+     -> interlettrage relatif jeu/ref = 0.950
