@@ -2,7 +2,7 @@
 
 Méthode : chaque maquette est chargée dans Chromium (Playwright) ; `document.getAnimations()` énumère les animations RÉELLES, rattachées à leur cadre (`.cadre`). Rien n'est lu à l'œil. Unité = une paire (écran, `@keyframes`) appliquée à ≥ 1 élément ; « instances » = éléments animés, tous cadres de l'écran réunis.
 
-## A. ecrans-brennar-6.html (atelier `d84c6eb`, 146 cadres) — 554 animations réelles mesurées
+## A. ecrans-brennar-6.html (atelier, 147 cadres) — 529 animations réelles mesurées
 
 | écran | @keyframes | instances | cadres animés / cadres de l'écran | gelées (paused) | cause dans la fiction | état Unity |
 |---|---|---:|---:|---:|---|---|
@@ -30,20 +30,15 @@ Méthode : chaque maquette est chargée dans Chromium (Playwright) ; `document.g
 | ② Fiche — Ash (l'écrin) | `am` | 3 | 3 / 3 | 0 | l'ampoule d'établi vacille | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
 | ② Fiche — Ash (l'écrin) | `ci` | 3 | 3 / 3 | 0 | la cire (bougie) respire | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
 | ② Fiche — Ash (l'écrin) | `cl` | 1 | 1 / 3 | 0 | le voyant clignote | absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement |
-| ㉑ Marché | `mk-veille` | 12 | 4 / 6 | 0 | la veille des voyants allumés | absente — écran NON MONTÉ (INDEX : « Market (non monté) ») |
-| ㉑ Marché | `mk-buee` | 6 | 2 / 6 | 0 | la buée du froid (marchandise réfrigérée) | absente — écran NON MONTÉ (INDEX : « Market (non monté) ») |
-| ㉑ Marché | `mk-scan` | 5 | 5 / 6 | 0 | le balayage du tablo (ligne cyan 2 px, 7,5 s) | absente — écran NON MONTÉ (INDEX : « Market (non monté) ») |
-| ㉑ Marché | `mk-lampe` | 3 | 3 / 6 | 0 | la lampe du tableau du Verge d'Or | absente — écran NON MONTÉ (INDEX : « Market (non monté) ») |
-| ㉟ La vente | `vnt6-scan` | 5 | 5 / 6 | 0 | le balayage du tablo (ligne cyan 2 px, 7,5 s) — cause diégétique À CONFIRMER (écran de contrôle ?) | absente — l'écran est monté mais statique : 0 balayage (grep Update/coroutine : aucun) |
-| ㊱ L'horizon | `hrz6-scan` | 5 | 5 / 6 | 0 | le balayage du tablo (ligne cyan 2 px, 7,5 s) — cause diégétique À CONFIRMER (écran de contrôle ?) | absente — l'écran est monté mais statique : 0 balayage (grep Update/coroutine : aucun) |
-| ㊲ La réputation | `rep6-scan` | 7 | 7 / 7 | 0 | le balayage du tablo (ligne cyan 2 px, 7,5 s) — cause diégétique À CONFIRMER (écran de contrôle ?) | absente — l'écran est monté mais statique : 0 balayage (grep Update/coroutine : aucun) |
-| ㊳ Le journal | `jrn6-scan` | 6 | 6 / 7 | 0 | le balayage du tablo (ligne cyan 2 px, 7,5 s) — cause diégétique À CONFIRMER (écran de contrôle ?) | absente — l'écran est monté mais statique : 0 balayage (grep Update/coroutine : aucun) |
-| ㊴ Le dossier | `dos6-scan` | 6 | 6 / 7 | 0 | le balayage du tablo (ligne cyan 2 px, 7,5 s) — cause diégétique À CONFIRMER (écran de contrôle ?) | absente — l'écran est monté mais statique : 0 balayage (grep Update/coroutine : aucun) |
-| ㊵ La filière | `bln6-scan` | 5 | 5 / 6 | 0 | le balayage du tablo (ligne cyan 2 px, 7,5 s) — cause diégétique À CONFIRMER (écran de contrôle ?) | absente — l'écran est monté mais statique : 0 balayage (grep Update/coroutine : aucun) |
+| ㉑ Marché | `mk-veille` | 15 | 5 / 7 | 0 | la veille des voyants allumés | absente — écran NON MONTÉ (aucun contrôleur `Market`) |
+| ㉑ Marché | `mk-scan` | 6 | 6 / 7 | 0 | le balayage du tablo (ligne cyan 2 px, 7,5 s) | absente — écran NON MONTÉ (aucun contrôleur `Market`) |
+| ㉑ Marché | `mk-buee` | 6 | 2 / 7 | 0 | la buée du froid (marchandise réfrigérée) | absente — écran NON MONTÉ (aucun contrôleur `Market`) |
+| ㉑ Marché | `mk-lampe` | 4 | 4 / 7 | 0 | la lampe du tableau du Verge d'Or | absente — écran NON MONTÉ (aucun contrôleur `Market`) |
+| ㉑ Marché | `mk-eclat` | 4 | 1 / 7 | 0 | l'éclat des prismes | absente — écran NON MONTÉ (aucun contrôleur `Market`) |
 
-**Total A : 34 paires (écran, @keyframes) · 554 instances · 554 animations mesurées dans le fichier · résidu non rattaché à un écran : 0.**
-Somme de contrôle A (paires, instances) par écran : ③ Carte = 1, 3 ; ② Fiche — la serre = 8, 276 ; ② Fiche — le labo = 9, 94 ; ② Fiche — Ash (l'écrin) = 6, 121 ; ㉑ Marché = 4, 26 ; ㉟ La vente = 1, 5 ; ㊱ L'horizon = 1, 5 ; ㊲ La réputation = 1, 7 ; ㊳ Le journal = 1, 6 ; ㊴ Le dossier = 1, 6 ; ㊵ La filière = 1, 5 ⇒ Σ paires = 34, Σ instances = 554.
-Cadres portant ≥ 1 animation : 54 sur 146. Les 92 autres sont STATIQUES.
+**Total A : 29 paires (écran, @keyframes) · 529 instances · 529 animations mesurées dans le fichier · résidu non rattaché à un écran : 0.**
+Somme de contrôle A (paires, instances) par écran : ③ Carte = 1, 3 ; ② Fiche — la serre = 8, 276 ; ② Fiche — le labo = 9, 94 ; ② Fiche — Ash (l'écrin) = 6, 121 ; ㉑ Marché = 5, 35 ⇒ Σ paires = 29, Σ instances = 529.
+Cadres portant ≥ 1 animation : 21 sur 147. Les 126 autres sont STATIQUES.
 Animations en PAUSE dans ce fichier : 0 (avant le dégel du 07/10, atelier b7d8c1a : 491 sur 554, bloc `.serre6/.ecrin6/.labo6{animation-play-state:paused !important}` du ruling 27/08 13h42 ; levé par d84c6eb, ruling du soir « animé le truc »).
 
 ## B. hud-brennar-canon.html (atelier `d84c6eb`) — ① Intérieur de district, lu dans le CSS (états `.tel.descente` / `.tel.jour` : le fichier ne les exerce qu'au clic)
@@ -66,7 +61,8 @@ Animations en PAUSE dans ce fichier : 0 (avant le dégel du 07/10, atelier b7d8c
 ## C. Maquettes à animation DÉFINIE mais NON APPLIQUÉE (0 instance mesurée)
 
 - ④ `ecrans-brennar-accueil.html` : 6 `@keyframes` définis (goutte, derive, respire, osc, pulseRose, clign), **0 animation en cours** sur les 5 cadres → ④ est statique en maquette.
-- `ecrans-brennar-6.html` : 13 `@keyframes` étaient morts avant d84c6eb : 12 RETIRÉS (6 `*6-lampe` sans règle, 6 `*6-veille` sans élément `.veille6`, pages + chassis6.py + 6 générateurs) ; **`mk-eclat` RESTE** (hôte = grappe de prismes de la tuile Ash du marché, `generateur-marche.py:294`, qu'aucun cadre ne montre) : sur le marché, 4 des 5 animations annoncées tournent.
+- `ecrans-brennar-6.html` : 13 `@keyframes` étaient morts avant d84c6eb ; 12 RETIRÉS (6 `*6-lampe`, 6 `*6-veille`) ; `mk-eclat` a maintenant son hôte : le cadre 146 (tuile Ash du marché, demande A1) porte 4 éclats — les 5 animations du marché tournent.
+- **Six `*6-scan` RETIRÉS le 07/10** (㉟ ㊱ ㊲ ㊳ ㊴ ㊵, 34 instances) : `.elast` est le panneau de TEXTE du châssis (liste, papier), pas un écran ni un terminal ; aucune cause dans la fiction (ruling f2 07/10 : ㊳ ㊴ sont des papiers, ㉟ ㊱ ㊲ ㊵ ne dessinent pas de terminal). Retirés des pages ET de `chassis6.py` ; les 6 générateurs déclarent `STATIQUE = True`. `mk-scan` du marché reste : son hôte est le `.tablo`, le tableau de voyants.
 - `ecrans-brennar-conflit-proposes-2026-09-24.html` : 33 noms définis, 0 animation en cours (㉙ statique).
 - Série 4 (`ecrans-brennar-4.html`), `-3`, `-5`, `-navigation`, `-7-lieutenant`, `-25-tutoriel`, `-34-composeur`, `-porte` : 0 animation en cours.
 
@@ -84,5 +80,5 @@ Mécanismes visuels : **4** (3 méthodes `Update` + 1 coroutine) pour **5 effets
 Retour d'appui : 15 sites `Selectable.Transition.None` sur 67 créations de `Button` ; aucune animation d'appui écrite.
 
 ## F. Bilan
-- **Maquette → Unity, paires comptées (A + B) : 44.** Présentes 2 · partielles 1 · absentes 41.
-- A : 34 paires, toutes absentes. B : 10 lignes, 2 présentes, 1 partielle, 7 absentes. Contrôle : 34 + 10 = 44.
+- **Maquette → Unity, paires comptées (A + B) : 39.** Présentes 2 · partielles 1 · absentes 36.
+- A : 29 paires, toutes absentes. B : 10 lignes, 2 présentes, 1 partielle, 7 absentes. Contrôle : 29 + 10 = 39.

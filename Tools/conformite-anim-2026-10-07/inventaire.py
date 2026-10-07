@@ -17,13 +17,7 @@ GROUPES = [
     ("② Fiche — la serre",           list(range(36, 39))),
     ("② Fiche — le labo",            list(range(39, 45))),
     ("② Fiche — Ash (l'écrin)",      list(range(92, 95))),
-    ("㉑ Marché",                     list(range(101, 107))),
-    ("㉟ La vente",                   list(range(107, 113))),
-    ("㊱ L'horizon",                  list(range(113, 119))),
-    ("㊲ La réputation",              list(range(119, 125)) + [144]),
-    ("㊳ Le journal",                 list(range(125, 131)) + [145]),
-    ("㊴ Le dossier",                 list(range(131, 137)) + [143]),
-    ("㊵ La filière",                 list(range(137, 143))),
+    ("㉑ Marché",                     list(range(101, 107)) + [146]),
 ]
 GEL = {"② Fiche — la serre", "② Fiche — le labo", "② Fiche — Ash (l'écrin)"}   # .serre6/.labo6/.ecrin6 : play-state paused !important
 
@@ -64,19 +58,17 @@ CAUSE = {
  "mk-veille": "la veille des voyants allumés",
  "mk-scan": "le balayage du tablo (ligne cyan 2 px, 7,5 s)",
 }
-for p in ("vnt6", "hrz6", "rep6", "jrn6", "dos6", "bln6"):
-    CAUSE[p + "-scan"] = "le balayage du tablo (ligne cyan 2 px, 7,5 s) — cause diégétique À CONFIRMER (écran de contrôle ?)"
 
 UNITY_SCENE_ABSENTE = {
  "② Fiche — la serre": "absente — AUCUNE scène de serre dans BuildingCardController (0 plante, 0 rampe, 0 goutte)",
  "② Fiche — le labo": "absente — le pupitre est une silhouette de fourneau FIGÉE (BuildingCardController.AddPupitreLaboratoire:2242) : 0 ébullition, 0 vapeur",
  "② Fiche — Ash (l'écrin)": "absente — VitrineAsh = socle + cloche + éclats FIGÉS (BuildingCardController.AddVitrineAsh:2318) : 0 mouvement",
  "③ Carte": "absente — l'hôte (le pin « VOUS ÊTES ICI ») n'existe pas côté client (DistrictCellView.cs:95)",
- "㉑ Marché": "absente — écran NON MONTÉ (INDEX : « Market (non monté) »)",
+ "㉑ Marché": "absente — écran NON MONTÉ (aucun contrôleur `Market`)",
 }
 def etat_unity(g, name):
     if g in UNITY_SCENE_ABSENTE: return UNITY_SCENE_ABSENTE[g]
-    return "absente — l'écran est monté mais statique : 0 balayage (grep Update/coroutine : aucun)"
+    return "absente"
 
 out = []
 P = out.append
@@ -97,7 +89,7 @@ residu = [r for r in rows if id(r) not in mapped]
 
 P("# Inventaire des animations — maquettes ↔ Unity (CLIENT-3, 07/10/2026)\n")
 P("Méthode : chaque maquette est chargée dans Chromium (Playwright) ; `document.getAnimations()` énumère les animations RÉELLES, rattachées à leur cadre (`.cadre`). Rien n'est lu à l'œil. Unité = une paire (écran, `@keyframes`) appliquée à ≥ 1 élément ; « instances » = éléments animés, tous cadres de l'écran réunis.\n")
-P("## A. ecrans-brennar-6.html (atelier `d84c6eb`, 146 cadres) — %d animations réelles mesurées\n" % len(rows))
+P("## A. ecrans-brennar-6.html (atelier, 147 cadres) — %d animations réelles mesurées\n" % len(rows))
 P("| écran | @keyframes | instances | cadres animés / cadres de l'écran | gelées (paused) | cause dans la fiction | état Unity |")
 P("|---|---|---:|---:|---:|---|---|")
 for g, name, n, nc, ncad, np_, cause, un in tab:
@@ -136,7 +128,8 @@ P("**Total B : %d lignes (4 @keyframes + 6 transitions) = %d présentes + %d par
 P("")
 P("## C. Maquettes à animation DÉFINIE mais NON APPLIQUÉE (0 instance mesurée)\n")
 P("- ④ `ecrans-brennar-accueil.html` : 6 `@keyframes` définis (goutte, derive, respire, osc, pulseRose, clign), **0 animation en cours** sur les 5 cadres → ④ est statique en maquette.")
-P("- `ecrans-brennar-6.html` : 13 `@keyframes` étaient morts avant d84c6eb : 12 RETIRÉS (6 `*6-lampe` sans règle, 6 `*6-veille` sans élément `.veille6`, pages + chassis6.py + 6 générateurs) ; **`mk-eclat` RESTE** (hôte = grappe de prismes de la tuile Ash du marché, `generateur-marche.py:294`, qu'aucun cadre ne montre) : sur le marché, 4 des 5 animations annoncées tournent.")
+P("- `ecrans-brennar-6.html` : 13 `@keyframes` étaient morts avant d84c6eb ; 12 RETIRÉS (6 `*6-lampe`, 6 `*6-veille`) ; `mk-eclat` a maintenant son hôte : le cadre 146 (tuile Ash du marché, demande A1) porte 4 éclats — les 5 animations du marché tournent.")
+P("- **Six `*6-scan` RETIRÉS le 07/10** (㉟ ㊱ ㊲ ㊳ ㊴ ㊵, 34 instances) : `.elast` est le panneau de TEXTE du châssis (liste, papier), pas un écran ni un terminal ; aucune cause dans la fiction (ruling f2 07/10 : ㊳ ㊴ sont des papiers, ㉟ ㊱ ㊲ ㊵ ne dessinent pas de terminal). Retirés des pages ET de `chassis6.py` ; les 6 générateurs déclarent `STATIQUE = True`. `mk-scan` du marché reste : son hôte est le `.tablo`, le tableau de voyants.")
 P("- `ecrans-brennar-conflit-proposes-2026-09-24.html` : 33 noms définis, 0 animation en cours (㉙ statique).")
 P("- Série 4 (`ecrans-brennar-4.html`), `-3`, `-5`, `-navigation`, `-7-lieutenant`, `-25-tutoriel`, `-34-composeur`, `-porte` : 0 animation en cours.")
 P("")

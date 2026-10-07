@@ -13,14 +13,13 @@ import json, os, re, subprocess, sys, tempfile, collections
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 REQUIS = ("hl sf drip derive led spl respire tg clign bl vp cd fl rl ch ec rd gt po sc pe am ci cl "
-          "mk-lampe mk-buee mk-eclat mk-veille mk-scan vnt6-scan hrz6-scan rep6-scan jrn6-scan dos6-scan bln6-scan").split()
-# plancher d'instances EN COURS par écran (mesuré le 07/10 : 554 au total) — cadres de ecrans-brennar-6.html
+          "mk-lampe mk-buee mk-eclat mk-veille mk-scan").split()
+# plancher d'instances EN COURS par écran (mesuré le 07/10 après retrait des 6 balayages sans cause et pose du
+# cadre 146 : 529 au total) — cadres de ecrans-brennar-6.html
 PLANCHER = [
     ("③ carte", list(range(22, 25)), 3), ("② serre", list(range(36, 39)), 276), ("② labo", list(range(39, 45)), 94),
-    ("② Ash", list(range(92, 95)), 121), ("㉑ marché", list(range(101, 107)), 26), ("㉟ vente", list(range(107, 113)), 5),
-    ("㊱ horizon", list(range(113, 119)), 5), ("㊲ réputation", list(range(119, 125)) + [144], 7),
-    ("㊳ journal", list(range(125, 131)) + [145], 6), ("㊴ dossier", list(range(131, 137)) + [143], 6),
-    ("㊵ filière", list(range(137, 143)), 5)]
+    ("② Ash", list(range(92, 95)), 121), ("㉑ marché", list(range(101, 107)) + [146], 35),
+    ("㉑ tuile Ash (cadre 146 : éclats)", [146], 9)]
 
 def mesurer(html):
     sortie = tempfile.mktemp(suffix=".json")
