@@ -1,0 +1,36 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   fond du verre (fenetre 81x81 en 600,1700) = RGB (8, 15, 22)  lum 14.0
+   or_commander     boite x  604..1058 (455 px)  y  934..1113 (180 px)
+                    remplissage haut-gauche RGB (12, 18, 30) (lum 17.6) · bas-droit RGB (15, 20, 29) (lum 19.6)
+                    pixel le plus clair du BORD HAUT (x=831) : y=932 RGB (12, 18, 31) (lum 17.7)
+   voir_la_vente    boite x  608..1058 (451 px)  y 1142..1271 (130 px)
+                    remplissage haut-gauche RGB (12, 18, 29) (lum 17.5) · bas-droit RGB (12, 17, 28) (lum 16.7)
+                    pixel le plus clair du BORD HAUT (x=833) : y=1142 RGB (14, 20, 30) (lum 19.4)
+   blanchir         boite x  605..1058 (454 px)  y 1385..1555 (171 px)
+                    remplissage haut-gauche RGB (9, 15, 25) (lum 14.4) · bas-droit RGB (9, 15, 24) (lum 14.4)
+                    pixel le plus clair du BORD HAUT (x=831) : y=1382 RGB (10, 14, 26) (lum 14.0)
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   fond du verre (fenetre 51x51 en 600,1410) = RGB (18, 19, 26)  lum 19.3
+   or_commander     boite x  621..1058 (438 px)  y  956..1073 (118 px)
+                    remplissage haut-gauche RGB (36, 30, 30) (lum 31.3) · bas-droit RGB (21, 20, 28) (lum 20.8)
+                    pixel le plus clair du BORD HAUT (x=839) : y=961 RGB (28, 19, 24) (lum 21.3)
+   voir_la_vente    boite x  661..1058 (398 px)  y 1091..1211 (121 px)
+                    remplissage haut-gauche RGB (16, 19, 27) (lum 18.9) · bas-droit RGB (18, 21, 30) (lum 21.0)
+                    pixel le plus clair du BORD HAUT (x=859) : y=1088 RGB (19, 21, 30) (lum 21.2)
+   blanchir         boite x  624..1058 (435 px)  y 1272..1394 (123 px)
+                    remplissage haut-gauche RGB (31, 23, 25) (lum 24.8) · bas-droit RGB (15, 18, 28) (lum 18.1)
+                    pixel le plus clair du BORD HAUT (x=841) : y=1270 RGB (19, 18, 25) (lum 18.7)
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   fond du verre (fenetre 51x51 en 600,1817) = RGB (13, 15, 25)  lum 15.3
+   or_commander     boite x  653..1058 (406 px)  y 1361..1477 (117 px)
+                    remplissage haut-gauche RGB (26, 29, 33) (lum 28.7) · bas-droit RGB (18, 20, 30) (lum 20.3)
+                    pixel le plus clair du BORD HAUT (x=855) : y=1365 RGB (19, 22, 31) (lum 22.0)
+   voir_la_vente    boite x  629..1058 (430 px)  y 1497..1618 (122 px)
+                    remplissage haut-gauche RGB (18, 21, 30) (lum 21.0) · bas-droit RGB (51, 41, 32) (lum 42.5)
+                    pixel le plus clair du BORD HAUT (x=843) : y=1494 RGB (13, 14, 24) (lum 14.5)
+   blanchir         boite x  626..1058 (433 px)  y 1676..1809 (134 px)
+                    remplissage haut-gauche RGB (19, 18, 25) (lum 18.7) · bas-droit RGB (21, 24, 33) (lum 24.0)
+                    pixel le plus clair du BORD HAUT (x=842) : y=1674 RGB (13, 14, 23) (lum 14.4)
+

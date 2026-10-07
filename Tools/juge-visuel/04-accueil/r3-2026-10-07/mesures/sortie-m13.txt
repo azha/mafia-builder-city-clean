@@ -1,0 +1,27 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   MEDAILLON, coupe VERTICALE x=544 : segments laiton [(22, 26), (105, 110), (194, 198), (206, 222)] (epaisseurs [5, 6, 5, 17])
+      anneau bbox x 420..679 (D=260) · y  22..209 (H=188) · centre (550, 116)
+      losange bbox x 527..552 (L=26) · y 201..226 (H=26) · centre x=540
+      [controle negatif] coupe y=400 : 0 px laiton
+   DOCK, ligne la plus occupee y=1944 : 4 objets [(196, 322, 127), (383, 509, 127), (570, 696, 127), (757, 883, 127)]
+      diametres [127, 127, 127, 127] · ecarts entre ronds [60, 60, 60]
+      pastille sur le 2e rond : ABSENTE
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   MEDAILLON, coupe VERTICALE x=544 : segments laiton [(18, 22), (119, 128), (197, 201), (219, 227)] (epaisseurs [5, 10, 5, 9])
+      anneau bbox x 420..679 (D=260) · y  18..201 (H=184) · centre (550, 110)
+      losange bbox x 520..556 (L=37) · y 200..231 (H=32) · centre x=538
+      [controle negatif] coupe y=400 : 0 px laiton
+   DOCK, ligne la plus occupee y=1762 : 9 objets [(60, 197, 138), (236, 281, 46), (320, 384, 65), (424, 468, 45), (507, 572, 66), (611, 655, 45), (695, 759, 65), (798, 843, 46), (882, 1019, 138)]
+      diametres [138, 46, 65, 45, 66, 45, 65, 46, 138] · ecarts entre ronds [38, 38, 39, 38, 38, 39, 38, 38]
+      pastille sur le 2e rond : ABSENTE
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   MEDAILLON, coupe VERTICALE x=544 : segments laiton [(18, 22), (119, 128), (197, 201), (219, 227)] (epaisseurs [5, 10, 5, 9])
+      anneau bbox x 420..679 (D=260) · y  18..201 (H=184) · centre (550, 110)
+      losange bbox x 520..556 (L=37) · y 200..231 (H=32) · centre x=538
+      [controle negatif] coupe y=400 : 0 px laiton
+   DOCK, ligne la plus occupee y=2242 : 9 objets [(60, 197, 138), (236, 281, 46), (320, 384, 65), (424, 468, 45), (507, 572, 66), (611, 655, 45), (695, 759, 65), (798, 843, 46), (882, 1019, 138)]
+      diametres [138, 46, 65, 45, 66, 45, 65, 46, 138] · ecarts entre ronds [38, 38, 39, 38, 38, 39, 38, 38]
+      pastille sur le 2e rond : ABSENTE
+

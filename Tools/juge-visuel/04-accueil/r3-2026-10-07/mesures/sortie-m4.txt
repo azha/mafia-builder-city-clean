@@ -1,0 +1,29 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+
+=== (b) CONTROLE POSITIF — filet laiton du BANDEAU ===
+   REF y= 143  laiton x  616.. 984  largeur  369 px (34.2%)
+   C19 y= 141  laiton x  615..1029  largeur  415 px (38.4%)
+   C24 y= 141  laiton x  615..1029  largeur  415 px (38.4%)
+
+=== (b) CONTROLE NEGATIF — une ligne DANS le verre, sans filet ===
+   REF y=1028  -> laiton 660..970 (311 px) /// detecteur suspect
+   C19 y=1086  -> laiton 17..46 (30 px) /// detecteur suspect
+   C24 y=1492  -> AUCUN laiton
+
+=== (b) FILET LAITON DU BORD HAUT DU PANNEAU ===
+   intention CSS (verre::after, x3,6) : x 94..986 = 893 px = 82,7 %
+   REF  y= 829  x  224.. 854  largeur  631 px (58.4% ecran)  centre x=539
+   C19  y= 885  x  215.. 864  largeur  650 px (60.2% ecran)  centre x=540
+   C24  y=1291  x  215.. 864  largeur  650 px (60.2% ecran)  centre x=540
+
+=== (a) BORDS DU PANNEAU (plage sombre contenant x=540) ===
+   intention CSS (marge 12 px x3,6) : gauche 43, droite 1036, largeur 994
+   REF  y= 888  gauche= 529 droite= 543  largeur=  15  marges 529 / 536
+   REF  y= 928  gauche=  11 droite=1067  largeur=1057  marges 11 / 12
+   REF  y= 988  gauche=  49 droite= 650  largeur= 602  marges 49 / 429
+   C19  y= 946  gauche=  49 droite= 703  largeur= 655  marges 49 / 376
+   C19  y=1046  gauche= 197 droite= 664  largeur= 468  marges 197 / 415
+   C24  y=1352  gauche=  49 droite=1022  largeur= 974  marges 49 / 57
+   C24  y=1452  gauche= 198 droite= 663  largeur= 466  marges 198 / 416

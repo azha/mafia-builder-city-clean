@@ -1,0 +1,7 @@
+LU REF (1080, 2102) r2-2026-10-07/reference/cadre-4-la-suite.png
+   y=1930 : 4 plages claires [(200, 318), (387, 505), (574, 692), (761, 879)] diametres [119, 119, 119, 119]
+   y=1944 : 4 plages claires [(196, 290), (383, 477), (570, 664), (757, 851)] diametres [95, 95, 95, 95]
+   y=1960 : 4 plages claires [(196, 288), (383, 475), (570, 662), (757, 849)] diametres [93, 93, 93, 93]
+   1er rond coupe verticale x=259 : (1860, 2040, 181)
+   pastille FAMILLE : PRESENTE x 497..508 y 1890..1901 (12x12 px)
+   trait ACTIF : x 208..308 (101 px) y 2017..2048 (32 px)

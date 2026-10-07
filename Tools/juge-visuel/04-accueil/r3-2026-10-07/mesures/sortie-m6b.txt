@@ -1,0 +1,33 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   COMMANDER(or)   x  500..1033 (534 px) · y  945..1037 ( 93 px)
+                   REMPLISSAGE RGB (222, 182, 89)   lum  183.8   [controle negatif, verre nu x120..200 : RGB (13, 19, 31) lum 18.6]
+                   LIBELLE (p98 clair) RGB (222, 182, 89)   lum  183.8   contraste libelle/remplissage = 1.00:1
+   VOIR LA VENTE   x  606..1059 (454 px) · y 1159..1251 ( 93 px)
+                   REMPLISSAGE RGB (20, 26, 36)     lum   25.4   [controle negatif, verre nu x120..200 : RGB (10, 16, 28) lum 15.6]
+                   LIBELLE (p98 clair) RGB (234, 224, 200)  lum  224.4   contraste libelle/remplissage = 6.21:1
+   BLANCHIR        x  706..1059 (354 px) · y 1418..1510 ( 93 px)
+                   REMPLISSAGE RGB (18, 23, 33)     lum   22.7   [controle negatif, verre nu x120..200 : RGB (10, 15, 26) lum 14.7]
+                   LIBELLE (p98 clair) RGB (234, 224, 200)  lum  224.4   contraste libelle/remplissage = 6.70:1
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   COMMANDER(or)   x  507..1059 (553 px) · y  968..1052 ( 85 px)
+                   REMPLISSAGE RGB (223, 183, 91)   lum  184.9   [controle negatif, verre nu x120..200 : RGB (16, 17, 26) lum 17.4]
+                   LIBELLE (p98 clair) RGB (222, 182, 89)   lum  183.8   contraste libelle/remplissage = 0.99:1
+   VOIR LA VENTE   x  501..1059 (559 px) · y 1113..1197 ( 85 px)
+                   REMPLISSAGE RGB (66, 79, 96)     lum   77.5   [controle negatif, verre nu x120..200 : RGB (25, 25, 31) lum 25.4]
+                   LIBELLE (p98 clair) RGB (238, 241, 242)  lum  240.4   contraste libelle/remplissage = 2.81:1
+   BLANCHIR        x  626..1059 (434 px) · y 1293..1377 ( 85 px)
+                   REMPLISSAGE RGB (66, 79, 96)     lum   77.5   [controle negatif, verre nu x120..200 : RGB (20, 22, 31) lum 22.2]
+                   LIBELLE (p98 clair) RGB (238, 241, 242)  lum  240.4   contraste libelle/remplissage = 2.81:1
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   COMMANDER(or)   x  515..1059 (545 px) · y 1374..1458 ( 85 px)
+                   REMPLISSAGE RGB (223, 183, 91)   lum  184.9   [controle negatif, verre nu x120..200 : RGB (24, 24, 30) lum 24.4]
+                   LIBELLE (p98 clair) RGB (222, 183, 90)   lum  184.6   contraste libelle/remplissage = 1.00:1
+   VOIR LA VENTE   x  501..1059 (559 px) · y 1519..1603 ( 85 px)
+                   REMPLISSAGE RGB (66, 79, 96)     lum   77.5   [controle negatif, verre nu x120..200 : RGB (15, 18, 29) lum 18.2]
+                   LIBELLE (p98 clair) RGB (238, 241, 242)  lum  240.4   contraste libelle/remplissage = 2.81:1
+   BLANCHIR        x  618..1059 (442 px) · y 1699..1783 ( 85 px)
+                   REMPLISSAGE RGB (66, 79, 96)     lum   77.5   [controle negatif, verre nu x120..200 : RGB (14, 15, 23) lum 15.4]
+                   LIBELLE (p98 clair) RGB (238, 241, 242)  lum  240.4   contraste libelle/remplissage = 2.81:1
+

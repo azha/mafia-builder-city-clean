@@ -1,0 +1,30 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   5 lignes les plus plates du panneau :
+      y= 840  non-plat=0.00%  mediane=19.2  ->  gauche=3 droite=1076 largeur=1074  marges 3 / 3
+      y= 841  non-plat=0.00%  mediane=18.7  ->  gauche=3 droite=1076 largeur=1074  marges 3 / 3
+      y= 842  non-plat=0.00%  mediane=19.4  ->  gauche=3 droite=1076 largeur=1074  marges 3 / 3
+      y= 843  non-plat=0.00%  mediane=18.7  ->  gauche=3 droite=1076 largeur=1074  marges 3 / 3
+      y= 844  non-plat=0.00%  mediane=18.7  ->  gauche=3 droite=1076 largeur=1074  marges 3 / 3
+   [controle negatif] ligne la MOINS plate :
+      y= 968  non-plat=99.40%  mediane=125.4  ->  gauche=0 droite=1079 largeur=1080
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   5 lignes les plus plates du panneau :
+      y=1076  non-plat=0.00%  mediane=83.2  ->  gauche=0 droite=1079 largeur=1080  marges 0 / 0
+      y=1101  non-plat=0.00%  mediane=20.0  ->  gauche=49 droite=1030 largeur=982  marges 49 / 49
+      y=1102  non-plat=0.00%  mediane=20.0  ->  gauche=49 droite=1030 largeur=982  marges 49 / 49
+      y=1103  non-plat=0.00%  mediane=20.0  ->  gauche=49 droite=1030 largeur=982  marges 49 / 49
+      y=1104  non-plat=0.00%  mediane=19.9  ->  gauche=49 droite=1030 largeur=982  marges 49 / 49
+   [controle negatif] ligne la MOINS plate :
+      y=1164  non-plat=99.52%  mediane=49.5  ->  gauche=0 droite=1030 largeur=1031
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   5 lignes les plus plates du panneau :
+      y=1346  non-plat=0.00%  mediane=20.2  ->  gauche=49 droite=1012 largeur=964  marges 49 / 67
+      y=1347  non-plat=0.00%  mediane=20.2  ->  gauche=49 droite=1014 largeur=966  marges 49 / 65
+      y=1348  non-plat=0.00%  mediane=20.2  ->  gauche=49 droite=1016 largeur=968  marges 49 / 63
+      y=1349  non-plat=0.00%  mediane=20.2  ->  gauche=49 droite=1020 largeur=972  marges 49 / 59
+      y=1350  non-plat=0.00%  mediane=20.2  ->  gauche=49 droite=1012 largeur=964  marges 49 / 67
+   [controle negatif] ligne la MOINS plate :
+      y=1396  non-plat=99.64%  mediane=136.5  ->  gauche=0 droite=1079 largeur=1080
+

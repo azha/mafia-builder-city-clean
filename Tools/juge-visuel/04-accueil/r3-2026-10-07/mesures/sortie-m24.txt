@@ -1,0 +1,12 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   phase    1er glyphe x  842.. 864 · y  72..102 · HAUTEUR 31 px
+   montant  1er glyphe x   44..  92 · y  60..102 · HAUTEUR 43 px
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   phase    1er glyphe x  935.. 986 · y  71.. 98 · HAUTEUR 28 px
+   montant  1er glyphe x   44..  86 · y  57.. 97 · HAUTEUR 41 px
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   phase    1er glyphe x  935.. 986 · y  71.. 98 · HAUTEUR 28 px
+   montant  1er glyphe x   44..  86 · y  57.. 97 · HAUTEUR 41 px
+

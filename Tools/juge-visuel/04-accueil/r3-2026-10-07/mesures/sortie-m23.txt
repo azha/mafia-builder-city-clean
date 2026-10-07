@@ -1,0 +1,18 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   BOUTON OR : largeur pleine 323 px · 98 % atteints a dy=16  -> rayon ~16 px (4.4 px CSS)
+      courbe : 0:0 1:0 2:0 3:0 4:285 5:291 6:295 7:299 8:301 9:305 10:307 11:309 12:311 13:313 14:313 15:315 16:317 17:317 18:319 19:319 20:321 21:321 22:321 23:323 24:323 25:323
+   montant  encre y  66..103  HAUTEUR 38 px · x   40.. 205 (chasse 166 px, chaine DIFFERENTE)
+   phase    encre y  66..112  HAUTEUR 47 px · x  842..1044 (chasse 203 px, chaine DIFFERENTE)
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   BOUTON OR : largeur pleine 324 px · 98 % atteints a dy=6  -> rayon ~6 px (1.7 px CSS)
+      courbe : 0:0 1:304 2:307 3:310 4:314 5:316 6:318 7:319 8:320 9:322 10:322 11:324 12:324 13:324 14:324 15:324 16:323 17:322 18:322 19:322 20:322 21:322 22:322 23:322 24:322 25:322
+   montant  encre y  57.. 97  HAUTEUR 41 px · x   40.. 191 (chasse 152 px, chaine DIFFERENTE)
+   phase    encre y  69.. 98  HAUTEUR 30 px · x  935..1033 (chasse  99 px, chaine DIFFERENTE)
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   BOUTON OR : largeur pleine 324 px · 98 % atteints a dy=7  -> rayon ~7 px (1.9 px CSS)
+      courbe : 0:0 1:300 2:307 3:310 4:312 5:314 6:316 7:319 8:320 9:320 10:322 11:322 12:324 13:324 14:324 15:324 16:324 17:323 18:322 19:322 20:322 21:322 22:322 23:322 24:322 25:322
+   montant  encre y  57.. 97  HAUTEUR 41 px · x   40.. 191 (chasse 152 px, chaine DIFFERENTE)
+   phase    encre y  69.. 98  HAUTEUR 30 px · x  935..1033 (chasse  99 px, chaine DIFFERENTE)
+

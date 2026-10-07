@@ -1,0 +1,53 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   CONTROLE POSITIF : haut du panneau = 828 (filet laiton du m4)
+   « LA SUITE » (centre)      : [(871, 889)]
+   bandes d encre a gauche    :
+       1  y  947.. 977  (hauteur 31)   ecart a la bande precedente : 119 px
+       2  y  984.. 987  (hauteur  4)   ecart a la bande precedente :   7 px
+       3  y 1007..1032  (hauteur 26)   ecart a la bande precedente :  20 px
+       4  y 1125..1146  (hauteur 22)   ecart a la bande precedente :  93 px
+       5  y 1153..1156  (hauteur  4)   ecart a la bande precedente :   7 px
+       6  y 1175..1196  (hauteur 22)   ecart a la bande precedente :  19 px
+       7  y 1202..1205  (hauteur  4)   ecart a la bande precedente :   6 px
+       8  y 1225..1248  (hauteur 24)   ecart a la bande precedente :  20 px
+       9  y 1266..1291  (hauteur 26)   ecart a la bande precedente :  18 px
+      10  y 1375..1415  (hauteur 41)   ecart a la bande precedente :  84 px
+      11  y 1434..1464  (hauteur 31)   ecart a la bande precedente :  19 px
+      12  y 1484..1507  (hauteur 24)   ecart a la bande precedente :  20 px
+      13  y 1525..1553  (hauteur 29)   ecart a la bande precedente :  18 px
+   gouttiere haut-du-panneau -> « LA SUITE »   : 43 px
+   gouttiere « LA SUITE » -> 1er titre         : 58 px
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   CONTROLE POSITIF : haut du panneau = 886 (filet laiton du m4)
+   « LA SUITE » (centre)      : [(886, 938)]
+   bandes d encre a gauche    :
+       1  y  912.. 930  (hauteur 19)   ecart a la bande precedente :  26 px
+       2  y  976..1004  (hauteur 29)   ecart a la bande precedente :  46 px
+       3  y 1024..1043  (hauteur 20)   ecart a la bande precedente :  20 px
+       4  y 1115..1135  (hauteur 21)   ecart a la bande precedente :  72 px
+       5  y 1155..1174  (hauteur 20)   ecart a la bande precedente :  20 px
+       6  y 1184..1208  (hauteur 25)   ecart a la bande precedente :  10 px
+       7  y 1265..1301  (hauteur 37)   ecart a la bande precedente :  57 px
+       8  y 1316..1375  (hauteur 60)   ecart a la bande precedente :  15 px
+       9  y 1386..1404  (hauteur 19)   ecart a la bande precedente :  11 px
+      10  y 1413..1447  (hauteur 35)   ecart a la bande precedente :   9 px
+   gouttiere haut-du-panneau -> « LA SUITE »   : 0 px
+   gouttiere « LA SUITE » -> 1er titre         : -26 px
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   CONTROLE POSITIF : haut du panneau = 1292 (filet laiton du m4)
+   « LA SUITE » (centre)      : [(1329, 1345)]
+   bandes d encre a gauche    :
+       1  y 1383..1411  (hauteur 29)   ecart a la bande precedente :  91 px
+       2  y 1431..1450  (hauteur 20)   ecart a la bande precedente :  20 px
+       3  y 1522..1541  (hauteur 20)   ecart a la bande precedente :  72 px
+       4  y 1562..1580  (hauteur 19)   ecart a la bande precedente :  21 px
+       5  y 1591..1615  (hauteur 25)   ecart a la bande precedente :  11 px
+       6  y 1671..1707  (hauteur 37)   ecart a la bande precedente :  56 px
+       7  y 1723..1754  (hauteur 32)   ecart a la bande precedente :  16 px
+       8  y 1763..1785  (hauteur 23)   ecart a la bande precedente :   9 px
+       9  y 1792..1811  (hauteur 20)   ecart a la bande precedente :   7 px
+   gouttiere haut-du-panneau -> « LA SUITE »   : 37 px
+   gouttiere « LA SUITE » -> 1er titre         : 38 px
+

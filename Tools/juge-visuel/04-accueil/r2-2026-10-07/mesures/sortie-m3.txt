@@ -1,0 +1,15 @@
+r1  : 1080x2102  /home/erutheone/project/mafia-builder-city-clean/Tools/juge-visuel/04-accueil/r1-2026-09-26/reference/cadre-4-la-suite.png
+r2  : 1080x2102  /home/erutheone/project/mafia-builder-city-clean/Tools/juge-visuel/04-accueil/r2-2026-10-07/reference/cadre-4-la-suite.png
+CONTROLE POSITIF tailles egales : OK
+
+pixels differents (>16/255) sur tout le cadre : 63944 / 567540 = 11.3 %
+
+par bande :
+   chrome haut (bandeau, filet, medaillon)       9.1 % differents
+   art / diorama                                 2.1 % differents
+   titre LA SUITE                               22.9 % differents
+   ligne A  (labo -> COMMANDER)                 36.0 % differents
+   ligne B  (vente -> VOIR LA VENTE)            13.9 % differents
+   ligne 3  (planque/consigne -> CTA)           14.1 % differents
+   file du lieutenant + gravite                 10.6 % differents
+   dock                                          9.9 % differents

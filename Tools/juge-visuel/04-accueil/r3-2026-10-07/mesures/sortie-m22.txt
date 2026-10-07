@@ -1,0 +1,50 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   (a) ligne la PLUS uniforme entre y=150 et 260 : y=247  ecart-type 5.37  luminance 15.1
+       bande entiere : ecart-type 16.27 · luminance 19.8  [controle negatif : l art n est jamais uniforme]
+   (b) trancher  RGB (230, 191, 101)  (962 px d encre)
+   (b) titre     RGB (242, 201, 107)  (4103 px d encre)
+   (b) lasuite   RGB (185, 173, 146)  (1078 px d encre)
+   (b) bouton or haut (232, 195, 105) · bas (201, 154, 55)
+       etendue des ors sur R : 12
+       etendue des ors sur G : 10
+       etendue des ors sur B : 6
+   (d) bouton or : largeur de la boite, ligne par ligne depuis le haut
+       + 9 : x  670.. 960  (largeur 291)
+       +12 : x  665.. 965  (largeur 301)
+       +16 : x  660.. 970  (largeur 311)
+       +20 : x  600.. 973  (largeur 374)
+       +26 : x  600.. 975  (largeur 376)
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   (a) ligne la PLUS uniforme entre y=148 et 258 : y=249  ecart-type 14.30  luminance 39.3
+       bande entiere : ecart-type 19.46 · luminance 47.9  [controle negatif : l art n est jamais uniforme]
+   (b) trancher  RGB (233, 197, 106)  (887 px d encre)
+   (b) titre     RGB (242, 201, 106)  (3641 px d encre)
+   (b) lasuite   RGB (185, 173, 146)  (879 px d encre)
+   (b) bouton or haut (231, 194, 104) · bas (202, 155, 57)
+       etendue des ors sur R : 11
+       etendue des ors sur G : 7
+       etendue des ors sur B : 2
+   (d) bouton or : largeur de la boite, ligne par ligne depuis le haut
+       + 6 : x  670.. 976  (largeur 307)
+       + 9 : x  665.. 980  (largeur 316)
+       +12 : x  663.. 982  (largeur 320)
+       +16 : x  661.. 984  (largeur 324)
+       +20 : x  661.. 983  (largeur 323)
+       +26 : x  662.. 983  (largeur 322)
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   (a) ligne la PLUS uniforme entre y=148 et 258 : y=202  ecart-type 12.01  luminance 57.9
+       bande entiere : ecart-type 17.08 · luminance 54.2  [controle negatif : l art n est jamais uniforme]
+   (b) trancher  RGB None             (0 px d encre)
+   (b) titre     RGB (242, 201, 106)  (3459 px d encre)
+   (b) lasuite   RGB (185, 173, 146)  (933 px d encre)
+   (b) bouton or haut (232, 195, 104) · bas (202, 156, 57)
+   (d) bouton or : largeur de la boite, ligne par ligne depuis le haut
+       + 6 : x  670.. 976  (largeur 307)
+       + 9 : x  666.. 979  (largeur 314)
+       +12 : x  663.. 982  (largeur 320)
+       +16 : x  661.. 984  (largeur 324)
+       +20 : x  661.. 984  (largeur 324)
+       +26 : x  662.. 983  (largeur 322)
+

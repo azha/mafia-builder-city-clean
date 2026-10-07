@@ -1,0 +1,21 @@
+LU REF (1080, 2102) cadre-4-la-suite.png   bande y 832..918
+   verre (luminance mediane au centre) = 19.1
+   BORD GAUCHE x=531   BORD DROIT x=540   LARGEUR=10   marges 531 / 539
+   profil autour du bord gauche : 525:44 526:47 527:43 528:42 529:42 530:31 531:19 532:19 533:23 534:23 535:18 536:19 537:23
+   profil autour du bord droit  : 534:23 535:18 536:19 537:23 538:23 539:18 540:19 541:35 542:49 543:47 544:49 545:51 546:34
+   [controle negatif, bande y 1132..1218 dans le texte] -> gauche=454 droite=604 largeur=151
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png   bande y 890..955
+   verre (luminance mediane au centre) = 27.9
+   BORD GAUCHE x=535   BORD DROIT x=543   LARGEUR=9   marges 535 / 536
+   profil autour du bord gauche : 529:58 530:62 531:62 532:60 533:57 534:41 535:34 536:34 537:34 538:34 539:34 540:34 541:34
+   profil autour du bord droit  : 537:34 538:34 539:34 540:34 541:34 542:34 543:34 544:62 545:66 546:68 547:70 548:54 549:42
+   [controle negatif, bande y 1190..1255 dans le texte] -> gauche=314 droite=788 largeur=475
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png   bande y 1296..1360
+   verre (luminance mediane au centre) = 23.2
+   BORD GAUCHE x=534   BORD DROIT x=543   LARGEUR=10   marges 534 / 536
+   profil autour du bord gauche : 528:46 529:47 530:51 531:52 532:51 533:45 534:30 535:22 536:22 537:21 538:21 539:20 540:20
+   profil autour du bord droit  : 537:21 538:21 539:20 540:20 541:20 542:19 543:19 544:49 545:54 546:56 547:57 548:40 549:27
+   [controle negatif, bande y 1596..1660 dans le texte] -> gauche=323 droite=650 largeur=328
+

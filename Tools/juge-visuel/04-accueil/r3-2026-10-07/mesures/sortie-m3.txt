@@ -1,0 +1,36 @@
+=== CONTROLE POSITIF : filet laiton du BANDEAU (pleine largeur attendue) ===
+LU REF (1080, 2102) cadre-4-la-suite.png
+   REF y=141  filet bandeau : x 457..622  (15 colonnes, 1.4% de la largeur)
+   REF y=142  filet bandeau : x 457..621  (19 colonnes, 1.8% de la largeur)
+   REF y=143  filet bandeau : x 45..1033  (853 colonnes, 79.0% de la largeur)
+   REF y=144  filet bandeau : x 46..1034  (853 colonnes, 79.0% de la largeur)
+   REF y=145  filet bandeau : x 45..1033  (855 colonnes, 79.2% de la largeur)
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   C19 y=141  filet bandeau : x 75..999  (791 colonnes, 73.2% de la largeur)
+   C19 y=142  filet bandeau : x 75..999  (796 colonnes, 73.7% de la largeur)
+   C19 y=143  filet bandeau : x 291..829  (59 colonnes, 5.5% de la largeur)
+   C19 y=144  filet bandeau : x 291..829  (52 colonnes, 4.8% de la largeur)
+   C19 y=145  filet bandeau : x 290..829  (12 colonnes, 1.1% de la largeur)
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   C24 y=141  filet bandeau : x 64..998  (802 colonnes, 74.3% de la largeur)
+   C24 y=142  filet bandeau : x 64..998  (806 colonnes, 74.6% de la largeur)
+   C24 y=143  filet bandeau : x 453..626  (54 colonnes, 5.0% de la largeur)
+   C24 y=144  filet bandeau : x 454..625  (47 colonnes, 4.4% de la largeur)
+   C24 y=145  filet bandeau : x 454..625  (6 colonnes, 0.6% de la largeur)
+
+=== FILET LAITON DU BORD HAUT DU PANNEAU (verre::after) ===
+   attendu (CSS x3,6) : x 94..986, soit 893 px = 82,7 %% de la largeur d ecran
+   REF  y=829  x 153..1074  (784 colonnes, 72.6% de la largeur) — centre a x=614
+   C19  y=885  x 25..1020  (986 colonnes, 91.3% de la largeur) — centre a x=522
+   C24  y=1292  x 11..1022  (970 colonnes, 89.8% de la largeur) — centre a x=516
+
+=== BORDS GAUCHE/DROITE DU PANNEAU ===
+   attendu (CSS marge 12 px x3,6) : gauche 43, droite 1037, largeur 994
+   REF  y=948  gauche=49  droite=1076  largeur=1028  (marges 49 / 3)
+   C19  y=1006  gauche=103  droite=1030  largeur=928  (marges 103 / 49)
+   C24  y=1412  gauche=66  droite=1030  largeur=965  (marges 66 / 49)
+
+=== FOND DU VERRE (mediane d une fenetre 24x24 sans texte) ===
+   REF  fenetre (540, 868) -> RGB (13, 19, 32)
+   C19  fenetre (540, 926) -> RGB (29, 24, 26)
+   C24  fenetre (540, 1332) -> RGB (18, 20, 29)

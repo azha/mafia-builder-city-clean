@@ -1,0 +1,27 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   LA SUITE           encre x  380.. 699 (320 px) · y  945.. 999 · HAUTEUR  55 px (15.3 px CSS)
+                        couleur du noyau RGB (242, 201, 107)  · 5000 px d encre · fond 17.6
+   titre 1            encre x  153.. 417 (265 px) · y 1030..1039 · HAUTEUR  10 px (2.8 px CSS)
+                        couleur du noyau RGB (185, 173, 146)  · 436 px d encre · fond 16.8
+   corps 1            encre x  444.. 451 (  8 px) · y 1116..1119 · HAUTEUR   4 px (1.1 px CSS)
+                        couleur du noyau RGB (242, 201, 107)  · 24 px d encre · fond 16.3
+   titre 2 (l.1)      encre x  150.. 608 (459 px) · y 1180..1229 · HAUTEUR  50 px (13.9 px CSS)
+                        couleur du noyau RGB (242, 201, 107)  · 914 px d encre · fond 15.6
+   corps 2 (l.1)      encre x  150.. 556 (407 px) · y 1266..1298 · HAUTEUR  33 px (9.2 px CSS)
+                        couleur du noyau RGB (185, 173, 146)  · 3546 px d encre · fond 15.5
+   bande SANS texte   AUCUNE ENCRE (fond 10.2, seuil 45.2)
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   LA SUITE           encre x  380.. 699 (320 px) · y  968.. 999 · HAUTEUR  32 px (8.9 px CSS)
+                        couleur du noyau RGB (242, 201, 106)  · 2444 px d encre · fond 18.9
+   titre 1            encre x  150.. 619 (470 px) · y 1076..1076 · HAUTEUR   1 px (0.3 px CSS)
+                        couleur du noyau RGB (73, 85, 96)     · 470 px d encre · fond 15.4
+   corps 1            encre x  150.. 567 (418 px) · y 1107..1135 · HAUTEUR  29 px (8.1 px CSS)
+                        couleur du noyau RGB (242, 201, 106)  · 3321 px d encre · fond 18.0
+   titre 2 (l.1)      encre x  150.. 555 (406 px) · y 1155..1184 · HAUTEUR  30 px (8.3 px CSS)
+                        couleur du noyau RGB (185, 173, 146)  · 2286 px d encre · fond 20.3
+   corps 2 (l.1)      encre x  150.. 322 (173 px) · y 1185..1208 · HAUTEUR  24 px (6.7 px CSS)
+                        couleur du noyau RGB (185, 173, 146)  · 1078 px d encre · fond 15.6
+   bande SANS texte   encre x  153.. 489 (337 px) · y 1400..1434 · HAUTEUR  35 px (9.7 px CSS)
+                        couleur du noyau RGB (185, 173, 146)  · 754 px d encre · fond 15.5
+

@@ -1,0 +1,24 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   lisere_panneau           RGB (32, 37, 47)     lum  36.7
+   separateur               RGB (29, 34, 44)     lum  33.7
+   bouton2_fond             RGB (20, 26, 36)     lum  25.4
+   lisere_trancher          RGB (41, 53, 70)     lum  51.7
+   CTRLNEG_centre_du_verre  RGB (11, 17, 28)     lum  16.5
+   -> 4 valeur(s) DISTINCTE(S) sur les 4 surfaces de verre
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   lisere_panneau           RGB (73, 85, 96)     lum  83.2
+   separateur               RGB (73, 85, 96)     lum  83.2
+   bouton2_fond             RGB (66, 79, 96)     lum  77.5
+   lisere_trancher          RGB (73, 85, 96)     lum  83.2
+   CTRLNEG_centre_du_verre  RGB (15, 17, 26)     lum  17.2
+   -> 2 valeur(s) DISTINCTE(S) sur les 4 surfaces de verre
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   lisere_panneau           RGB (73, 85, 96)     lum  83.2
+   separateur               RGB (73, 85, 96)     lum  83.2
+   bouton2_fond             RGB (66, 79, 96)     lum  77.5
+   lisere_trancher          RGB (73, 85, 96)     lum  83.2
+   CTRLNEG_centre_du_verre  RGB (26, 26, 31)     lum  26.4
+   -> 2 valeur(s) DISTINCTE(S) sur les 4 surfaces de verre
+

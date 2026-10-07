@@ -1,0 +1,29 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   LA SUITE                 capitale  18 px (5.0 CSS) · chasse  162 px · encre x 456..617 · 1er glyphe x 456..468
+   titre 1 "Le labo..."     capitale  30 px (8.3 CSS) · chasse  437 px · encre x 163..599 · 1er glyphe x 163..173
+   corps 1 "Sans lui..."    capitale  25 px (6.9 CSS) · chasse  268 px · encre x 150..417 · 1er glyphe x 150..155
+   titre 2 "Personne..."    capitale  21 px (5.8 CSS) · chasse  305 px · encre x 150..454 · 1er glyphe x 150..166
+   BANDE VIDE (ctrl neg.)   AUCUNE ENCRE
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   LA SUITE                 capitale  16 px (4.4 CSS) · chasse  147 px · encre x 467..613 · 1er glyphe x 467..478
+   titre 1 "Le labo..."     capitale  29 px (8.1 CSS) · chasse  417 px · encre x 153..569 · 1er glyphe x 153..162
+   corps 1 "Sans lui..."    capitale  15 px (4.2 CSS) · chasse  209 px · encre x 150..358 · 1er glyphe x 150..153
+   titre 2 "Personne..."    capitale  21 px (5.8 CSS) · chasse  418 px · encre x 150..567 · 1er glyphe x 150..156
+   BANDE VIDE (ctrl neg.)   capitale  30 px (8.3 CSS) · chasse   59 px · encre x 155..213 · 1er glyphe x 155..186
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   LA SUITE                 capitale  17 px (4.7 CSS) · chasse  147 px · encre x 467..613 · 1er glyphe x 467..478
+   titre 1 "Le labo..."     capitale  28 px (7.8 CSS) · chasse  417 px · encre x 153..569 · 1er glyphe x 153..162
+   corps 1 "Sans lui..."    capitale  14 px (3.9 CSS) · chasse  209 px · encre x 150..358 · 1er glyphe x 150..153
+   titre 2 "Personne..."    capitale  20 px (5.6 CSS) · chasse  418 px · encre x 150..567 · 1er glyphe x 150..156
+   BANDE VIDE (ctrl neg.)   capitale   6 px (1.7 CSS) · chasse   56 px · encre x 158..213 · 1er glyphe x 158..170
+
+=== COMPARAISON (px, echelle 1:1) ===
+Traceback (most recent call last):
+  File "/home/erutheone/project/mafia-builder-city-clean/Tools/juge-visuel/04-accueil/r3-2026-10-07/mesures/m8_capitales.py", line 95, in <module>
+    main()
+  File "/home/erutheone/project/mafia-builder-city-clean/Tools/juge-visuel/04-accueil/r3-2026-10-07/mesures/m8_capitales.py", line 84, in main
+    print('%-24s %>0s' % ('', ''))
+          ~~~~~~~~~~~~~^~~~~~~~~~
+ValueError: unsupported format character '>' (0x3e) at index 7

@@ -1,0 +1,30 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   COMMANDER (or)             y= 990 seuil + 8 : x  651.. 979  LARGEUR  329 px (33.5% du panneau 982 px) · verre=17.6
+   COMMANDER (or)             y= 990 seuil +25 : x  651.. 979  LARGEUR  329 px (33.5% du panneau 982 px) · verre=17.6
+   VOIR LA VENTE              y=1178 seuil + 8 : x  606.. 978  LARGEUR  373 px (38.0% du panneau 982 px) · verre=16.7
+   VOIR LA VENTE              y=1178 seuil +25 : x  607.. 977  LARGEUR  371 px (37.8% du panneau 982 px) · verre=16.7
+   BLANCHIR                   y=1437 seuil + 8 : x  706.. 978  LARGEUR  273 px (27.8% du panneau 982 px) · verre=13.9
+   BLANCHIR                   y=1437 seuil +25 : x  707.. 977  LARGEUR  271 px (27.6% du panneau 982 px) · verre=13.9
+   INTER-RANGEE (ctrl neg.)   y=1100 seuil + 8 : AUCUN objet (verre=16.4)
+   INTER-RANGEE (ctrl neg.)   y=1100 seuil +25 : AUCUN objet (verre=16.4)
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   COMMANDER (or)             y=1010 seuil + 8 : x  619..1026  LARGEUR  408 px (41.5% du panneau 982 px) · verre=19.7
+   COMMANDER (or)             y=1010 seuil +25 : x  661..1019  LARGEUR  359 px (36.6% du panneau 982 px) · verre=19.7
+   VOIR LA VENTE              y=1132 seuil + 8 : x  661.. 998  LARGEUR  338 px (34.4% du panneau 982 px) · verre=17.3
+   VOIR LA VENTE              y=1132 seuil +25 : x  661.. 984  LARGEUR  324 px (33.0% du panneau 982 px) · verre=17.3
+   BLANCHIR                   y=1312 seuil + 8 : x  627.. 984  LARGEUR  358 px (36.5% du panneau 982 px) · verre=20.8
+   BLANCHIR                   y=1312 seuil +25 : x  635.. 984  LARGEUR  350 px (35.6% du panneau 982 px) · verre=20.8
+   INTER-RANGEE (ctrl neg.)   y=1086 seuil + 8 : x  611..1020  LARGEUR  410 px (41.8% du panneau 982 px) · verre=16.2
+   INTER-RANGEE (ctrl neg.)   y=1086 seuil +25 : x  895.. 972  LARGEUR   78 px (7.9% du panneau 982 px) · verre=16.2
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   COMMANDER (or)             y=1416 seuil + 8 : x  661.. 984  LARGEUR  324 px (33.0% du panneau 982 px) · verre=17.2
+   COMMANDER (or)             y=1416 seuil +25 : x  661.. 984  LARGEUR  324 px (33.0% du panneau 982 px) · verre=17.2
+   VOIR LA VENTE              y=1538 seuil + 8 : x  661.. 984  LARGEUR  324 px (33.0% du panneau 982 px) · verre=14.4
+   VOIR LA VENTE              y=1538 seuil +25 : x  661.. 984  LARGEUR  324 px (33.0% du panneau 982 px) · verre=14.4
+   BLANCHIR                   y=1718 seuil + 8 : x  638.. 984  LARGEUR  347 px (35.3% du panneau 982 px) · verre=18.9
+   BLANCHIR                   y=1718 seuil +25 : x  661.. 984  LARGEUR  324 px (33.0% du panneau 982 px) · verre=18.9
+   INTER-RANGEE (ctrl neg.)   y=1492 seuil + 8 : x  919..1002  LARGEUR   84 px (8.6% du panneau 982 px) · verre=14.5
+   INTER-RANGEE (ctrl neg.)   y=1492 seuil +25 : x  994..1001  LARGEUR    8 px (0.8% du panneau 982 px) · verre=14.5
+

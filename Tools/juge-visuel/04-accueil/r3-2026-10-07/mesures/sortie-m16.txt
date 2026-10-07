@@ -1,0 +1,15 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   PANNEAU : haut 828 · bas 1859 · HAUTEUR 1032 px (49.1% de l ecran) · mediane du verre 18.7
+   BARRE TRANCHER (mediane de colonne, bande y 1640..1860) : x 49..1030 · largeur 982 px · marges 49 / 49
+   BARRE TRANCHER : haut 1640 · bas 1822 · HAUTEUR 183 px · gouttiere panneau->barre -219 px
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   PANNEAU : haut 886 · bas 1633 · HAUTEUR 748 px (39.0% de l ecran) · mediane du verre 22.1
+   BARRE TRANCHER (mediane de colonne, bande y 1440..1680) : x 151..1027 · largeur 877 px · marges 151 / 52
+   BARRE TRANCHER : haut 1489 · bas 1633 · HAUTEUR 145 px · gouttiere panneau->barre -144 px
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   PANNEAU : haut 1292 · bas 2099 · HAUTEUR 808 px (33.7% de l ecran) · mediane du verre 21.2
+   BARRE TRANCHER (mediane de colonne, bande y 1860..2100) : x 49..1030 · largeur 982 px · marges 49 / 49
+   BARRE TRANCHER : haut 1908 · bas 2099 · HAUTEUR 192 px · gouttiere panneau->barre -191 px
+

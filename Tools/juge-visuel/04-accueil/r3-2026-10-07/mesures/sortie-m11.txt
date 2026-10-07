@@ -1,0 +1,18 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   ARGENT (libelle)       chasse  116 px (x   47.. 162) · hauteur 22 px (y  40.. 61) · RGB (185, 173, 146)
+   CHALEUR (medaillon)    chasse  160 px (x  460.. 619) · hauteur 30 px (y 148..177) · RGB (185, 173, 146)
+   bande vide (ctrl-)     AUCUNE ENCRE
+   MEDAILLON              anneau laiton x  400.. 689 (diametre 290 px) · y  22..226 (hauteur 205 px) · centre x=544
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   ARGENT (libelle)       chasse  107 px (x   44.. 150) · hauteur 19 px (y  27.. 45) · RGB (185, 173, 146)
+   CHALEUR (medaillon)    chasse  168 px (x  456.. 623) · hauteur 30 px (y 152..181) · RGB (185, 173, 146)
+   bande vide (ctrl-)     AUCUNE ENCRE
+   MEDAILLON              anneau laiton x  400.. 689 (diametre 290 px) · y  18..229 (hauteur 212 px) · centre x=544
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   ARGENT (libelle)       chasse  107 px (x   44.. 150) · hauteur 19 px (y  27.. 45) · RGB (185, 173, 146)
+   CHALEUR (medaillon)    chasse  168 px (x  456.. 623) · hauteur 30 px (y 152..181) · RGB (185, 173, 146)
+   bande vide (ctrl-)     AUCUNE ENCRE
+   MEDAILLON              anneau laiton x  400.. 689 (diametre 290 px) · y  18..229 (hauteur 212 px) · centre x=544
+

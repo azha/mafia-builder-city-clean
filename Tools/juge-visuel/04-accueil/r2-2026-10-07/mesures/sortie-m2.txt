@@ -1,0 +1,34 @@
+=== images lues ===
+   ouvre p1_lancement_1080x1920.png     1080x1920
+   ouvre p1_lancement_1080x2400.png     1080x2400
+   ouvre p1_lancement_1080x1920.png     1080x1920
+   ouvre p1_lancement_1080x2400.png     1080x2400
+   ouvre cadre-4-la-suite.png           1080x2102
+   ouvre cadre-4-la-suite.png           1080x2102
+
+=== T1-controle POSITIF : cyan dans la bande du manometre (y 40..200) ===
+    doit etre > 0 PARTOUT, sinon le motif ne sait pas voir du cyan
+   capture r1 1920        cyan=     0  KO motif aveugle
+   capture r1 2400        cyan=     0  KO motif aveugle
+   capture 072418 1920    cyan=   348  OK
+   capture 072418 2400    cyan=    22  OK
+   REF cadre4 (r2)        cyan=     0  KO motif aveugle
+   REF cadre4 (r1)        cyan=   243  OK
+
+=== T1 : cyan sature dans la MOITIE BASSE (jeton de gravite) ===
+    AVANT (F17 non applique) -> > 0 ; APRES -> 0 ; REF courante = controle NEGATIF
+   capture r1 1920        cyan=   425  -> AVANT (cyan present)
+   capture r1 2400        cyan=   425  -> AVANT (cyan present)
+   capture 072418 1920    cyan=   425  -> AVANT (cyan present)
+   capture 072418 2400    cyan=   425  -> AVANT (cyan present)
+   REF cadre4 (r2)        cyan=  1525  -> AVANT (cyan present)
+   REF cadre4 (r1)        cyan=  1747  -> AVANT (cyan present)
+
+=== T2 : bande sous le filet, HORS medaillon (y 150..230, x<300 et x>780) ===
+    un APLAT -> ecart-type ~0
+   capture r1 1920        ecart-type=   0.00  luminance= 13.00  -> BANDE PLATE
+   capture r1 2400        ecart-type=   0.00  luminance= 13.00  -> BANDE PLATE
+   capture 072418 1920    ecart-type=  11.70  luminance= 22.85  -> de l art
+   capture 072418 2400    ecart-type=  11.72  luminance= 28.69  -> de l art
+   REF cadre4 (r2)        ecart-type=   5.78  luminance= 20.26  -> de l art
+   REF cadre4 (r1)        ecart-type=   5.78  luminance= 20.26  -> de l art

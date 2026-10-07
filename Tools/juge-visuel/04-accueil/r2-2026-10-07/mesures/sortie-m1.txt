@@ -1,0 +1,30 @@
+=== images lues ===
+   ouvre p1_lancement_1080x1920.png 1080x1920  /home/erutheone/project/mafia-builder-city-clean/Tools/juge-visuel/04-accueil/r1-2026-09-26/captures/p1_lancement_1080x1920.png
+   ouvre p1_lancement_1080x2400.png 1080x2400  /home/erutheone/project/mafia-builder-city-clean/Tools/juge-visuel/04-accueil/r1-2026-09-26/captures/p1_lancement_1080x2400.png
+   ouvre p1_lancement_1080x1920.png 1080x1920  /home/erutheone/project/mafia-unity-F/Logs/cliche-parcours/20260926-072418/p1_lancement_1080x1920.png
+   ouvre cadre-4-la-suite.png     1080x2102  /home/erutheone/project/mafia-builder-city-clean/Tools/juge-visuel/04-accueil/r2-2026-10-07/reference/cadre-4-la-suite.png
+
+=== CONTROLE POSITIF : largeur attendue 1080 pour toutes ===
+   capture r1 1080x1920     largeur=1080  OK
+   capture r1 1080x2400     largeur=1080  OK
+   capture 072418 1920      largeur=1080  OK
+   reference cadre4 r2      largeur=1080  OK
+
+=== S1 la BANDE sous le filet (y 155..225) ===
+   un APLAT -> ecart-type ~0 ; de l ART -> ecart-type eleve
+   capture r1 1080x1920     ecart-type median=  15.11   luminance mediane= 16.32
+   capture r1 1080x2400     ecart-type median=  15.11   luminance mediane= 16.32
+   capture 072418 1920      ecart-type median=  19.27   luminance mediane= 28.15
+   reference cadre4 r2      ecart-type median=  17.16   luminance mediane= 20.72
+
+=== S2 encre de « LEGERE » ===
+   AVANT (cyan) -> B > R ; APRES (gris chaud) -> R > B
+   capture r1 1080x1920     encre RGB=( 64.7,219.0,187.2)  R-B=-122.5  -> cyan (AVANT)
+   capture r1 1080x2400     encre RGB=( 22.0, 22.0, 28.0)  R-B=  -6.0  -> indecis
+   capture 072418 1920      encre RGB=( 64.7,219.0,187.2)  R-B=-122.5  -> cyan (AVANT)
+   reference cadre4 r2      encre RGB=(138.8,128.8,112.6)  R-B= +26.2  -> gris chaud (APRES)
+
+=== S3 pilule du 1er CTA (degrade vertical) ===
+   capture r1 1080x1920     haut=156.92  bas=156.92  delta= +0.00  -> aplat
+   capture 072418 1920      haut=156.92  bas=156.92  delta= +0.00  -> aplat
+   reference cadre4 r2      haut= 18.52  bas=189.51  delta=-170.99  -> degrade

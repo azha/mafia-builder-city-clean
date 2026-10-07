@@ -1,0 +1,22 @@
+LU texture source  (720, 1280)
+LU REF             (1080, 2102)
+LU C19             (1080, 1920)
+LU C24             (1080, 2400)
+
+=== CONTROLE POSITIF : correlation du profil vertical texture <-> images ===
+   texture vs REF  : r = +0.975   |   [controle negatif, REF retourne] r = -0.803
+   texture vs C19  : r = +0.911   |   [controle negatif, C19 retourne] r = -0.620
+   texture vs C24  : r = +0.760   |   [controle negatif, C24 retourne] r = -0.712
+
+=== RAPPORT DE LUMINANCE jeu / reference, par tiers de la bande de decor ===
+   prediction si l assombrissement de la maquette (brightness .42) est ABSENT du jeu : 2,38
+   et PLUS GRAND la ou le voile mord (haut : alpha .80 -> .13 ; bas : -> .40)
+   tiers HAUT  (voile fort)   REF  18.5 · C19  47.7 (x2.58) · C24  47.4 (x2.57)
+   tiers MILIEU (voile nul)   REF  26.5 · C19  70.6 (x2.66) · C24  72.5 (x2.73)
+   tiers BAS   (voile moyen)  REF  29.7 · C19  78.5 (x2.64) · C24  89.4 (x3.01)
+
+=== EAU du quai (bas de la texture) — la bande qui apparait sous la barre TRANCHER ===
+   texture source  y  793.. 921 : RGB median (53, 71, 90)     lum 68.5  (B-R = +37)
+   REF             y 1840..2000 : RGB median (13, 23, 34)     lum 21.7  (B-R = +21)
+   C19             y 1645..1800 : RGB median (28, 55, 74)     lum 50.6  (B-R = +46)
+   C24             y 2115..2280 : RGB median (29, 59, 79)     lum 54.1  (B-R = +50)

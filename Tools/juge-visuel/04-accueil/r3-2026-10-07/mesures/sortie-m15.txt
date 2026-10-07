@@ -1,0 +1,43 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   « TRANCHER » : span 218 px · capitale 24 px · 8 groupes · gaps [7, 4, 7, 8, 9, 9, 8] · gap moyen 7.4 px
+   barre TRANCHER, ligne plate y=1674 : x 3..1076 (largeur 1074 px) · marges 3 / 3 · fond lum 31.3
+   bouton OR, profil vertical du remplissage :
+      y= 951  RGB (232, 195, 105)  lum 196.4
+      y= 962  RGB (228, 190, 99)  lum 191.5
+      y= 973  RGB (224, 184, 92)  lum 185.9
+      y= 984  RGB (219, 178, 85)  lum 180.0
+      y= 995  RGB (215, 173, 78)  lum 175.1
+      y=1006  RGB (212, 168, 72)  lum 170.4
+      y=1017  RGB (207, 162, 65)  lum 164.6
+      y=1028  RGB (203, 157, 59)  lum 159.7
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   « TRANCHER » : span 209 px · capitale 70 px · 9 groupes · gaps [4, 3, 5, 6, 6, 7, 6, 29] · gap moyen 8.2 px
+   barre TRANCHER, ligne plate y=1487 : x 0..1079 (largeur 1080 px) · marges 0 / 0 · fond lum 83.2
+   bouton OR, profil vertical du remplissage :
+      y= 974  RGB (231, 194, 103)  lum 195.3
+      y= 984  RGB (227, 188, 97)  lum 189.7
+      y= 994  RGB (223, 183, 91)  lum 184.9
+      y=1004  RGB (219, 178, 84)  lum 179.9
+      y=1014  RGB (215, 173, 78)  lum 175.1
+      y=1024  RGB (211, 168, 72)  lum 170.2
+      y=1034  RGB (208, 163, 66)  lum 165.6
+      y=1044  RGB (203, 157, 59)  lum 159.7
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   « TRANCHER » : span 209 px · capitale 70 px · 9 groupes · gaps [4, 7, 7, 6, 6, 7, 6, 31] · gap moyen 9.2 px
+   barre TRANCHER, ligne plate y=1906 : x 0..1079 (largeur 1080 px) · marges 0 / 0 · fond lum 83.2
+   bouton OR, profil vertical du remplissage :
+      y=1380  RGB (231, 194, 103)  lum 195.3
+      y=1390  RGB (227, 189, 97)  lum 190.4
+      y=1400  RGB (223, 183, 91)  lum 184.9
+      y=1410  RGB (219, 179, 85)  lum 180.7
+      y=1420  RGB (215, 173, 78)  lum 175.1
+      y=1430  RGB (212, 168, 72)  lum 170.4
+      y=1440  RGB (208, 163, 66)  lum 165.6
+      y=1450  RGB (204, 158, 59)  lum 160.6
+
+=== ORDRE DE LECTURE — les 8 blocs 90x90 les plus CLAIRS de l ecran ===
+   REF : (810,900)=92 · (720,900)=92 · (720,990)=89 · (810,990)=89 · (900,900)=85 · (900,990)=82 · (630,990)=72 · (630,900)=71
+   C19 : (900,990)=123 · (540,720)=119 · (810,990)=117 · (180,810)=117 · (720,990)=116 · (630,720)=99 · (270,810)=97 · (810,810)=92
+   C24 : (270,1080)=130 · (540,1170)=129 · (540,900)=128 · (180,990)=127 · (900,1350)=126 · (630,1170)=123 · (720,1080)=123 · (540,1080)=121

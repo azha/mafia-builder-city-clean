@@ -1,0 +1,18 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   luminance moyenne 26.2 · L>=90 : 3.9 % · L>=140 : 3.2 % · L>=200 : 0.66 % (controle negatif)
+   palette : 23.6% (11, 17, 26) · 21.5% (8, 13, 21) · 20.9% (27, 33, 40) · 14.0% (13, 21, 31) · 12.2% (18, 24, 32) · 7.8% (62, 60, 53)   (somme 100.0 %)
+   RANG du bouton OR parmi les blocs 90x90 les plus clairs de l ecran : 1 / 990
+      les 5 blocs les plus clairs : (675,945)=157 · (765,945)=155 · (855,945)=153 · (810,945)=153 · (720,945)=151
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   luminance moyenne 50.6 · L>=90 : 9.5 % · L>=140 : 3.8 % · L>=200 : 0.98 % (controle negatif)
+   palette : 30.8% (15, 19, 29) · 20.7% (21, 29, 41) · 20.1% (67, 84, 99) · 11.6% (38, 56, 77) · 9.2% (61, 65, 71) · 7.6% (112, 112, 105)   (somme 100.0 %)
+   RANG du bouton OR parmi les blocs 90x90 les plus clairs de l ecran : 1 / 902
+      les 5 blocs les plus clairs : (675,945)=136 · (855,945)=130 · (900,945)=129 · (720,945)=129 · (810,945)=128
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   luminance moyenne 55.0 · L>=90 : 12.8 % · L>=140 : 4.8 % · L>=200 : 1.16 % (controle negatif)
+   palette : 22.7% (14, 19, 31) · 20.7% (69, 86, 101) · 19.8% (53, 65, 79) · 16.2% (18, 26, 40) · 11.9% (31, 36, 46) · 8.8% (125, 121, 109)   (somme 100.0 %)
+   RANG du bouton OR parmi les blocs 90x90 les plus clairs de l ecran : 13 / 1144
+      les 5 blocs les plus clairs : (540,1125)=149 · (135,990)=147 · (495,1125)=146 · (135,1035)=145 · (495,1170)=136
+

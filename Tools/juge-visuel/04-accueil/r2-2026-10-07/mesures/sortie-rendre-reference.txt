@@ -1,0 +1,33 @@
+rendu   : 1368x2394
+attendu : >= 1080x2106 (contenu 300x585 CSS @ 3.6x)
+✅ non rogné
+sortie  : 1080x2102  pixels non noirs : 48%
+rendu   : 1368x2394
+attendu : >= 1080x2106 (contenu 300x585 CSS @ 3.6x)
+✅ non rogné
+sortie  : 1080x2102  pixels non noirs : 41%
+rendu   : 1368x2394
+attendu : >= 1080x2106 (contenu 300x585 CSS @ 3.6x)
+✅ non rogné
+sortie  : 1080x2102  pixels non noirs : 44%
+rendu   : 1368x2394
+attendu : >= 1080x2106 (contenu 300x585 CSS @ 3.6x)
+✅ non rogné
+sortie  : 1080x2102  pixels non noirs : 47%
+rendu   : 1368x2394
+attendu : >= 1080x2106 (contenu 300x585 CSS @ 3.6x)
+✅ non rogné
+sortie  : 1080x2102  pixels non noirs : 37%
+page   : /home/erutheone/project/atelier3d-mafia/ecrans-brennar-accueil.html
+cadres : 5
+  cadre 0  OK   « ④ L’ouverture — rien à trancher »
+  cadre 1  OK   « ④ L’ouverture — une carte de tête · état cible, HL chunk 3 ; en attendant, le client garde »
+  cadre 2  OK   « ④ L’ouverture — des rapports à lire (l’entrée du rapport) »
+  cadre 3  OK   « ④ L’ouverture — la file sous pression »
+  cadre 4  OK   « ④ L’ouverture — un joueur neuf, planque non vide : la suite, ordre réel A · B|C · E · D pl »
+machine : LIBRE
+  -> cadre-0-rien-a-trancher.png : 1080x2102 OK
+  -> cadre-1-carte-de-tete.png : 1080x2102 OK
+  -> cadre-2-rapports-a-lire.png : 1080x2102 OK
+  -> cadre-3-file-sous-pression.png : 1080x2102 OK
+  -> cadre-4-la-suite.png : 1080x2102 OK

@@ -1,0 +1,21 @@
+LU REF (1080, 2102) cadre-4-la-suite.png   (haut du panneau y=828)
+   separateur 1 : y=1075  RGB (29, 34, 44)     lum  33.7  (verre  17.1, ecart +16.5)  epaisseur 3 px
+                  etendue x  100.. 979 = 880 px (89.6% du panneau 982 px)
+   separateur 2 : y=1335  RGB (27, 31, 42)     lum  30.9  (verre  14.7, ecart +16.2)  epaisseur 3 px
+                  etendue x  100.. 979 = 880 px (89.6% du panneau 982 px)
+   ecart entre separateurs : 259 px
+
+LU C19 (1080, 1920) p1_lancement_1080x1920.png   (haut du panneau y=886)
+   separateur 1 : y=1076  RGB (73, 85, 96)     lum  83.2  (verre  19.7, ecart +63.6)  epaisseur 1 px
+                  etendue x   55..1028 = 974 px (99.2% du panneau 982 px)
+   separateur 2 : y=1233  RGB (73, 85, 96)     lum  83.2  (verre  17.4, ecart +65.8)  epaisseur 2 px
+                  etendue x   94..1008 = 915 px (93.2% du panneau 982 px)
+   ecart entre separateurs : 158 px
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png   (haut du panneau y=1292)
+   separateur 1 : y=1482  RGB (73, 85, 96)     lum  83.2  (verre  19.4, ecart +63.9)  epaisseur 2 px
+                  etendue x   69.. 984 = 916 px (93.3% du panneau 982 px)
+   separateur 2 : y=1640  RGB (73, 85, 96)     lum  83.2  (verre  18.5, ecart +64.8)  epaisseur 2 px
+                  etendue x   94.. 984 = 891 px (90.7% du panneau 982 px)
+   ecart entre separateurs : 158 px
+

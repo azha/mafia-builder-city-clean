@@ -1,0 +1,14 @@
+LU REF (1080, 2102) cadre-4-la-suite.png
+   AUCUNE ligne a 4 ronds trouvee
+LU C19 (1080, 1920) p1_lancement_1080x1920.png
+   ligne y=1748 : 4 ronds [(200, 317), (387, 505), (574, 692), (762, 879)] · diametres [118, 119, 119, 118] · ecarts [69, 68, 69] · empan total 680 px (x 200..879)
+      1er rond, coupe verticale x=258 : y 1700..1748 (hauteur 49 px)
+      trait ACTIF sous le 1er rond : x 240..277 (largeur 38 px) · y 1832..1836 (hauteur 5 px)
+      pastille FAMILLE : ABSENTE (0 px or dans le rond 2 et son pourtour)
+
+LU C24 (1080, 2400) p1_lancement_1080x2400.png
+   ligne y=2228 : 4 ronds [(200, 317), (387, 505), (574, 692), (762, 879)] · diametres [118, 119, 119, 118] · ecarts [69, 68, 69] · empan total 680 px (x 200..879)
+      1er rond, coupe verticale x=258 : y 2180..2228 (hauteur 49 px)
+      trait ACTIF sous le 1er rond : x 240..277 (largeur 38 px) · y 2312..2316 (hauteur 5 px)
+      pastille FAMILLE : ABSENTE (0 px or dans le rond 2 et son pourtour)
+
