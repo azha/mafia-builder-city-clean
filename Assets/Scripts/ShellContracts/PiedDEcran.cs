@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.Shell
@@ -59,6 +60,94 @@ namespace MafiaCleanCity.Shell
             if (im != null) im.color = fond;
             if (libelle != null) libelle.color = texte;
             Cerner(bouton.transform, cerne, EpaisseurDuCerne);
+        }
+
+        /// <summary>LA BANDE BASSE `.bas` des écrans de commande (classe C-c du juge groupé du 07/10) : la plaque `#141a21` PLEINE LARGEUR, son filet haut de 2 CSS px `#2c3640` (hors mise en page), le padding `9 13 15` ; rend
+        /// la plaque (le contenu — voix, geste — s'y range). `debordGauche/Droite` : de combien elle déborde des marges de la colonne qui la porte (0 si elle est posée sur une racine sans marges). Idempotent par nom.</summary>
+        public static GameObject Bande(Transform parent, System.Func<float, float> px, float debordGauche = 0f, float debordDroite = 0f)
+        {
+            Transform existant = parent.Find("Bas");
+            if (existant != null) return existant.gameObject;
+            GameObject bas = new GameObject("Bas", typeof(RectTransform));
+            bas.transform.SetParent(parent, false);
+            UnityEngine.UI.Image fond = bas.AddComponent<UnityEngine.UI.Image>();
+            fond.color = PlaqueDuBas;
+            fond.raycastTarget = false;
+            UnityEngine.UI.VerticalLayoutGroup v = bas.AddComponent<UnityEngine.UI.VerticalLayoutGroup>();
+            v.padding = new RectOffset((int)px(13f), (int)px(13f), (int)px(9f) + (int)px(2f), (int)px(15f));
+            v.spacing = px(5f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            bas.AddComponent<UnityEngine.UI.LayoutElement>().flexibleHeight = 0f;
+            if (debordGauche > 0f || debordDroite > 0f)
+            {
+                // la plaque et le filet débordent des marges de la colonne : un fond enfant, hors mise en page, sous le contenu
+                GameObject plaque = new GameObject("Plaque", typeof(RectTransform));
+                plaque.transform.SetParent(bas.transform, false);
+                plaque.transform.SetAsFirstSibling();
+                plaque.AddComponent<UnityEngine.UI.LayoutElement>().ignoreLayout = true;
+                RectTransform pr = (RectTransform)plaque.transform;
+                pr.anchorMin = Vector2.zero; pr.anchorMax = Vector2.one; pr.offsetMin = new Vector2(-debordGauche, 0f); pr.offsetMax = new Vector2(debordDroite, 0f);
+                UnityEngine.UI.Image pi = plaque.AddComponent<UnityEngine.UI.Image>();
+                pi.color = PlaqueDuBas; pi.raycastTarget = false;
+                fond.color = new Color(0f, 0f, 0f, 0f);
+            }
+            GameObject filet = new GameObject("Filet", typeof(RectTransform));
+            filet.transform.SetParent(bas.transform, false);
+            filet.transform.SetSiblingIndex(1 < bas.transform.childCount ? 1 : 0);
+            filet.AddComponent<UnityEngine.UI.LayoutElement>().ignoreLayout = true;
+            RectTransform fr = (RectTransform)filet.transform;
+            fr.anchorMin = new Vector2(0f, 1f); fr.anchorMax = new Vector2(1f, 1f); fr.pivot = new Vector2(0.5f, 1f);
+            fr.offsetMin = new Vector2(-debordGauche, -px(2f)); fr.offsetMax = new Vector2(debordDroite, 0f);
+            UnityEngine.UI.Image fi = filet.AddComponent<UnityEngine.UI.Image>();
+            fi.color = FiletDuBas; fi.raycastTarget = false;
+            return bas;
+        }
+
+        /// <summary>LE GESTE d'une bande basse (`.geste`, `.cn-geste`) : un bouton à fond sombre, cerne, libellé en capitales lettrées à gauche et LÉGENDE `small` à droite, dans la forme `Forme.Geste` et l'état demandé.
+        /// `Etat.Mort` (`.mort`) = le geste ÉTEINT, posé sans mentir quand aucune route ne l'active (㉞ Carnet, comme ㊳) : le `Button` n'est pas interactif. Rend le bouton.</summary>
+        public static Button Geste(Transform bande, System.Func<float, float> px, TMP_FontAsset police, string libelle, string legende, Etat etat, System.Action surClic = null)
+        {
+            GameObject go = new GameObject("Geste", typeof(RectTransform));
+            go.transform.SetParent(bande, false);
+            Image fond = go.AddComponent<Image>();
+            Button b = go.AddComponent<Button>();
+            b.targetGraphic = fond;
+            b.interactable = etat != Etat.Mort && surClic != null;
+            if (surClic != null) b.onClick.AddListener(() => surClic());
+            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)px(11f), (int)px(11f), (int)px(9f), (int)px(9f));
+            h.spacing = px(8f);
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            go.AddComponent<LayoutElement>().minHeight = px(26f);
+            TextMeshProUGUI lib = Texte(go.transform, "Libelle", libelle, px(9.5f), police, true);
+            lib.characterSpacing = 7f;   // `.7px` sur 9,5 px ≈ .074em
+            lib.enableWordWrapping = true;
+            lib.gameObject.GetComponent<LayoutElement>().flexibleWidth = 1f;
+            if (!string.IsNullOrEmpty(legende))
+            {
+                TextMeshProUGUI leg = Texte(go.transform, "Legende", legende, px(6.5f), police, false);
+                leg.color = Legende(etat);
+                leg.alignment = TextAlignmentOptions.MidlineRight;
+                leg.enableWordWrapping = true;
+                leg.gameObject.GetComponent<LayoutElement>().flexibleWidth = 1f;
+            }
+            StylerLeBouton(go, lib, Forme.Geste, etat);
+            return b;
+        }
+
+        private static TextMeshProUGUI Texte(Transform parent, string nom, string texte, float taille, TMP_FontAsset police, bool gras)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
+            TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
+            t.font = police; t.fontSize = taille; t.text = texte; t.raycastTarget = false;
+            if (gras) t.fontStyle = FontStyles.Bold;
+            go.AddComponent<LayoutElement>();
+            return t;
         }
 
         /// <summary>Un cerne de `epaisseur` u sur le pourtour du parent : quatre filets, hors mise en page, sans toucher.</summary>

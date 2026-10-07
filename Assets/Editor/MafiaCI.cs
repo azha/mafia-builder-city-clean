@@ -346,6 +346,8 @@ public static class MafiaCI
         "FileDeLAccueilRaison",
         // EnteteDEcran (CLIENT-1, 08/10) — classes C-a/C-b du juge groupé : le bandeau de titre en gabarit, la police et l'échelle des titres. PAS ENCORE JOUÉE.
         "EnteteDEcran",
+        // BandeBasse (CLIENT-1, 08/10) — classe C-c et instances A du juge groupé (㉚ rouge + pied en bande, ㉘ jetons d'action, ㉞ bande éteinte + pastilles + réglure). PAS ENCORE JOUÉE.
+        "BandeBasse",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

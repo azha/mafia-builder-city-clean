@@ -453,14 +453,14 @@ namespace MafiaCleanCity.Operational
             string valeurStock = ChaineDApproResolvers.TexteStock(dto.stock_band) + " · " +
                                   (dto.stock_liters_label ?? "?");   // label DÉJÀ formaté, affiché tel quel
             ConstruireLigne(ficheRoot, "ce_qu_il_en_reste", "CE QU'IL EN RESTE", valeurStock,
-                dto.stock_band == "NONE" ? RougeMauvais : EncreSombre);
+                dto.stock_band == "NONE" ? RougeDuBon : EncreSombre);
 
             ConstruireLigne(ficheRoot, "le_prix", "LE PRIX", ChaineDApproResolvers.TextePrix(dto.price_trend_bucket),
-                ChaineDApproResolvers.CouleurPrix(dto.price_trend_bucket, RougeMauvais, VertBon, EncreSombre));
+                ChaineDApproResolvers.CouleurPrix(dto.price_trend_bucket, RougeDuBon, VertBon, EncreSombre));
 
             ConstruireLigne(ficheRoot, "le_fournisseur", "LE FOURNISSEUR",
                 ChaineDApproResolvers.TextePressionFournisseur(dto.supplier_pressure_bucket),
-                ChaineDApproResolvers.CouleurPressionFournisseur(dto.supplier_pressure_bucket, RougeMauvais, EncreSombre));
+                ChaineDApproResolvers.CouleurPressionFournisseur(dto.supplier_pressure_bucket, RougeDuBon, EncreSombre));
 
             if (enCours)
                 ConstruireLigne(ficheRoot, "la_commande", "LA COMMANDE", "est en route", VertBon);   // m-49, verbatim
@@ -770,12 +770,15 @@ namespace MafiaCleanCity.Operational
             chaineRoot = chaineGo.transform;
 
             // Le pied — réplique/note + bouton, contenu rempli par `RendrePied`.
-            GameObject piedGo = NouveauUI("Pied", corpsGo.transform);
+            // C-c (juge groupé du 07/10, f2 ; A4) : le pied est la BANDE BASSE `.bas` de la maquette — plaque #141a21 pleine largeur + filet haut 2 px, ANCRÉE EN PIED de la pile (le corps, flexible, la pousse en bas) ;
+            // il flottait dans la colonne, sous la chaîne, sans plaque ni filet.
+            GameObject bande = PiedDEcran.Bande(racine.transform, Px);
+            GameObject piedGo = NouveauUI("Pied", bande.transform);
             VerticalLayoutGroup vp = piedGo.AddComponent<VerticalLayoutGroup>();
             vp.spacing = Px(8f);
             vp.childControlWidth = true; vp.childControlHeight = true;
             vp.childForceExpandWidth = true; vp.childForceExpandHeight = false;
-            AddLayoutElement(piedGo, flexibleHeight: 1);
+            AddLayoutElement(piedGo, flexibleHeight: 0);
             piedRoot = piedGo.transform;
         }
 
@@ -799,6 +802,9 @@ namespace MafiaCleanCity.Operational
         private static Color EncreSombre => DesignTokens.Current.ficheCtaOrEncre;
         private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;
         private static Color RougeMauvais => DesignTokens.Current.accentDanger;
+        /// <summary>A2 (juge groupé du 07/10, f2) : le rouge des valeurs SUR LE PAPIER du bon — `.bon .l b.rouge` `#a8402f` (4,96:1 sur le papier) ; `accentDanger` `#ff5a4d` (pensé pour le fond sombre) n'y fait que 2,34:1,
+        /// sous le plancher de 3:1. Aucun jeton n'est à ce rouge (le plus proche est à plus de 60/255) : une couleur propre au bon, en aplat exact (jamais un jeton substitué).</summary>
+        public static Color RougeDuBon => new Color32(0xa8, 0x40, 0x2f, 255);
         private static Color VertBon => DesignTokens.Current.accentSuccess;
 
         private static Color Hex(string h)

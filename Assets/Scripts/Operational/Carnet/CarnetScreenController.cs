@@ -613,6 +613,8 @@ namespace MafiaCleanCity.Operational
         // parce qu'il est le seul du programme à opposer un objet CHAUD (le carnet du joueur) au
         // châssis FROID (ce que la ville lui sert). Les prendre dans les jetons de surface
         // rendrait le carnet identique aux autres blocs, et l'écran perdrait son argument.
+        /// <summary>`.cn-slot .no` : le disque du rang pris `#2a2118` et du rang vide `#cbbfa4` ; le filet de la réglure `#d4c8ac` (mesuré ~ sur la référence).</summary>
+        private static readonly Color PastillePrise = new Color32(0x2a, 0x21, 0x18, 255), PastilleVide = new Color32(0xcb, 0xbf, 0xa4, 255), FiletDeReglure = new Color32(0xd4, 0xc8, 0xac, 255);
         private static readonly Color CouleurPapier      = new Color(0.898f, 0.878f, 0.816f);
         private static readonly Color CouleurEncre       = new Color(0.129f, 0.106f, 0.075f);
         private static readonly Color CouleurEncreFaible = new Color(0.404f, 0.365f, 0.302f);
@@ -727,11 +729,27 @@ namespace MafiaCleanCity.Operational
             h.childAlignment = TextAnchor.MiddleLeft;
 
             bool vide = string.IsNullOrEmpty(titre);
-            TextMeshProUGUI num = NouveauTexte(go.transform, "Rang", rang.ToString(), Px(9f),
-                vide ? CouleurEncreFaible : CouleurEncre, DesignTokens.Current.primaryFont);
+            // A2 (juge groupé du 07/10, f2) : la PASTILLE de rang de la maquette (`.cn-slot .no`) — un disque de 15 CSS px, `#2a2118` (rang pris, numéro clair) ou `#cbbfa4` (rang vide, numéro éteint) — et non le numéro nu
+            GameObject pastille = NouveauUI("Pastille", go.transform);
+            Image disque = pastille.AddComponent<Image>();
+            disque.sprite = ProceduralUI.RadialDisc((int)Px(15f), Color.white, Color.white);
+            disque.color = vide ? PastilleVide : PastillePrise;
+            disque.raycastTarget = false;
+            var lePast = pastille.AddComponent<LayoutElement>();
+            lePast.minWidth = lePast.preferredWidth = Px(15f); lePast.minHeight = lePast.preferredHeight = Px(15f); lePast.flexibleWidth = 0f; lePast.flexibleHeight = 0f;
+            TextMeshProUGUI num = NouveauTexte(pastille.transform, "Rang", rang.ToString(), Px(8.5f),
+                vide ? new Color32(0x7a, 0x6f, 0x55, 255) : new Color32(0xea, 0xe0, 0xc8, 255), DesignTokens.Current.primaryFont);
             num.alignment = TextAlignmentOptions.Center;
-            var leNum = num.gameObject.AddComponent<LayoutElement>();
-            leNum.minWidth = Px(16f); leNum.preferredWidth = Px(16f); leNum.flexibleWidth = 0f;
+            num.fontStyle = FontStyles.Bold;
+            RectTransform nr = (RectTransform)num.transform;
+            nr.anchorMin = Vector2.zero; nr.anchorMax = Vector2.one; nr.offsetMin = nr.offsetMax = Vector2.zero;
+            // A1 : la RÉGLURE — le filet du bas de chaque ligne (`.cn-page`, pas de 25-26 CSS px) ; sans lui la page n'est pas réglée (0 trait sur 3 attendus)
+            GameObject regle = NouveauUI("Regle", go.transform);
+            regle.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rr = (RectTransform)regle.transform;
+            rr.anchorMin = new Vector2(0f, 0f); rr.anchorMax = new Vector2(1f, 0f); rr.pivot = new Vector2(0.5f, 0f);
+            rr.offsetMin = new Vector2(0f, 0f); rr.offsetMax = new Vector2(0f, Px(0.7f));
+            Image ri = regle.AddComponent<Image>(); ri.color = FiletDeReglure; ri.raycastTarget = false;
 
             GameObject corps = NouveauUI("Corps", go.transform);
             var vc = corps.AddComponent<VerticalLayoutGroup>();
@@ -761,6 +779,9 @@ namespace MafiaCleanCity.Operational
             return go;
         }
 
+
+        /// <summary>Le geste ÉTEINT de la bande basse (crochet de test) — jamais interactif tant qu'aucune route ne l'active.</summary>
+        public Button GesteDuPied { get; private set; }
 
         private void BuildLayout()
         {
@@ -849,6 +870,12 @@ namespace MafiaCleanCity.Operational
             compo.SetActive(false);
 
             ConstruirePanneau(racine.transform);
+            // C-c (juge groupé du 07/10, f2 ; A4) : la BANDE BASSE `.cn-bas` de la maquette — plaque #141a21 + filet 2 px, et le geste « LANCER LA SOIRÉE » posé ÉTEINT (`.cn-geste.mort`, même règle que ㊳ : aucune route
+            // n'active ce geste ici — sans mentir). La VOIX du lieutenant n'est pas servie (TD-823). Les mots sont ceux du cadre de la maquette.
+            GameObject bandeBasse = PiedDEcran.Bande(racine.transform, Px, Px(13f), Px(13f));
+            Button gesteDuCarnet = PiedDEcran.Geste(bandeBasse.transform, Px, DesignTokens.Current.primaryFont,
+                Lib("LANCER LA SOIRÉE"), Lib("une fois partie, on ne la reprend pas"), PiedDEcran.Etat.Mort);
+            GesteDuPied = gesteDuCarnet;
             RendreEtatInitial();
             // MÉTIER ICI — le reste de la mise en page (enseigne, blocs, listes…) se construit
             // ici, depuis la maquette. `ConstruireCerne`/`ConstruireEnseigne`/… de ㊲ montrent le

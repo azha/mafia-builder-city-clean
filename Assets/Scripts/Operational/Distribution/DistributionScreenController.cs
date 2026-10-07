@@ -682,9 +682,10 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(boutonAchat, preferredHeight: Px(26f), flexibleHeight: 0);
 
             TextMeshProUGUI libAchat = NouveauTexteFiche(boutonAchat.transform, "Libelle",
-                Libelle.De("distribution", "bouton", "ACHETER UN VÉLO"), 8.5f,
+                Libelle.De("distribution", "bouton", "ACHETER UN VÉLO"), 9.5f,
                 DesignTokens.Current.onSurfacePrimary, true);
             TrackText(libAchat.text);
+            Gestifier(boutonAchat, hba, libAchat);
         }
 
         /// <summary>Le pied : portrait + nom (RÉEL si `LieutenantLabel` a été découvert, sinon AUCUN —
@@ -881,9 +882,20 @@ namespace MafiaCleanCity.Operational
             h.childControlWidth = true; h.childControlHeight = true;
             AddLayoutElement(bouton, preferredHeight: Px(26f), flexibleHeight: 0);
             TextMeshProUGUI lib = NouveauTexteFiche(bouton.transform, "Libelle",
-                Libelle.Gabarit("distribution.geste.acheter_un_relais", "Acheter un relais"), 8.5f,
+                Libelle.Gabarit("distribution.geste.acheter_un_relais", "Acheter un relais"), 9.5f,
                 DesignTokens.Current.onSurfacePrimary, true);
             TrackText(lib.text);
+            Gestifier(bouton, h, lib);
+        }
+
+        /// <summary>A2 (juge groupé du 07/10, f2) : les jetons d'action de ㉘ (« Acheter un relais », « Acheter un vélo ») sont à la forme `.geste` de la maquette — bord #5a4a2a, fond #241c11, libellé #d9ab4e en CAPITALES lettrées,
+        /// aligné à gauche — et non le gris-bleu #2a2e38 au texte blanc en casse de phrase.</summary>
+        private static void Gestifier(GameObject bouton, HorizontalLayoutGroup h, TextMeshProUGUI libelle)
+        {
+            h.childAlignment = TextAnchor.MiddleLeft;
+            libelle.fontStyle |= FontStyles.UpperCase;   // la casse est un STYLE : le texte servi reste intact
+            libelle.characterSpacing = 7f;
+            PiedDEcran.StylerLeBouton(bouton, libelle, PiedDEcran.Forme.Geste);
         }
 
         /// <summary>L'achat, sur le bloc proposé. Réussi ⇒ « Relais acheté. Reste à l'ouvrir, depuis sa fiche. » et le geste se retire
