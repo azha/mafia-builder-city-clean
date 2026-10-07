@@ -1,0 +1,290 @@
+[
+ {
+  "hex": "#0a0f18",
+  "jeton": "lieutenantGlassBottom",
+  "d": 1.45,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#0a2318",
+  "jeton": "surfaceCard",
+  "d": 15.87,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#0b1016",
+  "jeton": "hudGaugeFaceOuter",
+  "d": 2.24,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#0b111b",
+  "jeton": "hudBarGlassTop",
+  "d": 0.1,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#0d0f10",
+  "jeton": "surfaceBase",
+  "d": 0.08,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#0d131e",
+  "jeton": "hudBarGlassBottom",
+  "d": 0.15,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#101317",
+  "jeton": "mapDialogBg",
+  "d": 5.56,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#111014",
+  "jeton": "surfaceBase",
+  "d": 5.69,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#111823",
+  "jeton": "lieutenantMedallionOuter",
+  "d": 3.05,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#121519",
+  "jeton": "mapDialogBg",
+  "d": 3.11,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#131211",
+  "jeton": "surfaceBase",
+  "d": 6.75,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#141014",
+  "jeton": "surfaceBase",
+  "d": 8.08,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#141513",
+  "jeton": "surfaceCard",
+  "d": 9.17,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#14181d",
+  "jeton": "surfaceCard",
+  "d": 2.93,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#151310",
+  "jeton": "nightSocle",
+  "d": 8.23,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#15181c",
+  "jeton": "surfaceCard",
+  "d": 1.67,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#161a20",
+  "jeton": "surfaceCard",
+  "d": 5.07,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#17402d",
+  "jeton": "surfaceRow",
+  "d": 24.96,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#181614",
+  "jeton": "readableTextDark",
+  "d": 6.69,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#191a17",
+  "jeton": "readableTextDark",
+  "d": 2.6,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#1a2027",
+  "jeton": "lieutenantMutedDeep",
+  "d": 3.62,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#1b1f24",
+  "jeton": "lieutenantMutedDeep",
+  "d": 1.58,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#1c1a17",
+  "jeton": "readableTextDark",
+  "d": 3.57,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#1d1610",
+  "jeton": "readableTextDark",
+  "d": 10.71,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#1d2124",
+  "jeton": "autonomyBlockBg",
+  "d": 4.11,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#1d2229",
+  "jeton": "lieutenantMutedDeep",
+  "d": 7.2,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#1e1c19",
+  "jeton": "readableTextDark",
+  "d": 5.17,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#20211d",
+  "jeton": "autonomyBlockBg",
+  "d": 7.98,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#22262b",
+  "jeton": "surfaceRow",
+  "d": 4.58,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#23272b",
+  "jeton": "surfaceRow",
+  "d": 3.6,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#232a32",
+  "jeton": "nightOutOfDistrictMuted",
+  "d": 3.08,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#2a1e14",
+  "jeton": "readableTextDark",
+  "d": 17.97,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#2a2e33",
+  "jeton": "surfaceRaised",
+  "d": 5.24,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#2a3648",
+  "jeton": "hudGaugeFaceInner",
+  "d": 7.49,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#2b120c",
+  "jeton": "ficheCtaOrEncre",
+  "d": 12.17,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#2f6e4c",
+  "jeton": "controlUnknown",
+  "d": 44.99,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#333c46",
+  "jeton": "mapChipBg",
+  "d": 8.35,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3a1c0e",
+  "jeton": "ficheCtaOrEncre",
+  "d": 24.51,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#3a3f47",
+  "jeton": "mapChipBg",
+  "d": 6.09,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#4a5057",
+  "jeton": "controlUnknown",
+  "d": 6.9,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#513a1c",
+  "jeton": "nightBase",
+  "d": 19.74,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#5a2e16",
+  "jeton": "nightBase",
+  "d": 31.92,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#6b4f28",
+  "jeton": "ficheCtaOrBord",
+  "d": 37.7,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#7fd4d9",
+  "jeton": "hudGaugeArcCold",
+  "d": 0.1,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#8a6a3a",
+  "jeton": "ficheCtaOrBord",
+  "d": 31.3,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#b08d3e",
+  "jeton": "hudHairlineGold",
+  "d": 0.06,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#d9ab4e",
+  "jeton": "hudMoneyUnderlineGold",
+  "d": 0.11,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#efe4c6",
+  "jeton": "hudCreme",
+  "d": 6.68,
+  "regle": "littéral"
+ }
+]
