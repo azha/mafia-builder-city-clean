@@ -195,7 +195,7 @@ SOURCE = [
  (N, "Aucune affaire en cours.", 1, "㉛ état vide des affaires — `LoiScreenController.MessageAffairesVide`, lu par EcranLoiE1"),
  (N, "Une affaire naît d'une descente — rien ici n'en crée.", 1, "㉛ note de l'état vide (atelier, ebf97d1e) — `LoiScreenController.NoteAffaires`, lue par EcranLoiE1"),
  (N, "Friction", 4, "chrome, nom de barre — `OrgVitalsPanelController.NomFriction` ; les 3 autres littéraux qui le contiennent sont des noms de méthode de ㉝ (`DemolitionResolvers.LireFriction…`, `PhraseDeFriction`, `CouleurDeFriction`) : 3 ⇒ la barre a perdu son nom"),
- (N, "Tension", 1, "chrome, nom de barre (8166447a) — `OrgVitalsPanelController.NomTension`, lu par CharpenteAccueilPanneaux…C2"),
+ (N, "Tension", 1, "chrome, nom de barre (8166447a) — `MotsDesEnumeres.NomTension` (déplacé 07/10, cause 4 : lu par `OrgVitalsPanelController.NomTension` ET par la ligne de pression de ⑭), lu par CharpenteAccueilPanneaux…C2"),
  # 22/09 (captures des sous-vues de ⑥) — quatre textes du dialogue de réaffectation sortis du champ de l'extracteur par leur constante :
  # population 1140 → 1136, exactement ces quatre (comparaison avant/après).
  (N, "Confirmer la réaffectation ? Son ancienneté repart de zéro", 1, "⑥ dialogue de réaffectation (f1bcd5d3) — `LieutenantScreenController.PhraseConfirmationReaffectation`, lue par Capture_Famille_Reaffectation"),

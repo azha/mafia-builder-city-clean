@@ -394,7 +394,7 @@ namespace MafiaCleanCity.Operational.Selling
             LayoutElement pl = pastille.AddComponent<LayoutElement>();
             pl.preferredWidth = Px(11f); pl.preferredHeight = Px(11f); pl.flexibleWidth = 0f;
 
-            Texte(tete.transform, "Nom", Lisible(d.substance), Px(11.5f), Creme,
+            Texte(tete.transform, "Nom", NomDeSubstance(d.substance), Px(11.5f), Creme,
                   DesignTokens.Current.hudSerifFont);
             GameObject espace = new GameObject("Espace", typeof(RectTransform));
             espace.transform.SetParent(tete.transform, false);
@@ -580,9 +580,9 @@ namespace MafiaCleanCity.Operational.Selling
             b == "WORKING" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "au travail") : b == "IDLE" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "au repos")
             : b == "ABSENT" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "pas là") : b == "COMPROMISED" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "grillé") : "—";
 
-        /// <summary>Pis-aller : aucune clé i18n n'est servie par ce back (178 référencées, 0
-        /// servie). Ce n'est PAS une traduction.</summary>
-        private static string Lisible(string v)
+        /// <summary>Le NOM PROPRE d'une substance (`DealerSubstanceLabel` = `BRINDLE | CRICK | HUSH | ASH`, `selling.projection.service.ts:89`) : une marque de la fiction, pas un mot à traduire —
+        /// « Brindle », « Crick ». Ce n'est PAS un énuméré à mots (cause 4) : la garde de classe le nomme en exception.</summary>
+        private static string NomDeSubstance(string v)
         {
             if (string.IsNullOrEmpty(v)) return "—";
             string d = v.Replace('_', ' ').ToLowerInvariant();

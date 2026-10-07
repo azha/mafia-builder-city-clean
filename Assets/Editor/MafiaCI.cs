@@ -340,6 +340,8 @@ public static class MafiaCI
         // PiedDEcran (CLIENT-1, 07/10, cause 3 du rapport de conformité de CLIENT-3) — les DEUX grammaires du geste principal de la maquette (`.cta6` des écrans de lecture, `.geste` des écrans de commande) :
         // couleurs, effet sur un bouton construit, garde (㉚ ㉘ ㊵). Catégorie NEUVE inscrite le jour où elle naît (garde I1) ; PAS ENCORE JOUÉE.
         "PiedDEcran",
+        // MotsDesEnumeres (CLIENT-1, 07/10, cause 4 du rapport de conformité de CLIENT-3) — le résolveur commun des énumérés (⑭ ⑮), sa garde de classe (plus de `Lisible(`, liste noire anglaise) et la dette datée de ㉔. PAS ENCORE JOUÉE.
+        "MotsDesEnumeres",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

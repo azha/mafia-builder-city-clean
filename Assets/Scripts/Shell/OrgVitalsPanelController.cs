@@ -168,7 +168,7 @@ namespace MafiaCleanCity.Shell
         /// <summary>Les noms des barres — UNE source : le panneau les rend (`RenderBar`), les tests les lisent ICI. Mesuré le
         /// 2026-09-22 : `CharpenteAccueilPanneaux…C2` cherchait « Stress: » en dur et a rougi quand 8166447a a traduit la barre.</summary>
         public const string NomFriction = "Friction";
-        public const string NomTension = "Tension";
+        public const string NomTension = MafiaCleanCity.I18n.MotsDesEnumeres.NomTension;   // UN seul littéral (cause 4 : ⑭ dit « Tension » aussi) — la garde du cliquet le compte une fois
 
         private void RenderBar(TextMeshProUGUI text, string name, string bucketValue, string label)
         {

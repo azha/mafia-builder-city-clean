@@ -231,18 +231,11 @@ namespace MafiaCleanCity.Account.Profile
 
         public static string EtatDuCompte(string v) =>
             string.IsNullOrEmpty(v) ? "—"
-            : MafiaCleanCity.I18n.Libelle.ParValeur("profil", "etat", v, ReplisDEtat.TryGetValue(v, out string mot) ? mot : Lisible(v));
+            : MafiaCleanCity.I18n.Libelle.ParValeur("profil", "etat", v, ReplisDEtat.TryGetValue(v, out string mot) ? mot : "—");
 
         public static string LangueDuCompte(string v) =>
             string.IsNullOrEmpty(v) ? "—"
             : MafiaCleanCity.I18n.Libelle.ParValeur("profil", "langue", v, ReplisDeLangue.TryGetValue(v, out string mot) ? mot : v);
-
-        private static string Lisible(string v)
-        {
-            if (string.IsNullOrEmpty(v)) return "—";
-            string d = v.Replace('_', ' ').ToLowerInvariant();
-            return char.ToUpperInvariant(d[0]) + d.Substring(1);
-        }
 
         private void Construire()
         {

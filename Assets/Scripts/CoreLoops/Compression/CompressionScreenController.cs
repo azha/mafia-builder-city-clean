@@ -193,7 +193,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
 
             pressionTexte.text = Etat == null
                 ? "pression inconnue"
-                : $"{Lisible(Etat.stress_bucket)} · {Lisible(Etat.week_state)}";
+                : LignePression(Etat.stress_bucket, Etat.week_state);
             // ⛔ « SEVERE » N'EXISTE PAS DANS CE DOMAINE — je l'avais supposé par analogie avec les
             // paliers d'autres écrans. `StressBucket` (stress-bucket.ts) vaut
             // `calm | mounting | crushing | compression_active`, EN MINUSCULES. La comparaison
@@ -261,14 +261,14 @@ namespace MafiaCleanCity.CoreLoops.Compression
             LayoutElement pl = pastille.AddComponent<LayoutElement>();
             pl.preferredWidth = Px(11f); pl.preferredHeight = Px(11f); pl.flexibleWidth = 0f;
 
-            Texte(tete.transform, "Genre", Lisible(p.source_kind), Px(11.5f),
+            Texte(tete.transform, "Genre", MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.GenreDeProbleme, p.source_kind), Px(11.5f),
                   p.addressed ? Creme2 : Creme, DesignTokens.Current.hudSerifFont);
 
             GameObject espace = new GameObject("Espace", typeof(RectTransform));
             espace.transform.SetParent(tete.transform, false);
             espace.AddComponent<LayoutElement>().flexibleWidth = 1f;
 
-            Texte(tete.transform, "Palier", Lisible(p.tier), Px(7.5f), TeintePalier(p.tier),
+            Texte(tete.transform, "Palier", MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.Palier, p.tier), Px(7.5f), TeintePalier(p.tier),
                   DesignTokens.Current.primaryFont);
 
             if (p.addressed)
@@ -337,13 +337,13 @@ namespace MafiaCleanCity.CoreLoops.Compression
         private static Color TeintePalier(string t) =>
             t == "SEVERE" ? Braise : t == "MODERATE" ? Or : Creme2;
 
-        /// <summary>Pis-aller : aucune clé i18n n'est servie par ce back. Ce n'est PAS une
-        /// traduction — c'est une mise en forme d'un littéral anglais.</summary>
-        private static string Lisible(string v)
+        /// <summary>La ligne de pression (cause 4, ⑭ B3) : « TENSION CALME · AUCUNE SEMAINE » — les deux énumérés (`stress_bucket`, `week_state`) en MOTS FRANÇAIS de l'atelier, par le résolveur
+        /// commun (`MotsDesEnumeres`) ; un mot que l'atelier n'a pas écrit se dit « — », jamais l'anglais dé-sluggé (l'ancien `Lisible()` rendait « Calm · None »). Pure.</summary>
+        public static string LignePression(string stressBucket, string weekState)
         {
-            if (string.IsNullOrEmpty(v)) return "—";
-            string d = v.Replace('_', ' ').ToLowerInvariant();
-            return char.ToUpperInvariant(d[0]) + d.Substring(1);
+            string tension = MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.Tension, stressBucket);
+            string semaine = MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.Semaine, weekState);
+            return (MafiaCleanCity.I18n.MotsDesEnumeres.NomTension + " " + tension + " · " + semaine).ToUpperInvariant();
         }
 
         private void Construire()

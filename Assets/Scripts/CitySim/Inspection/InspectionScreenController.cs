@@ -322,9 +322,9 @@ namespace MafiaCleanCity.CitySim.Inspection
             le.flexibleWidth = 0f; le.flexibleHeight = 0f;
 
             Colonne(l.transform, "Nom", nom, Px(8f), f == null ? Creme2 : Creme, 1.2f, 0f);
-            Colonne(l.transform, "Charge", f == null ? "—" : Lisible(f.queue_load), Px(7f),
+            Colonne(l.transform, "Charge", f == null ? "—" : MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.ChargeDeLaFile, f.queue_load), Px(7f),
                     f == null ? Eteint : Creme2, 0f, Px(46f));
-            Colonne(l.transform, "Regime", f == null ? "—" : Lisible(f.dispatcher_regime), Px(7f),
+            Colonne(l.transform, "Regime", f == null ? "—" : MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.Regime, f.dispatcher_regime), Px(7f),
                     f == null ? Eteint : tendu ? Braise : Creme2, 0f, Px(52f));
             Colonne(l.transform, "Origines", f == null ? "—" : Origines(f.type_distribution), Px(6.5f),
                     f == null ? Eteint : Creme2, 1.6f, 0f);
@@ -353,13 +353,6 @@ namespace MafiaCleanCity.CitySim.Inspection
 
         private static int BandeRang(string b) =>
             b == "PREDOMINANT" ? 3 : b == "MANY" ? 2 : b == "SOME" ? 1 : 0;
-
-        private static string Lisible(string v)
-        {
-            if (string.IsNullOrEmpty(v)) return "—";
-            string d = v.Replace('_', ' ').ToLowerInvariant();
-            return char.ToUpperInvariant(d[0]) + d.Substring(1);
-        }
 
         // ═══ CONSTRUCTION ═══════════════════════════════════════════════════════════════════════════
 
