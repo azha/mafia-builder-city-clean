@@ -10,8 +10,11 @@ sup=json.load(open(os.path.join(D,'mesure-support.json')))
 cols=set()
 for r in sup:
     for m in re.finditer(r'rgba?\((\d+), (\d+), (\d+)',r['bg']+' '+r['bgColor']): cols.add(tuple(int(x) for x in m.groups()))
-for h in ['#0b111b','#0d131e','#2a3648','#b08d3e','#0b1016','#d9ab4e','#7fd4d9','#0d0f10','#0a0f18']:
-    cols.add(tuple(int(h[i:i+2],16) for i in (1,3,5)))
+# + TOUTES les couleurs écrites dans le catalogue (DESIGN.md §3.2 à §4, hors la table §4.1 elle-même) : zones dominantes ㉓ ㉘, cerne, enseigne, voile…
+design=open(os.path.join(D,'DESIGN.md'),encoding='utf-8').read()
+a=design.index('### 3.2'); b=design.index('### 4.1')
+for h in set(re.findall(r'#([0-9a-fA-F]{6})(?![0-9a-fA-F])',design[a:b])) | {'0a0f18','b08d3e','2a3648','d9ab4e','7fd4d9','0b111b','0d131e','0b1016','0d0f10'}:
+    cols.add(tuple(int(h[i:i+2],16) for i in (0,2,4)))
 out=[]
 for c in sorted(cols):
     if c==(0,0,0): continue

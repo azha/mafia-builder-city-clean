@@ -24,6 +24,12 @@
   "regle": "JETON"
  },
  {
+  "hex": "#0c1015",
+  "jeton": "hudGaugeFaceOuter",
+  "d": 3.0,
+  "regle": "JETON"
+ },
+ {
   "hex": "#0d0f10",
   "jeton": "surfaceBase",
   "d": 0.08,
@@ -33,6 +39,12 @@
   "hex": "#0d131e",
   "jeton": "hudBarGlassBottom",
   "d": 0.15,
+  "regle": "JETON"
+ },
+ {
+  "hex": "#0f141a",
+  "jeton": "mapDialogBg",
+  "d": 3.53,
   "regle": "JETON"
  },
  {
@@ -94,6 +106,12 @@
   "jeton": "surfaceCard",
   "d": 1.67,
   "regle": "JETON"
+ },
+ {
+  "hex": "#151b23",
+  "jeton": "mapRootBg",
+  "d": 4.67,
+  "regle": "littéral"
  },
  {
   "hex": "#161a20",
@@ -252,9 +270,21 @@
   "regle": "littéral"
  },
  {
+  "hex": "#654a2c",
+  "jeton": "mapCloseButtonBg",
+  "d": 32.43,
+  "regle": "littéral"
+ },
+ {
   "hex": "#6b4f28",
   "jeton": "ficheCtaOrBord",
   "d": 37.7,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#7b5c37",
+  "jeton": "ficheCtaOrBord",
+  "d": 31.21,
   "regle": "littéral"
  },
  {
@@ -267,6 +297,12 @@
   "hex": "#8a6a3a",
   "jeton": "ficheCtaOrBord",
   "d": 31.3,
+  "regle": "littéral"
+ },
+ {
+  "hex": "#9a774b",
+  "jeton": "hudHairlineGold",
+  "d": 33.71,
   "regle": "littéral"
  },
  {
