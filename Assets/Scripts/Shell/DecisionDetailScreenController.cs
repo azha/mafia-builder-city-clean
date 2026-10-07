@@ -63,6 +63,17 @@ namespace MafiaCleanCity.Shell
         // arbitrage de palette qui appartient à l'atelier. *Substituer ne serait pas ranger.*
         private static readonly Color Rouge = Hex("#93402c");
 
+        // ⑤ F4 + F5 (CLIENT-3 / juge r1, décision de f2 07/10 : « fidèle à la maquette », aucune décision écrite ne réduit l'écran) — la PLAQUE CRÈME. La carte et le tampon étaient des CONTOURS
+        // sans matière (`RoundedRectOutline` seul : l'intérieur transparent laissait voir le zinc noir) : 0 px crème en jeu, le CTA primaire à 2,78:1 sur noir contre 4,33:1 sur crème, et le
+        // secondaire 5,3× plus contrasté que lui. Mesures du juge : matière de la carte REF (219,206,171), plaque du CTA REF (216,202,167). Troisième grammaire du « geste principal » : un CTA
+        // CRÈME à encre sombre (ni `.cta6` ni `.geste`), documenté dans `Tools/juge-visuel/decision-du-jour/DECISION-F4-F5-2026-10-07.md`.
+        /// <summary>La matière de la carte : REF (219,206,171) ; la plaque du tampon : REF (216,202,167). Aplats opaques (aucune conversion sRGB → linéaire).</summary>
+        public static Color MatiereDeLaCarte => new Color32(219, 206, 171, 255);
+        public static Color PlaqueDuTampon => new Color32(216, 202, 167, 255);
+        /// <summary>L'encre sombre sur la matière crème (le titre) et sa version affaiblie (les libellés) — l'encre de la carte de la maquette.</summary>
+        private static Color Encre => Hex("#2a1c12");
+        private static Color EncreFaible => Hex("#6f5f4d");
+
         private static Color Hex(string h)
         {
             ColorUtility.TryParseHtmlString(h, out Color c);
@@ -201,13 +212,36 @@ namespace MafiaCleanCity.Shell
             jetonEtat.color = pris ? Creme2 : OrVif;
         }
 
+        private static Sprite Disque => ProceduralUI.RadialDisc((int)Px(7f), Color.white, Color.white);
+        private static Sprite Anneau => ProceduralUI.Ring((int)Px(7f), Px(1f), Color.white);
+
+        /// <summary>Un cerne de `epaisseur` u autour d'une surface (le contour arrondi de la maquette), en enfant HORS mise en page, posé EN PREMIER (sous les textes), à `retrait` u du bord. Idempotent par nom.</summary>
+        private static void Cerner(Transform parent, string nom, int rayon, float epaisseur, Color couleur, float retrait)
+        {
+            if (parent.Find(nom) != null) return;
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            go.transform.SetAsFirstSibling();
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(retrait, retrait); rt.offsetMax = new Vector2(-retrait, -retrait);
+            Image im = go.AddComponent<Image>();
+            im.sprite = ProceduralUI.RoundedRectOutline(rayon, epaisseur, couleur);
+            im.type = Image.Type.Sliced;
+            im.raycastTarget = false;
+        }
+
         private static void RemplirPips(RectTransform hote, TextMeshProUGUI libelle, string bucket, bool urgence)
         {
             int n = LibellesDecision.Rang(bucket, urgence);
             for (int i = 0; i < hote.childCount; i++)
             {
                 Image img = hote.GetChild(i).GetComponent<Image>();
-                if (img != null) img.color = i < n ? Or : new Color(1f, 1f, 1f, 0.12f);
+                if (img == null) continue;
+                // ⑤ F8 (même matière) : le rang plein est un DISQUE rouge brique (147,64,44), le rang vide un ANNEAU creux de la même teinte — plus un disque gris plein
+                img.sprite = i < n ? Disque : Anneau;
+                img.color = Rouge;
             }
             // ⛔⛔ CETTE TERNAIRE COUVRAIT TROIS VALEURS SUR SIX. Elle testait `high`, `moderate`,
             //    `medium`, `low` — le back sert `minor|moderate|major` et `low|elevated|pressing`.
@@ -319,25 +353,27 @@ namespace MafiaCleanCity.Shell
             //    translucidité doit être convertie pour le mélange linéaire est une question de
             //    RENDU, mesurable seulement contre la référence de cet écran — la mêler ici ferait
             //    bouger deux choses à la fois, et plus rien ne départagerait laquelle a agi.
-            Color bordCarte = DesignTokens.Current.hudMoneyUnderlineGold;
-            bordCarte.a = 0x55 / 255f;
-            fond.sprite = ProceduralUI.RoundedRectOutline((int)Px(14f), Px(1.5f), bordCarte);
+            // ⑤ F4 : la MATIÈRE crème d'abord (surface pleine), puis le bord d'or-brun et le filet rouge intérieur de la maquette, en enfants hors mise en page
+            fond.sprite = ProceduralUI.RoundedRectMask((int)Px(14f));
+            fond.color = MatiereDeLaCarte;
             fond.type = Image.Type.Sliced;
+            Cerner(carte.transform, "BordCarte", (int)Px(14f), Px(1.5f), Hex("#8a6a2c"), 0f);
+            Cerner(carte.transform, "FiletCarte", (int)Px(11f), Px(1f), Rouge, Px(3f));
             VerticalLayoutGroup cv = carte.GetComponent<VerticalLayoutGroup>();
             cv.padding = new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(12f));
             carte.AddComponent<LayoutElement>().flexibleWidth = 1f;
 
             GameObject coin = Bloc("Coin", carte.transform, horizontal: true, espace: Px(4f));
             coin.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
-            Texte(coin.transform, "Cachet", "♦", Px(13f), Or, DesignTokens.Current.primaryFont);
-            coinLibelle = PetitesCapitales(Texte(coin.transform, "Nature", "tactique", Px(7.5f), Creme2,
+            Texte(coin.transform, "Cachet", "♦", Px(13f), Rouge, DesignTokens.Current.primaryFont);
+            coinLibelle = PetitesCapitales(Texte(coin.transform, "Nature", "tactique", Px(7.5f), Rouge,
                                 DesignTokens.Current.primaryFont));
 
             TextMeshProUGUI kicker = Texte(carte.transform, "Kicker", "CE QUI PÈSE LE PLUS AUJOURD'HUI",
-                                           Px(7.5f), Creme2, DesignTokens.Current.primaryFont);
+                                           Px(7.5f), Rouge, DesignTokens.Current.primaryFont);
             kicker.characterSpacing = 14f;
 
-            titre = Texte(carte.transform, "Titre", "", Px(15f), Creme,
+            titre = Texte(carte.transform, "Titre", "", Px(15f), Encre,
                           DesignTokens.Current.hudSerifFont);
             titre.enableWordWrapping = true;
             titre.GetComponent<LayoutElement>().preferredWidth = 0f;
@@ -414,9 +450,12 @@ namespace MafiaCleanCity.Shell
             tampon.GetComponent<VerticalLayoutGroup>().padding =
                 new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(10f));
             Image tf = tampon.AddComponent<Image>();
-            tf.sprite = ProceduralUI.RoundedRectOutline((int)Px(11f), Px(2f), Rouge);
+            // ⑤ F5 : la PLAQUE crème (surface pleine, REF 216,202,167) sous le cerne rouge — l'encre rouge sombre y est à 4,3:1 ; sur le zinc noir elle était à 2,78:1
+            tf.sprite = ProceduralUI.RoundedRectMask((int)Px(11f));
             tf.type = Image.Type.Sliced;
-            tf.color = Hex("#d9cca9");
+            tf.color = PlaqueDuTampon;
+            Cerner(tampon.transform, "BordTampon", (int)Px(11f), Px(2f), Rouge, 0f);
+            Cerner(tampon.transform, "FiletTampon", (int)Px(8f), Px(1f), new Color(Rouge.r, Rouge.g, Rouge.b, 0.5f), Px(4f));
             TextMeshProUGUI lib = Texte(tampon.transform, "Lib", "LES LIRE MAINTENANT", Px(12f),
                                         Rouge, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             lib.characterSpacing = 20f;
@@ -434,7 +473,7 @@ namespace MafiaCleanCity.Shell
             GameObject bande = Bloc("Bande" + nom, parent, horizontal: true, espace: Px(6f));
             bande.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
             bande.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
-            PetitesCapitales(Texte(bande.transform, "Lib", nom, Px(7.5f), Creme2, DesignTokens.Current.primaryFont));
+            PetitesCapitales(Texte(bande.transform, "Lib", nom, Px(7.5f), EncreFaible, DesignTokens.Current.primaryFont));
 
             GameObject pips = Bloc("Pips", bande.transform, horizontal: true, espace: Px(3f));
             pips.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
@@ -442,7 +481,7 @@ namespace MafiaCleanCity.Shell
             {
                 GameObject pip = new GameObject("Pip" + i, typeof(RectTransform));
                 pip.transform.SetParent(pips.transform, false);
-                pip.AddComponent<Image>().sprite = ProceduralUI.RadialDisc((int)Px(7f), Color.white, Color.white);
+                pip.AddComponent<Image>().sprite = Disque;
                 LayoutElement pl = pip.AddComponent<LayoutElement>();
                 pl.preferredWidth = Px(7f);
                 pl.preferredHeight = Px(7f);
@@ -454,7 +493,7 @@ namespace MafiaCleanCity.Shell
             // URGENCE, LIBRE), mais les VALEURS sont en bas de casse (« modérée », « faible »).
             // *Une cause unique ne veut pas dire une population unique* — j'ai failli fermer le
             // finding en en créant un autre, et seule l'image l'a montré.
-            libelle = Texte(bande.transform, "Val", "—", Px(7.5f), Creme, DesignTokens.Current.primaryFont);
+            libelle = Texte(bande.transform, "Val", "—", Px(7.5f), Encre, DesignTokens.Current.primaryFont);
             return (RectTransform)pips.transform;
         }
 

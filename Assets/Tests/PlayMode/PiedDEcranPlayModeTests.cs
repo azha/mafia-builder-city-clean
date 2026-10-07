@@ -133,5 +133,33 @@ namespace MafiaCleanCity.CityMap.Tests
                 Object.DestroyImmediate(host);
             }
         }
+
+        private static float Lum(Color c)
+        {
+            float L(float v) => v <= 0.03928f ? v / 12.92f : Mathf.Pow((v + 0.055f) / 1.055f, 2.4f);
+            return 0.2126f * L(c.r) + 0.7152f * L(c.g) + 0.0722f * L(c.b);
+        }
+        private static float Contraste(Color a, Color b)
+        {
+            float x = Lum(a) + 0.05f, y = Lum(b) + 0.05f;
+            return x > y ? x / y : y / x;
+        }
+
+        [Test]
+        public void P5_Cinq_LaPlaqueCreme_TroisiemeGrammaire_MatiereEtContraste()
+        {
+            // ⑤ F4 + F5 (décision de f2, 07/10) : la matière de la carte REF (219,206,171), la plaque du tampon REF (216,202,167)
+            Assert.AreEqual((219, 206, 171), Trio(DecisionDetailScreenController.MatiereDeLaCarte));
+            Assert.AreEqual((216, 202, 167), Trio(DecisionDetailScreenController.PlaqueDuTampon));
+            Color rouge = new Color32(0x93, 0x40, 0x2c, 255);   // l'encre du CTA primaire de la maquette
+            Assert.GreaterOrEqual(Contraste(rouge, DecisionDetailScreenController.PlaqueDuTampon), 4.2f, "le CTA primaire : ~4,3:1 sur sa plaque crème (le juge : 4,33:1 en référence, 2,78:1 sur noir en jeu)");
+            Assert.Less(Contraste(rouge, new Color32(13, 13, 13, 255)), 3f, "contrôle négatif : sur le zinc noir (13,13,13), le même rouge est sous le plancher de 3:1 — c'est le défaut F5");
+            Assert.GreaterOrEqual(Contraste(new Color32(0x2a, 0x1c, 0x12, 255), DecisionDetailScreenController.MatiereDeLaCarte), 10f, "le titre (encre sombre) sur la matière crème");
+            Assert.IsFalse(PiedDEcran.EstUnAplatOr(DecisionDetailScreenController.PlaqueDuTampon), "une plaque CRÈME n'est pas l'or plein");
+            string src = File.ReadAllText(Path.Combine(Application.dataPath, "Scripts", "Shell", "DecisionDetailScreenController.cs"));
+            StringAssert.Contains("fond.color = MatiereDeLaCarte;", src, "la carte a sa matière (surface pleine)");
+            StringAssert.Contains("tf.color = PlaqueDuTampon;", src, "le tampon a sa plaque");
+            StringAssert.DoesNotContain("RoundedRectOutline((int)Px(14f), Px(1.5f), bordCarte)", src, "plus de carte réduite à un contour sans matière");
+        }
     }
 }
