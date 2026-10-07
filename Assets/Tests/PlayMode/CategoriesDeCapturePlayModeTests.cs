@@ -115,29 +115,49 @@ namespace MafiaCleanCity.CityMap.Tests
             }
         }
 
+        private static readonly Regex AppelSimple = new Regex(@"\b(\w+)\s*\(", RegexOptions.Compiled);
+        private static readonly Regex AppelQualifie = new Regex(@"\b(\w+)\s*\.\s*(\w+)\s*\(", RegexOptions.Compiled);
+
         /// <summary>Les méthodes qui ÉCRIVENT une image : l'API dans le corps, puis (point fixe) toute méthode qui en appelle une — même
-        /// fichier par son nom, ou ailleurs par `Classe.Nom(` (les aides de `CaptureSupport` / `CaptureSousShell`).</summary>
+        /// fichier par son nom, ou ailleurs par `Classe.Nom(` (les aides de `CaptureSupport` / `CaptureSousShell`).
+        /// ⛔ K3 a dépassé son délai de 180 s dans le run complet (TD-756) : l'ancienne boucle construisait DEUX regex dynamiques par couple
+        /// (méthode × écrivain) et à chaque tour du point fixe — environ 650 000 évaluations, bien au-delà du cache de 15 motifs de .NET, pour un
+        /// corpus de tests en hausse de 24 %. Maintenant : les appels de chaque corps sont extraits UNE fois (deux regex précompilées), indexés
+        /// par nom et par (classe, nom), et le point fixe se propage par ces index — linéaire. Même relation qu'avant (`\bNom\s*\(` dans le corps ;
+        /// `\bClasse\s*\.\s*Nom\s*\(`), même résultat : le test K3 pose des contrôles positif et négatif sur la même sémantique.</summary>
         internal static HashSet<(string fichier, string methode)> Ecrivains(IEnumerable<Source> sources)
         {
             var corps = new Dictionary<(string, string), (string corps, string classe)>();
             foreach (Source s in sources)
                 foreach (var (nom, c) in Methodes(s.code))
                     corps[(s.nom, nom)] = (c, s.classe);
-            var ecr = new HashSet<(string, string)>(corps.Where(kv => Api.IsMatch(kv.Value.corps)).Select(kv => kv.Key));
-            bool change = true;
-            while (change)
+
+            var parNom = new Dictionary<string, List<(string, string)>>();
+            var parClasse = new Dictionary<(string, string), List<(string, string)>>();
+            foreach (var kv in corps)
             {
-                change = false;
-                foreach (var kv in corps)
+                foreach (string nom in AppelSimple.Matches(kv.Value.corps).Cast<Match>().Select(m => m.Groups[1].Value).Distinct())
                 {
-                    if (ecr.Contains(kv.Key)) continue;
-                    foreach (var e in ecr.ToList())
-                    {
-                        bool memeFichier = e.Item1 == kv.Key.Item1 && Regex.IsMatch(kv.Value.corps, @"\b" + e.Item2 + @"\s*\(");
-                        bool parClasse = Regex.IsMatch(kv.Value.corps, @"\b" + corps[e].classe + @"\s*\.\s*" + e.Item2 + @"\s*\(");
-                        if (memeFichier || parClasse) { ecr.Add(kv.Key); change = true; break; }
-                    }
+                    if (!parNom.TryGetValue(nom, out var l)) parNom[nom] = l = new List<(string, string)>();
+                    l.Add(kv.Key);
                 }
+                foreach (var q in AppelQualifie.Matches(kv.Value.corps).Cast<Match>().Select(m => (m.Groups[1].Value, m.Groups[2].Value)).Distinct())
+                {
+                    if (!parClasse.TryGetValue(q, out var l)) parClasse[q] = l = new List<(string, string)>();
+                    l.Add(kv.Key);
+                }
+            }
+
+            var ecr = new HashSet<(string, string)>(corps.Where(kv => Api.IsMatch(kv.Value.corps)).Select(kv => kv.Key));
+            var file = new Queue<(string, string)>(ecr);
+            while (file.Count > 0)
+            {
+                var e = file.Dequeue();
+                var appelants = new List<(string, string)>();
+                if (parNom.TryGetValue(e.Item2, out var memeNom)) appelants.AddRange(memeNom.Where(k => k.Item1 == e.Item1));   // même fichier, par son nom
+                if (parClasse.TryGetValue((corps[e].classe, e.Item2), out var qualifies)) appelants.AddRange(qualifies);         // ailleurs, par `Classe.Nom(`
+                foreach (var a in appelants)
+                    if (ecr.Add(a)) file.Enqueue(a);
             }
             return ecr;
         }
@@ -155,9 +175,9 @@ namespace MafiaCleanCity.CityMap.Tests
             tests.Where(t => t.cats.Any(EstCapture) && t.cats.Any(EstEcran))
                  .Select(t => $"{t.fichier}:{t.methode} [{string.Join(", ", t.cats.OrderBy(c => c))}]").ToList();
 
-        internal static List<string> ViolationsK3(List<Source> sources, HashSet<string> admises)
+        internal static List<string> ViolationsK3(List<Source> sources, HashSet<string> admises, HashSet<(string fichier, string methode)> ecrivains = null)
         {
-            var ecr = Ecrivains(sources);
+            var ecr = ecrivains ?? Ecrivains(sources);
             return sources.SelectMany(Tests)
                 .Where(t => ecr.Contains((t.fichier, t.methode)) && !t.cats.Any(EstCapture) && !admises.Contains($"{t.fichier}:{t.methode}"))
                 .Select(t => $"{t.fichier}:{t.methode} [{string.Join(", ", t.cats.OrderBy(c => c))}]").ToList();
@@ -209,15 +229,24 @@ namespace MafiaCleanCity.CityMap.Tests
                 + " [Test]\n public void ParPrivee() { Ecrire2(); }\n private void Ecrire2() { UnityEngine.ScreenCapture.CaptureScreenshot(\"a\"); }\n"
                 + " [Test]\n public void LitSeulement() { var t = UnityEngine.ScreenCapture.CaptureScreenshotAsTexture(); }\n"
                 + " [Test]\n public void DansUneNote() { /* File.WriteAllBytes(x) */ var s = \"File.WriteAllBytes(\"; }\n"
-                + " [Test, Category(\"ClicheX\")]\n public void Capture() { System.IO.File.WriteAllBytes(\"a\", null); }\n}");
-            CollectionAssert.AreEquivalent(new[] { "E.cs:Direct [EcranX]", "E.cs:ParAide [EcranX]", "E.cs:ParPrivee [EcranX]" },
-                ViolationsK3(new List<Source> { aide, ecran }, new HashSet<string>()),
+                + " [Test, Category(\"ClicheX\")]\n public void Capture() { System.IO.File.WriteAllBytes(\"a\", null); }\n"
+                + " [Test]\n public void ParChaine() { Ecrire3(); }\n private void Ecrire3() { Ecrire2(); }\n}");
+            var autre = Lire("F.cs", "[Category(\"EcranY\")]\npublic class F {\n [Test]\n public void AutreFichier() { Ecrire2(); }\n}");
+            CollectionAssert.AreEquivalent(new[] { "E.cs:Direct [EcranX]", "E.cs:ParAide [EcranX]", "E.cs:ParPrivee [EcranX]", "E.cs:ParChaine [EcranX]" },
+                ViolationsK3(new List<Source> { aide, ecran, autre }, new HashSet<string>()),
                 "contrôle positif : l'écriture directe, par une aide d'une autre classe, par une méthode privée — et contrôle négatif : lire "
-                + "une texture (AsTexture), une API citée dans une note ou une chaîne, une vraie capture");
+                + "une texture (AsTexture), une API citée dans une note ou une chaîne, une vraie capture ; la CHAÎNE (point fixe par l'index) ; "
+                + "un appel NU d'un autre fichier n'est pas un appel de l'écrivain (même fichier par son nom, ailleurs par `Classe.Nom(`)");
 
             var sources = Sources();
-            Assert.Greater(Ecrivains(sources).Count, 20, "anti-vacuité : les méthodes qui écrivent une image sont trouvées");
-            List<string> v = ViolationsK3(sources, EcrituresAdmises);
+            // TD-756 : la mesure qu'on demande, écrite au journal — K3 avait dépassé 180 s dans le run complet, sans qu'on sache où allait le temps
+            var chrono = System.Diagnostics.Stopwatch.StartNew();
+            var ecrivains = Ecrivains(sources);
+            chrono.Stop();
+            UnityEngine.Debug.Log($"[K3-MESURE] Ecrivains : {ecrivains.Count} écrivains sur {sources.Count} sources en {chrono.ElapsedMilliseconds} ms");
+            Assert.Greater(ecrivains.Count, 20, "anti-vacuité : les méthodes qui écrivent une image sont trouvées");
+            Assert.Less(chrono.ElapsedMilliseconds, 20000, "le point fixe est linéaire : 20 s ne se dépassent pas (l'ancienne boucle en prenait plus de 180 en run complet)");
+            List<string> v = ViolationsK3(sources, EcrituresAdmises, ecrivains);
             Assert.IsEmpty(v, "un test ÉCRIT une image sans être une capture ni une exception nommée — une sonde écrit dans `Temp/`, une "
                 + "photo de juge porte sa catégorie de capture : " + string.Join(" · ", v));
             var toutes = sources.SelectMany(Tests).Select(t => $"{t.fichier}:{t.methode}").ToHashSet();
