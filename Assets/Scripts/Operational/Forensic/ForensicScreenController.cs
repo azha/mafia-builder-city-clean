@@ -841,7 +841,13 @@ namespace MafiaCleanCity.Operational
         /// <summary>⛔ UN SEUL SITE (TD-881) : les pistes dont le back ne sert qu'une valeur CONSTANTE. `audit_risk_bucket` (source
         /// `ledger_entry_ring`, TD-358) et `lifestyle_alarm_bucket` (source `lifestyle_audit_state`) rendent la même bande pour tout
         /// joueur (`forensic.controller.ts:11-19`) et AUCUN champ ne le dit : le client le sait, ici, à la main. Sortie de la dette : le
-        /// back sert la vivacité de chaque piste (transmis à BACK-1).</summary>
+        /// back sert la vivacité de chaque piste (transmis à BACK-1).
+        /// MESURE (juge-données de ㊴, 08/10 ; lue, pas rejouée) : les deux bandes SONT servies — un compte frais rend `clean` et `quiet` (`mesures/forensic_frais.json`) — puis jetées ici. Elles restent
+        /// ÉTEINTES parce que le back lui-même les dit constantes : `forensic.controller.ts:11-19` (« stay CONSTANT for every player », la chaîne de blanchiment est « dead at 4 maillons », TD-358 ;
+        /// l'anti-péremption du back épingle `audit_risk_bucket` à « aucune donnée » pour un joueur qui a exercé la vraie chaîne de production) et `district-interior.projection.service.ts:20`
+        /// (`ledger_entry_ring` « n'a AUCUN écrivain de production »). Les écrivains de TICK existent (`leading-digit-audit.service.ts` WEEKLY, `standing-gap-heat.service.ts` mensuel) mais n'ont pas été
+        /// exercés sur un compte qui blanchit : CE QUI N'EST PAS MESURÉ est donc que la bande ne variera jamais par un chemin joueur. Le jour où le back sert la vivacité (ou qu'un compte mesuré montre une
+        /// bande ≠ premier cran), rallumer les deux pistes (de l'information au joueur) et supprimer cette liste.</summary>
         public static readonly string[] PistesConstantes = { "audit_risk_bucket", "lifestyle_alarm_bucket" };
 
         /// <summary>Les trois pistes DANS L'ORDRE de la maquette (150) : la comptabilité, les cuves, le train de vie. Échelles lues dans le
