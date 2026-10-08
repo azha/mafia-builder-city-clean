@@ -1730,13 +1730,16 @@ namespace MafiaCleanCity.Shell
         public static float HautDeLaLigne((float min, float max) bandeFile, float voulueU, float zoneU) =>
             zoneU <= 0f ? bandeFile.max : Mathf.Max(bandeFile.max, bandeFile.min + voulueU / zoneU);
 
-        /// <summary>La bande de la carte de tête posée sur une ligne dont le haut est `hautDeLaLigne` : la marge, puis la hauteur de la tête des cadres (0,5). Pure.</summary>
+        /// <summary>La bande de la carte de tête posée sur une ligne dont le haut est `hautDeLaLigne` : la marge, puis la hauteur de la tête des cadres (0,5),
+        /// BORNÉE au haut de la zone sûre (1) — mesuré au créneau du 08/10 nuit (A12c, zone de 391 u du banc) : une ligne qui grandit (raison sur deux
+        /// lignes) poussait la tête de 0,5 AU-DESSUS du bandeau (272 > 205 u). Aux résolutions de jeu (zone ≈ 1 700 u) la ligne ne grandit pas et la
+        /// borne ne mord pas : la tête garde ses 0,5. Pure.</summary>
         public static (float min, float max) BandeTeteSur(float hautDeLaLigne) =>
-            (hautDeLaLigne + MargeAuDessusDeLaLigne, hautDeLaLigne + MargeAuDessusDeLaLigne + (BandeTete.max - BandeTete.min));
+            (hautDeLaLigne + MargeAuDessusDeLaLigne, Mathf.Min(1f, hautDeLaLigne + MargeAuDessusDeLaLigne + (BandeTete.max - BandeTete.min)));
 
         /// <summary>La bande de « LA SUITE » posée sur cette ligne : son bas s'ancre (la marge), son haut reste celui MESURÉ pour l'état (`haut`). Pure.</summary>
         public static (float min, float max) BandeSuiteSur(float hautDeLaLigne, float haut) =>
-            (hautDeLaLigne + MargeAuDessusDeLaLigne, Mathf.Max(haut, hautDeLaLigne + MargeAuDessusDeLaLigne));
+            (hautDeLaLigne + MargeAuDessusDeLaLigne, Mathf.Min(1f, Mathf.Max(haut, hautDeLaLigne + MargeAuDessusDeLaLigne)));
 
         // L'ancrage de l'Accueil COURANT : la ligne (et la bande mesurée de son état), ce qui s'y ancre (tête ou suite, et le haut mesuré de la suite).
         private ExceptionQueuePanelController ligneDeLAccueil;

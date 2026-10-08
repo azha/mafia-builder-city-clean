@@ -174,6 +174,10 @@ namespace MafiaCleanCity.Capture.Tests
                     new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "fab-2", lieutenant_id = "", severity_band = "MILD", event_descriptor = "Il fait chaud en ville" },
                 };
                 Assert.IsTrue(ExceptionQueuePanelController.LigneHaute(cartes), "précondition : deux cartes ⇒ la ligne haute du cadre 4");
+                // ⛔ (créneau du 08/10 nuit, run 5 : ÉCHEC « la file n'est pas montée ») la raison est RENDUE en réplique (« … », `ExceptionBandes.Replique`) :
+                //    la comparer au texte BRUT ne réussissait jamais. On compare à la règle MÊME du rendu.
+                string raisonRendue = ExceptionQueuePanelController.RaisonDeLaCarte(cartes[0]);
+                Assert.IsNotNull(raisonRendue, "précondition : la carte du lieutenant a une raison à rendre");
                 // Le RE-MONTAGE avec la file fabriquée : le chemin de A6 (AccueilCanon), sur le vrai shell connecté.
                 // ⛔ (créneau du 08/10 soir) la réponse fabriquée part de la VRAIE session (phase, jour, budgets) : seules la tête et la file changent. Une réponse
                 //    neuve publiait la phase « — » (F14) sous un bandeau resté à « Aube », et la garde de phase de `CapturerLeShell` rougissait à juste titre.
@@ -199,10 +203,10 @@ namespace MafiaCleanCity.Capture.Tests
                 while (Time.realtimeSinceStartup < fin)
                 {
                     file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
-                    if (file != null && file.RaisonRendue == raison && file.transform.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_fab-1")) break;
+                    if (file != null && file.RaisonRendue == raisonRendue && file.transform.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_fab-1")) break;
                     yield return null;
                 }
-                if (file == null || file.RaisonRendue != raison || !file.transform.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_fab-1"))
+                if (file == null || file.RaisonRendue != raisonRendue || !file.transform.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_fab-1"))
                 {
                     Noter("A01", "④ Accueil — la file" + variante, "ÉCHEC : le panneau de la file n'est pas monté sur l'Accueil (ou sans la carte fabriquée de cette variante)", Ref);
                     Assert.Fail("④ A01 : la file fabriquée n'est pas montée sur l'Accueil rouvert — rien n'a été mesuré (un ÉCHEC noté n'est pas un vert)");

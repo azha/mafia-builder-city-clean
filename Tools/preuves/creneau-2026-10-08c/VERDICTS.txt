@@ -1,0 +1,44 @@
+# Créneau groupé du 08/10 nuit (CLIENT-1, porte prise 03:53, rendue après le run 6) — lignes de verdict extraites des journaux (journaux complets hors dépôt)
+# run1 = cumul dcf6dc9f ; run2-4 = + borne de la tête et A12b à la règle (non commités au moment des runs) ; run5 = A01 rouge (harnais : raison comparée au texte brut) ; run6 = A01 corrigé
+== run1.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [AccueilCanon, EcranAccueil, W3U1, EcranDistribution, EcranVitrine]
+MafiaCI: RunPlayModeTests started — 1102 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 101
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.AccueilCanonPlayModeTests.A12b_LigneHaute_LaFileGrandit_LaSuiteEtLaTeteMontentSansRecouvrement —   la ligne haute du cadre 4 (424 → 506 sur 406)
+[A12c] raison sur une ligne : zone 391 u · ligne voulue 160.9 u · haut de la ligne 0.437 (bande 0.227) · bas de la tête 0.462
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.AccueilCanonPlayModeTests.A12c_LaTeteSAncreSurLeHautReelDeLaLigne_RaisonSurUnePuisDeuxLignes —   raison sur deux lignes : une bande monte sur le bandeau (272 > 205)
+MafiaCI: RunPlayModeTests finished — passed=99 failed=2 skipped=0 inconclusive=0 declares=101 comptes=101
+MafiaCI: catégories RÉELLEMENT exécutées = [AccueilCanon, EcranAccueil, EcranDistribution, EcranVitrine, W3U1]
+MafiaCI: VERDICT code=1 (failed=2 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run2.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [AccueilCanon]
+MafiaCI: RunPlayModeTests started — 1102 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 27
+[A12c] raison sur une ligne : zone 391 u · ligne voulue 160.9 u · haut de la ligne 0.437 (bande 0.227) · bas de la tête 0.462
+[A12c] raison sur deux lignes : zone 391 u · ligne voulue 242.4 u · haut de la ligne 0.646 (bande 0.227) · bas de la tête 0.671
+MafiaCI: RunPlayModeTests finished — passed=27 failed=0 skipped=0 inconclusive=0 declares=27 comptes=27
+MafiaCI: catégories RÉELLEMENT exécutées = [AccueilCanon]
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run3.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [^GardeCategories$]
+MafiaCI: RunPlayModeTests started — 1102 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 9
+MafiaCI: RunPlayModeTests finished — passed=9 failed=0 skipped=0 inconclusive=0 declares=9 comptes=9
+MafiaCI: catégories RÉELLEMENT exécutées = [GardeCategories]
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run4.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [GardeCategories]
+MafiaCI: RunPlayModeTests started — 1102 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 9
+MafiaCI: RunPlayModeTests finished — passed=9 failed=0 skipped=0 inconclusive=0 declares=9 comptes=9
+MafiaCI: catégories RÉELLEMENT exécutées = [GardeCategories]
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run5.log
+MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = [MafiaCleanCity.Capture.Tests.PlanchesParEcranCapturePlayModeTests.Planche_AccueilFile_DeuxCartes_MesureDuDebordement]
+MafiaCI: RunPlayModeTests started — 1102 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 1
+MafiaCI: FAIL MafiaCleanCity.Capture.Tests.PlanchesParEcranCapturePlayModeTests.Planche_AccueilFile_DeuxCartes_MesureDuDebordement — ④ A01 : la file fabriquée n'est pas montée sur l'Accueil rouvert — rien n'a été mesuré (un ÉCHEC noté n'est pas un vert)
+MafiaCI: RunPlayModeTests finished — passed=0 failed=1 skipped=0 inconclusive=0 declares=1 comptes=1
+MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
+MafiaCI: VERDICT code=1 (failed=1 tronquee=0 filtreVide=0 catalogueSurvivant=0 nomsInconnus=0)
+== run6.log
+MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = [MafiaCleanCity.Capture.Tests.PlanchesParEcranCapturePlayModeTests.Planche_AccueilFile_DeuxCartes_MesureDuDebordement]
+MafiaCI: RunPlayModeTests started — 1102 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 1
+MafiaCI: RunPlayModeTests finished — passed=1 failed=0 skipped=0 inconclusive=0 declares=1 comptes=1
+MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0 nomsInconnus=0)

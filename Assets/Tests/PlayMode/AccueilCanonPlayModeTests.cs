@@ -337,21 +337,28 @@ namespace MafiaCleanCity.Shell.Tests
             shell.SourceDeLaSuitePourTest = new SourceTemoin { Etat = JoueurNeuf(1) };
             MafiaCleanCity.Operational.Exceptions.ExceptionCardDto Nue(string id) => new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = id, severity_band = "MODERATE" };
 
-            float PartDeLaFile(string cas, out ExceptionQueuePanelController file)
+            // ⛔ (créneau du 08/10 nuit) depuis l'ANCRAGE (279d28b4), la ligne n'a plus une hauteur fixe : son haut est le plus haut de sa bande
+            //    MESURÉE et de la hauteur que son contenu VEUT. Au banc (zone de 391 u), le contenu veut 160,9 u ⇒ 0,41 de la zone, pas 0,202 : la
+            //    part attendue est celle de LA RÈGLE (`AppShell.HautDeLaLigne`), jamais moins que la bande de l'état.
+            float PartEtAttendue(string cas, out ExceptionQueuePanelController file, out float zoneU)
             {
                 Canvas.ForceUpdateCanvases();
                 file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
                 Assert.IsNotNull(file, $"{cas} : la file est montée");
-                float zone = shell.ContentSlot.rect.height - ShellChrome.TopInsetPx - ShellChrome.BottomInsetPx;
-                Assert.Greater(zone, 1f, $"{cas} : précondition, une zone sûre mesurable");
-                return ((RectTransform)file.transform).rect.height / zone;
+                zoneU = shell.ContentSlot.rect.height - ShellChrome.TopInsetPx - ShellChrome.BottomInsetPx;
+                Assert.Greater(zoneU, 1f, $"{cas} : précondition, une zone sûre mesurable");
+                return ((RectTransform)file.transform).rect.height / zoneU;
             }
+            float Attendue((float min, float max) bande, ExceptionQueuePanelController f, float zoneU) =>
+                AppShell.HautDeLaLigne(bande, f.HauteurVoulueDeLaLigne(), zoneU) - bande.min;
 
             // (1) sans carte, deux cartes en file : la suite et la ligne HAUTE (le cadre 4).
             SessionOpenDto suiteEtDeux = AvecCarte(null); suiteEtDeux.queue = new[] { Nue("e-1"), Nue("e-2") };
             transport.Reponse = suiteEtDeux;
             yield return RouvrirParEmpire();
-            Assert.AreEqual(0.227f - 0.025f, PartDeLaFile("suite + deux cartes", out ExceptionQueuePanelController file), 0.005f, "la ligne haute du cadre 4 (424 → 506 sur 406)");
+            float part = PartEtAttendue("suite + deux cartes", out ExceptionQueuePanelController file, out float zone);
+            Assert.AreEqual(Attendue(AppShell.BandeFileHaute, file, zone), part, 0.005f, "la ligne haute du cadre 4 (424 → 506 sur 406), ou plus si son contenu le veut");
+            Assert.GreaterOrEqual(part, 0.227f - 0.025f - 0.005f, "jamais moins que la bande haute du cadre 4");
             Assert.IsNotNull(file.PlusieursRendu, "anti-vacuité : le pluriel est rendu dans la ligne haute");
             LaSuitePanelController suite = shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).LastOrDefault();
             Assert.IsTrue(suite != null && suite.Visible, "précondition : la suite se montre");
@@ -361,7 +368,8 @@ namespace MafiaCleanCity.Shell.Tests
             SessionOpenDto teteEtDeux = AvecCarte("c-tete"); teteEtDeux.queue = new[] { Nue("e-1"), Nue("e-2") };
             transport.Reponse = teteEtDeux;
             yield return RouvrirParEmpire();
-            Assert.AreEqual(0.227f - 0.025f, PartDeLaFile("tête + deux cartes", out file), 0.005f, "la ligne haute, avec ou sans carte de tête");
+            part = PartEtAttendue("tête + deux cartes", out file, out zone);
+            Assert.AreEqual(Attendue(AppShell.BandeFileHaute, file, zone), part, 0.005f, "la ligne haute, avec ou sans carte de tête");
             HighestLeverageCardController tete = Tete();
             Assert.IsNotNull(tete, "précondition : la carte de tête est montée");
             VerifierGeometrie("la tête sur la ligne haute", (RectTransform)tete.transform, (RectTransform)file.transform);
@@ -370,7 +378,8 @@ namespace MafiaCleanCity.Shell.Tests
             SessionOpenDto teteEtUne = AvecCarte("c-tete"); teteEtUne.queue = new[] { Nue("e-1") };
             transport.Reponse = teteEtUne;
             yield return RouvrirParEmpire();
-            Assert.AreEqual(0.128f - 0.025f, PartDeLaFile("tête + une carte nue", out file), 0.005f, "sans raison ni pluriel : la ligne des cadres 1-3 (464 → 506)");
+            part = PartEtAttendue("tête + une carte nue", out file, out zone);
+            Assert.AreEqual(Attendue(AppShell.BandeFile, file, zone), part, 0.005f, "sans raison ni pluriel : la ligne des cadres 1-3 (464 → 506), ou plus si son contenu le veut");
             VerifierGeometrie("la tête sur la ligne basse", (RectTransform)Tete().transform, (RectTransform)file.transform);
         }
 
@@ -432,7 +441,8 @@ namespace MafiaCleanCity.Shell.Tests
                 Assert.AreEqual(AppShell.HautDeLaLigne(AppShell.BandeFileHaute, voulue, zone), hautLigne, 0.003f,
                     $"{cas} : le haut de la ligne est celui de la règle (sa bande mesurée, ou plus haut si le contenu le veut)");
                 Assert.AreEqual(hautLigne + AppShell.MargeAuDessusDeLaLigne, basTete, 0.003f, $"{cas} : la tête commence à la marge au-dessus du haut RÉEL de la ligne");
-                Assert.AreEqual(AppShell.BandeTete.max - AppShell.BandeTete.min, Bord(teteRt, true, zone) - basTete, 0.003f, $"{cas} : la tête garde sa hauteur");
+                Assert.AreEqual(Mathf.Min(AppShell.BandeTete.max - AppShell.BandeTete.min, 1f - basTete), Bord(teteRt, true, zone) - basTete, 0.003f,
+                    $"{cas} : la tête garde sa hauteur, bornée au haut de la zone sûre");
                 VerifierGeometrie(cas, teteRt, fileRt);
                 Debug.Log($"[A12c] {cas} : zone {zone:0} u · ligne voulue {voulue:0.#} u · haut de la ligne {hautLigne:0.000} (bande {AppShell.BandeFileHaute.max:0.000}) · bas de la tête {basTete:0.000}");
                 hauts.Add(hautLigne);
@@ -515,6 +525,10 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(AppShell.BandeFileHaute.min + 0.3f, grande, 1e-4f, "le contenu veut plus que la bande : la ligne grandit");
             Assert.AreEqual(grande + AppShell.MargeAuDessusDeLaLigne, AppShell.BandeTeteSur(grande).min, 1e-4f, "et la tête monte d'autant");
             Assert.AreEqual(AppShell.BandeFileHaute.max, AppShell.HautDeLaLigne(AppShell.BandeFileHaute, 300f, 0f), "contrôle : zone nulle ⇒ la bande mesurée");
+            // la borne (créneau du 08/10 nuit, A12c au banc : 272 > 205 u) : une ligne très haute ne pousse JAMAIS la tête hors de la zone sûre
+            float tresHaute = AppShell.HautDeLaLigne(AppShell.BandeFileHaute, 600f, 1000f);   // 0,625
+            Assert.AreEqual(1f, AppShell.BandeTeteSur(tresHaute).max, 1e-4f, "la tête est bornée au haut de la zone sûre");
+            Assert.LessOrEqual(AppShell.BandeSuiteSur(0.99f, AppShell.BandeSuite.max).max, 1f, "la suite aussi");
         }
 
         private sealed class SourceTemoin : ISourceDeLaSuite
