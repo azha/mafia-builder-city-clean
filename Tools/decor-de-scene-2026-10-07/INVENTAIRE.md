@@ -36,7 +36,7 @@ SYM  CONTRÔLEUR                         CADRE(n)  SCÈNE        LUM   BANDE  RA
 ⑮    InspectionScreenController          31(5)  district    0.45   10%  corkboard C objet / matière dédiée  F     F        punaise,fiche-p.chasse,corkboard,grain,fiche-p.soup,fiche-p.veille
 ⑰    PrecinctScreenController            31(5)  district    0.45   10%  corkboard C objet / matière dédiée  F     F        punaise,fiche-p.chasse,corkboard,grain,fiche-p.soup,fiche-p.veille
 ⑭    CompressionScreenController         14(6)  district    0.62   35%  tole      C objet / matière dédiée  F     F        tole,vapeur,cadran-fer,vis.v1,vis.v2,vis.v3
-㊴    ForensicScreenController           131(6)  district    0.24   21%  dos6      A support standard        T     T        dos6,enseigne
+㊴    ForensicScreenController           131(8)  district    0.24   21%  dos6      A support standard        T     T        dos6,enseigne
 ㊳    JournalScreenController            125(6)  district    0.24   21%  jrn6      A support standard        T     T        jrn6,enseigne
 ㊵    FiliereScreenController            137(6)  district    0.24   21%  bln6      A support standard        T     T        bln6,enseigne
 ㉕    TutorialScreenController           — aucune maquette série 6
@@ -64,7 +64,7 @@ SYM  CONTRÔLEUR                         CADRE(n)  SCÈNE        LUM   BANDE  RA
 Scènes : {'district': 21, 'verge': 1, 'verge-jour': 1, 'bar': 3}
 Familles : {'C objet / matière dédiée': 10, 'A support standard': 7, 'B support à fond propre': 9}
 Cerne+enseigne : 7 | luminosités distinctes : ['0.18', '0.2', '0.24', '0.4', '0.45', '0.55', '0.62', '—']
-Cadres couverts : 133
+Cadres couverts : 135
 ```
 Lecture : 35 écrans de l'index, **26 ont une maquette série 6 (25 cadres nominaux distincts : ⑮ et ⑰ partagent les cadres 31-35)**, 9 n'en ont pas (④ ⑥ ⑪ ㉕ ⑲ ① ② ⑬ ⑳ — le décor n'y est PAS défini : hors périmètre fidèle, à décider par f2).
 Scènes : `district` 21 écrans, `bar` 3, `verge` 1, `verge-jour` 1. Familles : A 7 · B 9 · C 10. **7 écrans portent cerne + enseigne ; 19 non.**

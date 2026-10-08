@@ -132,18 +132,18 @@ Découpe « cover » : `DecorAuComptoir.UvCouverture` (public, éprouvée) RÉUT
 
 ### 3.4 L5 — Filets et bords d'état (classe mesurée par un juge groupé, 07/10)
 **Le constat (juge, rapports `screen_c1`, `ecran_loi`, `ecran_appro` / `r-groupe-2026-10-07`)** : les FILETS du canon ne sont pas tracés — ㊳ : 0 bord `#2a3648` sur 9 blocs (référence ×3) ; ㉛ : les bords d'état vert `#4f7f3f` et or `#8a6a22` sont égaux au fond ; ㉚ : 4 filets pointillés du bon → 0. Les CTA et gestes, eux, portent leur bord à 1/255 (`PiedDEcran.Cerner`) : le client SAIT tracer un bord, il ne le fait pas sur les blocs.
-**La mesure (Chromium, `mesurer-filets.cjs` → `mesure-filets.json`, TOUS les cadres des 26 écrans de l'INDEX — nominaux ET d'état —, 128 cadres)** : **1560 éléments bordés, 5403 côtés** (plein 5194 · tireté 140 · pointillé 45 · double 24), **137 recettes distinctes** (côtés, style, couleur, épaisseur), **87 couleurs de bord** distinctes. (Sur les seuls 25 cadres nominaux : 312 / 1083 / 85 — chiffres de la v4, remplacés parce que les bords d'ÉTAT, p. ex. `#4f7f3f` de ㉛, ne sont que sur les cadres d'état.) Les plus fréquentes :
+**La mesure (Chromium, `mesurer-filets.cjs` → `mesure-filets.json`, TOUS les cadres des 26 écrans de l'INDEX — nominaux ET d'état —, 130 cadres)** : **1587 éléments bordés, 5511 côtés** (plein 5298 · tireté 144 · pointillé 45 · double 24), **137 recettes distinctes** (côtés, style, couleur, épaisseur), **87 couleurs de bord** distinctes. (08/10, ㊴ : cadres 150-151 ajoutés à l'index — 128 → 130 cadres, 1560 → 1587 éléments, 5403 → 5511 côtés ; chiffres antérieurs dans l'historique git. Sur les seuls 25 cadres nominaux : 312 / 1083 / 85 — chiffres de la v4, remplacés parce que les bords d'ÉTAT, p. ex. `#4f7f3f` de ㉛, ne sont que sur les cadres d'état.) Les plus fréquentes :
 | côtés | style | couleur | épaisseur | éléments |
 |---|---|---|---|---|
-| 4 côté(s) | solid | `#2a3648` | 1 px | 357 |
-| 4 côté(s) | solid | `#b08d3e` | 2 px | 143 |
+| 4 côté(s) | solid | `#2a3648` | 1 px | 377 |
+| 4 côté(s) | solid | `#b08d3e` | 2 px | 145 |
 | 4 côté(s) | solid | `#14171a` | 1 px | 99 |
-| 4 côté(s) | solid | `#b08d3e` | 1 px | 77 |
+| 4 côté(s) | solid | `#b08d3e` | 1 px | 81 |
 | 1 côté(s) | solid | `#2c3640` | 2 px | 44 |
 | 4 côté(s) | solid | `#5a4a2a` | 1 px | 44 |
 | 4 côté(s) | solid | `#1f2a3a` | 1 px | 27 |
 | 4 côté(s) | solid | `#1f2a3a@0.4` | 1 px | 27 |
-(la couleur `#2a3648` à elle seule porte 1403 côtés ; les filets pointillés de ㉚ = `#c3b79e` 1 px haut ×4 ; `.cerne` laiton = 4 côtés, 1 px, rayon 3 : mesuré sur les 7 `.cerne`). Les bords d'ÉTAT de ㉛ : `.pris` fond `#22301f` bord `#4f7f3f`, `.risque` fond `#2e2114` bord `#8a6a22`, neutre bord `#303a44`.
+(la couleur `#2a3648` à elle seule porte 1485 côtés ; les filets pointillés de ㉚ = `#c3b79e` 1 px haut ×4 ; `.cerne` laiton = 4 côtés, 1 px, rayon 3 : mesuré sur les 7 `.cerne`). Les bords d'ÉTAT de ㉛ : `.pris` fond `#22301f` bord `#4f7f3f`, `.risque` fond `#2e2114` bord `#8a6a22`, neutre bord `#303a44`.
 **Mécanisme** : `Filets.Poser(bloc, SpecFilet)` ajoute au bloc un conteneur `Filets` (nom figé, distinct du `Cerne` de `PiedDEcran.Cerner`) portant 1 à 4 `Image` de côté `Filets/Haut|Droite|Bas|Gauche` (`ignoreLayout`, `raycastTarget = false`, **ni `CanvasGroup` ni `Canvas`**, `CanvasRenderer` ajouté EXPLICITEMENT), épaisseur = `EchelleMaquette.PxTrait(EpaisseurCss, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar6)` (l'échelle EXISTANTE du dépôt : largeur du canvas / 300 ; 1280 n'en est que le repli — plus de constante K), couleur par `Teinte` (jeton si d ≤ 4, §4.1) ; `Pointille`/`Tirete` = tuile `Tiled` (50 % de remplissage mesuré par le juge) ; `Rayon > 0` sur 4 côtés = `ProceduralUI.RoundedRectOutline` / `RoundedRectDashedOutline` (existants) ; `Double` = deux traits ; `Inset`/`Lueur` = le cerne (A). `Filets.Etat(bloc, fond, EtatDeBloc)` pose fond ET bord ENSEMBLE (c'est ce qui rend « bord = fond » impossible : un état sans bord distinct est refusé à la construction). `PiedDEcran.Cerner` (CLIENT-1) reste son propriétaire ; on lui proposera de DÉLÉGUER à `Filets` après sa fusion (une seule implémentation du trait).
 **Déclaration** : les recettes de chaque écran sont GÉNÉRÉES de la mesure (`generer-filets.py` → `DecorsDeSceneFilets.cs`, partie du catalogue, régénérable) sous des noms par écran ; un contrôleur ne porte ni couleur ni épaisseur de bord, il appelle `Filets.Poser(bloc, DecorsDeScene.Filets.<Ecran>.<Nom>)`.
 

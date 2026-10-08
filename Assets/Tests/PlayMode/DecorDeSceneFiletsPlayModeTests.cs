@@ -94,8 +94,8 @@ namespace MafiaCleanCity.Tests.PlayMode
         public void D6a_RecettesGenerees_EgalesALaMesure_ParEcran_SurTousSesCadres()
         {
             Mesure m = LireMesure();
-            Assert.AreEqual(128, m.r.Length, "anti-vacuité : les 128 cadres mesurés");
-            Assert.AreEqual(1560, m.r.Sum(c => c.el.Length), "anti-vacuité : les 1560 éléments bordés du design (§3.4)");
+            Assert.AreEqual(130, m.r.Length, "anti-vacuité : les 130 cadres mesurés (㊴ : 150-151 ajoutés le 08/10)");
+            Assert.AreEqual(1587, m.r.Sum(c => c.el.Length), "anti-vacuité : les 1587 éléments bordés du design (§3.4)");
             Dictionary<int, Cadre> parCadre = m.r.ToDictionary(c => c.i);
 
             var noms = new HashSet<string>(DecorsDeScene.Tous.Select(s =>

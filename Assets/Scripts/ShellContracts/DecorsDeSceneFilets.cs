@@ -315,32 +315,42 @@ namespace MafiaCleanCity.Shell
                 public static readonly SpecFilet[] Tole = { F(Cotes.Haut, 4.0f, StyleFilet.Plein, Teinte.Jeton("hudHairlineGold", t => t.hudHairlineGold, 1.0f), "b08d3e", "0px") };
             }
 
-            /// <summary>㊴ — cadres 131, 132, 133, 134, 135, 136 : 11 recette(s).</summary>
+            /// <summary>㊴ — cadres 131, 132, 133, 134, 135, 136, 150, 151 : 16 recette(s).</summary>
             public static class Forensic
             {
-                public static readonly int[] Cadres = { 131, 132, 133, 134, 135, 136 };
-                /// <summary>`.ac` — cadres 133, 134.</summary>
+                public static readonly int[] Cadres = { 131, 132, 133, 134, 135, 136, 150, 151 };
+                /// <summary>`.ac` — cadres 133, 134, 151.</summary>
                 public static readonly SpecFilet[] Ac = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1.0f), "2a3648", "0px") };
-                /// <summary>`.ac.parti` — cadres 133, 134.</summary>
+                /// <summary>`.ac.parti` — cadres 133, 134, 151.</summary>
                 public static readonly SpecFilet[] AcParti = { F(Cotes.Tous, 1.0f, StyleFilet.Tirete, Teinte.Hex("#2a3648", 1.0f), "2a3648", "0px") };
-                /// <summary>`.cerne` — cadres 131, 132, 133, 134, 135, 136.</summary>
+                /// <summary>`.cerne` — cadres 131, 132, 133, 134, 135, 136, 150, 151.</summary>
                 public static readonly SpecFilet[] Cerne = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Jeton("hudHairlineGold", t => t.hudHairlineGold, 1.0f), "b08d3e", "3px") };
                 /// <summary>`.cta6` — cadres 131, 132.</summary>
                 public static readonly SpecFilet[] Cta6 = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Jeton("hudHairlineGold", t => t.hudHairlineGold, 1.0f), "b08d3e", "0px") };
-                /// <summary>`.elast` — cadres 131, 132, 133, 134, 135.</summary>
+                /// <summary>`.cta6.eteint` — cadres 150.</summary>
+                public static readonly SpecFilet[] Cta6Eteint = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1.0f), "2a3648", "0px") };
+                /// <summary>`.elast` — cadres 131, 132, 133, 134, 135, 150, 151.</summary>
                 public static readonly SpecFilet[] Elast = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1.0f), "2a3648", "0px") };
-                /// <summary>`.enseigne` — cadres 131, 132, 133, 134, 135, 136.</summary>
+                /// <summary>`.enseigne` — cadres 131, 132, 133, 134, 135, 136, 150, 151.</summary>
                 public static readonly SpecFilet[] Enseigne = { F(Cotes.Bas, 2.0f, StyleFilet.Plein, Teinte.Jeton("hudHairlineGold", t => t.hudHairlineGold, 1.0f), "b08d3e", "0px"), F(Cotes.Haut | Cotes.Droite | Cotes.Gauche, 1.0f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1.0f), "2a3648", "0px") };
-                /// <summary>`.fen` — cadres 131, 132, 133, 134, 135, 136.</summary>
+                /// <summary>`.fen` — cadres 131, 132, 133, 134, 135, 136, 150, 151.</summary>
                 public static readonly SpecFilet[] Fen = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1.0f), "2a3648", "0px") };
-                /// <summary>`.mano` — cadres 131, 132, 133, 134, 135, 136.</summary>
+                /// <summary>`.fen.ici` — cadres 150, 151.</summary>
+                public static readonly SpecFilet[] FenIci = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1.0f), "2a3648", "0px") };
+                /// <summary>`.fen.porte` — cadres 150, 151.</summary>
+                public static readonly SpecFilet[] FenPorte = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Jeton("hudHairlineGold", t => t.hudHairlineGold, 1.0f), "b08d3e", "0px") };
+                /// <summary>`.mano` — cadres 131, 132, 133, 134, 135, 136, 150, 151.</summary>
                 public static readonly SpecFilet[] Mano = { F(Cotes.Tous, 2.0f, StyleFilet.Plein, Teinte.Jeton("hudHairlineGold", t => t.hudHairlineGold, 1.0f), "b08d3e", "50%") };
-                /// <summary>`.pann` — cadres 131, 132, 133, 134, 135, 136.</summary>
+                /// <summary>`.pann` — cadres 131, 132, 133, 134, 135, 136, 150, 151.</summary>
                 public static readonly SpecFilet[] Pann = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1.0f), "2a3648", "0px") };
-                /// <summary>`.pi` — cadres 131, 132.</summary>
+                /// <summary>`.pi` — cadres 131, 132, 150.</summary>
                 public static readonly SpecFilet[] Pi = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1.0f), "2a3648", "0px") };
                 /// <summary>`.pi.bout` — cadres 132.</summary>
                 public static readonly SpecFilet[] PiBout = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Jeton("accentDanger", t => t.accentDanger, 1.0f), "ff5a4d", "0px") };
+                /// <summary>`.pi.eteinte` — cadres 150.</summary>
+                public static readonly SpecFilet[] PiEteinte = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1.0f), "2a3648", "0px") };
+                /// <summary>`.rg` — cadres 151.</summary>
+                public static readonly SpecFilet[] Rg = { F(Cotes.Tous, 1.0f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1.0f), "2a3648", "0px") };
             }
 
             /// <summary>㊳ — cadres 125, 126, 127, 128, 129, 130 : 16 recette(s).</summary>
