@@ -21,7 +21,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   V3  EFFET, sur un catalogue fabriqué (solde 100, une possession) : A1 deux cartes par rangée, chacune moins large que la moitié de l'écran et de même largeur ; A2 une plaque teintée (≠ fond de page) ;
     //       A3 des dessins qui DIFFÈRENT (la pile de 3 500 plus haute que celle de 100 ; la clé porte son chiffre ; la plaque porte ses couleurs) ; A4 la bande basse en PIED, sans voix ; B1 les deux intitulés ;
     //       B2 le médaillon de bonus hors mise en page ; B3 le comptoir : enseigne et solde dans la MÊME ligne, l'enseigne à gauche ; l'article possédé : ACQUIS et plus de prix ; l'article hors d'atteinte :
-    //       sa raison en rouge et pas de geste ; l'article à portée : la carte est le geste
+    //       sa raison en rouge et pas de geste ; l'article à portée : la carte est le geste, un APPUI LONG (décision de f2, 08/10) — un appui court n'achète rien, la vitre qui glisse lâche l'appui ;
+    //       la bande basse SANS cadre rond de portrait (décision de f2, 08/10)
     [Category("Vitrine")]
     public class VitrinePlayModeTests
     {
@@ -59,6 +60,9 @@ namespace MafiaCleanCity.CityMap.Tests
             StringAssert.Contains("Lib(\"Les Marks — payés au magasin\")", s);
             StringAssert.DoesNotContain("RadialDisc((int)Px(11f)", s, "A3 : plus le même disque pour tous les produits");
             StringAssert.DoesNotContain("\"ACHETER\"", s, "la maquette ne dessine aucun bouton : la carte est l'article");
+            StringAssert.Contains("art.AddComponent<LongPressButton>()", s, "décision de f2 (08/10) : l'achat se prend d'un appui LONG");
+            StringAssert.DoesNotContain("art.AddComponent<Button>()", s, "plus d'achat en un seul appui");
+            StringAssert.DoesNotContain("\"Portrait\"", s, "décision de f2 (08/10) : pas de cadre rond vide");
             string p = Source("ShellContracts", "PiedDEcran.cs");
             StringAssert.Contains("public static GameObject BandeDeVoix(Transform parent, System.Func<float, float> px, Color plaque, Color filet)", p);
         }
@@ -123,7 +127,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.AreEqual(hote.transform.childCount - 1, bas.GetSiblingIndex(), "en PIED de la pile");
                 Assert.AreEqual(Trio(DesignTokens.Current.nightSocle), Trio(bas.GetComponent<Image>().color), "la plaque `.voix` (#12100e, par le jeton nightSocle)");
                 Assert.IsNotNull(bas.Find("Filet"));
-                Assert.IsNotNull(bas.Find("Portrait"), "le cadre rond du portrait");
+                Assert.IsNull(bas.Find("Portrait"), "PAS de cadre rond vide (décision de f2, 08/10 : il reviendra avec TD-823)");
                 Transform voix = bas.Find("Voix");
                 Assert.IsNotNull(voix);
                 Assert.AreEqual(0, voix.GetComponentsInChildren<TextMeshProUGUI>(false).Count(t => t.gameObject.activeInHierarchy && !string.IsNullOrEmpty(t.text) && t.name != "Note"),
@@ -182,18 +186,29 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.IsNotNull(possede.Find("Acquis"), "ACQUIS en étiquette d'angle");
                 Assert.IsNull(possede.Find("Etiquette"), "plus d'étiquette de prix sur un article possédé (cadre 100)");
                 Assert.AreEqual(0.62f, possede.GetComponent<CanvasGroup>().alpha, 0.001f, "`.art.pris`");
-                Assert.IsNull(possede.GetComponent<Button>(), "rien à acheter");
+                Assert.IsNull(possede.GetComponent<LongPressButton>(), "rien à acheter");
                 Transform hors = Trouver(etageres, "Sku_save_slot_3");
                 Assert.IsNotNull(hors.Find("Etiquette"));
                 Assert.AreEqual("pas assez de Marks", hors.Find("Manque").GetComponent<TextMeshProUGUI>().text, "la raison, celle que le back sert (table 69)");
-                Assert.IsNull(hors.GetComponent<Button>(), "hors d'atteinte : aucun geste");
+                Assert.IsNull(hors.GetComponent<LongPressButton>(), "hors d'atteinte : aucun geste");
                 Transform aPortee = Trouver(etageres, "Sku_cosm_dashboard_theme_1");
-                Assert.IsNotNull(aPortee.GetComponent<Button>(), "à portée : la carte est le geste");
+                LongPressButton appui = aPortee.GetComponent<LongPressButton>();
+                Assert.IsNotNull(appui, "à portée : la carte est le geste — un APPUI LONG (décision de f2, 08/10)");
+                Assert.IsNull(aPortee.GetComponent<Button>(), "plus d'achat en un seul appui");
+                Assert.AreEqual(UiTimingTunables.DestructiveLongpressMs, appui.RequiredHoldMs, "le geste maison des actions irréversibles : 1 000 ms");
+                appui.SimulateShortTap();
+                Assert.AreEqual(0, ecran.AchatsDemandes, "un appui COURT n'achète rien");
+                appui.OnPointerDown(null);
+                Assert.IsTrue(appui.IsPressing, "contrôle positif : l'appui est en cours");
+                hote.transform.Find("Defilement").GetComponent<ScrollRect>().onValueChanged.Invoke(Vector2.zero);
+                Assert.IsFalse(appui.IsPressing, "la vitre qui glisse LÂCHE l'appui : un glissement lent n'achète pas");
+                appui.SimulateCompletedLongPress();
+                Assert.AreEqual(1, ecran.AchatsDemandes, "un appui LONG abouti demande l'achat, une fois");
                 Assert.IsNull(aPortee.Find("Manque"));
                 Assert.AreEqual("80 Marks", aPortee.Find("Etiquette/Montant").GetComponent<TextMeshProUGUI>().text);
                 Assert.AreEqual("DERRIÈRE LA VITRE", petite.Find("Etiquette/Montant").GetComponent<TextMeshProUGUI>().text, "argent réel : derrière la vitre");
                 Assert.AreEqual("Bientôt", petite.Find("Note").GetComponent<TextMeshProUGUI>().text);
-                Assert.IsNull(petite.GetComponent<Button>());
+                Assert.IsNull(petite.GetComponent<LongPressButton>());
                 Assert.AreEqual(1, ecran.RendusEffectues, "le prédicat de capture a monté une fois");
             }
             finally

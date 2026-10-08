@@ -45,7 +45,7 @@
 | A1 | grille 2×2 | `.planche` : deux cartes par rangée, gouttière 8 CSS px, hauteur de rangée commune ; le soutien sur une `.planche.large` | `Planche()` |
 | A2 | matière de la carte | `.art` : plaque arrondie (rayon 4) teintée `#1e171d` (médiane du dégradé #221a20→#1a141a), bord 1 px `#3a2530` | `Article()` |
 | A3 | pictogramme | un dessin PAR article, recopié du SVG (viewBox 84×54 → 64×41) : pile de pièces par rang (1/3/5/8 épaisseurs), plaque aux trois couleurs, tableau au sodium, clé numérotée, enveloppe scellée | `VitrinePictogrammes` |
-| A4 | bande du bas | `.voix` : plaque `#12100e` (jeton nightSocle), filet haut `#3a2e24`, cadre rond du portrait — **sans la voix** (voir « non fourni ») | `PiedDEcran.BandeDeVoix`, `ConstruireLaBande()` |
+| A4 | bande du bas | `.voix` : plaque `#12100e` (jeton nightSocle), filet haut `#3a2e24` — **sans la voix** ni cadre rond du portrait (décision de f2, 08/10 (c)) | `PiedDEcran.BandeDeVoix`, `ConstruireLaBande()` |
 | A5 | vocabulaire | une seule monnaie, les Marks, partout (clés de la table 69) ; la maquette re-rendue en Marks | — |
 | B1 | intitulé d'étagère | « Les extras — payés en Marks » / « Les Marks — payés au magasin » (h3, 7,5 px, lettré, capitales) | `Etagere()` |
 | B2 | médaillon de bonus | `.bonus` : plaque OR collée dans l'angle haut-droit, encre sombre, texte plié dans 60 % de la carte, hors mise en page | `Medaillon()` |
@@ -55,11 +55,25 @@
   catalogue est servi liasses d'abord ; l'écran le RANGE.
 - **Le geste d'achat** : la maquette ne dessine aucun bouton — la carte est l'article, l'étiquette
   de prix dit l'état (`.etiq` / `.etiq.hors` + « hors d'atteinte » / `.acquis`). Une carte à portée se
-  prend d'un appui sur la carte (`Button`). ⚠️ Aucune confirmation n'est dessinée dans les cadres
-  98-100 : signalé à f2 (un appui dépense le don de bienvenue d'un coup).
+  prend d'un **APPUI LONG** sur la carte (`LongPressButton`, 1 000 ms) — décision de f2 (08/10 (a)),
+  ci-dessous. Un glissement de la vitre lâche l'appui en cours.
 - **i18n** : deux clés neuves dérivées (`boutique.bloc.les_extras_payes_en_marks`,
   `boutique.bloc.les_marks_payes_au_magasin`), inscrites en dette datée
   (`ZeroRepliDesLocatairesPlayModeTests.DetteDatee`), table demandée au back via f2.
+
+## Décisions de f2 (08/10, en réponse au message FIN DE TÂCHE de ㉓)
+
+| # | question | décision de f2 | appliqué |
+|---|---|---|---|
+| (a) | l'ACHAT SANS CONFIRMATION : la maquette ne dessine aucune confirmation, un appui dépense le don de bienvenue d'un coup | **pas d'achat en un seul appui** : le geste maison des actions irréversibles, l'**APPUI LONG** (`LongPressButton`, `T.ui.destructive_longpress_ms` = 1 000 ms, avec son arc). L'atelier dessinera l'arc sur la carte plus tard | la carte à portée porte `LongPressButton` (plus de `Button`) ; un appui court n'achète rien ; la vitre qui glisse lâche l'appui (un glissement lent de plus d'une seconde aurait acheté l'article sous le doigt). **L'arc n'est pas posé** : aucun composant d'arc n'existe dans le dépôt, et l'atelier le dessine — la carte ne montre donc AUCUN retour pendant l'appui |
+| (b) | les extras d'abord (cadre nominal 98) | OK, c'est le cadre nominal | inchangé |
+| (c) | la bande `.voix` avec le cadre rond du portrait VIDE | **retirer le cadre rond** tant que TD-823 n'est pas servi (un cercle vide se lit comme un défaut) ; la bande garde texte et filet | `ConstruireLaBande()` ne pose plus « Portrait » |
+| (d) | « donne 100 Marks » au lieu de « + 100 Marks » | C consigné, OK | C2 ci-dessous |
+
+⚠️ Reste ouvert, à f2 : le canon de `LongPressButton` (`global_conventions_core.md:129-138`) dit que la
+confirmation destructive est un appui long **OU** une saisie, et que l'alternative par saisie est
+**obligatoire pour l'accessibilité** (HighestLeverageCard la pose). La maquette n'en dessine aucune ici :
+rien n'est inventé, la question est remontée.
 
 ## Écarts CONSIGNÉS (C — ni correctif ni tour de juge, ruling user 07/10)
 
@@ -77,12 +91,13 @@
 
 1. **La voix du lieutenant** (Wexler, portrait, « derrière le comptoir », les trois répliques des
    cadres 98-100) : **non servie** — TD-823 (registre back). Décision de f2 du 08/10 : « bande basse
-   sans voix ». La bande, son filet et le cadre rond du portrait sont posés ; la colonne de la voix est
+   sans voix ». La bande et son filet sont posés, PAS le cadre rond du portrait (f2, 08/10 (c)) ; la colonne de la voix est
    VIDE, rien n'est inventé à sa place. Le juge verra la bande SANS personnage : c'est l'état attendu.
 2. **Aucune capture en jeu** : rien n'a été joué (porte Unity libre, aucun créneau sans signal de f2).
    Les planches `E07_Boutique_*` du harnais `PlanchesParEcran` sont à reprendre au créneau groupé.
-3. **Le geste d'achat réel** (appui → `POST /v1/me/iap/items/purchase` → relecture) : hors réseau,
-   non vérifié.
+3. **Le geste d'achat réel** (appui long → `POST /v1/me/iap/items/purchase` → relecture) : hors
+   réseau, non vérifié. La garde `Vitrine` V3 pilote l'appui (court : 0 achat ; lâché par la vitre ;
+   long abouti : 1 achat demandé), pas la route.
 4. **Les polices réellement rendues** (`fc-match`) : non exécuté ce tour.
 
 ## Captures en jeu attendues (au créneau groupé, sur signal de f2)

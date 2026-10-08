@@ -20,7 +20,7 @@ namespace MafiaCleanCity.Economy.Shop
     //   A1 la GRILLE 2 × 2 (`.planche`) : deux cartes par rangée, gouttière de 8 CSS px — plus une colonne de bandes pleine largeur ;
     //   A2 la carte est une PLAQUE teintée (`.art` : #221a20 → #1a141a, bord #3a2530, rayon 4) — plus un filet sur le fond de page ;
     //   A3 un DESSIN par article (`VitrinePictogrammes` : la pile de pièces par rang, la plaque aux couleurs, le tableau de bord, la clé, l'enveloppe) — plus le même disque quatre fois ;
-    //   A4 la BANDE BASSE `.voix` (`PiedDEcran.BandeDeVoix`) en pied de la pile ; SANS la voix (Wexler, « derrière le comptoir », sa réplique) : TD-823, registre back — rien n'est inventé à sa place ;
+    //   A4 la BANDE BASSE `.voix` (`PiedDEcran.BandeDeVoix`) en pied de la pile ; SANS la voix (Wexler, « derrière le comptoir », sa réplique) : TD-823, registre back — rien n'est inventé à sa place, pas même le cadre rond du portrait (décision de f2, 08/10) ;
     //   A5 une seule monnaie, les Marks, partout (les clés de la table 69) ;
     //   B1 l'INTITULÉ d'étagère qui dit par quoi on paie (« Les extras — payés en Marks » / « Les Marks — payés au magasin ») ;
     //   B2 le MÉDAILLON de bonus (`.bonus`) : plaque or collée dans l'angle de la carte, hors mise en page ;
@@ -63,6 +63,17 @@ namespace MafiaCleanCity.Economy.Shop
         /// dépend d'aucun champ, d'aucun ordre de requêtes, et elle survivra à l'ajout d'un appel.</summary>
         public int RendusEffectues { get; private set; }
         public string DerniereErreur { get; private set; }
+        /// <summary>Les achats DEMANDÉS par un appui long abouti (garde `Vitrine` : un appui court n'en demande aucun).</summary>
+        public int AchatsDemandes { get; private set; }
+        private readonly List<LongPressButton> appuis = new List<LongPressButton>();
+
+        /// <summary>⛔ La vitrine DÉFILE, et un doigt qui la fait glisser reste posé sur une carte : sans ceci, un glissement lent de plus d'une
+        /// seconde achèterait l'article sous le doigt. Tout mouvement de la vitre lâche les appuis en cours.</summary>
+        private void LacherLesAppuis()
+        {
+            foreach (LongPressButton a in appuis)
+                if (a != null && a.IsPressing) a.OnPointerExit(null);
+        }
 
         private const float K = 1280f / 300f;
         private static float Px(float cssPx) => cssPx * K;
@@ -89,12 +100,11 @@ namespace MafiaCleanCity.Economy.Shop
         private static readonly Color32 BordDArticle = new Color32(0x3a, 0x25, 0x30, 255);
         private static readonly Color32 Papier = new Color32(0xef, 0xe6, 0xd4, 255);          // le nom de l'article, l'étiquette de prix
         private static readonly Color32 PapierTerni = new Color32(0xe6, 0xdb, 0xc9, 255);     // `.etiq.hors`
-        private static readonly Color32 EncreDuPapier = new Color32(0x24, 0x1f, 0x1c, 255);   // le montant, le médaillon ; le fond du portrait
+        private static readonly Color32 EncreDuPapier = new Color32(0x24, 0x1f, 0x1c, 255);   // le montant, le médaillon
         private static readonly Color32 EncreTernie = new Color32(0x75, 0x59, 0x59, 255);
         private static readonly Color32 MagasinFond = new Color32(0x1b, 0x23, 0x2c, 255), MagasinBord = new Color32(0x3f, 0x4a, 0x57, 255), MagasinEncre = new Color32(0x9f, 0xb0, 0xc0, 255);
         private static readonly Color32 VertAcquis = new Color32(0x7f, 0xc9, 0x9a, 255);
         private static readonly Color32 RougeDuManque = new Color32(0xd9, 0x7a, 0x6a, 255);
-        private static readonly Color32 BordDuPortrait = new Color32(0x4a, 0x3a, 0x2a, 255);
         private static readonly Color32 EncreMorte = new Color32(0xd0, 0xa8, 0xa0, 255);      // `.mort`
 
         private enum EtatDEtiquette { Papier, Hors, Magasin }
@@ -178,6 +188,7 @@ namespace MafiaCleanCity.Economy.Shop
         {
             for (int i = etageres.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(etageres.GetChild(i).gameObject);
+            appuis.Clear();
 
             // ⚠️ -1 signifie « pas lu », 0 signifie « lu, et il est vide ». Les confondre ferait
             // afficher « 0 Mark » à un joueur dont la route a simplement échoué.
@@ -259,7 +270,7 @@ namespace MafiaCleanCity.Economy.Shop
         }
 
         /// <summary>UNE CARTE `.art` (A2, A3) : la plaque teintée au bord fin et au rayon 4, le dessin, le nom en serif, ce que la liasse donne, l'étiquette de prix et l'état ; le médaillon de bonus (B2) et l'étiquette ACQUIS
-        /// collés dans les angles, hors mise en page. Un article à portée se prend d'un appui sur la carte.</summary>
+        /// collés dans les angles, hors mise en page. Un article à portée se prend d'un APPUI LONG sur la carte (décision de f2, 08/10).</summary>
         private void Article(Transform rangee, SkuDto s, bool possede, Dictionary<string, int> rangs)
         {
             bool argentReel = s.kind == "MARKS_PACK" || s.kind == "SUPPORT";
@@ -320,12 +331,16 @@ namespace MafiaCleanCity.Economy.Shop
                 Medaillon(art.transform, MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.bonus_de_marks_par_euro", "+{bonus} % de Marks par euro",
                     new Dictionary<string, string> { { "bonus", s.bonus_pct.ToString(System.Globalization.CultureInfo.InvariantCulture) } }));
 
+            // ⛔ DÉCISION DE f2 (08/10) : PAS d'achat en un seul appui — un appui sur la carte dépensait le don de bienvenue d'un coup, et la
+            //    maquette ne dessine aucune confirmation. On reprend le geste MAISON des actions irréversibles : l'APPUI LONG
+            //    (`LongPressButton`, `T.ui.destructive_longpress_ms` = 1 000 ms) ; l'atelier dessinera son arc sur la carte plus tard.
             if (abordable)
             {
-                Button bouton = art.AddComponent<Button>();
-                bouton.targetGraphic = fond;
+                fond.raycastTarget = true;   // la carte reçoit l'appui
+                LongPressButton appui = art.AddComponent<LongPressButton>();
                 string skuId = s.sku_id;
-                bouton.onClick.AddListener(() => StartCoroutine(Acheter(skuId)));
+                appui.OnLongPressCompleted += () => { AchatsDemandes++; StartCoroutine(Acheter(skuId)); };
+                appuis.Add(appui);
             }
         }
 
@@ -514,6 +529,7 @@ namespace MafiaCleanCity.Economy.Shop
             defil.horizontal = false;
             defil.movementType = ScrollRect.MovementType.Clamped;
             defil.scrollSensitivity = Px(20f);
+            defil.onValueChanged.AddListener(_ => LacherLesAppuis());   // un glissement n'achète jamais
 
             GameObject liste = Bloc("Etageres", vue.transform, false, 0f);
             RectTransform listeRt = (RectTransform)liste.transform;
@@ -535,20 +551,12 @@ namespace MafiaCleanCity.Economy.Shop
             videTexte.gameObject.SetActive(false);
         }
 
-        /// <summary>LA BANDE BASSE `.voix` (A4) : la plaque et son filet par `PiedDEcran.BandeDeVoix` ; le cadre rond du portrait `.av` ; la colonne de la voix — VIDE : la voix du lieutenant (Wexler, « derrière le
-        /// comptoir », sa réplique) n'est pas servie (TD-823) et rien n'est posé à sa place. La seule ligne qu'elle porte : la note de l'état terminal (`.pied p.mort`), quand le solde est à zéro.</summary>
+        /// <summary>LA BANDE BASSE `.voix` (A4) : la plaque et son filet par `PiedDEcran.BandeDeVoix` ; la colonne de la voix — VIDE : la voix du lieutenant (Wexler, « derrière le comptoir », sa réplique)
+        /// n'est pas servie (TD-823) et rien n'est posé à sa place. ⛔ PAS de cadre rond du portrait `.av` (décision de f2, 08/10) : un cercle vide se lit comme un défaut — il reviendra avec TD-823. La seule
+        /// ligne qu'elle porte : la note de l'état terminal (`.pied p.mort`), quand le solde est à zéro.</summary>
         private void ConstruireLaBande()
         {
             GameObject bas = PiedDEcran.BandeDeVoix(transform, Px, Socle, Rebord);
-
-            GameObject portrait = new GameObject("Portrait", typeof(RectTransform));
-            portrait.transform.SetParent(bas.transform, false);
-            LayoutElement pl = portrait.AddComponent<LayoutElement>();
-            pl.preferredWidth = Px(32f); pl.preferredHeight = Px(32f); pl.minWidth = Px(32f); pl.flexibleWidth = 0f;
-            Image pf = portrait.AddComponent<Image>();
-            pf.sprite = ProceduralUI.RadialDisc((int)Px(32f), EncreDuPapier, EncreDuPapier);
-            pf.raycastTarget = false;
-            Bord(portrait.transform, ProceduralUI.Ring((int)Px(32f), Px(1f), BordDuPortrait), Image.Type.Simple);
 
             GameObject colonne = Bloc("Voix", bas.transform, false, Px(3f));
             colonne.AddComponent<LayoutElement>().flexibleWidth = 1f;
