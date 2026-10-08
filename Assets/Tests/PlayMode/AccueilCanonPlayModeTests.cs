@@ -505,6 +505,86 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsTrue(apres == null || apres.CurrentCard == null, "EFFET : après ⑤, la carte tranchée n'est plus montrée");
         }
 
+        /// <summary>A14 — LA CARTE DE TÊTE DU CADRE 5 (f2 08/10 nuit : l'ancien widget W3U1 était un A visible — textes minuscules, aplat jaune).
+        /// Vrai shell, hors réseau, une carte ordinaire FABRIQUÉE avec ses deux options servies. Garde d'EFFET et de structure : le verre est ANCRÉ en
+        /// bas de sa bande et y tient ; UN seul geste cliquable (« Prendre acte ») ; les options sont des FAITS en texte — aucune plaque, aucun cerne,
+        /// aucun sélecteur entre elles et le verre (f2 : « rien ne doit avoir l'air d'un bouton ») ; le geste a la grammaire `.g.or` (encre
+        /// ficheCtaOrEncre), jamais l'aplat `accentGold` ; le titre a le corps du cadre (16 px CSS × 1280/300) en or `hudMoneyGold` ; la saisie
+        /// du canon est cachée au repos et révélée par un appui court, sans faire sortir le verre de sa bande.</summary>
+        [UnityTest]
+        public IEnumerator A14_LaCarteDeTete_EstCelleDuCadre5_UnSeulGeste_OptionsEnTexte_SaisieDiscrete()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_Cadre5");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            Poser(shell, "Token", "jeton-de-test");
+            SessionOpenDto s = AvecCarte("c-cadre5");
+            s.hl_card.decision_type_key = "DAMAGED_BUILDING";
+            s.hl_card.options = new[] { new DecisionOptionDto { label = "hl.option.damaged_building.repair_via_queue" },
+                                        new DecisionOptionDto { label = "hl.option.damaged_building.leave_damaged" } };
+            shell.TransportDeSessionPourTest = new TransportTemoin { Reponse = s };
+            shell.SourceDeLaSuitePourTest = new SourceTemoin { Etat = JoueurNeuf(1) };
+            yield return RouvrirParEmpire();
+            Canvas.ForceUpdateCanvases();
+            HighestLeverageCardController tete = Tete();
+            Assert.IsNotNull(tete, "précondition : la carte de tête est montée");
+            Assert.AreEqual(HighestLeverageCardController.CardState.Available, tete.RenderedState, "précondition : une carte ordinaire");
+            Assert.IsNotNull(tete.Bloc, "le verre existe");
+
+            // le verre : ANCRÉ en bas de la bande (son bas = le bas de la bande, à la marge de la ligne), et dans la bande
+            var cb = new Vector3[4]; var cv = new Vector3[4];
+            ((RectTransform)tete.transform).GetWorldCorners(cb);
+            tete.Bloc.GetWorldCorners(cv);
+            float u = shell.ContentSlot.InverseTransformVector(Vector3.up).y;   // monde → u
+            Assert.AreEqual(cb[0].y, cv[0].y, 1.5f / Mathf.Max(u, 1e-4f), "le verre est ancré au BAS de sa bande");
+            Assert.LessOrEqual(cv[1].y, cb[1].y + 1f / Mathf.Max(u, 1e-4f), "le verre ne sort pas de sa bande");
+
+            // UN seul geste cliquable : « Prendre acte » (la surface du verre ouvre ⑤, ce n'est pas un geste de la carte)
+            var gestes = tete.GetComponentsInChildren<UnityEngine.UI.Selectable>(false).Where(x => x != tete.SurfaceButton).ToList();
+            CollectionAssert.AreEqual(new[] { "CommitButton" }, gestes.Select(g => g.name).ToList(), "un seul geste : Prendre acte");
+            Assert.IsNull(tete.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "SkipButton"), "aucun « Pas maintenant »");
+
+            // les OPTIONS : des faits en TEXTE — ni plaque, ni cerne, ni sélecteur entre elles et le verre
+            int options = 0;
+            foreach (string nom in new[] { "Recommandation", "Alternative" })
+            {
+                TMPro.TextMeshProUGUI o = tete.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false).FirstOrDefault(t => t.name == nom);
+                Assert.IsNotNull(o, $"l'option « {nom} » est rendue");
+                Assert.IsFalse(string.IsNullOrEmpty(o.text), $"anti-vacuité : l'option « {nom} » a un texte");
+                options++;
+                for (Transform a = o.transform; a != null && a != tete.Bloc; a = a.parent)
+                {
+                    Assert.IsNull(a.GetComponent<UnityEngine.UI.Selectable>(), $"« {nom} » : aucun sélecteur ({a.name})");
+                    Assert.IsTrue(a == o.transform || a.GetComponent<UnityEngine.UI.Image>() == null, $"« {nom} » : aucune plaque ni cerne ({a.name})");
+                }
+                Assert.AreEqual(0, o.transform.parent.Cast<Transform>().Count(ch => ch.GetComponent<UnityEngine.UI.Image>() != null), $"« {nom} » : aucun cerne frère");
+            }
+            Assert.AreEqual(2, options);
+
+            // la grammaire `.g.or`, jamais l'aplat accentGold
+            TMPro.TextMeshProUGUI lib = tete.CommitButton.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).First();
+            Assert.AreEqual(Trio(MafiaCleanCity.Theme.DesignTokens.Current.ficheCtaOrEncre), Trio(lib.color), "le libellé du geste : l'encre de la pilule or");
+            Assert.IsNotNull(tete.CommitButton.transform.Find("Degrade"), "la pilule lustrée (dégradé ficheCtaOrHaut → ficheCtaOrBas)");
+            Assert.IsFalse(tete.GetComponentsInChildren<UnityEngine.UI.Image>(true).Any(im => Trio(im.color) == Trio(MafiaCleanCity.Theme.DesignTokens.Current.accentGold)), "aucun aplat accentGold");
+
+            // typographie du cadre : le titre en or, au corps de 16 px CSS
+            TMPro.TextMeshProUGUI titre = tete.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false).First(t => t.name == "Title");
+            Assert.AreEqual(16f * 1280f / 300f, titre.fontSize, 0.01f, "`.titre` : 16 px CSS");
+            Assert.AreEqual(Trio(MafiaCleanCity.Theme.DesignTokens.Current.hudMoneyGold), Trio(titre.color), "`.titre` : #f2c96b");
+
+            // la saisie du canon : discrète (cachée au repos), révélée par un appui court, le verre reste dans sa bande
+            Assert.IsFalse(tete.SaisieVisible, "la saisie est cachée au repos");
+            tete.RevelerLaSaisie();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            Assert.IsTrue(tete.SaisieVisible, "un appui court révèle la saisie");
+            tete.Bloc.GetWorldCorners(cv);
+            Assert.LessOrEqual(cv[1].y, cb[1].y + 1f / Mathf.Max(u, 1e-4f), "avec la saisie, le verre tient encore dans sa bande (réduit au besoin)");
+        }
+
+        private static (int, int, int) Trio(Color c) { Color32 k = c; return (k.r, k.g, k.b); }
+
         /// <summary>A12d — la RÈGLE d'ancrage, pure, contre les cadres MESURÉS (instrument de l'UX, atelier master 5240cec, zone sûre 110 → 516) : elle retrouve la tête
         /// des cadres 1-3 (252 → 454 sur la ligne 464 → 506), celle du cadre 5 (212 → 414 sur la ligne haute 424 → 506) et la suite du cadre 4 (187 → 414) à 0,005 près ;
         /// une ligne qui VEUT plus que sa bande grandit et la tête monte d'autant ; une zone nulle retombe sur la bande mesurée.</summary>

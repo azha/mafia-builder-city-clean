@@ -93,3 +93,32 @@ une valeur machine brute à l'écran). `Replique` montre ce même identifiant nu
   INTERSECTION, et le test rougit).
 - **Écart C** : le haut de la tête vaut 0,752 dans le jeu contre 0,7488 au cadre 5 (moins d'1 px CSS). Le jeu garde la hauteur 0,5 des
   cadres 1-3.
+
+## La carte de tête reconstruite sur le cadre 5 (décision de f2, 08/10 nuit) — options en TEXTE jusqu'à TD-724
+
+- **Le constat** : sur la planche A01 « tête » du créneau du 08/10 nuit, la carte de tête était l'ANCIEN widget W3U1. Ses textes de 14-18 u
+  débordaient en haut à gauche du bloc, et sa rangée d'actions s'étirait en un aplat `accentGold` sur toute la hauteur. Aucun cadre ne le
+  dessinait : un A visible.
+- **La reconstruction** (`HighestLeverageCardController`) : la structure, la typographie, la matière et la place du cadre 5
+  (`ecrans-brennar-accueil.html`, atelier master 5240cec, règles `.acc4`).
+  - Le verre est CELUI de « LA SUITE » (`LaSuitePanelController.PoserLeVerre`, une seule matière). Il est ancré au BAS de sa bande, à sa
+    hauteur préférée, et réduit à l'échelle s'il dépasse ; son bas reste à la marge de la ligne de file.
+  - `.titre` : sérif, 16 px CSS, or #f2c96b. `.niveaux` : PORTÉE et URGENCE (6,6 px, gras, capitales, #b9ad92), valeurs en sérif 10 px
+    #eae0c8. `.sur` : « Ce qu'on peut faire ». Échelle 300 CSS = 1 280 u.
+- **Les règles de f2, tant que TD-724 (hl-card « agit ») n'est pas livré** (mesuré : le commit ne reçoit AUCUNE option,
+  `hl-card.controller.ts:41-46` ; `DecisionOption` = « descriptive flavor », `hl-card-types.ts:99-105`) :
+  - les OPTIONS sont des FAITS de la carte, en TEXTE `.csq4` (8 px, #b9ad92, deux colonnes centrées). Rien ne doit avoir l'air d'un bouton :
+    ni cerne, ni plaque, ni flèche (garde A14) ;
+  - UN seul geste, « PRENDRE ACTE », à appui long, dans la grammaire `.g.or` du cadre (la pilule lustrée ficheCtaOrHaut → ficheCtaOrBas,
+    bord ficheCtaOrBord, encre ficheCtaOrEncre : les jetons égalent le CSS au 1/255). Sous lui, sa conséquence vraie : « prendre acte n'agit
+    pas à votre place » ;
+  - l'alternative par SAISIE du canon est DISCRÈTE : cachée au repos, un appui court sur le geste la révèle (patron ㉓). Le mot-clé est le
+    libellé du geste (« PRENDRE ACTE »), plus « COMMIT ». L'indication « tapez {mot} » a une clé NEUVE, `accueil.carte.tapez_mot`, à la
+    liste des mots.
+  - Quand TD-724 sera livré, les options redeviendront des gestes (cadres 1 et 5 : « Mettre en réparation » / « Laisser en l'état », avec
+    leurs lignes de conséquence).
+- **Variantes** : la carte des rapports (cadre 2) garde son geste RÉEL « LIRE MAINTENANT » (navigation, aucun commit), même grammaire ;
+  « Laisser en attente » est retiré (skip, geste mort, 2b56310b). Le calme (cadre 0) : le titre et « Aucune décision en attente ». La limite
+  de structure atteinte : le titre, les niveaux, « Limite de structure atteinte », et AUCUN geste (le commit refuserait toujours).
+- **Écarts ASSUMÉS** : pas de lignes de conséquence sous les options (non servies, TD-724) ; « Prêt » n'est plus dit (le cadre 5 n'a pas de
+  ligne d'état).

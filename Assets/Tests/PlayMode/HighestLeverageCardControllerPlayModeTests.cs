@@ -146,7 +146,7 @@ namespace MafiaCleanCity.Shell.Tests
             yield return ctrl.RequestCommitViaTypedConfirm("nope");
             Assert.AreEqual(0, ctrl.CommitRequestCount, "a WRONG keyword emits zero requests");
 
-            yield return ctrl.RequestCommitViaTypedConfirm("commit"); // case-insensitive
+            yield return ctrl.RequestCommitViaTypedConfirm(HighestLeverageCardController.MotCle.ToLowerInvariant()); // case-insensitive ; le mot-clé = le libellé du geste (08/10 nuit)
             Assert.AreEqual(1, ctrl.CommitRequestCount, "the CORRECT keyword routes to RequestCommit() — exactly one request");
             Assert.IsNull(ctrl.LastCommitError, $"commit errored: {ctrl.LastCommitError}");
             Assert.AreEqual(true, ctrl.LastCommitCommitted, "committed through the SAME payload.data path as the long-press trigger");
@@ -154,7 +154,7 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(1, ctrl.DecisionsTranchees, "le commit accepté lève OnDecisionTranchee (le shell relit l'Accueil)");
             Assert.IsNull(ctrl.RefusRendu, "aucun refus après un commit accepté");
             // …et un REFUS se dit : la même carte, déjà tranchée (terminale), rend 409 — la phrase est MONTRÉE, jamais une erreur muette.
-            yield return ctrl.RequestCommitViaTypedConfirm("commit");
+            yield return ctrl.RequestCommitViaTypedConfirm(HighestLeverageCardController.MotCle);
             Assert.IsNotNull(ctrl.LastCommitError, "précondition : la carte déjà tranchée est refusée par le back (409)");
             Assert.AreEqual(1, ctrl.DecisionsTranchees, "un refus n'annonce AUCUNE décision");
             Assert.IsFalse(string.IsNullOrEmpty(ctrl.RefusRendu), "le refus a une phrase");

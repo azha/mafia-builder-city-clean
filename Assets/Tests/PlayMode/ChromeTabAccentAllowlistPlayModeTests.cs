@@ -158,7 +158,8 @@ namespace MafiaCleanCity.Theme.Tests
             "Operational/Exceptions/ExceptionQueueController.cs",
             "Operational/Lieutenant/LieutenantScreenController.cs",
             "Shell/ExceptionQueuePanelController.cs",
-            "Shell/HighestLeverageCardController.cs",
+            // "Shell/HighestLeverageCardController.cs" RETIRÉ NOMMÉMENT (08/10 nuit, CLIENT-1, décision f2) : la carte de tête est reconstruite sur
+            // le cadre 5 de l'Accueil ; ses gestes prennent la grammaire `.g.or` (jetons ficheCtaOr*), l'aplat `accentGold` de l'ancien widget n'existe plus.
         };
 
         [Test]

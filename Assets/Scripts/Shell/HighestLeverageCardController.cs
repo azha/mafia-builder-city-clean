@@ -12,19 +12,18 @@ namespace MafiaCleanCity.Shell
     // de catalogue, deux buckets, drapeau structurel) et le budget structurel. Confirmation
     // destructive OBLIGATOIRE sur Commit (le canon en fait la seule action destructive de Home,
     // global_conventions_core.md:129-138) : appui long (`LongPressButton`, REUSE) OU saisie d'un
-    // mot-clé (`TypedConfirmKeyword`) — l'alternative typed-confirm est OBLIGATOIRE pour
+    // mot-clé (`MotCle`) — l'alternative typed-confirm est OBLIGATOIRE pour
     // l'accessibilité (F2, "utilisateurs sans accès haptique"), jamais un pur bonus. Skip est un tap
     // simple (non destructif, "carry semantics", design §8) — jamais gardé par une confirmation.
     public class HighestLeverageCardController : MonoBehaviour
     {
-        /// <summary>Le CTA de la carte ([Tamponner], [Lire maintenant]) — UNE liaison `accentGold` pour le fichier (allowlist D5,
-        /// `C5F2_AccentGoldBindings` compte les occurrences, patron `CtaColor` d'AutonomyInbox/Exceptions).</summary>
-        private static Color CtaColor => DesignTokens.Current.accentGold;
+        // (08/10 nuit) `CtaColor` (`accentGold`, jaune vif #ffd23f) est RETIRÉ avec l'ancien widget : les gestes prennent la grammaire `.g.or` du cadre 5
+        // (jetons ficheCtaOr*) — l'allowlist D5 de `C5F2_AccentGoldBindings` perd ce fichier, nommément.
 
         public enum CardState { NoCard, Available, CapBlocked }
 
-        // canon: "l'utilisateur tape un mot-clé de confirmation" (localisé F1 — EN MVP, D4 différé).
-        public const string TypedConfirmKeyword = "COMMIT";
+        // canon: "l'utilisateur tape un mot-clé de confirmation" (localisé F1). 08/10 nuit : le mot-clé est le LIBELLÉ du geste (`MotCle`,
+        // « PRENDRE ACTE »), plus « COMMIT » (anglais, et texte de développeur à l'écran : `AccueilCanon.A0`).
 
         [Header("Backend")]
         private string baseUrlPose;   // posée par un appelant (tests, shell) ; sinon la source unique
@@ -190,7 +189,7 @@ namespace MafiaCleanCity.Shell
             // un refus se DIT : la phrase servie (`error.core_loops.structural_cap_exhausted`…), sinon celle de la carte — jamais une erreur muette
             RefusRendu = client.DernierePhraseDeRefus
                          ?? MafiaCleanCity.I18n.Libelle.Gabarit("accueil.carte.la_decision_n_a_pas_ete_prise", "La décision n\u2019a pas été prise.");
-            if (stateText != null) { stateText.text = RefusRendu; Track(RefusRendu); }
+            if (stateText != null) { stateText.text = RefusRendu; Track(RefusRendu); Visibilites(); }
         }
 
         /// <summary>La décision est ACCEPTÉE par le back : on le compte et on l'annonce au shell (qui relit la session et remonte l'Accueil).</summary>
@@ -205,13 +204,13 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>The accessible ALTERNATIVE to the long press (canon: "alternative typed-confirm
         /// obligatoire — utilisateurs sans accès haptique", F2). A tap on the confirm button ALONE
-        /// never commits — the typed text must match `TypedConfirmKeyword` (case-insensitive; the
+        /// never commits — the typed text must match `MotCle` (case-insensitive; the
         /// SAME "no bare tap confirms a destructive action" rule the canon states for BOTH paths).
         /// Routes through the SAME `RequestCommit()` — one behaviour, two triggers, never two
         /// divergent request paths that could drift apart.</summary>
         public IEnumerator RequestCommitViaTypedConfirm(string typedText)
         {
-            if (!string.Equals((typedText ?? "").Trim(), TypedConfirmKeyword, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals((typedText ?? "").Trim(), MotCle, StringComparison.OrdinalIgnoreCase))
                 yield break; // wrong/empty keyword -> refused, zero requests (mirrors the CapBlocked refusal)
             yield return RequestCommit();
         }
@@ -246,10 +245,12 @@ namespace MafiaCleanCity.Shell
             bool rapports = RenderedState == CardState.Available && EstCarteDesRapports;
             // ⛔ PASSE UX 26/09 (§G P1) — sans carte (« Rien à signaler »), l'Accueil montrait QUAND MÊME le bloc « Tamponner — appui
             //    long », « Skip » et la rangée « Type "COMMIT" » : des gestes sur rien. Les gestes n'existent que s'il y a une carte.
-            bool carte = RenderedState != CardState.NoCard;
-            if (lireButton != null) lireButton.gameObject.SetActive(rapports);
-            if (CommitButton != null) CommitButton.gameObject.SetActive(carte && !rapports);   // la carte des rapports ne se tamponne pas d'ici
-            if (typedRowGo != null) typedRowGo.SetActive(carte && !rapports);
+            // 08/10 nuit (cadre 5) : le geste n'existe que s'il AGIT — pas sans carte, pas sur la carte des rapports (elle se LIT), pas quand la limite
+            // de structure est atteinte (`RequestCommit` refuserait : un geste qui refuse toujours serait un geste mort). La saisie est cachée au repos.
+            Montrer(lireButton, rapports);
+            Montrer(CommitButton, RenderedState == CardState.Available && !rapports);
+            if (typedRowGo != null) typedRowGo.SetActive(false);
+            if (stateText != null) stateText.text = "";
             switch (RenderedState)
             {
                 case CardState.NoCard:
@@ -277,13 +278,24 @@ namespace MafiaCleanCity.Shell
                     titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key);
                     impactText.text = ImpactLabel(CurrentCard.impact_bucket);
                     urgencyText.text = UrgencyLabel(CurrentCard.urgency_bucket);
-                    stateText.text = Lib("carte", "Prêt");
+                    // « Prêt » n'est plus dit : le cadre 5 n'a pas de ligne d'état ; le geste dit qu'on peut agir.
                     Track(titleText.text);
                     Track(impactText.text);
                     Track(urgencyText.text);
-                    Track(stateText.text);
                     break;
             }
+            Visibilites();
+        }
+
+        /// <summary>Le verre ne garde que ce qui PARLE : un texte vide est retiré (il prendrait sa ligne), les niveaux et les options avec leurs textes ;
+        /// puis le bloc est ajusté à sa bande.</summary>
+        private void Visibilites()
+        {
+            foreach (TextMeshProUGUI t in new[] { titleText, stateText, rapportText, surtitreText, noteText })
+                if (t != null) t.gameObject.SetActive(!string.IsNullOrEmpty(t.text));
+            if (niveauxGo != null) niveauxGo.SetActive(!string.IsNullOrEmpty(impactText.text) || !string.IsNullOrEmpty(urgencyText.text));
+            if (optionsGo != null) optionsGo.SetActive(!string.IsNullOrEmpty(recommandationText.text) || !string.IsNullOrEmpty(alternativeText.text));
+            Ajuster();
         }
 
         /// <summary>④ les deux options SERVIES (clés `hl.option.*`, traduites par le catalogue) en RECOMMANDATION, exactement deux, sinon
@@ -347,144 +359,277 @@ namespace MafiaCleanCity.Shell
 
         // --------------------------------------------------------------- UI build
 
+        // ═══ LA CARTE DE TÊTE, RECONSTRUITE SUR LE CADRE 5 (f2, 08/10 nuit) ════════════════════════════════════════════════════════════════
+        // L'ancien widget W3U1 (textes de 14-18 u en haut à gauche, rangée d'actions étirée en aplat jaune `accentGold`) n'était construit
+        // sur AUCUN cadre — mesuré sur la planche A01 « tête » du créneau du 08/10 nuit. La carte prend maintenant la structure, la typographie,
+        // la matière et la place du cadre 5 de `ecrans-brennar-accueil.html` (atelier master 5240cec, règles `.acc4 .verre/.titre/.niveaux/.sur/
+        // .gestes/.g/.g.or/.csq4/.sous`), avec deux règles de f2 tant que TD-724 (hl-card « agit ») n'est pas livré — le commit ne reçoit AUCUNE
+        // option (mesuré : `hl-card.controller.ts:41-46`, `DecisionOption` « descriptive flavor ») :
+        //   · les OPTIONS sont des FAITS de la carte, en TEXTE (`.csq4`) — rien qui ait l'air d'un bouton : ni cerne, ni plaque, ni flèche ;
+        //   · UN seul geste, « PRENDRE ACTE », dans la grammaire `.g.or` du cadre (pilule lustrée ficheCtaOrHaut → ficheCtaOrBas, bord ficheCtaOrBord,
+        //     encre ficheCtaOrEncre — les jetons égalent le CSS au 1/255), à APPUI LONG ; l'alternative par SAISIE du canon (global_conventions_core
+        //     .md:129-138) est DISCRÈTE : invisible au repos, un appui COURT sur le geste la révèle (patron ㉓).
+        // La carte des rapports (cadre 2) garde son geste RÉEL « LIRE MAINTENANT » (navigation, aucun commit), même grammaire. Le calme (cadre 0) : le
+        // titre et sa phrase. Le verre est CELUI de « LA SUITE » (`LaSuitePanelController.PoserLeVerre`) : ancré en BAS de la bande, à sa hauteur
+        // préférée, réduit à l'échelle s'il dépasse (`Ajuster`) — son bas reste à la marge de la ligne de file (l'ancrage de ④).
+        // Échelle : 300 CSS = 1 280 u ⇒ K = 4,2667 u par px CSS (même convention que ⑤).
+        private const float K = 1280f / 300f;
+        private static float U(float cssPx) => cssPx * K;
+
+        /// <summary>Le bloc de verre (enfant de l'hôte, qui porte la BANDE) — crochet de mesure.</summary>
+        public RectTransform Bloc { get; private set; }
+        /// <summary>L'échelle appliquée au bloc pour qu'il tienne dans sa bande (1 aux résolutions de jeu).</summary>
+        public float Echelle { get; private set; } = 1f;
+        private GameObject niveauxGo, optionsGo;
+        private TextMeshProUGUI porteeLib, urgenceLib;
+        private bool ajustementEnCours;
+
         private void BuildLayout()
         {
             RectTransform selfRt = GetComponent<RectTransform>();
             if (selfRt == null) selfRt = gameObject.AddComponent<RectTransform>();
 
-            VerticalLayoutGroup vlg = gameObject.AddComponent<VerticalLayoutGroup>();
-            vlg.padding = new RectOffset(12, 12, 10, 10);
-            vlg.spacing = 6;
-            vlg.childControlWidth = true;
-            vlg.childControlHeight = true;
-            vlg.childForceExpandWidth = true;
-            vlg.childForceExpandHeight = false;
+            GameObject verre = LaSuitePanelController.PoserLeVerre(transform, "Carte");
+            Bloc = (RectTransform)verre.transform;
+            VerticalLayoutGroup vlg = verre.AddComponent<VerticalLayoutGroup>();
+            vlg.padding = new RectOffset(Mathf.RoundToInt(U(14f)), Mathf.RoundToInt(U(14f)), Mathf.RoundToInt(U(12f)), Mathf.RoundToInt(U(12f)));   // `.verre{padding:12px 14px}`
+            vlg.spacing = 0f;
+            vlg.childAlignment = TextAnchor.UpperCenter;
+            vlg.childControlWidth = true; vlg.childControlHeight = true;
+            vlg.childForceExpandWidth = true; vlg.childForceExpandHeight = false;
+            verre.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            // B6 (passe UX 2026-09-24) — la SURFACE de la carte ouvre ⑤. `DemanderDetail()` n'avait qu'un appelant, un test :
-            // le shell écoutait `OnOuvrirDetail` (AppShell) et rien ne le levait. Le bouton est posé sur la racine, pour qu'un
-            // toucher sur un texte REMONTE jusqu'à lui ; les boutons Tamponner/Pas maintenant/Lire, plus profonds, gardent le leur.
-            // Le graphique est transparent : il reçoit le toucher sur les blancs, il ne peint rien.
-            Image surface = gameObject.GetComponent<Image>();
-            if (surface == null) surface = gameObject.AddComponent<Image>();   // jamais `??` sur un objet Unity (faux null)
-            Color transparente = Color.white; transparente.a = 0f;
-            surface.color = transparente;
+            // B6 (passe UX 2026-09-24) — la SURFACE de la carte ouvre ⑤ : le bouton est sur le VERRE (plus sur toute la bande : le vide au-dessus du
+            // verre n'ouvre rien) ; les gestes, plus profonds, gardent le leur. La plaque-masque reçoit le toucher, elle ne peint rien de plus.
+            Image surface = verre.GetComponent<Image>();
             surface.raycastTarget = true;
-            SurfaceButton = gameObject.AddComponent<Button>();
+            SurfaceButton = verre.AddComponent<Button>();
             SurfaceButton.transition = Selectable.Transition.None;
             SurfaceButton.targetGraphic = surface;
             SurfaceButton.onClick.AddListener(DemanderDetail);
 
-            titleText = NewText("Title", 18, FontStyles.Bold);
-            impactText = NewText("Impact", 14, FontStyles.Normal);
-            urgencyText = NewText("Urgency", 14, FontStyles.Normal);
-            stateText = NewText("State", 14, FontStyles.Italic);
-            rapportText = NewText("RapportEntree", 14, FontStyles.Normal);   // ④ l'entrée du rapport (vide hors carte des rapports)
-            surtitreText = NewText("CeQuOnPeutFaire", 12, FontStyles.Normal);         // ④ « Ce qu’on peut faire » (table 45)
-            recommandationText = NewText("Recommandation", 14, FontStyles.Normal);   // ④ options[0], texte (jamais un bouton)
-            alternativeText = NewText("Alternative", 13, FontStyles.Italic);          // ④ options[1], texte
-            noteText = NewText("PrendreActeNote", 12, FontStyles.Italic);               // ④ « prendre acte n’agit pas à votre place »
+            Transform c = verre.transform;
+            // `.titre{font:400 16px/1.2 'DejaVu Serif';letter-spacing:.06em;color:#f2c96b;text-align:center}`
+            titleText = Texte(c, "Title", 16f, DesignTokens.Current.hudMoneyGold, Serif(), FontStyles.Normal, 6f);
+            // `.sous{font:400 9.2px/1.4 'DejaVu Sans';color:#b9ad92;margin-top:5px}` — l'entrée du rapport (cadre 2), l'état (cadres 0 et cap), un refus
+            stateText = Texte(c, "State", 9.2f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f, margeHaut: 5f);
+            rapportText = Texte(c, "RapportEntree", 9.2f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f, margeHaut: 5f);
 
-            GameObject actions = new GameObject("Actions", typeof(RectTransform));
-            actions.transform.SetParent(transform, false);
-            HorizontalLayoutGroup ahlg = actions.AddComponent<HorizontalLayoutGroup>();
-            ahlg.spacing = 8;
-            ahlg.childControlWidth = true;
-            ahlg.childControlHeight = true;
-            ahlg.childForceExpandWidth = true;
-            ahlg.childForceExpandHeight = true;
-            LayoutElement actionsLe = actions.AddComponent<LayoutElement>();
-            actionsLe.minHeight = 44;
+            // `.niveaux{display:flex;justify-content:center;gap:14px;margin-top:8px}` ; `span` 6,6 px gras capitales .2em #b9ad92 ; `b` 10 px sérif #eae0c8, 5 px après
+            niveauxGo = Rangee(c, "Niveaux", U(14f), margeHaut: 8f);
+            porteeLib = Texte(niveauxGo.transform, "PorteeLib", 6.6f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Bold | FontStyles.UpperCase, 20f);
+            impactText = Texte(niveauxGo.transform, "Impact", 10f, DesignTokens.Current.hudCreme, Serif(), FontStyles.Normal, 0f);
+            urgenceLib = Texte(niveauxGo.transform, "UrgenceLib", 6.6f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Bold | FontStyles.UpperCase, 20f);
+            urgencyText = Texte(niveauxGo.transform, "Urgency", 10f, DesignTokens.Current.hudCreme, Serif(), FontStyles.Normal, 0f);
+            porteeLib.text = Lib("carte", "Portée"); urgenceLib.text = Lib("carte", "Urgence");
+            niveauxGo.GetComponent<HorizontalLayoutGroup>().spacing = U(5f);
+            porteeLib.margin = new Vector4(0f, 0f, 0f, 0f); urgenceLib.margin = new Vector4(U(14f) - U(5f), 0f, 0f, 0f);   // le `gap:14px` entre les deux groupes
 
-            GameObject commitGo = new GameObject("CommitButton", typeof(RectTransform));
-            commitGo.transform.SetParent(actions.transform, false);
-            commitGo.AddComponent<Image>().color = CtaColor;
-            CommitButton = commitGo.AddComponent<LongPressButton>();
+            // `.sur{font:700 6.6px/1 'DejaVu Sans';letter-spacing:.28em;text-transform:uppercase;color:#b9ad92;text-align:center}` (margin-top 10 px)
+            surtitreText = Texte(c, "CeQuOnPeutFaire", 6.6f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Bold | FontStyles.UpperCase, 28f, margeHaut: 10f);
+            // LES OPTIONS — des FAITS, en TEXTE `.csq4` (8 px, #b9ad92, centrées, deux colonnes à `gap:8px`) : ni cerne, ni plaque, ni flèche (f2)
+            optionsGo = Rangee(c, "Options", U(8f), margeHaut: 5f);
+            recommandationText = Texte(optionsGo.transform, "Recommandation", 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f);
+            alternativeText = Texte(optionsGo.transform, "Alternative", 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f);
+            foreach (TextMeshProUGUI o in new[] { recommandationText, alternativeText })
+                o.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+
+            // LE GESTE `.g.or` (margin-top 11 px) — « PRENDRE ACTE » à appui long ; un appui COURT révèle la saisie (alternative du canon)
+            CommitButton = Geste(c, "CommitButton", out commitLabel).AddComponent<LongPressButton>();
             CommitButton.OnLongPressCompleted += () => StartCoroutine(RequestCommit());
-            commitLabel = NewChildText(commitGo.transform, Lib("carte", "Prendre acte"), 15);   // table 45 (servie) — plus « Tamponner — appui long »
-            commitLabel.color = DesignTokens.Current.surfaceBase;
+            CommitButton.OnShortTap += RevelerLaSaisie;
+            commitLabel.text = Lib("carte", "Prendre acte");   // table 45 (servie)
 
-            // « Pas maintenant » (skip) RETIRÉ — f2 08/10 nuit, option (c) : un geste MORT (voir `RequestSkip`).
+            // ④ [Lire maintenant] — la carte des rapports seulement : OUVRE les rapports, sans tampon (table 45). Même grammaire `.g.or`.
+            GameObject lireGo = Geste(c, "LireButton", out lireLabel);
+            lireButton = lireGo.AddComponent<Button>();
+            lireButton.targetGraphic = lireGo.GetComponent<Image>();
+            lireButton.onClick.AddListener(OuvrirLesRapports);
+            lireGo.SetActive(false);
 
-            // Accessible typed-confirm ALTERNATIVE to the long press (canon:129-138, F2 — obligatoire,
-            // pas un bonus). A row: [type "COMMIT"] [Confirm].
+            // `.csq4` sous le geste : « prendre acte n'agit pas à votre place » (clé servie) — la conséquence vraie du geste
+            noteText = Texte(c, "PrendreActeNote", 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f, margeHaut: 5f);
+
+            // L'ALTERNATIVE PAR SAISIE (canon : obligatoire pour l'accessibilité) — discrète : cachée au repos, révélée par un appui court sur le geste.
+            // Le champ au style de la plaque sombre du cadre (`.g` : fond à peine levé, filet clair) ; « tapez PRENDRE ACTE » en indication.
             GameObject typedRow = new GameObject("TypedConfirmRow", typeof(RectTransform));
-            typedRow.transform.SetParent(transform, false);
+            typedRow.transform.SetParent(c, false);
             HorizontalLayoutGroup trhlg = typedRow.AddComponent<HorizontalLayoutGroup>();
-            trhlg.spacing = 6;
-            trhlg.childControlWidth = true;
-            trhlg.childControlHeight = true;
-            trhlg.childForceExpandWidth = true;
-            trhlg.childForceExpandHeight = true;
-            LayoutElement typedRowLe = typedRow.AddComponent<LayoutElement>();
-            typedRowLe.minHeight = 32;
+            trhlg.spacing = U(6f);
+            trhlg.padding = new RectOffset(0, 0, Mathf.RoundToInt(U(6f)), 0);
+            trhlg.childControlWidth = true; trhlg.childControlHeight = true;
+            trhlg.childForceExpandWidth = true; trhlg.childForceExpandHeight = true;
+            typedRow.AddComponent<LayoutElement>().minHeight = U(6f) + LaSuitePanelController.HauteurDuGeste * 0.8f;
 
             GameObject inputGo = new GameObject("TypedConfirmInput", typeof(RectTransform));
             inputGo.transform.SetParent(typedRow.transform, false);
-            inputGo.AddComponent<Image>().color = DesignTokens.Current.surfaceRow;
+            Image inputImg = inputGo.AddComponent<Image>();
+            LaSuitePanelController.Arrondir(inputImg, LaSuitePanelController.RayonGeste, LaSuitePanelController.FondGesteSombre);
+            LaSuitePanelController.Lisere(inputGo.transform, LaSuitePanelController.RayonGeste, LaSuitePanelController.BordDeGesteSombre);
             typedConfirmInput = inputGo.AddComponent<TMP_InputField>();
-            GameObject inputTextGo = new GameObject("Text", typeof(RectTransform));
-            inputTextGo.transform.SetParent(inputGo.transform, false);
-            RectTransform inputTextRt = (RectTransform)inputTextGo.transform;
-            inputTextRt.anchorMin = Vector2.zero; inputTextRt.anchorMax = Vector2.one;
-            inputTextRt.offsetMin = new Vector2(6, 2); inputTextRt.offsetMax = new Vector2(-6, -2);
-            TextMeshProUGUI inputText = inputTextGo.AddComponent<TextMeshProUGUI>();
-            inputText.font = DesignTokens.Current.primaryFont;
-            inputText.fontSize = 14;
-            inputText.color = DesignTokens.Current.onSurfacePrimary;
+            TextMeshProUGUI inputText = ChampTexte(inputGo.transform, "Text", DesignTokens.Current.hudCreme);
+            TextMeshProUGUI indication = ChampTexte(inputGo.transform, "Indication", DesignTokens.Current.hudCremeSecondary);
+            indication.text = MafiaCleanCity.I18n.Libelle.Gabarit("accueil.carte.tapez_mot", "tapez {mot}",
+                new Dictionary<string, string> { { "mot", MotCle } });
+            indication.fontStyle = FontStyles.Italic;
             typedConfirmInput.textComponent = inputText;
+            typedConfirmInput.placeholder = indication;
 
-            GameObject typedConfirmGo = new GameObject("TypedConfirmButton", typeof(RectTransform));
-            typedConfirmGo.transform.SetParent(typedRow.transform, false);
-            Image typedConfirmImg = typedConfirmGo.AddComponent<Image>();
-            typedConfirmImg.color = DesignTokens.Current.surfaceRaised;
+            GameObject typedConfirmGo = Geste(typedRow.transform, "TypedConfirmButton", out TextMeshProUGUI typedConfirmLabel, margeHaute: false);
+            typedConfirmGo.GetComponent<LayoutElement>().flexibleWidth = 0f;
+            typedConfirmLabel.text = Lib("carte", "Prendre acte");
             typedConfirmButton = typedConfirmGo.AddComponent<Button>();
-            typedConfirmButton.targetGraphic = typedConfirmImg;
+            typedConfirmButton.targetGraphic = typedConfirmGo.GetComponent<Image>();
             typedConfirmButton.onClick.AddListener(() => StartCoroutine(RequestCommitViaTypedConfirm(typedConfirmInput.text)));
-            TextMeshProUGUI typedConfirmLabel = NewChildText(typedConfirmGo.transform, $"Type \"{TypedConfirmKeyword}\"", 13);
-            typedConfirmLabel.color = DesignTokens.Current.onSurfacePrimary;
             typedRowGo = typedRow;
-
-            // ④ [Lire maintenant] — la carte des rapports seulement : OUVRE les rapports, sans tampon (table 45).
-            GameObject lireGo = new GameObject("LireButton", typeof(RectTransform));
-            lireGo.transform.SetParent(actions.transform, false);
-            lireGo.transform.SetSiblingIndex(0);
-            Image lireImg = lireGo.AddComponent<Image>();
-            lireImg.color = CtaColor;   // même CTA que [Tamponner]
-            lireButton = lireGo.AddComponent<Button>();
-            lireButton.targetGraphic = lireImg;
-            lireButton.onClick.AddListener(OuvrirLesRapports);
-            lireLabel = NewChildText(lireGo.transform, "", 15);
-            lireLabel.color = DesignTokens.Current.surfaceBase;
-            lireGo.SetActive(false);
+            typedRow.SetActive(false);
         }
 
-        private TextMeshProUGUI NewText(string name, int size, FontStyles style)
+        /// <summary>Le mot-clé de la saisie : le libellé MÊME du geste, en capitales (localisé avec lui).</summary>
+        public static string MotCle => Lib("carte", "Prendre acte").ToUpperInvariant();
+
+        /// <summary>Crochet de test : la saisie est-elle montrée ?</summary>
+        public bool SaisieVisible => typedRowGo != null && typedRowGo.activeSelf;
+
+        /// <summary>Un appui COURT sur le geste révèle l'alternative par saisie (elle reste cachée au repos : discrète).</summary>
+        public void RevelerLaSaisie()
         {
-            GameObject go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(transform, false);
+            if (typedRowGo == null || RenderedState != CardState.Available || EstCarteDesRapports) return;
+            typedRowGo.SetActive(true);
+            Ajuster();
+        }
+
+        /// <summary>Le bloc ne sort JAMAIS de sa bande : plus haut qu'elle (petit écran, titre long), il se réduit à l'échelle depuis son pied
+        /// (même règle que `LaSuitePanelController.Ajuster`).</summary>
+        public void Ajuster()
+        {
+            if (Bloc == null || ajustementEnCours) return;
+            ajustementEnCours = true;
+            Bloc.localScale = Vector3.one;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(Bloc);
+            float h = LayoutUtility.GetPreferredHeight(Bloc);
+            float dispo = ((RectTransform)transform).rect.height;
+            float k = h > 0f && dispo > 0f && h > dispo ? dispo / h : 1f;
+            Bloc.localScale = new Vector3(k, k, 1f);
+            Echelle = k;
+            ajustementEnCours = false;
+        }
+
+        private void OnRectTransformDimensionsChange()
+        {
+            if (initialized && isActiveAndEnabled) Ajuster();   // la bande change (rebâtie à la résolution, ou ancrée sur la ligne)
+        }
+
+        private static TMP_FontAsset Serif() => DesignTokens.Current.hudSerifFont != null ? DesignTokens.Current.hudSerifFont : DesignTokens.Current.primaryFont;
+
+        /// <summary>Un texte du verre, aux unités du cadre (px CSS × K), centré, qui reflue ; `margeHaut` = le `margin-top` CSS.</summary>
+        private static TextMeshProUGUI Texte(Transform parent, string nom, float cssPx, Color couleur, TMP_FontAsset police, FontStyles style,
+                                             float interlettrage, float margeHaut = 0f)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
             TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
-            t.font = DesignTokens.Current.primaryFont;
-            t.fontSize = size;
+            t.font = police;
+            t.fontSize = U(cssPx);
             t.fontStyle = style;
-            t.color = DesignTokens.Current.onSurfacePrimary;
+            t.characterSpacing = interlettrage;
+            t.color = couleur;
+            t.alignment = TextAlignmentOptions.Center;
+            t.enableWordWrapping = true;
             t.raycastTarget = false;
+            if (margeHaut > 0f) t.margin = new Vector4(0f, U(margeHaut), 0f, 0f);
             return t;
         }
 
-        private TextMeshProUGUI NewChildText(Transform parent, string value, int size)
+        /// <summary>Une rangée centrée (`display:flex;justify-content:center`).</summary>
+        private static GameObject Rangee(Transform parent, string nom, float espace, float margeHaut)
         {
-            GameObject go = new GameObject("Label", typeof(RectTransform));
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = espace;
+            h.padding = new RectOffset(0, 0, Mathf.RoundToInt(U(margeHaut)), 0);
+            h.childAlignment = TextAnchor.UpperCenter;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            return go;
+        }
+
+        /// <summary>LE GESTE `.g.or` du cadre : la pilule LUSTRÉE de « LA SUITE » (plaque ficheCtaOrBas qui sert de masque, dégradé ficheCtaOrHaut →
+        /// ficheCtaOrBas, bord ficheCtaOrBord, rayon `RayonGeste`), libellé ficheCtaOrEncre, 9 px gras, capitales `.12em` ; `margin-top:11px`,
+        /// pleine largeur (un seul geste : `flex:1`).</summary>
+        private static GameObject Geste(Transform parent, string nom, out TextMeshProUGUI libelle, bool margeHaute = true)
+        {
+            Transform hote = parent;
+            if (margeHaute)
+            {
+                // la marge haute du geste (`margin-top:11px`) : un conteneur « <nom>_Marge » la porte — un groupe vertical n'a pas de marge par enfant.
+                // ⚠️ Montrer/cacher le geste passe par `Montrer`, qui bascule AUSSI ce conteneur (sinon un vide de 47 u reste).
+                GameObject cadre = new GameObject(nom + "_Marge", typeof(RectTransform));
+                cadre.transform.SetParent(parent, false);
+                VerticalLayoutGroup v = cadre.AddComponent<VerticalLayoutGroup>();
+                v.padding = new RectOffset(0, 0, Mathf.RoundToInt(U(11f)), 0);
+                v.childControlWidth = true; v.childControlHeight = true;
+                v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+                hote = cadre.transform;
+            }
+            GameObject geste = new GameObject(nom, typeof(RectTransform));
+            geste.transform.SetParent(hote, false);
+            Image im = geste.AddComponent<Image>();
+            LaSuitePanelController.Arrondir(im, LaSuitePanelController.RayonGeste, DesignTokens.Current.ficheCtaOrBas);
+            geste.AddComponent<Mask>().showMaskGraphic = false;
+            GameObject lustre = new GameObject("Degrade", typeof(RectTransform));
+            lustre.transform.SetParent(geste.transform, false);
+            lustre.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform drt = (RectTransform)lustre.transform;
+            drt.anchorMin = Vector2.zero; drt.anchorMax = Vector2.one; drt.offsetMin = drt.offsetMax = Vector2.zero;
+            Image degrade = lustre.AddComponent<Image>();
+            degrade.sprite = ProceduralUI.VerticalGradient(64, DesignTokens.Current.ficheCtaOrHaut, DesignTokens.Current.ficheCtaOrBas);
+            degrade.raycastTarget = false;
+            LaSuitePanelController.Lisere(geste.transform, LaSuitePanelController.RayonGeste, DesignTokens.Current.ficheCtaOrBord);
+            HorizontalLayoutGroup bh = geste.AddComponent<HorizontalLayoutGroup>();
+            bh.padding = new RectOffset(Mathf.RoundToInt(U(4f)), Mathf.RoundToInt(U(4f)), 0, 0);
+            bh.childAlignment = TextAnchor.MiddleCenter;
+            bh.childControlWidth = true; bh.childControlHeight = true;
+            bh.childForceExpandWidth = false; bh.childForceExpandHeight = false;
+            LayoutElement le = geste.AddComponent<LayoutElement>();
+            le.minHeight = le.preferredHeight = LaSuitePanelController.HauteurDuGeste;
+            le.flexibleWidth = 1f;
+            GameObject motGo = new GameObject("Label", typeof(RectTransform));
+            motGo.transform.SetParent(geste.transform, false);
+            libelle = motGo.AddComponent<TextMeshProUGUI>();
+            libelle.font = DesignTokens.Current.primaryFont;
+            libelle.fontSize = U(9f);
+            libelle.fontStyle = FontStyles.Bold | FontStyles.UpperCase;   // la casse est un STYLE : le texte servi reste intact
+            libelle.characterSpacing = 12f;
+            libelle.color = DesignTokens.Current.ficheCtaOrEncre;
+            libelle.alignment = TextAlignmentOptions.Center;
+            libelle.enableWordWrapping = false;
+            libelle.raycastTarget = false;
+            return geste;
+        }
+
+        /// <summary>Montre ou cache un élément du verre ET son conteneur de marge (« <nom>_Marge ») s'il en a un.</summary>
+        private static void Montrer(Component c, bool visible)
+        {
+            if (c == null) return;
+            c.gameObject.SetActive(visible);
+            Transform p = c.transform.parent;
+            if (p != null && p.name == c.name + "_Marge") p.gameObject.SetActive(visible);
+        }
+
+        private static TextMeshProUGUI ChampTexte(Transform parent, string nom, Color couleur)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
             go.transform.SetParent(parent, false);
             RectTransform rt = (RectTransform)go.transform;
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = new Vector2(6, 4);
-            rt.offsetMax = new Vector2(-6, -4);
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(U(8f), U(2f)); rt.offsetMax = new Vector2(-U(8f), -U(2f));
             TextMeshProUGUI t = go.AddComponent<TextMeshProUGUI>();
             t.font = DesignTokens.Current.primaryFont;
-            t.text = value;
-            t.fontSize = size;
-            t.alignment = TextAlignmentOptions.Center;
+            t.fontSize = U(8f);
+            t.color = couleur;
+            t.alignment = TextAlignmentOptions.MidlineLeft;
             t.raycastTarget = false;
             return t;
         }

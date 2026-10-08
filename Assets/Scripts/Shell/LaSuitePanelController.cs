@@ -56,9 +56,43 @@ namespace MafiaCleanCity.Shell
 
         private void Construire()
         {
-            GameObject go = new GameObject("LaSuite", typeof(RectTransform));
-            go.transform.SetParent(transform, false);
+            GameObject go = PoserLeVerre(transform, "LaSuite");
             bloc = (RectTransform)go.transform;
+            VerticalLayoutGroup vlg = go.AddComponent<VerticalLayoutGroup>();
+            // G9/G10 (juge ⊥ r3, 07/10) : le rythme vertical du panneau était comprimé de 22 à 35 % sur trois gouttières indépendantes (réf → jeu : haut → « LA SUITE » 43 → 37 px,
+            // « LA SUITE » → 1ᵉʳ titre 58 → 38, titre → corps 30 → 20, corps → titre suivant 93 → 72). MESURE du créneau du 07/10 (P1·mesure) : le bloc veut 636,7 u pour une bande de
+            // 1 011,7 u (1920) et 1 349,1 u (2400), échelle 1 — l'allongement (≈ 115 u) tient, `Ajuster` ne le réduit pas, les marges latérales restent exactes. (px ÷ 0,839 = u.)
+            vlg.padding = new RectOffset(RembourrageGauche, RembourrageDroite, RembourrageHaut, 48);
+            vlg.spacing = EspaceEntreLignes;
+            vlg.childControlWidth = true; vlg.childControlHeight = true;
+            vlg.childForceExpandWidth = true; vlg.childForceExpandHeight = false;
+            ContentSizeFitter fit = go.AddComponent<ContentSizeFitter>();
+            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            // F10 : le crème CHAUD du bandeau (hudCremeSecondary, le jeton de « ARGENT ») — plus le gris froid. F16 : interlettrage rendu.
+            TextMeshProUGUI titre = Texte(go.transform, LaSuite.Titre().ToUpperInvariant(), 26, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            titre.name = "Titre";
+            titre.characterSpacing = 26;
+            titre.fontStyle = FontStyles.Bold;
+            titre.alignment = TextAlignmentOptions.Center;
+
+            for (int i = 0; i < lignesRendues.Count; i++)
+            {
+                if (i > 0) Separateur(go.transform);
+                Ligne(go.transform, lignesRendues[i], premierGeste: i == PremierGeste(), premiereLigne: i == 0);
+            }
+            Ajuster();
+        }
+
+        /// <summary>LE VERRE `.acc4 .verre` (cadres 0-5 de l'Accueil) — partagé par « LA SUITE » et la CARTE DE TÊTE (`HighestLeverageCardController`,
+        /// reconstruite sur le cadre 5 le 08/10 nuit, décision f2) : une seule matière, un seul code. Le bloc est ANCRÉ EN BAS de sa bande
+        /// (pivot bas : il pousse vers le haut), aux marges latérales mesurées ; la plaque bleu nuit arrondie sert de MASQUE au dégradé éclairé du
+        /// haut ; le liseré clair autour ; le filet laiton SUR le bord supérieur. Le contenu (groupe vertical, ajusteur) se pose par l'appelant.</summary>
+        public static GameObject PoserLeVerre(Transform parent, string nom)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            RectTransform bloc = (RectTransform)go.transform;
             bloc.anchorMin = new Vector2(0f, 0f);
             bloc.anchorMax = new Vector2(1f, 0f);
             bloc.pivot = new Vector2(0.5f, 0f);                        // ancré en BAS de la bande, il pousse vers le haut
@@ -81,17 +115,6 @@ namespace MafiaCleanCity.Shell
             vi.sprite = ProceduralUI.VerticalGradient(64, VerreHaut, VerreBas);
             vi.raycastTarget = false;
             Lisere(go.transform, RayonBloc, BordDePlaque);
-            VerticalLayoutGroup vlg = go.AddComponent<VerticalLayoutGroup>();
-            // G9/G10 (juge ⊥ r3, 07/10) : le rythme vertical du panneau était comprimé de 22 à 35 % sur trois gouttières indépendantes (réf → jeu : haut → « LA SUITE » 43 → 37 px,
-            // « LA SUITE » → 1ᵉʳ titre 58 → 38, titre → corps 30 → 20, corps → titre suivant 93 → 72). MESURE du créneau du 07/10 (P1·mesure) : le bloc veut 636,7 u pour une bande de
-            // 1 011,7 u (1920) et 1 349,1 u (2400), échelle 1 — l'allongement (≈ 115 u) tient, `Ajuster` ne le réduit pas, les marges latérales restent exactes. (px ÷ 0,839 = u.)
-            vlg.padding = new RectOffset(RembourrageGauche, RembourrageDroite, RembourrageHaut, 48);
-            vlg.spacing = EspaceEntreLignes;
-            vlg.childControlWidth = true; vlg.childControlHeight = true;
-            vlg.childForceExpandWidth = true; vlg.childForceExpandHeight = false;
-            ContentSizeFitter fit = go.AddComponent<ContentSizeFitter>();
-            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
             // F8 : le liseré or est SUR le bord supérieur de la plaque (3 px, laiton, ~66 % de sa largeur, centré) — plus un filet flottant
             // à l'intérieur, qui se lisait comme un séparateur au-dessus de « LA SUITE ».
             GameObject lisereOr = new GameObject("LisereOr", typeof(RectTransform));
@@ -107,19 +130,7 @@ namespace MafiaCleanCity.Shell
             li.color = Color.white;
             li.raycastTarget = false;
 
-            // F10 : le crème CHAUD du bandeau (hudCremeSecondary, le jeton de « ARGENT ») — plus le gris froid. F16 : interlettrage rendu.
-            TextMeshProUGUI titre = Texte(go.transform, LaSuite.Titre().ToUpperInvariant(), 26, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
-            titre.name = "Titre";
-            titre.characterSpacing = 26;
-            titre.fontStyle = FontStyles.Bold;
-            titre.alignment = TextAlignmentOptions.Center;
-
-            for (int i = 0; i < lignesRendues.Count; i++)
-            {
-                if (i > 0) Separateur(go.transform);
-                Ligne(go.transform, lignesRendues[i], premierGeste: i == PremierGeste(), premiereLigne: i == 0);
-            }
-            Ajuster();
+            return go;
         }
 
         /// <summary>Le bloc ne sort JAMAIS de sa bande : plus haut qu'elle (petit écran, trois lignes longues), il se réduit à l'échelle
