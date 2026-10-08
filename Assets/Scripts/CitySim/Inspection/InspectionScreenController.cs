@@ -87,6 +87,8 @@ namespace MafiaCleanCity.CitySim.Inspection
         private static Color Papier => new Color32(0xe9, 0xe6, 0xd8, 255);
         private static Color EncreDuRegistre => new Color32(0x2b, 0x2a, 0x26, 255);
         private static Color EncreFaibleDuRegistre => new Color32(0x6b, 0x69, 0x5e, 255);
+        /// <summary>`.avert-dep{color:#5a4629}` (cadre 33) : l'encre de l'avertissement de la fiche, 5,5:1 sur la plaque crème (`EncreFaibleDuRegistre` n'y fait que 3,4:1).</summary>
+        private static Color EncreDeLAvertissement => new Color32(0x5a, 0x46, 0x29, 255);
         private static Color ZebrageDuRegistre => new Color32(0xcf, 0xe0, 0xcd, 255);
         private static Color RougeDuRegistre => new Color32(0x93, 0x40, 0x2c, 255);
 
@@ -427,21 +429,27 @@ namespace MafiaCleanCity.CitySim.Inspection
             piedTexte.characterSpacing = 8f;
 
             // ── le dépôt (#33) ──
-            TextMeshProUGUI depotTitre = Texte(transform, "DepotTitre", "DÉPOSER UN SIGNALEMENT", Px(9f), Or,
+            // F7 (juge d'ensemble r1, 08/10) : le dépôt est UNE FICHE de papier (`.depot`, cadre 33 : fond #e8dcc0 → #d6c8a4, encre #2b2622) punaisée sur le liège — et non du texte clair posé
+            // sur le liège (2,6 à 3,1:1, sous le seuil de 4,5). Le décor avait changé le fond sans réencrer le contenu : tout le bloc (titre, SUR / PRIX / EFFET, le tampon DÉPOSER, l'avertissement)
+            // vit maintenant DANS la fiche, à l'encre du registre (8,84:1 sur la plaque).
+            GameObject fiche = Bloc("Fiche", transform, false, Px(3f));
+            fiche.AddComponent<Image>().color = PiedDEcran.PlaqueCreme;
+            fiche.GetComponent<VerticalLayoutGroup>().padding = new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(14f), (int)Px(12f));
+            TextMeshProUGUI depotTitre = Texte(fiche.transform, "DepotTitre", "DÉPOSER UN SIGNALEMENT", Px(9f), EncreDuRegistre,
                                                DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             depotTitre.characterSpacing = 12f;
-            cibleTexte = Texte(transform, "Cible", "", Px(7.5f), Creme2,
+            cibleTexte = Texte(fiche.transform, "Cible", "", Px(7.5f), EncreDuRegistre,
                                DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             cibleTexte.enableWordWrapping = true;
-            Texte(transform, "Effet", "EFFET · une entrée de plus dans leur file", Px(7f), Creme2,
+            Texte(fiche.transform, "Effet", "EFFET · une entrée de plus dans leur file", Px(7f), EncreDuRegistre,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
-            prixTexte = Texte(transform, "Prix", "", Px(7.5f), Creme,
+            prixTexte = Texte(fiche.transform, "Prix", "", Px(7.5f), EncreDuRegistre,
                               DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             prixTexte.enableWordWrapping = true;
             prixTexte.gameObject.SetActive(false);
 
             var bGo = new GameObject("Deposer", typeof(RectTransform));
-            bGo.transform.SetParent(transform, false);
+            bGo.transform.SetParent(fiche.transform, false);
             // A3 (juge groupé du 07/10, f2) : DÉPOSER est une PLAQUE crème à double filet rouge (cadre 33 : la fiche de papier), pas l'aplat olive pleine largeur sans arrondi ni filet — la même grammaire crème que le CTA de ⑤
             Image fondBouton = bGo.AddComponent<Image>();
             fondBouton.sprite = ProceduralUI.RoundedRectMask((int)Px(5f));
@@ -472,7 +480,7 @@ namespace MafiaCleanCity.CitySim.Inspection
             libRt.anchorMin = Vector2.zero; libRt.anchorMax = Vector2.one;
             libRt.offsetMin = Vector2.zero; libRt.offsetMax = Vector2.zero;
 
-            Texte(transform, "Avert", "⚠ au bout de plusieurs, la police se retourne", Px(6.5f), Creme2,
+            Texte(fiche.transform, "Avert", "⚠ au bout de plusieurs, la police se retourne", Px(6.5f), EncreDeLAvertissement,
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
 
             // ★ le retour de bâton (#34) : figé jusqu'au prochain geste

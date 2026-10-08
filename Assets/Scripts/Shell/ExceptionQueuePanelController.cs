@@ -319,8 +319,9 @@ namespace MafiaCleanCity.Shell
                 raison.fontSize = TailleDeLaRaison;
                 raison.color = DesignTokens.Current.hudCremeSecondary;   // #b9ad92
                 raison.enableWordWrapping = true;
-                raison.maxVisibleLines = 2;
-                raison.overflowMode = TextOverflowModes.Ellipsis;
+                // F1 (juge d'ensemble r1, 08/10) : `maxVisibleLines = 2` masquait la 3ᵉ ligne SANS « … » (la réplique s'arrêtait en pleine phrase) alors que sa hauteur restait réservée :
+                // la raison servie se lit EN ENTIER, la carte épouse son texte.
+                raison.overflowMode = TextOverflowModes.Overflow;
             }
             PlusieursRendu = LignePlusieurs(currentCards.Length);
             if (PlusieursRendu != null)

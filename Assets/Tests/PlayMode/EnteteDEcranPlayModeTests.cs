@@ -67,7 +67,16 @@ namespace MafiaCleanCity.CityMap.Tests
                 Transform racine = GameObject.Find("LoiRoot").transform;
                 Transform entete = racine.Find("Entete");
                 Assert.IsNotNull(entete, "le bandeau existe");
-                Assert.AreEqual(0, entete.GetSiblingIndex(), "premier élément de la pile (au-dessus du corps défilant : il ne défile pas)");
+                // F10 (juge d'ensemble r1, 08/10) : « premier » = premier élément de la PILE, mais dessiné APRÈS `Decor` — placé avant, il passait sous le support opaque (0 pixel de titre sur ㉚ ㉛ ㉘)
+                Transform decor = racine.Find("Decor");
+                Assert.IsNotNull(decor, "le décor est posé");
+                Assert.Greater(entete.GetSiblingIndex(), decor.GetSiblingIndex(), "le bandeau est dessiné PAR-DESSUS le décor, jamais dessous");
+                for (int i = 0; i < entete.GetSiblingIndex(); i++)
+                {
+                    LayoutElement le = racine.GetChild(i).GetComponent<LayoutElement>();
+                    Assert.IsTrue(!racine.GetChild(i).gameObject.activeSelf || (le != null && le.ignoreLayout), $"{racine.GetChild(i).name} précède le bandeau et entre dans la pile : le bandeau n'est plus le premier élément de la pile");
+                }
+                Assert.AreEqual(entete, racine.GetChild(entete.GetSiblingIndex()), "(le bandeau ne défile pas : il est hors du corps défilant)");
                 Assert.AreEqual(((0x1a, 0x1f, 0x26)), Trio(entete.GetComponent<Image>().color), "plaque `.pl-tete`");
                 Transform filet = entete.Find("Filet");
                 Assert.IsNotNull(filet); Assert.AreEqual((0x33, 0x3c, 0x46), Trio(filet.GetComponent<Image>().color));

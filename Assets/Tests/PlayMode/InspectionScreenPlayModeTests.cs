@@ -122,6 +122,41 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
             Assert.AreEqual(0, ecran.LignesRendues, "tout ou rien : 0 file ⇒ 0 ligne, jamais 18 lignes éteintes");
         }
 
+        // ═══ F7 (juge d'ensemble r1, 08/10) — le dépôt est une FICHE de papier, pas du texte clair sur le liège ═══════════════════════
+
+        private static float Luminance(Color c)
+        {
+            float F(float v) => v <= 0.03928f ? v / 12.92f : Mathf.Pow((v + 0.055f) / 1.055f, 2.4f);
+            return 0.2126f * F(c.r) + 0.7152f * F(c.g) + 0.0722f * F(c.b);
+        }
+        private static float Contraste(Color a, Color b)
+        {
+            float la = Luminance(a), lb = Luminance(b);
+            return (Mathf.Max(la, lb) + 0.05f) / (Mathf.Min(la, lb) + 0.05f);
+        }
+
+        [UnityTest]
+        public IEnumerator Depot_LeBlocEstUneFicheDePapier_ToutLeTexteSeLitSurSaPlaque()
+        {
+            var ecran = Monter();
+            yield return null; yield return null; yield return null;
+            Transform fiche = ecran.transform.Find("Fiche");
+            Assert.IsNotNull(fiche, "le dépôt est une fiche de papier (`.depot`, cadre 33)");
+            Color plaque = fiche.GetComponent<UnityEngine.UI.Image>().color;
+            Assert.AreEqual(1f, plaque.a, 0.001f, "la plaque est opaque");
+            foreach (string nom in new[] { "DepotTitre", "Cible", "Effet", "Prix", "Deposer", "Avert" })
+                Assert.AreSame(fiche, ecran.transform.Find("Fiche/" + nom)?.parent, nom + " est DANS la fiche (jamais posé directement sur le liège)");
+            int lus = 0;
+            foreach (TMPro.TextMeshProUGUI t in fiche.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+            {
+                lus++;
+                float seuil = t.transform.parent.name == "Deposer" ? 3f : 4.5f;   // le tampon « DÉPOSER » est un GRAND texte (9 px CSS, gras, espacé) : 3:1
+                Assert.GreaterOrEqual(Contraste(t.color, plaque), seuil, $"« {t.name} » sur la plaque de la fiche : {Contraste(t.color, plaque):0.00}:1 < {seuil}:1");
+            }
+            Assert.GreaterOrEqual(lus, 5, "population lue : titre, cible, effet, prix, libellé du tampon, avertissement (anti-vacuité)");
+            Assert.Less(Contraste(new Color32(0xb9, 0xac, 0x92, 255), plaque), 4.5f, "contrôle positif : l'ancienne encre claire (#b9ac92) ne passe PAS sur la plaque");
+        }
+
         // ═══ D3 — le dépôt ══════════════════════════════════════════════════════════════════════
 
         [UnityTest]
