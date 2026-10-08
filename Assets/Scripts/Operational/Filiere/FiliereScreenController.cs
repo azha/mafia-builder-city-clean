@@ -169,7 +169,7 @@ namespace MafiaCleanCity.Operational
             yield return Charger();
         }
 
-        /// <summary>État vide (passe UX 2026-09-26) : la planque SERVIE du joueur — `district/:id/stash` sur ses quartiers — et son
+        /// <summary>État vide (passe UX 2026-09-26), et nominal depuis ㊵ Q2 (f2 08/10) : la planque SERVIE du joueur — `district/:id/stash` sur ses quartiers — et son
         /// enseigne, servie par `me/buildings` pour le bâtiment de la planque. Null tant que non trouvée.</summary>
         public bool PlanqueTrouvee { get; private set; }
         public string EnseigneDeLaPlanque { get; private set; }
@@ -348,6 +348,9 @@ namespace MafiaCleanCity.Operational
                 if (n != null) ecartsParNoeud[tete] = n.deviation_active;
             }
 
+            // ㊵ Q2 (f2 08/10) : la planque est lue AUSSI en nominal — le cadre 142 montre le geste au pied AVEC une filière montée.
+            yield return TrouverLaPlanque();
+
             AppliquerEtat(DernierChargement, liste, ecartsParNoeud);
             RenduTermine = true;
         }
@@ -384,6 +387,14 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Même contrat que `RendrePourTest(dto)`, avec la liste (`stage_index`) et les écarts par nœud — pour les tests
         /// d'état de l'ordre et du cadre 138, sans réseau.</summary>
+        /// <summary>La planque que `TrouverLaPlanque` aurait lue — réservé aux tests (patron ㊲) : rien n'est demandé au réseau, le rendu
+        /// suivant (`RendrePourTest`) en tient compte. Ne prouve jamais que le back sert cette planque.</summary>
+        public void PoserLaPlanquePourTest(string charge, string facadeId, string safehouseId, string enseigne = null)
+        {
+            PlanqueTrouvee = true; ChargeDeLaPlanque = charge; FacadeId = facadeId; SafehouseIdDeLaPlanque = safehouseId;
+            EnseigneDeLaPlanque = enseigne;
+        }
+
         public void RendrePourTest(LaunderingPipelineDto dto, LaunderingNodesDto liste, IDictionary<string, bool> ecarts)
         {
             corpsImposeParUnTest = true;
@@ -454,7 +465,7 @@ namespace MafiaCleanCity.Operational
             foreach (LaunderingStageDto e in etapes)
             {
                 if (e == null) continue;
-                if (e.terminal && e.cleanliness_band == "CLEAN") propres++;
+                if (e.cleanliness_band == "CLEAN") propres++;
                 if (enEcart(e)) ecarts++;
             }
 
@@ -465,8 +476,11 @@ namespace MafiaCleanCity.Operational
                 : Lib("LA CHAÎNE, DE LA TÊTE À LA SORTIE");
 
             MajCompteur(0, etapes.Length, Lib("ÉTAPES"));
-            MajCompteur(1, propres, Lib("PROPRE AU BOUT"));
-            compteurNombre[1].text = propres.ToString("00") + "<size=55%>/" + etapes.Length + "</size>";
+            // ㊵ B1 (f2 08/10) : le libellé suit l'état que dessine le cadre, selon que le back SERT ou non le compte des étapes
+            // propres. MESURÉ (back a0a7672b, `laundering.projection.service.ts`) : `…/pipeline` ne sert que `stages[]` (bande,
+            // `terminal`, `has_cash`) — aucun compte. ⇒ la forme des cadres 142/143/145 : « 01 PROPRES », les étapes dont la bande
+            // servie est CLEAN, sans dénominateur (plus « 01/4 PROPRE AU BOUT », la forme du seul cadre 146).
+            MajCompteur(1, propres, Lib("PROPRES"));
             MajCompteur(2, ecarts, Lib("ÉCARTS"));
             EcartsAffiches = ecarts;
 
@@ -490,6 +504,10 @@ namespace MafiaCleanCity.Operational
                     Lib("chaque étape rend l'argent un peu plus propre que la précédente. Seule la "
                         + "DERNIÈRE crédite le portefeuille — tant qu'il n'y a pas de sortie, il n'y a "
                         + "pas d'argent, seulement une file d'attente."));
+
+            // ㊵ Q2 (f2 08/10) : le geste au pied, comme le cadre 142 — mêmes conditions que la chaîne vide (absent, jamais éteint).
+            if (PlanqueTrouvee && GesteBlanchirOffert(ChargeDeLaPlanque, FacadeId, SafehouseIdDeLaPlanque))
+                RendreGesteBlanchir();
         }
 
         /// <summary>Une étape RÉELLE de la chaîne — la rangée `.et6` des cadres 137-138 (A2 du juge groupé du 07/10) : la CUVE à gauche, la
@@ -640,7 +658,7 @@ namespace MafiaCleanCity.Operational
             ViderListe();
             sousTitre.text = Lib("LA FILIÈRE N'A PAS RÉPONDU");
             MajCompteur(0, 0, Lib("ÉTAPES"));
-            MajCompteur(1, 0, Lib("PROPRE AU BOUT"));
+            MajCompteur(1, 0, Lib("PROPRES"));
             MajCompteur(2, 0, Lib("ÉCARTS"));
             MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"), Lib("Pas de réponse"),
                 Lib("on n'a pas eu de réponse. Ce n'est pas « la filière est vide » : c'est « on "
@@ -689,7 +707,7 @@ namespace MafiaCleanCity.Operational
             ViderListe();
             sousTitre.text = Lib("AUCUN NŒUD POUR VOUS");
             MajCompteur(0, 0, Lib("ÉTAPES"));
-            MajCompteur(1, 0, Lib("PROPRE AU BOUT"));
+            MajCompteur(1, 0, Lib("PROPRES"));
             MajCompteur(2, 0, Lib("ÉCARTS"));
 
             // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26) : « Obtenir une planque » et « il faut une planque » étaient dits à TOUT joueur
@@ -792,7 +810,7 @@ namespace MafiaCleanCity.Operational
         {
             sousTitre.text = Lib("EN ATTENTE");
             MajCompteur(0, 0, Lib("ÉTAPES"));
-            MajCompteur(1, 0, Lib("PROPRE AU BOUT"));
+            MajCompteur(1, 0, Lib("PROPRES"));
             MajCompteur(2, 0, Lib("ÉCARTS"));
             MajPanneau(Lib("CE QU'ON SAIT POUR L'INSTANT"),
                 Lib("La filière n'a pas encore été interrogée"),
@@ -927,6 +945,7 @@ namespace MafiaCleanCity.Operational
                     DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.primaryFont);
                 compteurLibelle[i].alignment = TextAlignmentOptions.Center;
                 compteurLibelle[i].characterSpacing = 16f;
+                compteurLibelle[i].fontStyle |= FontStyles.UpperCase;   // `.bln6 .fen>span{text-transform:uppercase}` : la valeur servie « propres » est en minuscules
             }
 
             // ㊵ A2 du juge groupé du 07/10 — LA BOÎTE DE LA CHAÎNE (`.elast` des cadres 137-141) : tout l'espace que la pile laisse
@@ -990,8 +1009,8 @@ namespace MafiaCleanCity.Operational
             pannTexte = NouveauTexte(pan.transform, "Texte", "", Px(9f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
 
-            // ㊵ A3 — LE PIED (`.pied`) : le geste et sa note, DERNIER bloc de la pile, sous le panneau (cadres 137, 138, 140). Vide et
-            // éteint tant que le geste n'est pas offert (il est ABSENT, jamais éteint : `GesteBlanchirOffert`).
+            // ㊵ A3 — LE PIED (`.pied`) : le geste et sa note, DERNIER bloc de la pile, sous le panneau (cadres 137, 138, 140), en nominal
+            // comme à vide (Q2 de f2, 08/10). Vide et éteint tant que le geste n'est pas offert (il est ABSENT, jamais éteint : `GesteBlanchirOffert`).
             GameObject piedGo = NouveauUI("Pied", racine.transform);
             piedGo.AddComponent<LayoutElement>().flexibleHeight = 0f;
             var vpied = piedGo.AddComponent<VerticalLayoutGroup>();

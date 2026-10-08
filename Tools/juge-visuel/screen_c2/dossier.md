@@ -71,7 +71,8 @@ Trois nombres, toujours les trois :
 
 | écart | raison mesurée | source |
 |---|---|---|
-| <à remplir> | <…> | <…> |
+| **B1 du juge du 07/10 — le libellé du 2ᵉ compteur** : « 01 PROPRES » (cadres 142/143/145 du fichier au 08/10 = 137/138/140 de l'INDEX), plus « 00/4 PROPRE AU BOUT » (cadre 146 = 141 de l'INDEX) | **règle de f2 (08/10)** : le libellé suit l'état que dessine le cadre — la forme « N/M PROPRE AU BOUT » si le back SERT le compte des étapes propres, sinon « PROPRES ». **MESURÉ** (back `a0a7672b`, `operational/laundering/laundering.projection.service.ts:85-92, 155-164`) : `GET …/laundering/:nodeId/pipeline` ne sert que `stages[]` (`cleanliness_band`, `terminal`, `has_cash`) — **aucun compte** (« chain LENGTH … NOT surfaced as a raw number »). ⇒ « PROPRES » partout, sans dénominateur ; le nombre = les étapes dont la bande servie est `CLEAN` (cadre 142 : une seule étape `clean` ⇒ « 01 »). Libellé en capitales par le style (`.bln6 .fen>span{text-transform:uppercase}`), la valeur servie `filiere.bloc.propres` étant « propres » | décision de f2 du 08/10 ; mesure ci-contre |
+| **Q2 — le geste au pied AVEC une filière montée** (cadre 142 : INJECTER sous le panneau) | **décision de f2 (08/10)** : la planque est lue AUSSI en nominal ; le pied porte le geste quand la planque servie tient de quoi blanchir (absent sinon, jamais éteint). Le libellé reste BLANCHIR (mot ratifié, table 77) et sa note « l'argent passe de la planque à la filière » | décision de f2 du 08/10 |
 
 ## Format du RAPPORT — imposé
 

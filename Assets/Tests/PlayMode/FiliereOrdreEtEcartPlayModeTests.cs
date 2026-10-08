@@ -148,9 +148,12 @@ namespace MafiaCleanCity.Operational.Tests
                 Assert.AreEqual(1f, largeur.flexibleWidth, 0.001f, $"Compteur{i} prend exactement un tiers disponible");
             }
             string comptePropres = compteurs.Find("Compteur1/Nombre").GetComponent<TMPro.TextMeshProUGUI>().text;
-            StringAssert.StartsWith("01", comptePropres, "seule la sortie terminale CLEAN est comptée");
-            StringAssert.Contains("/4", comptePropres, "le dénominateur vient du nombre d'étapes servi");
-            Assert.AreEqual("PROPRE AU BOUT", compteurs.Find("Compteur1/Libelle").GetComponent<TMPro.TextMeshProUGUI>().text);
+            // ㊵ B1 (f2 08/10) : le back ne sert aucun compte ⇒ la forme des cadres 142/143/145, « PROPRES » sans dénominateur ;
+            // n3 et n4 sont servies CLEAN ⇒ 02.
+            Assert.AreEqual("02", comptePropres, "les étapes de bande CLEAN sont comptées, sans dénominateur");
+            TMPro.TextMeshProUGUI libellePropres = compteurs.Find("Compteur1/Libelle").GetComponent<TMPro.TextMeshProUGUI>();
+            Assert.AreEqual("PROPRES", libellePropres.text);
+            Assert.IsTrue((libellePropres.fontStyle & TMPro.FontStyles.UpperCase) != 0, "`.fen>span` est en capitales : la valeur servie « propres » aussi");
             Assert.IsNotNull(tous.First(t => t.name == "Enseigne").Find("FiletOr"), "le filet or ferme l'enseigne");
             Assert.AreEqual(5, racine.GetComponentsInChildren<UnityEngine.UI.Outline>(true).Length,
                 "enseigne + 3 compteurs + panneau portent leur liseré ; les étapes, elles, sont CERNÉES (A2 du 07/10)");
@@ -193,6 +196,36 @@ namespace MafiaCleanCity.Operational.Tests
             StringAssert.StartsWith("Obtenir une planque", rien.text, "sans planque : le premier maillon à obtenir");
             Assert.IsFalse(r.GetComponentsInChildren<Transform>(true).Any(t => t.name.StartsWith("Maillon")),
                 "plus de « maillons » en plaques (patron du cadre 142, une planche d'état de l'atelier)");
+        }
+
+        /// <summary>㊵ Q2 (f2 08/10) — État FABRIQUÉ : une filière MONTÉE et une planque servie qui tient de quoi blanchir. Comme le
+        /// cadre 142, le PIED porte le geste (dernier bloc, allumé, un bouton) ; la même filière avec une planque VIDE n'en porte pas
+        /// (absent, jamais éteint). EFFET : le pied est actif et son bouton a une hauteur résolue.</summary>
+        [UnityTest]
+        public IEnumerator Fabrique_FiliereMontee_PlanqueChargee_LeGesteEstAuPied()
+        {
+            var ecran = MonterEcran();
+            var dto = new LaunderingPipelineDto { stages = new[] { Etape("n1", "PARTIAL"), Etape("n2", "CLEAN", terminal: true) } };
+            var liste = new LaunderingNodesDto { nodes = new[] { Noeud("n1", 1), Noeud("n2", 2) } };
+            ecran.RendrePourTest(dto, liste, null);   // planque non lue : le pied se tait
+            Transform r = GameObject.Find("FiliereRoot").transform;
+            Assert.IsFalse(r.Find("Pied").gameObject.activeSelf, "planque non lue : aucun geste");
+
+            ecran.PoserLaPlanquePourTest("NOMINAL", "facade-1", "planque-1");
+            ecran.RendrePourTest(dto, liste, null);
+            yield return null;
+            yield return null;
+            Transform pied = r.Find("Pied");
+            Assert.IsTrue(pied.gameObject.activeSelf, "filière montée + planque chargée : le geste est au pied (cadre 142)");
+            Assert.AreEqual(r.childCount - 1, pied.GetSiblingIndex(), "le pied reste le dernier bloc");
+            Transform bouton = pied.Find("BoutonBlanchir");
+            Assert.IsNotNull(bouton, "le bouton du geste est posé");
+            Assert.Greater(((RectTransform)bouton).rect.height, 1f, "EFFET : le bouton a une hauteur résolue");
+            Assert.AreEqual(2, ecran.OrdreAffiche.Count, "les étapes restent rendues avec le geste");
+
+            ecran.PoserLaPlanquePourTest("EMPTY", "facade-1", "planque-1");
+            ecran.RendrePourTest(dto, liste, null);
+            Assert.IsFalse(pied.gameObject.activeSelf, "planque vide : le geste est ABSENT");
         }
 
         /// <summary>État FABRIQUÉ : une étape du pipeline n'a pas de `stage_index` dans la liste ⇒ l'ordre du SERVEUR est gardé
