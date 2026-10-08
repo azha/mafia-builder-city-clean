@@ -389,6 +389,79 @@ namespace MafiaCleanCity.Operational.Tests
                 "un jour, peuvent parler à leur tour.");
         }
 
+        private static Transform Trouver(Transform racine, string nom)
+        {
+            foreach (Transform x in racine.GetComponentsInChildren<Transform>(true))
+                if (x.name == nom) return x;
+            return null;
+        }
+
+        private static Rect Monde(RectTransform rt)
+        {
+            var c = new Vector3[4];
+            rt.GetWorldCorners(c);
+            return Rect.MinMaxRect(c[0].x, c[0].y, c[2].x, c[2].y);
+        }
+
+        /// <summary>㉛ A3 / B2 / B3 (juge du 07/10, corrigés le 08/10) — gardes d'EFFET : les rects RENDUS, pas les paramètres posés.</summary>
+        [UnityTest]
+        public IEnumerator EcranLoiE4b_PastillesEncadrees_EnPlaceVert_AvertissementAFiletEtGras()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(Etat());
+            yield return null;
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            Transform racine = RacineEcran().transform;
+
+            // A3 + B2 : la couleur ET le cadre de chaque pastille sont ceux de la recette mesurée du cadre 68
+            var attendu = new Dictionary<string, Color32>
+            {
+                { "Carte_commis_d_office", new Color32(0x7f, 0xc9, 0x9a, 255) },   // `.tag` EN PLACE : vert #7fc99a (B2)
+                { "Carte_un_cabinet",     new Color32(0x8d, 0x99, 0xa6, 255) },   // DISPONIBLE : gris #8d99a6
+                { "Carte_la_filiere",     new Color32(0xd9, 0xab, 0x4e, 255) },   // À VOS RISQUES : or #d9ab4e
+            };
+            foreach (KeyValuePair<string, Color32> kv in attendu)
+            {
+                Transform carte = Trouver(racine, kv.Key);
+                Assert.IsNotNull(carte, kv.Key);
+                Transform pastille = Trouver(carte, "Pastille");
+                Assert.IsNotNull(pastille, kv.Key + " : la pastille existe (conteneur du cadre)");
+                var badge = Trouver(pastille, "Badge").GetComponent<TMPro.TextMeshProUGUI>();
+                Assert.LessOrEqual(MafiaCleanCity.Shell.Filets.Distance255(badge.color, kv.Value), 4f,
+                    kv.Key + " : l'encre de la pastille est celle du cadre 68 (" + ColorUtility.ToHtmlStringRGB(badge.color) + ")");
+                Transform filets = pastille.Find(MafiaCleanCity.Shell.Filets.NomConteneur);
+                Assert.IsNotNull(filets, kv.Key + " : A3 — la pastille porte son CADRE");
+                Graphic contour = null;
+                foreach (Graphic g in filets.GetComponentsInChildren<Graphic>(true)) if (g.name == "Contour") contour = g;
+                Assert.IsNotNull(contour, kv.Key + " : le cadre est un contour (`border:1px solid currentColor`)");
+                Assert.LessOrEqual(MafiaCleanCity.Shell.Filets.Distance255(contour.color, badge.color), 4f, kv.Key + " : cadre et texte de la MÊME encre (currentColor)");
+
+                Rect rc = Monde((RectTransform)carte), rp = Monde((RectTransform)pastille), rb = Monde(badge.rectTransform);
+                Assert.Greater(rp.width, rb.width + 0.5f, kv.Key + " : la pastille déborde le texte (marge intérieure 5 px)");
+                Assert.Greater(rp.height, rb.height + 0.5f, kv.Key + " : …et en hauteur (3 px)");
+                Assert.Greater(rp.center.x, Monde((RectTransform)Trouver(carte, "Nom")).center.x, kv.Key + " : la pastille est à DROITE du nom");
+                Assert.AreEqual(rc.center.y, rp.center.y, rc.height * 0.1f, kv.Key + " : centrée sur la hauteur de la carte (`align-items:center`)");
+            }
+            Assert.Greater(MafiaCleanCity.Shell.Filets.Distance255(
+                Trouver(Trouver(racine, "Carte_commis_d_office"), "Badge").GetComponent<TMPro.TextMeshProUGUI>().color,
+                MafiaCleanCity.Theme.DesignTokens.Current.accentSuccess), 30f, "B2 : EN PLACE n'est plus le turquoise du jeton de succès");
+
+            // B3 : le bloc d'avertissement a son filet GAUCHE de 2 px sur toute sa hauteur, et « filière » en gras
+            Transform avert = Trouver(racine, "AvertissementFiliere");
+            Assert.IsNotNull(avert);
+            Graphic gauche = null;
+            foreach (Graphic g in avert.GetComponentsInChildren<Graphic>(true)) if (g.name == "Gauche") gauche = g;
+            Assert.IsNotNull(gauche, "B3 : le filet gauche existe");
+            Rect ra = Monde((RectTransform)avert), rg = Monde(gauche.rectTransform);
+            Assert.Greater(rg.width, 0.4f, "B3 : il a une épaisseur RENDUE");
+            Assert.Greater(rg.height, ra.height * 0.95f, "B3 : …sur toute la hauteur du bloc");
+            Assert.AreEqual(ra.xMin, rg.xMin, 0.5f, "B3 : …au bord gauche");
+            var info = Trouver(avert, "InfoFiliere").GetComponent<TMPro.TextMeshProUGUI>();
+            StringAssert.Contains("<b>filière</b>", info.text, "B3 : « filière » en gras (`.pl-rien b`)");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, info.text, "le corpus scanné est le texte SERVI, sans balise");
+        }
+
         /// <summary>⛔ JAMAIS EXERCÉ SUR LES DEUX COMPTES SONDÉS — repli DÉFENSIF seulement (voir
         /// `RendreAffaires`). N'exige RIEN sur le domaine d'un cas, seulement que l'écran ne
         /// plante pas et rende un compte honnête.</summary>

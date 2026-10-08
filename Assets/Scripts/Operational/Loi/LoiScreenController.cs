@@ -403,22 +403,41 @@ namespace MafiaCleanCity.Operational
             eyebrow.characterSpacing = 4f;
             TrackText(eyebrow.text);
 
+            // ㉛ A3 / B2 (juge du 07/10) : la PASTILLE est encadrée (`.tag{border:1px solid currentColor}`) et sa couleur, comme son cadre,
+            // vient de la recette mesurée du cadre 68 — « EN PLACE » est le vert #7fc99a (`Tag`), plus le turquoise du jeton de succès.
             ConstruireCarteAvocat(recruteRoot, "commis_d_office", "Commis d’office",
-                "gratuit — il fait ce qu'il peut", "EN PLACE", VertBon, null);
+                "gratuit — il fait ce qu'il peut", "EN PLACE", DecorsDeScene.Filets.Loi.Tag, null);
             ConstruireCarteAvocat(recruteRoot, "un_cabinet", "Un cabinet",
-                "ça coûte — il connaît les juges", "DISPONIBLE", DesignTokens.Current.onSurfaceMuted,
+                "ça coûte — il connaît les juges", "DISPONIBLE", DecorsDeScene.Filets.Loi.Tag_2,
                 "boutique");
             ConstruireCarteAvocat(recruteRoot, "la_filiere", "La filière",
                 "ça coûte cher — et ça peut se retourner", "À VOS RISQUES",
-                DesignTokens.Current.hudMoneyUnderlineGold, "corruption_pipeline");
+                DecorsDeScene.Filets.Loi.Tag_3, "corruption_pipeline");
 
-            TextMeshProUGUI info = NouveauTexteFiche(recruteRoot, "InfoFiliere",
-                Libelle.De("loi", "bloc",
+            // ㉛ B3 : `.pl-rien{margin-top:10px;padding:8px 10px;border-left:2px solid #3b4650;font:6.9px/1.35}` et `b{font-weight:600}` sur « filière »
+            GameObject avert = NouveauUI("AvertissementFiliere", recruteRoot);
+            VerticalLayoutGroup va = avert.AddComponent<VerticalLayoutGroup>();
+            va.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(8f), PxTrait(8f));
+            va.childControlWidth = true; va.childControlHeight = true;
+            va.childForceExpandWidth = true; va.childForceExpandHeight = false;
+            AddLayoutElement(avert, flexibleHeight: 0);
+            Filets.Poser((RectTransform)avert.transform, DecorsDeScene.Filets.Loi.PlRien);
+            TextMeshProUGUI info = NouveauTexteFiche(avert.transform, "InfoFiliere",
+                MettreEnGras(Libelle.De("loi", "bloc",
                     "La filière fait classer une affaire sans procès — mais elle se sert de gens " +
-                    "qui, un jour, peuvent parler à leur tour."),
-                8f, DesignTokens.Current.onSurfaceMuted, false);
+                    "qui, un jour, peuvent parler à leur tour."), "filière"),
+                6.9f, DesignTokens.Current.onSurfaceMuted, false);
             info.enableWordWrapping = true;
-            TrackText(info.text);
+            TrackText(info.text.Replace("<b>", "").Replace("</b>", ""));   // le corpus scanné reste le texte SERVI, sans balise
+        }
+
+        /// <summary>Le mot nommé, en gras, dans la phrase SERVIE (sa première occurrence, sans égard à la casse) ; la phrase telle quelle s'il n'y est pas.</summary>
+        private static string MettreEnGras(string phrase, string mot)
+        {
+            if (string.IsNullOrEmpty(phrase) || string.IsNullOrEmpty(mot)) return phrase;
+            int i = phrase.IndexOf(mot, System.StringComparison.OrdinalIgnoreCase);
+            if (i < 0) return phrase;
+            return phrase.Substring(0, i) + "<b>" + phrase.Substring(i, mot.Length) + "</b>" + phrase.Substring(i + mot.Length);
         }
 
         /// <summary>Les trois messages de l'état vide — UNE source : l'écran les rend, les tests les lisent ICI. Mesuré le
@@ -443,39 +462,51 @@ namespace MafiaCleanCity.Operational
         }
 
         private void ConstruireCarteAvocat(Transform parent, string idStable, string titreLitteral,
-            string sousTitreLitteral, string badgeLitteral, Color couleurBadge, string tier)
+            string sousTitreLitteral, string badgeLitteral, SpecFilet[] recettePastille, string tier)
         {
             GameObject carte = NouveauUI("Carte_" + idStable, parent);
             // `.pl-choix` : l'ÉTAT de la carte (fond ET bord ensemble, `Filets.Etat` refuse un bord égal au fond — le A du juge sur ㉛).
             Image fondCarte = AjouterFond(carte, DesignTokens.Current.surfaceRow);
             Filets.Etat((RectTransform)carte.transform, fondCarte, EtatDeLaCarte(idStable));
-            VerticalLayoutGroup v = carte.AddComponent<VerticalLayoutGroup>();
-            v.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(8f), PxTrait(8f));
-            v.spacing = Px(3f);
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            // `.pl-choix{display:flex;align-items:center;gap:9px;padding:8px 10px}` : le bloc nom + sous-ligne à gauche, la pastille à droite, CENTRÉE
+            HorizontalLayoutGroup h = carte.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(8f), PxTrait(8f));
+            h.spacing = Px(9f);
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
             AddLayoutElement(carte, flexibleHeight: 0);
 
-            GameObject ligne = NouveauUI("Ligne", carte.transform);
-            HorizontalLayoutGroup h = ligne.AddComponent<HorizontalLayoutGroup>();
-            h.childControlWidth = true; h.childControlHeight = true;
-            h.childForceExpandWidth = true; h.childForceExpandHeight = false;
-            AddLayoutElement(ligne, minHeight: Px(16f), flexibleHeight: 0);
+            GameObject nom = NouveauUI("Nom", carte.transform);   // `.n{flex:1;min-width:0}`
+            VerticalLayoutGroup v = nom.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(2f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            AddLayoutElement(nom, flexibleWidth: 1);
 
-            TextMeshProUGUI titre = NouveauTexteFiche(ligne.transform, "Titre",
+            TextMeshProUGUI titre = NouveauTexteFiche(nom.transform, "Titre",
                 Libelle.De("loi", "bloc", titreLitteral), 10f, DesignTokens.Current.onSurfacePrimary, true);
-            AddLayoutElement(titre.gameObject, flexibleWidth: 1);
             TrackText(titre.text);
 
-            TextMeshProUGUI badge = NouveauTexteFiche(ligne.transform, "Badge",
-                Libelle.De("loi", "badge", badgeLitteral), 7.5f, couleurBadge, true);
-            badge.alignment = TextAlignmentOptions.Right;
-            TrackText(badge.text);
-
-            TextMeshProUGUI sous = NouveauTexteFiche(carte.transform, "SousTitre",
+            TextMeshProUGUI sous = NouveauTexteFiche(nom.transform, "SousTitre",
                 Libelle.De("loi", "bloc", sousTitreLitteral), 8f, DesignTokens.Current.onSurfaceMuted, false);
             sous.enableWordWrapping = true;
             TrackText(sous.text);
+
+            // `.tag{font:700 6.6px;letter-spacing:.8px;border:1px solid currentColor;border-radius:2px;padding:3px 5px}` : le cadre ET l'encre sont
+            // celles de la recette mesurée (`currentColor` = la couleur du texte).
+            GameObject pastille = NouveauUI("Pastille", carte.transform);
+            HorizontalLayoutGroup hp = pastille.AddComponent<HorizontalLayoutGroup>();
+            hp.padding = new RectOffset(PxTrait(5f), PxTrait(5f), PxTrait(3f), PxTrait(3f));
+            hp.childControlWidth = true; hp.childControlHeight = true;
+            hp.childForceExpandWidth = false; hp.childForceExpandHeight = false;
+            AddLayoutElement(pastille, flexibleWidth: 0);
+            Filets.Poser((RectTransform)pastille.transform, recettePastille);
+            TextMeshProUGUI badge = NouveauTexteFiche(pastille.transform, "Badge",
+                Libelle.De("loi", "badge", badgeLitteral), 6.6f, recettePastille[0].Couleur.Resoudre(), true);
+            badge.characterSpacing = 12f;   // .8px sur 6,6px ≈ .12em
+            badge.enableWordWrapping = false;
+            TrackText(badge.text);
 
             if (tier == null) return;   // « Commis d'office » — informatif seul, aucune route.
 
