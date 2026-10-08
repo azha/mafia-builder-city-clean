@@ -1,4 +1,4 @@
-# Design — la couche de mouvement du client Unity (CLIENT-3, 07-08/10/2026) — v4.3 — ✅ APPROUVÉ (revue ⊥ n°4 : 0 BLOCKING) + ajouts §16 (`CouleurA = Cible`, revue ⊥ n°2 du catalogue : cohérent) et §17 (cible du retour d'appui, voile), soumis à la revue ⊥ n°3 du catalogue
+# Design — la couche de mouvement du client Unity (CLIENT-3, 07-08/10/2026) — v4.4 — ✅ APPROUVÉ (revue ⊥ n°4 : 0 BLOCKING) + ajouts §16 (`CouleurA = Cible`, jugé cohérent par les revues n°2 et n°3 du catalogue), §17 (prédicat « rend », surface nommée, voile ; réécrit en v4.4) et G11 au prédicat exact, soumis à la revue ⊥ n°4 du catalogue
 
 Statut : **design, rien n'est codé.** Historique des revues ⊥ (agent neuf à chaque tour) : v1 NOT_APPROUVÉ (6 BLOCKING / 13 MAJEUR / 11 mineurs) ; v2 NOT_APPROUVÉ (3 BLOCKING / 9 MAJEUR / 10 mineurs, commit `d207b48b`) ; v3 NOT_APPROUVÉ (2 BLOCKING / 5 MAJOR / 9 mineurs, commit `5a47e04c` ; les trois BLOCKING de la v2 vérifiés corrigés). Cette v4 répond aux findings de la v3 (table §14) ; la revue n°4 l'**APPROUVE** (0 BLOCKING, 5 MAJOR, 10 mineurs) et la v4.1 ferme les 5 MAJOR (table §15) ; les 10 mineurs vont en dette (`dettes-design-mouvement.md`). Règles de revue en vigueur : **BLOCKING = « le code écrit d'après ce design serait faux » ; une prémisse non démontrable depuis le dépôt se tranche par une MESURE planifiée (E0) avec un défaut sûr.** Rulings du 07/10 : écarts de nuance (pixels, millisecondes, forme exacte d'une courbe) consignés, pas traités ; animations **fidèles en cause, rythme et sensation** ; animations DIÉGÉTIQUES ; ère des objets 2000-2010 (le laiton du chrome d'interface reste).
 
@@ -88,7 +88,7 @@ Constantes dans un `MouvementTunables` voisin de `UiTimingTunables`. **`UiTiming
 
 Canon (`global_conventions_core.md` l.33, l.127) : option **toggleable**, désactive les transitions (F2).
 - `PolitiqueMouvement` = `Plein | Reduit` (`Aucun` : tests et contrôle négatif seulement).
-- **`Reduit`** : tout est figé à `PoseDeReposS`, **y compris** `Alerte` (son état statique nommé existe sans pulsation). **Exceptions** : (i) `Retour` garde le **mélange** de couleur à l'appui — **ou, pour un bouton sans `Graphic` qui rende, son voile `Alpha` (§17)** —, plus le liseré du bouton quand il en a un (le canon veut qu'une couleur ne soit pas le seul différenciateur), sans échelle ; (ii) une entrée **`Fonctionnelle`** (un `Remplissage` de progression : l'arc de 1 000 ms de l'appui long) **ne se gèle pas** : elle devient un indicateur statique plus un compteur textuel (`screen_2a:314`, `screen_13:308`), car le geler supprimerait le seul signal d'une action irréversible.
+- **`Reduit`** : tout est figé à `PoseDeReposS`, **y compris** `Alerte` (son état statique nommé existe sans pulsation). **Exceptions** : (i) `Retour` garde le **mélange** de couleur à l'appui — **ou, pour `retour.appui-voile` seulement, son voile `Alpha` (§17)** —, plus le liseré du bouton quand il en a un (le canon veut qu'une couleur ne soit pas le seul différenciateur), sans échelle ; (ii) une entrée **`Fonctionnelle`** (un `Remplissage` de progression : l'arc de 1 000 ms de l'appui long) **ne se gèle pas** : elle devient un indicateur statique plus un compteur textuel (`screen_2a:314`, `screen_13:308`), car le geler supprimerait le seul signal d'une action irréversible.
 - **Source** : le réglage du joueur dans ⑲ est **un REUSE du canon** (`screen_14:71,146,208,251,298`), pas une question produit ; persistance en `PlayerPrefs` en attendant `PATCH /v1/me/settings` (aucun `GET` n'existe : lot back différé). S'y ajoute Android `Settings.Global.ANIMATOR_DURATION_SCALE == 0` (JNI), relu à chaque `OnApplicationPause(false)`. iOS : réglage joueur seul. Niveau = `Reduit` si l'une des deux sources le demande.
 - Limite de clignotement (G5) : toutes politiques, tous canaux, après `Alterne`, **au plus 3 extrema par seconde (période ≥ 0,667 s)** par piste d'alpha/mélange/éclat. (Le canon de ③ demande un flash toutes les 250 ms : G5 gagne, contradiction consignée avant E3.)
 
@@ -132,10 +132,10 @@ Le test pur applique la table de repère du §2 puis exige : valeur normalisée 
 | G5 | ≤ 3 extrema/s, toutes politiques | runner |
 | G6 | pas de canal ≠ `Alpha` sur un `TMP_Text` | runner (assembly de tests) |
 | G7 | motifs interdits dans `Mouvements/` | source |
-| G8 | **une entrée `Bloquante` ET > `AnimMaxBlockMs` est refusée ; une entrée non bloquante peut durer davantage (appui long 1 000 ms, `carnet.en-main` 500 ms, balayage d'aiguille 700 ms)** (le canon l.124 dit « coupée OU exécutée en arrière-plan » : le client choisit le refus à l'attachement ; l'interruptibilité de l.125 est la règle de remplacement du §3) ; aucun canal n'écrit `blocksRaycasts`/`interactable` ; les `Retour` d'APPUI (`retour.appui`) ≤ 250 ms | runner |
+| G8 | **une entrée `Bloquante` ET > `AnimMaxBlockMs` est refusée ; une entrée non bloquante peut durer davantage (appui long 1 000 ms, `carnet.en-main` 500 ms, balayage d'aiguille 700 ms)** (le canon l.124 dit « coupée OU exécutée en arrière-plan » : le client choisit le refus à l'attachement ; l'interruptibilité de l.125 est la règle de remplacement du §3) ; aucun canal n'écrit `blocksRaycasts`/`interactable` ; les `Retour` d'APPUI (`retour.appui`, `retour.appui-voile`) ≤ 250 ms | runner |
 | G9 | tout `Button` a `RetourAppui` ou une exclusion nommée (la `Scrollbar` de `ReputationScreenController:994`…) | runner |
 | G10 | aucun `Update`/`LateUpdate`/coroutine **hors `Mouvements/` et hors la liste FERMÉE ci-dessous** n'écrit couleur, alpha, rotation, échelle ou position visuelle. **Liste fermée, par fichier:méthode (10 `Update`/`LateUpdate` mesurés dans `Assets/Scripts` : 3 migrés en §9, 7 nommés ici ; plus 1 coroutine visuelle, celle du bandeau, dont le fondu migre et la minuterie reste)** : `AppShell.Update` (touche retour) · `DistrictMapNavigation.Update` (pan/zoom au doigt) · `LongPressButton.Update`, `AppuiLong.Update` (minuteries, aucune écriture visuelle) · `ExceptionQueueController.LateUpdate` (`CalerLeZinc`, mise en page) · `LaSuitePanelController.LateUpdate` (`Ajuster` → `localScale` d'ajustement à la bande : de la mise en page, pas du mouvement — **nommée parce qu'elle écrit une échelle**) · `ReputationScreenController…LateUpdate` (visibilité de l'ascenseur) · minuterie de `BandeauEphemere`. Tout autre `Update`/`LateUpdate`/coroutine visuel nouveau fait rougir | source |
-| G11 | pas de canal **`TranslationX/Y`** sous un `LayoutGroup` ni `ContentSizeFitter` (sauf `LayoutElement.ignoreLayout`) ; `Echelle` n'est refusée que sous `ContentSizeFitter` (un `LayoutGroup` ne pilote pas `localScale` : 306 `LayoutGroup` coexistent avec les 67 boutons) | runner |
+| G11 | **v4.4, prédicat exact** : une **translation** est refusée si le **parent direct** de la cible porte un `LayoutGroup` (sans `LayoutElement.ignoreLayout` sur la cible) — un `LayoutGroup` ne réécrit la position que de ses enfants directs — ou si la cible porte elle-même un `ContentSizeFitter` ; une **`Echelle`** est refusée si la cible **ou un ancêtre quelconque** porte un `ContentSizeFitter`. (Un `LayoutGroup` ne pilote pas `localScale` : 306 `LayoutGroup` coexistent avec les 67 boutons) | runner |
 | G12 | pas de deux `Absolu` sur le même couple | runner |
 | G13 | `Ambiance` invisible refusée (seuils par propriété, §6.2) | runner |
 
@@ -221,29 +221,39 @@ Le catalogue rencontre le même cas sur les crans de ⑰ (teinte selon le rang) 
 §5 (i) (`Retour` garde le `Melange` sous `Reduit`) ; le test de fin de piste, qui vérifie maintenant que la
 couleur restituée est **celle de la cible**, avec un contrôle négatif sur deux boutons de couleurs différentes.
 
-## 17. Ajout v4.3 — la cible du retour d'appui, et le voile (revue ⊥ n°2 du catalogue, 08/10)
+## 17. Ajout v4.3, réécrit v4.4 — la cible du retour d'appui, et le voile (revues ⊥ n°2 et n°3 du catalogue, 08/10)
 
-**Pourquoi.** Mesuré sur les 67 `Button` : 18 n'ont aucune surface que `Melange` puisse faire varier — 1 `Button` posé
-sur un `TMP_Text` (`DailyReviewScreenController.cs:1101`, G6 refuserait le `Melange`), 3 sans aucun `Graphic`
-(`ExceptionDetailController.cs:569`, `LieutenantScreenController.cs:2731`, `BandeauEphemere.cs:251`), 14 dont le
-`Graphic` a un alpha nul (zone de clic transparente : `HighestLeverageCardController.cs:342`,
-`DelegationScreenController.cs:1533`, `DemolitionScreenController.cs:1459`, `AppShell.cs:2349`…). `Melange` n'écrit que le
-RGB : sur eux, le retour d'appui serait invisible — et ce sont justement les panneaux pleine largeur que le §8 prive
-d'échelle.
+**Pourquoi.** `Melange` n'écrit que le RGB d'un `Graphic` ; si ce `Graphic` ne peint rien, le retour d'appui est invisible.
+La v4.3 décidait « peint » par l'alpha seul et cherchait la plaque parmi les enfants : la revue n°3 a mesuré trois autres
+façons de ne rien peindre (un `Mask` à `showMaskGraphic = false` : `ExceptionDetailController.cs:538`,
+`DistrictInteriorScreenController.cs:2261`, `LaSuitePanelController.cs:211` ; `Graphic.enabled = false` :
+`DistrictInteriorScreenController.cs:1064` ; un GameObject inactif : `DistrictCellView.cs:114`), une recherche d'enfant
+qui retenait l'OMBRE PORTÉE de ⑥ (`LieutenantScreenController.cs:1939`), et un voile posé sur une zone de clic nue
+(alpha 0, sans enfant) qui n'assombrissait rien (`DelegationScreenController.cs:1527-1535`,
+`DemolitionScreenController.cs:1453-1459`, `DistrictInteriorScreenController.cs:2125-2128`).
 
-**Quoi.** `Retour.Poser(Button)` choisit, une fois, à la pose :
-1. `button.targetGraphic`, s'il n'est pas un `TMP_Text` et que son `color.a ≥ 0,1` ⇒ entrée `retour.appui` (`Melange`,
-   `CouleurA = Cible`, et `Echelle` sous les conditions du §8 **et** de G11 : aucun ancêtre `ContentSizeFitter`) ;
-2. sinon le premier `Graphic` enfant non texte, `color.a ≥ 0,1`, qui couvre au moins la moitié du rect du bouton ⇒ même
-   entrée, sur cet enfant ;
-3. sinon ⇒ entrée **`retour.appui-voile`** : `Alpha` `Multiplicatif` 1 → 0,80 sur un `CanvasGroup` posé sur le `Button`
-   lui-même (permis sur un texte, G6), 90 ms à l'appui, 140 ms au relâchement, sans échelle.
-Sous `Reduit`, le voile est gardé comme le mélange (§5 (i)) : il ne déplace rien, et sans lui ces 18 boutons n'auraient
-plus aucun retour.
+**Prédicat « rend ».** `Rend(g)` ⇔ `g != null` ∧ `g` n'est pas un `TMP_Text` ∧ `g.enabled` ∧ `g.gameObject.activeInHierarchy`
+∧ `g.color.a ≥ 0,1` ∧ aucun `Mask` à `showMaskGraphic = false` sur `g.gameObject`. Calculable à la pose, sans réflexion.
 
-**Gardes.** G9 devient : tout `Button` a un `RetourAppui` **dont la cible rend** (cas 1 ou 2), ou le voile (cas 3), ou
-une exclusion nommée ; le test relève, pour chaque bouton monté, le cas retenu, et rougit si un cas 1/2 vise un
-`Graphic` d'alpha < 0,1 (contrôle négatif : un bouton à `Image` transparente doit tomber en cas 3).
+**Quoi.** `Retour.Poser(Button b, Graphic surface = null)` choisit, une fois, à la pose :
+1. `surface`, si l'appelant la nomme et qu'elle rend ⇒ entrée `retour.appui` sur elle. L'appelant la nomme quand le
+   `targetGraphic` est un masque qui ne peint pas : `ExceptionDetailController.cs:570` → `Verre`,
+   `DistrictInteriorScreenController.cs:2312` → `Remplissage`, `LaSuitePanelController.cs:223` → `Degrade` (E2) ;
+2. sinon `b.targetGraphic`, s'il rend ⇒ entrée `retour.appui` (`Melange`, `CouleurA = Cible`, `Echelle` sous les conditions
+   du §8 et de G11) ;
+3. sinon ⇒ entrée **`retour.appui-voile`** : `Alpha` `Multiplicatif` 1 → 0,80 sur un `CanvasGroup` posé sur la **cible du
+   voile** = `b` si `b` ou un de ses descendants porte un `Graphic` qui rend ; sinon le plus proche ancêtre de `b` dont la
+   sous-arborescence en porte un. 90 ms à l'appui, 140 ms au relâchement, sans échelle ; permis sur un texte (G6).
+**Aucune recherche automatique de « plaque » parmi les enfants** : elle a choisi l'ombre portée. **Déduit** du classement bouton par bouton de la revue n°3
+(51 / 3 / 13 sous la règle v4.3) : 3 en cas (1), 48 en cas (2), **16 en voile** — à vérifier par G9 au créneau.
+Sous `Reduit`, le voile est gardé comme le mélange : §5 (i) vise le `Melange` des `Retour` et le voile de
+`retour.appui-voile`, **et rien d'autre** (le `Alpha` de `carnet.en-main` est gelé).
+
+**Gardes.** G9 devient : tout `Button` monté a un `RetourAppui` dont la cible **rend** (cas 1 ou 2), ou un voile dont la
+cible a une sous-arborescence qui **rend** (cas 3), ou une exclusion nommée. Le test relève, pour chaque bouton monté, le
+cas retenu et la cible. Contrôles négatifs NOMMÉS, un par façon de ne rien peindre : `Image` d'alpha 0, `Mask` à
+`showMaskGraphic = false`, `Graphic.enabled = false`, GameObject inactif, zone de clic nue sans enfant (le voile doit
+monter d'un cran), bouton posé sur un `TMP_Text` (cas 3 sur le texte).
 
 **Note pour E4 (manomètre de ⑭), 08/10, CLIENT-2.** ⑭ porte le décor de scène (`5c71a421`, `feat/decor-de-scene`) : la
 pile est le `VerticalLayoutGroup` du GameObject de `CompressionScreenController` (variable `v` dans `Construire()`), et un
