@@ -12,8 +12,9 @@ namespace MafiaCleanCity.Shell
     // `ecrans-brennar-4.html` cadres 4-8. La scène : une carte se détache du sabot et se pose sur
     // le comptoir. Le coin ♦ dit si elle est TACTIQUE ou STRUCTURELLE ; deux bandes de pips disent
     // sa portée (`impact_bucket`) et son urgence (`urgency_bucket`) ; le jeton à droite est votre
-    // décision structurelle de la session (`structural_budget`). Deux gestes : « les lire
-    // maintenant » (appui long — `commit`) ou « laisser sur le zinc » (`skip`).
+    // décision structurelle de la session (`structural_budget`). Le geste : « les lire maintenant » (appui long — `commit`). « Laisser
+    // sur le zinc » (`skip`) est RETIRÉ (f2 08/10 nuit, option (c)) : un GESTE MORT — 200, puis rien — et le back ne sert aucune carte
+    // suivante (la carte sautée est reportée telle quelle). Écart à la maquette ASSUMÉ par f2, à consigner au dossier de ⑤.
     //
     // ⛔ CE QUE CET ÉCRAN NE PEUT PAS FAIRE, ET POURQUOI IL NE LE PROMET PAS :
     // · IL N'EXISTE AUCUN `GET` UNITAIRE DE CARTE HL. Elle n'est servie que dans la clé `hl_card`
@@ -37,8 +38,14 @@ namespace MafiaCleanCity.Shell
         public HlCardDto CarteAffichee { get; private set; }
         public bool EtatSabot { get; private set; }
         public int CommitCount { get; private set; }
-        public int SkipCount { get; private set; }
         public string DerniereErreur { get; private set; }
+        /// <summary>La phrase du dernier refus, MONTRÉE au joueur (servie, sinon celle de la carte) ; null sans refus.</summary>
+        public string RefusRendu { get; private set; }
+        /// <summary>⛔ GESTE MORT fermé (f2 08/10 nuit) : le tampon postait le commit et l'écran restait tel quel. Levé après un commit ACCEPTÉ : le
+        /// shell referme cette surimpression et remonte l'Accueil, relu (la carte tranchée n'y est plus).</summary>
+        public event System.Action OnDecisionTranchee;
+        /// <summary>Crochet de test : combien de décisions ACCEPTÉES ont levé `OnDecisionTranchee`.</summary>
+        public int DecisionsTranchees { get; private set; }
         public LongPressButton BoutonLire { get; private set; }
 
         private const float K = 1280f / 300f;
@@ -104,7 +111,7 @@ namespace MafiaCleanCity.Shell
                 { "DUSK", "Rien ne se détache du sabot ce soir." },
                 { "NIGHT", "Rien ne se détache du sabot cette nuit." },
             }, "Rien ne se détache du sabot pour l\u2019instant.");
-        private GameObject filet, tampon;
+        private GameObject tampon;
 
         private void Awake() => Init();
 
@@ -190,7 +197,6 @@ namespace MafiaCleanCity.Shell
             carteRoot.gameObject.SetActive(carte != null);
             if (carte == null) sabotTexte.text = PhraseDuSabot();   // la phase servie peut avoir changé depuis le montage
             sabotTexte.gameObject.SetActive(carte == null);
-            filet.SetActive(carte != null);
             tampon.SetActive(carte != null);
             if (carte == null) return;
 
@@ -283,24 +289,30 @@ namespace MafiaCleanCity.Shell
             if (CarteAffichee == null) yield break;
             CommitCount++;
             DerniereErreur = null;
-            yield return client.Commit(token, CarteAffichee.card_id, dto => { },
+            RefusRendu = null;
+            bool accepte = false;
+            yield return client.Commit(token, CarteAffichee.card_id, dto => accepte = dto.committed,
                                        (c, m) => DerniereErreur = $"{c}: {m}");
+            if (this == null) yield break;
+            if (DerniereErreur == null && accepte) { TrancheePourDeBon(); yield break; }
+            // un refus se DIT, sous la carte (la note du zinc) : la phrase servie, sinon celle de la carte — jamais une erreur muette
+            RefusRendu = client.DernierePhraseDeRefus
+                         ?? MafiaCleanCity.I18n.Libelle.Gabarit("accueil.carte.la_decision_n_a_pas_ete_prise", "La décision n\u2019a pas été prise.");
+            if (noteZinc != null) noteZinc.text = RefusRendu;
         }
 
-        public IEnumerator Skip()
+        private void TrancheePourDeBon()
         {
-            Init();
-            if (CarteAffichee == null) yield break;
-            SkipCount++;
-            DerniereErreur = null;
-            yield return client.Skip(token, CarteAffichee.card_id, dto => { },
-                                     (c, m) => DerniereErreur = $"{c}: {m}");
+            DecisionsTranchees++;
+            OnDecisionTranchee?.Invoke();
         }
+
+        /// <summary>⛔ Réservé aux tests hors réseau : rejoue EXACTEMENT ce qu'un commit accepté déclenche.</summary>
+        public void DecisionAccepteePourTest() => TrancheePourDeBon();
 
         // --------------------------------------------------------------- construction
 
-        /// <summary>Le comptoir : la carte au centre avec son jeton, la note, le filet « laisser
-        /// sur le zinc », le tampon. Ancré EN BAS comme la maquette (`margin-top:auto`) — c'est ce
+        /// <summary>Le comptoir : la carte au centre avec son jeton, la note, le tampon (le filet « laisser sur le zinc » est retiré, f2 08/10). Ancré EN BAS comme la maquette (`margin-top:auto`) — c'est ce
         /// qui fait lire la scène comme un zinc et pas comme une page.</summary>
         private void Construire()
         {
@@ -419,30 +431,7 @@ namespace MafiaCleanCity.Shell
             noteZinc.enableWordWrapping = true;
             noteZinc.fontStyle |= FontStyles.Italic;   // F19 — le canon la met en italique
 
-            // ── « laisser sur le zinc » = skip. Un geste simple : la carte revient. ───────────
-            filet = Bloc("Filet", transform, horizontal: false, espace: Px(1f));
-            filet.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
-            filet.GetComponent<VerticalLayoutGroup>().padding =
-                new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(7f), (int)Px(7f));
-            Image filetFond = filet.AddComponent<Image>();
-            filetFond.sprite = ProceduralUI.RoundedRectDashedOutline((int)Px(10f), Px(1f), (int)Px(4f), (int)Px(3f), Hex("#ffffff22"));
-            // ⛔ `Tiled`, PAS `Sliced` — et c'est le générateur lui-même qui le dit : « un contour
-            //    de rectangle arrondi en POINTILLÉS, à utiliser en `Image.Type.Tiled` ». Les deux
-            //    respectent le `border` du sprite et gardent les coins ; `Sliced` ÉTIRE la section
-            //    centrale — qui porte exactement UNE période de pointillé — et la transforme en une
-            //    longue barre, tandis que `Tiled` la RÉPÈTE. Mesuré par un juge ⊥ sur un cadre brisé :
-            //    334 px de trou, 36 %, symétrique haut et bas parce que les deux rails partagent la
-            //    même bande. ⇒ Classe fermée sur les 7 sites, pas seulement sur celui du rapport ;
-            //    le remède était DÉJÀ en production sur deux sites de `LieutenantScreenController`.
-            filetFond.type = Image.Type.Tiled;
-            Texte(filet.transform, "Lib", "Laisser sur le zinc", Px(10f), Creme,
-                  DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
-            Texte(filet.transform, "Sous", "elle revient à la prochaine session, au même rang",
-                  Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
-            Button skip = filet.AddComponent<Button>();
-            skip.targetGraphic = filetFond;
-            skip.onClick.AddListener(() => StartCoroutine(Skip()));
-
+            // ── « laisser sur le zinc » (skip) RETIRÉ — f2 08/10 nuit, option (c) : un geste MORT (voir l'en-tête). ──────────
             // ── le tampon = commit, à APPUI LONG. Même geste que le tampon de la Revue : ce qui
             //    est irréversible ne se déclenche pas d'un doigt distrait. ──────────────────────
             tampon = Bloc("Tampon", transform, horizontal: false, espace: Px(2f));

@@ -150,6 +150,15 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(1, ctrl.CommitRequestCount, "the CORRECT keyword routes to RequestCommit() — exactly one request");
             Assert.IsNull(ctrl.LastCommitError, $"commit errored: {ctrl.LastCommitError}");
             Assert.AreEqual(true, ctrl.LastCommitCommitted, "committed through the SAME payload.data path as the long-press trigger");
+            // ⛔ GESTE MORT fermé (f2 08/10 nuit) : le commit ACCEPTÉ est annoncé au shell (qui relit l'Accueil) — une fois, aucun refus montré.
+            Assert.AreEqual(1, ctrl.DecisionsTranchees, "le commit accepté lève OnDecisionTranchee (le shell relit l'Accueil)");
+            Assert.IsNull(ctrl.RefusRendu, "aucun refus après un commit accepté");
+            // …et un REFUS se dit : la même carte, déjà tranchée (terminale), rend 409 — la phrase est MONTRÉE, jamais une erreur muette.
+            yield return ctrl.RequestCommitViaTypedConfirm("commit");
+            Assert.IsNotNull(ctrl.LastCommitError, "précondition : la carte déjà tranchée est refusée par le back (409)");
+            Assert.AreEqual(1, ctrl.DecisionsTranchees, "un refus n'annonce AUCUNE décision");
+            Assert.IsFalse(string.IsNullOrEmpty(ctrl.RefusRendu), "le refus a une phrase");
+            CollectionAssert.Contains(ctrl.RenderedTexts, ctrl.RefusRendu, "la phrase du refus est RENDUE sur la carte");
         }
 
         // C4-F1 (à travers l'enveloppe aussi, via C4-F4) — un tap simple n'émet AUCUNE requête ;

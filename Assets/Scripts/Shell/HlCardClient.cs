@@ -20,6 +20,8 @@ namespace MafiaCleanCity.Shell
     {
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
+        /// <summary>La phrase SERVIE du dernier refus (`RefusServi.Phrase` : null si le corps n'en porte pas, ou si la clé est générique) ; null après un succès.</summary>
+        public string DernierePhraseDeRefus { get; private set; }
 
         public IEnumerator Commit(string bearer, string cardId, Action<CommitResponseDto> onOk, Action<long, string> onErr)
         {
@@ -56,6 +58,8 @@ namespace MafiaCleanCity.Shell
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 yield return req.SendWebRequest();
+                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null
+                    : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
 
                 if (req.result == UnityWebRequest.Result.Success) onOk?.Invoke(req.downloadHandler.text);
                 else onErr?.Invoke(req.responseCode, $"{path} failed ({req.responseCode}) {req.error}");

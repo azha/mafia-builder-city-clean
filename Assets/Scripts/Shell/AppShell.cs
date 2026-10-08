@@ -538,6 +538,25 @@ namespace MafiaCleanCity.Shell
         /// <summary>Vrai si le dernier Accueil rouvert a été nourri d'une relecture fraîche (G1) ; faux s'il a été monté sans donnée.</summary>
         public bool AccueilRelu { get; private set; }
 
+        /// <summary>⛔ GESTE MORT fermé (f2 08/10 nuit, instruit par CLIENT-1) : une décision ACCEPTÉE depuis la carte de tête ou depuis ⑤
+        /// (`OnDecisionTranchee`) laissait l'écran tel quel. Le shell referme ce qui est ouvert (⑤ et l'Accueil se dépilent ENSEMBLE vers la
+        /// carte, `Depiler`) puis ROUVRE l'Accueil comme le toucher d'EMPIRE (`RouvrirLAccueil` : relecture de `session/open`, qui ne sert
+        /// plus la carte tranchée — terminale côté back). Une frame d'écart : la coroutine du locataire qui annonce finit avant le démontage.</summary>
+        public void RelireLAccueilApresUneDecision() { if (this != null) StartCoroutine(RelireLAccueilApresUneDecisionCo()); }
+
+        /// <summary>Crochet de test : combien de relectures de l'Accueil une décision tranchée a déclenchées.</summary>
+        public int RelecturesApresDecision { get; private set; }
+
+        private IEnumerator RelireLAccueilApresUneDecisionCo()
+        {
+            yield return null;
+            if (this == null) yield break;
+            RelecturesApresDecision++;
+            if (SurimpressionOuverte) Depiler();
+            yield return null;
+            if (SurLaCarteSansRienDessus) RouvrirLAccueil();
+        }
+
         /// <summary>Geste (2) : dépile UN niveau. Rend ce qui a été dépilé — `surimpression`, `fiche`, `district`, `entree` (du menu
         /// Plus), `onglet` — ou `racine` quand on est déjà sur la carte (et rien n'est fait).</summary>
         public string Depiler()
@@ -1774,7 +1793,8 @@ namespace MafiaCleanCity.Shell
                 // ⑤ `screen_1a` — le DÉTAIL de la carte, en surimpression. L'écran existe (maquette ratifiée « ok top on garde comme
                 // ça »), et sans ce fil il ne serait montable par personne : *un écran construit que rien ne monte est un écran que le
                 // joueur ne voit jamais* — c'est le défaut exact qui laissait la Revue du jour invisible depuis W3.U1.
-                hlCard.OnOuvrirDetail += () => MonterLocataireEnSurimpression<DecisionDetailScreenController>();
+                hlCard.OnOuvrirDetail += () => MonterLocataireEnSurimpression<DecisionDetailScreenController>().OnDecisionTranchee += RelireLAccueilApresUneDecision;
+                hlCard.OnDecisionTranchee += RelireLAccueilApresUneDecision;   // f2 08/10 nuit : plus de geste mort
                 hlCard.SetPayload(Token, dto.hl_card, dto.structural_budget);
             }
             else
@@ -1784,7 +1804,7 @@ namespace MafiaCleanCity.Shell
                 if (!avecFile)
                 {
                     calme = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", BandeTeteVide.min, BandeTeteVide.max);
-                    calme.OnOuvrirDetail += () => MonterLocataireEnSurimpression<DecisionDetailScreenController>();
+                    calme.OnOuvrirDetail += () => MonterLocataireEnSurimpression<DecisionDetailScreenController>().OnDecisionTranchee += RelireLAccueilApresUneDecision;
                     calme.SetPayload(Token, null, dto?.structural_budget);
                 }
                 // « LA SUITE » (cadre 4, table 72) : le vide du joueur neuf rempli par ses objectifs. Elle lit son état ; si une ligne est

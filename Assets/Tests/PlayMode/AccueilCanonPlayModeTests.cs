@@ -440,6 +440,61 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.GreaterOrEqual(hauts[1], hauts[0] - 0.001f, "deux lignes de raison ne font jamais BAISSER le haut de la ligne");
         }
 
+        /// <summary>A13 — PLUS DE GESTE MORT sur la carte de tête (f2 08/10 nuit, instruit par CLIENT-1). Vrai shell, hors réseau (transport témoin).
+        /// Garde d'EFFET : une décision ACCEPTÉE (le chemin exact d'un commit 200, `DecisionAccepteePourTest`) fait relire la session et remonter
+        /// l'Accueil ; le back ne sert plus la carte tranchée (terminale) ⇒ la tête n'est PLUS la même (plus de carte). Même effet depuis ⑤, qui se
+        /// referme d'abord. Et « Pas maintenant » / « Laisser sur le zinc » (skip, geste mort : le back ne sert aucune carte suivante) n'existent plus.</summary>
+        [UnityTest]
+        public IEnumerator A13_UneDecisionTranchee_RelitLAccueil_LaCarteNEstPlusLaMeme_EtLeSkipNExistePlus()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_Tranchee");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            Poser(shell, "Token", "jeton-de-test");
+            var transport = new TransportTemoin { Reponse = AvecCarte("c-tete") };
+            shell.TransportDeSessionPourTest = transport;
+            shell.SourceDeLaSuitePourTest = new SourceTemoin { Etat = JoueurNeuf(1) };
+
+            IEnumerator TrancherPuisAttendre(System.Action trancher, int ouverturesAvant)
+            {
+                transport.Reponse = AvecCarte(null);   // ce que le back sert après un commit : la carte est terminale, `hl_card` est nul
+                trancher();
+                float fin = Time.realtimeSinceStartup + 10f;
+                while (Time.realtimeSinceStartup < fin && transport.Ouvertures == ouverturesAvant) yield return null;
+                yield return AttendreLAccueil();
+            }
+
+            // (1) depuis la carte de tête de l'Accueil
+            yield return RouvrirParEmpire();
+            HighestLeverageCardController tete = Tete();
+            Assert.AreEqual(HighestLeverageCardController.CardState.Available, tete.RenderedState, "précondition : une carte est montrée");
+            Assert.IsNull(tete.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "SkipButton"), "« Pas maintenant » n'existe plus (geste mort)");
+            Assert.AreEqual(1, tete.LibellesDesBoutons.Count, "un seul bouton : le tampon");
+            int relectures = shell.RelecturesApresDecision, ouvertures = transport.Ouvertures;
+            yield return TrancherPuisAttendre(() => tete.DecisionAccepteePourTest(), ouvertures);
+            Assert.AreEqual(relectures + 1, shell.RelecturesApresDecision, "la décision acceptée a fait relire l'Accueil");
+            Assert.Greater(transport.Ouvertures, ouvertures, "la session est RELUE (session/open), pas la réponse gardée");
+            Assert.IsTrue(shell.SurimpressionOuverte, "l'Accueil est remonté");
+            HighestLeverageCardController apres = Tete();
+            Assert.IsTrue(apres == null || apres.CurrentCard == null, "EFFET : la carte tranchée n'est plus montrée (la tête n'est plus la même)");
+
+            // (2) depuis ⑤ : il se referme, puis l'Accueil est relu
+            transport.Reponse = AvecCarte("c-tete-2");
+            yield return RouvrirParEmpire();
+            Tete().DemanderDetail();
+            for (int i = 0; i < 5; i++) yield return null;
+            DecisionDetailScreenController detail = shell.ContentSlot.GetComponentsInChildren<DecisionDetailScreenController>(false).LastOrDefault();
+            Assert.IsNotNull(detail, "précondition : ⑤ est monté par la surface de la carte");
+            Assert.IsFalse(detail.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).Any(t => t.text == "Laisser sur le zinc"), "« Laisser sur le zinc » n'existe plus (geste mort)");
+            ouvertures = transport.Ouvertures;
+            yield return TrancherPuisAttendre(() => detail.DecisionAccepteePourTest(), ouvertures);
+            Assert.IsNull(shell.ContentSlot.GetComponentsInChildren<DecisionDetailScreenController>(false).FirstOrDefault(), "⑤ s'est refermé");
+            Assert.Greater(transport.Ouvertures, ouvertures, "la session est relue après ⑤");
+            apres = Tete();
+            Assert.IsTrue(apres == null || apres.CurrentCard == null, "EFFET : après ⑤, la carte tranchée n'est plus montrée");
+        }
+
         /// <summary>A12d — la RÈGLE d'ancrage, pure, contre les cadres MESURÉS (instrument de l'UX, atelier master 5240cec, zone sûre 110 → 516) : elle retrouve la tête
         /// des cadres 1-3 (252 → 454 sur la ligne 464 → 506), celle du cadre 5 (212 → 414 sur la ligne haute 424 → 506) et la suite du cadre 4 (187 → 414) à 0,005 près ;
         /// une ligne qui VEUT plus que sa bande grandit et la tête monte d'autant ; une zone nulle retombe sur la bande mesurée.</summary>

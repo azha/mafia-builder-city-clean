@@ -39,6 +39,15 @@ namespace MafiaCleanCity.Shell
         /// depuis ailleurs.*</summary>
         public event System.Action OnOuvrirDetail;
 
+        /// <summary>⛔ GESTE MORT fermé (f2 08/10 nuit, instruit par CLIENT-1) : « Prendre acte » (appui long ou saisie) postait le commit, recevait
+        /// 200… et l'écran ne changeait pas ; un second appui rendait un 409 muet. Levé après un commit ACCEPTÉ (`committed`) : le shell relit
+        /// la session et remonte l'Accueil (la carte tranchée est terminale côté back : `session/open` ne la sert plus). Comme `OnOuvrirDetail`,
+        /// la carte ANNONCE, le shell monte.</summary>
+        public event System.Action OnDecisionTranchee;
+
+        /// <summary>La phrase du dernier refus de commit, MONTRÉE au joueur (la phrase servie du refus, sinon la phrase de la carte) ; null sans refus.</summary>
+        public string RefusRendu { get; private set; }
+
         /// <summary>Appelé par la surface de la carte — pas par les boutons Commit/Skip, qui
         /// tranchent depuis le résumé sans passer par le détail.</summary>
         public void DemanderDetail()
@@ -53,6 +62,8 @@ namespace MafiaCleanCity.Shell
         public bool CapReached { get; private set; }
         public int CommitRequestCount { get; private set; }
         public int SkipRequestCount { get; private set; }
+        /// <summary>Crochet de test : combien de décisions ACCEPTÉES ont levé `OnDecisionTranchee`.</summary>
+        public int DecisionsTranchees { get; private set; }
         public bool? LastCommitCommitted { get; private set; }
         public bool? LastSkipSkipped { get; private set; }
         public string LastCommitError { get; private set; }
@@ -64,7 +75,6 @@ namespace MafiaCleanCity.Shell
         public LongPressButton CommitButton { get; private set; }
         private TMP_InputField typedConfirmInput;
         private Button typedConfirmButton;
-        private Button skipButton;
         private TextMeshProUGUI titleText;
         private TextMeshProUGUI impactText;
         private TextMeshProUGUI urgencyText;
@@ -74,18 +84,19 @@ namespace MafiaCleanCity.Shell
         // sont DESCRIPTIVES (`hl-card-types.ts:99-102`) — commit ne reçoit aucun indice d'option et ne produit aucun effet pour les 8
         // fournisseurs (il enregistre une décision de session). « Réparer via la file » sur le bouton du tampon mentirait. Les boutons
         // gardent leurs libellés jusqu'aux mots de l'atelier (demandés par f2). Et l'entrée du rapport quand la carte est celle des rapports.
-        private TextMeshProUGUI commitLabel, skipLabel, rapportText, recommandationText, alternativeText, surtitreText, noteText;
+        private TextMeshProUGUI commitLabel, rapportText, recommandationText, alternativeText, surtitreText, noteText;
         // Table 45 de l'atelier (a0ff6cba, accueil.carte.*) : les boutons disent ce qu'ils FONT — [Prendre acte] = commit (une décision de
-        // session), [Pas maintenant] = skip — et la carte des rapports garde [Lire maintenant], qui OUVRE les rapports (navigation réelle,
-        // jamais le commit) et [Laisser en attente] = skip.
+        // session) — et la carte des rapports garde [Lire maintenant], qui OUVRE les rapports (navigation réelle, jamais le commit).
+        // [Pas maintenant] et [Laisser en attente] (= skip) sont RETIRÉS (f2 08/10 nuit : gestes morts, voir `RequestSkip`).
         private Button lireButton;
         private TextMeshProUGUI lireLabel;
         private GameObject typedRowGo;
         /// <summary>Crochet de test : les deux options RENDUES en recommandation ([0], puis [1]), vide sans carte.</summary>
         public IReadOnlyList<string> OptionsRendues => optionsRendues;
-        /// <summary>Crochet de test : les libellés des DEUX BOUTONS (tampon, laisser) — la garde vérifie qu'aucun ne porte une option.</summary>
+        /// <summary>Crochet de test : les libellés des boutons de la carte (le tampon seul depuis le retrait de « Pas maintenant », f2 08/10) — la garde
+        /// vérifie qu'aucun ne porte une option.</summary>
         public IReadOnlyList<string> LibellesDesBoutons =>
-            new List<string> { commitLabel != null ? commitLabel.text : null, skipLabel != null ? skipLabel.text : null };
+            new List<string> { commitLabel != null ? commitLabel.text : null };
         /// <summary>Crochet de test : le libellé de [Lire maintenant] (carte des rapports), null s'il est caché.</summary>
         public string LibelleLire => lireButton != null && lireButton.gameObject.activeSelf && lireLabel != null ? lireLabel.text : null;
         public bool TamponVisible => CommitButton != null && CommitButton.gameObject.activeSelf;
@@ -169,10 +180,28 @@ namespace MafiaCleanCity.Shell
             if (RenderedState != CardState.Available || CurrentCard == null) yield break; // CapBlocked/NoCard -> refused, zero requests
             CommitRequestCount++;
             LastCommitError = null;
+            LastCommitCommitted = null;
+            RefusRendu = null;
             yield return client.Commit(token, CurrentCard.card_id,
                 dto => LastCommitCommitted = dto.committed,
                 (code, msg) => LastCommitError = $"{code}: {msg}");
+            if (this == null) yield break;
+            if (LastCommitError == null && LastCommitCommitted == true) { TrancheePourDeBon(); yield break; }
+            // un refus se DIT : la phrase servie (`error.core_loops.structural_cap_exhausted`…), sinon celle de la carte — jamais une erreur muette
+            RefusRendu = client.DernierePhraseDeRefus
+                         ?? MafiaCleanCity.I18n.Libelle.Gabarit("accueil.carte.la_decision_n_a_pas_ete_prise", "La décision n\u2019a pas été prise.");
+            if (stateText != null) { stateText.text = RefusRendu; Track(RefusRendu); }
         }
+
+        /// <summary>La décision est ACCEPTÉE par le back : on le compte et on l'annonce au shell (qui relit la session et remonte l'Accueil).</summary>
+        private void TrancheePourDeBon()
+        {
+            DecisionsTranchees++;
+            OnDecisionTranchee?.Invoke();
+        }
+
+        /// <summary>⛔ Réservé aux tests hors réseau : rejoue EXACTEMENT ce qu'un commit accepté déclenche (le compte et l'annonce au shell).</summary>
+        public void DecisionAccepteePourTest() => TrancheePourDeBon();
 
         /// <summary>The accessible ALTERNATIVE to the long press (canon: "alternative typed-confirm
         /// obligatoire — utilisateurs sans accès haptique", F2). A tap on the confirm button ALONE
@@ -187,8 +216,11 @@ namespace MafiaCleanCity.Shell
             yield return RequestCommit();
         }
 
-        /// <summary>Wired to the Skip button's normal click — Skip is NOT destructive (design §8
-        /// "carry semantics"), no long-press gate.</summary>
+        /// <summary>La route `skip` (design §8 « carry semantics »). ⛔ AUCUN GESTE NE L'APPELLE PLUS (f2 08/10 nuit, option (c)) : « Pas
+        /// maintenant » était un GESTE MORT — 200, puis rien à l'écran — et le back ne sert AUCUNE carte suivante (modèle top-1 : la carte
+        /// sautée est reportée, `findCarried` la relit telle quelle ; rien n'est recalculé avant la prochaine ouverture FRAÎCHE). Le cadre 5
+        /// de l'atelier (5240cec) ne le dessine pas. Gardée pour l'option (a) (une ligne « mise de côté » de l'atelier) et pour la garde
+        /// réseau de la route (W3U1 C4-F4).</summary>
         public IEnumerator RequestSkip()
         {
             EnsureInitialized();
@@ -217,7 +249,6 @@ namespace MafiaCleanCity.Shell
             bool carte = RenderedState != CardState.NoCard;
             if (lireButton != null) lireButton.gameObject.SetActive(rapports);
             if (CommitButton != null) CommitButton.gameObject.SetActive(carte && !rapports);   // la carte des rapports ne se tamponne pas d'ici
-            if (skipButton != null) skipButton.gameObject.SetActive(carte);
             if (typedRowGo != null) typedRowGo.SetActive(carte && !rapports);
             switch (RenderedState)
             {
@@ -268,9 +299,9 @@ namespace MafiaCleanCity.Shell
                 optionsRendues.Add(laisser);
                 if (EstCarteDesRapports)
                 {
-                    // [Lire maintenant] ouvre les rapports, [Laisser en attente] = skip : les options SONT ici les gestes (table 45).
+                    // [Lire maintenant] ouvre les rapports : l'option SAISIE est ici le geste (table 45). [Laisser en attente] (= skip) est
+                    // RETIRÉ avec « Pas maintenant » (f2 08/10 : un geste mort, la carte restait) ; l'option reste lue, pas montrée en bouton.
                     if (lireLabel != null) lireLabel.text = agir;
-                    if (skipLabel != null) skipLabel.text = laisser;
                 }
                 else
                 {
@@ -287,7 +318,6 @@ namespace MafiaCleanCity.Shell
             if (!EstCarteDesRapports)
             {
                 if (commitLabel != null) commitLabel.text = Lib("carte", "Prendre acte");
-                if (skipLabel != null) skipLabel.text = Lib("carte", "Pas maintenant");
             }
             if (EstCarteDesRapports && !string.IsNullOrWhiteSpace(NomDuRapport) && rapportText != null)
             {
@@ -373,15 +403,7 @@ namespace MafiaCleanCity.Shell
             commitLabel = NewChildText(commitGo.transform, Lib("carte", "Prendre acte"), 15);   // table 45 (servie) — plus « Tamponner — appui long »
             commitLabel.color = DesignTokens.Current.surfaceBase;
 
-            GameObject skipGo = new GameObject("SkipButton", typeof(RectTransform));
-            skipGo.transform.SetParent(actions.transform, false);
-            Image skipImg = skipGo.AddComponent<Image>();
-            skipImg.color = DesignTokens.Current.surfaceRow;
-            skipButton = skipGo.AddComponent<Button>();
-            skipButton.targetGraphic = skipImg;
-            skipButton.onClick.AddListener(() => StartCoroutine(RequestSkip()));
-            skipLabel = NewChildText(skipGo.transform, Lib("carte", "Pas maintenant"), 15);   // table 45 (servie) — plus « Skip »
-            skipLabel.color = DesignTokens.Current.onSurfacePrimary;
+            // « Pas maintenant » (skip) RETIRÉ — f2 08/10 nuit, option (c) : un geste MORT (voir `RequestSkip`).
 
             // Accessible typed-confirm ALTERNATIVE to the long press (canon:129-138, F2 — obligatoire,
             // pas un bonus). A row: [type "COMMIT"] [Confirm].
