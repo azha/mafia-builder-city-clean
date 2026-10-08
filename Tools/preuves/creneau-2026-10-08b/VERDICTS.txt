@@ -1,0 +1,36 @@
+# Créneau groupé du 08/10 soir (CLIENT-1, porte prise 02:57, rendue 03:10) — lignes de verdict extraites des journaux (journaux complets hors dépôt)
+# run1-2 = cumul fa376cc4 ; run3 = id. (A01 faux vert : ÉCHEC noté, test vert) ; run4-8 = test A01 corrigé (non commité au moment des runs) ; run6 = compilation rouge, rien joué
+== run1.log
+MafiaCI: catégories RÉELLEMENT exécutées = [AccueilCanon, EcranDemolition, EcranFiliere, ListeDefilante]
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [^ListeDefilante$, ^EcranFiliere$, ^EcranDemolition$, ^AccueilCanon$]
+MafiaCI: RunPlayModeTests finished — passed=40 failed=0 skipped=0 inconclusive=0 declares=0 comptes=40
+== run2.log
+MafiaCI: catégories RÉELLEMENT exécutées = [Charpente]
+MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = [MafiaCleanCity.Shell.Tests.AccueilPanneauxGeometriePhotoPlayModeTests.MesureGeometrie_AccueilPanneaux_1080x1920_et_1080x2400_SEEDE_OperationalDemo, MafiaCleanCity.Shell.Tests.AccueilPanneauxGeometriePhotoPlayModeTests.MesureGeometrie_AccueilPanneaux_MontageNatif1080x1920_SEEDE_OperationalDemo]
+MafiaCI: RunPlayModeTests finished — passed=2 failed=0 skipped=0 inconclusive=0 declares=2 comptes=2
+== run3.log
+MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [^ClichePlanchesParEcran$]
+MafiaCI: RunPlayModeTests finished — passed=4 failed=0 skipped=0 inconclusive=0 declares=0 comptes=4
+== run4.log
+MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
+MafiaCI: FAIL MafiaCleanCity.Capture.Tests.PlanchesParEcranCapturePlayModeTests.Planche_AccueilFile_DeuxCartes_MesureDuDebordement — /home/erutheone/project/mafia-builder-city-clean/Tools/juge-visuel/planches-par-ecran-2026-10-08-soir/A01_AccueilFile2Cartes_1080x2400.png : phase «Aube» hors district — seules «—» et la phase de SESSION «—» (F14) sont justes ici ; cette valeur est le r
+MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = [MafiaCleanCity.Capture.Tests.PlanchesParEcranCapturePlayModeTests.Planche_AccueilFile_DeuxCartes_MesureDuDebordement]
+MafiaCI: RunPlayModeTests finished — passed=0 failed=1 skipped=0 inconclusive=0 declares=1 comptes=1
+== run5.log
+MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
+MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = [MafiaCleanCity.Capture.Tests.PlanchesParEcranCapturePlayModeTests.Planche_AccueilFile_DeuxCartes_MesureDuDebordement]
+MafiaCI: RunPlayModeTests finished — passed=1 failed=0 skipped=0 inconclusive=0 declares=1 comptes=1
+== run6.log
+Assets/Tests/PlayMode/PlanchesParEcranCapturePlayModeTests.cs(205,109): error CS1002: ; expected
+Assets/Tests/PlayMode/PlanchesParEcranCapturePlayModeTests.cs(205,109): error CS1513: } expected
+Assets/Tests/PlayMode/PlanchesParEcranCapturePlayModeTests.cs(205,98): error CS1026: ) expected
+== run7.log
+MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
+MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = [MafiaCleanCity.Capture.Tests.PlanchesParEcranCapturePlayModeTests.Planche_AccueilFile_DeuxCartes_MesureDuDebordement]
+MafiaCI: RunPlayModeTests finished — passed=1 failed=0 skipped=0 inconclusive=0 declares=1 comptes=1
+== run8.log
+MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [^ClichePlanchesParEcran$]
+MafiaCI: RunPlayModeTests finished — passed=4 failed=0 skipped=0 inconclusive=0 declares=0 comptes=4
+

@@ -59,7 +59,7 @@ namespace MafiaCleanCity.Capture.Tests
         private AppShell shell;
         private string dossier, journal, urlAvant;
 
-        [SetUp] public void SetUp() { urlAvant = CibleDuParcours.Appliquer(System.Environment.GetEnvironmentVariable(VariableCible)); }
+        [SetUp] public void SetUp() { echecsNotes.Clear(); urlAvant = CibleDuParcours.Appliquer(System.Environment.GetEnvironmentVariable(VariableCible)); }
 
         [TearDown]
         public void TearDown()
@@ -117,6 +117,7 @@ namespace MafiaCleanCity.Capture.Tests
             foreach (Ecran e in Ecrans)
                 yield return Photographier(e);
             Assert.IsEmpty(trous, "liste(s) qui débordent à la résolution de capture sans que le défilement atteigne leur bout (contenu INATTEIGNABLE) :\n" + string.Join("\n", trous));
+            Assert.IsEmpty(echecsNotes, "écran(s) non photographié(s) — un ÉCHEC noté au journal n'est pas un vert :\n" + string.Join("\n", echecsNotes));
         }
 
         /// <summary>⑤ « la décision du jour » (F4/F5, plaque crème) : compte NEUF, le shell, ⑤ monté en surimpression, une carte FABRIQUÉE (`Afficher`) — le compte neuf n'a pas de carte de tête servie et la capture
@@ -134,7 +135,7 @@ namespace MafiaCleanCity.Capture.Tests
                 ecran = shell.ContentSlot.GetComponentInChildren<DecisionDetailScreenController>(true);
                 yield return null;
             }
-            if (ecran == null) { Noter("E11", "⑤ Decision Detail", "ÉCHEC : ⑤ non monté", "decision-du-jour/reference-1080x2102.png (cadre 4 de ecrans-brennar-4.html)"); yield break; }
+            if (ecran == null) { Noter("E11", "⑤ Decision Detail", "ÉCHEC : ⑤ non monté", "decision-du-jour/reference-1080x2102.png (cadre 4 de ecrans-brennar-4.html)"); Assert.Fail("⑤ E11 non monté : rien n'a été photographié"); }
             for (int i = 0; i < 10; i++) yield return null;
             ecran.Afficher(new HlCardDto { card_id = "carte-fabriquee", decision_type_key = "AUTONOMY_REPORTS_PENDING", impact_bucket = "moderate", urgency_bucket = "low", structural = false },
                            new StructuralBudgetDto { used = 0, cap_reached = false });
@@ -167,7 +168,23 @@ namespace MafiaCleanCity.Capture.Tests
             };
             Assert.IsTrue(ExceptionQueuePanelController.LigneHaute(cartes), "précondition : deux cartes ⇒ la ligne haute du cadre 4");
             // Le RE-MONTAGE avec la file fabriquée : le chemin de A6 (AccueilCanon), sur le vrai shell connecté.
-            shell.TransportDeSessionPourTest = new SessionFabriquee { Reponse = new SessionOpenDto { session_id = "s-fab", hl_card = null, queue = cartes } };
+            // ⛔ (créneau du 08/10 soir) la réponse fabriquée part de la VRAIE session (phase, jour, budgets) : seules la tête et la file changent. Une réponse
+            //    neuve publiait la phase « — » (F14) sous un bandeau resté à « Aube », et la garde de phase de `CapturerLeShell` rougissait à juste titre.
+            SessionOpenDto reelle = shell.LastSessionOpen;
+            Assert.IsNotNull(reelle, "précondition : la session du compte neuf est ouverte");
+            SessionOpenDto fabriquee = JsonUtility.FromJson<SessionOpenDto>(JsonUtility.ToJson(reelle));
+            fabriquee.JourDeFamille = reelle.JourDeFamille;
+            fabriquee.JourDeFamilleALOuverture = reelle.JourDeFamilleALOuverture;
+            fabriquee.JourDeFamilleServi = reelle.JourDeFamilleServi;
+            fabriquee.hl_card = null;
+            fabriquee.queue = cartes;
+            shell.TransportDeSessionPourTest = new SessionFabriquee { Reponse = fabriquee };
+            // ⛔ (créneau du 08/10 soir) EMPIRE ne ROUVRE l'Accueil que sur la carte SANS RIEN DESSUS (`SurLaCarteSansRienDessus`, geste G1) : après
+            //    `Ouvrir()`, l'Accueil de l'ouverture de session est DÉJÀ en surimpression, et toucher EMPIRE remontait la carte seule (journal :
+            //    « [CityMap] Loaded », aucune file) — le test notait ÉCHEC et sortait VERT. On le referme d'abord, comme `AccueilCanon.RouvrirParEmpire`.
+            while (shell.SurimpressionOuverte) { shell.Depiler(); yield return null; }
+            if (shell.MountedTenantType != typeof(CityMapController)) { shell.ActivateTab(AppShell.Tab.Empire); for (int i = 0; i < 5; i++) yield return null; }
+            Assert.IsTrue(shell.SurLaCarteSansRienDessus, "précondition : la carte, sans rien dessus — sinon EMPIRE ne rouvre pas l'Accueil");
             ProductionClickSupport.Click(shell.TabBarRoot.Find("Tab_Empire").GetComponent<Button>());
             ExceptionQueuePanelController file = null;
             float fin = Time.realtimeSinceStartup + 20f;
@@ -177,7 +194,23 @@ namespace MafiaCleanCity.Capture.Tests
                 if (file != null && file.transform.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_fab-1")) break;
                 yield return null;
             }
-            if (file == null) { Noter("A01", "④ Accueil — la file", "ÉCHEC : le panneau de la file n'est pas monté sur l'Accueil", Ref); yield break; }
+            if (file == null || !file.transform.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_fab-1"))
+            {
+                Noter("A01", "④ Accueil — la file", "ÉCHEC : le panneau de la file n'est pas monté sur l'Accueil (ou sans la carte fabriquée)", Ref);
+                Assert.Fail("④ A01 : la file fabriquée n'est pas montée sur l'Accueil rouvert — rien n'a été mesuré (un ÉCHEC noté n'est pas un vert)");
+            }
+            // « LA SUITE » se lit par le RÉSEAU (`LaSuitePanelController.Charger`) : sans cette attente, la planche 2400 (prise la première) partait
+            // avant elle — la suite absente à 2400, présente à 1920 (créneau du 08/10 soir). On attend qu'elle ait LU, quelle que soit sa réponse.
+            LaSuitePanelController suite = null;
+            float finSuite = Time.realtimeSinceStartup + 20f;
+            while (Time.realtimeSinceStartup < finSuite)
+            {
+                suite = shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).LastOrDefault();
+                if (suite != null && suite.Lu) break;
+                yield return null;
+            }
+            Assert.IsTrue(suite != null && suite.Lu, "④ A01 : « LA SUITE » n'a pas lu son état en 20 s — la planche ne montrerait pas l'Accueil entier");
+            for (int i = 0; i < 5; i++) yield return null;
             var debordements = new List<string>();
             foreach ((int largeur, int hauteur) in Resolutions)
             {
@@ -269,6 +302,8 @@ namespace MafiaCleanCity.Capture.Tests
 
         /// <summary>Les TROUS du parcours (liste qui déborde dans le régime de capture sans atteindre son bout) : écrits au journal, puis le test rougit une fois toutes les planches prises.</summary>
         private readonly List<string> trous = new List<string>();
+        /// <summary>Chaque `Noter` dont l'état commence par « ÉCHEC » (créneau du 08/10 soir : A01 notait ÉCHEC et sortait VERT) — le test qui l'a noté rougit en fin de parcours.</summary>
+        private readonly List<string> echecsNotes = new List<string>();
 
         /// <summary>La liste qui déborde dans la mise en page COURANTE : active, fenêtre de hauteur POSITIVE (une fenêtre écrasée n'est pas une liste qui déborde : ㊵ du 08/10),
         /// course ≥ 12 u. La plus grande course l'emporte (un écran à plusieurs listes : celle qui cache le plus).</summary>
@@ -337,6 +372,7 @@ namespace MafiaCleanCity.Capture.Tests
         private void Noter(string pas, string ecran, string etat, string reference)
         {
             File.AppendAllText(journal, $"{pas}\t{ecran}\t{etat}\t{reference}\n");
+            if (etat.StartsWith("ÉCHEC")) echecsNotes.Add($"{pas} {ecran} : {etat}");
             Debug.Log($"[PLANCHES] {pas} · {ecran} · {etat}");
         }
 
