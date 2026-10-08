@@ -1,15 +1,17 @@
-# Catalogue des mouvements diégétiques — écrans montés du client Unity (CLIENT-3, 07/10/2026) — v1
+# Catalogue des mouvements diégétiques — écrans montés du client Unity (CLIENT-3, 07-08/10/2026) — v2
+
+> **v2 (08/10)** : réponse à la revue ⊥ n°1 (NON APPROUVÉ : 7 BLOCKING, 17 MAJOR, 12 mineurs). Table de traitement en §VIII. Le canal `Teinte` n'existait pas dans le modèle : il est remplacé partout par `Melange` (avec `CouleurA`/`CouleurB` déclarées) ou par `Alpha` ; trois translations sous `LayoutGroup` sont retirées (G11) ; les signes de ⑩ sont en repère Unity ; les `PoseDeReposS` sont hors de l'identité (G3) ; chaque `Entree` est déclarée champ par champ en **§I.4**.
 
 Statut : **PROPOSITION**. Rien n'est tranché ici. f2 puis l'user valident ; l'atelier dessine ce qui
 doit l'être (§III) ; `coder` n'écrit rien avant. Ce fichier est la table `Catalogue` du design
-(`design-couche-mouvement.md` v3 §2 : `Entree { Id, Ecrans[], Source, Cause, Genre, MouvementDefini, Pistes, Bloquante, Hote }` ; le dégradé réduit suit la règle par genre du §5 du design ; les entrées sans hôte dans le client portent `Hote = SansHote:<raison>` ; gardes G1-G13)
-rendue en prose : **une ligne de tableau = une `Entree`**, et rien de ce fichier ne vit hors de ce modèle.
+(`design-couche-mouvement.md` **v4.2** §2 : `Entree { Id, Ecrans[], Source, Cause, Genre, MouvementDefini, Pistes, Bloquante, Hote }` ; le dégradé réduit suit la règle par genre du §5 du design ; les entrées sans hôte dans le client portent `Hote = SansHote:<raison>` ; gardes G1-G13)
+rendue en prose : **une ligne de tableau = une `Entree` par cible** (une ligne qui nomme plusieurs cibles aux canaux différents porte plusieurs `Entree` d'Id `ligne/cible`, §I.1), et rien de ce fichier ne vit hors de ce modèle. La projection exacte, champ par champ, est la table **§I.4**.
 
-Entrées lues : `design-couche-mouvement.md` (le mécanisme, les plafonds, §4 mouvement réduit, gardes
-G1-G9) · `inventaire-animations.md` (les 40 paires de maquette (44 à la rédaction, recalé le 08/10 : −6 balayages retirés, +1 `mk-eclat` désormais hébergé, +1 B11 l'aiguille de ⑭) : **référencées, jamais redéfinies**) ·
-`Tools/juge-visuel/INDEX.md` (les 35 écrans, 26 contrôleurs montés) · `~/project/mafia-clean-city/front.md`
+Entrées lues : `design-couche-mouvement.md` (v4.2 : modèle §2, régie §3, plafonds §4, mouvement réduit §5,
+seuils §6.2, gardes G1-G13 §10) · `inventaire-animations.md` (les 40 paires de maquette (44 à la rédaction, recalé le 08/10 : −6 balayages retirés, +1 `mk-eclat` désormais hébergé, +1 B11 l'aiguille de ⑭) : **référencées, jamais redéfinies**) ·
+`Tools/juge-visuel/INDEX.md` (les 35 écrans ; **25** contrôleurs montés par `AppShell`, `INDEX.md:47`) · `~/project/mafia-clean-city/front.md`
 (la fiction, écran par écran) · le canon `docs/tech/08_ui_screens/` (25 fichiers — il spécifie déjà du
-mouvement : §0.6) · les 24 contrôleurs eux-mêmes (ce qui existe RÉELLEMENT à l'écran).
+mouvement : §0.2) · les contrôleurs montés eux-mêmes (ce qui existe RÉELLEMENT à l'écran).
 
 Rulings qui cadrent : 27/08 soir, user — « animé le truc, tout en restant dans un univers dark/mafieux »,
 animations **DIÉGÉTIQUES** seulement ; 07/10, user — « il y a 0 animation » ; 07/10, f2 — l'ÈRE est **2000-2010** (tranchée par l'user le 02/09, mémoire « DA silhouettes contemporaines » ; canon gdd/02 §Forbidden et gdd/01 « Not Scarface »), ton sombre / mafieux ; vocabulaire de matière : lampe de bureau, néon, écran LCD ou cathodique de fin de vie, pager, téléphone à clapet — PAS de bakélite, de standard à fiches ni de lampe d'époque, sauf objet ancien assumé dans le décor.
@@ -33,10 +35,10 @@ qu'on distribue, le jeton qu'on pousse sur le zinc, le cartel qu'on glisse dans 
 **Seules 6 sont des `Ambiance`** (la matière qui vit toute seule), et toutes les six ont une source
 lumineuse ou un corps en mouvement réellement présent à l'écran.
 
-Ce n'est pas de la prudence, c'est une lecture du territoire. J'ai relevé les 24 contrôleurs : hors
+Ce n'est pas de la prudence, c'est une lecture du territoire. J'ai relevé les contrôleurs montés : hors
 le décor de comptoir de ⑨/⑩/⑯ et les silhouettes de ㉙, **il n'existe à l'écran aucune lampe, aucun
-voyant, aucune fumée, aucun liquide, aucune aiguille, aucune ficelle libre** — 0 `fillAmount`,
-0 `Image.Type.Filled`, 0 `Animator`, 0 `ParticleSystem` dans tout `Assets/Scripts`. Les écrans sont
+voyant, aucune fumée, aucun liquide, aucune aiguille, aucune ficelle libre** — 0 **usage** de `fillAmount`,
+d'`Image.Type.Filled`, d'`Animator` ou de `ParticleSystem` dans tout `Assets/Scripts` (12 occurrences textuelles, toutes en commentaire). Les écrans sont
 du texte et des traits de 1 à 2 px CSS. Une `Ambiance` posée là n'aurait pas de cause : ce serait du
 décoratif, c'est-à-dire exactement ce que le ruling du 27/08 interdit.
 
@@ -47,7 +49,7 @@ piste permanente.
 ### 0.2 Le canon spécifie DÉJÀ du mouvement, et il gagne
 
 Avant de proposer, j'ai balayé les 25 fichiers de `~/project/mafia-lot-i18n/docs/tech/08_ui_screens/`.
-**21 des 22 écrans canon y portent au moins une règle de mouvement.** Les entrées ci-dessous les
+**21 des 22 écrans canon y portent au moins une règle de mouvement** (relevé de lecture, compte par fichier non joint : affirmation non porteuse pour le code). Les entrées ci-dessous les
 reprennent par référence au lieu de les réinventer.
 
 > **Convention de citation** : dans tout ce fichier, `screen_14:71` abrège
@@ -73,12 +75,12 @@ reprennent par référence au lieu de les réinventer.
 | fade-out d'écran à la résolution | `screen_5a:254` | couvert par `shell.entree` |
 | transitions de l'arbre ≤ 250 ms | `screen_3:451` | `famille.rang-ouvre` |
 | transition push/pop de navigation, interruptible | `screen_12:223` | `shell.entree` |
-| ⑲ **porte le bouton « Mouvement réduit »**, rôle `switch`, bascule immédiate, `PATCH /v1/me/settings` | `screen_14:71`, `:146`, `:208`, `:251`, `:298` | **tranche la question 1 du design §4** (⇒ Q4) |
-| interdits : spinner bloquant · `HealthBar`/`StatBar`/`ProgressBar` (R4.2) · countdown continu (P1/P4) · barre de progression continue · readout « 0 » | `global_conventions_core.md:112` · `screen_1:319` · `screen_13:120`, `:123` · `screen_3b:423` · `screen_12:193` | aucune entrée n'anime une jauge de stat ni un compte à rebours |
+| ⑲ **porte le bouton « Mouvement réduit »**, rôle `switch`, bascule immédiate, `PATCH /v1/me/settings` | `screen_14:71`, `:146`, `:208`, `:251`, `:298` | REUSE porté par le design §5 (Q4 **résolue**) |
+| interdits : spinner bloquant · `HealthBar`/`StatBar`/`ProgressBar` (R4.2) · countdown continu (P1/P4) · barre de progression continue · readout « 0 » | `global_conventions_core.md:209` · `screen_1:374` · `screen_13:120`, `:123` · `screen_3b:423` · `screen_12:193` | aucune entrée n'anime une jauge de stat ni un compte à rebours |
 
 Le canon **ne spécifie aucune courbe d'aisance, nulle part** (0 occurrence de `ease`, `easing`,
 `tween`, `lerp` dans les 12 638 lignes). Les aisances de ce catalogue sont donc des propositions,
-mesurables contre l'oracle CSS de l'atelier (design §5, X7) quand une maquette existe.
+mesurables contre l'oracle CSS de l'atelier (design §7, X7) quand une maquette existe.
 
 ### 0.3 L'unité, et le plancher de perceptibilité (un joueur, un téléphone, 1080×1920)
 
@@ -101,7 +103,9 @@ PERCEVOIR chaque entrée ») :
 - déplacement (translation, ou course du point le plus éloigné sous rotation) : **≥ 3,0 px physiques**
   — soit ≥ 3,6 u de canvas, ≥ 0,84 px CSS de série 6, ≥ 1,6 FX de ⑥ ;
 - `Alpha` : **Δ ≥ 0,15** sur un hôte dont la plus petite dimension ≥ 2,5 px ;
-- `Teinte` : **Δ ≥ 0,12** sur un hôte d'au moins 20 × 20 px, ou sur un trait d'au moins 3 px d'épais.
+- `Melange` (écart de couleur RGB rendu, design §2) : **Δ ≥ 0,12** sur un hôte d'au moins 20 × 20 px, ou sur un trait d'au moins 3 px d'épais.
+
+Ce plancher est celui du **choix** des entrées ; la garde G13 (design §6.2 : ≥ 3/255 de couleur rendue, ≥ 0,5 px de déplacement) reste la borne exécutable. Un plancher se calcule sur la valeur **rendue**, pas sur le facteur : un `CanvasGroup` multiplie l'alpha du `Graphic` (design §9).
 
 Deux candidates ont été écartées par ce plancher, nommément : le balancement des deux brins d'une
 ficelle rompue de ㉘ (±0,8° sur 100 u = 1,2 px) et la respiration du liseré `OrLisere` de ㉓
@@ -109,17 +113,23 @@ ficelle rompue de ㉘ (±0,8° sur 100 u = 1,2 px) et la respiration du liseré 
 
 ### 0.4 La phase négative n'est pas héritée de la maquette : elle est à CHOISIR
 
-Mesuré sur `mesure-ecrans-brennar-6.json` (554 animations réelles) : **8 paires sur 34 seulement
-portent un `animation-delay` négatif** (les 6 `*6-scan` à −2,600 s et `mk-buee` à −2,1/−1,5/−0,9 s,
-`mk-scan` à −2,600 s) — soit **45 instances sur 554**. Les 26 autres paires démarrent à un délai
-≥ 0 : `mk-veille` 0/+0,9 s, `mk-lampe` 0, `sf` +0,02 à +4,97 s, `po` 0, `pe` 0, `sc` 0…
+Mesuré sur `mesure-ecrans-brennar-6.json` (recompté le 08/10, après le dégel et le retrait des six
+`*6-scan` : **529 animations, 29 paires**) : **3 paires seulement portent un `animation-delay` négatif**
+(`mk-scan` ×6 à −2,600 s, `mk-buee` ×6 à −2,1/−1,5/−0,9 s, `mk-eclat` ×4 à −4,2/−3,9/−2,6/−1,3 s) — soit
+**16 instances sur 529**. Les 26 autres paires démarrent à un délai ≥ 0 : `mk-veille` 0/+0,9 s,
+`mk-lampe` 0, `sf` +0,02 à +4,97 s, `po` 0, `pe` 0, `sc` 0…
 
-⇒ Le design impose `Reglage.PhaseS` **négatif obligatoire** pour tout `Ambiance`/`Alerte` (§1, garde
-G3 « t0 riche »). **La maquette ne le fournit pas** : chaque entrée `Ambiance`/`Alerte` de ce catalogue
-déclare donc sa propre phase négative, et elle est contrôlable à la main. Exemple ouvert, à vérifier
-par le reviewer sur n'importe quelle autre ligne : pour la forme « lampe » (Alpha 0,82 → 1,00 → 0,82,
-période 4,6 s, `ease-in-out`, `Repos = 1,00`, `PoseDeReposS = 2,30 s`), une phase de **−0,90 s** place
-t0 à 0,90/2,30 = 39 % de la montée, soit Alpha ≈ 0,87 ≠ 1,00 — G3 passe, et la PNG à t=0 la voit.
+⇒ Deux choses distinctes, à ne pas confondre :
+- **`PoseDeReposS`** (champ de `MouvementDefini`, design §2) est l'instant où le mouvement est FIGÉ
+  sous `Reduit` (§5) et sous délestage (§4). **G3** (design §10) exige qu'il donne une valeur **≠ repos** —
+  le repos étant l'état restitué par `Detacher` (design §3, « Fin de piste ») : α 1, facteur 1,
+  `Melange` 0, `Eclat` 0, déplacement 0. Chaque `Ambiance`/`Alerte` de ce catalogue pose donc son
+  `PoseDeReposS` sur un instant où **chaque** canal est hors de son repos ; pour une forme symétrique
+  dont la crête vaut l'identité (la « lampe » 0,82 → 1,00 → 0,82), c'est le **creux** (`PoseDeReposS =
+  0,000 s`, facteur 0,82), jamais la mi-période.
+- **`Reglage.PhaseS`** est un choix de mise en scène, pas une garde : une phase non nulle évite que
+  tout l'écran batte à l'unisson à son montage. La maquette ne la fournit que pour 3 paires ; chaque
+  entrée en régime de ce catalogue déclare la sienne, contrôlable à la main.
 
 ### 0.5 La forme « lampe » est un REUSE mesuré, pas un nombre inventé
 
@@ -129,7 +139,7 @@ choisie par moi : c'est celle de la lampe de l'atelier, mesurée.
 
 > `@keyframes mk-lampe{0%,100%{opacity:.82}50%{opacity:1}}`, `4.6s ease-in-out infinite`
 > — `~/project/atelier3d-mafia/generateur-marche.py:112` et `:197` ; durée confirmée à **4 600 ms**
-> sur 3 instances par `mesure-ecrans-brennar-6.json` (`mk-lampe`) ; paire d'inventaire
+> sur 4 instances par `mesure-ecrans-brennar-6.json` (`mk-lampe`, délais tous 0) ; paire d'inventaire
 > `inventaire-animations.md:36` (« la lampe du tableau du Verge d'Or »).
 
 Les entrées qui la reprennent portent `Source = PROPOSÉ · forme REUSE « ecrans-brennar-6: mk-lampe »`.
@@ -141,33 +151,55 @@ personne différente : la cause justifie la différence.
 
 ### 0.6 Ce que ce catalogue NE fait pas
 
-- Il ne redéfinit **aucune** des 44 paires de l'inventaire : elles sont référencées en §I.3 par leur
+- Il ne redéfinit **aucune** des 40 paires de l'inventaire : elles sont référencées en §I.3 par leur
   id (`ecrans-brennar-6: <keyframe>` / `hud-brennar-canon: <nom>`).
-- Il ne tranche rien : 12 questions en §IV, chacune avec ma recommandation.
-- Il ne maquille aucun trou : 9 entrées dépendent d'un hôte **à dessiner** (§III) ou d'un puits qui
-  **n'existe pas** dans l'enum `Propriete` (Q3). Elles sont marquées, comptées, et nommées.
+- Il ne tranche rien de neuf : les 12 questions de §IV sont **toutes résolues** (f2 07/10, ou portées
+  par le design v4.1/v4.2) ; reste ouvert le seul flotteur « + $ » (R2.2, design §11).
+- Il ne maquille aucun trou : 3 entrées dépendent d'un hôte **à dessiner** (§III : A2, A3, A4). Elles
+  sont marquées, comptées, et nommées.
 
 ---
 
 ## I. Conventions de lecture des tableaux
 
-### I.1 Les colonnes, et le champ d'`Entree` qu'elles portent
+### I.1 Les colonnes, et le champ du modèle qu'elles portent (design v4.2 §2)
 
-| colonne | champ du design §1 | règle |
+| colonne | champ du design §2 | règle |
 |---|---|---|
-| `id` | `Entree.Id`, forme `ecran.role` | unique dans tout le catalogue (G1) |
-| `déclencheur / état` | — (contrat du contrôleur) | un identifiant RÉEL du code, avec son `file:line`, ou « en continu » |
-| `mouvement` | `Entree.M` : `Mouvement { PeriodeS, Canaux[Propriete, ImageCle[]], Iterations, Direction, PoseDeReposS }` + `Reglage.PhaseS` | propriétés, amplitudes concrètes, durée ou période en secondes, aisance CSS, itérations, phase |
+| `id` | `Entree.Id`, forme `ecran.role` ; **`ecran.role/cible`** quand la ligne nomme plusieurs cibles aux canaux différents | unique dans tout le catalogue (G1) |
+| `déclencheur / état` | — (contrat du contrôleur : qui appelle `Attacher`/`Transitionner`/`Detacher`) | un identifiant RÉEL du code, avec son `file:line`, ou « en continu » |
+| `mouvement` | `Entree.MouvementDefini` : `{ PeriodeS ; Canal[] { Propriete, Mode, ImageCle[] } ; Iteration ; Alterne ; PoseDeReposS ; CouleurA, CouleurB ; Fonctionnelle }` + `Reglage` (`PhaseS`, `Dx`, `KDepl`) | propriétés, mode, amplitudes concrètes, durée ou période en secondes, aisance CSS, itérations, phase |
 | `cause dans la fiction` | `Entree.Cause` (≥ 20 car., non « TODO », G1) | une phrase vraie, physique, vérifiable à l'écran |
-| `genre` | `Entree.G` | `Alerte` \| `Ambiance` \| `Retour` \| `Transition` |
-| `pistes` | `Entree.Pistes` | entier ≥ 1 ; Σ par écran ≤ 16 (G4) |
-| `réduit` | `Entree.DegradeReduit` | appliqué du §4 du design, jamais inventé |
+| `genre` | `Entree.Genre` | `Alerte` \| `Ambiance` \| `Retour` \| `Transition` |
+| `pistes` | `Entree.Pistes` | entier ≥ 1, **une piste = une cible** (design §4) ; Σ par écran résolu ≤ 16 (G4) |
+| `réduit` | **aucun champ** : le comportement sous `Reduit` est **dérivé** de `Genre`, `Fonctionnelle` et `PoseDeReposS` par la règle du design §5 ; la colonne l'écrit en clair, elle ne le stocke pas | appliqué du §5, jamais inventé |
 | `source` | `Entree.Source` | `PROPOSÉ` \| paire d'inventaire \| `REUSE <ancre>` |
-| `question` | — | ce que l'atelier doit dessiner, ou ce que f2/l'user doivent trancher, ou « — » |
+| `question` | — | ce que l'atelier doit dessiner, une dépendance (E0, hôte), ou « — » |
 
-Un écran porte en plus les entrées **transverses** (§II.0) dont il est la cible : elles sont comptées
-sur lui dans le récapitulatif (§V), et une seule fois dans le total par entrée. L'écart entre les deux
-sommes est la somme de contrôle.
+Les champs que les colonnes ne portent pas en clair — `Ecrans`, `Bloquante`, `Hote`, `Fonctionnelle`,
+`Iteration`, `Alterne`, `CouleurA`/`CouleurB`, `PoseDeReposS` — sont déclarés **pour chaque `Entree`**
+dans la table **§I.4**, qui est la projection exacte sur le modèle et la seule source pour E1.
+
+**Trois conventions d'écriture, qui ferment les ambiguïtés relevées par la revue ⊥ n°1.**
+1. **Une piste = une cible, une `Entree` = un `MouvementDefini`.** `Attacher(e, cible, …)` applique
+   TOUS les canaux de `e` à `cible`. Une ligne qui anime deux cibles avec des canaux différents (un
+   disque en `Echelle`, son étiquette en `Alpha`) est donc **deux `Entree`**, d'Id `ligne/cible`, de
+   même `Cause` et de même `Genre`. Plusieurs cibles qui reçoivent le **même** mouvement (les 3 cartes
+   de ⑩, les 6 voyants de ⑮, les 7 silhouettes de ㉙) restent **une** `Entree` attachée N fois.
+2. **`Attacher` ou `Transitionner`.** Un mouvement à images clés (une fois ou en régime) est un
+   `Attacher` ; ses canaux de transformation sont `Additif` et finissent à 0, ses `Alpha`/`Echelle`
+   sont `Multiplicatif` et finissent à 1 — **la fin d'une `Transition` est l'état du propriétaire**,
+   que le contrôleur a déjà posé (« la piste part de l'ancienne valeur »). Un passage **d'une valeur
+   du propriétaire à une autre**, sur un seul canal (l'aiguille, le jeton de ⑯, la ficelle de ㉘),
+   est un `Transitionner(de, vers)` (design §3).
+3. **Couleurs.** `Melange` va de `CouleurA` (0) à `CouleurB` (1) et n'écrit que le RGB (design §2).
+   `CouleurA = Cible` signifie « la couleur RGB de la cible lue à l'attachement » et `CouleurB =
+   Cible × k` un facteur RGB par canal, borné à 1 (design **v4.2** §2, ajouté pour `retour.appui` et
+   les cibles dont la couleur dépend de l'état) ; une couleur nommée (`OrSombre`…) est celle du code,
+   avec son ancre. Un `Graphic` blanc dont la couleur est **cuite dans le sprite** (`RadialDisc`,
+   `RoundedRectOutline` teinté) ne s'éclaircit pas par `Graphic.color` : il s'assombrit (`k < 1`), ou
+   sa lumière passe par l'`Alpha`. Le mot « Teinte » de la v1 n'est **pas** une `Propriete` et a
+   disparu de ce fichier.
 
 ### I.2 Les contraintes dures, qui sont des gardes du design
 
@@ -175,71 +207,150 @@ Toutes les lignes de ce catalogue les respectent ; chaque violation possible est
 survient, jamais passée sous silence.
 
 1. **Jamais de texte animé autre qu'`Alpha`** (G6 : une cible portant un `TMP_Text` refuse tout autre
-   canal). Les six entrées dont l'hôte est un `TMP_Text` (`police.baton`, `autonomie.appel`,
-   `premiere-fois.lecon`, `carnet.encre`, `appro.commande-partie`, et le volet « ACQUIS » de
-   `vitrine.acquis`) sont **en `Alpha` seul**.
+   canal). Les cinq `Entree` dont la cible est un `TMP_Text` (`police.baton`, `autonomie.appel`,
+   `premiere-fois.lecon`, `vitrine.acquis/possede`, `service.cartel/qui`) et les deux dont la cible
+   est un conteneur qui ne porte que des textes (`carnet.encre`, `appro.commande-partie`) sont **en
+   `Alpha` seul**. `autonomie.reponse` vise le `Decided` (`AutonomyInboxController.cs:319`),
+   un `TMP_Text` : `Alpha` seul aussi.
 2. **Aucun montant exact animé ni affiché** (R2.2 : « le back projette des **bandes**, jamais de
    scalaire » — `~/project/mafia-lot-i18n/.claude/skills/juge-donnees/mandat-juge-donnees.md:63`).
-   Aucune entrée n'anime un nombre. Les seuls chiffres touchés sont des **comptes d'items
-   actionnables** (le « 1 » du jeton de ⑤, les 8 créneaux de ㉞), que le canon autorise explicitement
-   (⑱ : « badge de count d'items ACTIONNABLES … jamais un scalaire de simulation », front.md:1568) —
-   et même eux ne sont jamais animés : c'est leur support qui bouge.
-3. **`Retour` et `Transition` ≤ 250 ms** (X8, G8). Trois entrées dépassent, toutes **non bloquantes**,
-   toutes nommées : `retour.appui-long` (1 000 ms, = `UiTimingTunables.DestructiveLongpressMs`),
-   `carnet.en-main` (500 ms, = `Operational/Carnet/AppuiLong.cs:10`), `semaine.aiguille` (700 ms, la
-   valeur de la maquette, `inventaire-animations.md:62`). ⇒ **Q2**.
-4. **Un `Alerte` en `Alpha`/`Teinte` ne varie pas plus de 3 fois par seconde** (période ≥ 0,4 s, G5).
-   La plus rapide du catalogue est à **1,1 s** (`accueil.descente`, la période de `Pouls`).
-5. **Tout `Ambiance`/`Alerte` démarre à une phase négative** (« t0 riche », G3) : chaque ligne la
-   déclare. Voir le calcul ouvert en §0.4.
-6. **Σ `Pistes` ≤ 16 par écran** (G4) et **48 pistes vivantes dans tout le client** (`MaxPistes`,
-   design §3). Le pire cas simultané de ce catalogue : **㉙ à 9 pistes** + les 3 `Alerte` du chrome en
-   descente (§8 du design) + 3 transverses = **15 sur 48**.
+   Aucune entrée n'anime un nombre. Les chiffres que portent les cibles animées sont des **comptes
+   d'items actionnables** (le « 1 » du jeton de ⑤, les 8 créneaux de ㉞), que le canon autorise
+   explicitement (⑱ : « badge de count d'items ACTIONNABLES … jamais un scalaire de simulation »,
+   front.md:1568) — et même eux ne sont jamais animés : c'est leur support qui bouge.
+   **Une exception, consignée** : `autonomie.appel` fait battre le `ReportHeader` de ㉔, dont le texte
+   porte un scalaire servi exact (`"Oldest: " + report.backlog_age_cycles + " cycles"`,
+   `AutonomyInboxController.cs:285`). L'affichage préexiste au catalogue, qui ne l'anime qu'en `Alpha`,
+   sans toucher au nombre ; c'est une **dette R2.2 de ㉔** (comme `monte` au design §11), à porter au
+   lot d'écarts, pas un mouvement à retirer.
+3. **G8 (design §10) : une entrée `Bloquante` ET > `AnimMaxBlockMs` (250 ms) est refusée ; les `Retour`
+   d'appui (`retour.appui`) ≤ 250 ms.** **Aucune** entrée de ce catalogue n'est `Bloquante` (§I.4).
+   Quatre dépassent 250 ms, toutes non bloquantes, toutes nommées : `retour.appui-long` (1 000 ms,
+   = `UiTimingTunables.DestructiveLongpressMs`), `semaine.aiguille` (700 ms, la valeur de la maquette,
+   `inventaire-animations.md:58`), `carnet.en-main` (500 ms, = `AppuiLong.Duree`, `AppuiLong.cs:10`),
+   `bandeau.sortie` (400 ms, `BandeauEphemere.cs:167`). Q2 est résolue par le design (`Bloquante`).
+4. **G5 : au plus 3 extrema par seconde (période ≥ 0,667 s)**, toutes politiques, par piste d'alpha,
+   de mélange ou d'éclat (design §5). La plus rapide du catalogue est à **1,1 s** (`accueil.descente`,
+   la période de `Pouls`) ; les 11 entrées en régime sont toutes ≥ 1,1 s.
+5. **G3 : le `PoseDeReposS` de toute `Ambiance`/`Alerte` donne, sur chaque canal, une valeur ≠ repos**
+   (repos = l'état restitué par `Detacher`, design §3). Chaque ligne le déclare, §I.4 le recopie, et
+   §0.4 dit pourquoi ce n'est jamais la crête d'une forme « lampe ».
+6. **Σ `Pistes` ≤ 16 par écran résolu** (G4 : une `Entree` à plusieurs écrans compte sur **chacun**)
+   et **48 pistes vivantes dans tout le client** (design §4). Le pire écran, transverses `*` résolues
+   au pire cas (bandeau compris), est **㉙ à 13** (§V) ; le pire cas simultané : ㉙ 13 + les 4 `Alerte`
+   du chrome en descente (pouls du cerclage, pouls du filet, tremblement, gyrophare : design §9) =
+   **17 sur 48**.
 7. **Sous un `RectMask2D`, le canal de transformation est plafonné à 6 pistes** et aucun Canvas
-   imbriqué n'est posé (design §3, **hypothèse à mesurer : spike E0**). Les écrans concernés de ce
+   imbriqué n'est posé (design §4, **hypothèse à mesurer : spike E0**). Les écrans concernés de ce
    lot : ⑥ (`LieutenantScreenController.cs:1331`), ㉓ (`ShopScreenController.cs:406`),
    ㉜ (`DelegationScreenController.cs:979`), ㉝ (`DemolitionScreenController.cs:1185`),
    ㉞ (`CarnetScreenController.cs:810`), ㉙ (`ConflitScreenController.cs:1219`),
    ④ (`DashboardController.cs:639`, masque de décor, pas de liste), ⑱ (`AppShell.cs:1348`).
-   **Entrées de ce catalogue qui posent un canal de transformation ou de couleur sous un masque : 5**
-   (`famille.lampe-du-don` Alpha, `service.jeton` Teinte, `service.cartel` Teinte,
-   `demolition.fiche-sortie` TranslationX, `demolition.offre-fermee` Teinte) — toutes ≤ 6 par écran,
-   toutes suspendues au verdict d'E0.
+   **Entrées de ce catalogue sous un masque** : `famille.lampe-du-don` (`Alpha`), `service.jeton`
+   (`Melange`), `service.cartel/cro` (`Melange`) et `/qui` (`Alpha`), `demolition.fiche-sortie`
+   (`Alpha`), `demolition.offre-fermee/tag` (`Alpha`) et `/rang` (`Melange`), `conflit.envoi/bord` et
+   `/cadre` (`Alpha`). **Aucune ne pose plus de canal de transformation sous un masque** (la seule,
+   `demolition.fiche-sortie`, a perdu sa translation : G11) ; leur coût (`CanvasGroup.alpha`,
+   `Graphic.color`) est l'objet des mesures (a)-(b)-(d) d'E0.
 8. **Le premier montage de la session n'est pas animé** (`global_conventions_core.md:126`, F4).
 
-### I.3 Les paires de l'inventaire : référencées, pas redéfinies
+### I.3 Les paires de l'inventaire : référencées, pas redéfinies (G2)
 
-> ⚠️ **Recalé le 08/10** : cette table a été écrite sur 44 paires. Aujourd'hui l'inventaire en compte **40** (`inventaire-animations.md` §F : 29 maquette + 11 HUD/⑭ ; 2 présentes, 1 partielle, 37 absentes) : les six lignes `*6-scan` (㉟ ㊱ ㊲ ㊳ ㊴ ㊵) sont RETIRÉES (atelier 9469d5a), `mk-eclat` a son hôte (cadre 146), B11 (aiguille de ⑭) est ajoutée. Lire la table ci-dessous sans ces six lignes.
+Source : `inventaire-animations.md` §F — **40 paires** (29 `ecrans-brennar-6` mesurées dans Chromium +
+11 lignes HUD/⑭) ; présentes 2 · partielle 1 · absentes 37. G2 (design §10) exige pour chacune une
+`Entree` ou un `Hote = SansHote:<raison>` compté. Je ne les réécris pas ; je donne leur `Entree` ou leur
+`SansHote`, parce que c'est ce qui décide si elles sont câblables.
 
-Elles sont **déjà au catalogue** (garde G2 : « une paire de `inventaire-animations.md` sans entrée »
-rougit). Je ne les réécris pas ; je constate leur état d'hôte, parce que c'est ce qui décide si elles
-sont câblables ou différées.
-
-| bloc | paires | hôte côté client | verdict |
+| bloc | paires | `Entree` ou `SansHote` | câblable ? |
 |---|---:|---|---|
-| `hud-brennar-canon: pouls`, `tremble` | 2 | existent et **tournent** (`Shell/TopBarController.cs:763`, `:770`) | migrent au catalogue, design §8 — rien à faire ici |
-| `hud-brennar-canon: gyroflip` | 1 | existe, **partiel** (`CityMap/Gyrophare.cs`, fond D seul) | design §8 |
-| `hud-brennar-canon:` les 7 absentes (`monte`, fondu jour↔nuit, 3 virages braise, fondu du gyro, balayage de l'aiguille) | 7 | ① — hôtes présents, animations absentes | **E3 du design**, hors de ce lot. ⚠️ `monte` est le flotteur « + $320 » : **montant exact**, il heurte R2.2 (design §11.2) |
-| `ecrans-brennar-6: hl` (③ le halo du pin) | 1 | **hôte absent** (`CityMap/DistrictCellView.cs:95` : pas de pin) | différé |
-| `ecrans-brennar-6:` serre (`sf` ×202, `drip`, `derive`, `led`, `spl`, `respire`, `tg`, `clign`) | 8 | **0 scène de serre** dans `BuildingCardController` | différé → **E5** (de l'ART, pas du mouvement) |
-| `ecrans-brennar-6:` labo (`bl` ×52, `vp`, `cd`, `fl`, `rl`, `ch`, `ec`, `rd`, `gt`) | 9 | pupitre **figé** (`BuildingCardController.AddPupitreLaboratoire:2242`) | différé → E5 |
-| `ecrans-brennar-6:` Ash (`po` ×78, `sc`, `pe`, `am`, `ci`, `cl`) | 6 | `AddVitrineAsh:2318` **figé** | différé → E5 |
-| `ecrans-brennar-6:` marché (`mk-veille`, `mk-buee`, `mk-scan`, `mk-lampe`) | 4 | **écran ㉑ NON MONTÉ** (aucun contrôleur) | différé. **`mk-eclat` n'a toujours aucun hôte** ⇒ demande **A1** |
-| `ecrans-brennar-6: vnt6-scan`, `hrz6-scan`, `rep6-scan`, `jrn6-scan`, `dos6-scan`, `bln6-scan` | 6 | écrans ㉟ ㊱ ㊲ ㊳ ㊴ ㊵ **montés** ; la barre de balayage et sa piste masquée **non vérifiées** dans ce lot | mesuré : **7,500 s `linear infinite`, délai −2,600 s**, course `translateY(−6px → 184px)`, opacité 0 → .5 → 0, barre cyan de 2 px (`generateur-marche.py:117-118`, `:151-153`). ⇒ demande **A9**, cause à confirmer **Q10** |
+| `hud-brennar-canon` B1 `pouls`, B2 `tremble` | 2 | présentes (`TopBarController.cs:763`, `:770`) ⇒ entrées du chrome, migrées au catalogue du HUD (design §9, E2) | oui (E2) |
+| `hud-brennar-canon` B3 `gyroflip` | 1 | partielle (`Gyrophare.cs`, fond D seul) ⇒ piste `Alerte` `Hue` (design §9, E2) | oui (E2) |
+| `hud-brennar-canon` B6 filet, B7 anneau, B8 lunette, B9 fondu du gyro, B10 aiguille du HUD | 5 | hôtes présents dans ① ⇒ entrées du chrome (`chrome.filet.virage`, `chrome.anneau.virage`, `chrome.aiguille.balayage`…, design §3/§7/§9, E3) | oui (E3) |
+| `hud-brennar-canon` B4 `monte` | 1 | `SansHote:R2.2 — le flotteur « + $320 » est un montant exact` (design §11) | non : décision |
+| `hud-brennar-canon` B5 fondu jour↔nuit de `.fond` | 1 | `SansHote:① hôte de fondu croisé à construire (deux couches de fond)` (design §7, E3) | non : hôte à construire |
+| `ecrans-brennar-6` **B11** aiguille du cadran TENSION de ⑭ | 1 | **= `semaine.aiguille`** (§II ⑭, une ligne de ce fichier), `SansHote:⑭ cadran absent` jusqu'à E4 (design §7) | non : hôte à construire (E4) |
+| `ecrans-brennar-6: hl` (③ le halo du pin) | 1 | `SansHote:③ pas de pin` (`CityMap/DistrictCellView.cs:95`) | non |
+| `ecrans-brennar-6:` serre (`sf` ×202, `drip`, `derive`, `led`, `spl`, `respire`, `tg`, `clign`) | 8 | `SansHote:② 0 scène de serre` (`BuildingCardController`) | non : E5 (ART d'abord) |
+| `ecrans-brennar-6:` labo (`bl` ×52, `vp`, `cd`, `fl`, `rl`, `ch`, `ec`, `rd`, `gt`) | 9 | `SansHote:② pupitre figé` (`BuildingCardController.AddPupitreLaboratoire:2242`) | non : E5 |
+| `ecrans-brennar-6:` Ash (`po` ×78, `sc`, `pe`, `am`, `ci`, `cl`) | 6 | `SansHote:② vitrine Ash figée` (`AddVitrineAsh:2318`) | non : E5 |
+| `ecrans-brennar-6:` marché (`mk-veille`, `mk-scan`, `mk-buee`, `mk-lampe`, `mk-eclat`) | 5 | `SansHote:㉑ écran non monté` (aucun contrôleur). `mk-eclat` a son hôte **dans la maquette** (cadre 146, 4 instances mesurées, `inventaire-animations.md:37`, `:65`) ; c'est l'écran client qui manque | non : ㉑ non monté |
 
-**Contrôle : 2 + 1 + 7 + 1 + 8 + 9 + 6 + 4 + 6 = 44.** Présentes 2 · partielle 1 · absentes 41
-(`inventaire-animations.md:87-89`, inchangé).
+**Contrôle : 2 + 1 + 5 + 1 + 1 + 1 + 1 + 8 + 9 + 6 + 5 = 40** · câblables **8** (B1-B3, B6-B10),
+non câblables **32** (B4 · B5 · B11 · `hl` · 23 de la fiche · 5 du marché). Les six `*6-scan` (㉟-㊵)
+ne sont **plus** des paires : retirés de la maquette (atelier 9469d5a) et de l'inventaire (Q10).
 
-`mk-eclat` **n'est pas** l'une des 44 : l'inventaire le classe en §C (défini, 0 instance mesurée,
-`inventaire-animations.md:69`) parce qu'aucun cadre ne montre son hôte. Il n'entre au catalogue que
-par la demande **A1**.
+⇒ **Le `Catalogue` final** compte **42 lignes de ce fichier** (47 `Entree` après la règle « une piste =
+une cible », §I.4) **+ 39 paires** d'inventaire (B11 est déjà la ligne `semaine.aiguille`) = **81 lignes
+G2**, dont **34 non câblables aujourd'hui** : 31 paires (B4, B5, `hl`, 23 de la fiche, 5 du marché) et
+**3 des miennes**, suspendues à un hôte à construire ou à dessiner (`semaine.aiguille` = B11 → E4,
+`vitrine.reflet` → A3, `distribution.photo` → A4). **47 sont câblables** : 39 de mes lignes et les 8
+paires du chrome. Contrôle : 34 + 47 = 81.
 
-⇒ Le `Catalogue` final comptera **42 entrées de ce fichier + 40 paires d'inventaire = 82 lignes**,
-dont **38 non câblables aujourd'hui** : 28 des 44 sans aucun hôte (serre 8 · labo 9 · Ash 6 · ③ 1 ·
-marché 4), 6 à hôte **non vérifié** (les `*6-scan`), et **4 des miennes** — 3 suspendues à un hôte à
-dessiner (`semaine.aiguille` → A2, `vitrine.reflet` → A3, `distribution.photo` → A4) et 1 à un trou
-du design (`distribution.ficelle-tendue` → Q3). C'est ce chiffre-là, pas le « 44 », qui dit où en est
-la carte avant E1. **38 attendent quelque chose ; 48 sont câblables.**
+### I.4 La projection exacte sur le modèle — une ligne par `Entree` (47)
+
+C'est la table que E1 recopie dans `Catalogue`. Les colonnes absentes valent la même chose pour toutes les
+`Entree` : **`Bloquante = false`** (aucune entrée ne refuse l'entrée du joueur, X8, G8) · **`Alterne = false`**
+· **`Source`, `Cause`** : celles de la ligne de §II. `Fonctionnelle = true` pour la seule `retour.appui-long`.
+« Mult » = `Multiplicatif`, « Add » = `Additif`, « Abs » = `Absolu` (design §2). `PoseDeReposS` « — » :
+une `Transition` ou un `Retour` sous `Reduit` saute à sa fin, c'est-à-dire à l'état du propriétaire
+(§I.1, règle 2) ; seul `carnet.en-main` déclare le sien, parce qu'un `Retour` est figé et non sauté (§5).
+Pour une `Ambiance`/`Alerte`, la parenthèse donne la valeur au gel, hors du repos sur chaque canal (G3).
+
+| `Entree.Id` | `Ecrans` | `Genre` | cible | canaux (`Propriete` · `Mode`) | `Iteration`, durée ou période | `PoseDeReposS` (s) | `CouleurA` → `CouleurB` | `Hote` | `Pistes` |
+|---|---|---|---|---|---|---|---|---|---:|
+| `retour.appui` | `*` | Retour | le `Button` pressé | `Echelle` Mult · `Melange` Abs | appui 90 ms puis relâché 140 ms | — | `Cible` → `Cible × 0,85` | client | 1 |
+| `retour.appui-long` | `*` (4 instances : ④ ⑤ ⑯ ×2) | Retour | un `Ring` `Filled` posé sur l'objet pressé | `Remplissage` Abs | Fois 1, 1 000 ms | — | — | client (anneau à créer) · **`Fonctionnelle`** | 1 |
+| `shell.entree` | `*` | Transition | la racine du locataire | `Alpha` Mult | 160 ms | — | — | client | 1 |
+| `bandeau.entree` | `*` | Transition | la racine du bandeau | `TranslationY` Add · `Alpha` Mult | 200 ms | — | — | client | 1 |
+| `bandeau.sortie` | `*` | Transition | le groupe du bandeau | `Alpha`, par `Transitionner` | 400 ms | — | — | client | 1 |
+| `comptoir.lampe` | ⑨ ⑩ ⑯ | Ambiance | `Plateau/FiletHaut` | `Alpha` Mult | Infini, 4,6 s | 0,000 (0,82) | — | client | 1 |
+| `comptoir.bouteilles` | ⑨ ⑯ | Ambiance | la rangée `Bouteilles` | `Alpha` Mult | Infini, 4,6 s | 0,000 (0,83) | — | client | 1 |
+| `bascule.course` | ⑲ ㉕ | Transition | le `Curseur` | `TranslationX` Add | 140 ms | — | — | client | 1 |
+| `accueil.carte-suivante` | ④ | Transition | la racine d'`AccueilHlCard` | `Alpha` Mult | 200 ms | — | — | client | 1 |
+| `accueil.descente` | ④ | Alerte | `Row_descente` | `Melange` Abs | Infini, 1,1 s | 0,000 (`Melange` 1) | `Cible` (`#232a2d`) → `Cible × 1,22` | client | 1 |
+| `decision.distribuee` | ⑤ | Transition | « CarteDuJour » | `Rotation` Add · `Alpha` Mult | 220 ms | — | — | client | 1 |
+| `decision.cachet` | ⑤ | Transition | le `Tampon` | `Echelle` Mult · `Melange` Abs | 180 ms | — | `Cible` → `Cible × 0,75` | client | 1 |
+| `decision.jeton` | ⑤ | Alerte | le `Jeton` | `Melange` Abs | Infini, 4,6 s | 0,000 (`Melange` 1) | `Cible` (blanc) → `Cible × 0,88` | client | 1 |
+| `famille.lampe-du-don` | ⑥ | Ambiance | le `Halo` du Don | `Alpha` Mult | Infini, 4,6 s | 0,000 (0,82) | — | client | 1 |
+| `famille.rang-ouvre` | ⑥ | Transition | le `CanvasGroup` du détail | `Alpha`, par `Transitionner` | 160 ms | — | — | client | 1 |
+| `revue.jeton-rendu/jeton` | ⑯ | Transition | le `Jeton` | `Rotation` Abs, par `Transitionner` | 220 ms | — | — | client | 1 |
+| `revue.jeton-rendu/bulle` | ⑯ | Transition | la `Bulle` | `Alpha`, par `Transitionner` | 200 ms | — | — | client | 1 |
+| `revue.cachet` | ⑯ | Transition | le `Cachet` | `Echelle` Mult · `Alpha` Mult | 160 ms | — | — | client | 1 |
+| `file.cachet` | ⑨ | Transition | le `Cachet` | `Echelle` Mult · `Alpha` Mult | 160 ms | — | — | client | 1 |
+| `file.part` | ⑨ | Transition | l'attendant parti | `Alpha`, par `Transitionner` | 200 ms | — | — | client | 1 |
+| `main.distribuee` | ⑩ | Transition | les 3 `Face` | `TranslationY` Add · `Rotation` Add · `Alpha` Mult | 150 ms, `PhaseS` 0 / +0,045 / +0,090 s | — | — | client | 3 |
+| `main.levee` | ⑩ | Transition | les 2 `Face` concernées | `TranslationY` Add | 180 ms | — | — | client | 2 |
+| `semaine.jeton-depense` | ⑭ | Transition | le jeton dépensé | `Echelle` Mult | 200 ms | — | — | client | 1 |
+| `semaine.aiguille` | ⑭ | Transition | l'aiguille du cadran TENSION | `Rotation` Abs, par `Transitionner` | 700 ms | — | — | `SansHote:⑭ cadran absent` (E4) | 1 |
+| `police.dispatch` | ⑮ | Alerte | le glyphe `Regime` de chaque ligne tendue (≤ 6) | `Melange` Abs | Infini, 1,6 s | 0,800 (`Melange` 1) | `Cible` (`Braise`) → `Cible × 1,35` | client | 6 |
+| `police.baton` | ⑮ | Transition | `batonTexte` (`TMP_Text`) | `Alpha` Mult | 200 ms | — | — | client | 1 |
+| `commissariat.crans` | ⑰ | Transition | le cran allumé | `Alpha` Mult · `Melange` Abs | 200 ms | — | `Cible` → `Cible × 1,45` | client | 1 |
+| `vitrine.acquis/objet` | ㉓ | Transition | l'`Objet` acheté | `Echelle` Mult | 180 ms | — | — | client | 1 |
+| `vitrine.acquis/possede` | ㉓ | Transition | `Possede` (`TMP_Text`) | `Alpha` Mult | 160 ms | — | — | client | 1 |
+| `vitrine.reflet` | ㉓ | Ambiance | la bande de reflet | `TranslationX` Add | Infini, 11,0 s | 3,700 (33,6 % de course) | — | `SansHote:㉓ vitre absente` (A3) | 1 |
+| `autonomie.appel` | ㉔ | Alerte | le `ReportHeader` du plus vieux rapport (`TMP_Text`) | `Alpha` Mult | Infini, 1,6 s | 0,800 (0,62) | — | client | 1 |
+| `autonomie.reponse` | ㉔ | Transition | `Decided` (`TMP_Text`) | `Alpha` Mult | 160 ms | — | — | client | 1 |
+| `premiere-fois.lecon` | ㉕ | Transition | le `Texte` de la leçon (`TMP_Text`) | `Alpha` Mult | 200 ms | — | — | client | 1 |
+| `distribution.ficelle-tendue` | ㉘ | Transition | `DistributionFicelleGraphic` | `Parametre` canal 0 Abs, par `Transitionner` | 240 ms | — | — | client (`IParametreAnime` à implémenter) | 1 |
+| `distribution.photo` | ㉘ | Ambiance | la photo punaisée | `Rotation` Add | Infini, 7,4 s | 3,700 (+2,5°) | — | `SansHote:㉘ photo absente` (A4) | 1 |
+| `appro.commande-partie` | ㉚ | Transition | `Ligne_la_commande` | `Alpha` Mult | 200 ms | — | — | client | 1 |
+| `service.jeton` | ㉜ | Alerte | le `Rond` du jeton | `Melange` Abs | Infini, 4,6 s | 0,000 (`Melange` 1) | `Cible` (`Or`) → `Cible × 0,88` | client | 1 |
+| `service.cartel/cro` | ㉜ | Transition | le `Cro` | `Melange` Abs | 200 ms | — | `Cible` (`OrSombre`) → `CroLibre` | client | 1 |
+| `service.cartel/qui` | ㉜ | Transition | `Qui` (`TMP_Text`) | `Alpha` Mult | 160 ms | — | — | client | 1 |
+| `demolition.fiche-sortie` | ㉝ | Transition | la `Fiche` | `Alpha` Mult | 200 ms | — | — | client | 1 |
+| `demolition.offre-fermee/tag` | ㉝ | Transition | le `Tag` | `Alpha` Mult | 200 ms | — | — | client | 1 |
+| `demolition.offre-fermee/rang` | ㉝ | Transition | le disque de `Rang` (si l'offre était la première) | `Melange` Abs | 200 ms | — | `Cible` (`BlocBord`) → `OrSombre` | client | 1 |
+| `carnet.encre` | ㉞ | Transition | le `Corps` de la ligne | `Alpha` Mult | 220 ms | — | — | client | 1 |
+| `carnet.en-main` | ㉞ | Retour | la `Marque` de la ligne | `Alpha` Mult | Fois 1, 500 ms | 0,000 (α 0) | — | client (`Marque` à créer) | 1 |
+| `conflit.salle` | ㉙ | Ambiance | les 7 `Silhouette_*` | `Alpha` Mult · `TranslationX` Add | Infini, 11,0 s | 0,000 (0,82 ; −5 px CSS) | — | client | 7 |
+| `conflit.envoi/bord` | ㉙ | Transition | `BordChoisi` | `Alpha` Mult | 220 ms | — | — | client | 1 |
+| `conflit.envoi/cadre` | ㉙ | Transition | `CeSoirCadre` | `Alpha` Mult | 160 ms | — | — | client | 1 |
+
+**Contrôle** : 47 `Entree` = 42 lignes de §II + 5 lignes à deux cibles (`revue.jeton-rendu`, `vitrine.acquis`,
+`service.cartel`, `demolition.offre-fermee`, `conflit.envoi`). Σ `Pistes` par `Entree` distincte = **61** (= la ligne
+« Σ par ligne distincte » de §V). Genres : 5 `Alerte` · 6 `Ambiance` · 3 `Retour` · 33 `Transition` (les 28 lignes
+`Transition` de §II, dont 5 portent deux `Entree`) = 47. `Hote = SansHote` : 3 (`semaine.aiguille`,
+`vitrine.reflet`, `distribution.photo`).
 
 ---
 
@@ -250,10 +361,10 @@ la carte avant E1. **38 attendent quelque chose ; 48 sont câblables.**
 Elles ne vivent pas sur un écran : elles vivent sur un **geste** (l'appui), sur le **shell** (le
 montage, le bandeau), ou sur une **matière partagée** (le comptoir de ⑨/⑩/⑯, la bascule de ⑲/㉕).
 
-⚠️ **`Entree.Ecran` est un `string` singulier** dans le design (§1 : « `string Ecran (sym ①…㊵)` »).
-Ces 8 lignes ne tiennent donc pas dans le modèle tel qu'il est écrit. Convention adoptée ici, à
-ratifier : `Ecran = "*"` pour une entrée qui suit un geste, et `Ecran = "⑨ ⑩ ⑯"` pour une entrée qui
-suit une matière. ⇒ **Q1**.
+Le modèle les porte tel quel : `Entree.Ecrans` est une liste (`string[]`, ou `"*"`), et une `Entree` à
+plusieurs écrans compte, pour G4, sur **chacun des écrans résolus** (design §2 ; Q1 résolue). `Ecrans
+= "*"` pour une entrée qui suit un geste ou le shell, `Ecrans = ["⑨","⑩","⑯"]` pour une entrée qui
+suit une matière. Le §V les résout écran par écran.
 
 ### II.0.a Le retour d'appui — la demande de f2 (15 sites `Transition.None` sur 67 `Button`)
 
@@ -265,8 +376,8 @@ Ce lieu, c'est le doigt sur la matière : rien ne se passe à l'écran avant qu'
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `retour.appui` | `PointerDown` sur n'importe quel `Button` créé par le client (67 sites) ; relâchement ou sortie du doigt | **appui** : `Echelle` 1,00 → 0,97 et `Teinte` 1,00 → 0,85, **90 ms**, `ease-out`, une fois · **relâchement** : retour aux valeurs de repos, **140 ms**, `ease-out`, une fois. Total ≤ 230 ms. Le `onClick` reste émis au relâchement, inchangé | Un bouton est une pièce de plastique dur (touche, bouton de pager) montée sur ressort : il s'enfonce sous le pouce et remonte quand on le lâche — sans rebond, sans lueur. | `Retour` | 1 | `Teinte` seule, **sans échelle** (design §4) | `REUSE design §9` (`Retour.Poser(Button)`) | **Q6** : 10 des 15 sites sont des **cartes/rangées/panneaux entiers** (la racine de `HighestLeverageCard`, tout le bandeau, une rangée de ⑥, une plaque de ㉜, un bloc de ㉝, une cellule de bâtiment de ①, le texte vide de ⑯…). Un −3 % sur une feuille de 560 u déplace son bord de 8,4 u = 7 px : l'écran a l'air de sauter |
-| `retour.appui-long` | `LongPressButton.IsPressing` (`ShellContracts/LongPressButton.cs:20`) ; 4 instances aujourd'hui : `Shell/DecisionDetailScreenController.cs:428`, `Shell/HighestLeverageCardController.cs:371`, `Shell/DailyReviewScreenController.cs:583` et `:1276` | `Remplissage` 0,00 → 1,00 sur **1 000 ms** (= `UiTimingTunables.DestructiveLongpressMs`, `ShellContracts/UiTimingTunables.cs:19`), `linear`, une fois · relâchement avant le seuil : retour à 0,00 en **120 ms**, `ease-out`. Hôte : un `ProceduralUI.Ring` (`ShellContracts/ProceduralUI.cs:241`) posé sur l'objet pressé, `Image.type = Filled`, `fillMethod = Radial360`. **Non bloquant** : le doigt n'est jamais retardé | On n'abat pas un tampon d'un coup de doigt : on appuie, l'encre prend, et c'est au bout de la seconde que la mention est portée. | `Retour` | 1 | **PAS un gel** : indicateur statique + compteur textuel de secondes (canon `screen_2a:314`, `screen_13:308`), et l'alternative saisie reste offerte (F2) | `REUSE canon global_conventions_core.md:136` + `screen_2a:279`, `:300` (`role="progressbar"`, `aria-valuenow` 0→100) + `UiTimingTunables.cs:19` | **Q2** : 1 000 ms > 250 ms ⇒ G8 rougit. Aujourd'hui `LongPressButton` **ne montre RIEN** pendant la seconde d'appui (aucun `Image`, aucun `fillAmount`) : le joueur maintient le doigt à l'aveugle sur une action irréversible |
+| `retour.appui` | `PointerDown` sur n'importe quel `Button` créé par le client (67 sites) ; relâchement ou sortie du doigt | **appui** : `Echelle` 1,00 → 0,97 et `Melange` 0 → 1 (`CouleurA = Cible`, `CouleurB = Cible × 0,85` : la couleur RGB du bouton lue à l'attachement, assombrie de 15 % ; design §2 v4.2), **90 ms**, `ease-out`, une fois · **relâchement** : retour à `Melange` 0 et `Echelle` 1,00, **140 ms**, `ease-out`, une fois (design §8). Total ≤ 230 ms. Le `onClick` reste émis au relâchement, inchangé. `Echelle` seulement si la plus grande dimension du bouton ≤ 1/3 du cadre (design §8, Q6) | Un bouton est une pièce de plastique dur (touche, bouton de pager) montée sur ressort : il s'enfonce sous le pouce et remonte quand on le lâche — sans rebond, sans lueur. | `Retour` | 1 | `Melange` seul, **sans échelle** (design §5 (i)) | `REUSE design §9` (`Retour.Poser(Button)`) | **Q6** : 10 des 15 sites sont des **cartes/rangées/panneaux entiers** (la racine de `HighestLeverageCard`, tout le bandeau, une rangée de ⑥, une plaque de ㉜, un bloc de ㉝, une cellule de bâtiment de ①, le texte vide de ⑯…). Un −3 % sur une feuille de 560 u déplace son bord de 8,4 u = 7 px : l'écran a l'air de sauter |
+| `retour.appui-long` | `LongPressButton.IsPressing` (`ShellContracts/LongPressButton.cs:20`) ; 4 instances aujourd'hui : `Shell/DecisionDetailScreenController.cs:428`, `Shell/HighestLeverageCardController.cs:371`, `Shell/DailyReviewScreenController.cs:583` et `:1276` | `Remplissage` 0,00 → 1,00 sur **1 000 ms** (= `UiTimingTunables.DestructiveLongpressMs`, `ShellContracts/UiTimingTunables.cs:19`), `linear`, une fois · relâchement avant le seuil : retour à 0,00 en **120 ms**, `ease-out`. Hôte : un `ProceduralUI.Ring` (`ShellContracts/ProceduralUI.cs:241`) posé sur l'objet pressé, `Image.type = Filled`, `fillMethod = Radial360` (**à créer** : 0 usage de `Filled` aujourd'hui). **`Fonctionnelle = true`, `Bloquante = false`** : le doigt n'est jamais retardé | On n'abat pas un tampon d'un coup de doigt : on appuie, l'encre prend, et c'est au bout de la seconde que la mention est portée. | `Retour` | 1 | **PAS un gel** (`Fonctionnelle`, design §5 (ii)) : indicateur statique + compteur textuel de secondes **rendu par le contrôleur, pas par la régie** (canon `screen_2a:314`, `screen_13:308`), et l'alternative saisie reste offerte (F2) | `REUSE canon global_conventions_core.md:136` + `screen_2a:279`, `:300` (`role="progressbar"`, `aria-valuenow` 0→100) + `UiTimingTunables.cs:19` | **Q2** : 1 000 ms > 250 ms ⇒ G8 rougit. Aujourd'hui `LongPressButton` **ne montre RIEN** pendant la seconde d'appui (aucun `Image`, aucun `fillAmount`) : le joueur maintient le doigt à l'aveugle sur une action irréversible |
 
 ### II.0.b Le shell — montage d'un écran, et le bandeau
 
@@ -275,9 +386,9 @@ comptoir.
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `shell.entree` | tout montage dans `ContentSlot` : `MountTenant<T>` (`Shell/AppShell.cs:1480`), `MonterLocataireEnSurimpression<T>` (`:1525`), `EnterDistrict` (`:329`), `MonterMenuPlus` (`:1328`). **Exclu : le premier montage de la session** | `Alpha` 0,00 → 1,00 sur le `CanvasGroup` de la racine du locataire (posé à l'`Attacher`), **160 ms**, `ease-out`, une fois. Pas de translation (voir question) | On ne se téléporte pas d'une pièce à l'autre : on pousse une porte, et ce qu'il y a derrière se découvre le temps du geste. | `Transition` | 1 | durée 0 (design §4) | `REUSE canon screen_12:223` (« Transition `T.ui.anim_max_block_ms` — interruptible ») | ⚠️ **La SORTIE n'est pas animable sans retouche** : `UnmountCurrentTenant` détruit l'ancien locataire **de façon synchrone** et vide tout `ContentSlot` (`AppShell.cs:1858-1863`). Je propose donc d'animer **l'entrée seule** — l'écran précédent disparaît d'un coup, comme aujourd'hui : une entrée, zéro retouche du shell. Et **F4 interdit l'animation au cold-open** (`global_conventions_core.md:126`) ⇒ l'exclusion du premier montage est une garde, pas une préférence. Glissement de ⑱ : le canon ne spécifie un `slide-up` que pour la bottom-sheet de ② (`screen_2a:258`) ; ⑱ est une liste plein cadre ⇒ **fondu seul, recommandé** |
+| `shell.entree` | tout montage dans `ContentSlot` : `MountTenant<T>` (`Shell/AppShell.cs:1480`), `MonterLocataireEnSurimpression<T>` (`:1525`), `EnterDistrict` (`:329`), `MonterMenuPlus` (`:1328`). **Exclu : le premier montage de la session** | `Alpha` 0,00 → 1,00 sur le `CanvasGroup` de la racine du locataire (posé à l'`Attacher`), **160 ms**, `ease-out`, une fois. Pas de translation (voir question) | On ne se téléporte pas d'une pièce à l'autre : on pousse une porte, et ce qu'il y a derrière se découvre le temps du geste. | `Transition` | 1 | durée 0 (design §5) | `REUSE canon screen_12:223` (« Transition `T.ui.anim_max_block_ms` — interruptible ») | ⚠️ **La SORTIE n'est pas animable sans retouche** : `UnmountCurrentTenant` détruit l'ancien locataire **de façon synchrone** et vide tout `ContentSlot` (`AppShell.cs:1858-1863`). Je propose donc d'animer **l'entrée seule** — l'écran précédent disparaît d'un coup, comme aujourd'hui : une entrée, zéro retouche du shell. Et **F4 interdit l'animation au cold-open** (`global_conventions_core.md:126`) ⇒ l'exclusion du premier montage est une garde, pas une préférence. Glissement de ⑱ : le canon ne spécifie un `slide-up` que pour la bottom-sheet de ② (`screen_2a:258`) ; ⑱ est une liste plein cadre ⇒ **fondu seul, recommandé** |
 | `bandeau.entree` | `BandeauEphemere.Annoncer(...)` (`Shell/BandeauEphemere.cs:261-275`) : aujourd'hui `groupe.alpha = 1f` d'un coup (`:269`) | `TranslationY` **−10 u de bandeau → 0** (= 27,6 px, le bandeau est ancré au bord haut, pivot haut, `BandeauEphemere.cs:204-206`) et `Alpha` 0,00 → 1,00, **200 ms**, `ease-out`, une fois | Une annonce descend de la barre comme un billet qu'on vous passe par-dessus le comptoir : elle arrive, elle n'était pas là. | `Transition` | 1 | durée 0 | `PROPOSÉ` (l'entrée du bandeau n'existe pas : seule la sortie est animée) | — |
-| `bandeau.sortie` | la minuterie du bandeau, ou le toucher | `Alpha` 1,00 → 0,00, **400 ms**, **`linear`** (mesuré : `BandeauEphemere.cs:296-299`, `Time.unscaledDeltaTime`), une fois, après une tenue de **5,000 s** (`DureeParDefautS`, `:166`) | Une annonce ne se décroche pas : elle s'éteint, et le temps qu'elle met à s'éteindre dit qu'elle n'était pas importante. | `Transition` | 1 | durée 0 | `REUSE design §8` (la coroutine `Effacement` disparaît) | **Q2** : 400 ms > 250 ms ⇒ G8 rougit, alors que le canon ne plafonne que la durée **bloquante** (`global_conventions_core.md:124`) et que ce fondu ne bloque rien (`Toucher()` appelle `Effacer()` immédiatement, `:286-291`). **Q11** : la durée 5 s / 0,4 s est déclarée **non ratifiée** par le code lui-même (`:157-158`, « à ratifier au rendu ») |
+| `bandeau.sortie` | la minuterie du bandeau, ou le toucher | `Alpha` 1,00 → 0,00, **400 ms**, **`linear`** (mesuré : `BandeauEphemere.cs:296-299`, `Time.unscaledDeltaTime`), une fois, après une tenue de **5,000 s** (`DureeParDefautS`, `:166`) | Une annonce ne se décroche pas : elle s'éteint, et le temps qu'elle met à s'éteindre dit qu'elle n'était pas importante. | `Transition` | 1 | durée 0 | `REUSE design §9` (la coroutine `Effacement` reste minuterie ; le fondu devient `Transitionner(bandeau.sortie, quandFini: Effacer)`) | **Q2** résolue : `Bloquante = false`, G8 ne lit que « `Bloquante` ET > 250 ms » ; le fondu ne bloque rien (`Toucher()` appelle `Effacer()` immédiatement, `:286-291`). **Q11** ratifiée (f2) : 5 s de tenue + 0,4 s de fondu (`:157-158`) |
 
 ### II.0.c Le comptoir du Verge d'Or — la matière partagée de ⑨, ⑩ et ⑯
 
@@ -291,8 +402,8 @@ C'est donc le seul endroit du périmètre où une `Ambiance` a une cause physiqu
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `comptoir.lampe` <br>`Ecran = ⑨ ⑩ ⑯` | en continu, tant que l'écran est monté | `Alpha` **0,82 → 1,00 → 0,82** sur un `CanvasGroup` posé sur `Plateau/FiletHaut` (`DecorAuComptoir.cs:124` : trait de `Px(2)` = **8,5 u = 7,2 px**, pleine largeur, or `#d9ab4e` à α 0x88), **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 2,300 s` | Au-dessus du zinc il y a une rampe, et le laiton du plateau est ce qui la rend : c'est le seul endroit du comptoir où l'on voit la lumière bouger. | `Ambiance` | 1 (par écran) | figé à `PoseDeReposS` = l'image riche (α 1,00), pas la 0 % (design §4) | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` (4 600 ms mesurés, §0.5) | — |
-| `comptoir.bouteilles` <br>`Ecran = ⑨ ⑯` | en continu | `Alpha` **0,80 → 0,96 → 0,80** sur un `CanvasGroup` posé sur la rangée `Bouteilles` (`DecorAuComptoir.cs:236`, 7 bouteilles de `Px(9) × Px(32 ou 26)` = **38 × 136 ou 111 u**, dégradés braise/or et cyan/or à α 0,80, `:255-260`), **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s** (la même que `comptoir.lampe` : c'est la même rampe), `PoseDeReposS = 2,300 s` | Les bouteilles de l'étagère sont en verre : elles ne s'allument pas toutes seules, elles rendent la rampe du comptoir, en même temps qu'elle. | `Ambiance` | 1 (par écran) | figé à `PoseDeReposS` (α 0,96) | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` | ⑩ **n'en a pas** : son zinc est posé à `HauteurDos = 0f` (`Operational/Exceptions/ExceptionDetailController.cs:781`) ⇒ `dos.SetActive(false)` (`DecorAuComptoir.cs:135`) ⇒ **ni étagère, ni bouteilles** sur ⑩. Fait mesuré, pas un oubli |
+| `comptoir.lampe` <br>`Ecrans = ⑨ ⑩ ⑯` | en continu, tant que l'écran est monté | `Alpha` `Multiplicatif` **0,82 → 1,00 → 0,82** sur un `CanvasGroup` posé sur `Plateau/FiletHaut` (`DecorAuComptoir.cs:124` : trait de `Px(2)` = **8,5 u = 7,2 px**, pleine largeur, or `#d9ab4e` à α 0x88), **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 0,000 s` (facteur 0,82 : le creux du filament) | Au-dessus du zinc il y a une rampe, et le laiton du plateau est ce qui la rend : c'est le seul endroit du comptoir où l'on voit la lumière bouger. | `Ambiance` | 1 (par écran) | figé à `PoseDeReposS` (facteur 0,82, design §5). Pas la crête : la crête vaut 1,00, l'état sans piste (G3) | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` (4 600 ms mesurés, §0.5) | — |
+| `comptoir.bouteilles` <br>`Ecrans = ⑨ ⑯` | en continu | `Alpha` `Multiplicatif`, **facteur 0,83 → 1,00 → 0,83**, sur un `CanvasGroup` posé sur la rangée `Bouteilles` (`DecorAuComptoir.cs:236`, 7 bouteilles de `Px(9) × Px(32 ou 26)` = **38 × 136 ou 111 u**, dégradés braise/or et cyan/or ; base **mesurée** α 0,80 par bouteille, `:260` ⇒ **rendu 0,66 → 0,80 → 0,66** : un `CanvasGroup` ne dépasse pas l'alpha du `Graphic`, la crête est la base, design §9), **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s** (la même que `comptoir.lampe` : c'est la même rampe), `PoseDeReposS = 0,000 s` | Les bouteilles de l'étagère sont en verre : elles ne s'allument pas toutes seules, elles rendent la rampe du comptoir, en même temps qu'elle. | `Ambiance` | 1 (par écran) | figé à `PoseDeReposS` (facteur 0,83, rendu 0,66) | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` | ⑩ **n'en a pas** : son zinc est posé à `HauteurDos = 0f` (`Operational/Exceptions/ExceptionDetailController.cs:777`) ⇒ `dos.SetActive(false)` (`DecorAuComptoir.cs:135`) ⇒ **ni étagère, ni bouteilles** sur ⑩. Fait mesuré, pas un oubli |
 
 ### II.0.d La bascule — la matière partagée de ⑲ et ㉕
 
@@ -302,7 +413,7 @@ et `Onboarding/TutorialScreenController.cs:344-363`. Mêmes dimensions, mêmes c
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `bascule.course` <br>`Ecran = ⑲ ㉕` | le `Button` de la ligne entière (`SettingsScreenController.cs:256-258`, `TutorialScreenController.cs:365-370`) ; l'état d'arrivée est déjà calculé (`BasculeTutoriels.Allumee`, `ShellContracts/BasculeTutoriels.cs:11`) | `Curseur` : `TranslationX` d'un bout à l'autre de la piste, **course 42,7 u = 36,0 px** (piste `Px(22)` = 93,9 u, curseur `Px(5)` = 42,7 u, retrait `Px(1)` de chaque bord — `SettingsScreenController.cs:241-251`) · `Interrupteur` : `Teinte` de `Eteint` (blanc α 0,18) à `Or` `#d9ab4e`, ou l'inverse. **140 ms**, `ease-out`, une fois | Un interrupteur a une course : le curseur passe d'un bout de la piste à l'autre sous le pouce, et le laiton de la piste s'allume quand il arrive au bout. | `Transition` | 2 | durée 0 (les deux valeurs sont posées d'un coup — exactement le comportement d'aujourd'hui) | `PROPOSÉ` · les deux positions et les deux couleurs de repos sont **déjà dans le code** (`:240`, `:244-246`) : rien à inventer | — |
+| `bascule.course` <br>`Ecrans = ⑲ ㉕` | le `Button` de la ligne entière (`SettingsScreenController.cs:256-258`, `TutorialScreenController.cs:365-370`) ; l'état d'arrivée est déjà calculé (`BasculeTutoriels.Allumee`, `ShellContracts/BasculeTutoriels.cs:11`) | `Curseur` : `TranslationX` `Additif` **−Dx → 0**, `Dx` = ±42,7 u = ±36,0 px (`Reglage.Dx`, signe = sens de la course ; le contrôleur pose d'abord le curseur à sa position d'arrivée, la piste part de l'ancienne). Piste `Px(22)` = 93,9 u, curseur `Px(10)` = 42,7 u, retrait `Px(1)` de chaque bord (`SettingsScreenController.cs:241-251`). **140 ms**, `ease-out`, une fois. La couleur de l'`Interrupteur` (`Eteint` blanc α 0,18 ↔ `Or` `#d9ab4e`) **n'est pas animée** : elle change aussi d'alpha, que `Melange` ne porte pas ; le contrôleur la pose dans `quandFini`, quand le curseur touche le bout | Un interrupteur a une course : le curseur passe d'un bout de la piste à l'autre sous le pouce, et le laiton de la piste s'allume quand il arrive au bout. | `Transition` | 1 | durée 0 : la course est sautée, `quandFini` pose la couleur aussitôt (= le comportement d'aujourd'hui) | `PROPOSÉ` · les deux positions et les deux couleurs de repos sont **déjà dans le code** (`:240`, `:244-246`) : rien à inventer | — |
 
 ---
 
@@ -318,7 +429,7 @@ Maquette : « ❌ aucune » (`front.md:1613`).
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
 | `accueil.carte-suivante` | `SkipButton` de la carte à plus fort levier (`Shell/HighestLeverageCardController.cs:376-384`), puis la carte suivante est rendue | `Alpha` 1,00 → 0,00 en **90 ms** `ease-in`, puis 0,00 → 1,00 en **110 ms** `ease-out`, sur le `CanvasGroup` de la racine de `AccueilHlCard` (`Shell/AppShell.cs:1701`). Total **200 ms**, une fois | On écarte la carte et on en distribue une autre : la main qui la pose met le temps de la poser, on ne voit pas deux cartes à la fois. | `Transition` | 1 | durée 0 | `REUSE canon screen_1:386` (« Swap animé `T.ui.anim_max_block_ms` (250 ms max) quand Skip remplace la card ») | — |
-| `accueil.descente` | `CurrentHeat.escalated` (`DashboardController.cs:493-494`, la ligne « Descente ») | `Teinte` de l'`Image` de fond de `Row_descente` (`RowBg` `#232a2d`, `minHeight 32 u` = 27 px, pleine largeur, créée `:751-763`) : **1,22 → 1,00 → 1,22**, **période 1,100 s**, `ease-in-out`, **infini**, **phase −0,400 s**, `PoseDeReposS = 0,550 s`. Le fond seul : les `TMP_Text` de la ligne ne sont pas touchés (G6) | Quand la brigade est dans le quartier, la ligne bat au même rythme que le cerclage du médaillon et le filet de la barre — parce que c'est la même nouvelle, et qu'elle vient du même gyrophare. | `Alerte` | 1 | `Alerte` + `Teinte` ⇒ **conservé** (design §4 : « la pulsation d'un voyant reste ») | `PROPOSÉ` · **période REUSE** `hud-brennar-canon: pouls` (1,100 s, `Shell/TopBarController.cs:782`) | — |
+| `accueil.descente` | `CurrentHeat.escalated` (`DashboardController.cs:493-494`, la ligne « Descente ») | `Melange` de l'`Image` de fond de `Row_descente` (`RowBg` `#232a2d`, couleur pleine sans sprite, `minHeight 32 u` = 27 px, pleine largeur, créée `:751-763`) : `CouleurA = Cible` (`#232a2d`), `CouleurB = Cible × 1,22` (= `#2b3337`) ; **1 → 0 → 1**, **période 1,100 s**, `ease-in-out`, **infini**, **phase −0,400 s**, `PoseDeReposS = 0,000 s` (`Melange` 1 : la ligne éclairée). Le fond seul : les `TMP_Text` de la ligne ne sont pas touchés (G6) | Quand la brigade est dans le quartier, la ligne bat au même rythme que le cerclage du médaillon et le filet de la barre — parce que c'est la même nouvelle, et qu'elle vient du même gyrophare. | `Alerte` | 1 | figé à `PoseDeReposS` (la ligne éclairée, `#2b3337`) : c'est l'état statique nommé de l'`Alerte` (design §5 : `Alerte` comprise) | `PROPOSÉ` · **période REUSE** `hud-brennar-canon: pouls` (1,100 s, `Shell/TopBarController.cs:782`) | — |
 
 **Pourquoi seulement deux.** J'ai écarté une `Ambiance` sur `FondDeVille` (teinter tout le diorama =
 faire respirer une ville entière : aucune cause) et sur `VoileDeScene` (un voile qui bouge sans source
@@ -336,9 +447,9 @@ tampon, pips, coin ♦. Tout existe réellement : `Shell/DecisionDetailScreenCon
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `decision.distribuee` | ouverture de l'écran avec une carte servie : `EtatSabot == false` (`DecisionDetailScreenController.cs:174`, `:179-184`) | `carteRoot` (`:302-328`) : `TranslationX` **−34 u → 0** (= −28,7 px), `Rotation` **+7,0° → +2,0°** (la rotation de repos, posée `:311`), `Alpha` 0,00 → 1,00. **220 ms**, `cubic-bezier(.2,.8,.3,1)`, une fois. Le point le plus éloigné de la carte parcourt ≈ 34 px | Une carte n'apparaît pas sur le zinc : elle est distribuée — elle glisse de la main vers vous et s'arrête de travers. | `Transition` | 1 | durée 0 | `PROPOSÉ` · l'angle de repos (+2°) est **lu dans le code**, pas choisi (`:82`, `:311`) | — |
-| `decision.cachet` | `BoutonLire.OnLongPressCompleted` (le `LongPressButton` du tampon, `:428-429`) | sur `Tampon/Bord` (`RoundedRectOutline` rouge `#93402c`, trait `Px(2)` = **8,5 u = 7,2 px**, `:412-419`) : `Echelle` 1,00 → 1,06 → 1,00 et `Teinte` 1,00 → 1,35 → 1,00, **180 ms** (`ease-out` puis `ease-in`), une fois | Le tampon s'abat : le caoutchouc écrase l'encre une fraction de seconde, puis se relève — et la mention reste. | `Transition` | 1 | durée 0 | `PROPOSÉ` · précédé de `retour.appui-long` (§II.0.a), qui est le REUSE canon | **Q9** : le geste **referme l'écran**. Il faut ordonner la fermeture APRÈS les 180 ms (non bloquant), sinon la frappe n'est jamais vue et l'entrée doit être **retirée** — une transition qu'on ne voit pas est une dette, pas une animation |
-| `decision.jeton` | `pris == false`, soit `budget.cap_reached` faux (`:198-201`) : la décision de structure du jour est encore libre | `Jeton` (`ProceduralUI.RadialDisc`, `Px(40)` = **170,7 u = 144 px** de laiton, `:356-363`) : `Teinte` **0,88 → 1,00 → 0,88**, **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 2,300 s` | La lampe de bureau du bureau est sur un vieux circuit : son filament bat lentement, et le laiton du jeton est la seule chose de la table qui le rende. | `Alerte` | 1 | `Alerte` + `Teinte` ⇒ **conservé** : tant qu'il reste une décision, on doit le voir même en mouvement réduit | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` (§0.5) | Pourquoi `Alerte` et non `Ambiance` : la cause est la lampe, mais **l'information est de jeu** (il reste une décision aujourd'hui). Un `Ambiance` serait gelé en mouvement réduit et l'information disparaîtrait |
+| `decision.distribuee` | ouverture de l'écran avec une carte servie : `EtatSabot == false` (`DecisionDetailScreenController.cs:174`, `:179-184`) | `carteRoot` = « CarteDuJour » (`:302-328`) : `Rotation` `Additif` **+5,0° → 0** au-dessus du repos de `:311` (repère Unity ; rendu : +7,0° → +2,0°), `Alpha` 0,00 → 1,00. **220 ms**, `cubic-bezier(.2,.8,.3,1)`, une fois. **Pas de `TranslationX`** : « CarteDuJour » est un enfant direct de « TableDeJeu » (`HorizontalLayoutGroup`, `:299-300`), `flexibleWidth = 1` (`:328`), sans `ignoreLayout` — G11 la refuse et la passe de layout l'écraserait | Une carte n'apparaît pas sur le zinc : elle y est jetée — elle arrive en tournant et s'arrête de travers. | `Transition` | 1 | durée 0 | `PROPOSÉ` · l'angle de repos (+2°) est **lu dans le code**, pas choisi (`:82`, `:311`) | — |
+| `decision.cachet` | `BoutonLire.OnLongPressCompleted` (le `LongPressButton` du tampon, `:428-429`) | sur le `Tampon` (son `Image` `tf` : `RoundedRectOutline` rouge `#93402c` teinté `#d9cca9`, `:416-419`) : `Echelle` 1,00 → 1,06 → 1,00 et `Melange` 0 → 1 → 0 (`CouleurA = Cible`, `CouleurB = Cible × 0,75`), **180 ms** (`ease-out` puis `ease-in`), une fois. `Bloquante = false` | Le tampon s'abat : le caoutchouc écrase l'encre une fraction de seconde — elle fonce sous la pression —, puis se relève, et la mention reste. | `Transition` | 1 | durée 0 | `PROPOSÉ` · précédé de `retour.appui-long` (§II.0.a), qui est le REUSE canon | **Q9** : le geste **referme l'écran**. Il faut ordonner la fermeture APRÈS les 180 ms (non bloquant), sinon la frappe n'est jamais vue et l'entrée doit être **retirée** — une transition qu'on ne voit pas est une dette, pas une animation |
+| `decision.jeton` | `pris == false`, soit `budget.cap_reached` faux (`:198-201`) : la décision de structure du jour est encore libre | `Jeton` (`ProceduralUI.RadialDisc` `#f2d9a0` → `#7a5a14` cuit dans le sprite, `Image.color` blanc, `Px(40)` = **170,7 u = 144 px**, `:356-363`) : `Melange` **1 → 0 → 1** (`CouleurA = Cible` = blanc, `CouleurB = Cible × 0,88`), **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 0,000 s` (`Melange` 1 : le laiton au creux du filament). Un `Graphic` blanc ne peut pas dépasser sa couleur : la lampe se lit en assombrissant le creux, jamais en éclaircissant la crête | La lampe de bureau du bureau est sur un vieux circuit : son filament bat lentement, et le laiton du jeton est la seule chose de la table qui le rende. | `Alerte` | 1 | figé à `PoseDeReposS` (design §5 : `Alerte` comprise). L'information de jeu ne dépend pas du battement : le jeton et son « 1 » restent affichés, c'est l'état statique nommé | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` (§0.5) | Pourquoi `Alerte` et non `Ambiance` : la cause est la lampe, mais **l'information est de jeu** (il reste une décision aujourd'hui) ; le battement s'arrête quand elle est prise (`Detacher`). Sous `Reduit` les deux genres gèlent (§5) : l'information tient au jeton lui-même |
 
 ---
 
@@ -357,8 +468,8 @@ Recrutement aussi (`front.md:1441` → `:117`, `:173`).
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `famille.lampe-du-don` | en continu, tant que la rangée du Don est montée | `Halo` (le voile radial d'or du Don, **225 × 225 u = 190 × 190 px**) : `Alpha` **0,82 → 1,00 → 0,82** sur un `CanvasGroup` posé dessus, **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 2,300 s` | Le Don reçoit sous une lampe de bureau ; son halo est la lumière de cette lampe, et un vieux filament ne tient pas une intensité fixe. | `Ambiance` | 1 | figé à `PoseDeReposS` (α 1,00) | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` | ⚠️ L'hôte est **sous le `RectMask2D`** du défilement (`:1331`) : canal `Alpha` par `CanvasGroup`, donc hors du plafond de 6 pistes de transformation, mais le **coût** de `CanvasGroup.alpha` sous un masque est l'objet du **spike E0** (design §3) |
-| `famille.rang-ouvre` | tap sur une rangée de lieutenant → `OpenLieutenant(id)` (`:2733`) ; aujourd'hui `MajVisibiliteDetail` pose `CanvasGroup.alpha = 0 ou 1` **en une affectation** (`:1849`, `:1860`) | le **même** `CanvasGroup` : `Alpha` 0,00 → 1,00, **160 ms**, `ease-out`, une fois | On ouvre la chemise d'un homme : les pages ne sautent pas sous la main, elles viennent. | `Transition` | 1 | durée 0 (= le comportement d'aujourd'hui, à l'identique) | `REUSE canon screen_3:451` (« transitions arbre + `SplitFlapReadout` ≤ 250 ms ») · **l'hôte existe déjà** (`:1847-1848`) : zéro objet neuf | — |
+| `famille.lampe-du-don` | en continu, tant que la rangée du Don est montée | `Halo` (le voile radial d'or du Don, `VoileRadial` à **α 0,14**, `LieutenantScreenController.cs:2381-2383`, **225 × 225 u = 190 × 190 px**) : `Alpha` `Multiplicatif` **0,82 → 1,00 → 0,82** sur un `CanvasGroup` posé dessus, **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 0,000 s` | Le Don reçoit sous une lampe de bureau ; son halo est la lumière de cette lampe, et un vieux filament ne tient pas une intensité fixe. | `Ambiance` | 1 | figé à `PoseDeReposS` (facteur 0,82) | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` | ⚠️ **Δ rendu faible, à MESURER** : 0,18 × 0,14 ≈ 0,025 au centre du voile (≈ 6/255), moins vers le bord. G13 (≥ 3/255) passe au centre ; la planche E4 le mesure, et sous 3/255 l'entrée est **retirée** comme le liseré de ㉓ (§0.3). Hôte **sous le `RectMask2D`** (`:1331`) : coût suspendu à E0 (design §4) |
+| `famille.rang-ouvre` | tap sur une rangée de lieutenant → `OpenLieutenant(id)` (`:2733`) ; aujourd'hui `MajVisibiliteDetail` pose `CanvasGroup.alpha = 0 ou 1` **en une affectation** (`:1849`, `:1860`) | le **même** `CanvasGroup` : `Transitionner` `Alpha` **de 0,00 vers 1,00** (le propriétaire pose 1 en une affectation, `:1849`, `:1860`), **160 ms**, `ease-out`, une fois | On ouvre la chemise d'un homme : les pages ne sautent pas sous la main, elles viennent. | `Transition` | 1 | durée 0 (= le comportement d'aujourd'hui, à l'identique) | `REUSE canon screen_3:451` (« transitions arbre + `SplitFlapReadout` ≤ 250 ms ») · **l'hôte existe déjà** (`:1847-1848`) : zéro objet neuf | — |
 
 **Écarté** : une `Alerte` sur `EstCuisinierAuRepos` (`:2742-2743` — un cuisinier à vous ne fait rien,
 c'est une vraie information de jeu). Son seul hôte possible est l'encart d'équipe en pointillé, trait
@@ -384,7 +495,7 @@ Porte aussi : `comptoir.lampe`, `comptoir.bouteilles` (§II.0.c).
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `revue.jeton-rendu` | `verdict.token_returned` (`DailyReviewScreenController.cs:662`) ; aujourd'hui `Jeton.localRotation = +12°` (`:667`) et `Bulle.alpha = 0,72` (`:658`) sont posés **d'un coup** | `Jeton` : `Rotation` **0° → +12,0°**, **220 ms**, `ease-out` (le bord du disque de 122 px parcourt **12,7 px**) · `Bulle` (`CanvasGroup`, `:443`) : `Alpha` 1,00 → 0,72, **200 ms**, `ease-out`. Une fois | On rend le jeton : il est poussé sur le zinc et s'arrête de travers, et le billet de l'homme n'a plus besoin d'être lu. | `Transition` | 2 | durée 0 (= le comportement d'aujourd'hui) | `REUSE canon screen_11:255` (« card passe à l'état `VALIDATED`, animation flip-out ») · les deux valeurs d'arrivée sont **déjà dans le code** | ⚠️ Le canon se contredit sur le mot : `screen_11:255` et `:396` disent **flip**, `screen_11:280` dit **slide-out**. Je propose la rotation, qui est celle que le code pose déjà |
+| `revue.jeton-rendu` | `verdict.token_returned` (`DailyReviewScreenController.cs:662`) ; aujourd'hui `Jeton.localRotation = +12°` (`:667`) et `Bulle.alpha = 0,72` (`:658`) sont posés **d'un coup** | **`revue.jeton-rendu/jeton`** — `Jeton` : `Transitionner` `Rotation` **de 0° vers +12,0°** (repère Unity : le code pose `+12°` à `:667`, son commentaire le dit « `rotate(-12deg)` en CSS »), **220 ms**, `ease-out` (le bord du disque de 122 px parcourt **12,7 px**) · **`revue.jeton-rendu/bulle`** — `Bulle` (`CanvasGroup` existant, `:443`) : `Transitionner` `Alpha` **de 1,00 vers 0,72** (la valeur que le code pose à `:658`), **200 ms**, `ease-out`. Une fois | On rend le jeton : il est poussé sur le zinc et s'arrête de travers, et le billet de l'homme n'a plus besoin d'être lu. | `Transition` | 2 | durée 0 (= le comportement d'aujourd'hui) | `REUSE canon screen_11:255` (« card passe à l'état `VALIDATED`, animation flip-out ») · les deux valeurs d'arrivée sont **déjà dans le code** | ⚠️ Le canon se contredit sur le mot : `screen_11:255` et `:396` disent **flip**, `screen_11:280` dit **slide-out**. Je propose la rotation, qui est celle que le code pose déjà |
 | `revue.cachet` | `TamponSigne` / `lotSigne > 0` (`:722`) ; aujourd'hui `tamponCachet.SetActive(true)` (`:735`) | `Cachet` (papier `#efe4c6cc` incliné de **+14°**, `:1286-1311`) : `Echelle` **1,14 → 1,00** en **160 ms** `ease-out`, et `Alpha` 0,00 → 1,00 en **120 ms** `ease-out`. Une fois | Le cachet est abattu d'un coup sec : il arrive plus large que sa marque, puis la marque reste. | `Transition` | 1 | durée 0 | `PROPOSÉ` · précédé de `retour.appui-long` sur `BatchConfirmButton` (`:1276`) | — |
 
 **Pourquoi pas plus.** Les 7 bouteilles et le filet du plateau sont déjà pris par les deux entrées
@@ -413,8 +524,8 @@ Porte aussi : `comptoir.lampe`, `comptoir.bouteilles` (§II.0.c).
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `file.cachet` | `ApresPresent` devient vrai (`:425`, posé par `trancheeIssue`/`garderTranchee` `:418-420`, bloc activé `:508`) | `Cachet` (conteneur incliné de **+8°**, qui **déborde** du verre, `:477-495`) : `Echelle` **1,12 → 1,00** en **160 ms** `ease-out`, `Alpha` 0,00 → 1,00 en **120 ms** `ease-out`. Une fois | La carte tranchée reçoit son cachet : on l'abat de travers sur le verre, et il reste là jusqu'à demain. | `Transition` | 1 | durée 0 | `PROPOSÉ` — le canon le réclamait sans le dessiner (`front.md:1512` : « `outcome` **cacheté** — Q3 du juge, **jamais dessiné** ») ; il **est** dessiné aujourd'hui, il n'est simplement pas abattu | — |
-| `file.part` | un attendant devient `parti` (`:596`, `:610` : `CanvasGroup.alpha = 0,28`) | `CanvasGroup` de l'attendant : `Alpha` 1,00 → 0,28 et `TranslationY` **0 → −9 u** (= −7,6 px), **200 ms**, `ease-out`, une fois | L'homme qu'on vient de renvoyer s'écarte du comptoir : il recule d'un pas et s'efface dans l'ombre — il ne disparaît pas. | `Transition` | 1 | durée 0 (= le comportement d'aujourd'hui) | `REUSE canon screen_5:340` (« row disparaît, **fade out** `T.ui.anim_max_block_ms` ») · l'alpha d'arrivée (0,28) est **déjà dans le code** | — |
+| `file.cachet` | `ApresPresent` devient vrai (`:425`, posé par `trancheeIssue`/`garderTranchee`, champs déclarés `:418-420`, bloc activé `:517` `apresBloc.SetActive(montre)`) | `Cachet` (conteneur incliné de **+8°**, qui **déborde** du verre, `:477-495`) : `Echelle` **1,12 → 1,00** en **160 ms** `ease-out`, `Alpha` 0,00 → 1,00 en **120 ms** `ease-out`. Une fois | La carte tranchée reçoit son cachet : on l'abat de travers sur le verre, et il reste là jusqu'à demain. | `Transition` | 1 | durée 0 | `PROPOSÉ` — le canon le réclamait sans le dessiner (`front.md:1512` : « `outcome` **cacheté** — Q3 du juge, **jamais dessiné** ») ; il **est** dessiné aujourd'hui, il n'est simplement pas abattu | — |
+| `file.part` | un attendant devient `parti` (`:596`, `:610` : `CanvasGroup.alpha = 0,28`) | `CanvasGroup` de l'attendant : `Transitionner` `Alpha` **de 1,00 vers 0,28** (la valeur que le code pose, `:610`), **200 ms**, `ease-out`, une fois. **Pas de translation** : l'attendant est un enfant de `fileRoot` (`HorizontalLayoutGroup`, `ExceptionQueueController.cs:1149`) dont le `LayoutElement` n'a pas `ignoreLayout` (`:618`, `:1420-1430`) — G11 | L'homme qu'on vient de renvoyer s'écarte du comptoir et s'efface dans l'ombre — il ne disparaît pas. | `Transition` | 1 | durée 0 (= le comportement d'aujourd'hui) | `REUSE canon screen_5:340` (« row disparaît, **fade out** `T.ui.anim_max_block_ms` ») · l'alpha d'arrivée (0,28) est **déjà dans le code** | — |
 
 ⚠️ **Chemin mort relevé au passage** (pas une animation, mais il mord le même code) : `headerText`
 (`:46`) et `rowsArea` (`:47`) ne sont jamais assignés, et `RenderError()` les déréférence (`:1038-1039`).
@@ -438,8 +549,8 @@ Porte aussi : `comptoir.lampe` (§II.0.c — pas `comptoir.bouteilles`, voir sa 
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `main.distribuee` | ouverture de l'écran, la main est servie (`:365-373`, `:380-385`) | les 3 `Face` : `TranslationY` **+48 u → repos** (= +40,5 px), `Rotation` **−14,0° → repos** (−5° / 0° / +5°), `Alpha` 0,00 → 1,00. **150 ms** chacune, `ease-out`, une fois, **décalées de 0 / 45 / 90 ms** ⇒ la dernière finit à **240 ms** | On distribue une main : les trois cartes arrivent l'une après l'autre et s'arrêtent en éventail, chacune à son angle. | `Transition` | 3 | durée 0 | `PROPOSÉ` · les 3 angles et les 3 levées de repos sont **lus dans le code** (`:380-385`) | 240 ms au total, **non bloquant** : le décalage est une suite de 3 pistes de 150 ms, pas une animation de 240 ms. Si f2 préfère la lecture stricte de G8, supprimer le décalage (les 3 cartes arrivent ensemble) coûte la fiction du « distribué » |
-| `main.levee` | le joueur choisit une autre carte (`selection`, `:70`, `:569-574`) : celle qui était levée redescend, la nouvelle monte | `TranslationY` **±34 u** (= ±28,8 px ; `Px(8)` = `CssCarteLeve`, `:319`, `:384`), **180 ms**, `ease-out`, une fois, sur les deux cartes concernées | On ne choisit pas une carte en la montrant du doigt : on la sort du rang — elle monte, et celle qu'on laisse retombe. | `Transition` | 2 | durée 0 | `PROPOSÉ` · la levée de repos est **dans le code** (`:384`) | — |
+| `main.distribuee` | ouverture de l'écran, la main est servie (`:365-373`, `:380-385`) | les 3 `Face` : `TranslationY` `Additif` **+48 u → 0** (repère Unity : la carte arrive d'au-dessus, du côté du donneur ; = 40,5 px), `Rotation` `Additif` **+9,0° → 0** autour du repos de chaque carte — repos en repère **Unity : +5° ♠ / 0° ♦ / −5° ♣** (`:532` applique `Euler(0,0,-rotationCss)` aux `rotationCss` −5 / 0 / +5 de `:381-385`) —, `Alpha` 0,00 → 1,00. **150 ms** chacune, `ease-out`, une fois, **décalées de 0 / 45 / 90 ms** (`Reglage.PhaseS` = 0 / +0,045 / +0,090 s, l'équivalent d'un `animation-delay` positif ; pendant le délai la carte tient sa première image clé, α 0) ⇒ la dernière finit à **240 ms**. `Bloquante = false` | On distribue une main : les trois cartes arrivent l'une après l'autre et s'arrêtent en éventail, chacune à son angle. | `Transition` | 3 | durée 0 | `PROPOSÉ` · les 3 angles et les 3 levées de repos sont **lus dans le code** (`:381-385`, appliqués `:532`) | 240 ms au total, **non bloquant** : le décalage est une suite de 3 pistes de 150 ms, pas une animation de 240 ms. Si f2 préfère la lecture stricte de G8, supprimer le décalage (les 3 cartes arrivent ensemble) coûte la fiction du « distribué » |
+| `main.levee` | le joueur choisit une autre carte (`selection`, `:70`, `:569-574`) : celle qui était levée redescend, la nouvelle monte | `TranslationY` `Additif` **∓34 u → 0** (= 28,8 px ; `Px(8)` = `CssCarteLeve`, `:315`, appliqué `:383`) : le contrôleur pose la levée d'arrivée, la piste part de l'ancienne — la carte qui monte part de 34 u plus bas, celle qui retombe de 34 u plus haut (signe par `Reglage.KDepl = ±1`). **180 ms**, `ease-out`, une fois, sur les deux cartes concernées | On ne choisit pas une carte en la montrant du doigt : on la sort du rang — elle monte, et celle qu'on laisse retombe. | `Transition` | 2 | durée 0 | `PROPOSÉ` · la levée de repos est **dans le code** (`:383`) | — |
 
 ---
 
@@ -456,8 +567,8 @@ de `Px(13)` = **55,5 u = 47 px**, or si libre, `Eteint` si dépensé (`:231-239`
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `semaine.jeton-depense` | une décision est confirmée (`Decider`, `:322-335`) : un jeton passe de `Libre` (or) à `Depense` (`Eteint`, blanc α 0,18) | sur le jeton concerné (**47 px** de diamètre) : `Teinte` 1,00 → 0,42 en **200 ms** `ease-in`, `Echelle` 1,00 → 0,94 en **200 ms** `ease-out`. Une fois | Un jeton dépensé n'est pas effacé : on le retourne sur le tapis, il perd son or et s'enfonce d'un cheveu. | `Transition` | 1 | durée 0 — et le canon le demande explicitement (`screen_13:372` : « mouvement réduit = valeur statique ») | `REUSE canon screen_13:281` (« `ProblemCardWidget` … animation flip-out, `DecisionBudgetReadout` décrémente ») et `screen_13:372` (« ≤ 250 ms, **interruptible** ») | — |
-| `semaine.aiguille` | `stress_bucket` change entre deux chargements (`:202-203` : `tendu` = `crushing` ou `compression_active`) | `Rotation` de l'aiguille, de l'angle de l'ancienne bande à celui de la nouvelle, **700 ms**, `ease-in-out`, une fois | Une aiguille ne saute pas d'une graduation à l'autre : elle balaie, et c'est le balayage qui dit que la ville a serré d'un cran. | `Transition` | 1 | durée 0 | **`hud-brennar-canon: aiguille`** = la paire d'inventaire **B10** (`inventaire-animations.md:62` : « transition `transform .7s` (aiguille) — l'aiguille du manomètre balaie jusqu'à sa nouvelle bande »), **absente côté client** | ⛔ **HÔTE À DESSINER** ⇒ demande **A2**. **Q2** : 700 ms > 250 ms, mais c'est la durée **mesurée de la maquette** et X7 exige la fidélité au moteur CSS réel ; elle ne bloque rien. Trancher entre fidélité (700 ms) et plafond (250 ms) |
+| `semaine.jeton-depense` | une décision est confirmée (`Decider`, `:322-335`) : un jeton passe de `Libre` (or) à `Depense` (`Eteint`, blanc α 0,18) | sur le jeton concerné (**47 px** de diamètre ; sa couleur `Libre` → `Depense` est **cuite dans le sprite** par le contrôleur, `:233-236`, et change d'un coup) : `Echelle` **1,00 → 0,94 → 1,00**, **200 ms** (`ease-in` puis `ease-out`), une fois | Un jeton dépensé n'est pas effacé : on le retourne sur le tapis — il perd son or d'un coup — et il s'enfonce d'un cheveu sous le doigt. | `Transition` | 1 | durée 0 — et le canon le demande explicitement (`screen_13:372` : « mouvement réduit = valeur statique ») | `REUSE canon screen_13:281` (« `ProblemCardWidget` … animation flip-out, `DecisionBudgetReadout` décrémente ») et `screen_13:372` (« ≤ 250 ms, **interruptible** ») | — |
+| `semaine.aiguille` | `stress_bucket` change entre deux chargements (`:202-203` : `tendu` = `crushing` ou `compression_active`) | `Rotation` de l'aiguille, de l'angle de l'ancienne bande à celui de la nouvelle, **700 ms**, `ease-in-out`, une fois | Une aiguille ne saute pas d'une graduation à l'autre : elle balaie, et c'est le balayage qui dit que la ville a serré d'un cran. | `Transition` | 1 | durée 0 | **`ecrans-brennar-6` : B11** = l'aiguille du cadran TENSION de ⑭ (`inventaire-animations.md:58` : transition `transform .7s`, 6 cadres 14-19, `transitions-brennar-6.json`), **absente côté client** : `SansHote:⑭ cadran absent` (design §7) jusqu'à E4. (B10, l'aiguille du HUD, est `chrome.aiguille.balayage`, design §9 — pas cette entrée) | ⛔ **HÔTE À CONSTRUIRE (client, E4)** : le cadran TENSION de ⑭ est dessiné par l'atelier (cadres 14-19, A2 faite côté atelier) mais le client rend `stress_bucket` en texte. 700 ms > 250 ms : **non bloquant** (`Bloquante = false`, G8 ; Q2 résolue) — c'est la durée mesurée de la maquette |
 
 ---
 
@@ -476,7 +587,7 @@ teinté `Braise` si tendu, `:310-322`). Les « barres de présence » des origin
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `police.dispatch` | `tendu` (`dispatcher_regime == "SURGE"` ou `"BACKLOGGED"`, `:308`) — le répartiteur du secteur déborde | le glyphe `Regime` de chaque ligne tendue (**32 × 32 px**) : `Teinte` **1,28 → 1,00 → 1,28**, **période 1,600 s**, `ease-in-out`, **infini**, **phase −0,600 s**, `PoseDeReposS = 0,800 s`. **Même phase pour toutes les lignes** : c'est le même tableau | Un tableau de dispatch est une console de répartition (voyants LED) : quand un secteur déborde, son voyant n'est pas allumé fixe — il bat, et c'est comme ça qu'un répartiteur le repère d'un coup d'œil. | `Alerte` | **6** | `Alerte` + `Teinte` ⇒ **conservé** (G5 : 1,6 s ≥ 0,4 s, soit 1,25 variation/s) | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-veille` (la veille des voyants : `filter:brightness(1 → 1.35)`, **3 200 ms** mesurés, `generateur-marche.py:116`, `inventaire-animations.md:33`) — **période raccourcie à 1,6 s** et c'est un écart assumé : un voyant de dispatch qui déborde bat plus vite qu'un voyant de veille | Budget plafonné à **6** voyants, dans l'ordre de la liste : c'est le compte réel mesuré par la fiction (`front.md:1768` : « `belief` **mesuré HUNTING ×6 dès le J1** »). Au-delà, la régie refuse (design §3) : **pas de voyant**, jamais un voyant à moitié |
+| `police.dispatch` | `tendu` (`dispatcher_regime == "SURGE"` ou `"BACKLOGGED"`, `:308`) — le répartiteur du secteur déborde | le glyphe `Regime` de chaque ligne tendue (**32 × 32 px**, `gl.color = Braise` = `hudGaugeArcHot`, `InspectionScreenController.cs:318`) : `Melange` **0 → 1 → 0** (`CouleurA = Cible`, `CouleurB = Cible × 1,35`, borné à 1 par canal), **période 1,600 s**, `ease-in-out`, **infini**, **phase −0,600 s**, `PoseDeReposS = 0,800 s` (le pic). **Même phase pour toutes les lignes** : c'est le même tableau | Un tableau de dispatch est une console de répartition (voyants LED) : quand un secteur déborde, son voyant n'est pas allumé fixe — il bat, et c'est comme ça qu'un répartiteur le repère d'un coup d'œil. | `Alerte` | **6** | figé à `PoseDeReposS` (le voyant à son pic) : état statique nommé de l'`Alerte` (design §5). G5 : 1,6 s ≥ 0,667 s | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-veille` (`brightness` **1,0 → 1,35 (p = 0,5) → 1,0**, mesuré dans `oracle-css-ecrans-brennar-6.json`, 3 200 ms, `inventaire-animations.md:33`) — **même ordre d'extrema** (pic à mi-période) ; **période raccourcie à 1,6 s**, écart assumé : un voyant de dispatch qui déborde bat plus vite qu'un voyant de veille | Budget plafonné à **6** voyants, dans l'ordre de la liste : c'est le compte réel mesuré par la fiction (`front.md:1768` : « `belief` **mesuré HUNTING ×6 dès le J1** »). Au-delà, la régie refuse (quota du design §4) : **pas de voyant**, jamais un voyant à moitié |
 | `police.baton` | `baton` = `DernierRapport.backlash_triggered` (`:263`) | `batonTexte` (`TMP_Text`, `Px(9)` = **38 u = 32 px**, `Braise`, `:433-436`) : `Alpha` 0,00 → 1,00, **200 ms**, `ease-out`, une fois. **`Alpha` seul** (G6) | C'est une ligne qu'on vient d'ajouter au registre : l'encre paraît sous le stylo, elle n'était pas là avant le geste. | `Transition` | 1 | durée 0 | `PROPOSÉ` | — |
 
 ---
@@ -495,7 +606,7 @@ Les crans, en revanche, sont de vrais objets : `C0..C3`, `RoundedRectOutline` de
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `commissariat.crans` | `CroyanceRang` ou `PatrouilleRang` monte entre deux chargements (`:271-272`, `:278-279`) | le cran qui vient de s'allumer (**101 × 21,6 px**) : `Alpha` 0,00 → 1,00 et `Teinte` **1,45 → 1,00**, **200 ms**, `ease-out`, une fois | Ce que la police croit vient de monter d'un cran : sur le tableau, c'est une encoche de plus qui prend la couleur, et elle la prend au moment où le greffier la marque. | `Transition` | 1 | durée 0 | `PROPOSÉ` | — |
+| `commissariat.crans` | `CroyanceRang` ou `PatrouilleRang` monte entre deux chargements (`:271-272`, `:278-279`) | le cran qui vient de s'allumer (**101 × 21,6 px**, `im.color` = la teinte du rang, `PrecinctScreenController.cs:239`) : `Alpha` 0,00 → 1,00 et `Melange` **1 → 0** (`CouleurA = Cible`, `CouleurB = Cible × 1,45`, borné à 1 par canal), **200 ms**, `ease-out`, une fois | Ce que la police croit vient de monter d'un cran : sur le tableau, c'est une encoche de plus qui prend la couleur, et elle la prend au moment où le greffier la marque. | `Transition` | 1 | durée 0 | `PROPOSÉ` | — |
 
 **Une seule entrée, et c'est une décision.** ⑰ est une lecture de deux états : pas de lampe, pas de
 device, 9 textes (`front.md:1783`). Le seul moment où quelque chose **se passe** est l'escalade, et
@@ -569,7 +680,7 @@ nombre ». Je ne l'anime pas (contrainte 2 de §I.2) et je ne le corrige pas : c
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `vitrine.acquis` | un achat aboutit : `Acheter()` → `Charger(token)` (`:327-335`, `:334`) ; au rendu suivant, `possede` est vrai pour ce `sku_id` (`:195`) | sur l'article acheté : `Objet` (le disque de laiton, **40 px**) `Echelle` **0,90 → 1,00**, **180 ms**, `ease-out` · `Possede` (le `TMP_Text` « ACQUIS », `:241`) `Alpha` 0,00 → 1,00, **160 ms**, `ease-out`. **`Alpha` seul sur le texte** (G6). Une fois | L'article passe de la vitrine à votre poche : le commis le sort, le pose devant vous et retourne l'étiquette. | `Transition` | 2 | durée 0 | `PROPOSÉ` | ⚠️ `Rendre()` **détruit tous ses enfants** à chaque appel (`:171-172`) : la transition s'attache au rendu **qui suit** l'achat, et le contrôleur sait quel `sku_id` a été acheté. C'est la règle générale de ce catalogue (§VI.2) |
+| `vitrine.acquis` | un achat aboutit : `Acheter()` → `Charger(token)` (`:327-335`, `:334`) ; au rendu suivant, `possede` est vrai pour ce `sku_id` (`:195`) | sur l'article acheté : **`vitrine.acquis/objet`** — `Objet` (le disque de laiton, **40 px**) `Echelle` `Multiplicatif` **0,90 → 1,00**, **180 ms**, `ease-out` · **`vitrine.acquis/possede`** — `Possede` (le `TMP_Text` « ACQUIS », `:241`) `Alpha` 0,00 → 1,00, **160 ms**, `ease-out`. **`Alpha` seul sur le texte** (G6). Une fois | L'article passe de la vitrine à votre poche : le commis le sort, le pose devant vous et retourne l'étiquette. | `Transition` | 2 | durée 0 | `PROPOSÉ` | ⚠️ `Rendre()` **détruit tous ses enfants** à chaque appel (`:171-172`) : la transition s'attache au rendu **qui suit** l'achat, et le contrôleur sait quel `sku_id` a été acheté. C'est la règle générale de ce catalogue (§VI.2) |
 | `vitrine.reflet` | en continu | une bande de lumière oblique de **60 u de large** (≈ 51 px) traverse le comptoir : `TranslationX` **−60 u → 1 256 u**, **période 11,000 s**, `linear`, **infini**, **phase −4,200 s**, `PoseDeReposS = 3,700 s`. Bornée par une fenêtre de découpe à dessiner | Une vitre de comptoir prend la lumière de la rue : un phare passe dehors, et le reflet traverse le verre d'un bout à l'autre. | `Ambiance` | 1 | figé à `PoseDeReposS` (le reflet arrêté au tiers de sa course — visible sur une PNG) | `PROPOSÉ` | ⛔ **HÔTE À DESSINER** ⇒ demande **A3** : la vitre, la bande de reflet, et sa fenêtre de découpe. **Tant que l'hôte n'existe pas, ㉓ n'a qu'une entrée** (`vitrine.acquis`), et il faut le dire plutôt que de compter une ligne qui ne tourne pas |
 
 ---
@@ -595,8 +706,8 @@ En revanche l'état de jeu y est le plus riche du périmètre : `issue.decided` 
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `autonomie.appel` | le rapport **le plus vieux** par `backlog_age_cycles` (`AutonomyDtos.cs:26`), tant qu'au moins une de ses questions n'est pas décidée (`issue.decided` vide, `:316`) | son `ReportHeader` (`TMP_Text`, fontSize **24 u = 20 px**, `Bold`, `:285-289`) : `Alpha` **1,00 → 0,62 → 1,00**, **période 1,600 s**, `ease-in-out`, **infini**, **phase −0,600 s**, `PoseDeReposS = 0,800 s`. **`Alpha` seul** (G6) | Un bippeur ne dit pas une seule fois qu'un message attend : il répète son appel tant que personne n'a répondu, et c'est le plus vieux des rapports qu'il répète. | `Alerte` | 1 | `Alerte` + `Alpha` ⇒ **conservé** (G5 : 1,6 s = 1,25 variation/s) | `PROPOSÉ` | **Q8** : quel âge compte comme « qui traîne » ? Ma recommandation : **le plus vieux seulement, quel que soit son âge** — une console de répartition n'allume pas douze voyants à la fois, et `backlog_age_cycles` n'a pas de seuil servi |
-| `autonomie.reponse` | `Resolve` aboutit (`:192-215`) : `issue.decided` devient non vide | les deux blocs `Option_A`/`Option_B` (`:339-345`) : `Alpha` 1,00 → 0,00 en **120 ms** `ease-in` · puis `Decided` (« ✓ Décidé », `:319-322`) : `Alpha` 0,00 → 1,00 en **120 ms** `ease-out`. Total **240 ms**, une fois | On tape le chiffre sur le clavier : l'afficheur efface les deux choix et ne garde que la réponse — un bippeur n'affiche qu'une ligne à la fois. | `Transition` | 2 | durée 0 | `PROPOSÉ` | ⚠️ `ClearRows()` détruit tout (`:463-469`) : s'attache au rendu **qui suit** la réponse (§VI.2) |
+| `autonomie.appel` | le rapport **le plus vieux** par `backlog_age_cycles` (`AutonomyDtos.cs:26`), tant qu'au moins une de ses questions n'est pas décidée (`issue.decided` vide, `:316`) | son `ReportHeader` (`TMP_Text`, fontSize **24 u = 20 px**, `Bold`, `:285-289`) : `Alpha` **1,00 → 0,62 → 1,00**, **période 1,600 s**, `ease-in-out`, **infini**, **phase −0,600 s**, `PoseDeReposS = 0,800 s`. **`Alpha` seul** (G6) | Un bippeur ne dit pas une seule fois qu'un message attend : il répète son appel tant que personne n'a répondu, et c'est le plus vieux des rapports qu'il répète. | `Alerte` | 1 | figé à `PoseDeReposS` (α 0,62 : l'en-tête du plus vieux rapport en demi-teinte), design §5 : `Alerte` comprise. G5 : 1,6 s ≥ 0,667 s | `PROPOSÉ` | **Q8** : quel âge compte comme « qui traîne » ? Ma recommandation : **le plus vieux seulement, quel que soit son âge** — une console de répartition n'allume pas douze voyants à la fois, et `backlog_age_cycles` n'a pas de seuil servi |
+| `autonomie.reponse` | `Resolve` aboutit (`:192-215`) : `issue.decided` devient non vide | `Decided` (« ✓ Décidé », `TMP_Text`, `AutonomyInboxController.cs:319-322`) : `Alpha` 0,00 → 1,00, **160 ms**, `ease-out`, une fois, au rendu qui suit la réponse. **Les deux blocs `Option_A`/`Option_B` ne s'effacent pas en fondu** : une question décidée est rebâtie SANS eux (`ClearRows()` `:463-469`, puis `return` avant `AddOptionBlock`, `:316-323`) — il n'y a rien à faire disparaître. `Alpha` seul (G6) | On tape le chiffre sur le clavier : l'afficheur efface les choix d'un coup et imprime la réponse — un bippeur n'affiche qu'une ligne à la fois. | `Transition` | 1 | durée 0 | `PROPOSÉ` | ⚠️ `ClearRows()` détruit tout (`:463-469`) : s'attache au rendu **qui suit** la réponse (§VI.2). v1 animait aussi la sortie des options : impossible, elles n'existent plus au rendu suivant |
 
 ---
 
@@ -637,7 +748,7 @@ d'épingle rouge `#c4413a` de `Px(4,5)` à l'origine (`:1430`). Couleurs **mesur
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `distribution.ficelle-tendue` | `enTransit` devient vrai (un courrier `IN_TRANSIT`, `:394`, `:399`), puis `arrivee` (`transit_band == "ARRIVED"`, `:400`) | l'**amplitude** de l'onde de la ficelle : `Px(6)` → `Px(2)` (= 25,6 u → 8,5 u, soit un ventre qui passe de **21,6 px à 7,2 px**) au départ, et l'inverse à l'arrivée. **240 ms**, `ease-out`, une fois | Quand le chargement part, la ficelle se tend : le mou se résorbe entre les deux punaises, et il revient quand il est arrivé. | `Transition` | 1 | durée 0 | `PROPOSÉ` | ⛔ **DIFFÉRÉ, et c'est un trou du design, pas une préférence** : l'enum `Propriete` (design §1) n'a **aucun puits** pour un paramètre de graphe sur mesure. `Alpha`, `Teinte`, `Remplissage` et les canaux de `RectTransform` ne touchent pas `DefinirTrace(amplitude:)`. ⇒ **Q3**. Sans Q3, cette entrée **sort du catalogue** |
+| `distribution.ficelle-tendue` | `enTransit` devient vrai (un courrier `IN_TRANSIT`, `:394`, `:399`), puis `arrivee` (`transit_band == "ARRIVED"`, `:400`) | `Parametre`, canal 0 = l'**amplitude** de l'onde de la ficelle, `Absolu` : `Px(6)` → `Px(2)` (= 25,6 u → 8,5 u, soit un ventre qui passe de **21,6 px à 7,2 px**) au départ, et l'inverse à l'arrivée, par `Transitionner(de, vers)`. **240 ms**, `ease-out`, une fois. Puits : `DistributionFicelleGraphic` (`:1340`) implémente `IParametreAnime.PoserParametre(0, v)` et relaie à `DefinirTrace(amplitude: v)` (`:518-523`) — design §2, « la ficelle de ㉘ » | Quand le chargement part, la ficelle se tend : le mou se résorbe entre les deux punaises, et il revient quand il est arrivé. | `Transition` | 1 | durée 0 | `PROPOSÉ` | Hôte : `DistributionFicelleGraphic` **existe** ; il lui manque l'implémentation d'`IParametreAnime` (une méthode, lot E4). Câblable |
 | `distribution.photo` | en continu, quand un coursier s'est fait prendre | la photo punaisée par un seul coin : `Rotation` **−2,5° → +2,5° → −2,5°** autour de la punaise, **période 7,400 s**, `ease-in-out`, **infini**, **phase −2,600 s**, `PoseDeReposS = 3,700 s`. Sur une photo de `Px(30)` = 128 u de haut, le coin libre parcourt **5,6 u = 4,7 px** | Une photo punaisée par un seul coin n'est jamais immobile : le courant d'air du hangar la fait battre contre le liège. | `Ambiance` | 1 | figé à `PoseDeReposS` (la photo arrêtée en bout de course, pas à plat) | `PROPOSÉ` | ⛔ **HÔTE À DESSINER** ⇒ demande **A4**. La fiction la réclame nommément : `front.md:1249`, « **Le cadre qui vaut l'écran : un coursier s'est fait prendre. Sa photo est punaisée, la ficelle pend derrière.** » Elle n'existe pas dans le code |
 
 **Écarté par le plancher de perceptibilité** (§0.3) : le balancement des deux brins d'une ficelle
@@ -667,7 +778,7 @@ blanc à α 0,06 (`:526-533`), un bouton or (`:582-593`).
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `appro.commande-partie` | `enCours` = `dto.has_pending_order` devient vrai (`:382`) : la 5ᵉ ligne `la_commande` apparaît sur le bon (`:466`) | ses deux `TMP_Text` `Libelle` et `Valeur` (`:498`, `:504`) : `Alpha` 0,00 → 1,00, **200 ms**, `cubic-bezier(.3,.7,.2,1)`, une fois. **`Alpha` seul** (G6) | La ligne de commande est portée au bon à la main : l'encre paraît sur le papier pelure au moment où on l'écrit. | `Transition` | 1 | durée 0 | `PROPOSÉ` | — |
+| `appro.commande-partie` | `enCours` = `dto.has_pending_order` devient vrai (`:382`) : la 5ᵉ ligne `la_commande` apparaît sur le bon (`:466`) | la rangée `Ligne_la_commande` (`ConstruireLigne`, `:490-506` : un conteneur sans `Graphic` qui ne porte que les deux `TMP_Text` `Libelle` et `Valeur`, `:498`, `:504`) : `Alpha` 0,00 → 1,00, **200 ms**, `cubic-bezier(.3,.7,.2,1)`, une fois. La cible est le conteneur, pas un texte : `Alpha` seul, une piste (G6) | La ligne de commande est portée au bon à la main : l'encre paraît sur le papier pelure au moment où on l'écrit. | `Transition` | 1 | durée 0 | `PROPOSÉ` | — |
 
 **Une seule entrée, et c'est une décision.** ㉚ n'a ni lampe, ni voyant, ni liquide, ni pièce mobile.
 Le seul événement de l'écran est l'écriture d'une ligne sur un bon. Si f2 veut honorer le titre de la
@@ -722,8 +833,8 @@ Défilement : `RectMask2D` `:979`, `ScrollRect` `:980`.
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `service.jeton` | `JetonDisponible` (`:735`, dérivé de `JetonDeStructure.Connu`/`PlafondAtteint`, `:360-362`) : la décision de structure du jour n'est pas prise | le `Rond` du jeton (**58 px** de laiton) : `Teinte` **0,88 → 1,00 → 0,88**, **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 2,300 s` | Le tableau de service est éclairé par une seule lampe de bureau, et le laiton du jeton est le seul objet de la planche qui la rende : tant que la décision du jour n'est pas prise, on la voit bouger dessus. | `Alerte` | 1 | `Alerte` + `Teinte` ⇒ **conservé** : l'information (il reste une décision) doit survivre au mouvement réduit | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` | ⚠️ Hôte **sous le `RectMask2D`** (`:979`) et canal de **couleur** ⇒ compte dans le plafond de 6 et dépend du **spike E0** (design §3). Le jeton dépensé **ne bat pas** : `Detacher`, et retour au `Repos` (`#2a2320`) |
-| `service.cartel` | `Confier` aboutit (`:534`) : `delegation_state` passe de `SELF` au nom d'un homme | le `cro` de la plaque (**38 × 85 u = 32 × 72 px**) : `Teinte` de `CroLibre` `#46515c` à `OrSombre`, **200 ms**, `ease-out` · le `TMP_Text` `Qui` (`:1164`) : `Alpha` 0,00 → 1,00, **160 ms**, `ease-out`. Une fois | On glisse un cartel au nom de l'homme dans la fente de la plaque : le laiton remplace le vide, et le nom est écrit dessus. | `Transition` | 2 | durée 0 | `PROPOSÉ` · les deux couleurs de cartel sont **dans le code** (`:1131-1140`) | ⚠️ Sous le masque (canal de couleur) ⇒ même dépendance E0 |
+| `service.jeton` | `JetonDisponible` (`:735`, dérivé de `JetonDeStructure.Connu`/`PlafondAtteint`, `:360-362`) : la décision de structure du jour n'est pas prise | le `Rond` du jeton (**58 px**, `RadialDisc` blanc, `disque.color = Or`, `DelegationScreenController.cs:1051-1054`) : `Melange` **1 → 0 → 1** (`CouleurA = Cible` (`Or`), `CouleurB = Cible × 0,88`), **période 4,600 s**, `ease-in-out`, **infini**, **phase −0,900 s**, `PoseDeReposS = 0,000 s` (le creux) | Le tableau de service est éclairé par une seule lampe de bureau, et le laiton du jeton est le seul objet de la planche qui la rende : tant que la décision du jour n'est pas prise, on la voit bouger dessus. | `Alerte` | 1 | figé à `PoseDeReposS` (design §5 : `Alerte` comprise) ; l'information (il reste une décision) tient au jeton disponible lui-même | `PROPOSÉ` · forme **REUSE** `ecrans-brennar-6: mk-lampe` | ⚠️ Hôte **sous le `RectMask2D`** (`:979`) et canal de **couleur** : son coût dépend du **spike E0** (design §4). Le jeton dépensé **ne bat pas** : `Detacher`, et retour au `Repos` (`#2a2320`) |
+| `service.cartel` | `Confier` aboutit (`:534`) : `delegation_state` passe de `SELF` au nom d'un homme | **`service.cartel/cro`** — le `Cro` de la plaque (**38 × 85 u = 32 × 72 px**, `croImg.color`, `:1133`) : `Melange` **1 → 0** (`CouleurA = Cible` = `OrSombre` `#8a6a22`, posé par le contrôleur à l'arrivée ; `CouleurB = CroLibre` `#46515c`), **200 ms**, `ease-out` · **`service.cartel/qui`** — le `TMP_Text` `Qui` (`:1164`) : `Alpha` 0,00 → 1,00, **160 ms**, `ease-out`. Une fois | On glisse un cartel au nom de l'homme dans la fente de la plaque : le laiton remplace le vide, et le nom est écrit dessus. | `Transition` | 2 | durée 0 | `PROPOSÉ` · les deux couleurs de cartel sont **dans le code** (`:1131-1140`) | ⚠️ Sous le masque (canal de couleur) ⇒ coût suspendu à E0 |
 
 ---
 
@@ -749,8 +860,8 @@ l'étiquette « FICHE DU SITE » (`:708`) et le bloc `Verdict`. Je n'en invente 
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `demolition.fiche-sortie` | `OuvrirFiche(b)` (lancé `:529` et `:609`) : l'état passe à `Fiche` (`:88`, `:418-430`) | la `Fiche` : `TranslationX` **−51 u → 0** (= −43 px, soit la largeur de son dos ×2), `Alpha` 0,00 → 1,00. **200 ms**, `ease-out`, une fois | On ne lit pas une fiche sans la sortir du tiroir : elle glisse sur la table avant de s'arrêter devant vous. | `Transition` | 1 | durée 0 | `PROPOSÉ` | ⚠️ Canal de **transformation sous un `RectMask2D`** (`:1185`) : c'est **le cas qui décide E0** (design §3 — « pas de Canvas imbriqué sous un masque, et le canal de transformation y est plafonné à 6 pistes »). Si E0 refuse, l'entrée tombe en `Alpha` seul |
-| `demolition.offre-fermee` | `fermee` (`:778`, `:843`) : une offre se ferme (`REPLACEMENT_OPTION_ALREADY_CLOSED`) et son `Tag` devient « DÉJÀ PRISE » en `TagFerme` `#8b6a6a` (`:967`, `:981`) | le `Tag` : `Teinte` 1,00 → 0,70, **200 ms**, `ease-in` · le disque de `Rang` (**72 px**) : `Teinte` d'`OrSombre` à `BlocBord`, **200 ms**, `ease-in`. Une fois | L'offre est partie : quelqu'un a barré la ligne au crayon gras avant vous, et le numéro perd sa dorure. | `Transition` | 2 | durée 0 | `PROPOSÉ` · les deux couleurs d'arrivée sont **dans le code** (`:929`, `:967`) | ⚠️ Sous le masque (canal de couleur) ⇒ même dépendance E0 |
+| `demolition.fiche-sortie` | `OuvrirFiche(b)` (lancé `:529` et `:609`) : l'état passe à `Fiche` (`:88`, `:418-430`) | la `Fiche` : `Alpha` 0,00 → 1,00, **200 ms**, `ease-out`, une fois. **Pas de `TranslationX`** : la `Fiche` (`:673`) est un enfant de « Contenu » (`zoneCentrale`), qui porte un `VerticalLayoutGroup` (`:1202`) **et** un `ContentSizeFitter` (`:1210`) ; seul son `Dos` a `ignoreLayout` (`:682`) — G11 | On ne lit pas une fiche sans la sortir du tiroir : elle remonte de l'ombre de la table avant de s'arrêter devant vous. | `Transition` | 1 | durée 0 | `PROPOSÉ` | ⚠️ Sous le `RectMask2D` (`:1185`) : `Alpha` par `CanvasGroup`, coût suspendu à E0 (design §4) |
+| `demolition.offre-fermee` | `fermee` (`:778`, `:843`) : une offre se ferme (`REPLACEMENT_OPTION_ALREADY_CLOSED`) et son `Tag` devient « DÉJÀ PRISE » en `TagFerme` `#8b6a6a` (`:967`, `:981`) | **`demolition.offre-fermee/tag`** — le `Tag` (son `Image`, `tb.color = TagFerme` `#8b6a6a` posé par le contrôleur, `:967-972`) : `Alpha` 0,00 → 1,00 (le `CanvasGroup` du `Tag` emporte son texte enfant « DÉJÀ PRISE » : la cible est l'`Image`, pas le texte — G6), **200 ms**, `ease-in` · **`demolition.offre-fermee/rang`** — le disque de `Rang` (**72 px**, `disque.color`, `:929`), **seulement si l'offre fermée était la première** (seule à porter `OrSombre`) : `Melange` **1 → 0** (`CouleurA = Cible` = `BlocBord` `#3c3e35`, `CouleurB = OrSombre` `#5a4a2a`), **200 ms**, `ease-in`. Une fois | L'offre est partie : quelqu'un a barré la ligne au crayon gras avant vous — la mention arrive comme le trait — et le numéro perd sa dorure. | `Transition` | 2 | durée 0 | `PROPOSÉ` · les couleurs d'arrivée et de départ sont **dans le code** (`:929`, `:967`, `DemolitionResolvers` `:1528`, `:1549`, `:1552`) | ⚠️ Sous le masque ⇒ coût suspendu à E0 |
 
 ---
 
@@ -771,8 +882,8 @@ CSS entre les créneaux (`:819`). Les 8 créneaux sont **toujours** dessinés (`
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `carnet.encre` | un créneau passe de « — rien — » (`:745-746`) à un ordre posé (`Titre` + `Sous`, `:756-760`) — le composeur vient de l'écrire | les `TMP_Text` `Titre` (11 px CSS serif gras) et `Sous` (8 px CSS) de la ligne : `Alpha` 0,00 → 1,00, **220 ms**, `cubic-bezier(.3,.7,.2,1)`, une fois. **`Alpha` seul** (G6) | On écrit l'ordre sur la ligne : l'encre prend sur le papier le temps d'un trait de stylo, elle n'est pas là avant le geste. | `Transition` | 1 | durée 0 | `PROPOSÉ` | — |
-| `carnet.en-main` | `AppuiLong` sur une ligne (`:463-464` ; `Operational/Carnet/AppuiLong.cs:15-20`, `Duree = 0.5f` `:10`) | le fond de la ligne (`Image`, transparente au repos, `CouleurEnMain` `(0,851 ; 0,824 ; 0,741)` en main, `:461`) : `Alpha` 0,00 → 1,00 sur **500 ms**, `linear`, une fois ; maintenu tant que la ligne est en main ; retour à 0,00 en **120 ms** si le doigt part avant le seuil | On appuie sur la ligne pour la décoller du carnet : le papier marque sous le pouce avant de céder. | `Retour` | 1 | **PAS un gel** : même règle que `retour.appui-long` — la marque apparaît d'un coup au seuil, et l'alternative reste accessible | `PROPOSÉ` · la couleur d'arrivée est **dans le code** (`:461`, `:620`) | **Q2** (500 ms > 250 ms) et **Q12** : le client porte **deux** durées d'appui long, `1 000 ms` nommée (`ShellContracts/UiTimingTunables.cs:19`) et **`0.5f` en littéral** (`AppuiLong.cs:10`) — R2.3 « tunables jamais inline » |
+| `carnet.encre` | un créneau passe de « — rien — » (`:745-746`) à un ordre posé (`Titre` + `Sous`, `:756-760`) — le composeur vient de l'écrire | le conteneur `Corps` de la ligne (`:736`, il ne porte que les `TMP_Text` `Titre` — 11 px CSS serif gras — et `Sous` — 8 px CSS —, `:756-760`) : `Alpha` 0,00 → 1,00, **220 ms**, `cubic-bezier(.3,.7,.2,1)`, une fois. La cible est le conteneur, pas un texte : `Alpha` seul, une piste (G6) | On écrit l'ordre sur la ligne : l'encre prend sur le papier le temps d'un trait de stylo, elle n'est pas là avant le geste. | `Transition` | 1 | durée 0 | `PROPOSÉ` | — |
+| `carnet.en-main` | `AppuiLong` sur une ligne (`:463-464` ; `Operational/Carnet/AppuiLong.cs:15-20`, `Duree = 0.5f` `:10`) | la **`Marque`** de la ligne — une `Image` enfant **à créer** par `BrancherLigne` (`:455-466`), étirée, `ignoreLayout`, couleur `CouleurEnMain` `(0,851 ; 0,824 ; 0,741)` (`:461`) : `Alpha` 0,00 → 1,00 sur **500 ms**, `linear`, une fois ; retour à 0,00 en **120 ms** si le doigt part avant le seuil. **Pas sur la ligne elle-même** : un `CanvasGroup` posé sur la ligne ferait fondre ses textes (design §3, « Application »). `Bloquante = false` | On appuie sur la ligne pour la décoller du carnet : le papier marque sous le pouce avant de céder. | `Retour` | 1 | figé à `PoseDeReposS = 0,000 s` (design §5 : un `Retour` ne garde que le `Melange`) : pendant l'appui rien ne bouge ; au seuil, `PrendreEnMain` re-rend la ligne avec son fond `CouleurEnMain` — la marque apparaît d'un coup, et l'alternative reste accessible | `PROPOSÉ` · la couleur d'arrivée est **dans le code** (`:461`, `:620`) | **Q12** résolue (f2) : `AppuiLong.Duree = UiTimingTunables.AppuiLongDeplacementMs / 1000f`, constante **à créer** (500) |
 
 ⚠️ Une demande d'atelier existe ici, mais elle ne bloque rien : le carnet **n'a pas ses lignes réglées**
 (⇒ **A8**). `carnet.encre` fonctionne sans elles.
@@ -802,8 +913,8 @@ Plus : 4 rangées de famille à liseré de laiton `#8a6a22` quand choisie (`:714
 
 | id | déclencheur / état | mouvement | cause dans la fiction | genre | pistes | réduit | source | question |
 |---|---|---|---|---|---:|---|---|---|
-| `conflit.salle` | en continu | les 7 `Silhouette_*` : `Alpha` **0,82 → 1,00 → 0,82** et `TranslationX` **−5 → +5 px CSS** (= ±21,3 u, soit une course de **36 px**), **période 11,000 s**, `ease-in-out`, **infini**, `PoseDeReposS = 5,500 s`. **Phases distinctes** : −1,2 / −3,6 / −5,9 / −7,4 / −9,1 / −2,7 / −6,3 s | Au fond de la salle, les gens ne sont pas des statues : ils se déplacent lentement entre les tables, et leurs silhouettes passent devant la lumière du bar. | `Ambiance` | **7** | figé à `PoseDeReposS` — chaque silhouette arrêtée à sa propre place, pas toutes alignées | `PROPOSÉ` | **Les phases distinctes sont justifiées ici, et nulle part ailleurs** : chaque silhouette est une personne différente. Partout où la cause est **une lampe**, la phase est commune (§0.5). C'est contrôlable ligne à ligne |
-| `conflit.envoi` | `EnvoyerCeSoirEtRecharger` aboutit (`:322`) : la famille choisie reçoit son badge « CE SOIR » (`:788-804`) et son liseré passe en laiton (`:714-721`) | `BordChoisi` (liseré `#8a6a22`, trait `Px(1)` = **4,27 u = 3,6 px**) : `Teinte` 1,00 → 1,55 → 1,00, **220 ms** (`ease-out` puis `ease-in`) · `CeSoirCadre` : `Alpha` 0,00 → 1,00, **160 ms**, `ease-out`. Une fois | L'ordre est parti : le cartel « CE SOIR » est posé sur la rangée de la famille, et le laiton du cadre prend la lumière une fois, le temps qu'on le pose. | `Transition` | 2 | durée 0 | `PROPOSÉ` | ⚠️ Les deux hôtes sont **sous le `RectMask2D`** (`:1219`) — canal de couleur ⇒ dépendance **E0**. `conflit.salle`, lui, est **hors masque** (`SceneHaute`, `:1322-1330`) : sa translation ne dépend pas d'E0 |
+| `conflit.salle` | en continu | les 7 `Silhouette_*` : `Alpha` **0,82 → 1,00 → 0,82** et `TranslationX` **−5 → +5 px CSS** (= ±21,3 u, soit une course de **36 px**), **période 11,000 s**, `ease-in-out`, **infini**, `PoseDeReposS = 0,000 s` (α 0,82 et −5 px : les deux canaux hors de leur repos, G3). **Phases distinctes** : −1,2 / −3,6 / −5,9 / −7,4 / −9,1 / −2,7 / −6,3 s | Au fond de la salle, les gens ne sont pas des statues : ils se déplacent lentement entre les tables, et leurs silhouettes passent devant la lumière du bar. | `Ambiance` | **7** | figé à `PoseDeReposS` — chaque silhouette arrêtée à sa propre place, pas toutes alignées | `PROPOSÉ` | **Les phases distinctes sont justifiées ici, et nulle part ailleurs** : chaque silhouette est une personne différente. Partout où la cause est **une lampe**, la phase est commune (§0.5). C'est contrôlable ligne à ligne |
+| `conflit.envoi` | `EnvoyerCeSoirEtRecharger` aboutit (`:322`) : la famille choisie reçoit son badge « CE SOIR » (`:788-804`) et son liseré passe en laiton (`:714-721`) | **`conflit.envoi/bord`** — `BordChoisi` (liseré `#8a6a22` **cuit dans le sprite**, `Image.color` blanc, trait `Px(1)` = 3,6 px, `ignoreLayout`, `:714-721`) : `Alpha` **0,35 → 1,00**, **220 ms**, `ease-out` · **`conflit.envoi/cadre`** — `CeSoirCadre` : `Alpha` 0,00 → 1,00, **160 ms**, `ease-out`. Une fois. (Un sprite cuit sous un `Image.color` blanc ne s'éclaircit pas : la lumière se lit en montant l'alpha du liseré) | L'ordre est parti : le cartel « CE SOIR » est posé sur la rangée de la famille, et le laiton du cadre s'allume sous la lampe, le temps qu'on le pose. | `Transition` | 2 | durée 0 | `PROPOSÉ` | ⚠️ Les deux hôtes sont **sous le `RectMask2D`** (`:1219`) ⇒ coût suspendu à **E0**. `conflit.salle`, lui, est **hors masque** (`SceneHaute`, `:1322-1330`) : sa translation ne dépend pas d'E0 |
 
 ---
 
@@ -814,37 +925,41 @@ réclame — aucune demande n'est formulée sans source.
 
 | id | écran | ce qu'il faut dessiner | ce que ça débloque | la fiction qui le réclame |
 |---|---|---|---|---|
-| **A1** | ㉑ Marché | **la tuile ASH et sa grappe de prismes** : le monticule de poudre `#8a8474`, **4 prismes** de 14 unités de large sur 39 / 57 / 33 / 24 de haut, et **4 éclats** (la facette supérieure gauche de chacun, blanc à α 0,45) — la géométrie exacte est déjà écrite : `~/project/atelier3d-mafia/generateur-marche.py:288-295` | **`mk-eclat`**, le seul `@keyframes` de la série 6 **sans hôte** : `0%,72%,100%{opacity:.16} 82%{opacity:.85}`, `5.2s ease-in-out infinite`, délais **−4,2 / −1,3 / −2,6 / −3,9 s** (`generateur-marche.py:115`, `:201-204`) — un scintillement bref (≈1,46 s actif sur 5,2 s), les quatre éclats à tour de rôle | `front.md:1715-1720` : « **LA MARCHANDISE REMPLACE LE PERSONNAGE** … ash→labo spécialisé, canal de luxe (**poudre → prismes**) » ; `inventaire-animations.md:69` : « **`mk-eclat` RESTE** (hôte = grappe de prismes de la tuile Ash du marché … qu'aucun cadre ne montre) » |
-| **A2** | ⑭ La semaine | **le manomètre de « la ville serre »** : une face, un arc, une aiguille et son pivot. La géométrie existe déjà dans le chrome et se réutilise telle quelle — `Shell/TopBarController.cs:1315-1327` (face), `:1387` + `:1609-1625` (arcs `ProceduralUI.ArcCuit`), `:1515-1524` (aiguille, pivot `(0.5, 0)`), `:1526-1535` (pivot) | **`semaine.aiguille`** (§II.⑭) — et avec elle la paire d'inventaire **B10** | `front.md:1557` : « la ville serre (**manomètre** = `stress_bucket`… ) ». ⚠️ Écart mesuré : `stress_bucket` est aujourd'hui rendu **en texte** (`CompressionScreenController.cs:194-204`, `:461-471`) |
+| **A1** | ㉑ Marché | ✅ **FAIT (atelier, cadre 146)** : la tuile Ash du marché porte sa grappe de prismes et **4 éclats** (4 instances `mk-eclat` mesurées, `dur` 5 200 ms, délais −4,2 / −3,9 / −2,6 / −1,3 s, `inventaire-animations.md:37`, `:65`). Rien de plus à dessiner | la paire `mk-eclat` a son hôte **dans la maquette** ; côté client elle reste `SansHote:㉑ écran non monté` (§I.3) | `front.md:1715-1720` : « **LA MARCHANDISE REMPLACE LE PERSONNAGE** … ash→labo spécialisé, canal de luxe (**poudre → prismes**) » |
+| **A2** | ⑭ La semaine | ✅ **Côté atelier, FAIT** : les cadres 14-19 dessinent le cadran TENSION (trois arcs, aiguille et pivot, six angles), et son aiguille balaie en transition CSS `.7s`. **Ce qui reste est du client** : construire le manomètre (étape E4 du design §11, à CLIENT-3) en réutilisant la géométrie du chrome — `Shell/TopBarController.cs:1315-1327` (face), `:1387` + `:1609-1625` (arcs `ProceduralUI.ArcCuit`), `:1515-1524` (aiguille, pivot `(0.5, 0)`), `:1526-1535` (pivot) | **`semaine.aiguille`** (§II.⑭) = la paire d'inventaire **B11** | `front.md:1557` : « la ville serre (**manomètre** = `stress_bucket`… ) ». ⚠️ Écart mesuré : `stress_bucket` est aujourd'hui rendu **en texte** (`CompressionScreenController.cs:194-204`, `:461-471`) |
 | **A3** | ㉓ La vitrine | **la vitre du comptoir, sa bande de reflet et sa fenêtre de découpe** : une bande oblique claire de ≈60 u de large, et un masque qui l'empêche de sortir du comptoir | **`vitrine.reflet`** (§II.㉓) | `front.md:1861` : « comptoir de laiton, **vitre avec ses reflets**, étagères de velours » |
 | **A4** | ㉘ La distribution | **la photo punaisée du coursier pris**, épinglée par **un seul coin** (c'est le coin unique qui rend le battement possible) | **`distribution.photo`** (§II.㉘) | `front.md:1249` : « **Le cadre qui vaut l'écran : un coursier s'est fait prendre. Sa photo est punaisée, la ficelle pend derrière.** » |
-| **A5** | ⑲ Les réglages | **une ligne « Mouvement réduit »** — rien à dessiner : le gabarit de bascule existe (`Account/Settings/SettingsScreenController.cs:220-259`), il faut une ligne de plus dans la section « Le jeu ». Le canon donne jusqu'au libellé : i18n `settings.a11y.reduced_motion` → FR « **Mouvement réduit** » (`screen_14:208`), rôle `switch` (`:298`), défaut **Off** (`:71`). Et il en veut **un second** : `settings.game.disable_autoplay` (`:78`, `:212`) | **tout le §4 du design** : sans ce bouton, `PolitiqueMouvement` n'a qu'une source (le réglage Android), et aucune sur iOS | `screen_14:71`, `:146`, `:251` ⇒ **Q4** |
+| **A5** | ⑲ Les réglages | ✅ **FAIT (atelier, cadres 147-148)** : la ligne « Mouvement réduit » est dessinée sur le gabarit de bascule existant (`Account/Settings/SettingsScreenController.cs:220-259`), section « Le jeu ». Canon : i18n `settings.a11y.reduced_motion` → FR « **Mouvement réduit** » (`screen_14:208`), rôle `switch` (`:298`), défaut **Off** (`:71`). Le canon en veut **un second** (`settings.game.disable_autoplay`, `:78`, `:212`) : hors de ce lot | **le §5 du design** : la seconde source de `PolitiqueMouvement` (avec Android), la seule sur iOS ; persistance `PlayerPrefs` (E2) | `screen_14:71`, `:146`, `:251` (Q4 résolue) |
 | **A6** | ㉛ La loi | **le parloir** : la vitre, le prévenu derrière, la liste devant. 6 cadres de maquette existent (m-67..72), **0 est construit** | ㉛ sort de « sans mouvement » ; aucune entrée ne l'attend aujourd'hui | `front.md:1187-1188` ; le contrôleur ne crée **aucune forme** (`LoiScreenController.cs`, 0 appel à `ProceduralUI`) |
 | **A7** | ㉒ Votre profil | **la molette de laiton, les leviers, les plaques de compteur frappées** de la porte de coffre | ㉒ sort de « sans mouvement » | `front.md:1821-1822` |
 | **A8** | ㉞ Les ordres du soir | **les lignes réglées du carnet** (et sa reliure) : aujourd'hui le carnet est **une seule `Image` plate** (`CarnetScreenController.cs:807`) | rien — `carnet.encre` fonctionne sans ; c'est une dette de DA, pas un blocage | `front.md:1113` : « le **carnet d'ordres réglé** (créneaux numérotés) » |
-| **A9** | ㉟ ㊱ ㊲ ㊳ ㊴ ㊵ | **vérifier, et dessiner si absente, la barre de balayage et sa piste masquée** : barre de **2 px**, `linear-gradient(90deg, transparent, #7fd4d9, transparent)`, course `translateY(−6px → 184px)` (`generateur-marche.py:117-118`, `:151-153`) | les **6 paires `*6-scan`** de l'inventaire : 7,500 s `linear infinite`, délai **−2,600 s** (mesuré sur 34 instances) | `inventaire-animations.md:37-42`. ⚠️ Les 6 écrans sont **montés**, mais la présence de l'hôte **n'a pas été vérifiée dans ce lot** — je ne l'affirme ni ne la nie. ⇒ **Q10** sur la cause |
+| **A9** | ㉟ ㊱ ㊲ ㊳ ㊴ ㊵ | ⛔ **SANS OBJET** : les six `*6-scan` sont retirés de la maquette (atelier 9469d5a) et de l'inventaire (Q10) | — | — |
 
-**9 demandes. 3 débloquent une entrée de ce catalogue (A2, A3, A4), 1 débloque le §4 du design (A5),
-1 débloque une animation d'inventaire sans hôte (A1), 1 en débloque six (A9), et 3 sont des dettes de
-DA qui ne bloquent rien (A6, A7, A8).**
+**9 demandes, dont 3 faites par l'atelier (A1, A2 côté atelier, A5) et 1 sans objet (A9).** Restent **2
+qui débloquent une entrée** de ce catalogue (A3 → `vitrine.reflet`, A4 → `distribution.photo`) et **3
+dettes de DA** qui ne bloquent rien (A6, A7, A8). `semaine.aiguille` n'attend plus l'atelier : elle
+attend le manomètre de ⑭, que le client construit en E4.
 
 ---
 
 # IV. Questions pour f2 et pour l'user — avec ma recommandation
 
-Ordonnées par ce que la réponse change : les quatre premières touchent le **mécanisme** (le design
-doit bouger) ; les suivantes touchent une **valeur** ou un **périmètre**.
+> **État au 08/10 : les 12 questions sont RÉSOLUES.** Q1, Q2, Q3 et Q4 sont portées par le design
+> v4.1 (`Ecrans[]` §2, `Bloquante` §2 et G8, `Parametre` §2, REUSE de ⑲ §5) ; Q5 est consignée au
+> design §5 ; Q6, Q8, Q9, Q11 et Q12 sont ratifiées par f2 (07/10, 22 h) ; Q7 et Q10 sont tranchées.
+> Le texte des questions est gardé pour la trace ; aucune ne bloque E1. Rien ici ne modifie plus le
+> design.
 
-### Q1 — Une entrée peut-elle servir plusieurs écrans ?
+### Q1 — Une entrée peut-elle servir plusieurs écrans ? — RÉSOLUE (design v4.1 §2 : `Ecrans[]`, G4 par écran résolu)
 
-`Entree.Ecran` est un `string` singulier (design §1 : « `string Ecran (sym ①…㊵)` »). **8 de mes 42
+*Texte de la v1* : `Entree.Ecran` était un `string` singulier dans le design v1. **8 de mes 42
 entrées sont transverses** (2 sur le geste d'appui, 3 sur le shell, 2 sur le décor de comptoir, 1 sur
 la bascule). Les dupliquer donnerait 8 → 19 lignes pour **8 mécanismes**, et 11 `Id` à maintenir en
 parallèle.
 > **Reco** : `Ecran` accepte une liste (ou `"*"`), et **G4 (budget) compte par écran RÉSOLU**, jamais
 > par chaîne. Sinon la garde de budget ne voit pas les pistes des entrées transverses.
 
-### Q2 — Le 5ᵉ genre, ou le drapeau `Bloquante` ?
+### Q2 — Le 5ᵉ genre, ou le drapeau `Bloquante` ? — RÉSOLUE (design v4.1 : `Entree.Bloquante`, G8 « `Bloquante` ET > 250 ms », §5 (ii) `Fonctionnelle`)
 
 G8 rougit dès qu'un `Retour`/`Transition` dépasse 250 ms. **Quatre mouvements du périmètre dépassent,
 et aucun ne bloque l'entrée** :
@@ -853,7 +968,7 @@ et aucun ne bloque l'entrée** :
 |---|---|---|
 | `retour.appui-long` | **1 000 ms** | `UiTimingTunables.DestructiveLongpressMs` (`:19`), lui-même `T.ui.destructive_longpress_ms` du canon |
 | `carnet.en-main` | **500 ms** | `Operational/Carnet/AppuiLong.cs:10` (littéral) |
-| `semaine.aiguille` | **700 ms** | la maquette, mesurée (`inventaire-animations.md:62`) |
+| `semaine.aiguille` | **700 ms** | la maquette, mesurée (`inventaire-animations.md:58`, B11) |
 | `bandeau.sortie` | **400 ms** | le code en place (`BandeauEphemere.cs:296-299`) |
 
 Et le canon ne plafonne que la durée **bloquante** : « Durée max **bloquante** : `T.ui.anim_max_block_ms`
@@ -865,20 +980,21 @@ interruptibles** » (`:125`) et « Jamais de transition qui **bloque l'input** �
 > long destructif supprimerait le seul signal d'une action irréversible : ce serait un défaut d'a11y
 > créé par la garde d'a11y.
 
-### Q3 — `Propriete` n'a aucun puits pour un paramètre de graphe sur mesure
+### Q3 — `Propriete` n'a aucun puits pour un paramètre de graphe sur mesure — RÉSOLUE (design v4.1 §2 : `Parametre` et `IParametreAnime`, « la ficelle de ㉘ »)
 
 `DistributionFicelleGraphic.DefinirTrace(..., amplitude:)` (`DistributionScreenController.cs:518-523`)
 est le paramètre qui porte **toute** la fiction de ㉘ (« LA GÉOGRAPHIE EST DESSINÉE, JAMAIS ÉCRITE »,
-`front.md:1242`). Aucun membre de `Propriete` ne l'atteint : `Fonction` est une **source** de valeur
-(design §1), pas un puits ; `Teinte` et `Remplissage` écrivent un `Graphic`, pas un champ.
+`front.md:1242`). Dans le design v1, aucun membre de `Propriete` ne l'atteignait : `Alpha`, `Melange` et `Remplissage`
+écrivent un `Graphic`, pas un champ. Le design v4.1 a ajouté le puits ; `distribution.ficelle-tendue`
+est câblable.
 > **Reco** : `Propriete.Parametre` + `interface IParametreAnime { void PoserParametre(int canal,
 > float v); }` que le graphe implémente — **un seul point d'extension**, testable sans Unity (un faux
 > implémenteur sous `[Test]`), et déjà couvert par la garde G7 (aucune réflexion). Si la réponse est
 > non, **`distribution.ficelle-tendue` sort du catalogue** et ㉘ n'a plus qu'une entrée différée.
 
-### Q4 — Le réglage de mouvement réduit : le design pose une question que le canon a déjà tranchée
+### Q4 — Le réglage de mouvement réduit — RÉSOLUE (design v4.1 §5 : REUSE du canon, `PlayerPrefs` ; atelier cadres 147-148)
 
-Le design §4 la laisse ouverte (« **Question produit à f2** : (b) ajoute une ligne à ⑲ … ; alternative :
+Le design v1 la laissait ouverte (« **Question produit à f2** : (b) ajoute une ligne à ⑲ … ; alternative :
 (a) seul »). Mais le canon l'a écrite, avec son libellé, son rôle ARIA, son défaut et sa route :
 `screen_14:71` (« Reduced motion `[ ] Off` »), `:146` (« `reduced_motion = true` → coupe toutes les
 transitions `Animator` non-critiques »), `:208` (i18n `settings.a11y.reduced_motion` → « Mouvement
@@ -892,7 +1008,7 @@ en demande **un second** : `settings.game.disable_autoplay` (`:78`, `:212`).
 > `Shell/CompteDeLAppareil.cs:41-44`), **consigné comme différé**, et le serveur comme un lot back —
 > pas comme un choix d'architecture client.
 
-### Q5 — G5 (période ≥ 0,4 s) contre le canon de ③
+### Q5 — G5 (au plus 3 extrema/s, période ≥ 0,667 s) contre le canon de ③ — CONSIGNÉE (design §5 : « G5 gagne, contradiction consignée avant E3 »)
 
 `screen_2_city_map.md:434` demande un flash d'`AuditPin` « **toutes les `T.ui.anim_max_block_ms`** »,
 soit une période de **250 ms = 4 Hz**. G5 plafonne à 3 extrema par seconde (période ≥ 0,667 s). C'est
@@ -902,7 +1018,7 @@ le **seul endroit du canon** où ce tunable sert de *période* au lieu de *plafo
 > mais la contradiction doit être consignée **avant E3**, sinon elle sera tranchée par accident au
 > moment de coder ①/③.
 
-### Q6 — L'échelle 0,97 du retour d'appui sur un bouton plein écran
+### Q6 — L'échelle 0,97 du retour d'appui sur un bouton plein écran — RATIFIÉE (f2 07/10 ; design §8)
 
 **10 des 15 sites `Transition.None` sont des cartes, des rangées ou des panneaux entiers** : la racine
 de `HighestLeverageCard` (`Shell/HighestLeverageCardController.cs:343`), toute la surface du bandeau
@@ -913,7 +1029,7 @@ un bloc de ㉝ (`DemolitionScreenController.cs:1460`), une cellule de bâtiment 
 (`DailyReviewScreenController.cs:1102`). Un −3 % sur une feuille de 560 u déplace son bord de **8,4 u
 = 7,1 px** : l'écran entier a l'air de sauter sous le doigt.
 > **Reco** : `Echelle` seulement si la plus grande dimension du bouton ≤ **1/3 du cadre** ; au-delà,
-> **`Teinte` seule** — ce qui est exactement le dégradé réduit déjà écrit au §4 du design, donc zéro
+> **`Melange` seul** — ce qui est exactement le dégradé réduit d'un `Retour` (design §5 (i)), donc zéro
 > code en plus. (Note : `ReputationScreenController.cs:994` n'est pas un bouton mais une
 > **`Scrollbar`** : il sort de la liste des 15 pour le retour d'appui, et doit rejoindre les
 > exclusions nommées de G9.)
@@ -922,7 +1038,7 @@ un bloc de ㉝ (`DemolitionScreenController.cs:1460`), une cellule de bâtiment 
 
 Tranchée par l'user le 02/09 : **2000-2010** (mémoire « DA silhouettes contemporaines » ; canon gdd/02 §Forbidden, gdd/01 « Not Scarface »). `front.md` §O était périmé (BACK-1 le réécrit). **Nuance de f2** : l'ère vaut pour les OBJETS du décor et de la fiction (lampes, écrans, téléphones, papiers). Le **laiton et l'or du CHROME d'interface** (cerne laiton, filets, boutons cernés d'or) sont la direction artistique ratifiée de l'interface et RESTENT ; ce catalogue n'y touche pas. Vocabulaire de ce fichier repassé : lampe de bureau, néon, console de répartition à voyants LED, stylo, plastique dur, pager ; plus de bakélite, de standard à fiches ni de lampe d'époque.
 
-### Q8 — Quel rapport « traîne » ? (㉔)
+### Q8 — Quel rapport « traîne » ? (㉔) — RATIFIÉE (f2 07/10 : le plus vieux seulement)
 
 `report.backlog_age_cycles` est servi (`AutonomyDtos.cs:26`) et affiché (`:285`), mais **aucun seuil
 n'est servi**. La fiction dit seulement « **un rapport qui traîne** » (`front.md:1594`).
@@ -930,7 +1046,7 @@ n'est servi**. La fiction dit seulement « **un rapport qui traîne** » (`front
 > voyants : s'il y a trois rapports, c'est le plus vieux qui appelle, et il cesse quand on l'a traité.
 > Pas de seuil ⇒ pas de nombre inventé (R2.2), et la garde est triviale : exactement 1 piste.
 
-### Q9 — La frappe du tampon de ⑤ est-elle jouable ?
+### Q9 — La frappe du tampon de ⑤ est-elle jouable ? — RATIFIÉE (f2 07/10 : fermeture ordonnée APRÈS les 180 ms, non bloquant)
 
 `decision.cachet` dure 180 ms, mais le geste **referme l'écran** (`ResoudreLeChoix`,
 `DecisionDetailScreenController.cs:429`).
@@ -942,19 +1058,18 @@ n'est servi**. La fiction dit seulement « **un rapport qui traîne** » (`front
 
 `.elast` est le panneau de TEXTE du châssis (mesuré : conteneur de liste, pas un écran dessiné) ; ㊳ ㊴ sont des papiers ; ㉟ ㊱ ㊲ ㊵ ne dessinent pas de terminal. **Les six paires sont retirées de la maquette (atelier 9469d5a) et du catalogue.** Seul `mk-scan` du marché reste (hôte : `.tablo`, le tableau de voyants).
 
-### Q11 — La durée du bandeau (5,000 s + 0,400 s) est-elle ratifiée ?
+### Q11 — La durée du bandeau (5,000 s + 0,400 s) est-elle ratifiée ? — RATIFIÉE (f2 07/10)
 
 Le code le dit lui-même : « le canon n'en donne aucune ; l'atelier propose **5 s, ou jusqu'au
 toucher** — prise telle quelle, **à ratifier au rendu** » (`BandeauEphemere.cs:157-158`).
 > **Reco** : ratifier **5,000 s de tenue + 0,400 s de fondu linéaire** tel quel — c'est mesuré, c'est
 > en place, et ça marche — et le déclarer **non bloquant** (Q2). Les deux nombres rejoignent alors
-> `UiTimingTunables` sous les noms `Mouvement…` annoncés par `design-couche-mouvement.md:68`
-> (« Toutes les constantes de ce tableau vivent dans `UiTimingTunables` … nommées `Mouvement…` »).
+> `MouvementTunables`, la classe que le design §4 pose « voisine de `UiTimingTunables` ».
 > ⚠️ Vérifié : **aucune constante `Mouvement*` n'existe aujourd'hui** dans `ShellContracts/`, et
 > `AnimMaxBlockMs` (250) n'a **aucun consommateur** dans tout `Assets/Scripts` — seul
-> `DestructiveLongpressMs` est lu (`LongPressButton.cs:18`).
+> `DestructiveLongpressMs` est lu (`LongPressButton.cs:18`). Le design §4 le fait consommer par G8.
 
-### Q12 — Deux durées d'appui long dans le même client
+### Q12 — Deux durées d'appui long dans le même client — RATIFIÉE (f2 07/10 : `AppuiLongDeplacementMs = 500`, à créer)
 
 **1 000 ms** nommée (`ShellContracts/UiTimingTunables.cs:19`) et **`0.5f` en littéral**
 (`Operational/Carnet/AppuiLong.cs:10`). R2.3 : « tunables jamais inline ».
@@ -965,76 +1080,80 @@ toucher** — prise telle quelle, **à ratifier au rendu** » (`BandeauEphemere.
 
 ---
 
-# V. Récapitulatif — écran × entrées × pistes × genres, avec somme de contrôle
+# V. Récapitulatif — écran × lignes × pistes × genres, avec somme de contrôle
 
-**Lecture** : « entrées » = les entrées **attachées** à cet écran, y compris les transverses de §II.0
-(une entrée transverse est comptée sur **chaque** écran qu'elle sert). « pistes » = la somme des
-`Entree.Pistes` sur cet écran, c'est-à-dire ce que G4 mesure. Les deux dernières lignes du tableau
-donnent les deux totaux, et leur écart est la somme de contrôle.
+**Lecture** : « lignes » = les lignes de §II **attachées** à cet écran, y compris les transverses
+nommées de §II.0 (`comptoir.lampe` ⑨⑩⑯, `comptoir.bouteilles` ⑨⑯, `bascule.course` ⑲㉕), comptées sur
+**chaque** écran qu'elles servent. Une ligne peut porter plusieurs `Entree` (§I.1, règle 1 ; le détail
+est en §I.4) ; les pistes, elles, ne changent pas. « pistes » = Σ `Entree.Pistes` des lignes propres et
+nommées. **« G4 résolu »** = ce que G4 calculera (design §2 : une `Entree` à plusieurs écrans compte
+sur **chacun des écrans résolus**) : les pistes + les 5 transverses `Ecrans = "*"` résolues au pire cas
+— `shell.entree` 1 partout, `retour.appui` 1 partout où il existe un `Button` (pas sur ㉒), 
+`retour.appui-long` 1 sur ④ ⑤ ⑯ seulement (ses 4 instances mesurées), `bandeau.entree` et
+`bandeau.sortie` 2 partout (majorant : ils ne vivent jamais ensemble).
 
-| écran | entrées | pistes | Alerte | Ambiance | Retour | Transition | ≤ 16 ? |
-|---|---:|---:|---:|---:|---:|---:|:---:|
-| ④ Accueil | 2 | 2 | 1 | 0 | 0 | 1 | ✔ |
-| ⑤ Décision du jour | 3 | 3 | 1 | 0 | 0 | 2 | ✔ |
-| ⑥ La Famille (⑦ ⑧ ⑳ = ses sections) | 2 | 2 | 0 | 1 | 0 | 1 | ✔ |
-| ⑨ Exception Queue | 4 | 4 | 0 | 2 | 0 | 2 | ✔ |
-| ⑩ Exception Detail | 3 | 6 | 0 | 1 | 0 | 2 | ✔ |
-| ⑭ La semaine | 2 | 2 | 0 | 0 | 0 | 2 | ✔ |
-| ⑮ Les inspections | 2 | 7 | 1 | 0 | 0 | 1 | ✔ |
-| ⑯ Revue du jour | 4 | 5 | 0 | 2 | 0 | 2 | ✔ |
-| ⑰ Le commissariat | 1 | 1 | 0 | 0 | 0 | 1 | ✔ |
-| ⑲ Les réglages | 1 | 2 | 0 | 0 | 0 | 1 | ✔ |
-| ㉒ Votre profil | **0** | **0** | 0 | 0 | 0 | 0 | ✔ |
-| ㉓ La vitrine | 2 | 3 | 0 | 1 | 0 | 1 | ✔ |
-| ㉔ Les rapports d'autonomie | 2 | 3 | 1 | 0 | 0 | 1 | ✔ |
-| ㉕ La première fois | 2 | 3 | 0 | 0 | 0 | 2 | ✔ |
-| ㉘ La distribution | 2 | 2 | 0 | 1 | 0 | 1 | ✔ |
-| ㉚ La chaîne d'appro | 1 | 1 | 0 | 0 | 0 | 1 | ✔ |
-| ㉛ La loi | **0** | **0** | 0 | 0 | 0 | 0 | ✔ |
-| ㉜ Ce que vous avez confié | 2 | 3 | 1 | 0 | 0 | 1 | ✔ |
-| ㉝ Raser un site | 2 | 3 | 0 | 0 | 0 | 2 | ✔ |
-| ㉞ Les ordres du soir | 2 | 2 | 0 | 0 | 1 | 1 | ✔ |
-| ㉙ Le conflit | 2 | **9** | 0 | 1 | 0 | 1 | ✔ |
-| `*` transverses (geste, shell, bandeau) | 5 | 5 | 0 | 0 | 2 | 3 | ✔ |
-| **Σ par attachement** | **46** | **68** | **5** | **9** | **3** | **29** | max = 9 |
-| **Σ par entrée distincte** | **42** | **63** | **5** | **6** | **3** | **28** | — |
-| **écart = attachements en double** | **+4** | **+5** | 0 | **+3** | 0 | **+1** | — |
+| écran | lignes | pistes | Alerte | Ambiance | Retour | Transition | **G4 résolu** | ≤ 16 ? |
+|---|---:|---:|---:|---:|---:|---:|---:|:---:|
+| ④ Accueil | 2 | 2 | 1 | 0 | 0 | 1 | 2 + 1 + 1 + 1 + 2 = **7** | ✔ |
+| ⑤ Décision du jour | 3 | 3 | 1 | 0 | 0 | 2 | 3 + 1 + 1 + 1 + 2 = **8** | ✔ |
+| ⑥ La Famille (⑦ ⑧ ⑳ = ses sections) | 2 | 2 | 0 | 1 | 0 | 1 | 2 + 1 + 1 + 2 = **6** | ✔ |
+| ⑨ Exception Queue | 4 | 4 | 0 | 2 | 0 | 2 | 4 + 1 + 1 + 2 = **8** | ✔ |
+| ⑩ Exception Detail | 3 | 6 | 0 | 1 | 0 | 2 | 6 + 1 + 1 + 2 = **10** | ✔ |
+| ⑭ La semaine | 2 | 2 | 0 | 0 | 0 | 2 | 2 + 1 + 1 + 2 = **6** | ✔ |
+| ⑮ Les inspections | 2 | 7 | 1 | 0 | 0 | 1 | 7 + 1 + 1 + 2 = **11** | ✔ |
+| ⑯ Revue du jour | 4 | 5 | 0 | 2 | 0 | 2 | 5 + 1 + 1 + 1 + 2 = **10** | ✔ |
+| ⑰ Le commissariat | 1 | 1 | 0 | 0 | 0 | 1 | 1 + 1 + 1 + 2 = **5** | ✔ |
+| ⑲ Les réglages | 1 | 1 | 0 | 0 | 0 | 1 | 1 + 1 + 1 + 2 = **5** | ✔ |
+| ㉒ Votre profil | **0** | **0** | 0 | 0 | 0 | 0 | 0 + 1 + 0 + 2 = **3** | ✔ |
+| ㉓ La vitrine | 2 | 3 | 0 | 1 | 0 | 1 | 3 + 1 + 1 + 2 = **7** | ✔ |
+| ㉔ Les rapports d'autonomie | 2 | 2 | 1 | 0 | 0 | 1 | 2 + 1 + 1 + 2 = **6** | ✔ |
+| ㉕ La première fois | 2 | 2 | 0 | 0 | 0 | 2 | 2 + 1 + 1 + 2 = **6** | ✔ |
+| ㉘ La distribution | 2 | 2 | 0 | 1 | 0 | 1 | 2 + 1 + 1 + 2 = **6** | ✔ |
+| ㉚ La chaîne d'appro | 1 | 1 | 0 | 0 | 0 | 1 | 1 + 1 + 1 + 2 = **5** | ✔ |
+| ㉛ La loi | **0** | **0** | 0 | 0 | 0 | 0 | 0 + 1 + 1 + 2 = **4** | ✔ |
+| ㉜ Ce que vous avez confié | 2 | 3 | 1 | 0 | 0 | 1 | 3 + 1 + 1 + 2 = **7** | ✔ |
+| ㉝ Raser un site | 2 | 3 | 0 | 0 | 0 | 2 | 3 + 1 + 1 + 2 = **7** | ✔ |
+| ㉞ Les ordres du soir | 2 | 2 | 0 | 0 | 1 | 1 | 2 + 1 + 1 + 2 = **6** | ✔ |
+| ㉙ Le conflit | 2 | **9** | 0 | 1 | 0 | 1 | 9 + 1 + 1 + 2 = **13** | ✔ |
+| `*` transverses (geste, shell, bandeau) | 5 | 5 | 0 | 0 | 2 | 3 | (résolues ci-dessus) | — |
+| **Σ par attachement** | **46** | **65** | **5** | **9** | **3** | **29** | max = **13** (㉙) | ✔ |
+| **Σ par ligne distincte** | **42** | **61** | **5** | **6** | **3** | **28** | — | — |
+| **écart = attachements en double** | **+4** | **+4** | 0 | **+3** | 0 | **+1** | — | — |
 
 ### Les trois sommes de contrôle
 
-**1. Les entrées.** Σ par attachement (46) − entrées distinctes (42) = **+4**, et ces 4 sont nommés :
+**1. Les lignes.** Σ par attachement (46) − lignes distinctes (42) = **+4**, et ces 4 sont nommés :
 `comptoir.lampe` sert **3** écrans (⑨ ⑩ ⑯) ⇒ +2 · `comptoir.bouteilles` sert **2** écrans (⑨ ⑯) ⇒ +1 ·
 `bascule.course` sert **2** écrans (⑲ ㉕) ⇒ +1. **2 + 1 + 1 = 4** ✔
 
-**2. Les pistes.** Σ par attachement (68) − Σ par entrée (63) = **+5** : `comptoir.lampe` (+2 écrans
-× 1 piste = 2) · `comptoir.bouteilles` (+1 × 1 = 1) · `bascule.course` (+1 × **2** pistes = 2).
-**2 + 1 + 2 = 5** ✔
+**2. Les pistes.** Σ par attachement (65) − Σ par ligne (61) = **+4** : `comptoir.lampe` (+2 écrans
+× 1 piste = 2) · `comptoir.bouteilles` (+1 × 1 = 1) · `bascule.course` (+1 × **1** piste = 1 ; elle
+en portait 2 en v1, la couleur de l'interrupteur n'est plus animée). **2 + 1 + 1 = 4** ✔
 
-**3. Les genres.** Par entrée distincte : **5 + 6 + 3 + 28 = 42** ✔ (= le total des entrées).
-Par attachement : **5 + 9 + 3 + 29 = 46** ✔ (= le total des attachements). Et l'écart par genre se
-rattache aux mêmes 4 doublons : Ambiance +3 (les deux entrées de comptoir) et Transition +1
-(`bascule.course`) ⇒ **+4** ✔
+**3. Les genres.** Par ligne distincte : **5 + 6 + 3 + 28 = 42** ✔. Par attachement : **5 + 9 + 3 + 29
+= 46** ✔. L'écart par genre se rattache aux mêmes 4 doublons : Ambiance +3 (les deux lignes de comptoir)
+et Transition +1 (`bascule.course`) ⇒ **+4** ✔
 
 ### Ce que ces nombres disent
 
-- **28 des 42 entrées sont des `Transition`** (67 %) : le catalogue fait répondre les écrans, il ne les
+- **28 des 42 lignes sont des `Transition`** (67 %) : le catalogue fait répondre les écrans, il ne les
   fait pas remuer (§0.1). **6 `Ambiance`** seulement, toutes sur une matière réellement dessinée ou
   explicitement demandée à l'atelier.
-- **Pire écran : ㉙ à 9 pistes** (7 pour les silhouettes de la salle), soit **56 % du budget de 16**.
-  Tous les autres sont ≤ 7.
-- **Pire cas simultané dans tout le client** : ㉙ (9) + les 3 `Alerte` du chrome en descente (design
-  §8) + 3 transverses = **15 pistes sur `MaxPistes` = 48**. La couche de mouvement n'approche jamais
-  son plafond avec ce catalogue — le plafond protège contre ce qui viendra après (E5, les 202 pivots
-  de feuilles de la serre).
-- **Cadence** : les 6 `Ambiance` et les 5 `Alerte` tournent en régime ⇒ 11 pistes au plus en
-  permanence, dont 6 à 30 Hz (`Ambiance`, design §3). Les 28 `Transition` et 3 `Retour` ne consomment
-  rien hors du geste.
-- **4 entrées ne sont pas câblables aujourd'hui** : `semaine.aiguille` (A2), `vitrine.reflet` (A3),
-  `distribution.photo` (A4), `distribution.ficelle-tendue` (Q3). **38 le sont.**
-- **5 entrées posent un canal de transformation ou de couleur sous un `RectMask2D`** et attendent le
-  verdict du **spike E0** : `famille.lampe-du-don` (⑥), `service.jeton` et `service.cartel` (㉜),
-  `demolition.fiche-sortie` et `demolition.offre-fermee` (㉝). Aucune ne dépasse 6 par écran. Celle
-  qui décide est `demolition.fiche-sortie` : c'est la seule **translation** sous un masque.
+- **Pire écran résolu : ㉙ à 13 pistes sur 16** (7 pour les silhouettes de la salle). Tous les autres
+  sont ≤ 11.
+- **Pire cas simultané dans tout le client** : ㉙ résolu (13) + les 4 `Alerte` du chrome en descente
+  (design §9) = **17 pistes sur 48** (design §4). La couche de mouvement n'approche pas son plafond
+  avec ce catalogue — le plafond protège contre ce qui viendra après (E5, les 202 pivots de feuilles
+  de la serre).
+- **Cadence** : les 6 `Ambiance` et les 5 `Alerte` tournent en régime ⇒ 11 lignes au plus en
+  permanence (jusqu'à 22 pistes : les 6 voyants de ⑮ et les 7 silhouettes de ㉙ ne sont jamais à
+  l'écran ensemble), dont les `Ambiance` à 30 Hz au plus (design §4). Les 28 `Transition` et 3
+  `Retour` ne consomment rien hors du geste.
+- **3 lignes ne sont pas câblables aujourd'hui** : `semaine.aiguille` (B11, cadran à construire en
+  E4), `vitrine.reflet` (A3), `distribution.photo` (A4). **39 le sont.**
+- **Sous un `RectMask2D`** : 9 `Entree` sur ⑥, ㉜, ㉝ et ㉙ (liste en §I.2.7), toutes en `Alpha` ou
+  `Melange` ; **aucune translation** sous un masque depuis la v2. Elles attendent les mesures (a), (b)
+  et (d) du spike E0 pour leur coût, pas pour leur existence.
 
 ---
 
@@ -1080,9 +1199,9 @@ d'un fait mesuré, pas d'une préférence.
 | écran | pourquoi il n'est pas ici |
 |---|---|
 | ① Intérieur de district · ② Fiche bâtiment · ③ Carte | couverts par l'inventaire (§I.3) et par **E3**/**E5** du design |
-| ㉟ ㊱ ㊲ ㊳ ㊴ ㊵ | couverts par l'inventaire : les 6 paires `*6-scan` (§I.3, demande A9, question Q10) |
-| ㉑ Marché | **maquette ratifiée et ANIMÉE, zéro ligne de code** (`front.md:1683`) — aucun contrôleur `Market` n'existe. Ses 4 paires restent à l'inventaire ; `mk-eclat` attend A1 |
-| **⑪ Le coffre / Pipeline** | ⚠️ **`LaunderingController` n'existe pas** : seuls `Operational/Laundering/LaunderingDtos.cs` et `LaunderingClient.cs` sont là. `AppShell.cs:294` monte `FiliereScreenController` sur `Tab.Pipeline` (« ㊵ porte la filière (ruling de f2, 2026-09-23) ; **⑪ et ⑫ sortent du chemin joueur** »). ⇒ **`INDEX.md:15` et `:47` sont périmés sur cette ligne** (générés le 2026-09-22, la veille du ruling) |
+| ㉟ ㊱ ㊲ ㊳ ㊴ ㊵ | **aucun mouvement** : les six `*6-scan` sont retirés de la maquette et de l'inventaire (Q10), aucune cause dans la fiction |
+| ㉑ Marché | **maquette ratifiée et ANIMÉE, zéro ligne de code** (`front.md:1683`) — aucun contrôleur `Market` n'existe. Ses 5 paires (dont `mk-eclat`, hébergé au cadre 146) restent à l'inventaire en `SansHote:㉑ écran non monté` (§I.3) |
+| **⑪ Le coffre / Pipeline** | ⚠️ **`LaunderingController` n'existe pas** : seuls `Operational/Laundering/LaunderingDtos.cs` et `LaunderingClient.cs` sont là. `AppShell.cs:294` monte `FiliereScreenController` sur `Tab.Pipeline` (« ㊵ porte la filière (ruling de f2, 2026-09-23) ; **⑪ et ⑫ sortent du chemin joueur** »). `INDEX.md:47` porte déjà la correction (à la main, 2026-10-07 : « ⑪ non monté, 25 contrôleurs ») |
 | ⑦ Lieutenant Detail · ⑧ Rule Editor · ⑳ Recrutement | **ce ne sont pas des écrans** : des sections de `LieutenantScreenController` (`front.md:1400` → `:177` · `front.md:1421` → `:186` · `front.md:1441` → `:117`, `:173`). ⑳ est en outre **mis de côté par l'user** le 2026-08-26 (arbitrage **M**, recrutement par promotion, `front.md:1444`) ⇒ rien avant l'arbitrage |
 | ⑬ Pile du jour | **ni construit ni monté** (`front.md:1544` : « `[ ]` construit · `[ ]` monté »), **mis de côté par l'user** le 2026-08-26 (arbitrage **N**) |
 | ⑱ Plus | couvert par `shell.entree` : c'est une liste défilante plein cadre montée dans le même `ContentSlot` (`AppShell.cs:1328-1418`), sans matière propre. Le canon ne lui donne qu'une « transition push/pop » (`screen_12:223`) |
@@ -1091,16 +1210,59 @@ d'un fait mesuré, pas d'une préférence.
 
 # VII. Ce qu'il faut faire de ce fichier
 
-1. **f2** répond aux 12 questions du §IV. Quatre d'entre elles (Q1, Q2, Q3, Q4) **modifient le design**
-   avant E1 : un champ `Bloquante`, un `Ecran` pluriel, un `Propriete.Parametre`, et une question
-   produit qui n'en est pas une.
-2. **l'user** tranche **Q7** (l'ère — tout le vocabulaire de matière en dépend) et **Q10** (la cause du
-   balayage, qui décide si 6 paires restent au catalogue).
-3. **l'atelier** prend les 9 demandes du §III ; **A5** (la ligne de ⑲) et **A2** (le manomètre de ⑭)
-   sont les deux qui débloquent le plus.
-4. **ensuite seulement** : `coder` écrit E1 avec un `Catalogue` de **82 lignes** (42 d'ici + 40 de
-   l'inventaire), dont **48 câblables** — et les gardes G1 à G9 peuvent être vertes le premier jour,
-   parce que chaque ligne porte déjà sa `Cause`, sa `Source`, son `Ecran`, son budget et son dégradé.
+1. **Revue ⊥ n°2** de cette v2 (et de l'ajout v4.2 du design, §2 « `CouleurA = Cible` »), jusqu'à
+   0 BLOCKING. Les 12 questions du §IV sont résolues : aucune décision de f2 n'est attendue avant E1,
+   sauf le flotteur « + $ » (R2.2), hors de ce catalogue.
+2. **L'atelier** n'a plus que A3 (la vitre de ㉓) et A4 (la photo de ㉘) qui débloquent une ligne ;
+   A6-A8 sont des dettes de DA.
+3. **Ensuite** : E1 écrit le `Catalogue` à partir de **§I.4** (47 `Entree` de ce fichier) **et de §I.3**
+   (les 8 entrées du chrome du design §9, les 31 `SansHote` des paires restantes) — **81 lignes G2**,
+   dont **47 câblables**. G1, G2, G4, G6, G8, G12 et G13 se vérifient sur la donnée seule ; G3 et G5
+   sur les courbes ; G9, G10, G11 sur l'arbre et les sources, au créneau.
 
-**Aucune ligne de ce fichier n'est une décision.** Je propose ; f2 et l'user valident ; et le juge ⊥
-qui relira ceci n'a pas besoin de me faire confiance : chaque nombre porte son ancre.
+**Aucune ligne de ce fichier n'est une décision nouvelle.** Je propose ; f2 et l'user ont validé ce qui
+devait l'être (§IV) ; et le juge ⊥ qui relira ceci n'a pas besoin de me faire confiance : chaque nombre
+porte son ancre.
+
+---
+
+# VIII. Réponse à la revue ⊥ n°1 (08/10) — NON APPROUVÉ : 7 BLOCKING, 17 MAJOR, 12 mineurs
+
+Rapport complet : `revue-catalogue-n1.md` (même dossier).
+
+| finding | traitement (v2) |
+|---|---|
+| **BL-1** canal `Teinte` inexistant (12 entrées) | `Teinte` retiré du fichier. Assombrissements et virages ⇒ `Melange` avec `CouleurA`/`CouleurB` déclarées (§I.4) ; éclaircissements sur un `Graphic` coloré ⇒ `Melange` vers `Cible × k`, k > 1, borné ; sprites cuits sous un `Graphic` blanc ⇒ assombrir (`decision.jeton`, `service.jeton`) ou monter l'`Alpha` (`conflit.envoi/bord`) ; couleurs qui changent aussi d'alpha ⇒ posées par le contrôleur (`bascule.course` en `quandFini`, `semaine.jeton-depense` d'un coup). Le design gagne `CouleurA = Cible` (v4.2 §2, §16), sans quoi `retour.appui` repeignait les 67 boutons de la même couleur |
+| **BL-2** `file.part` `TranslationY` sous `HorizontalLayoutGroup` | `Alpha` seul (`Transitionner` 1 → 0,28), le fade du canon `screen_5:340` |
+| **BL-3** `decision.distribuee` `TranslationX` sous `HorizontalLayoutGroup` | translation retirée ; `Rotation` `Additif` +5° → 0 et `Alpha` gardés |
+| **BL-4** `demolition.fiche-sortie` sous `VerticalLayoutGroup` + `ContentSizeFitter` | `Alpha` seul ; plus aucune translation sous un masque (§I.2.7) |
+| **BL-5** angles de ⑩ en repère CSS | repos Unity **+5° / 0° / −5°** (`:532`) ; arrivée en `Rotation` `Additif` +9° → 0 ; `TranslationY` +48 u dit en repère Unity |
+| **BL-6** `police.dispatch` forme `mk-veille` inversée | `Melange` **0 → 1 → 0**, pic à mi-période comme l'oracle ; `PoseDeReposS = 0,800 s` = le pic |
+| **BL-7** six `PoseDeReposS` sur l'identité (G3) | `comptoir.lampe`, `comptoir.bouteilles`, `famille.lampe-du-don`, `conflit.salle` ⇒ `PoseDeReposS = 0,000 s` (le creux, chaque canal hors repos) ; `accueil.descente`, `decision.jeton`, `service.jeton` ⇒ `Melange` 1 à t = 0 ; `police.dispatch` ⇒ BL-6. Règle écrite en §0.4 et §I.2.5 |
+| MA-1 noms de champs de I.1 | I.1 recalé sur le §2 v4.2 ; `réduit` dit **dérivé**, non stocké |
+| MA-2 `Bloquante`/`Hote`/`Fonctionnelle` non déclarés | table **§I.4**, une ligne par `Entree` (47) |
+| MA-3 Q1-Q4 présentées ouvertes | marquées RÉSOLUES par v4.1 ; encadré de II.0 réécrit ; §VII réécrit |
+| MA-4 `distribution.ficelle-tendue` dite hors modèle | `Parametre` canal 0, `Transitionner`, câblable |
+| MA-5 cinq `Alerte` « conservées » sous `Reduit` | figées à `PoseDeReposS` (§5 : `Alerte` comprise) ; l'information tient à l'objet (état statique nommé) |
+| MA-6 `carnet.en-main` hors des exceptions du §5 | figé à `PoseDeReposS = 0` ; la marque apparaît au seuil par le re-rendu de `PrendreEnMain`. Et sa cible devient une `Marque` enfant : un `CanvasGroup` sur la ligne faisait fondre ses textes (trouvé en corrigeant) |
+| MA-7 G5 « ≥ 0,4 s » | « au plus 3 extrema/s, période ≥ 0,667 s » partout |
+| MA-8 trois dépassements nommés au lieu de quatre | quatre, `bandeau.sortie` ajouté (§I.2.3) |
+| MA-9 table G2 écrite sur 44 | §I.3 réécrite sur 40, avec B11 et `mk-eclat`, contrôle 40 |
+| MA-10 38 + 48 ≠ 82 | 81 lignes G2 (B11 = `semaine.aiguille`), 34 non câblables + 47 câblables |
+| MA-11 A1 contredite par l'atelier | A1 marquée FAITE (cadre 146) |
+| MA-12 `semaine.aiguille` revendique B10 | B11 ; B10 est `chrome.aiguille.balayage` |
+| MA-13 §0.4 périmé | recompté : 529 / 29 / 3 paires / 16 instances, `mk-eclat` cité |
+| MA-14 R2.2 de ㉔ effacée | exception consignée en §I.2.2 (dette R2.2 de ㉔) |
+| MA-15 `comptoir.bouteilles` en valeurs rendues | facteurs 0,83 → 1,00, rendu 0,66 → 0,80 dit |
+| MA-16 halo de ⑥ à α 0,14 | Δ rendu ≈ 6/255 au centre dit ; mesuré à la planche E4, retiré sous 3/255 |
+| MA-17 transverses non résolues dans §V | colonne « G4 résolu » ; pire écran ㉙ 13/16 ; pire cas 17/48 |
+| mi-1 à mi-12 | renvois recalés sur v4.2 (§2-§11, G1-G13), 4 instances de `mk-lampe`, 25 contrôleurs, `INDEX.md:47` déjà corrigé, `:777`, `:517`, `:315`/`:383`, `Px(10)`, `:209`/`:374`, 21/22 dit non mesuré, 7 cibles texte, « 0 usage » |
+
+**Trouvé en corrigeant, hors du rapport** : (1) une `Entree` applique tous ses canaux à sa cible ⇒ les 5
+lignes à deux cibles aux canaux différents sont scindées (`ligne/cible`, §I.1 règle 1) ; (2)
+`autonomie.reponse` faisait s'effacer `Option_A`/`Option_B`, qui **ne sont pas rebâtis** une fois la
+question décidée (`AutonomyInboxController.cs:316-323`) : l'entrée ne garde que l'apparition de
+`Decided`, 1 piste (㉔ passe de 3 à 2) ; (3) `appro.commande-partie` et `carnet.encre` visaient deux
+textes chacun pour 1 piste : ils visent désormais leur conteneur, qui ne porte que ces textes ; (4)
+`file.part` et `famille.rang-ouvre` écrivent dans un `CanvasGroup` que le propriétaire règle lui-même :
+`Transitionner(de, vers)`, pas un `Attacher` multiplicatif.

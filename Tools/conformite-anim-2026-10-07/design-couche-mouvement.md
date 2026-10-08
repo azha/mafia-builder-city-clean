@@ -1,4 +1,4 @@
-# Design — la couche de mouvement du client Unity (CLIENT-3, 07-08/10/2026) — v4.1 — ✅ APPROUVÉ (revue ⊥ n°4 : 0 BLOCKING)
+# Design — la couche de mouvement du client Unity (CLIENT-3, 07-08/10/2026) — v4.2 — ✅ APPROUVÉ (revue ⊥ n°4 : 0 BLOCKING) + un ajout au §2 (§16), soumis à la revue ⊥ n°2 du catalogue
 
 Statut : **design, rien n'est codé.** Historique des revues ⊥ (agent neuf à chaque tour) : v1 NOT_APPROUVÉ (6 BLOCKING / 13 MAJEUR / 11 mineurs) ; v2 NOT_APPROUVÉ (3 BLOCKING / 9 MAJEUR / 10 mineurs, commit `d207b48b`) ; v3 NOT_APPROUVÉ (2 BLOCKING / 5 MAJOR / 9 mineurs, commit `5a47e04c` ; les trois BLOCKING de la v2 vérifiés corrigés). Cette v4 répond aux findings de la v3 (table §14) ; la revue n°4 l'**APPROUVE** (0 BLOCKING, 5 MAJOR, 10 mineurs) et la v4.1 ferme les 5 MAJOR (table §15) ; les 10 mineurs vont en dette (`dettes-design-mouvement.md`). Règles de revue en vigueur : **BLOCKING = « le code écrit d'après ce design serait faux » ; une prémisse non démontrable depuis le dépôt se tranche par une MESURE planifiée (E0) avec un défaut sûr.** Rulings du 07/10 : écarts de nuance (pixels, millisecondes, forme exacte d'une courbe) consignés, pas traités ; animations **fidèles en cause, rythme et sensation** ; animations DIÉGÉTIQUES ; ère des objets 2000-2010 (le laiton du chrome d'interface reste).
 
@@ -33,7 +33,7 @@ Tout est `static readonly`, immuable.
 **Convention de repère (BL-2 v2).** Les valeurs du catalogue sont dans le repère d'**Unity**. Le passage CSS → Unity est écrit une fois, dans l'oracle et son test : **`Rotation` Unity = − rotation CSS** (CSS horaire, Unity antihoraire), **`TranslationY` Unity = − translateY CSS** (CSS vers le bas), `TranslationX` inchangé, `Alpha`, `Echelle`, `EchelleX`, `EchelleY` inchangés (une échelle est invariante au retournement d'axe). Exemple : `tremble` CSS `52° → 56° → 52°` = **`0 → −4° → 0`** en `Additif` côté Unity (vers le chaud, `Tremblement(0.07) = −4`, épinglé par `DistrictDescentePlayModeTests.cs:179`).
 
 - **`Genre`** : `Alerte`, `Ambiance`, `Retour`, `Transition`.
-- **`Propriete`** : `Alpha` (CanvasGroup.alpha) · `Melange` (0..1 entre `CouleurA` et `CouleurB`, écrit RGB dans `Graphic.color` sans toucher l'alpha) · `Hue` (degrés ; **base = `CouleurA`** déclarée sur le mouvement, écrit RGB seulement, sans composition — le gyrophare recalcule depuis sa teinte comme aujourd'hui) · `Eclat` (alpha d'un calque de lumière enfant nommé `Eclat`, car un `Graphic` ne peut pas dépasser sa couleur : `filter:brightness(1.35)`) · `TranslationX`, `TranslationY`, `Rotation`, `Echelle` (uniforme : X et Y ensemble), `EchelleX`, `EchelleY` (axes seuls : `ec` et `mk-buee` ne bougent qu'en X, `drip` et `gt` qu'en Y — mesuré dans l'oracle) · `Remplissage` (`Image.fillAmount`, **progression fonctionnelle** : l'arc d'appui long de 1 000 ms du canon) · `Parametre` (puits générique : `IParametreAnime.PoserParametre(int canal, float v)`, implémenté par un graphe sur mesure — la ficelle de ㉘ ; un seul point d'extension, testable avec un faux implémenteur).
+- **`Propriete`** : `Alpha` (CanvasGroup.alpha) · `Melange` (0..1 entre `CouleurA` et `CouleurB`, écrit RGB dans `Graphic.color` sans toucher l'alpha ; **v4.2** : `CouleurA` vaut une couleur nommée **ou `Cible`** — le RGB de la cible lu à l'attachement, traité comme la base d'un transform (`Rebaser` et la détection du §3 le relisent, `Detacher` le restitue) — et `CouleurB` une couleur nommée **ou `Cible × k`**, facteur RGB par canal, résultat borné à [0, 1] ; §16) · `Hue` (degrés ; **base = `CouleurA`** déclarée sur le mouvement, écrit RGB seulement, sans composition — le gyrophare recalcule depuis sa teinte comme aujourd'hui) · `Eclat` (alpha d'un calque de lumière enfant nommé `Eclat`, car un `Graphic` ne peut pas dépasser sa couleur : `filter:brightness(1.35)`) · `TranslationX`, `TranslationY`, `Rotation`, `Echelle` (uniforme : X et Y ensemble), `EchelleX`, `EchelleY` (axes seuls : `ec` et `mk-buee` ne bougent qu'en X, `drip` et `gt` qu'en Y — mesuré dans l'oracle) · `Remplissage` (`Image.fillAmount`, **progression fonctionnelle** : l'arc d'appui long de 1 000 ms du canon) · `Parametre` (puits générique : `IParametreAnime.PoserParametre(int canal, float v)`, implémenté par un graphe sur mesure — la ficelle de ㉘ ; un seul point d'extension, testable avec un faux implémenteur).
 - **`Mode`** par canal : `Additif` (delta : translations, rotation du tremblement), `Multiplicatif` (facteur : alpha, échelle), `Absolu` (valeur imposée : mélange, hue, balayage d'aiguille, remplissage).
 - **`ImageCle`** `{ T; V; Aisance E }` ; **`Aisance`** (lue dans `easing_cles[i].easing` de l'oracle, **jamais** dans `easing` de l'effet, qui vaut « linear » pour toute animation CSS : l'`animation-timing-function` devient l'assouplissement par image clé) = struct à 4 flottants (`Lineaire`, `Ease`, `EaseIn`, `EaseOut`, `EaseInOut`, `Bezier(x1,y1,x2,y2)`), résolue par 6 itérations de Newton sans allocation.
 - **`Canal`** `{ Propriete P; Mode M; ImageCle[] Cles; }` ; **`MouvementDefini`** `{ Id; Genre G; float PeriodeS; Canal[] Canaux; Iteration (Infini | Fois n); bool Alterne; float PoseDeReposS; Couleur CouleurA, CouleurB; bool Fonctionnelle; }`.
@@ -198,3 +198,25 @@ Le catalogue (42 entrées) est une proposition à relire une fois ce mécanisme 
 | MA-3 `Rebaser` manque `UpdateAlarmState`, epsilons manquants | trois sites `:822/836/851` migrés en `Transitionner` ; epsilons ajoutés (§3) |
 | MA-4 B1 sans précondition | §9 : le test crée sa régie par `PourTest()` |
 | MA-5 compteurs non exposés | `PistesVivantes`, `Refus`, `SansRegie` (§3) |
+
+## 16. Ajout v4.2 — `CouleurA = Cible` (porté par la revue ⊥ n°1 du catalogue, 08/10)
+
+**Pourquoi.** `CouleurA`/`CouleurB` sont déclarées sur le `MouvementDefini`, donc statiques. Or le §8 pose un
+`Melange` « vers sombre » sur **les 67 boutons**, dont les `Image.color` diffèrent : avec une `CouleurA`
+statique, `Detacher` (§3, « `Melange`/`Hue` → `CouleurA` ») repeindrait chaque bouton de la même couleur.
+Le catalogue rencontre le même cas sur les crans de ⑰ (teinte selon le rang) et les voyants de ⑮.
+
+**Quoi.** `CouleurA ∈ { couleur nommée, Cible }` ; `CouleurB ∈ { couleur nommée, Cible × k }`.
+- `Cible` = `Graphic.color` RGB **lu à l'`Attacher`/`Transitionner`**, après que le propriétaire a posé son
+  état d'arrivée. C'est la base de la propriété `Melange`, exactement comme pour un transform : `Rebaser(cible,
+  Melange)` la relit, la détection (epsilon 1/512 par canal) la relit si le propriétaire réécrit, `Detacher` la
+  restitue. L'alpha du `Graphic` n'est jamais touché (inchangé).
+- `Cible × k` = produit par canal, borné à [0, 1]. `k < 1` assombrit. `k > 1` n'éclaircit que les canaux
+  sous 1 : sur un `Graphic` **blanc** dont la couleur est cuite dans le sprite, il ne fait rien — G13 le voit
+  pour une `Ambiance`, et le catalogue l'interdit pour les autres genres (§I.1 du catalogue, règle 3).
+- Coût : un `Color` par piste, lu une fois à l'attachement ; aucune allocation par `Tick` (X3 inchangé).
+
+**Ce qui ne change pas.** G12 (deux `Absolu` sur le même couple) ; la règle de remplacement du §3 ; le
+§5 (i) (`Retour` garde le `Melange` sous `Reduit`) ; le test de fin de piste, qui vérifie maintenant que la
+couleur restituée est **celle de la cible**, avec un contrôle négatif sur deux boutons de couleurs différentes.
+
