@@ -70,10 +70,27 @@
 | (c) | la bande `.voix` avec le cadre rond du portrait VIDE | **retirer le cadre rond** tant que TD-823 n'est pas servi (un cercle vide se lit comme un défaut) ; la bande garde texte et filet | `ConstruireLaBande()` ne pose plus « Portrait » |
 | (d) | « donne 100 Marks » au lieu de « + 100 Marks » | C consigné, OK | C2 ci-dessous |
 
-⚠️ Reste ouvert, à f2 : le canon de `LongPressButton` (`global_conventions_core.md:129-138`) dit que la
-confirmation destructive est un appui long **OU** une saisie, et que l'alternative par saisie est
-**obligatoire pour l'accessibilité** (HighestLeverageCard la pose). La maquette n'en dessine aucune ici :
-rien n'est inventé, la question est remontée.
+| (e) | l'ALTERNATIVE PAR SAISIE : le canon de `LongPressButton` l'exige, la maquette n'en dessine aucune | **le canon fait foi** : la poser, la plus discrète possible (style de la carte, sans nouvel élément visible si le canon le permet) ; écrire ici que c'est le canon qui l'impose et que l'atelier la dessinera | voir ci-dessous |
+
+### (e) L'alternative par saisie — c'est le CANON qui l'impose ; l'atelier la dessinera
+
+- **Source** : `docs/tech/08_ui_screens/global_conventions_core.md:131-137` (dépôt back) — confirmation par
+  **typed-confirm** (mot-clé dans la langue de l'interface) **ou** appui long de 1 000 ms, et pour l'appui long :
+  « Accessible : alternative typed-confirm **obligatoire** (F2 — utilisateurs sans accès haptique) ». La maquette (cadres
+  98-100) n'en dessine aucune : **ce n'est pas une décision de design, c'est une exigence du canon**, et sa forme est
+  provisoire jusqu'au dessin de l'atelier.
+- **Forme posée (la plus discrète)** : **rien de visible au repos**. Un appui COURT sur une carte à portée — qui n'achète
+  jamais (« un tap simple ne confirme jamais ») — ouvre DANS la carte une étiquette de saisie au style de l'étiquette de
+  prix (plaque papier `#efe6d4`, rayon 2, bord crème fin ; invite italique éteinte « tapez ACHETER », centrée). Le mot
+  validé (casse et blancs ignorés) demande l'achat par le MÊME chemin que l'appui long ; tout autre mot n'achète rien.
+  Un second appui court referme la saisie ; une seule est ouverte à la fois.
+- **Code** : `LongPressButton.OnShortTap` (neuf, additif : un appui relâché avant le seuil, ni sorti ni lâché par la
+  vitre) ; `ShopScreenController.OuvrirLaSaisie`, `ConfirmerParSaisie`, `MotCleDAchat`.
+- **Mots neufs, non servis** : `boutique.bloc.acheter` (« ACHETER », le mot-clé) et `boutique.bloc.tapez_mot`
+  (« tapez {mot} ») — à faire servir par une table de l'atelier.
+- **Garde** : `Vitrine` V2 (source : aucun `Button`, la saisie s'ouvre par `OnShortTap`) et V3 (effet : absente au
+  repos, ouverte par l'appui court, papier, `CanvasRenderer`, un mauvais mot et le vide n'achètent rien, le mot-clé
+  achète une fois).
 
 ## Écarts CONSIGNÉS (C — ni correctif ni tour de juge, ruling user 07/10)
 
@@ -97,7 +114,7 @@ rien n'est inventé, la question est remontée.
    Les planches `E07_Boutique_*` du harnais `PlanchesParEcran` sont à reprendre au créneau groupé.
 3. **Le geste d'achat réel** (appui long → `POST /v1/me/iap/items/purchase` → relecture) : hors
    réseau, non vérifié. La garde `Vitrine` V3 pilote l'appui (court : 0 achat ; lâché par la vitre ;
-   long abouti : 1 achat demandé), pas la route.
+   long abouti : 1 achat demandé ; saisie : le mot-clé seul achète), pas la route.
 4. **Les polices réellement rendues** (`fc-match`) : non exécuté ce tour.
 
 ## Captures en jeu attendues (au créneau groupé, sur signal de f2)

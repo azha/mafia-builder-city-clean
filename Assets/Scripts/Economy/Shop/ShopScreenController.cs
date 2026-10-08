@@ -340,8 +340,86 @@ namespace MafiaCleanCity.Economy.Shop
                 LongPressButton appui = art.AddComponent<LongPressButton>();
                 string skuId = s.sku_id;
                 appui.OnLongPressCompleted += () => { AchatsDemandes++; StartCoroutine(Acheter(skuId)); };
+                // ㉓ (f2 08/10) : le CANON fait foi — « alternative typed-confirm obligatoire (F2 — utilisateurs sans accès haptique) »
+                //    (global_conventions_core.md:135). La plus discrète possible : RIEN de visible au repos ; un appui COURT (qui n'achète
+                //    jamais) ouvre la saisie DANS la carte. La maquette n'en dessine aucune : l'atelier la dessinera.
+                Transform carte = art.transform;
+                appui.OnShortTap += () => OuvrirLaSaisie(carte, skuId);
                 appuis.Add(appui);
             }
+        }
+
+        // ═══ ㉓ l'alternative par SAISIE (canon global_conventions_core.md:129-138 ; décision de f2 du 08/10) ═══
+
+        private GameObject saisieOuverte;
+
+        /// <summary>Le mot-clé, dans la langue de l'interface (canon : « mot-clé fourni dans la même langue que l'UI »).</summary>
+        public static string MotCleDAchat => Lib("ACHETER");
+
+        /// <summary>Un appui court sur une carte à portée : l'étiquette de SAISIE, au style de l'étiquette de prix (plaque de papier, rayon 2,
+        /// bord crème fin), sous la carte ; une seule ouverte à la fois. Le mot validé (`onSubmit`) passe par `ConfirmerParSaisie`.</summary>
+        private void OuvrirLaSaisie(Transform art, string skuId)
+        {
+            if (saisieOuverte != null)
+            {
+                bool memeCarte = saisieOuverte.transform.parent == art;
+                Destroy(saisieOuverte);
+                saisieOuverte = null;
+                if (memeCarte) return;   // un second appui court la referme
+            }
+            GameObject e = new GameObject("Saisie", typeof(RectTransform));
+            e.transform.SetParent(art, false);
+            if (e.GetComponent<CanvasRenderer>() == null) e.AddComponent<CanvasRenderer>();
+            Image fond = e.AddComponent<Image>();
+            fond.sprite = ProceduralUI.RoundedRectMask((int)Px(2f));
+            fond.type = Image.Type.Sliced;
+            fond.color = Papier;
+            LayoutElement le = e.AddComponent<LayoutElement>();
+            le.minHeight = le.preferredHeight = Px(9f) * 1.35f + 2f * Px(2f);
+            le.preferredWidth = 0f; le.flexibleWidth = 1f;
+            Bord(e.transform, ProceduralUI.RoundedRectOutline((int)Px(2f), Px(1f), Creme2), Image.Type.Sliced);
+
+            GameObject zone = new GameObject("Zone", typeof(RectTransform));
+            zone.transform.SetParent(e.transform, false);
+            RectTransform zr = (RectTransform)zone.transform;
+            zr.anchorMin = Vector2.zero; zr.anchorMax = Vector2.one;
+            zr.offsetMin = new Vector2(Px(6f), Px(2f)); zr.offsetMax = new Vector2(-Px(6f), -Px(2f));
+            zone.AddComponent<RectMask2D>();
+            TextMeshProUGUI texte = Plein(NouveauTexte(zone.transform, "Texte", "", 9f, EncreDuPapier, Sans, true, TextAlignmentOptions.Center));
+            TextMeshProUGUI invite = Plein(NouveauTexte(zone.transform, "Invite",
+                MafiaCleanCity.I18n.Libelle.Gabarit("boutique.bloc.tapez_mot", "tapez {mot}", new Dictionary<string, string> { { "mot", MotCleDAchat } }),
+                9f, EncreTernie, Sans, false, TextAlignmentOptions.Center));
+            invite.fontStyle = FontStyles.Italic;
+
+            TMP_InputField champ = e.AddComponent<TMP_InputField>();
+            champ.targetGraphic = fond;
+            champ.textViewport = zr;
+            champ.textComponent = texte;
+            champ.placeholder = invite;
+            champ.lineType = TMP_InputField.LineType.SingleLine;
+            champ.onSubmit.AddListener(mot => ConfirmerParSaisie(skuId, mot));
+            saisieOuverte = e;
+            champ.ActivateInputField();
+        }
+
+        private static TextMeshProUGUI Plein(TextMeshProUGUI t)
+        {
+            RectTransform rt = t.rectTransform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            t.GetComponent<LayoutElement>().ignoreLayout = true;
+            return t;
+        }
+
+        /// <summary>L'alternative par saisie : le mot-clé exact (casse et blancs ignorés) demande l'achat — par le MÊME chemin que l'appui
+        /// long (`AchatsDemandes`, `Acheter`) ; tout autre mot n'achète rien. Rend vrai si l'achat est demandé.</summary>
+        public bool ConfirmerParSaisie(string skuId, string mot)
+        {
+            if (!string.Equals((mot ?? "").Trim(), MotCleDAchat, System.StringComparison.OrdinalIgnoreCase)) return false;
+            if (saisieOuverte != null) { Destroy(saisieOuverte); saisieOuverte = null; }
+            AchatsDemandes++;
+            StartCoroutine(Acheter(skuId));
+            return true;
         }
 
         /// <summary>L'ÉTIQUETTE DE PRIX `.etiq`, pendue sous le nom : plaque de papier au bord fin (rayon 2), le jeton et le montant ; `.hors` = papier terni, bord POINTILLÉ, encre éteinte ; `.magasin` = plaque sombre

@@ -17,11 +17,12 @@ namespace MafiaCleanCity.CityMap.Tests
     // atelier 7159e54 ; « bande basse sans voix », TD-823). HORS RÉSEAU : le catalogue est FABRIQUÉ (les neuf SKU du canon, `iap_catalogue.md` §2.1).
     //   V1  les DESSINS, purs : un motif par article (kind, identifiant), la pile par rang (1/3/5/8 épaisseurs, pas 5,5/5,5/5,0/4,2), le chiffre de la clé
     //   V2  GARDE DE SOURCE : le contrôleur passe par la pile (EnteteDEcran.PoserLaPile), les dessins (VitrinePictogrammes.Dessiner), la bande de voix (PiedDEcran.BandeDeVoix), le défilement indiqué ;
-    //       plus de disque unique (A3) ni de bouton « ACHETER » (la carte est l'article)
+    //       plus de disque unique (A3) ni AUCUN bouton (la carte est l'article) ; l'alternative typed-confirm du canon est ouverte par l'appui court
     //   V3  EFFET, sur un catalogue fabriqué (solde 100, une possession) : A1 deux cartes par rangée, chacune moins large que la moitié de l'écran et de même largeur ; A2 une plaque teintée (≠ fond de page) ;
     //       A3 des dessins qui DIFFÈRENT (la pile de 3 500 plus haute que celle de 100 ; la clé porte son chiffre ; la plaque porte ses couleurs) ; A4 la bande basse en PIED, sans voix ; B1 les deux intitulés ;
     //       B2 le médaillon de bonus hors mise en page ; B3 le comptoir : enseigne et solde dans la MÊME ligne, l'enseigne à gauche ; l'article possédé : ACQUIS et plus de prix ; l'article hors d'atteinte :
     //       sa raison en rouge et pas de geste ; l'article à portée : la carte est le geste, un APPUI LONG (décision de f2, 08/10) — un appui court n'achète rien, la vitre qui glisse lâche l'appui ;
+    //       l'alternative par SAISIE (canon global_conventions_core.md:135, f2 08/10) : absente au repos, ouverte par l'appui court, seul le mot-clé achète ;
     //       la bande basse SANS cadre rond de portrait (décision de f2, 08/10)
     [Category("Vitrine")]
     public class VitrinePlayModeTests
@@ -59,7 +60,9 @@ namespace MafiaCleanCity.CityMap.Tests
             StringAssert.Contains("Lib(\"Les extras — payés en Marks\")", s, "B1 : l'intitulé qui dit par quoi on paie");
             StringAssert.Contains("Lib(\"Les Marks — payés au magasin\")", s);
             StringAssert.DoesNotContain("RadialDisc((int)Px(11f)", s, "A3 : plus le même disque pour tous les produits");
-            StringAssert.DoesNotContain("\"ACHETER\"", s, "la maquette ne dessine aucun bouton : la carte est l'article");
+            // « ACHETER » est désormais le MOT-CLÉ de la saisie (canon typed-confirm, f2 08/10), pas un bouton : la garde devient structurelle.
+            StringAssert.DoesNotContain("AddComponent<Button>", s, "la maquette ne dessine aucun bouton : la carte est l'article");
+            StringAssert.Contains("appui.OnShortTap += () => OuvrirLaSaisie(carte, skuId)", s, "canon : l'alternative typed-confirm, ouverte par un appui court");
             StringAssert.Contains("art.AddComponent<LongPressButton>()", s, "décision de f2 (08/10) : l'achat se prend d'un appui LONG");
             StringAssert.DoesNotContain("art.AddComponent<Button>()", s, "plus d'achat en un seul appui");
             StringAssert.DoesNotContain("\"Portrait\"", s, "décision de f2 (08/10) : pas de cadre rond vide");
@@ -196,14 +199,27 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.IsNotNull(appui, "à portée : la carte est le geste — un APPUI LONG (décision de f2, 08/10)");
                 Assert.IsNull(aPortee.GetComponent<Button>(), "plus d'achat en un seul appui");
                 Assert.AreEqual(UiTimingTunables.DestructiveLongpressMs, appui.RequiredHoldMs, "le geste maison des actions irréversibles : 1 000 ms");
+                Assert.IsNull(aPortee.Find("Saisie"), "au repos, aucun élément neuf : la saisie n'est pas visible");
                 appui.SimulateShortTap();
                 Assert.AreEqual(0, ecran.AchatsDemandes, "un appui COURT n'achète rien");
+                // ㉓ canon (global_conventions_core.md:135, f2 08/10) : l'appui court OUVRE l'alternative typed-confirm, dans la carte
+                Transform saisie = aPortee.Find("Saisie");
+                Assert.IsNotNull(saisie, "l'appui court ouvre la saisie dans la carte");
+                Assert.IsNotNull(saisie.GetComponent<TMP_InputField>(), "une saisie, pas un bouton");
+                Assert.AreEqual((Color32)new Color32(0xef, 0xe6, 0xd4, 255), (Color32)saisie.GetComponent<Image>().color, "au style de l'étiquette de prix : le papier");
+                Assert.IsNotNull(saisie.GetComponent<CanvasRenderer>(), "la plaque porte son CanvasRenderer");
+                StringAssert.Contains("ACHETER", saisie.Find("Zone/Invite").GetComponent<TextMeshProUGUI>().text, "l'invite nomme le mot-clé");
+                Assert.IsFalse(ecran.ConfirmerParSaisie("cosm_dashboard_theme_1", "acheté"), "un autre mot n'achète rien");
+                Assert.IsFalse(ecran.ConfirmerParSaisie("cosm_dashboard_theme_1", ""), "une saisie vide n'achète rien");
+                Assert.AreEqual(0, ecran.AchatsDemandes);
                 appui.OnPointerDown(null);
                 Assert.IsTrue(appui.IsPressing, "contrôle positif : l'appui est en cours");
                 hote.transform.Find("Defilement").GetComponent<ScrollRect>().onValueChanged.Invoke(Vector2.zero);
                 Assert.IsFalse(appui.IsPressing, "la vitre qui glisse LÂCHE l'appui : un glissement lent n'achète pas");
                 appui.SimulateCompletedLongPress();
                 Assert.AreEqual(1, ecran.AchatsDemandes, "un appui LONG abouti demande l'achat, une fois");
+                Assert.IsTrue(ecran.ConfirmerParSaisie("cosm_dashboard_theme_1", " acheter "), "le mot-clé (casse et blancs ignorés) demande l'achat");
+                Assert.AreEqual(2, ecran.AchatsDemandes, "la saisie passe par le MÊME chemin que l'appui long");
                 Assert.IsNull(aPortee.Find("Manque"));
                 Assert.AreEqual("80 Marks", aPortee.Find("Etiquette/Montant").GetComponent<TextMeshProUGUI>().text);
                 Assert.AreEqual("DERRIÈRE LA VITRE", petite.Find("Etiquette/Montant").GetComponent<TextMeshProUGUI>().text, "argent réel : derrière la vitre");

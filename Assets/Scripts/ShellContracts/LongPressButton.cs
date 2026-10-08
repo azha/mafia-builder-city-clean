@@ -15,6 +15,9 @@ namespace MafiaCleanCity.Shell
     public class LongPressButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
     {
         public event Action OnLongPressCompleted;
+        /// <summary>Un appui RELÂCHÉ avant le seuil, sur la carte même (ni sorti, ni lâché par un défilement) — il ne confirme JAMAIS
+        /// rien (canon : « un tap simple ne confirme jamais »). ㉓ s'en sert pour OUVRIR son alternative typed-confirm.</summary>
+        public event Action OnShortTap;
         public int RequiredHoldMs = UiTimingTunables.DestructiveLongpressMs;
 
         public bool IsPressing { get; private set; }
@@ -31,8 +34,10 @@ namespace MafiaCleanCity.Shell
 
         public void OnPointerUp(PointerEventData eventData)
         {
+            bool court = IsPressing && !firedThisPress;
             IsPressing = false;
             pressStartTime = -1f;
+            if (court) OnShortTap?.Invoke();
         }
 
         public void OnPointerExit(PointerEventData eventData)
