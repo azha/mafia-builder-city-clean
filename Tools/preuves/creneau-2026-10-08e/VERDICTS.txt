@@ -1,0 +1,20 @@
+# NavF5 — créneau du 08/10 (CLIENT-1, porte 09:47-09:5x, sur 94ac1b0e) — lignes de verdict extraites des journaux (journaux complets hors dépôt)
+# run1 = diagnostic (forme ORIGINALE : Object.Destroy différé) + NavF5 corrigé ; run2 = diagnostic précisé
+== run1.log
+MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = [MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF5_Diag_OrigineDeLaBarreDetruite, MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF5_TitleOffsetConsumesInsetTop_56pxDelta_InsetAssertedPositiveFirst]
+[DIAG-NAVF5] hôte nu : canvas=Canvas id=-1498 sousHote=True
+[DIAG-NAVF5] FIN f324258 t=12.00s barreVue=False barreVivante=False
+MafiaCI: PASSED MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF5_Diag_OrigineDeLaBarreDetruite
+MafiaCI: PASSED MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF5_TitleOffsetConsumesInsetTop_56pxDelta_InsetAssertedPositiveFirst
+MafiaCI: RunPlayModeTests finished — passed=2 failed=0 skipped=0 inconclusive=0 declares=2 comptes=2
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0 nomsInconnus=0)
+== run2.log
+MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = [MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF5_Diag_OrigineDeLaBarreDetruite]
+[DIAG-NAVF5] hôte nu : canvas=Canvas id=-1478 sousHote=True
+[DIAG-NAVF5] f1 le shell tient un canvas : id=-1478 ; id du canvas de l'hôte nu=-1478 ; IDENTIQUES=True ; canvas vivant=False ; barre tenue=True vivante=False ; hôte nu vivant=False
+[DIAG-NAVF5] f1 barre sous l'hôte nu ? False
+[DIAG-NAVF5] f6 t=0.25s : la barre est DÉTRUITE (canvas vivant=False, shell vivant=True)
+[DIAG-NAVF5] FIN f6 t=0.25s barreVivante=False canvasVivant=False
+MafiaCI: PASSED MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF5_Diag_OrigineDeLaBarreDetruite
+MafiaCI: RunPlayModeTests finished — passed=1 failed=0 skipped=0 inconclusive=0 declares=1 comptes=1
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0 nomsInconnus=0)
