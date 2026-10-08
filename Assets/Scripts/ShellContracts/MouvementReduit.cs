@@ -82,9 +82,13 @@ namespace MafiaCleanCity.Mouvements
                     return reglages.CallStatic<float>("getFloat", resolveur, nom, 1f) == 0f;
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return false;   // une lecture qui échoue ne force pas le mouvement réduit : le réglage du joueur reste seul
+                // Une lecture qui échoue ne force pas le mouvement réduit : le réglage du joueur reste seul. Mais elle se DIT (revue de
+                // code E2a, M6) : sinon la source système serait morte à vie sans que personne le sache. Aucun test du créneau ne couvre ce
+                // bloc (`#if UNITY_ANDROID && !UNITY_EDITOR`) : sa vérification se fait SUR APPAREIL (dette 26).
+                Debug.LogWarning("MouvementReduit : lecture d'ANIMATOR_DURATION_SCALE impossible (" + e.GetType().Name + " : " + e.Message + ")");
+                return false;
             }
 #else
             return false;

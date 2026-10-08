@@ -89,6 +89,31 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNull(Gyrophare.Poser((RectTransform)scene.transform, fondRt, Art("UN_AUTRE_FOND"), 2f));
         }
 
+        [Test]
+        public void G5_LaLueur_SeReAttache_ApresLaLiberationDes30sDeCibleInactive()
+        {
+            // Revue de code E2a, M2 : la régie libère une piste dont la cible est restée inactive plus de 30 s (horloge de régie) ; sans
+            // ré-attache à la réactivation, la lueur resterait figée sur sa teinte de base à vie. Contrôle négatif : tant que la cible n'a
+            // pas dépassé 30 s, la piste n'est PAS libérée (l'assertion de ré-attache ne triche pas sur un état toujours vivant).
+            Regie regie = RegieMouvement.PourTest();
+            var horloge = (HorlogeFigee)regie.Horloge;
+            var scene = new GameObject("Scene", typeof(RectTransform));
+            montes.Add(scene);
+            var fond = new GameObject("Fond", typeof(RectTransform));
+            fond.transform.SetParent(scene.transform, false);
+            Gyrophare g = Gyrophare.Poser((RectTransform)scene.transform, (RectTransform)fond.transform, Art("VERGE_D_NUIT_FINAL"), 2f);
+            Assert.AreEqual(1, regie.PistesVivantes, "la lueur est une piste de la régie");
+            regie.Tick(0f);
+            g.gameObject.SetActive(false);
+            horloge.Temps = 1f; regie.Tick(1f);
+            horloge.Temps = 20f; regie.Tick(20f);
+            Assert.AreEqual(1, regie.PistesVivantes, "20 s d'inactivité : la piste est gardée (contrôle négatif)");
+            horloge.Temps = 40f; regie.Tick(40f);
+            Assert.AreEqual(0, regie.PistesVivantes, "plus de 30 s d'inactivité : la régie a libéré la piste");
+            g.gameObject.SetActive(true);
+            Assert.AreEqual(1, regie.PistesVivantes, "à la réactivation la lueur se ré-attache");
+        }
+
         private static DistrictInteriorDto Verge() => new DistrictInteriorDto
         {
             district = "district-16", district_id = 16, profile = "verge", name = "La Lisière", name_canonical = "Test",
@@ -213,12 +238,61 @@ namespace MafiaCleanCity.CityMap.Tests
         public void T1_SansRegie_LaBraiseEtLeLaitonSePosentDUnCoup()
         {
             // hôte nu (aucune régie) : pas de virage, mais la ville qui brûle se voit — repli consigné (implementation-notes.md)
+            RegieMouvement.Oublier();
             TopBarController barre = NouvelleBarre();
             barre.SetCitywideHeatBucket("BURNING");
             Image cerclage = barre.GetComponentsInChildren<Image>(true).First(i => i.gameObject.name == "BoitierRing");
             Assert.LessOrEqual(Couleurs.EcartRvb(cerclage.color, DesignTokens.Current.hudGaugeArcHot), 1f / 255f);
             barre.SetCitywideHeatBucket("WARM");
             Assert.LessOrEqual(Couleurs.EcartRvb(cerclage.color, DesignTokens.Current.hudHairlineGold), 1f / 255f, "et le retour au calme aussi");
+        }
+
+        [Test]
+        public void T1b_Aiguille_PremierePoseDirecte_PuisBalaye_EtNeSautePas()
+        {
+            // §9 B10 (revue de code E2a, M3) : « l'aiguille ne saute pas » — la première pose est DIRECTE (un cadran qui s'allume ne
+            // balaie pas), la suivante BALAIE 0,7 s de l'ancienne bande à la nouvelle ; une bande inchangée ne fait rien.
+            Regie regie = RegieMouvement.PourTest();
+            TopBarController barre = NouvelleBarre();
+            RectTransform aiguille = barre.GetComponentsInChildren<RectTransform>(true).First(r => r.gameObject.name == "Needle");
+            barre.SetCitywideHeatBucket("COLD");
+            float froid = HeatBucketResolver.NeedleAngleDegrees("COLD"), brulant = HeatBucketResolver.NeedleAngleDegrees("BURNING");
+            Assert.AreEqual(0, regie.PistesVivantes, "première pose : directe, aucune piste");
+            Assert.AreEqual(froid, Mathf.DeltaAngle(0f, aiguille.localEulerAngles.z), 1e-3f);
+            barre.SetCitywideHeatBucket("COLD");
+            Assert.AreEqual(0, regie.PistesVivantes, "même bande : rien ne balaie");
+
+            barre.SetCitywideHeatBucket("BURNING");
+            regie.Tick(Debut);
+            regie.Tick(Debut + 0.35f);
+            float enVol = Mathf.DeltaAngle(0f, aiguille.localEulerAngles.z);
+            Assert.That(enVol, Is.GreaterThan(Mathf.Min(froid, brulant) + 1f).And.LessThan(Mathf.Max(froid, brulant) - 1f),
+                "à mi-balayage l'aiguille est ENTRE les deux bandes, elle n'a pas sauté");
+            regie.Tick(Debut + 0.8f);
+            Assert.AreEqual(brulant, Mathf.DeltaAngle(0f, aiguille.localEulerAngles.z), 1e-2f, "fin du balayage : la nouvelle bande");
+            Assert.AreEqual(brulant, barre.HeatNeedleAngleDegrees, 1e-3f, "`HeatNeedleAngleDegrees` reste la valeur de la BANDE");
+        }
+
+        [Test]
+        public void T1c_UnVirageInverseEnPleinVol_RepartDOuIlEn_Est_ControleNegatif()
+        {
+            // Revue de code E2a, M1 : la ville se refroidit pendant que l'anneau vire vers la braise. Le `transition` CSS repart de la
+            // valeur COURANTE ; le contrôle négatif de cette assertion est l'ancien comportement (repartir de la cible demandée,
+            // 100 % braise) : à l'instant 0 du virage de retour l'anneau serait EXACTEMENT braise, donc cette assertion rougirait.
+            Regie regie = RegieMouvement.PourTest();
+            TopBarController barre = NouvelleBarre();
+            Image anneau = barre.GetComponentsInChildren<Image>(true).First(i => i.gameObject.name == "BoitierRing");
+            barre.SetCitywideHeatBucket("WARM");
+            barre.SetCitywideHeatBucket("BURNING");
+            regie.Tick(Debut);
+            regie.Tick(Debut + 0.3f);
+            barre.SetCitywideHeatBucket("WARM");       // le virage de retour remplace le virage en vol
+            regie.Tick(Debut + 0.3f);
+            Color braise = DesignTokens.Current.hudGaugeArcHot, laiton = DesignTokens.Current.hudHairlineGold;
+            Assert.Greater(Couleurs.EcartRvb(anneau.color, braise), 2f / 255f, "pas de saut vers la braise entière");
+            Assert.Greater(Couleurs.EcartRvb(anneau.color, laiton), 2f / 255f, "…ni vers le laiton : il repart d'où il en était");
+            regie.Tick(Debut + 1.2f);
+            Assert.LessOrEqual(Couleurs.EcartRvb(anneau.color, laiton), 1f / 255f, "et il rejoint le laiton calme");
         }
 
         [Test]

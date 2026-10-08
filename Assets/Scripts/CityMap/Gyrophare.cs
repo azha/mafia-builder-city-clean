@@ -48,6 +48,7 @@ namespace MafiaCleanCity.CityMap
 
         private Image image;
         private Handle piste = Handle.Nul;
+        private RectTransform cibleDeLaPiste;
 
         /// <summary>Le centre de la lueur pour ce fond, ou faux s'il n'est pas dans la table.</summary>
         public static bool CentreDansLArt(Texture2D art, out Vector2 centrePx)
@@ -82,6 +83,7 @@ namespace MafiaCleanCity.CityMap
             g.image.type = Image.Type.Simple;
             g.image.raycastTarget = false;
             g.image.color = TeinteA(0f);
+            g.cibleDeLaPiste = rt;
             g.piste = RegieMouvement.Attacher(CatalogueHud.Gyrophare, rt, Reglage.Defaut);
             return g;
         }
@@ -98,6 +100,14 @@ namespace MafiaCleanCity.CityMap
         /// <summary>La matrice `hue-rotate` du CSS (Filter Effects §feColorMatrix), sur les composantes telles qu'écrites. ENVELOPPE
         /// de `Couleurs.HueRotate` (design §1 : elle est descendue dans `ShellContracts`) ; un seul appelant externe, un test.</summary>
         public static Color HueRotate(Color c, float deg) => Couleurs.HueRotate(c, deg);
+
+        /// <summary>La régie libère une piste dont la cible est restée inactive plus de 30 s (design §4) : à la réactivation du district,
+        /// la lueur se ré-attache (revue de code E2a, M2) — sinon elle resterait figée sur sa teinte de base à vie.</summary>
+        private void OnEnable()
+        {
+            if (cibleDeLaPiste != null && RegieMouvement.Courante != null && !RegieMouvement.EstVivant(piste))
+                piste = RegieMouvement.Attacher(CatalogueHud.Gyrophare, cibleDeLaPiste, Reglage.Defaut);
+        }
 
         private void OnDestroy()
         {

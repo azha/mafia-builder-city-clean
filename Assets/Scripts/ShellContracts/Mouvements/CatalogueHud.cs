@@ -157,7 +157,9 @@ namespace MafiaCleanCity.Mouvements
             return new[] { new ImageCle(0f, 0f, e), new ImageCle(1f, 1f, Aisance.Lineaire) };
         }
 
-        /// <summary>Une `Ambiance` d'alpha : 1 → creux → 1 sur `AmbiancePeriodeS`, `ease-in-out` ; figée au creux sous `Reduit`.</summary>
+        /// <summary>Une `Ambiance` d'alpha : 1 → creux → 1 sur `AmbiancePeriodeS`, `ease-in-out` ; sous `Reduit` figée à MI-DESCENTE (p = 0,25,
+        /// facteur (1 + creux) / 2 : néon 0,94, fumée 0,655), ni au creux (la fumée serait trois fois plus pâle, 0,109 au lieu de 0,35 —
+        /// revue de code E2a, M4) ni à la crête (le repos, G3). Même raisonnement que `PoulsPoseReduitS` ; décision à ratifier par f2.</summary>
         private static Entree Boucle(string id, string source, string cause, float creux, int pistes)
         {
             return new Entree(
@@ -172,7 +174,7 @@ namespace MafiaCleanCity.Mouvements
                             new ImageCle(1f, 1f, Aisance.EaseInOut),
                         }),
                     },
-                    Iteration.InfiniFois, alterne: false, poseDeReposS: AmbiancePeriodeS * 0.5f),
+                    Iteration.InfiniFois, alterne: false, poseDeReposS: AmbiancePeriodeS * 0.25f),
                 pistes: pistes, bloquante: false, hote: Entree.HoteClient);
         }
 

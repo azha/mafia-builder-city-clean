@@ -94,6 +94,21 @@ namespace MafiaCleanCity.Mouvements
             if (Courante != null) Courante.Detacher(h);
         }
 
+        /// <summary>`Regie.ValeurEcrite`, null-sûre : faux sans régie.</summary>
+        public static bool ValeurEcrite(RectTransform cible, Propriete p, out float valeur)
+        {
+            Regie rg = Courante;
+            valeur = 0f;
+            return rg != null && rg.ValeurEcrite(cible, p, out valeur);
+        }
+
+        /// <summary>`Regie.EstVivant`, null-sûre : faux sans régie (un handle nul n'est jamais vivant).</summary>
+        public static bool EstVivant(Handle h)
+        {
+            Regie rg = Courante;
+            return rg != null && rg.EstVivant(h);
+        }
+
         public static void Rebaser(RectTransform cible, Propriete p)
         {
             if (Courante != null) Courante.Rebaser(cible, p);

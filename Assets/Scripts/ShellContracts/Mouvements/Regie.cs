@@ -127,6 +127,24 @@ namespace MafiaCleanCity.Mouvements
             return true;
         }
 
+        /// <summary>La valeur que la régie a ÉCRITE en dernier sur le couple (`cible`, `p`) tant qu'une piste le tient ; faux sinon. Pour un
+        /// `Melange` c'est le progrès 0 → 1, pour une `Rotation` l'angle posé. Un propriétaire qui enchaîne deux `Transitionner` y
+        /// reprend `de` (le CSS ne saute pas à l'ancienne cible : revue de code E2a, M1). Aucune allocation.</summary>
+        public bool ValeurEcrite(RectTransform cible, Propriete p, out float valeur)
+        {
+            valeur = 0f;
+            for (int k = 0; k < couples.Length; k++)
+            {
+                Couple q = couples[k];
+                if (q.utilise && q.p == p && ReferenceEquals(q.rt, cible) && q.ecritValide && q.occupant >= 0)
+                {
+                    valeur = q.ecrit;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public bool EstVivant(Handle h)
         {
             return h.Gen != 0 && h.Slot >= 0 && h.Slot < pistes.Length && pistes[h.Slot].vivante && pistes[h.Slot].gen == h.Gen;

@@ -877,8 +877,25 @@ namespace MafiaCleanCity.Shell
         /// il réécrirait sinon sa braise par-dessus).</summary>
         private void Virer(Entree virage, Image cible, ref bool chaud, ref Handle tenu, bool versLeChaud)
         {
-            if (cible == null || chaud == versLeChaud) return;
-            Handle h = RegieMouvement.Transitionner(virage, cible.rectTransform, chaud ? 1f : 0f, versLeChaud ? 1f : 0f);
+            if (cible == null) return;
+            if (chaud == versLeChaud)
+            {
+                // Une piste qui TIENT la braise peut avoir été libérée par la régie (cible inactive plus de 30 s, `Regie.Tick`) : la
+                // couleur est alors revenue au laiton sans que ce composant le sache (revue de code E2a, M2). On la repose d'un coup.
+                if (chaud && !tenu.EstNul && RegieMouvement.Courante != null && !RegieMouvement.EstVivant(tenu))
+                {
+                    Color c = DesignTokens.Current.hudGaugeArcHot;
+                    c.a = cible.color.a;
+                    cible.color = c;
+                    tenu = Handle.Nul;
+                }
+                return;
+            }
+            // `de` = ce que le pixel montre : si un virage est en vol (ou tient), sa valeur écrite, pas la cible demandée — un virage
+            // inversé en plein vol repart de là où il en est (revue de code E2a, M1 : le CSS `transition` ne saute pas).
+            float de = chaud ? 1f : 0f;
+            if (RegieMouvement.ValeurEcrite(cible.rectTransform, Propriete.Melange, out float enVol)) de = enVol;
+            Handle h = RegieMouvement.Transitionner(virage, cible.rectTransform, de, versLeChaud ? 1f : 0f);
             if (h.EstNul)
             {
                 RegieMouvement.Detacher(tenu);

@@ -155,6 +155,21 @@ namespace MafiaCleanCity.Account.Settings
             Rendre();
         }
 
+        /// <summary>E2a (design-couche-mouvement.md §5) — « Mouvement réduit » : REUSE du canon (`screen_14:71,146,208,251,298`, clé du canon
+        /// `settings.a11y.reduced_motion`), un réglage LOCAL (`PlayerPrefs`, en attendant `PATCH /v1/me/settings` : aucun `GET` n'existe).
+        /// Le toucher bascule et réapplique le niveau de la régie tout de suite, sans réseau ; le canon veut qu'il reste utilisable
+        /// sous le réglage lui-même (rien n'anime cette ligne). Rendue AUSSI dans l'état vide : elle ne lit pas le profil.</summary>
+        private void LigneMouvementReduit()
+        {
+            bool reduit = MouvementReduit.ReglageDuJoueur;
+            BasculeMouvementReduitAffichee = reduit;
+            Bascule("Bascule_MouvementReduit", Lib("Mouvement réduit"), null, reduit, () =>
+            {
+                MouvementReduit.PoserReglageDuJoueur(!reduit);
+                Rendre();
+            });
+        }
+
         private void Rendre()
         {
             for (int i = corps.childCount - 1; i >= 0; i--)
@@ -167,6 +182,10 @@ namespace MafiaCleanCity.Account.Settings
                 videTexte.text = DerniereErreur == null
                     ? Lib("Aucun réglage.")
                     : Lib("Les réglages n'ont pas répondu.");
+                // Revue de code E2a, M5 : « Mouvement réduit » est un réglage LOCAL (aucun réseau) — une panne du profil ne prive pas le
+                // joueur de la seule option d'accessibilité du client.
+                Section(Lib("Le jeu"));
+                LigneMouvementReduit();
                 RendusEffectues++;
                 return;
             }
@@ -190,17 +209,7 @@ namespace MafiaCleanCity.Account.Settings
             Bascule("Bascule_Marche", Lib("Dire mes prix au marché"),
                     Lib("sans ça, le marché de région ne vous dit rien non plus"), visible,
                     () => StartCoroutine(DefinirVisibilite(!visible)));
-            // E2a (design-couche-mouvement.md §5) — « Mouvement réduit » : REUSE du canon (`screen_14:71,146,208,251,298`, clé du canon
-            // `settings.a11y.reduced_motion`), un réglage LOCAL (`PlayerPrefs`, en attendant `PATCH /v1/me/settings` : aucun `GET` n'existe).
-            // Le toucher bascule et réapplique le niveau de la régie tout de suite, sans réseau ; le canon veut qu'il reste utilisable
-            // sous le réglage lui-même (rien n'anime cette ligne).
-            bool reduit = MouvementReduit.ReglageDuJoueur;
-            BasculeMouvementReduitAffichee = reduit;
-            Bascule("Bascule_MouvementReduit", Lib("Mouvement réduit"), null, reduit, () =>
-            {
-                MouvementReduit.PoserReglageDuJoueur(!reduit);
-                Rendre();
-            });
+            LigneMouvementReduit();
 
             // La sortie : « Fermer le coffre · cette session seulement » (ratifié, cadres 95-96), VIVANTE (`POST /v1/auth/signout`).
             if (CoffreFerme)

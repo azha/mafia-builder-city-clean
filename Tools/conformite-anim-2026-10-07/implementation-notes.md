@@ -46,3 +46,14 @@ Une déviation CONSIGNÉE est le fonctionnement normal ; une déviation muette e
 - Effet de bord attendu des planches photo avec un shell réel : l'aiguille balaie 0,7 s et le cerclage vire 0,6 s après une publication de
   chaleur (B6/B7/B10) ; une capture prise dans cet intervalle voit un état intermédiaire.
 - Dette 8 (4 commentaires qui nomment `AmbientPulseLoop`) : nettoyée. Dette 17 / `PoulsPoseReduitS` : inchangée.
+
+## Réponse à la revue ⊥ de code d'E2a (08/10) — 1 BLOCKING, 6 importants, 7 mineurs
+
+- **B1** G10 : 12 `Update`/`LateUpdate` mesurés (pas 10) ; `ListeDefilante.LateUpdate` et `SuiviDuCadre.LateUpdate` nommés (position de défilement / ancres, jamais le temps), design §10 amendé, dette 25.
+- **M1** déviation 2 corrigée pour les virages : `Regie.ValeurEcrite` (+ façade) ; `Virer` repart de la valeur écrite. L'aiguille (B10) garde `de` = l'ancienne bande (tremble Additif sur le même couple) : dette 28. Test `T1c`.
+- **M2** `Virer` repose la braise si sa piste tenue a été libérée (30 s) ; `Gyrophare.OnEnable` se ré-attache ; façade `RegieMouvement.EstVivant`. Test `G5`.
+- **M3** test `T1b` (B10 : première pose directe, balayage, bande inchangée).
+- **M4** pose `Reduit` des boucles ambiantes à p = 0,25 (mi-descente : néon 0,94, fumée 0,655), dette 27, à ratifier par f2.
+- **M5** « Mouvement réduit » rendue aussi dans l'état vide de ⑲.
+- **M6** `LogWarning` dans le `catch` du JNI ; vérification sur appareil en dette 26.
+- Mineurs : m1 `Oublier()` ajouté au test sans régie. m2-m7 non traités (publication sans garde de deux shells ; quota Melange avant remplacements ; EchelleX/Y hors G11 — décision avant E3 ; statiques de `MouvementReduit` ; namespace hors dossier ; seuil 0,02).

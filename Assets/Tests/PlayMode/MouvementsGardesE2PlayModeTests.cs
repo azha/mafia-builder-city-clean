@@ -34,8 +34,10 @@ namespace MafiaCleanCity.Mouvements.Tests
         // ------------------------------------------------------------------------------------------ G10
 
         /// <summary>LA LISTE FERMÉE du design §10 — les `Update`/`LateUpdate` qui restent hors de `Mouvements/`, par fichier:méthode
-        /// (chemins relatifs à `Assets/Scripts`). 10 mesurés avant E2a : 3 migrés (`TopBarController.Update`, `Gyrophare.Update`,
-        /// `AmbientPulseLoop.Update`), 7 nommés ici. `LaSuitePanelController.LateUpdate` écrit une échelle (`Ajuster` → `localScale`) :
+        /// (chemins relatifs à `Assets/Scripts`). 12 mesurés avant E2a (revue de code E2a, B1 : le design disait 10, compté à la main) : 3 migrés
+        /// (`TopBarController.Update`, `Gyrophare.Update`, `AmbientPulseLoop.Update`), 9 nommés ici. `ListeDefilante.LateUpdate` écrit l'alpha du
+        /// fondu et la position de l'ascenseur : ils sont fonction de la POSITION de défilement, jamais du temps (mise en page, comme
+        /// `LaSuitePanelController`) — consigné en dette 25. `LaSuitePanelController.LateUpdate` écrit une échelle (`Ajuster` → `localScale`) :
         /// de la mise en page (ajustement à la bande), pas du mouvement. Elle ne fait que RÉTRÉCIR : un ajout est une décision nommée.</summary>
         internal static readonly string[] UpdateAdmis =
         {
@@ -46,6 +48,8 @@ namespace MafiaCleanCity.Mouvements.Tests
             "Shell/AppShell.cs:Update",                                      // la touche retour
             "Shell/LaSuitePanelController.cs:LateUpdate",                    // `Ajuster` → `localScale` d'ajustement à la bande
             "ShellContracts/LongPressButton.cs:Update",                      // minuterie, aucune écriture visuelle
+            "ShellContracts/ListeDefilante.cs:LateUpdate",                   // fondu et ascenseur d'une liste : fonction de la position, pas du temps
+            "ShellContracts/SuiviDuCadre.cs:LateUpdate",                     // suit le cadre : ancres de mise en page
         };
 
         /// <summary>Les coroutines admises à ÉCRIRE du visuel : AUCUNE. La minuterie du bandeau reste une coroutine (l'attente n'est pas une
