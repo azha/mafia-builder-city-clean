@@ -382,7 +382,7 @@ namespace MafiaCleanCity.Operational.Tests
                 Assert.AreEqual(!parti, ligne.Find("Renseignement") != null, $"{statuts[i]} : le geste éteint n'existe que hors « parti »");
                 if (!parti) Assert.AreEqual("Renseignement", ligne.GetChild(ligne.childCount - 1).name, "le geste est le DERNIER enfant de la ligne");
                 CanvasGroup g = ligne.GetComponent<CanvasGroup>();
-                if (parti) { Assert.IsNotNull(g); Assert.AreEqual(0.45f, g.alpha, 0.02f, "`.ac.parti{opacity:.45}`"); }
+                if (parti) { Assert.IsNotNull(g); Assert.AreEqual(DossierCalculs.AlphaUguiDuParti, g.alpha, 0.001f, "`.ac.parti{opacity:.45}` rendu en alpha uGUI (composition linéaire)"); }
                 else Assert.IsNull(g, "seule la ligne « parti » est atténuée");
             }
             Assert.AreEqual(4, mots.Count, "quatre statuts, quatre mots");
@@ -695,8 +695,8 @@ namespace MafiaCleanCity.Operational.Tests
                 RectTransform sil = (RectTransform)Sous("Elast/Acteurs/Acteur3/Silhouette");
                 Vector2Int tete = banc.Pixel(sil, 0.5f, 11f / 16f);
                 Color vuTete = t.GetPixel(tete.x, tete.y);
-                Color attenduTete = Color.Lerp(fondParti, DesignTokens.Current.accentDanger, DossierCalculs.OpaciteDuParti);
-                Assert.LessOrEqual(Ecart(vuTete, attenduTete), 14f, $"la tête de la silhouette « parti » : {vuTete} au lieu de {attenduTete} (rouge à 45 % sur son fond)");
+                Color attenduTete = Color.Lerp(elast, DesignTokens.Current.accentDanger, DossierCalculs.OpaciteDuParti);   // la maquette compose le GROUPE : rouge à 45 % sur le fond de la boîte
+                Assert.LessOrEqual(Ecart(vuTete, attenduTete), 14f, $"la tête de la silhouette « parti » : {vuTete} au lieu de {attenduTete} (rouge à 45 % SRGB sur son fond ; Unity compose en linéaire : 0,45 recopié rendrait (179, 63, 55))");
                 Assert.Greater(Ecart(vuTete, DesignTokens.Current.accentDanger), 40f, "la silhouette « parti » n'est pas en rouge PLEIN");
             }
             finally { if (t != null) Object.DestroyImmediate(t); banc.Dispose(); }

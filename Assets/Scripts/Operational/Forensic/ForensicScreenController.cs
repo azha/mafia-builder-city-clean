@@ -300,7 +300,7 @@ namespace MafiaCleanCity.Operational
             GameObject ligne = NouveauUI("Acteur" + rang, acteursRoot);
             AjouterFond(ligne, DesignTokens.Current.lieutenantMedallionOuter);
             Filets.Poser((RectTransform)ligne.transform, parti ? DecorsDeScene.Filets.Forensic.AcParti : DecorsDeScene.Filets.Forensic.Ac);
-            if (parti) ligne.AddComponent<CanvasGroup>().alpha = DossierCalculs.OpaciteDuParti;   // `.ac.parti{opacity:.45}`
+            if (parti) ligne.AddComponent<CanvasGroup>().alpha = DossierCalculs.AlphaUguiDuParti;   // `.ac.parti{opacity:.45}`, en alpha uGUI (voir la constante)
             var le = ligne.AddComponent<LayoutElement>();
             le.minHeight = Px(27f); le.flexibleHeight = 0f;
             var h = ligne.AddComponent<HorizontalLayoutGroup>();
@@ -786,8 +786,13 @@ namespace MafiaCleanCity.Operational
     public static class DossierCalculs
     {
         public const int Crans = 4;
-        /// <summary>`.ac.parti{opacity:.45}` (cadre 151, mesuré).</summary>
+        /// <summary>`.ac.parti{opacity:.45}` (cadre 151, mesuré) — l'opacité de la MAQUETTE, composée en sRGB.</summary>
         public const float OpaciteDuParti = 0.45f;
+        /// <summary>⛔ L'alpha uGUI qui REND ce que `OpaciteDuParti` rend dans la maquette. Unity compose en LINÉAIRE, la maquette en sRGB :
+        /// recopier 0,45 rend la tête rouge de la silhouette à (179, 63, 55) au lieu de (122, 49, 43) — MESURÉ au créneau du 08/10 (garde
+        /// `ScreenB7P1`), et le calcul linéaire donne (179, 62, 54) : le modèle est juste. 0,2 donne (124, 43, 38), à 6/255 de la cible
+        /// (le canal le plus bas ne se rattrape pas avec un seul alpha) ; ses fonds sombres, eux, restent à ≤ 3/255.</summary>
+        public const float AlphaUguiDuParti = 0.2f;
 
         public sealed class Piste
         {
