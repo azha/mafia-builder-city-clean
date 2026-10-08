@@ -402,6 +402,7 @@ namespace MafiaCleanCity.Operational
             }
             bool boutonVisible = !enTransit;
 
+            MontrerLesZones(couriers: true, pied: true);
             RendreTitre(enTransit, arrivee);
             RendreCorkboard();
             RendreCouriers();
@@ -528,6 +529,7 @@ namespace MafiaCleanCity.Operational
             vl.spacing = Px(2f);
             vl.childControlWidth = true; vl.childControlHeight = true;
             vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
+            PoserLaPlaqueDeLecture(lignes, vl);   // ㉘ fonds de zone : la bande `.lecture` sous le liège
             AddLayoutElement(lignes, flexibleHeight: 0);
             lignesRoot = lignes.transform;
 
@@ -863,6 +865,7 @@ namespace MafiaCleanCity.Operational
 
         private void RendreGesteAchatDeRelais()
         {
+            MontrerLesZones(couriers: false, pied: true);
             // le coût, dit AVANT l'appui (table 71 ; D18 « demain »), sans montant
             TextMeshProUGUI cout = NouveauTexteFiche(piedRoot, "CoutAchatRelais", Libelle.Gabarit(
                 "distribution.geste.coute_de_l_argent_et_votre_decision_de_structure_du_jour_il_s_ouvre_ensuite_depuis_sa_fiche_sur_le_port_ou_dans_les_cheminees_seulement_et_en_demandera_une_autre_demain",
@@ -932,6 +935,7 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(corkboardRoot);
             ViderEnfants(couriersRoot);
             ViderEnfants(piedRoot);
+            MontrerLesZones(couriers: false, pied: false);   // la bande basse revient avec le geste d'achat, s'il est offert
             titreTexte.text = Libelle.Gabarit("distribution.vide.pas_encore_de_relais", "Pas encore de relais.");
             sousTitreTexte.text = Libelle.Gabarit("distribution.vide.sans_relais_rien_ne_part_c_est_de_la_que_vos_coursiers_livrent",
                                       "Sans relais, rien ne part\u00A0: c’est de là que vos coursiers livrent.")
@@ -950,6 +954,7 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(corkboardRoot);
             ViderEnfants(couriersRoot);
             ViderEnfants(piedRoot);
+            MontrerLesZones(couriers: false, pied: false);
             titreTexte.text = Libelle.De("distribution", "titre", "La distribution n'a pas répondu");
             // la phrase SERVIE du refus, sinon celle de l'écran — jamais `DerniereErreur` (garde de classe des refus)
             sousTitreTexte.text = PhraseDuRefus ?? Libelle.De("distribution", "sous_titre", "Réessayez dans un instant.");
@@ -1068,13 +1073,22 @@ namespace MafiaCleanCity.Operational
 
             GameObject corkboardGo = NouveauUI("Corkboard", corpsGo.transform);
             VerticalLayoutGroup vcb = corkboardGo.AddComponent<VerticalLayoutGroup>();
-            vcb.spacing = Px(6f);
+            vcb.spacing = 0f;   // la `.lecture` est COLLÉE sous la `.planche` (cadres 54-57) : aucun interstice entre le liège et sa lecture
             vcb.childControlWidth = true; vcb.childControlHeight = true;
             vcb.childForceExpandWidth = true; vcb.childForceExpandHeight = false;
             AddLayoutElement(corkboardGo, flexibleHeight: 0);
             corkboardRoot = corkboardGo.transform;
 
-            GameObject couriersGo = NouveauUI("Couriers", corpsGo.transform);
+            // ㉘ fonds de zone (08/10, avant le décor de CLIENT-2 : sa racine prend le support `.planche`, et chaque zone sœur garde SON fond —
+            // DESIGN.md §3.3 B) : « VOS COURRIERS » n'a AUCUN cadre (m-54..m-58) ; elle se range sous la lecture et en prend la plaque `.lecture`.
+            // La plaque et son filet sur `Couriers`, le contenu (vidé à chaque rendu) dans `Contenu` : vider la plaque emporterait son filet.
+            zoneCouriers = NouveauUI("Couriers", corpsGo.transform);
+            VerticalLayoutGroup vzc = zoneCouriers.AddComponent<VerticalLayoutGroup>();
+            vzc.childControlWidth = true; vzc.childControlHeight = true;
+            vzc.childForceExpandWidth = true; vzc.childForceExpandHeight = false;
+            PoserLaPlaqueDeLecture(zoneCouriers, vzc);
+            AddLayoutElement(zoneCouriers, flexibleHeight: 0);
+            GameObject couriersGo = NouveauUI("Contenu", zoneCouriers.transform);
             VerticalLayoutGroup vco = couriersGo.AddComponent<VerticalLayoutGroup>();
             vco.spacing = Px(4f);
             vco.childControlWidth = true; vco.childControlHeight = true;
@@ -1082,16 +1096,43 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(couriersGo, flexibleHeight: 0);
             couriersRoot = couriersGo.transform;
 
-            GameObject piedGo = NouveauUI("Pied", corpsGo.transform);
+            // ㉘ B2 (juge groupé du 07/10) : le pied est la BANDE BASSE `.lieg6 .bas` (plaque #141a21 pleine largeur + filet haut 2 px #2c3640), ANCRÉE
+            // EN PIED de la pile (le corps, flexible, la pousse en bas — patron ㉚) ; il prenait le reste du corps, sans fond, et tout se tassait en haut.
+            bandeBasse = PiedDEcran.Bande(racine.transform, Px);
+            GameObject piedGo = NouveauUI("Pied", bandeBasse.transform);
             VerticalLayoutGroup vp = piedGo.AddComponent<VerticalLayoutGroup>();
             vp.spacing = Px(8f);
             vp.childControlWidth = true; vp.childControlHeight = true;
             vp.childForceExpandWidth = true; vp.childForceExpandHeight = false;
-            AddLayoutElement(piedGo, flexibleHeight: 1);
+            AddLayoutElement(piedGo, flexibleHeight: 0);
             piedRoot = piedGo.transform;
+            MontrerLesZones(couriers: false, pied: false);   // pendant le chargement : aucune plaque vide ; le rendu les montre
+        }
+
+        /// <summary>La plaque `.lieg6 .lecture` (cadres 54-57) : fond `#1a1108`, filet HAUT de 1 CSS px `#3d3024` (hors mise en page), padding
+        /// `8 13`. Posée sur une zone DÉJÀ munie de son groupe vertical. Le pointillé entre deux lignes (`.l+.l{border-top:1px dotted #3d3024}`) n'est
+        /// pas tracé : nuance C (ruling du 07/10).</summary>
+        private void PoserLaPlaqueDeLecture(GameObject zone, VerticalLayoutGroup v)
+        {
+            AjouterFond(zone, PlaqueDeLecture);
+            v.padding = new RectOffset(PxTrait(13f), PxTrait(13f), PxTrait(8f) + PxTrait(1f), PxTrait(8f));
+            GameObject filet = NouveauUI("Filet", zone.transform);
+            filet.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform fr = (RectTransform)filet.transform;
+            fr.anchorMin = new Vector2(0f, 1f); fr.anchorMax = new Vector2(1f, 1f); fr.pivot = new Vector2(0.5f, 1f);
+            fr.offsetMin = new Vector2(0f, -PxTrait(1f)); fr.offsetMax = Vector2.zero;
+            AjouterFond(filet, EnteteDEcran.Distribution.Filet);   // `#3d3024`, le filet de la même famille `.lieg6`
+        }
+
+        /// <summary>Une zone vidée (états « aucun relais », « indisponible ») se RETIRE : une plaque sans contenu serait une bande sombre vide.</summary>
+        private void MontrerLesZones(bool couriers, bool pied)
+        {
+            if (zoneCouriers != null) zoneCouriers.SetActive(couriers);
+            if (bandeBasse != null) bandeBasse.SetActive(pied);
         }
 
         private Transform corkboardRoot, lignesRoot, couriersRoot, piedRoot;
+        private GameObject zoneCouriers, bandeBasse;
         private TextMeshProUGUI titreTexte, sousTitreTexte, boutonEnvoyerTexte;
         private Button boutonEnvoyer;
 
@@ -1103,6 +1144,8 @@ namespace MafiaCleanCity.Operational
         // lecture de pixel disponible cette passe — même trou que ㉚, voir implementation-notes.md).
         private static readonly Color Liege = Hex("#7a5230");
         private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;
+        /// <summary>`.lieg6 .lecture{background:#1a1108}` (cadres 54-57, lu dans `ecrans-brennar-6.html` de l'atelier master 5240cec).</summary>
+        public static Color PlaqueDeLecture => new Color32(0x1a, 0x11, 0x08, 255);
         // ⛔⛔ TD-558 — la ficelle et l'épingle du panneau de liège. MESURÉES au pixel sur
         // `Tools/juge-visuel/v6/m-54.png` (python3/PIL, couleur la plus fréquente dans un carré
         // échantillon posé sur le trait / le cœur de l'épingle) — pas « estimées visuellement »

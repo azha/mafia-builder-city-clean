@@ -530,5 +530,72 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(DistributionResolvers.EstRompue(null), "null n'est pas 'active' → interrompu");
             Assert.IsTrue(DistributionResolvers.EstRompue(""), "chaîne vide n'est pas 'active' → interrompu");
         }
+
+        // ═══ Z — FONDS DE ZONE (08/10) : la racine perd son aplat au décor de scène (CLIENT-2, DESIGN.md §3.3 B — le support `.planche`
+        // s'y pose) ; chaque zone sœur garde SON fond (`.entete`, `.lecture`, `.bas`). Garde d'EFFET structurelle : chaque texte VISIBLE a un
+        // ancêtre opaque STRICTEMENT sous la racine — sans quoi il se lirait sur la planche de bois claire.
+
+        /// <summary>Les textes actifs sans ancêtre opaque (Image active, alpha ≥ 0,99) entre eux et la racine, racine EXCLUE.</summary>
+        private static List<string> TextesSansFondDeZone(Transform racine, out int vus)
+        {
+            var orphelins = new List<string>();
+            vus = 0;
+            foreach (TMPro.TextMeshProUGUI t in racine.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false))
+            {
+                if (string.IsNullOrEmpty(t.text)) continue;
+                vus++;
+                bool fond = false;
+                for (Transform a = t.transform.parent; a != null && a != racine; a = a.parent)
+                {
+                    Image im = a.GetComponent<Image>();
+                    if (im != null && im.isActiveAndEnabled && im.color.a >= 0.99f) { fond = true; break; }
+                }
+                if (!fond) orphelins.Add(t.transform.parent.name + "/" + t.name + " « " + t.text + " »");
+            }
+            return orphelins;
+        }
+
+        [UnityTest]
+        public IEnumerator EcranDistributionZ1_ChaqueTexte_AUnFondDeZone_LaBandeBasseEnPied()
+        {
+            var ecran = MonterEcran();
+            // le cas le plus PEUPLÉ : route (liège + lecture), deux courriers dont un qui se dégrade (note), un lieutenant nommé (pied complet)
+            ecran.RendrePourTest(CouriersFabrique(Courier("IDLE"), Courier("ARRIVED", degrading: true)),
+                ProjectionFabrique(RouteFabrique()), lieutenantLabel: "Lt. Rin");
+            yield return null;
+            Transform racine = RacineEcran().transform;
+
+            List<string> orphelins = TextesSansFondDeZone(racine, out int vus);
+            Assert.GreaterOrEqual(vus, 12, "anti-vacuité : titre, sous-titre, 2 étiquettes ×2, 3 lignes ×2, courriers, pied");
+            Assert.IsEmpty(orphelins, "des textes sans fond de zone (ils se liraient sur le support du décor) : " + string.Join(" · ", orphelins));
+
+            Transform bas = racine.GetChild(racine.childCount - 1);
+            Assert.AreEqual("Bas", bas.name, "la bande basse `.bas` est le DERNIER enfant de la pile : ancrée en pied (㉘ B2)");
+            Assert.IsTrue(bas.gameObject.activeSelf);
+            Assert.IsNotNull(bas.Find("Filet"), "le filet haut de 2 px #2c3640");
+            Assert.IsNotNull(bas.Find("Pied"), "le pied (voix + geste) est DANS la bande");
+            Transform couriers = racine.Find("Corps/Couriers");
+            Assert.AreEqual((0x1a, 0x11, 0x08), Trio(couriers.GetComponent<Image>().color), "la plaque `.lecture` #1a1108 sous VOS COURRIERS");
+            Assert.IsNotNull(couriers.Find("Filet"), "son filet haut #3d3024 survit au rendu (le contenu est vidé, pas la plaque)");
+            Transform lignes = racine.Find("Corps/Corkboard/Lignes");
+            Assert.AreEqual((0x1a, 0x11, 0x08), Trio(lignes.GetComponent<Image>().color), "la `.lecture` sous le liège");
+
+            // CONTRÔLE NÉGATIF : un texte posé à même le corps (aucune plaque) DOIT être nommé — sinon la garde ne voit rien
+            GameObject sonde = new GameObject("Sonde", typeof(RectTransform));
+            sonde.transform.SetParent(racine.Find("Corps"), false);
+            sonde.AddComponent<CanvasRenderer>();
+            sonde.AddComponent<TMPro.TextMeshProUGUI>().text = "sonde";
+            Assert.AreEqual(1, TextesSansFondDeZone(racine, out _).Count, "contrôle négatif : la garde doit nommer la sonde posée sans fond");
+            Object.DestroyImmediate(sonde);
+
+            // le cas le plus PAUVRE : aucune route, aucun courrier, aucune destination — chaque texte restant a encore son fond
+            ecran.RendrePourTest(CouriersFabrique(), ProjectionFabrique(), toLabel: null);
+            yield return null;
+            orphelins = TextesSansFondDeZone(racine, out vus);
+            Assert.GreaterOrEqual(vus, 5, "anti-vacuité (état pauvre)");
+            Assert.IsEmpty(orphelins, "état pauvre : " + string.Join(" · ", orphelins));
+        }
+
+        private static (int, int, int) Trio(Color c) { Color32 k = c; return (k.r, k.g, k.b); }
     }
 }
