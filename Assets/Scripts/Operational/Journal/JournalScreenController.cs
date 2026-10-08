@@ -108,6 +108,8 @@ namespace MafiaCleanCity.Operational
         public WorldDistrictDto[] Quartiers { get; private set; }
         /// <summary>Crochet de test : pose les quartiers sans réseau, AVANT `RendrePourTest`.</summary>
         public void PoserQuartiersPourTest(WorldDistrictDto[] quartiers) => Quartiers = quartiers;
+        /// <summary>Crochet de test : pose le fil de la rue sans réseau, AVANT `RendrePourTest` (qui ne rend que les brèves du corps qu'on lui donne).</summary>
+        public void PoserLaRuePourTest(GetAmbientFeedResponseDto rue) => DernierAmbient = rue;
         /// <summary>C2 — combien de lignes rendues n'ont PAS de texte servi (leur clé est montrée à la place).</summary>
         public int LignesSansTexte { get; private set; }
 
@@ -376,13 +378,12 @@ namespace MafiaCleanCity.Operational
             foreach (NewsBeatDto b in breves)
             {
                 if (b == null) continue;
-                Ligne(Texte(b.outlet_i18n_key), b.headline_i18n_key, ParametresDuTitre(b.headline_params, Quartiers),
-                      b.district, b.recency_band, false);
+                Une(b);
             }
             foreach (AmbientEventDto a in rue)
             {
                 if (a == null) continue;
-                Ligne(null, a.descriptor_i18n_key, null, a.district, a.recency_band, false);
+                Breve(a);
             }
             foreach (RandomWorldEventDto m in monde)
             {
@@ -444,6 +445,180 @@ namespace MafiaCleanCity.Operational
                 dessous = string.IsNullOrEmpty(dessous) ? fraicheur : dessous + " · " + fraicheur;
             NouveauTexte(go.transform, "Cle", dessous, Px(7f), TexteFaible,
                 DesignTokens.Current.primaryFont);
+        }
+
+        // ═══ ㊳ A3 / B2 (juge du 07/10) — la carte « à la une » (`.une`) et la brève de la rue (`.brv`) du cadre 125 ═══════════════════════
+        // `.une{bg #111823;border 1px #2a3648;padding 8px 9px 9px}` : l'EN-TÊTE `.jrn` (nom du journal en capitales sérif 7,4 px gras .2em or,
+        // horodatage à DROITE en sans 5,4 px gras .13em capitales), son filet laiton 1 px (`padding-bottom 4px`, `margin-bottom 6px`), le titre
+        // `h5` sérif gras 11,5 px, la ligne `.cle` 5,6 px et l'étiquette d'angle `.angle` (cerne 1 px, capitales 5,4 px .11em) ;
+        // `.brv{flex;gap 7px;padding 5px 8px}` : le point 5 px (`margin-top 3px`), le titre sans gras 7,6 px, `.cle` 5,8 px, et `.qd` à droite,
+        // centré, de la couleur du point. ⚠️ Écarts DITS : (1) la ligne `.cle` de la maquette montre la CLÉ i18n (`news.beat.body_found ·
+        // Dépôt-Est`), le client montre le seul quartier — jamais un identifiant à l'écran ; (2) `.angle` ne se pose que si l'étiquette de cadre
+        // est SERVIE (`frame_tag_i18n_key`, nul sur tout le corps mesuré) — rien n'est inventé ; (3) les encres `.cle` (#7a838d) n'ont pas de
+        // jeton : `hudCremeSecondary` (C, consigné).
+
+        /// <summary>L'encre de l'horodatage ET du point d'une brève : l'or pour ce qui vient de se passer (`ce matin`, #f2c96b), la crème
+        /// secondaire pour le reste (`hier`, #b9ad92) — fonction nommée, jamais une chaîne de ternaires.</summary>
+        private static Color CouleurDeFraicheur(string bande)
+        {
+            switch (bande)
+            {
+                case "fresh": return AccentOr;
+                default:      return TexteFaible;
+            }
+        }
+
+        /// <summary>Le titre d'une carte : le TEXTE servi de la clé (ses trous remplis), sinon la clé elle-même — et la carte est COMPTÉE
+        /// « sans texte » (le panneau le dit).</summary>
+        private string TitreDeLaCarte(string cle, IDictionary<string, string> parametres)
+        {
+            string servi = MafiaCleanCity.I18n.Libelle.Gabarit(cle, null, parametres);
+            if (servi == null) LignesSansTexte++;
+            return servi != null ? Capitale(servi) : cle ?? "(sans clé)";
+        }
+
+        private TextMeshProUGUI Etiquette(Transform parent, string nom, string texte, float corpsCss, Color couleur,
+                                          TMP_FontAsset police, bool gras, float espacement, bool capitales)
+        {
+            TextMeshProUGUI t = NouveauTexte(parent, nom, texte, Px(corpsCss), couleur, police);
+            FontStyles style = FontStyles.Normal;
+            if (gras) style |= FontStyles.Bold;
+            if (capitales) style |= FontStyles.UpperCase;
+            t.fontStyle = style;
+            t.characterSpacing = espacement;
+            return t;
+        }
+
+        private static void Espace(Transform parent, float hauteur)
+        {
+            GameObject g = NouveauUI("Espace", parent);
+            LayoutElement le = g.AddComponent<LayoutElement>();
+            le.minHeight = hauteur; le.preferredHeight = hauteur; le.flexibleHeight = 0f;
+        }
+
+        private static VerticalLayoutGroup PileDeCarte(GameObject go, RectOffset marges)
+        {
+            VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();
+            v.padding = marges;
+            v.spacing = 0f;
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            return v;
+        }
+
+        /// <summary>`.une` — une brève de presse : l'en-tête (journal à gauche, horodatage à droite), le filet laiton, le titre, le quartier, et
+        /// l'étiquette d'angle quand elle est servie.</summary>
+        private void Une(NewsBeatDto b)
+        {
+            string titre = TitreDeLaCarte(b.headline_i18n_key, ParametresDuTitre(b.headline_params, Quartiers));
+            string journal = Texte(b.outlet_i18n_key);
+            string quand = FraicheurEnMots(b.recency_band);
+            string quartier = NomDuQuartier(b.district, Quartiers);
+            string angle = string.IsNullOrEmpty(b.frame_tag_i18n_key) ? null : MafiaCleanCity.I18n.Libelle.Gabarit(b.frame_tag_i18n_key, null);
+
+            GameObject go = NouveauUI("Une", listeRoot);
+            AjouterFond(go, FondBloc);
+            Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Journal.Evt);   // `.une` : même recette que `.evt` (1 px #2a3648)
+            PileDeCarte(go, new RectOffset((int)Px(9f), (int)Px(9f), (int)Px(8f), (int)Px(9f)));
+
+            if (!string.IsNullOrEmpty(journal) || !string.IsNullOrEmpty(quand))
+            {
+                GameObject jrn = NouveauUI("Jrn", go.transform);
+                HorizontalLayoutGroup h = jrn.AddComponent<HorizontalLayoutGroup>();
+                h.spacing = Px(8f);
+                h.padding = new RectOffset(0, 0, 0, (int)Px(4f));   // `padding-bottom:4px`, avant le filet
+                h.childAlignment = TextAnchor.LowerLeft;            // `align-items:baseline`
+                h.childControlWidth = true; h.childControlHeight = true;
+                h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+                TextMeshProUGUI nom = Etiquette(jrn.transform, "Journal", journal ?? "", 7.4f, AccentOr, DesignTokens.Current.hudSerifFont, true, 20f, true);
+                nom.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+                nom.gameObject.SetActive(!string.IsNullOrEmpty(journal));
+                TextMeshProUGUI horo = Etiquette(jrn.transform, "Quand", quand ?? "", 5.4f, CouleurDeFraicheur(b.recency_band),
+                                                 DesignTokens.Current.primaryFont, true, 13f, true);
+                horo.enableWordWrapping = false;
+                horo.gameObject.SetActive(!string.IsNullOrEmpty(quand));
+
+                GameObject filet = NouveauUI("FiletOr", go.transform);   // `border-bottom:1px solid #b08d3e` = le jeton hudHairlineGold
+                AjouterFond(filet, DesignTokens.Current.hudHairlineGold);
+                LayoutElement lf = filet.AddComponent<LayoutElement>();
+                lf.minHeight = PxTrait(1f); lf.preferredHeight = PxTrait(1f); lf.flexibleHeight = 0f;
+                Espace(go.transform, Px(6f));                           // `margin-bottom:6px`
+            }
+
+            Etiquette(go.transform, "Titre", titre, 11.5f, TexteFort, DesignTokens.Current.hudSerifFont, true, 0f, false);
+
+            if (!string.IsNullOrEmpty(quartier))
+            {
+                Espace(go.transform, Px(3f));
+                Etiquette(go.transform, "Cle", quartier, 5.6f, TexteFaible, DesignTokens.Current.primaryFont, false, 0f, false);
+            }
+
+            if (!string.IsNullOrEmpty(angle))
+            {
+                Espace(go.transform, Px(5f));
+                GameObject rangee = NouveauUI("AngleRangee", go.transform);   // l'étiquette est `inline-block` : elle ne s'étire pas
+                HorizontalLayoutGroup hr = rangee.AddComponent<HorizontalLayoutGroup>();
+                hr.childAlignment = TextAnchor.UpperLeft;
+                hr.childControlWidth = true; hr.childControlHeight = true;
+                hr.childForceExpandWidth = false; hr.childForceExpandHeight = false;
+                GameObject tag = NouveauUI("Angle", rangee.transform);
+                HorizontalLayoutGroup ht = tag.AddComponent<HorizontalLayoutGroup>();
+                ht.padding = new RectOffset((int)Px(5f), (int)Px(5f), (int)Px(3f), (int)Px(3f));
+                ht.childControlWidth = true; ht.childControlHeight = true;
+                ht.childForceExpandWidth = false; ht.childForceExpandHeight = false;
+                Filets.Poser((RectTransform)tag.transform, DecorsDeScene.Filets.Journal.Evt);   // `.angle` : cerne 1 px #2a3648
+                Etiquette(tag.transform, "Texte", angle, 5.4f, TexteFaible, DesignTokens.Current.primaryFont, true, 11f, true);
+            }
+        }
+
+        /// <summary>`.brv` — une brève de la rue : le point et l'horodatage portent la même encre (l'or ce matin, la crème secondaire sinon).</summary>
+        private void Breve(AmbientEventDto a)
+        {
+            string titre = TitreDeLaCarte(a.descriptor_i18n_key, null);
+            string quand = FraicheurEnMots(a.recency_band);
+            string quartier = NomDuQuartier(a.district, Quartiers);
+            Color encre = CouleurDeFraicheur(a.recency_band);
+
+            GameObject go = NouveauUI("Breve", listeRoot);
+            AjouterFond(go, FondBloc);
+            Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Journal.Evt);   // `.brv` : 1 px #2a3648
+            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(5f), (int)Px(5f));
+            h.spacing = Px(7f);
+            h.childAlignment = TextAnchor.UpperLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = true;   // chaque colonne porte SON alignement vertical
+
+            GameObject colPoint = NouveauUI("PointCol", go.transform);
+            PileDeCarte(colPoint, new RectOffset(0, 0, (int)Px(3f), 0));          // `margin-top:3px`
+            LayoutElement lc = colPoint.AddComponent<LayoutElement>();
+            lc.minWidth = Px(5f); lc.preferredWidth = Px(5f); lc.flexibleWidth = 0f;
+            GameObject point = NouveauUI("Point", colPoint.transform);
+            Image disque = AjouterImage(point);
+            disque.sprite = ProceduralUI.RadialDisc(Mathf.Max(4, Mathf.RoundToInt(Px(5f))), Color.white, Color.white);
+            disque.color = encre;
+            disque.raycastTarget = false;
+            LayoutElement lp = point.AddComponent<LayoutElement>();
+            lp.minWidth = Px(5f); lp.preferredWidth = Px(5f); lp.minHeight = Px(5f); lp.preferredHeight = Px(5f);
+
+            GameObject corps = NouveauUI("Corps", go.transform);
+            PileDeCarte(corps, new RectOffset(0, 0, 0, 0));
+            corps.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            Etiquette(corps.transform, "Titre", titre, 7.6f, TexteFort, DesignTokens.Current.primaryFont, true, 0f, false);
+            if (!string.IsNullOrEmpty(quartier))
+            {
+                Espace(corps.transform, Px(2f));
+                Etiquette(corps.transform, "Cle", quartier, 5.8f, TexteFaible, DesignTokens.Current.primaryFont, false, 0f, false);
+            }
+
+            if (!string.IsNullOrEmpty(quand))
+            {
+                GameObject colQuand = NouveauUI("QuandCol", go.transform);          // `align-self:center`
+                VerticalLayoutGroup vq = PileDeCarte(colQuand, new RectOffset(0, 0, 0, 0));
+                vq.childAlignment = TextAnchor.MiddleRight;
+                TextMeshProUGUI horo = Etiquette(colQuand.transform, "Quand", quand, 5.4f, encre, DesignTokens.Current.primaryFont, true, 10f, true);
+                horo.enableWordWrapping = false;
+            }
         }
 
         /// <summary>La phase, en mots — cadre 126 : « quatre passent, une seule reste ».

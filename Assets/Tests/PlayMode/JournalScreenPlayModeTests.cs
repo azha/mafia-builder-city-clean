@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.TestTools;
 using MafiaCleanCity.Operational;
 using MafiaCleanCity.Tests;   // SeederSupport.SafeCallsign
+using MafiaCleanCity.Theme;
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.Operational.Tests
@@ -341,7 +342,10 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsFalse(textes.Exists(x => x.Contains("news_beat.") || x.Contains("press.outlet.") || x.Contains("district-16")),
                 "aucune clé ni slug à l'écran : " + string.Join(" | ", textes));
             // ㊳ (§G, 26/09) : la fraîcheur en mots (table 49), jamais la bande brute
-            CollectionAssert.Contains(textes, "La Lisière · ce matin", string.Join(" | ", textes));
+            // ㊳ A3/B2 (08/10) : le quartier sous le titre, l'horodatage dans l'EN-TÊTE à droite — plus fondus dans une même ligne grise
+            CollectionAssert.Contains(textes, "La Lisière", string.Join(" | ", textes));
+            CollectionAssert.Contains(textes, "ce matin", string.Join(" | ", textes));
+            Assert.IsFalse(textes.Exists(x => x.Contains("La Lisière · ce matin")), "l'horodatage n'est plus fondu dans le sous-titre : " + string.Join(" | ", textes));
             Assert.IsFalse(textes.Exists(x => x.Contains("fresh")), "« fresh » brut : " + string.Join(" | ", textes));
             Assert.AreEqual(0, ecran.LignesSansTexte);
             Assert.IsFalse(textes.Exists(x => x.Contains("n'a de texte") || x.Contains("sans leur texte") || x.Contains("sans son texte")),
@@ -373,6 +377,137 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.Contains(textes, "Petites nouvelles de quartier 16, qui restent des nouvelles",
                 "sans les quartiers (route non arrivée), « quartier 16 » plutôt que le slug");
             CollectionAssert.Contains(textes, "Une brève est arrivée sans son texte", "le panneau compte le trou, il ne le généralise pas");
+        }
+
+        // ═══ ㊳ A3 / B2 (juge du 07/10, corrigés le 08/10) — la carte « à la une » et la brève de la rue ═══════════════════════════════
+        // Gardes d'EFFET : elles lisent les rects RENDUS (mise en page forcée), pas les paramètres posés — un réglage valide peut ne rien produire.
+
+        private static Transform Trouver(Transform racine, string nom)
+        {
+            foreach (Transform t in racine.GetComponentsInChildren<Transform>(true))
+                if (t.name == nom) return t;
+            return null;
+        }
+
+        private static IEnumerator MettreEnPage()
+        {
+            yield return null;
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+        }
+
+        private static Rect Monde(RectTransform rt)
+        {
+            var c = new Vector3[4];
+            rt.GetWorldCorners(c);
+            return Rect.MinMaxRect(c[0].x, c[0].y, c[2].x, c[2].y);
+        }
+
+        [UnityTest]
+        [Category("ScreenC1")]
+        public IEnumerator A3_LaCarteALaUne_EnTeteFiletOrEtHorodatageADroite()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                { "news_beat.digest.ambient_micro.tilbey_weekly.headline", "Petites nouvelles de {district}, qui restent des nouvelles" },
+                { "press.outlet.tilbey_weekly.name", "Le Clairon de Brennar" },
+                { "ambient.micro_event.noisy_block", "un pâté de maisons bruyant" },
+                { "press.frame.fait_divers", "fait divers" },
+            });
+            JournalScreenController ecran = MonterEcran();
+            ecran.PoserQuartiersPourTest(new[] { new WorldDistrictDto { id = 16, name = "La Lisière", name_canonical = "Verge-A" } });
+            NewsBeatDto sans = BreveTilbey("news_beat.digest.ambient_micro.tilbey_weekly.headline");
+            NewsBeatDto avec = BreveTilbey("news_beat.digest.ambient_micro.tilbey_weekly.headline");
+            avec.frame_tag_i18n_key = "press.frame.fait_divers";
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new[] { sans, avec } });
+            yield return MettreEnPage();
+
+            Transform racine = RacineEcran().transform;
+            var unes = new List<Transform>();
+            foreach (Transform t in racine.GetComponentsInChildren<Transform>(true)) if (t.name == "Une") unes.Add(t);
+            Assert.AreEqual(2, unes.Count, "une carte par brève");
+            Transform une = unes[0];
+
+            // l'ordre de fratrie : en-tête, filet laiton, titre, quartier
+            var ordre = new List<string>();
+            foreach (Transform enfant in une) if (enfant.name != "Espace") ordre.Add(enfant.name);
+            CollectionAssert.AreEqual(new[] { "Jrn", "FiletOr", "Titre", "Cle" }, ordre, "A3 : en-tête, filet d'or, titre, quartier");
+
+            var nom = Trouver(une, "Journal").GetComponent<TMPro.TextMeshProUGUI>();
+            var quand = Trouver(une, "Quand").GetComponent<TMPro.TextMeshProUGUI>();
+            Assert.AreEqual("Le Clairon de Brennar", nom.text, "le journal par son nom servi");
+            Assert.IsTrue((nom.fontStyle & TMPro.FontStyles.UpperCase) != 0 && (nom.fontStyle & TMPro.FontStyles.Bold) != 0, "capitales, gras (`.jrn b`)");
+            Assert.AreEqual(DesignTokens.Current.hudMoneyGold, nom.color, "le nom du journal est or (#f2c96b)");
+            Assert.AreEqual("ce matin", quand.text);
+
+            Rect rUne = Monde((RectTransform)une), rNom = Monde(nom.rectTransform), rQuand = Monde(quand.rectTransform);
+            Rect rFiletOr = Monde((RectTransform)Trouver(une, "FiletOr"));
+            Assert.Greater(rQuand.center.x, rNom.center.x, "A3 : l'horodatage est À DROITE du nom du journal");
+            Assert.Less(rQuand.xMax, rUne.xMax, "…dans la carte (marge intérieure)");
+            Assert.Greater(rNom.xMin, rUne.xMin, "…le nom dans la marge gauche");
+            Assert.Greater(rFiletOr.height, 0.4f, "A3 : le filet d'or a une épaisseur RENDUE (pas un réglage sans pixel)");
+            Assert.Greater(rFiletOr.width, rUne.width * 0.8f, "…et court sur la largeur de la carte");
+            Assert.Less(rFiletOr.center.y, rNom.center.y, "…SOUS l'en-tête");
+            Image filet = Trouver(une, "FiletOr").GetComponent<Image>();
+            Assert.AreEqual(DesignTokens.Current.hudHairlineGold, filet.color, "le filet est le laiton #b08d3e");
+            Assert.IsNotNull(filet.GetComponent<CanvasRenderer>());
+
+            Assert.AreEqual("La Lisière", Trouver(une, "Cle").GetComponent<TMPro.TextMeshProUGUI>().text, "le quartier seul sous le titre");
+            Assert.IsNull(Trouver(unes[0], "Angle"), "pas d'étiquette de cadre servie ⇒ rien d'inventé");
+            Transform angle = Trouver(unes[1], "Angle");
+            Assert.IsNotNull(angle, "étiquette de cadre servie ⇒ l'étiquette d'angle (`.angle`)");
+            Assert.AreEqual("fait divers", angle.GetComponentInChildren<TMPro.TextMeshProUGUI>().text);
+            Assert.Less(Monde((RectTransform)angle).width, Monde((RectTransform)unes[1]).width * 0.5f, "l'étiquette est `inline-block` : elle ne s'étire pas");
+        }
+
+        [UnityTest]
+        [Category("ScreenC1")]
+        public IEnumerator B2_LaBreveDeLaRue_PointEtHorodatageDeLaMemeEncre_HorodatageADroiteCentre()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
+            {
+                { "ambient.queue_pharmacy", "Une file devant la pharmacie" },
+                { "ambient.church_closed", "Le curé a fermé sa porte" },
+            });
+            JournalScreenController ecran = MonterEcran();
+            ecran.PoserQuartiersPourTest(new[] { new WorldDistrictDto { id = 16, name = "La Lisière", name_canonical = "Verge-A" } });
+            ecran.PoserLaRuePourTest(new GetAmbientFeedResponseDto
+            {
+                events = new[]
+                {
+                    new AmbientEventDto { descriptor_i18n_key = "ambient.queue_pharmacy", district = "district-16", recency_band = "fresh" },
+                    new AmbientEventDto { descriptor_i18n_key = "ambient.church_closed", district = "district-16", recency_band = "settling" },
+                },
+            });
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+
+            var breves = new List<Transform>();
+            foreach (Transform t in RacineEcran().transform.GetComponentsInChildren<Transform>(true)) if (t.name == "Breve") breves.Add(t);
+            Assert.AreEqual(2, breves.Count, "une brève par évènement de la rue");
+
+            Color[] attendu = { DesignTokens.Current.hudMoneyGold, DesignTokens.Current.hudCremeSecondary };
+            string[] mots = { "ce matin", "hier" };
+            for (int i = 0; i < 2; i++)
+            {
+                Transform b = breves[i];
+                Image point = Trouver(b, "Point").GetComponent<Image>();
+                var quand = Trouver(b, "Quand").GetComponent<TMPro.TextMeshProUGUI>();
+                Assert.AreEqual(mots[i], quand.text);
+                Assert.AreEqual(attendu[i], point.color, "le point porte l'encre de la fraîcheur");
+                Assert.AreEqual(attendu[i], quand.color, "B2 : l'horodatage porte la MÊME encre que le point");
+                Assert.IsNotNull(point.sprite, "le point est un disque");
+
+                Rect rb = Monde((RectTransform)b), rp = Monde(point.rectTransform), rq = Monde(quand.rectTransform), rt = Monde((RectTransform)Trouver(b, "Corps"));
+                Assert.Greater(rp.width, 0.4f, "le point a une taille RENDUE");
+                Assert.AreEqual(rp.width, rp.height, 0.5f, "…carré (donc rond)");
+                Assert.Greater(rq.center.x, rt.center.x, "B2 : l'horodatage est dans la colonne de DROITE, pas fondu sous le titre");
+                Assert.Less(rq.xMax, rb.xMax, "…dans la brève");
+                Assert.Greater(rp.center.y, rb.center.y, "le point est en haut (`margin-top:3px`)");
+                Assert.AreEqual(rb.center.y, rq.center.y, rb.height * 0.2f, "l'horodatage est centré sur la hauteur (`align-self:center`)");
+                var cle = Trouver(b, "Cle").GetComponent<TMPro.TextMeshProUGUI>();
+                Assert.AreEqual("La Lisière", cle.text, "le quartier sous le titre, sans l'horodatage");
+            }
         }
 
         [Test]
