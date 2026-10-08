@@ -81,11 +81,13 @@ namespace MafiaCleanCity.CityMap.Tests
             string appro = File.ReadAllText(Path.Combine(racine, "ChaineDAppro", "ChaineDApproScreenController.cs"));
             string distrib = File.ReadAllText(Path.Combine(racine, "Distribution", "DistributionScreenController.cs"));
             string filiere = File.ReadAllText(Path.Combine(racine, "Filiere", "FiliereScreenController.cs"));
-            StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)", appro, "㉚ : la forme `.geste` de `.appr6`");
+            // ㉚ : depuis B3 (CLIENT-1, da1401bd) le geste « EN COMMANDER » passe par `PiedDEcran.Geste` (pose la forme `.geste`, sa légende et son état) et non plus par un Styler à la main — garde périmée
+            // jusqu'au créneau du 08/10 soir (la catégorie PiedDEcran n'était dans aucun filtre de CLIENT-1)
+            StringAssert.Contains("PiedDEcran.Geste(piedRoot, Px,", appro, "㉚ : la forme `.geste` de `.appr6`, par PiedDEcran.Geste");
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)", distrib, "㉘ : la forme `.geste` de `.lieg6`");
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, libelleBlanchir)", filiere, "㊵ : la forme `.cta6` (Cta6 par défaut)");
             // le fond d'or de construction est REPEINT par le Styler (l'EFFET est prouvé par P2) : l'appel doit venir APRÈS la pose de l'or, jamais avant
-            Assert.Greater(appro.IndexOf("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)"), appro.IndexOf("fond.color = Or;"), "㉚ : le Styler repeint APRÈS la pose du fond (plus de « gros bouton jaune »)");
+            StringAssert.DoesNotContain("fond.color = Or;", appro, "㉚ : plus de pose à la main du fond d'or (PiedDEcran.Geste le pose : plus de « gros bouton jaune »)");
             Assert.Greater(distrib.IndexOf("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)"), distrib.IndexOf("AjouterFond(bouton, Or);"), "㉘ : le Styler repeint APRÈS le pavé or");
             string journal = File.ReadAllText(Path.Combine(racine, "Journal", "JournalScreenController.cs"));
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, lib, PiedDEcran.Forme.Cta6, PiedDEcran.Etat.Eteint)", journal, "㊳ : le pied `.cta6` ÉTEINT (aucune route « assister » : TD-848)");

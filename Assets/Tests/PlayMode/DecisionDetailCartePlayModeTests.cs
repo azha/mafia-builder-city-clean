@@ -528,7 +528,7 @@ namespace MafiaCleanCity.Shell.Tests
                     return n;
                 }
                 Assert.GreaterOrEqual(Sombres(a.x, a.y, b.x, b.y), 40, "le libellé est d'encre SOMBRE (#3a2a0a) sur l'or");
-                Vector2Int ba = banc.Pixel(plaque, 0.03f, 0.15f), bb = banc.Pixel(plaque, 0.08f, 0.85f);
+                Vector2Int ba = banc.Pixel(plaque, 0.30f, 0.04f), bb = banc.Pixel(plaque, 0.70f, 0.12f);   // bande HAUTE de la plaque : sous le bord (1 px #6b4a12), au-dessus du libellé (centré en hauteur, espacé : il occupe toute la largeur)
                 Assert.AreEqual(0, Sombres(ba.x, ba.y, bb.x, bb.y), "contrôle négatif : la bande de fond, sans texte, n'a aucun pixel d'encre");
                 // la structure : le bord 1 px est POSÉ par Filets (recette PlaqueLaiton), AU-DESSUS du dégradé et SOUS les textes ; la plaque masque, le dégradé est maskable
                 Transform filets = plaque.Find(Filets.NomConteneur);

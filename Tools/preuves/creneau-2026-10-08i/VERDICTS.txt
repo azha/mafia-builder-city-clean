@@ -1,0 +1,33 @@
+# Créneau du 08/10 soir (client-2) — corrections du juge d'ensemble r2 (tête 5475ef54 + calibrages de tests) — lignes de verdict extraites
+# run1 = 21 catégories (283) : 280/283 — P3 (garde PÉRIMÉE depuis B3 de CLIENT-1 : ㉚ passe par PiedDEcran.Geste ; la catégorie PiedDEcran n'était dans aucun filtre), Vide_LeLiegeEstBorne (contrôle positif calé trop haut), F7 (bande de contrôle négatif sur le libellé) — des gardes NEUVES ou périmées, aucun défaut de rendu ; run1b 281/283 ; run1c 24/25 ; run1d 6/7 ; run1e (Inspection,DecisionCarte,PiedDEcran) 25/25 ; run2 = ClichePlanchesParEcran 5/5 (planches-par-ecran-2026-10-08-client2-r2)
+== run1.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ScreenB7, EnteteDEcran, Inspection, JaugeDeTension, DecisionCarte, DecorDeScene, BundleReel, ListeDefilante, EcranAppro, EcranAccueil, AccueilCanon, MotsDesEnumeres, CuisinierAuRepos, Replis, ChainesDev, I18n, EcranLoi, EcranDistribution, HUDv31,
+MafiaCI: FAIL MafiaCleanCity.CityMap.Tests.PiedDEcranPlayModeTests.P3_Garde_Appro_Distribution_Filiere_PortentLaFormeDeLeurCadre —   ㉚ : la forme `.geste` de `.appr6`
+MafiaCI: FAIL MafiaCleanCity.CitySim.Inspection.Tests.InspectionScreenPlayModeTests.Vide_LeLiegeEstBorne_LeBasNEstPasDuLiegeNu_DeuxHauteurs_AvecControlePositif —   960 : contrôle positif — sans la hauteur posée, le liège couvre ~90 % de la page
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.DecisionDetailCartePlayModeTests.F7_LeGestePrincipal_EstLaPlaqueLaiton_OrAuMilieu_EncreSombre_RenduSurLesPixels —   contrôle négatif : la bande de fond, sans texte, n'a aucun pixel d'encre
+MafiaCI: RunPlayModeTests finished — passed=280 failed=3 skipped=0 inconclusive=0 declares=283 comptes=283
+MafiaCI: VERDICT code=1 (failed=3 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run1b.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ScreenB7, EnteteDEcran, Inspection, JaugeDeTension, DecisionCarte, DecorDeScene, BundleReel, ListeDefilante, EcranAppro, EcranAccueil, AccueilCanon, MotsDesEnumeres, CuisinierAuRepos, Replis, ChainesDev, I18n, EcranLoi, EcranDistribution, HUDv31,
+MafiaCI: FAIL MafiaCleanCity.CitySim.Inspection.Tests.InspectionScreenPlayModeTests.Vide_LeLiegeEstBorne_LeBasNEstPasDuLiegeNu_DeuxHauteurs_AvecControlePositif —   1200 : sous la fiche, c'est du liège (la sonde voit le liège)
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.DecisionDetailCartePlayModeTests.F7_LeGestePrincipal_EstLaPlaqueLaiton_OrAuMilieu_EncreSombre_RenduSurLesPixels —   contrôle négatif : la bande de fond, sans texte, n'a aucun pixel d'encre
+MafiaCI: RunPlayModeTests finished — passed=281 failed=2 skipped=0 inconclusive=0 declares=283 comptes=283
+MafiaCI: VERDICT code=1 (failed=2 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run1c.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [Inspection, DecisionCarte, PiedDEcran]
+MafiaCI: FAIL MafiaCleanCity.CitySim.Inspection.Tests.InspectionScreenPlayModeTests.Vide_LeLiegeEstBorne_LeBasNEstPasDuLiegeNu_DeuxHauteurs_AvecControlePositif —   1200 : sous la fiche, c'est du liège (la sonde voit le liège)
+MafiaCI: RunPlayModeTests finished — passed=24 failed=1 skipped=0 inconclusive=0 declares=25 comptes=25
+MafiaCI: VERDICT code=1 (failed=1 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run1d.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [Inspection]
+MafiaCI: FAIL MafiaCleanCity.CitySim.Inspection.Tests.InspectionScreenPlayModeTests.Vide_LeLiegeEstBorne_LeBasNEstPasDuLiegeNu_DeuxHauteurs_AvecControlePositif —   1200 : contrôle positif — sans la hauteur posée, le liège couvre l'essentiel de la page (mesuré 75 % à 960 : le seuil est une m
+MafiaCI: RunPlayModeTests finished — passed=6 failed=1 skipped=0 inconclusive=0 declares=7 comptes=7
+MafiaCI: VERDICT code=1 (failed=1 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run1e.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [Inspection, DecisionCarte, PiedDEcran]
+MafiaCI: RunPlayModeTests finished — passed=25 failed=0 skipped=0 inconclusive=0 declares=25 comptes=25
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run2.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ClichePlanchesParEcran]
+MafiaCI: RunPlayModeTests finished — passed=5 failed=0 skipped=0 inconclusive=0 declares=5 comptes=5
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
