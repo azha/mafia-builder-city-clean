@@ -580,6 +580,20 @@ namespace MafiaCleanCity.Shell
             return SpecCouche.Plein(Teinte.Nommee("noir", Color.black));
         }
 
+        /// <summary>Place le contenu de l'écran SOUS la bande de scène (voir `ReserveDeBande`) : à appeler sur la pile racine
+        /// du contrôleur, avec la marge haute qu'il posait (en unités de canvas). ③ (`Bande` = 1, aucun support) n'en a pas
+        /// besoin. Le décor seul ne déplace AUCUN bloc : sans cet appel, la scène est visible, le contenu ne bouge pas.</summary>
+        public static ReserveDeBande ReserverLaBande(LayoutGroup pile, DecorPose pose, float margeHautUnites)
+        {
+            if (pile == null) throw new ArgumentNullException(nameof(pile));
+            if (pose == null) throw new ArgumentNullException(nameof(pose));
+            ReserveDeBande r = pile.GetComponent<ReserveDeBande>();
+            if (r == null) r = pile.gameObject.AddComponent<ReserveDeBande>();
+            r.Lier(pose, pile, margeHautUnites);
+            r.Maj();
+            return r;
+        }
+
         // ───────────────────────────────────────────────────────────────────────────────────────────── enseigne (A)
 
         /// <summary>L'ENSEIGNE de la famille A (§3.3) — `.enseigne{background:linear-gradient(178deg,rgba(11,17,27,.91),

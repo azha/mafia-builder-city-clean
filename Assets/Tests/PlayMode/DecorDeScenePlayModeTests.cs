@@ -450,6 +450,39 @@ namespace MafiaCleanCity.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator D4i_ReserveDeBande_LeContenuCommenceSousLaBande_EtSuitLeRedimensionnement()
+        {
+            SpecDecor s = DecorsDeScene.Reputation;   // Bande 21 %
+            var banc = new Banc();
+            try
+            {
+                var pile = banc.Racine.gameObject.AddComponent<VerticalLayoutGroup>();
+                pile.childControlWidth = true; pile.childControlHeight = true;
+                pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+                var bloc = new GameObject("Bloc", typeof(RectTransform));
+                bloc.transform.SetParent(banc.Racine, false);
+                bloc.AddComponent<LayoutElement>().preferredHeight = 50f;
+                DecorPose p = DecorDeScene.Poser(banc.Racine, s);
+                ReserveDeBande r = DecorDeScene.ReserverLaBande(pile, p, 10f);
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                int attendu = Mathf.RoundToInt(Mathf.Max(ShellChrome.TopInsetPx, H * s.Bande) + 10f);
+                Assert.AreEqual(attendu, pile.padding.top, "retrait = bande + marge");
+                var coins = new Vector3[4];
+                ((RectTransform)bloc.transform).GetWorldCorners(coins);
+                float hautDuBloc = banc.Racine.InverseTransformPoint(coins[1]).y + H / 2f;   // y depuis le bas du banc
+                Assert.AreEqual(H - attendu, hautDuBloc, 1.5f, "le premier bloc commence sous la bande, sur le support");
+                Assert.AreEqual(0, p.transform.GetSiblingIndex(), "le décor reste premier enfant, hors pile");
+
+                banc.Racine.offsetMax = new Vector2(0f, -460f);   // 960 → 500
+                yield return null;
+                Assert.AreEqual(Mathf.RoundToInt(Mathf.Max(ShellChrome.TopInsetPx, 500f * s.Bande) + 10f), r.RetraitHaut,
+                    "le retrait suit la hauteur réelle (jamais figé au montage)");
+            }
+            finally { banc.Dispose(); }
+        }
+
+        [UnityTest]
         public IEnumerator D4h_Points_TuileALEchelleDeLaMaquette()
         {
             SpecDecor s = DecorsDeScene.Compression;   // ⑭ : points tous les 26 px CSS
