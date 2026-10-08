@@ -583,13 +583,15 @@ namespace MafiaCleanCity.Shell
         /// <summary>Place le contenu de l'écran SOUS la bande de scène (voir `ReserveDeBande`) : à appeler sur la pile racine
         /// du contrôleur, avec la marge haute qu'il posait (en unités de canvas). ③ (`Bande` = 1, aucun support) n'en a pas
         /// besoin. Le décor seul ne déplace AUCUN bloc : sans cet appel, la scène est visible, le contenu ne bouge pas.</summary>
-        public static ReserveDeBande ReserverLaBande(LayoutGroup pile, DecorPose pose, float margeHautUnites)
+        /// <param name="plancherBarre">vrai (défaut) : la racine couvre l'écran, le contenu descend sous max(barre, bande). Faux : la racine
+        /// est DÉJÀ sous la barre (⑱ `MenuPlus`, insettée par `ShellChrome`, §5.1) — la bande seule, sinon la barre compterait deux fois.</param>
+        public static ReserveDeBande ReserverLaBande(LayoutGroup pile, DecorPose pose, float margeHautUnites, bool plancherBarre = true)
         {
             if (pile == null) throw new ArgumentNullException(nameof(pile));
             if (pose == null) throw new ArgumentNullException(nameof(pose));
             ReserveDeBande r = pile.GetComponent<ReserveDeBande>();
             if (r == null) r = pile.gameObject.AddComponent<ReserveDeBande>();
-            r.Lier(pose, pile, margeHautUnites);
+            r.Lier(pose, pile, margeHautUnites, plancherBarre);
             r.Maj();
             return r;
         }

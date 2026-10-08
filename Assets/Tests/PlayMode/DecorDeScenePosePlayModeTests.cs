@@ -24,9 +24,10 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            // Posés le 08/10 — avec le feu vert de CLIENT-1 : ㊵ ㊳ ㉜ ㉚ ㉛ ㉝ ㉞ ㉙ ⑤ ㉘ ㉓ ㊲ ; attribués à CLIENT-2 par f2 : ㊴ ㉟ ㊱ ⑮ ⑰ ㉒ ㉔ ⑭.
+            // Posés le 08/10 — avec le feu vert de CLIENT-1 : ㊵ ㊳ ㉜ ㉚ ㉛ ㉝ ㉞ ㉙ ⑤ ㉘ ㉓ ㊲ ⑱ ; attribués à CLIENT-2 par f2 : ㊴ ㉟ ㊱ ⑮ ⑰ ㉒ ㉔ ⑭.
             // ③ : DéjàLivré (amendement du 08/10, la ville peinte), hors de cette dette.
-            "⑱",   // AppShell.MonterMenuPlus — EN DERNIER : CLIENT-1 tient AppShell (④, BandeFile) jusqu'à ce qu'il le rende.
+            // ⑱ AppShell.MonterMenuPlus posé le 08/10, EN DERNIER (AppShell rendu par CLIENT-1). La dette est VIDE : les 21 entrées Pose
+            // sont posées ; elle reste déclarée pour qu'une entrée Pose NEUVE du catalogue y passe avant sa pose.
         };
 
         /// <summary>DETTE DATÉE : par écran POSÉ, les recettes de filets pas encore branchées, chacune avec sa raison. Ne fait
@@ -45,6 +46,8 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ⑱ (08/10) — le bureau posé ; les entrées du menu PLUS (groupes, entrées `.e5`) : blocs de CLIENT-1 — à déléguer à Filets.
+            { "⑱", new[] { "Bureau", "Mano", "Picto", "PlaqueBureau", "SousMain", "TagLaiton", "TagLaiton_2" } },
             // ㊲ (08/10, option A) — le support A et le cerne posés par le décor sur le cadre (SuivreLeCadre) ; l'enseigne, les compteurs,
             //   le miroir, le panneau : blocs de CLIENT-1 avec leurs traits propres — à déléguer à Filets.
             { "㊲", new[] { "Cta6", "Cta6Eteint", "Elast", "Enseigne", "Fen", "Mano", "Nm", "Pann", "Pann_2", "Prt", "Rg6", "Tl", "TlOn" } },

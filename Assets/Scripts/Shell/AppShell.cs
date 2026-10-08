@@ -1361,6 +1361,12 @@ namespace MafiaCleanCity.Shell
             rt.anchorMin = new Vector2(0f, 0f); rt.anchorMax = new Vector2(1f, 1f);
             rt.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
             rt.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md` §5.1) : ⑱ le bureau — la scène du bar à
+            // 0,55, le voile, le support `bureau` (#5a2e16 → #3a1c0e à 18 px, arrêt DUR, #2b120c) — DÉCLARÉS au catalogue. Posé sur la
+            // FENÊTRE `MenuPlus` (premier enfant, hors du contenu qui défile, coupé par son RectMask2D) ; `ContentSlot` n'est pas touché.
+            // `Decor/Capteur` est un AJOUT assumé (§5.2) : `MenuPlus` n'avait aucun fond, un menu plein cadre ne laisse plus cliquer
+            // à travers.
+            DecorPose decorMenu = DecorDeScene.Poser(menu.transform, DecorsDeScene.MenuPlus);
 
             // (2) — `menu` devient la FENÊTRE (elle coupe et fait défiler) ; la pile d'entrées
             // descend d'un cran dans `MenuPlus_Contenu`, qui se dimensionne sur ses enfants.
@@ -1401,6 +1407,8 @@ namespace MafiaCleanCity.Shell
             // sont un STYLE : les valeurs servies sont en casse de phrase.
             pile.padding = new RectOffset(Mathf.RoundToInt(Px(12f)), Mathf.RoundToInt(Px(12f)), 0, Mathf.RoundToInt(Px(6f)));
             pile.spacing = Px(4f);
+            // §5.6 du design : la première entrée sous la bande de scène de ⑱ (12 % de CE rect, déjà sous la barre : pas de plancher).
+            DecorDeScene.ReserverLaBande(pile, decorMenu, 0f, plancherBarre: false);
             var parId = new Dictionary<string, (string libelle, System.Action monter)>();
             foreach ((string idStable, string libelle, System.Action monter) in DestinationsPlus()) parId[idStable] = (libelle, monter);
             foreach ((string idGroupe, string titre, string[] ids) in GroupesPlus())

@@ -673,6 +673,34 @@ namespace MafiaCleanCity.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator D4m_ReserveDeBande_SansPlancher_PourUneRacineDejaSousLaBarre()
+        {
+            // ⑱ : `MenuPlus` est DÉJÀ retirée de la barre (ShellChrome) — la bande s'applique à CE rect (§5.1), sans plancher de barre,
+            // sinon la barre compterait deux fois. Contrôle : la même pile AVEC plancher descend sous la barre publiée.
+            SpecDecor s = DecorsDeScene.MenuPlus;   // Bande 12 %
+            float hautAvant = ShellChrome.TopInsetPx, basAvant = ShellChrome.BottomInsetPx;
+            var banc = new Banc();
+            try
+            {
+                ShellChrome.PublierInsets(150f, basAvant);
+                var pile = banc.Racine.gameObject.AddComponent<VerticalLayoutGroup>();
+                DecorPose p = DecorDeScene.Poser(banc.Racine, s);
+                ReserveDeBande r = DecorDeScene.ReserverLaBande(pile, p, 10f, plancherBarre: false);
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                Assert.AreEqual(Mathf.RoundToInt(H * s.Bande + 10f), r.RetraitHaut, "sans plancher : la bande seule (+ marge), même sous une barre de 150");
+                DecorDeScene.ReserverLaBande(pile, p, 10f, plancherBarre: true);
+                Assert.AreEqual(Mathf.RoundToInt(Mathf.Max(150f, H * s.Bande) + 10f), r.RetraitHaut, "contrôle : AVEC plancher, sous la barre publiée");
+                Assert.Greater(150f, H * s.Bande, "prémisse : la barre publiée dépasse la bande, sinon le contrôle ne discrimine rien");
+            }
+            finally
+            {
+                ShellChrome.PublierInsets(hautAvant, basAvant);
+                banc.Dispose();
+            }
+        }
+
+        [UnityTest]
         public IEnumerator D4h_Points_TuileALEchelleDeLaMaquette()
         {
             SpecDecor s = DecorsDeScene.Compression;   // ⑭ : points tous les 26 px CSS

@@ -16,10 +16,11 @@ namespace MafiaCleanCity.Shell
         private DecorPose pose;
         private LayoutGroup pile;
         private float margeHaut;
+        private bool sousLaBarre = true;
 
         public int RetraitHaut { get; private set; }
 
-        internal void Lier(DecorPose p, LayoutGroup g, float marge) { pose = p; pile = g; margeHaut = marge; }
+        internal void Lier(DecorPose p, LayoutGroup g, float marge, bool plancherBarre) { pose = p; pile = g; margeHaut = marge; sousLaBarre = plancherBarre; }
 
         private void OnRectTransformDimensionsChange() => Maj();
 
@@ -28,7 +29,9 @@ namespace MafiaCleanCity.Shell
             if (pose == null || pile == null || pose.Spec == null) return;
             float h = ((RectTransform)pose.transform).rect.height;
             float bande = h * Mathf.Clamp01(pose.Spec.Bande);
-            int retrait = Mathf.RoundToInt(Mathf.Max(ShellChrome.TopInsetPx, bande) + margeHaut);
+            // Une racine plein écran : le contenu sous max(barre, bande). Une racine DÉJÀ retirée de la barre (⑱ `MenuPlus`, insettée
+            // par `ShellChrome`) : la bande seule — la barre compterait deux fois.
+            int retrait = Mathf.RoundToInt((sousLaBarre ? Mathf.Max(ShellChrome.TopInsetPx, bande) : bande) + margeHaut);
             if (retrait == RetraitHaut && pile.padding.top == retrait) return;
             RetraitHaut = retrait;
             pile.padding.top = retrait;
