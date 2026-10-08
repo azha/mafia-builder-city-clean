@@ -33,7 +33,25 @@ namespace MafiaCleanCity.Shell
         /// <summary>Unités de canvas par px CSS de la maquette série 6, sur la racine que le décor couvre.</summary>
         public float Echelle => EchelleMaquette.Px(1f, (RectTransform)transform, EchelleMaquette.LargeurEcransBrennar6);
 
-        private void OnRectTransformDimensionsChange() => Rafraichir();
+        private SuiviDuCadre suivi;
+
+        /// <summary>`Decor/Support` et `Decor/Cerne` suivent le rect RÉEL de `cadre` au lieu de l'ancrage « sous la bande » (㊲ : un
+        /// panneau à géométrie propre). Le contenu de l'écran ne bouge pas ; aucune `ReserverLaBande` ne s'applique alors.</summary>
+        public SuiviDuCadre SuivreLeCadre(RectTransform cadre)
+        {
+            if (cadre == null) throw new System.ArgumentNullException(nameof(cadre));
+            suivi = cadre.GetComponent<SuiviDuCadre>();
+            if (suivi == null) suivi = cadre.gameObject.AddComponent<SuiviDuCadre>();
+            suivi.Pose = this;
+            suivi.Maj();
+            return suivi;
+        }
+
+        private void OnRectTransformDimensionsChange()
+        {
+            Rafraichir();
+            if (suivi != null) suivi.Maj();
+        }
 
         public void Rafraichir()
         {

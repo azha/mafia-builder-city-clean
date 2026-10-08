@@ -640,49 +640,15 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("ReputationRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, ReputationResolvers.Encre);
-
-            // ⛔ LES TROIS COUCHES DU FOND — sans elles « l'écran est éteint ». Le juge a sondé 16
-            // points et trouvé un aplat unique (13,13,22) là où la maquette monte à (41,40,35) sous
-            // l'enseigne : plus de dégradé vertical, plus de halo doré en haut, plus de halo cyan
-            // au pied. Six mesures centre/bord rendaient Δlum = 0,0 contre +2,7, +4,6, −8,9 et +11.
-            // ★ Chaque aplat était pourtant juste à ≤ 4/255. Un écran peut avoir toutes ses
-            //   couleurs exactes et n'avoir aucune lumière : ce qui manquait n'était dans aucune
-            //   valeur nommée, mais dans ce qui les relie.
-            //
-            // Traduites une à une de `.%(p)s{background:…}` (chassis6.py:104-107). ⚠️ L'axe Y de la
-            // CSS descend, celui des UV monte : `at 50% 22%` devient donc un centre à (0,5 · 0,78).
-            //   radial-gradient(72% 40% at 50% 22%,  rgba(217,171,78,.15), transparent 66%)
-            //   radial-gradient(90% 60% at 50% 96%,  rgba(127,212,217,.07), transparent 70%)
-            //   linear-gradient(178deg, carte 0%, fond 54%, fond2 100%)
-            // ⛔⛔ LES ALPHAS SONT CONVERTIS, PAS RECOPIÉS — et c'est le piège sRGB/linéaire, le
-            // seul de la journée que la colorimétrie des aplats ne pouvait pas révéler.
-            // Le navigateur mélange en sRGB, Unity en LINÉAIRE. Le même 0,07 ne donne donc pas la
-            // même couleur, et l'écart n'est pas petit : mesuré par le juge au même point du corps,
-            // maquette (11,16,22) luminance 15,4 · jeu (37,63,65) luminance **57,6**, 3,7× plus
-            // clair — le tiers bas de l'écran virait au vert à la résolution cible, et le trait
-            // d'identité « fond presque noir, l'or seul brille » tombait.
-            //
-            // Vérifié par le calcul avant de toucher au code, et le calcul REPRODUIT la mesure :
-            //     alpha 0,070 mélangé en linéaire      → (36, 64, 67)   le juge mesure (36, 62, 64)
-            //     le même 0,070 mélangé en sRGB        → (19, 31, 40)   ce que la maquette rend
-            // On résout donc pour l'alpha qui, mélangé en LINÉAIRE, rend la couleur que le
-            // navigateur obtient en sRGB — ce n'est pas un ajustement à l'œil, c'est l'inverse
-            // d'une fonction connue :
-            //     halo or   0,150 → 0,0290   cible (42,39,30)  obtenu (42,35,25)
-            //     halo cyan 0,070 → 0,0130   cible (19,30,36)  obtenu (18,31,35)
-            // ★ Les facteurs (0,193 et 0,186) sont PROCHES mais différents : la correction dépend
-            //   de la couleur, donc un facteur global appliqué aux deux serait faux pour l'un des
-            //   deux. C'est pourquoi chaque halo a le sien, calculé séparément.
-            AjouterVoile(racine, "FondDegrade",
-                ProceduralUI.VerticalGradient(128, ReputationResolvers.Panneau, ReputationResolvers.Fond2),
-                Color.white);
-            AjouterVoile(racine, "HaloOr",
-                ProceduralUI.VoileRadial(160, Color.white, new Vector2(0.5f, 0.78f), 0.72f, 0.40f, 0.66f),
-                new Color(217f / 255f, 171f / 255f, 78f / 255f, 0.0290f));   // CSS 0,15 → linéaire
-            AjouterVoile(racine, "HaloCyan",
-                ProceduralUI.VoileRadial(160, Color.white, new Vector2(0.5f, 0.04f), 0.90f, 0.60f, 0.70f),
-                new Color(127f / 255f, 212f / 255f, 217f / 255f, 0.0130f));  // CSS 0,07 → linéaire
+            // LE DÉCOR DE SCÈNE (CLIENT-2, 08/10, option A acceptée par CLIENT-1) : la scène du district à 0,24, le voile, et le support A
+            // de `.rep6` — les TROIS COUCHES (halo or 72 % 40 % à 50 % 22 %, halo cyan 90 % 60 % à 50 % 96 %, 178° à 3 arrêts) et le CERNE
+            // d'or — DÉCLARÉS au catalogue, UNE recette pour les sept écrans A. Ils étaient peints ici, sur un aplat Encre PLEIN ÉCRAN ;
+            // ils sont désormais posés sur le rect du PANNEAU (`Corps`, borné à 462 CSS), par `SuivreLeCadre` ci-dessous — plus fidèle :
+            // dans la maquette le fond `.rep6` est celui du panneau.
+            // ★ LA LEÇON QUE CES COUCHES PORTAIENT TIENT TOUJOURS, et le décor la garde : les alphas des halos sont CONVERTIS pour le
+            //   mélange linéaire, jamais recopiés (le juge avait mesuré le tiers bas 3,7× trop clair avec 0,07 recopié) — le décor
+            //   déplace la COULEUR sur le fond connu du support (`CouleurPourMelangeLineaire`), sa sonde D4 le garde à ±6/255.
+            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Reputation);
 
             // ⛔ L'ÉCHELLE AVANT TOUT — un RectTransform qui vient d'être étiré n'a PAS encore son
             // `rect` résolu, et `Px()` le lit dès la première constante convertie. Mesuré sur cet
@@ -777,6 +743,9 @@ namespace MafiaCleanCity.Operational
             borne.margeBasse = ShellChrome.BottomInsetPx + borne.margeBasseHorsChrome;
             borne.insetHaut = ShellChrome.TopInsetPx;
             borne.Appliquer();
+            // Le support et le cerne du décor suivent CE cadre (son rect réel, recopié à chaque recalcul de la borne) : pas de réserve
+            // de bande ici, la géométrie de ㊲ (ruling user du 07/09) ne bouge pas.
+            decor.SuivreLeCadre(corps);
 
             // ⛔⛔ SANS CE LAYOUT, LES SIX BLOCS RESTENT TOUS À LA POSITION PAR DÉFAUT.
             // Mesuré sur la première capture réussie : l'enseigne était en place (elle porte son
@@ -1003,9 +972,8 @@ namespace MafiaCleanCity.Operational
                 suite.curseur = curseur;
             }
 
-            // Le cerne sur la FENÊTRE (il encadre et ne défile pas) ; les cinq blocs dans le
+            // Le cerne est celui du DÉCOR (`Decor/Cerne`, sur le rect de cette fenêtre) ; les cinq blocs dans le
             // CONTENU (c'est eux qui défilent). Aucun d'eux n'a à savoir qu'il y a un défilement.
-            ConstruireCerne(corpsGo.transform);
             ConstruireEnseigne(contenuGo.transform);
             ConstruireCompteurs(contenuGo.transform);
             ConstruireMiroir(contenuGo.transform);
@@ -1014,38 +982,10 @@ namespace MafiaCleanCity.Operational
         }
 
         /// <summary>Le liseré doré qui encadre l'écran (`.cerne{inset:5px}`).</summary>
-        private void ConstruireCerne(Transform parent)
-        {
-            GameObject go = NouveauUI("Cerne", parent);
-            RectTransform rt = (RectTransform)go.transform;
-            // Le cerne ENCADRE l'écran, il ne s'empile pas avec les blocs : on l'exclut du layout.
-            go.AddComponent<LayoutElement>().ignoreLayout = true;
-            float inset = Px(CssCernInset);
-            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
-            rt.offsetMin = new Vector2(inset, inset);
-            rt.offsetMax = new Vector2(-inset, -inset);
-            Image img = AjouterImage(go);
-            img.sprite = ProceduralUI.RoundedRectOutline(PxTrait(3f), PxTrait(1f), Color.white);
-            img.type = Image.Type.Sliced;
-            img.color = ReputationResolvers.OrFilet;
-            img.raycastTarget = false;
-        }
-
         /// <summary>Une couche de fond étirée sur toute la racine, derrière tout le reste et
         /// hors du flux. Le sprite porte la FORME du dégradé, `teinte` en porte la couleur et
         /// l'alpha — jamais les deux, sinon uGUI multiplie et rend la couleur au carré (défaut
         /// déjà payé sur le teint du portrait, mesuré à (133,116,81) pour (185,173,146)).</summary>
-        private void AjouterVoile(GameObject parent, string nom, Sprite sprite, Color teinte)
-        {
-            GameObject go = NouveauUI(nom, parent.transform);
-            Image img = go.AddComponent<Image>();
-            img.sprite = sprite;
-            img.color = teinte;
-            img.raycastTarget = false;
-            Etirer((RectTransform)go.transform);
-            go.AddComponent<LayoutElement>().ignoreLayout = true;   // décor : jamais une colonne
-        }
-
         private void ConstruireEnseigne(Transform parent)
         {
             GameObject go = NouveauUI("Enseigne", parent);

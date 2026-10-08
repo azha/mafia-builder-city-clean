@@ -595,6 +595,72 @@ namespace MafiaCleanCity.Tests.PlayMode
             }
         }
 
+        private static void AssertRectsEgaux(RectTransform a, RectTransform b, float tol, string ou)
+        {
+            var ca = new Vector3[4]; var cb = new Vector3[4];
+            a.GetWorldCorners(ca); b.GetWorldCorners(cb);
+            for (int k = 0; k < 4; k += 2)
+            {
+                Assert.AreEqual(cb[k].x, ca[k].x, tol, $"{ou} : coin {k} x");
+                Assert.AreEqual(cb[k].y, ca[k].y, tol, $"{ou} : coin {k} y");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator D4l_SuivreLeCadre_SupportEtCerneSurLeCadreReel_DeuxResolutions_ApresRecalcul_EtHalosA6()
+        {
+            // ㊲ (option A de CLIENT-1, 08/10) : le panneau a SA géométrie (ancré en bas, hauteur bornée, recalculée) ; Decor/Support et
+            // Decor/Cerne doivent prendre son rect RÉEL — aux deux résolutions ET après le recalcul de la hauteur (un support calé sur
+            // le rect d'AVANT le recalcul serait le défaut « rect lu au montage »).
+            SpecDecor s = DecorsDeScene.Reputation;
+            var banc = new Banc();
+            Texture2D t = null;
+            try
+            {
+                var cadreGo = new GameObject("Corps", typeof(RectTransform));
+                cadreGo.transform.SetParent(banc.Racine, false);
+                var cadre = (RectTransform)cadreGo.transform;
+                cadre.anchorMin = Vector2.zero; cadre.anchorMax = new Vector2(1f, 0f); cadre.pivot = new Vector2(0.5f, 0f);
+                cadre.offsetMin = new Vector2(20f, 60f); cadre.offsetMax = new Vector2(-20f, 660f);
+                DecorPose p = DecorDeScene.Poser(banc.Racine, s);
+                p.SuivreLeCadre(cadre);
+                float e = 540f / 300f;
+                foreach (float hauteurRacine in new[] { 960f, 1200f })
+                    foreach (float hauteurCadre in new[] { 600f, 420f })
+                    {
+                        banc.Racine.offsetMax = new Vector2(0f, hauteurRacine - H);
+                        cadre.offsetMax = new Vector2(-20f, 60f + hauteurCadre);   // « le recalcul de la borne »
+                        yield return null;
+                        Canvas.ForceUpdateCanvases();
+                        string ou = $"racine {hauteurRacine}, cadre {hauteurCadre}";
+                        AssertRectsEgaux(p.Support, cadre, 1f, ou + " : Decor/Support = le cadre");
+                        AssertRectsEgaux(p.Cerne, cadre, 1f, ou + " : Decor/Cerne = le cadre");
+                        var trait = (RectTransform)p.Cerne.Find("Trait");
+                        var ct = new Vector3[4]; var cc = new Vector3[4];
+                        trait.GetWorldCorners(ct); cadre.GetWorldCorners(cc);
+                        Assert.AreEqual(5f * e, ct[0].x - cc[0].x, 1f, ou + " : le trait du cerne à 5 CSS du bord gauche");
+                        Assert.AreEqual(5f * e, cc[2].y - ct[2].y, 1f, ou + " : à 5 CSS du bord haut");
+                    }
+
+                // Condition 2 de CLIENT-1 : les halos, mesurés DANS le cadre borné, à ±6/255 du mélange CSS (sRGB).
+                banc.Racine.offsetMax = Vector2.zero;
+                cadre.offsetMax = new Vector2(-20f, 660f);
+                yield return null;
+                t = banc.Rendre();
+                Vector2 boite = DecorDeScene.BoiteSupportCss(s);
+                SpecCouche baseA = s.Support.Couches[2];
+                Color or = s.Support.Couches[0].Arrets[0].Couleur.Resoudre(), cyan = s.Support.Couches[1].Arrets[0].Couleur.Resoudre();
+                // cadre : x 20 → 520, y 60 → 660 (pixels du banc, y depuis le BAS)
+                Color fondOr = DecorDeScene.CouleurDeCouche(baseA, 0.5f, 0.22f, boite);
+                Color fondCyan = DecorDeScene.CouleurDeCouche(baseA, 0.5f, 0.96f, boite);
+                Color attenduOr = Color.Lerp(fondOr, or, or.a), attenduCyan = Color.Lerp(fondCyan, cyan, cyan.a);
+                Proche(attenduOr, t.GetPixel(270, Mathf.RoundToInt(660f - 0.22f * 600f)), 6f, "foyer du halo OR (mélange CSS)");
+                Proche(attenduCyan, t.GetPixel(270, Mathf.RoundToInt(660f - 0.96f * 600f)), 6f, "foyer du halo CYAN (mélange CSS)");
+                Assert.Greater(Ecart(attenduOr, fondOr) * 255f, 4f, "contrôle : le halo or se distingue de son fond (la sonde mesure quelque chose)");
+            }
+            finally { Detruire(t); banc.Dispose(); }
+        }
+
         [UnityTest]
         public IEnumerator D4h_Points_TuileALEchelleDeLaMaquette()
         {
