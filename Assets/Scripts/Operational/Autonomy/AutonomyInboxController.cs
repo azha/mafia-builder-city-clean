@@ -407,7 +407,11 @@ namespace MafiaCleanCity.Operational.Autonomy
             // Full-screen ardoise backdrop.
             GameObject backdrop = NewUI("AutonomyInboxBackdrop", root);
             Stretch((RectTransform)backdrop.transform, Vector2.zero, Vector2.zero);
-            backdrop.AddComponent<Image>().color = SurfaceBg;
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,45, le voile,
+            // et le support B du `burner` (#3a3f47 → #22262b 40 % → #15181c) — DÉCLARÉS au catalogue, à la place de l'aplat
+            // `surfaceBase` ; `Decor/Capteur` garde le bloqueur de raycast que portait cet aplat. Bande 10 % ≈ la barre du haut : la
+            // carte, posée à TopInsetPx + 28 sous le haut, est déjà sur le support.
+            MafiaCleanCity.Shell.DecorDeScene.Poser(backdrop.transform, MafiaCleanCity.Shell.DecorsDeScene.AutonomyInbox);
 
             // The inbox card, anchored top-centre.
             GameObject card = NewUI("AutonomyInboxSheet", root);

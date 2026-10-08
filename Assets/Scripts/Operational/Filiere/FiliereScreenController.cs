@@ -877,21 +877,23 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("FiliereRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DesignTokens.Current.surfaceBase);
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,24, le voile,
+            // le support A (halos or et cyan sur le 178°) et le cerne d'or A1 — DÉCLARÉS au catalogue, plus de fond plat ici.
+            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Filiere);
 
             VerticalLayoutGroup pile = racine.AddComponent<VerticalLayoutGroup>();
             pile.padding = new RectOffset(
                 (int)Px(13f), (int)Px(13f),
-                (int)(Px(10f) + MafiaCleanCity.Shell.ShellChrome.TopInsetPx),
+                0,   // le haut : sous la bande de scène, posé (et recalculé à chaque rect) par ReserverLaBande juste dessous
                 (int)(Px(10f) + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx));
             pile.spacing = Px(9f);
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+            // §5.6 du design : la pile commence SOUS max(barre, bande de scène 21 %), comme le panneau de la maquette.
+            DecorDeScene.ReserverLaBande(pile, decor, Px(10f));
 
             // L'enseigne
             GameObject ens = NouveauUI("Enseigne", racine.transform);
-            AjouterFond(ens, DesignTokens.Current.surfaceCard);
-            AjouterLisere(ens);
             var ve = ens.AddComponent<VerticalLayoutGroup>();
             ve.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(7f), (int)Px(7f));
             ve.childControlWidth = true; ve.childControlHeight = true;
@@ -904,10 +906,9 @@ namespace MafiaCleanCity.Operational
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
             sousTitre.alignment = TextAlignmentOptions.Center;
             sousTitre.characterSpacing = 18f;
-            GameObject filet = NouveauUI("FiletOr", ens.transform);
-            AjouterFond(filet, DesignTokens.Current.hudHairlineGold);
-            LayoutElement filetLe = filet.AddComponent<LayoutElement>();
-            filetLe.minHeight = PxTrait(2f); filetLe.preferredHeight = PxTrait(2f); filetLe.flexibleHeight = 0f;
+            // `.enseigne` : plaque 178° translucide, bord 1 px #2a3648, filet BAS 2 px laiton (l'ancien `FiletOr`), liseré blanc —
+            // la recette MESURÉE de ㊵, posée par le décor ; le texte reste ici.
+            DecorDeScene.HabillerEnseigne((RectTransform)ens.transform, DecorsDeScene.Filets.Filiere.Enseigne, DecorsDeScene.Filiere);
 
             // Les trois compteurs
             GameObject bande = NouveauUI("Compteurs", racine.transform);
@@ -929,7 +930,7 @@ namespace MafiaCleanCity.Operational
             {
                 GameObject c = NouveauUI("Compteur" + i, bande.transform);
                 AjouterFond(c, DesignTokens.Current.surfaceCard);
-                AjouterLisere(c);
+                Filets.Poser((RectTransform)c.transform, DecorsDeScene.Filets.Filiere.Fen);   // `.fen` : 1 px #2a3648 mesuré
                 LayoutElement largeurEgale = c.AddComponent<LayoutElement>();
                 largeurEgale.minWidth = 0f;
                 largeurEgale.preferredWidth = 0f;
@@ -994,7 +995,7 @@ namespace MafiaCleanCity.Operational
             // Le panneau
             GameObject pan = NouveauUI("Panneau", racine.transform);
             AjouterFond(pan, DesignTokens.Current.surfaceCard);
-            AjouterLisere(pan);
+            Filets.Poser((RectTransform)pan.transform, DecorsDeScene.Filets.Filiere.Pann);   // `.pann` : 1 px #2a3648 mesuré
             var lep = pan.AddComponent<LayoutElement>();
             lep.minHeight = Px(92f); lep.preferredHeight = -1f; lep.flexibleHeight = 0f;
             var vp = pan.AddComponent<VerticalLayoutGroup>();
@@ -1056,15 +1057,6 @@ namespace MafiaCleanCity.Operational
             img.color = couleur;
             img.raycastTarget = false;
             return img;
-        }
-
-        private void AjouterLisere(GameObject go)
-        {
-            Outline lisere = go.AddComponent<Outline>();
-            lisere.effectColor = DesignTokens.Current.surfaceRaised;
-            float trait = Mathf.Max(1f, PxTrait(1f));
-            lisere.effectDistance = new Vector2(trait, -trait);
-            lisere.useGraphicAlpha = false;
         }
 
         private static TextMeshProUGUI NouveauTexte(Transform parent, string nom, string texte,

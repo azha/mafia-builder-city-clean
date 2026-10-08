@@ -154,9 +154,30 @@ namespace MafiaCleanCity.Operational.Tests
             TMPro.TextMeshProUGUI libellePropres = compteurs.Find("Compteur1/Libelle").GetComponent<TMPro.TextMeshProUGUI>();
             Assert.AreEqual("PROPRES", libellePropres.text);
             Assert.IsTrue((libellePropres.fontStyle & TMPro.FontStyles.UpperCase) != 0, "`.fen>span` est en capitales : la valeur servie « propres » aussi");
-            Assert.IsNotNull(tous.First(t => t.name == "Enseigne").Find("FiletOr"), "le filet or ferme l'enseigne");
-            Assert.AreEqual(5, racine.GetComponentsInChildren<UnityEngine.UI.Outline>(true).Length,
-                "enseigne + 3 compteurs + panneau portent leur liseré ; les étapes, elles, sont CERNÉES (A2 du 07/10)");
+            // Le décor de scène (CLIENT-2, 08/10) : l'enseigne est HABILLÉE par sa recette mesurée — le filet or qui la ferme est
+            // désormais son côté BAS (2 px CSS, laiton) —, compteurs et panneau portent leur filet `.fen`/`.pann` (1 px #2a3648)
+            // à la place de l'ancien liseré (Outline). On asserte l'EFFET posé : la couleur et l'épaisseur des côtés.
+            Transform enseigne = tous.First(t => t.name == "Enseigne");
+            UnityEngine.UI.Image basOr = enseigne.Find("Filets/Bas")?.GetComponent<UnityEngine.UI.Image>();
+            Assert.IsNotNull(basOr, "le filet or ferme l'enseigne (Enseigne/Filets/Bas)");
+            Assert.AreEqual((Color32)MafiaCleanCity.Theme.DesignTokens.Current.hudHairlineGold, (Color32)basOr.color, "le filet bas de l'enseigne est laiton");
+            Assert.AreEqual(MafiaCleanCity.Shell.EchelleMaquette.PxTrait(2f, (RectTransform)racine.transform, MafiaCleanCity.Shell.EchelleMaquette.LargeurEcransBrennar6),
+                basOr.rectTransform.rect.height, 1.01f, "le filet bas mesure 2 px CSS à l'échelle de l'écran (PxTrait)");
+            Assert.IsNotNull(enseigne.Find("Plaque"), "l'enseigne repose sur sa plaque 178° (`.enseigne` background)");
+            Color32 bordMesure = (Color32)MafiaCleanCity.Shell.DecorsDeScene.Filets.Filiere.Fen[0].Couleur.Resoudre();
+            foreach (string bloc in new[] { "Compteurs/Compteur0", "Compteurs/Compteur1", "Compteurs/Compteur2", "Panneau" })
+            {
+                Transform b = racine.transform.Find(bloc);
+                foreach (string cote in new[] { "Haut", "Droite", "Bas", "Gauche" })
+                {
+                    UnityEngine.UI.Image img = b.Find("Filets/" + cote)?.GetComponent<UnityEngine.UI.Image>();
+                    Assert.IsNotNull(img, $"{bloc} porte son filet {cote} (`.fen`/`.pann`, mesuré)");
+                    Assert.AreEqual(bordMesure, (Color32)img.color, $"{bloc}/{cote} : la couleur mesurée #2a3648");
+                    Assert.Greater(Mathf.Min(img.rectTransform.rect.width, img.rectTransform.rect.height), 0.5f, $"{bloc}/{cote} : un trait d'épaisseur non nulle");
+                }
+            }
+            Assert.AreEqual(0, racine.GetComponentsInChildren<UnityEngine.UI.Outline>(true).Length,
+                "plus aucun liseré Outline : les étapes sont CERNÉES (A2 du 07/10), les blocs FILETÉS (décor de scène)");
         }
 
         /// <summary>㊵ A2 + A3 du juge groupé du 07/10 (`Tools/juge-visuel/screen_c2/r-groupe-2026-10-07/rapport.md`) — État FABRIQUÉ :

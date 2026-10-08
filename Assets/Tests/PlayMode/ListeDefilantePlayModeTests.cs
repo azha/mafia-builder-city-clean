@@ -118,6 +118,9 @@ namespace MafiaCleanCity.CityMap.Tests
         {
             { "DashboardController.cs", "décor : la zone du fond de ville de l'Accueil, pas une liste" },
             { "ReputationPortrait.cs", "décor : la zone du portrait de ㊲, pas une liste" },
+            // CLIENT-2, 08/10 : le décor de scène coupe ses couches au rect du SUPPORT (`Decor/Support`, et `Decor/Cerne`) — l'Image
+            // carrée d'un cercle de liège déborde de 908 px ; ce n'est pas une liste, rien n'y défile (design §3.3, garde D0/D4e).
+            { "DecorDeScene.cs", "décor : le clip des couches du support et du cerne (design décor de scène §3.3), pas une liste" },
         };
 
         private static readonly Regex Masque = new Regex(@"AddComponent<RectMask2D>\(\)");

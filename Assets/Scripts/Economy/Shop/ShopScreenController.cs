@@ -528,12 +528,15 @@ namespace MafiaCleanCity.Economy.Shop
             RectTransform selfRt = GetComponent<RectTransform>();
             if (selfRt == null) selfRt = gameObject.AddComponent<RectTransform>();
 
-            Image voile = gameObject.AddComponent<Image>();
-            voile.color = DesignTokens.Current.surfaceBase;
-            voile.raycastTarget = true;
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,24, le voile, et
+            // le support = la VITRE, zone dominante (168°, #151b23 → #0f141a 46 % → #0c1015) — DÉCLARÉS au catalogue, à la place de l'aplat
+            // `surfaceBase` ; `Decor/Capteur` garde le bloqueur de raycast que portait cet aplat.
+            DecorPose decor = DecorDeScene.Poser(transform, DecorsDeScene.Shop);
 
-            // B3 + A4 : la racine est une PILE (gabarit `EnteteDEcran.PoserLaPile`, marges d'écran haut/bas du shell) : le comptoir en tête, la vitre qui défile et prend le reste, la bande basse en pied.
-            EnteteDEcran.PoserLaPile(gameObject, (int)ShellChrome.TopInsetPx, (int)ShellChrome.BottomInsetPx);
+            // B3 + A4 : la racine est une PILE (gabarit `EnteteDEcran.PoserLaPile`, marge d'écran BAS du shell ; le HAUT est la bande de
+            // scène, §5.6) : le comptoir en tête, la vitre qui défile et prend le reste, la bande basse en pied.
+            VerticalLayoutGroup pile = EnteteDEcran.PoserLaPile(gameObject, 0, (int)ShellChrome.BottomInsetPx);
+            DecorDeScene.ReserverLaBande(pile, decor, 0f);
             ConstruireLeComptoir();
             ConstruireLaVitre();
             ConstruireLaBande();

@@ -490,6 +490,8 @@ namespace MafiaCleanCity.Operational
         private void ConstruireLigne(Transform parent, string idStable, string libelleLitteral, string valeur, Color couleurValeur)
         {
             GameObject ligne = NouveauUI("Ligne_" + idStable, parent);
+            // `.bon .l{border-top:1px dotted #c3b79e}` — le A du juge groupé : « 4 filets pointillés du bon → 0 ». Recette MESURÉE.
+            Filets.Poser((RectTransform)ligne.transform, DecorsDeScene.Filets.ChaineDAppro.L);
             HorizontalLayoutGroup h = ligne.AddComponent<HorizontalLayoutGroup>();
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandWidth = true; h.childForceExpandHeight = false;
@@ -718,7 +720,9 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("ChaineDApproRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DesignTokens.Current.surfaceBase);
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,2, le voile,
+            // le support B de `.appr6` (#1c1a17 → #151310 60 % → #111014) — DÉCLARÉS au catalogue, plus de fond plat ici.
+            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.ChaineDAppro);
             racinePleinEcran.SetAsLastSibling();
 
             // ⛔ L'ÉCHELLE AVANT TOUTE CONVERSION (patron `ExceptionQueueController`) — un
@@ -730,7 +734,8 @@ namespace MafiaCleanCity.Operational
             // le corps remplit tout l'écran : le comportement d'avant que ces champs existent.
             // C-a + C-b (juge groupé du 07/10, f2) : la racine est une PILE (marges d'écran haut/bas du shell) dont le premier élément est le BANDEAU DE TITRE de la maquette (`EnteteDEcran` : plaque pleine largeur +
             // filet, titre DejaVu Serif crème à l'échelle de la maquette) ; le corps prend ce qui reste.
-            EnteteDEcran.PoserLaPile(racine, (int)ShellChrome.TopInsetPx, (int)ShellChrome.BottomInsetPx);
+            // §5.6 du design : l'en-tête commence SOUS max(barre, bande de scène 21 %), comme `.appr6` sous la scène de la maquette.
+            DecorDeScene.ReserverLaBande(EnteteDEcran.PoserLaPile(racine, 0, (int)ShellChrome.BottomInsetPx), decor, 0f);
             var (titreDuBandeau, sousTitreDuBandeau) = EnteteDEcran.Construire(racine.transform, EnteteDEcran.Appro, Px,
                 DesignTokens.Current.hudSerifFont, DesignTokens.Current.primaryFont, DesignTokens.Current.onSurfaceSecondary, 10.5f);
             GameObject corpsGo = NouveauUI("Corps", racine.transform);

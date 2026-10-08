@@ -1094,15 +1094,10 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("DemolitionRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DemolitionResolvers.FondBas);
-
-            // `linear-gradient(180deg,#20211d,#191a17 58%,#141513)` — trois arrêts, donc DEUX
-            // bandes qui se rejoignent au genou de 58 %. Un seul dégradé déplacerait le genou.
-            // ⚠️ Aplats OPAQUES : aucune conversion sRGB→linéaire (elle ne concerne que les alphas).
-            AjouterBande(racine, "FondHaut", 0.42f, 1f,
-                ProceduralUI.VerticalGradient(96, DemolitionResolvers.FondHaut, DemolitionResolvers.FondMilieu));
-            AjouterBande(racine, "FondBas", 0f, 0.42f,
-                ProceduralUI.VerticalGradient(96, DemolitionResolvers.FondMilieu, DemolitionResolvers.FondBas));
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,18, le voile,
+            // et le support B de `.demo6` — `linear-gradient(180deg,#20211d,#191a17 58%,#141513)`, UN dégradé à 3 arrêts, le genou à
+            // 58 % exact (les deux bandes `FondHaut`/`FondBas` qui le peignaient à la main sont retirées) — DÉCLARÉS au catalogue.
+            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Demolition);
 
             Canvas.ForceUpdateCanvases();
             float largeurLue = racinePleinEcran.rect.width;
@@ -1124,13 +1119,15 @@ namespace MafiaCleanCity.Operational
             corps.anchorMax = Vector2.one;
             corps.pivot = new Vector2(0.5f, 0.5f);
             corps.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
-            corps.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
+            corps.offsetMax = Vector2.zero;   // le haut : la pile commence sous la bande de scène (ReserverLaBande, §5.6 du design)
 
             VerticalLayoutGroup pile = corpsGo.AddComponent<VerticalLayoutGroup>();
             pile.spacing = 0f;
             pile.padding = new RectOffset(0, 0, 0, 0);
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+            // §5.6 du design : la tête commence SOUS max(barre, bande de scène 21 %), comme `.demo6` sous la scène de la maquette.
+            DecorDeScene.ReserverLaBande(pile, decor, 0f);
 
             ConstruireTete(corpsGo.transform);
             zoneCentrale = ConstruireZoneCentrale(corpsGo.transform);

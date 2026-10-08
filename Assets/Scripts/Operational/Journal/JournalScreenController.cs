@@ -420,6 +420,9 @@ namespace MafiaCleanCity.Operational
             leLigne.preferredHeight = -1f;
             leLigne.flexibleHeight = 0f;
             if (acquis) Contour(go, AccentVif);
+            // `.evt` (et `.une`/`.brv`/`.angle`, même recette) : 1 px #2a3648 mesuré — le juge en comptait 0 sur 9 blocs. L'acquise
+            // (`permanent`) garde son Contour (CLIENT-1).
+            else Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Journal.Evt);
 
             var v = go.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset((int)Px(9f), (int)Px(9f), (int)Px(7f), (int)Px(7f));
@@ -594,7 +597,9 @@ namespace MafiaCleanCity.Operational
         private void ConstruireEnseigne(Transform parent)
         {
             GameObject go = NouveauUI("Enseigne", parent);
-            AjouterFond(go, FondBloc);
+            // `.enseigne` : plaque 178° translucide, bord 1 px #2a3648, filet bas 2 px laiton, liseré blanc — recette MESURÉE de ㊳,
+            // posée par le décor ; le texte reste ici.
+            DecorDeScene.HabillerEnseigne((RectTransform)go.transform, DecorsDeScene.Filets.Journal.Enseigne, DecorsDeScene.Journal);
             AjouterHauteur(go, Px(CssHEnseigne));
             var v = go.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(7f), (int)Px(7f));
@@ -630,6 +635,7 @@ namespace MafiaCleanCity.Operational
             {
                 GameObject c = NouveauUI("Compteur" + i, bande.transform);
                 AjouterFond(c, FondBloc);
+                Filets.Poser((RectTransform)c.transform, DecorsDeScene.Filets.Journal.Fen);   // `.fen` : 1 px #2a3648 mesuré
                 var v = c.AddComponent<VerticalLayoutGroup>();
                 v.padding = new RectOffset((int)Px(4f), (int)Px(4f), (int)Px(5f), (int)Px(5f));
                 v.childControlWidth = true; v.childControlHeight = true;
@@ -700,6 +706,7 @@ namespace MafiaCleanCity.Operational
             GameObject go = NouveauUI("Panneau", parent);
             panneauGo = go;
             AjouterFond(go, FondBloc);
+            Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Journal.Pann);   // `.pann` : 1 px #2a3648 mesuré
             var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
             le.minHeight = Px(CssHPanneau);
             le.preferredHeight = -1f;
@@ -824,7 +831,9 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("JournalRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DesignTokens.Current.surfaceBase);
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,24, le voile,
+            // le support A (halos or et cyan sur le 178°) et le cerne d'or — DÉCLARÉS au catalogue, plus de fond plat ici.
+            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Journal);
 
             // ⛔ LE CHROME MANGE SA PART, EN HAUT ET EN BAS — posé AVANT toute capture sous
             // chrome. Quatre écrans sur quatre portaient ce défaut le même jour (⑨ et ② en bas,
@@ -833,11 +842,14 @@ namespace MafiaCleanCity.Operational
             VerticalLayoutGroup pile = racine.AddComponent<VerticalLayoutGroup>();
             pile.padding = new RectOffset(
                 (int)Px(CssMargeX), (int)Px(CssMargeX),
-                (int)(Px(CssMargeY) + MafiaCleanCity.Shell.ShellChrome.TopInsetPx),
+                0,   // le haut : sous la bande de scène, posé (et recalculé à chaque rect) par ReserverLaBande juste dessous
                 (int)(Px(CssMargeY) + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx));
             pile.spacing = Px(CssEcart);
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+
+            // §5.6 du design : la pile commence SOUS max(barre, bande de scène 21 %), comme le panneau de la maquette.
+            DecorDeScene.ReserverLaBande(pile, decor, Px(CssMargeY));
 
             ConstruireEnseigne(racine.transform);
             ConstruireCompteurs(racine.transform);

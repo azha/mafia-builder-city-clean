@@ -53,7 +53,9 @@ namespace MafiaCleanCity.CityMap.Tests
         public void V2_Garde_LeControleurPasseParLesGabarits_PlusDeDisqueUniqueNiDeBoutonAcheter()
         {
             string s = Source("Economy", "Shop", "ShopScreenController.cs");
-            StringAssert.Contains("EnteteDEcran.PoserLaPile(gameObject, (int)ShellChrome.TopInsetPx, (int)ShellChrome.BottomInsetPx)", s, "la racine est la pile du gabarit");
+            // Le décor de scène (CLIENT-2, 08/10) : le HAUT de la pile est la bande de scène (ReserverLaBande, §5.6 du design), plus TopInsetPx.
+            StringAssert.Contains("EnteteDEcran.PoserLaPile(gameObject, 0, (int)ShellChrome.BottomInsetPx)", s, "la racine est la pile du gabarit");
+            StringAssert.Contains("DecorDeScene.ReserverLaBande(", s, "la racine est la pile du gabarit : son haut est sous la bande de scène");
             StringAssert.Contains("VitrinePictogrammes.Dessiner(art.transform, VitrinePictogrammes.MotifDe(s.kind, s.sku_id)", s, "A3 : un dessin par article");
             StringAssert.Contains("PiedDEcran.BandeDeVoix(transform, Px, Socle, Rebord)", s, "A4 : la bande basse `.voix`, par le gabarit");
             StringAssert.Contains("ListeDefilante.Indiquer(defil, VitreBas)", s, "cause 7 : le défilement est indiqué");
@@ -113,7 +115,11 @@ namespace MafiaCleanCity.CityMap.Tests
                 // B3 — le comptoir : premier élément de la pile, enseigne à gauche et solde à droite dans la même ligne
                 Transform comptoir = hote.transform.Find("Comptoir");
                 Assert.IsNotNull(comptoir, "le comptoir existe");
-                Assert.AreEqual(0, comptoir.GetSiblingIndex(), "en tête de la pile");
+                // Le décor de scène (CLIENT-2, 08/10) est le PREMIER enfant de l'écran, HORS mise en page (ignoreLayout) : « en tête de la
+                // pile » se lit donc parmi les enfants que la pile empile — le premier d'entre eux est le comptoir.
+                Transform premierEmpile = hote.transform.Cast<Transform>()
+                    .FirstOrDefault(c => c.gameObject.activeSelf && !(c.GetComponent<LayoutElement>()?.ignoreLayout ?? false));
+                Assert.AreSame(comptoir, premierEmpile, "en tête de la pile");
                 RectTransform titre = (RectTransform)comptoir.Find("Titre"), solde = (RectTransform)comptoir.Find("Solde");
                 Assert.AreEqual("LA VITRINE", titre.GetComponent<TextMeshProUGUI>().text);
                 Assert.AreEqual(DesignTokens.Current.hudSerifFont, titre.GetComponent<TextMeshProUGUI>().font, "l'enseigne en serif");

@@ -1,0 +1,42 @@
+SYM  CONTRÔLEUR                         CADRE(n)  SCÈNE        LUM   BANDE  RACINE    FAMILLE                   CERNE ENSEIGNE  OBJETS
+③    CityMapController                   22(3)  district    0.4   100%  barre     C objet / matière dédiée  F     F        fleuve,halo,carte-pied
+④    DashboardController                — aucune maquette série 6
+⑤    DecisionDetailScreenController       4(5)  verge       —      34%  tapis-feutre C objet / matière dédiée  F     F        tapis-feutre,spot,carte-or,cachet,piece,plaque-laiton
+⑥    LieutenantScreenController         — aucune maquette série 6
+⑪    LaunderingController               — aucune maquette série 6
+⑯    DailyReviewScreenController          0(4)  verge-jour  —      19%  feuille   C objet / matière dédiée  F     F        fond
+㊲    ReputationScreenController         119(6)  district    0.24   21%  rep6      A support standard        T     T        rep6,enseigne
+㉟    SellingScreenController            107(6)  district    0.24   21%  vnt6      A support standard        T     T        vnt6,enseigne
+㉓    ShopScreenController                98(3)  district    0.24   21%  vitr6     B support à fond propre   F     F        art,compt,vitre,reflet,reflet.b
+⑮    InspectionScreenController          31(5)  district    0.45   10%  corkboard C objet / matière dédiée  F     F        punaise,fiche-p.chasse,corkboard,grain,fiche-p.soup,fiche-p.veille
+⑰    PrecinctScreenController            31(5)  district    0.45   10%  corkboard C objet / matière dédiée  F     F        punaise,fiche-p.chasse,corkboard,grain,fiche-p.soup,fiche-p.veille
+⑭    CompressionScreenController         14(6)  district    0.62   35%  tole      C objet / matière dédiée  F     F        tole,vapeur,cadran-fer,vis.v1,vis.v2,vis.v3
+㊴    ForensicScreenController           131(6)  district    0.24   21%  dos6      A support standard        T     T        dos6,enseigne
+㊳    JournalScreenController            125(6)  district    0.24   21%  jrn6      A support standard        T     T        jrn6,enseigne
+㊵    FiliereScreenController            137(6)  district    0.24   21%  bln6      A support standard        T     T        bln6,enseigne
+㉕    TutorialScreenController           — aucune maquette série 6
+㉒    ProfileScreenController             95(3)  district    0.24   21%  cofr6     B support à fond propre   F     F        pl,tir,poig,cofr6,plaque-id,molette
+⑲    SettingsScreenController           — aucune maquette série 6
+㊱    HorizonScreenController            113(6)  district    0.24   21%  hrz6      A support standard        T     T        hrz6,enseigne
+㉜    DelegationScreenController          73(6)  district    0.18   21%  serv6     B support à fond propre   F     F        sv-plaque,serv6
+㉚    ChaineDApproScreenController        48(6)  district    0.2    21%  appr6     B support à fond propre   F     F        appr6
+㉘    DistributionScreenController        54(5)  district    0.24   21%  lieg6     B support à fond propre   F     F        planche
+㉛    LoiScreenController                 67(6)  district    0.18   21%  parl6     B support à fond propre   F     F        parl6,pl-vitre
+㉝    DemolitionScreenController          79(6)  district    0.18   21%  demo6     B support à fond propre   F     F        demo6
+㉞    CarnetScreenController              85(7)  district    0.18   21%  carn6     B support à fond propre   F     F        carn6,cn-page
+㉙    ConflitScreenController             59(8)  district    0.2    21%  cfl6      B support à fond propre   F     F        cfl6
+①    DistrictInteriorScreenController   — aucune maquette série 6
+②    BuildingCardController             — aucune maquette série 6
+⑨    ExceptionQueueController             9(4)  bar         —      29%  ardoise-p C objet / matière dédiée  F     F        lampe
+⑩    ExceptionDetailController           10(1)  bar         —      11%  ardoise-p C objet / matière dédiée  F     F        lampe
+㉔    AutonomyInboxController             25(6)  district    0.45   10%  burner    C objet / matière dédiée  F     F        i,span,burner,lcd,scan,ok
+⑬    CueStack (sections)                — aucune maquette série 6
+⑳    Recruitment (sections)             — aucune maquette série 6
+㉑    Market (non monté)                 101(6)  district    0.24   21%  mar6      A support standard        T     T        mar6,enseigne,ecrin
+⑱    AppShell.MonterMenuPlus             20(2)  bar         0.55   12%  bureau    C objet / matière dédiée  F     F        objet,tag-laiton,bureau,abat-jour,pied,lumiere
+
+ÉCRANS AVEC MAQUETTE SÉRIE 6 : 26 | sans : 9
+Scènes : {'district': 21, 'verge': 1, 'verge-jour': 1, 'bar': 3}
+Familles : {'C objet / matière dédiée': 10, 'A support standard': 7, 'B support à fond propre': 9}
+Cerne+enseigne : 7 | luminosités distinctes : ['0.18', '0.2', '0.24', '0.4', '0.45', '0.55', '0.62', '—']
+Cadres couverts : 133

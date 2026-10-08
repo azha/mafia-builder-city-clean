@@ -124,13 +124,18 @@ namespace MafiaCleanCity.Operational.Tests
                 Transform t = sr.content.Find(section);
                 Assert.IsTrue(t != null, $"la section {section} n'est pas sous le contenu qui défile");
             }
+            // Le DÉCOR DE SCÈNE (CLIENT-2, 08/10) remplace la SceneHaute et la matière : il est EXEMPTÉ de la règle « dans la
+            // fenêtre » (il est DESSOUS), et l'effet se garde par l'ordre de fratrie — frère AVANT la fenêtre, donc dessiné sous elle.
+            Transform decor = racine.Find("Decor");
+            Assert.IsTrue(decor != null, "le décor de scène est posé sous ConflitRoot");
+            Assert.Less(decor.GetSiblingIndex(), sr.viewport.GetSiblingIndex(), "le décor est un frère AVANT la fenêtre : dessiné SOUS elle");
+            Assert.IsTrue(racine.Find("SceneHaute") == null, "plus de silhouettes procédurales : la scène est celle du décor");
             var horsFenetre = new List<string>();
             var nonMasquables = new List<string>();
             foreach (Graphic g in racine.GetComponentsInChildren<Graphic>(true))
             {
-                if (g.transform == racine) continue;   // le fond plein écran
-                Transform sceneHaute = racine.Find("SceneHaute");
-                if (!g.transform.IsChildOf(sr.viewport) && !g.transform.IsChildOf(sceneHaute)) horsFenetre.Add(g.name);
+                if (g.transform == racine) continue;   // un fond plein écran éventuel
+                if (!g.transform.IsChildOf(sr.viewport) && !g.transform.IsChildOf(decor)) horsFenetre.Add(g.name);
                 else if (!(g is MaskableGraphic mg) || !mg.maskable) nonMasquables.Add(g.name);
             }
             Assert.IsEmpty(horsFenetre, "des Graphic hors de la fenêtre dessineraient par-dessus le chrome : " + string.Join(", ", horsFenetre));
