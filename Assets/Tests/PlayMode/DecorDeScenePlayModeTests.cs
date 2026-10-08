@@ -474,10 +474,20 @@ namespace MafiaCleanCity.Tests.PlayMode
                 Assert.AreEqual(H - attendu, hautDuBloc, 1.5f, "le premier bloc commence sous la bande, sur le support");
                 Assert.AreEqual(0, p.transform.GetSiblingIndex(), "le décor reste premier enfant, hors pile");
 
-                banc.Racine.offsetMax = new Vector2(0f, -460f);   // 960 → 500
-                yield return null;
-                Assert.AreEqual(Mathf.RoundToInt(Mathf.Max(ShellChrome.TopInsetPx, 500f * s.Bande) + 10f), r.RetraitHaut,
-                    "le retrait suit la hauteur réelle (jamais figé au montage)");
+                // Les DEUX résolutions du dépôt (amendement §5.6) : 9:16 ci-dessus (540×960 ≈ 1080×1920), puis 9:20 (540×1200
+                // ≈ 1080×2400 : la racine dépasse le banc, seule sa hauteur compte ici), puis un rétrécissement.
+                foreach (float hauteur in new[] { 1200f, 500f })
+                {
+                    banc.Racine.offsetMax = new Vector2(0f, hauteur - H);
+                    yield return null;
+                    Canvas.ForceUpdateCanvases();
+                    int voulu = Mathf.RoundToInt(Mathf.Max(ShellChrome.TopInsetPx, hauteur * s.Bande) + 10f);
+                    Assert.AreEqual(voulu, r.RetraitHaut, $"hauteur {hauteur} : le retrait suit la hauteur réelle (jamais figé au montage)");
+                    Assert.AreEqual(voulu, pile.padding.top, $"hauteur {hauteur} : posé sur la pile");
+                    ((RectTransform)bloc.transform).GetWorldCorners(coins);
+                    float haut = banc.Racine.InverseTransformPoint(coins[1]).y + banc.Racine.rect.height * banc.Racine.pivot.y;
+                    Assert.AreEqual(hauteur - voulu, haut, 1.5f, $"hauteur {hauteur} : le premier bloc commence sous la bande");
+                }
             }
             finally { banc.Dispose(); }
         }
