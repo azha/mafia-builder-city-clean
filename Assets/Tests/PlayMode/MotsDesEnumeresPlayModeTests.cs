@@ -11,8 +11,8 @@ namespace MafiaCleanCity.CityMap.Tests
 {
     // CAUSE 4 (CLIENT-3, 07/10 : « anglais / texte technique à l'écran » — ⑮ ⑭ ㉔ ⑨ ㉓) : le résolveur commun `MotsDesEnumeres` et sa garde de classe. HORS RÉSEAU.
     //   M1  les mots de l'atelier sortent PAR LA VALEUR SERVIE ; le bundle servi GAGNE ; hors domaine = le mot de la famille (atelier 28), jamais l'enum dé-sluggé ; absent = « — »
-    //   M2  un mot que l'atelier n'a pas écrit se dit « — » ET se NOMME dans MotsManquants (⑮ entier, ⑭ compression_active / active / 4 genres / 3 paliers)
-    //   M3  la ligne de pression de ⑭ : « TENSION CALME · AUCUNE SEMAINE » (le canon), plus « Calm · None »
+    //   M2  les 14 mots que l'atelier avait à écrire sont écrits (MOTS-GENERES 08/10 : ⑮ 5, ⑭ 9) : plus aucun `null` dans les tables, plus un seul manquant
+    //   M3  la ligne de pression de ⑭ : « TENSION CALME · AUCUNE SEMAINE » (le canon), plus « Calm · None » ; la semaine ouverte dit enfin son mot
     //   M4  GARDE DE CLASSE : plus aucune fonction `Lisible(` (dé-slug) dans les contrôleurs hors l'exception nommée ; plus aucun libellé anglais de la liste noire ; ㉔ en dette DATÉE
     [Category("MotsDesEnumeres")]
     public class MotsDesEnumeresPlayModeTests
@@ -39,15 +39,24 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
-        public void M2_UnMotQueLAtelierN_ApasEcrit_SeDitTiret_EtSeNomme()
+        public void M2_LesQuatorzeMotsDeLAtelier_SontEcrits_PlusRienNeManque()
         {
-            Assert.AreEqual("—", MotsDesEnumeres.Dire(MotsDesEnumeres.ChargeDeLaFile, "MODERATE"));
-            Assert.AreEqual("—", MotsDesEnumeres.Dire(MotsDesEnumeres.Regime, "SURGE"));
-            Assert.AreEqual("—", MotsDesEnumeres.Dire(MotsDesEnumeres.Tension, "compression_active"));
-            Assert.AreEqual("—", MotsDesEnumeres.Dire(MotsDesEnumeres.Palier, "critical"));
-            CollectionAssert.AreEquivalent(new[] { "inspection.charge.MODERATE", "inspection.regime.SURGE", "compression.tension.compression_active", "compression.palier.critical" },
-                MotsDesEnumeres.MotsManquants.ToArray(), "chaque valeur sans mot est NOMMÉE, une fois");
-            // la table elle-même : tout mot présent est du français (aucune des valeurs anglaises du domaine ne sert de mot), et les valeurs sans mot sont celles qu'on a déclarées
+            // les 14 valeurs qui disaient « — » avant le lot, avec le mot FR que le document de l'atelier leur donne (recopié à l'octet)
+            var attendus = new (MotsDesEnumeres.Domaine d, string valeur, string mot)[]
+            {
+                (MotsDesEnumeres.Tension, "compression_active", "sous compression"), (MotsDesEnumeres.Semaine, "active", "la semaine est ouverte"),
+                (MotsDesEnumeres.GenreDeProbleme, "severed_route", "Une route ne tient plus la charge"),
+                (MotsDesEnumeres.GenreDeProbleme, "cue_cascade_card", "Un créneau raté en a entraîné d’autres"),
+                (MotsDesEnumeres.GenreDeProbleme, "settling_overload", "Un changement de plus pendant la stabilisation"),
+                (MotsDesEnumeres.GenreDeProbleme, "friction_penalty", "L’organisation porte trop de friction"),
+                (MotsDesEnumeres.Palier, "minor", "mineur"), (MotsDesEnumeres.Palier, "moderate", "modéré"), (MotsDesEnumeres.Palier, "critical", "critique"),
+                (MotsDesEnumeres.ChargeDeLaFile, "MODERATE", "moyenne"), (MotsDesEnumeres.ChargeDeLaFile, "HEAVY", "lourde"), (MotsDesEnumeres.ChargeDeLaFile, "SATURATED", "saturée"),
+                (MotsDesEnumeres.Regime, "BUDGET_CUT", "budget coupé"), (MotsDesEnumeres.Regime, "SURGE", "en renfort"),
+            };
+            Assert.AreEqual(14, attendus.Length);
+            foreach (var (d, valeur, mot) in attendus) Assert.AreEqual(mot, MotsDesEnumeres.Dire(d, valeur), d.Nom + "." + d.Role + "." + valeur);
+            CollectionAssert.IsEmpty(MotsDesEnumeres.MotsManquants.ToArray(), "plus aucune valeur sans mot : rien à nommer");
+            // la table elle-même : tout mot est du français (aucune des valeurs anglaises du domaine ne sert de mot), et plus aucune valeur n'est sans mot
             var sansMot = new List<string>();
             foreach (MotsDesEnumeres.Domaine d in MotsDesEnumeres.Tous)
                 foreach (var kv in d.Mots)
@@ -55,7 +64,7 @@ namespace MafiaCleanCity.CityMap.Tests
                     if (kv.Value == null) { sansMot.Add(d.Nom + "." + d.Role + "." + kv.Key); continue; }
                     Assert.AreNotEqual(kv.Key.Replace('_', ' '), kv.Value.ToLowerInvariant(), d.Nom + "." + d.Role + "." + kv.Key + " : un mot qui n'est que l'enum dé-sluggé n'est pas un mot");
                 }
-            Assert.AreEqual(14, sansMot.Count, "14 mots attendus de l'atelier : ⑮ 5 (MODERATE, HEAVY, SATURATED ; BUDGET_CUT, SURGE — le cadre 32 ne dessine que VIDE, LEGERE, NOMINAL, ARRIERE) ; ⑭ 9 (compression_active, active, 4 genres, 3 paliers) — si ce nombre baisse, l'atelier a écrit des mots : mettre à jour la dette");
+            CollectionAssert.IsEmpty(sansMot, "14 → 0 (TD-846) : un `null` qui revient dans une table est un mot que l'atelier n'a pas écrit — le NOMMER ici, avec sa dette");
         }
 
         [Test]
@@ -64,8 +73,8 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("TENSION CALME · AUCUNE SEMAINE", CompressionScreenController.LignePression("calm", "none"));
             Assert.AreEqual("TENSION MONTANTE · LA SEMAINE S’ANNONCE", CompressionScreenController.LignePression("mounting", "warning"));
             StringAssert.DoesNotContain("Calm", CompressionScreenController.LignePression("calm", "none"));
-            Assert.AreEqual("TENSION — · —", CompressionScreenController.LignePression("compression_active", "active"), "deux mots attendus de l'atelier : « — », jamais « Compression active · Active »");
-            CollectionAssert.Contains(MotsDesEnumeres.MotsManquants.ToArray(), "compression.semaine.active");
+            Assert.AreEqual("TENSION SOUS COMPRESSION · LA SEMAINE EST OUVERTE", CompressionScreenController.LignePression("compression_active", "active"), "les deux mots de l'atelier, jamais « Compression active · Active » ni « — »");
+            CollectionAssert.IsEmpty(MotsDesEnumeres.MotsManquants.ToArray(), "aucun mot ne manque plus");
         }
 
         private static string RacineScripts => Path.Combine(Application.dataPath, "Scripts");
