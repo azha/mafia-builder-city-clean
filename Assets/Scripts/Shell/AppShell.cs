@@ -1687,16 +1687,66 @@ namespace MafiaCleanCity.Shell
         ///   · cadres 1-3 (ligne sans raison ni pluriel) : 464 → 506 ⇒ (0,025 ; 0,128), INCHANGÉ ; la carte de tête 252 → 454 ⇒ (0,153 ; 0,650) ;
         ///   · cadre 4 (raison + pluriel) : la ligne 424 → 506 ⇒ (0,025 ; 0,227) ; « LA SUITE » REMONTE avec elle, 187 → 414 ⇒ (0,251 ; 0,810).
         ///   La ligne est HAUTE quand elle porte la raison ou le pluriel (`ExceptionQueuePanelController.LigneHaute`, la règle même du rendu),
-        ///   et alors la suite prend la bande du cadre 4. ⚠️ ASSUMÉ, non dessiné : une carte de tête AU-DESSUS d'une ligne haute. Aucun cadre ne
-        ///   le montre ; la tête garde sa hauteur (0,5) et monte de la même marge (0,025) au-dessus de la ligne ⇒ (0,252 ; 0,752), sous le haut
-        ///   de la suite du cadre 4 (0,810). Signalé à f2.</summary>
-        internal static readonly (float min, float max) BandeFile = (0.025f, 0.128f),
+        ///   et alors la suite prend la bande du cadre 4.
+        /// ⛔ L'ANCRAGE SUR LE HAUT RÉEL DE LA LIGNE (DÉCISION f2 08/10 soir ; atelier master 5240cec, cadre 5 « une carte de tête AU-DESSUS d'une
+        ///    ligne de file haute », mesuré au même instrument : zone sûre 110 → 516 ; ligne 424 → 506 ⇒ (0,0246 ; 0,2266) ; tête 212 → 414 ⇒
+        ///    (0,2512 ; 0,7488)). Les cinq cadres obéissent à UNE règle : ce qui est au-dessus de la ligne (la tête, la suite) commence 10 px (0,025)
+        ///    au-dessus de son haut, et la tête garde sa hauteur (202 px, 0,5). La ligne, elle, change de hauteur (raison sur 1 ou 2 lignes,
+        ///    pluriel ou non) : son haut n'est PLUS une constante — c'est le plus haut de sa bande MESURÉE pour son état (`BandeFile`,
+        ///    `BandeFileHaute`) et de la hauteur que son contenu VEUT (`ExceptionQueuePanelController.HauteurVoulueDeLaLigne`) ; la tête et la
+        ///    suite s'ANCRENT dessus (`AncrerSurLaLigne`, au montage et à chaque reconstruction par résolution). L'ancienne bande assumée
+        ///    (0,252 ; 0,752) est retirée : le cadre 5 la confirme à 0,001 près, et la règle la produit.</summary>
+        public static readonly (float min, float max) BandeFile = (0.025f, 0.128f),
                                                          BandeFileHaute = (0.025f, 0.227f),
                                                          BandeTete = (0.153f, 0.653f),
-                                                         BandeTeteSurLigneHaute = (0.252f, 0.752f),
                                                          BandeSuite = (0.153f, 0.746f),
                                                          BandeSuiteSurLigneHaute = (0.251f, 0.810f),
                                                          BandeTeteVide = (0.128f, 0.271f);
+
+        /// <summary>L'écart entre le haut RÉEL de la ligne de file et le bas de ce qui est au-dessus (tête, suite) : 10 px sur 406 aux cadres 1-5 (0,0246 mesuré).</summary>
+        public const float MargeAuDessusDeLaLigne = 0.025f;
+
+        /// <summary>Le haut de la ligne de file, en fraction de la zone sûre : jamais sous la bande MESURÉE pour son état (`bandeFile.max`), plus haut quand
+        /// son contenu veut plus (`voulueU` u, sur une zone sûre de `zoneU` u). Pure.</summary>
+        public static float HautDeLaLigne((float min, float max) bandeFile, float voulueU, float zoneU) =>
+            zoneU <= 0f ? bandeFile.max : Mathf.Max(bandeFile.max, bandeFile.min + voulueU / zoneU);
+
+        /// <summary>La bande de la carte de tête posée sur une ligne dont le haut est `hautDeLaLigne` : la marge, puis la hauteur de la tête des cadres (0,5). Pure.</summary>
+        public static (float min, float max) BandeTeteSur(float hautDeLaLigne) =>
+            (hautDeLaLigne + MargeAuDessusDeLaLigne, hautDeLaLigne + MargeAuDessusDeLaLigne + (BandeTete.max - BandeTete.min));
+
+        /// <summary>La bande de « LA SUITE » posée sur cette ligne : son bas s'ancre (la marge), son haut reste celui MESURÉ pour l'état (`haut`). Pure.</summary>
+        public static (float min, float max) BandeSuiteSur(float hautDeLaLigne, float haut) =>
+            (hautDeLaLigne + MargeAuDessusDeLaLigne, Mathf.Max(haut, hautDeLaLigne + MargeAuDessusDeLaLigne));
+
+        // L'ancrage de l'Accueil COURANT : la ligne (et la bande mesurée de son état), ce qui s'y ancre (tête ou suite, et le haut mesuré de la suite).
+        private ExceptionQueuePanelController ligneDeLAccueil;
+        private (float min, float max) bandeDeLaLigne;
+        private RectTransform teteAncree, suiteAncree;
+        private float hautDeLaSuite;
+
+        /// <summary>Ancre la tête et la suite sur le haut RÉEL de la ligne (voir `BandeFile`) : la ligne reprend la bande de son état, la mise en page
+        /// est forcée (la largeur décide du retour à la ligne de la raison), la hauteur VOULUE est lue, puis la ligne grandit s'il le faut et ce qui
+        /// est au-dessus se pose à la marge. Rejouée par `RebatirPanneauxAccueilPourResolutionCourante` : la hauteur voulue est en u, la zone sûre change.</summary>
+        private void AncrerSurLaLigne()
+        {
+            if (ligneDeLAccueil == null) return;
+            RectTransform ligneRt = (RectTransform)ligneDeLAccueil.transform;
+            PoserBandeAccueil(ligneRt, bandeDeLaLigne.min, bandeDeLaLigne.max);
+            Canvas.ForceUpdateCanvases();
+            float haut = HautDeLaLigne(bandeDeLaLigne, ligneDeLAccueil.HauteurVoulueDeLaLigne(), ZoneSureHauteur());
+            ReposerBandeAccueil(ligneRt, bandeDeLaLigne.min, haut);
+            if (teteAncree != null) { (float min, float max) t = BandeTeteSur(haut); ReposerBandeAccueil(teteAncree, t.min, t.max); }
+            if (suiteAncree != null) { (float min, float max) b = BandeSuiteSur(haut, hautDeLaSuite); ReposerBandeAccueil(suiteAncree, b.min, b.max); }
+        }
+
+        /// <summary>Pose la bande ET la mémorise pour la reconstruction (même entrée de `panneauxAccueilBandes`).</summary>
+        private void ReposerBandeAccueil(RectTransform rt, float yMin, float yMax)
+        {
+            PoserBandeAccueil(rt, yMin, yMax);
+            for (int i = 0; i < panneauxAccueilBandes.Count; i++)
+                if (panneauxAccueilBandes[i].rt == rt) panneauxAccueilBandes[i] = (rt, yMin, yMax);
+        }
 
         private void MonterPanneauxAccueil(SessionOpenDto dto)
         {
@@ -1712,12 +1762,15 @@ namespace MafiaCleanCity.Shell
             bool avecFile = dto?.queue != null && dto.queue.Length > 0;
             // La ligne HAUTE du cadre 4 (raison ou pluriel) : la file grandit, la tête et la suite montent avec elle (voir `BandeFileHaute`).
             bool ligneHaute = ExceptionQueuePanelController.LigneHaute(dto?.queue);
-            (float min, float max) bandeTete = ligneHaute ? BandeTeteSurLigneHaute : BandeTete,
-                                   bandeSuite = ligneHaute ? BandeSuiteSurLigneHaute : BandeSuite,
-                                   bandeFile = ligneHaute ? BandeFileHaute : BandeFile;
+            (float min, float max) bandeSuite = ligneHaute ? BandeSuiteSurLigneHaute : BandeSuite,
+                                   bandeFile = ligneHaute ? BandeFileHaute : BandeFile,
+                                   bandeTete = BandeTeteSur(bandeFile.max);   // provisoire : `AncrerSurLaLigne` la repose sur le haut RÉEL de la ligne
+            ligneDeLAccueil = null; teteAncree = null; suiteAncree = null;
+            bandeDeLaLigne = bandeFile; hautDeLaSuite = bandeSuite.max;
             if (avecCarte)
             {
                 HighestLeverageCardController hlCard = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", bandeTete.min, bandeTete.max);
+                teteAncree = (RectTransform)hlCard.transform;
                 // ⑤ `screen_1a` — le DÉTAIL de la carte, en surimpression. L'écran existe (maquette ratifiée « ok top on garde comme
                 // ça »), et sans ce fil il ne serait montable par personne : *un écran construit que rien ne monte est un écran que le
                 // joueur ne voit jamais* — c'est le défaut exact qui laissait la Revue du jour invisible depuis W3.U1.
@@ -1738,6 +1791,7 @@ namespace MafiaCleanCity.Shell
                 // vraie, elle PREND le milieu et le calme s'efface (le bloc de la maquette remplace « Rien à signaler ») ; sinon rien ne
                 // change.
                 LaSuitePanelController suite = NouveauPanneauAccueil<LaSuitePanelController>("AccueilLaSuite", bandeSuite.min, bandeSuite.max);
+                suiteAncree = (RectTransform)suite.transform;
                 HighestLeverageCardController calmeVu = calme;
                 suite.Rendue += visible => { if (calmeVu != null) calmeVu.gameObject.SetActive(!visible); };
                 suite.Charger(Token, SourceDeLaSuitePourTest ?? new SourceDeLaSuiteReseau { BaseUrl = baseUrl }, carteDeTete: false);
@@ -1746,6 +1800,8 @@ namespace MafiaCleanCity.Shell
             ExceptionQueuePanelController exceptions = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", bandeFile.min, bandeFile.max);
             exceptions.PoserEnLigneDeLAccueil();
             exceptions.SetQueue(Token, dto?.queue);
+            ligneDeLAccueil = exceptions;
+            AncrerSurLaLigne();   // décision f2 08/10 soir : la tête et la suite sur le haut RÉEL de la ligne, plus sur une bande fixe
             // ⛔ PASSE UX 26/09 (§G P1, « deux mises en page superposées ») — les VITAUX (OrgVitals : « Friction: Light · Tension: Calm »,
             //    cohésion) et le CHROME (HomeChrome : bandeau de chaufferie, raccourcis, machine à 5 états « [LoadingState] ») ne sont plus
             //    montés sur l'Accueil : le canon ④ n'a qu'une zone de tête et la ligne de file. Leurs contrôleurs restent (tests W3U1) ; « La
@@ -1790,12 +1846,13 @@ namespace MafiaCleanCity.Shell
         /// insets à sa toute fin — voir son propre docstring). Hors shell (tenu par le repli
         /// documenté sur `ShellChrome`), les deux insets valent 0 : la bande retombe sur
         /// `ContentSlot` entier, comportement inchangé pour tout test qui construit ce panneau seul.</summary>
+        private float ZoneSureHauteur() =>
+            Mathf.Max(ShellChrome.BottomInsetPx, ContentSlot.rect.height - ShellChrome.TopInsetPx) - ShellChrome.BottomInsetPx;
+
         private void PoserBandeAccueil(RectTransform rt, float yMin, float yMax)
         {
-            float hauteurTotale = ContentSlot.rect.height;
             float zoneSureBas = ShellChrome.BottomInsetPx;
-            float zoneSureHaut = Mathf.Max(zoneSureBas, hauteurTotale - ShellChrome.TopInsetPx);
-            float zoneSureHauteur = zoneSureHaut - zoneSureBas;
+            float zoneSureHauteur = ZoneSureHauteur();
             float yBas = zoneSureBas + yMin * zoneSureHauteur;
             float yHaut = zoneSureBas + yMax * zoneSureHauteur;
             rt.anchorMin = new Vector2(0f, 0f);
@@ -1863,6 +1920,7 @@ namespace MafiaCleanCity.Shell
                 if (bande.rt == null) continue; // démonté depuis (changement d'onglet) — rien à refaire
                 PoserBandeAccueil(bande.rt, bande.yMin, bande.yMax);
             }
+            AncrerSurLaLigne();   // la hauteur voulue de la ligne est en u : à une autre zone sûre, une autre fraction
         }
 
         private void UnmountCurrentTenant()

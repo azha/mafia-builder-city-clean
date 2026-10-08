@@ -71,3 +71,25 @@ Rapport : `r4-2026-10-07/rapport.md` (NON APPROUVÉ, 0 BLOQUANT, 3 MAJEUR, 7 min
 Le cadre 4 (atelier master 0dd516e) porte, dans le bloc `.qui` de la ligne de file, la RAISON en réplique de lieutenant puis « Plusieurs attendent encore » (seulement s'il y a plusieurs cartes). La raison suit `ExceptionBandes.Replique`
 (« … » seulement dans la bouche d'un lieutenant), **sauf sur un point : un texte servi SANS espace est un identifiant technique (`exc_demo_…`), et sur l'Accueil on se TAIT** (`ExceptionQueuePanelController.RaisonDeLaCarte` rend null — aucune ligne ; atelier 28 : jamais
 une valeur machine brute à l'écran). `Replique` montre ce même identifiant nu dans ⑨, « pour que le trou se voie » : il reste visible là et dans la dette back **TD-453**. Dérogation tranchée par f2 le 07/10.
+
+## Ancrage de la tête et de la suite sur la ligne de file (décision de f2, 08/10 soir) — fin de l'« hypothèse f2 »
+
+- **Avant** (4739deb6) : la carte de tête au-dessus d'une ligne HAUTE était une bande ASSUMÉE, (0,252 ; 0,752) de la zone sûre. Aucun cadre ne
+  la dessinait alors. f2 l'avait validée PROVISOIREMENT (« hypothèse f2 en attente de cadre ») et l'avait commandée à l'atelier.
+- **Le cadre** : atelier master 5240cec, `ecrans-brennar-accueil.html`, cadre 5 « une carte de tête AU-DESSUS d'une ligne de file haute ». Mesuré
+  par CLIENT-1 avec l'instrument de l'UX (`mesure-maquette-accueil.js`, copie qui va jusqu'au cadre 5 ; zone sûre 110 → 516, soit 406 px) :
+  la ligne va de 424 à 506 ⇒ (0,0246 ; 0,2266) ; la tête de 212 à 414 ⇒ (0,2512 ; 0,7488). La marge entre la ligne et la tête est de 10 px
+  (0,0246), et la hauteur de la tête de 202 px, la même qu'aux cadres 1-3 (252 → 454 au-dessus de la ligne 464 → 506). La mesure de CLIENT-3
+  (tête 0,2509-0,7488 ; ligne 0,0246-0,2263) concorde.
+- **La décision** : la tête ET la suite s'ANCRENT sur le haut RÉEL de la ligne, plus une marge de 0,025. La ligne n'est plus une bande fixe.
+  Son haut est le plus haut de deux valeurs : sa bande mesurée pour son état (`BandeFile`, `BandeFileHaute`) et la hauteur que son contenu
+  VEUT (`HauteurVoulueDeLaLigne`, padding compris : une raison sur deux lignes la fait grandir si elle ne tient plus). La tête garde sa
+  hauteur (0,5). La suite garde le haut mesuré pour son état (0,746 ; 0,810 au cadre 4). Code : `AppShell.HautDeLaLigne`, `BandeTeteSur`,
+  `BandeSuiteSur` et `AncrerSurLaLigne`, rejoué à chaque reconstruction par résolution (la hauteur voulue est en u, la zone sûre change).
+  La règle retrouve les cadres 1-5 à 0,005 près (garde A12d). La bande assumée (0,252 ; 0,752) est RETIRÉE.
+- **Gardes** : A12c (AccueilCanon, vrai shell, hors réseau ; raison sur une puis deux lignes : le haut de la ligne est celui de la règle, la
+  tête est à la marge, rien ne se recouvre) ; A01 (ClichePlanchesParEcran, aux deux résolutions, dans le régime de capture ; deux
+  variantes : suite et raison courte, puis tête et raison longue ; un écart négatif entre ce qui est au-dessus et la ligne est une
+  INTERSECTION, et le test rougit).
+- **Écart C** : le haut de la tête vaut 0,752 dans le jeu contre 0,7488 au cadre 5 (moins d'1 px CSS). Le jeu garde la hauteur 0,5 des
+  cadres 1-3.

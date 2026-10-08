@@ -322,7 +322,7 @@ namespace MafiaCleanCity.Shell.Tests
 
         /// <summary>A12b — la ligne HAUTE dans le vrai shell (transport et source témoins, hors réseau) : la file prend la bande du cadre 4
         /// (0,025 → 0,227 de la zone sûre), et ce qui est au-dessus MONTE avec elle — la suite (cadre 4 : 0,251 → 0,810) comme la carte de tête
-        /// (ASSUMÉ, non dessiné : 0,252 → 0,752) — sans recouvrement ni vide de plus de 5 % (`VerifierGeometrie`). Contrôle : une carte sans
+        /// (cadre 5, atelier 5240cec : 0,251 → 0,749 ; ancrée sur le haut RÉEL de la ligne, voir A12c) — sans recouvrement ni vide de plus de 5 % (`VerifierGeometrie`). Contrôle : une carte sans
         /// raison garde la ligne des cadres 1-3 (0,103 de la zone).</summary>
         [UnityTest]
         public IEnumerator A12b_LigneHaute_LaFileGrandit_LaSuiteEtLaTeteMontentSansRecouvrement()
@@ -372,6 +372,94 @@ namespace MafiaCleanCity.Shell.Tests
             yield return RouvrirParEmpire();
             Assert.AreEqual(0.128f - 0.025f, PartDeLaFile("tête + une carte nue", out file), 0.005f, "sans raison ni pluriel : la ligne des cadres 1-3 (464 → 506)");
             VerifierGeometrie("la tête sur la ligne basse", (RectTransform)Tete().transform, (RectTransform)file.transform);
+        }
+
+        /// <summary>A12c — L'ANCRAGE (décision f2 08/10 soir ; atelier master 5240cec, cadre 5) dans le vrai shell, hors réseau : une carte de tête au-dessus d'une ligne
+        /// qui porte la raison, sur UNE puis DEUX lignes. Le haut de la ligne est celui que la règle tire de sa hauteur VOULUE (`AppShell.HautDeLaLigne`), la tête commence
+        /// à la marge (0,025) au-dessus de ce haut RÉEL, garde sa hauteur (0,5), et rien ne se recouvre (`VerifierGeometrie`). Une raison plus longue ne fait jamais
+        /// baisser le haut de la ligne. L'effet aux deux résolutions est mesuré par A01 (`PlanchesParEcranCapturePlayModeTests`), dans le régime de capture.</summary>
+        [UnityTest]
+        public IEnumerator A12c_LaTeteSAncreSurLeHautReelDeLaLigne_RaisonSurUnePuisDeuxLignes()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_Ancrage");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            Poser(shell, "Token", "jeton-de-test");
+            var transport = new TransportTemoin();
+            shell.TransportDeSessionPourTest = transport;
+            shell.SourceDeLaSuitePourTest = new SourceTemoin { Etat = JoueurNeuf(1) };
+            MafiaCleanCity.Operational.Exceptions.ExceptionCardDto Parlante(string raison) => new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto
+            {
+                exception_id = "e-1", lieutenant_id = "lt-1", severity_band = "MODERATE", event_descriptor = raison,
+                lieutenant = new MafiaCleanCity.Operational.Exceptions.ExceptionLieutenantDto { name = "Lt. Kane" },
+            };
+            float Bord(RectTransform rt, bool duHaut, float zone)
+            {
+                var c = new Vector3[4];
+                rt.GetWorldCorners(c);
+                float y = shell.ContentSlot.InverseTransformPoint(duHaut ? c[1] : c[0]).y;
+                return (y - (shell.ContentSlot.rect.yMin + ShellChrome.BottomInsetPx)) / zone;
+            }
+
+            var hauts = new List<float>();
+            foreach ((string cas, string raison, int lignes) in new[]
+            {
+                ("raison sur une ligne", "Sans pyralin, je ne rallume pas.", 1),
+                ("raison sur deux lignes", "L’étagère est vide depuis hier soir, et sans pyralin je ne rallume pas le labo : il me faut une livraison avant la nuit.", 2),
+            })
+            {
+                SessionOpenDto s = AvecCarte("c-tete"); s.queue = new[] { Parlante(raison) };
+                transport.Reponse = s;
+                yield return RouvrirParEmpire();
+                Canvas.ForceUpdateCanvases();
+                ExceptionQueuePanelController file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
+                HighestLeverageCardController tete = Tete();
+                Assert.IsNotNull(file, $"{cas} : la file est montée");
+                Assert.IsNotNull(tete, $"{cas} : la carte de tête est montée");
+                TMPro.TextMeshProUGUI r = file.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false).FirstOrDefault(t => t.name == "Raison");
+                Assert.IsNotNull(r, $"{cas} : anti-vacuité, la raison est rendue dans la ligne");
+                r.ForceMeshUpdate();
+                if (lignes == 1) Assert.AreEqual(1, r.textInfo.lineCount, $"{cas} : anti-vacuité, la raison tient sur une ligne");
+                else Assert.GreaterOrEqual(r.textInfo.lineCount, 2, $"{cas} : anti-vacuité, la raison passe sur deux lignes");
+
+                float zone = shell.ContentSlot.rect.height - ShellChrome.TopInsetPx - ShellChrome.BottomInsetPx;
+                Assert.Greater(zone, 1f, $"{cas} : précondition, une zone sûre mesurable");
+                RectTransform fileRt = (RectTransform)file.transform, teteRt = (RectTransform)tete.transform;
+                float voulue = file.HauteurVoulueDeLaLigne();
+                Assert.Greater(voulue, 0f, $"{cas} : anti-vacuité, la ligne VEUT une hauteur");
+                float hautLigne = Bord(fileRt, true, zone), basTete = Bord(teteRt, false, zone);
+                Assert.AreEqual(AppShell.HautDeLaLigne(AppShell.BandeFileHaute, voulue, zone), hautLigne, 0.003f,
+                    $"{cas} : le haut de la ligne est celui de la règle (sa bande mesurée, ou plus haut si le contenu le veut)");
+                Assert.AreEqual(hautLigne + AppShell.MargeAuDessusDeLaLigne, basTete, 0.003f, $"{cas} : la tête commence à la marge au-dessus du haut RÉEL de la ligne");
+                Assert.AreEqual(AppShell.BandeTete.max - AppShell.BandeTete.min, Bord(teteRt, true, zone) - basTete, 0.003f, $"{cas} : la tête garde sa hauteur");
+                VerifierGeometrie(cas, teteRt, fileRt);
+                Debug.Log($"[A12c] {cas} : zone {zone:0} u · ligne voulue {voulue:0.#} u · haut de la ligne {hautLigne:0.000} (bande {AppShell.BandeFileHaute.max:0.000}) · bas de la tête {basTete:0.000}");
+                hauts.Add(hautLigne);
+            }
+            Assert.GreaterOrEqual(hauts[1], hauts[0] - 0.001f, "deux lignes de raison ne font jamais BAISSER le haut de la ligne");
+        }
+
+        /// <summary>A12d — la RÈGLE d'ancrage, pure, contre les cadres MESURÉS (instrument de l'UX, atelier master 5240cec, zone sûre 110 → 516) : elle retrouve la tête
+        /// des cadres 1-3 (252 → 454 sur la ligne 464 → 506), celle du cadre 5 (212 → 414 sur la ligne haute 424 → 506) et la suite du cadre 4 (187 → 414) à 0,005 près ;
+        /// une ligne qui VEUT plus que sa bande grandit et la tête monte d'autant ; une zone nulle retombe sur la bande mesurée.</summary>
+        [Test]
+        public void A12d_LaRegleDAncrage_RetrouveLesCadresMesures()
+        {
+            float F(float y) => (516f - y) / 406f;
+            float basse = AppShell.HautDeLaLigne(AppShell.BandeFile, 0f, 1000f), haute = AppShell.HautDeLaLigne(AppShell.BandeFileHaute, 0f, 1000f);
+            Assert.AreEqual(F(464f), basse, 0.005f, "cadres 1-3 : le haut de la ligne");
+            Assert.AreEqual(F(424f), haute, 0.005f, "cadre 5 : le haut de la ligne haute");
+            (float min, float max) t13 = AppShell.BandeTeteSur(basse), t5 = AppShell.BandeTeteSur(haute), s4 = AppShell.BandeSuiteSur(haute, AppShell.BandeSuiteSurLigneHaute.max);
+            Assert.AreEqual(F(454f), t13.min, 0.005f, "cadres 1-3 : le bas de la tête"); Assert.AreEqual(F(252f), t13.max, 0.005f, "cadres 1-3 : le haut de la tête");
+            Assert.AreEqual(F(414f), t5.min, 0.005f, "cadre 5 : le bas de la tête"); Assert.AreEqual(F(212f), t5.max, 0.005f, "cadre 5 : le haut de la tête");
+            Assert.AreEqual(F(414f), s4.min, 0.005f, "cadre 4 : le bas de la suite"); Assert.AreEqual(F(187f), s4.max, 0.005f, "cadre 4 : le haut de la suite");
+            Assert.AreEqual(AppShell.BandeTete.min, t13.min, 1e-4f, "la bande des cadres 1-3 est un CAS de la règle");
+
+            float grande = AppShell.HautDeLaLigne(AppShell.BandeFileHaute, 300f, 1000f);
+            Assert.AreEqual(AppShell.BandeFileHaute.min + 0.3f, grande, 1e-4f, "le contenu veut plus que la bande : la ligne grandit");
+            Assert.AreEqual(grande + AppShell.MargeAuDessusDeLaLigne, AppShell.BandeTeteSur(grande).min, 1e-4f, "et la tête monte d'autant");
+            Assert.AreEqual(AppShell.BandeFileHaute.max, AppShell.HautDeLaLigne(AppShell.BandeFileHaute, 300f, 0f), "contrôle : zone nulle ⇒ la bande mesurée");
         }
 
         private sealed class SourceTemoin : ISourceDeLaSuite

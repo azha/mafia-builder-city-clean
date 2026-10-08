@@ -389,6 +389,21 @@ namespace MafiaCleanCity.Shell
         public static bool LigneHaute(ExceptionCardDto[] cartes) =>
             cartes != null && cartes.Length > 0 && (cartes.Length > 1 || RaisonDeLaCarte(cartes[0]) != null);
 
+        /// <summary>La hauteur que la ligne de l'Accueil VEUT (u) : sa rangée la plus récente (`Row_…`, padding vertical compris), mesurée par la mise en page — la
+        /// colonne « qui » grandit d'une ligne quand la raison passe sur deux (même mesure que la garde A01 : préférée, padding compris). 0 sans rangée (file
+        /// vide, ou hors Accueil). À lire APRÈS une mise en page forcée : la largeur de la rangée décide du retour à la ligne de la raison.</summary>
+        public float HauteurVoulueDeLaLigne()
+        {
+            if (!LigneDeLAccueil || rowsRoot == null) return 0f;
+            for (int i = rowsRoot.childCount - 1; i >= 0; i--)   // la PLUS RÉCENTE : `Render` détruit les anciennes en fin de frame seulement
+            {
+                Transform row = rowsRoot.GetChild(i);
+                if (row.gameObject.activeSelf && row.name.StartsWith("Row_", StringComparison.Ordinal))
+                    return LayoutUtility.GetPreferredHeight((RectTransform)row);
+            }
+            return 0f;
+        }
+
         /// <summary>La boîte de TRANCHER pour un mot mesuré de `mesure` u : jamais moins que les 220 u d'avant, jamais moins que le mot plus sa marge. Pure.</summary>
         public const float MargeDuMot = 12f;
         public static float LargeurDuTrancher(float mesure) => Mathf.Max(220f, Mathf.Ceil(mesure) + MargeDuMot);

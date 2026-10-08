@@ -160,80 +160,110 @@ namespace MafiaCleanCity.Capture.Tests
         {
             yield return Ouvrir();
             const string Ref = "04-accueil/r2-2026-10-07/reference/cadre-4-la-suite.png ; atelier master 7d88a65 (ligne haute du cadre 4 : 424 → 506, la raison + « Plusieurs attendent encore »)";
-            var cartes = new[]
-            {
-                new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "fab-1", lieutenant_id = "lt-fab", severity_band = "MODERATE",
-                    event_descriptor = "L’étagère est vide. Sans pyralin, je ne rallume pas.", lieutenant = new MafiaCleanCity.Operational.Exceptions.ExceptionLieutenantDto { name = "Lt. Kane" } },
-                new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "fab-2", lieutenant_id = "", severity_band = "MILD", event_descriptor = "Il fait chaud en ville" },
-            };
-            Assert.IsTrue(ExceptionQueuePanelController.LigneHaute(cartes), "précondition : deux cartes ⇒ la ligne haute du cadre 4");
-            // Le RE-MONTAGE avec la file fabriquée : le chemin de A6 (AccueilCanon), sur le vrai shell connecté.
-            // ⛔ (créneau du 08/10 soir) la réponse fabriquée part de la VRAIE session (phase, jour, budgets) : seules la tête et la file changent. Une réponse
-            //    neuve publiait la phase « — » (F14) sous un bandeau resté à « Aube », et la garde de phase de `CapturerLeShell` rougissait à juste titre.
-            SessionOpenDto reelle = shell.LastSessionOpen;
-            Assert.IsNotNull(reelle, "précondition : la session du compte neuf est ouverte");
-            SessionOpenDto fabriquee = JsonUtility.FromJson<SessionOpenDto>(JsonUtility.ToJson(reelle));
-            fabriquee.JourDeFamille = reelle.JourDeFamille;
-            fabriquee.JourDeFamilleALOuverture = reelle.JourDeFamilleALOuverture;
-            fabriquee.JourDeFamilleServi = reelle.JourDeFamilleServi;
-            fabriquee.hl_card = null;
-            fabriquee.queue = cartes;
-            shell.TransportDeSessionPourTest = new SessionFabriquee { Reponse = fabriquee };
-            // ⛔ (créneau du 08/10 soir) EMPIRE ne ROUVRE l'Accueil que sur la carte SANS RIEN DESSUS (`SurLaCarteSansRienDessus`, geste G1) : après
-            //    `Ouvrir()`, l'Accueil de l'ouverture de session est DÉJÀ en surimpression, et toucher EMPIRE remontait la carte seule (journal :
-            //    « [CityMap] Loaded », aucune file) — le test notait ÉCHEC et sortait VERT. On le referme d'abord, comme `AccueilCanon.RouvrirParEmpire`.
-            while (shell.SurimpressionOuverte) { shell.Depiler(); yield return null; }
-            if (shell.MountedTenantType != typeof(CityMapController)) { shell.ActivateTab(AppShell.Tab.Empire); for (int i = 0; i < 5; i++) yield return null; }
-            Assert.IsTrue(shell.SurLaCarteSansRienDessus, "précondition : la carte, sans rien dessus — sinon EMPIRE ne rouvre pas l'Accueil");
-            ProductionClickSupport.Click(shell.TabBarRoot.Find("Tab_Empire").GetComponent<Button>());
-            ExceptionQueuePanelController file = null;
-            float fin = Time.realtimeSinceStartup + 20f;
-            while (Time.realtimeSinceStartup < fin)
-            {
-                file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
-                if (file != null && file.transform.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_fab-1")) break;
-                yield return null;
-            }
-            if (file == null || !file.transform.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_fab-1"))
-            {
-                Noter("A01", "④ Accueil — la file", "ÉCHEC : le panneau de la file n'est pas monté sur l'Accueil (ou sans la carte fabriquée)", Ref);
-                Assert.Fail("④ A01 : la file fabriquée n'est pas montée sur l'Accueil rouvert — rien n'a été mesuré (un ÉCHEC noté n'est pas un vert)");
-            }
-            // « LA SUITE » se lit par le RÉSEAU (`LaSuitePanelController.Charger`) : sans cette attente, la planche 2400 (prise la première) partait
-            // avant elle — la suite absente à 2400, présente à 1920 (créneau du 08/10 soir). On attend qu'elle ait LU, quelle que soit sa réponse.
-            LaSuitePanelController suite = null;
-            float finSuite = Time.realtimeSinceStartup + 20f;
-            while (Time.realtimeSinceStartup < finSuite)
-            {
-                suite = shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).LastOrDefault();
-                if (suite != null && suite.Lu) break;
-                yield return null;
-            }
-            Assert.IsTrue(suite != null && suite.Lu, "④ A01 : « LA SUITE » n'a pas lu son état en 20 s — la planche ne montrerait pas l'Accueil entier");
-            for (int i = 0; i < 5; i++) yield return null;
+            // Deux variantes (décision f2 08/10 soir : la tête et la suite s'ANCRENT sur le haut RÉEL de la ligne — garde d'effet « aucune intersection, raison sur 1 PUIS
+            // 2 lignes, aux deux résolutions ») : (1) la suite au-dessus, raison COURTE (les planches d'avant, mêmes noms) ; (2) une carte de tête au-dessus, raison LONGUE.
+            const string RaisonCourte = "L’étagère est vide. Sans pyralin, je ne rallume pas.";
+            const string RaisonLongue = "L’étagère est vide depuis hier soir, et sans pyralin je ne rallume pas le labo : il me faut une livraison avant la nuit.";
             var debordements = new List<string>();
-            foreach ((int largeur, int hauteur) in Resolutions)
+            foreach ((string variante, string raison, bool avecTete) in new[] { ("", RaisonCourte, false), ("_TeteRaisonLongue", RaisonLongue, true) })
             {
-                string mesure = null;
-                bool deborde = false;
-                // `rebatirAccueil` : les quatre panneaux sont rebâtis À LA RÉSOLUTION (sans lui, la ligne de l'Accueil reste à sa hauteur de montage) ; la MESURE est prise ici, dans le régime de capture.
-                yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"A01_AccueilFile2Cartes_{largeur}x{hauteur}.png"), true, () =>
+                var cartes = new[]
+                {
+                    new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "fab-1", lieutenant_id = "lt-fab", severity_band = "MODERATE",
+                        event_descriptor = raison, lieutenant = new MafiaCleanCity.Operational.Exceptions.ExceptionLieutenantDto { name = "Lt. Kane" } },
+                    new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "fab-2", lieutenant_id = "", severity_band = "MILD", event_descriptor = "Il fait chaud en ville" },
+                };
+                Assert.IsTrue(ExceptionQueuePanelController.LigneHaute(cartes), "précondition : deux cartes ⇒ la ligne haute du cadre 4");
+                // Le RE-MONTAGE avec la file fabriquée : le chemin de A6 (AccueilCanon), sur le vrai shell connecté.
+                // ⛔ (créneau du 08/10 soir) la réponse fabriquée part de la VRAIE session (phase, jour, budgets) : seules la tête et la file changent. Une réponse
+                //    neuve publiait la phase « — » (F14) sous un bandeau resté à « Aube », et la garde de phase de `CapturerLeShell` rougissait à juste titre.
+                SessionOpenDto reelle = shell.LastSessionOpen;
+                Assert.IsNotNull(reelle, "précondition : la session du compte neuf est ouverte");
+                SessionOpenDto fabriquee = JsonUtility.FromJson<SessionOpenDto>(JsonUtility.ToJson(reelle));
+                fabriquee.JourDeFamille = reelle.JourDeFamille;
+                fabriquee.JourDeFamilleALOuverture = reelle.JourDeFamilleALOuverture;
+                fabriquee.JourDeFamilleServi = reelle.JourDeFamilleServi;
+                // la tête FABRIQUÉE est celle de E11 (même carte, NON servie) ; sans tête, « LA SUITE » prend le dessus de la ligne
+                fabriquee.hl_card = avecTete ? new HlCardDto { card_id = "carte-fabriquee", decision_type_key = "AUTONOMY_REPORTS_PENDING", impact_bucket = "moderate", urgency_bucket = "low", structural = false } : null;
+                fabriquee.queue = cartes;
+                shell.TransportDeSessionPourTest = new SessionFabriquee { Reponse = fabriquee };
+                // ⛔ (créneau du 08/10 soir) EMPIRE ne ROUVRE l'Accueil que sur la carte SANS RIEN DESSUS (`SurLaCarteSansRienDessus`, geste G1) : après
+                //    `Ouvrir()`, l'Accueil de l'ouverture de session est DÉJÀ en surimpression, et toucher EMPIRE remontait la carte seule (journal :
+                //    « [CityMap] Loaded », aucune file) — le test notait ÉCHEC et sortait VERT. On le referme d'abord, comme `AccueilCanon.RouvrirParEmpire`.
+                while (shell.SurimpressionOuverte) { shell.Depiler(); yield return null; }
+                if (shell.MountedTenantType != typeof(CityMapController)) { shell.ActivateTab(AppShell.Tab.Empire); for (int i = 0; i < 5; i++) yield return null; }
+                Assert.IsTrue(shell.SurLaCarteSansRienDessus, "précondition : la carte, sans rien dessus — sinon EMPIRE ne rouvre pas l'Accueil");
+                ProductionClickSupport.Click(shell.TabBarRoot.Find("Tab_Empire").GetComponent<Button>());
+                ExceptionQueuePanelController file = null;
+                float fin = Time.realtimeSinceStartup + 20f;
+                while (Time.realtimeSinceStartup < fin)
                 {
                     file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
-                    Canvas.ForceUpdateCanvases();
-                    Transform row = file != null ? file.transform.GetComponentsInChildren<Transform>(true).FirstOrDefault(c => c.name == "Row_fab-1") : null;
-                    Transform col = row != null ? row.Find("QuiAttend") : null;
-                    if (row == null || col == null) { mesure = "ÉCHEC : ligne ou colonne « qui » introuvable"; deborde = true; return; }
-                    float bandeH = ((RectTransform)row).rect.height;
-                    int padding = row.GetComponent<HorizontalLayoutGroup>().padding.vertical;
-                    float disponible = bandeH - padding, voulue = LayoutUtility.GetPreferredHeight((RectTransform)col);
-                    deborde = voulue > disponible + 0.5f;
-                    mesure = $"ligne={bandeH:0.#} u · disponible (− padding {padding})={disponible:0.#} u · colonne voulue={voulue:0.#} u · raison=«{file.RaisonRendue}» · pluriel=«{file.PlusieursRendu}» · {(deborde ? "DÉBORDE (A)" : "tient")}";
-                });
-                Noter("A01", $"④ file {largeur}x{hauteur}", mesure ?? "ÉCHEC : aucune mesure prise", Ref);
-                if (deborde || mesure == null) debordements.Add($"{largeur}x{hauteur} : {mesure}");
+                    if (file != null && file.RaisonRendue == raison && file.transform.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_fab-1")) break;
+                    yield return null;
+                }
+                if (file == null || file.RaisonRendue != raison || !file.transform.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_fab-1"))
+                {
+                    Noter("A01", "④ Accueil — la file" + variante, "ÉCHEC : le panneau de la file n'est pas monté sur l'Accueil (ou sans la carte fabriquée de cette variante)", Ref);
+                    Assert.Fail("④ A01 : la file fabriquée n'est pas montée sur l'Accueil rouvert — rien n'a été mesuré (un ÉCHEC noté n'est pas un vert)");
+                }
+                // Ce qui est AU-DESSUS de la ligne : la tête (variante 2) ou « LA SUITE », qui se lit par le RÉSEAU (`LaSuitePanelController.Charger`) — sans cette
+                // attente, la planche 2400 (prise la première) partait avant elle (créneau du 08/10 soir). On attend qu'elle ait LU, quelle que soit sa réponse.
+                if (!avecTete)
+                {
+                    LaSuitePanelController suite = null;
+                    float finSuite = Time.realtimeSinceStartup + 20f;
+                    while (Time.realtimeSinceStartup < finSuite)
+                    {
+                        suite = shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).LastOrDefault();
+                        if (suite != null && suite.Lu) break;
+                        yield return null;
+                    }
+                    Assert.IsTrue(suite != null && suite.Lu, "④ A01 : « LA SUITE » n'a pas lu son état en 20 s — la planche ne montrerait pas l'Accueil entier");
+                }
+                for (int i = 0; i < 5; i++) yield return null;
+                foreach ((int largeur, int hauteur) in Resolutions)
+                {
+                    string mesure = null;
+                    bool deborde = false;
+                    // `rebatirAccueil` : les quatre panneaux sont rebâtis À LA RÉSOLUTION (sans lui, la ligne de l'Accueil reste à sa hauteur de montage) ; la MESURE est prise ici, dans le régime de capture.
+                    yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"A01_AccueilFile2Cartes{variante}_{largeur}x{hauteur}.png"), true, () =>
+                    {
+                        file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
+                        Canvas.ForceUpdateCanvases();
+                        Transform row = file != null ? file.transform.GetComponentsInChildren<Transform>(true).FirstOrDefault(c => c.name == "Row_fab-1") : null;
+                        Transform col = row != null ? row.Find("QuiAttend") : null;
+                        if (row == null || col == null) { mesure = "ÉCHEC : ligne ou colonne « qui » introuvable"; deborde = true; return; }
+                        float bandeH = ((RectTransform)row).rect.height;
+                        int padding = row.GetComponent<HorizontalLayoutGroup>().padding.vertical;
+                        float disponible = bandeH - padding, voulue = LayoutUtility.GetPreferredHeight((RectTransform)col);
+                        deborde = voulue > disponible + 0.5f;
+                        TMPro.TextMeshProUGUI r = row.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false).FirstOrDefault(t => t.name == "Raison");
+                        int lignesDeRaison = 0;
+                        if (r != null) { r.ForceMeshUpdate(); lignesDeRaison = r.textInfo.lineCount; }
+                        // L'ANCRAGE : ce qui est au-dessus de la ligne (la tête ou la suite) commence AU-DESSUS de son haut réel — un écart négatif est une intersection (A).
+                        Component dessus = avecTete
+                            ? (Component)shell.ContentSlot.GetComponentsInChildren<HighestLeverageCardController>(false).LastOrDefault()
+                            : shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).LastOrDefault();
+                        if (dessus == null) { mesure = $"ÉCHEC : {(avecTete ? "la carte de tête" : "« LA SUITE »")} introuvable au-dessus de la ligne"; deborde = true; return; }
+                        var c4 = new Vector3[4];
+                        ((RectTransform)file.transform).GetWorldCorners(c4);
+                        float hautLigne = shell.ContentSlot.InverseTransformPoint(c4[1]).y;
+                        ((RectTransform)dessus.transform).GetWorldCorners(c4);
+                        float basDessus = shell.ContentSlot.InverseTransformPoint(c4[0]).y;
+                        float zone = shell.ContentSlot.rect.height - ShellChrome.TopInsetPx - ShellChrome.BottomInsetPx;
+                        float ecart = basDessus - hautLigne;
+                        bool intersection = ecart < -0.5f;
+                        deborde |= intersection;
+                        mesure = $"ligne={bandeH:0.#} u · disponible (− padding {padding})={disponible:0.#} u · colonne voulue={voulue:0.#} u · raison=«{file.RaisonRendue}» sur {lignesDeRaison} ligne(s) · pluriel=«{file.PlusieursRendu}» · "
+                               + $"{(avecTete ? "tête" : "suite")} au-dessus : écart {ecart:0.#} u ({(zone > 0f ? ecart / zone : 0f):0.0000} de la zone, marge voulue {AppShell.MargeAuDessusDeLaLigne:0.000}) · "
+                               + $"{(deborde ? (intersection ? "INTERSECTION (A)" : "DÉBORDE (A)") : "tient")}";
+                    });
+                    Noter("A01", $"④ file{variante} {largeur}x{hauteur}", mesure ?? "ÉCHEC : aucune mesure prise", Ref);
+                    if (deborde || mesure == null) debordements.Add($"{variante} {largeur}x{hauteur} : {mesure}");
+                }
             }
-            Assert.IsEmpty(debordements, "④ la colonne « qui » de la ligne de file ne tient pas (préférée > disponible) :\n" + string.Join("\n", debordements));
+            Assert.IsEmpty(debordements, "④ la ligne de file ne tient pas (colonne préférée > disponible) ou ce qui est au-dessus la RECOUPE :\n" + string.Join("\n", debordements));
         }
 
         /// <summary>Une réponse `session/open` FABRIQUÉE (le re-montage de l'Accueil de A01) — le patron de `AccueilCanonPlayModeTests.TransportTemoin`.</summary>
