@@ -24,7 +24,7 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉟", "㉓", "⑮", "⑰", "⑭", "㉒",   // ㊵, ㊳, ㉜, ㉚ posés le 08/10 (feu vert CLIENT-1) ; ㊴ (à CLIENT-2, f2)
+            "③", "⑤", "㊲", "㉓", "⑮", "⑰", "⑭", "㉒",   // ㊵, ㊳, ㉜, ㉚ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ (à CLIENT-2, f2)
             "㊱", "㉘", "㉛", "㉝", "㉞", "㉙", "㉔", "⑱",
         };
 
@@ -44,6 +44,10 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ㉟ (08/10) — Enseigne et Fen posées. Dl/DlMort/DlPris/DlPrisMort (les rangées de points de vente), Gd, Pann/Pann_2 (le
+            //   panneau d'état) : déjà tracés par `ProceduralUI` dans le contrôleur (rangées, pastilles) — à migrer vers Filets ; Elast
+            //   (la boîte), Cta6/Cta6Eteint (le pied), Mano (le cadran) : à classer au juge.
+            { "㉟", new[] { "Cta6", "Cta6Eteint", "Dl", "DlMort", "DlPris", "DlPrisMort", "Elast", "Gd", "Mano", "Pann", "Pann_2" } },
             // ㉚ (08/10) — L posée (les filets pointillés du bon). Le reste : en-tête (EnteteDEcran), pied (PiedDEcran), chaîne
             //   (nœuds, tuyaux, pics, états, gestes, rien, cadran) — blocs de CLIENT-1, à déléguer à Filets.
             { "㉚", new[] { "Bas", "Entete", "Etat", "Etat_2", "Geste", "GesteMort", "Mano", "Noeud", "NoeudFlou", "NoeudTrouve", "Pic", "Pic_2", "Rien", "Tuyau", "TuyauRefoule" } },

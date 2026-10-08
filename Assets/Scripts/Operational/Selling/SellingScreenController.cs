@@ -594,13 +594,14 @@ namespace MafiaCleanCity.Operational.Selling
             RectTransform selfRt = GetComponent<RectTransform>();
             if (selfRt == null) selfRt = gameObject.AddComponent<RectTransform>();
 
-            Image voile = gameObject.AddComponent<Image>();
-            voile.color = DesignTokens.Current.surfaceBase;
-            voile.raycastTarget = true;
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,24, le voile,
+            // le support A de `.vnt6` (halos or et cyan sur le 178°) et le CERNE d'or A1 — DÉCLARÉS au catalogue. Il remplace l'aplat
+            // `surfaceBase` d'ici ; son `Decor/Capteur` garde le bloqueur de raycast que portait cet aplat.
+            DecorPose decor = DecorDeScene.Poser(transform, DecorsDeScene.Selling);
 
             VerticalLayoutGroup v = gameObject.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset((int)Px(10f), (int)Px(10f),
-                                       (int)ShellChrome.TopInsetPx + (int)Px(8f),
+                                       0,   // le haut : sous la bande de scène (ReserverLaBande, juste dessous)
                                        (int)ShellChrome.BottomInsetPx + (int)Px(8f));
             v.spacing = Px(8f);
             v.childControlWidth = true;
@@ -608,6 +609,8 @@ namespace MafiaCleanCity.Operational.Selling
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.UpperCenter;
+            // §5.6 du design : la pile commence SOUS max(barre, bande de scène 21 %), comme le panneau de la maquette.
+            DecorDeScene.ReserverLaBande(v, decor, Px(8f));
 
             // ── LE CHÂSSIS (B1) — `.cerne`, `.enseigne`, `.compteurs` ────────────────────────
             // ⛔ MESURÉ ABSENT, PAS MAL RENDU. Un juge ⊥ a mesuré 2,12 % d'encre contre 14,54 % au
@@ -622,35 +625,15 @@ namespace MafiaCleanCity.Operational.Selling
             //    `#b08d3e` EST le jeton `hudHairlineGold` — mesuré à distance 0,000, donc on
             //    emploie le jeton NOMMÉ et jamais le littéral (un littéral qui recopie la valeur
             //    d'un jeton est invisible à toute garde qui balaie les accès au jeton).
-            GameObject cerne = NewUI("Cerne", transform);
-            // ⛔⛔ UN RECOUVREMENT PLEIN ÉCRAN NE PEUT PAS ÊTRE UNE RANGÉE D'UN GROUPE DE LAYOUT.
-            //    `gameObject` porte un `VerticalLayoutGroup` avec `childControlWidth/Height = true`
-            //    (:342-348) : le groupe RÉÉCRIT les ancres et les offsets de chacun de ses enfants.
-            //    Sans cette ligne, les quatre lignes qui suivent sont annulées à la frame suivante
-            //    et le cerne devient une RANGÉE de la pile — mesuré sur planche : une « pilule »
-            //    de 1010 × 20 px entre l'enseigne et les compteurs, et ZÉRO pixel doré sur les
-            //    quatre bords (0/667 gauche · 0/667 droit · 0/357 haut · 0/357 bas).
-            //    ★★ ET C'EST POURQUOI MON PROPRE CONTRÔLE NE POUVAIT PAS LE VOIR : j'avais écrit
-            //       « un `ProceduralUI` a-t-il tourné sur le châssis ? ». La réponse était OUI.
-            //       *Un sprite qui rend dans un rect écrasé rend quand même.* Une garde sur
-            //       « le mécanisme s'est exécuté » ne voit jamais « il s'est exécuté dans le
-            //       mauvais rect » — la garde sur les PARAMÈTRES contre la garde sur l'EFFET,
-            //       appliquée à la géométrie au lieu de l'opacité.
-            cerne.AddComponent<LayoutElement>().ignoreLayout = true;
-            var cerneRt = (RectTransform)cerne.transform;
-            cerneRt.anchorMin = Vector2.zero; cerneRt.anchorMax = Vector2.one;
-            cerneRt.offsetMin = new Vector2(Px(5f), Px(5f));
-            cerneRt.offsetMax = new Vector2(-Px(5f), -Px(5f));
-            var cerneImg = cerne.AddComponent<Image>();
-            cerneImg.sprite = ProceduralUI.RoundedRectOutline((int)Px(3f), Px(1f),
-                                                              DesignTokens.Current.hudHairlineGold);
-            cerneImg.type = Image.Type.Sliced;     // trait CONTINU ⇒ l'étirement le préserve
-            cerneImg.raycastTarget = false;        // `.cerne{pointer-events:none}`
-            cerne.transform.SetAsLastSibling();    // `.cerne{z-index:6}` — au-dessus du contenu
+            // ⇒ Le cerne est désormais celui du DÉCOR (`Decor/Cerne` : trait laiton 1 px à 5 px du bord du SUPPORT, rayon 3, liseré
+            //   `#0b1016`, lueur), une seule implémentation pour les sept écrans A — et posé sur le rect du support (sous la bande de
+            //   scène), comme `.vnt6 .cerne{inset:5px}` dans la racine du panneau. La garde `ChassisVenteRect` B1 le mesure là.
 
             // L'ENSEIGNE — le titre cesse d'être un texte nu posé sur le vide : il est PORTÉ.
             GameObject enseigne = Bloc("Enseigne", transform, false, Px(2f));
-            AjouterFondPlaque(enseigne);
+            // `.enseigne` : plaque 178° translucide, bord 1 px #2a3648, filet bas 2 px laiton, liseré blanc — la recette MESURÉE de ㉟,
+            // posée par le décor (l'ancien aplat de plaque attendait « quelqu'un qui mesure la conversion » : c'est fait).
+            DecorDeScene.HabillerEnseigne((RectTransform)enseigne.transform, DecorsDeScene.Filets.Selling.Enseigne, DecorsDeScene.Selling);
             TextMeshProUGUI titre = Texte(enseigne.transform, "Titre", "LES POINTS DE VENTE", Px(13f), Or,
                                           DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             titre.characterSpacing = 18f;
@@ -713,6 +696,7 @@ namespace MafiaCleanCity.Operational.Selling
         private void Fenetre(string valeur, string libelle)
         {
             GameObject f = Bloc("Fen", compteurs, false, Px(1f));
+            Filets.Poser((RectTransform)f.transform, DecorsDeScene.Filets.Selling.Fen);   // `.fen` : 1 px #2a3648 mesuré
             f.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             Texte(f.transform, "Val", valeur, Px(12f), Or,
                   DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
@@ -726,22 +710,6 @@ namespace MafiaCleanCity.Operational.Selling
             go.transform.SetParent(parent, false);
             if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
             return go;
-        }
-
-        /// <summary>La plaque de l'enseigne — `.enseigne{background:linear-gradient(178deg,…);
-        /// border:1px solid #2a3648; border-bottom:2px solid #b08d3e}`.
-        /// ⚠️ Le dégradé de la maquette est rendu par un APLAT de sa teinte haute : ce dépôt a
-        /// mesuré qu'une valeur d'opacité reprise d'une maquette HTML est exprimée dans l'espace du
-        /// NAVIGATEUR, et que le projet compose en LINÉAIRE — la recopier telle quelle est un
-        /// changement d'unité silencieux. Un aplat est HONNÊTE ; un dégradé mal converti serait un
-        /// nombre faux qui a l'air juste. À reprendre quand quelqu'un mesure la conversion.</summary>
-        private void AjouterFondPlaque(GameObject cible)
-        {
-            Image f = cible.AddComponent<Image>();
-            f.sprite = ProceduralUI.RoundedRectOutline((int)Px(2f), Px(1f), Hex("#2a3648"));
-            f.type = Image.Type.Sliced;
-            f.raycastTarget = false;
-            cible.transform.SetAsFirstSibling();
         }
 
         private static GameObject Bloc(string nom, Transform parent, bool horizontal, float espace)

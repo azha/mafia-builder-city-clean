@@ -66,42 +66,40 @@ namespace MafiaCleanCity.Operational.Selling.Tests
             LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
             yield return null;
 
+            // ⇒ Depuis le DÉCOR DE SCÈNE (CLIENT-2, 08/10), le cerne de ㉟ est `Decor/Cerne` : il couvre le SUPPORT (le panneau,
+            //   sous la bande de scène), pas l'écran entier — `.vnt6 .cerne{inset:5px}` dans la racine du panneau. La propriété
+            //   gardée ne change pas : un cadre, pas une rangée de la pile ; et le remède est le même (`ignoreLayout`, porté par
+            //   le nœud `Decor`, premier enfant de l'écran).
+            MafiaCleanCity.Shell.DecorPose decor = hote.GetComponentInChildren<MafiaCleanCity.Shell.DecorPose>(true);
+            Assert.IsNotNull(decor, "le décor de scène doit être posé — c'est lui qui porte le cerne (B1)");
             RectTransform cerne = TrouverCerne(hote);
-            // ⛔ ANTI-VACUITÉ D'ABORD : sans cerne du tout, toute assertion sur son rect serait
-            //    vraie à vide — et c'est exactement l'état d'avant le lot B1.
             Assert.IsNotNull(cerne, "le cerne doit exister — c'est lui qui porte B1");
-            Image img = cerne.GetComponent<Image>();
-            Assert.IsNotNull(img, "le cerne doit porter une Image");
-            Assert.IsNotNull(img.sprite, "l'Image du cerne doit porter un sprite (le filet procédural)");
+            Assert.AreSame(decor.Cerne, cerne, "le seul cerne de l'écran est celui du décor (une implémentation)");
+            Image img = cerne.Find("Trait")?.GetComponent<Image>();
+            Assert.IsNotNull(img, "le cerne doit porter son trait (Decor/Cerne/Trait)");
+            Assert.IsNotNull(img.sprite, "le trait du cerne doit porter un sprite (le filet procédural)");
 
-            float pw = rt.rect.width, ph = rt.rect.height;
-            Assert.Greater(pw, 0f, "anti-vacuité — le châssis a une largeur");
-            Assert.Greater(ph, 0f, "anti-vacuité — le châssis a une hauteur");
+            float pw = decor.Support.rect.width, ph = decor.Support.rect.height;
+            Assert.Greater(pw, 0f, "anti-vacuité — le support a une largeur");
+            Assert.Greater(ph, 0f, "anti-vacuité — le support a une hauteur");
+            Assert.Greater(ph / rt.rect.height, 0.70f, "le support est le panneau sous la bande, pas une rangée");
 
-            // ⛔ LA GARDE D'EFFET : le cerne COUVRE le châssis. Un plein cadre moins 5 px d'inset en
-            //    fait plus de 95 % ; la « pilule » mesurée sur planche en faisait ~5 % en hauteur.
-            //    Le plancher à 0,80 laisse toute la place aux insets et n'en laisse aucune à une
-            //    rangée de pile.
-            Assert.Greater(cerne.rect.height / ph, 0.80f,
-                $"le cerne ne couvre que {100f * cerne.rect.height / ph:0.#} % de la HAUTEUR du "
-                + "châssis — c'est une rangée de la pile, pas un cadre. (Cause connue : un "
-                + "recouvrement plein cadre enfant d'un groupe de layout qui pilote ses enfants ; "
-                + "remède : `LayoutElement.ignoreLayout = true`.)");
-            Assert.Greater(cerne.rect.width / pw, 0.80f,
-                $"le cerne ne couvre que {100f * cerne.rect.width / pw:0.#} % de la LARGEUR du châssis");
+            Assert.Greater(cerne.rect.height / ph, 0.95f,
+                $"le cerne ne couvre que {100f * cerne.rect.height / ph:0.#} % de la HAUTEUR du support — c'est une rangée de la "
+                + "pile, pas un cadre. (Cause connue : un recouvrement enfant d'un groupe de layout qui pilote ses enfants ; "
+                + "remède : `LayoutElement.ignoreLayout = true` sur `Decor`.)");
+            Assert.Greater(cerne.rect.width / pw, 0.95f,
+                $"le cerne ne couvre que {100f * cerne.rect.width / pw:0.#} % de la LARGEUR du support");
 
-            // ⛔⛔ CONTRÔLE POSITIF — on DÉSARME le remède et on exige que la garde tombe. Sans lui,
-            //    une garde verte ne prouve pas qu'elle sait rougir : le châssis pourrait couvrir
-            //    98 % pour une raison sans rapport avec `ignoreLayout`, et l'assertion ci-dessus
-            //    resterait verte le jour où quelqu'un retire la ligne.
-            LayoutElement le = cerne.GetComponent<LayoutElement>();
-            Assert.IsNotNull(le, "le cerne doit porter un LayoutElement — c'est le remède lui-même");
+            LayoutElement le = decor.GetComponent<LayoutElement>();
+            Assert.IsNotNull(le, "le décor doit porter un LayoutElement — c'est le remède lui-même");
             Assert.IsTrue(le.ignoreLayout, "et il doit ignorer le layout");
+            float hAvant = cerne.rect.height;
             le.ignoreLayout = false;
             LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
             yield return null;
-            Assert.Less(cerne.rect.height / ph, 0.80f,
-                "⛔ CONTRÔLE POSITIF MUET : en retirant `ignoreLayout`, le cerne devrait s'écraser "
+            Assert.Less(cerne.rect.height, 0.5f * hAvant,
+                "⛔ CONTRÔLE POSITIF MUET : en retirant `ignoreLayout`, le décor (et son cerne) devrait s'écraser "
                 + "en une rangée de la pile. Il ne s'écrase pas ⇒ la garde ci-dessus passe pour une "
                 + "raison SANS RAPPORT avec le défaut qu'elle prétend surveiller, et elle resterait "
                 + "verte le jour où la ligne est retirée.");
