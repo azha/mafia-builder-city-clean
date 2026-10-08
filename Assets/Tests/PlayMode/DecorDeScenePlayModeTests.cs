@@ -275,11 +275,18 @@ namespace MafiaCleanCity.Tests.PlayMode
 
         // ════════════════════════════════════════════════════════════════════════════ D4 — comportement
 
+        private static float Lin(float u) => u <= 0.04045f ? u / 12.92f : Mathf.Pow((u + 0.055f) / 1.055f, 2.4f);
+        private static float Gam(float l) => l <= 0.0031308f ? 12.92f * l : 1.055f * Mathf.Pow(l, 1f / 2.4f) - 0.055f;
+
         [UnityTest]
-        public IEnumerator D4a_Luminosite_PixelDeScene_FoisB()
+        public IEnumerator D4a_Luminosite_MecanismeLineaire_EtEcartABrightnessBorne()
         {
-            // Prémisse du design (§3.2, M3) : `RawImage.color = (b,b,b)` = `brightness(b)` à ±2/255. ROUGE ⇒ le repli
-            // (voile noir 1 − b ajusté) devient nécessaire : c'est le rôle de cette sonde.
+            // ⛔ PRÉMISSE M3 DU DESIGN RÉFUTÉE AU CRÉNEAU DU 08/10 : « teinte (b,b,b) = brightness(b) à ±2/255 » a mesuré 7,40/255.
+            //    Ce n'est pas un défaut de pose : Unity compose en LINÉAIRE (la teinte est linéarisée : pixel = γ(lin(b)·lin(c))) et
+            //    `brightness()` multiplie en sRGB ; avec la courbe sRGB par morceaux, AUCUN facteur unique ne tient ±2/255 — calculé :
+            //    6,72/255 au mieux à b = 0,4 (4,1 à 7,4 selon b). Le repli du design (voile noir 1 − b) est le MÊME produit linéaire.
+            //    ⇒ Deux gardes distinctes : (1) le MÉCANISME, exact à ±2/255 ; (2) l'écart à `brightness()`, borné (≤ 8/255,
+            //    classe C, dette TD-880 : seul un shader qui multiplie en sRGB le fermerait).
             const float b = 0.4f;
             var un = new SpecDecor("t", "t", StatutDecor.Pose, SceneDeFond.District, 1f, 1f, null, voile: false);
             var sombre = new SpecDecor("t", "t", StatutDecor.Pose, SceneDeFond.District, b, 1f, null, voile: false);
@@ -294,17 +301,23 @@ namespace MafiaCleanCity.Tests.PlayMode
                 DecorDeScene.Poser(banc.Racine, sombre);
                 yield return null;
                 tb = banc.Rendre();
-                float pire = 0f, max1 = 0f;
+                float pireMecanisme = 0f, pireCss = 0f, max1 = 0f;
+                float kb = Lin(b);
                 for (int y = 40; y < H; y += 110)
                     for (int x = 30; x < W; x += 80)
                     {
                         Color c1 = t1.GetPixel(x, y), cb = tb.GetPixel(x, y);
                         max1 = Mathf.Max(max1, Mathf.Max(c1.r, Mathf.Max(c1.g, c1.b)));
-                        pire = Mathf.Max(pire, Mathf.Abs(cb.r - b * c1.r), Mathf.Abs(cb.g - b * c1.g));
-                        pire = Mathf.Max(pire, Mathf.Abs(cb.b - b * c1.b));
+                        for (int k = 0; k < 3; k++)
+                        {
+                            pireMecanisme = Mathf.Max(pireMecanisme, Mathf.Abs(cb[k] - Gam(kb * Lin(c1[k]))));
+                            pireCss = Mathf.Max(pireCss, Mathf.Abs(cb[k] - b * c1[k]));
+                        }
                     }
                 Assert.Greater(max1 * 255f, 40f, "anti-vacuité : la scène à b = 1 n'est pas noire");
-                Assert.LessOrEqual(pire * 255f, 2f, $"brightness({b}) : écart maximal {pire * 255f:F2}/255");
+                Assert.LessOrEqual(pireMecanisme * 255f, 2f, $"mécanisme : pixel = γ(lin(b)·lin(c)) — écart {pireMecanisme * 255f:F2}/255");
+                Assert.LessOrEqual(pireCss * 255f, 8f, $"écart à brightness({b}) du CSS : {pireCss * 255f:F2}/255 (borne C : 8/255, TD-880)");
+                Assert.Greater(pireCss * 255f, pireMecanisme * 255f, "contrôle : la garde CSS mesure bien un AUTRE modèle que le mécanisme");
             }
             finally { Detruire(t1); Detruire(tb); banc.Dispose(); }
         }

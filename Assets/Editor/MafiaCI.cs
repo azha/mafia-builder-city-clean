@@ -351,6 +351,9 @@ public static class MafiaCI
         // EcranVitrine (CLIENT-1, 08/10 ; « Vitrine » jusqu'au 08/10 soir, renommée : la regex non ancrée prenait PhotoVitrine avec elle, K0) — ㉓ : les cinq A et trois B du juge groupé du 07/10 (grille 2×2 de plaques illustrées, dessins par article, bande basse sans voix, comptoir, intitulés, médaillon) ; dessins purs, garde de source, effet
         // sur un catalogue fabriqué. Catégorie NEUVE inscrite le jour où elle naît (garde I1) ; PAS ENCORE JOUÉE.
         "EcranVitrine",
+        // DecorDeScene (CLIENT-2, 08/10) : verte SEULE au créneau du 08/10 (passed=38 failed=0 declares=38, HEAD feat/decor-de-scene) —
+        // primitives, Poser, catalogue = INDEX, rendu 540×960, filets D6, gardes statiques D2/D3/D6b.
+        "DecorDeScene",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

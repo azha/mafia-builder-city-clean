@@ -151,9 +151,11 @@ namespace MafiaCleanCity.Tests.PlayMode
             Proche(B, Px(s, 0.5f, 1f - 0.66f), TolInterieure, "t = 0,6 sur l'axe vertical (ry = 0,6 de la hauteur)");
             // Sur l'axe horizontal : u = 0,5 + 0,3·rx = 0,77 ⇒ t = 0,3 ⇒ mi-course A→B.
             Proche(Css(0.3f, 0.6f), Px(s, 0.77f, 1f - 0.3f), TolInterieure, "t = 0,3 sur l'axe horizontal (rx = 0,9 de la largeur)");
-            // Les coins sont hors de l'ellipse (t > 1) : dernier arrêt, exactement.
+            // Les coins du BAS sont hors de l'ellipse (t ≈ 1,29 > 1) : dernier arrêt, exactement. (Les coins du HAUT, eux, sont
+            // DEDANS — t ≈ 0,75 : rx = 0,9 de la largeur ; la première version de ce test les croyait dehors, le créneau l'a réfuté.)
             Proche(C, Px(s, 0.001f, 0.001f), TolExacte, "coin bas-gauche hors de l'ellipse = C");
-            Proche(C, Px(s, 0.999f, 0.999f), TolExacte, "coin haut-droit hors de l'ellipse = C");
+            Proche(C, Px(s, 0.999f, 0.001f), TolExacte, "coin bas-droit hors de l'ellipse = C");
+            Proche(Css(0.745f, 0.6f), Px(s, 0.999f, 0.999f), TolInterieure, "coin haut-droit DANS l'ellipse : t ≈ 0,745");
         }
 
         // ───────────────────────────────────────── RayonCoinLePlusLoin ─────────────────────────────────────────
@@ -185,7 +187,8 @@ namespace MafiaCleanCity.Tests.PlayMode
             Texture2D t = s.texture;
             Assert.AreEqual(128, t.width);
             Assert.AreEqual(128, t.height);
-            Proche(A, t.GetPixel(64, 64), 4f / 255f, "le centre est le premier arrêt");
+            // Le pixel (64, 64) a son centre à 0,5·√2 px du centre de la texture : t = 0,011, pas 0 (réfuté au créneau à 4/255).
+            Proche(Css(0.5f * Mathf.Sqrt(2f) / 64f, 0.6f), t.GetPixel(64, 64), TolExacte, "le centre : premier arrêt, à t ≈ 0,011");
             // r = 1 au MILIEU du bord : le pixel (127, 64) a son centre à 63,5 px du centre pour un demi-côté de 64.
             Proche(Css(63.5f / 64f, 0.6f), t.GetPixel(127, 64), TolInterieure, "milieu du bord droit : t ≈ 0,99");
             Proche(Css(63.5f / 64f, 0.6f), t.GetPixel(64, 0), TolInterieure, "milieu du bord bas : même t (un CERCLE, pas une ellipse)");
@@ -212,10 +215,19 @@ namespace MafiaCleanCity.Tests.PlayMode
             Assert.Greater(t.GetPixel(0, 0).a, 0.95f, "coin bas-gauche : CARRÉ (rayon 0)");
             Assert.Greater(t.GetPixel(d - 1, 0).a, 0.95f, "coin bas-droit : CARRÉ (rayon 0)");
             Assert.Greater(t.GetPixel(d / 2, d / 2).a, 0.95f, "centre plein");
-            // Le quart de cercle est bien là : sur la diagonale du coin haut-gauche, à 26·(1 − 1/√2) ≈ 7,6 px du coin on est SUR le bord.
-            int k = Mathf.RoundToInt(26f * (1f - 1f / Mathf.Sqrt(2f)));
-            float surLeBord = t.GetPixel(k, d - 1 - k).a;
-            Assert.That(surLeBord, Is.GreaterThan(0.05f).And.LessThan(0.95f), "diagonale du coin : la rampe anti-crénelée du rayon");
+            // Le quart de cercle est bien là : en descendant la diagonale depuis le coin haut-gauche, l'alpha passe de 0 à 1 par une
+            // RAMPE (au moins un pixel strictement entre les deux), et jamais ne redescend. (La v1 visait un pixel calculé avec un
+            // centre de courbure décalé d'un texel : réfuté au créneau.)
+            int rampe = 0; float avant = -1f;
+            for (int k = 0; k < 26; k++)
+            {
+                float a = t.GetPixel(k, d - 1 - k).a;
+                if (a > 0.05f && a < 0.95f) rampe++;
+                Assert.GreaterOrEqual(a, avant - 1e-4f, $"diagonale : l'alpha ne redescend pas (k = {k})");
+                avant = a;
+            }
+            Assert.GreaterOrEqual(rampe, 1, "diagonale du coin : la rampe anti-crénelée du rayon");
+            Assert.Greater(avant, 0.95f, "au bout de la diagonale, plein");
 
             // ⚠️ La surcharge EXISTANTE ne bouge pas : `RoundedRectMask(26)` arrondit ses QUATRE coins, et les quatre rayons
             // égaux reproduisent sa texture pixel pour pixel.
