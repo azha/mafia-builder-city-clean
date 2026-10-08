@@ -324,15 +324,15 @@ namespace MafiaCleanCity.Shell
             // ville, ses districts et les blocs de l'Accueil traversaient tout, rendant l'écran
             // illisible. Le défaut ne se voit PAS en lisant le contrôleur : il naît de ce qu'il y a
             // DERRIÈRE, donc seule une capture prise sur le chemin réel pouvait le montrer.
-            // ⇒ Le voile est opaque, pas un scrim : cet écran REMPLACE la vue, il ne la nuance pas.
-            Image voile = gameObject.AddComponent<Image>();
-            voile.color = DesignTokens.Current.surfaceBase;
-            voile.raycastTarget = true;   // et il AVALE les clics : sans ça, un doigt qui tombe entre
-                                          // deux éléments actionne l'écran de dessous.
+            // ⇒ Le fond est opaque, pas un scrim : cet écran REMPLACE la vue, il ne la nuance pas.
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) tient ces deux rôles : la scène « verge »
+            // nuit + le voile + le TAPIS de feutre (radial 90 % 60 % à 50 % 30 %, coins 26/26/0/0) couvrent TOUT le cadre (opaque), et
+            // `Decor/Capteur` (raycast) AVALE les clics — sans ça, un doigt qui tombe entre deux éléments actionne l'écran de dessous.
+            DecorPose decor = DecorDeScene.Poser(transform, DecorsDeScene.DecisionDetail);
 
             VerticalLayoutGroup vlg = gameObject.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset((int)Px(10f), (int)Px(10f),
-                                         (int)ShellChrome.TopInsetPx + (int)Px(6f),
+                                         0,   // le haut : sous la bande de scène (ReserverLaBande, juste dessous)
                                          (int)ShellChrome.BottomInsetPx + (int)Px(6f));
             vlg.spacing = Px(8f);
             vlg.childControlWidth = true;
@@ -340,6 +340,8 @@ namespace MafiaCleanCity.Shell
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
             vlg.childAlignment = TextAnchor.LowerCenter;
+            // §5.6 du design : la pile commence SOUS max(barre, bande de scène 34 %) ; alignée en BAS, la table reste sur le feutre.
+            DecorDeScene.ReserverLaBande(vlg, decor, Px(6f));
 
             // ── la table de jeu : la carte + le jeton structurel, côte à côte ────────────────
             GameObject table = Bloc("TableDeJeu", transform, horizontal: true, espace: Px(8f));

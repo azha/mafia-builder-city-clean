@@ -24,7 +24,7 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "⑤", "㊲", "㉓",   // ③ : DéjàLivré (amendement du 08/10), hors de cette dette   // ㊵, ㊳, ㉜, ㉚, ㉛, ㉝, ㉞, ㉙ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ ⑮ ⑰ ㉒ ㉔ ⑭ (à CLIENT-2, f2)
+            "㊲", "㉓",   // ③ : DéjàLivré (amendement du 08/10), hors de cette dette   // ㊵, ㊳, ㉜, ㉚, ㉛, ㉝, ㉞, ㉙, ⑤ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ ⑮ ⑰ ㉒ ㉔ ⑭ (à CLIENT-2, f2)
             "㉘", "⑱",
         };
 
@@ -44,6 +44,9 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ⑤ (08/10) — le feutre posé ; la carte (BordCarte, FiletCarte), le jeton, les pips, le tampon, le pied : traits propres du
+            //   contrôleur (CLIENT-1) — à déléguer à Filets.
+            { "⑤", new[] { "Bandes", "CarteOr", "CarteOrTranchee", "Deja", "I", "I_2", "LigneOr", "Mano", "On", "Piece", "Piece_2", "PlaqueLaiton", "TamponDiag", "TapisFeutre" } },
             // ㉙ (08/10) — toutes les recettes de blocs (tableau, sections, coups, pied) : blocs de CLIENT-1 — à déléguer à Filets.
             { "㉙", new[] { "Av", "Av_2", "Bas", "Doss", "Ecu", "Ecu_2", "Entete", "Env", "Fam", "FamVisee", "Geste", "GesteRouge", "L", "Mano", "Rappel", "Res", "Res_2", "Res_3", "Res_4", "Rien", "ViseeTag" } },
             // ⑭ (08/10) — la tôle posée ; les blocs de l'écran (le manomètre de CLIENT-3 à venir, les fiches de la semaine) :

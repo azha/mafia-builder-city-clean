@@ -97,6 +97,12 @@ namespace MafiaCleanCity.Tests.PlayMode
 
         private static void Detruire(Texture2D t) { if (t != null) UnityEngine.Object.DestroyImmediate(t); }
 
+        private static void EtirerPlein(RectTransform rt)
+        {
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+        }
+
         // ════════════════════════════════════════════════════════════════════════════ catalogue (pur)
 
         [Test]
@@ -503,6 +509,48 @@ namespace MafiaCleanCity.Tests.PlayMode
                 }
             }
             finally { banc.Dispose(); }
+        }
+
+        [UnityTest]
+        public IEnumerator D4j_DecisionDetail_UnClicHorsDuContenu_TombeSurLeCapteur_EtNeTraversePas()
+        {
+            // ⑤ : l'aplat opaque qui AVALAIT les clics a été remplacé par le décor (CLIENT-2, 08/10). L'EFFET gardé (demande de
+            // CLIENT-1) : un clic hors du contenu tombe sur `Decor/Capteur` de ⑤ et ne traverse pas vers l'écran de dessous.
+            var banc = new Banc();
+            GameObject dessous = null, ecranGo = null;
+            try
+            {
+                dessous = new GameObject("EcranDeDessous", typeof(RectTransform), typeof(CanvasRenderer));
+                dessous.transform.SetParent(banc.Racine, false);
+                EtirerPlein((RectTransform)dessous.transform);
+                Image piege = dessous.AddComponent<Image>();
+                piege.color = Color.clear;
+                piege.raycastTarget = true;   // il prendrait le clic s'il traversait
+
+                ecranGo = new GameObject("EcranDecision", typeof(RectTransform));
+                ecranGo.transform.SetParent(banc.Racine, false);
+                EtirerPlein((RectTransform)ecranGo.transform);
+                ecranGo.AddComponent<DecisionDetailScreenController>();
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+
+                Assert.IsNull(ecranGo.GetComponent<Image>(), "plus d'aplat sur le nœud de l'écran : le décor tient le rôle");
+                Assert.IsNotNull(ecranGo.GetComponentInChildren<DecorPose>(true), "le décor de scène est posé sur ⑤");
+                // Dans la bande de scène (en haut : la pile de ⑤ est alignée en BAS), hors de tout contenu.
+                var ped = new PointerEventData(EventSystem.current) { position = new Vector2(W / 2f, H * 0.9f) };
+                var hits = new List<RaycastResult>();
+                banc.Canvas.GetComponent<GraphicRaycaster>().Raycast(ped, hits);
+                Assert.IsNotEmpty(hits, "le clic touche quelque chose");
+                Assert.AreEqual("Capteur", hits[0].gameObject.name, "premier touché : " + string.Join(", ", hits.Select(h => h.gameObject.name)));
+                Assert.IsTrue(hits[0].gameObject.transform.IsChildOf(ecranGo.transform), "le Capteur est celui de ⑤");
+                Assert.AreNotSame(dessous, hits[0].gameObject, "le clic ne traverse pas vers l'écran de dessous");
+            }
+            finally
+            {
+                if (ecranGo != null) UnityEngine.Object.DestroyImmediate(ecranGo);
+                if (dessous != null) UnityEngine.Object.DestroyImmediate(dessous);
+                banc.Dispose();
+            }
         }
 
         [UnityTest]
