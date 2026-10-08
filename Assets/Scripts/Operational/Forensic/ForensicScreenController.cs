@@ -333,6 +333,9 @@ namespace MafiaCleanCity.Operational
 
             GameObject col = NouveauUI("Identite", ligne.transform);
             var colLe = col.AddComponent<LayoutElement>(); colLe.flexibleWidth = 1f; colLe.minWidth = 0f;
+            // Q1 : la colonne prend le RESTE, jamais sa largeur « préférée » — un nom long (non coupé en lignes, « … ») la ferait sinon dépasser et le groupe
+            // horizontal rognerait le mot de statut (mesuré au créneau du 08/10 : 133 → 99 px avec un nom de 55 caractères).
+            colLe.preferredWidth = 0f;
             var v = col.AddComponent<VerticalLayoutGroup>();
             v.spacing = Px(2f);
             v.childControlWidth = true; v.childControlHeight = true;
