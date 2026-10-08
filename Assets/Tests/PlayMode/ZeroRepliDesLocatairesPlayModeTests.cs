@@ -44,7 +44,7 @@ namespace MafiaCleanCity.Operational.Tests
         {
             // ⚠️ COUPE du 2026-09-26 (créneau CLIENT-1, cumul 9e9704e1) contre la pile reconstruite sur main 256de0f8 (bundle fr 1996
             // clés) : la règle (2) a rougi, 37 des 43 clés de la dette SONT servies (vente.vide, accueil.suite ligne E, filiere.etat, ㉞…)
-            // — retirées. Restent 6 clés, non servies à 256de0f8 :
+            // — retirées. Restent 6 clés, non servies à 256de0f8 (7 avec E2a, ci-dessous) :
             "filiere.bloc.blanchir",       // le mot du bouton de ㊵ (clé dérivée) — demandé à l'atelier
             "building.action.blanchir",
             // B5 (table 79 @f81ad7cb) : l'écran d'échec de démarrage et la ligne de ㉒.
@@ -52,6 +52,9 @@ namespace MafiaCleanCity.Operational.Tests
             "demarrage.echec.la_ville_ne_repond_pas_verifiez_votre_connexion_puis_reessayez",
             "demarrage.echec.reessayer",
             "reglages.bloc.votre_partie_vit_sur_cet_appareil_desinstaller_l_appli_l_efface",
+            // E2a (08/10) : la ligne « Mouvement réduit » de ⑲ (REUSE du canon `screen_14`, mot du canon « Mouvement réduit ») — clé dérivée,
+            // non servie à 83b4f291 ; voir `Tools/juge-donnees/i18n/cles-neuves-e2a-2026-10-08.md`.
+            "reglages.bloc.mouvement_reduit",
             // COLLECTE (CLIENT-1, 07/10) — la jauge de ㉟ se dit PAR LA VALEUR SERVIE (`CollecteMots.Bande`) : table 75, lignes B-*. Le back
             // (lot/boucle-argent @615ca764) ne les sert pas AVANT le déploiement du lot COLLECTE ; le préfixe `vente.caisse.bande.` est
             // « à confirmer par le back » (atelier). La règle (2) rougit le jour où l'une est servie : la retirer alors. 6 entrées.

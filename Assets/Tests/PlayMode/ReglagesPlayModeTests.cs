@@ -7,6 +7,8 @@ using UnityEngine.UI;
 using MafiaCleanCity.Account.Profile;
 using MafiaCleanCity.Account.Settings;
 using MafiaCleanCity.I18n;
+using MafiaCleanCity.Mouvements;
+using MafiaCleanCity.Mouvements.Tests;
 using MafiaCleanCity.Onboarding;
 using Object = UnityEngine.Object;
 
@@ -19,6 +21,8 @@ namespace MafiaCleanCity.CityMap.Tests
     //   S3  « Fermer le coffre » est VIVANT (plus « Se déconnecter — pas encore ») ; « Fermer partout » et « Tout effacer » restent
     //       éteints (L11, L10 : le back ne les sert pas) ; « La langue de la maison » (D14)
     //   S4  forme G : `meta_market_visibility_enabled`, `visibilityEnabled` et `signed_out` sont DÉCLARÉS (JsonUtility les lit)
+    //   S5  E2a — « Mouvement réduit » (REUSE du canon `screen_14`) : le toucher bascule le réglage du joueur, le persiste et pose le niveau
+    //       de la régie, dans les DEUX sens ; un autre toucher ne le change pas
     [Category("Reglages")]
     public class ReglagesPlayModeTests
     {
@@ -27,6 +31,9 @@ namespace MafiaCleanCity.CityMap.Tests
         [TearDown]
         public void TearDown()
         {
+            MouvementReduit.Stockage = new StockageMouvementReduitPlayerPrefs();
+            MouvementReduit.LectureDuSysteme = () => false;
+            RegieMouvement.Oublier();
             I18nCatalog.Oublier();
             foreach (GameObject g in montes) if (g != null) Object.DestroyImmediate(g);
             montes.Clear();
@@ -94,6 +101,37 @@ namespace MafiaCleanCity.CityMap.Tests
             Ligne(e, "FermerLeCoffre").onClick.Invoke();
             Assert.IsTrue(e.DeconnexionDemandee, "le geste part");
             Assert.IsFalse(e.CoffreFerme, "sans réponse `signed_out: true`, le coffre n'est PAS dit fermé (garde de valeur)");
+        }
+
+        [Test]
+        public void S5_MouvementReduit_LeToucherBascule_Persiste_EtPoseLeNiveauDeLaRegie()
+        {
+            // E2a (design §5) — le réglage du joueur : la ligne reflète l'état STOCKÉ, le toucher l'inverse, le persiste (le stockage de test
+            // tient la place de `PlayerPrefs`, que ce test ne touche jamais) et pose `Reduit` / `Plein` sur la régie
+            var stockage = new StockageEnMemoire();
+            MouvementReduit.Stockage = stockage;
+            MouvementReduit.LectureDuSysteme = () => false;
+            Regie regie = RegieMouvement.PourTest();
+            foreach (bool depart in new[] { false, true })
+            {
+                stockage.Valeur = depart;
+                SettingsScreenController e = Ecran(false, true);
+                Assert.AreEqual(depart, e.BasculeMouvementReduitAffichee, $"réglage {depart} : la bascule le montre");
+                CollectionAssert.Contains(Textes(e), "Mouvement réduit", "le mot du canon (`screen_14:208`)");
+
+                Ligne(e, "Bascule_MouvementReduit").onClick.Invoke();
+                Assert.AreEqual(!depart, stockage.Valeur, $"réglage {depart} : le toucher l'inverse ET le persiste");
+                Assert.AreEqual(depart ? PolitiqueMouvement.Plein : PolitiqueMouvement.Reduit, regie.Politique, "et la régie est réglée tout de suite");
+                Assert.AreEqual(!depart, e.BasculeMouvementReduitAffichee, "l'écran se redessine sur le nouvel état");
+            }
+
+            // contrôle négatif : une AUTRE bascule ne touche ni le réglage ni le niveau
+            stockage.Valeur = false;
+            MouvementReduit.Appliquer();
+            SettingsScreenController autre = Ecran(false, true);
+            Ligne(autre, "Bascule_Marche").onClick.Invoke();
+            Assert.IsFalse(stockage.Valeur);
+            Assert.AreEqual(PolitiqueMouvement.Plein, regie.Politique);
         }
 
         [Test]

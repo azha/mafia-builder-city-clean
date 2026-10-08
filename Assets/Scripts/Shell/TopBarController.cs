@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
+using MafiaCleanCity.Mouvements;
 using MafiaCleanCity.Operational; // REUSE DashboardClient (GetMe/GetWallet) + MeDto/WalletDto (envelope/payload/data)
 using MafiaCleanCity.Theme;
 using TMPro;
@@ -271,6 +272,15 @@ namespace MafiaCleanCity.Shell
         private Image hairline;
         private Image boitierRing;
         private Color calmGoldColor;
+
+        // E2a (design-couche-mouvement.md §9) — les mouvements du chrome vivent dans la régie (`Mouvements/`), plus ici : ce
+        // composant n'a plus d'`Update`. `Handle.Nul` : pas de régie (hôte nu), refus, ou rien d'attaché.
+        private Handle poulsCerclage = Handle.Nul, poulsFilet = Handle.Nul, tremble = Handle.Nul;
+        // Où en est le virage du filet et de l'anneau : faux = laiton calme, vrai = braise. `de` du prochain `Transitionner`.
+        private bool filetChaud, anneauChaud;
+        private Handle filetVire = Handle.Nul, anneauVire = Handle.Nul;
+        // Faux tant que l'aiguille n'a pas eu sa première pose (directe, sans balayage) : un cadran qui s'allume ne balaie pas.
+        private bool aiguillePosee;
 
         /// <summary>Gouttière horizontale du chrome. La VALEUR a déménagé dans `ShellChrome.GutterX`
         /// (assembly `ShellContracts`) le 2026-08-21 : les locataires en ont besoin pour s'y aligner
@@ -699,13 +709,29 @@ namespace MafiaCleanCity.Shell
             EnsureInitialized();
             CitywideHeatBucket = bucket;
             CitywideHeatRank = HeatBucketResolver.ResolveRank(bucket);
+            float ancienAngle = HeatNeedleAngleDegrees;
             HeatNeedleAngleDegrees = HeatBucketResolver.NeedleAngleDegrees(bucket);
-            heatNeedle.localEulerAngles = new Vector3(0f, 0f, HeatNeedleAngleDegrees);
+            PoserLAiguille(ancienAngle, HeatNeedleAngleDegrees);
             gaugeValueText.text = HeatBucketResolver.Label(bucket);
             // Les quatre libellés n'ont pas la même largeur : la boîte suit le texte, sinon elle
             // reste dimensionnée pour celui du premier rendu.
             AjusterALEncre(gaugeValueText, ManometreDiameter - BoitierRingThicknessPx * 2f - 1f - 8f);
             UpdateAlarmState();
+        }
+
+        /// <summary>B10 (design §9) — la première pose de l'aiguille est DIRECTE (suivie de `Rebaser` : la base du transform est la
+        /// propriété de ce composant) ; ensuite l'aiguille BALAIE de l'ancienne bande à la nouvelle (`chrome.aiguille.balayage`,
+        /// 0,7 s). Le tremblement `Additif` de la descente se pose par-dessus. Sans régie, ou si elle refuse : pose directe.</summary>
+        private void PoserLAiguille(float ancien, float bande)
+        {
+            if (aiguillePosee)
+            {
+                if (Mathf.Approximately(ancien, bande)) return;
+                if (!RegieMouvement.Transitionner(CatalogueHud.AiguilleBalayage, heatNeedle, ancien, bande).EstNul) return;
+            }
+            heatNeedle.localEulerAngles = new Vector3(0f, 0f, bande);
+            RegieMouvement.Rebaser(heatNeedle, Propriete.Rotation);
+            aiguillePosee = true;
         }
 
         // ----------------------------------------------------------- la descente (①-4)
@@ -728,11 +754,27 @@ namespace MafiaCleanCity.Shell
                     : LegendeCalme;
                 AjusterALEncre(gaugeCaption, gaugeCaptionLargeurMax);
             }
-            if (!descente)
+            if (descente)
+            {
+                // `.tel.descente .medaillon .boitier{animation:pouls}` · `.tel.descente .barre::after{animation:pouls}` · l'aiguille
+                // tremble : trois pistes `Alerte` de la régie (le pouls est UN mouvement sur deux cibles).
+                if (boitierRing != null) poulsCerclage = RegieMouvement.Attacher(CatalogueHud.Pouls, boitierRing.rectTransform, Reglage.Defaut);
+                if (hairline != null) poulsFilet = RegieMouvement.Attacher(CatalogueHud.Pouls, hairline.rectTransform, Reglage.Defaut);
+                if (heatNeedle != null) tremble = RegieMouvement.Attacher(CatalogueHud.Tremble, heatNeedle, Reglage.Defaut);
+            }
+            else
             {
                 // Retour à l'état NOMMÉ : opacité pleine, aiguille sur sa bande — jamais « la dernière image du battement ».
-                AppliquerPouls(1f);
-                if (heatNeedle != null) heatNeedle.localEulerAngles = new Vector3(0f, 0f, HeatNeedleAngleDegrees);
+                // `Detacher` restitue (le `CanvasGroup` du pouls revient à 1) ; l'aiguille est réécrite par ce composant, donc `Rebaser`.
+                RegieMouvement.Detacher(poulsCerclage);
+                RegieMouvement.Detacher(poulsFilet);
+                RegieMouvement.Detacher(tremble);
+                poulsCerclage = poulsFilet = tremble = Handle.Nul;
+                if (heatNeedle != null)
+                {
+                    heatNeedle.localEulerAngles = new Vector3(0f, 0f, HeatNeedleAngleDegrees);
+                    RegieMouvement.Rebaser(heatNeedle, Propriete.Rotation);
+                }
             }
             UpdateAlarmState();
         }
@@ -742,45 +784,22 @@ namespace MafiaCleanCity.Shell
         /// <summary>①-4 — la légende du médaillon telle qu'affichée (« CHALEUR » / « DESCENTE »).</summary>
         public string GaugeCaptionText => gaugeCaption != null ? gaugeCaption.text : null;
 
-        /// <summary>`@keyframes pouls{0%,100%{opacity:1}50%{opacity:.45}}`, 1,1 s ; l'`ease` approché par un `SmoothStep`.</summary>
-        public static float Pouls(float t)
-        {
-            float phase = Mathf.Repeat(t, PoulsPeriodeS) / PoulsPeriodeS;
-            float m = phase < 0.5f ? phase * 2f : (1f - phase) * 2f;
-            return Mathf.Lerp(1f, PoulsCreux, Mathf.SmoothStep(0f, 1f, m));
-        }
+        /// <summary>`@keyframes pouls{0%,100%{opacity:1}50%{opacity:.45}}`, 1,1 s, `ease` à chaque image clé. ENVELOPPE (design §1) :
+        /// elle lit la courbe du catalogue (`chrome.pouls`), la même que celle de la régie — plus de `SmoothStep` (à p = 0,125 il
+        /// rendait 0,914 pour 0,775 mesuré).</summary>
+        public static float Pouls(float t) => LaCourbe(CatalogueHud.Pouls.Mouvement, t);
 
-        /// <summary>`@keyframes tremble{0%,100%{rotate(52deg)}50%{rotate(56deg)}}`, 0,14 s : 4° VERS LE CHAUD, et retour.</summary>
-        public static float Tremblement(float t)
-        {
-            float phase = Mathf.Repeat(t, TremblePeriodeS) / TremblePeriodeS;
-            float m = phase < 0.5f ? phase * 2f : (1f - phase) * 2f;
-            float versLeChaud = Mathf.Sign(HeatBucketResolver.NeedleAngleDegrees(HeatBucketResolver.Rank.Burning)
-                                           - HeatBucketResolver.NeedleAngleDegrees(HeatBucketResolver.Rank.Cold));
-            return versLeChaud * TrembleAmplitudeDeg * Mathf.SmoothStep(0f, 1f, m);
-        }
+        /// <summary>`@keyframes tremble{0%,100%{rotate(52deg)}50%{rotate(56deg)}}`, 0,14 s : 4° VERS LE CHAUD, et retour. ENVELOPPE :
+        /// la courbe du catalogue (`chrome.tremble`), dans le repère d'Unity (`Rotation` Unity = − rotation CSS, design §2) : −4° à
+        /// mi-période, comme `4f * versLeChaud` que le test épinglait.</summary>
+        public static float Tremblement(float t) => LaCourbe(CatalogueHud.Tremble.Mouvement, t);
 
-        private void Update()
+        private static float LaCourbe(MouvementDefini m, float t)
         {
-            if (!Descente) return;
-            float t = Time.unscaledTime;
-            AppliquerPouls(Pouls(t));
-            // `HeatNeedleAngleDegrees` reste la valeur de la BANDE (contrat pinné) : seul le transform tremble autour.
-            if (heatNeedle != null)
-                heatNeedle.localEulerAngles = new Vector3(0f, 0f, HeatNeedleAngleDegrees + Tremblement(t));
-        }
-
-        /// <summary>`.tel.descente .medaillon .boitier{animation:pouls}` et `.tel.descente .barre::after{animation:pouls}` :
-        /// l'opacité du cerclage et du filet, rien d'autre.</summary>
-        private void AppliquerPouls(float alpha)
-        {
-            if (boitierRing != null) { Color c = boitierRing.color; c.a = alpha; boitierRing.color = c; }
-            if (hairline != null) { Color c = hairline.color; c.a = alpha; hairline.color = c; }
+            return Courbes.EvaluerCanal(m.Canaux[0], Mathf.Repeat(t, m.PeriodeS) / m.PeriodeS);
         }
 
         private const string LegendeCalme = "CHALEUR";
-        private const float PoulsPeriodeS = 1.1f, PoulsCreux = 0.45f;
-        private const float TremblePeriodeS = 0.14f, TrembleAmplitudeDeg = 4f;
         private TextMeshProUGUI gaugeCaption;
         private float gaugeCaptionLargeurMax;
 
@@ -819,8 +838,8 @@ namespace MafiaCleanCity.Shell
                 //   c'est déjà lui que l'arc chaud du cadran emploie, donc un seul `--braise` dans
                 //   tout le chrome, comme il n'y a qu'un seul or.
                 Color warmedBrass = DesignTokens.Current.hudGaugeArcHot;
-                if (hairline != null) hairline.color = warmedBrass;
-                if (boitierRing != null) boitierRing.color = warmedBrass;
+                // E2a (B6/B7) : le filet et l'anneau VIRENT vers ce jeton par la régie (`chrome.filet.virage`, `chrome.anneau.virage`,
+                // 0,6 s `ease`), plus aucune écriture directe de `color` sur ces deux cibles — voir `Virer`, en fin de méthode.
                 // ⛔⛔ LE CANON A QUATRE RÈGLES `.chaud`, CE CODE N'EN APPLIQUAIT QUE DEUX. Un juge
                 // ⊥ (r7 de ①) mesure « Brûlant » et « Aube » restés CRÈME là où la maquette les
                 // passe en braise. Les deux manquantes portent sur du TEXTE, les deux appliquées
@@ -833,8 +852,6 @@ namespace MafiaCleanCity.Shell
             }
             else
             {
-                if (hairline != null) hairline.color = calmGoldColor;
-                if (boitierRing != null) boitierRing.color = calmGoldColor;
                 // Retour à l'ÉTAT NOMMÉ de construction, jamais à « la dernière couleur connue » :
                 // un état qui ne sait pas revenir laisse une braise permanente au premier pic de
                 // chaleur — la variante « allumé une fois, allumé pour toujours » que ce dépôt a
@@ -846,12 +863,48 @@ namespace MafiaCleanCity.Shell
             // `.tel.descente .medaillon .boitier{border-color:var(--braise)}`, PAR-DESSUS l'état de la ville : une descente
             // dans un district tiède reste une descente. La phase (aile droite) n'est pas dans ces règles : elle suit la ville.
             Color braise = DesignTokens.Current.hudGaugeArcHot;
-            if (Descente)
-            {
-                if (boitierRing != null) boitierRing.color = braise;
-                if (gaugeValueText != null) gaugeValueText.color = braise;
-            }
+            if (Descente && gaugeValueText != null) gaugeValueText.color = braise;
             if (gaugeCaption != null) gaugeCaption.color = Descente ? braise : DesignTokens.Current.hudCremeSecondary;
+            // B6/B7 — le filet suit la ville ; l'anneau suit la ville OU la descente (la braise de la descente passe PAR-DESSUS).
+            Virer(CatalogueHud.FiletVirage, hairline, ref filetChaud, ref filetVire, alarm);
+            Virer(CatalogueHud.AnneauVirage, boitierRing, ref anneauChaud, ref anneauVire, alarm || Descente);
+        }
+
+        /// <summary>B6/B7 (design §3, §9) — le virage laiton ↔ braise d'un trait, 0,6 s : un `Transitionner` de la régie, du virage
+        /// où il en est (`chaud`) vers celui qu'on veut. Un virage vers le laiton qui finit REJOINT la base et se libère ; un virage
+        /// vers la braise TIENT (ce composant n'écrit plus la couleur). Sans régie (hôte nu) ou si elle refuse, la couleur est posée
+        /// d'un coup, comme avant : la ville qui brûle se voit toujours (et le virage tenu d'avant, s'il y en a un, est détaché :
+        /// il réécrirait sinon sa braise par-dessus).</summary>
+        private void Virer(Entree virage, Image cible, ref bool chaud, ref Handle tenu, bool versLeChaud)
+        {
+            if (cible == null) return;
+            if (chaud == versLeChaud)
+            {
+                // Une piste qui TIENT la braise peut avoir été libérée par la régie (cible inactive plus de 30 s, `Regie.Tick`) : la
+                // couleur est alors revenue au laiton sans que ce composant le sache (revue de code E2a, M2). On la repose d'un coup.
+                if (chaud && !tenu.EstNul && RegieMouvement.Courante != null && !RegieMouvement.EstVivant(tenu))
+                {
+                    Color c = DesignTokens.Current.hudGaugeArcHot;
+                    c.a = cible.color.a;
+                    cible.color = c;
+                    tenu = Handle.Nul;
+                }
+                return;
+            }
+            // `de` = ce que le pixel montre : si un virage est en vol (ou tient), sa valeur écrite, pas la cible demandée — un virage
+            // inversé en plein vol repart de là où il en est (revue de code E2a, M1 : le CSS `transition` ne saute pas).
+            float de = chaud ? 1f : 0f;
+            if (RegieMouvement.ValeurEcrite(cible.rectTransform, Propriete.Melange, out float enVol)) de = enVol;
+            Handle h = RegieMouvement.Transitionner(virage, cible.rectTransform, de, versLeChaud ? 1f : 0f);
+            if (h.EstNul)
+            {
+                RegieMouvement.Detacher(tenu);
+                Color c = versLeChaud ? DesignTokens.Current.hudGaugeArcHot : calmGoldColor;
+                c.a = cible.color.a;
+                cible.color = c;
+            }
+            tenu = h;
+            chaud = versLeChaud;
         }
 
         private static Color WithAlpha(Color c, float a)

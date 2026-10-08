@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MafiaCleanCity.Mouvements;
 
 namespace MafiaCleanCity.Shell
 {
@@ -24,6 +25,13 @@ namespace MafiaCleanCity.Shell
             "JetonDeStructure.Utilises",
             "JetonDeStructure.PlafondAtteint",
             "PhaseDeSession.DayPhase",   // classe « moment en dur » (26/09) : la phase servie à l'ouverture
+            // E2a (08/10) : la régie de mouvement publiée par le shell, son niveau et les sources du « Mouvement réduit »
+            "RegieMouvement.Courante",
+            "RegieMouvement.SansRegie",
+            "RegieMouvement.PolitiqueGlobale",
+            "RegieMouvement.pourTest",
+            "MouvementReduit.Stockage",
+            "MouvementReduit.LectureDuSysteme",
         };
 
         /// <summary>Les statiques mutables de `Shell` que cette assembly NE PEUT PAS rendre (`ShellContracts` ne voit pas `AppShell` :
@@ -39,7 +47,8 @@ namespace MafiaCleanCity.Shell
         public static bool Vierge =>
             ShellChrome.TopInsetPx == 0f && ShellChrome.BottomInsetPx == 0f
             && !JetonDeStructure.Connu && JetonDeStructure.Utilises == 0 && !JetonDeStructure.PlafondAtteint
-            && PhaseDeSession.DayPhase == null;
+            && PhaseDeSession.DayPhase == null
+            && RegieMouvement.Courante == null && RegieMouvement.SansRegie == 0;
 
         /// <summary>Ce qui est publié, pour qu'un journal NOMME l'état laissé (vide si <see cref="Vierge"/>).</summary>
         public static string Decrire()
@@ -55,6 +64,8 @@ namespace MafiaCleanCity.Shell
             ShellChrome.PublierInsets(0f, 0f);
             JetonDeStructure.OublierPourTest();
             PhaseDeSession.Oublier();
+            RegieMouvement.Oublier();   // la régie du shell (retirée du registre), celle d'un test (détruite), le niveau et le compteur
+            MouvementReduit.OublierPourTest();
         }
     }
 }

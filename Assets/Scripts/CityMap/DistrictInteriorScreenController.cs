@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using MafiaCleanCity.Mouvements;
 using MafiaCleanCity.Theme;
 using TMPro;
 using MafiaCleanCity.Shell;   // ProceduralUI (médaillon du marqueur), ShellChrome — assembly ShellContracts
@@ -49,7 +50,8 @@ namespace MafiaCleanCity.CityMap
     // W3.U2 C10 (design §3 C10, engagement 7 — U-12 : boucles ambiantes budgétées) : AU PLUS
     // MaxAmbientLoops (4) micro-animations actives simultanément, quel que soit le nombre de sources
     // qui les réclameraient. TryStartAmbientLoop est le SEUL point d'entrée qui attache
-    // AmbientPulseLoop — les 3 bindings DYNAMIQUES déjà branchés à un fait du back (néon EARNING,
+    // une piste d'ambiance de la régie (E2a : les trois boucles sont des entrées `Ambiance` du catalogue du HUD —
+    // `CatalogueHud.Neon/Fumee/Scintillement` ; l'ancien composant à `Update` est supprimé) — les 3 bindings DYNAMIQUES déjà branchés à un fait du back (néon EARNING,
     // fumée ACTIVE, grésillement de maintenance) sont candidats, dans l'ORDRE où BuildBuildingCell
     // les construit déjà (déterministe — pas de tri ajouté). Binding 1+2 (fenêtre ambre, la
     // possession — l'état le plus commun et le moins événementiel) N'EST PAS candidat : l'intensité
@@ -161,8 +163,8 @@ namespace MafiaCleanCity.CityMap
         /// <summary>U-12 (C10-F2, engagement 7) — le nombre de boucles ambiantes RÉELLEMENT
         /// démarrées ce rendu (jamais plus de <see cref="MaxAmbientLoops"/>, quel que soit le
         /// nombre de sources candidates). "cible : le compte à l'exécution" (C10-F2) — un compteur
-        /// d'intention ne suffirait pas ; TryStartAmbientLoop attache un composant RÉEL par unité
-        /// comptée ici.</summary>
+        /// d'intention ne suffirait pas ; TryStartAmbientLoop attache une piste RÉELLE de la régie par unité
+        /// comptée ici — quand une régie existe (un hôte nu compte les boucles que le budget admet, sans piste).</summary>
         public int ActiveAmbientLoopCount { get; private set; }
         /// <summary>Le budget lui-même — une PROPRIÉTÉ que le code fait tenir (C10-F2), pas une
         /// intention en prose. Exposé pour que le test ne duplique pas le nombre "4" en dur.</summary>
@@ -1466,7 +1468,7 @@ namespace MafiaCleanCity.CityMap
                     BuildStatePip(cell, "RevenueSign", 1, DesignTokens.Current.nightNeonGlow,
                         footprintW, footprintOffsetX, footprintBottomMargin, cellH);
                     RenderedNeonGlowCount++;
-                    TryStartAmbientLoop(cell.Find("OwnershipBadge/RevenueSign").gameObject);
+                    TryStartAmbientLoop(cell.Find("OwnershipBadge/RevenueSign").gameObject, CatalogueHud.Neon);
                 }
                 return;
             }
@@ -1487,7 +1489,7 @@ namespace MafiaCleanCity.CityMap
             if (earning)
             {
                 RenderedNeonGlowCount++;
-                TryStartAmbientLoop(signGo); // C10-F2 — candidat : néon RÉELLEMENT allumé, pas l'enseigne sombre
+                TryStartAmbientLoop(signGo, CatalogueHud.Neon); // C10-F2 — candidat : néon RÉELLEMENT allumé, pas l'enseigne sombre
             }
         }
 
@@ -1503,7 +1505,7 @@ namespace MafiaCleanCity.CityMap
                 BuildStatePip(cell, "ActivitySmoke", 2, DesignTokens.Current.nightSmoke,
                     footprintW, footprintOffsetX, footprintBottomMargin, cellH);
                 RenderedSmokeCount++;
-                TryStartAmbientLoop(cell.Find("OwnershipBadge/ActivitySmoke").gameObject);
+                TryStartAmbientLoop(cell.Find("OwnershipBadge/ActivitySmoke").gameObject, CatalogueHud.Fumee);
                 return;
             }
             Image ov = TryBuildOverlay(cell, "ActivitySmoke", building.operational_type, "actif", Color.white);
@@ -1521,7 +1523,7 @@ namespace MafiaCleanCity.CityMap
                 img.raycastTarget = false;
             }
             RenderedSmokeCount++;
-            TryStartAmbientLoop(smoke); // C10-F2 — candidat : opération active
+            TryStartAmbientLoop(smoke, CatalogueHud.Fumee); // C10-F2 — candidat : opération active
         }
 
         /// <summary>Binding 5 (§1.5 ligne 5) — l'enseigne qui grésille, "maintenance en retard".
@@ -1543,7 +1545,7 @@ namespace MafiaCleanCity.CityMap
                 BuildStatePip(cell, "MaintenanceFlicker", 3, DesignTokens.Current.accentWarning,
                     footprintW, footprintOffsetX, footprintBottomMargin, cellH);
                 RenderedMaintenanceFlickerCount++;   // le FAIT se compte, quelle que soit sa forme
-                TryStartAmbientLoop(cell.Find("OwnershipBadge/MaintenanceFlicker").gameObject);
+                TryStartAmbientLoop(cell.Find("OwnershipBadge/MaintenanceFlicker").gameObject, CatalogueHud.Scintillement);
                 return;
             }
             GameObject flicker = NewUI("MaintenanceFlicker", cell);
@@ -1555,7 +1557,7 @@ namespace MafiaCleanCity.CityMap
             // ajouté pour ce binding en C5 (DesignTokens.cs "District Night" n'en porte que 4).
             flicker.AddComponent<Image>().color = DesignTokens.Current.accentWarning;
             RenderedMaintenanceFlickerCount++;
-            TryStartAmbientLoop(flicker); // C10-F2 — candidat : dette de maintenance en retard
+            TryStartAmbientLoop(flicker, CatalogueHud.Scintillement); // C10-F2 — candidat : dette de maintenance en retard
         }
 
         /// <summary>U-11 (C10-F1, D10/§C2-bis) — un marqueur PAR ENTRÉE de `lieutenant_ids`, jamais un
@@ -1758,11 +1760,17 @@ namespace MafiaCleanCity.CityMap
         /// dégradée — sa présence reste un fait) mais SANS micro-motion : ce que C10-F2 vérifie porte
         /// sur le compte de boucles ACTIVES, jamais sur le compte de lumières rendues. Ordre d'appel
         /// = ordre de construction (déterministe, pas de tri ajouté) : les 4 premiers candidats
-        /// rencontrés gagnent le budget.</summary>
-        private void TryStartAmbientLoop(GameObject source)
+        /// rencontrés gagnent le budget.
+        /// E2a : la boucle est une piste `Ambiance` de la régie (`boucle` : néon, fumée ou scintillement du catalogue) posée sur la
+        /// source ; elle ne règle que son `CanvasGroup` (le `Graphic.color.a` initial de la source n'est pas touché). Le compte du
+        /// budget ne dépend PAS de la présence d'une régie (contrat épinglé) : sans régie la façade rend un handle nul, compté.</summary>
+        private void TryStartAmbientLoop(GameObject source, Entree boucle)
         {
             if (ActiveAmbientLoopCount >= MaxAmbientLoops) return;
-            source.AddComponent<AmbientPulseLoop>();
+            // Déphasage par instance — sans lui, les boucles pulseraient À L'UNISSON, ce qui LIT comme un seul effet plein écran plutôt
+            // que des sources indépendantes (engagement 7 : jamais un flash synchronisé global). Un `PhaseS` négatif = en avance.
+            float avance = Random.Range(0f, boucle.Mouvement.PeriodeS);
+            RegieMouvement.Attacher(boucle, (RectTransform)source.transform, Reglage.AvecPhase(-avance));
             ActiveAmbientLoopCount++;
         }
 
@@ -1838,6 +1846,7 @@ namespace MafiaCleanCity.CityMap
                 // L'exclusion porte sur l'IDENTITÉ de l'objet, jamais sur son nom : un nom se
                 // renomme, une référence non.
                 if (ficheRoot != null && enfant == (Transform)ficheRoot) continue;
+                RegieMouvement.DetacherSous(enfant);   // E2a : les pistes d'ambiance de ce sous-arbre s'en vont avec lui (la restitution ne peint plus rien)
                 Destroy(enfant.gameObject);
             }
         }

@@ -8,6 +8,7 @@ using UnityEngine.TestTools;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap;
 using MafiaCleanCity.I18n;
+using MafiaCleanCity.Mouvements;
 using MafiaCleanCity.Operational.Exceptions;
 using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
@@ -26,6 +27,9 @@ namespace MafiaCleanCity.CityMap.Tests
     //   B7  le titre de ① se tait pendant que le bandeau parle, y compris à travers un nouveau rendu ; sa couleur ne bouge pas
     //   B8  lot F : le nom du 1ᵉʳ rapport OUVERT, garde de VALEUR (instance vide, blanc, id recopié ⇒ rien), le 1ᵉʳ seulement
     //   B9  `Suivante` : la première annonce pas encore dite, jamais moins prioritaire que celle à l'écran
+    //   B10 E2a — le fondu est une piste de la RÉGIE (`bandeau.sortie`) : `groupe.alpha` RÉEL après `Effacer`, après un nouvel `Annoncer`
+    //       (`Opacite` rend 0 dès que `Visible` est faux : elle ne voit pas l'alpha), à la fin du fondu ; sans régie, il s'efface sans fondu
+    //   B11 E2a — la perte d'annonce : une Carte s'efface, une Descente arrive en plein fondu ⇒ alpha 1, `Visible`, porte la Descente
     [Category("EcranDistrict")]
     public class BandeauEphemerePlayModeTests
     {
@@ -34,6 +38,7 @@ namespace MafiaCleanCity.CityMap.Tests
         [TearDown]
         public void TearDown()
         {
+            RegieMouvement.Oublier();
             I18nCatalog.Oublier();
             foreach (GameObject g in montes) if (g != null) Object.DestroyImmediate(g);
             montes.Clear();
@@ -146,6 +151,142 @@ namespace MafiaCleanCity.CityMap.Tests
 
             Assert.IsTrue(bandeau.Annoncer(AnnonceDuBandeau.Choisir(false, null, "BURNING", null, null), null, 5f),
                 "une AUTRE annonce passe");
+        }
+
+        // ── E2a : le fondu de sortie est une piste de la régie ───────────────────────────────────────────────
+
+        /// <summary>Une régie de test à horloge posée à la main, AVANT tout bandeau : son `Update` rejoue le même `t` (idempotent), les
+        /// `Tick` de ce test sont les seuls qui comptent.</summary>
+        private static Regie RegieDeTest(out HorlogeFigee horloge)
+        {
+            Regie regie = RegieMouvement.PourTest();
+            horloge = (HorlogeFigee)regie.Horloge;
+            horloge.Temps = 100f;
+            regie.Tick(100f);
+            return regie;
+        }
+
+        private static void Avancer(Regie regie, HorlogeFigee horloge, float t)
+        {
+            horloge.Temps = t;
+            regie.Tick(t);
+        }
+
+        /// <summary>Attend (temps réel) que la minuterie ait passé la main à la régie : le fondu est une piste vivante.</summary>
+        private static IEnumerator AttendreLeFondu(Regie regie)
+        {
+            float fin = Time.realtimeSinceStartup + 3f;
+            while (regie.PistesVivantes == 0 && Time.realtimeSinceStartup < fin) yield return null;
+            Assert.AreEqual(1, regie.PistesVivantes, "la minuterie est finie : le fondu est UNE piste de la régie");
+        }
+
+        [UnityTest]
+        public IEnumerator B10_Effacer_RendLAlphaReel_EtUnNouvelAnnoncerLeRemetAUn()
+        {
+            Regie regie = RegieDeTest(out HorlogeFigee horloge);
+            BandeauEphemere bandeau = NouveauBandeau();
+            CanvasGroup groupe = bandeau.GetComponent<CanvasGroup>();
+            AnnonceDuBandeau a = AnnonceDuBandeau.Choisir(false, null, "HOT", null, null);
+            Assert.IsTrue(bandeau.Annoncer(a, null, 0.05f));
+            Assert.AreEqual(1f, groupe.alpha, "annoncé : alpha réel 1");
+            yield return AttendreLeFondu(regie);
+
+            // le fondu court sur la régie, pas sur une coroutine : 0,2 s sur 0,4 (linéaire) ⇒ alpha réel .5
+            Avancer(regie, horloge, 101f);     // première évaluation de la piste (âge 0)
+            Avancer(regie, horloge, 101.2f);
+            Assert.AreEqual(0.5f, groupe.alpha, 0.02f, "à mi-fondu, lu sur le CanvasGroup (la régie l'écrit)");
+            Assert.IsTrue(bandeau.Visible, "`Visible` reste vrai pendant le fondu");
+
+            // un toucher en plein fondu l'annule : `Effacer` détache, et l'alpha RÉEL revient à 1 (`Opacite`, elle, rend 0 dès que
+            // `Visible` est faux — elle ne dit rien de cet alpha-là)
+            bandeau.Toucher();
+            Assert.IsFalse(bandeau.Visible);
+            Assert.AreEqual(0f, bandeau.Opacite, "`Opacite` : 0 dès que `Visible` est faux — ce n'est PAS la mesure");
+            Assert.AreEqual(1f, groupe.alpha, 1e-4f, "`groupe.alpha` RÉEL après `Effacer` : restitué (CONTRÔLE : il valait .5 juste avant)");
+            Assert.AreEqual(0, regie.PistesVivantes, "le fondu est détaché");
+            Avancer(regie, horloge, 105f);
+            Assert.AreEqual(1f, groupe.alpha, 1e-4f, "plus rien n'écrit : la piste détachée ne revient pas");
+
+            // un nouvel Annoncer : alpha 1, visible, aucune piste
+            AnnonceDuBandeau b = AnnonceDuBandeau.Choisir(false, null, "BURNING", null, null);
+            Assert.IsTrue(bandeau.Annoncer(b, null, 5f));
+            Assert.AreEqual(1f, groupe.alpha, 1e-4f, "`groupe.alpha` RÉEL après un nouvel `Annoncer`");
+            Assert.IsTrue(bandeau.Visible);
+            Assert.AreEqual(1f, bandeau.Opacite);
+            Assert.AreEqual(0, regie.PistesVivantes);
+        }
+
+        [UnityTest]
+        public IEnumerator B10_LeFonduMeneATerme_Efface_EtRendLAlphaReel()
+        {
+            Regie regie = RegieDeTest(out HorlogeFigee horloge);
+            BandeauEphemere bandeau = NouveauBandeau();
+            CanvasGroup groupe = bandeau.GetComponent<CanvasGroup>();
+            var vus = new List<bool>();
+            bandeau.VisibiliteChangee += v => vus.Add(v);
+            bandeau.Annoncer(AnnonceDuBandeau.Choisir(false, null, "HOT", null, null), null, 0.05f);
+            yield return AttendreLeFondu(regie);
+
+            Avancer(regie, horloge, 101f);
+            Avancer(regie, horloge, 101.39f);
+            Assert.IsTrue(bandeau.Visible, "0,39 s sur 0,4 : le fondu n'est pas fini");
+            Avancer(regie, horloge, 101.5f);
+            Assert.IsFalse(bandeau.Visible, "le fondu fini appelle `Effacer` (`quandFini`)");
+            Assert.IsFalse(bandeau.gameObject.activeSelf);
+            Assert.AreEqual(1f, groupe.alpha, 1e-4f, "alpha réel restitué : le prochain `Annoncer` repart d'un bandeau opaque");
+            Assert.AreEqual(0, regie.PistesVivantes, "le fondu est libéré");
+            CollectionAssert.AreEqual(new[] { true, false }, vus, "apparition puis effacement, annoncés une fois chacun");
+        }
+
+        [UnityTest]
+        public IEnumerator B10_SansRegie_LAnnonceSEfface_SansFondu()
+        {
+            // hôte nu : la façade rend un handle nul — l'annonce ne reste pas à l'écran pour autant (B4 le prouve aussi, sans régie)
+            RegieMouvement.Oublier();
+            BandeauEphemere bandeau = NouveauBandeau();
+            bandeau.Annoncer(AnnonceDuBandeau.Choisir(false, null, "HOT", null, null), null, 0.05f);
+            float fin = Time.realtimeSinceStartup + 3f;
+            while (bandeau.Visible && Time.realtimeSinceStartup < fin) yield return null;
+            Assert.IsFalse(bandeau.Visible, "sans régie, la minuterie efface");
+            Assert.AreEqual(1f, bandeau.GetComponent<CanvasGroup>().alpha, 1e-4f);
+            Assert.AreEqual(1, RegieMouvement.SansRegie, "et le fondu manquant est COMPTÉ, pas perdu en silence");
+        }
+
+        [UnityTest]
+        public IEnumerator B11_PerteDAnnonce_UneDescenteEnPleinFondu_RestePleinementVisible()
+        {
+            // annonce A (une Carte), fondu entamé, annonce B plus prioritaire (la Descente) : `Visible` est vrai pendant le fondu et
+            // `Suivante` admet toute annonce strictement plus prioritaire. Sans détachement, la piste périmée écrivait vers 0 puis
+            // `Effacer` : l'annonce B aurait été signée, jamais vue.
+            Regie regie = RegieDeTest(out HorlogeFigee horloge);
+            BandeauEphemere bandeau = NouveauBandeau();
+            CanvasGroup groupe = bandeau.GetComponent<CanvasGroup>();
+            AnnonceDuBandeau carte = AnnonceDuBandeau.Choisir(false, null, "COLD", CarteDe("e-1", "lt-1", "Sal"), null);
+            AnnonceDuBandeau descente = AnnonceDuBandeau.Choisir(true, "district-16", null, null, null);
+            Assert.AreEqual(AnnonceDuBandeau.Etat.Carte, carte.Quoi);
+            Assert.AreEqual(AnnonceDuBandeau.Etat.Descente, descente.Quoi);
+            Assert.IsNotNull(AnnonceDuBandeau.Suivante(new[] { descente }, bandeau.DejaAnnoncee, carte), "la Descente est admise par-dessus la Carte à l'écran");
+
+            Assert.IsTrue(bandeau.Annoncer(carte, null, 0.05f));
+            yield return AttendreLeFondu(regie);
+            Avancer(regie, horloge, 101f);
+            Avancer(regie, horloge, 101.2f);
+            Assert.AreEqual(0.5f, groupe.alpha, 0.02f, "CONTRÔLE : en plein fondu l'alpha réel n'est pas 1");
+            Assert.IsTrue(bandeau.Visible, "…et le bandeau est encore `Visible` : c'est ce qui laisse la Descente passer");
+
+            Assert.IsTrue(bandeau.Annoncer(descente, null, 5f), "la Descente est annoncée pendant le fondu");
+            Assert.AreEqual(1f, groupe.alpha, 1e-4f, "alpha réel 1 : le fondu de la Carte ne dessine plus rien");
+            Assert.IsTrue(bandeau.Visible);
+            Assert.AreSame(descente, bandeau.Courante, "le bandeau porte la Descente");
+            Assert.AreEqual(descente.Phrase, bandeau.TexteAffiche);
+            Assert.AreEqual(0, regie.PistesVivantes, "la piste de la Carte est détachée");
+
+            // la régie continue de tourner bien au-delà de la fin du fondu de la Carte : rien ne revient
+            Avancer(regie, horloge, 102f);
+            Avancer(regie, horloge, 104f);
+            Assert.IsTrue(bandeau.Visible, "la piste périmée n'a PAS appelé `Effacer` : la Descente reste");
+            Assert.AreEqual(1f, groupe.alpha, 1e-4f);
+            Assert.AreEqual(descente.Phrase, bandeau.TexteAffiche);
         }
 
         [Test]

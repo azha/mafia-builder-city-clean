@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using MafiaCleanCity.Mouvements;
 using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using MafiaCleanCity.Account.Profile;
@@ -9,6 +10,8 @@ using TMPro;
 
 namespace MafiaCleanCity.Account.Settings
 {
+    // E2a — la ligne « Mouvement réduit » (REUSE du canon `screen_14`), du tiroir « Le jeu » : un réglage LOCAL, voir `Rendre`.
+    //
     // ⑲ LES RÉGLAGES — la langue, et rien d'autre, parce que rien d'autre n'est servi.
     //
     // ⛔⛔ CET ÉCRAN A ÉTÉ DÉCLARÉ « BLOQUÉ » CE MATIN PAR MOI-MÊME. La mesure disait : 1 endpoint
@@ -67,6 +70,8 @@ namespace MafiaCleanCity.Account.Settings
         /// <summary>Gardes : l'état AFFICHÉ des deux bascules.</summary>
         public bool BasculeTutorielsAffichee { get; private set; }
         public bool BasculeMarcheAffichee { get; private set; }
+        /// <summary>E2a — l'état AFFICHÉ de « Mouvement réduit » (le réglage du joueur, `MouvementReduit`).</summary>
+        public bool BasculeMouvementReduitAffichee { get; private set; }
 
         private TutorialClient tutoriels;
 
@@ -150,6 +155,21 @@ namespace MafiaCleanCity.Account.Settings
             Rendre();
         }
 
+        /// <summary>E2a (design-couche-mouvement.md §5) — « Mouvement réduit » : REUSE du canon (`screen_14:71,146,208,251,298`, clé du canon
+        /// `settings.a11y.reduced_motion`), un réglage LOCAL (`PlayerPrefs`, en attendant `PATCH /v1/me/settings` : aucun `GET` n'existe).
+        /// Le toucher bascule et réapplique le niveau de la régie tout de suite, sans réseau ; le canon veut qu'il reste utilisable
+        /// sous le réglage lui-même (rien n'anime cette ligne). Rendue AUSSI dans l'état vide : elle ne lit pas le profil.</summary>
+        private void LigneMouvementReduit()
+        {
+            bool reduit = MouvementReduit.ReglageDuJoueur;
+            BasculeMouvementReduitAffichee = reduit;
+            Bascule("Bascule_MouvementReduit", Lib("Mouvement réduit"), null, reduit, () =>
+            {
+                MouvementReduit.PoserReglageDuJoueur(!reduit);
+                Rendre();
+            });
+        }
+
         private void Rendre()
         {
             for (int i = corps.childCount - 1; i >= 0; i--)
@@ -162,6 +182,10 @@ namespace MafiaCleanCity.Account.Settings
                 videTexte.text = DerniereErreur == null
                     ? Lib("Aucun réglage.")
                     : Lib("Les réglages n'ont pas répondu.");
+                // Revue de code E2a, M5 : « Mouvement réduit » est un réglage LOCAL (aucun réseau) — une panne du profil ne prive pas le
+                // joueur de la seule option d'accessibilité du client.
+                Section(Lib("Le jeu"));
+                LigneMouvementReduit();
                 RendusEffectues++;
                 return;
             }
@@ -185,6 +209,7 @@ namespace MafiaCleanCity.Account.Settings
             Bascule("Bascule_Marche", Lib("Dire mes prix au marché"),
                     Lib("sans ça, le marché de région ne vous dit rien non plus"), visible,
                     () => StartCoroutine(DefinirVisibilite(!visible)));
+            LigneMouvementReduit();
 
             // La sortie : « Fermer le coffre · cette session seulement » (ratifié, cadres 95-96), VIVANTE (`POST /v1/auth/signout`).
             if (CoffreFerme)
@@ -227,7 +252,9 @@ namespace MafiaCleanCity.Account.Settings
             GameObject textes = Bloc("Textes", ligne.transform, false, Px(2f));
             textes.AddComponent<LayoutElement>().flexibleWidth = 1f;
             Texte(textes.transform, "Libelle", libelle, Px(10.5f), Creme, DesignTokens.Current.primaryFont).enableWordWrapping = true;
-            Texte(textes.transform, "Sous", sous, Px(7.5f), Creme2, DesignTokens.Current.primaryFont).enableWordWrapping = true;
+            // Le canon de « Mouvement réduit » n'a pas de sous-ligne : sans texte, pas de ligne vide qui tienne de la place.
+            if (!string.IsNullOrEmpty(sous))
+                Texte(textes.transform, "Sous", sous, Px(7.5f), Creme2, DesignTokens.Current.primaryFont).enableWordWrapping = true;
 
             GameObject piste = new GameObject("Interrupteur", typeof(RectTransform));
             piste.transform.SetParent(ligne.transform, false);
