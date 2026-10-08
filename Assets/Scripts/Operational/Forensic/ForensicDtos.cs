@@ -22,6 +22,22 @@ namespace MafiaCleanCity.Operational
         public string lifestyle_alarm_bucket;
     }
 
+    /// <summary>Une ligne de `GET /v1/me/internal-affairs/actors` (`ActorSummary`, `ia-projection.service.ts`, mesuré @accc9605) : TROIS
+    /// champs, jamais de niveau de soupçon (mur P5). `actorType` ∈ {lawyer, clerk} ; `status` ∈ {steady, nervous, unavailable, gone}.
+    /// ⚠️ Le PRIX d'un renseignement n'est servi par aucune route avant l'achat (`costCents` n'existe que dans le RÉSULTAT du POST) :
+    /// l'écran n'achète donc rien (㊴, R2 du design).</summary>
+    [Serializable]
+    public class ActeurDto
+    {
+        public string actorRef;
+        public string actorType;
+        public string status;
+    }
+
+    [Serializable] public class GetActeursResponseDto { public ActeurDto[] actors; }
+    [Serializable] public class GetActeursPayload { public GetActeursResponseDto data; }
+    [Serializable] public class GetActeursEnvelope { public GetActeursPayload payload; }
+
     [Serializable] public class GetForensicPayload { public GetForensicResponseDto data; }
     [Serializable] public class GetForensicEnvelope { public GetForensicPayload payload; }
 }

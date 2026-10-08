@@ -97,14 +97,10 @@ namespace MafiaCleanCity.Tests.PlayMode
             // ㉚ (08/10) — L posée (les filets pointillés du bon). Le reste : en-tête (EnteteDEcran), pied (PiedDEcran), chaîne
             //   (nœuds, tuyaux, pics, états, gestes, rien, cadran) — blocs de CLIENT-1, à déléguer à Filets.
             { "㉚", new[] { "Bas", "Entete", "Etat", "Etat_2", "Geste", "GesteMort", "Mano", "Noeud", "NoeudFlou", "NoeudTrouve", "Pic", "Pic_2", "Rien", "Tuyau", "TuyauRefoule" } },
-            // ㊴ (08/10) — Fen (×3 compteurs), Elast (la boîte des pistes), Cta6 (le pied « acheter du renseignement »), Ac/AcParti
-            //   (les acteurs), Mano (le cadran) : éléments de la maquette `.dos6` que le contrôleur NE CONSTRUIT PAS (structure du
-            //   client : enseigne, 3 signaux, panneau) — signalé à f2, à classer au juge (A s'ils manquent au joueur). PiBout : la
-            //   piste « au bout » (bord accentDanger), état non exprimé par le contrôleur.
-            //   + (08/10, étape 0 de la vue pistes/acteurs, cadres 150-151 : DESIGN v5.2 §5) Cta6Eteint (le pied éteint), FenIci/FenPorte
-            //   (la fenêtre « ici » et la porte de bascule), PiEteinte (les pistes constantes), Rg (« renseignement » éteint) : recettes
-            //   GÉNÉRÉES que le contrôleur ne référence pas encore ; elles sortent à la pose de la vue.
-            { "㊴", new[] { "Ac", "AcParti", "Cta6", "Cta6Eteint", "Elast", "Fen", "FenIci", "FenPorte", "Mano", "PiBout", "PiEteinte", "Rg" } },
+            // ㊴ (08/10, DESIGN v5.2) — la vue pistes/acteurs/vide est construite d'après les cadres 150, 151 et 135 : toutes les recettes de
+            //   `.dos6` sont posées SAUF deux. Cta6 : le pied « acheter du renseignement » ALLUMÉ des cadres 131-132, dessin ANCIEN (le pied
+            //   qui fait foi est Cta6Eteint, 150 : le prix n'est pas servi). Mano : le cadran des cadres 131-134, que le client ne construit pas.
+            { "㊴", new[] { "Cta6", "Mano" } },
             // ㉜ (08/10) — toutes les recettes de blocs (tête, bas, plaques, réserves, jetons, gestes, aperçu, rien, ligne pointillée,
             //   cadran) : blocs de CLIENT-1, tracés par ses propres bords (`Bord`, `FiletG`, `Filet`) — à déléguer à Filets avec Cerner.
             { "㉜", new[] { "L", "Mano", "Rond", "Rond_2", "SvApercu", "SvBas", "SvGeste", "SvGesteMort", "SvJeton", "SvJetonUse", "SvPlaque", "SvPlaqueConfiee", "SvPlaqueGris", "SvPlaqueViser", "SvRien", "SvTete" } },

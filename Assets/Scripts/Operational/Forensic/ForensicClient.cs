@@ -15,6 +15,10 @@ namespace MafiaCleanCity.Operational
         public string BaseUrl = MafiaCleanCity.AdresseDuBack.Url;
         public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
 
+        /// <summary>Le nombre de requêtes ENVOYÉES par ce client (une par appel de route, succès ou non) : le compteur des gardes
+        /// « un geste éteint n'émet AUCUNE requête » (㊴, DESIGN v5.2 §6) — il doit d'abord BOUGER au chargement.</summary>
+        public int RequetesEmises { get; private set; }
+
         /// <summary>`GET /v1/me/forensic` → TODO(MÉTIER ICI) : corps de réponse réel non mesuré —
         /// dériver `GetForensicResponseDto` du CORPS RÉEL (juge-données), jamais de l'interface
         /// TypeScript back lue seule.</summary>
@@ -25,6 +29,7 @@ namespace MafiaCleanCity.Operational
             {
                 MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
+                RequetesEmises++;
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success)
                 {
@@ -35,6 +40,27 @@ namespace MafiaCleanCity.Operational
                 }
                 else onErr?.Invoke(req.responseCode,
                                    $"GET /v1/me/forensic a échoué ({req.responseCode}) {req.error}");
+            }
+        }
+
+        /// <summary>`GET /v1/me/internal-affairs/actors` → `payload.data.actors[]` (le roster du joueur : `actorRef`, `actorType`, `status`).
+        /// Une liste VIDE est un succès (aucun acteur), pas une erreur.</summary>
+        public IEnumerator GetActeurs(string bearer, Action<ActeurDto[]> onOk, Action<long, string> onErr)
+        {
+            using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/me/internal-affairs/actors"))
+            {
+                MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
+                MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
+                RequetesEmises++;
+                yield return req.SendWebRequest();
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    GetActeursResponseDto dto = JsonUtility.FromJson<GetActeursEnvelope>(req.downloadHandler.text)?.payload?.data;
+                    if (dto == null || dto.actors == null) { onErr?.Invoke(0, "corps sans `payload.data.actors` (GetActeurs)"); yield break; }
+                    onOk?.Invoke(dto.actors);
+                }
+                else onErr?.Invoke(req.responseCode,
+                                   $"GET /v1/me/internal-affairs/actors a échoué ({req.responseCode}) {req.error}");
             }
         }
     }

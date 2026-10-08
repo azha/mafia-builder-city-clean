@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using UnityEngine.TestTools;
+using MafiaCleanCity.Tests;     // ProductionClickSupport
+using MafiaCleanCity.Theme;
 using MafiaCleanCity.CityMap;   // REUSE AuthClient (signin)
 using MafiaCleanCity.Operational;
 using Object = UnityEngine.Object;
@@ -269,6 +272,294 @@ namespace MafiaCleanCity.Operational.Tests
             yield return MafiaCleanCity.Tests.CaptureSupport.CapturerCanvas(
                 canvas, (RectTransform)racine.transform, largeur, hauteur, chemin);
             MafiaCleanCity.Tests.CaptureSupport.GarderLaCapture(chemin);
+        }
+
+        // ═══ 3. LE DOSSIER (㊴, DESIGN v5.2 §6) — corps FABRIQUÉS, aucun réseau ═══════════════════════════════════════
+
+        private static GetForensicResponseDto Bandes(string audit, string effluent, string lifestyle) =>
+            new GetForensicResponseDto { audit_risk_bucket = audit, effluent_visibility_bucket = effluent, lifestyle_alarm_bucket = lifestyle };
+
+        private static ActeurDto Acteur(string type, string statut, string reference) =>
+            new ActeurDto { actorType = type, status = statut, actorRef = reference };
+
+        /// <summary>Le roster du cadre 151 : quatre acteurs, un par statut.</summary>
+        private static ActeurDto[] RosterDe4() => new[]
+        {
+            Acteur("lawyer", "steady", "4f21aaaa"), Acteur("clerk", "nervous", "9c07bbbb"),
+            Acteur("clerk", "unavailable", "1b44cccc"), Acteur("lawyer", "gone", "7e90dddd"),
+        };
+
+        private Transform Sous(string chemin)
+        {
+            Transform t = RacineEcran().transform.Find(chemin);
+            Assert.IsNotNull(t, $"{chemin} introuvable sous ForensicRoot");
+            return t;
+        }
+        private string Texte(string chemin) => Sous(chemin).GetComponent<TMPro.TextMeshProUGUI>().text;
+        private static string Nu(string riche) => System.Text.RegularExpressions.Regex.Replace(riche, "<[^>]+>", "");
+        private string Compteur(int i) => Nu(Texte($"Compteurs/Fenetre{i}/Nombre"));
+        private static bool Meme(Color a, Color b)
+        {
+            Color32 x = a, y = b;
+            return x.r == y.r && x.g == y.g && x.b == y.b && x.a == y.a;
+        }
+
+        /// <summary>Les trois fenêtres de compteur de la vue PISTES (cadre 150) et ses trois pistes : « 01/1 pistes chaudes · 00 franchies ·
+        /// 01/4 acteurs qui tiennent », la piste des cuves à « ça se voit » (3 crans sur 4, l'orange), les deux autres ÉTEINTES (0 cran coloré,
+        /// « — », « pas encore sur la table »). Les nombres sont recalculés ICI, indépendamment de l'écran, sur le corps fabriqué.</summary>
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7D1_VuePistes_CompteursEtTroisPistes_DeuxEteintes()
+        {
+            ForensicScreenController ecran = MonterEcran();
+            ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), RosterDe4());
+            yield return null; yield return null;
+            Assert.AreEqual(VueDossier.Pistes, ecran.Vue);
+            Assert.AreEqual("01/1", Compteur(0), "pistes chaudes : l'effluent seul est vivant, hors de son premier cran");
+            Assert.AreEqual("00", Compteur(1), "franchies : aucune piste vivante au dernier cran");
+            Assert.AreEqual("01/4", Compteur(2), "acteurs qui tiennent : 1 `steady` sur 4 servis");
+            Assert.IsTrue(Sous("Elast/Pistes").gameObject.activeSelf && !Sous("Elast/Acteurs").gameObject.activeSelf && !Sous("Elast/Rien").gameObject.activeSelf);
+            Assert.IsTrue(Sous("Pied").gameObject.activeSelf && Sous("Pied/BoutonAcheter").gameObject.activeSelf, "le pied éteint est montré en vue pistes");
+
+            Color vide = new Color32(0x2A, 0x36, 0x48, 0xFF);   // `#2a3648`, le cran éteint
+            for (int i = 0; i < 3; i++)
+            {
+                Assert.AreEqual(4, Sous($"Elast/Pistes/Piste{i}/Crans").childCount, $"piste {i} : quatre crans");
+                int allumes = 0;
+                for (int c = 0; c < 4; c++) if (!Meme(Sous($"Elast/Pistes/Piste{i}/Crans/Cran{c}").GetComponent<Image>().color, vide)) allumes++;
+                if (i == 1)
+                {
+                    Assert.AreEqual(3, allumes, "« visible » = le troisième cran : trois crans allumés");
+                    Assert.IsTrue(Meme(Sous("Elast/Pistes/Piste1/Crans/Cran0").GetComponent<Image>().color, DesignTokens.Current.accentWarning), "le cran allumé est l'orange de `visible`");
+                    Assert.IsTrue(Meme(Sous("Elast/Pistes/Piste1/Crans/Cran3").GetComponent<Image>().color, vide), "le plus haut cran reste éteint");
+                    Assert.AreEqual(ForensicResolvers.Phrase("visible"), Texte("Elast/Pistes/Piste1/Mot"));
+                    Assert.AreEqual("visible", Texte("Elast/Pistes/Piste1/Cle"), "la clé servie, brute");
+                }
+                else
+                {
+                    Assert.AreEqual(0, allumes, $"piste {i} ÉTEINTE : aucun cran coloré");
+                    Assert.AreEqual("—", Texte($"Elast/Pistes/Piste{i}/Mot"));
+                    StringAssert.Contains("table", Texte($"Elast/Pistes/Piste{i}/Cle"), "« pas encore sur la table » à la place de la clé");
+                }
+            }
+            // la 1ʳᵉ fenêtre porte l'or de `.fen.ici` (recette composée) : un nœud `Bas1` doré, ancré en BAS, au-dessus du bord
+            Transform or = Sous("Compteurs/Fenetre0/Filets/Bas1");
+            Assert.IsTrue(Meme(or.GetComponent<Image>().color, DesignTokens.Current.hudMoneyGold), "l'or de la fenêtre « ici »");
+            Assert.AreEqual(0f, ((RectTransform)or).anchorMax.y, "l'or est ancré au bas de la fenêtre");
+            Assert.IsNull(Sous("Compteurs/Fenetre1").Find("Filets/Bas1"), "la 2ᵉ fenêtre n'a pas d'or");
+        }
+
+        /// <summary>La BASCULE (la porte) : un geste LOCAL qui montre les acteurs (cadre 151) — « 04 acteurs connus · 01 qui ont peur · 01/1
+        /// pistes chaudes » —, une ligne par acteur, le geste « renseignement » ÉTEINT en DERNIER enfant de chaque ligne sauf « parti »
+        /// (qui est à 45 % d'opacité), les quatre mots de statut distincts. Et le retour.</summary>
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7D2_Bascule_VueActeurs_UneLigneParActeur_GesteEteintSaufParti()
+        {
+            ForensicScreenController ecran = MonterEcran();
+            ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), RosterDe4());
+            yield return null;
+            ecran.Basculer();
+            yield return null; yield return null;
+            Assert.AreEqual(VueDossier.Acteurs, ecran.Vue);
+            Assert.AreEqual("04", Compteur(0), "acteurs connus : tous les servis, `gone` compris");
+            Assert.AreEqual("01", Compteur(1), "qui ont peur : 1 `nervous`");
+            Assert.AreEqual("01/1", Compteur(2), "la porte montre le MÊME compte de pistes chaudes que la vue pistes");
+            Assert.IsTrue(!Sous("Elast/Pistes").gameObject.activeSelf && Sous("Elast/Acteurs").gameObject.activeSelf);
+            Assert.IsTrue(Sous("Pied").gameObject.activeSelf && !Sous("Pied/BoutonAcheter").gameObject.activeSelf, "en vue acteurs, le pied n'est que sa note");
+
+            Transform liste = Sous("Elast/Acteurs");
+            Assert.AreEqual(4, liste.childCount, "une ligne par acteur servi");
+            var mots = new HashSet<string>();
+            string[] statuts = { "steady", "nervous", "unavailable", "gone" };
+            for (int i = 0; i < 4; i++)
+            {
+                Transform ligne = liste.GetChild(i);
+                string mot = ligne.Find("Statut").GetComponent<TMPro.TextMeshProUGUI>().text;
+                Assert.AreEqual(DossierCalculs.MotDuStatut(statuts[i]), mot);
+                mots.Add(mot);
+                bool parti = statuts[i] == "gone";
+                Assert.AreEqual(!parti, ligne.Find("Renseignement") != null, $"{statuts[i]} : le geste éteint n'existe que hors « parti »");
+                if (!parti) Assert.AreEqual("Renseignement", ligne.GetChild(ligne.childCount - 1).name, "le geste est le DERNIER enfant de la ligne");
+                CanvasGroup g = ligne.GetComponent<CanvasGroup>();
+                if (parti) { Assert.IsNotNull(g); Assert.AreEqual(0.45f, g.alpha, 0.02f, "`.ac.parti{opacity:.45}`"); }
+                else Assert.IsNull(g, "seule la ligne « parti » est atténuée");
+            }
+            Assert.AreEqual(4, mots.Count, "quatre statuts, quatre mots");
+
+            ecran.Basculer();
+            yield return null;
+            Assert.AreEqual(VueDossier.Pistes, ecran.Vue, "la porte revient aux pistes");
+        }
+
+        /// <summary>L'ÉTAT VIDE (cadre 135) : toutes les pistes vivantes au premier cran ET un roster SERVI vide ⇒ trois fenêtres nues
+        /// (« 00/1 pistes chaudes · 00 franchies · 00 acteurs connus »), « rien à votre nom », PAS de bascule, PAS de pied. Et la porte
+        /// ne rouvre rien. Les deux cas voisins ne sont PAS vides : un roster vide avec une piste chaude, et un roster non servi.</summary>
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7D3_EtatVide_SansBascule_SansPied_EtLesCasVoisinsNeLeSontPas()
+        {
+            ForensicScreenController ecran = MonterEcran();
+            ecran.RendrePourTest(Bandes("clean", "clear", "quiet"), new ActeurDto[0]);
+            yield return null; yield return null;
+            Assert.AreEqual(VueDossier.Vide, ecran.Vue);
+            Assert.AreEqual("00/1", Compteur(0)); Assert.AreEqual("00", Compteur(1)); Assert.AreEqual("00", Compteur(2));
+            Assert.IsTrue(Sous("Elast/Rien").gameObject.activeSelf && !Sous("Elast/Pistes").gameObject.activeSelf && !Sous("Elast/Acteurs").gameObject.activeSelf);
+            Assert.IsFalse(Sous("Pied").gameObject.activeSelf, "135 n'a pas de pied");
+            Button porte = Sous("Compteurs/Fenetre2").GetComponent<Button>();
+            Assert.IsFalse(porte.interactable, "135 n'a pas de bascule");
+            Assert.IsFalse(Sous("Compteurs/Fenetre2").GetComponent<Image>().raycastTarget, "la 3ᵉ fenêtre n'attrape aucun clic en état vide");
+            Assert.IsFalse(Sous("Compteurs/Fenetre2/Fleche").gameObject.activeSelf, "pas de flèche");
+            Assert.IsNull(Sous("Compteurs/Fenetre0").Find("Filets/Bas1"), "pas d'« ici » doré en état vide");
+            ecran.Basculer();
+            yield return null;
+            Assert.AreEqual(VueDossier.Vide, ecran.Vue, "rien à basculer");
+
+            // voisin 1 : roster vide MAIS une piste chaude ⇒ la vue pistes ; sa porte mène à « 00 acteurs connus », sans ligne
+            ecran.RendrePourTest(Bandes("clean", "faint", "quiet"), new ActeurDto[0]);
+            yield return null;
+            Assert.AreEqual(VueDossier.Pistes, ecran.Vue);
+            Assert.AreEqual("01/1", Compteur(0));
+            ecran.Basculer();
+            yield return null;
+            Assert.AreEqual("00", Compteur(0)); Assert.AreEqual(0, Sous("Elast/Acteurs").childCount);
+            ecran.Basculer();
+
+            // voisin 2 : roster NON servi (route en erreur) ⇒ jamais « vide » : on ne sait pas
+            ecran.RendrePourTest(Bandes("clean", "clear", "quiet"), null);
+            yield return null;
+            Assert.AreEqual(VueDossier.Pistes, ecran.Vue, "un roster inconnu n'est pas un roster vide");
+        }
+
+        /// <summary>Une route en erreur ⇒ « — », JAMAIS 0 : un zéro dirait « mesuré à zéro ». Les deux routes sont indépendantes.</summary>
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7D4_RouteEnErreur_DisentTiret_JamaisZero()
+        {
+            ForensicScreenController ecran = MonterEcran();
+            ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), null);   // roster en erreur
+            yield return null;
+            Assert.AreEqual("01/1", Compteur(0), "les pistes restent lisibles");
+            Assert.AreEqual("—", Compteur(2), "les acteurs qui tiennent : « — », pas « 00/0 »");
+            ecran.Basculer();
+            yield return null;
+            Assert.AreEqual("—", Compteur(0)); Assert.AreEqual("—", Compteur(1));
+            Assert.AreEqual("01/1", Compteur(2), "la porte vers les pistes garde son compte");
+            ecran.Basculer();
+
+            ecran.RendrePourTest(null, RosterDe4());   // bandes en erreur
+            yield return null;
+            Assert.AreEqual("—", Compteur(0)); Assert.AreEqual("—", Compteur(1));
+            Assert.AreEqual("01/4", Compteur(2), "le roster reste lisible");
+        }
+
+        /// <summary>« Un geste éteint n'émet AUCUNE requête » (DESIGN v5.2 §6). Valide seulement parce que le MÊME compteur est mis à
+        /// l'épreuve : (a) le chargement le FAIT BOUGER (compteur branché) ; (b) la porte est cliquée par `ProductionClickSupport.Click` (le
+        /// raycast de son centre touche un gestionnaire de clic) et bascule SANS requête ; (c) le pied éteint et un « renseignement » sont
+        /// TROUVÉS, ont un rect, et le raycast de leur centre ne rencontre AUCUN gestionnaire de clic ⇒ le compteur ne bouge pas.</summary>
+        [UnityTest, Timeout(120000)]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7D5_GestesEteints_AucuneRequete_CompteurMisALEpreuve()
+        {
+            GameObject es = EventSystem.current == null ? new GameObject("fil_es", typeof(EventSystem), typeof(StandaloneInputModule)) : null;
+            try
+            {
+                ForensicScreenController ecran = MonterEcran();
+                ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), RosterDe4());   // arrête l'auto-chargement
+                yield return null;
+                // (a) le compteur est BRANCHÉ : un chargement (même sans back joignable) envoie au moins une requête
+                ecran.SetToken("jeton-de-controle-sans-valeur");
+                yield return ecran.Charger();
+                Assert.GreaterOrEqual(ecran.RequetesEmises, 1, "(a) le chargement n'a fait bouger le compteur : il serait muet");
+                ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), RosterDe4());   // l'état fabriqué, rétabli
+                yield return null; yield return null;
+                int avant = ecran.RequetesEmises;
+
+                // (b) la porte : un vrai clic, le raycast de son centre la touche, la vue bascule, aucune requête
+                Button porte = Sous("Compteurs/Fenetre2").GetComponent<Button>();
+                Assert.IsTrue(AUnGestionnaireDeClic(Toucher((RectTransform)porte.transform)), "(b) le raycast du centre de la porte ne touche aucun gestionnaire : la garde (c) serait vraie à vide");
+                Assert.IsTrue(ProductionClickSupport.Click(porte));
+                yield return null; yield return null;
+                Assert.AreEqual(VueDossier.Acteurs, ecran.Vue, "(b) le clic de production bascule");
+                Assert.AreEqual(avant, ecran.RequetesEmises, "(b) la bascule est locale : aucune requête");
+
+                // (c) un « renseignement » éteint (vue acteurs)
+                RectTransform rg = (RectTransform)Sous("Elast/Acteurs/Acteur0/Renseignement");
+                Assert.Greater(rg.rect.width, 0f); Assert.Greater(rg.rect.height, 0f);
+                Assert.IsFalse(AUnGestionnaireDeClic(Toucher(rg)), "(c) le « renseignement » éteint ne doit porter aucun gestionnaire de clic");
+                Assert.AreEqual(avant, ecran.RequetesEmises, "(c) aucune requête");
+
+                // (c) le pied éteint (vue pistes)
+                ecran.Basculer();
+                yield return null; yield return null;
+                RectTransform pied = (RectTransform)Sous("Pied/BoutonAcheter");
+                Assert.Greater(pied.rect.width, 0f); Assert.Greater(pied.rect.height, 0f);
+                Assert.IsFalse(AUnGestionnaireDeClic(Toucher(pied)), "(c) « ACHETER DU RENSEIGNEMENT » éteint ne doit porter aucun gestionnaire de clic");
+                Assert.AreEqual(avant, ecran.RequetesEmises, "(c) aucune requête");
+            }
+            finally { if (es != null) Object.DestroyImmediate(es); }
+        }
+
+        private static List<RaycastResult> Toucher(RectTransform rt)
+        {
+            Vector3 monde = rt.TransformPoint(rt.rect.center);
+            var donnees = new PointerEventData(EventSystem.current) { position = RectTransformUtility.WorldToScreenPoint(null, monde) };
+            var resultats = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(donnees, resultats);
+            return resultats;
+        }
+
+        private static bool AUnGestionnaireDeClic(List<RaycastResult> resultats)
+        {
+            foreach (RaycastResult r in resultats)
+                if (ExecuteEvents.GetEventHandler<IPointerClickHandler>(r.gameObject) != null) return true;
+            return false;
+        }
+
+        /// <summary>Le CALCUL pur du dossier, sur des corps fabriqués : les échelles (quatre crans par piste, domaines clos du back), les
+        /// pistes constantes lues en UN site, un mot inconnu n'est ni chaud ni calme, l'état vide.</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7D6_DossierCalculs_Echelles_Constantes_EtatVide()
+        {
+            Assert.AreEqual(3, DossierCalculs.Pistes.Length);
+            foreach (DossierCalculs.Piste p in DossierCalculs.Pistes)
+            {
+                Assert.AreEqual(DossierCalculs.Crans, p.Echelle.Length, $"{p.Cle} : quatre crans");
+                for (int c = 0; c < p.Echelle.Length; c++) Assert.AreEqual(c, DossierCalculs.CranDe(p, p.Echelle[c]));
+                Assert.AreEqual(-1, DossierCalculs.CranDe(p, "smouldering"), "un mot inconnu n'a pas de cran");
+                Assert.AreEqual(-1, DossierCalculs.CranDe(p, null));
+            }
+            CollectionAssert.AreEqual(new[] { "audit_risk_bucket", "lifestyle_alarm_bucket" }, DossierCalculs.PistesConstantes, "les deux pistes constantes (TD-881)");
+            Assert.AreEqual(1, DossierCalculs.PistesVivantes());
+            // la vivacité ne dépend QUE de PistesConstantes : une bande « chaude » d'une piste constante ne compte pas
+            Assert.AreEqual(0, DossierCalculs.PistesChaudes(Bandes("audited", "clear", "subpoenaed")), "les constantes ne chauffent pas le compteur");
+            Assert.AreEqual(0, DossierCalculs.PistesFranchies(Bandes("audited", "clear", "subpoenaed")));
+            Assert.AreEqual(1, DossierCalculs.PistesFranchies(Bandes("clean", "glaring", "quiet")));
+            Assert.AreEqual(0, DossierCalculs.PistesChaudes(Bandes("clean", "smouldering", "quiet")), "une bande inconnue n'est pas « chaude »");
+            Assert.IsTrue(DossierCalculs.EtatVide(Bandes("clean", "clear", "quiet"), new ActeurDto[0]));
+            Assert.IsFalse(DossierCalculs.EtatVide(Bandes("clean", "clear", "quiet"), null), "roster non servi ≠ vide");
+            Assert.IsFalse(DossierCalculs.EtatVide(null, new ActeurDto[0]), "bandes non servies ≠ vide");
+            Assert.IsFalse(DossierCalculs.EtatVide(Bandes("clean", "faint", "quiet"), new ActeurDto[0]));
+            Assert.IsFalse(DossierCalculs.EtatVide(Bandes("clean", "clear", "quiet"), new[] { Acteur("clerk", "gone", "x") }));
+        }
+
+        /// <summary>Les pistes constantes sont lues en UN SEUL SITE (TD-881) : ni `audit_risk` ni `lifestyle_alarm` ne sont comparés
+        /// ailleurs dans le contrôleur — la liste est `DossierCalculs.PistesConstantes`, rien d'autre. Garde de SOURCE.</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7D7_PistesConstantes_LuesEnUnSeulSite()
+        {
+            string[] fichiers = System.IO.Directory.GetFiles(System.IO.Path.Combine(Application.dataPath, "Scripts", "Operational", "Forensic"), "*.cs");
+            int sites = 0;
+            foreach (string f in fichiers)
+            {
+                string src = System.IO.File.ReadAllText(f);
+                sites += System.Text.RegularExpressions.Regex.Matches(src, @"PistesConstantes\s*=").Count;
+                Assert.IsFalse(System.Text.RegularExpressions.Regex.IsMatch(src, @"(audit_risk|lifestyle_alarm)_bucket""\s*\)\s*(==|!=)|(==|!=)\s*""(audit_risk|lifestyle_alarm)"),
+                    $"{System.IO.Path.GetFileName(f)} compare une piste constante hors de `PistesConstantes`");
+            }
+            Assert.AreEqual(1, sites, "`PistesConstantes` est DÉCLARÉE en un seul site");
         }
 
         // MÉTIER ICI — ajouter ici les tests de PARCOURS (signup → session/open → la route) et
