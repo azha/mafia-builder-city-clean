@@ -202,9 +202,12 @@ namespace MafiaCleanCity.Shell.Tests
             // Les deux références, recopiées de leurs sources et non de mémoire :
             //   SVG source du client (`Tools/hud-topbar-reference-source.html`, rayon 26) :
             //     anneau 2 ⇒ 0,0769 R · arc 3,5 ⇒ 0,1346 R · ratio 0,571
-            //   canon du juge (r3 de ①) : anneau 1,33 · arc 2,33 CSS ⇒ ratio 0,571 · rayon d'arc 0,45 R
+            //   canon du juge (r3 de ①) : anneau 1,33 · arc 2,33 CSS ⇒ ratio 0,571 (le « rayon d'arc 0,45 R » de ce canon ne figure dans aucune source : juge d'ensemble r2 F4, f2 08/10)
+            //   MAQUETTE (`.mano` de `ecrans-brennar-6.html:197-199`, 54 px, R = 27) : arc `A15 15` ⇒ rayon médian 15/27 = 0,556 R
             const float RatioReference = 2f / 3.5f;
-            const float RayonArcCanon = 0.45f;
+            const float RayonArcCanon = 15f / 27f;
+            // CONTRÔLE POSITIF : la garde ci-dessous (tolérance 0,05) doit ROUGIR sur l'ancienne valeur 0,45 — sinon elle ne mesure rien.
+            Assert.Greater(Mathf.Abs(0.45f - RayonArcCanon), 0.05f, "contrôle positif : l'ancien rayon 0,45 R doit sortir de la tolérance de la garde");
 
             Debug.Log($"[① manomètre] rayon médaillon {rAnneau:F2} u (texture {texAnneau} px) · " +
                       $"anneau {epAnneau:F2} u = {fracAnneau:F4} R · arc {epArc:F2} u = {fracArc:F4} R " +

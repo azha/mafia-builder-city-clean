@@ -876,7 +876,7 @@ namespace MafiaCleanCity.Operational
 
             ConstruirePanneau(racine.transform);
             // C-c (juge groupé du 07/10, f2 ; A4) : la BANDE BASSE `.cn-bas` de la maquette — plaque #141a21 + filet 2 px, et le geste « LANCER LA SOIRÉE » posé ÉTEINT (`.cn-geste.mort`, même règle que ㊳ : aucune route
-            // n'active ce geste ici — sans mentir). La VOIX du lieutenant n'est pas servie (TD-823). Les mots sont ceux du cadre de la maquette.
+            // n'active ce geste ici — sans mentir). La VOIX du lieutenant (« N ordres. On peut en mettre {reste} de plus, ou partir comme ça. », clé `carnet.bloc.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca`) EST servie, mais ce contrôleur ne la lit pas encore : TD-882 (ce n'est PAS TD-823, qui ne vaut que pour ㉛ ; juge d'ensemble r2 F2, f2 08/10). Les mots sont ceux du cadre de la maquette.
             GameObject bandeBasse = PiedDEcran.Bande(racine.transform, Px, Px(13f), Px(13f));
             Button gesteDuCarnet = PiedDEcran.Geste(bandeBasse.transform, Px, DesignTokens.Current.primaryFont,
                 Lib("LANCER LA SOIRÉE"), Lib("une fois partie, on ne la reprend pas"), PiedDEcran.Etat.Mort);

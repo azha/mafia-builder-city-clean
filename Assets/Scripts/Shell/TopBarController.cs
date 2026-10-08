@@ -440,8 +440,11 @@ namespace MafiaCleanCity.Shell
         private const float ArcThicknessPx = 5f;
 
         /// <summary>Le rayon MÉDIAN de l'arc, en fraction du rayon du médaillon — la grandeur que
-        /// le canon fixe, et la seule qui ne dépende pas de la taille du médaillon.</summary>
-        private const float ArcRayonMedianFractionCanon = 0.45f;
+        /// la maquette fixe, et la seule qui ne dépende pas de la taille du médaillon.
+        /// ⛔ 15/27 = 0,556 : `.mano` de `ecrans-brennar-6.html:197-199` (54 px, R = 27 ; `svg` 40×26 à l'échelle 1, arc `A15 15`, trait 3), identique en série 4 ; la source HUD d'août
+        /// (`Tools/hud-topbar-reference-source.html`, 26·0,7/32) donne 0,569. L'ancienne valeur 0,45 (« canon du juge r3 de ① », commit ede63949, 06/09) ne figurait dans AUCUNE source du dépôt :
+        /// elle corrigeait un arc mesuré à 0,59-0,632 R — c'est-à-dire la valeur de la maquette — et rendait le cadran trop petit dans sa lunette (juge d'ensemble r2, F4 : arc ×0,75).</summary>
+        private const float ArcRayonMedianFractionCanon = 15f / 27f;
 
         /// <summary>⛔⛔⛔ DÉRIVÉ, PLUS UN LITTÉRAL — et le littéral qu'il remplace est celui que le
         /// socle de ce dépôt cite déjà en exemple. `ArcDiameterPx` valait **48**, un nombre calculé
