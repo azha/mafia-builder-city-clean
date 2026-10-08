@@ -1,8 +1,8 @@
-# ㊴ Le dossier — les éléments ABSENTS de la maquette `.dos6` (CLIENT-2) — DESIGN v5.1 (08/10), à revoir ⊥
+# ㊴ Le dossier — les éléments ABSENTS de la maquette `.dos6` (CLIENT-2) — DESIGN v5.2 (08/10) — revue ⊥ de la v5.1 : APPROVED (0 BLOCKING)
 
 **Commande** (f2, 08/10) : construire sur ㊴ ce que la maquette montre et que le client ne construit pas — compteurs, pistes côte à côte,
 acteurs, pied, bascule — d'après les cadres de ㊴, en vérifiant ce que le back sert avant de dessiner une valeur. Classe A. **Aucun code.**
-v5.1 = v5 (31bfafd3) amendée par la revue ⊥ de la v5 (NOT_APPROVED : B1 nom de nœud = clé de géométrie, B2 D6a et `verifier-design.py`
+v5.2 = v5.1 (8f40d5e7, revue ⊥ NEUVE : APPROVED, 0 BLOCKING, M1-M5 et m1-m7 intégrés ci-dessous) = v5 (31bfafd3) amendée par la revue ⊥ de la v5 (NOT_APPROVED : B1 nom de nœud = clé de géométrie, B2 D6a et `verifier-design.py`
 rouges à l'étape 0, M1-M3, m1-m5). v5 AMENDE la v4 (historique : `git log -- Tools/ecran-39-elements-absents/DESIGN.md`) et lève la revue ⊥ NEUVE de la v4
 (`REVUE-v4.md` : NOT_APPROVED, B1-B2, M1-M4, m1-m6). Décision de f2 (08/10) sur B2 : indexer les côtés de `FiletsPoses.Cote` comme
 `Contour`, avec une garde. Chaque mesure citée ci-dessous a été REFAITE le 08/10 sur cette branche (sorties dans §7).
@@ -78,7 +78,7 @@ Enfants directs de chaque `.dos6` :
   Q3) — le « 3 » de la maquette compterait des pistes éteintes. Roster vide avec une piste vivante chaude ⇒ vue pistes (150), sa porte
   vers une vue acteurs qui affiche « 00 acteurs connus » et aucune ligne.
 - **R6 — mots** (tous par `Libelle`, clés neuves avec le texte de la maquette ; les textes PROPOSÉS sont re-mesurés s'ils changent) :
-  `steady` « il tient » · `nervous` « il a peur » · `unavailable` « injoignable » · `gone` « parti » (+ `.ac.parti`) ; `lawyer` « Avocat »
+  `steady` « il tient » · `nervous` « il a peur » · `unavailable` « injoignable » · `gone` « parti » (+ `.ac.parti`) ; `gone` se rend à **45 % d'opacité** (`.dos6 .ac.parti{opacity:.45}`, mesuré 151 : 0.45) en plus du tireté de `AcParti` ; `lawyer` « Avocat »
   · `clerk` « Greffier » ; silhouette `.sil` teintée par l'état. Panneaux : pistes = 150, acteurs = 151 (= 133 réécrit, PROPOSÉ ; la
   phrase « Les trois autres existent sans être visibles. » a disparu), vide = 135 — **trois clés de panneau**, une par vue.
 
@@ -94,16 +94,20 @@ et `.rg` — qui ont tous un bord 1 px — sont des recettes GÉNÉRÉES, que l'
    FUSION dans le JSON existant, pas une concaténation) ; les 6 cadres déjà mesurés sont re-mesurés identiques (131-136, vérifié).
 3. **Le contrôle qui existe (M2).** `verifier-indices-cadres.py` n'est pas sur cette branche et vise `Tools/juge-visuel/INDEX.md` : on
    ne s'y appuie pas. À la place, `generer-filets.py` REFUSE (exit 1, message nommant le cadre) tout cadre de l'index absent de
-   `mesure-filets.json` — aujourd'hui `par_cadre.get(c, [])` l'avale en silence, c'est ce qui rendrait l'étape 0 muette. Contrôle
+   `mesure-filets.json` — aujourd'hui `par_cadre.get(c, [])` l'avale en silence (mesuré : 151 retiré de la mesure ⇒ `rc=0`, ㊴ à 15 recettes au lieu de 16). `verifier-design.py` et D6a l'attrapent déjà plus tard ; ce refus est un fail-fast, au plus près de la faute. Contrôle
    obligatoire : retirer 151 de la mesure, lancer, lire `rc=1` ; le remettre, lire `rc=0`. Puis `generer-filets.py` et `--verifier`.
 4. **Deux instruments committés deviennent rouges dès le point 2 et se remettent au vert DANS LE MÊME COMMIT** (mesuré : 128 → 130
    cadres, 1560 → 1587 éléments bordés, 5403 → 5511 côtés ; recettes distinctes 137 et couleurs 87 inchangées, à re-lire) :
    (a) **D6a** (`DecorDeSceneFiletsPlayModeTests.cs:97-98`, anti-vacuité « 128 cadres », « 1560 éléments ») : constantes passées à
-   130 et 1587, valeurs RE-LUES de la mesure ; (b) **`verifier-design.py`** compare à §3.4 du design décor : amendement DATÉ de
-   `Tools/decor-de-scene-2026-10-07/DESIGN.md` (§3.4 et la ligne B3 du tableau) — « 08/10, ㊴ : cadres 150-151 ajoutés à l'index, 128 → 130
-   cadres, 1560 → 1587 éléments, 5403 → 5511 côtés » —, même mécanisme que les amendements datés déjà portés par ce design (§3.2, §4,
-   §5.6) ; f2 en est informé en même temps que du commit. Le commit d'étape 0 n'est valable que si `verifier-design.py` rend `rc=0`,
-   `teintes.py` rejoué laisse `teintes.json` identique, `inventaire.py` est relancé (écart consigné), et D6a est lue verte au
+   130 et 1587, valeurs RE-LUES de la mesure ; (b) **`verifier-design.py`** compare à §3.4 du design décor : les nombres de §3.4 de
+   `Tools/decor-de-scene-2026-10-07/DESIGN.md` sont REMPLACÉS EN PLACE (ligne 135 ; `verifier-design.py:22` lit la PREMIÈRE occurrence de
+   « N éléments bordés, N côtés » : un bloc d'amendement ajouté avant laisserait l'outil rouge — mesuré en bac à sable), suivis d'une
+   mention datée « 08/10, ㊴ : cadres 150-151 ajoutés à l'index ». Nombres à REMPLACER, tous mesurés (re-lus à l'exécution) : 128 → 130
+   cadres · 1560 → 1587 éléments · 5403 → 5511 côtés · plein 5194 → 5298 · tireté 140 → 144 (pointillé 45, double 24, recettes 137,
+   couleurs 87 inchangés) · table des plus fréquentes 357 → 377, 143 → 145, 77 → 81 · « `#2a3648` à elle seule porte 1403 côtés » →
+   1485. La ligne B3 (l.63) peut rester : son libellé ne mord pas la regex. Même mécanisme que les amendements datés déjà portés par
+   ce design (§3.2, §4, §5.6) ; f2 en est informé en même temps que du commit. Le commit d'étape 0 n'est valable que si `verifier-design.py` rend `rc=0`,
+   `teintes.py` rejoué laisse `teintes.json` identique, `inventaire.py` est relancé et `INVENTAIRE.md:39` + `inventaire-compte.txt` suivent (㊴ `131(6)` → `131(8)`, « cadres couverts » 133 → 135, mesuré), et D6a est lue verte au
    créneau (déclarée dans la catégorie `DecorDeScene`).
 Résultat ATTENDU, calculé le 08/10 sans rien écrire (générateur appelé en mémoire sur l'index et la mesure amendés) : ㊴ passe de 11
 à **16** recettes — neuves : **`Cta6Eteint` `FenIci` `FenPorte` `PiEteinte` `Rg`** — et le total de 363 à 368. Le compte du catalogue
@@ -125,7 +129,7 @@ spec) pour les suivantes — un `HashSet<string>` local, vidé à chaque `Maj()`
 (`Enseigne/Filets/Bas`, `FiliereOrdreEtEcartPlayModeTests.cs:161` ; `Haut|Droite|Bas|Gauche`, `DecorDeSceneFiletsPlayModeTests.cs:227`)
 et la classe de défaut se ferme quand même : aucune bande n'en écrase une autre.
 Même passage : l'or est posé avec `inset: 1f` (le bord est 1 px CSS). `Filets.cs:22-23` (docstring du conteneur : « `Haut|Droite|Bas|Gauche`
-ou `Contour` ») est mise à jour : un côté en collision porte le nom `<Côté><rang>`.
+ou `Contour` ») est mise à jour : un côté en collision porte le nom `<Côté><rang>`. Asymétrie assumée : `Contour` suffixe dès `recette.Length > 1`, `Cote` seulement en collision (mesuré : 0 recette arrondie multi-spec sur 368) ; le jour où un composeur touche une recette arrondie, `DecorDeSceneFiletsPlayModeTests.cs:315` et `ReputationScreenPlayModeTests.cs:437` changent de verdict.
 **Conséquence MESURÉE, déjà en production (M1 de la revue de la v5)** : les 363 recettes générées n'ont AUCUNE collision interne ; le seul
 composeur est `DecorDeScene.HabillerEnseigne` (`DecorDeScene.cs:631-636`), qui ajoute une spec `Cotes.Haut` (liseré blanc `#ffffff` à
 6 %, `inset: 1f`) à une recette `Enseigne` qui couvre déjà `Haut` (1 px `#2a3648`) : AUJOURD'HUI le liseré écrase le bord haut de
@@ -141,7 +145,7 @@ suffixé garde la géométrie de SON côté* : `Bas1` est ancré au bas du bloc 
 rougi sur la faute de la v5 ; (3) rendre et compter sur la colonne centrale, du bas vers le haut : le bord `#2a3648` PUIS l'or,
 chacun à `PxTrait ± 1` rangée (`Is.InRange(ep - 1, ep + 1)`, comme les gardes D6c existantes : au banc 540/300, `Px(1)` = 1,8 contre
 `PxTrait(1)` = 2, les centres de pixels décident) ; 0 rangée or en haut ; (4) *le cas réel* : `HabillerEnseigne` sur un banc ⇒ le haut de
-l'enseigne montre le bord `#2a3648` ET, un cran en dedans, le liseré, et `Haut1` est ancré en HAUT. Contrôle de chaque garde : le
+l'enseigne montre le bord `#2a3648` ET, un cran en dedans, le liseré, et `Haut2` (rang de la spec : `HabillerEnseigne` ajoute le liseré en dernier, indice 2) est ancré en HAUT. Contrôle de chaque garde : le
 code d'avant (suffixe retiré, ou nom passé tel quel à `Bande`) doit les faire rougir ; la sortie rouge est lue avant de les croire.
 
 **Recette composée `FenIciOr` (M3, M4, m2).** Hôte : une classe NEUVE `DecorsDeScene.FiletsComposes` dans `DecorsDeScene.cs`, HORS du
@@ -151,7 +155,7 @@ fichier généré (`Filets` n'est pas `partial`, `F(…)` y est privé : on n'y 
 Mécanisme : `Filets.Poser` (surimpression étirée, `ignoreLayout`, au-dessus du fond du bloc). L'analogie de la v4 avec `Lisere` tombe
 (M4) : `Lisere` est rendu par `DecorDeScene.PoserCerne`, pas par `Filets.Poser`. `FiletsComposes` est invisible à D6b
 (`RecettesDe` ne réfléchit que `Filets`) : **garde D6e** (nom libre : `D6c` désigne déjà le COMPORTEMENT dans ce fichier de tests) — pour chaque champ de `FiletsComposes`, ses N premières specs sont, une à une,
-celles de la recette GÉNÉRÉE qu'il nomme (un re-mesure qui change `FenIci` change `FenIciOr` ou rougit) ; et D6b compte une référence
+celles de la recette GÉNÉRÉE qu'il nomme (un re-mesure qui change `FenIci` change `FenIciOr` ou rougit ; `SpecFilet` n'a pas d'égalité de valeur : `FenIciOr` RÉFÉRENCE les `SpecFilet` générés, et D6e compare les champs un à un) ; et D6b compte une référence
 à `FiletsComposes.FenIciOr` comme référence à `FenIci` (table du test `{FenIciOr → FenIci}`).
 
 **Ce qui n'est PAS une recette** : `.notepi` (aucun bord, fond ni ombre : un texte TMP posé par l'écran). `.pi.eteinte` EST générée
@@ -163,7 +167,7 @@ l'étape 0, les 5 neuves y entrent (12) avec leur raison (D6b rougit sinon) ; à
 allumé des cadres 131-132, dessin ANCIEN ; le pied qui fait foi est `Cta6Eteint`). Le test D6b exige que toute sortie soit effective.
 
 ## 6. Gardes prévues (EFFET d'abord : rendre et compter des pixels)
-- **Structure** : 3 `.fen` dans l'ordre ; vue pistes = 3 `.pi` côte à côte (ordre, 4 crans chacune) ; vue acteurs = une ligne par acteur
+- **Structure** (et **M5** : la ligne `gone` a un `CanvasGroup` ou une teinte équivalente à 0,45 ± 0,02, mesuré sur ses pixels contre ceux d'une ligne vivante) : 3 `.fen` dans l'ordre ; vue pistes = 3 `.pi` côte à côte (ordre, 4 crans chacune) ; vue acteurs = une ligne par acteur
   servi, `.rg` dernier enfant sauf `gone` ; 135 : `.pann` frère de `.elast`, 0 porte, 0 pied.
 - **Pixels (m3 : épaisseurs et positions PINCÉES, à `PxTrait ± 1` rangée près : les centres de pixels décident)** : `FenIciOr` —
   `PxTrait(2)` rangées or au bas de la 1ʳᵉ fenêtre, directement AU-DESSUS de `PxTrait(1)` rangées `#2a3648`, 0 en haut (contrôle : `FenIci` seule n'a aucune rangée or) ; la porte : `PxTrait(1)` rangées de
@@ -171,10 +175,13 @@ allumé des cadres 131-132, dessin ANCIEN ; le pied qui fait foi est `Cta6Eteint
   sinon consigné) ; 2 pistes éteintes = 0 cran coloré, l'effluent ≥ 1. **m5** : `.notepi` — son texte rendu a des pixels à `#8a979c`
   ±6/255, centré à ±2 px du milieu de sa colonne ; les mots « — » et « pas encore sur la table » de `.pi.eteinte` — pixels à `#7a838d`
   non nuls dans leur boîte (une garde sur les PARAMÈTRES ne tient pas lieu de garde sur l'EFFET).
-- **Geste** : clic de PRODUCTION sur la porte ⇒ l'autre vue, `.fen.ici` suit ; clic sur `Cta6Eteint` ou un `.rg` ⇒ AUCUNE requête —
-  **la garde n'est valide que si, dans le même harnais, un clic sur un élément CLIQUABLE connu (la porte, ou un geste d'un autre
-  écran) fait BOUGER le même compteur** (sinon 0 = « élément absent », « raycast manqué » ou « compteur non branché ») et si l'élément
-  éteint est TROUVÉ et son rect > 0 avant le clic ; 135 : aucun geste (même contrôle).
+- **Geste** : clic de PRODUCTION sur la porte ⇒ l'autre vue, `.fen.ici` suit ; clic sur `Cta6Eteint` ou un `.rg` ⇒ AUCUNE requête.
+  Le compteur est `RequetesEmises` du contrôleur (couture à ajouter : incrémenté à chaque envoi HTTP ; précédent
+  `VitrinePlayModeTests.cs:210-228`, `AchatsDemandes`) ; le harnais de ㊴ (`ForensicScreenPlayModeTests.cs`) tape le vrai back et n'en a
+  aucun. Contrôles, DANS le même test : (a) le CHARGEMENT de l'écran fait passer `RequetesEmises` de 0 à ≥ 1 (compteur branché) ;
+  (b) la porte est cliquée par `ProductionClickSupport.Click(Button)` qui rend `true` (le raycast touche : sinon « manqué ») et la vue
+  bascule SANS requête (la bascule est locale, R1 : on ne lui demande pas de bouger le compteur) ; (c) l'élément éteint est TROUVÉ, son
+  rect > 0, et un raycast de son centre ne rend aucun `IPointerClickHandler` ⇒ compteur inchangé. 135 : (a) et (c) sans porte.
 - **Données** : compteurs recalculés indépendamment sur des corps FABRIQUÉS (vide 135 ; chargé 150/151 ; roster vide + piste chaude ;
   route en erreur ⇒ « — ») ; dénominateur = pistes vivantes ; `PistesConstantes` lue en UN site (garde de source) ; TD-881 au registre.
 - **Décor** : D2/D6b/D6e (`RecettesEnAttente[㊴]` rétrécit, jamais de nom périmé). **Ordre des commits** : étape 0 (outil + données +
@@ -182,7 +189,7 @@ allumé des cadres 131-132, dessin ANCIEN ; le pied qui fait foi est `Cta6Eteint
 
 - **TD-612 à l'étape écran (m4)** : mesuré sur `DesignTokens.asset`, arrondi à l'octet — `#8a979c` = `onSurfaceSecondary` (d = 0),
   `#16191b` = `surfaceCard` (0), `#0a0e16` = `hudGaugeFaceOuter` (0), `#111823` = `lieutenantMedallionOuter` (3), `#f2c96b` =
-  `hudMoneyGold` (0) : ces cinq passent par leur JETON dans `Assets/Scripts` ; `#7a838d` (6,78) et `#2a3648` (7,48) sont des littéraux
+  `hudMoneyGold` (0) : ces cinq passent par leur JETON (et, vue acteurs, `#eae0c8` `hudCreme` · `#7db36a` `accentCalm` · `#ff9e3d` `accentWarning` · `#ff5a4d` `accentDanger`, tous d = 0) dans `Assets/Scripts` ; `#7a838d` (6,78) et `#2a3648` (7,48) sont des littéraux
   admis. La garde TD-612 est lue verte avant le commit d'écran.
 
 ## 7. Preuves (08/10, cette branche)
@@ -190,7 +197,10 @@ allumé des cadres 131-132, dessin ANCIEN ; le pied qui fait foi est `Cta6Eteint
   (`.mar6`), 66 (`.rgl6`), aucun `.dos6`.
 - `mesurer-filets.cjs '[131…136,150,151]'` : 131-136 identiques à `mesure-filets.json` ; 150 → 12 éléments, 151 → 15 (listés : `mano cerne
   enseigne fen.ici fen fen.porte elast pi.eteinte pi pi.eteinte pann cta6.eteint` ; `… ac rg ac rg ac rg ac.parti pann`).
-- Ombres internes sur les 128 cadres indexés + 150-151 : seule `fen.ici` porte `inset 0 -2px 0 0 #f2c96b` ; aucune ombre interne
-  n'est un bord (`cerne` 1 px est posé par `PoserCerne`).
+- Ombres internes sur les 128 cadres indexés + 150-151 : seule `fen.ici` porte `inset 0 -2px 0 0 #f2c96b` ; AU PÉRIMÈTRE DE ㊴ (131-136, 150, 151),
+  les seules ombres internes dures sont `cerne` 1 px (posé par `PoserCerne`), le liseré de `.enseigne` et l'or de `.fen.ici` ; `fen`,
+  `fen.porte`, `pann` et `elast` portent des lueurs FLOUES, pas des bords. (Sur les 130 cadres : 379 ombres dures, 17 classes — `vy`
+  252 ×… — signal pour le design décor, hors ㊴.) Cadre 143 (9ᵉ `.dos6`) : délibérément hors index, ses classes (`piste`, `cran`,
+  `cran.dernier`) n'existent pas en 150-151.
 - Générateur appelé en mémoire avec 150-151 ajoutés : 363 → 368 recettes ; ㊴ = `Ac AcParti Cerne Cta6 Cta6Eteint Elast Enseigne Fen FenIci
   FenPorte Mano Pann Pi PiBout PiEteinte Rg` (16).
