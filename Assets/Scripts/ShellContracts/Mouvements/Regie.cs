@@ -24,7 +24,7 @@ namespace MafiaCleanCity.Mouvements
         private readonly int[] finis = new int[MouvementTunables.PistesMax];
         private readonly int[] finisGen = new int[MouvementTunables.PistesMax];
         private readonly int[] remplaces = new int[MouvementTunables.CanauxParPisteMax];
-        private int nFinis, nAmbiance, nAutres, nCouples;
+        private int nFinis, nAmbiance, nAutres, nCouples, nMelange;
 
         private bool aTicke;
         private float dernierT;
@@ -68,6 +68,10 @@ namespace MafiaCleanCity.Mouvements
 
         public int PistesVivantes => nAmbiance + nAutres;
         public int Refus { get; private set; }
+        /// <summary>Refus dus au quota `Melange` (E0) ou à un `Melange` sur une `Ambiance` ; déjà comptés aussi dans `Refus`.</summary>
+        public int RefusMelange { get; private set; }
+        /// <summary>Pistes vivantes portant un canal `Melange` (≤ `MouvementTunables.PistesMelangeMax`).</summary>
+        public int PistesMelange => nMelange;
         /// <summary>Les `Attacher` faits sans régie (hôte nu) : le compteur est statique, `Courante` étant nul alors.</summary>
         public int SansRegie => RegieMouvement.SansRegie;
         public EtatDelestage Delestage => delestage;
@@ -456,6 +460,16 @@ namespace MafiaCleanCity.Mouvements
             if (amb ? nAmbiance >= MouvementTunables.QuotaAmbiance : nAutres >= MouvementTunables.QuotaAlerteRetourTransition)
                 return Refuser(e, "quota " + (amb ? "Ambiance" : "Alerte/Retour/Transition") + " atteint");
 
+            // E0 (décision f2, 08/10) : `Melange` interdit aux `Ambiance`, et au plus 8 pistes `Melange` vivantes à la fois.
+            bool melange = false;
+            for (int ci = 0; ci < m.Canaux.Length; ci++) if (m.Canaux[ci].P == Propriete.Melange) melange = true;
+            if (melange && amb) { RefusMelange++; return Refuser(e, "Melange interdit aux Ambiance (E0 : l'Alpha d'abord)"); }
+            if (melange && nMelange >= MouvementTunables.PistesMelangeMax)
+            {
+                RefusMelange++;
+                return Refuser(e, "quota Melange atteint (" + MouvementTunables.PistesMelangeMax + " pistes vivantes, E0)");
+            }
+
             int slot = -1;
             for (int i = 0; i < pistes.Length; i++) if (!pistes[i].vivante) { slot = i; break; }
             if (slot < 0) return Refuser(e, "48 pistes vivantes");
@@ -489,6 +503,8 @@ namespace MafiaCleanCity.Mouvements
             p.cycleLen = p.periodeEff * (m.Alterne ? 2f : 1f);
             p.transitionner = transition; p.de = de; p.vers = vers; p.quandFini = quandFini;
             p.ambiance = amb;
+            p.melange = melange;
+            if (melange) nMelange++;
             p.age = 0f; p.tRef = 0f; p.aEvalue = false; p.fini = false; p.notifie = false; p.horsChampDepuis = float.NaN;
             p.n = m.Canaux.Length;
             for (int ci = 0; ci < p.n; ci++)
@@ -551,6 +567,7 @@ namespace MafiaCleanCity.Mouvements
                 }
             }
             if (p.ambiance) nAmbiance--; else nAutres--;
+            if (p.melange) nMelange--;
             p.Vider();
             p.gen++;   // les jetons en circulation deviennent périmés
         }

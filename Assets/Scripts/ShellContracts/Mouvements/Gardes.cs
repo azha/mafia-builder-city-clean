@@ -272,6 +272,23 @@ namespace MafiaCleanCity.Mouvements
             v.AddRange(G8(catalogue));
             v.AddRange(G12(catalogue));
             v.AddRange(G13(catalogue, ctx));
+            v.AddRange(MelangeEtAmbiance(catalogue));
+            return v;
+        }
+
+        /// <summary>E0 (décision f2, 08/10) : aucune `Ambiance` ne porte un canal `Melange` — la matière qui vit toute seule passe
+        /// par l'`Alpha`. (Le plafond de 8 pistes `Melange` vivantes est une affaire de régie, pas de donnée.)</summary>
+        public static List<string> MelangeEtAmbiance(IReadOnlyList<Entree> catalogue)
+        {
+            var v = new List<string>();
+            for (int i = 0; i < catalogue.Count; i++)
+            {
+                Entree e = catalogue[i];
+                if (e.Genre != Genre.Ambiance) continue;
+                Canal[] cs = e.Mouvement.Canaux;
+                for (int k = 0; k < cs.Length; k++)
+                    if (cs[k].P == Propriete.Melange) { v.Add("E0 " + e.Id + " : Melange sur une Ambiance (l'Alpha d'abord)"); break; }
+            }
             return v;
         }
 
@@ -285,6 +302,9 @@ namespace MafiaCleanCity.Mouvements
             "TM" + "Pro",
             "MafiaCleanCity" + ".CityMap",
             "MafiaCleanCity" + ".Operational",
+            // E0 (08/10) : le mécanisme ne crée JAMAIS de Canvas (rendu CPU ×2, SetPass 2 → 96 sous masque). `CanvasGroup` reste permis.
+            "AddComponent<" + "Canvas>",
+            "new " + "Canvas(",
         };
 
         /// <summary>G7 : motifs interdits dans `Mouvements/` (réflexion, requêtes de collection, texte riche, dépendances vers les assemblies d'écran).

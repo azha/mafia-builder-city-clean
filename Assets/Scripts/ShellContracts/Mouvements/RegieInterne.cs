@@ -34,6 +34,7 @@ namespace MafiaCleanCity.Mouvements
         public float de, vers;
         public Action<Handle> quandFini;
         public bool ambiance;
+        public bool melange;   // la piste porte un canal `Melange` (quota E0)
 
         public float age, tRef;
         public bool aEvalue, fini, notifie;
@@ -47,7 +48,7 @@ namespace MafiaCleanCity.Mouvements
         public void Vider()
         {
             entree = null; def = null; cible = null; quandFini = null;
-            vivante = false; n = 0;
+            vivante = false; n = 0; melange = false;
         }
     }
 

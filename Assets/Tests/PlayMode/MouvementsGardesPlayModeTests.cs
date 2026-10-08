@@ -297,6 +297,18 @@ namespace MafiaCleanCity.Mouvements.Tests
         // ------------------------------------------------------------------------------------------ G7
 
         [Test]
+        public void E0_MelangeSurAmbiance_ControleNegatif()
+        {
+            // E0 (décision f2, 08/10) — garde de donnée : aucune Ambiance en Melange ; le HUD passe, une Ambiance Melange rougit.
+            Assert.IsEmpty(Gardes.MelangeEtAmbiance(CatalogueHud.Entrees));
+            var def = new MouvementDefini("x", Genre.Ambiance, 2f,
+                new[] { new Canal(Propriete.Melange, Mode.Absolu, new[] { new ImageCle(0f, 0f, Aisance.Lineaire), new ImageCle(1f, 1f, Aisance.Lineaire) }) },
+                Iteration.InfiniFois, poseDeReposS: 1f, couleurA: CouleurSpec.Cible, couleurB: CouleurSpec.CibleFois(0.8f));
+            Assert.IsNotEmpty(Gardes.MelangeEtAmbiance(Liste(Alerte("e0.amb", Genre.Ambiance, def))));
+            Assert.IsEmpty(Gardes.MelangeEtAmbiance(Liste(Alerte("e0.ale", Genre.Alerte, def))), "la même en Alerte passe");
+        }
+
+        [Test]
         public void G7_MotifsInterditsDansMouvements_ControleNegatif()
         {
             // §10 G7 — pas de réflexion, de LINQ, de TextMeshPro, ni de dépendance vers CityMap/Operational dans `Mouvements/`
@@ -312,6 +324,9 @@ namespace MafiaCleanCity.Mouvements.Tests
             foreach (string motif in Gardes.MotifsInterdits)
                 Assert.IsNotEmpty(Gardes.G7("faute.cs", "using " + motif + ";"), motif);
             Assert.IsEmpty(Gardes.G7("sain.cs", "using System.Collections.Generic; using UnityEngine;"));
+            // E0 (08/10) : le mécanisme ne crée jamais de Canvas ; un CanvasGroup reste permis
+            Assert.IsNotEmpty(Gardes.G7("faute.cs", "go." + "AddComponent<" + "Canvas>();"), "créer un Canvas doit rougir");
+            Assert.IsEmpty(Gardes.G7("sain.cs", "go.AddComponent<CanvasGroup>();"), "un CanvasGroup ne rougit pas");
         }
 
         // ------------------------------------------------------------------------------------------ tunables

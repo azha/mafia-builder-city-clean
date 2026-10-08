@@ -43,3 +43,11 @@ régie (E1), 15 images de chauffe puis 90 mesurées, 60 images/s simulées.
 travail, sans rendu à l'écran : ils classent les mécanismes entre eux (l'`Alpha` contre le `Melange`, avec ou sans Canvas
 imbriqué), ils ne disent PAS le coût GPU sur un téléphone. Aucun seuil GPU n'en est tiré. Les compteurs de rendu
 (batches, draw calls) sont invalides en batchmode : ils se liront au profileur, sur appareil.
+
+## Suite : règles ratifiées (f2, 08/10) et conséquence pour ce spike
+
+Règles écrites dans le design §4 et appliquées par la régie : aucun Canvas créé par le mécanisme (G7) ; `Alpha` d'abord ;
+`Melange` interdit aux `Ambiance` ; au plus **8** pistes `Melange` vivantes, refus compté (`Regie.RefusMelange`). ⚠️ Les
+scénarios `melange_48` et `melange_48_imbrique` de ce rapport sont donc une **mesure historique** : rejoués avec la régie
+actuelle, 40 des 48 cibles seraient refusées (et les 32 `Ambiance` le sont d'office). Ils ont servi à fonder la règle, ils
+ne se reproduisent plus tels quels.
