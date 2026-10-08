@@ -1,4 +1,4 @@
-# ㊴ Le dossier — les éléments ABSENTS de la maquette `.dos6` (CLIENT-2, 08/10) — DESIGN v2 (règles de f2 du 08/10 intégrées), à revoir ⊥
+# ㊴ Le dossier — les éléments ABSENTS de la maquette `.dos6` (CLIENT-2, 08/10) — DESIGN v3 (règles de f2 + cadres 150-151 de CLIENT-3), à revoir ⊥
 
 **Commande** (f2, 08/10) : après le décor de scène, construire sur ㊴ ce que la maquette montre et que le client ne construit pas — les
 compteurs, la boîte des pistes, le pied « acheter du renseignement », les acteurs — d'après les cadres de ㊴, le geste éteint s'il n'a pas
@@ -71,8 +71,25 @@ panneau dans `.elast`, **pas de pied** (mesuré). Roster vide mais une piste viv
 **R6 — mots.** `steady` « il tient » · `nervous` « il a peur » · `unavailable` « injoignable » · `gone` « parti » (+ `AcParti`) ;
 `lawyer` « Avocat » · `clerk` « Greffier » ; silhouette `.sil` teintée par l'état (4 jetons de la maquette) ; tout par `Libelle`.
 
+## 4bis. v3 — les cadres 150-151 (CLIENT-3, atelier master 1de62d6, `generateur-dossier-bascule.py`) RÉVISENT R1, R2 et P1
+Mesuré (9 `.dos6` désormais) : **150** « les pistes — la fenêtre des acteurs mène à eux » : compteurs `fen ici` (01/3 pistes chaudes) ·
+`fen` (00 franchies) · `fen porte` (« › », 01/4 acteurs qui tiennent) ; pistes ; panneau dont la phrase finit « Pour voir qui parle, la
+fenêtre des acteurs, en haut à droite. » ; pied `cta6 eteint` + note6 « sur un acteur, pas sur une piste — éteint : le prix n’est pas
+servi ». **151** « les acteurs — le renseignement par ligne, éteint ; la fenêtre des pistes ramène » : `fen ici` (04 acteurs connus) ·
+`fen` (01 qui ont peur) · `fen porte` (« ‹ », 01/3 pistes chaudes) ; 4 `.ac`, chacune suivie d'un `.rg` « renseignement » SAUF `.ac
+parti` ; panneau de 133 inchangé ; pied = `note6` seule. CSS neuve : `.fen.ici` (filet or au bas), `.fen.porte` (bord or, chiffre or,
+glyphe absolu à droite), `.ac .rg` (lisere, texte éteint).
+- **R1 (remplace)** : la bascule EST la 3ᵉ fenêtre (`.fen.porte`) dans les deux vues ; la 1ʳᵉ (`.fen.ici`) dit la vue courante. Le
+  retour système reste celui du shell (il sort de ㊴). **P1 fermé** : la vue acteurs se code.
+- **R2 (remplace)** : vue pistes, le CTA du pied est TOUJOURS `.cta6.eteint` (le dessin), note de 150 — le geste n'est plus de naviguer,
+  la fenêtre-porte le fait. Vue acteurs : un `.rg` ÉTEINT par ligne non `gone` (non cliquable), aucun sur `gone` ; pied `note6` de 151.
+  Allumage du `.rg` et `POST …/intel` : quand le back sert le prix avant l'achat (L3, BACK-1).
+- **R4 (précise)** : la fenêtre-porte de 151 réutilise le compteur « pistes chaudes » de la vue pistes, même règle de dénominateur.
+- **Écart du dessin restant (à CLIENT-3)** : 150 dessine les 2 pistes constantes comme VIVANTES (« on regarde / watched », « discret /
+  quiet ») — R3 (f2 Q3) n'y est pas, et le texte de la note des pistes éteintes manque toujours ; 151 et 150 écrivent « /3 » (P3).
+
 ## 5. Points ouverts pour la revue ⊥ (et f2)
-- P1 : R1 — élément dessiné par CLIENT-3, ou retour système (§C.14) ? Bloque la vue acteurs, pas la vue pistes.
+- P1 : FERMÉ par 150-151 (§4bis).
 - P2 : le panneau de 133 (« deux types listés, cinq achetables », « la route accepte… ») parle de la ROUTE au joueur : texte d'état
   joueur ou note de chantier comme 136 ? Proposé : remplacé par le panneau de 134 tant que l'atelier ne tranche pas.
 - P3 : R4 — un dénominateur « /1 » s'écarte du dessin « /3 » ; écart A assumé (vérité de la donnée) ou C ?
@@ -80,5 +97,5 @@ panneau dans `.elast`, **pas de pied** (mesuré). Roster vide mais une piste viv
 ## 6. Gardes prévues
 Pixels/structure : 3 `.pi` côte à côte dans `Elast` (ordre, 4 crans chacun, cran servi coloré), `PiBout` au dernier cran ; une ligne par
 acteur servi, `AcParti` sur `gone` ; compteurs dérivés = recalcul indépendant sur des corps FABRIQUÉS (deux états : vide 135, chargé
-131/133) ; « — » sur route en erreur ; D2/D6b du décor (RecettesEnAttente[㊴] rétrécit : Fen, Elast, PiBout, Ac, AcParti, Cta6) ; R2 : `Cta6Eteint` quand la vue acteurs n'existe pas ou que le roster est vide/en erreur ; R3 : 2 `.pi` éteintes (0 cran coloré, « — »),
+131/133) ; « — » sur route en erreur ; D2/D6b du décor (RecettesEnAttente[㊴] rétrécit : Fen, Elast, PiBout, Ac, AcParti, Cta6) ; R2 : `Cta6Eteint` toujours en vue pistes, un `Rg` éteint par ligne non `gone` (0 sur `gone`), la fenêtre-porte bascule (clic de production) et `FenIci` suit la vue ; R3 : 2 `.pi` éteintes (0 cran coloré, « — »),
 l'effluent coloré ; R4 : dénominateur = pistes vivantes ; R5 : 135 sans pied ; TD-881 au registre.
