@@ -24,8 +24,8 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉓", "⑮", "⑰", "⑭", "㉒",   // ㊵, ㊳, ㉜, ㉚ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ (à CLIENT-2, f2)
-            "㊱", "㉘", "㉛", "㉝", "㉞", "㉙", "㉔", "⑱",
+            "③", "⑤", "㊲", "㉓", "⑮", "⑰", "⑭", "㉒",   // ㊵, ㊳, ㉜, ㉚, ㉛ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ (à CLIENT-2, f2)
+            "㊱", "㉘", "㉝", "㉞", "㉙", "㉔", "⑱",
         };
 
         /// <summary>DETTE DATÉE : par écran POSÉ, les recettes de filets pas encore branchées, chacune avec sa raison. Ne fait
@@ -44,6 +44,11 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ㉛ (08/10) — PlChoix/PlChoixPris/PlChoixRisque : les états des trois cartes d'avocat (Filets.Etat), commit suivant.
+            //   PlItem/PlItemLache, PlAlerte, PlRien, Tag* : états d'une affaire ACTIVE, non servie (`GET /v1/me/legal` : activeCases: [])
+            //   — non construits (CLIENT-1). PlTete, PlBas, PlGeste*, PlVitre, PlAv, Mano : en-tête, pied, vitre, avatar, cadran —
+            //   blocs de CLIENT-1, à déléguer à Filets.
+            { "㉛", new[] { "Mano", "PlAlerte", "PlAv", "PlBas", "PlChoix", "PlChoixPris", "PlChoixRisque", "PlGeste", "PlGesteRouge", "PlItem", "PlItemLache", "PlRien", "PlTete", "PlVitre", "Tag", "Tag_2", "Tag_3" } },
             // ㉟ (08/10) — Enseigne et Fen posées. Dl/DlMort/DlPris/DlPrisMort (les rangées de points de vente), Gd, Pann/Pann_2 (le
             //   panneau d'état) : déjà tracés par `ProceduralUI` dans le contrôleur (rangées, pastilles) — à migrer vers Filets ; Elast
             //   (la boîte), Cta6/Cta6Eteint (le pied), Mano (le cadran) : à classer au juge.

@@ -628,7 +628,9 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("LoiRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DesignTokens.Current.surfaceBase);
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,18, le voile,
+            // le support B de `.parl6` (#1b1f24 → #14181d 58 % → #101317) — DÉCLARÉS au catalogue, plus de fond plat ici.
+            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Loi);
             racinePleinEcran.SetAsLastSibling();
 
             // ⛔ L'ÉCHELLE AVANT TOUTE CONVERSION — un RectTransform qui vient d'être étiré n'a
@@ -639,10 +641,12 @@ namespace MafiaCleanCity.Operational
             // BANDE BASSE `.bas` de la maquette (plaque #141a21, filet 2 px #2c3640, le geste), qui reste en PIED quoi que le corps contienne. Les marges d'écran (haut, bas) sont celles
             // de la pile ; l'ancien « PAS de ScrollRect » (écran jamais lancé) est levé par la classe : la garde ListeDefilante le sait.
             VerticalLayoutGroup pilePage = racine.AddComponent<VerticalLayoutGroup>();
-            pilePage.padding = new RectOffset(0, 0, (int)ShellChrome.TopInsetPx, (int)ShellChrome.BottomInsetPx);
+            pilePage.padding = new RectOffset(0, 0, 0, (int)ShellChrome.BottomInsetPx);   // le haut : ReserverLaBande, ci-dessous
             pilePage.spacing = 0f;
             pilePage.childControlWidth = true; pilePage.childControlHeight = true;
             pilePage.childForceExpandWidth = true; pilePage.childForceExpandHeight = false;
+            // §5.6 du design : l'en-tête commence SOUS max(barre, bande de scène 21 %), comme `.parl6` sous la scène de la maquette.
+            DecorDeScene.ReserverLaBande(pilePage, decor, 0f);
 
             // C-a + C-b (juge groupé du 07/10, f2) : le BANDEAU DE TITRE de la maquette (`.pl-tete`, `EnteteDEcran`) est le premier élément de la pile, pleine largeur, et NE DÉFILE PAS (`flex:none` : B1, le fragment de titre coupé)
             var (titreDuBandeau, sousTitreDuBandeau) = EnteteDEcran.Construire(racine.transform, EnteteDEcran.Loi, Px,
