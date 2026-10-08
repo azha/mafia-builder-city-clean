@@ -137,20 +137,21 @@ namespace MafiaCleanCity.CityMap.Tests
                     Assert.AreEqual(vide, ecran.EtatVide, vue + " : l'état de la vue fabriquée");
 
                     foreach (string nom in new[] { "ArcFroid", "ArcOr", "ArcChaud", "Piste", "Aiguille", "Moyeu", "MoyeuBord", "Face", "Bord", "Vis1", "Vis2", "Vis3", "Vis4", "Onglet" })
-                        Assert.IsTrue(Sous("Jauge/Cadran/" + nom).gameObject.activeInHierarchy, $"{vue} : « {nom} » est absent ou éteint");
+                        Assert.IsTrue(Sous("Corps/Contenu/Jauge/Cadran/" + nom).gameObject.activeInHierarchy, $"{vue} : « {nom} » est absent ou éteint");
 
                     // en TÊTE du corps : juste après le décor
-                    Transform jauge = Sous("Jauge"), decor = Sous("Decor");
-                    Assert.AreEqual(decor.GetSiblingIndex() + 1, jauge.GetSiblingIndex(), vue + " : la jauge ouvre la pile, sous le décor");
+                    Transform jauge = Sous("Corps/Contenu/Jauge"), decor = Sous("Decor");
+                    Assert.AreEqual(0, jauge.GetSiblingIndex(), vue + " : la jauge ouvre le contenu du corps");
+                    Assert.AreEqual(decor.GetSiblingIndex() + 1, Sous("Corps").GetSiblingIndex(), vue + " : le corps (la fenêtre défilante) suit le décor");
 
                     // les cotes de la maquette : 200 × 118 px CSS
-                    RectTransform cadran = (RectTransform)Sous("Jauge/Cadran");
+                    RectTransform cadran = (RectTransform)Sous("Corps/Contenu/Jauge/Cadran");
                     Assert.AreEqual(Px(200f), cadran.rect.width, 1f, vue + " : largeur du cadran (200 px CSS)");
                     Assert.AreEqual(Px(118f), cadran.rect.height, 1f, vue + " : hauteur du cadran (118 px CSS)");
 
                     // l'onglet et la légende disent leurs mots
-                    Assert.AreEqual("TENSION", Sous("Jauge/Cadran/Onglet/Mot").GetComponent<TextMeshProUGUI>().text, vue + " : l'onglet");
-                    Assert.AreEqual("CALME — VOS AFFAIRES RESPIRENT", Sous("Jauge/Legende/Mot").GetComponent<TextMeshProUGUI>().text, vue + " : la légende du cadre « au calme »");
+                    Assert.AreEqual("TENSION", Sous("Corps/Contenu/Jauge/Cadran/Onglet/Mot").GetComponent<TextMeshProUGUI>().text, vue + " : l'onglet");
+                    Assert.AreEqual("CALME — VOS AFFAIRES RESPIRENT", Sous("Corps/Contenu/Jauge/Legende/Mot").GetComponent<TextMeshProUGUI>().text, vue + " : la légende du cadre « au calme »");
 
                     // la structure : tout Graphic de la jauge porte son CanvasRenderer (sans lui, rien ne dessine et la console est muette)
                     foreach (Graphic g in jauge.GetComponentsInChildren<Graphic>(true))
@@ -190,7 +191,7 @@ namespace MafiaCleanCity.CityMap.Tests
             {
                 CompressionScreenController ecran = Monter(banc, "calm", true);
                 yield return Poser();
-                RectTransform ai = (RectTransform)Sous("Jauge/Cadran/Aiguille");
+                RectTransform ai = (RectTransform)Sous("Corps/Contenu/Jauge/Cadran/Aiguille");
                 // Unity tourne vers la GAUCHE pour un z positif ; le CSS vers la droite : z = −θ
                 var attendus = new (string cran, float z)[] { ("calm", 60f), ("mounting", -12f), ("crushing", -64f), ("compression_active", -64f) };
                 foreach (var (cran, z) in attendus)
@@ -223,7 +224,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 try
                 {
                     // (1) le bord laiton : des pixels or dans le rect du cadran
-                    RectTransform cadran = (RectTransform)Sous("Jauge/Cadran");
+                    RectTransform cadran = (RectTransform)Sous("Corps/Contenu/Jauge/Cadran");
                     Color laiton = DesignTokens.Current.hudHairlineGold;
                     Vector2Int a = banc.Pixel(cadran, 0f, 0f), b = banc.Pixel(cadran, 1f, 1f);
                     int or = 0;
@@ -233,7 +234,7 @@ namespace MafiaCleanCity.CityMap.Tests
                     Assert.Greater(or, 300, "le bord laiton du cadran n'a (presque) aucun pixel or : la jauge ne dessine pas");
 
                     // (2) les arcs, à leur milieu : le mélange sRGB du navigateur (`stroke-opacity` sur la piste `#ffffff1a`, sur le fond radial)
-                    RectTransform face = (RectTransform)Sous("Jauge/Cadran/Face");
+                    RectTransform face = (RectTransform)Sous("Corps/Contenu/Jauge/Cadran/Face");
                     Color fond0 = Css("#3a3f47"), fond1 = Css("#15181c");
                     float rayonSurDiametre = 70f / (2f * (70f + 4.5f));   // rayon de la LIGNE MÉDIANE d'un arc de rayon 70 et de trait 9, sur le diamètre extérieur du rect
                     var arcs = new (string nom, float angle, string encre, float alpha)[]
@@ -244,7 +245,7 @@ namespace MafiaCleanCity.CityMap.Tests
                     };
                     foreach (var (nom, angle, encre, alpha) in arcs)
                     {
-                        RectTransform arc = (RectTransform)Sous("Jauge/Cadran/" + nom);
+                        RectTransform arc = (RectTransform)Sous("Corps/Contenu/Jauge/Cadran/" + nom);
                         float fx = 0.5f + Mathf.Cos(angle * Mathf.Deg2Rad) * rayonSurDiametre, fy = 0.5f + Mathf.Sin(angle * Mathf.Deg2Rad) * rayonSurDiametre;
                         Vector3 monde = arc.TransformPoint(new Vector3(arc.rect.xMin + fx * arc.rect.width, arc.rect.yMin + fy * arc.rect.height, 0f));
                         Vector3 lp = face.InverseTransformPoint(monde);
@@ -261,15 +262,15 @@ namespace MafiaCleanCity.CityMap.Tests
                     }
 
                     // (3) l'aiguille (crème) aux deux tiers de sa hauteur, le moyeu (laiton) en son centre
-                    RectTransform ai = (RectTransform)Sous("Jauge/Cadran/Aiguille");
+                    RectTransform ai = (RectTransform)Sous("Corps/Contenu/Jauge/Cadran/Aiguille");
                     Vector2Int pn = banc.Pixel(ai, 0.5f, 0.6f);
                     Assert.LessOrEqual(Ecart(t.GetPixel(pn.x, pn.y), DesignTokens.Current.hudCreme), 24f, "l'aiguille n'a pas sa couleur crème sur sa hauteur");
-                    RectTransform moyeu = (RectTransform)Sous("Jauge/Cadran/Moyeu");
+                    RectTransform moyeu = (RectTransform)Sous("Corps/Contenu/Jauge/Cadran/Moyeu");
                     Vector2Int pm = banc.Pixel(moyeu, 0.5f, 0.5f);
                     Assert.LessOrEqual(Ecart(t.GetPixel(pm.x, pm.y), laiton), 12f, "le moyeu n'est pas laiton en son centre");
 
                     // (4) l'onglet : de l'encre brune (`#2b1d0e`) sur son fond or
-                    RectTransform onglet = (RectTransform)Sous("Jauge/Cadran/Onglet");
+                    RectTransform onglet = (RectTransform)Sous("Corps/Contenu/Jauge/Cadran/Onglet");
                     Color encreOnglet = Css("#2b1d0e");
                     Vector2Int oa = banc.Pixel(onglet, 0f, 0f), ob = banc.Pixel(onglet, 1f, 1f);
                     int brun = 0;
@@ -326,6 +327,56 @@ namespace MafiaCleanCity.CityMap.Tests
             // le foyer est AU MILIEU DU BAS : premier arrêt ; et à 70 % de l'ellipse (120 % × 100 %) le dernier — ici en haut au centre, ny = 1 ⇒ t = 1 > 0,7
             Assert.LessOrEqual(Ecart(tex.GetPixel(100, 0), premier), 3f, "le foyer (bas, milieu) porte le premier arrêt");
             Assert.LessOrEqual(Ecart(tex.GetPixel(100, 117), dernier), 3f, "le haut est au-delà de 70 % : dernier arrêt");
+        }
+
+        // ═══ G — le CONTENU dans son panneau (f2, 08/10 : « un débordement ne part pas en dette » ; même classe que ㊴ r1 F1/F2) ═════════════════════
+
+        private static Rect Monde(RectTransform r)
+        {
+            var c = new Vector3[4]; r.GetWorldCorners(c);
+            return new Rect(c[0].x, c[0].y, c[2].x - c[0].x, c[2].y - c[0].y);
+        }
+
+        [UnityTest]
+        public IEnumerator G1_LeCorps_EstUneFenetreDefilante_AucunTexteEcrase_LaDerniereLigneAtteignable()
+        {
+            using (var banc = new Banc())
+            {
+                foreach (bool vide in new[] { false, true })
+                {
+                    if (hote != null) Object.DestroyImmediate(hote);
+                    CompressionScreenController ecran = Monter(banc, "calm", vide);
+                    yield return Poser();
+                    string vue = vide ? "vue vide" : "vue calme";
+                    ListeDefilante fen = ecran.FenetreDefilante;
+                    Assert.IsNotNull(fen, vue + " : le corps n'est pas une ListeDefilante");
+                    RectTransform corps = (RectTransform)Sous("Corps"), contenu = (RectTransform)Sous("Corps/Contenu");
+                    Assert.AreSame(corps, fen.Defilement.viewport, vue + " : la fenêtre est le corps");
+                    Assert.AreSame(contenu, fen.Defilement.content, vue + " : le contenu défilant");
+                    // aucun texte écrasé sous sa hauteur préférée (la forme exacte du débordement : le texte sort de sa boîte)
+                    Transform cadranFixe = Sous("Corps/Contenu/Jauge/Cadran");   // le dessin du cadran (onglet compris) est posé en cotes ABSOLUES de la maquette : hors de la règle
+                    foreach (TextMeshProUGUI tx in contenu.GetComponentsInChildren<TextMeshProUGUI>(false))
+                    {
+                        if (tx.transform.IsChildOf(cadranFixe)) continue;
+                        tx.ForceMeshUpdate();
+                        Assert.LessOrEqual(tx.preferredHeight, tx.rectTransform.rect.height + 1f, $"{vue} : « {tx.text} » ({tx.name}) est écrasé : il lui faut {tx.preferredHeight:0.#}, il a {tx.rectTransform.rect.height:0.#}");
+                    }
+                    // fenêtre volontairement BASSE : le contenu défile et sa dernière ligne est atteignable
+                    LayoutElement le = corps.GetComponent<LayoutElement>();
+                    float basse = Mathf.Max(8f, contenu.rect.height * 0.5f);
+                    le.flexibleHeight = 0f; le.minHeight = basse; le.preferredHeight = basse;
+                    LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)hote.transform);
+                    yield return null; Canvas.ForceUpdateCanvases();
+                    fen.Rafraichir();
+                    Assert.IsTrue(fen.ContenuDepasse, vue + " : la fenêtre est basse, le contenu doit se dire « il y a une suite »");
+                    fen.Defilement.verticalNormalizedPosition = 0f;
+                    Canvas.ForceUpdateCanvases(); fen.Rafraichir();
+                    Transform derniere = null;
+                    for (int k = contenu.childCount - 1; k >= 0 && derniere == null; k--) if (contenu.GetChild(k).gameObject.activeSelf) derniere = contenu.GetChild(k);
+                    Assert.IsNotNull(derniere, vue + " : un contenu");
+                    Assert.GreaterOrEqual(Monde((RectTransform)derniere).yMin, Monde(corps).yMin - 1f, vue + " : la dernière ligne (" + derniere.name + ") reste hors de la fenêtre au bout de la course");
+                }
+            }
         }
     }
 }

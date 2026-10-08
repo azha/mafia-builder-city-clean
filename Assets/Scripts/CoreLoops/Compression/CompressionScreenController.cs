@@ -364,6 +364,10 @@ namespace MafiaCleanCity.CoreLoops.Compression
             return (MafiaCleanCity.I18n.MotsDesEnumeres.NomTension + " " + tension + " · " + semaine).ToUpperInvariant();
         }
 
+        private ListeDefilante fenetre;
+        /// <summary>La fenêtre défilante du corps (garde : le contenu qui dépasse défile, il n'est jamais tranché ni écrasé).</summary>
+        public ListeDefilante FenetreDefilante => fenetre;
+
         private void Construire()
         {
             RectTransform selfRt = GetComponent<RectTransform>();
@@ -388,34 +392,57 @@ namespace MafiaCleanCity.CoreLoops.Compression
             // §5.6 du design : la pile commence SOUS max(barre, bande de scène 35 %), comme la tôle de la maquette.
             DecorDeScene.ReserverLaBande(v, decor, Px(8f));
 
+            // ⛔ UN DÉBORDEMENT NE PART PAS EN DETTE (f2, 08/10 ; même classe que ㊴ r1 F1/F2) : la jauge ajoute ~120 px CSS à la pile ; à 1080×1920 elle dépasse la fenêtre d'environ 35 px CSS et le
+            // `VerticalLayoutGroup` l'écrasait sous sa hauteur préférée (texte hors de sa boîte). Le CORPS est donc une FENÊTRE défilante (`ListeDefilante` : fondu + ascenseur) sur un CONTENU qui épouse
+            // ses enfants (ContentSizeFitter) ; quand tout tient, rien ne change (ni fondu, ni course).
+            GameObject corps = new GameObject("Corps", typeof(RectTransform));
+            corps.transform.SetParent(transform, false);
+            corps.AddComponent<RectMask2D>();
+            LayoutElement corpsLe = corps.AddComponent<LayoutElement>();
+            corpsLe.flexibleHeight = 1f; corpsLe.minHeight = 0f;
+            GameObject contenuGo = new GameObject("Contenu", typeof(RectTransform));
+            contenuGo.transform.SetParent(corps.transform, false);
+            RectTransform contenuRt = (RectTransform)contenuGo.transform;
+            contenuRt.anchorMin = new Vector2(0f, 1f); contenuRt.anchorMax = new Vector2(1f, 1f);
+            contenuRt.pivot = new Vector2(0.5f, 1f);
+            contenuRt.offsetMin = Vector2.zero; contenuRt.offsetMax = Vector2.zero;
+            VerticalLayoutGroup pileCorps = contenuGo.AddComponent<VerticalLayoutGroup>();
+            pileCorps.spacing = Px(8f);
+            pileCorps.childControlWidth = true; pileCorps.childControlHeight = true;
+            pileCorps.childForceExpandWidth = true; pileCorps.childForceExpandHeight = false;
+            pileCorps.childAlignment = TextAnchor.UpperCenter;
+            contenuGo.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fenetre = ListeDefilante.Equiper((RectTransform)corps.transform, contenuRt, DesignTokens.Current.surfaceBase);
+            Transform pile = contenuGo.transform;
+
             // LA JAUGE DE TENSION (juge visuel r1 du 08/10, F3 : l'élément héros du cadre manquait) — en TÊTE du corps, comme `.cadran-fer`
             // est le premier objet de la tôle de la série 6 (cadres 14-19). Tout le reste de la pile est inchangé.
-            ConstruireJauge(transform);
+            ConstruireJauge(pile);
 
             // ⛔ OR VIF, PAS OR. Mesuré sur `reference-1080x2102.png` : le titre d'état rend
             //    (242,201,107) = `hudMoneyGold`. Il était posé en `--or` (217,171,78) — le bon
             //    jeton d'une AUTRE fonction (le soulignement du solde). *Un jeton juste employé
             //    pour un autre rôle rend un pixel plausible et faux.*
-            TextMeshProUGUI titre = Texte(transform, "Titre", "LA SEMAINE", Px(13f), OrVif,
+            TextMeshProUGUI titre = Texte(pile, "Titre", "LA SEMAINE", Px(13f), OrVif,
                                           DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             titre.characterSpacing = 18f;
 
-            pressionTexte = Texte(transform, "Pression", "pression inconnue", Px(8.5f), Creme2,
+            pressionTexte = Texte(pile, "Pression", "pression inconnue", Px(8.5f), Creme2,
                                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
 
             // le budget : des jetons qu'on compte, pas un nombre dans une phrase
-            GameObject bandeau = Bloc("Budget", transform, true, Px(5f));
+            GameObject bandeau = Bloc("Budget", pile, true, Px(5f));
             var hb = bandeau.GetComponent<HorizontalLayoutGroup>();
             hb.childForceExpandWidth = false;
             hb.childAlignment = TextAnchor.MiddleCenter;
             jetons = (RectTransform)bandeau.transform;
 
-            ConstruirePlaque(transform);
+            ConstruirePlaque(pile);
 
-            GameObject liste = Bloc("Lignes", transform, false, Px(8f));
+            GameObject liste = Bloc("Lignes", pile, false, Px(8f));
             lignes = (RectTransform)liste.transform;
 
-            videTexte = Texte(transform, "Vide", "", Px(11f), Creme2,
+            videTexte = Texte(pile, "Vide", "", Px(11f), Creme2,
                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             videTexte.gameObject.SetActive(false);
         }
