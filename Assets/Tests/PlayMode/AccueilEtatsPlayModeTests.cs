@@ -105,6 +105,26 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         [Test]
+        public void Etat3b_LaCarteDesRapportsSansOptions_LeGesteDitQuandMemeCeQuIlFait()
+        {
+            var hl = Monter<HighestLeverageCardController>();
+            var avec = Carte("AUTONOMY_REPORTS_PENDING", "hl.option.autonomy_reports.review_now", "hl.option.autonomy_reports.leave_pending");
+            hl.SetPayload(null, avec, null);
+            string servi = MafiaCleanCity.I18n.Libelle.Gabarit(avec.options[0].label, "—");
+            Assert.AreEqual(servi, hl.LibelleLire, "avec ses deux options, le geste porte l'option servie (inchangé)");
+
+            // Sans options (carte fabriquée du harnais, ou back qui n'en sert pas) : jamais une pilule SANS mot (planche A01 du 08/10).
+            var sans = Carte("AUTONOMY_REPORTS_PENDING", "a", "b");
+            sans.options = null;
+            hl.SetPayload(null, sans, null);
+            Assert.IsTrue(hl.EstCarteDesRapports);
+            string repli = MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Lire maintenant");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(hl.LibelleLire), "la pilule de la carte des rapports a un libellé");
+            Assert.AreEqual(repli, hl.LibelleLire, "le repli nommé : « Lire maintenant »");
+            Assert.AreNotEqual(servi, hl.LibelleLire, "le libellé de la carte précédente ne survit pas à un rendu sans options");
+        }
+
+        [Test]
         public void Etat4_LaLigneDuBacklogSuitBacklogBadge()
         {
             var chrome = Monter<HomeChromeController>();

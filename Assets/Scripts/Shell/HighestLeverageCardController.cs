@@ -240,6 +240,7 @@ namespace MafiaCleanCity.Shell
             if (rapportText != null) rapportText.text = "";
             if (recommandationText != null) recommandationText.text = "";
             if (alternativeText != null) alternativeText.text = "";
+            if (lireLabel != null) lireLabel.text = "";
             if (surtitreText != null) surtitreText.text = "";
             if (noteText != null) noteText.text = "";
             bool rapports = RenderedState == CardState.Available && EstCarteDesRapports;
@@ -275,6 +276,13 @@ namespace MafiaCleanCity.Shell
                     break;
                 case CardState.Available:
                     RendreLesOptions();
+                    // Le geste de la carte des rapports ne reste JAMAIS sans mot : sans exactement deux options servies (planche A01 du 08/10 :
+                    // pilule vide), il dit ce qu'il FAIT — la clé de la table 45, comme [Prendre acte].
+                    if (rapports && lireLabel != null && string.IsNullOrWhiteSpace(lireLabel.text))
+                    {
+                        lireLabel.text = Lib("carte", "Lire maintenant");
+                        Track(lireLabel.text);
+                    }
                     titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key);
                     impactText.text = ImpactLabel(CurrentCard.impact_bucket);
                     urgencyText.text = UrgencyLabel(CurrentCard.urgency_bucket);
