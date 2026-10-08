@@ -64,20 +64,58 @@ namespace MafiaCleanCity.Mouvements.Tests
         }
 
         [Test]
-        public void E0_Quota_9eMelangeRefuse_EtCompte()
+        public void E0_Quota_11eMelangeRefuse_EtCompte()
         {
-            // E0 (créneau du 08/10, décision f2) — « au plus 8 pistes Melange vivantes à la fois ; refus COMPTÉ au-delà ».
+            // E0 (créneau du 08/10, décision f2, recomptée) — « au plus 10 pistes Melange vivantes à la fois ; refus COMPTÉ au-delà ».
             // Mesuré au spike : Graphic.color reconstruit les lots, ≈ 100 × le coût d'un CanvasGroup.alpha.
             Entree m = MelangeDe("t.melange", Genre.Alerte);
             for (int i = 0; i < MouvementTunables.PistesMelangeMax; i++)
                 Assert.IsFalse(regie.Attacher(m, Img("m" + i, Color.white).rectTransform, Reglage.Defaut).EstNul, "Melange n° " + (i + 1));
-            Assert.AreEqual(8, regie.PistesMelange);
-            Assert.IsTrue(regie.Attacher(m, Img("m9", Color.white).rectTransform, Reglage.Defaut).EstNul, "la 9e piste Melange est refusée");
+            Assert.AreEqual(10, regie.PistesMelange);
+            Assert.IsTrue(regie.Attacher(m, Img("m11", Color.white).rectTransform, Reglage.Defaut).EstNul, "la 11e piste Melange est refusée");
             Assert.AreEqual(1, regie.RefusMelange, "…comptée dans RefusMelange");
             Assert.AreEqual(1, regie.Refus, "…et dans Refus");
             // contrôle : une piste ALPHA reste acceptée (le quota Melange ne mange pas le quota Alerte)
             Entree a = Constante("t.alpha", Genre.Alerte, Propriete.Alpha, Mode.Multiplicatif, 0.9f);
             Assert.IsFalse(regie.Attacher(a, Rect("a1"), Reglage.Defaut).EstNul, "un Alpha passe encore");
+        }
+
+        [Test]
+        public void E0_RetourDAppui_JamaisRefuse_PlafondPlein_BasculeSurLeVoile()
+        {
+            // RÈGLE DE CLASSE (f2, 08/10) — « le retour d'appui du joueur n'est JAMAIS celui qu'on refuse ». Plafond Melange plein
+            // + un appui ⇒ le retour s'affiche (voile Alpha), AUCUNE piste existante n'est perdue, AUCUN refus compté ; la bascule l'est.
+            Entree m = MelangeDe("t.melange.plein", Genre.Alerte);
+            var tenues = new List<Handle>();
+            for (int i = 0; i < MouvementTunables.PistesMelangeMax; i++)
+                tenues.Add(regie.Attacher(m, Img("p" + i, Color.white).rectTransform, Reglage.Defaut));
+            Assert.IsFalse(regie.PlaceMelangeLibre, "le plafond est plein");
+
+            var defAppui = new MouvementDefini("t.appui", Genre.Retour, 0.09f,
+                new[] { new Canal(Propriete.Melange, Mode.Absolu, new[] { AidesMouvement.K(0f, 0f), AidesMouvement.K(1f, 1f) }) },
+                Iteration.Fois(1), couleurA: CouleurSpec.Cible, couleurB: CouleurSpec.CibleFois(0.85f));
+            Entree appui = Admise(AidesMouvement.Faire("t.appui", defAppui));
+            var defVoile = new MouvementDefini("t.voile", Genre.Retour, 0.09f,
+                new[] { new Canal(Propriete.Alpha, Mode.Multiplicatif, new[] { AidesMouvement.K(0f, 1f), AidesMouvement.K(1f, 0.8f) }) },
+                Iteration.Fois(1));
+            Entree voile = Admise(AidesMouvement.Faire("t.voile", defVoile));
+
+            int refusAvant = regie.Refus;
+            Image bouton = Img("bouton", Color.white);
+            Handle h = regie.AttacherRetourAppui(appui, bouton.rectTransform, voile, bouton.rectTransform);
+            Assert.IsFalse(h.EstNul, "le retour d'appui S'AFFICHE");
+            Assert.AreEqual(1, regie.BasculesVoile, "…par le voile, et la bascule est comptée");
+            Assert.AreEqual(refusAvant, regie.Refus, "aucun refus compté");
+            foreach (Handle t in tenues) Assert.IsTrue(regie.EstVivant(t), "aucune piste Melange existante n'est évincée");
+            regie.Tick(0f); regie.Tick(0.05f);
+            Assert.Less(bouton.GetComponent<CanvasGroup>().alpha, 1f, "le voile assombrit réellement le bouton");
+
+            // contrôle négatif : avec une place libre, l'appui reste un Melange (pas de bascule)
+            regie.Detacher(tenues[0]);
+            Image b2 = Img("bouton2", Color.white);
+            Assert.IsFalse(regie.AttacherRetourAppui(appui, b2.rectTransform, voile, b2.rectTransform).EstNul);
+            Assert.AreEqual(1, regie.BasculesVoile, "pas de nouvelle bascule quand une place existe");
+            Assert.AreEqual(MouvementTunables.PistesMelangeMax, regie.PistesMelange);
         }
 
         [Test]

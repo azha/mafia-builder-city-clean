@@ -72,6 +72,31 @@ namespace MafiaCleanCity.Mouvements
         public int RefusMelange { get; private set; }
         /// <summary>Pistes vivantes portant un canal `Melange` (≤ `MouvementTunables.PistesMelangeMax`).</summary>
         public int PistesMelange => nMelange;
+        /// <summary>Vrai s'il reste une place `Melange` (E0).</summary>
+        public bool PlaceMelangeLibre => nMelange < MouvementTunables.PistesMelangeMax;
+        /// <summary>Retours d'appui basculés sur le voile faute de place `Melange` (aucun refus : décision f2 du 08/10).</summary>
+        public int BasculesVoile { get; private set; }
+
+        /// <summary>RÈGLE DE CLASSE (f2, 08/10) : le RETOUR D'APPUI du joueur n'est JAMAIS celui qu'on refuse. Si le plafond
+        /// `Melange` est atteint, l'appui passe sur le voile `Alpha` (`voile` sur `cibleVoile`) au lieu d'être refusé : aucune
+        /// piste existante n'est évincée (les `Alerte` en régime ne seraient ré-attachées par personne), aucun refus n'est
+        /// compté, la bascule l'est (`BasculesVoile`). Sans place et sans voile possible (`voile` ou `cibleVoile` nuls), le
+        /// refus ordinaire s'applique.</summary>
+        public Handle AttacherRetourAppui(Entree appui, RectTransform surface, Entree voile, RectTransform cibleVoile)
+        {
+            if (appui == null) throw new ArgumentNullException(nameof(appui));
+            if (appui.Genre != Genre.Retour) throw new ArgumentException("AttacherRetourAppui : une entrée Retour", nameof(appui));
+            bool melange = false;
+            for (int ci = 0; ci < appui.Mouvement.Canaux.Length; ci++)
+                if (appui.Mouvement.Canaux[ci].P == Propriete.Melange) melange = true;
+            if (melange && !PlaceMelangeLibre && voile != null && cibleVoile != null)
+            {
+                if (voile.Genre != Genre.Retour) throw new ArgumentException("le voile est un Retour", nameof(voile));
+                BasculesVoile++;
+                return Attacher(voile, cibleVoile, Reglage.Defaut);
+            }
+            return Attacher(appui, surface, Reglage.Defaut);
+        }
         /// <summary>Les `Attacher` faits sans régie (hôte nu) : le compteur est statique, `Courante` étant nul alors.</summary>
         public int SansRegie => RegieMouvement.SansRegie;
         public EtatDelestage Delestage => delestage;

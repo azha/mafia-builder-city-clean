@@ -1,4 +1,4 @@
-# Design — la couche de mouvement du client Unity (CLIENT-3, 07-08/10/2026) — v4.4 — ✅ APPROUVÉ (revue ⊥ n°4 : 0 BLOCKING) + ajouts §16 (`CouleurA = Cible`, jugé cohérent par les revues n°2 et n°3 du catalogue), §17 (prédicat « rend », surface nommée, voile ; réécrit en v4.4) et G11 au prédicat exact, soumis à la revue ⊥ n°4 du catalogue
+# Design — la couche de mouvement du client Unity (CLIENT-3, 07-08/10/2026) — v4.5 — ✅ APPROUVÉ (revue ⊥ n°4 : 0 BLOCKING) + ajouts §16 (`CouleurA = Cible`, jugé cohérent par les revues n°2 à n°4 du catalogue), §17 (cible du retour d'appui, réécrit en v4.5 : prédicats évalués à l'appui, voile borné), G11 au prédicat exact, et les règles E0 du §4 ; §17 soumis à une revue ⊥ ciblée
 
 Statut : **design, rien n'est codé.** Historique des revues ⊥ (agent neuf à chaque tour) : v1 NOT_APPROUVÉ (6 BLOCKING / 13 MAJEUR / 11 mineurs) ; v2 NOT_APPROUVÉ (3 BLOCKING / 9 MAJEUR / 10 mineurs, commit `d207b48b`) ; v3 NOT_APPROUVÉ (2 BLOCKING / 5 MAJOR / 9 mineurs, commit `5a47e04c` ; les trois BLOCKING de la v2 vérifiés corrigés). Cette v4 répond aux findings de la v3 (table §14) ; la revue n°4 l'**APPROUVE** (0 BLOCKING, 5 MAJOR, 10 mineurs) et la v4.1 ferme les 5 MAJOR (table §15) ; les 10 mineurs vont en dette (`dettes-design-mouvement.md`). Règles de revue en vigueur : **BLOCKING = « le code écrit d'après ce design serait faux » ; une prémisse non démontrable depuis le dépôt se tranche par une MESURE planifiée (E0) avec un défaut sûr.** Rulings du 07/10 : écarts de nuance (pixels, millisecondes, forme exacte d'une courbe) consignés, pas traités ; animations **fidèles en cause, rythme et sensation** ; animations DIÉGÉTIQUES ; ère des objets 2000-2010 (le laiton du chrome d'interface reste).
 
@@ -80,7 +80,7 @@ Regie : MonoBehaviour   (créée par AppShell)
 | hors champ | non évaluée, emplacement conservé 30 s d'horloge de régie, puis libérée (§3) | test (horloge injectée) |
 | délestage | **relatif à la cadence mesurée** : médiane de `dt` sur 120 images = `cible` ; EMA(0,2) de `dt` > 1,5 × cible pendant 1 s ⇒ `Ambiance` à demi-cadence ; > 2,5 × ⇒ figée à `PoseDeReposS` ; retour sous 1,25 × pendant 2 s | test + contrôle négatif |
 | allocation | 0 octet par `Tick` : `Is.Not.AllocatingGCMemory()` du test-framework 1.6.0 (présent au manifeste ; **aucun précédent dans le dépôt**, c'est un outil, pas un idiome) | test |
-| **inconnues d'uGUI → E0 — MESURÉES le 08/10** (`e0-spike-rapport.md`) | (a) `CanvasGroup.alpha` : pas de reconstruction (1,3 µs de mise à jour des canvas pour 48 cibles) ; (b) `Graphic.color` (`Melange`) : reconstruit les lots, ≈ 100 × (125 µs) ; (c) Canvas imbriqués : rendu CPU × 2, SetPass 2 → 96 sous masque ; (d) un `RectMask2D` découpe bien une cible posée dans un Canvas imbriqué. **Règles ratifiées par f2 (08/10)** : **aucun Canvas créé par le mécanisme** (garde G7 : motif `AddComponent<Canvas>`) ; **`Alpha` d'abord** partout où il suffit ; **`Melange` interdit aux `Ambiance`** (garde de donnée `Gardes.MelangeEtAmbiance` et refus à l'attachement) ; **au plus 8 pistes `Melange` vivantes** dans le client, refus COMPTÉ (`Regie.RefusMelange`, `MouvementTunables.PistesMelangeMax`) ; **sous un masque, transformations plafonnées à 6 pistes** (défaut maintenu : aucune mesure ne le contredit, et le catalogue v4 n'en pose aucune). Raison du `Melange` : l'`Alpha` n'éclaircit pas et ne change pas la teinte, d'où les 4 `Alerte` du catalogue gardées en `Melange`. **Limite** : coût CPU en batchmode sur poste de travail ; le coût de rendu réel se mesure sur appareil, aucun seuil GPU n'en est tiré | spike E0, créneau du 08/10 ; tests `E0_Quota_9eMelangeRefuse_EtCompte`, `E0_MelangeSurAmbiance_Refuse`, `E0_MelangeSurAmbiance_ControleNegatif` |
+| **inconnues d'uGUI → E0 — MESURÉES le 08/10** (`e0-spike-rapport.md`) | (a) `CanvasGroup.alpha` : pas de reconstruction (1,3 µs de mise à jour des canvas pour 48 cibles) ; (b) `Graphic.color` (`Melange`) : reconstruit les lots, ≈ 100 × (125 µs) ; (c) Canvas imbriqués : rendu CPU × 2, SetPass 2 → 96 sous masque ; (d) un `RectMask2D` découpe bien une cible posée dans un Canvas imbriqué. **Règles ratifiées par f2 (08/10)** : **aucun Canvas créé par le mécanisme** (garde G7 : motif `AddComponent<Canvas>`) ; **`Alpha` d'abord** partout où il suffit ; **`Melange` interdit aux `Ambiance`** (garde de donnée `Gardes.MelangeEtAmbiance` et refus à l'attachement) ; **au plus 10 pistes `Melange` vivantes** dans le client (pire cas compté : 2 virages TENUS du chrome + 6 voyants de ⑮ + 1 retour d'appui = 9, plus une marge ; 8, proposé d'abord, était trop bas), refus COMPTÉ (`Regie.RefusMelange`, `MouvementTunables.PistesMelangeMax`) ; **RÈGLE DE CLASSE : le retour d'appui du joueur n'est JAMAIS celui qu'on refuse** — plafond atteint ⇒ l'appui passe sur le voile `Alpha` (`Regie.AttacherRetourAppui`, bascule comptée dans `BasculesVoile`, aucune piste évincée, aucun refus) ; **sous un masque, transformations plafonnées à 6 pistes** (défaut maintenu : aucune mesure ne le contredit, et le catalogue v4 n'en pose aucune). Raison du `Melange` : l'`Alpha` n'éclaircit pas et ne change pas la teinte, d'où les 4 `Alerte` du catalogue gardées en `Melange`. **Limite** : coût CPU en batchmode sur poste de travail ; le coût de rendu réel se mesure sur appareil, aucun seuil GPU n'en est tiré | spike E0, créneau du 08/10 ; tests `E0_Quota_11eMelangeRefuse_EtCompte`, `E0_RetourDAppui_JamaisRefuse_PlafondPlein_BasculeSurLeVoile`, `E0_MelangeSurAmbiance_Refuse`, `E0_MelangeSurAmbiance_ControleNegatif` |
 
 Constantes dans un `MouvementTunables` voisin de `UiTimingTunables`. **`UiTimingTunables.AnimMaxBlockMs` (250, 0 consommateur aujourd'hui) est CONSOMMÉ** : `Regie.Attacher` refuse une entrée `Bloquante` dont la durée dépasse cette valeur (G8) ; un test le lit.
 
@@ -133,7 +133,7 @@ Le test pur applique la table de repère du §2 puis exige : valeur normalisée 
 | G6 | pas de canal ≠ `Alpha` sur un `TMP_Text` | runner (assembly de tests) |
 | G7 | motifs interdits dans `Mouvements/` | source |
 | G8 | **une entrée `Bloquante` ET > `AnimMaxBlockMs` est refusée ; une entrée non bloquante peut durer davantage (appui long 1 000 ms, `carnet.en-main` 500 ms, balayage d'aiguille 700 ms)** (le canon l.124 dit « coupée OU exécutée en arrière-plan » : le client choisit le refus à l'attachement ; l'interruptibilité de l.125 est la règle de remplacement du §3) ; aucun canal n'écrit `blocksRaycasts`/`interactable` ; les `Retour` d'APPUI (`retour.appui`, `retour.appui-voile`) ≤ 250 ms | runner |
-| G9 | tout `Button` a `RetourAppui` ou une exclusion nommée (la `Scrollbar` de `ReputationScreenController:994`…) | runner |
+| G9 | **v4.5** : tout `Button` monté, **actif et `interactable`** au moment du relevé, a un `RetourAppui` dont l'appui simulé tombe en cas 1-4 du §17, ou une exclusion nommée (la `Scrollbar` de `ReputationScreenController:994`…) ; un bouton non interactif ou inactif est relevé et compté, pas jugé (il ne peut pas être pressé) ; un cas 5 non déclaré ROUGIT | runner |
 | G10 | aucun `Update`/`LateUpdate`/coroutine **hors `Mouvements/` et hors la liste FERMÉE ci-dessous** n'écrit couleur, alpha, rotation, échelle ou position visuelle. **Liste fermée, par fichier:méthode (10 `Update`/`LateUpdate` mesurés dans `Assets/Scripts` : 3 migrés en §9, 7 nommés ici ; plus 1 coroutine visuelle, celle du bandeau, dont le fondu migre et la minuterie reste)** : `AppShell.Update` (touche retour) · `DistrictMapNavigation.Update` (pan/zoom au doigt) · `LongPressButton.Update`, `AppuiLong.Update` (minuteries, aucune écriture visuelle) · `ExceptionQueueController.LateUpdate` (`CalerLeZinc`, mise en page) · `LaSuitePanelController.LateUpdate` (`Ajuster` → `localScale` d'ajustement à la bande : de la mise en page, pas du mouvement — **nommée parce qu'elle écrit une échelle**) · `ReputationScreenController…LateUpdate` (visibilité de l'ascenseur) · minuterie de `BandeauEphemere`. Tout autre `Update`/`LateUpdate`/coroutine visuel nouveau fait rougir | source |
 | G11 | **v4.4, prédicat exact** : une **translation** est refusée si le **parent direct** de la cible porte un `LayoutGroup` (sans `LayoutElement.ignoreLayout` sur la cible) — un `LayoutGroup` ne réécrit la position que de ses enfants directs — ou si la cible porte elle-même un `ContentSizeFitter` ; une **`Echelle`** est refusée si la cible **ou un ancêtre quelconque** porte un `ContentSizeFitter`. (Un `LayoutGroup` ne pilote pas `localScale` : 306 `LayoutGroup` coexistent avec les 67 boutons) | runner |
 | G12 | pas de deux `Absolu` sur le même couple | runner |
@@ -221,39 +221,52 @@ Le catalogue rencontre le même cas sur les crans de ⑰ (teinte selon le rang) 
 §5 (i) (`Retour` garde le `Melange` sous `Reduit`) ; le test de fin de piste, qui vérifie maintenant que la
 couleur restituée est **celle de la cible**, avec un contrôle négatif sur deux boutons de couleurs différentes.
 
-## 17. Ajout v4.3, réécrit v4.4 — la cible du retour d'appui, et le voile (revues ⊥ n°2 et n°3 du catalogue, 08/10)
+## 17. Ajout v4.3, réécrit v4.5 — la cible du retour d'appui, et le voile (revues ⊥ n°2, n°3 et n°4 du catalogue, 08/10)
 
-**Pourquoi.** `Melange` n'écrit que le RGB d'un `Graphic` ; si ce `Graphic` ne peint rien, le retour d'appui est invisible.
-La v4.3 décidait « peint » par l'alpha seul et cherchait la plaque parmi les enfants : la revue n°3 a mesuré trois autres
-façons de ne rien peindre (un `Mask` à `showMaskGraphic = false` : `ExceptionDetailController.cs:538`,
-`DistrictInteriorScreenController.cs:2261`, `LaSuitePanelController.cs:211` ; `Graphic.enabled = false` :
-`DistrictInteriorScreenController.cs:1064` ; un GameObject inactif : `DistrictCellView.cs:114`), une recherche d'enfant
-qui retenait l'OMBRE PORTÉE de ⑥ (`LieutenantScreenController.cs:1939`), et un voile posé sur une zone de clic nue
-(alpha 0, sans enfant) qui n'assombrissait rien (`DelegationScreenController.cs:1527-1535`,
-`DemolitionScreenController.cs:1453-1459`, `DistrictInteriorScreenController.cs:2125-2128`).
+**Pourquoi.** `Melange` n'écrit que le RGB d'un `Graphic` : s'il ne peint rien, le retour d'appui est invisible. Trois
+revues ont mesuré ce qui fait qu'un `Graphic` ne peint pas (alpha nul, `Mask` à `showMaskGraphic = false`,
+`Graphic.enabled = false`, GameObject inactif), qu'une recherche d'enfant retient l'OMBRE PORTÉE de ⑥, qu'un voile posé
+sur une zone de clic nue n'assombrit rien, et qu'un voile qui remonte sans borne assombrit toute la barre du haut
+(`TopBarController.cs:940`) ou toute la carte (`CityMapController.cs:894`). Et l'état qui décide est MUTABLE : un
+`targetGraphic` opaque à la construction peut être forcé à α 0 ensuite (`ExceptionQueuePanelController.cs:99`), un
+calque éteint peut s'allumer (`DistrictCellView.cs:65`, `:114`).
 
-**Prédicat « rend ».** `Rend(g)` ⇔ `g != null` ∧ `g` n'est pas un `TMP_Text` ∧ `g.enabled` ∧ `g.gameObject.activeInHierarchy`
-∧ `g.color.a ≥ 0,1` ∧ aucun `Mask` à `showMaskGraphic = false` sur `g.gameObject`. Calculable à la pose, sans réflexion.
+**Deux prédicats, évalués AU `PointerDown`, à chaque appui** (B4-3 : pas une décision figée à la pose — à l'instant de
+l'appui, l'état est celui que le joueur voit, et la règle donne un résultat calculable et stable pour cet appui) :
+- `RendSurface(g)` ⇔ `g` est un `Graphic` **non texte**, `g.enabled`, `g.gameObject.activeInHierarchy`, `g.color.a ≥ 0,1`,
+  sans `Mask` à `showMaskGraphic = false` sur `g.gameObject`. C'est ce que `Melange` peut faire varier.
+- `Peint(t)` ⇔ la sous-arborescence de `t` (lui compris) porte au moins un `Graphic`, **texte compris**, `enabled`, actif,
+  `color.a ≥ 0,1`, hors `Mask` invisible. C'est ce qu'un voile `Alpha` peut assombrir (un `CanvasGroup` fond un texte :
+  G6 n'interdit que les canaux ≠ `Alpha`).
 
-**Quoi.** `Retour.Poser(Button b, Graphic surface = null)` choisit, une fois, à la pose :
-1. `surface`, si l'appelant la nomme et qu'elle rend ⇒ entrée `retour.appui` sur elle. L'appelant la nomme quand le
-   `targetGraphic` est un masque qui ne peint pas : `ExceptionDetailController.cs:570` → `Verre`,
-   `DistrictInteriorScreenController.cs:2312` → `Remplissage`, `LaSuitePanelController.cs:223` → `Degrade` (E2) ;
-2. sinon `b.targetGraphic`, s'il rend ⇒ entrée `retour.appui` (`Melange`, `CouleurA = Cible`, `Echelle` sous les conditions
-   du §8 et de G11) ;
-3. sinon ⇒ entrée **`retour.appui-voile`** : `Alpha` `Multiplicatif` 1 → 0,80 sur un `CanvasGroup` posé sur la **cible du
-   voile** = `b` si `b` ou un de ses descendants porte un `Graphic` qui rend ; sinon le plus proche ancêtre de `b` dont la
-   sous-arborescence en porte un. 90 ms à l'appui, 140 ms au relâchement, sans échelle ; permis sur un texte (G6).
-**Aucune recherche automatique de « plaque » parmi les enfants** : elle a choisi l'ombre portée. **Déduit** du classement bouton par bouton de la revue n°3
-(51 / 3 / 13 sous la règle v4.3) : 3 en cas (1), 48 en cas (2), **16 en voile** — à vérifier par G9 au créneau.
+**Quoi.** `Retour.Poser(Button b, Graphic surface = null)` attache un `RetourAppui` ; au `PointerDown`, il choisit :
+0. **Le retour d'appui n'est jamais refusé** (f2, 08/10) : si le plafond `Melange` du §4 est atteint, les cas 1-2 passent
+   directement au voile (cas 3-4) par `Regie.AttacherRetourAppui` ; la bascule est comptée, rien n'est évincé.
+1. la `surface` nommée par l'appelant, si `RendSurface` ⇒ `retour.appui` (`Melange` `CouleurA = Cible` + `Echelle` sous
+   les conditions du §8 et de G11). L'appelant la nomme quand le `targetGraphic` est un masque qui ne peint pas : ce sont
+   trois **sites** de création (un par carte, par geste…), `ExceptionDetailController.cs:570` → `Verre`,
+   `DistrictInteriorScreenController.cs:2312` → `Remplissage`, `LaSuitePanelController.cs:223` → `Degrade` **seulement
+   `if (premierGeste)`** (`:209-220` ; les autres gestes ont un `im` qui rend, cas 2) ;
+2. sinon `b.targetGraphic`, si `RendSurface` ⇒ `retour.appui` ;
+3. sinon, si `Peint(b)` ⇒ **`retour.appui-voile`** sur `b` (`Alpha` `Multiplicatif` 1 → 0,80, 90 ms / 140 ms, sans échelle) ;
+4. sinon, si le **parent direct** `q` de `b` vérifie `Peint(q)` **et** aire(`q`) ≤ 2 × aire(`b`) ⇒ voile sur `q` (la plaque
+   d'une zone de clic nue : `DelegationScreenController.cs:1527-1535`, `DemolitionScreenController.cs:1453-1459`) ;
+5. sinon **aucun retour**, compté (`RetourAppui.SansRetour`) : jamais de remontée au-delà d'un cran ni d'un ancêtre plus
+   grand que deux fois le bouton (la barre, la carte).
+**Aucun compte n'est affirmé ici** : la répartition des 67 sites entre les cas 1 à 5 se MESURE par G9 au créneau E2, bouton
+monté par bouton monté (les revues en ont donné des classements successifs — 18, 16, 17 — sous des règles différentes ;
+seul le relevé de G9 vaut). Exemples connus : `TopBarController.cs:940` tombe en cas 3 (son flèche `TMP_Text` peint) ;
+`CityMapController.cs:894` tombe en cas 5 tant qu'aucun calque ne peint dans la cellule — il doit être **déclaré** (une
+`surface` nommée ou une exclusion nommée de G9).
 Sous `Reduit`, le voile est gardé comme le mélange : §5 (i) vise le `Melange` des `Retour` et le voile de
-`retour.appui-voile`, **et rien d'autre** (le `Alpha` de `carnet.en-main` est gelé).
+`retour.appui-voile`, **et rien d'autre**.
 
-**Gardes.** G9 devient : tout `Button` monté a un `RetourAppui` dont la cible **rend** (cas 1 ou 2), ou un voile dont la
-cible a une sous-arborescence qui **rend** (cas 3), ou une exclusion nommée. Le test relève, pour chaque bouton monté, le
-cas retenu et la cible. Contrôles négatifs NOMMÉS, un par façon de ne rien peindre : `Image` d'alpha 0, `Mask` à
-`showMaskGraphic = false`, `Graphic.enabled = false`, GameObject inactif, zone de clic nue sans enfant (le voile doit
-monter d'un cran), bouton posé sur un `TMP_Text` (cas 3 sur le texte).
+**Gardes.** G9 : tout `Button` monté a un `RetourAppui` ; le test, après le premier rendu de chaque écran, simule un
+`PointerDown` sur chaque bouton et relève le cas retenu et la cible ; il ROUGIT si un bouton tombe en cas 5 sans
+déclaration (surface nommée ou exclusion nommée avec sa raison). Contrôles négatifs NOMMÉS, un par façon de ne rien
+peindre : `Image` d'alpha 0, `Mask` à `showMaskGraphic = false`, `Graphic.enabled = false`, GameObject inactif, état qui
+change entre la pose et l'appui (α 1 → 0), zone de clic nue sans enfant (voile sur le parent), parent trop grand (cas 5),
+bouton posé sur un `TMP_Text` (cas 3, voile sur le texte).
 
 **Note pour E4 (manomètre de ⑭), 08/10, CLIENT-2.** ⑭ porte le décor de scène (`5c71a421`, `feat/decor-de-scene`) : la
 pile est le `VerticalLayoutGroup` du GameObject de `CompressionScreenController` (variable `v` dans `Construire()`), et un

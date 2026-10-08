@@ -15,11 +15,12 @@ namespace MafiaCleanCity.Mouvements
         public const int QuotaAmbiance = 32;
         /// <summary>Quota réservé aux `Alerte` / `Retour` / `Transition`.</summary>
         public const int QuotaAlerteRetourTransition = 16;
-        /// <summary>E0 (créneau du 08/10, décision f2) : au plus 8 pistes vivantes portant un canal `Melange` dans tout le client.
+        /// <summary>E0 (créneau du 08/10, décision f2) : au plus 10 pistes vivantes portant un canal `Melange` dans tout le client
+        /// (pire cas compté : 2 virages TENUS du chrome + 6 voyants de ⑮ + 1 retour d'appui = 9, plus une marge ; 8 était trop bas).
         /// Mesuré : animer `Graphic.color` reconstruit les lots du canvas, ≈ 100 fois le coût de mise à jour d'un
         /// `CanvasGroup.alpha` (125 µs contre 1,3 µs pour 48 cibles). L'`Alpha` d'abord ; le `Melange` reste pour ce que l'`Alpha`
         /// ne sait pas faire (éclaircir, changer de teinte). Au-delà : refus COMPTÉ (`Regie.RefusMelange`).</summary>
-        public const int PistesMelangeMax = 8;
+        public const int PistesMelangeMax = 10;
         /// <summary>G4 : budget d'un écran résolu, en PISTES (une piste = une cible animée), pas en instances.</summary>
         public const int PistesParEcranMax = 16;
         /// <summary>Couples (cible, propriété) simultanés : 48 pistes × au plus 4 canaux en pratique.</summary>
