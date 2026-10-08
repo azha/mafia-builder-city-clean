@@ -208,7 +208,9 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("ForensicRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DesignTokens.Current.surfaceBase);
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,24, le voile,
+            // le support A de `.dos6` (halos or et cyan sur le 178°) et le cerne d'or — DÉCLARÉS au catalogue, plus de fond plat ici.
+            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Forensic);
 
             // ⚠️ AUCUNE MAQUETTE RATIFIÉE POUR CET ÉCRAN — et c'est mesuré, pas supposé :
             // `front.md` porte `maquette ❌` pour `screen_b7`, et note que **20 des 24 écrans
@@ -226,11 +228,14 @@ namespace MafiaCleanCity.Operational
             // Hors shell les insets valent 0 et l'écran remplit tout.
             pile.padding = new RectOffset(
                 (int)Px(CssMargeX), (int)Px(CssMargeX),
-                (int)(Px(CssMargeY) + MafiaCleanCity.Shell.ShellChrome.TopInsetPx),
+                0,   // le haut : sous la bande de scène, posé (et recalculé à chaque rect) par ReserverLaBande juste dessous
                 (int)(Px(CssMargeY) + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx));
             pile.spacing = Px(CssEcart);
             pile.childControlWidth = true;  pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+
+            // §5.6 du design : la pile commence SOUS max(barre, bande de scène 21 %), comme le panneau de la maquette.
+            DecorDeScene.ReserverLaBande(pile, decor, Px(CssMargeY));
 
             ConstruireEnseigne(racine.transform);
             signalRoot = ConstruireSignaux(racine.transform);
@@ -256,7 +261,9 @@ namespace MafiaCleanCity.Operational
         private void ConstruireEnseigne(Transform parent)
         {
             GameObject go = NouveauUI("Enseigne", parent);
-            AjouterFond(go, DesignTokens.Current.surfaceCard);
+            // `.enseigne` : plaque 178° translucide, bord 1 px #2a3648, filet bas 2 px laiton, liseré blanc — recette MESURÉE de ㊴,
+            // posée par le décor ; le texte reste ici.
+            DecorDeScene.HabillerEnseigne((RectTransform)go.transform, DecorsDeScene.Filets.Forensic.Enseigne, DecorsDeScene.Forensic);
             AjouterHauteur(go, Px(CssHEnseigne));
             var v = go.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.MiddleCenter;
@@ -289,6 +296,7 @@ namespace MafiaCleanCity.Operational
             {
                 GameObject ligne = NouveauUI($"Signal{i}", bloc.transform);
                 AjouterFond(ligne, DesignTokens.Current.surfaceCard);
+                Filets.Poser((RectTransform)ligne.transform, DecorsDeScene.Filets.Forensic.Pi);   // `.pi` (une piste) : 1 px #2a3648 mesuré
                 AjouterHauteur(ligne, Px(CssHSignal));
                 var lv = ligne.AddComponent<VerticalLayoutGroup>();
                 lv.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(8f));
@@ -319,6 +327,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Panneau", parent);
             AjouterFond(go, DesignTokens.Current.surfaceCard);
+            Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Forensic.Pann);   // `.pann` : 1 px #2a3648 mesuré
 
             // ⛔ HAUTEUR PLANCHER, PAS HAUTEUR FIGÉE — mesuré sur la première capture sous chrome
             // de ㊴ (2026-09-03) : à `preferredHeight` verrouillé, le titre passait sur deux

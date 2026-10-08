@@ -24,7 +24,7 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉟", "㉓", "⑮", "⑰", "⑭", "㊴", "㉒",   // ㊵, ㊳, ㉜ posés le 08/10 (feu vert CLIENT-1)
+            "③", "⑤", "㊲", "㉟", "㉓", "⑮", "⑰", "⑭", "㉒",   // ㊵, ㊳, ㉜ posés le 08/10 (feu vert CLIENT-1) ; ㊴ (à CLIENT-2, f2)
             "㊱", "㉚", "㉘", "㉛", "㉝", "㉞", "㉙", "㉔", "⑱",
         };
 
@@ -44,6 +44,11 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ㊴ (08/10) — Fen (×3 compteurs), Elast (la boîte des pistes), Cta6 (le pied « acheter du renseignement »), Ac/AcParti
+            //   (les acteurs), Mano (le cadran) : éléments de la maquette `.dos6` que le contrôleur NE CONSTRUIT PAS (structure du
+            //   client : enseigne, 3 signaux, panneau) — signalé à f2, à classer au juge (A s'ils manquent au joueur). PiBout : la
+            //   piste « au bout » (bord accentDanger), état non exprimé par le contrôleur.
+            { "㊴", new[] { "Ac", "AcParti", "Cta6", "Elast", "Fen", "Mano", "PiBout" } },
             // ㉜ (08/10) — toutes les recettes de blocs (tête, bas, plaques, réserves, jetons, gestes, aperçu, rien, ligne pointillée,
             //   cadran) : blocs de CLIENT-1, tracés par ses propres bords (`Bord`, `FiletG`, `Filet`) — à déléguer à Filets avec Cerner.
             { "㉜", new[] { "L", "Mano", "Rond", "Rond_2", "SvApercu", "SvBas", "SvGeste", "SvGesteMort", "SvJeton", "SvJetonUse", "SvPlaque", "SvPlaqueConfiee", "SvPlaqueGris", "SvPlaqueViser", "SvRien", "SvTete" } },
