@@ -536,7 +536,12 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("{pascal}Root", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DesignTokens.Current.surfaceBase);
+            // LE DÉCOR DE SCÈNE (design `Tools/decor-de-scene-2026-10-07/DESIGN.md`, §5) : l'écran ne CODE pas son fond, il le
+            // DÉCLARE — une entrée `DecorsDeScene.{pascal}` à AJOUTER au catalogue (scène, luminosité, bande, support mesurés
+            // sur la maquette) ; tant qu'elle n'existe pas, cette ligne ne compile pas, et c'est voulu. Jamais de fond plat ici.
+            MafiaCleanCity.Shell.DecorPose decor = MafiaCleanCity.Shell.DecorDeScene.Poser(racine.transform, MafiaCleanCity.Shell.DecorsDeScene.{pascal});
+            // MÉTIER ICI — la pile racine, une fois posée, commence SOUS la bande de scène (§5.6) :
+            //   MafiaCleanCity.Shell.DecorDeScene.ReserverLaBande(pile, decor, Px(<marge haute du premier bloc>));
 
             // MÉTIER ICI — le reste de la mise en page (enseigne, blocs, listes…) se construit
             // ici, depuis la maquette. `ConstruireCerne`/`ConstruireEnseigne`/… de ㊲ montrent le
