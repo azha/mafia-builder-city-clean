@@ -86,7 +86,14 @@ namespace MafiaCleanCity.Shell.Tests
             // la MÊME passe de coroutine, donc le voir vrai garantit que le montage interne d'Empire
             // est déjà réglé avant toute bascule manuelle.
             float bootElapsed = 0f;
-            while ((s.TopBar == null || !s.TopBar.Loaded) && bootElapsed < 15f) { bootElapsed += Time.deltaTime; yield return null; }
+            bool barreVue = false;
+            while ((s.TopBar == null || !s.TopBar.Loaded) && bootElapsed < 15f)
+            {
+                // NavF5 (08/10) : une barre DÉTRUITE pendant l'acquisition se lisait « 15 s sans Loaded » ; la cause se NOMME maintenant.
+                if (s.TopBar != null) barreVue = true;
+                else if (barreVue) Assert.Fail("la barre du haut a été DÉTRUITE pendant l'acquisition de session (canvas du shell détruit sous lui : voir l'hôte nu de NavF5)");
+                bootElapsed += Time.deltaTime; yield return null;
+            }
             Assert.IsTrue(s.TopBar != null && s.TopBar.Loaded, "acquisition de session propre du shell terminée avant toute bascule manuelle");
 
             // Re-tap (idempotent-ish remount, AppShell.ActivateTab) : Empire est déjà l'onglet par
@@ -460,7 +467,10 @@ namespace MafiaCleanCity.Shell.Tests
             bareScreen.Render(dto);
             float bareTitleY = ((RectTransform)bareScreen.ScreenRoot.Find("DistrictTitle")).anchoredPosition.y;
             Assert.AreEqual(-8f, bareTitleY, 0.01f, "hors shell : anchoredPosition.y == -8 (byte-identique à l'historique)");
-            Object.Destroy(bareGo);
+            // NavF5 (08/10) : DestroyImmediate + une frame. L'hôte nu porte SON Canvas (CanvasRacine.Creer, 00daa540 : sous l'hôte) ; détruit
+            // en fin de frame, il restait un Canvas de la scène à l'instant où le shell bâtit le sien (`FindFirstObjectByType<Canvas>`).
+            Object.DestroyImmediate(bareGo);
+            yield return null;
 
             // (b) dans le shell — le flux réel d'entrée en district.
             shellGo = new GameObject("AppShell");
