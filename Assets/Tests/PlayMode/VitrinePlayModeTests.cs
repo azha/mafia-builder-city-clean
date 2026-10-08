@@ -115,7 +115,11 @@ namespace MafiaCleanCity.CityMap.Tests
                 // B3 — le comptoir : premier élément de la pile, enseigne à gauche et solde à droite dans la même ligne
                 Transform comptoir = hote.transform.Find("Comptoir");
                 Assert.IsNotNull(comptoir, "le comptoir existe");
-                Assert.AreEqual(0, comptoir.GetSiblingIndex(), "en tête de la pile");
+                // Le décor de scène (CLIENT-2, 08/10) est le PREMIER enfant de l'écran, HORS mise en page (ignoreLayout) : « en tête de la
+                // pile » se lit donc parmi les enfants que la pile empile — le premier d'entre eux est le comptoir.
+                Transform premierEmpile = hote.transform.Cast<Transform>()
+                    .FirstOrDefault(c => c.gameObject.activeSelf && !(c.GetComponent<LayoutElement>()?.ignoreLayout ?? false));
+                Assert.AreSame(comptoir, premierEmpile, "en tête de la pile");
                 RectTransform titre = (RectTransform)comptoir.Find("Titre"), solde = (RectTransform)comptoir.Find("Solde");
                 Assert.AreEqual("LA VITRINE", titre.GetComponent<TextMeshProUGUI>().text);
                 Assert.AreEqual(DesignTokens.Current.hudSerifFont, titre.GetComponent<TextMeshProUGUI>().font, "l'enseigne en serif");

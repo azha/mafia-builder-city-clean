@@ -595,10 +595,20 @@ namespace MafiaCleanCity.Tests.PlayMode
             }
         }
 
-        private static void AssertRectsEgaux(RectTransform a, RectTransform b, float tol, string ou)
+        /// <summary>Les coins d'un rect dans le repère du CANVAS (unités = pixels du banc, ConstantPixelSize) — jamais les coins
+        /// MONDE : en ScreenSpace-Camera, 1 unité monde vaut ≈ 96 px, et une tolérance « ±1 » en monde laissait passer 96 px
+        /// (réfuté au créneau du 08/10 : un retrait de 9 px lu 0,094).</summary>
+        private static Vector3[] CoinsCanvas(RectTransform rt, Transform canvas)
         {
-            var ca = new Vector3[4]; var cb = new Vector3[4];
-            a.GetWorldCorners(ca); b.GetWorldCorners(cb);
+            var c = new Vector3[4];
+            rt.GetWorldCorners(c);
+            for (int k = 0; k < 4; k++) c[k] = canvas.InverseTransformPoint(c[k]);
+            return c;
+        }
+
+        private static void AssertRectsEgaux(RectTransform a, RectTransform b, Transform canvas, float tol, string ou)
+        {
+            Vector3[] ca = CoinsCanvas(a, canvas), cb = CoinsCanvas(b, canvas);
             for (int k = 0; k < 4; k += 2)
             {
                 Assert.AreEqual(cb[k].x, ca[k].x, tol, $"{ou} : coin {k} x");
@@ -633,11 +643,12 @@ namespace MafiaCleanCity.Tests.PlayMode
                         yield return null;
                         Canvas.ForceUpdateCanvases();
                         string ou = $"racine {hauteurRacine}, cadre {hauteurCadre}";
-                        AssertRectsEgaux(p.Support, cadre, 1f, ou + " : Decor/Support = le cadre");
-                        AssertRectsEgaux(p.Cerne, cadre, 1f, ou + " : Decor/Cerne = le cadre");
+                        Transform repere = banc.Canvas.transform;
+                        AssertRectsEgaux(p.Support, cadre, repere, 1f, ou + " : Decor/Support = le cadre");
+                        AssertRectsEgaux(p.Cerne, cadre, repere, 1f, ou + " : Decor/Cerne = le cadre");
                         var trait = (RectTransform)p.Cerne.Find("Trait");
-                        var ct = new Vector3[4]; var cc = new Vector3[4];
-                        trait.GetWorldCorners(ct); cadre.GetWorldCorners(cc);
+                        Vector3[] ct = CoinsCanvas(trait, repere), cc = CoinsCanvas(cadre, repere);
+                        Assert.AreEqual(500f, cc[2].x - cc[0].x, 1f, ou + " : prémisse — le cadre mesure 500 unités de canvas de large (pas des unités monde)");
                         Assert.AreEqual(5f * e, ct[0].x - cc[0].x, 1f, ou + " : le trait du cerne à 5 CSS du bord gauche");
                         Assert.AreEqual(5f * e, cc[2].y - ct[2].y, 1f, ou + " : à 5 CSS du bord haut");
                     }
