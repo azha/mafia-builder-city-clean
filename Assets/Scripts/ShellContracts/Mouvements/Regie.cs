@@ -518,8 +518,9 @@ namespace MafiaCleanCity.Mouvements
             //    Alerte/Retour/Transition s'arrêtent à 15 ; le retour d'appui passé par `AttacherRetourAppui` peut prendre la 16ᵉ.
             //    Sans cette réserve, 7 pistes tenues du chrome + 7 de ⑮ + shell + bandeau = 16 refusaient l'appui du joueur.
             int plafondAutres = MouvementTunables.QuotaAlerteRetourTransition - (retourAppui ? 0 : MouvementTunables.PlacesReserveesRetourAppui);
-            if (amb ? nAmbiance >= MouvementTunables.QuotaAmbiance : nAutres >= plafondAutres)
-                return Refuser(e, "quota " + (amb ? "Ambiance" : "Alerte/Retour/Transition") + " atteint");
+            // (deux `if` et non un ternaire à deux littéraux : la garde N3 des textes affichés compte ce motif, même dans un message de journal)
+            if (amb && nAmbiance >= MouvementTunables.QuotaAmbiance) return Refuser(e, "quota Ambiance atteint");
+            if (!amb && nAutres >= plafondAutres) return Refuser(e, "quota Alerte/Retour/Transition atteint");
 
             // E0 (décision f2, 08/10) : `Melange` interdit aux `Ambiance`, et au plus 10 pistes `Melange` vivantes à la fois.
             bool melange = false;

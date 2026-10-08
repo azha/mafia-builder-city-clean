@@ -286,11 +286,13 @@ namespace MafiaCleanCity.CityMap.Tests
             barre.SetCitywideHeatBucket("BURNING");
             regie.Tick(Debut);
             regie.Tick(Debut + 0.3f);
+            Color enVol = anneau.color;
             barre.SetCitywideHeatBucket("WARM");       // le virage de retour remplace le virage en vol
-            regie.Tick(Debut + 0.3f);
+            regie.Tick(Debut + 0.31f);                 // un AUTRE instant : `Tick` est idempotent pour un même t (première évaluation de la piste neuve)
             Color braise = DesignTokens.Current.hudGaugeArcHot, laiton = DesignTokens.Current.hudHairlineGold;
             Assert.Greater(Couleurs.EcartRvb(anneau.color, braise), 2f / 255f, "pas de saut vers la braise entière");
             Assert.Greater(Couleurs.EcartRvb(anneau.color, laiton), 2f / 255f, "…ni vers le laiton : il repart d'où il en était");
+            Assert.LessOrEqual(Couleurs.EcartRvb(anneau.color, enVol), 4f / 255f, "continuité : la couleur du virage neuf à son instant 0 est celle du virage en vol");
             regie.Tick(Debut + 1.2f);
             Assert.LessOrEqual(Couleurs.EcartRvb(anneau.color, laiton), 1f / 255f, "et il rejoint le laiton calme");
         }

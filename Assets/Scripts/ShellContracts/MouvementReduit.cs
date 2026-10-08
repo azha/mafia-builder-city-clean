@@ -43,6 +43,13 @@ namespace MafiaCleanCity.Mouvements
         /// <summary>La lecture du système : vrai si l'OS demande de supprimer les animations. Un test la remplace.</summary>
         public static Func<bool> LectureDuSysteme = LireLeSysteme;
 
+        /// <summary>⛔ Réservé aux tests et à `MafiaCI` (`EtatPublieParLeShell.RendrePourTest`) : les deux seams reviennent à la production.</summary>
+        public static void OublierPourTest()
+        {
+            Stockage = new StockageMouvementReduitPlayerPrefs();
+            LectureDuSysteme = LireLeSysteme;
+        }
+
         /// <summary>Ce que le joueur a posé dans ⑲.</summary>
         public static bool ReglageDuJoueur => Stockage.Lire();
 
