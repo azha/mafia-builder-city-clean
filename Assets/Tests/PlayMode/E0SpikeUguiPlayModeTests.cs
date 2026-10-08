@@ -137,14 +137,28 @@ namespace MafiaCleanCity.Tests
             using (var willRender = ProfilerRecorder.StartNew(ProfilerCategory.Gui, "Canvas.SendWillRenderCanvases"))
             {
                 double sB = 0, sS = 0, sD = 0, sG = 0, sBuild = 0, sWill = 0; long maxG = 0; int n = 0;
+                // ⛔ Run 2 (08/10) : en batchmode, « Batches Count » est INVALIDE et les draw calls lisent 0 (le rendu a
+                //    pourtant lieu : la découpe se mesure au pixel). La mesure de coût passe donc par le CHRONOMÈTRE :
+                //    tick de la régie + mise à jour des canvas + rendu de la caméra, et par l'allocation du thread autour
+                //    du seul tick (la régie promet 0 octet, §4).
+                var chrono = new System.Diagnostics.Stopwatch();
+                double sCpuTick = 0, sCpuCanvas = 0, sCpuRendu = 0, sAllocTick = 0; long maxAllocTick = 0;
                 for (int k = 0; k < Chauffe + Images; k++)
                 {
                     t += 1f / 60f;
-                    regie.Tick(t);
-                    cam.Render();
+                    long a0 = System.GC.GetAllocatedBytesForCurrentThread();
+                    chrono.Restart(); regie.Tick(t); chrono.Stop();
+                    long alloc = System.GC.GetAllocatedBytesForCurrentThread() - a0;
+                    double usTick = chrono.Elapsed.TotalMilliseconds * 1000.0;
+                    chrono.Restart(); Canvas.ForceUpdateCanvases(); chrono.Stop();
+                    double usCanvas = chrono.Elapsed.TotalMilliseconds * 1000.0;
+                    chrono.Restart(); cam.Render(); chrono.Stop();
+                    double usRendu = chrono.Elapsed.TotalMilliseconds * 1000.0;
                     yield return null;
                     if (k < Chauffe) continue;
                     n++;
+                    sCpuTick += usTick; sCpuCanvas += usCanvas; sCpuRendu += usRendu;
+                    sAllocTick += alloc; if (alloc > maxAllocTick) maxAllocTick = alloc;
                     sB += batches.LastValue; sS += setpass.LastValue; sD += draws.LastValue;
                     sG += gc.LastValue; if (gc.LastValue > maxG) maxG = gc.LastValue;
                     sBuild += build.LastValue; sWill += willRender.LastValue;
@@ -158,12 +172,18 @@ namespace MafiaCleanCity.Tests
                 Ecrire(scenario, "gc_octets_max", maxG);
                 Ecrire(scenario, "canvas_buildbatch_ns_moy", sBuild / n);
                 Ecrire(scenario, "canvas_willrender_ns_moy", sWill / n);
+                Ecrire(scenario, "cpu_tick_us_moy", sCpuTick / n);
+                Ecrire(scenario, "cpu_canvas_us_moy", sCpuCanvas / n);
+                Ecrire(scenario, "cpu_rendu_us_moy", sCpuRendu / n);
+                Ecrire(scenario, "alloc_tick_octets_moy", sAllocTick / n);
+                Ecrire(scenario, "alloc_tick_octets_max", maxAllocTick);
                 Ecrire(scenario, "pistes_vivantes", regie.PistesVivantes);
                 Ecrire(scenario, "refus", regie.Refus);
                 Ecrire(scenario, "ecritures_cumulees", regie.Ecritures);
-                if (scenario == "statique")
-                    Assert.Greater(sD / n, 0.0, "E0 VIDE : aucun draw call relevé sur le scénario statique — rien n'a été rendu " +
-                        "(batchmode -nographics ? recorder invalide ?). La mesure ne vaut rien : relancer AVEC rendu.");
+                // anti-vacuité : un rendu chronométré nul, ou un scénario animé sans écriture, est une mesure VIDE
+                Assert.Greater(sCpuRendu / n, 0.0, "E0 VIDE : temps de rendu nul sur " + scenario + " — rien n'a été rendu.");
+                if (anime.HasValue)
+                    Assert.Greater(regie.Ecritures, 0, "E0 VIDE : la régie n'a rien écrit sur " + scenario + " — pas d'animation mesurée.");
             }
             foreach (Object o in montes) if (o != null) Object.DestroyImmediate(o);
             montes.Clear();
