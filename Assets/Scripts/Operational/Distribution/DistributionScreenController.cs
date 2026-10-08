@@ -450,7 +450,6 @@ namespace MafiaCleanCity.Operational
         /// aucune n'est relue autrement que les résolveurs de texte voisins.</summary>
         private void RendreCorkboard()
         {
-            corkboardRoot.GetComponent<LayoutElement>().flexibleHeight = 0f;   // F2 : seul l'état « aucun relais » remplit le corps (RendreAucunRelais)
             ViderEnfants(corkboardRoot);
 
             // La route AVANT le panneau : la ficelle a besoin de savoir, dès sa construction, si
@@ -970,14 +969,14 @@ namespace MafiaCleanCity.Operational
 
             // F2 (juge d'ensemble r1, 08/10 ; f2 : « un état vide qui ne se lit pas comme voulu reste un défaut ») : sans zone, le `Support` (liège opaque, pleine page) ne portait RIEN sous le bandeau — tout le
             // corps était un tapis nu. Un PANNEAU de liège borné (le cartel du cadre, inséré par la marge du corps : un objet, pas un fond) porte l'étiquette crème « D'OÙ ÇA PART » — la même grammaire que
-            // la fiche d'une route — avec le titre de l'état ; aucun mot nouveau (les deux clés sont servies). Le conteneur prend la hauteur du corps dans cet état seulement (RendreCorkboard le remet à 0).
-            corkboardRoot.GetComponent<LayoutElement>().flexibleHeight = 1f;
+            // la fiche d'une route — avec le titre de l'état ; aucun mot nouveau (les deux clés sont servies). Même cote que le panneau de l'état nominal (`RendreCorkboard` : 120 px CSS) : la boîte
+            // d'une route qui n'existe pas encore, en HAUT du tapis — pas une plaque qui prend tout le corps (essai du créneau du 08/10 : un grand carré brun avec une étiquette flottante).
             GameObject vide = NouveauUI("PanneauVide", corkboardRoot);
             AjouterFond(vide, Liege);
-            AddLayoutElement(vide, minHeight: Px(120f), flexibleHeight: 1);
+            AddLayoutElement(vide, preferredHeight: Px(120f), flexibleHeight: 0);
             VerticalLayoutGroup vv = vide.AddComponent<VerticalLayoutGroup>();
             vv.padding = new RectOffset(PxTrait(14f), PxTrait(14f), PxTrait(14f), PxTrait(14f));
-            vv.childAlignment = TextAnchor.MiddleCenter;
+            vv.childAlignment = TextAnchor.UpperCenter;
             vv.childControlWidth = true; vv.childControlHeight = true;
             vv.childForceExpandWidth = true; vv.childForceExpandHeight = false;
             ConstruireEtiquette(vide.transform, "EtiquetteVide", titreTexte.text, "D'OÙ ÇA PART", TextAlignmentOptions.Center);

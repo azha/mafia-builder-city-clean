@@ -1,0 +1,5 @@
+# Planches par écran — 08/10 soir, recapture FINALE de CLIENT-2 (corrections des juges r1 : ㊴ et ensemble)
+
+C'est LE jeu à donner aux juges r2 (le dossier `…-client2-r1corrige` le précède de peu : seul E04 diffère). Harnais `PlanchesParEcran` (catégorie `ClichePlanchesParEcran`, **5/5 verts**, VERDICT 0), compte NEUF sur la pile dev, 1080×2400 et 1080×1920, tête = `lot/mots-client-2026-10-08` (cf. `Tools/preuves/creneau-2026-10-08h/VERDICTS.txt`). `journal.tsv` : l'état de chaque planche (E12 ㊴ : corps FABRIQUÉS, non servis ; E11 ⑤ : carte FABRIQUÉE).
+Contient E01-E12 (+ `_bas` quand la liste déborde) et A01 (file à 2 cartes, et variante raison longue).
+À savoir : E04 ㉘ est l'état « aucun relais » (pas une erreur) : le bandeau de titre est visible, un panneau de liège borné porte l'étiquette « D'OÙ ÇA PART » ; l'état avec ou sans le geste « ACHETER UN RELAIS » dépend d'un bloc libre trouvé sur la pile (variable d'un run à l'autre). E08 ⑭ à 1920 : le corps défile (fondu + ascenseur). Écarts ASSUMÉS (f2) : le geste « laisser sur le zinc » (E11), la voix de Wexler (E07). Réfutés par mesure : voir `Tools/ensemble-r1-2026-10-08/`.

@@ -22,3 +22,27 @@ MafiaCI: RunPlayModeTests finished — passed=5 failed=0 skipped=0 inconclusive=
 MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
 MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
 MafiaCI-harness: elapsed=121s timeout=2400s issue=[sortie normale (RC=0) · CHIEN DE GARDE: marqueur de tests vu (travail fini), sortie bloquée par le hook MCP ⇒ process terminé par nous]
+
+# Suite du créneau (même porte, trois passages courts) : F2 ㉘ — panneau de liège borné + étiquette
+# run4 = EcranDistribution,BundleReel,DecorDeScene,EnteteDEcran : 79/80 (mon test F2 : l'assertion « panneau dans le corps » est fausse sur un hôte sans taille) ; la plaque pleine-corps essayée était un grand carré brun à étiquette flottante ⇒ panneau à la cote nominale (120 css), en haut ; run6 = mêmes catégories : 80/80 ; run7 = ClichePlanchesParEcran 5/5 (dossier planches-par-ecran-2026-10-08-client2-final, AUTORITÉ pour les juges)
+== run4.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [EcranDistribution, BundleReel, DecorDeScene, EnteteDEcran]
+MafiaCI: RunPlayModeTests started — 1303 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 80
+MafiaCI: FAIL MafiaCleanCity.Operational.Tests.DistributionScreenPlayModeTests.EcranDistributionF2_AucunRelais_UnPanneauDeLiegeBornePorteLEtiquette —   le panneau reste DANS le corps
+MafiaCI: RunPlayModeTests finished — passed=79 failed=1 skipped=0 inconclusive=0 declares=80 comptes=80
+MafiaCI: VERDICT code=1 (failed=1 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run5.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ClichePlanchesParEcran]
+MafiaCI: RunPlayModeTests started — 1303 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 5
+MafiaCI: RunPlayModeTests finished — passed=5 failed=0 skipped=0 inconclusive=0 declares=5 comptes=5
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run6.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [EcranDistribution, BundleReel, DecorDeScene, EnteteDEcran]
+MafiaCI: RunPlayModeTests started — 1303 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 80
+MafiaCI: RunPlayModeTests finished — passed=80 failed=0 skipped=0 inconclusive=0 declares=80 comptes=80
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run7.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ClichePlanchesParEcran]
+MafiaCI: RunPlayModeTests started — 1303 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 5
+MafiaCI: RunPlayModeTests finished — passed=5 failed=0 skipped=0 inconclusive=0 declares=5 comptes=5
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)

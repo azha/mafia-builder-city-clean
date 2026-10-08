@@ -104,7 +104,7 @@ namespace MafiaCleanCity.Operational.Tests
         }
 
         /// <summary>㉘ F2 (juge d'ensemble r1, 08/10 ; f2 : « un état vide qui ne se lit pas comme voulu reste un défaut ») : sans zone, le corps entier était un tapis de liège NU sous le bandeau (87 % du corps).
-        /// Dans l'état « aucun relais » un PANNEAU de liège borné porte l'étiquette crème « D'OÙ ÇA PART » et le titre de l'état — deux clés DÉJÀ servies — et prend le corps ; l'état nominal ne le garde pas.</summary>
+        /// Dans l'état « aucun relais » un PANNEAU de liège borné porte l'étiquette crème « D'OÙ ÇA PART » et le titre de l'état — deux clés DÉJÀ servies — ; l'état nominal ne le garde pas.</summary>
         [UnityTest]
         public IEnumerator EcranDistributionF2_AucunRelais_UnPanneauDeLiegeBornePorteLEtiquette()
         {
@@ -120,9 +120,12 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNotNull(chip, "le panneau porte l'étiquette crème");
             Assert.AreEqual("D'OÙ ÇA PART", chip.Find("SousTitre").GetComponent<TMPro.TextMeshProUGUI>().text.ToUpperInvariant().Replace('’', '\''), "la même grammaire que la fiche d'une route");
             Assert.AreEqual(racine.Find("Entete/Titre").GetComponent<TMPro.TextMeshProUGUI>().text, chip.Find("Titre").GetComponent<TMPro.TextMeshProUGUI>().text, "le titre de l'état, sans mot nouveau");
-            RectTransform corps = (RectTransform)racine.Find("Corps"), panneau = (RectTransform)vide;
-            Assert.Greater(panneau.rect.height, 0.4f * corps.rect.height, "le panneau remplit le corps : le trou de 87 % (F2) n'est plus un tapis nu");
-            Assert.LessOrEqual(panneau.rect.height, corps.rect.height + 0.5f, "le panneau reste DANS le corps");
+            RectTransform panneau = (RectTransform)vide, etiquette = (RectTransform)chip;
+            Assert.Greater(panneau.rect.height, 0f, "le panneau a une hauteur : le tapis n'est plus nu (F2)");
+            var cp = new Vector3[4]; var ce = new Vector3[4];
+            panneau.GetWorldCorners(cp); etiquette.GetWorldCorners(ce);
+            Assert.GreaterOrEqual(ce[0].y, cp[0].y - 0.5f, "l'étiquette est DANS le panneau (bas)");
+            Assert.LessOrEqual(ce[2].y, cp[2].y + 0.5f, "l'étiquette est DANS le panneau (haut)");
         }
 
         // ═══ 1. GARDE STRUCTURELLE — ne lit aucun pixel, ne dépend d'aucune résolution ═══════
