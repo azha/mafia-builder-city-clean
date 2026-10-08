@@ -153,7 +153,9 @@ namespace MafiaCleanCity.Operational
             switch (Vue)
             {
                 case VueDossier.Acteurs: sousTitre.text = Lib("qui parle, et qui a peur"); break;
-                case VueDossier.Vide: sousTitre.text = Lib("rien à votre nom"); break;
+                // ⛔ PAS `Lib` : `forensic.bloc.rien_a_votre_nom` est la clé du texte `.rien` (« Rien à votre nom. », servie avec son point) — le sous-titre
+                // de l'enseigne (« rien à votre nom », sans point) a son propre rôle, sinon les deux textes ne pourraient jamais diverger.
+                case VueDossier.Vide: sousTitre.text = MafiaCleanCity.I18n.Libelle.De("forensic", "enseigne", "rien à votre nom"); break;
                 default: sousTitre.text = Lib("trois pistes, et elles ne se mélangent pas"); break;
             }
         }
@@ -428,6 +430,7 @@ namespace MafiaCleanCity.Operational
             AjouterHauteur(go, Px(CssHEnseigne));
             var v = go.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.MiddleCenter;
+            v.spacing = Px(5f);   // `.enseigne i{margin-top:5px}`
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
@@ -683,7 +686,7 @@ namespace MafiaCleanCity.Operational
         {
             Color32 c32 = couleur;
             var cle = ((c32.r << 16) | (c32.g << 8) | c32.b, chevron);
-            if (silhouettes.TryGetValue(cle, out Sprite deja) && deja != null) return deja;
+            if (silhouettes.TryGetValue(cle, out Sprite deja) && deja != null && deja.texture != null) return deja;   // la Texture2D peut mourir seule
             const int N = 64;
             Color marque = DesignTokens.Current.hudGaugeFaceOuter;
             var tex = new Texture2D(N, N, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
@@ -879,20 +882,22 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>`steady` « il tient » · `nervous` « il a peur » · `unavailable` « injoignable » · `gone` « parti » (cadre 151). Un statut
         /// que le back inventerait s'affiche TEL QUEL (jamais rabattu sur un mot rassurant).</summary>
-        public static string MotDuStatut(string statut)
+        public static string MotDuStatut(string statut) =>
+            MafiaCleanCity.I18n.Libelle.ParValeur("forensic", "statut", statut, RepliDuStatut(statut));
+
+        /// <summary>Le REPLI de `ParValeur` : le mot de la maquette, tant que la clé `forensic.statut.<valeur>` n'est pas servie (allowlist N2
+        /// nommée, patron `CollecteMots.RepliDeLaBande`). Un statut que le back inventerait s'affiche TEL QUEL.</summary>
+        private static string RepliDuStatut(string statut)
         {
             switch (statut)
             {
-                case "steady": return Mot("il tient");
-                case "nervous": return Mot("il a peur");
-                case "unavailable": return Mot("injoignable");
-                case "gone": return Mot("parti");
+                case "steady": return "il tient";
+                case "nervous": return "il a peur";
+                case "unavailable": return "injoignable";
+                case "gone": return "parti";
                 default: return string.IsNullOrEmpty(statut) ? "—" : statut;
             }
         }
-
-        /// <summary>Un mot du dossier : TOUJOURS par `Libelle` (garde N2 : un résolveur ne rend jamais un littéral à lettres pour une valeur nommée).</summary>
-        private static string Mot(string litteral) => MafiaCleanCity.I18n.Libelle.De("forensic", "acteur", litteral);
 
         /// <summary>L'encre du statut (cadre 151) : vert, orange, gris, rouge. Un statut inconnu : l'encre éteinte, jamais le vert.</summary>
         public static Color EncreDuStatut(string statut)
@@ -910,13 +915,17 @@ namespace MafiaCleanCity.Operational
         /// <summary>La marque sombre de la silhouette : un chevron pour « il tient » et « parti », une porte close pour « il a peur » et « injoignable ».</summary>
         public static bool SilhouetteAChevron(string statut) => statut == "steady" || statut == "gone";
 
-        /// <summary>`lawyer` « Avocat » · `clerk` « Greffier » ; un type inconnu s'affiche tel quel.</summary>
-        public static string NomDuType(string type)
+        /// <summary>`lawyer` « Avocat » · `clerk` « Greffier » : par la VALEUR SERVIE (`forensic.acteur.<type>`, servie FR et EN) ; un type
+        /// inconnu s'affiche tel quel.</summary>
+        public static string NomDuType(string type) =>
+            MafiaCleanCity.I18n.Libelle.ParValeur("forensic", "acteur", type, RepliDuType(type));
+
+        private static string RepliDuType(string type)
         {
             switch (type)
             {
-                case "lawyer": return Mot("Avocat");
-                case "clerk": return Mot("Greffier");
+                case "lawyer": return "Avocat";
+                case "clerk": return "Greffier";
                 default: return string.IsNullOrEmpty(type) ? "—" : type;
             }
         }

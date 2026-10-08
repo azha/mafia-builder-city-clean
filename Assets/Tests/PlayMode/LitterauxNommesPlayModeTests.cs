@@ -30,6 +30,10 @@ namespace MafiaCleanCity.CityMap.Tests
             // Les ENDONYMES : le nom d'une langue dans cette langue ne se traduit pas (« Français » reste « Français » pour un anglophone).
             // Le REPLI des bandes de caisse (COLLECTE, tables 75/85) : `CollecteMots.Bande` passe par `Libelle.ParValeur(…, RepliDeLaBande(valeur))` — le mot est le repli d'une clé dérivée de la VALEUR servie.
             { "CollecteMots.cs::RepliDeLaBande", "repli de ParValeur sur la clé `vente.caisse.bande.<valeur>` — dans Libelle, pas hors" },
+            // ㊴ LE DOSSIER (CLIENT-2, 08/10) : les REPLIS de `ParValeur("forensic", "statut"|"acteur", valeurServie, repli)` — le mot de la maquette tant
+            // que la clé `forensic.statut.<valeur>` / `forensic.acteur.<type>` (servie FR+EN) n'est pas chargée — dans Libelle, pas hors.
+            { "ForensicScreenController.cs::RepliDuStatut", "repli de ParValeur sur `forensic.statut.<valeur servie>` — dans Libelle, pas hors" },
+            { "ForensicScreenController.cs::RepliDuType", "repli de ParValeur sur `forensic.acteur.<type servi>` — dans Libelle, pas hors" },
             { "SettingsScreenController.cs::*", "endonymes « Français » / « English » (décision f2 du 23/09)" },
         };
 

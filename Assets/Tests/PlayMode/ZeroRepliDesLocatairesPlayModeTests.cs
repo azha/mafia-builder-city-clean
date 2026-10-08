@@ -74,13 +74,8 @@ namespace MafiaCleanCity.Operational.Tests
             "appro.bouton.ca_part_du_compte_tout_de_suite",
             // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : les mots de la vue pistes / acteurs / vide — clés dérivées par
             // `Libelle.De` du texte de la maquette, NON servies au HEAD du back (mesuré : `string_table.ts`, 16 des 37 clés de l'écran le SONT et
-            // n'y figurent donc pas) ; à servir par la table de l'atelier (via f2). 21 entrées.
-            "forensic.acteur.avocat",
-            "forensic.acteur.greffier",
-            "forensic.acteur.il_a_peur",
-            "forensic.acteur.il_tient",
-            "forensic.acteur.injoignable",
-            "forensic.acteur.parti",
+            // n'y figurent donc pas) ; à servir par la table de l'atelier (via f2). 16 entrées (les statuts et types d'acteur sont lus par la VALEUR servie : `forensic.statut.*`, `forensic.acteur.lawyer|clerk` — déjà servis).
+            "forensic.enseigne.rien_a_votre_nom",   // le sous-titre de l'enseigne du cadre 135 (sans point) : son rôle propre, la clé bloc.* est celle du texte `.rien`
             "forensic.bloc.acteurs_qui_tiennent",
             "forensic.bloc.ceux_qui_ne_sont_pas_sur_la_liste",
             "forensic.bloc.d_autres_parlent_et_vous_ne_les_voyez_pas",

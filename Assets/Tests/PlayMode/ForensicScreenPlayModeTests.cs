@@ -560,6 +560,149 @@ namespace MafiaCleanCity.Operational.Tests
                     $"{System.IO.Path.GetFileName(f)} compare une piste constante hors de `PistesConstantes`");
             }
             Assert.AreEqual(1, sites, "`PistesConstantes` est DÉCLARÉE en un seul site");
+            // CONTRÔLE POSITIF de la regex négative : elle DOIT voir une comparaison écrite en dur (sinon « 0 comparaison » serait vrai à vide)
+            const string motif = @"(audit_risk|lifestyle_alarm)_bucket""\s*\)\s*(==|!=)|(==|!=)\s*""(audit_risk|lifestyle_alarm)";
+            Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch("if (cle == \"audit_risk\") x();", motif), "la regex ne voit pas `cle == \"audit_risk\"`");
+            Assert.IsFalse(System.Text.RegularExpressions.Regex.IsMatch("DossierCalculs.PistesConstantes.Contains(cle)", motif));
+        }
+
+        // ═══ 4. LES PIXELS (DESIGN v5.2 §6, revue de code M1) — l'écran RENDU dans un banc, jamais ses seuls paramètres ═══════
+
+        /// <summary>Un banc comme celui des gardes de filets : Canvas `ScreenSpaceCamera` en pixels constants sur une cible 540×960 (1 px CSS =
+        /// 1,8 px), l'hôte de l'écran PARENTÉ sous lui (donc `CanvasRacine` y bâtit l'écran).</summary>
+        private sealed class BancEcran : System.IDisposable
+        {
+            public const int W = 540, H = 960;
+            public readonly RenderTexture Rt; public readonly Camera Cam; public readonly Canvas Canvas;
+            private readonly GameObject camGo, canGo;
+            public BancEcran()
+            {
+                Rt = new RenderTexture(W, H, 24, RenderTextureFormat.ARGB32);
+                camGo = new GameObject("ecr_cam"); Cam = camGo.AddComponent<Camera>();
+                Cam.targetTexture = Rt; Cam.clearFlags = CameraClearFlags.SolidColor; Cam.backgroundColor = Color.black;
+                Cam.orthographic = true; Cam.enabled = false;
+                canGo = new GameObject("ecr_canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+                Canvas = canGo.GetComponent<Canvas>(); Canvas.renderMode = RenderMode.ScreenSpaceCamera; Canvas.worldCamera = Cam;
+                canGo.GetComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
+            }
+            public Transform Racine => canGo.transform;
+            public Texture2D Rendre()
+            {
+                Canvas.ForceUpdateCanvases(); Cam.Render();
+                RenderTexture avant = RenderTexture.active; RenderTexture.active = Rt;
+                var t = new Texture2D(W, H, TextureFormat.RGB24, false);
+                t.ReadPixels(new Rect(0, 0, W, H), 0, 0); t.Apply(); RenderTexture.active = avant;
+                return t;
+            }
+            /// <summary>Le pixel (x, y ; origine en BAS) du point (`fx`, `fy` ∈ [0, 1], origine en bas à gauche) du rect `r`.</summary>
+            public Vector2Int Pixel(RectTransform r, float fx, float fy)
+            {
+                var c = (RectTransform)canGo.transform;
+                Vector3 monde = r.TransformPoint(new Vector3(r.rect.xMin + fx * r.rect.width, r.rect.yMin + fy * r.rect.height, 0f));
+                Vector3 p = c.InverseTransformPoint(monde);
+                return new Vector2Int(Mathf.FloorToInt((p.x - c.rect.xMin) / c.rect.width * W), Mathf.FloorToInt((p.y - c.rect.yMin) / c.rect.height * H));
+            }
+            public void Dispose()
+            {
+                Object.DestroyImmediate(canGo); Object.DestroyImmediate(camGo);
+                Rt.Release(); Object.DestroyImmediate(Rt);
+            }
+        }
+
+        private static float Ecart(Color a, Color b) =>
+            Mathf.Max(Mathf.Abs(a.r - b.r), Mathf.Max(Mathf.Abs(a.g - b.g), Mathf.Abs(a.b - b.b))) * 255f;
+
+        /// <summary>Compte, sur le segment de `n` pixels qui part de (x, y) dans la direction (dx, dy), ceux à `tol`/255 de `cible`.</summary>
+        private static int Compter(Texture2D t, int x, int y, int dx, int dy, int n, Color cible, float tol)
+        {
+            int k = 0;
+            for (int i = 0; i < n; i++) if (Ecart(t.GetPixel(x + i * dx, y + i * dy), cible) <= tol) k++;
+            return k;
+        }
+
+        /// <summary>L'EFFET, pas les paramètres : l'écran RENDU. (1) vue pistes — au centre de chaque cran, la couleur de la piste (l'orange pour
+        /// les trois crans de « visible », le cran vide `#2a3648` au-dessus ; AUCUN cran coloré sur les deux pistes éteintes) ; la porte a son bord
+        /// laiton sur `PxTrait(1)` colonnes, la 2ᵉ fenêtre aucun ; la 1ʳᵉ fenêtre a son or en BAS (et pas en haut) ; la note et le « — » ont de
+        /// l'encre. (2) vue acteurs — la ligne « parti » est à 45 % : sa silhouette rouge est mêlée à son fond, pas pleine.</summary>
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7P1_Pixels_Crans_Porte_Or_Note_EtLeParti()
+        {
+            var banc = new BancEcran();
+            Texture2D t = null;
+            try
+            {
+                hostGo = new GameObject("ForensicScreen", typeof(RectTransform));
+                hostGo.transform.SetParent(banc.Racine, false);
+                ForensicScreenController ecran = hostGo.AddComponent<ForensicScreenController>();
+                ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), RosterDe4());
+                yield return null; yield return null;
+                t = banc.Rendre();
+                Color vide = new Color32(0x2A, 0x36, 0x48, 0xFF);
+                Color orange = DesignTokens.Current.accentWarning, laiton = DesignTokens.Current.hudHairlineGold, dore = DesignTokens.Current.hudMoneyGold;
+                int ep = MafiaCleanCity.Shell.EchelleMaquette.PxTrait(1f, (RectTransform)banc.Racine, MafiaCleanCity.Shell.EchelleMaquette.LargeurEcransBrennar6);
+                int ep2 = MafiaCleanCity.Shell.EchelleMaquette.PxTrait(2f, (RectTransform)banc.Racine, MafiaCleanCity.Shell.EchelleMaquette.LargeurEcransBrennar6);
+
+                // (1) les crans
+                for (int i = 0; i < 3; i++)
+                    for (int c = 0; c < 4; c++)
+                    {
+                        Vector2Int px = banc.Pixel((RectTransform)Sous($"Elast/Pistes/Piste{i}/Crans/Cran{c}"), 0.5f, 0.5f);
+                        Color vu = t.GetPixel(px.x, px.y);
+                        Color attendu = (i == 1 && c <= 2) ? orange : vide;
+                        Assert.LessOrEqual(Ecart(vu, attendu), 8f, $"cran {c} de la piste {i} : pixel {vu} au lieu de {attendu}");
+                    }
+
+                // la porte : bord laiton sur ep colonnes (en partant du bord gauche, à mi-hauteur) ; la 2ᵉ fenêtre n'en a aucun
+                RectTransform porte = (RectTransform)Sous("Compteurs/Fenetre2"), deux = (RectTransform)Sous("Compteurs/Fenetre1");
+                Vector2Int gp = banc.Pixel(porte, 0f, 0.5f), dp = banc.Pixel(deux, 0f, 0.5f);
+                Assert.That(Compter(t, gp.x, gp.y, 1, 0, 8, laiton, 10f), Is.InRange(ep - 1, ep + 1), "la porte a son bord laiton");
+                Assert.AreEqual(0, Compter(t, dp.x, dp.y, 1, 0, 8, laiton, 10f), "la 2ᵉ fenêtre n'a pas de bord laiton");
+
+                // la 1ʳᵉ fenêtre : l'or de `.fen.ici` en BAS, jamais en haut
+                RectTransform ici = (RectTransform)Sous("Compteurs/Fenetre0");
+                Vector2Int bas = banc.Pixel(ici, 0.5f, 0f), haut = banc.Pixel(ici, 0.5f, 1f);
+                Assert.That(Compter(t, bas.x, bas.y, 0, 1, 12, dore, 10f), Is.InRange(ep2 - 1, ep2 + 1), "l'or de la fenêtre « ici », en bas");
+                Assert.AreEqual(0, Compter(t, haut.x, haut.y - 11, 0, 1, 12, dore, 10f), "pas d'or en haut de la fenêtre « ici »");
+
+                // de l'ENCRE là où le texte doit être : la note sous les pistes, le « — » d'une piste éteinte
+                RectTransform note = (RectTransform)Sous("Elast/NotePistes");
+                int encre = 0;
+                for (int ix = 0; ix < 40; ix++)
+                    for (int iy = 0; iy < 6; iy++)
+                    {
+                        Vector2Int q = banc.Pixel(note, ix / 40f, 0.3f + iy * 0.08f);
+                        if (Ecart(t.GetPixel(q.x, q.y), DesignTokens.Current.onSurfaceSecondary) <= 12f) encre++;
+                    }
+                Assert.GreaterOrEqual(encre, 6, "la note « Les livres et le train de vie… » a de l'encre");
+                RectTransform tiret = (RectTransform)Sous("Elast/Pistes/Piste0/Mot");
+                int encreTiret = 0;
+                for (int ix = 0; ix < 40; ix++)
+                    for (int iy = 0; iy < 6; iy++)
+                    {
+                        Vector2Int q = banc.Pixel(tiret, ix / 40f, 0.2f + iy * 0.12f);
+                        if (Ecart(t.GetPixel(q.x, q.y), new Color32(0x7A, 0x83, 0x8D, 0xFF)) <= 12f) encreTiret++;
+                    }
+                Assert.GreaterOrEqual(encreTiret, 2, "le « — » de la piste éteinte a de l'encre `#7a838d`");
+
+                // (2) la vue acteurs : la ligne « parti » est à 45 %
+                ecran.Basculer();
+                yield return null; yield return null;
+                Object.DestroyImmediate(t); t = banc.Rendre();
+                RectTransform vivante = (RectTransform)Sous("Elast/Acteurs/Acteur0"), parti = (RectTransform)Sous("Elast/Acteurs/Acteur3");
+                Color fondVivant = t.GetPixel(banc.Pixel(vivante, 0.02f, 0.5f).x, banc.Pixel(vivante, 0.02f, 0.5f).y);
+                Color fondParti = t.GetPixel(banc.Pixel(parti, 0.02f, 0.5f).x, banc.Pixel(parti, 0.02f, 0.5f).y);
+                Color elast = t.GetPixel(banc.Pixel((RectTransform)Sous("Elast/Acteurs"), 0f, 0.5f).x - 4, banc.Pixel(parti, 0.02f, 0.5f).y);
+                Color attenduFond = Color.Lerp(elast, fondVivant, DossierCalculs.OpaciteDuParti);
+                Assert.LessOrEqual(Ecart(fondParti, attenduFond), 7f, $"le fond de la ligne « parti » : {fondParti} au lieu de {attenduFond} (45 % de {fondVivant} sur {elast})");
+                RectTransform sil = (RectTransform)Sous("Elast/Acteurs/Acteur3/Silhouette");
+                Vector2Int tete = banc.Pixel(sil, 0.5f, 11f / 16f);
+                Color vuTete = t.GetPixel(tete.x, tete.y);
+                Color attenduTete = Color.Lerp(fondParti, DesignTokens.Current.accentDanger, DossierCalculs.OpaciteDuParti);
+                Assert.LessOrEqual(Ecart(vuTete, attenduTete), 14f, $"la tête de la silhouette « parti » : {vuTete} au lieu de {attenduTete} (rouge à 45 % sur son fond)");
+                Assert.Greater(Ecart(vuTete, DesignTokens.Current.accentDanger), 40f, "la silhouette « parti » n'est pas en rouge PLEIN");
+            }
+            finally { if (t != null) Object.DestroyImmediate(t); banc.Dispose(); }
         }
 
         // MÉTIER ICI — ajouter ici les tests de PARCOURS (signup → session/open → la route) et
