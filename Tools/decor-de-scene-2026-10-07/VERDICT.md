@@ -33,3 +33,12 @@ EXIT 0. Chiffres du design : 138 couleurs (30 par jeton · 108 littéraux) ; fil
 - Supports d'état différents du nominal (4 sur 103) : ⑮ cadre 32 (`listing`), ㉒ cadre 97 (`cofr6.dense`), ㉙ cadres 65-66 (`tabl6`, « v1 »).
 - `blur(1px)` ③, `sepia(.18)` ⑭, inclinaison de la feuille ⑯, ombres portées, `Bande` ancrée au haut du support (corkboard −18 px, burner +12 px), effet du bandeau sur la bande.
 - Prémisse de la luminosité (`RawImage.color` = produit sRGB) : à confirmer par la sonde D4 au premier créneau ; repli = voile noir ajusté.
+
+## CRÉNEAU du 08/10 n°4 (client-2, groupé f2 : CLIENT-1 → CLIENT-2 → CLIENT-3 ; porte rendue)
+- HEAD joué **01d8624d** (rebasée sur le cumul dcf6dc9f). `MAFIA_CI_CATEGORIES=DecorDeScene` (nom nu) : **passed=43 failed=0 declares=43
+  comptes=43 · VERDICT code=0** ; D4m (⑱, bande sans plancher) PASSED ; D4n PASSED. Arbre propre après le run.
+- **Mesure du fondu du menu PLUS (D4n, banc 540×960, x = 270, haut de course ⇒ opacité 1)** : surfaceBase (13,15,16) ; au pied (y=0) le
+  rendu est **(13,13,13)** contre le bureau seul **(43,18,12)** — écart 30/255 ; y=9 : 20 · y=18 : 13 · y=27 : 9 · y=36 : 5 · y=45 : 3 ·
+  y=54 : 1 · y≥63 : 0. ⇒ Le fondu ASSOMBRIT le pied du bureau brun vers un gris neutre presque noir sur ~45 px (rampe a²) : ce n'est pas
+  un « gris-bleu » visible, c'est un bas d'écran qui perd sa teinte brune. Correctif (toujours C, accord de CLIENT-1) : la couleur du fond
+  passée à `ListeDefilante.Indiquer` = l'arrêt bas du support `bureau` lu par son nom dans le catalogue, au lieu de surfaceBase.
