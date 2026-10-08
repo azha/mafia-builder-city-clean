@@ -1,4 +1,4 @@
-# Design — la couche de mouvement du client Unity (CLIENT-3, 07-08/10/2026) — v4.2 — ✅ APPROUVÉ (revue ⊥ n°4 : 0 BLOCKING) + un ajout au §2 (§16), soumis à la revue ⊥ n°2 du catalogue
+# Design — la couche de mouvement du client Unity (CLIENT-3, 07-08/10/2026) — v4.3 — ✅ APPROUVÉ (revue ⊥ n°4 : 0 BLOCKING) + ajouts §16 (`CouleurA = Cible`, revue ⊥ n°2 du catalogue : cohérent) et §17 (cible du retour d'appui, voile), soumis à la revue ⊥ n°3 du catalogue
 
 Statut : **design, rien n'est codé.** Historique des revues ⊥ (agent neuf à chaque tour) : v1 NOT_APPROUVÉ (6 BLOCKING / 13 MAJEUR / 11 mineurs) ; v2 NOT_APPROUVÉ (3 BLOCKING / 9 MAJEUR / 10 mineurs, commit `d207b48b`) ; v3 NOT_APPROUVÉ (2 BLOCKING / 5 MAJOR / 9 mineurs, commit `5a47e04c` ; les trois BLOCKING de la v2 vérifiés corrigés). Cette v4 répond aux findings de la v3 (table §14) ; la revue n°4 l'**APPROUVE** (0 BLOCKING, 5 MAJOR, 10 mineurs) et la v4.1 ferme les 5 MAJOR (table §15) ; les 10 mineurs vont en dette (`dettes-design-mouvement.md`). Règles de revue en vigueur : **BLOCKING = « le code écrit d'après ce design serait faux » ; une prémisse non démontrable depuis le dépôt se tranche par une MESURE planifiée (E0) avec un défaut sûr.** Rulings du 07/10 : écarts de nuance (pixels, millisecondes, forme exacte d'une courbe) consignés, pas traités ; animations **fidèles en cause, rythme et sensation** ; animations DIÉGÉTIQUES ; ère des objets 2000-2010 (le laiton du chrome d'interface reste).
 
@@ -88,7 +88,7 @@ Constantes dans un `MouvementTunables` voisin de `UiTimingTunables`. **`UiTiming
 
 Canon (`global_conventions_core.md` l.33, l.127) : option **toggleable**, désactive les transitions (F2).
 - `PolitiqueMouvement` = `Plein | Reduit` (`Aucun` : tests et contrôle négatif seulement).
-- **`Reduit`** : tout est figé à `PoseDeReposS`, **y compris** `Alerte` (son état statique nommé existe sans pulsation). **Exceptions** : (i) `Retour` garde le **mélange** de couleur à l'appui, plus le liseré du bouton quand il en a un (le canon veut qu'une couleur ne soit pas le seul différenciateur), sans échelle ; (ii) une entrée **`Fonctionnelle`** (un `Remplissage` de progression : l'arc de 1 000 ms de l'appui long) **ne se gèle pas** : elle devient un indicateur statique plus un compteur textuel (`screen_2a:314`, `screen_13:308`), car le geler supprimerait le seul signal d'une action irréversible.
+- **`Reduit`** : tout est figé à `PoseDeReposS`, **y compris** `Alerte` (son état statique nommé existe sans pulsation). **Exceptions** : (i) `Retour` garde le **mélange** de couleur à l'appui — **ou, pour un bouton sans `Graphic` qui rende, son voile `Alpha` (§17)** —, plus le liseré du bouton quand il en a un (le canon veut qu'une couleur ne soit pas le seul différenciateur), sans échelle ; (ii) une entrée **`Fonctionnelle`** (un `Remplissage` de progression : l'arc de 1 000 ms de l'appui long) **ne se gèle pas** : elle devient un indicateur statique plus un compteur textuel (`screen_2a:314`, `screen_13:308`), car le geler supprimerait le seul signal d'une action irréversible.
 - **Source** : le réglage du joueur dans ⑲ est **un REUSE du canon** (`screen_14:71,146,208,251,298`), pas une question produit ; persistance en `PlayerPrefs` en attendant `PATCH /v1/me/settings` (aucun `GET` n'existe : lot back différé). S'y ajoute Android `Settings.Global.ANIMATOR_DURATION_SCALE == 0` (JNI), relu à chaque `OnApplicationPause(false)`. iOS : réglage joueur seul. Niveau = `Reduit` si l'une des deux sources le demande.
 - Limite de clignotement (G5) : toutes politiques, tous canaux, après `Alterne`, **au plus 3 extrema par seconde (période ≥ 0,667 s)** par piste d'alpha/mélange/éclat. (Le canon de ③ demande un flash toutes les 250 ms : G5 gagne, contradiction consignée avant E3.)
 
@@ -109,7 +109,7 @@ Le test pur applique la table de repère du §2 puis exige : valeur normalisée 
 
 ## 8. Retour d'appui (demande f2)
 
-`RetourAppui` posé par un assistant `Retour.Poser(Button)` : appui → échelle .97 + mélange vers sombre, 90 ms `EaseOut` ; relâché → 140 ms. États : repos, appui, relâché, **annulé** (`IPointerExitHandler` + relâchement forcé après 400 ms). **Échelle seulement si la plus grande dimension du bouton ≤ 1/3 du cadre** ; au-delà, mélange seul (10 des 15 sites sans retour sont des cartes ou panneaux plein-largeur : −3 % sur 560 u déplace le bord de 7 px) — décision f2 ratifiée. 67 boutons : **tous** reçoivent `RetourAppui` et perdent le tintement `ColorTint` par défaut (52 d'entre eux) ; `ReputationScreenController.cs:994` est une `Scrollbar`, pas un bouton : exclusion nommée de G9. Appui long : `UiTimingTunables.AppuiLongDeplacementMs = 500` (**à CRÉER** : décision f2 Q12 ; l'en-tête de `UiTimingTunables.cs` épingle « les 4 identifiants `T.ui.*` » du canon, il faut y dire que cette constante est du client) ; `AppuiLong.Duree` est une `public const float` (`AppuiLong.cs:10`) : `= UiTimingTunables.AppuiLongDeplacementMs / 1000f` reste une expression constante, et la constante n'a aucun appelant externe (mesuré). **Une piste `Retour` est attachée à `PointerDown` et détachée au relâchement** (transitoire), jamais à `Retour.Poser` : 67 boutons ne consomment donc pas 67 pistes.
+`RetourAppui` posé par un assistant `Retour.Poser(Button)` : appui → échelle .97 + mélange vers sombre, 90 ms `EaseOut` ; relâché → 140 ms. **La cible du mélange et le repli quand rien ne rend : §17.** États : repos, appui, relâché, **annulé** (`IPointerExitHandler` + relâchement forcé après 400 ms). **Échelle seulement si la plus grande dimension du bouton ≤ 1/3 du cadre** ; au-delà, mélange seul (10 des 15 sites sans retour sont des cartes ou panneaux plein-largeur : −3 % sur 560 u déplace le bord de 7 px) — décision f2 ratifiée. 67 boutons : **tous** reçoivent `RetourAppui` et perdent le tintement `ColorTint` par défaut (52 d'entre eux) ; `ReputationScreenController.cs:994` est une `Scrollbar`, pas un bouton : exclusion nommée de G9. Appui long : `UiTimingTunables.AppuiLongDeplacementMs = 500` (**à CRÉER** : décision f2 Q12 ; l'en-tête de `UiTimingTunables.cs` épingle « les 4 identifiants `T.ui.*` » du canon, il faut y dire que cette constante est du client) ; `AppuiLong.Duree` est une `public const float` (`AppuiLong.cs:10`) : `= UiTimingTunables.AppuiLongDeplacementMs / 1000f` reste une expression constante, et la constante n'a aucun appelant externe (mesuré). **Une piste `Retour` est attachée à `PointerDown` et détachée au relâchement** (transitoire), jamais à `Retour.Poser` : 67 boutons ne consomment donc pas 67 pistes.
 
 ## 9. Migration des existants — assertion par assertion
 
@@ -213,10 +213,40 @@ Le catalogue rencontre le même cas sur les crans de ⑰ (teinte selon le rang) 
   restitue. L'alpha du `Graphic` n'est jamais touché (inchangé).
 - `Cible × k` = produit par canal, borné à [0, 1]. `k < 1` assombrit. `k > 1` n'éclaircit que les canaux
   sous 1 : sur un `Graphic` **blanc** dont la couleur est cuite dans le sprite, il ne fait rien — G13 le voit
-  pour une `Ambiance`, et le catalogue l'interdit pour les autres genres (§I.1 du catalogue, règle 3).
+  pour une `Ambiance`, et le catalogue l'interdit pour les autres genres (§I.1 du catalogue, règle 3). Un `Graphic` à alpha nul,
+  ou l'absence de `Graphic`, est l'autre moitié de ce trou : §17.
 - Coût : un `Color` par piste, lu une fois à l'attachement ; aucune allocation par `Tick` (X3 inchangé).
 
 **Ce qui ne change pas.** G12 (deux `Absolu` sur le même couple) ; la règle de remplacement du §3 ; le
 §5 (i) (`Retour` garde le `Melange` sous `Reduit`) ; le test de fin de piste, qui vérifie maintenant que la
 couleur restituée est **celle de la cible**, avec un contrôle négatif sur deux boutons de couleurs différentes.
+
+## 17. Ajout v4.3 — la cible du retour d'appui, et le voile (revue ⊥ n°2 du catalogue, 08/10)
+
+**Pourquoi.** Mesuré sur les 67 `Button` : 18 n'ont aucune surface que `Melange` puisse faire varier — 1 `Button` posé
+sur un `TMP_Text` (`DailyReviewScreenController.cs:1101`, G6 refuserait le `Melange`), 3 sans aucun `Graphic`
+(`ExceptionDetailController.cs:569`, `LieutenantScreenController.cs:2731`, `BandeauEphemere.cs:251`), 14 dont le
+`Graphic` a un alpha nul (zone de clic transparente : `HighestLeverageCardController.cs:342`,
+`DelegationScreenController.cs:1533`, `DemolitionScreenController.cs:1459`, `AppShell.cs:2349`…). `Melange` n'écrit que le
+RGB : sur eux, le retour d'appui serait invisible — et ce sont justement les panneaux pleine largeur que le §8 prive
+d'échelle.
+
+**Quoi.** `Retour.Poser(Button)` choisit, une fois, à la pose :
+1. `button.targetGraphic`, s'il n'est pas un `TMP_Text` et que son `color.a ≥ 0,1` ⇒ entrée `retour.appui` (`Melange`,
+   `CouleurA = Cible`, et `Echelle` sous les conditions du §8 **et** de G11 : aucun ancêtre `ContentSizeFitter`) ;
+2. sinon le premier `Graphic` enfant non texte, `color.a ≥ 0,1`, qui couvre au moins la moitié du rect du bouton ⇒ même
+   entrée, sur cet enfant ;
+3. sinon ⇒ entrée **`retour.appui-voile`** : `Alpha` `Multiplicatif` 1 → 0,80 sur un `CanvasGroup` posé sur le `Button`
+   lui-même (permis sur un texte, G6), 90 ms à l'appui, 140 ms au relâchement, sans échelle.
+Sous `Reduit`, le voile est gardé comme le mélange (§5 (i)) : il ne déplace rien, et sans lui ces 18 boutons n'auraient
+plus aucun retour.
+
+**Gardes.** G9 devient : tout `Button` a un `RetourAppui` **dont la cible rend** (cas 1 ou 2), ou le voile (cas 3), ou
+une exclusion nommée ; le test relève, pour chaque bouton monté, le cas retenu, et rougit si un cas 1/2 vise un
+`Graphic` d'alpha < 0,1 (contrôle négatif : un bouton à `Image` transparente doit tomber en cas 3).
+
+**Note pour E4 (manomètre de ⑭), 08/10, CLIENT-2.** ⑭ porte le décor de scène (`5c71a421`, `feat/decor-de-scene`) : la
+pile est le `VerticalLayoutGroup` du GameObject de `CompressionScreenController` (variable `v` dans `Construire()`), et un
+`ReserveDeBande` recalcule `v.padding.top` à chaque changement de rect. Le manomètre s'ajoute en ENFANT de la pile ; ne
+jamais écrire `padding.top` à la main.
 
