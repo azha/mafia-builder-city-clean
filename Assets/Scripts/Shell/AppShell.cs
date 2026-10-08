@@ -1679,10 +1679,23 @@ namespace MafiaCleanCity.Shell
         ///     (« Aucune exception en attente », l'ambiance SERVIE de la table 63 v2) se TOUCHENT et couvrent ensemble ce bloc.
         /// ⛔ Corrige la « mise en page par état » du 26/09 (file seule EN HAUT) : un écart à la maquette, où la file ne remonte jamais
         ///    (mesure de l'UX, ordre de l'orchestrateur du 26/09) ; elle chevauchait aussi le bandeau. Garde : `AccueilCanonPlayModeTests`
-        ///    (file au-dessus du dock et sous tout le reste, rien hors de la zone sûre, vide borné entre la tête ou la suite et la file).</summary>
+        ///    (file au-dessus du dock et sous tout le reste, rien hors de la zone sûre, vide borné entre la tête ou la suite et la file).
+        /// ⛔ LA LIGNE HAUTE (f2 08/10, ④ A du créneau groupé : la ligne à 2 cartes DÉBORDAIT — colonne « qui » voulue 208,9 u, offerte 198 u à
+        ///    2400 et 139,7 u à 1920, nom et « Plusieurs attendent encore » effacés). Depuis l'atelier 0dd516e, le cadre 4 porte la RAISON et
+        ///    « Plusieurs attendent encore » dans la ligne, et la ligne GRANDIT. Re-mesuré au même instrument sur master 7d88a65 (zone sûre
+        ///    110 → 516, même hauteur de 406) :
+        ///   · cadres 1-3 (ligne sans raison ni pluriel) : 464 → 506 ⇒ (0,025 ; 0,128), INCHANGÉ ; la carte de tête 252 → 454 ⇒ (0,153 ; 0,650) ;
+        ///   · cadre 4 (raison + pluriel) : la ligne 424 → 506 ⇒ (0,025 ; 0,227) ; « LA SUITE » REMONTE avec elle, 187 → 414 ⇒ (0,251 ; 0,810).
+        ///   La ligne est HAUTE quand elle porte la raison ou le pluriel (`ExceptionQueuePanelController.LigneHaute`, la règle même du rendu),
+        ///   et alors la suite prend la bande du cadre 4. ⚠️ ASSUMÉ, non dessiné : une carte de tête AU-DESSUS d'une ligne haute. Aucun cadre ne
+        ///   le montre ; la tête garde sa hauteur (0,5) et monte de la même marge (0,025) au-dessus de la ligne ⇒ (0,252 ; 0,752), sous le haut
+        ///   de la suite du cadre 4 (0,810). Signalé à f2.</summary>
         internal static readonly (float min, float max) BandeFile = (0.025f, 0.128f),
+                                                         BandeFileHaute = (0.025f, 0.227f),
                                                          BandeTete = (0.153f, 0.653f),
+                                                         BandeTeteSurLigneHaute = (0.252f, 0.752f),
                                                          BandeSuite = (0.153f, 0.746f),
+                                                         BandeSuiteSurLigneHaute = (0.251f, 0.810f),
                                                          BandeTeteVide = (0.128f, 0.271f);
 
         private void MonterPanneauxAccueil(SessionOpenDto dto)
@@ -1697,9 +1710,14 @@ namespace MafiaCleanCity.Shell
             // typeof(RectTransform))` les superposerait tous dans le coin bas-gauche de `ContentSlot`).
             bool avecCarte = dto?.hl_card != null && !string.IsNullOrEmpty(dto.hl_card.card_id);
             bool avecFile = dto?.queue != null && dto.queue.Length > 0;
+            // La ligne HAUTE du cadre 4 (raison ou pluriel) : la file grandit, la tête et la suite montent avec elle (voir `BandeFileHaute`).
+            bool ligneHaute = ExceptionQueuePanelController.LigneHaute(dto?.queue);
+            (float min, float max) bandeTete = ligneHaute ? BandeTeteSurLigneHaute : BandeTete,
+                                   bandeSuite = ligneHaute ? BandeSuiteSurLigneHaute : BandeSuite,
+                                   bandeFile = ligneHaute ? BandeFileHaute : BandeFile;
             if (avecCarte)
             {
-                HighestLeverageCardController hlCard = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", BandeTete.min, BandeTete.max);
+                HighestLeverageCardController hlCard = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", bandeTete.min, bandeTete.max);
                 // ⑤ `screen_1a` — le DÉTAIL de la carte, en surimpression. L'écran existe (maquette ratifiée « ok top on garde comme
                 // ça »), et sans ce fil il ne serait montable par personne : *un écran construit que rien ne monte est un écran que le
                 // joueur ne voit jamais* — c'est le défaut exact qui laissait la Revue du jour invisible depuis W3.U1.
@@ -1719,13 +1737,13 @@ namespace MafiaCleanCity.Shell
                 // « LA SUITE » (cadre 4, table 72) : le vide du joueur neuf rempli par ses objectifs. Elle lit son état ; si une ligne est
                 // vraie, elle PREND le milieu et le calme s'efface (le bloc de la maquette remplace « Rien à signaler ») ; sinon rien ne
                 // change.
-                LaSuitePanelController suite = NouveauPanneauAccueil<LaSuitePanelController>("AccueilLaSuite", BandeSuite.min, BandeSuite.max);
+                LaSuitePanelController suite = NouveauPanneauAccueil<LaSuitePanelController>("AccueilLaSuite", bandeSuite.min, bandeSuite.max);
                 HighestLeverageCardController calmeVu = calme;
                 suite.Rendue += visible => { if (calmeVu != null) calmeVu.gameObject.SetActive(!visible); };
                 suite.Charger(Token, SourceDeLaSuitePourTest ?? new SourceDeLaSuiteReseau { BaseUrl = baseUrl }, carteDeTete: false);
             }
 
-            ExceptionQueuePanelController exceptions = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", BandeFile.min, BandeFile.max);
+            ExceptionQueuePanelController exceptions = NouveauPanneauAccueil<ExceptionQueuePanelController>("AccueilExceptionQueue", bandeFile.min, bandeFile.max);
             exceptions.PoserEnLigneDeLAccueil();
             exceptions.SetQueue(Token, dto?.queue);
             // ⛔ PASSE UX 26/09 (§G P1, « deux mises en page superposées ») — les VITAUX (OrgVitals : « Friction: Light · Tension: Calm »,

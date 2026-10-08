@@ -48,7 +48,8 @@ namespace MafiaCleanCity.Shell
         public string TexteSuivante => suivanteText != null && suivanteText.gameObject.activeSelf ? suivanteText.text : null;
         public string TexteAmbiance => ambianceText != null && ambianceText.gameObject.activeSelf ? ambianceText.text : null;
         // ④ LA LIGNE DE L'ACCUEIL (2026-09-26, mesure de l'UX sur `ecrans-brennar-accueil.html` @ d4b0379, §I.5) — sur l'Accueil, la file
-        // n'est qu'UNE ligne, juste au-dessus du dock : « {nom} attend vos ordres » / GRAVITÉ, et TRANCHER à droite, 7,2 % de l'écran.
+        // n'est qu'UNE ligne, juste au-dessus du dock : « {nom} attend vos ordres » / GRAVITÉ, et TRANCHER à droite, 7,2 % de l'écran ; HAUTE (cadre 4,
+        // 0dd516e) quand elle porte aussi la raison et « Plusieurs attendent encore » (`LigneHaute`, bande choisie par le shell).
         // Le reste de la file vit dans l'ardoise ⑨ : toucher la ligne l'ouvre (« ViewAll », devenu la surface de la ligne) ; TRANCHER
         // ouvre la carte ⑩. Posé par le shell (`PoserEnLigneDeLAccueil`) ; hors Accueil, le panneau garde sa forme de liste.
         public bool LigneDeLAccueil { get; private set; }
@@ -86,7 +87,7 @@ namespace MafiaCleanCity.Shell
             LigneDeLAccueil = true;
             VerticalLayoutGroup vlg = GetComponent<VerticalLayoutGroup>();
             if (vlg != null) { vlg.padding = new RectOffset((int)LaSuitePanelController.MargeLaterale, (int)LaSuitePanelController.MargeLaterale, 0, 0); vlg.childAlignment = TextAnchor.UpperCenter; }
-            // La bande de la file EST l'emplacement de la ligne sur la maquette (452 → 494, 7,2 % de l'écran) : la ligne ÉPOUSE sa bande.
+            // La bande de la file EST l'emplacement de la ligne sur la maquette (464 → 506 à 7d88a65 ; 424 → 506 au cadre 4, ligne haute) : la ligne ÉPOUSE sa bande.
             // Une hauteur fixe (180 u) débordait à 1080×1920 (bande 148 px, ligne 152 px — AccueilPanneauxGeometriePhoto, créneau du 26/09).
             rowsRoot.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
             rowsRoot.GetComponent<VerticalLayoutGroup>().childForceExpandHeight = true;
@@ -381,6 +382,12 @@ namespace MafiaCleanCity.Shell
         /// <summary>« Plusieurs attendent encore » — clé servie `accueil.file.plusieurs_attendent_encore` : un MOT, pas un chiffre. Une carte (ou aucune) ⇒ null ; deux et plus ⇒ la ligne. Pure.</summary>
         public static string LignePlusieurs(int nombreDeCartes) =>
             nombreDeCartes > 1 ? MafiaCleanCity.I18n.Libelle.De("accueil", "file", "Plusieurs attendent encore") : null;
+
+        /// <summary>La ligne de l'Accueil est-elle HAUTE (cadre 4, atelier 0dd516e, re-mesuré à master 7d88a65 : 424 → 506 contre 464 → 506) ? Oui
+        /// dès qu'elle porte la RAISON de la 1ʳᵉ carte (`RaisonDeLaCarte`) ou « Plusieurs attendent encore » (deux cartes et plus) : la règle MÊME
+        /// du rendu (`AddLigneDeLAccueil`), lue par le shell AU MONTAGE pour choisir la bande (`AppShell.BandeFileHaute`). Une file vide ⇒ non. Pure.</summary>
+        public static bool LigneHaute(ExceptionCardDto[] cartes) =>
+            cartes != null && cartes.Length > 0 && (cartes.Length > 1 || RaisonDeLaCarte(cartes[0]) != null);
 
         /// <summary>La boîte de TRANCHER pour un mot mesuré de `mesure` u : jamais moins que les 220 u d'avant, jamais moins que le mot plus sa marge. Pure.</summary>
         public const float MargeDuMot = 12f;

@@ -145,8 +145,12 @@ namespace MafiaCleanCity.Capture.Tests
                   "decision-du-jour/reference-1080x2102.png (cadre nominal 4 de ecrans-brennar-4.html ; rapport r1 F4/F5)");
         }
 
-        /// <summary>④ P1 AVEC DEUX CARTES EN FILE (f2 07/10) : un compte NEUF n'a qu'une carte (ou aucune), donc la ligne de pluriel n'existerait pas. Le shell ouvert, la ligne de l'Accueil est RÉ-ALIMENTÉE par deux cartes FABRIQUÉES
-        /// (`SetQueue`), photographiée aux deux résolutions, et MESURÉE : la colonne « qui » (nom, gravité, raison, pluriel) tient-elle dans la ligne ? Un débordement est un A (le journal le dit : DÉBORDE).
+        /// <summary>④ P1 AVEC DEUX CARTES EN FILE (f2 07/10) : un compte NEUF n'a qu'une carte (ou aucune), donc la ligne de pluriel n'existerait pas. L'Accueil est RE-MONTÉ (Empire) avec une
+        /// réponse `session/open` dont la file porte deux cartes FABRIQUÉES (transport témoin) — c'est AU MONTAGE que le shell choisit la bande de la ligne (`AppShell.BandeFileHaute`, cadre 4) —, photographié
+        /// aux deux résolutions, et MESURÉ : la colonne « qui » (nom, gravité, raison, pluriel) TIENT-ELLE dans la ligne ? Un débordement est un A : le journal le dit et le test ROUGIT.
+        /// ⛔ Garde corrigée (08/10) : elle comparait les RECTS de la colonne et de la ligne — la mise en page CONTRAINT la colonne à la ligne, elle ne pouvait pas déborder (« tient » à tort, nom et pluriel
+        ///    effacés sur la planche). Elle compare maintenant la hauteur PRÉFÉRÉE de la colonne à la hauteur DISPONIBLE (ligne − padding vertical), DANS le régime de capture (`avantRendu`, jamais après :
+        ///    le canvas est alors rendu à la vue de jeu).
         /// ⚠️ Les cartes sont FABRIQUÉES (une réplique de lieutenant et une carte de la ville) : c'est la mise en page des deux lignes, pas un état servi.</summary>
         [UnityTest]
         [Category("ClichePlanchesParEcran")]
@@ -154,39 +158,57 @@ namespace MafiaCleanCity.Capture.Tests
         public IEnumerator Planche_AccueilFile_DeuxCartes_MesureDuDebordement()
         {
             yield return Ouvrir();
-            ExceptionQueuePanelController file = null;
-            for (float f = Time.realtimeSinceStartup + 20f; file == null && Time.realtimeSinceStartup < f;)
-            {
-                file = shell.ContentSlot.GetComponentInChildren<ExceptionQueuePanelController>(true);
-                yield return null;
-            }
-            const string Ref = "04-accueil/r2-2026-10-07/reference/cadre-4-la-suite.png ; atelier master 0dd516e (la raison + « Plusieurs attendent encore »)";
-            if (file == null) { Noter("A01", "④ Accueil — la file", "ÉCHEC : le panneau de la file n'est pas monté sur l'Accueil", Ref); yield break; }
+            const string Ref = "04-accueil/r2-2026-10-07/reference/cadre-4-la-suite.png ; atelier master 7d88a65 (ligne haute du cadre 4 : 424 → 506, la raison + « Plusieurs attendent encore »)";
             var cartes = new[]
             {
                 new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "fab-1", lieutenant_id = "lt-fab", severity_band = "MODERATE",
                     event_descriptor = "L’étagère est vide. Sans pyralin, je ne rallume pas.", lieutenant = new MafiaCleanCity.Operational.Exceptions.ExceptionLieutenantDto { name = "Lt. Kane" } },
                 new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "fab-2", lieutenant_id = "", severity_band = "MILD", event_descriptor = "Il fait chaud en ville" },
             };
+            Assert.IsTrue(ExceptionQueuePanelController.LigneHaute(cartes), "précondition : deux cartes ⇒ la ligne haute du cadre 4");
+            // Le RE-MONTAGE avec la file fabriquée : le chemin de A6 (AccueilCanon), sur le vrai shell connecté.
+            shell.TransportDeSessionPourTest = new SessionFabriquee { Reponse = new SessionOpenDto { session_id = "s-fab", hl_card = null, queue = cartes } };
+            ProductionClickSupport.Click(shell.TabBarRoot.Find("Tab_Empire").GetComponent<Button>());
+            ExceptionQueuePanelController file = null;
+            float fin = Time.realtimeSinceStartup + 20f;
+            while (Time.realtimeSinceStartup < fin)
+            {
+                file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
+                if (file != null && file.transform.GetComponentsInChildren<Transform>(true).Any(t => t.name == "Row_fab-1")) break;
+                yield return null;
+            }
+            if (file == null) { Noter("A01", "④ Accueil — la file", "ÉCHEC : le panneau de la file n'est pas monté sur l'Accueil", Ref); yield break; }
+            var debordements = new List<string>();
             foreach ((int largeur, int hauteur) in Resolutions)
             {
-                // `rebatirAccueil` : les quatre panneaux sont rebâtis À LA RÉSOLUTION (sans lui, la ligne de l'Accueil reste à sa hauteur de montage : 40 u) ; la file est ALORS ré-alimentée (le rebâtissage la recrée)
+                string mesure = null;
+                bool deborde = false;
+                // `rebatirAccueil` : les quatre panneaux sont rebâtis À LA RÉSOLUTION (sans lui, la ligne de l'Accueil reste à sa hauteur de montage) ; la MESURE est prise ici, dans le régime de capture.
                 yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"A01_AccueilFile2Cartes_{largeur}x{hauteur}.png"), true, () =>
                 {
-                    file = shell.ContentSlot.GetComponentInChildren<ExceptionQueuePanelController>(true);
-                    file?.SetQueue(shell.Token, cartes);
+                    file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
+                    Canvas.ForceUpdateCanvases();
+                    Transform row = file != null ? file.transform.GetComponentsInChildren<Transform>(true).FirstOrDefault(c => c.name == "Row_fab-1") : null;
+                    Transform col = row != null ? row.Find("QuiAttend") : null;
+                    if (row == null || col == null) { mesure = "ÉCHEC : ligne ou colonne « qui » introuvable"; deborde = true; return; }
+                    float bandeH = ((RectTransform)row).rect.height;
+                    int padding = row.GetComponent<HorizontalLayoutGroup>().padding.vertical;
+                    float disponible = bandeH - padding, voulue = LayoutUtility.GetPreferredHeight((RectTransform)col);
+                    deborde = voulue > disponible + 0.5f;
+                    mesure = $"ligne={bandeH:0.#} u · disponible (− padding {padding})={disponible:0.#} u · colonne voulue={voulue:0.#} u · raison=«{file.RaisonRendue}» · pluriel=«{file.PlusieursRendu}» · {(deborde ? "DÉBORDE (A)" : "tient")}";
                 });
-                Transform row = null;
-                if (file != null) foreach (Transform c in file.transform.GetComponentsInChildren<Transform>(true)) if (c.name == "Row_fab-1") { row = c; break; }
-                Transform col = row != null ? row.Find("QuiAttend") : null;
-                if (row == null || col == null) { Noter("A01", $"④ file {largeur}x{hauteur}", "ÉCHEC : ligne ou colonne « qui » introuvable", Ref); continue; }
-                float bandeH = ((RectTransform)row).rect.height, voulue = LayoutUtility.GetPreferredHeight((RectTransform)col);
-                var coins = new Vector3[4]; ((RectTransform)row).GetWorldCorners(coins); float basLigne = coins[0].y, hautLigne = coins[1].y;
-                ((RectTransform)col).GetWorldCorners(coins); float basColonne = coins[0].y, hautColonne = coins[1].y;
-                bool deborde = basColonne < basLigne - 0.5f || hautColonne > hautLigne + 0.5f;
-                Noter("A01", $"④ file {largeur}x{hauteur}",
-                    $"ligne={bandeH:0.#} u · colonne voulue={voulue:0.#} u · bas colonne−bas ligne={basColonne - basLigne:0.#} u · haut colonne−haut ligne={hautColonne - hautLigne:0.#} u · raison=«{file.RaisonRendue}» · pluriel=«{file.PlusieursRendu}» · {(deborde ? "DÉBORDE (A)" : "tient")}", Ref);
+                Noter("A01", $"④ file {largeur}x{hauteur}", mesure ?? "ÉCHEC : aucune mesure prise", Ref);
+                if (deborde || mesure == null) debordements.Add($"{largeur}x{hauteur} : {mesure}");
             }
+            Assert.IsEmpty(debordements, "④ la colonne « qui » de la ligne de file ne tient pas (préférée > disponible) :\n" + string.Join("\n", debordements));
+        }
+
+        /// <summary>Une réponse `session/open` FABRIQUÉE (le re-montage de l'Accueil de A01) — le patron de `AccueilCanonPlayModeTests.TransportTemoin`.</summary>
+        private sealed class SessionFabriquee : ITransportDeSession
+        {
+            public SessionOpenDto Reponse;
+            public IEnumerator Fermer(string jeton, System.Action<long, string> echec) { yield break; }
+            public IEnumerator Ouvrir(string jeton, System.Action<SessionOpenDto> ok, System.Action<long, string> echec) { ok(Reponse); yield break; }
         }
 
         private IEnumerator Photographier(Ecran e)

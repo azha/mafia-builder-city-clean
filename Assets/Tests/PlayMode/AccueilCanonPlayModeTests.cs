@@ -27,6 +27,8 @@ namespace MafiaCleanCity.Shell.Tests
     //       ligne porte « trancher ». Garde GÉOMÉTRIQUE (mesure de l'UX sur la maquette @ d4b0379, 26/09 — remplace « la file seule en
     //       haut ») : la file juste au-dessus du dock et sous tout le reste, rien hors de la zone sûre (ni sur le bandeau), vide borné
     //   A6  la ligne de file a la hauteur de la maquette (7,2 % de l'écran), la MÊME avec et sans carte de tête — jamais étirée
+    //   A12 (f2 08/10, ④ A : la ligne à 2 cartes débordait) la ligne HAUTE du cadre 4 (raison ou pluriel, re-mesurée à 7d88a65) : la file
+    //       grandit (0,025 → 0,227), la suite et la tête montent avec elle sans recouvrement ; une carte nue garde la ligne des cadres 1-3
     //   A8  (26/09, reste de l'UX) le fond de ville de ③ derrière l'Accueil ; « {nom} attend vos ordres » UNE fois à l'écran : le
     //       bandeau n'annonce pas la carte que la ligne de file porte (contrôle positif : sans la ligne, il l'annonce)
     //   A9  (f2, 26/09, après les arrondis et liserés de 1562d6fa) garde STRUCTURELLE du socle sur ④ monté en entier (suite, file, fond
@@ -300,6 +302,76 @@ namespace MafiaCleanCity.Shell.Tests
             float bande = ((RectTransform)shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).Last().transform).rect.height;
             Assert.AreEqual(bande, hSans, 1f, "la ligne ÉPOUSE sa bande (l'emplacement mesuré sur la maquette), jamais plus");
             Assert.AreEqual(hAvec, hSans, 0.5f, $"la ligne a la MÊME hauteur avec et sans carte de tête ({hAvec:F1} contre {hSans:F1}) — jamais étirée");
+        }
+
+        /// <summary>A12a (f2 08/10, ④ A du créneau groupé : la ligne à 2 cartes DÉBORDAIT) — la ligne est HAUTE (cadre 4, atelier 0dd516e, re-mesuré
+        /// à master 7d88a65) dès qu'elle porte la raison ou « Plusieurs attendent encore » : la règle MÊME du rendu. Pure.</summary>
+        [Test]
+        public void A12a_LigneHaute_DesQuEllePorteLaRaisonOuLePluriel()
+        {
+            var nue = new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "e-1", severity_band = "MODERATE" };
+            var parlante = new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = "e-2", lieutenant_id = "lt-1", severity_band = "MODERATE",
+                event_descriptor = "L’étagère est vide. Sans pyralin, je ne rallume pas.", lieutenant = new MafiaCleanCity.Operational.Exceptions.ExceptionLieutenantDto { name = "Lt. Kane" } };
+            Assert.IsFalse(ExceptionQueuePanelController.LigneHaute(null), "aucune file : aucune ligne");
+            Assert.IsFalse(ExceptionQueuePanelController.LigneHaute(new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto[0]), "file vide : aucune ligne");
+            Assert.IsFalse(ExceptionQueuePanelController.LigneHaute(new[] { nue }), "une carte sans raison : la ligne des cadres 1-3");
+            Assert.IsNotNull(ExceptionQueuePanelController.RaisonDeLaCarte(parlante), "précondition : la réplique est une raison rendue");
+            Assert.IsTrue(ExceptionQueuePanelController.LigneHaute(new[] { parlante }), "une raison : la ligne du cadre 4");
+            Assert.IsTrue(ExceptionQueuePanelController.LigneHaute(new[] { nue, nue }), "deux cartes (« Plusieurs attendent encore ») : la ligne du cadre 4");
+        }
+
+        /// <summary>A12b — la ligne HAUTE dans le vrai shell (transport et source témoins, hors réseau) : la file prend la bande du cadre 4
+        /// (0,025 → 0,227 de la zone sûre), et ce qui est au-dessus MONTE avec elle — la suite (cadre 4 : 0,251 → 0,810) comme la carte de tête
+        /// (ASSUMÉ, non dessiné : 0,252 → 0,752) — sans recouvrement ni vide de plus de 5 % (`VerifierGeometrie`). Contrôle : une carte sans
+        /// raison garde la ligne des cadres 1-3 (0,103 de la zone).</summary>
+        [UnityTest]
+        public IEnumerator A12b_LigneHaute_LaFileGrandit_LaSuiteEtLaTeteMontentSansRecouvrement()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell_LigneHaute");
+            shell = shellGo.AddComponent<AppShell>();
+            yield return AttendreLAccueil();
+            Poser(shell, "Token", "jeton-de-test");
+            var transport = new TransportTemoin();
+            shell.TransportDeSessionPourTest = transport;
+            shell.SourceDeLaSuitePourTest = new SourceTemoin { Etat = JoueurNeuf(1) };
+            MafiaCleanCity.Operational.Exceptions.ExceptionCardDto Nue(string id) => new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto { exception_id = id, severity_band = "MODERATE" };
+
+            float PartDeLaFile(string cas, out ExceptionQueuePanelController file)
+            {
+                Canvas.ForceUpdateCanvases();
+                file = shell.ContentSlot.GetComponentsInChildren<ExceptionQueuePanelController>(false).LastOrDefault();
+                Assert.IsNotNull(file, $"{cas} : la file est montée");
+                float zone = shell.ContentSlot.rect.height - ShellChrome.TopInsetPx - ShellChrome.BottomInsetPx;
+                Assert.Greater(zone, 1f, $"{cas} : précondition, une zone sûre mesurable");
+                return ((RectTransform)file.transform).rect.height / zone;
+            }
+
+            // (1) sans carte, deux cartes en file : la suite et la ligne HAUTE (le cadre 4).
+            SessionOpenDto suiteEtDeux = AvecCarte(null); suiteEtDeux.queue = new[] { Nue("e-1"), Nue("e-2") };
+            transport.Reponse = suiteEtDeux;
+            yield return RouvrirParEmpire();
+            Assert.AreEqual(0.227f - 0.025f, PartDeLaFile("suite + deux cartes", out ExceptionQueuePanelController file), 0.005f, "la ligne haute du cadre 4 (424 → 506 sur 406)");
+            Assert.IsNotNull(file.PlusieursRendu, "anti-vacuité : le pluriel est rendu dans la ligne haute");
+            LaSuitePanelController suite = shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).LastOrDefault();
+            Assert.IsTrue(suite != null && suite.Visible, "précondition : la suite se montre");
+            VerifierGeometrie("la suite sur la ligne haute", (RectTransform)suite.transform.Find("LaSuite"), (RectTransform)file.transform);
+
+            // (2) une carte de tête et deux cartes en file : la tête monte au-dessus de la ligne haute.
+            SessionOpenDto teteEtDeux = AvecCarte("c-tete"); teteEtDeux.queue = new[] { Nue("e-1"), Nue("e-2") };
+            transport.Reponse = teteEtDeux;
+            yield return RouvrirParEmpire();
+            Assert.AreEqual(0.227f - 0.025f, PartDeLaFile("tête + deux cartes", out file), 0.005f, "la ligne haute, avec ou sans carte de tête");
+            HighestLeverageCardController tete = Tete();
+            Assert.IsNotNull(tete, "précondition : la carte de tête est montée");
+            VerifierGeometrie("la tête sur la ligne haute", (RectTransform)tete.transform, (RectTransform)file.transform);
+
+            // (3) contrôle : une carte sans raison ⇒ la ligne des cadres 1-3.
+            SessionOpenDto teteEtUne = AvecCarte("c-tete"); teteEtUne.queue = new[] { Nue("e-1") };
+            transport.Reponse = teteEtUne;
+            yield return RouvrirParEmpire();
+            Assert.AreEqual(0.128f - 0.025f, PartDeLaFile("tête + une carte nue", out file), 0.005f, "sans raison ni pluriel : la ligne des cadres 1-3 (464 → 506)");
+            VerifierGeometrie("la tête sur la ligne basse", (RectTransform)Tete().transform, (RectTransform)file.transform);
         }
 
         private sealed class SourceTemoin : ISourceDeLaSuite
