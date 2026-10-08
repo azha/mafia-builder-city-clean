@@ -14,3 +14,9 @@ Design : `DESIGN.md` v5.2 (revue ⊥ APPROVED). Code : étapes 0-3 de `feat/doss
 ## Créneau du 08/10 (client-2, porte rendue) — VERT
 Filtre en 13 noms nus (DecorDeScene, ScreenB7, BundleReel, Replis, Palette, EcranFiliere, ScreenC1, ScreenC2, ScreenC6, ChassisVente, GestesDeVente, VenteRamassage, HorizonAuMontage), rebase sur le cumul 955f7e1d. Trois runs : **103/105** (D6b rouge SUR LE CUMUL — ㉛ Loi branchée par CLIENT-1 mais restée en attente — et une mesure d'encre trop stricte) → **104/105** (l'opacité 0,45 du « parti » recopiée rendait (179, 63, 55) au lieu de (122, 49, 43) : Unity compose en linéaire) → **105/105, VERDICT 0**, déclarés = comptés = 105, 13 catégories exécutées. Le rejeu des 5 écrans à enseigne (Filière, Journal, Vente, Horizon ; Forensic en ScreenB7) est dans ces 105.
 Non faits (hors mandat de cette session) : les deux juges ⊥ (visuel puis données) de la fin d'écran — à f2.
+
+## Juge-données de ㊴ (08/10) — suites
+- **D2, le panneau « Pas de réponse »** (`CE QU'ON SAIT VRAIMENT`, route en erreur) n'a pas de maquette : RATIFIÉ par f2 comme repli réseau ASSUMÉ (ni le zéro ni « tout va bien » : « on ne sait pas »).
+- **D3, le dénominateur `00/1` au lieu de `00/3`** : en dette, TD-883 (`Tools/juge-donnees/dettes-client2.md`).
+- **A2, les deux pistes « constantes »** : les deux bandes sont SERVIES puis jetées par `DossierCalculs.PistesConstantes` ; mesure lue et ce qui n'est pas mesuré écrits en commentaire à la place de la liste muette (`ForensicScreenController.cs`). D1 (des candidats refusés comptés comme acteurs) : défaut BACK, f2.
+

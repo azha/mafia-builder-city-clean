@@ -661,7 +661,7 @@ namespace MafiaCleanCity.Shell
             return g;
         }
 
-        private static void AncrerSousLaBande(RectTransform rt, float bande)
+        internal static void AncrerSousLaBande(RectTransform rt, float bande)
         {
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = new Vector2(1f, Mathf.Clamp01(1f - bande));

@@ -70,13 +70,32 @@ namespace MafiaCleanCity.Shell
         // arbitrage de palette qui appartient à l'atelier. *Substituer ne serait pas ranger.*
         private static readonly Color Rouge = Hex("#93402c");
 
-        // ⑤ F4 + F5 (CLIENT-3 / juge r1, décision de f2 07/10 : « fidèle à la maquette », aucune décision écrite ne réduit l'écran) — la PLAQUE CRÈME. La carte et le tampon étaient des CONTOURS
-        // sans matière (`RoundedRectOutline` seul : l'intérieur transparent laissait voir le zinc noir) : 0 px crème en jeu, le CTA primaire à 2,78:1 sur noir contre 4,33:1 sur crème, et le
-        // secondaire 5,3× plus contrasté que lui. Mesures du juge : matière de la carte REF (219,206,171), plaque du CTA REF (216,202,167). Troisième grammaire du « geste principal » : un CTA
-        // CRÈME à encre sombre (ni `.cta6` ni `.geste`), documenté dans `Tools/juge-visuel/decision-du-jour/DECISION-F4-F5-2026-10-07.md`.
-        /// <summary>La matière de la carte : REF (219,206,171) ; la plaque du tampon : REF (216,202,167). Aplats opaques (aucune conversion sRGB → linéaire).</summary>
+        // ⑤ F4 (CLIENT-3 / juge r1, décision de f2 du 07/10 : « fidèle à la maquette ») — la MATIÈRE CRÈME de la carte. La carte était un CONTOUR sans matière (`RoundedRectOutline` seul : l'intérieur transparent
+        // laissait voir le zinc noir) : 0 px crème en jeu. Mesure du juge : matière de la carte REF (219,206,171).
+        // ⑤ F7 (juge d'ensemble r2, 08/10) — LE GESTE PRINCIPAL N'EST PLUS UNE PLAQUE CRÈME : la série 4 (`.tampon`, crème / brique) a été remplacée par la série 6, dont le cadre 5 ne porte que la
+        // `.plaque-laiton` (`ecrans-brennar-6.html:263-264`) : `linear-gradient(180deg,#e8c87a,#b08d3e 55%,#8a6a22)`, bord 1 px `#6b4a12` rayon 6 (POSÉ par `Filets`, recette `PlaqueLaiton`), encre `#3a2a0a`,
+        // `small` en `#3a2a0acc`. `PiedDEcran.PlaqueCreme` reste, pour ⑮ DÉPOSER.
+        /// <summary>La matière de la carte : REF (219,206,171). Aplat opaque (aucune conversion sRGB → linéaire).</summary>
         public static Color MatiereDeLaCarte => new Color32(219, 206, 171, 255);
-        public static Color PlaqueDuTampon => PiedDEcran.PlaqueCreme;
+        /// <summary>`.plaque-laiton` : les trois arrêts du dégradé vertical (180°) — clair `#e8c87a` à 0 %, le laiton du jeton `hudHairlineGold` (`#b08d3e`, = le remplissage médian mesuré (173,138,60)) à 55 %, sombre `#8a6a22` à 100 %.
+        /// Des pixels OPAQUES cuits dans le sprite : aucune opacité à convertir pour le mélange linéaire.</summary>
+        public static (float pos, Color c)[] DegradeDeLaPlaque() => new[]
+        {
+            (0f, Hex("#e8c87a")), (0.55f, DesignTokens.Current.hudHairlineGold), (1f, Hex("#8a6a22")),
+        };
+        /// <summary>L'encre de la plaque laiton (`#3a2a0a`) — le libellé « LES LIRE MAINTENANT ».</summary>
+        public static Color EncreDeLaPlaque => Hex("#3a2a0a");
+        /// <summary>Où, dans la hauteur de la plaque, se tient la sous-ligne : 10 CSS de marge + le libellé (≈ 14) + 2 + la moitié de la sous-ligne, sur ≈ 48 CSS.</summary>
+        private const float PositionDeLaSousLigne = 0.7f;
+        /// <summary>`small{color:#3a2a0acc}` : l'encre à 80 % d'opacité. L'opacité CSS recopiée sur du texte ferait un mélange LINÉAIRE plus pâle que le navigateur, et déplacer la couleur à opacité conservée
+        /// ne peut pas être exact sur un fond qui varie (le dégradé) : la couleur est donc l'OPAQUE que le navigateur produit (mélange sRGB de l'encre sur le dégradé à la hauteur de la sous-ligne).</summary>
+        public static Color EncreDeLaSousLigne()
+        {
+            Color fond = ProceduralUI.EchantillonDeDegrade(DegradeDeLaPlaque(), PositionDeLaSousLigne);
+            Color m = Color.Lerp(fond, EncreDeLaPlaque, 0.8f);
+            m.a = 1f;
+            return m;
+        }
         /// <summary>L'encre sombre sur la matière crème (le titre) et sa version affaiblie (les libellés) — l'encre de la carte de la maquette.</summary>
         private static Color Encre => Hex("#2a1c12");
         private static Color EncreFaible => Hex("#6f5f4d");
@@ -338,6 +357,10 @@ namespace MafiaCleanCity.Shell
             // nuit + le voile + le TAPIS de feutre (radial 90 % 60 % à 50 % 30 %, coins 26/26/0/0) couvrent TOUT le cadre (opaque), et
             // `Decor/Capteur` (raycast) AVALE les clics — sans ça, un doigt qui tombe entre deux éléments actionne l'écran de dessous.
             DecorPose decor = DecorDeScene.Poser(transform, DecorsDeScene.DecisionDetail);
+            // ⑤ F8 — LE LISERÉ D'OR du tapis (`.tapis-feutre{border-top:3px solid #b08d3e}`) : la recette `TapisFeutre`, POSÉE par `Filets` sur le support (jamais un Image à la main : garde D6b). `Poser` met son conteneur
+            // en PREMIER enfant, donc SOUS le radial opaque du feutre (invisible) : il est remonté en DERNIER. Le `Mask` du support (coins 26/26/0/0) arrondit ses extrémités ; `PileDeDecision` ne fait que poser les
+            // offsets du support, le trait le suit.
+            Filets.Poser(decor.Support, DecorsDeScene.Filets.DecisionDetail.TapisFeutre).transform.SetAsLastSibling();
 
             // ⛔ F12 — LE FEUTRE SUIT LE CONTENU, il n'est pas ancré à une FRACTION de l'écran (la classe de ㊴ : une hauteur posée par `Bande` = 34 % laissait les deux tiers du
             // feutre vides, et à 1920 la pile ne tient pas). La maquette : `.tapis-feutre` ÉPOUSE son contenu (`.panneau{margin-top:auto}`). Trois étages, de dehors en dedans :
@@ -522,24 +545,30 @@ namespace MafiaCleanCity.Shell
             // ── « laisser sur le zinc » (skip) RETIRÉ — f2 08/10 nuit, option (c) : un geste MORT (voir l'en-tête). ──────────
             // ── le tampon = commit, à APPUI LONG. Même geste que le tampon de la Revue : ce qui
             //    est irréversible ne se déclenche pas d'un doigt distrait. ──────────────────────
-            tampon = Bloc("Tampon", pile, horizontal: false, espace: Px(2f));
+            tampon = Bloc("Tampon", pile, horizontal: false, espace: Px(2f));   // `.plaque-laiton small{margin-top:2px}`
             tampon.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             tampon.GetComponent<VerticalLayoutGroup>().padding =
-                new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(10f));
+                new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(11f), (int)Px(11f));   // `padding:11px 12px`
+            // ⑤ F7 — la `.plaque-laiton` de la série 6 (voir l'en-tête des couleurs) : un rectangle arrondi (rayon 6) qui MASQUE, dedans le dégradé 3 arrêts, au-dessus le bord 1 px POSÉ par `Filets`
+            // (recette `PlaqueLaiton`, jamais un Image à la main : garde D6b), puis les textes. Le dégradé est un sprite carré aux coins vifs : sans le masque ils dépasseraient du bord arrondi.
             Image tf = tampon.AddComponent<Image>();
-            // ⑤ F5 : la PLAQUE crème (surface pleine, REF 216,202,167) sous le cerne rouge — l'encre rouge sombre y est à 4,3:1 ; sur le zinc noir elle était à 2,78:1
-            tf.sprite = ProceduralUI.RoundedRectMask((int)Px(11f));
+            tf.sprite = ProceduralUI.RoundedRectMask((int)Px(6f));
             tf.type = Image.Type.Sliced;
-            tf.color = PlaqueDuTampon;
-            Cerner(tampon.transform, "BordTampon", (int)Px(11f), Px(2f), Rouge, 0f);
-            Cerner(tampon.transform, "FiletTampon", (int)Px(8f), Px(1f), new Color(Rouge.r, Rouge.g, Rouge.b, 0.5f), Px(4f));
-            TextMeshProUGUI lib = Texte(tampon.transform, "Lib", "LES LIRE MAINTENANT", Px(12f),
-                                        Rouge, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
-            lib.characterSpacing = 20f;
+            tf.color = Color.white;
+            tampon.AddComponent<Mask>().showMaskGraphic = false;   // seul le canal ALPHA du rectangle sert de stencil ; il reste cible du raycast (l'appui long)
+            Image degrade = NouvelleImage("Degrade", tampon.transform);
+            degrade.sprite = ProceduralUI.DegradeLineaire(180f, DegradeDeLaPlaque(), 1f, 1f);   // 180° : la hauteur de la boîte porte les `%`, son aspect n'y change rien
+            degrade.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            Etirer((RectTransform)degrade.transform);
+            degrade.transform.SetAsFirstSibling();
+            Filets.Poser((RectTransform)tampon.transform, DecorsDeScene.Filets.DecisionDetail.PlaqueLaiton).transform.SetSiblingIndex(1);   // au-dessus du dégradé (Poser le met en premier), sous les textes
+            TextMeshProUGUI lib = Texte(tampon.transform, "Lib", "LES LIRE MAINTENANT", Px(12.5f),
+                                        EncreDeLaPlaque, DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
+            lib.characterSpacing = 22f;   // `.22em`
             lib.fontStyle = FontStyles.Bold;
             Texte(tampon.transform, "Sous",
                   "appui long — la carte est tranchée ; le sujet, lui, reste à traiter",
-                  Px(8.5f), Rouge, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
+                  Px(8f), EncreDeLaSousLigne(), DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
                 .enableWordWrapping = true;
             BoutonLire = tampon.AddComponent<LongPressButton>();
             BoutonLire.OnLongPressCompleted += () => StartCoroutine(Commit());

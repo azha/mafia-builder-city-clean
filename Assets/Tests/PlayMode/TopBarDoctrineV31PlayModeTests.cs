@@ -589,8 +589,8 @@ namespace MafiaCleanCity.Shell.Tests
                 for (int deg = -95; deg <= 95; deg++)
                 {
                     float a = (90f - deg) * Mathf.Deg2Rad;
-                    int px = Mathf.RoundToInt(cx + Mathf.Cos(a) * rPx * 0.45f);
-                    int py = Mathf.RoundToInt(cy + Mathf.Sin(a) * rPx * 0.45f);
+                    int px = Mathf.RoundToInt(cx + Mathf.Cos(a) * rPx * (15f / 27f));   // le rayon médian de l'arc : `.mano` 15/27 R (était 0,45 : F4 du juge d'ensemble r2)
+                    int py = Mathf.RoundToInt(cy + Mathf.Sin(a) * rPx * (15f / 27f));
                     if (px < 0 || py < 0 || px >= img.width || py >= img.height) continue;
                     Color c = img.GetPixel(px, py);
                     float ecartFroid = Mathf.Min(c.g, c.b) - c.r;
@@ -1287,7 +1287,7 @@ namespace MafiaCleanCity.Shell.Tests
             Vector2 g = RectTransformUtility.WorldToScreenPoint(null, coins[0]);
             Vector2 d = RectTransformUtility.WorldToScreenPoint(null, coins[2]);
             float diametrePx = Mathf.Abs(d.x - g.x) * echelle;
-            return diametrePx * (5f / 35.6f);   // ArcThicknessPx / ArcDiameterPx, la proportion du sprite
+            return diametrePx * (5f / (15f / 27f * 68f + 5f));   // ArcThicknessPx / ArcDiameterPx (= 5 / 42,8 : f · D + t, f = 15/27 de `.mano`), la proportion du sprite
         }
 
         private Texture2D RendreLEcran()

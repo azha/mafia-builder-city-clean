@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.TestTools;
 using MafiaCleanCity.Operational;
+using MafiaCleanCity.Shell;
 using MafiaCleanCity.CityMap;   // REUSE AuthClient (signup/signin) — patron ㊲/㉚ OuvrirJoueurFrais
 using MafiaCleanCity.Tests;     // SeederSupport.SafeCallsign
 using Object = UnityEngine.Object;
@@ -119,13 +120,57 @@ namespace MafiaCleanCity.Operational.Tests
             Transform chip = vide.Find("EtiquetteVide");
             Assert.IsNotNull(chip, "le panneau porte l'étiquette crème");
             Assert.AreEqual("D'OÙ ÇA PART", chip.Find("SousTitre").GetComponent<TMPro.TextMeshProUGUI>().text.ToUpperInvariant().Replace('’', '\''), "la même grammaire que la fiche d'une route");
-            Assert.AreEqual(racine.Find("Entete/Titre").GetComponent<TMPro.TextMeshProUGUI>().text, chip.Find("Titre").GetComponent<TMPro.TextMeshProUGUI>().text, "le titre de l'état, sans mot nouveau");
+            // F6 (juge d'ensemble r2) : la ligne 1 d'une fiche est la SOURCE ; ici il n'y en a pas — la fiche ne RÉPÈTE plus le titre du bandeau, elle dit la phrase déjà servie de l'état sans route.
+            string ligne1 = chip.Find("Titre").GetComponent<TMPro.TextMeshProUGUI>().text;
+            Assert.AreNotEqual(racine.Find("Entete/Titre").GetComponent<TMPro.TextMeshProUGUI>().text, ligne1, "la fiche ne répète pas le titre de l'état (juge r2 F6)");
+            Assert.AreEqual(MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "Aucune route tendue pour l’instant."), ligne1, "ligne 1 = la clé déjà servie, aucun mot inventé");
             RectTransform panneau = (RectTransform)vide, etiquette = (RectTransform)chip;
             Assert.Greater(panneau.rect.height, 0f, "le panneau a une hauteur : le tapis n'est plus nu (F2)");
             var cp = new Vector3[4]; var ce = new Vector3[4];
             panneau.GetWorldCorners(cp); etiquette.GetWorldCorners(ce);
             Assert.GreaterOrEqual(ce[0].y, cp[0].y - 0.5f, "l'étiquette est DANS le panneau (bas)");
             Assert.LessOrEqual(ce[2].y, cp[2].y + 0.5f, "l'étiquette est DANS le panneau (haut)");
+        }
+
+        /// <summary>㉘ F3 + F5-a (juge d'ensemble r2, 08/10) : (F3) la plaque du panneau n'a plus de fond — l'aplat opaque recouvrait la planche (grain) — et porte le `.cadre-b` (`Filets`) ; (F5-a) dans l'état « aucun relais »
+        /// `Decor/Support` prend le rect de la PLAQUE (le reste de la page redevient la scène : plus de 28 à 44 % de liège nu), et l'état nominal le RENDOUT pleine page (sans quoi un support rétréci resterait sur un cadre disparu).
+        /// Garde d'EFFET sur la géométrie rendue, pas sur un paramètre ; le crochet de test marque le chargement terminé (F5-b).</summary>
+        [UnityTest]
+        public IEnumerator EcranDistributionF5_AucunRelais_LeSupportSuitLaPlaque_SansFond_AvecCadreB_EtLEtatNominalLeRend()
+        {
+            var ecran = MonterEcran();
+            yield return null; yield return null;
+            Canvas.ForceUpdateCanvases();
+            Transform racine = RacineEcran().transform;
+            RectTransform support = (RectTransform)racine.Find("Decor/Support");
+            Assert.IsNotNull(support, "Decor/Support");
+
+            ecran.MontrerAucunRelaisPourTest(gesteOffert: false);
+            yield return null; yield return null;
+            Canvas.ForceUpdateCanvases();
+            Assert.True(ecran.ProposeAchatTermine, "le rendu explicite marque le chargement terminé : la capture n'attend plus une course");
+            RectTransform plaque = (RectTransform)racine.Find("Corps/Corkboard/PanneauVide");
+            Assert.IsNull(plaque.GetComponent<Image>(), "F3 : la plaque n'a PLUS de fond plat (il recouvrait le grain de la planche)");
+            Assert.IsNotNull(plaque.Find(Filets.NomConteneur), "F3 : le `.cadre-b` (Filets.Distribution.CadreB) est posé sur la plaque");
+            var cs = new Vector3[4]; var cp = new Vector3[4];
+            support.GetWorldCorners(cs); plaque.GetWorldCorners(cp);
+            Assert.AreEqual(cp[0].y, cs[0].y, 1f, "F5-a : le bas du support = le bas de la plaque");
+            Assert.AreEqual(cp[2].y, cs[2].y, 1f, "F5-a : le haut du support = le haut de la plaque");
+            Assert.AreEqual(cp[0].x, cs[0].x, 1f, "F5-a : la gauche du support = la gauche de la plaque");
+            Assert.AreEqual(cp[2].x, cs[2].x, 1f, "F5-a : la droite du support = la droite de la plaque");
+            float hauteurDuDecor = ((RectTransform)racine.Find("Decor")).rect.height;
+            Assert.Less(support.rect.height, 0.5f * hauteurDuDecor, "F5-a : le support n'est plus un lit pleine page sous une petite plaque");
+
+            // l'état nominal (une route) : le support est de nouveau « sous la bande » (anchorMax.y = 1 − Bande du catalogue), la plaque a sa planche sans fond plat aussi
+            ecran.RendrePourTest(new GetOperationalCouriersResponseDto { couriers = new CourierDto[0] }, new GetOperationalDistributionProjectionResponseDto { routes = new DistributionRouteDto[0] });
+            yield return null; yield return null;
+            Canvas.ForceUpdateCanvases();
+            Assert.AreEqual(1f - DecorsDeScene.Distribution.Bande, support.anchorMax.y, 1e-3f, "l'état nominal rend le support pleine page, sous la bande du catalogue");
+            Assert.AreEqual(0f, support.anchorMin.y, 1e-3f);
+            RectTransform panneau = (RectTransform)racine.Find("Corps/Corkboard/Panneau");
+            Assert.IsNotNull(panneau, "l'état nominal pose son panneau");
+            Assert.IsNull(panneau.GetComponent<Image>(), "F3 : le panneau nominal n'a plus de fond plat non plus");
+            Assert.IsNotNull(panneau.Find(Filets.NomConteneur), "F3 : le `.cadre-b` du panneau nominal");
         }
 
         // ═══ 1. GARDE STRUCTURELLE — ne lit aucun pixel, ne dépend d'aucune résolution ═══════

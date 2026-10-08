@@ -81,11 +81,21 @@ namespace MafiaCleanCity.Shell
         public static readonly SpecDecor Shop = District("㉓", "ShopScreenController", 0.24f, 0.21f,
             Lin3(168f, Teinte.Hex("#151b23"), 0.46f, Dialogue, CadranExt));
 
+        /// <summary>Le liège de ⑮ ⑰ : le dégradé en cercle ET son `.grain` (`ecrans-brennar-6.html:476`, premier enfant de `.corkboard` : au-dessus du
+        /// dégradé, sous les fiches) — `radial-gradient(circle,#00000022 .8px,transparent 1.1px) 0 0/6px 6px` puis `#ffffff10 .6px→.9px` à `3px 3px/9px 9px`,
+        /// deux couches `Points` comme la planche de ㉘. Unity compose en linéaire : l'opacité CSS est traduite sur le fond connu (le cercle opaque dessous).</summary>
         private static SpecSupport Liege() => new SpecSupport(new[]
         {
+            SpecCouche.Points(6f, 0.8f, 1.1f, Teinte.Nommee("noir", Color.black, 0x22 / 255f), Vector2.zero),
+            SpecCouche.Points(9f, 0.6f, 0.9f, Teinte.Nommee("blanc", Color.white, 0x10 / 255f), new Vector2(3f, 3f)),
             SpecCouche.RadialCercle(0.30f, 0.20f,
                 A(0f, Teinte.Hex("#8a6a3a")), A(0.60f, Teinte.Hex("#6b4f28")), A(1f, Teinte.Hex("#513a1c"))),
         });
+
+        /// <summary>⑮ à l'état VIDE (cadres 33-35, la fiche de dépôt sous un registre court) : `.corkboard{min-height:400px}` — le liège est BORNÉ en px CSS, la
+        /// scène reste visible au-dessus, comme la maquette ; la fraction `Bande` (0,10, cadre 31/32 : un registre de 18 lignes) couvrirait 90 % de la page
+        /// d'un liège nu (juge d'ensemble r2, F1 : 49 % de la hauteur). Posée par l'écran sur son `DecorPose` (`FixerLaHauteurDuSupport`) ; l'état peuplé garde la fraction.</summary>
+        public const float HauteurSupportInspectionVideCss = 400f;
 
         public static readonly SpecDecor Inspection = District("⑮", "InspectionScreenController", 0.45f, 0.10f, Liege());
         public static readonly SpecDecor Precinct = District("⑰", "PrecinctScreenController", 0.45f, 0.10f, Liege());

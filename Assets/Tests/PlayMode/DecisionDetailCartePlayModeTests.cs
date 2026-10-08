@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
@@ -464,6 +465,114 @@ namespace MafiaCleanCity.Shell.Tests
                 finally { banc.Dispose(); }
                 if (ecranGo != null) { Object.DestroyImmediate(ecranGo); ecranGo = null; }
             }
+        }
+
+        // ═══ F7 + F8 — le geste principal est la `.plaque-laiton`, le tapis a son liseré d'or : l'EFFET, sur les pixels ═══════════════════
+
+        /// <summary>La médiane (par canal) des pixels du rect `r` entre (`fx0`, `fy0`) et (`fx1`, `fy1`) — fractions du rect, origine en BAS.</summary>
+        private static (int r, int g, int b) Mediane(Banc banc, Texture2D t, RectTransform r, float fx0, float fx1, float fy0, float fy1)
+        {
+            Vector2Int a = banc.Pixel(r, fx0, fy0), b = banc.Pixel(r, fx1, fy1);
+            var rs = new List<int>(); var gs = new List<int>(); var bs = new List<int>();
+            for (int x = Mathf.Min(a.x, b.x); x <= Mathf.Max(a.x, b.x); x++)
+                for (int y = Mathf.Min(a.y, b.y); y <= Mathf.Max(a.y, b.y); y++)
+                {
+                    Color32 c = t.GetPixel(x, y);
+                    rs.Add(c.r); gs.Add(c.g); bs.Add(c.b);
+                }
+            Assert.Greater(rs.Count, 0, "la fenêtre d'échantillonnage est vide");
+            rs.Sort(); gs.Sort(); bs.Sort();
+            return (rs[rs.Count / 2], gs[gs.Count / 2], bs[bs.Count / 2]);
+        }
+
+        private static float Ecart((int r, int g, int b) c, int r, int g, int b) =>
+            Mathf.Max(Mathf.Abs(c.r - r), Mathf.Max(Mathf.Abs(c.g - g), Mathf.Abs(c.b - b)));
+
+        [UnityTest]
+        [Category("DecisionCarte")]
+        public IEnumerator F7_LeGestePrincipal_EstLaPlaqueLaiton_OrAuMilieu_EncreSombre_RenduSurLesPixels()
+        {
+            var banc = new Banc(540, 960);
+            Texture2D t = null;
+            try
+            {
+                DecisionDetailScreenController e = null;
+                yield return Monter(banc, x => e = x);
+                Assert.IsFalse(e.LaPile.Deborde, "prémisse : à 9:16 le geste est dans la fenêtre");
+                t = banc.Rendre();
+                RectTransform plaque = (RectTransform)Sous(e, "Fenetre/Defile/Pile/Tampon");
+                // le remplissage médian : la bande GAUCHE de la plaque (hors texte), à la hauteur du palier médian (55 % depuis le haut) — la maquette : (173,138,60), le palier #b08d3e = (176,141,62)
+                var med = Mediane(banc, t, plaque, 0.03f, 0.08f, 0.40f, 0.50f);
+                Assert.LessOrEqual(Ecart(med, 173, 138, 60), 8f, $"le remplissage médian du geste est de l'OR (173,138,60) ± 8 : vu {med}");
+                // le dégradé a ses trois paliers : plus clair en haut, plus sombre en bas
+                var haut = Mediane(banc, t, plaque, 0.03f, 0.08f, 0.78f, 0.85f);
+                var bas = Mediane(banc, t, plaque, 0.03f, 0.08f, 0.15f, 0.22f);
+                Assert.Greater(haut.r, med.r + 15, $"le haut de la plaque est plus clair (#e8c87a → #b08d3e) : haut {haut}, milieu {med}");
+                Assert.Less(bas.r, med.r - 10, $"le bas de la plaque est plus sombre (#b08d3e → #8a6a22) : bas {bas}, milieu {med}");
+                // CONTRÔLE POSITIF de l'instrument : sur la matière crème de la carte (219,206,171) la même médiane lit du CRÈME — et la plaque n'en est pas (la plaque crème de la série 4 : (216,202,167))
+                var creme = Mediane(banc, t, e.CarteRect, 0.035f, 0.055f, 0.40f, 0.50f);
+                Assert.LessOrEqual(Ecart(creme, 219, 206, 171), 8f, $"contrôle positif : la médiane lit le crème de la carte (vu {creme})");
+                Assert.Greater(Ecart(med, 216, 202, 167), 40f, "le geste n'est PLUS la plaque crème de la série 4");
+                // l'encre sombre : des pixels d'encre (#3a2a0a) dans le libellé ; aucun dans la bande de fond
+                RectTransform lib = (RectTransform)Sous(e, "Fenetre/Defile/Pile/Tampon/Lib");
+                Vector2Int a = banc.Pixel(lib, 0f, 0f), b = banc.Pixel(lib, 1f, 1f);
+                int Sombres(int x0, int y0, int x1, int y1)
+                {
+                    int n = 0;
+                    for (int x = Mathf.Min(x0, x1); x <= Mathf.Max(x0, x1); x++)
+                        for (int y = Mathf.Min(y0, y1); y <= Mathf.Max(y0, y1); y++)
+                        {
+                            Color32 c = t.GetPixel(x, y);
+                            if (Mathf.Max(c.r, Mathf.Max(c.g, c.b)) < 100) n++;
+                        }
+                    return n;
+                }
+                Assert.GreaterOrEqual(Sombres(a.x, a.y, b.x, b.y), 40, "le libellé est d'encre SOMBRE (#3a2a0a) sur l'or");
+                Vector2Int ba = banc.Pixel(plaque, 0.30f, 0.04f), bb = banc.Pixel(plaque, 0.70f, 0.12f);   // bande HAUTE de la plaque : sous le bord (1 px #6b4a12), au-dessus du libellé (centré en hauteur, espacé : il occupe toute la largeur)
+                Assert.AreEqual(0, Sombres(ba.x, ba.y, bb.x, bb.y), "contrôle négatif : la bande de fond, sans texte, n'a aucun pixel d'encre");
+                // la structure : le bord 1 px est POSÉ par Filets (recette PlaqueLaiton), AU-DESSUS du dégradé et SOUS les textes ; la plaque masque, le dégradé est maskable
+                Transform filets = plaque.Find(Filets.NomConteneur);
+                Assert.IsNotNull(filets, "le bord de la plaque est posé par Filets.Poser");
+                Assert.IsNotNull(filets.GetComponent<FiletsPoses>());
+                Assert.Greater(filets.GetSiblingIndex(), plaque.Find("Degrade").GetSiblingIndex(), "le bord est AU-DESSUS du dégradé");
+                Assert.Less(filets.GetSiblingIndex(), lib.GetSiblingIndex(), "le bord est SOUS les textes");
+                Assert.IsNotNull(plaque.GetComponent<Mask>(), "les coins vifs du dégradé sont coupés par le rayon 6");
+                Assert.IsNotNull(filets.Find("Contour"), "le bord est un contour arrondi (rayon 6)");
+            }
+            finally { if (t != null) Object.DestroyImmediate(t); banc.Dispose(); }
+        }
+
+        [UnityTest]
+        [Category("DecisionCarte")]
+        public IEnumerator F8_LeTapisDeFeutre_PorteSonLisereDOr_AuDessusDuRadial_RenduSurLesPixels()
+        {
+            var banc = new Banc(540, 960);
+            Texture2D t = null;
+            try
+            {
+                DecisionDetailScreenController e = null;
+                yield return Monter(banc, x => e = x);
+                t = banc.Rendre();
+                RectTransform support = e.GetComponentInChildren<DecorPose>(true).Support;
+                // la structure : le conteneur de filets (recette TapisFeutre) est le DERNIER enfant du support — `Filets.Poser` le met en premier, SOUS le radial opaque (invisible)
+                Transform filets = support.Find(Filets.NomConteneur);
+                Assert.IsNotNull(filets, "le liseré d'or est posé par Filets.Poser sur le support");
+                Assert.AreEqual(support.childCount - 1, filets.GetSiblingIndex(), "le liseré est au-dessus du radial : dernier enfant du support");
+                Assert.IsNotNull(filets.Find("Haut"), "`border-top` : un trait en HAUT");
+                // l'EFFET : « or sur 28/28 colonnes » dans la maquette (176,141,62) — ici, ≥ 20 colonnes sur 28 à 2 px sous le bord haut du feutre
+                Color32 laiton = DesignTokens.Current.hudHairlineGold;
+                int enOr = 0, enOrLoin = 0;
+                for (int i = 0; i < 28; i++)
+                {
+                    Vector2Int p = banc.Pixel(support, 0.12f + 0.76f * i / 27f, 1f);
+                    Color32 c = t.GetPixel(p.x, p.y - 2), loin = t.GetPixel(p.x, p.y - 22);
+                    if (Mathf.Max(Mathf.Abs(c.r - laiton.r), Mathf.Max(Mathf.Abs(c.g - laiton.g), Mathf.Abs(c.b - laiton.b))) <= 12) enOr++;
+                    if (Mathf.Max(Mathf.Abs(loin.r - laiton.r), Mathf.Max(Mathf.Abs(loin.g - laiton.g), Mathf.Abs(loin.b - laiton.b))) <= 12) enOrLoin++;
+                }
+                Assert.GreaterOrEqual(enOr, 20, $"le liseré d'or (176,141,62) est RENDU : {enOr}/28 colonnes (le jeu : 1/28 à 2400, 0/28 à 1920 avant F8)");
+                Assert.AreEqual(0, enOrLoin, "contrôle négatif : 22 px plus bas c'est le feutre vert, pas de l'or — le seuil discrimine");
+            }
+            finally { if (t != null) Object.DestroyImmediate(t); banc.Dispose(); }
         }
 
         // ═══ structurel — la leçon de ㊴ ═════════════════════════════════════════════════════════════════════════════

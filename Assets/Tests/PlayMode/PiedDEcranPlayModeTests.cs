@@ -81,11 +81,13 @@ namespace MafiaCleanCity.CityMap.Tests
             string appro = File.ReadAllText(Path.Combine(racine, "ChaineDAppro", "ChaineDApproScreenController.cs"));
             string distrib = File.ReadAllText(Path.Combine(racine, "Distribution", "DistributionScreenController.cs"));
             string filiere = File.ReadAllText(Path.Combine(racine, "Filiere", "FiliereScreenController.cs"));
-            StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)", appro, "㉚ : la forme `.geste` de `.appr6`");
+            // ㉚ : depuis B3 (CLIENT-1, da1401bd) le geste « EN COMMANDER » passe par `PiedDEcran.Geste` (pose la forme `.geste`, sa légende et son état) et non plus par un Styler à la main — garde périmée
+            // jusqu'au créneau du 08/10 soir (la catégorie PiedDEcran n'était dans aucun filtre de CLIENT-1)
+            StringAssert.Contains("PiedDEcran.Geste(piedRoot, Px,", appro, "㉚ : la forme `.geste` de `.appr6`, par PiedDEcran.Geste");
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)", distrib, "㉘ : la forme `.geste` de `.lieg6`");
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, libelleBlanchir)", filiere, "㊵ : la forme `.cta6` (Cta6 par défaut)");
             // le fond d'or de construction est REPEINT par le Styler (l'EFFET est prouvé par P2) : l'appel doit venir APRÈS la pose de l'or, jamais avant
-            Assert.Greater(appro.IndexOf("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)"), appro.IndexOf("fond.color = Or;"), "㉚ : le Styler repeint APRÈS la pose du fond (plus de « gros bouton jaune »)");
+            StringAssert.DoesNotContain("fond.color = Or;", appro, "㉚ : plus de pose à la main du fond d'or (PiedDEcran.Geste le pose : plus de « gros bouton jaune »)");
             Assert.Greater(distrib.IndexOf("PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste)"), distrib.IndexOf("AjouterFond(bouton, Or);"), "㉘ : le Styler repeint APRÈS le pavé or");
             string journal = File.ReadAllText(Path.Combine(racine, "Journal", "JournalScreenController.cs"));
             StringAssert.Contains("PiedDEcran.StylerLeBouton(bouton, lib, PiedDEcran.Forme.Cta6, PiedDEcran.Etat.Eteint)", journal, "㊳ : le pied `.cta6` ÉTEINT (aucune route « assister » : TD-848)");
@@ -150,20 +152,42 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
-        public void P5_Cinq_LaPlaqueCreme_TroisiemeGrammaire_MatiereEtContraste()
+        public void P5_Cinq_LaPlaqueLaiton_SerieSix_Matiere_Encre_EtContraste()
         {
-            // ⑤ F4 + F5 (décision de f2, 07/10) : la matière de la carte REF (219,206,171), la plaque du tampon REF (216,202,167)
+            // ⑤ F4 : la matière de la carte REF (219,206,171). ⑤ F7 (juge d'ensemble r2, 08/10) : le geste principal est la `.plaque-laiton` de la SÉRIE 6
+            // (`linear-gradient(180deg,#e8c87a,#b08d3e 55%,#8a6a22)`, encre `#3a2a0a`), plus la plaque crème de la série 4 (216,202,167) — qui reste celle de ⑮ DÉPOSER.
             Assert.AreEqual((219, 206, 171), Trio(DecisionDetailScreenController.MatiereDeLaCarte));
-            Assert.AreEqual((216, 202, 167), Trio(DecisionDetailScreenController.PlaqueDuTampon));
-            Color rouge = new Color32(0x93, 0x40, 0x2c, 255);   // l'encre du CTA primaire de la maquette
-            Assert.GreaterOrEqual(Contraste(rouge, DecisionDetailScreenController.PlaqueDuTampon), 4.2f, "le CTA primaire : ~4,3:1 sur sa plaque crème (le juge : 4,33:1 en référence, 2,78:1 sur noir en jeu)");
-            Assert.Less(Contraste(rouge, new Color32(13, 13, 13, 255)), 3f, "contrôle négatif : sur le zinc noir (13,13,13), le même rouge est sous le plancher de 3:1 — c'est le défaut F5");
-            Assert.GreaterOrEqual(Contraste(new Color32(0x2a, 0x1c, 0x12, 255), DecisionDetailScreenController.MatiereDeLaCarte), 10f, "le titre (encre sombre) sur la matière crème");
-            Assert.IsFalse(PiedDEcran.EstUnAplatOr(DecisionDetailScreenController.PlaqueDuTampon), "une plaque CRÈME n'est pas l'or plein");
+            Assert.AreEqual((216, 202, 167), Trio(PiedDEcran.PlaqueCreme), "la plaque crème reste celle de ⑮ DÉPOSER");
+            var arrets = DecisionDetailScreenController.DegradeDeLaPlaque();
+            Assert.AreEqual(3, arrets.Length, "trois paliers");
+            Assert.AreEqual(new[] { 0f, 0.55f, 1f }, arrets.Select(x => x.pos).ToArray(), "0 % / 55 % / 100 %");
+            Assert.AreEqual((0xe8, 0xc8, 0x7a), Trio(arrets[0].c)); Assert.AreEqual((0xb0, 0x8d, 0x3e), Trio(arrets[1].c)); Assert.AreEqual((0x8a, 0x6a, 0x22), Trio(arrets[2].c));
+            Color encre = DecisionDetailScreenController.EncreDeLaPlaque;
+            Assert.AreEqual((0x3a, 0x2a, 0x0a), Trio(encre), "`color:#3a2a0a`");
+            // CONTRASTE MESURÉ de l'encre : sur le palier médian #b08d3e (le remplissage médian lu, (173,138,60) à ±3) 4,44:1 — SOUS la cible de 4,5 de 0,06, c'est la maquette ; sur le
+            // palier sombre #8a6a22 2,75:1. Le libellé, lui, se tient dans la moitié HAUTE de la plaque (≈ 35 % de la hauteur), où le fond est plus clair.
+            Assert.GreaterOrEqual(Contraste(encre, arrets[1].c), 4.4f, "encre #3a2a0a sur #b08d3e : 4,44:1 mesuré (cible 4,5 : manquée de 0,06 par la maquette elle-même)");
+            Assert.Less(Contraste(encre, arrets[1].c), 4.5f, "épingle la mesure : si la maquette change, ce test le dit");
+            Color fondDuLibelle = ProceduralUI.EchantillonDeDegrade(arrets, 0.35f);
+            Assert.GreaterOrEqual(Contraste(encre, fondDuLibelle), 4.5f, "le libellé « LES LIRE MAINTENANT » (≈ 35 % de la hauteur) tient la cible de 4,5:1");
+            Assert.Less(Contraste(encre, arrets[2].c), 3f, "contrôle négatif : sur le palier sombre le même encre est sous 3:1 — le test discrimine");
+            // la sous-ligne : `#3a2a0acc` = l'encre à 80 %, rendue en couleur OPAQUE mélangée en sRGB sur le dégradé à sa hauteur (79,59,19) — l'opacité CSS recopiée sur du texte serait pâlie par le linéaire
+            Color sous = DecisionDetailScreenController.EncreDeLaSousLigne();
+            Assert.AreEqual(1f, sous.a, "opaque : aucune opacité à convertir");
+            Color32 k = sous;
+            Assert.That(new[] { (int)k.r, (int)k.g, (int)k.b }, Is.EqualTo(new[] { 79, 59, 19 }).Within(1), $"la sous-ligne : encre à 80 % sur le dégradé à 70 % (vu {k.r},{k.g},{k.b})");
+            Assert.GreaterOrEqual(Contraste(sous, ProceduralUI.EchantillonDeDegrade(arrets, 0.7f)), 2.8f, "contraste de la sous-ligne (8 CSS, 80 %) mesuré à 2,92:1 — c'est la maquette");
+            // la source : le bord est POSÉ par `Filets` (recette PlaqueLaiton), la crème et le cerne rouge du tampon ont disparu
             string src = File.ReadAllText(Path.Combine(Application.dataPath, "Scripts", "Shell", "DecisionDetailScreenController.cs"));
             StringAssert.Contains("fond.color = MatiereDeLaCarte;", src, "la carte a sa matière (surface pleine)");
-            StringAssert.Contains("tf.color = PlaqueDuTampon;", src, "le tampon a sa plaque");
             StringAssert.DoesNotContain("RoundedRectOutline((int)Px(14f), Px(1.5f), bordCarte)", src, "plus de carte réduite à un contour sans matière");
+            int d = src.IndexOf("tampon = Bloc(\"Tampon\"", System.StringComparison.Ordinal), f = src.IndexOf("BoutonLire = tampon.AddComponent<LongPressButton>();", System.StringComparison.Ordinal);
+            Assert.That(d, Is.GreaterThan(0)); Assert.That(f, Is.GreaterThan(d));
+            string bloc = src.Substring(d, f - d);
+            StringAssert.Contains("Filets.Poser((RectTransform)tampon.transform, DecorsDeScene.Filets.DecisionDetail.PlaqueLaiton)", bloc, "le bord 1 px #6b4a12 est posé par Filets");
+            StringAssert.DoesNotContain("Rouge", bloc, "plus d'encre brique sur le geste principal");
+            StringAssert.DoesNotContain("Cerner(", bloc, "plus de cerne rouge à la main sur le tampon");
+            StringAssert.DoesNotContain("PlaqueCreme", bloc, "plus de plaque crème sur le tampon");
         }
     }
 }

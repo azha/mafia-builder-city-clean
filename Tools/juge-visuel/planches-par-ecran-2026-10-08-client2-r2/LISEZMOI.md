@@ -1,0 +1,5 @@
+# Planches par écran — 08/10 soir, recapture de CLIENT-2 après le juge d'ensemble r2 (+ ㊴)
+
+LE jeu à donner au juge r3. Harnais `PlanchesParEcran` (catégorie `ClichePlanchesParEcran`, **5/5 verts**, VERDICT 0), compte NEUF sur la pile dev, 1080×2400 et 1080×1920 ; preuves `Tools/preuves/creneau-2026-10-08i/VERDICTS.txt`. `journal.tsv` : l'état de chaque planche (E12 ㊴ : corps FABRIQUÉS ; E11 ⑤ : carte FABRIQUÉE ; E04 ㉘ : le journal dit AVEC ou SANS geste d'achat — état désormais déterministe).
+Corrections visibles (r2) : E09 ⑮ liège borné à 400 px CSS (la scène reste visible au-dessus) + grain · E04 ㉘ plaque sans aplat + cadre, fiche « D'OÙ ÇA PART » à la ligne servie « Aucune route tendue pour l'instant. », support qui suit la plaque · E11 ⑤ geste en plaque laiton (or / encre sombre) + liseré d'or du tapis · HUD (toutes les planches) : cadran du manomètre à 15/27 R (`.mano`).
+Assumés/consignés (f2) : F2 voix en pied (㉛ TD-823, ㉘ état « aucun relais », ㉝ bande « light », ⑮ ligne de ⑰ ; ㉞ = TD-882), F9 contenu du journal au compte neuf (dette back), « laisser sur le zinc » (E11), voix de Wexler (E07). MINEURS consignés.
