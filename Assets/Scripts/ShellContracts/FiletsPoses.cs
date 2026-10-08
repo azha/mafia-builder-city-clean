@@ -118,7 +118,8 @@ namespace MafiaCleanCity.Shell
 
         private void Contour(int i, SpecFilet f, Color c, int t, float d, Rect r, RectTransform racine)
         {
-            string nom = recette.Length == 1 ? "Contour" : "Contour" + i;
+            string nom = "Contour";   // un nom de NŒUD, pas un texte affiché (garde N3)
+            if (recette.Length > 1) nom += i;
             float w = Mathf.Max(0f, r.width - 2f * d), h = Mathf.Max(0f, r.height - 2f * d);
             float rayon = f.RayonPct > 0f ? f.RayonPct * Mathf.Min(w, h)
                                           : EchelleMaquette.Px(f.Rayon, racine, EchelleMaquette.LargeurEcransBrennar6);

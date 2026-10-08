@@ -136,10 +136,10 @@ namespace MafiaCleanCity.Shell
             Lin3(180f, Teinte.Hex("#2a1e14"), 0.46f, Teinte.Hex("#1d1610"), Teinte.Hex("#141014")));
 
         public static readonly SpecDecor ExceptionQueue = new SpecDecor("⑨", "ExceptionQueueController", StatutDecor.DejaLivre,
-            SceneDeFond.Bar, 1f, 0.29f, Plein(Teinte.Hex("#1d2124")));
+            SceneDeFond.Bar, 1f, 0.29f, Plein(Sourdine));   // #1d2124 : PAR LE JETON lieutenantMutedDeep (d 3,61 à l'octet, TD-612)
 
         public static readonly SpecDecor ExceptionDetail = new SpecDecor("⑩", "ExceptionDetailController", StatutDecor.DejaLivre,
-            SceneDeFond.Bar, 1f, 0.11f, Plein(Teinte.Hex("#1d2124")));
+            SceneDeFond.Bar, 1f, 0.11f, Plein(Sourdine));   // #1d2124 : PAR LE JETON lieutenantMutedDeep (d 3,61 à l'octet, TD-612)
 
         public static readonly SpecDecor AutonomyInbox = District("㉔", "AutonomyInboxController", 0.45f, 0.10f,
             Lin3(180f, Teinte.Hex("#3a3f47"), 0.40f, Teinte.Hex("#22262b"), Carte));

@@ -183,39 +183,40 @@ Comptes : 26 entrées — **Posé 21 · DéjàLivré 4 (⑨ ⑩ ⑯ : zinc de `D
 
 ### 4.1 Teintes — la garde TD-612 tranchée (`teintes.py` → `teintes.json` ; lit les 75 jetons de `DesignTokens.asset`, TOUTES les couleurs écrites au catalogue (§3.2-§4) et TOUTES les couleurs de bord mesurées)
 <!-- 4.1:DEBUT (régénéré par maj-design.py ; vérifié par verifier-design.py) -->
-**138 couleurs : 30 à d ≤ 4 d'un jeton (écrites PAR le jeton ; dérive ≤ 3,62/255, « le prix de la règle », précédent `DecorAuComptoir`) · 108 littéraux admis (d > 4)** — la liste complète des littéraux est dans `teintes.json` (`regle = littéral`).
+**138 couleurs : 31 à d ≤ 4 d'un jeton (écrites PAR le jeton ; dérive ≤ 3,62/255, « le prix de la règle », précédent `DecorAuComptoir`) · 107 littéraux admis (d > 4)** — la liste complète des littéraux est dans `teintes.json` (`regle = littéral`).
 | couleur | jeton | d |
 |---|---|---|
-| `#0a0d10` | `scrimBackdrop` | 2.85 |
-| `#0a0f18` | `lieutenantGlassBottom` | 1.45 |
+| `#0a0d10` | `scrimBackdrop` | 3.16 |
+| `#0a0f18` | `lieutenantGlassBottom` | 1.41 |
 | `#0b1016` | `hudGaugeFaceOuter` | 2.24 |
-| `#0b111b` | `hudBarGlassTop` | 0.1 |
+| `#0b111b` | `hudBarGlassTop` | 0.0 |
 | `#0c1015` | `hudGaugeFaceOuter` | 3.0 |
-| `#0d0f10` | `surfaceBase` | 0.08 |
-| `#0d131e` | `hudBarGlassBottom` | 0.15 |
-| `#0f141a` | `mapDialogBg` | 3.53 |
-| `#111823` | `lieutenantMedallionOuter` | 3.05 |
-| `#121519` | `mapDialogBg` | 3.11 |
-| `#14171a` | `surfaceCard` | 2.96 |
-| `#14181d` | `surfaceCard` | 2.93 |
-| `#15181c` | `surfaceCard` | 1.67 |
-| `#191a17` | `readableTextDark` | 2.6 |
-| `#1a2027` | `lieutenantMutedDeep` | 3.62 |
-| `#1b1f24` | `lieutenantMutedDeep` | 1.58 |
-| `#1c1a17` | `readableTextDark` | 3.57 |
-| `#23272b` | `surfaceRow` | 3.6 |
-| `#232a2d` | `surfaceRow` | 0.16 |
-| `#232a32` | `nightOutOfDistrictMuted` | 3.08 |
-| `#2b2f3a` | `surfaceRaised` | 3.11 |
-| `#7db36a` | `accentCalm` | 0.09 |
-| `#7fd4d9` | `hudGaugeArcCold` | 0.1 |
-| `#b08d3e` | `hudHairlineGold` | 0.06 |
-| `#b9ac92` | `hudCremeSecondary` | 0.91 |
-| `#d9ab4e` | `hudMoneyUnderlineGold` | 0.11 |
-| `#e0664a` | `hudGaugeArcHot` | 0.12 |
-| `#f2c96b` | `hudMoneyGold` | 0.12 |
-| `#ff5a4d` | `accentDanger` | 0.02 |
-| `#ff9e3d` | `accentWarning` | 0.11 |
+| `#0d0f10` | `surfaceBase` | 0.0 |
+| `#0d131e` | `hudBarGlassBottom` | 0.0 |
+| `#0f141a` | `mapDialogBg` | 3.61 |
+| `#111823` | `lieutenantMedallionOuter` | 3.0 |
+| `#121519` | `mapDialogBg` | 3.16 |
+| `#14171a` | `surfaceCard` | 3.0 |
+| `#14181d` | `surfaceCard` | 3.0 |
+| `#15181c` | `surfaceCard` | 1.73 |
+| `#191a17` | `readableTextDark` | 3.16 |
+| `#1a2027` | `lieutenantMutedDeep` | 3.16 |
+| `#1b1f24` | `lieutenantMutedDeep` | 1.0 |
+| `#1c1a17` | `readableTextDark` | 3.61 |
+| `#1d2124` | `lieutenantMutedDeep` | 3.61 |
+| `#23272b` | `surfaceRow` | 3.61 |
+| `#232a2d` | `surfaceRow` | 0.0 |
+| `#232a32` | `nightOutOfDistrictMuted` | 3.0 |
+| `#2b2f3a` | `surfaceRaised` | 3.0 |
+| `#7db36a` | `accentCalm` | 0.0 |
+| `#7fd4d9` | `hudGaugeArcCold` | 0.0 |
+| `#b08d3e` | `hudHairlineGold` | 0.0 |
+| `#b9ac92` | `hudCremeSecondary` | 1.0 |
+| `#d9ab4e` | `hudMoneyUnderlineGold` | 0.0 |
+| `#e0664a` | `hudGaugeArcHot` | 0.0 |
+| `#f2c96b` | `hudMoneyGold` | 0.0 |
+| `#ff5a4d` | `accentDanger` | 0.0 |
+| `#ff9e3d` | `accentWarning` | 0.0 |
 <!-- 4.1:FIN -->
 
 ## 5. Pose par le gabarit

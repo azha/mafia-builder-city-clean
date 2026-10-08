@@ -2,19 +2,19 @@
  {
   "hex": "#0a0d10",
   "jeton": "scrimBackdrop",
-  "d": 2.85,
+  "d": 3.16,
   "regle": "JETON"
  },
  {
   "hex": "#0a0f18",
   "jeton": "lieutenantGlassBottom",
-  "d": 1.45,
+  "d": 1.41,
   "regle": "JETON"
  },
  {
   "hex": "#0a2318",
   "jeton": "surfaceCard",
-  "d": 15.87,
+  "d": 15.91,
   "regle": "littéral"
  },
  {
@@ -26,7 +26,7 @@
  {
   "hex": "#0b111b",
   "jeton": "hudBarGlassTop",
-  "d": 0.1,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
@@ -38,55 +38,55 @@
  {
   "hex": "#0d0f10",
   "jeton": "surfaceBase",
-  "d": 0.08,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
   "hex": "#0d131e",
   "jeton": "hudBarGlassBottom",
-  "d": 0.15,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
   "hex": "#0f141a",
   "jeton": "mapDialogBg",
-  "d": 3.53,
+  "d": 3.61,
   "regle": "JETON"
  },
  {
   "hex": "#101317",
   "jeton": "mapDialogBg",
-  "d": 5.56,
+  "d": 5.48,
   "regle": "littéral"
  },
  {
   "hex": "#111014",
   "jeton": "surfaceBase",
-  "d": 5.69,
+  "d": 5.74,
   "regle": "littéral"
  },
  {
   "hex": "#111823",
   "jeton": "lieutenantMedallionOuter",
-  "d": 3.05,
+  "d": 3.0,
   "regle": "JETON"
  },
  {
   "hex": "#121519",
   "jeton": "mapDialogBg",
-  "d": 3.11,
+  "d": 3.16,
   "regle": "JETON"
  },
  {
   "hex": "#131211",
   "jeton": "surfaceBase",
-  "d": 6.75,
+  "d": 6.78,
   "regle": "littéral"
  },
  {
   "hex": "#141014",
   "jeton": "surfaceBase",
-  "d": 8.08,
+  "d": 8.12,
   "regle": "littéral"
  },
  {
@@ -98,121 +98,121 @@
  {
   "hex": "#14171a",
   "jeton": "surfaceCard",
-  "d": 2.96,
+  "d": 3.0,
   "regle": "JETON"
  },
  {
   "hex": "#14181d",
   "jeton": "surfaceCard",
-  "d": 2.93,
+  "d": 3.0,
   "regle": "JETON"
  },
  {
   "hex": "#151310",
   "jeton": "nightSocle",
-  "d": 8.23,
+  "d": 8.12,
   "regle": "littéral"
  },
  {
   "hex": "#15181c",
   "jeton": "surfaceCard",
-  "d": 1.67,
+  "d": 1.73,
   "regle": "JETON"
  },
  {
   "hex": "#151b23",
   "jeton": "mapRootBg",
-  "d": 4.67,
+  "d": 5.2,
   "regle": "littéral"
  },
  {
   "hex": "#161a20",
   "jeton": "surfaceCard",
-  "d": 5.07,
+  "d": 5.1,
   "regle": "littéral"
  },
  {
   "hex": "#17402d",
-  "jeton": "surfaceRow",
-  "d": 24.96,
+  "jeton": "nightBackground",
+  "d": 24.94,
   "regle": "littéral"
  },
  {
   "hex": "#181614",
   "jeton": "readableTextDark",
-  "d": 6.69,
+  "d": 7.48,
   "regle": "littéral"
  },
  {
   "hex": "#191a17",
   "jeton": "readableTextDark",
-  "d": 2.6,
+  "d": 3.16,
   "regle": "JETON"
  },
  {
   "hex": "#1a2027",
   "jeton": "lieutenantMutedDeep",
-  "d": 3.62,
+  "d": 3.16,
   "regle": "JETON"
  },
  {
   "hex": "#1b1f24",
   "jeton": "lieutenantMutedDeep",
-  "d": 1.58,
+  "d": 1.0,
   "regle": "JETON"
  },
  {
   "hex": "#1c1a17",
   "jeton": "readableTextDark",
-  "d": 3.57,
+  "d": 3.61,
   "regle": "JETON"
  },
  {
   "hex": "#1d1610",
   "jeton": "readableTextDark",
-  "d": 10.71,
+  "d": 11.18,
   "regle": "littéral"
  },
  {
   "hex": "#1d2124",
-  "jeton": "autonomyBlockBg",
-  "d": 4.11,
-  "regle": "littéral"
+  "jeton": "lieutenantMutedDeep",
+  "d": 3.61,
+  "regle": "JETON"
  },
  {
   "hex": "#1d2229",
   "jeton": "lieutenantMutedDeep",
-  "d": 7.2,
+  "d": 6.56,
   "regle": "littéral"
  },
  {
   "hex": "#1e1c19",
   "jeton": "readableTextDark",
-  "d": 5.17,
+  "d": 4.58,
   "regle": "littéral"
  },
  {
   "hex": "#1f2a24",
   "jeton": "surfaceRow",
-  "d": 9.71,
+  "d": 9.85,
   "regle": "littéral"
  },
  {
   "hex": "#1f2a3a",
   "jeton": "nightBackground",
-  "d": 5.01,
+  "d": 4.58,
   "regle": "littéral"
  },
  {
   "hex": "#1f6f74",
   "jeton": "nightFloorAlt",
-  "d": 53.21,
+  "d": 53.19,
   "regle": "littéral"
  },
  {
   "hex": "#20211d",
   "jeton": "autonomyBlockBg",
-  "d": 7.98,
+  "d": 8.06,
   "regle": "littéral"
  },
  {
@@ -224,247 +224,247 @@
  {
   "hex": "#22301f",
   "jeton": "surfaceRow",
-  "d": 15.12,
+  "d": 15.26,
   "regle": "littéral"
  },
  {
   "hex": "#23272b",
   "jeton": "surfaceRow",
-  "d": 3.6,
+  "d": 3.61,
   "regle": "JETON"
  },
  {
   "hex": "#232a2d",
   "jeton": "surfaceRow",
-  "d": 0.16,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
   "hex": "#232a32",
   "jeton": "nightOutOfDistrictMuted",
-  "d": 3.08,
+  "d": 3.0,
   "regle": "JETON"
  },
  {
   "hex": "#2a1e14",
   "jeton": "readableTextDark",
-  "d": 17.97,
+  "d": 17.55,
   "regle": "littéral"
  },
  {
   "hex": "#2a2e33",
   "jeton": "surfaceRaised",
-  "d": 5.24,
+  "d": 5.1,
   "regle": "littéral"
  },
  {
   "hex": "#2a3648",
   "jeton": "hudGaugeFaceInner",
-  "d": 7.49,
+  "d": 7.48,
   "regle": "littéral"
  },
  {
   "hex": "#2b120c",
   "jeton": "ficheCtaOrEncre",
-  "d": 12.17,
+  "d": 12.21,
   "regle": "littéral"
  },
  {
   "hex": "#2b2622",
   "jeton": "mapPanelSouth",
-  "d": 7.74,
+  "d": 7.87,
   "regle": "littéral"
  },
  {
   "hex": "#2b2f3a",
   "jeton": "surfaceRaised",
-  "d": 3.11,
+  "d": 3.0,
   "regle": "JETON"
  },
  {
   "hex": "#2c3640",
   "jeton": "hudGaugeFaceInner",
-  "d": 4.51,
+  "d": 4.47,
   "regle": "littéral"
  },
  {
   "hex": "#2c4a1e",
   "jeton": "surfaceRow",
-  "d": 36.37,
+  "d": 36.47,
   "regle": "littéral"
  },
  {
   "hex": "#2e2114",
   "jeton": "ficheCtaOrEncre",
-  "d": 20.88,
+  "d": 20.9,
   "regle": "littéral"
  },
  {
   "hex": "#2f6b2a",
   "jeton": "nightBase",
-  "d": 55.33,
+  "d": 55.61,
   "regle": "littéral"
  },
  {
   "hex": "#2f6e4c",
   "jeton": "controlUnknown",
-  "d": 44.99,
+  "d": 45.0,
   "regle": "littéral"
  },
  {
   "hex": "#303a44",
   "jeton": "hudGaugeFaceInner",
-  "d": 9.12,
+  "d": 9.17,
   "regle": "littéral"
  },
  {
   "hex": "#333c46",
   "jeton": "mapChipBg",
-  "d": 8.35,
+  "d": 8.66,
   "regle": "littéral"
  },
  {
   "hex": "#33404b",
   "jeton": "mapChipBg",
-  "d": 6.01,
+  "d": 6.16,
   "regle": "littéral"
  },
  {
   "hex": "#38434e",
   "jeton": "mapChipBg",
-  "d": 5.99,
+  "d": 6.08,
   "regle": "littéral"
  },
  {
   "hex": "#3a1c0e",
   "jeton": "ficheCtaOrEncre",
-  "d": 24.51,
+  "d": 24.49,
   "regle": "littéral"
  },
  {
   "hex": "#3a2530",
   "jeton": "mapPanelSouth",
-  "d": 14.14,
+  "d": 13.93,
   "regle": "littéral"
  },
  {
   "hex": "#3a2a12",
   "jeton": "mapPanelSouth",
-  "d": 26.57,
+  "d": 26.63,
   "regle": "littéral"
  },
  {
   "hex": "#3a2a18",
   "jeton": "mapPanelSouth",
-  "d": 21.64,
+  "d": 21.66,
   "regle": "littéral"
  },
  {
   "hex": "#3a2e24",
   "jeton": "mapPanelSouth",
-  "d": 16.6,
+  "d": 16.4,
   "regle": "littéral"
  },
  {
   "hex": "#3a2f14",
   "jeton": "mapPanelSouth",
-  "d": 26.58,
+  "d": 26.57,
   "regle": "littéral"
  },
  {
   "hex": "#3a352c",
   "jeton": "nightBase",
-  "d": 15.66,
+  "d": 15.94,
   "regle": "littéral"
  },
  {
   "hex": "#3a3c34",
   "jeton": "nightBase",
-  "d": 16.0,
+  "d": 16.28,
   "regle": "littéral"
  },
  {
   "hex": "#3a3f47",
   "jeton": "mapChipBg",
-  "d": 6.09,
+  "d": 6.63,
   "regle": "littéral"
  },
  {
   "hex": "#3b352c",
   "jeton": "nightBase",
-  "d": 14.73,
+  "d": 15.0,
   "regle": "littéral"
  },
  {
   "hex": "#3b4650",
   "jeton": "mapChipBg",
-  "d": 9.9,
+  "d": 9.95,
   "regle": "littéral"
  },
  {
   "hex": "#3c3e35",
   "jeton": "nightBase",
-  "d": 15.03,
+  "d": 15.3,
   "regle": "littéral"
  },
  {
   "hex": "#3d3024",
   "jeton": "nightBase",
-  "d": 18.36,
+  "d": 18.55,
   "regle": "littéral"
  },
  {
   "hex": "#3e382d",
   "jeton": "nightBase",
-  "d": 10.92,
+  "d": 11.22,
   "regle": "littéral"
  },
  {
   "hex": "#3f4a57",
   "jeton": "controlUnknown",
-  "d": 14.75,
+  "d": 15.17,
   "regle": "littéral"
  },
  {
   "hex": "#3f6b28",
   "jeton": "nightBase",
-  "d": 50.16,
+  "d": 50.37,
   "regle": "littéral"
  },
  {
   "hex": "#414d59",
   "jeton": "controlUnknown",
-  "d": 13.68,
+  "d": 13.89,
   "regle": "littéral"
  },
  {
   "hex": "#46515c",
   "jeton": "nightFloorAlt",
-  "d": 10.91,
+  "d": 10.95,
   "regle": "littéral"
  },
  {
   "hex": "#47535f",
   "jeton": "nightFloorAlt",
-  "d": 7.6,
+  "d": 7.62,
   "regle": "littéral"
  },
  {
   "hex": "#4a1008",
   "jeton": "ficheCtaOrEncre",
-  "d": 39.07,
+  "d": 39.04,
   "regle": "littéral"
  },
  {
   "hex": "#4a3722",
   "jeton": "nightBase",
-  "d": 12.38,
+  "d": 12.41,
   "regle": "littéral"
  },
  {
   "hex": "#4a3a12",
   "jeton": "nightBase",
-  "d": 27.93,
+  "d": 28.02,
   "regle": "littéral"
  },
  {
@@ -476,325 +476,325 @@
  {
   "hex": "#4a3a3a",
   "jeton": "mapCloseButtonBg",
-  "d": 10.51,
+  "d": 10.82,
   "regle": "littéral"
  },
  {
   "hex": "#4a443a",
   "jeton": "nightBase",
-  "d": 15.66,
+  "d": 15.65,
   "regle": "littéral"
  },
  {
   "hex": "#4a5057",
   "jeton": "controlUnknown",
-  "d": 6.9,
+  "d": 6.56,
   "regle": "littéral"
  },
  {
   "hex": "#4b463c",
   "jeton": "nightBase",
-  "d": 18.57,
+  "d": 18.55,
   "regle": "littéral"
  },
  {
   "hex": "#4b5763",
   "jeton": "nightFloorAlt",
-  "d": 5.21,
+  "d": 5.1,
   "regle": "littéral"
  },
  {
   "hex": "#4f7f3f",
   "jeton": "heatUnknown",
-  "d": 51.76,
+  "d": 51.96,
   "regle": "littéral"
  },
  {
   "hex": "#513a1c",
   "jeton": "nightBase",
-  "d": 19.74,
+  "d": 19.7,
   "regle": "littéral"
  },
  {
   "hex": "#574433",
   "jeton": "nightBase",
-  "d": 18.12,
+  "d": 17.92,
   "regle": "littéral"
  },
  {
   "hex": "#5a2e16",
   "jeton": "nightBase",
-  "d": 31.92,
+  "d": 31.76,
   "regle": "littéral"
  },
  {
   "hex": "#5a3a1a",
   "jeton": "nightBase",
-  "d": 26.39,
+  "d": 26.25,
   "regle": "littéral"
  },
  {
   "hex": "#5a4a2a",
   "jeton": "nightBase",
-  "d": 23.81,
+  "d": 23.69,
   "regle": "littéral"
  },
  {
   "hex": "#5a544a",
   "jeton": "controlUnknown",
-  "d": 17.21,
+  "d": 16.79,
   "regle": "littéral"
  },
  {
   "hex": "#5a5c4e",
   "jeton": "heatUnknown",
-  "d": 19.11,
+  "d": 19.26,
   "regle": "littéral"
  },
  {
   "hex": "#5a616a",
   "jeton": "heatUnknown",
-  "d": 11.98,
+  "d": 12.08,
   "regle": "littéral"
  },
  {
   "hex": "#5c2a2a",
   "jeton": "mapCloseButtonBg",
-  "d": 19.7,
+  "d": 19.42,
   "regle": "littéral"
  },
  {
   "hex": "#654a2c",
   "jeton": "mapCloseButtonBg",
-  "d": 32.43,
+  "d": 32.16,
   "regle": "littéral"
  },
  {
   "hex": "#6b2a20",
   "jeton": "mapCloseButtonBg",
-  "d": 36.15,
+  "d": 35.81,
   "regle": "littéral"
  },
  {
   "hex": "#6b3a38",
   "jeton": "mapCloseButtonBg",
-  "d": 26.35,
+  "d": 25.96,
   "regle": "littéral"
  },
  {
   "hex": "#6b4a12",
   "jeton": "ficheCtaOrBord",
-  "d": 39.79,
+  "d": 39.87,
   "regle": "littéral"
  },
  {
   "hex": "#6b4f14",
   "jeton": "ficheCtaOrBord",
-  "d": 36.65,
+  "d": 36.73,
   "regle": "littéral"
  },
  {
   "hex": "#6b4f28",
   "jeton": "ficheCtaOrBord",
-  "d": 37.7,
+  "d": 37.8,
   "regle": "littéral"
  },
  {
   "hex": "#6fae44",
   "jeton": "accentCalm",
-  "d": 40.86,
+  "d": 40.8,
   "regle": "littéral"
  },
  {
   "hex": "#7a4a22",
   "jeton": "ficheCtaOrBord",
-  "d": 28.54,
+  "d": 28.65,
   "regle": "littéral"
  },
  {
   "hex": "#7b5c37",
   "jeton": "ficheCtaOrBord",
-  "d": 31.21,
+  "d": 31.29,
   "regle": "littéral"
  },
  {
   "hex": "#7db36a",
   "jeton": "accentCalm",
-  "d": 0.09,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
   "hex": "#7fc99a",
   "jeton": "onSurfaceSecondary",
-  "d": 51.27,
+  "d": 51.23,
   "regle": "littéral"
  },
  {
   "hex": "#7fd4d9",
   "jeton": "hudGaugeArcCold",
-  "d": 0.1,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
   "hex": "#8a2a18",
   "jeton": "ficheCtaOrBord",
-  "d": 55.05,
+  "d": 55.15,
   "regle": "littéral"
  },
  {
   "hex": "#8a5a12",
   "jeton": "ficheCtaOrBord",
-  "d": 12.19,
+  "d": 12.21,
   "regle": "littéral"
  },
  {
   "hex": "#8a6a22",
   "jeton": "ficheCtaOrBord",
-  "d": 10.87,
+  "d": 10.82,
   "regle": "littéral"
  },
  {
   "hex": "#8a6a3a",
   "jeton": "ficheCtaOrBord",
-  "d": 31.3,
+  "d": 31.32,
   "regle": "littéral"
  },
  {
   "hex": "#8a6a42",
   "jeton": "ficheCtaOrBord",
-  "d": 39.03,
+  "d": 39.05,
   "regle": "littéral"
  },
  {
   "hex": "#8c2f36",
   "jeton": "ficheCtaOrBord",
-  "d": 56.28,
+  "d": 56.39,
   "regle": "littéral"
  },
  {
   "hex": "#8d99a6",
   "jeton": "onSurfaceSecondaryAlt",
-  "d": 5.97,
+  "d": 5.92,
   "regle": "littéral"
  },
  {
   "hex": "#8f9285",
   "jeton": "controlUncontested",
-  "d": 16.21,
+  "d": 16.43,
   "regle": "littéral"
  },
  {
   "hex": "#93402c",
   "jeton": "ficheCtaOrBord",
-  "d": 37.66,
+  "d": 37.76,
   "regle": "littéral"
  },
  {
   "hex": "#987979",
   "jeton": "mapConditionalGrey",
-  "d": 31.83,
+  "d": 31.4,
   "regle": "littéral"
  },
  {
   "hex": "#9a774b",
   "jeton": "hudHairlineGold",
-  "d": 33.71,
+  "d": 33.72,
   "regle": "littéral"
  },
  {
   "hex": "#b08d3e",
   "jeton": "hudHairlineGold",
-  "d": 0.06,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
   "hex": "#b3362a",
   "jeton": "controlRivalHeld",
-  "d": 40.59,
+  "d": 40.25,
   "regle": "littéral"
  },
  {
   "hex": "#b9ac92",
   "jeton": "hudCremeSecondary",
-  "d": 0.91,
+  "d": 1.0,
   "regle": "JETON"
  },
  {
   "hex": "#b9b6a8",
   "jeton": "hudCremeSecondary",
-  "d": 23.71,
+  "d": 23.77,
   "regle": "littéral"
  },
  {
   "hex": "#bfb39a",
   "jeton": "hudCremeSecondary",
-  "d": 11.71,
+  "d": 11.66,
   "regle": "littéral"
  },
  {
   "hex": "#c2bda4",
   "jeton": "hudCremeSecondary",
-  "d": 25.74,
+  "d": 25.71,
   "regle": "littéral"
  },
  {
   "hex": "#c3b79e",
   "jeton": "hudCremeSecondary",
-  "d": 18.6,
+  "d": 18.55,
   "regle": "littéral"
  },
  {
   "hex": "#c9a8e0",
   "jeton": "accentPremium",
-  "d": 32.8,
+  "d": 32.95,
   "regle": "littéral"
  },
  {
   "hex": "#cbbfa4",
   "jeton": "hudCremeSecondary",
-  "d": 31.25,
+  "d": 31.18,
   "regle": "littéral"
  },
  {
   "hex": "#d4f08a",
   "jeton": "nightLieutenantMarker",
-  "d": 43.51,
+  "d": 43.43,
   "regle": "littéral"
  },
  {
   "hex": "#d97a6a",
   "jeton": "hudGaugeArcHot",
-  "d": 38.4,
+  "d": 38.38,
   "regle": "littéral"
  },
  {
   "hex": "#d9ab4e",
   "jeton": "hudMoneyUnderlineGold",
-  "d": 0.11,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
   "hex": "#d9cca9",
   "jeton": "nightLieutenantMarker",
-  "d": 36.74,
+  "d": 36.41,
   "regle": "littéral"
  },
  {
   "hex": "#e0664a",
   "jeton": "hudGaugeArcHot",
-  "d": 0.12,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
   "hex": "#efe4c6",
   "jeton": "hudCreme",
-  "d": 6.68,
+  "d": 6.71,
   "regle": "littéral"
  },
  {
   "hex": "#efe9da",
   "jeton": "hudCreme",
-  "d": 20.83,
+  "d": 20.74,
   "regle": "littéral"
  },
  {
@@ -806,25 +806,25 @@
  {
   "hex": "#f2c96b",
   "jeton": "hudMoneyGold",
-  "d": 0.12,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
   "hex": "#ff5a4d",
   "jeton": "accentDanger",
-  "d": 0.02,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
   "hex": "#ff9e3d",
   "jeton": "accentWarning",
-  "d": 0.11,
+  "d": 0.0,
   "regle": "JETON"
  },
  {
   "hex": "#ffffff",
   "jeton": "onSurfacePrimary",
-  "d": 25.65,
+  "d": 25.57,
   "regle": "littéral"
  }
 ]

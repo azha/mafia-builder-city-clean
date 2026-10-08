@@ -5,7 +5,9 @@ Usage : python3 teintes.py  (depuis la racine du dépôt ou ce dossier) -> teint
 import re,json,math,os
 D=os.path.dirname(os.path.abspath(__file__)); R=os.path.abspath(os.path.join(D,'..','..'))
 y=open(os.path.join(R,'Assets/Resources/DesignTokens.asset'),encoding='utf-8').read()
-toks={m.group(1):tuple(float(m.group(i))*255 for i in (2,3,4)) for m in re.finditer(r'^\s{2}(\w+): \{r: ([\d.e-]+), g: ([\d.e-]+), b: ([\d.e-]+), a: ([\d.e-]+)\}',y,re.M)}
+# ⛔ Les jetons ARRONDIS À L'OCTET, comme la garde TD-612 (`(Color32)(Color)token`) : en flottants, `#1d2124` sortait à 4,11
+# (littéral) alors que la garde le voit à 3,61 de lieutenantMutedDeep — mesuré au créneau du 08/10.
+toks={m.group(1):tuple(min(255,max(0,int(float(m.group(i))*255+0.5))) for i in (2,3,4)) for m in re.finditer(r'^\s{2}(\w+): \{r: ([\d.e-]+), g: ([\d.e-]+), b: ([\d.e-]+), a: ([\d.e-]+)\}',y,re.M)}
 sup=json.load(open(os.path.join(D,'mesure-support.json')))
 cols=set()
 for r in sup:
