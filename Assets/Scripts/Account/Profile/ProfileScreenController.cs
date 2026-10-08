@@ -242,13 +242,14 @@ namespace MafiaCleanCity.Account.Profile
             RectTransform selfRt = GetComponent<RectTransform>();
             if (selfRt == null) selfRt = gameObject.AddComponent<RectTransform>();
 
-            Image voile = gameObject.AddComponent<Image>();
-            voile.color = DesignTokens.Current.surfaceBase;
-            voile.raycastTarget = true;
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,24, le voile,
+            // et le support B de `.cofr6` (158° : #333c46 → #232a32 42 % → #1a2027) — DÉCLARÉS au catalogue. Il remplace l'aplat
+            // `surfaceBase` ; son `Decor/Capteur` garde le bloqueur de raycast que portait cet aplat.
+            DecorPose decor = DecorDeScene.Poser(transform, DecorsDeScene.Profile);
 
             VerticalLayoutGroup v = gameObject.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset((int)Px(10f), (int)Px(10f),
-                                       (int)ShellChrome.TopInsetPx + (int)Px(8f),
+                                       0,   // le haut : sous la bande de scène (ReserverLaBande, juste dessous)
                                        (int)ShellChrome.BottomInsetPx + (int)Px(8f));
             v.spacing = Px(8f);
             v.childControlWidth = true;
@@ -256,6 +257,8 @@ namespace MafiaCleanCity.Account.Profile
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.UpperCenter;
+            // §5.6 du design : la pile commence SOUS max(barre, bande de scène 21 %), comme le coffre de la maquette.
+            DecorDeScene.ReserverLaBande(v, decor, Px(8f));
 
             TextMeshProUGUI titre = Texte(transform, "Titre", "LE PROFIL", Px(13f), Or,
                                           DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);

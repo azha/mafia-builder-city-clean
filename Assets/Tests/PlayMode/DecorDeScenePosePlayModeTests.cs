@@ -24,7 +24,7 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉓", "⑭", "㉒",   // ㊵, ㊳, ㉜, ㉚, ㉛, ㉝ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ ⑮ ⑰ (à CLIENT-2, f2)
+            "③", "⑤", "㊲", "㉓", "⑭",   // ㊵, ㊳, ㉜, ㉚, ㉛, ㉝ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ ⑮ ⑰ ㉒ (à CLIENT-2, f2)
             "㉘", "㉞", "㉙", "㉔", "⑱",
         };
 
@@ -44,6 +44,9 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ㉒ (08/10) — le coffre posé ; ses objets (plaque d'identité, rivets, leviers, molette, tirettes, interrupteurs, plaques,
+            //   cadran) : construits par le contrôleur avec ses propres traits, ou absents — à migrer vers Filets / à classer au juge.
+            { "㉒", new[] { "Lev", "LevRouge", "Mano", "Molette", "Pl", "PlaqueId", "Rivets", "Tir", "Tog", "TogOn" } },
             // ㉝ (08/10) — toutes les recettes de blocs (tête, bas, gestes, offres, parcelle, pénal, glob, rien, lignes, tags, cadran) :
             //   blocs de CLIENT-1, bords propres — à déléguer à Filets.
             { "㉝", new[] { "DmBas", "DmGeste", "DmGesteMort", "DmGesteRouge", "DmGlob", "DmOffre", "DmOffreUn", "DmOffreUnClose", "DmParcelle", "DmPenal", "DmRien", "DmTete", "L", "Mano", "Tag", "Tag_2", "Tag_3" } },
