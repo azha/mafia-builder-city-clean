@@ -24,7 +24,7 @@ namespace MafiaCleanCity.CityMap.Tests
     //       sa raison en rouge et pas de geste ; l'article à portée : la carte est le geste, un APPUI LONG (décision de f2, 08/10) — un appui court n'achète rien, la vitre qui glisse lâche l'appui ;
     //       l'alternative par SAISIE (canon global_conventions_core.md:135, f2 08/10) : absente au repos, ouverte par l'appui court, seul le mot-clé achète ;
     //       la bande basse SANS cadre rond de portrait (décision de f2, 08/10)
-    [Category("Vitrine")]
+    [Category("EcranVitrine")]
     public class VitrinePlayModeTests
     {
         [TearDown] public void OublierLeCatalogue() => MafiaCleanCity.I18n.I18nCatalog.Oublier();

@@ -348,9 +348,9 @@ public static class MafiaCI
         "EnteteDEcran",
         // BandeBasse (CLIENT-1, 08/10) — classe C-c et instances A du juge groupé (㉚ rouge + pied en bande, ㉘ jetons d'action, ㉞ bande éteinte + pastilles + réglure). PAS ENCORE JOUÉE.
         "BandeBasse",
-        // Vitrine (CLIENT-1, 08/10) — ㉓ : les cinq A et trois B du juge groupé du 07/10 (grille 2×2 de plaques illustrées, dessins par article, bande basse sans voix, comptoir, intitulés, médaillon) ; dessins purs, garde de source, effet
+        // EcranVitrine (CLIENT-1, 08/10 ; « Vitrine » jusqu'au 08/10 soir, renommée : la regex non ancrée prenait PhotoVitrine avec elle, K0) — ㉓ : les cinq A et trois B du juge groupé du 07/10 (grille 2×2 de plaques illustrées, dessins par article, bande basse sans voix, comptoir, intitulés, médaillon) ; dessins purs, garde de source, effet
         // sur un catalogue fabriqué. Catégorie NEUVE inscrite le jour où elle naît (garde I1) ; PAS ENCORE JOUÉE.
-        "Vitrine",
+        "EcranVitrine",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

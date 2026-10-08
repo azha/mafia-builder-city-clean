@@ -66,7 +66,8 @@ namespace MafiaCleanCity.Shell
 
         private Color fond = Color.black;   // toujours remplacée par `Equiper`/`Indiquer` (la couleur du fond de l'écran) : un défaut neutre, pas une recopie de surfaceBase (garde Palette)
         private RectTransform piste;
-        private static Sprite spriteDuFondu;
+        // Un CACHE, pas un état publié : une case `readonly` (convention de `ProceduralUI.cache`) — garde EtatDuShell S1, qui ne recense que les statiques réassignables.
+        private static readonly Sprite[] spriteDuFondu = new Sprite[1];
 
         /// <summary>Crée la FENÊTRE défilante d'un écran qui n'en avait pas : `cadre` (qui porte déjà son masque) devient un `ScrollRect` vertical sur `contenu`, avec un graphique transparent qui reçoit le
         /// geste. `fond` = la couleur du fond de l'écran sous la liste (le fondu s'y fond).</summary>
@@ -141,7 +142,7 @@ namespace MafiaCleanCity.Shell
         /// <summary>Le dégradé du fondu : transparent en haut, opaque en bas (une colonne de pixels blancs à alpha croissant, teintée par `Image.color`).</summary>
         private static Sprite SpriteDuFondu()
         {
-            if (spriteDuFondu != null) return spriteDuFondu;
+            if (spriteDuFondu[0] != null) return spriteDuFondu[0];
             const int n = 64;
             var tex = new Texture2D(1, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear, name = "FonduDeFin" };
             var px = new Color32[n];
@@ -152,8 +153,8 @@ namespace MafiaCleanCity.Shell
             }
             tex.SetPixels32(px);
             tex.Apply(false, true);
-            spriteDuFondu = Sprite.Create(tex, new Rect(0, 0, 1, n), new Vector2(0.5f, 0.5f), 100f);
-            return spriteDuFondu;
+            spriteDuFondu[0] = Sprite.Create(tex, new Rect(0, 0, 1, n), new Vector2(0.5f, 0.5f), 100f);
+            return spriteDuFondu[0];
         }
 
         private void LateUpdate() => Rafraichir();

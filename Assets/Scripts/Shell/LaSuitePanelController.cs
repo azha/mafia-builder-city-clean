@@ -361,11 +361,12 @@ namespace MafiaCleanCity.Shell
             return 1f;
         }
 
-        private static Sprite filetLaiton;
+        // Un CACHE, pas un état publié : une case `readonly` (convention de `ProceduralUI.cache`) — garde EtatDuShell S1, qui ne recense que les statiques réassignables.
+        private static readonly Sprite[] filetLaiton = new Sprite[1];
         /// <summary>Le filet laiton : une ligne de pixels du laiton `hudHairlineGold`, alpha = <see cref="AlphaCssDuFilet"/> converti pour le mélange linéaire sur la plaque (`AlphaSrgbVersLineaire`).</summary>
         private static Sprite FiletLaiton()
         {
-            if (filetLaiton != null) return filetLaiton;
+            if (filetLaiton[0] != null) return filetLaiton[0];
             const int n = 256;
             Color laiton = DesignTokens.Current.hudHairlineGold, fond = DesignTokens.Current.ficheGlassBottom;
             var tex = new Texture2D(n, 1, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear, name = "FiletLaiton" };
@@ -378,8 +379,8 @@ namespace MafiaCleanCity.Shell
             }
             tex.SetPixels32(px);
             tex.Apply(false, true);
-            filetLaiton = Sprite.Create(tex, new Rect(0, 0, n, 1), new Vector2(0.5f, 0.5f), 100f);
-            return filetLaiton;
+            filetLaiton[0] = Sprite.Create(tex, new Rect(0, 0, n, 1), new Vector2(0.5f, 0.5f), 100f);
+            return filetLaiton[0];
         }
 
         /// <summary>Le geste d'une ligne, PAR LE SHELL (en surimpression) : ㉚ la chaîne d'appro, ② la fiche du labo, ㉟ la vente, ⑧ les règles,
