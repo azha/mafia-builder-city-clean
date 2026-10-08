@@ -150,7 +150,7 @@ Découpe « cover » : `DecorAuComptoir.UvCouverture` (public, éprouvée) RÉUT
 ## 4. Catalogue (26 entrées ; ⑰ = ⑮, même cadre) — `#hex{jeton}` = la couleur est écrite PAR LE JETON nommé (d ≤ 4, §4.1) ; les autres hex sont des littéraux admis ; colonne cerne = cerne + enseigne (A)
 | sym | écran | statut | scène | lum. | bande | racine mesurée | cerne | fond |
 |---|---|---|---|---|---|---|---|---|
-| ③ | CityMap | Posé | district | 0.4 | 100 % | barre | — | — (scène seule, Bande = 100 %, **sans voile** : `Voile = false`) |
+| ③ | CityMap | DéjàLivré | district | 0.4 | 100 % | barre | — | — (scène seule, Bande = 100 %, **sans voile** : `Voile = false`) |
 | ⑤ | DecisionDetail | Posé | verge | 1 | 34 % | tapis-feutre | — | `radial-gradient(90% 60% at 50% 30%, #2f6e4c, #17402d 60%, #0a2318)` |
 | ⑯ | DailyReview | DéjàLivré | verge-jour | 1 | 19 % | feuille | — | `couleur #efe4c6` |
 | ㊲ | Reputation | Posé | district | 0.24 | 21 % | rep6 | oui | **A** (§3.3) |
@@ -177,7 +177,9 @@ Découpe « cover » : `DecorAuComptoir.UvCouverture` (public, éprouvée) RÉUT
 | ㉑ | Market (non monté) | NonMonté | district | 0.24 | 21 % | mar6 | oui | **A** (§3.3) |
 | ⑱ | AppShell.MonterMenuPlus | Posé | bar | 0.55 | 12 % | bureau | — | `linear-gradient(#5a2e16, #3a1c0e 18px, #2b120c 18px)` |
 
-Comptes : 26 entrées — **Posé 22 · DéjàLivré 3 (⑨ ⑩ ⑯ : zinc de `DecorAuComptoir`, non migrés ici) · NonMonté 1 (㉑)**. Hors catalogue (décision f2) : ④ ⑥ ⑪ ㉕ ⑲ ① ② ⑬ ⑳.
+Comptes : 26 entrées — **Posé 21 · DéjàLivré 4 (⑨ ⑩ ⑯ : zinc de `DecorAuComptoir`, non migrés ici ; ③ : la ville peinte) · NonMonté 1 (㉑)**.
+
+**Amendement du 08/10 (CLIENT-2, VALIDÉ par f2 le 08/10) — ③ passe de Posé à DéjàLivré.** Mesuré dans `CityMapController` (l. 104-110, 420-435) : ③ monte déjà sa VILLE PEINTE (`Resources/CityMap/carte_ville_nuit`, texture plein cadre EXTRAITE du cadre ③·22, 18 ancres de districts, gardée par `CarteVillePlayModeTests`). Poser le décor y aurait chargé `scene_district_nuit` SOUS la ville peinte — une autre image, invisible, 2,8 Mo, deux vérités pour une même scène. La ligne ③ reste au catalogue (périmètre D1) avec ses valeurs mesurées. Comptes AVANT → APRÈS : Posé 22 → 21 · DéjàLivré 3 → 4 · NonMonté 1 → 1. Hors catalogue (décision f2) : ④ ⑥ ⑪ ㉕ ⑲ ① ② ⑬ ⑳.
 
 ### 4.1 Teintes — la garde TD-612 tranchée (`teintes.py` → `teintes.json` ; lit les 75 jetons de `DesignTokens.asset`, TOUTES les couleurs écrites au catalogue (§3.2-§4) et TOUTES les couleurs de bord mesurées)
 <!-- 4.1:DEBUT (régénéré par maj-design.py ; vérifié par verifier-design.py) -->

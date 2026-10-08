@@ -100,12 +100,12 @@ namespace MafiaCleanCity.Tests.PlayMode
         // ════════════════════════════════════════════════════════════════════════════ catalogue (pur)
 
         [Test]
-        public void C1_Catalogue_26Entrees_22Pose_3DejaLivre_1NonMonte_SymbolesUniques()
+        public void C1_Catalogue_26Entrees_21Pose_4DejaLivre_1NonMonte_SymbolesUniques()
         {
             SpecDecor[] tous = DecorsDeScene.Tous;
             Assert.AreEqual(26, tous.Length);
-            Assert.AreEqual(22, tous.Count(s => s.Statut == StatutDecor.Pose));
-            CollectionAssert.AreEquivalent(new[] { "⑨", "⑩", "⑯" }, tous.Where(s => s.Statut == StatutDecor.DejaLivre).Select(s => s.Symbole));
+            Assert.AreEqual(21, tous.Count(s => s.Statut == StatutDecor.Pose), "③ est DéjàLivré depuis l'amendement du 08/10 (la ville peinte)");
+            CollectionAssert.AreEquivalent(new[] { "⑨", "⑩", "⑯", "③" }, tous.Where(s => s.Statut == StatutDecor.DejaLivre).Select(s => s.Symbole));
             CollectionAssert.AreEquivalent(new[] { "㉑" }, tous.Where(s => s.Statut == StatutDecor.NonMonte).Select(s => s.Symbole));
             Assert.AreEqual(26, tous.Select(s => s.Symbole).Distinct().Count(), "un symbole par entrée");
             // ③ seul : sans voile, sans support, Bande = 1 (§3.2, §4).

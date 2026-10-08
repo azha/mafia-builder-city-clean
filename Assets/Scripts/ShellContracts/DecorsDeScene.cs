@@ -11,7 +11,7 @@ namespace MafiaCleanCity.Shell
     ///    Le noir et le blanc des points de ㉘ sont les constantes nommées d'Unity.
     /// ⚠️ Les arrêts sont écrits tels que le CSS les écrit (premier = 0, dernier = 1 quand le CSS les omet) ; les couches
     ///    dans l'ordre CSS (la première est la plus HAUTE).
-    /// ⚠️ Statuts : Posé 22 · DéjàLivré 3 (⑨ ⑩ ⑯ : zinc de `DecorAuComptoir`, non migrés) · NonMonté 1 (㉑).
+    /// ⚠️ Statuts : Posé 21 · DéjàLivré 4 (⑨ ⑩ ⑯ : zinc de `DecorAuComptoir`, non migrés ; ③ : la ville peinte) · NonMonté 1 (㉑).
     ///    Hors catalogue (décision f2) : ④ ⑥ ⑪ ㉕ ⑲ ① ② ⑬ ⑳.</summary>
     public static partial class DecorsDeScene
     {
@@ -57,7 +57,9 @@ namespace MafiaCleanCity.Shell
 
         // ── les 26 entrées (§4) ───────────────────────────────────────────────────────────────────────────────
 
-        public static readonly SpecDecor CityMap = new SpecDecor("③", "CityMapController", StatutDecor.Pose,
+        /// <summary>③ : DÉJÀ LIVRÉ (amendement du 08/10, f2) — la ville peinte de `CityMapController` (`CityMap/carte_ville_nuit`,
+        /// extraite du cadre ③·22) EST la scène ; le décor n'y est pas posé (il chargerait une autre image, invisible dessous).</summary>
+        public static readonly SpecDecor CityMap = new SpecDecor("③", "CityMapController", StatutDecor.DejaLivre,
             SceneDeFond.District, 0.40f, 1f, null, voile: false);
 
         public static readonly SpecDecor DecisionDetail = new SpecDecor("⑤", "DecisionDetailScreenController", StatutDecor.Pose,

@@ -24,7 +24,7 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉓",   // ㊵, ㊳, ㉜, ㉚, ㉛, ㉝, ㉞ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ ⑮ ⑰ ㉒ ㉔ ⑭ (à CLIENT-2, f2)
+            "⑤", "㊲", "㉓",   // ③ : DéjàLivré (amendement du 08/10), hors de cette dette   // ㊵, ㊳, ㉜, ㉚, ㉛, ㉝, ㉞ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ ⑮ ⑰ ㉒ ㉔ ⑭ (à CLIENT-2, f2)
             "㉘", "㉙", "⑱",
         };
 

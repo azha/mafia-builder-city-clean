@@ -26,7 +26,7 @@ chk('mesure-filets couvre TOUS les cadres des 26 écrans',sorted(r['i'] for r in
 # 3. catalogue
 rows=re.findall(r'^\| (\S+) \| [^|]+ \| (Posé|DéjàLivré|NonMonté) \|',d,re.M)
 c=collections.Counter(s for _,s in rows)
-chk('§4 : 26 lignes, 22 Posé / 3 DéjàLivré / 1 NonMonté',(len(rows),c['Posé'],c['DéjàLivré'],c['NonMonté']),(26,22,3,1))
+chk('§4 : 26 lignes, 21 Posé / 4 DéjàLivré / 1 NonMonté (③ DéjàLivré : amendement du 08/10)',(len(rows),c['Posé'],c['DéjàLivré'],c['NonMonté']),(26,21,4,1))
 chk('§4 : symboles = écrans de l\'INDEX avec cadres série 6',{s for s,_ in rows},{x[0] for x in idx if x[3]})
 # 4. cohérence textuelle des décisions de la revue n°5 (greps)
 chk('clip : RectMask2D exigé sur Decor/Support (§3.3 et D0)',d.count('RectMask2D')>=3,True)
