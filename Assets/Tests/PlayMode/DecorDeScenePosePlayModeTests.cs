@@ -24,8 +24,8 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉟", "㉓", "⑮", "⑰", "⑭", "㉒",   // ㊵, ㊳, ㉜ posés le 08/10 (feu vert CLIENT-1) ; ㊴ (à CLIENT-2, f2)
-            "㊱", "㉚", "㉘", "㉛", "㉝", "㉞", "㉙", "㉔", "⑱",
+            "③", "⑤", "㊲", "㉟", "㉓", "⑮", "⑰", "⑭", "㉒",   // ㊵, ㊳, ㉜, ㉚ posés le 08/10 (feu vert CLIENT-1) ; ㊴ (à CLIENT-2, f2)
+            "㊱", "㉘", "㉛", "㉝", "㉞", "㉙", "㉔", "⑱",
         };
 
         /// <summary>DETTE DATÉE : par écran POSÉ, les recettes de filets pas encore branchées, chacune avec sa raison. Ne fait
@@ -44,6 +44,9 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ㉚ (08/10) — L posée (les filets pointillés du bon). Le reste : en-tête (EnteteDEcran), pied (PiedDEcran), chaîne
+            //   (nœuds, tuyaux, pics, états, gestes, rien, cadran) — blocs de CLIENT-1, à déléguer à Filets.
+            { "㉚", new[] { "Bas", "Entete", "Etat", "Etat_2", "Geste", "GesteMort", "Mano", "Noeud", "NoeudFlou", "NoeudTrouve", "Pic", "Pic_2", "Rien", "Tuyau", "TuyauRefoule" } },
             // ㊴ (08/10) — Fen (×3 compteurs), Elast (la boîte des pistes), Cta6 (le pied « acheter du renseignement »), Ac/AcParti
             //   (les acteurs), Mano (le cadran) : éléments de la maquette `.dos6` que le contrôleur NE CONSTRUIT PAS (structure du
             //   client : enseigne, 3 signaux, panneau) — signalé à f2, à classer au juge (A s'ils manquent au joueur). PiBout : la
