@@ -1389,7 +1389,7 @@ namespace MafiaCleanCity.Shell
             rtc.offsetMax = Vector2.zero;
             defilement.viewport = rt;
             defilement.content = rtc;
-            ListeDefilante.Indiquer(defilement, DesignTokens.Current.surfaceBase);   // cause 7 (f2) : fondu en fin de course + ascenseur — un ScrollRect sans indice cache du contenu
+            ListeDefilante.Indiquer(defilement, DecorsDeScene.MenuPlus.Support.CouleurDuBas);   // cause 7 (f2) : fondu en fin de course + ascenseur — un ScrollRect sans indice cache du contenu ; il se fond dans le BAS du bureau (D4n)
 
             VerticalLayoutGroup pile = contenu.AddComponent<VerticalLayoutGroup>();
             pile.childAlignment = TextAnchor.UpperCenter;

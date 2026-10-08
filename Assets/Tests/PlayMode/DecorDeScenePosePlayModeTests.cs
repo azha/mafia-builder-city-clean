@@ -208,6 +208,30 @@ namespace MafiaCleanCity.Tests.PlayMode
 
         // ════════════════════════════════════════════════════════════════════════════ gardes
 
+        /// <summary>D4o : les appels `ListeDefilante.Indiquer` d'une source, hors commentaires, et combien passent le BAS du bureau
+        /// par son nom (`DecorsDeScene.MenuPlus.Support.CouleurDuBas`).</summary>
+        private static (int appels, int auBas) FondusDuMenu(string source)
+        {
+            var lignes = source.Split('\n').Select(l => { int c = l.IndexOf("//", System.StringComparison.Ordinal); return c >= 0 ? l.Substring(0, c) : l; });
+            string code = string.Join("\n", lignes);
+            int appels = Regex.Matches(code, @"ListeDefilante\.Indiquer\(").Count;
+            int auBas = Regex.Matches(code, @"ListeDefilante\.Indiquer\(\s*\w+\s*,\s*DecorsDeScene\.MenuPlus\.Support\.CouleurDuBas\s*\)").Count;
+            return (appels, auBas);
+        }
+
+        [Test]
+        public void D4o_MenuPlus_LeFonduLitLeBasDuBureau_DansLaSource()
+        {
+            // Le banc D4n (DecorDeScenePlayModeTests) prouve l'EFFET pour `CouleurDuBas` ; ceci lie le banc à AppShell : le menu passe
+            // CETTE valeur, par son nom, à son unique fondu. Contrôles : l'ancien argument (surfaceBase) et un appel en commentaire
+            // ne comptent pas.
+            var (appels, auBas) = FondusDuMenu(SourceDe(DecorsDeScene.MenuPlus));
+            Assert.AreEqual(1, appels, "MonterMenuPlus pose UN fondu");
+            Assert.AreEqual(1, auBas, "le fondu du menu se fond dans le BAS du bureau (DecorsDeScene.MenuPlus.Support.CouleurDuBas), pas dans un jeton");
+            Assert.AreEqual((1, 0), FondusDuMenu("ListeDefilante.Indiquer(defilement, DesignTokens.Current.surfaceBase);"), "contrôle : l'ancien argument est vu");
+            Assert.AreEqual((0, 0), FondusDuMenu("// ListeDefilante.Indiquer(d, DecorsDeScene.MenuPlus.Support.CouleurDuBas);"), "contrôle : un commentaire ne compte pas");
+        }
+
         [Test]
         public void D2_D3_D6b_ControlesPositifs()
         {

@@ -194,6 +194,21 @@ namespace MafiaCleanCity.Shell
         }
 
         public bool Arrondi => Rayon.x > 0f || Rayon.y > 0f || Rayon.z > 0f || Rayon.w > 0f;
+
+        /// <summary>La couleur du BAS du support : le dernier arrêt de sa couche la plus HAUTE, quand celle-ci est un dégradé
+        /// linéaire vertical (180°) OPAQUE — elle couvre alors tout le reste. ⑱ : le fondu de fin de course du menu s'y fond
+        /// (mesuré au créneau n°4 : sur surfaceBase, le pied du bureau perdait son brun, écart 30/255). Tout autre support lève :
+        /// « le bas » n'y a pas une couleur unique, et un repli plausible serait pire qu'une erreur.</summary>
+        public Color CouleurDuBas
+        {
+            get
+            {
+                SpecCouche c = Couches.Length > 0 ? Couches[0] : null;
+                if (c == null || c.Genre != GenreCouche.Lineaire || Mathf.Abs(c.Angle - 180f) > 0.01f || !c.EstOpaque || c.Arrets.Length == 0)
+                    throw new InvalidOperationException("CouleurDuBas : la couche la plus haute n'est pas un dégradé linéaire 180° opaque");
+                return c.Arrets[c.Arrets.Length - 1].Couleur.Resoudre();
+            }
+        }
     }
 
     /// <summary>Le décor d'UN écran (une ligne du §4). Immuable.</summary>
