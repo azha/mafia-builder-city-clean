@@ -63,7 +63,8 @@ namespace MafiaCleanCity.Mouvements
         /// <summary>`IHorloge` de la régie (§3). Les 30 s « hors champ » se mesurent SUR ELLE.</summary>
         public IHorloge Horloge { get; set; } = HorlogeReelle.Instance;
 
-        /// <summary>Le niveau de mouvement (§5). Les sources (PlayerPrefs, Android) sont E2 : ici, seulement le setter.</summary>
+        /// <summary>Le niveau de mouvement (§5). Ses sources (réglage du joueur, Android) sont lues par `MouvementReduit` et ne passent
+        /// que par `RegieMouvement.PoserPolitique` : ici, seulement le setter.</summary>
         public PolitiqueMouvement Politique { get; set; } = PolitiqueMouvement.Plein;
 
         public int PistesVivantes => nAmbiance + nAutres;
@@ -114,6 +115,16 @@ namespace MafiaCleanCity.Mouvements
             if (admises.TryGetValue(e.Id, out Entree deja) && !ReferenceEquals(deja, e))
                 throw new ArgumentException("Id déjà admis pour une autre entrée : " + e.Id);
             admises[e.Id] = e;
+        }
+
+        /// <summary>Inspection en LECTURE SEULE (G6, G9, tests) : l'entrée et la cible de la piste vivante au rang `rang`
+        /// (0 ≤ rang &lt; `MouvementTunables.PistesMax`) ; faux si l'emplacement est libre. Aucune allocation.</summary>
+        public bool Inspecter(int rang, out Entree entree, out RectTransform cible)
+        {
+            entree = null; cible = null;
+            if (rang < 0 || rang >= pistes.Length || !pistes[rang].vivante) return false;
+            entree = pistes[rang].entree; cible = pistes[rang].cible;
+            return true;
         }
 
         public bool EstVivant(Handle h)
@@ -512,6 +523,8 @@ namespace MafiaCleanCity.Mouvements
             {
                 Canal c = m.Canaux[ci];
                 if (!Couple.Realisable(cible, c)) return Refuser(e, "la cible ne porte pas ce que " + c.P + " écrit");
+                string g11 = Gardes.G11(cible, c);   // E2a : une translation sous un LayoutGroup, une échelle sous un ContentSizeFitter
+                if (g11 != null) return Refuser(e, g11);
                 Couple q = Trouver(cible, c);
                 if (q == null) { besoin++; continue; }
                 if (c.M == Mode.Absolu && q.occupant >= 0)

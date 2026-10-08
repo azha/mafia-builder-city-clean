@@ -1,8 +1,10 @@
 using System.Collections;
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 using MafiaCleanCity.CityMap;
+using MafiaCleanCity.Mouvements;
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.CityMap.Tests
@@ -16,9 +18,12 @@ namespace MafiaCleanCity.CityMap.Tests
     //     jamais 0 (qui prouverait seulement l'impuissance de la sonde) ni au-delà.
     //   C10F2b — SOUS LE BUDGET : avec MOINS de candidats que le plafond, le compte suit EXACTEMENT
     //     le nombre de candidats — la garde anti-saturation ne doit pas non plus tuer le mécanisme.
-    // Les deux tests vérifient en plus que le compte correspond à des composants AmbientPulseLoop
-    // RÉELLEMENT attachés (pas un compteur déconnecté du monde qu'il prétend décrire — la même
-    // classe de piège qu'un `default` qui avale une garde).
+    // Les trois tests vérifient en plus que le compte correspond à des PISTES de la régie RÉELLEMENT
+    // attachées (E2a : le composant à `Update` est supprimé ; les boucles sont des pistes `Ambiance` du
+    // catalogue du HUD) — pas un compteur déconnecté du monde qu'il prétend décrire, la même classe de
+    // piège qu'un `default` qui avale une garde. Chaque triplet de comptes a son CONTRÔLE NÉGATIF : le
+    // même rendu SANS régie compte toujours 4 boucles admises par le budget (contrat épinglé), mais 0
+    // piste et 0 `CanvasGroup` — l'assertion sur les pistes n'est donc jamais satisfaite par le compteur.
     //
     // ⛔ C10-F1 (lieutenants visibles à leur affectation, U-11) N'EST PAS testé ici : ce chunk ne le
     // livre pas — voir DistrictInteriorScreenController.cs (tête de fichier, § C10) et
@@ -37,6 +42,7 @@ namespace MafiaCleanCity.CityMap.Tests
         [TearDown]
         public void TearDown()
         {
+            RegieMouvement.Oublier();
             if (bareHostGo != null)
             {
                 var diorama = bareHostGo.GetComponent<DistrictInteriorScreenController>();
@@ -105,6 +111,50 @@ namespace MafiaCleanCity.CityMap.Tests
             };
         }
 
+        // ── les pistes d'ambiance, observées sur les OBJETS ─────────────────────────────────────────────
+
+        private static readonly string[] NomsDesSources = { "RevenueSign", "ActivitySmoke", "MaintenanceFlicker" };
+
+        /// <summary>Une régie de test à horloge posée à la main, AVANT tout rendu : la régie de test n'avance jamais seule, et son
+        /// `Update` rejoue le même `t` (idempotent) — les `Tick` de ce test sont les seuls qui comptent.</summary>
+        private static Regie RegieDeTest(out HorlogeFigee horloge)
+        {
+            Regie regie = RegieMouvement.PourTest();
+            horloge = (HorlogeFigee)regie.Horloge;
+            horloge.Temps = 100f;
+            return regie;
+        }
+
+        /// <summary>Les `CanvasGroup` que la régie a posés sur les SOURCES du rendu (néon, fumée, scintillement).</summary>
+        private static List<CanvasGroup> GroupesDesSources(DistrictInteriorScreenController diorama)
+        {
+            var res = new List<CanvasGroup>();
+            foreach (CanvasGroup g in diorama.ScreenRoot.GetComponentsInChildren<CanvasGroup>(true))
+                if (System.Array.IndexOf(NomsDesSources, g.gameObject.name) >= 0) res.Add(g);
+            return res;
+        }
+
+        /// <summary>L'alpha de chaque groupe à cinq instants espacés de 0,5 s : une boucle VIT si son alpha bouge de plus de 0,02 sur 2 s
+        /// (l'amplitude du plus mince, la fumée, est 0,69 de facteur ; sur la moitié d'une période de 3,9 s, elle ne peut pas rester plate).</summary>
+        private static void AssertToutesVivent(Regie regie, HorlogeFigee horloge, List<CanvasGroup> groupes)
+        {
+            var mini = new float[groupes.Count];
+            var maxi = new float[groupes.Count];
+            for (int i = 0; i < groupes.Count; i++) { mini[i] = float.MaxValue; maxi[i] = float.MinValue; }
+            for (int k = 0; k < 5; k++)
+            {
+                horloge.Temps = 100f + 0.5f * k;
+                regie.Tick(horloge.Temps);
+                for (int i = 0; i < groupes.Count; i++)
+                {
+                    mini[i] = Mathf.Min(mini[i], groupes[i].alpha);
+                    maxi[i] = Mathf.Max(maxi[i], groupes[i].alpha);
+                }
+            }
+            for (int i = 0; i < groupes.Count; i++)
+                Assert.Greater(maxi[i] - mini[i], 0.02f, $"la boucle de {groupes[i].gameObject.name} doit VIVRE : son alpha varie sur 2 s");
+        }
+
         // ── C10-F2a — SATURATION : 6 bâtiments × 3 candidats chacun (18 candidats) plafonnent EXACTEMENT
         // à MaxAmbientLoops, jamais plus ─────────────────────────────────────────────────────────────
 
@@ -119,6 +169,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.Greater(buildings.Length * 3, DistrictInteriorScreenController.MaxAmbientLoops,
                 "scénario dimensionné — le nombre de candidats DOIT excéder le plafond");
 
+            Regie regie = RegieDeTest(out HorlogeFigee horloge);
             bareHostGo = new GameObject("DistrictInteriorDiorama_C10F2a");
             var diorama = bareHostGo.AddComponent<DistrictInteriorScreenController>();
             diorama.Render(WrapGrid(buildings));
@@ -126,10 +177,35 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(DistrictInteriorScreenController.MaxAmbientLoops, diorama.ActiveAmbientLoopCount,
                 "C10-F2 — le budget est une CONTRAINTE : le compte plafonne EXACTEMENT à MaxAmbientLoops, pas 0, pas au-delà");
 
-            // le compte n'est pas un compteur déconnecté — il correspond à des composants RÉELLEMENT attachés.
-            int actualComponents = diorama.ScreenRoot.GetComponentsInChildren<AmbientPulseLoop>(true).Length;
-            Assert.AreEqual(diorama.ActiveAmbientLoopCount, actualComponents,
-                "le compte DOIT correspondre à des AmbientPulseLoop réellement attachés, pas une intention en prose");
+            // le compte n'est pas un compteur déconnecté — il correspond à des PISTES réellement vivantes dans la régie du même hôte…
+            Assert.AreEqual(diorama.ActiveAmbientLoopCount, regie.PistesVivantes,
+                "le compte DOIT correspondre à des pistes réellement attachées, pas une intention en prose");
+            // …et on les voit SUR LES OBJETS : un CanvasGroup par source admise, dont l'alpha varie
+            List<CanvasGroup> groupes = GroupesDesSources(diorama);
+            Assert.AreEqual(diorama.ActiveAmbientLoopCount, groupes.Count, "un CanvasGroup posé par la régie sur chaque source admise, aucun sur les autres");
+            AssertToutesVivent(regie, horloge, groupes);
+
+            // CONTRÔLE NÉGATIF : sans régie, le budget compte toujours 4 (contrat épinglé), mais il n'y a ni piste ni CanvasGroup —
+            // l'assertion ci-dessus ne peut donc pas être satisfaite par le seul compteur
+            RegieMouvement.Oublier();
+            var nu = new GameObject("DistrictInteriorDiorama_C10F2a_SansRegie");
+            var dioramaNu = nu.AddComponent<DistrictInteriorScreenController>();
+            try
+            {
+                dioramaNu.Render(WrapGrid(buildings));
+                Assert.AreEqual(DistrictInteriorScreenController.MaxAmbientLoops, dioramaNu.ActiveAmbientLoopCount, "le compte épinglé ne dépend pas de la régie");
+                Assert.AreEqual(0, GroupesDesSources(dioramaNu).Count, "sans régie : aucun CanvasGroup posé");
+                Assert.AreEqual(DistrictInteriorScreenController.MaxAmbientLoops, RegieMouvement.SansRegie, "sans régie : les attachements sont comptés, pas perdus en silence");
+            }
+            finally
+            {
+                if (dioramaNu.ScreenRoot != null)
+                {
+                    Canvas c = dioramaNu.ScreenRoot.GetComponentInParent<Canvas>();
+                    if (c != null) Object.Destroy(c.gameObject);
+                }
+                Object.Destroy(nu);
+            }
 
             yield return null;
         }
@@ -156,6 +232,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.Less(expectedCandidates, DistrictInteriorScreenController.MaxAmbientLoops,
                 "scénario dimensionné — le nombre de candidats DOIT rester SOUS le plafond");
 
+            Regie regie = RegieDeTest(out HorlogeFigee horloge);
             bareHostGo = new GameObject("DistrictInteriorDiorama_C10F2b");
             var diorama = bareHostGo.AddComponent<DistrictInteriorScreenController>();
             diorama.Render(WrapGrid(buildings));
@@ -163,9 +240,12 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(expectedCandidates, diorama.ActiveAmbientLoopCount,
                 "sous le budget, le compte suit EXACTEMENT les candidats — pas 0 (le mécanisme n'est pas mort), pas plafonné artificiellement");
 
-            int actualComponents = diorama.ScreenRoot.GetComponentsInChildren<AmbientPulseLoop>(true).Length;
-            Assert.AreEqual(diorama.ActiveAmbientLoopCount, actualComponents,
-                "le compte DOIT correspondre à des AmbientPulseLoop réellement attachés");
+            Assert.AreEqual(diorama.ActiveAmbientLoopCount, regie.PistesVivantes,
+                "le compte DOIT correspondre à des pistes réellement attachées");
+            List<CanvasGroup> groupes = GroupesDesSources(diorama);
+            Assert.AreEqual(expectedCandidates, groupes.Count, "néon et fumée portent un CanvasGroup de la régie ; le scintillement (aucun candidat) non");
+            Assert.IsFalse(groupes.Exists(g => g.gameObject.name == "MaintenanceFlicker"), "contrôle négatif : une source non candidate n'est pas animée");
+            AssertToutesVivent(regie, horloge, groupes);
 
             yield return null;
         }
@@ -180,11 +260,14 @@ namespace MafiaCleanCity.CityMap.Tests
             for (int i = 0; i < saturating.Length; i++)
                 saturating[i] = MakeTripleCandidate($"building-{i}", i);
 
+            Regie regie = RegieDeTest(out _);
             bareHostGo = new GameObject("DistrictInteriorDiorama_C10F2c");
             var diorama = bareHostGo.AddComponent<DistrictInteriorScreenController>();
             diorama.Render(WrapGrid(saturating));
             Assert.AreEqual(DistrictInteriorScreenController.MaxAmbientLoops, diorama.ActiveAmbientLoopCount,
                 "premier rendu — saturé");
+            // la ligne de base du contrôle négatif : l'assertion finale sait distinguer 4 de 3 (et 7 si les pistes s'accumulaient)
+            Assert.AreEqual(DistrictInteriorScreenController.MaxAmbientLoops, regie.PistesVivantes, "premier rendu — 4 pistes vivantes");
 
             var single = new[] { MakeTripleCandidate("building-0", 0) }; // 1 bâtiment = 3 candidats
             diorama.Render(WrapGrid(single));
@@ -194,18 +277,19 @@ namespace MafiaCleanCity.CityMap.Tests
             // ⚠️ CORRECTIF DE PLACEMENT (le yield précédent, placé AVANT ce second Render(), était un
             // no-op : `ClearContent` du PREMIER render n'avait rien à détruire — root était vide avant
             // lui. C'est LE SECOND `Render()` (juste au-dessus) dont le `ClearContent` appelle `Destroy`
-            // sur les 4 `AmbientPulseLoop` du premier rendu — différé à la fin de frame. Le yield doit
-            // suivre CE render-ci, pas le précéder, pour que `GetComponentsInChildren` ci-dessous voie
-            // la hiérarchie RÉELLEMENT purgée (4+3=7 sinon — exactement le rouge mesuré). Vérifié dans
+            // sur les sources du premier rendu — différé à la fin de frame. Le yield doit suivre CE
+            // render-ci, pas le précéder, pour que la hiérarchie soit RÉELLEMENT purgée. Vérifié dans
             // le corps de `ClearContent`/`TryStartAmbientLoop` : aucun objet ne vit hors du sous-arbre
-            // de `root` (root → GridArea → Cell → sign/smoke/flicker, `AmbientPulseLoop` est un
-            // COMPOSANT ajouté sur ces GameObjects, jamais un objet séparé) — `ClearContent` détruit
-            // bien `root` en entier par cascade, aucune purge partielle.
+            // de `root` (root → GridArea → Cell → sign/smoke/flicker, la piste d'ambiance est une
+            // entrée de la RÉGIE posée sur ces GameObjects, jamais un objet séparé) — `ClearContent`
+            // détruit bien `root` en entier par cascade, aucune purge partielle.
+            // E2a : `ClearContent` DÉTACHE aussi les pistes du sous-arbre qu'il détruit (`DetacherSous`) : le compte de la régie
+            // est juste dès le second rendu, il n'attend pas la libération des cibles nulles au prochain `Tick`.
             yield return null;
 
-            int actualComponents = diorama.ScreenRoot.GetComponentsInChildren<AmbientPulseLoop>(true).Length;
-            Assert.AreEqual(3, actualComponents,
-                "les composants du premier rendu doivent avoir été détruits par ClearContent, pas accumulés");
+            Assert.AreEqual(3, regie.PistesVivantes,
+                "les pistes du premier rendu doivent avoir été détachées par ClearContent, pas accumulées (4 + 3 = 7 sinon)");
+            Assert.AreEqual(3, GroupesDesSources(diorama).Count, "et les sources détruites ne portent plus rien : 3 CanvasGroup, ceux du second rendu");
 
             yield return null;
         }

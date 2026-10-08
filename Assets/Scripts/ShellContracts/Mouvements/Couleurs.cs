@@ -3,8 +3,8 @@ using UnityEngine;
 namespace MafiaCleanCity.Mouvements
 {
     /// <summary>
-    /// Design §1 — les calculs de couleur de la couche de mouvement. `HueRotate` descend ici depuis `Gyrophare`
-    /// (assembly de la carte) : la migration de l'appelant est E2, `Gyrophare.HueRotate` reste en attendant (même matrice).
+    /// Design §1 — les calculs de couleur de la couche de mouvement. `HueRotate` est descendu ici depuis `Gyrophare` (assembly de
+    /// la carte) ; depuis E2a `Gyrophare.HueRotate` n'en est plus que l'enveloppe (même matrice, un appelant externe : un test).
     /// </summary>
     public static class Couleurs
     {

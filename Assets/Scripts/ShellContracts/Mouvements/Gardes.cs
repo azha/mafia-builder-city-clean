@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using MafiaCleanCity.Shell;
 
 namespace MafiaCleanCity.Mouvements
@@ -29,8 +30,9 @@ namespace MafiaCleanCity.Mouvements
     /// <summary>
     /// CLIENT-3 / E1 (design §10) — les gardes de DONNÉE exécutables sur le catalogue en mémoire : des fonctions pures qui
     /// rendent la liste des violations (vide = vert). Chacune a son contrôle négatif dans les tests (une donnée fautive
-    /// qui DOIT rougir). Les gardes qui lisent un arbre monté (G6, G9, G11) ou le code source de tout `Assets/Scripts`
-    /// (G10) sont E2.
+    /// qui DOIT rougir). Les gardes qui lisent le code source de tout `Assets/Scripts` (G10), ou un arbre monté avec TextMeshPro
+    /// (G6) ou des boutons (G9), vivent dans l'assembly de tests (E2a : `MouvementsGardesSourcePlayModeTests`). G11 lit l'arbre
+    /// d'UNE cible : son prédicat est ici (`G11`), la régie le consulte à l'attachement et REFUSE.
     /// </summary>
     public static class Gardes
     {
@@ -184,6 +186,33 @@ namespace MafiaCleanCity.Mouvements
             return v;
         }
 
+        // ---- G11 ----------------------------------------------------------------------------------------------
+        /// <summary>G11 (design §10, v4.4, prédicat exact) : une TRANSLATION est refusée si le PARENT DIRECT de la cible porte un
+        /// `LayoutGroup` (sans `LayoutElement.ignoreLayout` sur la cible) — un `LayoutGroup` ne réécrit la position que de ses
+        /// enfants directs — ou si la cible porte elle-même un `ContentSizeFitter` ; une `Echelle` est refusée si la cible OU UN
+        /// ANCÊTRE QUELCONQUE porte un `ContentSizeFitter`. (Un `LayoutGroup` ne pilote pas `localScale` : 306 `LayoutGroup`
+        /// coexistent avec les 67 boutons.) Rend la raison du refus, ou null. `EchelleX` / `EchelleY` ne sont pas nommées par le
+        /// prédicat : elles passent (dette consignée, `implementation-notes.md`).</summary>
+        public static string G11(RectTransform cible, Canal c)
+        {
+            if (cible == null || c == null) return null;
+            if (c.EstTranslation)
+            {
+                if (cible.GetComponent<ContentSizeFitter>() != null)
+                    return "G11 : une translation (" + c.P + ") sur une cible qui porte un ContentSizeFitter : " + cible.name;
+                Transform parent = cible.parent;
+                if (parent != null && parent.GetComponent<LayoutGroup>() != null)
+                {
+                    LayoutElement le = cible.GetComponent<LayoutElement>();
+                    if (le == null || !le.ignoreLayout)
+                        return "G11 : une translation (" + c.P + ") sur l'enfant direct d'un LayoutGroup (" + parent.name + ") : " + cible.name;
+                }
+            }
+            else if (c.P == Propriete.Echelle && cible.GetComponentInParent<ContentSizeFitter>(true) != null)
+                return "G11 : une Echelle sur une cible dont la cible ou un ancêtre porte un ContentSizeFitter : " + cible.name;
+            return null;
+        }
+
         // ---- G12 ----------------------------------------------------------------------------------------------
         /// <summary>G12, côté donnée : un mouvement n'impose pas deux `Absolu` à la même propriété (une piste = une cible, donc
         /// un seul couple). Côté exécution, la régie refuse le second `Absolu` d'un couple et REMPLACE une `Transitionner`
@@ -277,7 +306,7 @@ namespace MafiaCleanCity.Mouvements
         }
 
         /// <summary>E0 (décision f2, 08/10) : aucune `Ambiance` ne porte un canal `Melange` — la matière qui vit toute seule passe
-        /// par l'`Alpha`. (Le plafond de 8 pistes `Melange` vivantes est une affaire de régie, pas de donnée.)</summary>
+        /// par l'`Alpha`. (Le plafond de 10 pistes `Melange` vivantes est une affaire de régie, pas de donnée.)</summary>
         public static List<string> MelangeEtAmbiance(IReadOnlyList<Entree> catalogue)
         {
             var v = new List<string>();

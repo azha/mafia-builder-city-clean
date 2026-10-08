@@ -4,21 +4,27 @@ using UnityEngine;
 namespace MafiaCleanCity.Mouvements
 {
     /// <summary>
-    /// CLIENT-3 / E1 (design-couche-mouvement.md v4.3 §9, catalogue-mouvements.md §I.4) — le catalogue du HUD : les entrées
-    /// du CHROME seulement. Les 46 entrées d'écran du catalogue viendront après sa revue ⊥ (E2+). DONNÉE PURE : aucune
-    /// référence vers les assemblies d'écran.
+    /// CLIENT-3 / E1 puis E2a (design-couche-mouvement.md v4.3 §9, catalogue-mouvements.md §I.4) — le catalogue du HUD : les
+    /// entrées du CHROME, et les trois boucles ambiantes du ① (néon, fumée, scintillement de dette : `AmbientPulseLoop`, supprimé
+    /// en E2a). Les 46 entrées d'écran du catalogue viendront après sa revue ⊥ (E2+). DONNÉE PURE : aucune référence vers les
+    /// assemblies d'écran.
     ///
     /// Valeurs recopiées, avec leur source :
     ///  · `pouls` — `oracle-css-hud.json` : 1,1 s, `opacity` 1 → 0,45 → 1, `ease` à CHAQUE image clé (`easing_cles`, jamais
-    ///    `easing` de l'effet) ; `TopBarController.PoulsPeriodeS` / `PoulsCreux` (l'ancien `SmoothStep` s'écartait de l'`ease`
+    ///    `easing` de l'effet) ; les ex-constantes de `TopBarController` `PoulsPeriodeS` / `PoulsCreux`, retirées en E2a (l'ancien `SmoothStep` s'écartait de l'`ease`
     ///    CSS : à p = 0,125 il rendait 0,914 pour 0,775 mesuré).
     ///  · `tremble` — 0,14 s, CSS `52° → 56° → 52°` ⇒ REPÈRE UNITY `0 → −4° → 0` (`Rotation Unity = − rotation CSS`, §2) ;
-    ///    signe épinglé (« vers le chaud », `DistrictDescentePlayModeTests.cs:179`) ; `TremblePeriodeS` / `TrembleAmplitudeDeg`.
+    ///    signe épinglé (« vers le chaud », `DistrictDescentePlayModeTests.T2_LePouls_EtLeTremblement`) ; ex-`TremblePeriodeS` / `TrembleAmplitudeDeg` de `TopBarController` (retirées en E2a).
     ///  · `gyroflip` — 0,9 s, `hue-rotate` 0 → −140° → 0, `ease` ; teinte `#ff5a3c` (`Gyrophare.Teinte`). Une teinte (Hue) n'est
     ///    pas un repère : le signe ne change pas.
     ///  · virages B6/B7 (`transition: background .6s` / `border-color .6s`) et balayage B10 (`style="transition:transform .7s"`) :
     ///    aucun `transition-timing-function` dans `hud-brennar.html` ⇒ le défaut CSS, `ease`.
-    ///  · `bandeau.sortie` — 0,4 s LINÉAIRE (`BandeauEphemere.cs:167`).
+    ///  · `bandeau.sortie` — 0,4 s LINÉAIRE (l'ancien `FonduS` de `BandeauEphemere`).
+    ///  · `diorama.neon` / `diorama.fumee` / `diorama.scintillement` — la boucle `AmbientPulseLoop` (W3.U2 C10) : `sin(1,6 rad/s)`
+    ///    d'amplitude ±0,12 sur l'alpha du `Graphic`, période 2π / 1,6 = 3,927 s. La régie ne règle que le `CanvasGroup` (un
+    ///    `CanvasGroup` ne dépasse pas l'alpha du `Graphic` : la crête est la base) ; les facteurs sont MESURÉS sur les bases de
+    ///    `DesignTokens.asset` (design §9) : néon et scintillement (base 1) [0,88 .. 1], fumée (base 0,35) [0,31 .. 1] — même
+    ///    amplitude 0,24 qu'avant, crête = base. L'`ease-in-out` approche le sinus.
     /// Les Transitionner portent une courbe de PROGRÈS 0 → 1 (la valeur est `de + (vers − de) × courbe`, §3).
     /// </summary>
     public static class CatalogueHud
@@ -36,8 +42,12 @@ namespace MafiaCleanCity.Mouvements
         // une donnée `static readonly` ne peut pas lire l'asset de tokens, elle porte donc leurs valeurs (un test les compare).
         private const int Laiton = 0xb08d3e, Braise = 0xe0664a;
         private const float VirageDureeS = 0.6f, BalayageDureeS = 0.7f, BandeauSortieDureeS = 0.4f;
+        // Les boucles ambiantes du ① : l'ancienne `Speed = 1.6` rad/s ⇒ 2π / 1,6 s ; facteurs de crête à creux (design §9).
+        private const float AmbiancePeriodeS = 3.927f;
+        private const float AmbianceCreuxNeon = 0.88f, AmbianceCreuxFumee = 0.31f, AmbianceCreuxScintillement = 0.88f;
 
         private static readonly string[] TousLesEcrans = { Entree.Tous };
+        private static readonly string[] EcranDiorama = { "①" };
 
         public static readonly Entree Pouls = new Entree(
             "chrome.pouls", TousLesEcrans, "hud-brennar-canon: pouls (B1)",
@@ -109,7 +119,7 @@ namespace MafiaCleanCity.Mouvements
             pistes: 1, bloquante: false, hote: Entree.HoteClient);
 
         public static readonly Entree BandeauSortie = new Entree(
-            "bandeau.sortie", TousLesEcrans, "PROPOSE: fondu de sortie du bandeau (BandeauEphemere.cs:167)",
+            "bandeau.sortie", TousLesEcrans, "PROPOSE: fondu de sortie du bandeau (ex-FonduS de BandeauEphemere)",
             "Le bandeau d'annonce ne disparaît pas d'un coup : comme un papier qu'on retire de la lumière, il s'efface en quatre dixièmes de seconde.",
             Genre.Transition,
             new MouvementDefini("bandeau.sortie", Genre.Transition, BandeauSortieDureeS,
@@ -117,16 +127,53 @@ namespace MafiaCleanCity.Mouvements
                 Iteration.Fois(1)),
             pistes: 1, bloquante: false, hote: Entree.HoteClient);
 
-        /// <summary>Les entrées du chrome, dans l'ordre de déclaration.</summary>
+        // `Pistes` : le budget d'ambiance du ① est `DistrictInteriorScreenController.MaxAmbientLoops` = 4, PARTAGÉ entre les trois
+        // (G4 somme les `Pistes` des entrées d'un écran) : 2 + 1 + 1 = 4, la répartition est conventionnelle, le plafond est tenu par
+        // `TryStartAmbientLoop`.
+        public static readonly Entree Neon = Boucle(
+            "diorama.neon", "PROPOSE: migration d'AmbientPulseLoop (DistrictInteriorScreenController.BuildRevenueSign, W3.U2 C10)",
+            "L'enseigne au néon d'un commerce qui rapporte respire sur la façade : le courant passe, la caisse tourne, et la lumière tremble à peine avec le secteur.",
+            AmbianceCreuxNeon, pistes: 2);
+
+        public static readonly Entree Fumee = Boucle(
+            "diorama.fumee", "PROPOSE: migration d'AmbientPulseLoop (DistrictInteriorScreenController.BuildActivitySmoke, W3.U2 C10)",
+            "La fumée d'une opération en cours monte et retombe au-dessus du toit : un bâtiment qui travaille ne s'éteint pas tout à fait dans la nuit.",
+            AmbianceCreuxFumee, pistes: 1);
+
+        public static readonly Entree Scintillement = Boucle(
+            "diorama.scintillement", "PROPOSE: migration d'AmbientPulseLoop (DistrictInteriorScreenController.BuildMaintenanceFlicker, W3.U2 C10)",
+            "L'enseigne d'un bâtiment dont l'entretien est en retard grésille : le tube fatigue, la tension flanche, et personne n'est encore venu le réparer.",
+            AmbianceCreuxScintillement, pistes: 1);
+
+        /// <summary>Les entrées du HUD, dans l'ordre de déclaration : le chrome, puis les boucles ambiantes du ①.</summary>
         public static readonly IReadOnlyList<Entree> Entrees = new List<Entree>
         {
-            Pouls, Tremble, Gyrophare, FiletVirage, AnneauVirage, AiguilleBalayage, BandeauSortie,
+            Pouls, Tremble, Gyrophare, FiletVirage, AnneauVirage, AiguilleBalayage, BandeauSortie, Neon, Fumee, Scintillement,
         }.AsReadOnly();
 
         /// <summary>La courbe de progrès d'une `Transitionner` : 0 → 1, l'aisance sur le segment.</summary>
         private static ImageCle[] Progres(Aisance e)
         {
             return new[] { new ImageCle(0f, 0f, e), new ImageCle(1f, 1f, Aisance.Lineaire) };
+        }
+
+        /// <summary>Une `Ambiance` d'alpha : 1 → creux → 1 sur `AmbiancePeriodeS`, `ease-in-out` ; figée au creux sous `Reduit`.</summary>
+        private static Entree Boucle(string id, string source, string cause, float creux, int pistes)
+        {
+            return new Entree(
+                id, EcranDiorama, source, cause, Genre.Ambiance,
+                new MouvementDefini(id, Genre.Ambiance, AmbiancePeriodeS,
+                    new[]
+                    {
+                        new Canal(Propriete.Alpha, Mode.Multiplicatif, new[]
+                        {
+                            new ImageCle(0f, 1f, Aisance.EaseInOut),
+                            new ImageCle(0.5f, creux, Aisance.EaseInOut),
+                            new ImageCle(1f, 1f, Aisance.EaseInOut),
+                        }),
+                    },
+                    Iteration.InfiniFois, alterne: false, poseDeReposS: AmbiancePeriodeS * 0.5f),
+                pistes: pistes, bloquante: false, hote: Entree.HoteClient);
         }
 
         private static Entree Virage(string id, string source, string cause)

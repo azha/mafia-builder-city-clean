@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using MafiaCleanCity.I18n;
+using MafiaCleanCity.Mouvements;
 using MafiaCleanCity.Operational.Exceptions;
 using MafiaCleanCity.Theme;
 
@@ -164,7 +165,6 @@ namespace MafiaCleanCity.Shell
     public sealed class BandeauEphemere : MonoBehaviour
     {
         public const float DureeParDefautS = 5f;
-        private const float FonduS = 0.4f;
         private const float HautCss = 78f, MargeXCss = 34f, MargeYCss = 7f, CorpsCss = 11.5f;
         private const float LargeurRepliCss = 392f;   // la largeur du téléphone du canon, si la barre n'est pas encore posée
         private const float FonduLateral = 0.12f;     // `transparent … 12% … 88% … transparent`
@@ -187,6 +187,10 @@ namespace MafiaCleanCity.Shell
         private CanvasGroup groupe;
         private Action surToucher;
         private Coroutine minuterie;
+        // E2a (design §3, §9) : le fondu de sortie est une piste de la régie (`bandeau.sortie`) ; la coroutine ne garde que la
+        // MINUTERIE (l'attente n'est pas une animation). Le délégué de fin est mis en cache, une fois : pas d'allocation par fondu.
+        private Handle fondu = Handle.Nul;
+        private Action<Handle> surFonduFini;
 
         public static BandeauEphemere Construire(Transform parent)
         {
@@ -205,6 +209,7 @@ namespace MafiaCleanCity.Shell
             rt.pivot = new Vector2(0.5f, 1f);
             rt.anchoredPosition = new Vector2(0f, -HautCss);
             groupe = gameObject.AddComponent<CanvasGroup>();
+            surFonduFini = _ => Effacer();
 
             var fondGo = new GameObject("Fond", typeof(RectTransform));
             fondGo.transform.SetParent(transform, false);
@@ -266,6 +271,11 @@ namespace MafiaCleanCity.Shell
             Texte.text = a.PhraseRiche;
             Dimensionner();
             gameObject.SetActive(true);
+            // Le fondu en cours (une carte qui s'efface) est DÉTACHÉ avant de poser l'opacité : `Visible` est vrai pendant le fondu et
+            // `AnnonceDuBandeau.Suivante` admet toute annonce plus prioritaire — sans cela, la piste périmée écrirait vers 0 puis
+            // appellerait `Effacer` : l'annonce serait signée, jamais vue. `Detacher` prend le rôle de l'ancien `StopCoroutine`.
+            RegieMouvement.Detacher(fondu);
+            fondu = Handle.Nul;
             groupe.alpha = 1f;
             if (minuterie != null) StopCoroutine(minuterie);
             // Une barre inactive (un écran sans chrome) ne lance pas de coroutine : le bandeau attend alors le toucher.
@@ -277,6 +287,8 @@ namespace MafiaCleanCity.Shell
         public void Effacer()
         {
             if (minuterie != null) { StopCoroutine(minuterie); minuterie = null; }
+            RegieMouvement.Detacher(fondu);   // un toucher pendant le fondu l'annule, comme avant ; `Detacher` rend l'opacité (1)
+            fondu = Handle.Nul;
             surToucher = null;
             gameObject.SetActive(false);
             ChangerVisibilite(false);
@@ -293,13 +305,11 @@ namespace MafiaCleanCity.Shell
         private IEnumerator Effacement(float dureeS)
         {
             yield return new WaitForSecondsRealtime(Mathf.Max(0f, dureeS));
-            for (float t = 0f; t < FonduS; t += Time.unscaledDeltaTime)
-            {
-                groupe.alpha = 1f - t / FonduS;
-                yield return null;
-            }
             minuterie = null;
-            Effacer();
+            // Le fondu (0,4 s linéaire) : une `Transitionner` de la régie, qui efface à sa fin. Sans régie (hôte nu) ou si elle refuse,
+            // l'annonce s'efface sans fondu : elle ne reste jamais à l'écran.
+            fondu = RegieMouvement.Transitionner(CatalogueHud.BandeauSortie, rt, 1f, 0f, surFonduFini);
+            if (fondu.EstNul) Effacer();
         }
 
         private void ChangerVisibilite(bool v)

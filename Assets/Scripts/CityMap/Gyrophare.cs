@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using MafiaCleanCity.Mouvements;
 using MafiaCleanCity.Shell;
 
 namespace MafiaCleanCity.CityMap
@@ -22,7 +23,10 @@ namespace MafiaCleanCity.CityMap
     ///   · l'extinction est en cosinus (`ProceduralUI.VoileRadial`), pas linéaire jusqu'à 70 % : la rampe linéaire se quantifie
     ///     en paliers visibles (mesuré par un juge sur le voile d'en-tête) ; même centre, même fin ;
     ///   · `hue-rotate` est calculé par la matrice CSS (espace sRGB, comme le rendent les navigateurs pour la fonction
-    ///     raccourcie) ; l'`ease` des images clés est approché par un `SmoothStep`.</summary>
+    ///     raccourcie).
+    /// E2a (design-couche-mouvement.md §9) : la lueur ne tourne plus dans un `Update` — c'est une piste `Alerte` `Hue` de la régie
+    /// (`chrome.gyrophare`, `ease` à chaque image clé, `CouleurA` = `#ff5a3c`). `TeinteA` et `HueRotate` restent comme ENVELOPPES de
+    /// la même courbe et de `Couleurs.HueRotate`.</summary>
     public sealed class Gyrophare : MonoBehaviour
     {
         /// <summary>Le centre de la lueur, en px de l'art (origine en haut à gauche), par texture de fond.</summary>
@@ -33,8 +37,6 @@ namespace MafiaCleanCity.CityMap
         };
 
         public static readonly Vector2 TailleArtPx = new Vector2(165f, 99f);
-        private const float PeriodeS = 0.9f;
-        private const float RotationDeg = -140f;
         private const float AlphaCentre = 0xbb / 255f;   // `#ff5a3cbb`
         private const float FinEnFraction = 0.70f;        // `#ff5a3c00 70%`
 
@@ -45,6 +47,7 @@ namespace MafiaCleanCity.CityMap
         }
 
         private Image image;
+        private Handle piste = Handle.Nul;
 
         /// <summary>Le centre de la lueur pour ce fond, ou faux s'il n'est pas dans la table.</summary>
         public static bool CentreDansLArt(Texture2D art, out Vector2 centrePx)
@@ -79,33 +82,26 @@ namespace MafiaCleanCity.CityMap
             g.image.type = Image.Type.Simple;
             g.image.raycastTarget = false;
             g.image.color = TeinteA(0f);
+            g.piste = RegieMouvement.Attacher(CatalogueHud.Gyrophare, rt, Reglage.Defaut);
             return g;
         }
 
-        /// <summary>La teinte à l'instant `t` (s) : `hue-rotate` de 0 à −140° et retour, sur 0,9 s.</summary>
+        /// <summary>La teinte à l'instant `t` (s) : `hue-rotate` de 0 à −140° et retour, sur 0,9 s. ENVELOPPE : la courbe du catalogue
+        /// (`chrome.gyrophare`), `ease` à chaque image clé ; aux bornes (0 / 0,45 / 0,9 s) ce sont les images clés.</summary>
         public static Color TeinteA(float t)
         {
-            float phase = Mathf.Repeat(t, PeriodeS) / PeriodeS;              // 0..1
-            float montee = phase < 0.5f ? phase * 2f : (1f - phase) * 2f;    // 0 → 1 → 0
-            return HueRotate(Teinte, RotationDeg * Mathf.SmoothStep(0f, 1f, montee));
+            MouvementDefini m = CatalogueHud.Gyrophare.Mouvement;
+            float phase = Mathf.Repeat(t, m.PeriodeS) / m.PeriodeS;              // 0..1
+            return Couleurs.HueRotate(Teinte, Courbes.EvaluerCanal(m.Canaux[0], phase));
         }
 
-        /// <summary>La matrice `hue-rotate` du CSS (Filter Effects §feColorMatrix), sur les composantes telles qu'écrites.</summary>
-        public static Color HueRotate(Color c, float deg)
-        {
-            float a = deg * Mathf.Deg2Rad, cos = Mathf.Cos(a), sin = Mathf.Sin(a);
-            float r = (0.213f + cos * 0.787f - sin * 0.213f) * c.r + (0.715f - cos * 0.715f - sin * 0.715f) * c.g
-                      + (0.072f - cos * 0.072f + sin * 0.928f) * c.b;
-            float g = (0.213f - cos * 0.213f + sin * 0.143f) * c.r + (0.715f + cos * 0.285f + sin * 0.140f) * c.g
-                      + (0.072f - cos * 0.072f - sin * 0.283f) * c.b;
-            float b = (0.213f - cos * 0.213f - sin * 0.787f) * c.r + (0.715f - cos * 0.715f + sin * 0.715f) * c.g
-                      + (0.072f + cos * 0.928f + sin * 0.072f) * c.b;
-            return new Color(Mathf.Clamp01(r), Mathf.Clamp01(g), Mathf.Clamp01(b), c.a);
-        }
+        /// <summary>La matrice `hue-rotate` du CSS (Filter Effects §feColorMatrix), sur les composantes telles qu'écrites. ENVELOPPE
+        /// de `Couleurs.HueRotate` (design §1 : elle est descendue dans `ShellContracts`) ; un seul appelant externe, un test.</summary>
+        public static Color HueRotate(Color c, float deg) => Couleurs.HueRotate(c, deg);
 
-        private void Update()
+        private void OnDestroy()
         {
-            if (image != null) image.color = TeinteA(Time.unscaledTime);
+            RegieMouvement.Detacher(piste);
         }
     }
 }

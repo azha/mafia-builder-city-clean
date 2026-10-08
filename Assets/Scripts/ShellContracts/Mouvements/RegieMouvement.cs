@@ -17,7 +17,7 @@ namespace MafiaCleanCity.Mouvements
         /// <summary>Les `Attacher`/`Transitionner` demandés alors qu'aucune régie n'était publiée.</summary>
         public static int SansRegie { get; private set; }
 
-        /// <summary>Le niveau de mouvement voulu (§5). Les sources (PlayerPrefs, Android) sont E2 ; elles ne passent que par ici.</summary>
+        /// <summary>Le niveau de mouvement voulu (§5). Les sources (PlayerPrefs, Android : `MouvementReduit`) ne passent que par ici.</summary>
         public static PolitiqueMouvement PolitiqueGlobale { get; private set; } = PolitiqueMouvement.Plein;
 
         private static Regie pourTest;

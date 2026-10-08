@@ -21,6 +21,7 @@ using MafiaCleanCity.Onboarding;
 using MafiaCleanCity.CitySim.Inspection;
 using MafiaCleanCity.CitySim.Precinct;
 using MafiaCleanCity.CoreLoops.Compression;
+using MafiaCleanCity.Mouvements;
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -196,6 +197,11 @@ namespace MafiaCleanCity.Shell
         // returns the same citywide_bucket" ; OrgVitalsPanelController.cs:21) — jamais un nombre neuf.
         private const int HeatProbeDistrictId = 16;
 
+        /// <summary>E2a (design-couche-mouvement.md §3) — LA régie de mouvement du client : créée par le shell, PUBLIÉE dans
+        /// `RegieMouvement` (sur le précédent de `ShellChrome.PublierInsets`), retirée avec lui. Les contrôleurs n'y touchent jamais
+        /// directement : ils passent par les façades de `RegieMouvement`.</summary>
+        public Regie RegieDeMouvement { get; private set; }
+
         private readonly List<GameObject> tabButtons = new List<GameObject>();
         // Item 0.5 §C3 (Tools/charpente-item05-C3-implementation-notes.md) — la bande (yMin/yMax)
         // de CHAQUE panneau posé par `NouveauPanneauAccueil`, mémorisée pour que
@@ -233,12 +239,29 @@ namespace MafiaCleanCity.Shell
         // remembered to call UnmountCurrentTenant first. The tenant host is ALSO parented under
         // ContentSlot (see MountTenant), so this is normally redundant with Unity's own cascade —
         // this handler is the explicit, no-doubt guarantee.
-        private void OnDestroy() => UnmountCurrentTenant();
+        private void OnDestroy()
+        {
+            UnmountCurrentTenant();
+            // La régie vit avec le shell : elle est sur ce GameObject (détruite avec lui, `Regie.OnDestroy` se retire du registre) ;
+            // on retire ici la publication explicitement, sans toucher à celle d'un autre (une régie de test).
+            if (RegieDeMouvement != null && ReferenceEquals(RegieMouvement.Courante, RegieDeMouvement)) RegieMouvement.Publier(null);
+        }
+
+        /// <summary>E2a (design §3, §5) — crée la régie, lit le niveau de mouvement (le réglage du joueur de ⑲ et, sur Android,
+        /// l'échelle de durée d'animation du système : `MouvementReduit`), puis la publie. AVANT `BuildLayout()` : le chrome peut
+        /// s'y attacher dès sa construction.</summary>
+        private void CreerLaRegie()
+        {
+            RegieDeMouvement = gameObject.AddComponent<Regie>();
+            MouvementReduit.Appliquer();
+            RegieMouvement.Publier(RegieDeMouvement);
+        }
 
         private void EnsureInitialized()
         {
             if (initialized) return;
             initialized = true;
+            CreerLaRegie();
             BuildLayout();
             EnsureEventSystem();
         }
@@ -748,7 +771,11 @@ namespace MafiaCleanCity.Shell
         {
             enArrierePlan = enPause;
             if (enPause) NoterSortie();
-            else StartCoroutine(AuRetourAuPremierPlan());
+            else
+            {
+                MouvementReduit.Appliquer();   // design §5 : l'échelle de durée d'animation d'Android est relue à chaque retour au premier plan
+                StartCoroutine(AuRetourAuPremierPlan());
+            }
         }
 
         private void OnApplicationFocus(bool focus)

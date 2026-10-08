@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.UI;
 using MafiaCleanCity.Shell;
 
 namespace MafiaCleanCity.Mouvements.Tests
@@ -10,11 +11,20 @@ namespace MafiaCleanCity.Mouvements.Tests
     // CLIENT-3 / E1 (design-couche-mouvement.md v4.3 §4, §5, §6.2, §10) — les gardes de DONNÉE, chacune avec son CONTRÔLE NÉGATIF
     // (X9 : une donnée fautive qui DOIT rougir) et un contrôle positif (le catalogue du HUD passe).
     //   Hud_*  le catalogue du HUD passe toutes les gardes
-    //   G1…G13 une garde = un test positif/négatif
+    //   G1…G13 une garde = un test positif/négatif (G11 : E2a — le prédicat de translation / d'échelle et le REFUS de la régie)
     //   Tunables_*  les plafonds du design, nommés une fois
     [Category("Mouvement")]
     public class MouvementsGardesPlayModeTests
     {
+        private readonly List<UnityEngine.Object> montes = new List<UnityEngine.Object>();
+
+        [TearDown]
+        public void TearDown()
+        {
+            RegieMouvement.Oublier();
+            AidesMouvement.Oublier(montes);
+        }
+
         private static Entree Alerte(string id, Genre g, MouvementDefini m, int pistes = 1, string[] ecrans = null, bool bloquante = false)
         {
             return new Entree(id, ecrans ?? AidesMouvement.Partout, "test", AidesMouvement.CauseDeTest, g, m, pistes, bloquante, Entree.HoteClient);
@@ -33,8 +43,9 @@ namespace MafiaCleanCity.Mouvements.Tests
         [Test]
         public void Hud_LeCatalogueDuChrome_PasseToutesLesGardes()
         {
-            // §10/E1 — contrôle POSITIF : G1 G3 G4 G5 G8 G12 G13 sur les sept entrées du chrome
-            Assert.AreEqual(7, CatalogueHud.Entrees.Count);
+            // §10/E1 — contrôle POSITIF : G1 G3 G4 G5 G8 G12 G13 sur les sept entrées du chrome, plus (E2a) les trois boucles
+            // ambiantes du ① : néon, fumée, scintillement de dette
+            Assert.AreEqual(10, CatalogueHud.Entrees.Count);
             List<string> v = Gardes.Toutes(CatalogueHud.Entrees, ContexteRendu.Defaut);
             Assert.IsEmpty(v, string.Join("\n", v));
         }
@@ -71,6 +82,42 @@ namespace MafiaCleanCity.Mouvements.Tests
             foreach (Entree e in new[] { CatalogueHud.Pouls, CatalogueHud.Tremble, CatalogueHud.Gyrophare })
                 foreach (ImageCle k in e.Mouvement.Canaux[0].Cles)
                     Assert.AreEqual(Aisance.Ease, k.E, e.Id);
+        }
+
+        [Test]
+        public void Hud_LesBouclesAmbiantesDuDiorama_FacteursMesures_RecouvrementG1G3G4G13()
+        {
+            // §9 — `AmbientPulseLoop` devient trois `Ambiance` d'`Alpha Multiplicatif` : néon et scintillement (base 1) [0,88 .. 1],
+            // fumée (base 0,35) [0,31 .. 1], période 2π / 1,6 rad·s⁻¹ ; elles pèsent sur ① seulement
+            var attendus = new[] { (CatalogueHud.Neon, 0.88f), (CatalogueHud.Fumee, 0.31f), (CatalogueHud.Scintillement, 0.88f) };
+            int pistes = 0;
+            foreach ((Entree e, float creux) in attendus)
+            {
+                Assert.AreEqual(Genre.Ambiance, e.Genre, e.Id);
+                Canal c = e.Mouvement.Canaux[0];
+                Assert.AreEqual(Propriete.Alpha, c.P, e.Id);
+                Assert.AreEqual(Mode.Multiplicatif, c.M, e.Id);
+                Assert.AreEqual(1f, c.Cles[0].V, e.Id + " : la crête est la base");
+                Assert.AreEqual(creux, c.Cles[1].V, 1e-6f, e.Id + " : le creux mesuré (design §9)");
+                Assert.AreEqual(1f, c.Cles[2].V, e.Id);
+                Assert.IsTrue(e.Mouvement.Iteration.Infini, e.Id);
+                Assert.AreEqual(2f * Mathf.PI / 1.6f, e.Mouvement.PeriodeS, 2e-3f, e.Id + " : l'ancienne `Speed = 1.6`");
+                CollectionAssert.AreEqual(new[] { "①" }, e.Ecrans, e.Id);
+                Assert.IsTrue(e.Cause.Length >= Gardes.CauseMinCar, e.Id);
+                pistes += e.Pistes;
+            }
+            Assert.AreEqual(4, pistes, "le budget d'ambiance du ① est `MaxAmbientLoops` = 4, partagé entre les trois entrées");
+
+            // G13 sur la fumée (la plus mince : le `Graphic` ne porte que 0,35) : visible ; sur un Graphic d'alpha 0,01, invisible
+            Assert.IsEmpty(Gardes.G13(Liste(CatalogueHud.Fumee), new ContexteRendu(0.35f, 100f, 1f, Color.gray)));
+            Assert.IsNotEmpty(Gardes.G13(Liste(CatalogueHud.Fumee), new ContexteRendu(0.01f, 100f, 1f, Color.gray)), "contrôle négatif de G13");
+            Assert.IsNotEmpty(Gardes.G13(Liste(CatalogueHud.Neon), new ContexteRendu(0.05f, 100f, 1f, Color.gray)), "0,12 × 0,05 < 3/255");
+
+            // G4 : ① porte le chrome (8) + les boucles (4) = 12 ≤ 16 ; une entrée de 5 pistes de plus la fait rougir
+            Assert.IsEmpty(Gardes.G4(CatalogueHud.Entrees));
+            MouvementDefini m = AidesMouvement.Constant("m", Genre.Alerte, Propriete.Alpha, Mode.Multiplicatif, 0.9f);
+            var avecUneDeTrop = new List<Entree>(CatalogueHud.Entrees) { Alerte("g4.diorama", Genre.Alerte, m, 5, new[] { "①" }) };
+            Assert.IsTrue(Gardes.G4(avecUneDeTrop).Exists(x => x.StartsWith("G4 écran ①")), "12 + 5 = 17 > 16 sur ①, et sur lui seul");
         }
 
         // ------------------------------------------------------------------------------------------ G1
@@ -220,6 +267,122 @@ namespace MafiaCleanCity.Mouvements.Tests
             CollectionAssert.AreEquivalent(new[] { "Alpha", "Melange", "Hue", "Eclat", "TranslationX", "TranslationY", "Rotation", "Echelle", "EchelleX", "EchelleY", "Remplissage", "Parametre" }, noms);
             CollectionAssert.AreEquivalent(new[] { "Additif", "Multiplicatif", "Absolu" }, Enum.GetNames(typeof(Mode)));
             CollectionAssert.AreEquivalent(new[] { "Alerte", "Ambiance", "Retour", "Transition" }, Enum.GetNames(typeof(Genre)));
+        }
+
+        // ------------------------------------------------------------------------------------------ G11
+
+        private RectTransform Cible(string nom, Transform parent = null)
+        {
+            var go = new GameObject(nom, typeof(RectTransform));
+            if (parent != null) go.transform.SetParent(parent, false);
+            else montes.Add(go);
+            return (RectTransform)go.transform;
+        }
+
+        private static Canal Un(Propriete p, Mode mode) => new Canal(p, mode, new[] { AidesMouvement.K(0f, 0f), AidesMouvement.K(1f, 1f) });
+
+        [Test]
+        public void G11_Translation_ParentDirectLayoutGroup_ContentSizeFitter_ControleNegatif()
+        {
+            // §10 G11 (v4.4, prédicat exact) — une TRANSLATION est refusée si le PARENT DIRECT porte un LayoutGroup (sans ignoreLayout)
+            // ou si la cible porte elle-même un ContentSizeFitter
+            Canal tx = Un(Propriete.TranslationX, Mode.Additif), ty = Un(Propriete.TranslationY, Mode.Additif);
+            RectTransform libre = Cible("libre", Cible("parent-nu"));
+            Assert.IsNull(Gardes.G11(libre, tx), "contrôle positif : un parent nu laisse passer");
+
+            RectTransform parent = Cible("pile");
+            parent.gameObject.AddComponent<VerticalLayoutGroup>();
+            RectTransform enfant = Cible("enfant", parent);
+            Assert.IsNotNull(Gardes.G11(enfant, tx), "l'enfant DIRECT d'un LayoutGroup : refusée");
+            Assert.IsNotNull(Gardes.G11(enfant, ty));
+            StringAssert.StartsWith("G11", Gardes.G11(enfant, tx));
+
+            enfant.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            Assert.IsNull(Gardes.G11(enfant, tx), "`ignoreLayout` : le LayoutGroup ne la réécrit plus");
+            enfant.GetComponent<LayoutElement>().ignoreLayout = false;
+            Assert.IsNotNull(Gardes.G11(enfant, tx), "un LayoutElement sans ignoreLayout n'excuse rien");
+
+            RectTransform petitEnfant = Cible("petit-enfant", enfant);
+            Assert.IsNull(Gardes.G11(petitEnfant, tx), "un LayoutGroup ne réécrit que la position de ses enfants DIRECTS");
+
+            Assert.IsNull(Gardes.G11(enfant, Un(Propriete.Rotation, Mode.Additif)), "une rotation n'est pas une translation");
+            Assert.IsNull(Gardes.G11(enfant, Un(Propriete.Echelle, Mode.Multiplicatif)), "un LayoutGroup ne pilote pas localScale (306 LayoutGroup, 67 boutons)");
+            Assert.IsNull(Gardes.G11(enfant, Un(Propriete.Alpha, Mode.Multiplicatif)));
+
+            RectTransform ajuste = Cible("ajuste", Cible("parent-nu-2"));
+            ajuste.gameObject.AddComponent<ContentSizeFitter>();
+            Assert.IsNotNull(Gardes.G11(ajuste, tx), "la cible porte elle-même un ContentSizeFitter : refusée");
+        }
+
+        [Test]
+        public void G11_Echelle_CibleOuAncetreContentSizeFitter_ControleNegatif()
+        {
+            // §10 G11 — une Echelle est refusée si la cible OU UN ANCÊTRE QUELCONQUE porte un ContentSizeFitter
+            Canal ec = Un(Propriete.Echelle, Mode.Multiplicatif);
+            RectTransform racine = Cible("racine");
+            RectTransform milieu = Cible("milieu", racine), feuille = Cible("feuille", milieu);
+            Assert.IsNull(Gardes.G11(feuille, ec), "contrôle positif : aucun ContentSizeFitter");
+
+            racine.gameObject.AddComponent<ContentSizeFitter>();
+            Assert.IsNotNull(Gardes.G11(feuille, ec), "un ancêtre LOINTAIN le porte : refusée");
+            Assert.IsNotNull(Gardes.G11(racine, ec), "la cible elle-même");
+            Assert.IsNull(Gardes.G11(feuille, Un(Propriete.TranslationX, Mode.Additif)),
+                "un ancêtre ContentSizeFitter ne concerne pas une translation (parent direct nu)");
+            Assert.IsNull(Gardes.G11(feuille, Un(Propriete.Rotation, Mode.Additif)));
+        }
+
+        [Test]
+        public void G11_LaRegieRefuse_EtCompte_LaMemeEntreeSurUneCibleLibreEstAdmise()
+        {
+            // §10 G11 — « refusée » : à l'attachement, comme les autres refus (`Refus` compté), pas seulement un prédicat de test
+            Regie regie = RegieMouvement.PourTest();
+            Entree glisse = AidesMouvement.Faire("g11.glisse", AidesMouvement.Rampe("glisse", Genre.Transition, Propriete.TranslationX, Mode.Additif, 0f, 10f, 0.2f, Iteration.Fois(1)));
+            Entree grossit = AidesMouvement.Faire("g11.grossit", AidesMouvement.Rampe("grossit", Genre.Transition, Propriete.Echelle, Mode.Multiplicatif, 1f, 1.1f, 0.2f, Iteration.Fois(1)));
+            regie.Admettre(glisse);
+            regie.Admettre(grossit);
+
+            RectTransform pile = Cible("pile");
+            pile.gameObject.AddComponent<VerticalLayoutGroup>();
+            RectTransform sous = Cible("sous-la-pile", pile), libre = Cible("libre");
+            Assert.IsFalse(regie.Attacher(glisse, libre, Reglage.Defaut).EstNul, "contrôle positif : une cible libre");
+            Assert.AreEqual(0, regie.Refus);
+
+            Assert.IsTrue(regie.Attacher(glisse, sous, Reglage.Defaut).EstNul, "sous un LayoutGroup : refusée");
+            Assert.AreEqual(1, regie.Refus);
+            sous.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            Assert.IsFalse(regie.Attacher(glisse, sous, Reglage.Defaut).EstNul, "`ignoreLayout` : admise");
+            Assert.AreEqual(1, regie.Refus);
+
+            RectTransform fitter = Cible("fitter");
+            fitter.gameObject.AddComponent<ContentSizeFitter>();
+            RectTransform sousFitter = Cible("sous-le-fitter", fitter);
+            Assert.IsTrue(regie.Attacher(grossit, sousFitter, Reglage.Defaut).EstNul, "une échelle sous un ContentSizeFitter : refusée");
+            Assert.AreEqual(2, regie.Refus);
+            Assert.IsFalse(regie.Attacher(grossit, Cible("libre-2"), Reglage.Defaut).EstNul);
+        }
+
+        [Test]
+        public void Inspecter_LaRegieDitCeQuiVit_EtLaisseLesEmplacementsLibresVides()
+        {
+            // l'accessoire de lecture de G6 / G9 : l'entrée et la cible de chaque piste vivante
+            Regie regie = RegieMouvement.PourTest();
+            RectTransform a = Cible("a"), b = Cible("b");
+            regie.Attacher(CatalogueHud.Pouls, a, Reglage.Defaut);
+            regie.Attacher(CatalogueHud.Tremble, b, Reglage.Defaut);
+            int vues = 0;
+            bool aVu = false, bVu = false;
+            for (int i = 0; i < MouvementTunables.PistesMax; i++)
+            {
+                if (!regie.Inspecter(i, out Entree e, out RectTransform c)) { Assert.IsNull(e); Assert.IsNull(c); continue; }
+                vues++;
+                if (ReferenceEquals(c, a)) { aVu = true; Assert.AreSame(CatalogueHud.Pouls, e); }
+                if (ReferenceEquals(c, b)) { bVu = true; Assert.AreSame(CatalogueHud.Tremble, e); }
+            }
+            Assert.AreEqual(regie.PistesVivantes, vues);
+            Assert.AreEqual(2, vues);
+            Assert.IsTrue(aVu && bVu);
+            Assert.IsFalse(regie.Inspecter(-1, out _, out _));
+            Assert.IsFalse(regie.Inspecter(MouvementTunables.PistesMax, out _, out _));
         }
 
         // ------------------------------------------------------------------------------------------ G12
