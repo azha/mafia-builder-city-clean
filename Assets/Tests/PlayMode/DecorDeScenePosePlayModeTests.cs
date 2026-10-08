@@ -24,8 +24,8 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉓", "⑭",   // ㊵, ㊳, ㉜, ㉚, ㉛, ㉝ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ ⑮ ⑰ ㉒ ㉔ (à CLIENT-2, f2)
-            "㉘", "㉞", "㉙", "⑱",
+            "③", "⑤", "㊲", "㉓", "⑭",   // ㊵, ㊳, ㉜, ㉚, ㉛, ㉝, ㉞ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ ⑮ ⑰ ㉒ ㉔ (à CLIENT-2, f2)
+            "㉘", "㉙", "⑱",
         };
 
         /// <summary>DETTE DATÉE : par écran POSÉ, les recettes de filets pas encore branchées, chacune avec sa raison. Ne fait
@@ -44,6 +44,8 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ㉞ (08/10) — toutes les recettes de blocs (en-tête, carnet, composeur, pied) : blocs de CLIENT-1 — à déléguer à Filets.
+            { "㉞", new[] { "CnBas", "CnGeste", "CnGesteMort", "CnGesteRouge", "CnNouvelle", "CnNouvelleVue", "CnPol", "CnPolActif", "CnRien", "CnSeq", "CnSeqVerrou", "CnSlotVide", "CnTete", "Contre", "Mano", "Tag" } },
             // ㉔ (08/10) — le burner posé ; l'écran est une carte fixe (600×640) d'avant la série 6 : l'écran LCD, les bulles, les
             //   messages, les touches de la maquette n'y sont pas construits à l'identique — à classer au juge (structure de contenu).
             { "㉔", new[] { "BatLcd", "BulleLcd", "BulleLcdMoi", "BulleLcdRep", "Burner", "Ch", "D", "F_Bloc", "Hint", "I", "Lcd", "LcdTete", "Mano", "Mi", "MiRet", "MiStruct", "Msg", "MsgVieux", "N", "Ok", "Saisie", "Span" } },

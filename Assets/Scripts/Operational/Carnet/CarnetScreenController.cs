@@ -797,16 +797,20 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("CarnetRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DesignTokens.Current.surfaceBase);
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,18, le voile,
+            // le support B de `.carn6` (#1e1c19 → #181614 58 % → #131211) — DÉCLARÉS au catalogue, plus de fond plat ici.
+            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Carnet);
 
             VerticalLayoutGroup pile = racine.AddComponent<VerticalLayoutGroup>();
             pile.padding = new RectOffset(
                 (int)Px(13f), (int)Px(13f),
-                (int)(Px(10f) + MafiaCleanCity.Shell.ShellChrome.TopInsetPx),
+                0,   // le haut : sous la bande de scène, posé (et recalculé à chaque rect) par ReserverLaBande juste dessous
                 (int)(Px(10f) + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx));
             pile.spacing = Px(8f);
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+            // §5.6 du design : la pile commence SOUS max(barre, bande de scène 21 %) — donc toujours sous TopInsetPx (zone sûre).
+            DecorDeScene.ReserverLaBande(pile, decor, Px(10f));
 
             // L'enseigne — sombre, comme le reste du châssis
             GameObject ens = NouveauUI("Enseigne", racine.transform);
@@ -816,7 +820,8 @@ namespace MafiaCleanCity.Operational
             ve.childControlWidth = true; ve.childControlHeight = true;
             ve.childForceExpandWidth = true; ve.childForceExpandHeight = false;
             // C-a + C-b (juge groupé du 07/10, f2) : la PLAQUE pleine largeur + son filet (`.cn-tete`, `EnteteDEcran.Carnet`) ; le titre à l'échelle UNIQUE de la maquette, DejaVu Serif crème `#f0dfc4`
-            EnteteDEcran.Habiller(ens, EnteteDEcran.Carnet, Px(13f), Px(13f), Px(10f) + MafiaCleanCity.Shell.ShellChrome.TopInsetPx, Px(1f));
+            // Le débord HAUT de la plaque : la marge seule (plus TopInsetPx) — `.entete` est en tête du PANNEAU, sous la bande de scène.
+            EnteteDEcran.Habiller(ens, EnteteDEcran.Carnet, Px(13f), Px(13f), Px(10f), Px(1f));
             titreEcran = NouveauTexte(ens.transform, "Titre", "", Px(EnteteDEcran.TitreCss),
                 EnteteDEcran.TitreEncre, DesignTokens.Current.hudSerifFont);
             sousTitre = NouveauTexte(ens.transform, "SousTitre", "", Px(9f),
