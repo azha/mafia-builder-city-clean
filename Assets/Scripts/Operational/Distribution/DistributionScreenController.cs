@@ -1046,7 +1046,10 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("DistributionRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DesignTokens.Current.surfaceBase);
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,24, le voile,
+            // et la PLANCHE (`.planche`, zone dominante : Points ×2 sur un 158° de bois, sur un Plein) — DÉCLARÉS au catalogue. Premier
+            // enfant, hors mise en page : `Bas` (posé plus bas par `PiedDEcran.Bande`) reste le DERNIER. Aucune Image sur la racine.
+            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Distribution);
             racinePleinEcran.SetAsLastSibling();
 
             // ⛔ L'ÉCHELLE AVANT TOUTE CONVERSION — un RectTransform qui vient d'être étiré n'a
@@ -1054,7 +1057,8 @@ namespace MafiaCleanCity.Operational
             Canvas.ForceUpdateCanvases();
 
             // C-a + C-b (juge groupé du 07/10, f2) : pile + BANDEAU DE TITRE de la maquette (`EnteteDEcran`), le corps prend le reste
-            EnteteDEcran.PoserLaPile(racine, (int)ShellChrome.TopInsetPx, (int)ShellChrome.BottomInsetPx);
+            // §5.6 du design : l'en-tête commence SOUS max(barre, bande de scène 21 %), comme le panneau de la maquette.
+            DecorDeScene.ReserverLaBande(EnteteDEcran.PoserLaPile(racine, 0, (int)ShellChrome.BottomInsetPx), decor, 0f);
             var (titreDuBandeau, sousTitreDuBandeau) = EnteteDEcran.Construire(racine.transform, EnteteDEcran.Distribution, Px,
                 DesignTokens.Current.hudSerifFont, DesignTokens.Current.primaryFont, DesignTokens.Current.onSurfaceSecondary, 10f);
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
