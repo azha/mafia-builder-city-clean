@@ -24,7 +24,7 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉟", "㉓", "⑮", "⑰", "⑭", "㊴", "㊳", "㉒",   // ㊵ posé le 08/10 (feu vert CLIENT-1)
+            "③", "⑤", "㊲", "㉟", "㉓", "⑮", "⑰", "⑭", "㊴", "㉒",   // ㊵ puis ㊳ posés le 08/10 (feu vert CLIENT-1)
             "㊱", "㉜", "㉚", "㉘", "㉛", "㉝", "㉞", "㉙", "㉔", "⑱",
         };
 
@@ -38,6 +38,12 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   MailTenu, N, N_2 : éléments de cadres d'état que le contrôleur ne construit pas (cadran, maillons, pastilles) —
             //   à classer au juge (A s'ils manquent au joueur, sinon C).
             { "㊵", new[] { "Cta6", "Cuve", "Elast", "Et6", "Et6Alerte", "MailFlou", "MailTenu", "Mano", "N", "N_2" } },
+            // ㊳ (08/10) — Une, Brv, Angle : MÊME recette que `Evt` (1 px #2a3648, 4 côtés), que le contrôleur pose sur chaque Ligne ; le
+            //   client n'a qu'une sorte de carte (cadre 125 : une / brève / angle). EvtPerm : la carte `permanent` (servie) garde le
+            //   Contour(AccentVif) de CLIENT-1 — la mesure dit accentDanger, écart de teinte à classer au juge. Elast : la boîte de la
+            //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
+            //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
+            { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
         };
 
         /// <summary>Recettes posées par le décor lui-même (le cerne A : `Decor/Cerne`), jamais par le contrôleur.</summary>
