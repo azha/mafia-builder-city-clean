@@ -518,9 +518,11 @@ namespace MafiaCleanCity.CitySim.Inspection
             return spritePerforation;
         }
 
+        private const string NomPerfGauche = "PerfGauche", NomPerfDroite = "PerfDroite";
+
         private static void Perforations(Transform feuille, bool gauche)
         {
-            GameObject go = new GameObject(gauche ? "PerfGauche" : "PerfDroite", typeof(RectTransform));
+            GameObject go = new GameObject(gauche ? NomPerfGauche : NomPerfDroite, typeof(RectTransform));
             go.transform.SetParent(feuille, false);
             RectTransform rt = (RectTransform)go.transform;
             rt.anchorMin = new Vector2(gauche ? 0f : 1f, 0f); rt.anchorMax = new Vector2(gauche ? 0f : 1f, 1f);

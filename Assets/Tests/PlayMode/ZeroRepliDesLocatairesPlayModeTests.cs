@@ -60,6 +60,12 @@ namespace MafiaCleanCity.Operational.Tests
             // ㉓ LA VITRINE (CLIENT-1, 08/10 ; juge groupé du 07/10, B1 « la règle de paiement n'est plus écrite ») : les deux intitulés d'étagère des cadres 98-99 (atelier 7159e54, re-rendus en Marks), clés dérivées par
             // `Libelle.De` ; table demandée au back via f2 le 08/10 — FR « Les extras — payés en Marks » / « Les Marks — payés au magasin ». La règle (2) les retire le jour où elles sont servies. 2 entrées.
             "boutique.bloc.les_extras_payes_en_marks", "boutique.bloc.les_marks_payes_au_magasin",
+            // CAUSES 3 ET 4 (CLIENT-1, lots du 07/10) — vues en repli au créneau groupé du 08/10 (cumul eb477ecc, pile localhost) : ⑭ la ligne de
+            // pression « TENSION CALME · AUCUNE SEMAINE » (`ParValeur` sur la tension servie, et l'absence de semaine), ㊳ le pied éteint, ㉛ la bande
+            // basse (geste et note). Mots de la maquette, clés dérivées par `Libelle` ; à servir par la table de l'atelier (via f2). 5 entrées.
+            "compression.tension.calm", "compression.semaine.none",
+            "journal.bouton.y_preter_attention",
+            "loi.bouton.lui_trouver_un_avocat", "loi.bloc.le_commis_d_office_fait_ce_qu_il_peut",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

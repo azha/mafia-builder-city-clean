@@ -334,7 +334,8 @@ namespace MafiaCleanCity.Economy.Shop
             // ⛔ DÉCISION DE f2 (08/10) : PAS d'achat en un seul appui — un appui sur la carte dépensait le don de bienvenue d'un coup, et la
             //    maquette ne dessine aucune confirmation. On reprend le geste MAISON des actions irréversibles : l'APPUI LONG
             //    (`LongPressButton`, `T.ui.destructive_longpress_ms` = 1 000 ms) ; l'atelier dessinera son arc sur la carte plus tard.
-            if (abordable)
+            //    Un article POSSÉDÉ n'a aucun geste, même abordable (V3, créneau du 08/10 : `cosm_callsign_color` 50 Marks sur 100 se rachetait).
+            if (abordable && !possede)
             {
                 fond.raycastTarget = true;   // la carte reçoit l'appui
                 LongPressButton appui = art.AddComponent<LongPressButton>();
