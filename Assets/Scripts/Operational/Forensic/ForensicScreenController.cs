@@ -272,7 +272,7 @@ namespace MafiaCleanCity.Operational
                 Color encre = ForensicResolvers.CouleurPour(ForensicResolvers.NiveauDe(bande));
                 if (auBout) encre = DesignTokens.Current.accentDanger;   // 132 : le dernier cran est un ÉVÉNEMENT, tout en `#ff5a4d`
 
-                piTitre[i].text = Lib(piste.Titre);
+                piTitre[i].text = TitreAffiche(piste, DernierChargement);
                 piTitre[i].color = eteinte ? EncreEteinte : (Color)DesignTokens.Current.onSurfaceSecondary;
                 for (int c = 0; c < DossierCalculs.Crans; c++)
                     piCran[i, c].color = (!eteinte && c <= cran) ? encre : (Color)TeinteVide;
@@ -721,6 +721,19 @@ namespace MafiaCleanCity.Operational
         private static string Lib(string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("forensic", "bloc", litteral);
 
+        /// <summary>Q5 — le titre d'une piste : celui de la maquette, SAUF la piste du train de vie quand le back sert le NOM du lieutenant visé ET que la
+        /// piste est vivante ET que sa bande dépasse le premier cran : « le train de vie de {nom} » (phrase ENTIÈRE à trou — l'anglais met le nom
+        /// devant, `{nom}’s lifestyle` ; jamais une concaténation). Une piste éteinte ne nomme personne.</summary>
+        public static string TitreAffiche(DossierCalculs.Piste piste, GetForensicResponseDto d)
+        {
+            string nom = d?.lifestyle_lieutenant_name;
+            if (piste.Cle != DossierCalculs.CleDeLaPisteNommee || !piste.Vivante || string.IsNullOrWhiteSpace(nom)
+                || DossierCalculs.CranDe(piste, DossierCalculs.BandeDe(d, piste.Cle)) <= 0)
+                return Lib(piste.Titre);
+            return MafiaCleanCity.I18n.Libelle.Gabarit(DossierCalculs.CleDuTitreNomme, "le train de vie de {nom}",
+                                                       new Dictionary<string, string> { ["nom"] = nom.Trim() });
+        }
+
         private static void AjouterHauteur(GameObject go, float hauteur)
         {
             var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
@@ -844,6 +857,10 @@ namespace MafiaCleanCity.Operational
         /// `ScreenB7P1`), et le calcul linéaire donne (179, 62, 54) : le modèle est juste. 0,2 donne (124, 43, 38), à 6/255 de la cible
         /// (le canal le plus bas ne se rattrape pas avec un seul alpha) ; ses fonds sombres, eux, restent à ≤ 3/255.</summary>
         public const float AlphaUguiDuParti = 0.2f;
+
+        /// <summary>La piste qui peut porter un NOM (Q5) et la clé de sa phrase à trou (`Slug("le train de vie de {nom}")` sous le rôle `bloc`).</summary>
+        public const string CleDeLaPisteNommee = "lifestyle_alarm_bucket";
+        public const string CleDuTitreNomme = "forensic.bloc.le_train_de_vie_de_nom";
 
         public sealed class Piste
         {

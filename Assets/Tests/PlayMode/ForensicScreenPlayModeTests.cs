@@ -913,6 +913,69 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsFalse(DossierCalculs.AUnAvocat(null));
         }
 
+        // ═══ 5. Q5 — le NOM du lieutenant sur la piste du train de vie (clé ADDITIVE du back, option B, décision f2 08/10) ═══════════
+
+        private static DossierCalculs.Piste PisteTrainDeVie(bool vivante) =>
+            new DossierCalculs.Piste(DossierCalculs.CleDeLaPisteNommee, "le train de vie d’un lieutenant", vivante, "quiet", "noticed", "watched", "subpoenaed");
+
+        private static GetForensicResponseDto CorpsNomme(string bande, string nom) =>
+            new GetForensicResponseDto { audit_risk_bucket = "clean", effluent_visibility_bucket = "clear", lifestyle_alarm_bucket = bande, lifestyle_lieutenant_name = nom };
+
+        private static string TitreDeMaquette(DossierCalculs.Piste p) => MafiaCleanCity.I18n.Libelle.De("forensic", "bloc", p.Titre);
+
+        /// <summary>Q5 : piste VIVANTE + bande au-dessus du premier cran + nom servi ⇒ la phrase ENTIÈRE à trou porte le nom de la pool réelle (« Lt. Marrek »).</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7Q5a_PisteVivante_BandeChaude_NomServi_LeTitrePorteLeNom()
+        {
+            string titre = ForensicScreenController.TitreAffiche(PisteTrainDeVie(true), CorpsNomme("watched", "Lt. Marrek"));
+            StringAssert.Contains("Lt. Marrek", titre);
+            Assert.AreNotEqual(TitreDeMaquette(PisteTrainDeVie(true)), titre, "le titre n'est plus celui de la maquette");
+            Assert.AreEqual("forensic.bloc.le_train_de_vie_de_nom", DossierCalculs.CleDuTitreNomme);
+            Assert.AreEqual(MafiaCleanCity.I18n.Libelle.CleDe("forensic", "bloc", "le train de vie de {nom}"), DossierCalculs.CleDuTitreNomme,
+                "la clé écrite est celle que `Slug` dérive du littéral (rôle `bloc`, comme `Lib`) — sinon la dette et la demande à f2 visent une clé jamais interrogée");
+        }
+
+        /// <summary>Q5 : les quatre cas où le titre reste CELUI DE LA MAQUETTE — pas de nom, piste éteinte, bande `quiet` (contrôle négatif), autre piste.</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7Q5b_SansNom_PisteEteinte_BandeCalme_AutrePiste_LeTitreResteCeluiDeLaMaquette()
+        {
+            DossierCalculs.Piste vive = PisteTrainDeVie(true);
+            string maquette = TitreDeMaquette(vive);
+            Assert.AreEqual(maquette, ForensicScreenController.TitreAffiche(vive, CorpsNomme("watched", null)), "clé absente du back ⇒ comportement d'avant");
+            Assert.AreEqual(maquette, ForensicScreenController.TitreAffiche(vive, CorpsNomme("watched", "  ")), "nom blanc ⇒ pas de nom");
+            Assert.AreEqual(maquette, ForensicScreenController.TitreAffiche(PisteTrainDeVie(false), CorpsNomme("watched", "Lt. Marrek")), "une piste ÉTEINTE ne nomme personne");
+            Assert.AreEqual(maquette, ForensicScreenController.TitreAffiche(vive, CorpsNomme("quiet", "Lt. Marrek")), "bande `quiet` : personne à nommer");
+            Assert.AreEqual(maquette, ForensicScreenController.TitreAffiche(vive, null), "corps absent");
+            var audit = new DossierCalculs.Piste("audit_risk_bucket", "la comptabilité", true, "clean", "watched", "flagged", "audited");
+            Assert.AreEqual(TitreDeMaquette(audit), ForensicScreenController.TitreAffiche(audit, CorpsNomme("watched", "Lt. Marrek")), "le nom ne perce que la piste du train de vie");
+        }
+
+        /// <summary>Q5 : le corps se lit (clé additive, `JsonUtility`), et son ABSENCE donne null.</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7Q5c_LaCleAdditive_SeLit_EtSonAbsenceDonneNull()
+        {
+            var avec = JsonUtility.FromJson<GetForensicEnvelope>("{\"payload\":{\"data\":{\"audit_risk_bucket\":\"clean\",\"effluent_visibility_bucket\":\"clear\",\"lifestyle_alarm_bucket\":\"watched\",\"lifestyle_lieutenant_name\":\"Lt. Marrek\"}}}");
+            Assert.AreEqual("Lt. Marrek", avec.payload.data.lifestyle_lieutenant_name);
+            var sans = JsonUtility.FromJson<GetForensicEnvelope>("{\"payload\":{\"data\":{\"audit_risk_bucket\":\"clean\",\"effluent_visibility_bucket\":\"clear\",\"lifestyle_alarm_bucket\":\"quiet\"}}}");
+            Assert.IsNull(sans.payload.data.lifestyle_lieutenant_name);
+        }
+
+        /// <summary>Q5, RENDU : aujourd'hui la piste du train de vie est une constante ÉTEINTE (TD-881) — même avec un nom servi, l'écran garde le titre de la maquette.</summary>
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7Q5d_PisteConstanteEteinte_LEcranNeNommePersonne()
+        {
+            ForensicScreenController ecran = MonterEcran();
+            ecran.RendrePourTest(CorpsNomme("watched", "Lt. Marrek"), RosterDe4());
+            yield return null; yield return null;
+            string titre = Nu(Texte("Elast/Contenu/Pistes/Piste2/Titre"));
+            StringAssert.DoesNotContain("Marrek", titre);
+            Assert.AreEqual(Nu(TitreDeMaquette(DossierCalculs.Pistes[2])), titre, "le titre de la maquette, rendu tel quel");
+        }
+
         // MÉTIER ICI — ajouter ici les tests de PARCOURS (signup → session/open → la route) et
         // les tests d'état (AppliquerEtat sur un corps fabriqué via RendrePourTest), patron ㊲
         // §§ 1/3/5 de ReputationScreenPlayModeTests.

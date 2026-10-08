@@ -20,6 +20,10 @@ namespace MafiaCleanCity.Operational
         public string audit_risk_bucket;
         public string effluent_visibility_bucket;
         public string lifestyle_alarm_bucket;
+        /// <summary>Q5 — le NOM du lieutenant visé par la piste du train de vie (`Lt. Nom`), ADDITIF, décision f2 08/10 (option B : servi seulement si UNE ligne
+        /// porte les trois maxima, sinon null). ABSENT de la pile tant que le back ne l'a pas codé (dette de fin de tranche) : null ⇒ le libellé de la
+        /// maquette, inchangé. Jamais un identifiant ni un scalaire (mur P5).</summary>
+        public string lifestyle_lieutenant_name;
     }
 
     /// <summary>Une ligne de `GET /v1/me/internal-affairs/actors` (`ActorSummary`, `ia-projection.service.ts`, mesuré @accc9605) : TROIS
