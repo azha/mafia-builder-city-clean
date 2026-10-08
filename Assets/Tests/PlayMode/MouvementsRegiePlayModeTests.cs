@@ -119,6 +119,41 @@ namespace MafiaCleanCity.Mouvements.Tests
         }
 
         [Test]
+        public void E0_RetourDAppui_JamaisRefuse_QuotaNonAmbiancePlein()
+        {
+            // Revue ⊥ du §17, B1 — « le retour d'appui n'est JAMAIS celui qu'on refuse », MÊME quand le quota non-Ambiance est plein
+            // (7 pistes tenues du chrome + 7 de ⑮ + shell + bandeau) ET le plafond Melange atteint. Une place lui est réservée.
+            Entree m = MelangeDe("t.melange.q", Genre.Alerte);
+            Entree a = Constante("t.alerte.q", Genre.Alerte, Propriete.Alpha, Mode.Multiplicatif, 0.9f);
+            for (int i = 0; i < MouvementTunables.PistesMelangeMax; i++)
+                Assert.IsFalse(regie.Attacher(m, Img("mq" + i, Color.white).rectTransform, Reglage.Defaut).EstNul);
+            int ordinaires = MouvementTunables.QuotaAlerteRetourTransition - MouvementTunables.PlacesReserveesRetourAppui;
+            for (int i = MouvementTunables.PistesMelangeMax; i < ordinaires; i++)
+                Assert.IsFalse(regie.Attacher(a, Rect("aq" + i), Reglage.Defaut).EstNul);
+            Assert.IsTrue(regie.Attacher(a, Rect("aq-de-trop"), Reglage.Defaut).EstNul, "une Alerte ordinaire de plus est refusée : le quota est plein");
+            int refusAvant = regie.Refus;
+
+            var defAppui = new MouvementDefini("t.appui.q", Genre.Retour, 0.09f,
+                new[] { new Canal(Propriete.Melange, Mode.Absolu, new[] { AidesMouvement.K(0f, 0f), AidesMouvement.K(1f, 1f) }) },
+                Iteration.Fois(1), couleurA: CouleurSpec.Cible, couleurB: CouleurSpec.CibleFois(0.85f));
+            Entree appui = Admise(AidesMouvement.Faire("t.appui.q", defAppui));
+            var defVoile = new MouvementDefini("t.voile.q", Genre.Retour, 0.09f,
+                new[] { new Canal(Propriete.Alpha, Mode.Multiplicatif, new[] { AidesMouvement.K(0f, 1f), AidesMouvement.K(1f, 0.8f) }) },
+                Iteration.Fois(1));
+            Entree voile = Admise(AidesMouvement.Faire("t.voile.q", defVoile));
+            Image bouton = Img("bouton.q", Color.white);
+            Handle h = regie.AttacherRetourAppui(appui, bouton.rectTransform, voile, bouton.rectTransform);
+            Assert.IsFalse(h.EstNul, "quota plein ET plafond Melange plein : le retour d'appui s'affiche quand même (place réservée)");
+            Assert.AreEqual(refusAvant, regie.Refus, "aucun refus");
+            Assert.AreEqual(1, regie.BasculesVoile, "par le voile, la bascule comptée APRÈS le handle");
+
+            // contrôle négatif : par le chemin ordinaire `Attacher`, le même appui est refusé (la réserve n'est qu'à AttacherRetourAppui)
+            regie.Detacher(h);
+            Assert.IsTrue(regie.Attacher(voile, Img("bouton.q2", Color.white).rectTransform, Reglage.Defaut).EstNul,
+                "hors AttacherRetourAppui, pas de réserve");
+        }
+
+        [Test]
         public void E0_MelangeSurAmbiance_Refuse()
         {
             // E0 (décision f2, 08/10) — « Melange interdit aux Ambiance » : la matière qui vit toute seule passe par l'Alpha.
@@ -148,10 +183,10 @@ namespace MafiaCleanCity.Mouvements.Tests
             Assert.AreEqual(32, regie.PistesVivantes);
 
             Assert.IsFalse(regie.Attacher(alerte, Rect("al1"), Reglage.Defaut).EstNul, "une Alerte est encore acceptée : son quota est réservé");
-            for (int i = 2; i <= 16; i++)
+            for (int i = 2; i <= 15; i++)
                 Assert.IsFalse(regie.Attacher(alerte, Rect("al" + i), Reglage.Defaut).EstNul, "Alerte n° " + i);
-            Assert.AreEqual(48, regie.PistesVivantes, "32 + 16 : le plafond");
-            Assert.IsTrue(regie.Attacher(alerte, Rect("al17"), Reglage.Defaut).EstNul, "la 17e Alerte/Retour/Transition est refusée");
+            Assert.AreEqual(47, regie.PistesVivantes, "32 + 15 : la 16e place non-Ambiance est RÉSERVÉE au retour d'appui (§17, B1)");
+            Assert.IsTrue(regie.Attacher(alerte, Rect("al16"), Reglage.Defaut).EstNul, "la 16e Alerte/Retour/Transition ordinaire est refusée");
             Assert.AreEqual(2, regie.Refus);
         }
 
@@ -926,7 +961,9 @@ namespace MafiaCleanCity.Mouvements.Tests
                     new Canal(Propriete.Alpha, Mode.Multiplicatif, new[] { AidesMouvement.K(0f, 0f), AidesMouvement.K(1f, 1f) }),
                 }, Iteration.Fois(1));
             Entree main = Admise(AidesMouvement.Faire("t.main", trois));
-            for (int i = 0; i < 16; i++) Assert.IsFalse(regie.Attacher(main, Rect("m" + i), Reglage.AvecPhase(i * 0.045f)).EstNul);
+            // 15 = le quota non-Ambiance ORDINAIRE (une place est réservée au retour d'appui, revue ⊥ du §17)
+            int ordinaires = MouvementTunables.QuotaAlerteRetourTransition - MouvementTunables.PlacesReserveesRetourAppui;
+            for (int i = 0; i < ordinaires; i++) Assert.IsFalse(regie.Attacher(main, Rect("m" + i), Reglage.AvecPhase(i * 0.045f)).EstNul);
             Assert.DoesNotThrow(() => { regie.Tick(0f); regie.Tick(0.05f); regie.Tick(1f); });
             Assert.AreEqual(0, regie.Refus);
         }

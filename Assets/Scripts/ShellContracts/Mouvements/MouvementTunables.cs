@@ -15,6 +15,9 @@ namespace MafiaCleanCity.Mouvements
         public const int QuotaAmbiance = 32;
         /// <summary>Quota réservé aux `Alerte` / `Retour` / `Transition`.</summary>
         public const int QuotaAlerteRetourTransition = 16;
+        /// <summary>Places non-`Ambiance` RÉSERVÉES au retour d'appui (`Regie.AttacherRetourAppui`) : les autres genres s'arrêtent à
+        /// `QuotaAlerteRetourTransition − PlacesReserveesRetourAppui` (revue ⊥ du §17, B1 : le retour d'appui n'est jamais refusé).</summary>
+        public const int PlacesReserveesRetourAppui = 1;
         /// <summary>E0 (créneau du 08/10, décision f2) : au plus 10 pistes vivantes portant un canal `Melange` dans tout le client
         /// (pire cas compté : 2 virages TENUS du chrome + 6 voyants de ⑮ + 1 retour d'appui = 9, plus une marge ; 8 était trop bas).
         /// Mesuré : animer `Graphic.color` reconstruit les lots du canvas, ≈ 100 fois le coût de mise à jour d'un

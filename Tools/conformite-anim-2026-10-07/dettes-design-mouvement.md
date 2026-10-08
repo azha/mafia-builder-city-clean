@@ -26,3 +26,10 @@ Le design ne tranchait pas ces points ; E1 a choisi, les tests épinglent le cho
 17. ✅ **FERMÉE (f2, 08/10)** — chrome sous `Reduit` : le pouls se fige à **α 0,72** (pose 0,1638 s sur la courbe `ease`), « en alerte » sans être éteint. Ni le creux 0,45 (immobile et sombre se lit « rien ne se passe »), ni la crête 1 (le repos : G3). Constante `PoulsPoseReduitS` dans `CatalogueHud.cs`.
 18. **Design §1** : « à p = 0,125, 0,914 pour 0,775 » se lit `SmoothStep` 0,914 contre `ease` 0,7753 (oracle 0,775319) ; les tests exigent 0,7753.
 19. **`.meta`** des 17 fichiers et du dossier `Mouvements/` créés à la main (format minimal du dépôt, GUID neufs) pour qu'aucun arbre n'en génère d'autres à l'import.
+
+## Revue ⊥ ciblée du §17 (08/10) — ce que E2 doit porter
+
+20. **Cas 5 déclarés** (aucun `Graphic` qui peint, aucun parent admissible) : `CityMapController.cs:894` (cellule de quartier) et `DistrictInteriorScreenController.cs:2128` (`Tete_OuvrirFiche`). E2 leur nomme une `surface` (un calque qui peint) ou les inscrit comme exclusions de G9 avec leur raison ; sinon G9 rougit par construction.
+21. **Garde de source à écrire en E2** (revue du §17, M1) : aucun `Attacher(` sur `retour.appui` / `retour.appui-voile` hors `Regie.AttacherRetourAppui` — c'est elle qui porte la place réservée et la bascule ; le chemin `Attacher` ordinaire n'a pas la réserve (test `E0_RetourDAppui_JamaisRefuse_QuotaNonAmbiancePlein`, contrôle négatif).
+22. **20 sites `Button` non classés** par la revue (leur `targetGraphic` n'a pas été lu) : le relevé de G9 au créneau E2 les classe ; `AppShell.cs:2349` (voisin d'un `invisible.a = 0f`) est candidat cas 3.
+23. `AttacherRetourAppui` impose `Reglage.Defaut` et n'offre pas de `quandFini` : le retour se détache au relâchement par `Detacher` (design §8), jamais par une fin d'animation.

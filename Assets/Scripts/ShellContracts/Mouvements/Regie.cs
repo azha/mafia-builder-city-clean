@@ -92,10 +92,13 @@ namespace MafiaCleanCity.Mouvements
             if (melange && !PlaceMelangeLibre && voile != null && cibleVoile != null)
             {
                 if (voile.Genre != Genre.Retour) throw new ArgumentException("le voile est un Retour", nameof(voile));
-                BasculesVoile++;
-                return Attacher(voile, cibleVoile, Reglage.Defaut);
+                VerifierAdmise(voile);
+                Handle hv = Creer(voile, cibleVoile, Reglage.Defaut, false, 0f, 0f, null, true);
+                if (!hv.EstNul) BasculesVoile++;   // compté APRÈS un handle non nul (revue ⊥ du §17, B1)
+                return hv;
             }
-            return Attacher(appui, surface, Reglage.Defaut);
+            VerifierAdmise(appui);
+            return Creer(appui, surface, Reglage.Defaut, false, 0f, 0f, null, true);
         }
         /// <summary>Les `Attacher` faits sans régie (hôte nu) : le compteur est statique, `Courante` étant nul alors.</summary>
         public int SansRegie => RegieMouvement.SansRegie;
@@ -124,7 +127,7 @@ namespace MafiaCleanCity.Mouvements
         public Handle Attacher(Entree e, RectTransform cible, Reglage r, Action<Handle> quandFini = null)
         {
             VerifierAdmise(e);
-            return Creer(e, cible, r, false, 0f, 0f, quandFini);
+            return Creer(e, cible, r, false, 0f, 0f, quandFini, false);
         }
 
         /// <summary>Un passage d'une valeur du propriétaire à une autre, sur UN canal `Absolu` dont les images clés sont la
@@ -136,7 +139,7 @@ namespace MafiaCleanCity.Mouvements
             Canal[] cs = e.Mouvement.Canaux;
             if (cs.Length != 1 || cs[0].M != Mode.Absolu)
                 throw new ArgumentException("Transitionner exige UN canal Absolu : " + e.Id);
-            return Creer(e, cible, Reglage.Defaut, true, de, vers, quandFini);
+            return Creer(e, cible, Reglage.Defaut, true, de, vers, quandFini, false);
         }
 
         /// <summary>Le PROPRIÉTAIRE vient de réécrire `p` sur `cible` : la base devient la valeur courante.</summary>
@@ -468,7 +471,7 @@ namespace MafiaCleanCity.Mouvements
             return null;
         }
 
-        private Handle Creer(Entree e, RectTransform cible, Reglage r, bool transition, float de, float vers, Action<Handle> quandFini)
+        private Handle Creer(Entree e, RectTransform cible, Reglage r, bool transition, float de, float vers, Action<Handle> quandFini, bool retourAppui)
         {
             if (cible == null) throw new ArgumentNullException(nameof(cible));
             MouvementDefini m = e.Mouvement;
@@ -482,10 +485,14 @@ namespace MafiaCleanCity.Mouvements
 
             // §4 quotas réservés : 32 Ambiance / 16 Alerte-Retour-Transition
             bool amb = e.Genre == Genre.Ambiance;
-            if (amb ? nAmbiance >= MouvementTunables.QuotaAmbiance : nAutres >= MouvementTunables.QuotaAlerteRetourTransition)
+            // ⛔ RÈGLE DE CLASSE (revue ⊥ du §17, B1) : UNE place non-`Ambiance` est RÉSERVÉE au retour d'appui. Les autres
+            //    Alerte/Retour/Transition s'arrêtent à 15 ; le retour d'appui passé par `AttacherRetourAppui` peut prendre la 16ᵉ.
+            //    Sans cette réserve, 7 pistes tenues du chrome + 7 de ⑮ + shell + bandeau = 16 refusaient l'appui du joueur.
+            int plafondAutres = MouvementTunables.QuotaAlerteRetourTransition - (retourAppui ? 0 : MouvementTunables.PlacesReserveesRetourAppui);
+            if (amb ? nAmbiance >= MouvementTunables.QuotaAmbiance : nAutres >= plafondAutres)
                 return Refuser(e, "quota " + (amb ? "Ambiance" : "Alerte/Retour/Transition") + " atteint");
 
-            // E0 (décision f2, 08/10) : `Melange` interdit aux `Ambiance`, et au plus 8 pistes `Melange` vivantes à la fois.
+            // E0 (décision f2, 08/10) : `Melange` interdit aux `Ambiance`, et au plus 10 pistes `Melange` vivantes à la fois.
             bool melange = false;
             for (int ci = 0; ci < m.Canaux.Length; ci++) if (m.Canaux[ci].P == Propriete.Melange) melange = true;
             if (melange && amb) { RefusMelange++; return Refuser(e, "Melange interdit aux Ambiance (E0 : l'Alpha d'abord)"); }
