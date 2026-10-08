@@ -1,0 +1,5 @@
+# Planches par écran — 08/10 soir, recapture de CLIENT-2 APRÈS correction des juges r1 (㊴ et ensemble)
+
+Harnais `PlanchesParEcran` (catégorie `ClichePlanchesParEcran`, **5/5 verts**, VERDICT 0), compte NEUF sur la pile dev, 1080×2400 et 1080×1920, tête = `lot/mots-client-2026-10-08` (9728e244 + dette ZeroRepli nettoyée). Verdicts : `Tools/preuves/creneau-2026-10-08h/VERDICTS.txt`. `journal.tsv` : l'état de chaque planche (E12 ㊴ : corps FABRIQUÉS, non servis).
+Corrections visibles : ㊴ (fenêtre défilante, « ça se voit », emphase du vide) · A01 (raison entière) · bandeau de titre de E03/E04/E05 (au-dessus du décor) · E08 ⑭ (jauge de TENSION, corps défilant) · E09 ⑮ (dépôt = fiche crème) · E03 ㉚ (bon lisible) · E11 ⑤ (carte portrait, cachet, jeton moleté).
+À savoir : E04 est « aucun relais » (pas une erreur) — voir le correctif F2 du créneau suivant ; E08 ⑭ à 1920 : le corps défile (fondu + ascenseur) ; le geste « laisser sur le zinc » (E11) et la voix de Wexler (E07) sont des écarts ASSUMÉS (f2). Dossier `…-client2-mots` = planches AVANT correction ; `…-soir` = CLIENT-1.

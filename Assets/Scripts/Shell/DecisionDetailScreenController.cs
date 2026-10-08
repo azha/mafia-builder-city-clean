@@ -101,6 +101,15 @@ namespace MafiaCleanCity.Shell
 
         private RectTransform pipsPortee, pipsUrgence;
         private TextMeshProUGUI porteeLibelle, urgenceLibelle, sabotTexte;
+        private RectTransform pile;
+        private ListeDefilante listeDefilante;
+        private PileDeDecision pileDeDecision;
+        /// <summary>La FENÊTRE défilante de la pile (`ListeDefilante`) — lue par les gardes (le contenu qui dépasse défile, il n'est ni tranché ni imprimé sur le reste).</summary>
+        public ListeDefilante FenetreDefilante => listeDefilante;
+        /// <summary>Le calcul de la pile : hauteur préférée, fenêtre, haut du feutre (gardes).</summary>
+        public PileDeDecision LaPile => pileDeDecision;
+        /// <summary>La carte (portrait, `.carte-or`) — lue par les gardes de géométrie.</summary>
+        public RectTransform CarteRect => carteRoot;
 
         /// <summary>⑤ l'état SABOT — classe « moment en dur » (f2 26/09, table 78) : le moment suit day_phase SERVI (PhaseDeSession).</summary>
         public static string PhraseDuSabot() =>
@@ -225,7 +234,7 @@ namespace MafiaCleanCity.Shell
         private static void Cerner(Transform parent, string nom, int rayon, float epaisseur, Color couleur, float retrait)
         {
             if (parent.Find(nom) != null) return;
-            GameObject go = new GameObject(nom, typeof(RectTransform));
+            GameObject go = new GameObject(nom, typeof(RectTransform), typeof(CanvasRenderer));
             go.transform.SetParent(parent, false);
             go.transform.SetAsFirstSibling();
             go.AddComponent<LayoutElement>().ignoreLayout = true;
@@ -330,22 +339,59 @@ namespace MafiaCleanCity.Shell
             // `Decor/Capteur` (raycast) AVALE les clics — sans ça, un doigt qui tombe entre deux éléments actionne l'écran de dessous.
             DecorPose decor = DecorDeScene.Poser(transform, DecorsDeScene.DecisionDetail);
 
-            VerticalLayoutGroup vlg = gameObject.AddComponent<VerticalLayoutGroup>();
+            // ⛔ F12 — LE FEUTRE SUIT LE CONTENU, il n'est pas ancré à une FRACTION de l'écran (la classe de ㊴ : une hauteur posée par `Bande` = 34 % laissait les deux tiers du
+            // feutre vides, et à 1920 la pile ne tient pas). La maquette : `.tapis-feutre` ÉPOUSE son contenu (`.panneau{margin-top:auto}`). Trois étages, de dehors en dedans :
+            //   · `Fenetre`  — la fenêtre (RectMask2D + `ListeDefilante`) sous la barre du haut, jusqu'au bas de l'écran ;
+            //   · `Defile`   — le contenu défilant, haut = max(hauteur de la pile, hauteur de la fenêtre) : ce qui dépasse DÉFILE, il n'est ni tranché ni imprimé sur le reste ;
+            //   · `Pile`     — la pile verticale, ancrée EN BAS de `Defile` (`margin-top:auto`), de la hauteur de son contenu — SA HAUTEUR PRÉFÉRÉE, jamais une fraction.
+            // `PileDeDecision` (sur la pile) pose ces hauteurs et ancre le haut du support du décor sur le haut de la pile.
+            GameObject fenetreGo = new GameObject("Fenetre", typeof(RectTransform), typeof(CanvasRenderer));
+            fenetreGo.transform.SetParent(transform, false);
+            RectTransform fenetreRt = (RectTransform)fenetreGo.transform;
+            fenetreRt.anchorMin = Vector2.zero; fenetreRt.anchorMax = Vector2.one;
+            fenetreRt.offsetMin = Vector2.zero; fenetreRt.offsetMax = Vector2.zero;
+            Image recepteur = fenetreGo.AddComponent<Image>();
+            recepteur.color = Color.clear;
+            recepteur.raycastTarget = false;   // `PileDeDecision` ne le rend actif que si le contenu dépasse (un ScrollRect doit recevoir le geste) ; sinon `Decor/Capteur` avale le clic
+            fenetreGo.AddComponent<RectMask2D>();   // la FENÊTRE ; ce qui la dépasse défile (ListeDefilante : fondu + ascenseur)
+
+            GameObject defileGo = new GameObject("Defile", typeof(RectTransform));
+            defileGo.transform.SetParent(fenetreRt, false);
+            RectTransform defileRt = (RectTransform)defileGo.transform;
+            defileRt.anchorMin = new Vector2(0f, 1f); defileRt.anchorMax = Vector2.one; defileRt.pivot = new Vector2(0.5f, 1f);
+            defileRt.offsetMin = Vector2.zero; defileRt.offsetMax = Vector2.zero;
+
+            GameObject pileGo = new GameObject("Pile", typeof(RectTransform));
+            pileGo.transform.SetParent(defileRt, false);
+            pile = (RectTransform)pileGo.transform;
+            pile.anchorMin = Vector2.zero; pile.anchorMax = new Vector2(1f, 0f); pile.pivot = new Vector2(0.5f, 0f);
+            pile.offsetMin = Vector2.zero; pile.offsetMax = Vector2.zero;
+            VerticalLayoutGroup vlg = pileGo.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset((int)Px(10f), (int)Px(10f),
-                                         0,   // le haut : sous la bande de scène (ReserverLaBande, juste dessous)
-                                         (int)ShellChrome.BottomInsetPx + (int)Px(6f));
+                                         (int)Px(10f),   // `.tapis-feutre{padding:10px 12px 12px}` : le haut du feutre est ce retrait au-dessus de la table
+                                         (int)ShellChrome.BottomInsetPx + (int)Px(6f));   // relu à chaque frame par PileDeDecision (le shell publie ses insets après le montage)
             vlg.spacing = Px(8f);
             vlg.childControlWidth = true;
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
             vlg.childAlignment = TextAnchor.LowerCenter;
-            // §5.6 du design : la pile commence SOUS max(barre, bande de scène 34 %) ; alignée en BAS, la table reste sur le feutre.
-            DecorDeScene.ReserverLaBande(vlg, decor, Px(6f));
+            pileDeDecision = pileGo.AddComponent<PileDeDecision>();
+            pileDeDecision.Lier(fenetreRt, defileRt, vlg, decor, recepteur, Px(6f));
+            // le fondu de fin de course se fond dans le BAS du feutre : le dernier arrêt du radial du catalogue (jamais une recopie)
+            Color fondDuBas = DecorsDeScene.DecisionDetail.Support.Couches[0].Arrets[2].Couleur.Resoudre();
+            fondDuBas.a = 1f;
+            listeDefilante = ListeDefilante.Equiper(fenetreRt, defileRt, fondDuBas);
 
             // ── la table de jeu : la carte + le jeton structurel, côte à côte ────────────────
-            GameObject table = Bloc("TableDeJeu", transform, horizontal: true, espace: Px(8f));
-            table.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.LowerLeft;
+            // `.tapis-feutre .table{display:flex;align-items:flex-end;justify-content:center;gap:14px;padding:4px 0 0}` : centrée, chacun à SA largeur.
+            GameObject table = Bloc("TableDeJeu", pile, horizontal: true, espace: Px(14f));
+            HorizontalLayoutGroup th = table.GetComponent<HorizontalLayoutGroup>();
+            th.childAlignment = TextAnchor.LowerCenter;
+            th.childForceExpandWidth = false;
+            th.padding = new RectOffset(0, 0, (int)Px(4f), 0);
+            // ⛔ un groupe horizontal dans une pile verticale rend son `flexibleHeight` à la pile (la carte, dont le titre est élastique, lui en donnerait un) : 0 l'emporte.
+            table.AddComponent<LayoutElement>().flexibleHeight = 0f;
 
             GameObject carte = Bloc("CarteDuJour", table.transform, horizontal: false, espace: Px(4f));
             carteRoot = (RectTransform)carte.transform;
@@ -375,7 +421,13 @@ namespace MafiaCleanCity.Shell
             Cerner(carte.transform, "FiletCarte", (int)Px(11f), Px(1f), Rouge, Px(3f));
             VerticalLayoutGroup cv = carte.GetComponent<VerticalLayoutGroup>();
             cv.padding = new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(12f));
-            carte.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            // ⛔ F13 (a) — LA CARTE EST UN PORTRAIT : `.carte-or{width:176px;min-height:212px}`. Elle prenait toute la largeur que le jeton lui laissait
+            // (`flexibleWidth = 1` : 702×330, paysage) ; sa largeur est la sienne (176 CSS), sa hauteur un PLANCHER (212 CSS) que son contenu peut dépasser.
+            LayoutElement carteLe = carte.AddComponent<LayoutElement>();
+            carteLe.minWidth = Px(176f);
+            carteLe.preferredWidth = Px(176f);
+            carteLe.flexibleWidth = 0f;
+            carteLe.minHeight = Px(212f);
 
             GameObject coin = Bloc("Coin", carte.transform, horizontal: true, espace: Px(4f));
             coin.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
@@ -383,35 +435,69 @@ namespace MafiaCleanCity.Shell
             coinLibelle = PetitesCapitales(Texte(coin.transform, "Nature", "tactique", Px(7.5f), Rouge,
                                 DesignTokens.Current.primaryFont));
 
+            // Le kicker tient dans les 152 CSS de la carte PORTRAIT : `.carte-jour .kicker{font-size:6.5px;letter-spacing:.14em;text-align:center}` (série 4 — la série 6 n'a pas de kicker dans la
+            // carte). À 7,5 CSS et aligné à gauche il faisait ≈ 172 CSS et sortait de la carte ; il se CENTRE, et passe à la ligne s'il ne tient pas plutôt que de déborder.
             TextMeshProUGUI kicker = Texte(carte.transform, "Kicker", "CE QUI PÈSE LE PLUS AUJOURD'HUI",
-                                           Px(7.5f), Rouge, DesignTokens.Current.primaryFont);
+                                           Px(6.5f), Rouge, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             kicker.characterSpacing = 14f;
+            kicker.enableWordWrapping = true;
+            kicker.GetComponent<LayoutElement>().preferredWidth = 0f;
 
+            // F13 (e) — `.carte-or .titre{text-align:center;font-weight:700;margin:auto 2px;padding:24px 0 8px}` : en GRAS, centré dans ce que le plancher de la carte laisse (`margin:auto` ⇒
+            // la boîte du titre est ÉLASTIQUE, son texte au milieu), jamais collé en haut.
             titre = Texte(carte.transform, "Titre", "", Px(15f), Encre,
-                          DesignTokens.Current.hudSerifFont);
+                          DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             titre.enableWordWrapping = true;
-            titre.GetComponent<LayoutElement>().preferredWidth = 0f;
+            titre.fontStyle |= FontStyles.Bold;
+            titre.margin = new Vector4(Px(2f), Px(24f), Px(2f), Px(8f));
+            LayoutElement titreLe = titre.GetComponent<LayoutElement>();
+            titreLe.preferredWidth = 0f;
+            titreLe.flexibleHeight = 1f;
 
-            pipsPortee = BandeDePips(carte.transform, "Portée", out porteeLibelle);
-            pipsUrgence = BandeDePips(carte.transform, "Urgence", out urgenceLibelle);
+            // F13 (b) — `.bandes{display:flex;justify-content:space-between;border-top:1px solid #93402c44;padding-top:7px}` : PORTÉE et URGENCE sont deux COLONNES (libellé, pips, valeur
+            // empilés) écartées aux deux bords ; le filet haut est POSÉ par `Filets` (recette mesurée, sur la matière connue de la carte), jamais un Image à la main.
+            GameObject bandes = Bloc("Bandes", carte.transform, horizontal: true, espace: 0f);
+            HorizontalLayoutGroup bh = bandes.GetComponent<HorizontalLayoutGroup>();
+            bh.childForceExpandWidth = false;
+            bh.childAlignment = TextAnchor.UpperCenter;
+            bh.padding = new RectOffset(0, 0, (int)Px(7f), 0);
+            bandes.AddComponent<LayoutElement>().flexibleHeight = 0f;
+            pipsPortee = BandeDePips(bandes.transform, "Portée", out porteeLibelle);
+            GameObject ressort = new GameObject("Ressort", typeof(RectTransform));   // `justify-content:space-between`
+            ressort.transform.SetParent(bandes.transform, false);
+            LayoutElement ressortLe = ressort.AddComponent<LayoutElement>();
+            ressortLe.preferredWidth = 0f;
+            ressortLe.flexibleWidth = 1f;
+            pipsUrgence = BandeDePips(bandes.transform, "Urgence", out urgenceLibelle);
+            Filets.Poser((RectTransform)bandes.transform, DecorsDeScene.Filets.DecisionDetail.Bandes, MatiereDeLaCarte);
+
+            // F13 (c) — LE CACHET DE CIRE, posé EN DERNIER (il recouvre le coin haut-droit de la carte, à cheval sur son bord).
+            PoserLeCachetDeCire(carte.transform);
 
             // ── le jeton structurel ──────────────────────────────────────────────────────────
             GameObject colonne = Bloc("JetonStruct", table.transform, horizontal: false, espace: Px(1f));
             colonne.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             colonne.GetComponent<VerticalLayoutGroup>().childForceExpandWidth = false;
             LayoutElement colLe = colonne.AddComponent<LayoutElement>();
-            colLe.preferredWidth = Px(62f);
+            colLe.preferredWidth = Px(64f);   // `.jeton-or{width:64px}`
             colLe.flexibleWidth = 0f;
 
+            // `.jeton-or .piece` : 42 CSS, `radial-gradient(circle at 40% 32%, #f2d9a0, #b08d3e 60%, #7a5a14)`, `border:2px dashed #fff6` (la TRANCHE MOLETÉE : l'alternance
+            // tiret / vide qui crante le bord, F13 (d)), `inset 0 0 0 3px #b08d3e`, `0 6px 10px #000c`. Le conteneur ne dessine rien : ombre, pièce, chiffre sont ses enfants.
             GameObject jeton = new GameObject("Jeton", typeof(RectTransform));
             jeton.transform.SetParent(colonne.transform, false);
-            jeton.AddComponent<Image>().sprite =
-                ProceduralUI.RadialDisc((int)Px(40f), Hex("#f2d9a0"), Hex("#7a5a14"));
             LayoutElement jl = jeton.AddComponent<LayoutElement>();
-            jl.preferredWidth = Px(40f);
-            jl.preferredHeight = Px(40f);
+            jl.preferredWidth = Px(42f);
+            jl.preferredHeight = Px(42f);
             jl.flexibleWidth = 0f;
-            jetonChiffre = Texte(jeton.transform, "Chiffre", "1", Px(13f), Hex("#3a2a12"),
+            jl.flexibleHeight = 0f;
+            PoserUneOmbre(jeton.transform, 42f, 10f, 6f);
+            Image piece = NouvelleImage("Piece", jeton.transform);
+            piece.sprite = ProceduralUI.DisqueMolete((int)Px(42f), new Vector2(0.40f, 0.32f),
+                new[] { (0f, Hex("#f2d9a0")), (0.60f, DesignTokens.Current.hudHairlineGold), (1f, Hex("#7a5a14")) },
+                Px(3f), DesignTokens.Current.hudHairlineGold, Px(2f), Px(10f), 0.6f, Color.white, 0.4f);
+            Etirer((RectTransform)piece.transform);
+            jetonChiffre = Texte(jeton.transform, "Chiffre", "1", Px(14f), Hex("#3a2a12"),
                                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center, true);
             jetonEtat = PetitesCapitales(Texte(colonne.transform, "Etat", "libre", Px(7.5f), OrVif,
                               DesignTokens.Current.primaryFont, TextAlignmentOptions.Center));
@@ -420,7 +506,7 @@ namespace MafiaCleanCity.Shell
                 .enableWordWrapping = true;
 
             // ── l'état SABOT : aucune carte ne se détache ────────────────────────────────────
-            sabotTexte = Texte(transform, "Sabot",
+            sabotTexte = Texte(pile, "Sabot",
                                PhraseDuSabot(), Px(11f), Creme2,
                                DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             sabotTexte.gameObject.SetActive(false);
@@ -428,7 +514,7 @@ namespace MafiaCleanCity.Shell
             // F19 — la légende est en ITALIQUE dans le canon (« Tactique — trancher ne touche
             // pas… »), le jeu la rendait en romain. Vérifié sur la référence, pas déduit du
             // rapport.
-            noteZinc = Texte(transform, "NoteZinc", "", Px(8f), Creme2,
+            noteZinc = Texte(pile, "NoteZinc", "", Px(8f), Creme2,
                              DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             noteZinc.enableWordWrapping = true;
             noteZinc.fontStyle |= FontStyles.Italic;   // F19 — le canon la met en italique
@@ -436,7 +522,7 @@ namespace MafiaCleanCity.Shell
             // ── « laisser sur le zinc » (skip) RETIRÉ — f2 08/10 nuit, option (c) : un geste MORT (voir l'en-tête). ──────────
             // ── le tampon = commit, à APPUI LONG. Même geste que le tampon de la Revue : ce qui
             //    est irréversible ne se déclenche pas d'un doigt distrait. ──────────────────────
-            tampon = Bloc("Tampon", transform, horizontal: false, espace: Px(2f));
+            tampon = Bloc("Tampon", pile, horizontal: false, espace: Px(2f));
             tampon.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             tampon.GetComponent<VerticalLayoutGroup>().padding =
                 new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(10f));
@@ -459,18 +545,85 @@ namespace MafiaCleanCity.Shell
             BoutonLire.OnLongPressCompleted += () => StartCoroutine(Commit());
         }
 
+        /// <summary>F13 (c) — LE CACHET DE CIRE (`.carte-or .cachet`, recette `spec-cachet-et-jeton.md`) : 36 CSS, `radial-gradient(circle at 40% 35%, #c9432c, #7a1f12 70%)`, anneau
+        /// `inset 0 0 0 3px #8a2a18` (le bourrelet), ombre `0 3px 8px #000c`, « ♦ » or 13 CSS, `rotate(-12deg)` (CSS : sens horaire positif ⇒ +12° en Unity), `right:-10px;top:-14px` : il
+        /// DÉBORDE du coin haut-droit de la carte — son centre est à 8 CSS DEDANS du bord droit et à 4 CSS SOUS le bord haut. Hors mise en page, enfant de la carte, posé après tout le reste.
+        /// Dégradé et anneau sont des pixels OPAQUES (aucune opacité à convertir pour le mélange linéaire) ; seule l'ombre est translucide (`OmbreNoire`).</summary>
+        private void PoserLeCachetDeCire(Transform carte)
+        {
+            GameObject go = new GameObject("CachetDeCire", typeof(RectTransform));
+            go.transform.SetParent(carte, false);
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.one; rt.anchorMax = Vector2.one; rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(Px(36f), Px(36f));
+            rt.anchoredPosition = new Vector2(-Px(8f), -Px(4f));
+            rt.localRotation = Quaternion.Euler(0f, 0f, 12f);
+            PoserUneOmbre(rt, 36f, 8f, 3f);
+            Image disque = NouvelleImage("Cire", rt);
+            disque.sprite = ProceduralUI.DisqueAFoyer((int)Px(36f), new Vector2(0.40f, 0.35f),
+                new[] { (0f, Hex("#c9432c")), (0.70f, Hex("#7a1f12")) }, Px(3f), Hex("#8a2a18"));
+            Etirer((RectTransform)disque.transform);
+            TextMeshProUGUI losange = Texte(rt, "Glyphe", "♦", Px(13f), OrVif, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center, true);
+            losange.raycastTarget = false;
+        }
+
+        /// <summary>L'ombre `#000c` (noir à 80 %) : l'opacité CSS recopiée donnerait un halo trop LÉGER sur la matière claire de la carte (Unity compose en linéaire) ; le fond sous une ombre
+        /// n'est pas unique (crème de la carte, feutre vert), donc l'ajustement d'opacité pour fond quelconque — jamais le déplacement de couleur, impossible pour un noir.</summary>
+        private static Color OmbreNoire()
+        {
+            Color c = Color.black;
+            c.a = ProceduralUI.AlphaVoileSurFondQuelconque(Color.black, 0.8f, out _);
+            return c;
+        }
+
+        /// <summary>`box-shadow: 0 Ypx Bpx #000c` d'un disque de `diametreCss` : une Image carrée de `diametre + 2·flou` posée au centre de `parent`, décalée vers le BAS. Hors mise en page
+        /// (aucun groupe sur `parent`), posée EN PREMIER pour passer sous le disque.</summary>
+        private static void PoserUneOmbre(Transform parent, float diametreCss, float flouCss, float decalageCss)
+        {
+            int d = (int)Px(diametreCss), f = (int)Px(flouCss);
+            Image ombre = NouvelleImage("Ombre", parent);
+            ombre.sprite = ProceduralUI.OmbreDeDisque(d, f, OmbreNoire());
+            RectTransform rt = (RectTransform)ombre.transform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f); rt.anchorMax = new Vector2(0.5f, 0.5f); rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(d + 2 * f, d + 2 * f);
+            rt.anchoredPosition = new Vector2(0f, -Px(decalageCss));
+            rt.SetAsFirstSibling();
+        }
+
+        /// <summary>Une Image qui NAÎT avec son `CanvasRenderer` (garde du socle : `AddComponent` à l'exécution n'honore pas `[RequireComponent]`), sans raycast.</summary>
+        private static Image NouvelleImage(string nom, Transform parent)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform), typeof(CanvasRenderer));
+            go.transform.SetParent(parent, false);
+            Image im = go.AddComponent<Image>();
+            im.raycastTarget = false;
+            return im;
+        }
+
+        private static void Etirer(RectTransform rt)
+        {
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+        }
+
+        /// <summary>Une COLONNE de `.bandes` (`.bande{display:flex;flex-direction:column;align-items:center;gap:2px}`) : le libellé, les trois pips, la valeur — empilés, centrés. Elle
+        /// n'est plus une LIGNE (libellé · pips · valeur côte à côte) : deux colonnes écartées aux deux bords tiennent dans les 152 CSS de la carte.</summary>
         private RectTransform BandeDePips(Transform parent, string nom, out TextMeshProUGUI libelle)
         {
-            GameObject bande = Bloc("Bande" + nom, parent, horizontal: true, espace: Px(6f));
-            bande.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
-            bande.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
-            PetitesCapitales(Texte(bande.transform, "Lib", nom, Px(7.5f), EncreFaible, DesignTokens.Current.primaryFont));
+            GameObject bande = Bloc("Bande" + nom, parent, horizontal: false, espace: Px(2f));
+            VerticalLayoutGroup colonne = bande.GetComponent<VerticalLayoutGroup>();
+            colonne.childForceExpandWidth = false;
+            colonne.childAlignment = TextAnchor.UpperCenter;
+            PetitesCapitales(Texte(bande.transform, "Lib", nom, Px(7.5f), EncreFaible, DesignTokens.Current.primaryFont,
+                                   TextAlignmentOptions.Center));
 
             GameObject pips = Bloc("Pips", bande.transform, horizontal: true, espace: Px(3f));
             pips.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
+            pips.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             for (int i = 0; i < 3; i++)
             {
-                GameObject pip = new GameObject("Pip" + i, typeof(RectTransform));
+                GameObject pip = new GameObject("Pip" + i, typeof(RectTransform), typeof(CanvasRenderer));
                 pip.transform.SetParent(pips.transform, false);
                 pip.AddComponent<Image>().sprite = Disque;
                 LayoutElement pl = pip.AddComponent<LayoutElement>();
@@ -484,7 +637,8 @@ namespace MafiaCleanCity.Shell
             // URGENCE, LIBRE), mais les VALEURS sont en bas de casse (« modérée », « faible »).
             // *Une cause unique ne veut pas dire une population unique* — j'ai failli fermer le
             // finding en en créant un autre, et seule l'image l'a montré.
-            libelle = Texte(bande.transform, "Val", "—", Px(7.5f), Encre, DesignTokens.Current.primaryFont);
+            libelle = Texte(bande.transform, "Val", "—", Px(7.5f), Encre, DesignTokens.Current.primaryFont,
+                            TextAlignmentOptions.Center);
             return (RectTransform)pips.transform;
         }
 
@@ -526,7 +680,7 @@ namespace MafiaCleanCity.Shell
             Color couleur, TMP_FontAsset police,
             TextAlignmentOptions alignement = TextAlignmentOptions.Left, bool etendre = false)
         {
-            GameObject go = new GameObject(nom, typeof(RectTransform));
+            GameObject go = new GameObject(nom, typeof(RectTransform), typeof(CanvasRenderer));
             go.transform.SetParent(parent, false);
             if (etendre)
             {
@@ -543,6 +697,98 @@ namespace MafiaCleanCity.Shell
             t.enableWordWrapping = false;
             go.AddComponent<LayoutElement>();
             return t;
+        }
+    }
+
+    /// <summary>⛔ F12 — LA PILE DE ⑤ ET SON FEUTRE : le support du décor (le tapis de feutre) ÉPOUSE la hauteur du contenu, et ce qui dépasse la fenêtre DÉFILE.
+    ///
+    /// La maquette (`.tapis-feutre` dans `.panneau{margin-top:auto}`) fait suivre le feutre à son contenu ; le client l'ancrait à `Bande` = 34 % de la hauteur — une FRACTION, la classe de ㊴ :
+    /// deux tiers de feutre vides sous une carte rétrécie, et, à 1920, un contenu qui ne tient pas (déficit estimé −274 px) qu'aucune fraction ne rend. Porté par `Pile` (le groupe vertical
+    /// du contenu, ancré EN BAS de `Defile`, `Defile` étant le contenu défilant de `Fenetre`) :
+    ///   · `Pile` vaut sa hauteur PRÉFÉRÉE (jamais écrasée ni étirée) ; `Defile` vaut le plus grand de cette hauteur et de la fenêtre ⇒ si la pile tient, elle repose sur le bas de la fenêtre
+    ///     (`margin-top:auto`) ; sinon `Defile` est plus haut que la fenêtre et le `ScrollRect` de `ListeDefilante` le fait défiler ;
+    ///   · le haut du support = le haut de la pile quand elle tient (`retrait + fenêtre − pile`), le haut de la fenêtre sinon : le feutre couvre ce que la fenêtre montre. Posé par des OFFSETS
+    ///     (ancres 0..1, `offsetMax.y = −haut`), pas par une fraction ;
+    ///   · le retrait du haut (la barre du shell) et la marge du bas (le dock) sont relus à CHAQUE image : le shell publie ses insets APRÈS le montage du locataire.
+    /// Un `ILayoutSelfController` : ses hauteurs se posent DANS la passe de mise en page, après le calcul des hauteurs préférées des enfants (comme `ContentSizeFitter`), pas une image plus tard.</summary>
+    public sealed class PileDeDecision : MonoBehaviour, ILayoutSelfController
+    {
+        private RectTransform fenetre, defile, pile;
+        private LayoutGroup groupe;
+        private DecorPose decor;
+        private Image recepteur;
+        private float margeBas;
+        private float derniereVue = -1f;
+
+        /// <summary>La hauteur préférée de la pile (rembourrage compris), lue à la dernière passe.</summary>
+        public float HauteurPreferee { get; private set; }
+        /// <summary>La hauteur de la fenêtre à la dernière passe.</summary>
+        public float HauteurDeLaFenetre { get; private set; }
+        /// <summary>Le contenu dépasse-t-il la fenêtre (et défile-t-il) ?</summary>
+        public bool Deborde { get; private set; }
+        /// <summary>Le haut du feutre, en unités depuis le HAUT de l'écran.</summary>
+        public float HautDuFeutre { get; private set; }
+
+        internal void Lier(RectTransform fen, RectTransform def, LayoutGroup g, DecorPose d, Image rec, float margeBasUnites)
+        {
+            fenetre = fen; defile = def; pile = (RectTransform)g.transform; groupe = g; decor = d; recepteur = rec; margeBas = margeBasUnites;
+            Redemander();
+        }
+
+        public void SetLayoutHorizontal() { }
+
+        public void SetLayoutVertical() => Dimensionner();
+
+        private void OnEnable() => Redemander();
+
+        private void Redemander()
+        {
+            if (pile != null) LayoutRebuilder.MarkLayoutForRebuild(pile);
+        }
+
+        private void LateUpdate()
+        {
+            if (fenetre == null || groupe == null) return;
+            float retrait = ShellChrome.TopInsetPx;
+            if (!Mathf.Approximately(-fenetre.offsetMax.y, retrait))
+            {
+                fenetre.offsetMax = new Vector2(fenetre.offsetMax.x, -retrait);
+                Redemander();
+            }
+            int bas = Mathf.RoundToInt(ShellChrome.BottomInsetPx + margeBas);
+            if (groupe.padding.bottom != bas)
+            {
+                groupe.padding.bottom = bas;
+                Redemander();
+            }
+            if (!Mathf.Approximately(fenetre.rect.height, derniereVue))
+            {
+                derniereVue = fenetre.rect.height;
+                Redemander();
+            }
+        }
+
+        /// <summary>Pose les hauteurs de `Pile` et `Defile` et le haut du support. Public : un test le rejoue sans attendre une passe de mise en page.</summary>
+        public void Dimensionner()
+        {
+            if (fenetre == null || defile == null || pile == null) return;
+            float pref = LayoutUtility.GetPreferredHeight(pile);
+            float vue = fenetre.rect.height;
+            HauteurPreferee = pref;
+            HauteurDeLaFenetre = vue;
+            Deborde = ListeDefilante.Depasse(pref, vue);
+            defile.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(pref, vue));
+            pile.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, pref);
+            if (recepteur != null) recepteur.raycastTarget = Deborde;
+
+            // le haut du feutre : le retrait de la barre + ce que la fenêtre a de libre au-dessus de la pile (0 quand elle déborde)
+            HautDuFeutre = -fenetre.offsetMax.y + Mathf.Max(0f, vue - pref);
+            RectTransform support = decor != null ? decor.Support : null;
+            if (support != null)
+            {
+                support.anchorMin = Vector2.zero; support.anchorMax = Vector2.one;
+                support.offsetMin = Vector2.zero; support.offsetMax = new Vector2(0f, -HautDuFeutre);
+            }
         }
     }
 }

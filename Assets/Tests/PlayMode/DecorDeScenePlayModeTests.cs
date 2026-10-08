@@ -520,6 +520,9 @@ namespace MafiaCleanCity.Tests.PlayMode
             GameObject dessous = null, ecranGo = null;
             try
             {
+                // ⑤ compte en unités d'un canvas de 1280 de large (1 px CSS = 1280/300 ; le shell : `ScaleWithScreenSize`). Le banc est en pixels constants : sans cette échelle le contenu de ⑤ ferait 2,4× la
+                // largeur du banc, déborderait (F12 : il DÉFILE alors, et la fenêtre reçoit le geste) et la bande de scène en haut ne serait plus vide. À l'échelle du shell, ⑤ tient et le haut est vide.
+                banc.Canvas.GetComponent<CanvasScaler>().scaleFactor = W / 1280f;
                 dessous = new GameObject("EcranDeDessous", typeof(RectTransform), typeof(CanvasRenderer));
                 dessous.transform.SetParent(banc.Racine, false);
                 EtirerPlein((RectTransform)dessous.transform);
@@ -532,6 +535,7 @@ namespace MafiaCleanCity.Tests.PlayMode
                 EtirerPlein((RectTransform)ecranGo.transform);
                 ecranGo.AddComponent<DecisionDetailScreenController>();
                 yield return null;
+                yield return null;   // l'échelle du canvas, puis la mise en page de la pile (`PileDeDecision`) : deux images
                 Canvas.ForceUpdateCanvases();
 
                 Assert.IsNull(ecranGo.GetComponent<Image>(), "plus d'aplat sur le nœud de l'écran : le décor tient le rôle");

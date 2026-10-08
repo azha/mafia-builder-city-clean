@@ -56,6 +56,10 @@ namespace MafiaCleanCity.Shell
             GameObject plaque = new GameObject("Entete", typeof(RectTransform));
             plaque.transform.SetParent(racine, false);
             plaque.transform.SetAsFirstSibling();
+            // F10 (juge d'ensemble r1, 08/10) : « premier enfant » plaçait le bandeau SOUS `Decor` (dessiné avant le support opaque) — sur ㉚ ㉛ ㉘ il était présent et invisible (0 pixel de titre).
+            // Il passe juste APRÈS `Decor` : premier enfant de la PILE (les couches du décor ignorent la mise en page), dessiné par-dessus le support.
+            Transform decor = racine.Find("Decor");
+            if (decor != null) plaque.transform.SetSiblingIndex(decor.GetSiblingIndex() + 1);
             Image fond = plaque.AddComponent<Image>();
             fond.color = p.Plaque;
             fond.raycastTarget = false;

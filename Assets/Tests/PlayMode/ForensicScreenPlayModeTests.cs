@@ -318,28 +318,28 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("01/1", Compteur(0), "pistes chaudes : l'effluent seul est vivant, hors de son premier cran");
             Assert.AreEqual("00", Compteur(1), "franchies : aucune piste vivante au dernier cran");
             Assert.AreEqual("01/4", Compteur(2), "acteurs qui tiennent : 1 `steady` sur 4 servis");
-            Assert.IsTrue(Sous("Elast/Pistes").gameObject.activeSelf && !Sous("Elast/Acteurs").gameObject.activeSelf && !Sous("Elast/Rien").gameObject.activeSelf);
+            Assert.IsTrue(Sous("Elast/Contenu/Pistes").gameObject.activeSelf && !Sous("Elast/Contenu/Acteurs").gameObject.activeSelf && !Sous("Elast/Rien").gameObject.activeSelf);
             Assert.IsTrue(Sous("Pied").gameObject.activeSelf && Sous("Pied/BoutonAcheter").gameObject.activeSelf, "le pied éteint est montré en vue pistes");
 
             Color vide = new Color32(0x2A, 0x36, 0x48, 0xFF);   // `#2a3648`, le cran éteint
             for (int i = 0; i < 3; i++)
             {
-                Assert.AreEqual(4, Sous($"Elast/Pistes/Piste{i}/Crans").childCount, $"piste {i} : quatre crans");
+                Assert.AreEqual(4, Sous($"Elast/Contenu/Pistes/Piste{i}/Crans").childCount, $"piste {i} : quatre crans");
                 int allumes = 0;
-                for (int c = 0; c < 4; c++) if (!Meme(Sous($"Elast/Pistes/Piste{i}/Crans/Cran{c}").GetComponent<Image>().color, vide)) allumes++;
+                for (int c = 0; c < 4; c++) if (!Meme(Sous($"Elast/Contenu/Pistes/Piste{i}/Crans/Cran{c}").GetComponent<Image>().color, vide)) allumes++;
                 if (i == 1)
                 {
                     Assert.AreEqual(3, allumes, "« visible » = le troisième cran : trois crans allumés");
-                    Assert.IsTrue(Meme(Sous("Elast/Pistes/Piste1/Crans/Cran0").GetComponent<Image>().color, DesignTokens.Current.accentWarning), "le cran allumé est l'orange de `visible`");
-                    Assert.IsTrue(Meme(Sous("Elast/Pistes/Piste1/Crans/Cran3").GetComponent<Image>().color, vide), "le plus haut cran reste éteint");
-                    Assert.AreEqual(ForensicResolvers.Phrase("visible"), Texte("Elast/Pistes/Piste1/Mot"));
-                    Assert.AreEqual("visible", Texte("Elast/Pistes/Piste1/Cle"), "la clé servie, brute");
+                    Assert.IsTrue(Meme(Sous("Elast/Contenu/Pistes/Piste1/Crans/Cran0").GetComponent<Image>().color, DesignTokens.Current.accentWarning), "le cran allumé est l'orange de `visible`");
+                    Assert.IsTrue(Meme(Sous("Elast/Contenu/Pistes/Piste1/Crans/Cran3").GetComponent<Image>().color, vide), "le plus haut cran reste éteint");
+                    Assert.AreEqual(ForensicResolvers.Phrase("visible"), Texte("Elast/Contenu/Pistes/Piste1/Mot"));
+                    Assert.AreEqual("visible", Texte("Elast/Contenu/Pistes/Piste1/Cle"), "la clé servie, brute");
                 }
                 else
                 {
                     Assert.AreEqual(0, allumes, $"piste {i} ÉTEINTE : aucun cran coloré");
-                    Assert.AreEqual("—", Texte($"Elast/Pistes/Piste{i}/Mot"));
-                    StringAssert.Contains("table", Texte($"Elast/Pistes/Piste{i}/Cle"), "« pas encore sur la table » à la place de la clé");
+                    Assert.AreEqual("—", Texte($"Elast/Contenu/Pistes/Piste{i}/Mot"));
+                    StringAssert.Contains("table", Texte($"Elast/Contenu/Pistes/Piste{i}/Cle"), "« pas encore sur la table » à la place de la clé");
                 }
             }
             // la 1ʳᵉ fenêtre porte l'or de `.fen.ici` (recette composée) : un nœud `Bas1` doré, ancré en BAS, au-dessus du bord
@@ -365,10 +365,10 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("04", Compteur(0), "acteurs connus : tous les servis, `gone` compris");
             Assert.AreEqual("01", Compteur(1), "qui ont peur : 1 `nervous`");
             Assert.AreEqual("01/1", Compteur(2), "la porte montre le MÊME compte de pistes chaudes que la vue pistes");
-            Assert.IsTrue(!Sous("Elast/Pistes").gameObject.activeSelf && Sous("Elast/Acteurs").gameObject.activeSelf);
+            Assert.IsTrue(!Sous("Elast/Contenu/Pistes").gameObject.activeSelf && Sous("Elast/Contenu/Acteurs").gameObject.activeSelf);
             Assert.IsTrue(Sous("Pied").gameObject.activeSelf && !Sous("Pied/BoutonAcheter").gameObject.activeSelf, "en vue acteurs, le pied n'est que sa note");
 
-            Transform liste = Sous("Elast/Acteurs");
+            Transform liste = Sous("Elast/Contenu/Acteurs");
             Assert.AreEqual(4, liste.childCount, "une ligne par acteur servi");
             var mots = new HashSet<string>();
             string[] statuts = { "steady", "nervous", "unavailable", "gone" };
@@ -404,7 +404,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null; yield return null;
             Assert.AreEqual(VueDossier.Vide, ecran.Vue);
             Assert.AreEqual("00/1", Compteur(0)); Assert.AreEqual("00", Compteur(1)); Assert.AreEqual("00", Compteur(2));
-            Assert.IsTrue(Sous("Elast/Rien").gameObject.activeSelf && !Sous("Elast/Pistes").gameObject.activeSelf && !Sous("Elast/Acteurs").gameObject.activeSelf);
+            Assert.IsTrue(Sous("Elast/Rien").gameObject.activeSelf && !Sous("Elast/Contenu/Pistes").gameObject.activeSelf && !Sous("Elast/Contenu/Acteurs").gameObject.activeSelf);
             Assert.IsFalse(Sous("Pied").gameObject.activeSelf, "135 n'a pas de pied");
             Button porte = Sous("Compteurs/Fenetre2").GetComponent<Button>();
             Assert.IsFalse(porte.interactable, "135 n'a pas de bascule");
@@ -422,7 +422,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("01/1", Compteur(0));
             ecran.Basculer();
             yield return null;
-            Assert.AreEqual("00", Compteur(0)); Assert.AreEqual(0, Sous("Elast/Acteurs").childCount);
+            Assert.AreEqual("00", Compteur(0)); Assert.AreEqual(0, Sous("Elast/Contenu/Acteurs").childCount);
             ecran.Basculer();
 
             // voisin 2 : roster NON servi (route en erreur) ⇒ jamais « vide » : on ne sait pas
@@ -484,7 +484,7 @@ namespace MafiaCleanCity.Operational.Tests
                 Assert.AreEqual(avant, ecran.RequetesEmises, "(b) la bascule est locale : aucune requête");
 
                 // (c) un « renseignement » éteint (vue acteurs)
-                RectTransform rg = (RectTransform)Sous("Elast/Acteurs/Acteur0/Renseignement");
+                RectTransform rg = (RectTransform)Sous("Elast/Contenu/Acteurs/Acteur0/Renseignement");
                 Assert.Greater(rg.rect.width, 0f); Assert.Greater(rg.rect.height, 0f);
                 Assert.IsFalse(AUnGestionnaireDeClic(Toucher(rg)), "(c) le « renseignement » éteint ne doit porter aucun gestionnaire de clic");
                 Assert.AreEqual(avant, ecran.RequetesEmises, "(c) aucune requête");
@@ -658,7 +658,7 @@ namespace MafiaCleanCity.Operational.Tests
                 for (int i = 0; i < 3; i++)
                     for (int c = 0; c < 4; c++)
                     {
-                        Vector2Int px = banc.Pixel((RectTransform)Sous($"Elast/Pistes/Piste{i}/Crans/Cran{c}"), 0.5f, 0.5f);
+                        Vector2Int px = banc.Pixel((RectTransform)Sous($"Elast/Contenu/Pistes/Piste{i}/Crans/Cran{c}"), 0.5f, 0.5f);
                         Color vu = t.GetPixel(px.x, px.y);
                         Color attendu = (i == 1 && c <= 2) ? orange : vide;
                         Assert.LessOrEqual(Ecart(vu, attendu), 8f, $"cran {c} de la piste {i} : pixel {vu} au lieu de {attendu}");
@@ -678,21 +678,21 @@ namespace MafiaCleanCity.Operational.Tests
 
                 // de l'ENCRE là où le texte doit être (des pixels qui DIFFÈRENT du fond : le texte antialiasé n'a presque jamais sa couleur exacte)
                 Color fondElast = DesignTokens.Current.surfaceBase, fondPiste = DesignTokens.Current.lieutenantMedallionOuter;
-                Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/NotePistes"), fondElast), 20, "la note « Les livres et le train de vie… » a de l'encre");
-                Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/Pistes/Piste0/Mot"), fondPiste), 4, "le « — » de la piste éteinte a de l'encre");
-                Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/Pistes/Piste0/Cle"), fondPiste), 10, "« pas encore sur la table » a de l'encre");
+                Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/Contenu/NotePistes"), fondElast), 20, "la note « Les livres et le train de vie… » a de l'encre");
+                Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/Contenu/Pistes/Piste0/Mot"), fondPiste), 4, "le « — » de la piste éteinte a de l'encre");
+                Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/Contenu/Pistes/Piste0/Cle"), fondPiste), 10, "« pas encore sur la table » a de l'encre");
 
                 // (2) la vue acteurs : la ligne « parti » est à 45 %
                 ecran.Basculer();
                 yield return null; yield return null;
                 Object.DestroyImmediate(t); t = banc.Rendre();
-                RectTransform vivante = (RectTransform)Sous("Elast/Acteurs/Acteur0"), parti = (RectTransform)Sous("Elast/Acteurs/Acteur3");
+                RectTransform vivante = (RectTransform)Sous("Elast/Contenu/Acteurs/Acteur0"), parti = (RectTransform)Sous("Elast/Contenu/Acteurs/Acteur3");
                 Color fondVivant = t.GetPixel(banc.Pixel(vivante, 0.02f, 0.5f).x, banc.Pixel(vivante, 0.02f, 0.5f).y);
                 Color fondParti = t.GetPixel(banc.Pixel(parti, 0.02f, 0.5f).x, banc.Pixel(parti, 0.02f, 0.5f).y);
-                Color elast = t.GetPixel(banc.Pixel((RectTransform)Sous("Elast/Acteurs"), 0f, 0.5f).x - 4, banc.Pixel(parti, 0.02f, 0.5f).y);
+                Color elast = t.GetPixel(banc.Pixel((RectTransform)Sous("Elast/Contenu/Acteurs"), 0f, 0.5f).x - 4, banc.Pixel(parti, 0.02f, 0.5f).y);
                 Color attenduFond = Color.Lerp(elast, fondVivant, DossierCalculs.OpaciteDuParti);
                 Assert.LessOrEqual(Ecart(fondParti, attenduFond), 7f, $"le fond de la ligne « parti » : {fondParti} au lieu de {attenduFond} (45 % de {fondVivant} sur {elast})");
-                RectTransform sil = (RectTransform)Sous("Elast/Acteurs/Acteur3/Silhouette");
+                RectTransform sil = (RectTransform)Sous("Elast/Contenu/Acteurs/Acteur3/Silhouette");
                 Vector2Int tete = banc.Pixel(sil, 0.5f, 11f / 16f);
                 Color vuTete = t.GetPixel(tete.x, tete.y);
                 Color attenduTete = Color.Lerp(elast, DesignTokens.Current.accentDanger, DossierCalculs.OpaciteDuParti);   // la maquette compose le GROUPE : rouge à 45 % sur le fond de la boîte
@@ -700,6 +700,107 @@ namespace MafiaCleanCity.Operational.Tests
                 Assert.Greater(Ecart(vuTete, DesignTokens.Current.accentDanger), 40f, "la silhouette « parti » n'est pas en rouge PLEIN");
             }
             finally { if (t != null) Object.DestroyImmediate(t); banc.Dispose(); }
+        }
+
+        // ═══ 4. LE CONTENU DANS SON PANNEAU (juge visuel r1, 08/10 — F1, F2, F5) ═══════════════════════════════════════
+        //   La classe : « du contenu hors de son panneau ». À 1080×1920 la note s'imprimait sur « loin » (F1) et le 4ᵉ acteur était tranché (F2) ; `journal.tsv` ne le voyait pas, ni aucune garde
+        //   de PARAMÈTRES. Ces gardes sont STRUCTURELLES (vraies à toute hauteur) : (a) la boîte élastique est une fenêtre DÉFILANTE sur un contenu qui épouse ses enfants ; (b) aucun texte n'est écrasé
+        //   sous sa hauteur préférée ; (c) la note est SOUS les cartes ; (d) sous une fenêtre volontairement trop basse, le contenu défile et sa dernière ligne est ATTEIGNABLE.
+
+        private static Rect Monde(RectTransform r)
+        {
+            var c = new Vector3[4]; r.GetWorldCorners(c);
+            return new Rect(c[0].x, c[0].y, c[2].x - c[0].x, c[2].y - c[0].y);
+        }
+
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7G1_ContenuDansSonPanneau_JamaisTranche_NiImprimeSurLeReste()
+        {
+            var banc = new BancEcran();
+            try
+            {
+                hostGo = new GameObject("ForensicScreen", typeof(RectTransform));
+                hostGo.transform.SetParent(banc.Racine, false);
+                ForensicScreenController ecran = hostGo.AddComponent<ForensicScreenController>();
+                var vues = new (string nom, GetForensicResponseDto bandes, ActeurDto[] acteurs, string derniere)[]
+                {
+                    ("pistes", Bandes("clean", "visible", "quiet"), RosterDe4(), "Elast/Contenu/NotePistes"),
+                    ("acteurs", Bandes("clean", "visible", "quiet"), RosterDe4(), "Elast/Contenu/Acteurs/Acteur3"),
+                };
+                foreach (var vue in vues)
+                {
+                    ecran.RendrePourTest(vue.bandes, vue.acteurs);
+                    if (vue.nom == "acteurs") ecran.Basculer();
+                    yield return null; yield return null;
+                    Canvas.ForceUpdateCanvases();
+
+                    // (a) la fenêtre défilante, son contenu
+                    MafiaCleanCity.Shell.ListeDefilante fen = ecran.FenetreDefilante;
+                    Assert.IsNotNull(fen, vue.nom + " : la boîte élastique n'est pas une ListeDefilante");
+                    RectTransform elast = (RectTransform)Sous("Elast"), contenu = (RectTransform)Sous("Elast/Contenu");
+                    Assert.AreSame(elast, fen.Defilement.viewport, vue.nom + " : la fenêtre est la boîte élastique");
+                    Assert.AreSame(contenu, fen.Defilement.content, vue.nom + " : le contenu défilant");
+
+                    // (b) aucun texte écrasé sous sa hauteur préférée (la forme exacte de F1 : le texte sort de sa carte)
+                    foreach (TMPro.TextMeshProUGUI t in contenu.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false))
+                    {
+                        t.ForceMeshUpdate();
+                        Assert.LessOrEqual(t.preferredHeight, t.rectTransform.rect.height + 1f,
+                            $"{vue.nom} : « {Nu(t.text)} » ({t.name}) est écrasé : il lui faut {t.preferredHeight:0.#}, il a {t.rectTransform.rect.height:0.#}");
+                    }
+                    // le contenu va jusqu'au bout de ses enfants (aucun enfant ne déborde du contenu défilant)
+                    Rect rc = Monde(contenu);
+                    foreach (RectTransform enfant in contenu)
+                        if (enfant.gameObject.activeSelf)
+                            Assert.GreaterOrEqual(Monde(enfant).yMin, rc.yMin - 0.5f, vue.nom + " : " + enfant.name + " sort sous le contenu");
+
+                    // (c) la note est SOUS les cartes, jamais dessus
+                    if (vue.nom == "pistes")
+                        Assert.LessOrEqual(Monde((RectTransform)Sous("Elast/Contenu/NotePistes")).yMax, Monde((RectTransform)Sous("Elast/Contenu/Pistes")).yMin + 0.5f,
+                            "la note recouvre les cartes");
+
+                    // (d) fenêtre trop BASSE : le contenu défile, le fondu le dit, la dernière ligne est atteignable
+                    LayoutElement le = elast.GetComponent<LayoutElement>();
+                    float minAvant = le.minHeight, prefAvant = le.preferredHeight, flexAvant = le.flexibleHeight;
+                    float basse = Mathf.Max(8f, contenu.rect.height * 0.5f);   // en unités du CANVAS (le LayoutElement), pas en unités monde
+                    le.minHeight = basse; le.preferredHeight = basse; le.flexibleHeight = 0f;
+                    LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)RacineEcran().transform);
+                    yield return null; Canvas.ForceUpdateCanvases();
+                    fen.Rafraichir();
+                    Assert.IsTrue(fen.ContenuDepasse, vue.nom + " : la fenêtre est basse, le contenu doit se dire « il y a une suite »");
+                    fen.Defilement.verticalNormalizedPosition = 0f;
+                    Canvas.ForceUpdateCanvases(); fen.Rafraichir();
+                    Rect fenetre = Monde(elast), derniere = Monde((RectTransform)Sous(vue.derniere));
+                    Assert.GreaterOrEqual(derniere.yMin, fenetre.yMin - 1f, vue.nom + " : la dernière ligne reste hors de la fenêtre au bout de la course (inatteignable)");
+                    le.minHeight = minAvant; le.preferredHeight = prefAvant; le.flexibleHeight = flexAvant;
+                }
+            }
+            finally { banc.Dispose(); }
+        }
+
+        /// <summary>F3 — chaque bande de l'effluent dit le MOT DE SON CRAN (cadre 143 : invisible · des traces · ça se voit · ça saute aux yeux), jamais la phrase de sa gravité.
+        /// Le mot est épinglé EN DUR : l'ancien test comparait `Phrase("visible")` à lui-même.</summary>
+        [Test]
+        public void ScreenB7F3_LEffluent_DitLeMotDeSonCran_PasLaPhraseDeSaGravite()
+        {
+            Assert.AreEqual("invisible", ForensicResolvers.Phrase("clear"));
+            Assert.AreEqual("des traces", ForensicResolvers.Phrase("faint"));
+            Assert.AreEqual("ça se voit", ForensicResolvers.Phrase("visible"));
+            Assert.AreEqual("Ça saute aux yeux", ForensicResolvers.Phrase("glaring"));
+            StringAssert.DoesNotContain("loin", ForensicResolvers.Phrase("visible"));
+        }
+
+        /// <summary>F4 — une valeur SERVIE sans accolades reprend l'emphase du littéral (la valeur servie gagne, l'emphase de la maquette reste).</summary>
+        [Test]
+        public void ScreenB7F4_UneValeurServieSansAccolades_ReprendLEmphaseDuLitteral()
+        {
+            const string litteral = "elles disent que {vous n’avez pas encore commencé}.";
+            Assert.AreEqual("elles disent que {vous n’avez pas encore commencé}.", ForensicScreenController.ReposerLesEmphases("elles disent que vous n’avez pas encore commencé.", litteral));
+            Assert.AreEqual("déjà {servi} ainsi", ForensicScreenController.ReposerLesEmphases("déjà {servi} ainsi", litteral), "un texte servi qui a ses accolades est laissé tel quel");
+            Assert.AreEqual("a different text", ForensicScreenController.ReposerLesEmphases("a different text", litteral), "un fragment introuvable (autre langue) n'est pas forcé");
+            Assert.AreEqual("a {b} c {d}", ForensicScreenController.ReposerLesEmphases("a b c d", "a {b} c {d}"), "plusieurs fragments");
+            Assert.IsNull(ForensicScreenController.ReposerLesEmphases(null, litteral));
         }
 
         // MÉTIER ICI — ajouter ici les tests de PARCOURS (signup → session/open → la route) et

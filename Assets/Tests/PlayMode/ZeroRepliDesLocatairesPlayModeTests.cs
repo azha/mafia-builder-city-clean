@@ -55,42 +55,32 @@ namespace MafiaCleanCity.Operational.Tests
             // E2a (08/10) : la ligne « Mouvement réduit » de ⑲ (REUSE du canon `screen_14`, mot du canon « Mouvement réduit ») — clé dérivée,
             // non servie à 83b4f291 ; voir `Tools/juge-donnees/i18n/cles-neuves-e2a-2026-10-08.md`.
             "reglages.bloc.mouvement_reduit",
-            // COLLECTE (CLIENT-1, 07/10) — la jauge de ㉟ se dit PAR LA VALEUR SERVIE (`CollecteMots.Bande`) : table 75, lignes B-*. Le back
-            // (lot/boucle-argent @615ca764) ne les sert pas AVANT le déploiement du lot COLLECTE ; le préfixe `vente.caisse.bande.` est
-            // « à confirmer par le back » (atelier). La règle (2) rougit le jour où l'une est servie : la retirer alors. 6 entrées.
-            "vente.caisse.bande.none", "vente.caisse.bande.low", "vente.caisse.bande.moderate", "vente.caisse.bande.high", "vente.caisse.bande.full",
-            "vente.caisse.bande.full_il_ne_vend_plus_tant_qu_on_ne_ramasse_pas",
-            // ㉓ LA VITRINE (CLIENT-1, 08/10 ; juge groupé du 07/10, B1 « la règle de paiement n'est plus écrite ») : les deux intitulés d'étagère des cadres 98-99 (atelier 7159e54, re-rendus en Marks), clés dérivées par
-            // `Libelle.De` ; table demandée au back via f2 le 08/10 — FR « Les extras — payés en Marks » / « Les Marks — payés au magasin ». La règle (2) les retire le jour où elles sont servies. 2 entrées.
-            "boutique.bloc.les_extras_payes_en_marks", "boutique.bloc.les_marks_payes_au_magasin",
-            // CAUSES 3 ET 4 (CLIENT-1, lots du 07/10) — vues en repli au créneau groupé du 08/10 (cumul eb477ecc, pile localhost) : ⑭ la ligne de
-            // pression « TENSION CALME · AUCUNE SEMAINE » (`ParValeur` sur la tension servie, et l'absence de semaine), ㊳ le pied éteint, ㉛ la bande
-            // basse (geste et note). Mots de la maquette, clés dérivées par `Libelle` ; à servir par la table de l'atelier (via f2). 5 entrées.
-            "compression.tension.calm", "compression.semaine.none",
+            // ⚠️ COUPE du 2026-10-08 (créneau CLIENT-2, pile dev avec le lot de mots de f2) : la règle (2) a rougi, 28 clés de la dette SONT servies — retirées : COLLECTE `vente.caisse.bande.*` (6),
+            // ㉓ VITRINE `boutique.bloc.*` (2), ⑭ `compression.tension.calm` / `compression.semaine.none`, ㉛ `loi.bouton.lui_trouver_un_avocat` / `loi.bloc.le_commis_d_office_fait_ce_qu_il_peut`,
+            // ㉚ `appro.bouton.ca_part_du_compte_tout_de_suite`, et 15 clés `forensic.bloc.*` de ㊴. Restent, non servies : celles ci-dessous.
+            // ⑭ LA JAUGE DE TENSION (CLIENT-2, 08/10 ; juge d'ensemble r1, F3 : l'élément héros était absent) : l'onglet « TENSION » et la légende du cadre calme (`.lampe-rouge`, cadres 14-19 de la
+            // série 6) — clés dérivées par `Libelle.De("semaine", "bloc", …)`, NON servies à la pile du 08/10 ; f2 les fait servir (FR « Tension » / « vos affaires respirent »). 2 entrées.
+            "semaine.bloc.tension", "semaine.bloc.vos_affaires_respirent",
+            // ㊳ le pied éteint (CAUSES 3 ET 4, CLIENT-1) : mot de la maquette, clé dérivée, non servie. 1 entrée.
             "journal.bouton.y_preter_attention",
-            "loi.bouton.lui_trouver_un_avocat", "loi.bloc.le_commis_d_office_fait_ce_qu_il_peut",
-            // ㉚ B3 (CLIENT-1, 08/10 ; juge groupé du 07/10) : la LÉGENDE du geste « EN COMMANDER » (cadre 48, `.geste small`) — mot de la maquette, clé
-            // dérivée par `Libelle.De`, NON servie à 256de0f8 (mesuré : `string_table.ts` du back) ; à servir par la table de l'atelier (via f2). 1 entrée.
-            "appro.bouton.ca_part_du_compte_tout_de_suite",
-            // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : les mots de la vue pistes / acteurs / vide — clés dérivées par
-            // `Libelle.De` du texte de la maquette, NON servies au HEAD du back (mesuré : `string_table.ts`, 16 des 37 clés de l'écran le SONT et
-            // n'y figurent donc pas) ; à servir par la table de l'atelier (via f2). 16 entrées (les statuts et types d'acteur sont lus par la VALEUR servie : `forensic.statut.*`, `forensic.acteur.lawyer|clerk` — déjà servis).
+            // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : une clé restante, non servie à la pile du 08/10 (les 15 autres le sont : retirées ci-dessus). Les statuts et types d'acteur
+            // sont lus par la VALEUR servie (`forensic.statut.*`, `forensic.acteur.lawyer|clerk`).
             "forensic.enseigne.rien_a_votre_nom",   // le sous-titre de l'enseigne du cadre 135 (sans point) : son rôle propre, la clé bloc.* est celle du texte `.rien`
-            "forensic.bloc.acteurs_qui_tiennent",
-            "forensic.bloc.ceux_qui_ne_sont_pas_sur_la_liste",
-            "forensic.bloc.d_autres_parlent_et_vous_ne_les_voyez_pas",
-            "forensic.bloc.la_comptabilite",
-            "forensic.bloc.la_comptabilite_les_rejets_et_le_train_de_vie_ne_se_melangent_pas_pour_voir_qui_parle_la_fenetre_des_acteurs_en_haut_a_droite",
-            "forensic.bloc.le_dossier",
-            "forensic.bloc.le_renseignement_s_achete_acteur_par_acteur_eteint_tant_que_le_prix_n_est_pas_servi_on_n_achete_pas_sans_savoir_combien",
-            "forensic.bloc.les_livres_et_le_train_de_vie_personne_ne_regarde_par_la_pour_l_instant",
-            "forensic.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_tout_va_bien_c_est_on_ne_sait_pas",
-            "forensic.bloc.on_peut_etre_propre_sur_deux_et_pris_sur_la_troisieme",
-            "forensic.bloc.pas_encore_sur_la_table",
-            "forensic.bloc.pourquoi_trois_colonnes",
-            "forensic.bloc.renseignement",
-            "forensic.bloc.sur_un_acteur_pas_sur_une_piste_eteint_le_prix_n_est_pas_servi",
-            "forensic.bloc.un_inspecteur_du_port_un_courtier_le_greffier_d_un_juge_ils_se_paient_comme_les_autres_mais_personne_ne_vous_a_encore_donne_leur_nom",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

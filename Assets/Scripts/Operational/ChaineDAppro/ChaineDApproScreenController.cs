@@ -435,7 +435,7 @@ namespace MafiaCleanCity.Operational
             TrackText(nom.text);
 
             TextMeshProUGUI bon = NouveauTexteFiche(entete.transform, "Bon",
-                Libelle.De("appro", "bloc", "BON DE COMMANDE"), 8f, CremeSecondaire, false);
+                Libelle.De("appro", "bloc", "BON DE COMMANDE"), 8f, EncreDuTitreDuBon, false);
             bon.alignment = TextAlignmentOptions.Right;
             bon.characterSpacing = 6f;
             TrackText(bon.text);
@@ -495,10 +495,12 @@ namespace MafiaCleanCity.Operational
             HorizontalLayoutGroup h = ligne.AddComponent<HorizontalLayoutGroup>();
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandWidth = true; h.childForceExpandHeight = false;
-            AddLayoutElement(ligne, minHeight: Px(16f), flexibleHeight: 0);
+            // F9 (juge d'ensemble r1) : `.bon .l{padding:4px 0}` — sans lui le filet pointillé touchait le haut des capitales (3 px au lieu de ~21) ; la hauteur vient du padding + de la ligne de texte
+            h.padding = new RectOffset(0, 0, PxTrait(4f), PxTrait(4f));
+            AddLayoutElement(ligne, flexibleHeight: 0);
 
             TextMeshProUGUI lib = NouveauTexteFiche(ligne.transform, "Libelle",
-                Libelle.De("appro", "bloc", libelleLitteral), 7.5f, CremeSecondaire, false);
+                Libelle.De("appro", "bloc", libelleLitteral), 7.5f, EncreFaibleDuBon, false);
             AddLayoutElement(lib.gameObject, flexibleWidth: 1);
             lib.characterSpacing = 3f;
             TrackText(lib.text);
@@ -745,7 +747,7 @@ namespace MafiaCleanCity.Operational
             // La fiche crème « BON DE COMMANDE » — un fond, un layout, contenu rempli par
             // `RendreFiche` (appelée à chaque `AppliquerEtat`).
             GameObject ficheGo = NouveauUI("Fiche", corpsGo.transform);
-            ficheGo.AddComponent<Image>().color = Creme;
+            ficheGo.AddComponent<Image>().color = PlaqueDuBon;
             VerticalLayoutGroup vf = ficheGo.AddComponent<VerticalLayoutGroup>();
             vf.padding = new RectOffset(PxTrait(12f), PxTrait(12f), PxTrait(10f), PxTrait(10f));
             vf.spacing = Px(5f);
@@ -790,6 +792,11 @@ namespace MafiaCleanCity.Operational
         // mild/moderate/severe + CTA) ») : réutilisés tels quels. ═══════════════════════════════
         private static Color Creme => DesignTokens.Current.hudCreme;
         private static Color CremeSecondaire => DesignTokens.Current.hudCremeSecondary;
+        // F8 (juge d'ensemble r1) : `hudCremeSecondary` est une encre pour fond SOMBRE ; posée en libellé sur le papier du bon elle donnait 1,69:1. Teintes de la maquette (`ecrans-brennar-6.html` 4543-4545) :
+        // `.bon h4 span` #6f6656, `.bon .l u` #726552 (≥ 4,5:1 sur la plaque #efe7d6, la plaque de la maquette).
+        private static Color EncreFaibleDuBon => new Color32(0x72, 0x65, 0x52, 0xFF);
+        private static Color EncreDuTitreDuBon => new Color32(0x6F, 0x66, 0x56, 0xFF);
+        private static Color PlaqueDuBon => new Color32(0xEF, 0xE7, 0xD6, 0xFF);
         // ⚠️ ESTIMÉ VISUELLEMENT SUR LA MAQUETTE, NON ÉCHANTILLONNÉ AU PIXEL — aucun outil de
         // lecture de pixel n'était disponible cette passe. À corriger par une sonde dédiée (patron
         // `Tools/mesure-geometrie-*.py`) avant tout jugement `juge-visuel`. Voir
