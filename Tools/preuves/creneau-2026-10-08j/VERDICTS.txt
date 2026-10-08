@@ -1,0 +1,15 @@
+# Créneau du 08/10 après-midi (client-2) — ㊴ Q1+Q5 (tête 07dfb485 + correctif de la colonne d'identité) — lignes de verdict extraites
+# run0 = lancement sans LOG_FILE (journal perdu, 130 s) ; run1 = 21 catégories : 291/292 (Q1d : le mot de statut rogné 133→99 px par un nom de 55 car. — DÉFAUT RÉEL de mise en page, corrigé : colLe.preferredWidth=0) ; run2 = après correctif : 292/292 VERDICT 0 ; run3 = ClichePlanchesParEcran 5/5 → Tools/juge-visuel/planches-par-ecran-2026-10-08-client2-r3/
+== run1-avant-correctif-Q1d.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ScreenB7, EnteteDEcran, Inspection, JaugeDeTension, DecisionCarte, DecorDeScene, BundleReel, ListeDefilante, EcranAppro, EcranAccueil, AccueilCanon, MotsDesEnumeres, CuisinierAuRepos, Replis, ChainesDev, I18n, EcranLoi, EcranDistribution, HUDv31, PiedDEcran, Palette]
+MafiaCI: FAIL MafiaCleanCity.Operational.Tests.ForensicScreenPlayModeTests.ScreenB7Q1d_UnNomTresLong_RestePEnColonne_SansDeplacerLeStatut —   le mot de statut garde sa largeur
+MafiaCI: RunPlayModeTests finished — passed=291 failed=1 skipped=0 inconclusive=0 declares=292 comptes=292
+MafiaCI: VERDICT code=1 (failed=1 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run2.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ScreenB7, EnteteDEcran, Inspection, JaugeDeTension, DecisionCarte, DecorDeScene, BundleReel, ListeDefilante, EcranAppro, EcranAccueil, AccueilCanon, MotsDesEnumeres, CuisinierAuRepos, Replis, ChainesDev, I18n, EcranLoi, EcranDistribution, HUDv31, PiedDEcran, Palette]
+MafiaCI: RunPlayModeTests finished — passed=292 failed=0 skipped=0 inconclusive=0 declares=292 comptes=292
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run3.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ClichePlanchesParEcran]
+MafiaCI: RunPlayModeTests finished — passed=5 failed=0 skipped=0 inconclusive=0 declares=5 comptes=5
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)

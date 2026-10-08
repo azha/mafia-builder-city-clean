@@ -803,6 +803,179 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(ForensicScreenController.ReposerLesEmphases(null, litteral));
         }
 
+        // ═══ 4. Q1 — le NOM de l'avocat sur la ligne de l'acteur (GET /v1/me/legal, MESURÉ le 08/10) ═══════════════════════════
+
+        /// <summary>Le corps RÉEL de `GET /v1/me/legal` (compte joueur, 08/10 12:59, `mesures/me_legal.json` du juge-données de ㊴), octet pour octet
+        /// sur `payload`. Les deux témoins qui font la jointure : `lawyerId` ici = `actorRef` de `actors_plein.json`.</summary>
+        private const string CorpsLegalReel =
+            "{\"payload\":{\"data\":{\"activeCases\":[],\"lawyerRoster\":[{\"lawyerId\":\"7abe1833-237a-4817-a247-dda968ae569d\",\"lawyerLabel\":\"Maître Norwan\"," +
+            "\"lawyerNameI18n\":{\"key\":\"game.fiction.lawyer.name\",\"params\":{\"nom\":\"Maître Norwan\"}},\"lawyerLabelI18n\":{\"key\":\"game.legal.lawyer_tier.boutique\",\"params\":{}}," +
+            "\"tier\":\"boutique\",\"retainer\":false,\"activeCaseCount\":0}]}}}";
+        private const string RefAvocatReel = "7abe1833-237a-4817-a247-dda968ae569d";
+
+        private static Dictionary<string, string> NomsDuCorps(string corps) =>
+            DossierCalculs.NomsDesAvocats(JsonUtility.FromJson<GetLegalEnvelope>(corps)?.payload?.data?.lawyerRoster);
+
+        private string ReferenceDeLaLigne(int i) => Texte($"Elast/Contenu/Acteurs/Acteur{i}/Identite/Reference");
+
+        /// <summary>Q1 : le corps RÉEL se lit (`params` est un mot réservé C# : `@params` doit sérialiser « params »), et la jointure par l'id rend « Maître Norwan ».</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7Q1a_LeCorpsReel_DonneLeNomDeLAvocat_ParSonId()
+        {
+            Dictionary<string, string> noms = NomsDuCorps(CorpsLegalReel);
+            Assert.AreEqual(1, noms.Count);
+            Assert.AreEqual("Maître Norwan", noms[RefAvocatReel], "le NOM de la personne, pas le tier (`lawyerLabelI18n`)");
+            Assert.AreEqual("Maître Norwan", DossierCalculs.NomOuRef(Acteur("lawyer", "steady", RefAvocatReel), noms));
+            // contrôle négatif : un autre id ne reçoit PAS ce nom (une jointure qui ignore l'id rougit ici)
+            Assert.AreEqual("ia.actor.0000", DossierCalculs.NomOuRef(Acteur("lawyer", "steady", "00000000-aaaa"), noms));
+            // un clerk n'a aucune route qui le nomme, même si son id était au dictionnaire
+            Assert.AreEqual("ia.actor.7abe", DossierCalculs.NomOuRef(Acteur("clerk", "steady", RefAvocatReel), noms));
+            Assert.AreEqual("ia.actor.7abe", DossierCalculs.NomOuRef(Acteur("lawyer", "steady", RefAvocatReel), null), "route en erreur ⇒ la référence");
+        }
+
+        /// <summary>Q1 : la SENTINELLE du back (`unknown_lawyer`, colonne nulle) et un nom vide ne sont pas des noms.</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7Q1b_LaSentinelleEtLeNomVide_NeSontPasDesNoms()
+        {
+            string sentinelle = CorpsLegalReel.Replace("\"nom\":\"Maître Norwan\"", "\"nom\":\"unknown_lawyer\"");
+            string vide = CorpsLegalReel.Replace("\"nom\":\"Maître Norwan\"", "\"nom\":\"\"");
+            Assert.AreNotEqual(CorpsLegalReel, sentinelle, "le remplacement a bien eu lieu (anti-vacuité)");
+            Assert.AreEqual(0, NomsDuCorps(sentinelle).Count);
+            Assert.AreEqual(0, NomsDuCorps(vide).Count);
+            Assert.AreEqual(0, DossierCalculs.NomsDesAvocats(null).Count);
+        }
+
+        /// <summary>Q1, RENDU : la ligne de l'avocat porte son nom (sans « ia.actor. »), celle du greffier garde sa référence ; et sans noms servis, les références.</summary>
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7Q1c_LaLigneDeLAvocat_PorteSonNom_LeGreffierSaReference()
+        {
+            ForensicScreenController ecran = MonterEcran();
+            ActeurDto[] roster = { Acteur("lawyer", "steady", RefAvocatReel), Acteur("clerk", "nervous", "9c07bbbb") };
+            ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), roster, NomsDuCorps(CorpsLegalReel));
+            yield return null;
+            ecran.Basculer();
+            yield return null; yield return null;
+            Assert.AreEqual("Maître Norwan", ReferenceDeLaLigne(0));
+            StringAssert.DoesNotContain("ia.actor.", ReferenceDeLaLigne(0));
+            Assert.AreEqual("ia.actor.9c07", ReferenceDeLaLigne(1), "un greffier : aucune route ne le nomme");
+
+            ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), roster, null);   // la route des noms en erreur
+            yield return null; yield return null;
+            Assert.AreEqual("ia.actor.7abe", ReferenceDeLaLigne(0), "sans noms servis, la référence d'avant");
+            Assert.IsFalse(ecran.NomsIndisponibles && ecran.DerniereErreur != null, "l'erreur des noms ne pose pas de bandeau d'erreur");
+        }
+
+        /// <summary>Q1, EFFET (pas le paramètre) : le nom le plus long qu'on puisse servir reste DANS la colonne d'identité, sur une ligne, et ne déplace ni le
+        /// mot de statut ni la hauteur de la ligne — mesuré en rects, contre le rendu du nom COURT.</summary>
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7Q1d_UnNomTresLong_RestePEnColonne_SansDeplacerLeStatut()
+        {
+            ForensicScreenController ecran = MonterEcran();
+            ActeurDto[] roster = { Acteur("lawyer", "steady", RefAvocatReel) };
+            ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), roster, new Dictionary<string, string> { [RefAvocatReel] = "Maître Norwan" });
+            yield return null; ecran.Basculer(); yield return null; yield return null;
+            Canvas.ForceUpdateCanvases();
+            var court = (RectTransform)Sous("Elast/Contenu/Acteurs/Acteur0/Statut");
+            Vector2 posCourt = court.anchoredPosition; float largCourt = court.rect.width;
+            float hautCourt = ((RectTransform)Sous("Elast/Contenu/Acteurs/Acteur0")).rect.height;
+
+            string tresLong = "Maître Montgomery-Vanderbilt-Ferrand de la Haute-Garenne";
+            ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), roster, new Dictionary<string, string> { [RefAvocatReel] = tresLong });
+            yield return null; yield return null;
+            Canvas.ForceUpdateCanvases();
+            var ligne = (RectTransform)Sous("Elast/Contenu/Acteurs/Acteur0");
+            var statut = (RectTransform)Sous("Elast/Contenu/Acteurs/Acteur0/Statut");
+            var identite = (RectTransform)Sous("Elast/Contenu/Acteurs/Acteur0/Identite");
+            var reference = (RectTransform)Sous("Elast/Contenu/Acteurs/Acteur0/Identite/Reference");
+            Assert.AreEqual(tresLong, Texte("Elast/Contenu/Acteurs/Acteur0/Identite/Reference"), "le nom est rendu en entier dans le texte (la coupe est visuelle)");
+            Assert.LessOrEqual(reference.rect.width, identite.rect.width + 0.5f, "la référence ne déborde pas la colonne d'identité");
+            Assert.AreEqual(largCourt, statut.rect.width, 0.5f, "le mot de statut garde sa largeur");
+            Assert.AreEqual(hautCourt, ligne.rect.height, 0.5f, "une seule ligne : la hauteur de la rangée ne bouge pas");
+            Assert.LessOrEqual(Mathf.Abs(statut.anchoredPosition.x - posCourt.x), ligne.rect.width * 0.5f, "(anti-vacuité : le statut est bien mesuré)");
+            TMPro.TextMeshProUGUI t = reference.GetComponent<TMPro.TextMeshProUGUI>();
+            Assert.IsFalse(t.enableWordWrapping, "une ligne");
+            Assert.AreEqual(TMPro.TextOverflowModes.Ellipsis, t.overflowMode);
+            Assert.IsTrue(t.isTextTruncated, "le nom très long est coupé par « … » (sinon la garde ne voit rien)");
+        }
+
+        /// <summary>Q1, COMPTE : la route des noms n'est demandée QU'avec un avocat au roster (le compteur de requêtes de l'écran) — ici sur l'aiguillage pur.</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7Q1e_LesNomsNeSeDemandentQuAvecUnAvocat()
+        {
+            Assert.IsTrue(DossierCalculs.AUnAvocat(new[] { Acteur("clerk", "steady", "a"), Acteur("lawyer", "steady", "b") }));
+            Assert.IsFalse(DossierCalculs.AUnAvocat(new[] { Acteur("clerk", "steady", "a") }));
+            Assert.IsFalse(DossierCalculs.AUnAvocat(new ActeurDto[0]));
+            Assert.IsFalse(DossierCalculs.AUnAvocat(null));
+        }
+
+        // ═══ 5. Q5 — le NOM du lieutenant sur la piste du train de vie (clé ADDITIVE du back, option B, décision f2 08/10) ═══════════
+
+        private static DossierCalculs.Piste PisteTrainDeVie(bool vivante) =>
+            new DossierCalculs.Piste(DossierCalculs.CleDeLaPisteNommee, "le train de vie d’un lieutenant", vivante, "quiet", "noticed", "watched", "subpoenaed");
+
+        private static GetForensicResponseDto CorpsNomme(string bande, string nom) =>
+            new GetForensicResponseDto { audit_risk_bucket = "clean", effluent_visibility_bucket = "clear", lifestyle_alarm_bucket = bande, lifestyle_lieutenant_name = nom };
+
+        private static string TitreDeMaquette(DossierCalculs.Piste p) => MafiaCleanCity.I18n.Libelle.De("forensic", "bloc", p.Titre);
+
+        /// <summary>Q5 : piste VIVANTE + bande au-dessus du premier cran + nom servi ⇒ la phrase ENTIÈRE à trou porte le nom de la pool réelle (« Lt. Marrek »).</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7Q5a_PisteVivante_BandeChaude_NomServi_LeTitrePorteLeNom()
+        {
+            string titre = ForensicScreenController.TitreAffiche(PisteTrainDeVie(true), CorpsNomme("watched", "Lt. Marrek"));
+            StringAssert.Contains("Lt. Marrek", titre);
+            Assert.AreNotEqual(TitreDeMaquette(PisteTrainDeVie(true)), titre, "le titre n'est plus celui de la maquette");
+            Assert.AreEqual("forensic.bloc.le_train_de_vie_de_nom", DossierCalculs.CleDuTitreNomme);
+            Assert.AreEqual(MafiaCleanCity.I18n.Libelle.CleDe("forensic", "bloc", "le train de vie de {nom}"), DossierCalculs.CleDuTitreNomme,
+                "la clé écrite est celle que `Slug` dérive du littéral (rôle `bloc`, comme `Lib`) — sinon la dette et la demande à f2 visent une clé jamais interrogée");
+        }
+
+        /// <summary>Q5 : les quatre cas où le titre reste CELUI DE LA MAQUETTE — pas de nom, piste éteinte, bande `quiet` (contrôle négatif), autre piste.</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7Q5b_SansNom_PisteEteinte_BandeCalme_AutrePiste_LeTitreResteCeluiDeLaMaquette()
+        {
+            DossierCalculs.Piste vive = PisteTrainDeVie(true);
+            string maquette = TitreDeMaquette(vive);
+            Assert.AreEqual(maquette, ForensicScreenController.TitreAffiche(vive, CorpsNomme("watched", null)), "clé absente du back ⇒ comportement d'avant");
+            Assert.AreEqual(maquette, ForensicScreenController.TitreAffiche(vive, CorpsNomme("watched", "  ")), "nom blanc ⇒ pas de nom");
+            Assert.AreEqual(maquette, ForensicScreenController.TitreAffiche(PisteTrainDeVie(false), CorpsNomme("watched", "Lt. Marrek")), "une piste ÉTEINTE ne nomme personne");
+            Assert.AreEqual(maquette, ForensicScreenController.TitreAffiche(vive, CorpsNomme("quiet", "Lt. Marrek")), "bande `quiet` : personne à nommer");
+            Assert.AreEqual(maquette, ForensicScreenController.TitreAffiche(vive, null), "corps absent");
+            var audit = new DossierCalculs.Piste("audit_risk_bucket", "la comptabilité", true, "clean", "watched", "flagged", "audited");
+            Assert.AreEqual(TitreDeMaquette(audit), ForensicScreenController.TitreAffiche(audit, CorpsNomme("watched", "Lt. Marrek")), "le nom ne perce que la piste du train de vie");
+        }
+
+        /// <summary>Q5 : le corps se lit (clé additive, `JsonUtility`), et son ABSENCE donne null.</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7Q5c_LaCleAdditive_SeLit_EtSonAbsenceDonneNull()
+        {
+            var avec = JsonUtility.FromJson<GetForensicEnvelope>("{\"payload\":{\"data\":{\"audit_risk_bucket\":\"clean\",\"effluent_visibility_bucket\":\"clear\",\"lifestyle_alarm_bucket\":\"watched\",\"lifestyle_lieutenant_name\":\"Lt. Marrek\"}}}");
+            Assert.AreEqual("Lt. Marrek", avec.payload.data.lifestyle_lieutenant_name);
+            var sans = JsonUtility.FromJson<GetForensicEnvelope>("{\"payload\":{\"data\":{\"audit_risk_bucket\":\"clean\",\"effluent_visibility_bucket\":\"clear\",\"lifestyle_alarm_bucket\":\"quiet\"}}}");
+            Assert.IsNull(sans.payload.data.lifestyle_lieutenant_name);
+        }
+
+        /// <summary>Q5, RENDU : aujourd'hui la piste du train de vie est une constante ÉTEINTE (TD-881) — même avec un nom servi, l'écran garde le titre de la maquette.</summary>
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7Q5d_PisteConstanteEteinte_LEcranNeNommePersonne()
+        {
+            ForensicScreenController ecran = MonterEcran();
+            ecran.RendrePourTest(CorpsNomme("watched", "Lt. Marrek"), RosterDe4());
+            yield return null; yield return null;
+            string titre = Nu(Texte("Elast/Contenu/Pistes/Piste2/Titre"));
+            StringAssert.DoesNotContain("Marrek", titre);
+            Assert.AreEqual(Nu(TitreDeMaquette(DossierCalculs.Pistes[2])), titre, "le titre de la maquette, rendu tel quel");
+        }
+
         // MÉTIER ICI — ajouter ici les tests de PARCOURS (signup → session/open → la route) et
         // les tests d'état (AppliquerEtat sur un corps fabriqué via RendrePourTest), patron ㊲
         // §§ 1/3/5 de ReputationScreenPlayModeTests.

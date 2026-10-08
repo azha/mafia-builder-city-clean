@@ -40,6 +40,9 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le roster servi (null : pas encore reçu OU route en erreur — voir <see cref="ActeursIndisponibles"/>).</summary>
         public ActeurDto[] DerniersActeurs { get; private set; }
         public bool ActeursIndisponibles { get; private set; }
+        /// <summary>Q1 — `lawyerId → nom de la personne` (null : pas reçu, route en erreur, ou aucun avocat au roster).</summary>
+        public Dictionary<string, string> DerniersNoms { get; private set; }
+        public bool NomsIndisponibles { get; private set; }
         /// <summary>La vue MONTRÉE (l'état vide l'emporte sur le choix du joueur).</summary>
         public VueDossier Vue { get; private set; } = VueDossier.Pistes;
         /// <summary>Les requêtes envoyées par l'écran (compteur des gardes « un geste éteint n'émet rien »).</summary>
@@ -93,6 +96,8 @@ namespace MafiaCleanCity.Operational
             DernierChargement = null;
             DerniersActeurs = null;
             ActeursIndisponibles = false;
+            DerniersNoms = null;
+            NomsIndisponibles = false;
 
             yield return client.GetForensic(token,
                 dto => DernierChargement = dto,
@@ -100,6 +105,12 @@ namespace MafiaCleanCity.Operational
             yield return client.GetActeurs(token,
                 acteurs => DerniersActeurs = acteurs,
                 (code, msg) => { ActeursIndisponibles = true; if (DerniereErreur == null) { DernierCodeErreur = code; DerniereErreur = msg; } });
+
+            // Q1 : les noms ne se demandent que s'il y a un AVOCAT au roster ; leur erreur laisse les références (jamais un bandeau).
+            if (DossierCalculs.AUnAvocat(DerniersActeurs))
+                yield return client.GetNomsAvocats(token,
+                    noms => DerniersNoms = noms,
+                    (code, msg) => NomsIndisponibles = true);
 
             // La frame de création rend des rects non résolus : on attend le layout AVANT de rendre quoi que ce soit qui lise une géométrie.
             yield return null;
@@ -114,7 +125,7 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Rend des corps FABRIQUÉS, sans réseau — réservé aux tests. Ne prouve jamais que le back émet ces corps, seulement ce
         /// que l'écran EN FAIT. `acteurs` null = la route est en erreur (« — »), `new ActeurDto[0]` = roster vide servi.</summary>
-        public void RendrePourTest(GetForensicResponseDto dto, ActeurDto[] acteurs = null)
+        public void RendrePourTest(GetForensicResponseDto dto, ActeurDto[] acteurs = null, Dictionary<string, string> noms = null)
         {
             corpsImposeParUnTest = true;
             if (amorce != null) { StopCoroutine(amorce); amorce = null; }
@@ -122,6 +133,8 @@ namespace MafiaCleanCity.Operational
             DernierChargement = dto;
             DerniersActeurs = acteurs;
             ActeursIndisponibles = acteurs == null;
+            DerniersNoms = noms;
+            NomsIndisponibles = false;
             Rendre();
         }
 
@@ -259,7 +272,7 @@ namespace MafiaCleanCity.Operational
                 Color encre = ForensicResolvers.CouleurPour(ForensicResolvers.NiveauDe(bande));
                 if (auBout) encre = DesignTokens.Current.accentDanger;   // 132 : le dernier cran est un ÉVÉNEMENT, tout en `#ff5a4d`
 
-                piTitre[i].text = Lib(piste.Titre);
+                piTitre[i].text = TitreAffiche(piste, DernierChargement);
                 piTitre[i].color = eteinte ? EncreEteinte : (Color)DesignTokens.Current.onSurfaceSecondary;
                 for (int c = 0; c < DossierCalculs.Crans; c++)
                     piCran[i, c].color = (!eteinte && c <= cran) ? encre : (Color)TeinteVide;
@@ -320,6 +333,9 @@ namespace MafiaCleanCity.Operational
 
             GameObject col = NouveauUI("Identite", ligne.transform);
             var colLe = col.AddComponent<LayoutElement>(); colLe.flexibleWidth = 1f; colLe.minWidth = 0f;
+            // Q1 : la colonne prend le RESTE, jamais sa largeur « préférée » — un nom long (non coupé en lignes, « … ») la ferait sinon dépasser et le groupe
+            // horizontal rognerait le mot de statut (mesuré au créneau du 08/10 : 133 → 99 px avec un nom de 55 caractères).
+            colLe.preferredWidth = 0f;
             var v = col.AddComponent<VerticalLayoutGroup>();
             v.spacing = Px(2f);
             v.childControlWidth = true; v.childControlHeight = true;
@@ -327,8 +343,10 @@ namespace MafiaCleanCity.Operational
             TextMeshProUGUI nom = NouveauTexte(col.transform, "Type", DossierCalculs.NomDuType(a.actorType), Px(8f),
                                                DesignTokens.Current.hudCreme, DesignTokens.Current.primaryFont);
             nom.fontStyle = FontStyles.Bold;
-            NouveauTexte(col.transform, "Reference", DossierCalculs.RefAffichee(a.actorRef), Px(5.6f),
-                         EncreEteinte, DesignTokens.Current.primaryFont);
+            TextMeshProUGUI reference = NouveauTexte(col.transform, "Reference", DossierCalculs.NomOuRef(a, DerniersNoms), Px(5.6f),
+                                                     EncreEteinte, DesignTokens.Current.primaryFont);
+            reference.enableWordWrapping = false;   // un nom long se coupe par « … », jamais sur deux lignes
+            reference.overflowMode = TextOverflowModes.Ellipsis;
 
             TextMeshProUGUI st = NouveauTexte(ligne.transform, "Statut", DossierCalculs.MotDuStatut(a.status), Px(5.8f),
                                               encreStatut, DesignTokens.Current.primaryFont);
@@ -706,6 +724,19 @@ namespace MafiaCleanCity.Operational
         private static string Lib(string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("forensic", "bloc", litteral);
 
+        /// <summary>Q5 — le titre d'une piste : celui de la maquette, SAUF la piste du train de vie quand le back sert le NOM du lieutenant visé ET que la
+        /// piste est vivante ET que sa bande dépasse le premier cran : « le train de vie de {nom} » (phrase ENTIÈRE à trou — l'anglais met le nom
+        /// devant, `{nom}’s lifestyle` ; jamais une concaténation). Une piste éteinte ne nomme personne.</summary>
+        public static string TitreAffiche(DossierCalculs.Piste piste, GetForensicResponseDto d)
+        {
+            string nom = d?.lifestyle_lieutenant_name;
+            if (piste.Cle != DossierCalculs.CleDeLaPisteNommee || !piste.Vivante || string.IsNullOrWhiteSpace(nom)
+                || DossierCalculs.CranDe(piste, DossierCalculs.BandeDe(d, piste.Cle)) <= 0)
+                return Lib(piste.Titre);
+            return MafiaCleanCity.I18n.Libelle.Gabarit(DossierCalculs.CleDuTitreNomme, "le train de vie de {nom}",
+                                                       new Dictionary<string, string> { ["nom"] = nom.Trim() });
+        }
+
         private static void AjouterHauteur(GameObject go, float hauteur)
         {
             var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
@@ -829,6 +860,10 @@ namespace MafiaCleanCity.Operational
         /// `ScreenB7P1`), et le calcul linéaire donne (179, 62, 54) : le modèle est juste. 0,2 donne (124, 43, 38), à 6/255 de la cible
         /// (le canal le plus bas ne se rattrape pas avec un seul alpha) ; ses fonds sombres, eux, restent à ≤ 3/255.</summary>
         public const float AlphaUguiDuParti = 0.2f;
+
+        /// <summary>La piste qui peut porter un NOM (Q5) et la clé de sa phrase à trou (`Slug("le train de vie de {nom}")` sous le rôle `bloc`).</summary>
+        public const string CleDeLaPisteNommee = "lifestyle_alarm_bucket";
+        public const string CleDuTitreNomme = "forensic.bloc.le_train_de_vie_de_nom";
 
         public sealed class Piste
         {
@@ -984,6 +1019,40 @@ namespace MafiaCleanCity.Operational
             if (string.IsNullOrEmpty(actorRef)) return "—";
             string court = actorRef.Length > 4 ? actorRef.Substring(0, 4) : actorRef;
             return "ia.actor." + court;
+        }
+
+        /// <summary>Q1 — ce que la ligne d'un acteur montre sous son type : le NOM de la personne quand il est servi (avocat dont l'id est au
+        /// roster de `GET /v1/me/legal`, nom ni vide ni sentinelle), sinon la référence (<see cref="RefAffichee"/>). Un `clerk` n'a aucune
+        /// route qui le nomme : toujours la référence.</summary>
+        public static string NomOuRef(ActeurDto a, IDictionary<string, string> noms)
+        {
+            if (a != null && a.actorType == "lawyer" && noms != null && a.actorRef != null
+                && noms.TryGetValue(a.actorRef, out string nom) && !string.IsNullOrWhiteSpace(nom))
+                return nom;
+            return RefAffichee(a?.actorRef);
+        }
+
+        /// <summary>`lawyerId → nom` du roster servi. Le nom vide ou la SENTINELLE du back (`unknown_lawyer`, colonne nulle) n'est pas un nom.</summary>
+        public static Dictionary<string, string> NomsDesAvocats(LawyerDto[] roster)
+        {
+            var d = new Dictionary<string, string>();
+            if (roster == null) return d;
+            foreach (LawyerDto l in roster)
+            {
+                string nom = l?.lawyerNameI18n?.@params?.nom;
+                if (l == null || string.IsNullOrEmpty(l.lawyerId) || string.IsNullOrWhiteSpace(nom) || nom == NomSentinelleDuBack) continue;
+                d[l.lawyerId] = nom;
+            }
+            return d;
+        }
+
+        /// <summary>La valeur que le back sert dans `params.nom` quand `lawyers.name` est nul (`fiction-names.ts`, `lawyerNameRef`).</summary>
+        public const string NomSentinelleDuBack = "unknown_lawyer";
+
+        public static bool AUnAvocat(ActeurDto[] acteurs)
+        {
+            if (acteurs != null) foreach (ActeurDto x in acteurs) if (x != null && x.actorType == "lawyer") return true;
+            return false;
         }
     }
 

@@ -66,6 +66,9 @@ namespace MafiaCleanCity.Operational.Tests
             // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : une clé restante, non servie à la pile du 08/10 (les 15 autres le sont : retirées ci-dessus). Les statuts et types d'acteur
             // sont lus par la VALEUR servie (`forensic.statut.*`, `forensic.acteur.lawyer|clerk`).
             "forensic.enseigne.rien_a_votre_nom",   // le sous-titre de l'enseigne du cadre 135 (sans point) : son rôle propre, la clé bloc.* est celle du texte `.rien`
+            // ㊴ Q5 (CLIENT-2, 08/10 ; décision f2 « fr littéral client, en généré ») : la phrase à trou du titre de la piste du train de vie quand le back sert le nom
+            // du lieutenant (`lifestyle_lieutenant_name`) — fr `le train de vie de {nom}` · en `{nom}’s lifestyle` ; f2 la fait servir. NE SE RENDRA qu'avec la clé du back.
+            "forensic.bloc.le_train_de_vie_de_nom",
 
 
 
