@@ -700,19 +700,14 @@ namespace MafiaCleanCity.Tests.PlayMode
             }
         }
 
-        [UnityTest]
-        public IEnumerator D4n_Mesure_FonduDuMenuPlus_SurLeBureau()
+        /// <summary>⑱ : la pile d'`AppShell.MonterMenuPlus` sur le banc — le décor `MenuPlus`, puis une fenêtre qui déborde équipée de
+        /// `ListeDefilante` sur `fond` —, rendue fondu à opacité 1 (haut de course) puis fondu éteint (le décor seul).</summary>
+        private static IEnumerator RendreLeFonduDuMenu(Color fond, Texture2D[] rendus)
         {
-            // ⑱ consigné (C) : le fondu de fin de course du menu (`ListeDefilante.Indiquer(…, surfaceBase)`, AppShell) se fond dans
-            // surfaceBase, pas dans le bureau posé dessous. MESURE, pas garde : la même pile rendue deux fois — fondu à opacité 1
-            // (haut de course) puis fondu éteint (le décor seul) — et les octets journalisés sur la colonne centrale (l'ascenseur vit
-            // à droite). Seul contrôle : le fondu PRODUIT des pixels (un réglage valide peut n'en produire aucun).
-            SpecDecor s = DecorsDeScene.MenuPlus;
             var banc = new Banc();
-            Texture2D avec = null, sans = null;
             try
             {
-                DecorDeScene.Poser(banc.Racine, s);
+                DecorDeScene.Poser(banc.Racine, DecorsDeScene.MenuPlus);
                 var fen = new GameObject("Fenetre", typeof(RectTransform));
                 fen.transform.SetParent(banc.Racine, false);
                 RectTransform fenRt = (RectTransform)fen.transform;
@@ -722,30 +717,58 @@ namespace MafiaCleanCity.Tests.PlayMode
                 RectTransform contRt = (RectTransform)cont.transform;
                 contRt.anchorMin = new Vector2(0f, 1f); contRt.anchorMax = new Vector2(1f, 1f); contRt.pivot = new Vector2(0.5f, 1f);
                 contRt.sizeDelta = new Vector2(0f, 3f * H);   // déborde : le fondu est à opacité pleine en haut de course
-                ListeDefilante l = ListeDefilante.Equiper(fenRt, contRt, DesignTokens.Current.surfaceBase);
+                ListeDefilante l = ListeDefilante.Equiper(fenRt, contRt, fond);
                 yield return null;
                 Canvas.ForceUpdateCanvases();
                 l.Rafraichir();
                 Assert.IsTrue(l.ContenuDepasse, "prémisse : le contenu déborde, sinon le fondu est éteint et rien n'est mesuré");
                 Assert.AreEqual(1f, l.OpaciteCourante, 1e-4f, "prémisse : haut de course ⇒ opacité pleine");
-                avec = banc.Rendre();
+                rendus[0] = banc.Rendre();
                 l.enabled = false;            // LateUpdate ne rallume rien entre les deux rendus
                 l.Fondu.enabled = false;
-                sans = banc.Rendre();
-
-                Color32 sb = DesignTokens.Current.surfaceBase;
-                Debug.Log($"[MESURE-FONDU] surfaceBase = ({sb.r},{sb.g},{sb.b}) · HauteurDuFondu = {ListeDefilante.HauteurDuFondu} u · banc {W}×{H}, x = {W / 2}");
-                float ecartBas = 0f;
-                foreach (int y in new[] { 0, 1, 9, 18, 27, 36, 45, 54, 63, 71, 80 })
-                {
-                    Color32 a = avec.GetPixel(W / 2, y), b = sans.GetPixel(W / 2, y);
-                    float e = Ecart(avec.GetPixel(W / 2, y), sans.GetPixel(W / 2, y)) * 255f;
-                    if (y == 0) ecartBas = e;
-                    Debug.Log($"[MESURE-FONDU] y={y,2} (depuis le bas) : avec ({a.r},{a.g},{a.b}) · bureau seul ({b.r},{b.g},{b.b}) · écart max {e:0.#}/255");
-                }
-                Assert.Greater(ecartBas, 4f, "contrôle : au pied du fondu, l'image AVEC diffère du décor seul (la sonde mesure quelque chose)");
+                rendus[1] = banc.Rendre();
             }
-            finally { Detruire(avec); Detruire(sans); banc.Dispose(); }
+            finally { banc.Dispose(); }
+        }
+
+        [UnityTest]
+        public IEnumerator D4n_FonduDuMenuPlus_SeFondDansLeBasDuBureau()
+        {
+            // ⑱ : le fondu de fin de course du menu (`ListeDefilante.Indiquer(…, DecorsDeScene.MenuPlus.Support.CouleurDuBas)`, AppShell ;
+            // le lien source ↔ banc est la garde D4o de `DecorDeScenePosePlayModeTests`). Mesuré au créneau n°4 sur surfaceBase : pied
+            // (13,13,13) contre le bureau (43,18,12), 30/255 — le brun s'éteignait sur ~45 px. EFFET : sur TOUTE la hauteur du fondu,
+            // l'image AVEC reste à ±6/255 du décor seul (colonne centrale : l'ascenseur vit à droite). Contrôle : la même pile sur
+            // surfaceBase s'en écarte au pied (la sonde discrimine), et le pied du décor seul EST l'arrêt nommé (le nom lit le bon arrêt).
+            Color bas = DecorsDeScene.MenuPlus.Support.CouleurDuBas;
+            var bon = new Texture2D[2];
+            var temoin = new Texture2D[2];
+            try
+            {
+                yield return RendreLeFonduDuMenu(bas, bon);
+                yield return RendreLeFonduDuMenu(DesignTokens.Current.surfaceBase, temoin);
+                Proche(bas, bon[1].GetPixel(W / 2, 0), 6f, "le pied du décor seul est l'arrêt BAS du bureau");
+                var pires = new List<string>();
+                for (int y = 0; y <= Mathf.CeilToInt(ListeDefilante.HauteurDuFondu); y++)
+                {
+                    float e = Ecart(bon[0].GetPixel(W / 2, y), bon[1].GetPixel(W / 2, y)) * 255f;
+                    if (e > 6f) pires.Add($"y={y} : {e:0.#}/255");
+                }
+                Assert.IsEmpty(pires, $"le fondu ne se fond pas dans le bureau : [{string.Join(", ", pires)}]");
+                float temoinBas = Ecart(temoin[0].GetPixel(W / 2, 0), temoin[1].GetPixel(W / 2, 0)) * 255f;
+                Assert.Greater(temoinBas, 6f, "contrôle : sur surfaceBase, le pied du fondu s'écarte du bureau (la sonde voit le défaut)");
+            }
+            finally { Detruire(bon[0]); Detruire(bon[1]); Detruire(temoin[0]); Detruire(temoin[1]); }
+        }
+
+        [Test]
+        public void C9_CouleurDuBas_DernierArretDeLaCoucheHaute_SinonLeve()
+        {
+            SpecCouche c = DecorsDeScene.MenuPlus.Support.Couches[0];
+            Assert.AreEqual(c.Arrets[c.Arrets.Length - 1].Couleur.Resoudre(), DecorsDeScene.MenuPlus.Support.CouleurDuBas, "⑱ : le dernier arrêt du bureau");
+            var radial = new SpecSupport(new[] { SpecCouche.Radial(0.5f, 0.5f, 0.5f, 0.5f, c.Arrets) });
+            Assert.Throws<InvalidOperationException>(() => { var _ = radial.CouleurDuBas; }, "un radial n'a pas UN bas : il lève");
+            var biais = new SpecSupport(new[] { SpecCouche.Lineaire(135f, c.Arrets) });
+            Assert.Throws<InvalidOperationException>(() => { var _ = biais.CouleurDuBas; }, "un linéaire en biais n'a pas UN bas : il lève");
         }
 
         [UnityTest]
