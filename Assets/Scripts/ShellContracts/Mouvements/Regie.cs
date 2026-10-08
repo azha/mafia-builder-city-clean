@@ -89,6 +89,7 @@ namespace MafiaCleanCity.Mouvements
             bool melange = false;
             for (int ci = 0; ci < appui.Mouvement.Canaux.Length; ci++)
                 if (appui.Mouvement.Canaux[ci].P == Propriete.Melange) melange = true;
+            VerifierAdmise(appui);   // G1 sur TOUS les chemins, voile compris (revue ⊥ n°2 du §17, m4)
             if (melange && !PlaceMelangeLibre && voile != null && cibleVoile != null)
             {
                 if (voile.Genre != Genre.Retour) throw new ArgumentException("le voile est un Retour", nameof(voile));
@@ -97,7 +98,6 @@ namespace MafiaCleanCity.Mouvements
                 if (!hv.EstNul) BasculesVoile++;   // compté APRÈS un handle non nul (revue ⊥ du §17, B1)
                 return hv;
             }
-            VerifierAdmise(appui);
             return Creer(appui, surface, Reglage.Defaut, false, 0f, 0f, null, true);
         }
         /// <summary>Les `Attacher` faits sans régie (hôte nu) : le compteur est statique, `Courante` étant nul alors.</summary>

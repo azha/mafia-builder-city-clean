@@ -88,7 +88,7 @@ Constantes dans un `MouvementTunables` voisin de `UiTimingTunables`. **`UiTiming
 
 Canon (`global_conventions_core.md` l.33, l.127) : option **toggleable**, désactive les transitions (F2).
 - `PolitiqueMouvement` = `Plein | Reduit` (`Aucun` : tests et contrôle négatif seulement).
-- **`Reduit`** : tout est figé à `PoseDeReposS`, **y compris** `Alerte` (son état statique nommé existe sans pulsation). **Exceptions** : (i) `Retour` garde le **mélange** de couleur à l'appui — **ou, pour `retour.appui-voile` seulement, son voile `Alpha` (§17)** —, plus le liseré du bouton quand il en a un (le canon veut qu'une couleur ne soit pas le seul différenciateur), sans échelle ; (ii) une entrée **`Fonctionnelle`** (un `Remplissage` de progression : l'arc de 1 000 ms de l'appui long) **ne se gèle pas** : elle devient un indicateur statique plus un compteur textuel (`screen_2a:314`, `screen_13:308`), car le geler supprimerait le seul signal d'une action irréversible.
+- **`Reduit`** : tout est figé à `PoseDeReposS`, **y compris** `Alerte` (son état statique nommé existe sans pulsation). **Exceptions** : (i) `Retour` garde le **mélange** de couleur à l'appui (prédicat implémenté, `PolitiqueMouvement.Gele` : tout canal `Melange` d'un `Retour`, et tout canal `Alpha` d'un `Retour` SANS `PoseDeReposS` déclarée ; une nouvelle entrée `Retour`/`Alpha` doit donc déclarer sa pose, comme `carnet.en-main`, sinon elle reste animée sous `Reduit`) — **ou, pour `retour.appui-voile` seulement, son voile `Alpha` (§17)** —, plus le liseré du bouton quand il en a un (le canon veut qu'une couleur ne soit pas le seul différenciateur), sans échelle ; (ii) une entrée **`Fonctionnelle`** (un `Remplissage` de progression : l'arc de 1 000 ms de l'appui long) **ne se gèle pas** : elle devient un indicateur statique plus un compteur textuel (`screen_2a:314`, `screen_13:308`), car le geler supprimerait le seul signal d'une action irréversible.
 - **Source** : le réglage du joueur dans ⑲ est **un REUSE du canon** (`screen_14:71,146,208,251,298`), pas une question produit ; persistance en `PlayerPrefs` en attendant `PATCH /v1/me/settings` (aucun `GET` n'existe : lot back différé). S'y ajoute Android `Settings.Global.ANIMATOR_DURATION_SCALE == 0` (JNI), relu à chaque `OnApplicationPause(false)`. iOS : réglage joueur seul. Niveau = `Reduit` si l'une des deux sources le demande.
 - Limite de clignotement (G5) : toutes politiques, tous canaux, après `Alterne`, **au plus 3 extrema par seconde (période ≥ 0,667 s)** par piste d'alpha/mélange/éclat. (Le canon de ③ demande un flash toutes les 250 ms : G5 gagne, contradiction consignée avant E3.)
 
@@ -138,6 +138,7 @@ Le test pur applique la table de repère du §2 puis exige : valeur normalisée 
 | G11 | **v4.4, prédicat exact** : une **translation** est refusée si le **parent direct** de la cible porte un `LayoutGroup` (sans `LayoutElement.ignoreLayout` sur la cible) — un `LayoutGroup` ne réécrit la position que de ses enfants directs — ou si la cible porte elle-même un `ContentSizeFitter` ; une **`Echelle`** est refusée si la cible **ou un ancêtre quelconque** porte un `ContentSizeFitter`. (Un `LayoutGroup` ne pilote pas `localScale` : 306 `LayoutGroup` coexistent avec les 67 boutons) | runner |
 | G12 | pas de deux `Absolu` sur le même couple | runner |
 | G13 | `Ambiance` invisible refusée (seuils par propriété, §6.2) | runner |
+| G14 | **source** (revue ⊥ n°2 du §17, M1/m1) : (a) aucun `Attacher(`/`Transitionner(` sur `retour.appui` ou `retour.appui-voile` hors `Regie.AttacherRetourAppui` ; (b) `AttacherRetourAppui(` n'est appelé que depuis `Retour.cs` (E2), avec ces deux `Id` seulement — jamais `retour.appui-long` ni `carnet.en-main` | source |
 
 Ce qui prouve quoi : le typecheck hors Unity prouve syntaxe et types ; **toute exécution passe par un créneau** (une seule assembly de tests, `Assets/Tests/PlayMode`, `[Test]` et `[UnityTest]` dans le runner). Groupés.
 
@@ -235,13 +236,12 @@ calque éteint peut s'allumer (`DistrictCellView.cs:65`, `:114`).
 l'appui, l'état est celui que le joueur voit, et la règle donne un résultat calculable et stable pour cet appui) :
 - `RendSurface(g)` ⇔ `g` est un `Graphic` **non texte**, `g.enabled`, `g.gameObject.activeInHierarchy`, sans `Mask` à
   `showMaskGraphic = false` sur `g.gameObject`, et dont l'écart RENDU de `Cible` à `Cible × 0,85`, multiplié par `g.color.a`
-  et par l'alpha cumulé des `CanvasGroup` de ses ancêtres, atteint `MouvementTunables.SeuilCouleurRendue` (3/255, §6.2) —
+  et par l'alpha cumulé des `CanvasGroup` **du GameObject de `g` lui-même et de ses ancêtres**, atteint `MouvementTunables.SeuilCouleurRendue` (3/255, §6.2) **sur le plus grand des trois canaux R, G, B, en valeurs sRGB 0-255 telles que Unity les stocke dans `Color`** (c'est `Couleurs.EcartRvb`, `Couleurs.cs:32` ; revue ⊥ n°2 du §17, B1 : sur `InspectionScreenController.cs:415`, `Or` à α 0,18, l'écart vaut R 5,9 · G 4,6 · B 2,1 sur 255 — « le plus grand canal » ⇒ cas 2, « tous les canaux » ⇒ cas 3 ; c'est le plus grand canal qui est retenu) —
   revue du §17, M3-M4 : un seuil d'alpha seul acceptait un mélange invisible (α 0,10 sur fond sombre : 0,5/255), et un
-  bouton dans un groupe en fondu (`BandeauEphemere.cs:207`, `:298`). La surface est le PREMIER `Graphic` de son GameObject
+  bouton dans un groupe en fondu (`BandeauEphemere.cs:207`, `:298`). Un `RectMask2D` n'entre pas dans le prédicat (revue ⊥ n°2 du §17, m6) : il filtre aussi les raycasts, donc un bouton pressable n'est jamais entièrement découpé, et son découpage partiel est un écart de nuance (C), pas un retour invisible. La surface est le PREMIER `Graphic` de son GameObject
   (la régie le re-résout par `GetComponent<Graphic>()`, `RegieInterne.cs:124`).
 - `Peint(t)` ⇔ la sous-arborescence de `t` (lui compris) porte au moins un `Graphic`, **texte compris** (un `TMP_Text` NON
-  VIDE : `!string.IsNullOrWhiteSpace(text)`, revue du §17 M2), `enabled`, actif, `color.a ≥ 0,1`, hors `Mask` invisible, et
-  l'alpha cumulé des `CanvasGroup` ancêtres ≥ 0,1. C'est ce qu'un voile `Alpha` peut assombrir (un `CanvasGroup` fond un texte :
+  VIDE : `!string.IsNullOrWhiteSpace(text)`, revue du §17 M2), `enabled`, actif, hors `Mask` invisible, et dont l'écart RENDU du voile — 0,20 × max(R,G,B) × color.a × (alpha cumulé des `CanvasGroup` du GameObject du `Graphic` et de ses ancêtres, jusqu'à la racine du Canvas), en 0-255 — atteint `SeuilCouleurRendue` (3/255) : le même critère de perceptibilité que `RendSurface` (revue ⊥ n°2 du §17, M4-M5 : un seuil d'alpha nu laissait passer un fond à α 0,10, soit 0,8/255). C'est ce qu'un voile `Alpha` peut assombrir (un `CanvasGroup` fond un texte :
   G6 n'interdit que les canaux ≠ `Alpha`).
 
 **Quoi.** `Retour.Poser(Button b, Graphic surface = null)` attache un `RetourAppui` ; au `PointerDown`, il choisit :
@@ -249,7 +249,15 @@ l'appui, l'état est celui que le joueur voit, et la règle donne un résultat c
    `Regie.AttacherRetourAppui`, qui (a) lui RÉSERVE une place non-`Ambiance` (`MouvementTunables.PlacesReserveesRetourAppui
    = 1` : les autres `Alerte/Retour/Transition` s'arrêtent à 15) et (b) si le plafond `Melange` du §4 est atteint, envoie les
    cas 1-2 directement au voile (cas 3-4), la bascule comptée APRÈS un handle non nul. Rien n'est évincé. Un bouton qui ne
-   peint rien du tout (cas 5) n'est pas un refus de la régie : il se DÉCLARE (G9).
+   peint rien du tout (cas 5) n'est pas un refus de la régie : il se DÉCLARE (G9). **Ce que la réserve neutralise** : le quota
+   non-`Ambiance` et le plafond `Melange`. **Ce qu'elle ne neutralise pas** (revue ⊥ n°2 du §17, M2) : l'absence de voile
+   (`voile` ou `cibleVoile` nuls ⇒ le refus ordinaire s'applique), `Couple.Realisable` (`Melange` exige un `Graphic` sur la cible,
+   `RegieInterne.cs:102`), G12 (inatteignable sur ce catalogue : `retour.appui` n'a qu'un `Absolu` par couple, la piste est
+   transitoire), les couples épuisés et les 48 pistes du client. **`Retour.Poser` traite donc un handle NUL** : le retour est
+   alors perdu pour cet appui, et compté (`RetourAppui.SansRetour`, comme le cas 5) ; il ne lève jamais. `AttacherRetourAppui`
+   impose `Reglage.Defaut` et n'offre pas de `quandFini` (dette 23) : le retour se détache au relâchement par `Detacher`.
+   **Seul `retour.appui` / `retour.appui-voile` passe par cette méthode** (G14, ci-dessous) : la réserve est celle du geste du
+   joueur, pas d'un `Retour` quelconque.
 1. la `surface` nommée par l'appelant, si `RendSurface` ⇒ `retour.appui` (`Melange` `CouleurA = Cible` + `Echelle` sous
    les conditions du §8 et de G11). L'appelant la nomme quand le `targetGraphic` est un masque qui ne peint pas : ce sont
    trois **sites** de création (un par carte, par geste…), `ExceptionDetailController.cs:570` → `Verre`,
@@ -275,7 +283,11 @@ Sous `Reduit`, le voile est gardé comme le mélange : §5 (i) vise le `Melange`
 `retour.appui-voile`, **et rien d'autre**.
 
 **Gardes.** G9 : tout `Button` monté, **actif et `interactable`** au moment du relevé, a un `RetourAppui` ; le test, après le premier rendu de chaque écran, simule un
-`PointerDown` sur chaque bouton et relève le cas retenu et la cible ; il ROUGIT si un bouton tombe en cas 5 sans
+`PointerDown` sur chaque bouton et relève le cas retenu et la cible. **Protocole du relevé** (revue ⊥ n°2 du §17, M7) : sur une régie
+VIERGE (`RegieMouvement.PourTest()`), avec un `Detacher` du handle APRÈS chaque bouton relevé — sans quoi les 10 premiers
+cas 1-2 remplissent le plafond `Melange` et tous les suivants basculent en cas 0, faussant le relevé et masquant les cas 5 ;
+le cas est relevé dans l'état MONTÉ à ce moment, et les sites conditionnels (`DistrictInteriorScreenController.cs:691`,
+`ExceptionQueueController.cs:605`) le sont dans CHACUN de leurs états montables, chaque état nommé au relevé ; il ROUGIT si un bouton tombe en cas 5 sans
 déclaration (surface nommée ou exclusion nommée avec sa raison). Contrôles négatifs NOMMÉS, un par façon de ne rien
 peindre : `Image` d'alpha 0, `Mask` à `showMaskGraphic = false`, `Graphic.enabled = false`, GameObject inactif, état qui
 change entre la pose et l'appui (α 1 → 0), zone de clic nue sans enfant (voile sur le parent), parent trop grand (cas 5),
@@ -286,3 +298,17 @@ pile est le `VerticalLayoutGroup` du GameObject de `CompressionScreenController`
 `ReserveDeBande` recalcule `v.padding.top` à chaque changement de rect. Le manomètre s'ajoute en ENFANT de la pile ; ne
 jamais écrire `padding.top` à la main.
 
+
+**Réponse à la revue ⊥ n°2 du §17 (v4.6, 08/10 — 1 BLOCKING, 7 MAJOR, 6 mineurs).**
+
+| point | traitement |
+|---|---|
+| B1 canal de `RendSurface` | le plus grand des canaux R, G, B, en sRGB 0-255 (= `Couleurs.EcartRvb`) ; mesure de `InspectionScreenController.cs:415` en exemple |
+| M1 / m1 `AttacherRetourAppui` ne garde que le `Genre` | G14 (source, §10) : dans les deux sens, `Retour.cs` seul appelant, deux `Id` seulement ; dette 21 réciproque |
+| M2 chemins de refus non neutralisés | cas 0 : liste de ce que la réserve neutralise / ne neutralise pas ; `Retour.Poser` traite un handle nul (perdu, compté `SansRetour`) |
+| M3 catalogue §I.4 (`:343`) sans le repli ni l'appel obligatoire | reporté |
+| M4 / M5 `CanvasGroup` du nœud lui-même ; seuil d'alpha nu de `Peint` | cumul « du GameObject du `Graphic` et de ses ancêtres » ; `Peint` au même critère d'écart rendu (0,20 × canal max × alphas ≥ 3/255) |
+| M6 « 18 sur 48 » du catalogue | recompté sur le quota non-`Ambiance` ; la place réservée est porteuse |
+| M7 protocole de relevé de G9 | régie vierge + `Detacher` après chaque bouton ; états montables nommés |
+| m2 « 8 » au catalogue · m3 `Reglage.Defaut` / pas de `quandFini` · m5 prédicat de `Reduit` · m6 `RectMask2D` | catalogue corrigé ; dits en §17 cas 0 · §5 (i) · §17 `RendSurface` |
+| m4 G1 contournée sur le chemin du voile | CODE : `VerifierAdmise(appui)` avant la bascule (`Regie.cs`), test neuf `E0_AttacherRetourAppui_HorsCatalogue_Leve_MemeSurLeCheminDuVoile`, mutation vérifiée (harnais 82/82) |

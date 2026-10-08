@@ -204,6 +204,26 @@ namespace MafiaCleanCity.Mouvements.Tests
         }
 
         [Test]
+        public void E0_AttacherRetourAppui_HorsCatalogue_Leve_MemeSurLeCheminDuVoile()
+        {
+            // revue ⊥ n°2 du §17, m4 — G1 sur TOUS les chemins : plafond Melange plein ⇒ chemin du voile ; un appui hors catalogue lève quand même
+            Entree m = MelangeDe("t.melange.g1", Genre.Alerte);
+            for (int i = 0; i < MouvementTunables.PistesMelangeMax; i++)
+                regie.Attacher(m, Img("g" + i, Color.white).rectTransform, Reglage.Defaut);
+            Assert.IsFalse(regie.PlaceMelangeLibre);
+            var defVoile = new MouvementDefini("t.voile.g1", Genre.Retour, 0.09f,
+                new[] { new Canal(Propriete.Alpha, Mode.Multiplicatif, new[] { AidesMouvement.K(0f, 1f), AidesMouvement.K(1f, 0.8f) }) }, Iteration.Fois(1));
+            Entree voile = Admise(AidesMouvement.Faire("t.voile.g1", defVoile));
+            var defAppui = new MouvementDefini("t.appui.g1", Genre.Retour, 0.09f,
+                new[] { new Canal(Propriete.Melange, Mode.Absolu, new[] { AidesMouvement.K(0f, 0f), AidesMouvement.K(1f, 1f) }) },
+                Iteration.Fois(1), couleurA: CouleurSpec.Cible, couleurB: CouleurSpec.CibleFois(0.85f));
+            Entree horsCatalogue = AidesMouvement.Faire("t.appui.g1", defAppui);   // NON admise
+            Image b = Img("bouton.g1", Color.white);
+            Assert.Throws<ArgumentException>(() => regie.AttacherRetourAppui(horsCatalogue, b.rectTransform, voile, b.rectTransform));
+            Assert.AreEqual(0, regie.BasculesVoile, "rien n'a été attaché");
+        }
+
+        [Test]
         public void Hote_SansHote_EstRefuse_EtCompte()
         {
             // §3 — une entrée `SansHote:<raison>` existe au catalogue mais n'a pas d'hôte : jamais attachée, comptée

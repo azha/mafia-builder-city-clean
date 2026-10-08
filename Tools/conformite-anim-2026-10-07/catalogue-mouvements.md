@@ -340,7 +340,7 @@ repos sur chaque canal (G3) ; le gel évalue le mouvement à `PoseDeReposS` **sa
 
 | `Entree.Id` | `Ecrans` | `Genre` | cible | canaux (`Propriete` · `Mode`) | `Iteration`, durée ou période | `PoseDeReposS` (s) | `CouleurA` → `CouleurB` | `Hote` | `Pistes` |
 |---|---|---|---|---|---|---|---|---|---:|
-| `retour.appui` | `*` | Retour | la surface qui `RendSurface` au `PointerDown` (nommée, sinon `targetGraphic`) | `Echelle` Mult (sous condition) · `Melange` Abs | appui 90 ms puis relâché 140 ms | — | `Cible` → `Cible × 0,85` | client | 1 |
+| `retour.appui` | `*` | Retour | la surface qui `RendSurface` au `PointerDown` : la `surface` nommée, sinon `targetGraphic`, **à défaut le `Graphic` porté par le GameObject du bouton** (9 sites sur 67 ont un `targetGraphic` nul) ; appel **obligatoire** par `Regie.AttacherRetourAppui` (design §17 cas 0, G14) | `Echelle` Mult (sous condition) · `Melange` Abs | appui 90 ms puis relâché 140 ms | — | `Cible` → `Cible × 0,85` | client | 1 |
 | `retour.appui-voile` | `*` | Retour | le `Button` s'il `Peint`, sinon son parent direct (aire ≤ 2×) ; sinon aucun (compté, déclaré) — aussi quand le plafond `Melange` est plein (cas 0) ; appel par `Regie.AttacherRetourAppui` | `Alpha` Mult | appui 90 ms puis relâché 140 ms | — | — | client | 1 |
 | `retour.appui-long` | `*` (5 instances : ④ ⑤ ⑨ ⑩ ⑯) | Retour | un `Ring` `Filled` posé sur l'objet pressé | `Remplissage` Abs | Fois 1, 1 000 ms | — | — | client (anneau à créer) · **`Fonctionnelle`** | 1 |
 | `shell.entree` | `*` | Transition | la racine du locataire | `Alpha` Mult | 160 ms | — | — | client | 1 |
@@ -1179,8 +1179,7 @@ et Transition +1 (`bascule.course`) ⇒ **+4** ✔
 - **Pire écran résolu : ㉙ à 14 pistes sur 16** (7 pour les silhouettes de la salle), puis ⑥ à 13 (les 7
   sections du détail, majorant). Tous les autres sont ≤ 12.
 - **Pire cas simultané dans tout le client** : ㉙ résolu (14) + les 4 `Alerte` du chrome en descente
-  (design §9) = **18 pistes sur 48** (design §4). La couche de mouvement n'approche pas son plafond
-  avec ce catalogue — le plafond protège contre ce qui viendra après (E5, les 202 pivots de feuilles
+  (design §9) = **18 pistes sur 48** (design §4) — mais ce n'est PAS le total qui borne le retour d'appui : c'est le quota **non-`Ambiance`** (15 + 1 réservée), que 7 pistes tenues du chrome (4 `Alerte` + 3 `Transition` qui tiennent leur valeur : `aiguille.balayage`, deux virages, que §V ne compte pas) + 7 de ⑮ + `shell.entree` + le bandeau portent à 16 (revue ⊥ n°2 du §17, M6) ; la place réservée de `PlacesReserveesRetourAppui` est porteuse, ne la retirez pas comme inutile. Le plafond des 48 n'est pas approché — le plafond protège contre ce qui viendra après (E5, les 202 pivots de feuilles
   de la serre).
 - **Cadence** : les 6 `Ambiance` et les 5 `Alerte` tournent en régime ⇒ 11 lignes au plus en régime
   (jusqu'à 22 pistes : les 6 voyants de ⑮ et les 7 silhouettes de ㉙ ne sont jamais à l'écran
@@ -1389,7 +1388,7 @@ Rapport complet : `revue-catalogue-n4.md` (même dossier). Comptes de la v4 tous
 | M4-5 « trois boutons » | trois **sites** ; `LaSuitePanelController.cs:223` seulement `if (premierGeste)` |
 | m4-1 à m4-8 | `:745-746` ; G8 nomme le voile ; design v4.5 cité ; `:1860` retiré ; libellé servi du badge (`conflit.bloc.ce_soir`, repli « En cours ») ; `conflit.envoi` dit « au CHOIX » en §I.4 ; l'argument CSF de §I.2.9 couvre la chaîne du shell (`AppShell.cs:1374`, `:1120`) ; G9 ne juge que les boutons actifs et `interactable` (les autres sont relevés et comptés) |
 
-**Ajout de la même journée, hors revue** : règles E0 ratifiées par f2 (design §4) — aucun Canvas créé par le mécanisme, `Alpha` d'abord, `Melange` interdit aux `Ambiance`, au plus 8 pistes `Melange` vivantes. Le catalogue v5 : 0 `Ambiance` en `Melange` ✔. Le plafond de 8 que j'avais proposé était TROP BAS (mon erreur de compte) : les deux virages du chrome (`Melange`) TIENNENT leur valeur quand la ville brûle ; sur ⑮ en alerte, 2 + 6 voyants de `police.dispatch` + 1 `retour.appui` = **9**. Décidé par f2 : **10**, et une règle de classe — **le retour d'appui du joueur n'est jamais celui qu'on refuse** : plafond atteint ⇒ il bascule sur le voile `Alpha` (`Regie.AttacherRetourAppui`, bascule comptée, aucune piste évincée). Test : `E0_RetourDAppui_JamaisRefuse_PlafondPlein_BasculeSurLeVoile`, mutation vérifiée.
+**Ajout de la même journée, hors revue** : règles E0 ratifiées par f2 (design §4) — aucun Canvas créé par le mécanisme, `Alpha` d'abord, `Melange` interdit aux `Ambiance`, au plus 8 pistes `Melange` vivantes (proposé à 8, ramené à 10 deux phrases plus bas). Le catalogue v5 : 0 `Ambiance` en `Melange` ✔. Le plafond de 8 que j'avais proposé était TROP BAS (mon erreur de compte) : les deux virages du chrome (`Melange`) TIENNENT leur valeur quand la ville brûle ; sur ⑮ en alerte, 2 + 6 voyants de `police.dispatch` + 1 `retour.appui` = **9**. Décidé par f2 : **10**, et une règle de classe — **le retour d'appui du joueur n'est jamais celui qu'on refuse** : plafond atteint ⇒ il bascule sur le voile `Alpha` (`Regie.AttacherRetourAppui`, bascule comptée, aucune piste évincée). Test : `E0_RetourDAppui_JamaisRefuse_PlafondPlein_BasculeSurLeVoile`, mutation vérifiée.
 
 ---
 
