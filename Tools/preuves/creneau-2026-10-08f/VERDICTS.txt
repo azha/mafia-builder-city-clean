@@ -1,0 +1,23 @@
+# Créneau du 08/10 après-midi (CLIENT-1, porte 10:11-10:2x, sur la tête da1401bd + correctifs de revue ; run 2 sur le test Loi corrigé non commité au moment du run) — lignes de verdict extraites des journaux (journaux complets hors dépôt)
+# run1 = ScreenC1,EcranLoi,EcranAppro,EcranAccueil,BundleReel (noms nus) ; run2 = EcranLoi seul après correction de MA garde E4b (l'encre du cadre est cuite dans le sprite, l'Image reste blanche : lue sur la texture) ; run3 = ClichePlanchesParEcran
+== run1.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ScreenC1, EcranLoi, EcranAppro, EcranAccueil, BundleReel]
+MafiaCI: RunPlayModeTests started — 1154 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 41
+MafiaCI: FAIL MafiaCleanCity.Operational.Tests.LoiScreenPlayModeTests.EcranLoiE4b_PastillesEncadrees_EnPlaceVert_AvertissementAFiletEtGras —   Carte_commis_d_office : cadre et texte de la MÊME encre (currentColor)
+MafiaCI: RunPlayModeTests finished — passed=40 failed=1 skipped=0 inconclusive=0 declares=41 comptes=41
+MafiaCI: catégories RÉELLEMENT exécutées = [BundleReel, EcranAccueil, EcranAppro, EcranLoi, ScreenC1]
+MafiaCI: VERDICT code=1 (failed=1 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+  Expected: less than or equal to 4.0f
+  But was:  171.758545f
+== run2.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [EcranLoi]
+MafiaCI: RunPlayModeTests started — 1154 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 15
+MafiaCI: RunPlayModeTests finished — passed=15 failed=0 skipped=0 inconclusive=0 declares=15 comptes=15
+MafiaCI: catégories RÉELLEMENT exécutées = [EcranLoi]
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run3.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ClichePlanchesParEcran]
+MafiaCI: RunPlayModeTests started — 1154 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 4
+MafiaCI: RunPlayModeTests finished — passed=4 failed=0 skipped=0 inconclusive=0 declares=4 comptes=4
+MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)

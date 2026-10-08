@@ -435,7 +435,13 @@ namespace MafiaCleanCity.Operational.Tests
                 Graphic contour = null;
                 foreach (Graphic g in filets.GetComponentsInChildren<Graphic>(true)) if (g.name == "Contour") contour = g;
                 Assert.IsNotNull(contour, kv.Key + " : le cadre est un contour (`border:1px solid currentColor`)");
-                Assert.LessOrEqual(MafiaCleanCity.Shell.Filets.Distance255(contour.color, badge.color), 4f, kv.Key + " : cadre et texte de la MÊME encre (currentColor)");
+                // l'encre du cadre est CUITE dans le sprite du contour (l'`Image` reste blanche) : on lit un texel opaque de la texture
+                Image contourImg = contour.GetComponent<Image>();
+                Assert.IsNotNull(contourImg.sprite, kv.Key + " : le contour porte son sprite");
+                Color32? texel = null;
+                foreach (Color32 px in contourImg.sprite.texture.GetPixels32()) if (px.a >= 250) { texel = px; break; }
+                Assert.IsTrue(texel.HasValue, kv.Key + " : le cadre a des texels opaques (un réglage valide peut ne produire aucun pixel)");
+                Assert.LessOrEqual(MafiaCleanCity.Shell.Filets.Distance255(texel.Value, badge.color), 4f, kv.Key + " : cadre et texte de la MÊME encre (currentColor)");
 
                 Rect rc = Monde((RectTransform)carte), rp = Monde((RectTransform)pastille), rb = Monde(badge.rectTransform);
                 Assert.Greater(rp.width, rb.width + 0.5f, kv.Key + " : la pastille déborde le texte (marge intérieure 5 px)");
