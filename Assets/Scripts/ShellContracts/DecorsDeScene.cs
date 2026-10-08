@@ -13,7 +13,7 @@ namespace MafiaCleanCity.Shell
     ///    dans l'ordre CSS (la première est la plus HAUTE).
     /// ⚠️ Statuts : Posé 22 · DéjàLivré 3 (⑨ ⑩ ⑯ : zinc de `DecorAuComptoir`, non migrés) · NonMonté 1 (㉑).
     ///    Hors catalogue (décision f2) : ④ ⑥ ⑪ ㉕ ⑲ ① ② ⑬ ⑳.</summary>
-    public static class DecorsDeScene
+    public static partial class DecorsDeScene
     {
         // ── jetons (§4.1) ─────────────────────────────────────────────────────────────────────────────────────
         private static readonly Teinte Or = Teinte.Jeton("hudMoneyUnderlineGold", t => t.hudMoneyUnderlineGold);       // #d9ab4e

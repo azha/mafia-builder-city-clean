@@ -163,12 +163,21 @@ namespace MafiaCleanCity.Shell
         /// <summary>`box-shadow: inset 0 0 0 1px` : un trait de 1 px JUSTE À L'INTÉRIEUR du filet (le cerne : `#0b1016`).
         /// Ajout au §2 du design, qui le décrit au §3.3 sans lui donner de champ.</summary>
         public readonly Teinte? Lisere;
+        /// <summary>`border-radius` en POURCENTAGE (`50%` : une pastille, un cadran) : fraction du plus petit côté du
+        /// bloc, résolue sur son rect réel. 0 = `Rayon` (px CSS) fait foi.</summary>
+        public readonly float RayonPct;
+        /// <summary>La couleur telle que la MESURE l'a lue, SANS son « # » (`1f2a3a@0.4`) — null pour une recette écrite à
+        /// la main. Lue par D6(a) pour comparer le catalogue généré à `mesure-filets.json` sans repasser par les jetons.
+        /// ⚠️ Sans « # » parce que la garde TD-612 lit toute chaîne `"#rrggbb"` comme un LITTÉRAL de couleur : la teinte
+        /// écrite par son jeton serait accusée par sa propre trace de mesure.</summary>
+        public readonly string CouleurCss;
 
         public SpecFilet(Cotes cotes, float epaisseurCss, StyleFilet style, Teinte couleur, float rayon = 0f, float inset = 0f,
-                         Teinte? lueur = null, float flouLueurCss = 0f, Teinte? lisere = null)
+                         Teinte? lueur = null, float flouLueurCss = 0f, Teinte? lisere = null, float rayonPct = 0f,
+                         string couleurCss = null)
         {
             Cotes = cotes; EpaisseurCss = epaisseurCss; Style = style; Couleur = couleur; Rayon = rayon; Inset = inset;
-            Lueur = lueur; FlouLueurCss = flouLueurCss; Lisere = lisere;
+            Lueur = lueur; FlouLueurCss = flouLueurCss; Lisere = lisere; RayonPct = rayonPct; CouleurCss = couleurCss;
         }
     }
 
@@ -570,6 +579,44 @@ namespace MafiaCleanCity.Shell
             for (int j = couches.Length - 1; j >= 0; j--) if (couches[j].EstOpaque) return couches[j];
             return SpecCouche.Plein(Teinte.Nommee("noir", Color.black));
         }
+
+        // ───────────────────────────────────────────────────────────────────────────────────────────── enseigne (A)
+
+        /// <summary>L'ENSEIGNE de la famille A (§3.3) — `.enseigne{background:linear-gradient(178deg,rgba(11,17,27,.91),
+        /// rgba(13,19,30,.85)); border:1px solid #2a3648; border-bottom:2px solid #b08d3e; box-shadow:inset 0 1px 0 #ffffff0f}`.
+        /// Le bloc et son TEXTE appartiennent à l'écran (`margin:13px 13px 0`, sa hauteur suit le texte) : le décor
+        /// l'HABILLE — plaque `Plaque` (premier enfant, hors mise en page) et filets — sans le placer. `bord` = la recette
+        /// MESURÉE de l'écran (`DecorsDeScene.Filets.&lt;Ecran&gt;.Enseigne`) ; le liseré blanc du haut est ajouté ici.
+        /// La plaque est translucide sur un fond CONNU : le haut du support A de `decor`.</summary>
+        public static Image HabillerEnseigne(RectTransform enseigne, SpecFilet[] bord, SpecDecor decor)
+        {
+            if (enseigne == null) throw new ArgumentNullException(nameof(enseigne));
+            if (decor?.Support == null || !decor.Support.Enseigne)
+                throw new ArgumentException("l'enseigne n'existe que sur un support de la famille A", nameof(decor));
+            Vector2 boite = BoiteSupportCss(decor);
+            Color fond = CouleurDeCouche(DernierOpaque(decor.Support.Couches), 0.5f, 0.06f, boite);
+            Color haut = Ajuster(PlaqueHaut.Resoudre(), fond), bas = Ajuster(PlaqueBas.Resoudre(), fond);
+
+            var filets = new SpecFilet[(bord?.Length ?? 0) + 1];
+            if (bord != null) Array.Copy(bord, filets, bord.Length);
+            filets[filets.Length - 1] = new SpecFilet(Cotes.Haut, 1f, StyleFilet.Plein, Teinte.Nommee("blanc", Color.white, 0x0f / 255f),
+                                                      inset: 1f);
+            Color fondDuLisere = haut; fondDuLisere.a = 1f;
+            Filets.Poser(enseigne, filets, fondDuLisere);
+
+            Transform deja = enseigne.Find("Plaque");
+            if (deja != null) Detruire(deja.gameObject);
+            Image plaque = Graphique<Image>("Plaque", enseigne);
+            plaque.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            Etirer(plaque.rectTransform);
+            plaque.sprite = ProceduralUI.DegradeLineaire(178f, new[] { (0f, haut), (1f, bas) },
+                                                         LargeurCadreCss - 26f, 40f);
+            plaque.rectTransform.SetAsFirstSibling();   // sous les filets, sous le texte
+            return plaque;
+        }
+
+        private static Teinte PlaqueHaut => Teinte.Jeton("hudBarGlassTop", t => t.hudBarGlassTop, 0.91f);       // #0b111b (d 0,10)
+        private static Teinte PlaqueBas => Teinte.Jeton("hudBarGlassBottom", t => t.hudBarGlassBottom, 0.85f);  // #0d131e (d 0,15)
 
         // ───────────────────────────────────────────────────────────────────────────────────────────── outils
 

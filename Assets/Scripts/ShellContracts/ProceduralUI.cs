@@ -1462,6 +1462,34 @@ namespace MafiaCleanCity.Shell
             return Terminer(tex, pixels, key);
         }
 
+        /// <summary>Une TUILE de trait discontinu pour un côté droit — `border-style: dotted | dashed` (§3.4, `Filets`) —, en
+        /// UNITÉS DE CANVAS (1 texel = 1 unité : l'appelant pose l'Image en `Tiled` à multiplicateur neutre). Horizontale :
+        /// `periode × epaisseur`, le trait occupe les `trait` premiers texels ; verticale : la même, tournée.
+        /// Pointillé = trait = vide = épaisseur (CSS : des points de la taille du trait — 50 % de remplissage, mesuré par
+        /// le juge sur `#c3b79e`, ㉚) ; tireté : la longueur relève de l'appelant (non mesurée, consigné).</summary>
+        public static Sprite TuileTirets(int traitPx, int videPx, int epaisseurPx, Color teinte, bool vertical)
+        {
+            int trait = Mathf.Max(1, traitPx), vide = Mathf.Max(0, videPx), ep = Mathf.Max(1, epaisseurPx);
+            int periode = Mathf.Max(2, trait + vide);
+            string key = $"tirets:{trait}:{vide}:{ep}:{(vertical ? 'v' : 'h')}:{ColorKey(teinte)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int w = vertical ? ep : periode, h = vertical ? periode : ep;
+            var tex = NewTexture(w, h);
+            tex.wrapMode = TextureWrapMode.Repeat;
+            tex.filterMode = FilterMode.Point;   // un tiret net : le bilinéaire étalerait le bord sur deux texels
+            var pixels = new Color[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    int le = vertical ? (h - 1 - y) : x;   // le tiret commence en HAUT d'un côté vertical, à GAUCHE d'un horizontal
+                    Color c = teinte;
+                    c.a *= le < trait ? 1f : 0f;
+                    pixels[y * w + x] = c;
+                }
+            return Terminer(tex, pixels, key);
+        }
+
         private static float DistanceEnroulee(float a, float b, float periode)
         {
             float d = Mathf.Abs(a - b);
