@@ -1,0 +1,134 @@
+### python3 -I m_f2_bas.py
+6 appr6 ['Lt. Kane : « L’étagère est vide. Sans pyralin, je ne rallume pas. »']
+7 appr6 ['La commande est payée et partie.']
+8 appr6 ['Lt. Rin : « Ça refoule. Je peux remonter d’un cran, mais un seul à la fois — et chaque cran prend du temps. »']
+9 appr6 ['Lt. Rin : « Ça refoule. Je peux remonter d’un cran, mais un seul à la fois — et chaque cran prend du temps. »']
+10 appr6 ['Lt. Rin : « C’est le fournisseur. Il ne livre plus, et il ne le dira pas. »']
+11 appr6 ['Lt. Hara : « L’approvisionnement, c’est moi maintenant. Je commande quand il faut. »']
+12 lieg6 ['« La marchandise est prête au labo. Dites-moi qui part et par où, et je l’envoie ce soir. »']
+13 lieg6 ['« Il est parti à la nuit. Ça serpente, mais c’est la seule qui évite le pont du Threnny. »']
+14 lieg6 ['« Livré. Le carton est au comptoir, personne n’a rien vu. »']
+15 lieg6 ['« Cette route est brûlée — trop de monde y passe et ça se sait. Il faut la refaire autrement. »']
+16 lieg6 ['« Ils ont pris Lt. Tull au coin de Lattice. Il est au poste, il n’a rien dit pour l’instant. Vous décidez maintenant, pas demain. »']
+17 cfl6 ['«\xa0Dites-moi seulement chez qui. Je pars ce soir, on saura demain.\xa0»']
+18 cfl6 ['«\xa0Dites-moi seulement chez qui. Je pars ce soir, on saura demain.\xa0»']
+19 cfl6 ['«\xa0Lt. Marr, c’est les comptes, pas les coups. Et Saltline, on ne l’a jamais croisée — je ne saurais pas où frapper.\xa0»']
+20 cfl6 ['Deux personnes dehors. On ne les rappelle pas — on saura demain matin.']
+21 cfl6 ['«\xa0Voilà ce que ça a donné. À vous de dire si on y retourne.\xa0»']
+22 cfl6 []
+23 tabl6 ['« Dites-moi qui j’envoie et sur quoi. Je pars ce soir, on saura demain. »']
+24 tabl6 ['« Il est rentré. Regardez l’allumette : ce qu’il en reste vous dit ce que ça a donné. »']
+25 parl6 ['Lt. Rin : « Pour l’instant il n’a rien dit. Ça ne durera pas tout seul. »']
+26 parl6 ['Lt. Rin : « Le commis d’office ne coûte rien et ne gagne rien. Le cabinet coûte. La filière, elle, se paie deux fois. »']
+27 parl6 ['Lt. Rin : « Il a donné la planque et le nom de Lt. Hara. Ce qui est sorti ne rentrera pas. »']
+28 parl6 ['Lt. Rin : « Il a tout vidé. Il n’y a plus rien à sauver de ce côté. »']
+29 parl6 ['Lt. Rin : « À vous de dire. L’accord ferme le dossier proprement. La filière le fait disparaître, mais elle s’en souviendra. »']
+30 parl6 ['Lt. Rin : « Je ne peux pas vous dire s’il va tenir. Personne ne peut. »']
+31 serv6 ['Tant que vous tenez tout, rien ne se fait sans vous — et rien ne se fait pendant que vous dormez.']
+32 serv6 ['Lt. Hara\xa0: «\xa0Donnez-moi l’approvisionnement. Je m’en occupe, et vous ne verrez plus passer les commandes.\xa0»']
+33 serv6 ['Tant que vous tenez tout, rien ne se fait sans vous — et rien ne se fait pendant que vous dormez.']
+34 serv6 ['Vous pouvez la reprendre. Ce sera mal pris, et tout ce qui s’y était appris, il faudra le réapprendre.']
+35 serv6 ['Vous avez déjà confié l’embauche aujourd’hui.']
+36 serv6 ['Huit charges existent dans le jeu et personne n’y touche encore.']
+37 demo6 ['Lt. Rin : « On a trop de choses au même endroit. Il va falloir en enlever une. »']
+38 demo6 ['Lt. Rin : « Celui-là, on le garde par habitude. Il gêne les trois d’à côté et il ne rend presque rien. »']
+39 demo6 ['Une fois rasé, on ne le remet pas. La parcelle restera libre le temps de choisir quoi y mettre.']
+40 demo6 ['Vous avez déjà tranché une chose de structure aujourd’hui.']
+41 demo6 ['Lt. Rin : « Deux propositions. La première est mieux placée. Elles ne resteront pas sur la table. »']
+42 demo6 ['Lt. Rin : « Trop tard pour celle-là. »']
+43 carn6 ['Lt. Rin : « Cinq ordres. On peut en mettre trois de plus, ou partir comme ça. »']
+44 carn6 ['Lt. Rin : « Ça ne peut pas marcher. Chacun attend l’autre. »']
+45 carn6 ['Lt. Rin : « On peut y aller quand même, mais dites-le-moi clairement. »']
+46 carn6 ['Pour l’instant, chaque soirée se compose à la main.']
+47 carn6 ['Lt. Rin : « La tournée courte, je la connais par cœur. Dites juste le mot. »']
+48 carn6 ['Ce qui se passe là où vous avez quelque chose. Y être vu compte, dans un sens comme dans l’autre.']
+49 carn6 ['La ville ne vous prévient pas de tout — mais ce qui est annoncé, on peut s’y préparer.']
+52 vitr6 ['']
+53 vitr6 ['']
+54 vitr6 ['']
+73 rep6 []
+74 rep6 []
+75 rep6 []
+76 rep6 []
+77 rep6 []
+78 rep6 []
+85 dos6 []
+86 dos6 []
+87 dos6 []
+88 dos6 []
+89 dos6 []
+90 dos6 []
+97 dos6 []
+98 rep6 []
+103 demo6 ['Lt. Rin : « On a trop de choses au même endroit. Il va falloir en enlever une. »']
+104 dos6 []
+105 dos6 []
+
+### python3 -I m_07_juge_copie.py
+Le manomètre, maquette puis jeu, sur le même écran (㉚ E03) :
+  réf E03-cadre-48                   1080x2102  diam=194 px  épaisseur= 9 px =  4.6 % du diam  rayon d'arc= 89.9 = 92.7 % du rayon  | filet à y=81 ; or sur 13/110 px DANS le disque -> interrompu par le disque
+  jeu E03 2400                       1080x2400  diam=184 px  épaisseur= 5 px =  2.7 % du diam  rayon d'arc= 48.1 = 52.3 % du rayon  | filet à y=141 ; or sur 0/110 px DANS le disque -> interrompu par le disque
+
+Le même, sur trois autres écrans, pour vérifier que le chrome est bien IDENTIQUE partout :
+  réf E05-cadre-67.png               1080x2102  diam=194 px  épaisseur= 9 px =  4.6 % du diam  rayon d'arc= 89.9 = 92.7 % du rayon  | filet à y=81 ; or sur 13/110 px DANS le disque -> interrompu par le disque
+  réf E10-cadre-140-pas-enco         1080x2102  diam=194 px  épaisseur= 9 px =  4.6 % du diam  rayon d'arc= 89.9 = 92.7 % du rayon  | filet à y=81 ; or sur 13/110 px DANS le disque -> interrompu par le disque
+  réf E11-cadre-04-la-carte-         1080x2102  diam=194 px  épaisseur= 9 px =  4.6 % du diam  rayon d'arc=183.1 = 188.8 % du rayon  | filet à y=81 ; or sur 13/110 px DANS le disque -> interrompu par le disque
+  jeu E05_Loi_1080x2400.png          1080x2400  diam=184 px  épaisseur= 5 px =  2.7 % du diam  rayon d'arc= 48.1 = 52.3 % du rayon  | filet à y=141 ; or sur 0/110 px DANS le disque -> interrompu par le disque
+  jeu E10_Filire_1080x2400.p         1080x2400  diam=184 px  épaisseur= 5 px =  2.7 % du diam  rayon d'arc= 48.1 = 52.3 % du rayon  | filet à y=141 ; or sur 0/110 px DANS le disque -> interrompu par le disque
+  jeu E11_DecisionDetail_108         1080x2400  diam=184 px  épaisseur= 5 px =  2.7 % du diam  rayon d'arc=183.1 = 199.1 % du rayon  | filet à y=141 ; or sur 0/110 px DANS le disque -> interrompu par le disque
+
+contrôle positif  diamètre : réf 194 px / jeu 184 px -> rapport 0.948
+épaisseur de l'anneau : réf 4.6 % / jeu 2.7 % du diamètre
+rayon de l'arc        : réf 92.7 % / jeu 52.3 % du rayon
+
+### python3 -I m_f4_profil.py
+   bord haut anneau y= 25  centre retenu y= 126  (or a +-(R-4) sur la ligne:  6 /6 )
+REF E03-cadre-48: 1080x2102 centre=(540,126) diametre exterieur=194px R=97.0
+    60deg : or[0.0-9.5] or[93.5-99.5]
+    75deg : or[0.0-10.5] or[94.0-99.5]
+   105deg : or[0.0-11.5] teal[54.5-64.5] or[95.0-99.5]
+   120deg : or[0.0-10.5] teal[54.0-64.0] or[94.5-99.5]
+   150deg : or[0.0-8.5] teal[53.0-62.5] or[93.0-99.5]
+    30deg : or[0.0-6.0] rouge[50.5-61.0] or[92.0-98.5]
+   bord haut anneau y= 17  centre retenu y= 113  (or a +-(R-4) sur la ligne:  6 /6 )
+JEU E03 2400: 1080x2400 centre=(540,113) diametre exterieur=184px R=92.0
+    60deg : rouge[39.0-50.0] or[88.5-94.5]
+    75deg : or[89.0-94.5]
+   105deg : teal[40.0-51.0] or[89.0-94.5]
+   120deg : teal[40.0-50.5] or[89.5-94.5]
+   150deg : teal[39.0-49.0] or[88.5-94.5]
+    30deg : rouge[37.0-49.0] or[87.5-94.5]
+
+### python3 -I m_f4_ajust.py
+REF: arc  centre=(538.9,127.4) r_ajuste=58.4 radial p5..p95=51.0..65.3 (n=1589)
+      anneau centre=(539.3,121.7) r_ajuste=93.4 radial p2..p98=90.0..96.9 (n=2970)
+      => R ext anneau 96.9 | arc median/R ext = 0.603 | arc ext(p95)/R ext = 0.674 | epaisseur anneau 6.9px = 3.6 % du diametre
+JEU: arc  centre=(539.6,107.9) r_ajuste=41.5 radial p5..p95=36.1..46.4 (n=1169)
+      anneau centre=(539.5,109.8) r_ajuste=89.5 radial p2..p98=85.7..93.5 (n=3118)
+      => R ext anneau 93.5 | arc median/R ext = 0.444 | arc ext(p95)/R ext = 0.496 | epaisseur anneau 7.8px = 4.2 % du diametre
+
+arc median/R ext : ref 0.603 jeu 0.444 (jeu/ref 0.737) | arc ext/R ext : ref 0.674 jeu 0.496 | anneau %diam : ref 3.6 jeu 4.2
+REF: depuis le centre de l'anneau (539.3,121.7) : arc p5..p50..p95 = 49.5 / 55.1 / 67.2 ; /R ext : 0.511 / 0.569 / 0.694
+JEU: depuis le centre de l'anneau (539.5,109.8) : arc p5..p50..p95 = 37.1 / 42.6 / 47.3 ; /R ext : 0.397 / 0.456 / 0.506
+
+### python3 -I m_10b_juge_copie.py
+  maquette c04     1080x2102  bord du feutre y=749 (35.6 % de H)  or sur 28/28 colonnes de bord  épaisseur médiane=  8 px  -> LISERÉ
+                   ce qu'il y a juste au-dessus du bord : [(174, 140, 62), (176, 141, 62), (176, 141, 62)]
+  jeu 2400         1080x2400  bord du feutre y=1042 (43.4 % de H)  or sur  1/28 colonnes de bord  épaisseur médiane=  2 px  -> ABSENT
+                   ce qu'il y a juste au-dessus du bord : [(77, 76, 71), (78, 75, 70), (77, 74, 70)]
+  jeu 1920         1080x1920  bord du feutre y=562 (29.3 % de H)  or sur  0/28 colonnes de bord  épaisseur médiane=  0 px  -> ABSENT
+                   ce qu'il y a juste au-dessus du bord : [(58, 79, 101), (58, 79, 101), (58, 79, 101)]
+
+### python3 -I m_10_juge_copie.py
+(a) le bouton de la carte du jour
+  maquette ⑤  E11 cadre 04     1080x2102  remplissage=(173, 138, 60)     encre=(72, 56, 19)
+  maquette ④  A01 cadre 5      1080x2102  remplissage=(209, 165, 68)     encre=(36, 24, 4)
+  jeu ⑤      E11 2400          1080x2400  remplissage=(216, 202, 167)    encre=(147, 64, 42)
+  jeu ④ tête A01 1920          1080x1920  remplissage=(11, 16, 27)       encre=(227, 189, 97)
+
+(b) le liseré d'or en haut du tapis de feutre de ⑤
+  maquette ⑤ cadre 04                1080x2102  or trouvé sur 68/68 colonnes  épaisseur médiane=10 px
+  jeu ⑤ 2400                         1080x2400  or trouvé sur 17/68 colonnes  épaisseur médiane=7 px
+
+contrôle négatif : le liseré est-il vu dans la MAQUETTE ? OUI
+

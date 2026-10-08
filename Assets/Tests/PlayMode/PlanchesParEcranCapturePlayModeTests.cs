@@ -420,14 +420,19 @@ namespace MafiaCleanCity.Capture.Tests
 
         private static IEnumerator Charger(MonoBehaviour ecran, System.Action<string> etat)
         {
-            string[] finis = { "RenduTermine", "QueueLoaded", "DashboardLoaded", "CardLoaded", "IsLoaded", "ReportsLoaded", "RenderedEmptyState" };
+            string[] finis = { "RenduTermine", "QueueLoaded", "DashboardLoaded", "CardLoaded", "IsLoaded", "ReportsLoaded", "RenderedEmptyState", "ProposeAchatTermine" };
             string[] comptes = { "RendusEffectues", "RenderedCardCount" };
             string[] objets = { "LastLoadedReview", "DernierChargement", "DernierChargementProjection" };
             // ⛔ Les écrans à PLUSIEURS chargements (juge groupé du 07/10) : ㊳ rend `DernierChargement` AVANT ses deux autres listes (la planche à 2400 n'était pas dans l'état de celle à 1920), ㉘ n'avait AUCUN
             // drapeau reconnu (attente fixe de 6 s). On attend TOUS ceux que l'écran expose : `RenduTermine` (㊳), `DernierChargementCouriers` ET `DernierChargementProjection` (㉘).
-            string[] tousRequis = { "RenduTermine", "DernierChargementCouriers", "DernierChargementProjection" };
+            // ⛔ ㉘ (juge d'ensemble r2, F5-b) : l'état « aucun relais » pose `DerniereErreur` AVANT de rendre l'état vide et AVANT de chercher le geste « acheter un relais » (réseau : `GetDistricts`, puis un `Interior`
+            //    par quartier). Le verdict « erreur » rendait la main à cet instant : la planche à 2400 était prise SANS le geste, celle à 1920 AVEC (le réseau avait répondu entre les deux prises). Pour un écran qui
+            //    expose `ProposeAchatTermine`, `DerniereErreur` n'est qu'un DIAGNOSTIC (il ne met pas fin à l'attente) et la fin du chargement — geste compris — est attendue ; l'état « aucun relais » n'a ni
+            //    courriers ni projection à attendre.
+            string[] tousRequis = { "RenduTermine", "DernierChargementCouriers", "DernierChargementProjection", "ProposeAchatTermine" };
             string[] erreurs = { "DerniereErreur", "LastError", "QueueError", "CardError", "AuthError" };
             System.Type t = ecran.GetType();
+            if (t.GetProperty("ProposeAchatTermine") != null) erreurs = erreurs.Where(n => n != "DerniereErreur").ToArray();
             System.Func<string, object> lire = n => { var p = t.GetProperty(n); try { return p?.GetValue(ecran); } catch { return null; } };
             bool connu = finis.Concat(comptes).Concat(objets).Any(n => t.GetProperty(n) != null);
             if (!connu)
@@ -451,12 +456,18 @@ namespace MafiaCleanCity.Capture.Tests
                 {
                     bool manque = false;
                     foreach (string n in tousRequis)
-                        if (t.GetProperty(n) != null) { object x = lire(n); if (x == null || (x is bool bx && !bx)) manque = true; }
+                        if (t.GetProperty(n) != null)
+                        {
+                            if (n.StartsWith("DernierChargement") && lire("AucunRelais") is bool aucun && aucun) continue;   // ㉘ sans relais : rien à charger
+                            object x = lire(n); if (x == null || (x is bool bx && !bx)) manque = true;
+                        }
                     foreach (string n in erreurs) if (lire(n) is string e && !string.IsNullOrEmpty(e)) manque = false;
                     if (!manque) break;
                     yield return null;
                 }
             if (v != null && lire("EtatVide") is bool vide && vide) v += " · état vide";
+            if (v != null && lire("AucunRelais") is bool sansRelais && sansRelais)
+                v += " · aucun relais" + (lire("BlocDAchatDeRelais") is int bloc && bloc >= 0 ? " · AVEC le geste d'achat" : " · SANS geste d'achat (aucun bloc libre)");
             for (int i = 0; i < 20; i++) yield return null;
             etat(v ?? "⚠️ NON ABOUTI en 20 s — la planche montre l'écran tel qu'il est à 20 s");
         }

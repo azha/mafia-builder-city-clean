@@ -1,6 +1,7 @@
 using System.Collections;
 using MafiaCleanCity.CityMap;
 using MafiaCleanCity.CitySim.Inspection;
+using MafiaCleanCity.Shell;
 using MafiaCleanCity.Tests;
 using NUnit.Framework;
 using UnityEngine;
@@ -155,6 +156,118 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
             }
             Assert.GreaterOrEqual(lus, 5, "population lue : titre, cible, effet, prix, libellé du tampon, avertissement (anti-vacuité)");
             Assert.Less(Contraste(new Color32(0xb9, 0xac, 0x92, 255), plaque), 4.5f, "contrôle positif : l'ancienne encre claire (#b9ac92) ne passe PAS sur la plaque");
+        }
+
+        // ═══ F1 (juge d'ensemble r2, 08/10) — l'état vide n'est pas une moitié de page de liège nu ════════════════════════════
+        // Le `Support` de ⑮ était posé en FRACTION (0,10 ⇒ 90 % de la page) : sous un registre court et une fiche, 37 à 49 % de la hauteur n'étaient que du liège (juge r2 : 1180 px sur 2400, 709 sur 1920 ;
+        // le plus grand trou VOULU des cadres 31/33/34 : 24,8 %). La maquette borne le liège à 400 px CSS (`min-height`) ; la scène reste au-dessus. Garde d'EFFET : l'écran RÉEL (compte frais, le vrai back)
+        // rendu dans un banc à deux hauteurs (9:16 et 9:20 ; 1 px CSS = 1,8 px), la part de liège nu SOUS la fiche, jusqu'au dock, ≤ 25 % de la hauteur.
+
+        private sealed class BancVide : System.IDisposable
+        {
+            public const int W = 540;
+            public readonly int H;
+            public readonly RenderTexture Rt; public readonly Camera Cam; public readonly Canvas Canvas;
+            private readonly GameObject camGo, canGo;
+            public BancVide(int hauteur)
+            {
+                H = hauteur;
+                Rt = new RenderTexture(W, H, 24, RenderTextureFormat.ARGB32);
+                camGo = new GameObject("vide_cam"); Cam = camGo.AddComponent<Camera>();
+                Cam.targetTexture = Rt; Cam.clearFlags = CameraClearFlags.SolidColor; Cam.backgroundColor = Color.black;
+                Cam.orthographic = true; Cam.enabled = false;
+                canGo = new GameObject("vide_canvas", typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler), typeof(UnityEngine.UI.GraphicRaycaster));
+                Canvas = canGo.GetComponent<Canvas>(); Canvas.renderMode = RenderMode.ScreenSpaceCamera; Canvas.worldCamera = Cam;
+                var scaler = canGo.GetComponent<UnityEngine.UI.CanvasScaler>();
+                scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ConstantPixelSize;
+                scaler.scaleFactor = W / 1280f;   // l'échelle du shell : un canvas de 1280 unités de large (1 px CSS = 1280/300 unités = 1,8 px de banc)
+            }
+            public Texture2D Rendre()
+            {
+                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)canGo.transform);
+                Canvas.ForceUpdateCanvases(); Cam.Render();
+                RenderTexture avant = RenderTexture.active; RenderTexture.active = Rt;
+                var t = new Texture2D(W, H, TextureFormat.RGB24, false);
+                t.ReadPixels(new Rect(0, 0, W, H), 0, 0); t.Apply(); RenderTexture.active = avant;
+                return t;
+            }
+            /// <summary>L'ordonnée en pixels de banc, depuis le BAS, d'un point du monde.</summary>
+            public float YDepuisLeBas(Vector3 monde)
+            {
+                var c = (RectTransform)canGo.transform;
+                return (c.InverseTransformPoint(monde).y - c.rect.yMin) / c.rect.height * H;
+            }
+            public void Dispose() { Object.DestroyImmediate(canGo); Object.DestroyImmediate(camGo); Rt.Release(); Object.DestroyImmediate(Rt); }
+        }
+
+        /// <summary>Du LIÈGE : assez rouge (r ≥ 60) et nettement plus chaud que bleu (r − b ≥ 30) — le dégradé va de (138,106,58) à (81,58,28) ; la scène de nuit est froide et sombre.</summary>
+        private static bool EstDuLiege(Color c) => c.r * 255f >= 60f && (c.r - c.b) * 255f >= 30f;
+
+        private static float PartDeLiege(Texture2D t, float yBas, float yHaut)
+        {
+            int vus = 0, total = 0;
+            for (int y = Mathf.CeilToInt(yBas); y <= Mathf.FloorToInt(yHaut); y += 5)
+                for (int x = (int)(0.1f * BancVide.W); x < (int)(0.9f * BancVide.W); x += 6) { total++; if (EstDuLiege(t.GetPixel(x, y))) vus++; }
+            Assert.Greater(total, 20, $"anti-vacuité : la zone [{yBas:0}, {yHaut:0}] n'a que {total} points");
+            return vus / (float)total;
+        }
+
+        [UnityTest]
+        public IEnumerator Vide_LeLiegeEstBorne_LeBasNEstPasDuLiegeNu_DeuxHauteurs_AvecControlePositif()
+        {
+            float hautAvant = ShellChrome.TopInsetPx, basAvant = ShellChrome.BottomInsetPx;
+            const float dockCss = 61f;   // le dock mesuré par le juge r2 : l'encre du bas commence à 219 px de l'image de 2400 = 61 px CSS
+            yield return OuvrirUnCompteFrais();
+            foreach (int hauteur in new[] { 960, 1200 })
+            {
+                var banc = new BancVide(hauteur);
+                Texture2D t = null;
+                try
+                {
+                    ShellChrome.PublierInsets(0f, dockCss * 1280f / 300f);
+                    host = new GameObject("InspectionHost", typeof(RectTransform));
+                    host.transform.SetParent(banc.Canvas.transform, false);
+                    var rt = (RectTransform)host.transform;
+                    rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+                    var ecran = host.AddComponent<InspectionScreenController>();
+                    ecran.SetToken(token);
+                    yield return AttendreLeRendu(ecran);
+                    yield return null; yield return null;
+                    Assert.IsTrue(ecran.EtatVide, "prémisse : un compte frais n'a aucune file ouverte");
+
+                    var support = (RectTransform)host.transform.Find("Decor/Support");
+                    var fiche = (RectTransform)host.transform.Find("Fiche");
+                    float pxParCss = BancVide.W / 300f;
+                    var cs = new Vector3[4]; var cf = new Vector3[4];
+                    support.GetWorldCorners(cs); fiche.GetWorldCorners(cf);
+                    float supportHaut = banc.YDepuisLeBas(cs[1]), supportBas = banc.YDepuisLeBas(cs[0]);
+                    float ficheBas = banc.YDepuisLeBas(cf[0]), dock = dockCss * pxParCss;
+                    Assert.AreEqual(DecorsDeScene.HauteurSupportInspectionVideCss * pxParCss, supportHaut - supportBas, 3f, $"{hauteur} : le liège est borné à 400 px CSS (pas à une fraction de la page)");
+                    float trou = ficheBas - dock - supportBas;
+                    Assert.LessOrEqual(trou / hauteur, 0.25f, $"{hauteur} : le liège nu sous la fiche, jusqu'au dock, fait {trou / hauteur:P1} de la hauteur ({trou / pxParCss:0} px CSS ; la maquette : 145 px CSS = 24,8 %)");
+
+                    t = banc.Rendre();
+                    Assert.GreaterOrEqual(PartDeLiege(t, dock + 4f, ficheBas - 4f), 0.9f, $"{hauteur} : sous la fiche, c'est du liège (la sonde voit le liège)");
+                    float bandeBas = supportHaut + 6f, bandeHaut = supportHaut + 0.5f * (hauteur - supportHaut);
+                    Assert.LessOrEqual(PartDeLiege(t, bandeBas, bandeHaut), 0.1f, $"{hauteur} : au-dessus du liège borné, c'est la SCÈNE");
+
+                    // CONTRÔLE POSITIF : la fraction du catalogue (l'ancien rendu) — la pile remonte sous 10 % et la part de liège nu sous la fiche dépasse 25 % : la garde voit le défaut.
+                    var pose = host.transform.Find("Decor").GetComponent<DecorPose>();
+                    pose.FixerLaHauteurDuSupport(null);
+                    yield return null; yield return null;
+                    Canvas.ForceUpdateCanvases();
+                    support.GetWorldCorners(cs); fiche.GetWorldCorners(cf);
+                    Assert.Greater((banc.YDepuisLeBas(cs[1]) - banc.YDepuisLeBas(cs[0])) / hauteur, 0.85f, $"{hauteur} : contrôle positif — sans la hauteur posée, le liège couvre ~90 % de la page");
+                    Assert.Greater((banc.YDepuisLeBas(cf[0]) - dock - banc.YDepuisLeBas(cs[0])) / hauteur, 0.25f, $"{hauteur} : contrôle positif — sans la hauteur posée, le bas dépasse 25 % de liège nu");
+                }
+                finally
+                {
+                    ShellChrome.PublierInsets(hautAvant, basAvant);
+                    if (t != null) Object.DestroyImmediate(t);
+                    if (host != null) Object.DestroyImmediate(host);
+                    banc.Dispose();
+                }
+            }
         }
 
         // ═══ D3 — le dépôt ══════════════════════════════════════════════════════════════════════

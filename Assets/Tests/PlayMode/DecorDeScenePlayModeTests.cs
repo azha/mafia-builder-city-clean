@@ -422,6 +422,16 @@ namespace MafiaCleanCity.Tests.PlayMode
             finally { Detruire(t); banc.Dispose(); }
         }
 
+        /// <summary>La médiane (par canal) du carré de 9×9 pixels du coin BAS-DROIT du banc : un point du `.grain` du liège (6 px CSS de pas ≈ 11 px de banc) ne peut pas en couvrir plus de la moitié.</summary>
+        private static Color MedianeDuCoin(Texture2D t)
+        {
+            var r = new List<float>(); var g = new List<float>(); var b = new List<float>();
+            for (int y = 0; y < 9; y++)
+                for (int x = W - 9; x < W; x++) { Color c = t.GetPixel(x, y); r.Add(c.r); g.Add(c.g); b.Add(c.b); }
+            r.Sort(); g.Sort(); b.Sort();
+            return new Color(r[r.Count / 2], g[g.Count / 2], b[b.Count / 2]);
+        }
+
         [UnityTest]
         public IEnumerator D4f_Cercle_ApresRedimensionnement_CoinLePlusLoinAuDernierArret()
         {
@@ -432,18 +442,20 @@ namespace MafiaCleanCity.Tests.PlayMode
             {
                 DecorPose p = DecorDeScene.Poser(banc.Racine, s);
                 yield return null;
-                Color dernier = Arret(s, 0, 2);
+                // ⑮ : le `.grain` (deux couches `Points`, F3 r2) est AU-DESSUS du cercle — le cercle est la DERNIÈRE couche, et un point de grain peut tomber sur un pixel : le coin se lit à la MÉDIANE d'un carré.
+                Assert.AreEqual(GenreCouche.RadialCercle, s.Support.Couches[s.Support.Couches.Length - 1].Genre, "prémisse : le cercle est la couche du bas");
+                Color dernier = Arret(s, s.Support.Couches.Length - 1, 2);
                 float r1 = p.Radiaux[0].sizeDelta.x;
                 t1 = banc.Rendre();
                 // Le coin le plus loin du foyer (30 %, 20 % depuis le haut) est le coin BAS-DROIT.
-                Proche(dernier, t1.GetPixel(W - 1, 0), 6f, "avant : coin le plus loin = dernier arrêt");
+                Proche(dernier, MedianeDuCoin(t1), 6f, "avant : coin le plus loin = dernier arrêt");
 
                 banc.Racine.offsetMax = new Vector2(0f, -460f);   // la racine passe de 960 à 500 de haut
                 yield return null;
                 float r2 = p.Radiaux[0].sizeDelta.x;
                 Assert.Less(r2, 0.8f * r1, $"le rayon a été RECALCULÉ ({r1:F0} → {r2:F0}) : un rayon figé au montage laisserait le coin à t < 1");
                 t2 = banc.Rendre();
-                Proche(dernier, t2.GetPixel(W - 1, 0), 6f, "après : coin le plus loin = dernier arrêt");
+                Proche(dernier, MedianeDuCoin(t2), 6f, "après : coin le plus loin = dernier arrêt");
                 Assert.Greater(Ecart(dernier, t2.GetPixel(1, Mathf.FloorToInt(500f * 0.9f) - 2)) * 255f, 6f,
                     "contrôle : le coin haut-gauche, plus proche du foyer, n'est PAS au dernier arrêt");
             }
@@ -773,6 +785,101 @@ namespace MafiaCleanCity.Tests.PlayMode
             Assert.Throws<InvalidOperationException>(() => { var _ = radial.CouleurDuBas; }, "un radial n'a pas UN bas : il lève");
             var biais = new SpecSupport(new[] { SpecCouche.Lineaire(135f, c.Arrets) });
             Assert.Throws<InvalidOperationException>(() => { var _ = biais.CouleurDuBas; }, "un linéaire en biais n'a pas UN bas : il lève");
+        }
+
+        [UnityTest]
+        public IEnumerator D4o_HauteurSupportCss_LeLiegeEstBorneEnPxCss_AuxDeuxHauteurs_EtLaFractionRevientSansElle()
+        {
+            // F1 (juge d'ensemble r2) : ⑮ à l'état vide bornait son liège par une FRACTION (0,10 ⇒ 90 % de la page, 49 % de liège nu). La maquette le borne en px CSS (`min-height:400px`, cadres 33-35).
+            // EFFET, pas paramètre : scène noire (luminosité 0, sans voile), donc tout pixel non noir au-dessus du support est du liège qui n'a rien à y faire. Aux DEUX hauteurs de racine (500 → 960 → 1200
+            // de haut, 1 px CSS = 1,8 px de banc), le haut du support reste à 400 px CSS du bas ; sans la hauteur posée, il suit la fraction (contrôle POSITIF : le même point est du liège).
+            SpecSupport liege = DecorsDeScene.Inspection.Support;
+            var s = new SpecDecor("t", "t", StatutDecor.Pose, SceneDeFond.District, 0f, DecorsDeScene.Inspection.Bande, liege, voile: false);
+            var banc = new Banc();
+            Texture2D avant = null, apres = null;
+            try
+            {
+                var pile = banc.Racine.gameObject.AddComponent<VerticalLayoutGroup>();
+                pile.childControlWidth = true; pile.childControlHeight = true;
+                pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+                DecorPose p = DecorDeScene.Poser(banc.Racine, s);
+                ReserveDeBande r = DecorDeScene.ReserverLaBande(pile, p, 0f);
+                yield return null;
+                float px400 = DecorsDeScene.HauteurSupportInspectionVideCss * 540f / 300f;   // 720 px de banc
+                int sonde = Mathf.RoundToInt(px400) + 80;                                       // 80 px AU-DESSUS du haut du support borné
+                Assert.IsFalse(p.HauteurSupportCss.HasValue, "prémisse : sans hauteur posée, la fraction du catalogue");
+                Assert.AreEqual(s.Bande, p.Bande, 1e-6f);
+                avant = banc.Rendre();
+                Assert.IsFalse(Noir(avant.GetPixel(W / 2, sonde)), "contrôle POSITIF : sans la hauteur, le liège couvre ce point (fraction 0,10 ⇒ support de 864 px)");
+
+                p.FixerLaHauteurDuSupport(DecorsDeScene.HauteurSupportInspectionVideCss);
+                foreach (float hauteur in new[] { 960f, 1200f, 800f })
+                {
+                    banc.Racine.offsetMax = new Vector2(0f, hauteur - H);
+                    yield return null;
+                    Canvas.ForceUpdateCanvases();
+                    Assert.AreEqual(Mathf.Clamp01(1f - px400 / hauteur), p.Bande, 1e-3f, $"hauteur {hauteur} : la bande est ce qui reste au-dessus de 400 px CSS");
+                    Assert.AreEqual(px400, p.Support.rect.height, 1.5f, $"hauteur {hauteur} : le support fait 400 px CSS, pas une fraction de la page");
+                    Assert.AreEqual(Mathf.RoundToInt(Mathf.Max(ShellChrome.TopInsetPx, hauteur - px400)), r.RetraitHaut, 1.5f, $"hauteur {hauteur} : la pile commence SOUS le haut du support borné (la ReserveDeBande suit la hauteur posée)");
+                    Detruire(apres); apres = banc.Rendre();
+                    int haut = Mathf.Min(H - 1, Mathf.CeilToInt(px400) + 2), pixels = 0;
+                    for (int y = haut; y < H; y += 3)
+                        for (int x = 0; x < W; x += 3) if (!Noir(apres.GetPixel(x, y), 1f)) pixels++;
+                    Assert.AreEqual(0, pixels, $"hauteur {hauteur} : aucun pixel de liège au-dessus de 400 px CSS (scène noire)");
+                    Assert.IsFalse(Noir(apres.GetPixel(W / 2, Mathf.RoundToInt(px400) - 10)), $"hauteur {hauteur} : contrôle, juste sous le haut borné le liège est là");
+                }
+
+                p.FixerLaHauteurDuSupport(null);
+                banc.Racine.offsetMax = Vector2.zero;
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                Assert.AreEqual(s.Bande, p.Bande, 1e-6f, "null rend la fraction du catalogue");
+                Assert.AreEqual(H * (1f - s.Bande), p.Support.rect.height, 1.5f);
+            }
+            finally { Detruire(avant); Detruire(apres); banc.Dispose(); }
+        }
+
+        /// <summary>Le p99 de la valeur absolue du passe-haut (pixel − moyenne locale 15×15, canal vert) sur un carré de `n` px au coin (x0, y0), en /255. Un aplat rend 0.</summary>
+        private static float P99DuPasseHaut(Texture2D t, int x0, int y0, int n)
+        {
+            var v = new List<float>();
+            for (int y = y0; y < y0 + n; y++)
+                for (int x = x0; x < x0 + n; x++)
+                {
+                    float somme = 0f;
+                    for (int dy = -7; dy <= 7; dy++) for (int dx = -7; dx <= 7; dx++) somme += t.GetPixel(x + dx, y + dy).g;
+                    v.Add(Mathf.Abs(t.GetPixel(x, y).g - somme / 225f) * 255f);
+                }
+            v.Sort();
+            return v[Mathf.Min(v.Count - 1, Mathf.FloorToInt(0.99f * v.Count))];
+        }
+
+        [UnityTest]
+        public IEnumerator D4p_GrainDuLiege_Present_AvecControlePositifSansGrain()
+        {
+            // F3 (juge d'ensemble r2) : le liège de ⑮ ⑰ n'avait que son dégradé (p99 du passe-haut 0 contre 11 à la maquette). Le `.grain` (deux couches `Points`) est AU-DESSUS du cercle. EFFET : le p99 d'un
+            // carré de liège NU > 3/255 (la maquette en a 11 ; le noir à 13 % ne peut pas être traduit en linéaire — le p99 attendu est ~2/3 de la maquette, cf. ㉘) ; le MÊME liège sans ses couches de grain rend < 1,5 (un aplat lisse : la sonde discrimine). Scène noire, sans voile.
+            SpecSupport liege = DecorsDeScene.Inspection.Support;
+            Assert.AreEqual(2, liege.Couches.Count(c => c.Genre == GenreCouche.Points), "le catalogue déclare le grain : deux couches `Points`");
+            var nu = new SpecSupport(liege.Couches.Where(c => c.Genre != GenreCouche.Points).ToArray());
+            float avecGrain = -1f, sansGrain = -1f;
+            foreach (var (nom, support) in new[] { ("avec", liege), ("sans", nu) })
+            {
+                var spec = new SpecDecor("t", "t", StatutDecor.Pose, SceneDeFond.District, 0f, 0.10f, support, voile: false);
+                var banc = new Banc();
+                Texture2D t = null;
+                try
+                {
+                    DecorDeScene.Poser(banc.Racine, spec);
+                    yield return null;
+                    t = banc.Rendre();
+                    float p99 = P99DuPasseHaut(t, 150, 150, 40);
+                    if (nom == "avec") avecGrain = p99; else sansGrain = p99;
+                }
+                finally { Detruire(t); banc.Dispose(); }
+            }
+            Assert.Greater(avecGrain, 3f, $"le liège nu porte son grain : p99 du passe-haut {avecGrain:0.##}/255 (maquette : 11)");
+            Assert.Less(sansGrain, 1.5f, $"contrôle positif : sans ses couches de grain le liège est un aplat lisse ({sansGrain:0.##}/255)");
         }
 
         [UnityTest]

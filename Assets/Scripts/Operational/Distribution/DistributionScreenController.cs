@@ -280,7 +280,19 @@ namespace MafiaCleanCity.Operational
 
         // ═══ Chargement ══════════════════════════════════════════════════════════════════════
 
+        /// <summary>Faux de l'entrée dans `Charger()` jusqu'à sa FIN — recherche du geste « acheter un relais » comprise (`ProposerAchatDeRelais` : `GetDistricts` puis un `Interior` par
+        /// quartier, réseau), vrai ensuite (un chargement abandonné, arrêté ou terminé en repli le rend vrai aussi : `finally`). Crochet de test : `DerniereErreur` est posée AVANT le rendu
+        /// de l'état « aucun relais » et AVANT le geste — la capture qui s'y fie photographie l'écran avec OU sans geste selon la course au réseau (juge d'ensemble r2, F5-b).</summary>
+        public bool ProposeAchatTermine { get; private set; }
+
         public IEnumerator Charger()
+        {
+            ProposeAchatTermine = false;
+            try { yield return ChargerCorps(); }
+            finally { ProposeAchatTermine = true; }
+        }
+
+        private IEnumerator ChargerCorps()
         {
             EnsureInitialized();
             DerniereErreur = null;
@@ -376,6 +388,7 @@ namespace MafiaCleanCity.Operational
             ToLabel = toLabel;
             LieutenantLabel = lieutenantLabel;
             AppliquerEtat();
+            ProposeAchatTermine = true;   // rendu explicite : aucun chargement ne court
         }
 
         // ═══ Rendu — piloté par l'agrégat des `transit_band` des courriers (voir le commentaire
@@ -451,6 +464,7 @@ namespace MafiaCleanCity.Operational
         private void RendreCorkboard()
         {
             ViderEnfants(corkboardRoot);
+            decorPose.LacherLeCadre();   // l'état « aucun relais » a pu coller le support à sa plaque : ici le `Support` redevient la planche pleine page
 
             // La route AVANT le panneau : la ficelle a besoin de savoir, dès sa construction, si
             // elle a une forme à porter (aucune route ⇒ pas de ficelle du tout, seulement les 2
@@ -460,7 +474,7 @@ namespace MafiaCleanCity.Operational
                 ? DernierChargementProjection.routes[0] : null;
 
             GameObject panneau = NouveauUI("Panneau", corkboardRoot);
-            AjouterFond(panneau, Liege);
+            PoserLeCadreB(panneau);
             AddLayoutElement(panneau, preferredHeight: Px(120f), flexibleHeight: 0);
             VerticalLayoutGroup vp = panneau.AddComponent<VerticalLayoutGroup>();
             vp.padding = new RectOffset(PxTrait(14f), PxTrait(14f), PxTrait(14f), PxTrait(14f));
@@ -472,8 +486,8 @@ namespace MafiaCleanCity.Operational
             // ⛔⛔ LA FICELLE — premier enfant du panneau, `ignoreLayout` (ce n'est pas une rangée
             // du VerticalLayoutGroup : c'est une SURCOUCHE qui recouvre tout le panneau, jamais
             // dimensionnée par lui). Ordre de fratrie : un enfant est TOUJOURS rendu après le
-            // graphique de SON PARENT (donc après le fond `Liege` posé sur `panneau` lui-même —
-            // sous le liège dans l'ordre de rendu, mais au-dessus de sa texture) et, en étant le
+            // graphique de SON PARENT (donc après le `.cadre-b` posé sur `panneau` lui-même —
+            // sous le cadre dans l'ordre de rendu, mais au-dessus de la planche) et, en étant le
             // PREMIER enfant, elle est rendue AVANT les deux étiquettes construites juste après
             // (sous les deux étiquettes). Patron `VerticalGradientImage` : `MaskableGraphic`,
             // jamais `Graphic` nu, et son `CanvasRenderer` posé EXPLICITEMENT — `AddComponent<T>()`
@@ -552,6 +566,11 @@ namespace MafiaCleanCity.Operational
                 DistributionResolvers.TexteRouteState(route.route_state),
                 DistributionResolvers.CouleurRouteState(route.route_state, VertBon, DesignTokens.Current.onSurfacePrimary));
         }
+
+        /// <summary>F3 (juge d'ensemble r2) : la plaque du panneau (`.cadre-b`) n'a PLUS de fond — l'aplat opaque brun recouvrait la planche déclarée au catalogue (grain, dégradé : p99 0 contre 10
+        /// sur le `Support` voisin) et son cadre de 5 px n'était pas tracé. La planche (grain + dégradé) est le `Support` du décor ; le cadre est la recette MESURÉE `Filets.Distribution.CadreB`.</summary>
+        private static void PoserLeCadreB(GameObject plaque) =>
+            Filets.Poser((RectTransform)plaque.transform, DecorsDeScene.Filets.Distribution.CadreB);
 
         /// <summary>Rend le `GameObject` de la fiche — TD-558 : `RendreCorkboard` lit ses
         /// coordonnées réelles APRÈS coup pour y ancrer la ficelle, jamais des constantes.</summary>
@@ -954,6 +973,7 @@ namespace MafiaCleanCity.Operational
             AucunRelais = true;
             RendreAucunRelais();
             if (gesteOffert) RendreGesteAchatDeRelais();
+            ProposeAchatTermine = true;
         }
 
         private void RendreAucunRelais()
@@ -969,17 +989,23 @@ namespace MafiaCleanCity.Operational
 
             // F2 (juge d'ensemble r1, 08/10 ; f2 : « un état vide qui ne se lit pas comme voulu reste un défaut ») : sans zone, le `Support` (liège opaque, pleine page) ne portait RIEN sous le bandeau — tout le
             // corps était un tapis nu. Un PANNEAU de liège borné (le cartel du cadre, inséré par la marge du corps : un objet, pas un fond) porte l'étiquette crème « D'OÙ ÇA PART » — la même grammaire que
-            // la fiche d'une route — avec le titre de l'état ; aucun mot nouveau (les deux clés sont servies). Même cote que le panneau de l'état nominal (`RendreCorkboard` : 120 px CSS) : la boîte
-            // d'une route qui n'existe pas encore, en HAUT du tapis — pas une plaque qui prend tout le corps (essai du créneau du 08/10 : un grand carré brun avec une étiquette flottante).
+            // la fiche d'une route ; aucun mot nouveau (clés servies). Même cote que le panneau de l'état nominal (`RendreCorkboard` : 120 px CSS) : la boîte d'une route qui n'existe pas encore, en HAUT du corps —
+            // pas une plaque qui prend tout le corps (essai du créneau du 08/10 : un grand carré brun avec une étiquette flottante).
             GameObject vide = NouveauUI("PanneauVide", corkboardRoot);
-            AjouterFond(vide, Liege);
+            PoserLeCadreB(vide);
             AddLayoutElement(vide, preferredHeight: Px(120f), flexibleHeight: 0);
             VerticalLayoutGroup vv = vide.AddComponent<VerticalLayoutGroup>();
             vv.padding = new RectOffset(PxTrait(14f), PxTrait(14f), PxTrait(14f), PxTrait(14f));
             vv.childAlignment = TextAnchor.UpperCenter;
             vv.childControlWidth = true; vv.childControlHeight = true;
             vv.childForceExpandWidth = true; vv.childForceExpandHeight = false;
-            ConstruireEtiquette(vide.transform, "EtiquetteVide", titreTexte.text, "D'OÙ ÇA PART", TextAlignmentOptions.Center);
+            // F6 (juge d'ensemble r2) : la ligne 1 d'une fiche est la SOURCE (cadre 54 : le nom du bâtiment) ; il n'y en a pas, et le titre de l'état est déjà au bandeau, juste au-dessus. On y
+            // dit ce que l'écran sait de la route — la phrase DÉJÀ servie de l'état sans route (`AucuneRoute`, ci-dessus, absente de l'écran dans cet état : aucune répétition).
+            ConstruireEtiquette(vide.transform, "EtiquetteVide", Libelle.De("distribution", "bloc", "Aucune route tendue pour l’instant."),
+                                "D'OÙ ÇA PART", TextAlignmentOptions.Center);
+            // F5-a (juge d'ensemble r2) : la planche EST la plaque ; le reste de la page redevient la scène (précédent ㊲ : `SuivreLeCadre`). Un `Support` pleine page sous une plaque de 120 px CSS
+            // laissait 28 à 44 % de la hauteur en liège nu.
+            decorPose.SuivreLeCadre((RectTransform)vide.transform);
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau ou prémisse non remplie — jamais une exception,
@@ -989,6 +1015,7 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(corkboardRoot);
             ViderEnfants(couriersRoot);
             ViderEnfants(piedRoot);
+            decorPose.LacherLeCadre();
             MontrerLesZones(couriers: false, pied: false);
             titreTexte.text = Libelle.De("distribution", "titre", "La distribution n'a pas répondu");
             // la phrase SERVIE du refus, sinon celle de l'écran — jamais `DerniereErreur` (garde de classe des refus)
@@ -1084,7 +1111,7 @@ namespace MafiaCleanCity.Operational
             // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,24, le voile,
             // et la PLANCHE (`.planche`, zone dominante : Points ×2 sur un 158° de bois, sur un Plein) — DÉCLARÉS au catalogue. Premier
             // enfant, hors mise en page : `Bas` (posé plus bas par `PiedDEcran.Bande`) reste le DERNIER. Aucune Image sur la racine.
-            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Distribution);
+            DecorPose decor = decorPose = DecorDeScene.Poser(racine.transform, DecorsDeScene.Distribution);
             racinePleinEcran.SetAsLastSibling();
 
             // ⛔ L'ÉCHELLE AVANT TOUTE CONVERSION — un RectTransform qui vient d'être étiré n'a
@@ -1171,6 +1198,7 @@ namespace MafiaCleanCity.Operational
         }
 
         private Transform corkboardRoot, lignesRoot, couriersRoot, piedRoot;
+        private DecorPose decorPose;
         private GameObject zoneCouriers, bandeBasse;
         private TextMeshProUGUI titreTexte, sousTitreTexte, boutonEnvoyerTexte;
         private Button boutonEnvoyer;
@@ -1179,16 +1207,13 @@ namespace MafiaCleanCity.Operational
         // n'existe — ceux qui existent servent un AUTRE consommateur mesuré). ═══════════════════
         private static Color Creme => DesignTokens.Current.hudCreme;
         private static Color EncreSombre => DesignTokens.Current.ficheCtaOrEncre;
-        // ⚠️ ESTIMÉ VISUELLEMENT SUR LA MAQUETTE, NON ÉCHANTILLONNÉ AU PIXEL (aucun outil de
-        // lecture de pixel disponible cette passe — même trou que ㉚, voir implementation-notes.md).
-        private static readonly Color Liege = Hex("#7a5230");
         private static Color Or => DesignTokens.Current.hudMoneyUnderlineGold;
         /// <summary>`.lieg6 .lecture{background:#1a1108}` (cadres 54-57, lu dans `ecrans-brennar-6.html` de l'atelier master 5240cec).</summary>
         public static Color PlaqueDeLecture => new Color32(0x1a, 0x11, 0x08, 255);
         // ⛔⛔ TD-558 — la ficelle et l'épingle du panneau de liège. MESURÉES au pixel sur
         // `Tools/juge-visuel/v6/m-54.png` (python3/PIL, couleur la plus fréquente dans un carré
         // échantillon posé sur le trait / le cœur de l'épingle) — pas « estimées visuellement »
-        // comme `Liege`/`Creme` ci-dessus : le cordage rend (201,189,160) de façon quasi uniforme
+        // comme `Creme` ci-dessus : le cordage rend (201,189,160) de façon quasi uniforme
         // le long du trait, la tête de l'épingle (196,65,58) dans son cœur.
         private static readonly Color CordeClaire = Hex("#c9bda0");
         private static readonly Color EpingleRouge = Hex("#c4413a");

@@ -105,6 +105,7 @@ namespace MafiaCleanCity.CitySim.Inspection
         private bool depotEnCours;
         private Transform mountParent;
         private RectTransform corps;
+        private DecorPose decorPose;
         private TextMeshProUGUI sousTitre;
         private TextMeshProUGUI piedTexte;
         private TextMeshProUGUI cibleTexte;
@@ -225,6 +226,9 @@ namespace MafiaCleanCity.CitySim.Inspection
                 UnityEngine.Object.Destroy(corps.GetChild(i).gameObject);
             LignesRendues = 0;
             EtatVide = FilesOuvertes == 0;
+            // F1 (juge d'ensemble r2) : l'état vide est une fiche sous un registre court (cadres 33-35) — le liège y est borné en px CSS, la scène reste au-dessus ;
+            // le registre de 18 lignes (cadre 32) garde la fraction du catalogue.
+            decorPose.FixerLaHauteurDuSupport(EtatVide ? DecorsDeScene.HauteurSupportInspectionVideCss : (float?)null);
             int n = Districts != null && Districts.Length > 0 ? Districts.Length : NombreDeDistricts;
             sousTitre.text = $"{n} districts";
             videTexte.gameObject.SetActive(EtatVide);
@@ -380,7 +384,7 @@ namespace MafiaCleanCity.CitySim.Inspection
             // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,45, le voile,
             // et le LIÈGE du panneau (`circle farthest-corner at 30% 20%`, rayon recalculé à chaque rect) — DÉCLARÉS au catalogue. Il
             // remplace l'aplat `surfaceBase` ; son `Decor/Capteur` garde le bloqueur de raycast que portait cet aplat.
-            DecorPose decor = DecorDeScene.Poser(transform, DecorsDeScene.Inspection);
+            DecorPose decor = decorPose = DecorDeScene.Poser(transform, DecorsDeScene.Inspection);
             VerticalLayoutGroup v = gameObject.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset((int)Px(10f), (int)Px(10f),
                                        0,   // le haut : sous la bande de scène (ReserverLaBande, juste dessous)

@@ -47,7 +47,7 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>La plaque `.bas` des écrans de commande : fond `#141a21`, filet haut `#2c3640` de 2 CSS px. Pure.</summary>
         public static Color PlaqueDuBas => new Color32(0x14, 0x1a, 0x21, 255);
-        /// <summary>LA PLAQUE CRÈME (troisième grammaire du geste principal : ⑤ le CTA « LES LIRE MAINTENANT », ⑮ le geste « DÉPOSER ») : fond REF (216,202,167), encre rouge sombre `#93402c` (≈ 4,3:1 sur la plaque). Pures.</summary>
+        /// <summary>LA PLAQUE CRÈME (troisième grammaire du geste principal : ⑮ le geste « DÉPOSER » seulement — ⑤ « LES LIRE MAINTENANT » est passé à la `.plaque-laiton` de la série 6, juge d'ensemble r2 F7, 08/10) : fond REF (216,202,167), encre rouge sombre `#93402c` (≈ 4,3:1 sur la plaque). Pures.</summary>
         public static Color PlaqueCreme => new Color32(216, 202, 167, 255);
         public static Color EncreDeLaPlaque => new Color32(0x93, 0x40, 0x2c, 255);
         public static Color FiletDuBas => new Color32(0x2c, 0x36, 0x40, 255);
