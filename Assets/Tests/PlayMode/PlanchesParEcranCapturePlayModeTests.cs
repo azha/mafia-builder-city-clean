@@ -146,6 +146,64 @@ namespace MafiaCleanCity.Capture.Tests
                   "decision-du-jour/reference-1080x2102.png (cadre nominal 4 de ecrans-brennar-4.html ; rapport r1 F4/F5)");
         }
 
+        /// <summary>㊴ LE DOSSIER (E12, f2 08/10 — recapture pour les juges de fin d'écran) : les TROIS vues du cadre 150 (pistes), 151 (acteurs) et 135 (vide), aux deux résolutions. Compte NEUF, le vrai shell,
+        /// ㊴ monté en surimpression, puis des corps FABRIQUÉS (`RendrePourTest`, aucun réseau) : un compte neuf n'a ni pistes vivantes ni acteurs, donc les vues pistes et acteurs n'existeraient pas.
+        /// La vue est LUE (`Vue`) avant chaque cliché : une vue qui n'est pas celle attendue est un ÉCHEC noté et le test ROUGIT. ⚠️ L'état est DIT au journal : corps FABRIQUÉS (les bandes et les quatre
+        /// acteurs de `ForensicScreenPlayModeTests`), la mise en scène de l'écran, pas un état servi.</summary>
+        [UnityTest]
+        [Category("ClichePlanchesParEcran")]
+        [Timeout(600000)]
+        public IEnumerator Planche_Dossier_TroisVues_CorpsFabriques()
+        {
+            yield return Ouvrir();
+            shell.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.ForensicScreenController>();
+            MafiaCleanCity.Operational.ForensicScreenController ecran = null;
+            for (float f = Time.realtimeSinceStartup + 15f; ecran == null && Time.realtimeSinceStartup < f;)
+            {
+                ecran = shell.ContentSlot.GetComponentInChildren<MafiaCleanCity.Operational.ForensicScreenController>(true);
+                yield return null;
+            }
+            if (ecran == null) { Noter("E12", "㊴ Le dossier", "ÉCHEC : ㊴ non monté", "Tools/juge-visuel/INDEX.md ㊴ (cadres 150, 151, 135 de ecrans-brennar-6.html)"); Assert.Fail("㊴ E12 non monté : rien n'a été photographié"); }
+            for (int i = 0; i < 10; i++) yield return null;
+
+            var bandes = new MafiaCleanCity.Operational.GetForensicResponseDto { audit_risk_bucket = "clean", effluent_visibility_bucket = "visible", lifestyle_alarm_bucket = "quiet" };
+            var vides = new MafiaCleanCity.Operational.GetForensicResponseDto { audit_risk_bucket = "clean", effluent_visibility_bucket = "clear", lifestyle_alarm_bucket = "quiet" };
+            var roster = new[]
+            {
+                new MafiaCleanCity.Operational.ActeurDto { actorType = "lawyer", status = "steady", actorRef = "4f21aaaa" },
+                new MafiaCleanCity.Operational.ActeurDto { actorType = "clerk", status = "nervous", actorRef = "9c07bbbb" },
+                new MafiaCleanCity.Operational.ActeurDto { actorType = "clerk", status = "unavailable", actorRef = "1b44cccc" },
+                new MafiaCleanCity.Operational.ActeurDto { actorType = "lawyer", status = "gone", actorRef = "7e90dddd" },
+            };
+            const string ref150 = "Tools/juge-visuel/INDEX.md ㊴ — cadre 150 (pistes) de ecrans-brennar-6.html", ref151 = "Tools/juge-visuel/INDEX.md ㊴ — cadre 151 (acteurs) de ecrans-brennar-6.html",
+                         ref135 = "Tools/juge-visuel/INDEX.md ㊴ — cadre 135 (état vide) de ecrans-brennar-6.html";
+
+            // vue PISTES (cadre 150)
+            ecran.RendrePourTest(bandes, roster);
+            for (int i = 0; i < 20; i++) yield return null;
+            if (ecran.Vue != MafiaCleanCity.Operational.VueDossier.Pistes) { Noter("E12", "㊴ Le dossier — pistes", "ÉCHEC : la vue est " + ecran.Vue + ", pas Pistes", ref150); Assert.Fail("㊴ E12 : la vue pistes n'est pas celle montrée"); }
+            foreach ((int largeur, int hauteur) in Resolutions)
+                yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"E12_Dossier_Pistes_{largeur}x{hauteur}.png"), false, null);
+            Noter("E12", "㊴ Le dossier — pistes", "ForensicScreenController · vue Pistes · corps FABRIQUÉS (audit clean, effluent visible, train de vie quiet ; 4 acteurs) — NON servis", ref150);
+
+            // vue ACTEURS (cadre 151) : la PORTE, bascule locale
+            ecran.Basculer();
+            for (int i = 0; i < 20; i++) yield return null;
+            if (ecran.Vue != MafiaCleanCity.Operational.VueDossier.Acteurs) { Noter("E12", "㊴ Le dossier — acteurs", "ÉCHEC : la vue est " + ecran.Vue + ", pas Acteurs", ref151); Assert.Fail("㊴ E12 : la vue acteurs n'est pas celle montrée"); }
+            foreach ((int largeur, int hauteur) in Resolutions)
+                yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"E12_Dossier_Acteurs_{largeur}x{hauteur}.png"), false, null);
+            Noter("E12", "㊴ Le dossier — acteurs", "ForensicScreenController · vue Acteurs (après la porte) · mêmes corps FABRIQUÉS : un acteur par statut (steady, nervous, unavailable, gone) — NON servis", ref151);
+
+            // vue VIDE (cadre 135) : effluent clear + roster vide servi
+            ecran.RendrePourTest(vides, new MafiaCleanCity.Operational.ActeurDto[0]);
+            for (int i = 0; i < 20; i++) yield return null;
+            if (ecran.Vue != MafiaCleanCity.Operational.VueDossier.Vide) { Noter("E12", "㊴ Le dossier — vide", "ÉCHEC : la vue est " + ecran.Vue + ", pas Vide", ref135); Assert.Fail("㊴ E12 : la vue vide n'est pas celle montrée"); }
+            foreach ((int largeur, int hauteur) in Resolutions)
+                yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"E12_Dossier_Vide_{largeur}x{hauteur}.png"), false, null);
+            Noter("E12", "㊴ Le dossier — vide", "ForensicScreenController · vue Vide · corps FABRIQUÉS (effluent clear, roster vide servi) — NON servis", ref135);
+            Assert.IsEmpty(echecsNotes, "vue(s) non photographiée(s) — un ÉCHEC noté au journal n'est pas un vert :\n" + string.Join("\n", echecsNotes));
+        }
+
         /// <summary>④ P1 AVEC DEUX CARTES EN FILE (f2 07/10) : un compte NEUF n'a qu'une carte (ou aucune), donc la ligne de pluriel n'existerait pas. L'Accueil est RE-MONTÉ (Empire) avec une
         /// réponse `session/open` dont la file porte deux cartes FABRIQUÉES (transport témoin) — c'est AU MONTAGE que le shell choisit la bande de la ligne (`AppShell.BandeFileHaute`, cadre 4) —, photographié
         /// aux deux résolutions, et MESURÉ : la colonne « qui » (nom, gravité, raison, pluriel) TIENT-ELLE dans la ligne ? Un débordement est un A : le journal le dit et le test ROUGIT.
