@@ -860,19 +860,11 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("DelegationRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DelegationResolvers.FondBas);
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,18, le voile,
+            // et le support B de `.serv6` — `linear-gradient(180deg,#1d2229,#161a20 58%,#121519)`, UN dégradé à 3 arrêts, le genou à
+            // 58 % exact (les deux bandes `FondHaut`/`FondBas` qui le peignaient à la main sont retirées) — DÉCLARÉS au catalogue.
+            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Delegation);
 
-            // Le fond de `.serv6` a TROIS arrêts : `linear-gradient(180deg,#1d2229,#161a20 58%,
-            // #121519)`. `VerticalGradient` n'en prend que deux, donc on le rend en DEUX bandes
-            // qui se rejoignent exactement au genou de 58 % — un seul dégradé de bout en bout
-            // aurait déplacé le genou et éclairci tout le tiers bas.
-            // ⚠️ Ces couleurs sont OPAQUES : aucune conversion sRGB→linéaire ne s'applique ici
-            // (le piège ne concerne que les alphas, où le navigateur mélange en sRGB et Unity en
-            // linéaire). Une conversion appliquée à un aplat opaque serait une erreur symétrique.
-            AjouterBande(racine, "FondHaut", 0.42f, 1f,
-                         ProceduralUI.VerticalGradient(96, DelegationResolvers.FondHaut, DelegationResolvers.FondMilieu));
-            AjouterBande(racine, "FondBas", 0f, 0.42f,
-                         ProceduralUI.VerticalGradient(96, DelegationResolvers.FondMilieu, DelegationResolvers.FondBas));
 
             // ⛔ L'ÉCHELLE AVANT TOUT — un RectTransform qui vient d'être étiré n'a PAS encore son
             // `rect` résolu, et `Px()` le lit dès la première constante convertie. Une largeur de
@@ -910,7 +902,7 @@ namespace MafiaCleanCity.Operational
             corps.anchorMax = Vector2.one;
             corps.pivot = new Vector2(0.5f, 0.5f);
             corps.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
-            corps.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx);
+            corps.offsetMax = Vector2.zero;   // le haut : la pile commence sous la bande de scène (ReserverLaBande, §5.6 du design)
 
             // `.serv6{display:flex;flex-direction:column}` — tête et bas à leur hauteur de
             // contenu, le corps prend le reste. `childForceExpandHeight=false` + un
@@ -920,6 +912,8 @@ namespace MafiaCleanCity.Operational
             pile.padding = new RectOffset(0, 0, 0, 0);
             pile.childControlWidth = true;  pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+            // §5.6 du design : la tête commence SOUS max(barre, bande de scène 21 %), comme `.serv6` sous la scène de la maquette.
+            DecorDeScene.ReserverLaBande(pile, decor, 0f);
 
             tete = ConstruireTete(corpsGo.transform);
             zoneCentrale = ConstruireZoneCentrale(corpsGo.transform);

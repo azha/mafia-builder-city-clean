@@ -24,8 +24,8 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉟", "㉓", "⑮", "⑰", "⑭", "㊴", "㉒",   // ㊵ puis ㊳ posés le 08/10 (feu vert CLIENT-1)
-            "㊱", "㉜", "㉚", "㉘", "㉛", "㉝", "㉞", "㉙", "㉔", "⑱",
+            "③", "⑤", "㊲", "㉟", "㉓", "⑮", "⑰", "⑭", "㊴", "㉒",   // ㊵, ㊳, ㉜ posés le 08/10 (feu vert CLIENT-1)
+            "㊱", "㉚", "㉘", "㉛", "㉝", "㉞", "㉙", "㉔", "⑱",
         };
 
         /// <summary>DETTE DATÉE : par écran POSÉ, les recettes de filets pas encore branchées, chacune avec sa raison. Ne fait
@@ -44,6 +44,9 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ㉜ (08/10) — toutes les recettes de blocs (tête, bas, plaques, réserves, jetons, gestes, aperçu, rien, ligne pointillée,
+            //   cadran) : blocs de CLIENT-1, tracés par ses propres bords (`Bord`, `FiletG`, `Filet`) — à déléguer à Filets avec Cerner.
+            { "㉜", new[] { "L", "Mano", "Rond", "Rond_2", "SvApercu", "SvBas", "SvGeste", "SvGesteMort", "SvJeton", "SvJetonUse", "SvPlaque", "SvPlaqueConfiee", "SvPlaqueGris", "SvPlaqueViser", "SvRien", "SvTete" } },
         };
 
         /// <summary>Recettes posées par le décor lui-même (le cerne A : `Decor/Cerne`), jamais par le contrôleur.</summary>
