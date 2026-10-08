@@ -137,7 +137,7 @@ namespace MafiaCleanCity.Mouvements
 
         public static readonly Entree Fumee = Boucle(
             "diorama.fumee", "PROPOSE: migration d'AmbientPulseLoop (DistrictInteriorScreenController.BuildActivitySmoke, W3.U2 C10)",
-            "La fumée d'une opération en cours monte et retombe au-dessus du toit : un bâtiment qui travaille ne s'éteint pas tout à fait dans la nuit.",
+            "La fumée d'une opération en cours monte et retombe au-dessus du toit : un bâtiment qui travaille ne s'éteint pas tout à fait.",
             AmbianceCreuxFumee, pistes: 1);
 
         public static readonly Entree Scintillement = Boucle(
