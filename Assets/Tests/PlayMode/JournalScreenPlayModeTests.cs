@@ -430,7 +430,7 @@ namespace MafiaCleanCity.Operational.Tests
 
             // l'ordre de fratrie : en-tête, filet laiton, titre, quartier
             var ordre = new List<string>();
-            foreach (Transform enfant in une) if (enfant.name != "Espace") ordre.Add(enfant.name);
+            foreach (Transform enfant in une) if (enfant.name != "Espace" && enfant.name != MafiaCleanCity.Shell.Filets.NomConteneur) ordre.Add(enfant.name);   // `Filets.Poser` pose son conteneur en 1er enfant
             CollectionAssert.AreEqual(new[] { "Jrn", "FiletOr", "Titre", "Cle" }, ordre, "A3 : en-tête, filet d'or, titre, quartier");
 
             var nom = Trouver(une, "Journal").GetComponent<TMPro.TextMeshProUGUI>();
@@ -439,6 +439,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue((nom.fontStyle & TMPro.FontStyles.UpperCase) != 0 && (nom.fontStyle & TMPro.FontStyles.Bold) != 0, "capitales, gras (`.jrn b`)");
             Assert.AreEqual(DesignTokens.Current.hudMoneyGold, nom.color, "le nom du journal est or (#f2c96b)");
             Assert.AreEqual("ce matin", quand.text);
+            Assert.AreEqual(20f, nom.characterSpacing, "`.jrn b{letter-spacing:.2em}`");
+            Assert.IsTrue((quand.fontStyle & TMPro.FontStyles.UpperCase) != 0 && (quand.fontStyle & TMPro.FontStyles.Bold) != 0, "horodatage : capitales, gras (`.une .jrn span`)");
+            Assert.AreEqual(13f, quand.characterSpacing, "`.une .jrn span{letter-spacing:.13em}`");
 
             Rect rUne = Monde((RectTransform)une), rNom = Monde(nom.rectTransform), rQuand = Monde(quand.rectTransform);
             Rect rFiletOr = Monde((RectTransform)Trouver(une, "FiletOr"));
@@ -496,13 +499,20 @@ namespace MafiaCleanCity.Operational.Tests
                 Assert.AreEqual(mots[i], quand.text);
                 Assert.AreEqual(attendu[i], point.color, "le point porte l'encre de la fraîcheur");
                 Assert.AreEqual(attendu[i], quand.color, "B2 : l'horodatage porte la MÊME encre que le point");
+                Assert.IsTrue((quand.fontStyle & TMPro.FontStyles.UpperCase) != 0, "B2 : l'horodatage est en CAPITALES (le juge : « en bas de casse »)");
+                Assert.AreEqual(10f, quand.characterSpacing, "B2 : lettré (`.qd{letter-spacing:.1em}`)");
                 Assert.IsNotNull(point.sprite, "le point est un disque");
+                Texture2D disque = point.sprite.texture;   // l'EFFET : opaque au centre, transparent au coin
+                Assert.Greater(disque.GetPixel(disque.width / 2, disque.height / 2).a, 0.9f, "le point est plein au centre");
+                Assert.Less(disque.GetPixel(0, 0).a, 0.1f, "…et rond : le coin est transparent");
 
                 Rect rb = Monde((RectTransform)b), rp = Monde(point.rectTransform), rq = Monde(quand.rectTransform), rt = Monde((RectTransform)Trouver(b, "Corps"));
                 Assert.Greater(rp.width, 0.4f, "le point a une taille RENDUE");
                 Assert.AreEqual(rp.width, rp.height, 0.5f, "…carré (donc rond)");
                 Assert.Greater(rq.center.x, rt.center.x, "B2 : l'horodatage est dans la colonne de DROITE, pas fondu sous le titre");
                 Assert.Less(rq.xMax, rb.xMax, "…dans la brève");
+                Assert.GreaterOrEqual(((RectTransform)Trouver(b, "QuandCol")).rect.width, quand.GetPreferredValues().x - 0.01f,
+                    "B2 : la colonne garde la largeur de son texte (`.qd{flex:none}`)");
                 Assert.Greater(rp.center.y, rb.center.y, "le point est en haut (`margin-top:3px`)");
                 Assert.AreEqual(rb.center.y, rq.center.y, rb.height * 0.2f, "l'horodatage est centré sur la hauteur (`align-self:center`)");
                 var cle = Trouver(b, "Cle").GetComponent<TMPro.TextMeshProUGUI>();

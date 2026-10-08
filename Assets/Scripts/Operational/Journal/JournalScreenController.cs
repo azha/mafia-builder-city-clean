@@ -531,8 +531,7 @@ namespace MafiaCleanCity.Operational
                 h.childControlWidth = true; h.childControlHeight = true;
                 h.childForceExpandWidth = false; h.childForceExpandHeight = false;
                 TextMeshProUGUI nom = Etiquette(jrn.transform, "Journal", journal ?? "", 7.4f, AccentOr, DesignTokens.Current.hudSerifFont, true, 20f, true);
-                nom.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-                nom.gameObject.SetActive(!string.IsNullOrEmpty(journal));
+                nom.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;   // reste ACTIF même vide : c'est lui qui pousse l'horodatage à droite
                 TextMeshProUGUI horo = Etiquette(jrn.transform, "Quand", quand ?? "", 5.4f, CouleurDeFraicheur(b.recency_band),
                                                  DesignTokens.Current.primaryFont, true, 13f, true);
                 horo.enableWordWrapping = false;
@@ -618,6 +617,12 @@ namespace MafiaCleanCity.Operational
                 vq.childAlignment = TextAnchor.MiddleRight;
                 TextMeshProUGUI horo = Etiquette(colQuand.transform, "Quand", quand, 5.4f, encre, DesignTokens.Current.primaryFont, true, 10f, true);
                 horo.enableWordWrapping = false;
+                // `.brv .qd{flex:none}` : la colonne garde la largeur de son texte (un `TMP_Text` n'a pas de largeur minimale : sans cela le
+                // groupe la rétrécirait avec le titre et l'horodatage, sans retour à la ligne, déborderait du rect). `.brv div{flex:1;min-width:0}`
+                // reste au titre.
+                LayoutElement lq = colQuand.AddComponent<LayoutElement>();
+                float largeur = horo.GetPreferredValues().x;
+                lq.minWidth = largeur; lq.preferredWidth = largeur; lq.flexibleWidth = 0f;
             }
         }
 
