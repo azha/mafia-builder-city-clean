@@ -160,6 +160,14 @@ namespace MafiaCleanCity.Shell
         {
             /// <summary>㉛ `.pl-choix` (cadre 68, « Lui trouver un avocat ») — correspondance donnée par CLIENT-1 le 08/10 :
             /// commis d'office = `.pris` (« EN PLACE »), un cabinet = neutre (« DISPONIBLE »), la filière = `.risque`.</summary>
+            /// <summary>㊱ `.ct` : une carte de l'horizon — `background:#111823` (le jeton lieutenantMedallionOuter, d 3,05), bord 1 px
+            /// `#2a3648` ; `.ct.recule` (servi : `predicate_regressed`) : bord accentDanger.</summary>
+            public static class Horizon
+            {
+                public static readonly EtatDeBloc Carte = new EtatDeBloc(MedaillonExt, Filets.Horizon.Ct);
+                public static readonly EtatDeBloc Recule = new EtatDeBloc(MedaillonExt, Filets.Horizon.CtRecule);
+            }
+
             public static class Loi
             {
                 public static readonly EtatDeBloc Pris = new EtatDeBloc(Teinte.Hex("#22301f"), Filets.Loi.PlChoixPris);

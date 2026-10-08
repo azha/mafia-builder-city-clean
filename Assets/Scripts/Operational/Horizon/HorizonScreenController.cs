@@ -244,9 +244,11 @@ namespace MafiaCleanCity.Operational
             {
                 if (c == null) continue;
                 GameObject carte = NouveauUI("Carte_" + c.card_id, listeRoot);
+                if (carte.GetComponent<CanvasRenderer>() == null) carte.AddComponent<CanvasRenderer>();
                 Image fond = carte.AddComponent<Image>();
-                fond.color = c.predicate_regressed ? FondRecule : FondCarte;
-                if (c.predicate_regressed) Contour(carte, AccentRecule);
+                // `.ct` / `.ct.recule` : fond ET bord posés ensemble (`Filets.Etat`) — le bord mesuré, `#2a3648` ou accentDanger.
+                Filets.Etat((RectTransform)carte.transform, fond,
+                            c.predicate_regressed ? DecorsDeScene.Etats.Horizon.Recule : DecorsDeScene.Etats.Horizon.Carte);
 
                 VerticalLayoutGroup v = carte.AddComponent<VerticalLayoutGroup>();
                 v.padding = new RectOffset(PxI(12f), PxI(12f), PxI(10f), PxI(10f));
@@ -541,37 +543,10 @@ namespace MafiaCleanCity.Operational
             return t;
         }
 
-        /// <summary>Un contour, posé en PREMIER enfant — la convention de fratrie du dépôt : un
-        /// décor ne s'empile pas avec le contenu, et il ignore le layout.</summary>
-        /// <summary>Un liseré : QUATRE arêtes d'un px de trait, jamais un rectangle plein.
-        ///
-        /// ⛔ La version précédente posait UN enfant plein cadre couleur liseré et l'envoyait en
-        /// `SetAsFirstSibling`, en croyant le glisser derrière le fond. Mesuré sur la capture de
-        /// l'état vide : **82,5 % de l'écran en or plein** — les quatre blocs entièrement remplis.
-        /// La cause n'est pas l'ordre des frères : `AjouterFond` pose son `Image` SUR le bloc
-        /// lui-même, et un enfant est TOUJOURS rendu après le graphique de son parent. Aucun rang
-        /// de fratrie ne fait passer un enfant derrière son propre parent.
-        /// ★ La garde structurelle voyait un `Contour` présent, avec la bonne couleur, au bon
-        ///   endroit de l'arbre — et l'écran était illisible. Une garde qui vérifie qu'un élément
-        ///   EXISTE ne dit rien de ce qu'il RECOUVRE : il a fallu une image pour le voir.</summary>
-        private void Contour(GameObject cible, Color couleur)
-        {
-            void Arete(string nom, Vector2 aMin, Vector2 aMax, Vector2 oMin, Vector2 oMax)
-            {
-                GameObject b = NouveauUI(nom, cible.transform);
-                Image i = b.AddComponent<Image>();
-                i.color = couleur; i.raycastTarget = false;
-                RectTransform rt = (RectTransform)b.transform;
-                rt.anchorMin = aMin; rt.anchorMax = aMax;
-                rt.offsetMin = oMin; rt.offsetMax = oMax;
-                b.AddComponent<LayoutElement>().ignoreLayout = true;
-            }
-            float e = PxTrait(1f);
-            Arete("LisereHaut",   new Vector2(0f, 1f), Vector2.one,        new Vector2(0f, -e), Vector2.zero);
-            Arete("LisereBas",    Vector2.zero,        new Vector2(1f, 0f), Vector2.zero,       new Vector2(0f, e));
-            Arete("LisereGauche", Vector2.zero,        new Vector2(0f, 1f), Vector2.zero,       new Vector2(e, 0f));
-            Arete("LisereDroite", new Vector2(1f, 0f), Vector2.one,        new Vector2(-e, 0f), Vector2.zero);
-        }
+        // Le liseré des blocs (anciennement `Contour` : quatre arêtes de 1 px) est désormais posé par `Filets` (décor de scène,
+        // CLIENT-2, 08/10), avec la recette MESURÉE de chaque bloc. La leçon qu'il portait tient toujours : une version antérieure
+        // posait un enfant plein cadre (82,5 % de l'écran en or plein) — un enfant est toujours rendu APRÈS le graphique de son
+        // parent, et une garde qui vérifie qu'un élément EXISTE ne dit rien de ce qu'il RECOUVRE.
 
         /// <summary>Un compteur. `valeur < 0` ⇒ « — » : le trou se montre, il ne se comble pas
         /// par un zéro. Un « 0 » dirait « mesuré à zéro », un tiret dit « pas de source » —
@@ -601,7 +576,9 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("HorizonRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            AjouterFond(racine, DesignTokens.Current.surfaceBase);
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,24, le voile,
+            // le support A de `.hrz6` (halos or et cyan sur le 178°) et le cerne d'or — DÉCLARÉS au catalogue, plus de fond plat ici.
+            DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Horizon);
 
             // ⛔ L'ÉCHELLE AVANT TOUTE CONVERSION. Un RectTransform qui vient d'être étiré n'a
             // pas encore son `rect` résolu, et `Px()` le lit dès la première constante. Payé sur
@@ -621,12 +598,14 @@ namespace MafiaCleanCity.Operational
             // pas l'écran. Même famille que la garde qui comptait le slot au lieu de l'écran.
             // Hors shell les deux insets valent 0 et ㊱ remplit tout, comme avant.
             crt.offsetMin = new Vector2(Px(CssMargeH), Px(CssMargeH) + ShellChrome.BottomInsetPx);
-            crt.offsetMax = new Vector2(-Px(CssMargeH), -(Px(CssMargeH) + ShellChrome.TopInsetPx));
+            crt.offsetMax = new Vector2(-Px(CssMargeH), -Px(CssMargeH));   // le haut : ReserverLaBande, ci-dessous
 
             VerticalLayoutGroup pile = corps.AddComponent<VerticalLayoutGroup>();
             pile.spacing = Px(CssEcartBloc);
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
+            // §5.6 du design : la pile commence SOUS max(barre, bande de scène 21 %), comme le panneau de la maquette.
+            DecorDeScene.ReserverLaBande(pile, decor, 0f);
 
             ConstruireEnseigne(corps.transform);
             ConstruireCompteurs(corps.transform);
@@ -637,8 +616,8 @@ namespace MafiaCleanCity.Operational
         private void ConstruireEnseigne(Transform parent)
         {
             GameObject go = NouveauUI("Enseigne", parent);
-            AjouterFond(go, DesignTokens.Current.surfaceCard);
-            Contour(go, ReputationResolvers.Lisere);
+            // `.enseigne` : plaque 178° translucide, bord 1 px #2a3648, filet bas 2 px laiton, liseré blanc — recette MESURÉE de ㊱.
+            DecorDeScene.HabillerEnseigne((RectTransform)go.transform, DecorsDeScene.Filets.Horizon.Enseigne, DecorsDeScene.Horizon);
             AjouterLayout(go, Px(CssHautEnseigne));
 
             VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();
@@ -673,7 +652,7 @@ namespace MafiaCleanCity.Operational
             {
                 GameObject fen = NouveauUI("Fenetre" + i, go.transform);
                 AjouterFond(fen, ReputationResolvers.Encre);
-                Contour(fen, ReputationResolvers.Lisere);
+                Filets.Poser((RectTransform)fen.transform, DecorsDeScene.Filets.Horizon.Fen);   // `.fen` : 1 px #2a3648 mesuré
                 // Trois tiers ÉGAUX : sans `preferredWidth = 0`, la largeur vient du CONTENU et
                 // « DÉJÀ PRISES » écraserait « À PORTÉE ». Payé sur ㊲.
                 LayoutElement le = fen.AddComponent<LayoutElement>();
@@ -704,7 +683,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Liste", parent);
             AjouterFond(go, DesignTokens.Current.surfaceBase);
-            Contour(go, ReputationResolvers.Lisere);
+            Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Horizon.Elast);   // `.elast` : 1 px #2a3648 mesuré
             LayoutElement le = go.AddComponent<LayoutElement>();
             le.minHeight = Px(120f); le.flexibleHeight = 1f;
 
@@ -723,7 +702,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Panneau", parent);
             AjouterFond(go, ReputationResolvers.Panneau);
-            Contour(go, ReputationResolvers.Lisere);
+            Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Horizon.Pann);   // `.pann` : 1 px #2a3648 mesuré
             AjouterLayout(go, Px(CssHautPann));
 
             VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();

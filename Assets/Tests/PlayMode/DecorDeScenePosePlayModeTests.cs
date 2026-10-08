@@ -24,8 +24,8 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉓", "⑮", "⑰", "⑭", "㉒",   // ㊵, ㊳, ㉜, ㉚, ㉛ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ (à CLIENT-2, f2)
-            "㊱", "㉘", "㉝", "㉞", "㉙", "㉔", "⑱",
+            "③", "⑤", "㊲", "㉓", "⑮", "⑰", "⑭", "㉒",   // ㊵, ㊳, ㉜, ㉚, ㉛ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ (à CLIENT-2, f2)
+            "㉘", "㉝", "㉞", "㉙", "㉔", "⑱",
         };
 
         /// <summary>DETTE DATÉE : par écran POSÉ, les recettes de filets pas encore branchées, chacune avec sa raison. Ne fait
@@ -44,6 +44,10 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ㊱ (08/10) — Enseigne, Fen, Elast, Pann posées ; Ct/CtRecule par Etats.Horizon (servi : predicate_regressed). CtPris,
+            //   CtPrisRecule, CtHs : `view_status` (adopted, dismissed…) est servi, mais sa correspondance avec `.pris`/`.hs` n'est pas
+            //   établie — à trancher au juge ; Recul (filet haut de la mention « ça s'est éloigné »), Cta6 (le pied), Mano (cadran).
+            { "㊱", new[] { "CtHs", "CtPris", "CtPrisRecule", "Cta6", "Mano", "Recul" } },
             // ㉛ (08/10) — PlChoix/PlChoixPris/PlChoixRisque POSÉS (états des cartes d'avocat, Filets.Etat).
             //   PlItem/PlItemLache, PlAlerte, PlRien, Tag* : états d'une affaire ACTIVE, non servie (`GET /v1/me/legal` : activeCases: [])
             //   — non construits (CLIENT-1). PlTete, PlBas, PlGeste*, PlVitre, PlAv, Mano : en-tête, pied, vitre, avatar, cadran —
