@@ -1386,6 +1386,51 @@ namespace MafiaCleanCity.Shell
             return Mathf.Clamp01((r - dist) + 0.5f);
         }
 
+        /// <summary>Une boîte W×H à coins arrondis PAR MOITIÉ (les deux du haut à `rayonHautPx`, les deux du bas à `rayonBasPx`)
+        /// remplie d'un `radial-gradient(ellipse …)` CSS — la forme que ni `RoundedRectMask` (tranché en 9 : un rayon de 100 sur
+        /// une boîte de 118 de haut s'écrase) ni `DegradeRadial` (rectangle) ne donnent. Le cadran de fer de ⑭
+        /// (`.cadran-fer{border-radius:100px 100px 14px 14px; background:radial-gradient(120% 100% at 50% 100%,#3a3f47,#15181c 70%)}`)
+        /// et, à rayons égaux, un DISQUE à dégradé décentré (la vis `circle at 35% 30%`, la lampe `circle at 40% 35%`).
+        ///
+        /// `cx`, `cy` (foyer) et `rx`, `ry` (demi-axes) sont des FRACTIONS de la largeur et de la hauteur, `cy` depuis le HAUT
+        /// (comme `DegradeRadial`, dont c'est l'échantillonnage). Les rayons sont bornés comme en CSS : jamais plus de la moitié
+        /// de la largeur, et leur somme verticale ramenée à la hauteur. Bord anti-crénelé par la rampe de `RoundedRectMask`
+        /// (`(r − dist) + ½`). Sprite PLEIN (`Simple`) : à poser sur une Image de la taille exacte du sprite.</summary>
+        public static Sprite BoiteArrondieRadiale(int largeurPx, int hauteurPx, int rayonHautPx, int rayonBasPx,
+                                                  float cx, float cy, float rx, float ry,
+                                                  (float pos, Color c)[] arrets)
+        {
+            int w = Mathf.Max(4, largeurPx), h = Mathf.Max(4, hauteurPx);
+            string key = $"boiterad:{w}x{h}:{rayonHautPx}:{rayonBasPx}:{cx:F4},{cy:F4}:{rx:F4},{ry:F4}:{CleArrets(arrets)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            float rh = Mathf.Min(Mathf.Max(0, rayonHautPx), w * 0.5f), rb = Mathf.Min(Mathf.Max(0, rayonBasPx), w * 0.5f);
+            if (rh + rb > h) { float k = h / (rh + rb); rh *= k; rb *= k; }   // CSS : les rayons se ramènent à la boîte
+            float ex = Mathf.Max(1e-4f, rx), ey = Mathf.Max(1e-4f, ry);
+
+            var tex = NewTexture(w, h);
+            var pixels = new Color[w * h];
+            for (int y = 0; y < h; y++)
+            {
+                float py = h - (y + 0.5f);            // depuis le HAUT, comme CSS
+                float v = py / h;
+                for (int x = 0; x < w; x++)
+                {
+                    float px = x + 0.5f;
+                    float alpha = 1f;
+                    if (px < rh && py < rh) alpha = AlphaDeCoin(x, y, Mathf.RoundToInt(rh), rh, h - rh);
+                    else if (px > w - rh && py < rh) alpha = AlphaDeCoin(x, y, Mathf.RoundToInt(rh), w - rh, h - rh);
+                    else if (px < rb && py > h - rb) alpha = AlphaDeCoin(x, y, Mathf.RoundToInt(rb), rb, rb);
+                    else if (px > w - rb && py > h - rb) alpha = AlphaDeCoin(x, y, Mathf.RoundToInt(rb), w - rb, rb);
+                    float nx = (px / w - cx) / ex, ny = (v - cy) / ey;
+                    Color c = EchantillonDeDegrade(arrets, Mathf.Sqrt(nx * nx + ny * ny));
+                    c.a *= alpha;
+                    pixels[y * w + x] = c;
+                }
+            }
+            return Terminer(tex, pixels, key);
+        }
+
         /// <summary>Une TUILE de points — `radial-gradient(circle, teinte r1, transparent r2)` répété en
         /// `background-size: pas pas` avec `background-position: dx dy` (la tôle ⑭ : pas 26, r 1,4 → 1,9 ; la planche ㉘ :
         /// pas 9 et 13, décalages 0,0 et 4,6). À poser en `Image.Type.Tiled`.

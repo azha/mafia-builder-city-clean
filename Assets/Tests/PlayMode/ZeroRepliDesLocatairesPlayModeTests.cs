@@ -67,6 +67,9 @@ namespace MafiaCleanCity.Operational.Tests
             // pression « TENSION CALME · AUCUNE SEMAINE » (`ParValeur` sur la tension servie, et l'absence de semaine), ㊳ le pied éteint, ㉛ la bande
             // basse (geste et note). Mots de la maquette, clés dérivées par `Libelle` ; à servir par la table de l'atelier (via f2). 5 entrées.
             "compression.tension.calm", "compression.semaine.none",
+            // ⑭ LA JAUGE DE TENSION (CLIENT-2, 08/10 ; juge d'ensemble r1, F3 : l'élément héros était absent) : l'onglet « TENSION » et la légende du cadre calme (`.lampe-rouge`, cadres 14-19 de la
+            // série 6) — clés dérivées par `Libelle.De("semaine", "bloc", …)`, NON servies à 0a1be4a1 (mesuré : `string_table.ts`) ; à servir par f2 (FR « Tension » / « vos affaires respirent »). 2 entrées.
+            "semaine.bloc.tension", "semaine.bloc.vos_affaires_respirent",
             "journal.bouton.y_preter_attention",
             "loi.bouton.lui_trouver_un_avocat", "loi.bloc.le_commis_d_office_fait_ce_qu_il_peut",
             // ㉚ B3 (CLIENT-1, 08/10 ; juge groupé du 07/10) : la LÉGENDE du geste « EN COMMANDER » (cadre 48, `.geste small`) — mot de la maquette, clé

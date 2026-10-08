@@ -106,6 +106,12 @@ namespace MafiaCleanCity.CoreLoops.Compression
         private RectTransform jetons;
         private TextMeshProUGUI pressionTexte;
         private TextMeshProUGUI videTexte;
+        // la JAUGE DE TENSION (`.cadran-fer`) : ce que RendreJauge repose à chaque rendu
+        private RectTransform aiguille;
+        private Image lampe;
+        private Sprite lampeAllumee, lampeEteinte;
+        private TextMeshProUGUI legendeTexte;
+        private LayoutElement legendeLayout;
 
         private void Awake() => Init();
 
@@ -184,6 +190,17 @@ namespace MafiaCleanCity.CoreLoops.Compression
             Rendre();
         }
 
+        /// <summary>Le corps imposé par un TEST (patron `ForensicScreenController.RendrePourTest`) : l'état et le tableau d'un compte
+        /// fabriqué, aucune requête. Le rendu est celui de la production.</summary>
+        public void RendrePourTest(EtatData etat, BoardData tableau)
+        {
+            Init();
+            Etat = etat;
+            Tableau = tableau;
+            DerniereErreur = null;
+            Rendre();
+        }
+
         private void Rendre()
         {
             for (int i = lignes.childCount - 1; i >= 0; i--)
@@ -191,6 +208,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
             for (int i = jetons.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(jetons.GetChild(i).gameObject);
 
+            RendreJauge();
             pressionTexte.text = Etat == null
                 ? "pression inconnue"
                 : LignePression(Etat.stress_bucket, Etat.week_state);
@@ -356,7 +374,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
             // l'aplat `surfaceBase` ; son `Decor/Capteur` garde le bloqueur de raycast que portait cet aplat.
             DecorPose decor = DecorDeScene.Poser(transform, DecorsDeScene.Compression);
 
-            // ⚠️ `v` est LA pile de l'écran (le VerticalLayoutGroup du GameObject lui-même) : CLIENT-3 y construira le manomètre.
+            // ⚠️ `v` est LA pile de l'écran (le VerticalLayoutGroup du GameObject lui-même) : la jauge de tension (`ConstruireJauge`) en est le premier bloc.
             VerticalLayoutGroup v = gameObject.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset((int)Px(10f), (int)Px(10f),
                                        0,   // le haut : sous la bande de scène (ReserverLaBande, juste dessous)
@@ -369,6 +387,10 @@ namespace MafiaCleanCity.CoreLoops.Compression
             v.childAlignment = TextAnchor.UpperCenter;
             // §5.6 du design : la pile commence SOUS max(barre, bande de scène 35 %), comme la tôle de la maquette.
             DecorDeScene.ReserverLaBande(v, decor, Px(8f));
+
+            // LA JAUGE DE TENSION (juge visuel r1 du 08/10, F3 : l'élément héros du cadre manquait) — en TÊTE du corps, comme `.cadran-fer`
+            // est le premier objet de la tôle de la série 6 (cadres 14-19). Tout le reste de la pile est inchangé.
+            ConstruireJauge(transform);
 
             // ⛔ OR VIF, PAS OR. Mesuré sur `reference-1080x2102.png` : le titre d'état rend
             //    (242,201,107) = `hudMoneyGold`. Il était posé en `--or` (217,171,78) — le bon
@@ -396,6 +418,270 @@ namespace MafiaCleanCity.CoreLoops.Compression
             videTexte = Texte(transform, "Vide", "", Px(11f), Creme2,
                               DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             videTexte.gameObject.SetActive(false);
+        }
+
+        // ═══ LA JAUGE DE TENSION — `.cadran-fer` de la série 6 (`ecrans-brennar-6.html:289-292` ; SVG des cadres 14-19, l.784-804) ═══
+        // Juge visuel r1 du 08/10, F3 (BLOQUANT) : l'élément héros du cadre n'était pas construit — le commentaire de `Construire` promettait « le manomètre »
+        // depuis CLIENT-3 et personne ne l'avait écrit. La géométrie est RECOPIÉE de la maquette (px CSS, `Px()` comme le reste du contrôleur) :
+        //   · `.cadran-fer` 200×118, `border:4px #b08d3e`, `border-radius:100px 100px 14px 14px`, fond `radial-gradient(120% 100% at 50% 100%,#3a3f47,#15181c 70%)`,
+        //     halos `0 0 0 4px #1a1d21, 0 0 0 6px #4a3a12` ;
+        //   · le SVG (`left:14px; top:8px; 172×102`, viewBox 168×100 ⇒ échelle min(172/168, 102/100) = 1,02, centré) : piste `#ffffff1a`, froid `#7fd4d977`,
+        //     or `#d9ab4e99`, chaud `#e0402acc`, tous `stroke-width:9`, rayon 70 autour de (84,92) ; froid/or se rejoignent en (49,32), or/chaud en (119,32) ;
+        //     aiguille `line 84,92 → 84,40`, trait 2,6, `#eae0c8`, tournée de `rotate(θ)` autour de (84,92) ; moyeu `r=6 #b08d3e` cerclé `#6b4a12` ;
+        //   · 4 vis 9×9 (`.v1 left:10/bottom:8`, `.v2 right:10/bottom:8`, `.v3 left:40/top:24`, `.v4 right:40/top:24`), l'onglet `.etiquette-fer` « TENSION »
+        //     (`bottom:-11px`, 8 px, `letter-spacing:.34em`, `#e8c87a → #b08d3e`), puis `.lampe-rouge` (`margin-top:16px`) qui porte la légende.
+        // ⚠️ ANGLES DE L'AIGUILLE, MESURÉS sur les `transform:rotate()` des cadres (CSS : degrés, SENS HORAIRE depuis la verticale) : au calme −60° (cadre 18,
+        //    l.800) ; montante +12° (cadre 14, l.784) ; écrasante et sous compression +64° (cadres 15 et 19, l.788 et l.804 — le cadre 16 « un autre apparaît » dit +60°, l.792).
+        //    La maquette n'a AUCUN cadre pour `crushing` seul : les trois cadres chauds sont tous en semaine ouverte (`compression_active`) et disent « ÉCRASANTE » ;
+        //    le cran `crushing` reprend donc leur valeur dominante (+64°) — consigné aux Deviations de `impl-F3-jauge.md`.
+        private const float CadranL = 200f, CadranH = 118f, CadranBord = 4f, CadranRayonHaut = 100f, CadranRayonBas = 14f;
+        private const float SvgGauche = 14f, SvgHaut = 8f, SvgL = 172f, SvgH = 102f, VueL = 168f, VueH = 100f;
+        private const float ArcCentreVueX = 84f, ArcCentreVueY = 92f, ArcRayonVue = 70f, ArcTraitVue = 9f;
+        private const float AiguilleLongVue = 52f, AiguilleTraitVue = 2.6f, MoyeuRayonVue = 6f;
+        private const float VisCote = 9f, LampeCote = 13f, OngletDebord = 7f /* bottom:-11px du padding-box = 11 − 4 de bordure sous le border-box */;
+        private const float AiguilleCalmCss = -60f, AiguilleMountingCss = 12f, AiguilleCrushingCss = 64f, AiguilleActiveCss = 64f;
+        private const float PisteAlpha = 0x1a / 255f, FroidAlpha = 0x77 / 255f, OrAlpha = 0x99 / 255f, ChaudAlpha = 0xcc / 255f;
+
+        /// <summary>L'échelle du viewBox 168×100 dans sa boîte 172×102 (`preserveAspectRatio` par défaut : le plus petit des deux rapports, centré).</summary>
+        private static float EchelleSvg => Mathf.Min(SvgL / VueL, SvgH / VueH);
+
+        /// <summary>Le centre des arcs (pivot de l'aiguille), en px CSS depuis le coin haut-gauche du BORD du cadran.</summary>
+        private static Vector2 CentreDesArcsCss => new Vector2(
+            CadranBord + SvgGauche + (SvgL - VueL * EchelleSvg) * 0.5f + ArcCentreVueX * EchelleSvg,
+            CadranBord + SvgHaut + (SvgH - VueH * EchelleSvg) * 0.5f + ArcCentreVueY * EchelleSvg);
+
+        /// <summary>L'angle (0° à DROITE, sens trigonométrique) d'un point du viewBox vu du pivot : `M49 32` ⇒ 120,26° et `M119 32` ⇒ 59,74°.</summary>
+        private static float AngleDuPointVue(float x, float y) => Mathf.Atan2(ArcCentreVueY - y, x - ArcCentreVueX) * Mathf.Rad2Deg;
+        private static readonly float ArcFroidFinDeg = AngleDuPointVue(49f, 32f);
+        private static readonly float ArcChaudDebutDeg = AngleDuPointVue(119f, 32f);
+
+        private static Color Opaque(Color c) { c.a = 1f; return c; }
+        private static Color LegendeAllumee => Hex("#ff8a70");   // `.lampe-rouge span{color:#ff8a70}`
+        private static Color LegendeEteinte => Hex("#b3b8bf");   // `.lampe-rouge.eteinte span`
+
+        /// <summary>Les arrêts du fond du cadran : `radial-gradient(120% 100% at 50% 100%, #3a3f47, #15181c 70%)`. `#15181c` est à 1,7/255 du jeton `surfaceCard` (garde TD-612) : on prend le jeton ;
+        /// `#3a3f47` n'a aucun jeton à moins de 5 (`mapChipBg`).</summary>
+        private static (float pos, Color c)[] ArretsDuFond() =>
+            new[] { (0f, Hex("#3a3f47")), (0.7f, Opaque(DesignTokens.Current.surfaceCard)) };
+
+        /// <summary>Le fond sRGB du cadran au point `p` (px CSS depuis le coin du BORD) : le foyer est au milieu du bas de la boîte de PADDING (192×110), les demi-axes 120 % × 100 % de cette boîte.</summary>
+        private static Color FondDuCadran(Vector2 p)
+        {
+            const float L = CadranL - 2f * CadranBord, H = CadranH - 2f * CadranBord;
+            float nx = (p.x - (CadranBord + L * 0.5f)) / (1.2f * L), ny = (p.y - (CadranBord + H)) / H;
+            return ProceduralUI.EchantillonDeDegrade(ArretsDuFond(), Mathf.Sqrt(nx * nx + ny * ny));
+        }
+
+        private static Vector2 PointSurLArc(float angleDeg)
+        {
+            float a = angleDeg * Mathf.Deg2Rad, r = ArcRayonVue * EchelleSvg;
+            Vector2 c = CentreDesArcsCss;
+            return new Vector2(c.x + r * Mathf.Cos(a), c.y - r * Mathf.Sin(a));
+        }
+
+        /// <summary>Une teinte de maquette (sRGB, avec son opacité CSS) posée pour que le mélange LINÉAIRE d'Unity rende ce que le navigateur rend en sRGB sur `fondSrgb` — la classe mesurée sur le manomètre
+        /// du HUD (`TopBarController.TeinteSurCadran`, privée à `Shell` : même méthode, `ProceduralUI.CouleurPourMelangeLineaire`). On garde l'opacité du CSS et on déplace la COULEUR. Hors gamut :
+        /// teinte d'origine, et le log le dit. ⚠️ Le fond d'un arc VARIE le long de l'arc (le foyer du dégradé est au bas de la boîte, pas au pivot) : la teinte est résolue au point MILIEU de l'arc.</summary>
+        private static Color TeinteSurFond(Color encre, float alphaSrgb, Color fondSrgb, string quoi)
+        {
+            Color r = ProceduralUI.CouleurPourMelangeLineaire(encre, fondSrgb, alphaSrgb, out bool atteignable);
+            if (atteignable) return r;
+            Debug.LogWarning($"[JAUGE-sRGB] {quoi} : aucune couleur ne reproduit le mélange sRGB sur ce fond — teinte d'origine conservée.");
+            r = encre;
+            r.a = alphaSrgb;
+            return r;
+        }
+
+        /// <summary>L'angle de l'aiguille en degrés CSS (HORAIRE depuis la verticale) pour un cran du back — les valeurs MESURÉES sur la maquette (voir plus haut). Faux pour un cran inconnu : l'aiguille se retire,
+        /// elle ne se pose pas sur un cran inventé (même doctrine que `PlaqueDeTension`).</summary>
+        public static bool AngleDeLAiguilleCss(string stressBucket, out float degresCss)
+        {
+            switch (stressBucket)
+            {
+                case "calm": degresCss = AiguilleCalmCss; return true;
+                case "mounting": degresCss = AiguilleMountingCss; return true;
+                case "crushing": degresCss = AiguilleCrushingCss; return true;
+                case "compression_active": degresCss = AiguilleActiveCss; return true;
+                default: degresCss = 0f; return false;
+            }
+        }
+
+        /// <summary>La légende sous le cadran (`.lampe-rouge span`, en capitales) : le MOT du cran par le résolveur commun (`MotsDesEnumeres`), et au calme la phrase du cadre 18 — « CALME — VOS AFFAIRES RESPIRENT ».
+        /// Pure. (Les phrases des autres cadres — « SEMAINE ANNONCÉE — MONTANTE », « OUVERTE TOUTE SEULE — ÉCRASANTE »… — dépendent de la SEMAINE, pas du seul cran : la ligne de pression les dit.)</summary>
+        public static string LegendeDeTension(string stressBucket)
+        {
+            string mot = MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.Tension, stressBucket);
+            string phrase = stressBucket == "calm" ? Lib("vos affaires respirent") : null;
+            return (phrase == null ? mot : mot + " — " + phrase).ToUpperInvariant();
+        }
+
+        private static bool LampeAllumee(string stressBucket) => stressBucket == "crushing" || stressBucket == "compression_active";
+
+        private static RectTransform PoserCss(RectTransform rt, float x, float y, float l, float h)
+        {
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+            rt.anchoredPosition = new Vector2(Px(x), -Px(y));
+            rt.sizeDelta = new Vector2(Px(l), Px(h));
+            return rt;
+        }
+
+        /// <summary>Un `Graphic` qui NAÎT avec son `CanvasRenderer` (`AddComponent` à l'exécution n'honore pas `RequireComponent`), sans raycast.</summary>
+        private static Image Peindre(Transform parent, string nom, Sprite sprite, Color couleur)
+        {
+            GameObject go = new GameObject(nom, typeof(RectTransform), typeof(CanvasRenderer));
+            go.transform.SetParent(parent, false);
+            Image im = go.AddComponent<Image>();
+            im.sprite = sprite;
+            im.color = couleur;
+            im.type = Image.Type.Simple;
+            im.raycastTarget = false;
+            return im;
+        }
+
+        /// <summary>Une forme à coins arrondis haut/bas, unie ou à dégradé radial, posée en px CSS (coin haut-gauche du BORD du cadran).</summary>
+        private static Image Forme(Transform parent, string nom, float x, float y, float l, float h, float rayonHaut, float rayonBas,
+                                   float cx, float cy, float rx, float ry, (float pos, Color c)[] arrets)
+        {
+            Sprite sp = ProceduralUI.BoiteArrondieRadiale((int)Px(l), (int)Px(h), (int)Px(rayonHaut), (int)Px(rayonBas), cx, cy, rx, ry, arrets);
+            Image im = Peindre(parent, nom, sp, Color.white);
+            PoserCss(im.rectTransform, x, y, l, h);
+            return im;
+        }
+
+        private static Image FormeUnie(Transform parent, string nom, float x, float y, float l, float h, float rayonHaut, float rayonBas, Color plein) =>
+            Forme(parent, nom, x, y, l, h, rayonHaut, rayonBas, 0.5f, 0.5f, 1f, 1f, new[] { (0f, plein), (1f, plein) });
+
+        private static void Arc(Transform parent, string nom, float debutDeg, float finDeg, Color teinte)
+        {
+            float s = EchelleSvg, dExt = 2f * (ArcRayonVue + ArcTraitVue * 0.5f) * s;
+            Vector2 c = CentreDesArcsCss;
+            Sprite sp = ProceduralUI.ArcCuit((int)Px(dExt), Px(ArcTraitVue * s), Color.white, debutDeg, finDeg);
+            Image im = Peindre(parent, nom, sp, teinte);
+            PoserCss(im.rectTransform, c.x - dExt * 0.5f, c.y - dExt * 0.5f, dExt, dExt);
+        }
+
+        private void ConstruireJauge(Transform parent)
+        {
+            float s = EchelleSvg;
+            Color laiton = Opaque(DesignTokens.Current.hudHairlineGold);   // `--laiton` #b08d3e : le bord, le moyeu, le bas de l'onglet
+
+            GameObject jauge = Bloc("Jauge", parent, false, 0f);
+            VerticalLayoutGroup jv = jauge.GetComponent<VerticalLayoutGroup>();
+            jv.childForceExpandWidth = false;   // le cadran garde ses 200 px et se centre (`align-self:center`)
+            jv.childAlignment = TextAnchor.UpperCenter;
+
+            GameObject cad = new GameObject("Cadran", typeof(RectTransform));
+            cad.transform.SetParent(jauge.transform, false);
+            LayoutElement cl = cad.AddComponent<LayoutElement>();
+            cl.minWidth = cl.preferredWidth = Px(CadranL);
+            cl.minHeight = cl.preferredHeight = Px(CadranH);
+            cl.flexibleWidth = 0f;
+            Transform c = cad.transform;
+
+            // le boîtier, de l'extérieur vers l'intérieur : halo brun (+6), halo sombre (+4), bord laiton, face
+            FormeUnie(c, "HaloBrun", -6f, -6f, CadranL + 12f, CadranH + 12f, CadranRayonHaut + 6f, CadranRayonBas + 6f, Hex("#4a3a12"));
+            // `#1a1d21` est à 2,2/255 du jeton `autonomyBlockBg` (garde TD-612) : la valeur circule, on prend le jeton.
+            FormeUnie(c, "HaloSombre", -4f, -4f, CadranL + 8f, CadranH + 8f, CadranRayonHaut + 4f, CadranRayonBas + 4f, Opaque(DesignTokens.Current.autonomyBlockBg));
+            FormeUnie(c, "Bord", 0f, 0f, CadranL, CadranH, CadranRayonHaut, CadranRayonBas, laiton);
+            Forme(c, "Face", CadranBord, CadranBord, CadranL - 2f * CadranBord, CadranH - 2f * CadranBord,
+                  CadranRayonHaut - CadranBord, CadranRayonBas - CadranBord, 0.5f, 1f, 1.2f, 1f, ArretsDuFond());
+
+            // les quatre vis (`radial-gradient(circle at 35% 30%, #d9c08a, #6b4a12)`, cercle jusqu'au coin le plus loin : √(.65² + .70²) ≈ .955)
+            (float x, float y)[] vis = { (14f, 97f), (177f, 97f), (44f, 28f), (147f, 28f) };
+            for (int i = 0; i < vis.Length; i++)
+                Forme(c, "Vis" + (i + 1), vis[i].x, vis[i].y, VisCote, VisCote, VisCote * 0.5f, VisCote * 0.5f,
+                      0.35f, 0.30f, 0.955f, 0.955f, new[] { (0f, Hex("#d9c08a")), (1f, Hex("#6b4a12")) });
+
+            // la piste et les trois arcs : l'opacité du CSS est GARDÉE, la couleur est déplacée pour que le mélange linéaire rende le mélange sRGB du navigateur
+            Color piste = TeinteSurFond(Color.white, PisteAlpha, FondDuCadran(PointSurLArc(90f)), "piste");
+            Arc(c, "Piste", 180f, 0f, piste);
+            Color SousLaPiste(float angle) => Color.Lerp(FondDuCadran(PointSurLArc(angle)), Color.white, PisteAlpha);
+            float miFroid = (180f + ArcFroidFinDeg) * 0.5f, miOr = (ArcFroidFinDeg + ArcChaudDebutDeg) * 0.5f, miChaud = ArcChaudDebutDeg * 0.5f;
+            Arc(c, "ArcFroid", 180f, ArcFroidFinDeg,
+                TeinteSurFond(Opaque(DesignTokens.Current.hudGaugeArcCold), FroidAlpha, SousLaPiste(miFroid), "arc froid"));
+            Arc(c, "ArcOr", ArcFroidFinDeg, ArcChaudDebutDeg,
+                TeinteSurFond(Opaque(DesignTokens.Current.hudMoneyUnderlineGold), OrAlpha, SousLaPiste(miOr), "arc or"));
+            Arc(c, "ArcChaud", ArcChaudDebutDeg, 0f,
+                TeinteSurFond(Hex("#e0402a"), ChaudAlpha, SousLaPiste(miChaud), "arc chaud"));   // `#e0402a` : le plus proche jeton (`heatBurning`) est à 13
+
+            // l'aiguille : pivot en bas de son rect, posée sur le centre des arcs ; son angle est reposé à chaque rendu
+            Vector2 pivot = CentreDesArcsCss;
+            Image ai = Peindre(c, "Aiguille", null, Opaque(Creme));
+            aiguille = ai.rectTransform;
+            aiguille.anchorMin = aiguille.anchorMax = new Vector2(0f, 1f);
+            aiguille.pivot = new Vector2(0.5f, 0f);
+            aiguille.anchoredPosition = new Vector2(Px(pivot.x), -Px(pivot.y));
+            aiguille.sizeDelta = new Vector2(Px(AiguilleTraitVue * s), Px((AiguilleLongVue + AiguilleTraitVue * 0.5f) * s));   // + le demi-trait du bout rond
+
+            // le moyeu : `circle r=6 fill #b08d3e stroke #6b4a12` (trait de 1 centré sur le rayon ⇒ 13 de diamètre dehors, 11 dedans)
+            float dm = (MoyeuRayonVue * 2f + 1f) * s, di = (MoyeuRayonVue * 2f - 1f) * s;
+            Sprite cercleBrun = ProceduralUI.RadialDisc((int)Px(dm), Hex("#6b4a12"), Hex("#6b4a12"));
+            PoserCss(Peindre(c, "MoyeuBord", cercleBrun, Color.white).rectTransform, pivot.x - dm * 0.5f, pivot.y - dm * 0.5f, dm, dm);
+            Sprite cercleLaiton = ProceduralUI.RadialDisc((int)Px(di), laiton, laiton);
+            PoserCss(Peindre(c, "Moyeu", cercleLaiton, Color.white).rectTransform, pivot.x - di * 0.5f, pivot.y - di * 0.5f, di, di);
+
+            // l'onglet « TENSION » (`.etiquette-fer`) : à cheval sur le bas du cadran, sa taille suit son TEXTE
+            GameObject onglet = new GameObject("Onglet", typeof(RectTransform), typeof(CanvasRenderer));
+            onglet.transform.SetParent(c, false);
+            Image of = onglet.AddComponent<Image>();
+            of.raycastTarget = false;
+            HorizontalLayoutGroup oh = onglet.AddComponent<HorizontalLayoutGroup>();
+            oh.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(2f), (int)Px(2f));
+            oh.childControlWidth = oh.childControlHeight = true;
+            oh.childForceExpandWidth = oh.childForceExpandHeight = false;
+            oh.childAlignment = TextAnchor.MiddleCenter;
+            TextMeshProUGUI mot = Texte(onglet.transform, "Mot", Lib(MafiaCleanCity.I18n.MotsDesEnumeres.NomTension).ToUpperInvariant(), Px(8f),
+                                        Hex("#2b1d0e"), DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            mot.characterSpacing = 34f;   // .34em
+            mot.ForceMeshUpdate();
+            LayoutElement ml = mot.GetComponent<LayoutElement>();
+            ml.preferredWidth = mot.preferredWidth;
+            ml.flexibleWidth = 0f;
+            float lo = mot.preferredWidth + 2f * (int)Px(10f), ho = mot.preferredHeight + 2f * (int)Px(2f);
+            of.sprite = ProceduralUI.VerticalGradient(Mathf.Max(2, (int)ho), Hex("#e8c87a"), laiton);
+            RectTransform ort = (RectTransform)onglet.transform;
+            ort.anchorMin = ort.anchorMax = new Vector2(0.5f, 0f);
+            ort.pivot = new Vector2(0.5f, 0f);
+            ort.anchoredPosition = new Vector2(0f, -Px(OngletDebord));
+            ort.sizeDelta = new Vector2(lo, ho);
+
+            // la légende (`.lampe-rouge`, 16 px sous le cadran) : la lampe et le mot du cran
+            GameObject leg = Bloc("Legende", jauge.transform, true, Px(8f));
+            HorizontalLayoutGroup lh = leg.GetComponent<HorizontalLayoutGroup>();
+            lh.padding = new RectOffset(0, 0, (int)Px(16f), 0);
+            lh.childForceExpandWidth = false;
+            lh.childAlignment = TextAnchor.MiddleCenter;
+            // `radial-gradient(circle at 40% 35%, #ff8a70, #e0402a 60%, #7a1f12)` allumée ; `… #6a6f76, #2b2f35 60%` éteinte (`#2b2f35` : à 3,7 de `surfaceRaised` ⇒ le jeton)
+            int dl = (int)Px(LampeCote);
+            lampeAllumee = ProceduralUI.BoiteArrondieRadiale(dl, dl, dl / 2, dl / 2, 0.40f, 0.35f, 0.885f, 0.885f,
+                new[] { (0f, Hex("#ff8a70")), (0.6f, Hex("#e0402a")), (1f, Hex("#7a1f12")) });
+            lampeEteinte = ProceduralUI.BoiteArrondieRadiale(dl, dl, dl / 2, dl / 2, 0.40f, 0.35f, 0.885f, 0.885f,
+                new[] { (0f, Hex("#6a6f76")), (0.6f, Opaque(DesignTokens.Current.surfaceRaised)) });
+            lampe = Peindre(leg.transform, "Lampe", lampeEteinte, Color.white);
+            LayoutElement ll = lampe.gameObject.AddComponent<LayoutElement>();
+            ll.preferredWidth = ll.minWidth = Px(LampeCote);
+            ll.preferredHeight = ll.minHeight = Px(LampeCote);
+            ll.flexibleWidth = 0f;
+            legendeTexte = Texte(leg.transform, "Mot", "", Px(8.5f), LegendeEteinte, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center, true);
+            legendeTexte.characterSpacing = 22f;   // .22em
+            legendeLayout = legendeTexte.GetComponent<LayoutElement>();
+            legendeLayout.flexibleWidth = 0f;
+        }
+
+        /// <summary>Repose l'aiguille, la lampe et la légende sur le cran de l'état. Un état absent (le back n'a pas répondu) se lit « au calme » — le même repli que `RendrePlaque` ;
+        /// un cran que ce client ne connaît pas retire l'aiguille.</summary>
+        private void RendreJauge()
+        {
+            string cran = Etat == null ? "calm" : Etat.stress_bucket;
+            bool connu = AngleDeLAiguilleCss(cran, out float degres);
+            aiguille.gameObject.SetActive(connu);
+            if (connu) aiguille.localRotation = Quaternion.Euler(0f, 0f, -degres);   // CSS tourne vers la droite ; Unity, positif = vers la gauche
+            bool allumee = LampeAllumee(cran);
+            lampe.sprite = allumee ? lampeAllumee : lampeEteinte;
+            legendeTexte.text = LegendeDeTension(cran);
+            legendeTexte.color = allumee ? LegendeAllumee : LegendeEteinte;
+            legendeTexte.ForceMeshUpdate();
+            legendeLayout.preferredWidth = legendeTexte.preferredWidth;
         }
 
         /// <summary>⛔⛔ LA PLAQUE DE TENSION — ce que l'écran ne montrait PAS, et pourquoi son
