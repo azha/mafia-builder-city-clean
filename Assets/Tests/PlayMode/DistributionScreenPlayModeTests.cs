@@ -700,6 +700,98 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsEmpty(orphelins, "état pauvre : " + string.Join(" · ", orphelins));
         }
 
+        // ═══ F2 (juge d'ensemble r3, 08/10) — la planche de ㉘ « aucun relais » : du KRAFT grainé à DOUBLE encadrement, mesuré sur les PIXELS RENDUS ═══════════════════════════════════════
+        //
+        // Cause : le `Contour` du `.cadre-b` (5 px CSS de trait sur 3 px de rayon) était un sprite 9-slice dont la bande épaisse couvrait TOUT le sprite — le centre étiré était un aplat (74,55,34) opaque,
+        // posé SUR la planche. Les gardes précédentes (F3 de r2 : « pas d'Image sur la plaque », « un conteneur Filets existe ») étaient des gardes de PARAMÈTRES : elles passaient avec l'aplat.
+        // Ici : on rend l'écran (1080×2400, 1 px CSS = 3,6 px) et on lit — la bague `#2a1e12`, le trait `#4a3722`, le liseré (93,71,44) à leurs retraits de la maquette (4 · 5-10 · 10-11 px CSS du bord
+        // de la planche ; cadre 54 : transitions à x=17-21 et 39-43 px d'image), puis le GRAIN de la planche entre la fiche et le bas : écart-type de luminance non nul, teinte du kraft et non du trait.
+        // CONTRÔLE NÉGATIF : le même instrument, posé sur le trait plein (un aplat VOULU), doit rendre un écart-type ~0 — sinon il ne distinguerait pas un aplat d'un grain.
+        [UnityTest]
+        public IEnumerator EcranDistributionF2r3_AucunRelais_LaPlancheEstDuKraftGraine_ADoubleEncadrement_PixelsRendus()
+        {
+            const int W = 1080, H = 2400;
+            var ecran = MonterEcran();
+            yield return null; yield return null;
+            ecran.MontrerAucunRelaisPourTest(gesteOffert: false);
+            yield return null; yield return null;
+            Transform racine = RacineEcran().transform;
+            RectTransform plaque = (RectTransform)racine.Find("Corps/Corkboard/PanneauVide");
+            Assert.IsNotNull(plaque, "l'état « aucun relais » pose sa plaque");
+            Canvas canvas = racine.GetComponentInParent<Canvas>().rootCanvas;
+
+            RenderMode modeAvant = canvas.renderMode; Camera cameraAvant = canvas.worldCamera; float planAvant = canvas.planeDistance;
+            var rt = new RenderTexture(W, H, 24, RenderTextureFormat.ARGB32);
+            var camGo = new GameObject("F2r3_cam");
+            Camera cam = camGo.AddComponent<Camera>();
+            cam.targetTexture = rt; cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = Color.black; cam.orthographic = true;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = cam; canvas.planeDistance = 10f;
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)racine);
+            Canvas.ForceUpdateCanvases();
+            yield return null; yield return null;
+            RectTransform crt = (RectTransform)canvas.transform;
+            cam.orthographicSize = crt.rect.height / 2f; cam.aspect = crt.rect.width / crt.rect.height;
+            cam.Render();
+            RenderTexture avant = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(W, H, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, W, H), 0, 0); tex.Apply();
+            RenderTexture.active = avant;
+
+            try
+            {
+                float unitesParCss = ((RectTransform)racine).rect.width / 300f;   // la règle de la maquette (300 px CSS de large), lue sur la racine rendue
+                float largeurCss = plaque.rect.width / unitesParCss, hauteurCss = plaque.rect.height / unitesParCss;
+                Assert.Greater(largeurCss, 30f, "la plaque a une largeur (le rect est résolu)");
+                Assert.Greater(hauteurCss, 30f, "la plaque a une hauteur (le rect est résolu)");
+                // le pixel (origine EN BAS) du point (cssX depuis la gauche, fraction fy depuis le bas) de la plaque
+                System.Func<float, float, Vector2Int> pixel = (cssX, fy) =>
+                {
+                    Vector3 monde = plaque.TransformPoint(new Vector3(plaque.rect.xMin + cssX * unitesParCss, plaque.rect.yMin + fy * plaque.rect.height, 0f));
+                    Vector3 l = crt.InverseTransformPoint(monde);
+                    return new Vector2Int(Mathf.FloorToInt((l.x - crt.rect.xMin) / crt.rect.width * W), Mathf.FloorToInt((l.y - crt.rect.yMin) / crt.rect.height * H));
+                };
+                System.Func<Color, Color, float> ecart = (a, b) => Mathf.Max(Mathf.Abs(a.r - b.r), Mathf.Max(Mathf.Abs(a.g - b.g), Mathf.Abs(a.b - b.b))) * 255f;
+                Color Sur(float cssX, float fy) { Vector2Int p = pixel(cssX, fy); return tex.GetPixel(p.x, p.y); }
+
+                // (1) le DOUBLE encadrement, sur une ligne sous la fiche (fy = 0,25 depuis le bas) — les teintes de `.cadre-b` (`box-shadow: 0 0 0 1px #2a1e12`, `border: 5px solid #4a3722`, `inset 0 0 0 1px #00000044`)
+                Color bague = new Color32(0x2a, 0x1e, 0x12, 255), trait = DecorsDeScene.Filets.Distribution.CadreB[0].Couleur.Resoudre(), liseret = new Color32(93, 71, 44, 255);
+                Color vBague = Sur(4.5f, 0.25f), vTrait = Sur(7.5f, 0.25f), vLiseret = Sur(10.5f, 0.25f), vKraft = Sur(15f, 0.25f);
+                Assert.LessOrEqual(ecart(vBague, bague), 18f, $"la bague de 1 px CSS à 4,5 px du bord : {vBague} au lieu de {bague}");
+                Assert.LessOrEqual(ecart(vTrait, trait), 14f, $"le trait de 5 px CSS à 7,5 px du bord : {vTrait} au lieu de {trait}");
+                Assert.LessOrEqual(ecart(vLiseret, liseret), 22f, $"le liseré de 1 px CSS à 10,5 px du bord : {vLiseret} au lieu de {liseret}");
+                Assert.Greater(ecart(vKraft, trait), 25f, $"à 15 px CSS du bord on est dans le KRAFT, pas dans le trait : {vKraft}");
+                Assert.Greater(ecart(vBague, trait), 12f, "la bague se DISTINGUE du trait (deux filets, pas un)");
+                Assert.Greater(ecart(Sur(2f, 0.25f), trait), 25f, "à 2 px CSS du bord : le kraft, AVANT la bague — le cadre est en retrait de la planche, pas collé à son bord");
+
+                // (2) le GRAIN : entre la fiche et le bas, la planche n'est ni plate ni de la couleur du trait
+                System.Func<float, float, float, float, (float moyenne, float sigma)> lumiere = (cx0, cx1, fy0, fy1) =>
+                {
+                    Vector2Int a = pixel(cx0, fy0), b = pixel(cx1, fy1);
+                    var ls = new List<float>();
+                    for (int x = Mathf.Min(a.x, b.x); x <= Mathf.Max(a.x, b.x); x++)
+                        for (int y = Mathf.Min(a.y, b.y); y <= Mathf.Max(a.y, b.y); y++)
+                        { Color c = tex.GetPixel(x, y); ls.Add(0.299f * c.r + 0.587f * c.g + 0.114f * c.b); }
+                    float m = 0f; foreach (float l in ls) m += l; m /= ls.Count;
+                    float v = 0f; foreach (float l in ls) v += (l - m) * (l - m);
+                    return (m, Mathf.Sqrt(v / ls.Count));
+                };
+                var kraft = lumiere(largeurCss * 0.2f, largeurCss * 0.8f, 0.10f, 0.40f);
+                var aplat = lumiere(6.5f, 8.5f, 0.15f, 0.85f);   // CONTRÔLE NÉGATIF : le trait plein
+                float lumTrait = 0.299f * trait.r + 0.587f * trait.g + 0.114f * trait.b;
+                Assert.Less(aplat.sigma, 0.002f, "contrôle négatif : l'instrument lit ~0 sur le trait plein (un aplat voulu)");
+                Assert.Greater(kraft.sigma, 0.003f, $"la planche a du GRAIN (σ(lum) = {kraft.sigma:F5}) : 0 est l'aplat brun du juge r3");
+                Assert.Greater(kraft.moyenne, lumTrait + 0.06f, $"la planche est du KRAFT (lum {kraft.moyenne:F3}), plus claire que le trait ({lumTrait:F3}) — l'aplat brun la masquait");
+            }
+            finally
+            {
+                canvas.renderMode = modeAvant; canvas.worldCamera = cameraAvant; canvas.planeDistance = planAvant;
+                Object.DestroyImmediate(tex); Object.DestroyImmediate(camGo); rt.Release(); Object.DestroyImmediate(rt);
+            }
+        }
+
         private static (int, int, int) Trio(Color c) { Color32 k = c; return (k.r, k.g, k.b); }
     }
 }

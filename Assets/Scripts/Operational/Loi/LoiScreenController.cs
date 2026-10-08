@@ -694,7 +694,7 @@ namespace MafiaCleanCity.Operational
 
             // C-a + C-b (juge groupé du 07/10, f2) : le BANDEAU DE TITRE de la maquette (`.pl-tete`, `EnteteDEcran`) est le premier élément de la pile, pleine largeur, et NE DÉFILE PAS (`flex:none` : B1, le fragment de titre coupé)
             var (titreDuBandeau, sousTitreDuBandeau) = EnteteDEcran.Construire(racine.transform, EnteteDEcran.Loi, Px,
-                DesignTokens.Current.hudSerifFont, DesignTokens.Current.primaryFont, DesignTokens.Current.onSurfaceSecondary, 10f);
+                DesignTokens.Current.hudSerifFont, DesignTokens.Current.primaryFont, DesignTokens.Current.onSurfaceSecondary, 7f);
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
             corpsGo.AddComponent<RectMask2D>();
             LayoutElement corpsLe = corpsGo.AddComponent<LayoutElement>();

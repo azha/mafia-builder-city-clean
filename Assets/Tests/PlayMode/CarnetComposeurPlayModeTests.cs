@@ -288,5 +288,74 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsFalse(ecran.ConfirmationDemandee);
             Assert.AreEqual(0, ecran.Brouillon.Compte);
         }
+
+        // ═══ juge d'ensemble r3 (08/10) — F7 : le geste principal en CAPITALES ; F8 : la puce « Poser un ordre » ═════════════════
+        // ⛔ Garde d'EFFET : on lit ce que le TMP AFFICHE (`textInfo.characterInfo[i].character`, après la casse), pas le paramètre `fontStyle` seul, et le nombre de LIGNES rendues.
+
+        private static string Affiche(TextMeshProUGUI t)
+        {
+            t.ForceMeshUpdate();
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < t.textInfo.characterCount; i++) sb.Append(t.textInfo.characterInfo[i].character);
+            return sb.ToString();
+        }
+
+        private static float Lum(Color c)
+        {
+            float L(float v) => v <= 0.04045f ? v / 12.92f : Mathf.Pow((v + 0.055f) / 1.055f, 2.4f);
+            return 0.2126f * L(c.r) + 0.7152f * L(c.g) + 0.0722f * L(c.b);
+        }
+        private static float Contraste(Color a, Color b) { float x = Lum(a) + 0.05f, y = Lum(b) + 0.05f; return x > y ? x / y : y / x; }
+
+        [UnityTest]
+        public IEnumerator F7_LeGestePrincipal_Lancer_EstAffichePEnCapitales_LaValeurServieIntacte()
+        {
+            var cibles = CinqCibles();
+            yield return Monter(cibles, e =>
+            {
+                foreach (CibleDuCarnet c in cibles[ComposeurDuCarnet.Entretien].Take(3)) e.Brouillon.Poser(c);
+                e.Brouillon.Poser(cibles[ComposeurDuCarnet.Ardoise][0]);
+                e.FermerLeComposeur();
+            });
+            TextMeshProUGUI lib = Bouton("Lancer").transform.Find("Libelle").GetComponent<TextMeshProUGUI>();
+            Assert.AreEqual("Lancer la soirée", lib.text, "la valeur servie n'est PAS réécrite (la clé et la valeur restent)");
+            Assert.AreEqual("LANCER LA SOIRÉE", Affiche(lib), "affiché en CAPITALES (maquette `.cn-geste` : « LANCER LA SOIRÉE ») — jeu : casse de phrase");
+            Assert.IsTrue((lib.fontStyle & FontStyles.Bold) != 0, "`font:700`");
+        }
+
+        [UnityTest]
+        public IEnumerator F8_LaPuce_PoserUnOrdre_EstUneEtiquetteEnCapitalesSurFilet_UneLigne_SansPaveGris()
+        {
+            yield return Monter(CinqCibles());
+            Button b = Bouton("Poser");
+            Assert.IsNotNull(b);
+            var racine = (RectTransform)GameObject.Find("CarnetRoot").transform;
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(racine);
+            TextMeshProUGUI lib = b.transform.Find("Libelle").GetComponent<TextMeshProUGUI>();
+            Assert.AreEqual("Poser un ordre", lib.text, "la valeur servie n'est pas touchée");
+            Assert.AreEqual("POSER UN ORDRE", Affiche(lib), "affiché en CAPITALES (`.tag` : « REJOUER », « VOUS Y ÉTIEZ »)");
+            Assert.AreEqual(1, lib.textInfo.lineCount, "UNE ligne : le libellé ne casse plus sur deux (le pavé gris le cassait)");
+            Assert.AreEqual(12f, lib.characterSpacing, 0.01f, "interlettré `.8px` sur 6,6 px ≈ .12em");
+            Assert.IsTrue((lib.fontStyle & FontStyles.Bold) != 0, "`font:700`");
+            // pas de pavé : le fond du bouton est transparent (le jeu : aplat (209,203,184))
+            Assert.AreEqual(0f, b.GetComponent<Image>().color.a, 1e-4f, "aucun aplat plein derrière la puce");
+            // le FILET est de la couleur du libellé (`border:1px solid currentColor`) — quatre traits armés de leur CanvasRenderer
+            Transform cerne = b.transform.Find("Cerne");
+            Assert.IsNotNull(cerne, "la puce a son filet");
+            Assert.AreEqual(4, cerne.childCount);
+            foreach (Transform f in cerne)
+            {
+                Assert.IsNotNull(f.GetComponent<CanvasRenderer>(), f.name + " : un Graphic sans CanvasRenderer ne dessine rien");
+                Assert.AreEqual(lib.color, f.GetComponent<Image>().color, f.name + " : currentColor");
+            }
+            // la puce ÉPOUSE son libellé : sa largeur = libellé + 2 × 5 CSS (pas le pavé étiré sur 130 px)
+            float css = lib.fontSize / 6.6f;   // 1 CSS px, dans l'échelle de l'écran (le corps de la puce est 6,6 CSS)
+            Assert.AreEqual(lib.preferredWidth + 2f * 5f * css, ((RectTransform)b.transform).rect.width, 3f * css, "la puce épouse son libellé (`padding:3px 5px`)");
+            // lisible SUR LE PAPIER : ≥ 4,5:1 (l'or `#d9ab4e` de la maquette, posé sur fond sombre, y ferait 1,6:1)
+            Color papier = new Color32(0xe5, 0xe0, 0xd0, 255);
+            Assert.GreaterOrEqual(Contraste(lib.color, papier), 4.5f, "lisible sur le papier du carnet");
+            Assert.Less(Contraste(new Color32(0xd9, 0xab, 0x4e, 255), papier), 3f, "contrôle négatif : l'or de la maquette serait illisible ici — l'instrument discrimine");
+        }
     }
 }

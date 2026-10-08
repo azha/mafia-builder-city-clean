@@ -915,8 +915,10 @@ Trois nombres, toujours les trois :
 - contraste : ≥ 3:1 grands textes, ≥ 4,5:1 petits (sur l'art réel, pas un gris choisi)
 - langue affichée : français, via résolveurs nommés (aucun enum brut à l'écran)
 - safe area / portrait : le projet est configuré portrait seul
-- **animation : AUCUNE sur un nouvel écran** (ruling user 2026-08-27) : fournir deux captures du
-  même état à T et T+1 s ; le juge exige 0 pixel différent
+- **animation : VOULUE sur les écrans neufs** (ruling user 2026-08-27, version du SOIR — « animé le truc,
+  tout en restant dark/mafieux » ; la version de 13h42 « aucune » est périmée) : un pixel qui bouge n'est pas
+  un écart ; la capture est figée à t=0 ; seul compte où tombe l'image figée. Sans captures T et T+1 s :
+  « non vérifié ».
 
 ## Écarts ASSUMÉS (à inventorier, à classer ASSUMÉ, à vérifier « rendu proprement »)
 

@@ -336,5 +336,35 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("à moitié", titre.text, "le mot de la table 48, jamais la valeur brute « PARTIAL »");
         }
 
+        /// <summary>㊵ F9 (juge d'ensemble r3, 08/10) — le libellé du geste BLANCHIR est CENTRÉ dans son cadre (`.cta6{text-align:center}` ; la maquette : « INJECTER » centré à 538 pour 540). Le jeu le
+        /// calait à gauche (centre 186 px pour 540). EFFET : le milieu de l'ENCRE (de la 1ʳᵉ à la dernière lettre RENDUES) tombe sur le milieu du cadre du bouton, à 2 % de sa largeur près.</summary>
+        [UnityTest]
+        public IEnumerator F9_LeLibelleDuGesteBlanchir_EstCentreDansSonCadre()
+        {
+            var ecran = MonterEcran();
+            var dto = new LaunderingPipelineDto { stages = new[] { Etape("n1", "PARTIAL"), Etape("n2", "CLEAN", terminal: true) } };
+            var liste = new LaunderingNodesDto { nodes = new[] { Noeud("n1", 1), Noeud("n2", 2) } };
+            ecran.PoserLaPlanquePourTest("NOMINAL", "facade-1", "planque-1");
+            ecran.RendrePourTest(dto, liste, null);
+            yield return null;
+            yield return null;
+            Transform bouton = GameObject.Find("FiliereRoot").transform.Find("Pied/BoutonBlanchir");
+            Assert.IsNotNull(bouton, "le geste est au pied");
+            Canvas.ForceUpdateCanvases();
+            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)bouton);
+            var lib = bouton.Find("Libelle").GetComponent<TMPro.TextMeshProUGUI>();
+            Assert.AreEqual(TMPro.TextAlignmentOptions.Center, lib.alignment, "le libellé est aligné au CENTRE (le groupe étire l'enfant : sans cela, il est calé à gauche)");
+            lib.ForceMeshUpdate();
+            var info = lib.textInfo;
+            Assert.Greater(info.characterCount, 3, "le libellé est rendu");
+            float encreX0 = info.characterInfo[0].bottomLeft.x, encreX1 = info.characterInfo[info.characterCount - 1].topRight.x;
+            float milieuEncre = lib.transform.TransformPoint(new Vector3((encreX0 + encreX1) / 2f, 0f, 0f)).x;
+            var rb = (RectTransform)bouton;
+            float milieuCadre = rb.TransformPoint(rb.rect.center).x;
+            float largeurMonde = rb.TransformVector(new Vector3(rb.rect.width, 0f, 0f)).x;
+            Assert.AreEqual(milieuCadre, milieuEncre, 0.02f * Mathf.Abs(largeurMonde),
+                $"l'encre est centrée dans le cadre (écart {(milieuEncre - milieuCadre) / largeurMonde * 100f:0.0} % de sa largeur ; calée à gauche : ≈ −33 %)");
+            Assert.Greater(rb.rect.width, 3f * (encreX1 - encreX0), "contrôle : le cadre est BIEN plus large que le libellé — sinon le test ne discriminerait pas gauche et centre");
+        }
     }
 }

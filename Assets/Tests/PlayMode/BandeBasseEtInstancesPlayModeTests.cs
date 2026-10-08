@@ -99,5 +99,35 @@ namespace MafiaCleanCity.CityMap.Tests
                 Object.DestroyImmediate(hote);
             }
         }
+
+        /// <summary>㉞ F7 (juge d'ensemble r3, 08/10) — le geste de la bande basse du Carnet est AFFICHÉ en CAPITALES (maquette `.cn-geste` : « LANCER LA SOIRÉE »), la valeur servie (« Lancer la soirée ») restant intacte.
+        /// COULEUR : (152,121,121) `#987979` EST le `.cn-geste.mort` de la maquette (`ecrans-brennar-6.html:5165`) — le geste est posé ÉTEINT, sans mentir (aucune route ne l'active) : la couleur n'est pas un écart,
+        /// la casse en est un. Mesure du juge (`m12b`) : hauteurs des 4 premiers glyphes 26/20/20/20 (casse de phrase) contre 25/25/25/27 (capitales).</summary>
+        [UnityTest]
+        public IEnumerator F7_Carnet_GesteDeLaBandeBasse_AffichePEnCapitales_CouleurMort_ValeurServieIntacte()
+        {
+            hote = new GameObject("CarnetBande", typeof(RectTransform));
+            var carnet = hote.AddComponent<CarnetScreenController>();
+            try
+            {
+                yield return null;
+                carnet.RendrePourTest(new CarnetCourantDto { slots = new CueSlotDto[0] });
+                yield return null; yield return null;
+                TextMeshProUGUI lib = carnet.GesteDuPied.transform.Find("Libelle").GetComponent<TextMeshProUGUI>();
+                lib.ForceMeshUpdate();
+                var sb = new System.Text.StringBuilder();
+                for (int i = 0; i < lib.textInfo.characterCount; i++) sb.Append(lib.textInfo.characterInfo[i].character);
+                Assert.AreEqual(sb.ToString().ToUpperInvariant(), sb.ToString(), "ce qui est AFFICHÉ est en capitales (le jeu : « Lancer la soirée », capitale puis bas-de-casse)");
+                Assert.AreEqual("LANCER LA SOIRÉE", sb.ToString());
+                Color32 c = lib.color;
+                Assert.AreEqual((0x98, 0x79, 0x79), ((int)c.r, (int)c.g, (int)c.b), "`.cn-geste.mort{color:#987979}` : (152,121,121) est la couleur de la maquette pour un geste éteint");
+            }
+            finally
+            {
+                GameObject r = GameObject.Find("CarnetRoot");
+                if (r != null) Object.DestroyImmediate(r);
+                Object.DestroyImmediate(hote);
+            }
+        }
     }
 }

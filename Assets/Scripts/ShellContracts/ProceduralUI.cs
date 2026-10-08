@@ -405,8 +405,12 @@ namespace MafiaCleanCity.Shell
             if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
 
             int r = Mathf.Max(2, cornerRadiusPx);
-            int d = r * 2 + 3;
             float t = Mathf.Max(1f, thicknessPx);
+            // La DÉCOUPE (`border`) suit l'épaisseur quand elle dépasse le rayon : un trait de 18 px sur un coin de 11 px (㉘ `.cadre-b`, 5 px CSS sur 3) remplissait tout le
+            // sprite de 25 px — le centre étiré était OPAQUE et la plaque devenait un aplat (juge d'ensemble r3, F2). Le RAYON, lui, reste celui demandé.
+            // Épaisseur ≤ rayon : b = r, le sprite est celui d'avant (octet pour octet).
+            int b = Mathf.Max(r, Mathf.CeilToInt(t));
+            int d = b * 2 + 3;
             var tex = NewTexture(d);
             var pixels = new Color[d * d];
             for (int y = 0; y < d; y++)
@@ -432,7 +436,7 @@ namespace MafiaCleanCity.Shell
             tex.SetPixels(pixels);
             tex.Apply(false, false);
             Sprite sp = Sprite.Create(tex, new Rect(0, 0, d, d), new Vector2(0.5f, 0.5f), 100f, 0,
-                SpriteMeshType.FullRect, new Vector4(r, r, r, r));
+                SpriteMeshType.FullRect, new Vector4(b, b, b, b));
             sp.hideFlags = HideFlags.HideAndDontSave;
             cache[key] = sp;
             return sp;

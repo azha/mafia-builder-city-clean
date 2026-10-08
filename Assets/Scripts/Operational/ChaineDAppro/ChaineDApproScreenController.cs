@@ -729,7 +729,7 @@ namespace MafiaCleanCity.Operational
             // §5.6 du design : l'en-tête commence SOUS max(barre, bande de scène 21 %), comme `.appr6` sous la scène de la maquette.
             DecorDeScene.ReserverLaBande(EnteteDEcran.PoserLaPile(racine, 0, (int)ShellChrome.BottomInsetPx), decor, 0f);
             var (titreDuBandeau, sousTitreDuBandeau) = EnteteDEcran.Construire(racine.transform, EnteteDEcran.Appro, Px,
-                DesignTokens.Current.hudSerifFont, DesignTokens.Current.primaryFont, DesignTokens.Current.onSurfaceSecondary, 10.5f);
+                DesignTokens.Current.hudSerifFont, DesignTokens.Current.primaryFont, DesignTokens.Current.onSurfaceSecondary, 7f);
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
             LayoutElement corpsLe = corpsGo.AddComponent<LayoutElement>();
             corpsLe.flexibleHeight = 1f; corpsLe.minHeight = 0f;

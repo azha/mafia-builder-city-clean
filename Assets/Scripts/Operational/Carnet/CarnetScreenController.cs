@@ -467,8 +467,8 @@ namespace MafiaCleanCity.Operational
                 return;
             }
             if (index == Brouillon.Compte && !Brouillon.Plein && EtapeDuComposeur == null)
-                NouveauBouton(ligne.transform, "Poser", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.composeur.poser_un_ordre", "Poser un ordre"),
-                    OuvrirLeComposeur, false);
+                NouvellePuce(ligne.transform, "Poser", MafiaCleanCity.I18n.Libelle.Gabarit("carnet.composeur.poser_un_ordre", "Poser un ordre"),
+                    OuvrirLeComposeur);
         }
 
         /// <summary>Le bloc du composeur, sous le carnet : l'état vide, l'étape 1, l'étape 2, le refus, la confirmation, et le pied
@@ -583,7 +583,60 @@ namespace MafiaCleanCity.Operational
             TextMeshProUGUI t = NouveauTexte(go.transform, "Libelle", texte, Px(8.5f), principal ? CouleurPapier : CouleurEncre,
                 DesignTokens.Current.primaryFont);
             t.alignment = TextAlignmentOptions.Center;
+            if (principal)
+            {
+                // ㉞ F7 (juge d'ensemble r3, 08/10) : un GESTE PRINCIPAL (« Lancer la soirée », « Y aller quand même ») est en CAPITALES grasses interlettrées dans la maquette (`.cn-geste{font:700 9.5px;
+                // letter-spacing:.7px}`, « LANCER LA SOIRÉE », « Y ALLER QUAND MÊME »). La valeur servie reste en casse de phrase : les capitales sont posées À L'AFFICHAGE (`UpperCase`), jamais dans le texte ni la clé.
+                t.fontStyle |= FontStyles.Bold | FontStyles.UpperCase;
+                t.characterSpacing = 7f;   // `.7px` sur 9,5 px ≈ .074em
+            }
             Etirer((RectTransform)t.transform, Px(3f));
+            return go;
+        }
+
+        /// <summary>⛔ F8 — LA PUCE `.tag` de la maquette (`.carn6 .cn-seq .tag{font:700 6.6px 'DejaVu Sans';letter-spacing:.8px;border:1px solid currentColor;border-radius:2px;padding:3px 5px}`, « REJOUER », « VOUS Y ÉTIEZ ») :
+        /// des CAPITALES grasses interlettrées (`.8px` sur 6,6 px ≈ .12em) sur un FILET de la couleur de l'encre, sans aplat, qui épouse son libellé (une seule ligne). Le jeu posait « Poser un ordre » en pavé gris plein dont le
+        /// libellé cassait sur deux lignes. Capitales À L'AFFICHAGE (`UpperCase`) : le texte servi n'est pas touché. COULEUR : la maquette pose ses puces en or `#d9ab4e` sur fond SOMBRE ; ici la puce est sur le PAPIER du carnet, où
+        /// cet or ferait ≈ 1,6:1 (doctrine : 4,5:1 pour un petit texte) — c'est le laiton foncé `#7a5a14` (la même famille, ≈ 4,8:1 sur le papier) qui porte le libellé et le filet.</summary>
+        private GameObject NouvellePuce(Transform parent, string nom, string texte, UnityEngine.Events.UnityAction action)
+        {
+            GameObject go = NouveauUI("Bouton" + nom, parent);
+            Image fond = AjouterFond(go, new Color(0f, 0f, 0f, 0f));
+            fond.raycastTarget = true;   // toute la puce reçoit le toucher
+            var b = go.AddComponent<Button>();
+            b.targetGraphic = fond;
+            b.onClick.AddListener(action);
+            var h = go.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset((int)Px(5f), (int)Px(5f), (int)Px(3f), (int)Px(3f));   // `padding:3px 5px`
+            h.childAlignment = TextAnchor.MiddleCenter;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            var le = go.AddComponent<LayoutElement>();
+            le.flexibleWidth = 0f; le.flexibleHeight = 0f;
+            TextMeshProUGUI t = NouveauTexte(go.transform, "Libelle", texte, Px(6.6f), EncreDeLaPuce, DesignTokens.Current.primaryFont);
+            t.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+            t.characterSpacing = 12f;   // `.8px` sur 6,6 px ≈ .12em — 100 = 1 em dans TMP
+            t.alignment = TextAlignmentOptions.Center;
+            t.enableWordWrapping = false;   // une puce ne passe pas à la ligne : elle s'élargit
+            // le filet (`border:1px solid currentColor`) : quatre traits, hors mise en page, chacun un Graphic armé de son CanvasRenderer (AjouterFond)
+            float e = Px(1f);
+            var cerne = NouveauUI("Cerne", go.transform);
+            cerne.AddComponent<LayoutElement>().ignoreLayout = true;
+            var cr = (RectTransform)cerne.transform;
+            cr.anchorMin = Vector2.zero; cr.anchorMax = Vector2.one; cr.offsetMin = cr.offsetMax = Vector2.zero;
+            foreach (var (n, amin, amax, omin, omax) in new[]
+            {
+                ("Haut",   new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -e), Vector2.zero),
+                ("Bas",    new Vector2(0f, 0f), new Vector2(1f, 0f), Vector2.zero, new Vector2(0f, e)),
+                ("Gauche", new Vector2(0f, 0f), new Vector2(0f, 1f), Vector2.zero, new Vector2(e, 0f)),
+                ("Droite", new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(-e, 0f), Vector2.zero),
+            })
+            {
+                var f = NouveauUI(n, cr);
+                var fr = (RectTransform)f.transform;
+                fr.anchorMin = amin; fr.anchorMax = amax; fr.offsetMin = omin; fr.offsetMax = omax;
+                AjouterFond(f, EncreDeLaPuce);
+            }
             return go;
         }
 
@@ -620,6 +673,8 @@ namespace MafiaCleanCity.Operational
         private static readonly Color CouleurEncreFaible = new Color(0.404f, 0.365f, 0.302f);
         private static readonly Color CouleurPapierFonce = new Color(0.820f, 0.796f, 0.722f);   // un geste secondaire, sur le papier
         private static readonly Color CouleurEnMain      = new Color(0.851f, 0.824f, 0.741f);   // la ligne prise en main
+        /// <summary>L'encre d'une puce `.tag` SUR LE PAPIER : le laiton foncé `#7a5a14` (l'or `#d9ab4e` de la maquette, posé sur fond sombre, ferait ≈ 1,6:1 sur le papier).</summary>
+        public static readonly Color EncreDeLaPuce = new Color32(0x7a, 0x5a, 0x14, 255);
 
         private RectTransform composeurRoot;
 
@@ -824,7 +879,7 @@ namespace MafiaCleanCity.Operational
             EnteteDEcran.Habiller(ens, EnteteDEcran.Carnet, Px(13f), Px(13f), Px(10f), Px(1f));
             titreEcran = NouveauTexte(ens.transform, "Titre", "", Px(EnteteDEcran.TitreCss),
                 EnteteDEcran.TitreEncre, DesignTokens.Current.hudSerifFont);
-            sousTitre = NouveauTexte(ens.transform, "SousTitre", "", Px(9f),
+            sousTitre = NouveauTexte(ens.transform, "SousTitre", "", Px(7f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
 
             // ⛔ LE CARNET EST CRÈME SUR FOND SOMBRE — et ce n'est pas une coquetterie : les six
