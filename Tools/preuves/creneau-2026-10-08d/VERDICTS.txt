@@ -1,0 +1,35 @@
+# Créneau du 08/10 matin (CLIENT-1, porte prise 06:01 sur 4ba7048c, rendue après le run 4) — lignes de verdict extraites des journaux (journaux complets hors dépôt)
+# run1 = 4ba7048c ; run2 = + A14, C3, F2 corrigés (tests seuls, non commités au moment du run) ; run3 = NavF5 seul ; run4 = planche A01
+== run1.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [AccueilCanon, EcranAccueil, W3U1, W3U2, Charpente, LaSuite]
+MafiaCI: RunPlayModeTests started — 1147 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 233
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.AccueilCanonPlayModeTests.A14_LaCarteDeTete_EstCelleDuCadre5_UnSeulGeste_OptionsEnTexte_SaisieDiscrete —   un seul geste : Prendre acte
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.CharpenteAccueilPanneauxPlayModeTests.C3_RebatirPanneauxAccueil_ReprendLaMemeFractionDeZoneSure_ApresUnVraiChangementDeHauteur —   3 panneau(x) dont la fraction de zone sûre a changé après RebatirPanneauxAccueilPourResolutionCourante() (hauteur 960.0 -> 2844.4) — un écart signale que la bande n'a PAS été recuite depuis ContentSlot.rect.height COUR
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.HudPlayModeTests.F2_SeverityTokenAccesses_EqualMeasuredAllowlist_TopBarControllerExcluded —   attendu 34 accès aux 3 tokens de sévérité, trouvé 38 — un accès a été ajouté ou retiré sans mettre à jour l'allowlist déclarée ci-dessus.
+MissingReferenceException: The object of type 'UnityEngine.GameObject' has been destroyed but you are still trying to access it.
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF5_TitleOffsetConsumesInsetTop_56pxDelta_InsetAssertedPositiveFirst —   acquisition de session propre du shell terminée avant toute bascule manuelle
+MafiaCI: RunPlayModeTests finished — passed=228 failed=4 skipped=1 inconclusive=0 declares=233 comptes=233
+MafiaCI: catégories RÉELLEMENT exécutées = [AccueilCanon, Charpente, EcranAccueil, LaSuite, W3U1, W3U2]
+MafiaCI: VERDICT code=1 (failed=4 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run2.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [AccueilCanon, Charpente, W3U2]
+MafiaCI: RunPlayModeTests started — 1147 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 171
+MissingReferenceException: The object of type 'UnityEngine.GameObject' has been destroyed but you are still trying to access it.
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF5_TitleOffsetConsumesInsetTop_56pxDelta_InsetAssertedPositiveFirst —   acquisition de session propre du shell terminée avant toute bascule manuelle
+MafiaCI: RunPlayModeTests finished — passed=169 failed=1 skipped=1 inconclusive=0 declares=171 comptes=171
+MafiaCI: catégories RÉELLEMENT exécutées = [AccueilCanon, Charpente, W3U2]
+MafiaCI: VERDICT code=1 (failed=1 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run3.log
+MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = [MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF5_TitleOffsetConsumesInsetTop_56pxDelta_InsetAssertedPositiveFirst]
+MafiaCI: RunPlayModeTests started — 1147 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 1
+MissingReferenceException: The object of type 'UnityEngine.GameObject' has been destroyed but you are still trying to access it.
+MafiaCI: FAIL MafiaCleanCity.Shell.Tests.NavigationPlayModeTests.NavF5_TitleOffsetConsumesInsetTop_56pxDelta_InsetAssertedPositiveFirst —   acquisition de session propre du shell terminée avant toute bascule manuelle
+MafiaCI: RunPlayModeTests finished — passed=0 failed=1 skipped=0 inconclusive=0 declares=1 comptes=1
+MafiaCI: catégories RÉELLEMENT exécutées = [W3U2]
+MafiaCI: VERDICT code=1 (failed=1 tronquee=0 filtreVide=0 catalogueSurvivant=0 nomsInconnus=0)
+== run4.log
+MafiaCI: filtre PAR NOMS (MAFIA_CI_TESTS, les catégories sont IGNORÉES) = [MafiaCleanCity.Capture.Tests.PlanchesParEcranCapturePlayModeTests.Planche_AccueilFile_DeuxCartes_MesureDuDebordement]
+MafiaCI: RunPlayModeTests started — 1147 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 1
+MafiaCI: RunPlayModeTests finished — passed=1 failed=0 skipped=0 inconclusive=0 declares=1 comptes=1
+MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0 nomsInconnus=0)

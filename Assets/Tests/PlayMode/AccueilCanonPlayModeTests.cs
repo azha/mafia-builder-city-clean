@@ -541,8 +541,11 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.LessOrEqual(cv[1].y, cb[1].y + 1f / Mathf.Max(u, 1e-4f), "le verre ne sort pas de sa bande");
 
             // UN seul geste cliquable : « Prendre acte » (la surface du verre ouvre ⑤, ce n'est pas un geste de la carte)
-            var gestes = tete.GetComponentsInChildren<UnityEngine.UI.Selectable>(false).Where(x => x != tete.SurfaceButton).ToList();
-            CollectionAssert.AreEqual(new[] { "CommitButton" }, gestes.Select(g => g.name).ToList(), "un seul geste : Prendre acte");
+            // (créneau du 08/10 matin) un geste est un `Selectable` OU un `LongPressButton` (qui n'en est pas un : la 1ʳᵉ version de cette garde ne voyait AUCUN geste)
+            var gestes = tete.GetComponentsInChildren<Component>(false)
+                .Where(x => (x is UnityEngine.UI.Selectable || x is LongPressButton) && x != tete.SurfaceButton)
+                .Select(x => x.gameObject.name).Distinct().ToList();
+            CollectionAssert.AreEqual(new[] { "CommitButton" }, gestes, "un seul geste : Prendre acte");
             Assert.IsNull(tete.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "SkipButton"), "aucun « Pas maintenant »");
 
             // les OPTIONS : des faits en TEXTE — ni plaque, ni cerne, ni sélecteur entre elles et le verre

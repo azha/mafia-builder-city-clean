@@ -631,6 +631,7 @@ namespace MafiaCleanCity.Shell.Tests
             "Operational/Distribution/DistributionScreenController.cs",
             "Operational/Exceptions/ExceptionDetailController.cs",
             "Operational/Exceptions/ExceptionQueueController.cs",
+            "Operational/Filiere/FiliereScreenController.cs",   // AJOUTÉ NOMMÉMENT 08/10 (voir le compte 34 → 38 ci-dessous)
             "Operational/Forensic/ForensicScreenController.cs",
             "Operational/Lieutenant/LieutenantScreenController.cs",
             "Operational/Loi/LoiScreenController.cs",
@@ -667,7 +668,12 @@ namespace MafiaCleanCity.Shell.Tests
         // RE-AMENDÉ NOMMÉMENT 40 → 34 (2026-09-23, créneau 06:48) : ⑪ `LaunderingController` et ⑫ `PipelineOverviewController` sont
         // RETIRÉS du dépôt (9be2fe9d, code mort) — ils portaient 3 accès CHACUN (mesuré par la méthode de ce test à 02dbbfa1 et à
         // 80141d36 : 3 + 3). Leurs deux fichiers ont quitté l'allowlist dans le même lot ; ce compte les suit.
-        private const int ExpectedSeverityTokenTotal = 34;
+        // RE-AMENDÉ NOMMÉMENT 34 → 38 (2026-10-08, créneau du matin, CLIENT-1) : ㊵ `Operational/Filiere/FiliereScreenController.cs` ENTRE dans
+        // l'allowlist avec 4 accès, ajoutés par ff5ec89a (㊵, la boîte de la chaîne, 08/10) : la propreté d'une étape en couleur de bande (`DIRTY` →
+        // accentDanger, `PARTIAL` → accentWarning) et le cerne et le mot de l'écart (`.dv`, accentWarning ×2). Sémantique de gravité, pas une correspondance
+        // de bucket de chaleur (motif 2). Mesuré par la méthode de ce test (comptage d'occurrences) : 34 à ff5ec89a~1, 38 à ff5ec89a.
+        // ★ Quatrième fois : ajouté par MOI dans un lot dont la garde (W3U2) n'était pas au créneau.
+        private const int ExpectedSeverityTokenTotal = 38;
 
         // ── motif 2 — littéraux de bucket (ferme l'angle mort du motif 1, IMPORTANT-2) ──────
         private static readonly string[] BucketLiterals = { "\"COLD\"", "\"WARM\"", "\"HOT\"", "\"BURNING\"" };

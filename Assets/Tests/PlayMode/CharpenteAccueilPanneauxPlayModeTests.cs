@@ -562,15 +562,30 @@ namespace MafiaCleanCity.Shell.Tests
             Canvas.ForceUpdateCanvases();
             yield return null;
 
+            // ⛔ (créneau du 08/10 matin) depuis l'ANCRAGE de ④ (279d28b4), la ligne de file n'a plus une fraction fixe : son haut est le plus haut de sa
+            //    bande MESURÉE et de la hauteur que son contenu VEUT (en u), et la tête s'ancre dessus. Rebâtie à une AUTRE hauteur, la bonne fraction est
+            //    donc celle que LA RÈGLE donne à la hauteur COURANTE (mesuré au créneau : 960 u ⇒ ligne 0,428, tête 0,453 ; 2 844 u ⇒ 0,227 et 0,252,
+            //    les bandes des cadres) — l'ancienne attente « la même fraction qu'avant » supposait des bandes fixes. Le but de la garde ne change pas : une
+            //    bande restée FIGÉE sur l'ancienne hauteur garderait la fraction d'avant, et s'écarterait de la règle.
+            float zoneApres = Mathf.Max(1f, shell.ContentSlot.rect.height - ShellChrome.TopInsetPx - ShellChrome.BottomInsetPx);
+            bool ligneHaute = ExceptionQueuePanelController.LigneHaute(shell.LastSessionOpen?.queue);
+            (float min, float max) bandeFile = ligneHaute ? AppShell.BandeFileHaute : AppShell.BandeFile;
+            float hautDeLaLigne = AppShell.HautDeLaLigne(bandeFile, exceptionQueue.HauteurVoulueDeLaLigne(), zoneApres);
+            bool avecCarte = shell.LastSessionOpen?.hl_card != null && !string.IsNullOrEmpty(shell.LastSessionOpen.hl_card.card_id);
+            var attendues = new Dictionary<string, (float min, float max)>
+            {
+                [nameof(ExceptionQueuePanelController)] = (bandeFile.min, hautDeLaLigne),
+                [nameof(HighestLeverageCardController)] = avecCarte ? AppShell.BandeTeteSur(hautDeLaLigne) : fractionsAvant[nameof(HighestLeverageCardController)],
+            };
             var constats = new List<string>();
             foreach ((string nom, RectTransform rt) in panneaux)
             {
                 (float fracMin, float fracMax) apres = MesurerFraction(rt);
-                (float min, float max) avant = fractionsAvant[nom];
-                if (Mathf.Abs(avant.min - apres.fracMin) > 0.01f)
-                    constats.Add($"{nom} : fraction BASSE avant={avant.min:F4} après={apres.fracMin:F4}");
-                if (Mathf.Abs(avant.max - apres.fracMax) > 0.01f)
-                    constats.Add($"{nom} : fraction HAUTE avant={avant.max:F4} après={apres.fracMax:F4}");
+                (float min, float max) attendue = attendues[nom];
+                if (Mathf.Abs(attendue.min - apres.fracMin) > 0.01f)
+                    constats.Add($"{nom} : fraction BASSE attendue (règle)={attendue.min:F4} après={apres.fracMin:F4} (avant={fractionsAvant[nom].min:F4})");
+                if (Mathf.Abs(attendue.max - apres.fracMax) > 0.01f)
+                    constats.Add($"{nom} : fraction HAUTE attendue (règle)={attendue.max:F4} après={apres.fracMax:F4} (avant={fractionsAvant[nom].max:F4})");
             }
 
             Object.DestroyImmediate(camGo);
@@ -583,7 +598,7 @@ namespace MafiaCleanCity.Shell.Tests
             yield return null;
 
             Assert.IsEmpty(constats,
-                $"{constats.Count} panneau(x) dont la fraction de zone sûre a changé après " +
+                $"{constats.Count} panneau(x) dont la fraction de zone sûre s'écarte de la RÈGLE après " +
                 $"RebatirPanneauxAccueilPourResolutionCourante() (hauteur {hauteurAvant:F1} -> " +
                 $"{hauteurApresBascule:F1}) — un écart signale que la bande n'a PAS été recuite " +
                 "depuis ContentSlot.rect.height COURANT (la classe que ce chunk ferme) :\n" +
