@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -272,6 +273,38 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("", DemolitionScreenController.LieuDuSite(sans), "le titre de repli porte déjà le lieu : rien en sous-ligne");
             Assert.AreEqual("Local sans enseigne — îlot 7", DemolitionScreenController.NomDuSite(new DistrictBuildingDto { building = "z", block_id = 7 }),
                 "sans district servi, l'îlot seul — jamais un district inventé");
+        }
+
+        // ═══ Le défilement (f2 08/10, E06 du créneau groupé) — l'EFFET, sur une liste qui déborde vraiment ═══════════════════
+
+        /// <summary>« Le contenu dépasse mais le défilement ne déplace rien » (E06, 08/10) était une mesure prise HORS du régime de capture : sur compte
+        /// neuf, les 4 sites TIENNENT à 1080×1920 et 1080×2400. Ce que le joueur réel peut avoir — « le monde réel en a dix-sept » (`ConstruireZoneCentrale`)
+        /// — est fabriqué ici : 17 sites, état léger. EFFET : la fenêtre a une hauteur positive, le contenu la dépasse, le ScrollRect le remonte de TOUTE
+        /// sa course et le 17ᵉ site entre dans la fenêtre — aucun site injoignable sous la coupe.</summary>
+        [UnityTest]
+        [Category("EcranDemolition")]
+        public IEnumerator Fabrique_DixSeptSites_LaListeDefileJusquAuBout_LeDernierSiteEntreDansLaFenetre()
+        {
+            const int n = 17;
+            var sites = Enumerable.Range(1, n).Select(i => new DistrictBuildingDto
+            {
+                building = "b" + i, block_id = 1500 + i, operational_type = "lab", district_name = "La Lisière",
+            }).ToArray();
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(new GetFrictionStateResponseDto { friction_bucket = "light", friction_node_count = 0 }, batiments: sites);
+            yield return null;
+            yield return null;
+            GameObject racine = RacineEcran();
+            Assert.Greater(ecran.RendusEffectues, 0, "anti-vacuité : l'écran a rendu");
+            var listes = racine.GetComponentsInChildren<MafiaCleanCity.Shell.ListeDefilante>(false);
+            Assert.AreEqual(1, listes.Length, "une seule liste défilante : la zone centrale");
+            Transform dernier = racine.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "Site_" + (1500 + n));
+            Assert.IsNotNull(dernier, $"Site_{1500 + n} introuvable : les {n} sites ne sont pas tous rendus");
+            var c = MafiaCleanCity.CityMap.Tests.ListeDefilantePlayModeTests.DefilerJusquAuBout(listes[0], (RectTransform)dernier);
+            Assert.Greater(c.Fenetre, 0f, $"la fenêtre a une hauteur positive ({c.Fenetre:0.#} u)");
+            Assert.IsTrue(c.Deborde, $"anti-vacuité : {n} sites débordent (fenêtre {c.Fenetre:0.#} u, contenu {c.Contenu:0.#} u)");
+            Assert.IsTrue(c.AtteintLeBout, $"le ScrollRect remonte la liste de {c.Remontee:0.#} u sur une course de {c.Attendue:0.#}");
+            Assert.IsTrue(c.DernierVisible, $"le {n}ᵉ site entre dans la fenêtre au bout de la course");
         }
     }
 }

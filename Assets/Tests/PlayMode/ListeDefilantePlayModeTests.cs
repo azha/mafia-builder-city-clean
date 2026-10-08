@@ -150,5 +150,78 @@ namespace MafiaCleanCity.CityMap.Tests
             foreach (string indique in new[] { "DemolitionScreenController.cs", "ShopScreenController.cs", "DelegationScreenController.cs", "ConflitScreenController.cs", "LieutenantScreenController.cs", "ReputationScreenController.cs", "AppShell.cs" })
                 Assert.IsTrue(sources.Any(s => s.Item1 == indique && s.Item2.Contains("ListeDefilante.Indiquer(")), indique + " : le ScrollRect existant porte l'indice");
         }
+
+        // ── le défilement MESURÉ (f2 08/10, E05 ㉛ / E06 ㉝ / E10 ㊵ du créneau groupé) ─────────────────────────────────────────────────
+
+        /// <summary>Ce qu'un défilement jusqu'au bout a fait : la fenêtre et le contenu (u), la course ATTENDUE (contenu − fenêtre, ≥ 0), ce dont le contenu
+        /// est RÉELLEMENT remonté, et si le dernier élément est entré dans la fenêtre.</summary>
+        public struct Course
+        {
+            public float Fenetre, Contenu, Attendue, Remontee;
+            public bool DernierVisible;
+            public bool Deborde => Fenetre > 0f && Attendue >= 12f;
+            public bool AtteintLeBout => Mathf.Abs(Remontee - Attendue) <= 1f;
+        }
+
+        /// <summary>Fait défiler `l` jusqu'au bout PAR SON SCROLLRECT (`verticalNormalizedPosition = 0`, le geste qu'un doigt finit par produire) et MESURE
+        /// l'effet : le contenu a-t-il remonté de toute sa course, le `dernier` élément est-il entré dans la fenêtre ? ⚠️ La mesure ne vaut que dans le régime
+        /// où elle est prise : sous une capture, l'appeler DANS `avantRendu` (après la mise en page de la résolution cible), jamais après — le canvas est alors
+        /// rendu à la vue de jeu (1280×960 u) et la mesure décrit un autre écran (le « +59,7 u » de ㊵ du 08/10 était une fenêtre NÉGATIVE de −2×Px(7)).
+        /// Hypothèse du composant (`Rafraichir`) : le contenu est ancré en HAUT, `anchoredPosition.y` est donc ce qui est remonté.</summary>
+        public static Course DefilerJusquAuBout(ListeDefilante l, RectTransform dernier)
+        {
+            ScrollRect sr = l.Defilement;
+            Canvas.ForceUpdateCanvases();
+            RectTransform fenetre = sr.viewport != null ? sr.viewport : (RectTransform)sr.transform;
+            var c = new Course { Fenetre = fenetre.rect.height, Contenu = sr.content.rect.height };
+            c.Attendue = Mathf.Max(0f, c.Contenu - c.Fenetre);
+            sr.verticalNormalizedPosition = 0f;
+            Canvas.ForceUpdateCanvases();
+            l.Rafraichir();
+            c.Remontee = sr.content.anchoredPosition.y;
+            if (dernier != null)
+            {
+                var coins = new Vector3[4];
+                dernier.GetWorldCorners(coins);
+                float bas = fenetre.InverseTransformPoint(coins[0]).y, haut = fenetre.InverseTransformPoint(coins[1]).y;
+                c.DernierVisible = bas >= fenetre.rect.yMin - 1f && haut <= fenetre.rect.yMax + 1f;
+            }
+            return c;
+        }
+
+        /// <summary>L4 — le SCROLLRECT déplace le contenu (L2 posait `anchoredPosition` à la main : il ne prouvait pas qu'un geste arrive au bout). Fenêtre de
+        /// 400 u, contenu de 1 000 u, dernière ligne de 50 u au pied du contenu : après `DefilerJusquAuBout`, remonté de 600 u, la dernière ligne est dans la
+        /// fenêtre, le fondu s'est éteint. Un contenu qui tient : course 0, rien ne bouge.</summary>
+        [Test]
+        public void L4_LeScrollRect_RemonteDeTouteSaCourse_LaDerniereLigneEntreDansLaFenetre()
+        {
+            var (racine, contenu, l) = Fenetre(1000f);
+            try
+            {
+                var go = new GameObject("Derniere", typeof(RectTransform));
+                go.transform.SetParent(contenu, false);
+                var der = (RectTransform)go.transform;
+                der.anchorMin = new Vector2(0f, 0f); der.anchorMax = new Vector2(1f, 0f); der.pivot = new Vector2(0.5f, 0f);
+                der.sizeDelta = new Vector2(0f, 50f); der.anchoredPosition = Vector2.zero;
+                l.Rafraichir();
+                Assert.AreEqual(0f, contenu.anchoredPosition.y, 1e-3f, "au départ : en haut de course");
+                Course c = DefilerJusquAuBout(l, der);
+                Assert.IsTrue(c.Deborde, $"anti-vacuité : le contenu déborde (fenêtre {c.Fenetre:0.#} u, contenu {c.Contenu:0.#} u)");
+                Assert.AreEqual(600f, c.Attendue, 1f, "course attendue = contenu − fenêtre");
+                Assert.IsTrue(c.AtteintLeBout, $"le ScrollRect a remonté le contenu de {c.Remontee:0.#} u sur {c.Attendue:0.#}");
+                Assert.IsTrue(c.DernierVisible, "la dernière ligne est entrée dans la fenêtre");
+                Assert.AreEqual(0f, l.OpaciteCourante, "au bout : le fondu s'est éteint");
+            }
+            finally { Object.DestroyImmediate(racine); }
+
+            var (court, contenuCourt, lc) = Fenetre(300f);
+            try
+            {
+                Course c = DefilerJusquAuBout(lc, null);
+                Assert.IsFalse(c.Deborde, "tout tient : aucune course");
+                Assert.AreEqual(0f, contenuCourt.anchoredPosition.y, 1f, "tout tient : rien ne bouge");
+            }
+            finally { Object.DestroyImmediate(court); }
+        }
     }
 }

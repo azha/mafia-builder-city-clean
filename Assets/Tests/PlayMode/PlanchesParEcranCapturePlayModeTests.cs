@@ -22,7 +22,7 @@ namespace MafiaCleanCity.Capture.Tests
     // L'ÉTAT est celui qu'un compte NEUF montre — VIDE ou NOMINAL selon l'écran — et CHAQUE planche le DIT dans `journal.tsv` (colonne « état » : le verdict de chargement de l'écran, « état vide » quand il
     // l'expose) avec le CADRE DE RÉFÉRENCE correspondant NOMMÉ (colonne « référence » : `Tools/juge-visuel/INDEX.md`, le fichier rendu et le cadre de la maquette). Un écran dont l'état neuf n'est pas celui
     // du cadre ne peut pas être jugé sur la composition de ses rangées : le juge lit la colonne avant de comparer.
-    // Quand un écran est une LISTE DÉFILANTE dont le contenu déborde (`ListeDefilante.ContenuDepasse`, cause 7), une seconde planche `<pas>_bas` le montre défilé jusqu'au bout.
+    // Quand un écran est une LISTE DÉFILANTE dont le contenu déborde À LA RÉSOLUTION DE CAPTURE (mesuré dans le régime de capture, cause 7), une seconde planche `<pas>_bas` le montre défilé jusqu'au bout ; une liste qui ne l'atteint pas rougit le test.
     // Sortie : `MAFIA_PLANCHES_SORTIE` si posée, sinon `Logs/planches-par-ecran/<horodatage>/` — JAMAIS dans `Assets/`. Cible : `MAFIA_PARCOURS_BACK_URL` (mêmes gardes, `CibleDuParcours`).
     // ⚠️ Catégorie PROPRE de la famille capture (`ClichePlanchesParEcran`), hors du filtre MafiaCI ; elle se lance nommément, sur la pile dev, et crée un compte à chaque exécution.
     public class PlanchesParEcranCapturePlayModeTests
@@ -112,9 +112,11 @@ namespace MafiaCleanCity.Capture.Tests
         public IEnumerator Planches_DesDixEcrans_CompteNeuf_DeuxResolutions()
         {
             yield return Ouvrir();
+            trous.Clear();
             // E01-E10 · les dix écrans — un échec s'écrit au journal et le parcours CONTINUE (un écran récalcitrant ne coûte pas les planches suivantes)
             foreach (Ecran e in Ecrans)
                 yield return Photographier(e);
+            Assert.IsEmpty(trous, "liste(s) qui débordent à la résolution de capture sans que le défilement atteigne leur bout (contenu INATTEIGNABLE) :\n" + string.Join("\n", trous));
         }
 
         /// <summary>⑤ « la décision du jour » (F4/F5, plaque crème) : compte NEUF, le shell, ⑤ monté en surimpression, une carte FABRIQUÉE (`Afficher`) — le compte neuf n'a pas de carte de tête servie et la capture
@@ -206,27 +208,62 @@ namespace MafiaCleanCity.Capture.Tests
             foreach ((int largeur, int hauteur) in Resolutions)
                 yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"{e.Pas}_{Ascii(e.Nom)}_{largeur}x{hauteur}.png"), false, null);
             // cause 7 : une liste dont le contenu déborde est photographiée AUSSI défilée jusqu'au bout.
-            // ⛔ Détection corrigée (juge groupé du 07/10 : sur ㉝ les planches `_bas` étaient identiques au bit près aux hautes alors que `ContenuDepasse` disait vrai) : on exige un débordement MESURÉ
-            // (contenu − fenêtre ≥ 12 u), et APRÈS la planche basse on compare les octets des deux PNG — identiques ⇒ le journal le DIT, il ne prétend pas que la liste défile.
-            ListeDefilante deborde = shell.ContentSlot.GetComponentsInChildren<ListeDefilante>(false)
-                .FirstOrDefault(l => l.ContenuDepasse && l.Defilement != null && l.Defilement.content != null && l.Defilement.viewport != null
-                                     && l.Defilement.content.rect.height - l.Defilement.viewport.rect.height >= 12f);
-            string defil = "aucune liste ne déborde (mesure : contenu − fenêtre < 12 u)";
-            if (deborde != null)
+            // ⛔⛔ MESURÉE DANS LE RÉGIME DE CAPTURE, PAR RÉSOLUTION (instruit le 08/10 : E05 ㉛, E06 ㉝, E10 ㊵ « ContenuDepasse vrai, planches _bas identiques »).
+            //    Avant, le débordement était lu APRÈS les deux captures, quand `CapturerLeShell` a rendu le canvas à la VUE DE JEU (1280×960 u) : il décrivait un
+            //    autre écran. ㊵ « +59,7 u » = une boîte de chaîne écrasée à 0 et une fenêtre de −2×Px(7) ; ㉛ « +1326 u » = ~40 u à 1920 + l'écart de hauteur de
+            //    canvas ; à 1080×2400 et 1080×1920 les trois écrans TENAIENT (planches : aucun ascenseur), des _bas identiques étaient donc JUSTES.
+            //    Maintenant : la liste est cherchée et défilée DANS `avantRendu` (après la mise en page de la résolution cible), par son ScrollRect, et l'EFFET est
+            //    mesuré (le contenu a-t-il remonté de toute sa course ?) ; une liste qui tient n'a pas de planche _bas ; une liste qui déborde sans atteindre son
+            //    bout, ou dont la planche _bas est identique, est un TROU (contenu inatteignable) : le journal le dit et le test rougit en fin de parcours.
+            var parResolution = new List<string>();
+            foreach ((int largeur, int hauteur) in Resolutions)
             {
-                float excedent = deborde.Defilement.content.rect.height - deborde.Defilement.viewport.rect.height;
-                int identiques = 0;
-                foreach ((int largeur, int hauteur) in Resolutions)
+                string haut = Path.Combine(dossier, $"{e.Pas}_{Ascii(e.Nom)}_{largeur}x{hauteur}.png"), bas = Path.Combine(dossier, $"{e.Pas}_{Ascii(e.Nom)}_bas_{largeur}x{hauteur}.png");
+                ListeDefilante liste = null;
+                MafiaCleanCity.CityMap.Tests.ListeDefilantePlayModeTests.Course course = default;
+                yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, bas, false, () =>
                 {
-                    string haut = Path.Combine(dossier, $"{e.Pas}_{Ascii(e.Nom)}_{largeur}x{hauteur}.png"), bas = Path.Combine(dossier, $"{e.Pas}_{Ascii(e.Nom)}_bas_{largeur}x{hauteur}.png");
-                    yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, bas, false,
-                        () => { deborde.Defilement.verticalNormalizedPosition = 0f; deborde.Rafraichir(); });
-                    if (File.Exists(haut) && File.Exists(bas) && File.ReadAllBytes(haut).SequenceEqual(File.ReadAllBytes(bas))) identiques++;
+                    liste = ListeQuiDeborde(shell.ContentSlot);
+                    if (liste != null) course = MafiaCleanCity.CityMap.Tests.ListeDefilantePlayModeTests.DefilerJusquAuBout(liste, null);
+                });
+                if (liste == null)
+                {
+                    if (File.Exists(bas)) File.Delete(bas);
+                    parResolution.Add($"{hauteur} : tout tient (contenu − fenêtre < 12 u, mesuré à {largeur}x{hauteur})");
+                    continue;
                 }
-                defil = identiques == 0 ? $"liste défilante : le contenu DÉBORDE de {excedent:0.#} u — planche _bas prise"
-                    : $"⚠️ ContenuDepasse vrai (+{excedent:0.#} u) mais {identiques}/2 planches _bas IDENTIQUES aux hautes : le défilement ne déplace rien — à instruire";
+                bool identiques = File.Exists(haut) && File.Exists(bas) && File.ReadAllBytes(haut).SequenceEqual(File.ReadAllBytes(bas));
+                string ou = $"« {Chemin(liste.transform, shell.ContentSlot)} » fenêtre {course.Fenetre:0.#} u, contenu {course.Contenu:0.#} u";
+                if (identiques || !course.AtteintLeBout)
+                {
+                    string detail = $"{ou}, remonté de {course.Remontee:0.#} u sur {course.Attendue:0.#}{(identiques ? ", planche _bas IDENTIQUE" : "")}";
+                    trous.Add($"{e.Pas} {e.Nom} {largeur}x{hauteur} : {detail}");
+                    parResolution.Add($"{hauteur} : ⚠️ TROU — {detail}");
+                }
+                else parResolution.Add($"{hauteur} : déborde de {course.Attendue:0.#} u ({ou}), remonté jusqu'au bout — planche _bas prise");
             }
-            Noter(e.Pas, e.Nom, $"{shell.MountedTenantType.Name} · {etat} · {defil}", e.Reference);
+            Noter(e.Pas, e.Nom, $"{shell.MountedTenantType.Name} · {etat} · {string.Join(" · ", parResolution)}", e.Reference);
+        }
+
+        /// <summary>Les TROUS du parcours (liste qui déborde dans le régime de capture sans atteindre son bout) : écrits au journal, puis le test rougit une fois toutes les planches prises.</summary>
+        private readonly List<string> trous = new List<string>();
+
+        /// <summary>La liste qui déborde dans la mise en page COURANTE : active, fenêtre de hauteur POSITIVE (une fenêtre écrasée n'est pas une liste qui déborde : ㊵ du 08/10),
+        /// course ≥ 12 u. La plus grande course l'emporte (un écran à plusieurs listes : celle qui cache le plus).</summary>
+        private static ListeDefilante ListeQuiDeborde(Transform racine) =>
+            racine.GetComponentsInChildren<ListeDefilante>(false)
+                .Where(l => l.Defilement != null && l.Defilement.content != null)
+                .Select(l => (l, f: (l.Defilement.viewport != null ? l.Defilement.viewport : (RectTransform)l.Defilement.transform).rect.height, c: l.Defilement.content.rect.height))
+                .Where(x => x.f > 0f && x.c - x.f >= 12f)
+                .OrderByDescending(x => x.c - x.f)
+                .Select(x => x.l)
+                .FirstOrDefault();
+
+        private static string Chemin(Transform t, Transform racine)
+        {
+            var noms = new List<string>();
+            for (Transform p = t; p != null && p != racine; p = p.parent) noms.Insert(0, p.name);
+            return string.Join("/", noms);
         }
 
         private static string Ascii(string nom) =>

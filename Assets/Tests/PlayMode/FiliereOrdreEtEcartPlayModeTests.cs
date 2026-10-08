@@ -228,6 +228,33 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsFalse(pied.gameObject.activeSelf, "planque vide : le geste est ABSENT");
         }
 
+        /// <summary>f2 08/10 (E10 du créneau groupé, « le contenu dépasse mais le défilement ne déplace rien ») — État FABRIQUÉ : une chaîne de 14 étapes,
+        /// plus haute que sa boîte. EFFET : la boîte a une fenêtre de hauteur POSITIVE, le contenu la dépasse, le ScrollRect le remonte de TOUTE sa course
+        /// et la 14ᵉ étape entre dans la fenêtre — rien n'est inatteignable sous la coupe. (Le « +59,7 u » du 08/10 était une fenêtre négative, mesurée
+        /// hors du régime de capture : ce test-ci mesure une chaîne qui déborde vraiment.)</summary>
+        [UnityTest]
+        public IEnumerator Fabrique_ChaineLongue_LaListeDefileJusquAuBout_LaDerniereEtapeEntreDansLaFenetre()
+        {
+            const int n = 14;
+            var ecran = MonterEcran();
+            var dto = new LaunderingPipelineDto { stages = Enumerable.Range(1, n).Select(i => Etape("n" + i, i == n ? "CLEAN" : "PARTIAL", terminal: i == n)).ToArray() };
+            var liste = new LaunderingNodesDto { nodes = Enumerable.Range(1, n).Select(i => Noeud("n" + i, i)).ToArray() };
+            ecran.RendrePourTest(dto, liste, null);
+            yield return null;
+            yield return null;
+            Transform r = GameObject.Find("FiliereRoot").transform;
+            Assert.AreEqual(n, ecran.OrdreAffiche.Count, "anti-vacuité : les 14 étapes sont rendues");
+            var defil = r.Find("Chaine/Liste").GetComponent<MafiaCleanCity.Shell.ListeDefilante>();
+            Assert.IsNotNull(defil, "la liste de la chaîne est une ListeDefilante");
+            Transform derniere = r.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "Etape" + n);
+            Assert.IsNotNull(derniere, $"Etape{n} introuvable");
+            var c = MafiaCleanCity.CityMap.Tests.ListeDefilantePlayModeTests.DefilerJusquAuBout(defil, (RectTransform)derniere);
+            Assert.Greater(c.Fenetre, 0f, $"la fenêtre de la chaîne a une hauteur positive ({c.Fenetre:0.#} u)");
+            Assert.IsTrue(c.Deborde, $"anti-vacuité : 14 étapes débordent de la boîte (fenêtre {c.Fenetre:0.#} u, contenu {c.Contenu:0.#} u)");
+            Assert.IsTrue(c.AtteintLeBout, $"le ScrollRect remonte la chaîne de {c.Remontee:0.#} u sur une course de {c.Attendue:0.#}");
+            Assert.IsTrue(c.DernierVisible, $"la {n}ᵉ étape entre dans la fenêtre au bout de la course");
+        }
+
         /// <summary>État FABRIQUÉ : une étape du pipeline n'a pas de `stage_index` dans la liste ⇒ l'ordre du SERVEUR est gardé
         /// (aucun rang inventé), et le drapeau le dit ; aucun écart lu ⇒ compteur 0.</summary>
         [Test]
