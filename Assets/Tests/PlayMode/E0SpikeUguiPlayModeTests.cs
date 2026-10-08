@@ -26,6 +26,7 @@ namespace MafiaCleanCity.Tests
     ///    -nographics, recorder invalide) : la mesure est VIDE et le test ROUGIT au lieu de rendre des zéros plausibles.
     ///    La décision (Canvas imbriqué oui/non, plafond sous masque) se prend APRÈS, sur le TSV, pas dans ce test.
     /// </summary>
+    [Category("SpikeE0")]   // hors du filtre par défaut de MafiaCI : lancé SEUL au créneau (MAFIA_CI_CATEGORIES=SpikeE0)
     public class E0SpikeUguiPlayModeTests
     {
         private const int Cibles = 48, Images = 90, Chauffe = 15;
