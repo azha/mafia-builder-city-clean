@@ -145,10 +145,18 @@ namespace MafiaCleanCity.Tests.PlayMode
             return d;
         }
 
+        /// <summary>Les recettes COMPOSÉES (`DecorsDeScene.FiletsComposes.<Nom>`) : champ du catalogue → (composée → générée qu'elle
+        /// prolonge). D6e exige qu'aucune composée n'y manque et qu'aucune entrée n'y soit périmée.</summary>
+        internal static readonly Dictionary<string, Dictionary<string, string>> Composees = new Dictionary<string, Dictionary<string, string>>
+        {
+            { "Forensic", new Dictionary<string, string> { { "FenIciOr", "FenIci" } } },
+        };
+
         /// <summary>D6b : les recettes de `ecran` que la source ne référence pas — ni directement (`Filets.&lt;Ecran&gt;.&lt;Nom&gt;`), ni
         /// par un ÉTAT référencé (`Etats.&lt;Ecran&gt;.&lt;État&gt;` dont le bord EST la recette : `parEtat[état]` = ses recettes). Pure.</summary>
         internal static List<string> RecettesOrphelines(string source, string ecran, IEnumerable<string> recettes,
-                                                        IDictionary<string, string[]> parEtat = null)
+                                                        IDictionary<string, string[]> parEtat = null,
+                                                        IDictionary<string, string> composees = null)
         {
             string s = SansCommentaires(source);
             var viaEtats = new HashSet<string>();
@@ -156,6 +164,10 @@ namespace MafiaCleanCity.Tests.PlayMode
                 foreach (var kv in parEtat)
                     if (Regex.IsMatch(s, @"Etats\." + Regex.Escape(ecran) + @"\." + Regex.Escape(kv.Key) + @"\b"))
                         foreach (string r in kv.Value) viaEtats.Add(r);
+            // Une recette COMPOSÉE référencée (`FiletsComposes.<Nom>`) vaut référence à la recette GÉNÉRÉE qu'elle prolonge.
+            if (composees != null)
+                foreach (var kv in composees)
+                    if (Regex.IsMatch(s, @"FiletsComposes\." + Regex.Escape(kv.Key) + @"\b")) viaEtats.Add(kv.Value);
             return recettes.Where(r => !PoseesParLeDecor.Contains(r) && !viaEtats.Contains(r)
                                        && !Regex.IsMatch(s, @"Filets\." + Regex.Escape(ecran) + @"\." + Regex.Escape(r) + @"\b"))
                            .OrderBy(r => r).ToList();
@@ -254,6 +266,53 @@ namespace MafiaCleanCity.Tests.PlayMode
                 RecettesOrphelines("return DecorsDeScene.Etats.Loi.Pris;", "Loi", new[] { "PlChoixPris", "PlChoixRisque" }, parEtat),
                 "une recette portée par un état RÉFÉRENCÉ compte ; celle d'un état non référencé reste orpheline");
             Assert.IsNotEmpty(RecettesParEtat("Loi")["Pris"], "le bord de Etats.Loi.Pris EST une recette mesurée de ㉛ (référence)");
+            // Une recette COMPOSÉE référencée vaut référence à la générée qu'elle prolonge (㊴ : FenIciOr → FenIci) ; en commentaire, non.
+            var compo = new Dictionary<string, string> { { "FenIciOr", "FenIci" } };
+            CollectionAssert.AreEqual(new[] { "Fen" }, RecettesOrphelines("Filets.Poser(b, DecorsDeScene.FiletsComposes.FenIciOr);", "Forensic",
+                new[] { "Fen", "FenIci" }, null, compo), "FenIciOr posée ⇒ FenIci référencée ; Fen reste orpheline");
+            CollectionAssert.AreEqual(new[] { "Fen", "FenIci" }, RecettesOrphelines("// DecorsDeScene.FiletsComposes.FenIciOr", "Forensic",
+                new[] { "Fen", "FenIci" }, null, compo), "une référence en commentaire ne compte pas");
+            var generee = new[] { new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1f)) };
+            var composee = new[] { generee[0], new SpecFilet(Cotes.Bas, 2f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1f), inset: 1f) };
+            Assert.IsTrue(PrefixeIdentique(composee, generee), "les premières specs SONT celles de la générée (même référence)");
+            Assert.IsFalse(PrefixeIdentique(new[] { new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1f)), composee[1] }, generee),
+                "une COPIE égale en valeur n'est pas la générée : un re-mesure ne la suivrait pas");
+            Assert.IsFalse(PrefixeIdentique(generee, generee), "une composée qui n'ajoute rien n'en est pas une");
+        }
+
+        /// <summary>Pure : `composee` commence, par RÉFÉRENCE, par toutes les specs de `generee` et en ajoute au moins une.</summary>
+        internal static bool PrefixeIdentique(SpecFilet[] composee, SpecFilet[] generee)
+        {
+            if (composee.Length <= generee.Length) return false;
+            for (int k = 0; k < generee.Length; k++) if (!ReferenceEquals(composee[k], generee[k])) return false;
+            return true;
+        }
+
+        /// <summary>D6e : chaque recette COMPOSÉE du catalogue (`FiletsComposes`) prolonge, par référence, la recette GÉNÉRÉE que
+        /// `Composees` lui assigne ; aucune composée sans entrée, aucune entrée sans composée.</summary>
+        [Test]
+        public void D6e_ChaqueRecetteComposeeProlongeLaGenereeParReference()
+        {
+            FieldInfo[] champs = typeof(DecorsDeScene.FiletsComposes).GetFields(BindingFlags.Public | BindingFlags.Static)
+                                                                      .Where(f => f.FieldType == typeof(SpecFilet[])).ToArray();
+            Assert.IsNotEmpty(champs, "anti-vacuité : au moins une recette composée");
+            var vues = new HashSet<string>();
+            foreach (var ec in Composees)
+            {
+                System.Type filets = typeof(DecorsDeScene.Filets).GetNestedType(ec.Key, BindingFlags.Public | BindingFlags.Static);
+                Assert.IsNotNull(filets, $"DecorsDeScene.Filets.{ec.Key} absent");
+                foreach (var kv in ec.Value)
+                {
+                    FieldInfo composee = champs.FirstOrDefault(f => f.Name == kv.Key);
+                    Assert.IsNotNull(composee, $"Composees[{ec.Key}] nomme {kv.Key} : absente de FiletsComposes (entrée périmée)");
+                    FieldInfo generee = filets.GetField(kv.Value, BindingFlags.Public | BindingFlags.Static);
+                    Assert.IsNotNull(generee, $"Filets.{ec.Key}.{kv.Value} absente (renommée par un re-mesure ?)");
+                    Assert.IsTrue(PrefixeIdentique((SpecFilet[])composee.GetValue(null), (SpecFilet[])generee.GetValue(null)),
+                        $"FiletsComposes.{kv.Key} ne prolonge pas Filets.{ec.Key}.{kv.Value} par référence");
+                    vues.Add(kv.Key);
+                }
+            }
+            CollectionAssert.AreEquivalent(champs.Select(f => f.Name).ToArray(), vues.ToArray(), "toute composée a son entrée dans Composees");
         }
 
         [Test]
@@ -290,7 +349,8 @@ namespace MafiaCleanCity.Tests.PlayMode
             foreach (SpecDecor s in DecorsDeScene.Tous.Where(e => e.Statut == StatutDecor.Pose && !PoseEnAttente.Contains(e.Symbole)))
             {
                 string champ = NomDeChamp(s);
-                List<string> orphelines = RecettesOrphelines(SourceDe(s), champ, RecettesDe(champ), RecettesParEtat(champ));
+                List<string> orphelines = RecettesOrphelines(SourceDe(s), champ, RecettesDe(champ), RecettesParEtat(champ),
+                                                              Composees.TryGetValue(champ, out var compo) ? compo : null);
                 RecettesEnAttente.TryGetValue(s.Symbole, out string[] attente);
                 attente = attente ?? new string[0];
                 foreach (string o in orphelines.Except(attente)) echecs.Add($"{s.Symbole} {champ}.{o} : recette mesurée jamais posée");
