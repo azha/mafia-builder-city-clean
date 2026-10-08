@@ -32,21 +32,22 @@ namespace MafiaCleanCity.I18n
         }
 
         // ⑭ — la tension (cadres 25 « Montante — la semaine s'annonce », 26 « Écrasante — la semaine s'est ouverte toute seule », 29 « Calme — vos affaires respirent »).
-        // `compression_active` : les cadres disent « Écrasante » pour la semaine ouverte sans dire quelle valeur du domaine la porte (crushing ou compression_active) → à confirmer.
+        // `compression_active` : « sous compression » (MOTS-GENERES 08/10, ligne 1 — le mot dit le RÉGIME, pas un niveau : le back rend cette valeur dès que la semaine est ouverte, sans regarder la tension) ;
+        // `crushing` garde « Écrasante ».
         public static readonly Domaine Tension = new Domaine("compression", "tension", new Dictionary<string, string>
         {
-            { "calm", "Calme" }, { "mounting", "Montante" }, { "crushing", "Écrasante" }, { "compression_active", null },
+            { "calm", "Calme" }, { "mounting", "Montante" }, { "crushing", "Écrasante" }, { "compression_active", "sous compression" },
         });
 
-        // ⑭ — la semaine (canon de la série 2 : « JOUR 1 · TENSION CALME · AUCUNE SEMAINE » ; cadre 25 : « la semaine s'annonce »). `active` : le mot varie avec le cadre (« s'est ouverte toute seule »,
-        // « 2 jours avant la fin », « est close ») et dépend d'un compte de jours → à écrire.
+        // ⑭ — la semaine (canon de la série 2 : « JOUR 1 · TENSION CALME · AUCUNE SEMAINE » ; cadre 25 : « la semaine s'annonce »). `active` : « la semaine est ouverte » (MOTS-GENERES 08/10 : ni cause
+        // « toute seule » ni compte de jours, rien dans la valeur servie ne les établit).
         public static readonly Domaine Semaine = new Domaine("compression", "semaine", new Dictionary<string, string>
         {
-            { "none", "aucune semaine" }, { "warning", "la semaine s’annonce" }, { "active", null },
+            { "none", "aucune semaine" }, { "warning", "la semaine s’annonce" }, { "active", "la semaine est ouverte" },
         });
 
         // ⑭ — le genre d'un problème du tableau (cadre 26 : les cinq phrases dessinées). Les quatre autres genres (`severed_route`, `cue_cascade_card`, `settling_overload`, `friction_penalty`)
-        // n'ont aucune phrase dans le cadre → attendus.
+        // n'avaient aucune phrase dans le cadre : écrites le 08/10 (MOTS-GENERES, ligne 1 (a)).
         public static readonly Domaine GenreDeProbleme = new Domaine("compression", "genre", new Dictionary<string, string>
         {
             { "exception_card", "Une exception attend depuis trop longtemps" },
@@ -54,24 +55,25 @@ namespace MafiaCleanCity.I18n
             { "backpressure_node", "Un nœud de la chaîne sature" },
             { "stressed_leg", "Un tronçon fatigue faute d’entretien" },
             { "cue_stack_failed_slot", "Un créneau de la pile a raté" },
-            { "severed_route", null }, { "cue_cascade_card", null }, { "settling_overload", null }, { "friction_penalty", null },
+            { "severed_route", "Une route ne tient plus la charge" }, { "cue_cascade_card", "Un créneau raté en a entraîné d’autres" }, { "settling_overload", "Un changement de plus pendant la stabilisation" }, { "friction_penalty", "L’organisation porte trop de friction" },
         }, estUneSorte: true);
 
-        // ⑭ — la gravité d'un problème : le cadre la dit par la COULEUR du palier, aucun mot dessiné → attendus.
+        // ⑭ — la gravité d'un problème : le cadre la dit par la COULEUR du palier, aucun mot dessiné ; les trois mots masculins (la pastille qualifie un problème) sont écrits le 08/10.
         public static readonly Domaine Palier = new Domaine("compression", "palier", new Dictionary<string, string>
         {
-            { "minor", null }, { "moderate", null }, { "critical", null },
+            { "minor", "mineur" }, { "moderate", "modéré" }, { "critical", "critique" },
         }, estUneSorte: true);
 
         // ⑮ — la charge de la file et le régime du répartiteur : les mots du cadre 32 (« VIDE », « LEGERE », « NOMINAL », « ARRIERE » — en capitales de listing, sans accent : le registre les écrit en police à chasse fixe) ;
-        // les accents sont rétablis (légère) ; « ARRIERE » est lu « arriéré » (BACKLOGGED : un retard accumulé) — À CONFIRMER par l'atelier. MODERATE, HEAVY, SATURATED, BUDGET_CUT, SURGE : aucun cadre ne les dessine → attendus.
+        // les accents sont rétablis (légère) ; « arriéré » est CONFIRMÉ par le back (`inspection.regime.backlogged`). MODERATE, HEAVY, SATURATED, BUDGET_CUT, SURGE : aucun cadre ne les dessine — le repli est le mot
+        // DÉJÀ SERVI par le back (`inspection.charge.*`, `inspection.regime.*`), recopié du fichier : l'écran ne change pas de mot hors ligne ou avant l'amorçage.
         public static readonly Domaine ChargeDeLaFile = new Domaine("inspection", "charge", new Dictionary<string, string>
         {
-            { "EMPTY", "vide" }, { "LIGHT", "légère" }, { "MODERATE", null }, { "HEAVY", null }, { "SATURATED", null },
+            { "EMPTY", "vide" }, { "LIGHT", "légère" }, { "MODERATE", "moyenne" }, { "HEAVY", "lourde" }, { "SATURATED", "saturée" },
         });
         public static readonly Domaine Regime = new Domaine("inspection", "regime", new Dictionary<string, string>
         {
-            { "NOMINAL", "nominal" }, { "BACKLOGGED", "arriéré" }, { "BUDGET_CUT", null }, { "SURGE", null },
+            { "NOMINAL", "nominal" }, { "BACKLOGGED", "arriéré" }, { "BUDGET_CUT", "budget coupé" }, { "SURGE", "en renfort" },
         });
 
         /// <summary>Tous les domaines (la garde et le rapport les parcourent).</summary>

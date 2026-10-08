@@ -79,7 +79,7 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         // ── ⑥ (L2 client, 07/10) — la phrase SUIT le stock du labo servi au roster : `precursor_stock_band` ───────────────────────────
-        //   S1  M3 (revue ⊥, f2) : aucune phrase ratifiée par l'atelier ⇒ TOUTES les bandes disent la phrase d'avant (jamais « pleine » pour HIGH)
+        //   S1  LOW / MEDIUM / HIGH disent la phrase ratifiée par l'atelier (08/10) ; NONE, vide et inconnue celle d'avant (jamais « pleine » pour HIGH)
         //   S2  GARDE épinglée sur la valeur SERVIE : MEDIUM, pas MODERATE (≠ `DealerCashBand`) — un MODERATE servi n'est pas un stock moyen
         //   S3  la clé se lit dans le corps du roster (type fermé, jamais null) ; le DTO la déclare AVANT qu'elle soit servie (forme G)
 
@@ -87,18 +87,29 @@ namespace MafiaCleanCity.CityMap.Tests
             LieutenantScreenController.TexteDuCuisinierAuRepos(new RosterRow { archetype = "COOK", op_state_band = "IDLE", precursor_stock_band = bande });
 
         [Test]
-        public void S1_TantQueLAtelierNAPasRatifie_ToutesLesBandesDisentLaPhraseDAvant()
+        public void S1_LesTroisBandesRatifiees_DisentLeurPhrase_LesAutresCellesDAvant()
         {
             Libelle.RemettreLesCompteurs();
             string avant = Texte(null);
             StringAssert.Contains("rien \u00e0 cuire", avant);
             StringAssert.Contains("d\u2019appro", avant, "« rien à cuire » et le renvoi à ㉚");
-            foreach (string bande in new[] { "NONE", "LOW", "MEDIUM", "HIGH", "", "INCONNUE" })
+            foreach (string bande in new[] { "NONE", "", "INCONNUE" })
                 Assert.AreEqual(avant, Texte(bande), $"bande « {bande} » : aucune phrase ratifiée, donc celle d'avant — jamais une phrase inventée");
+            // MOTS-GENERES 08/10 ligne 2 : une phrase par bande, recopiée à l'octet (U+00A0 devant « : » de LOW, U+2019 partout)
+            Assert.AreEqual("Au repos\u00A0: il ne reste presque rien \u00e0 cuire. Commandez de la mati\u00e8re depuis la cha\u00eene d\u2019appro.", Texte("LOW"));
+            Assert.AreEqual("Au repos, alors qu\u2019il y a de la mati\u00e8re au labo. La cha\u00eene d\u2019appro dit ce qui arrive.", Texte("MEDIUM"));
+            Assert.AreEqual("Au repos, et la mati\u00e8re s\u2019entasse au labo. La cha\u00eene d\u2019appro dit ce qui arrive.", Texte("HIGH"));
+            foreach (string bande in new[] { "LOW", "MEDIUM", "HIGH" })
+            {
+                Assert.AreNotEqual(avant, Texte(bande), $"{bande} : sa propre phrase");
+                StringAssert.Contains("cha\u00eene d\u2019appro", Texte(bande), $"{bande} : le renvoi à ㉚ reste (le geste est câblé pour tout cuisinier au repos)");
+            }
             StringAssert.DoesNotContain("pleine", string.Join("|", new[] { "LOW", "MEDIUM", "HIGH" }.Select(Texte)),
                 "HIGH = plus de 50 unités en ABSOLU, pas une réserve pleine (la faute de ㉟)");
-            Assert.IsEmpty(Libelle.ClesEnRepli.Where(k => k.StartsWith("famille.vide.au_repos_stock.")), "aucune clé neuve n'est demandée au back");
-            Assert.IsNull(LieutenantScreenController.PhraseDeLAtelier("LOW"), "le mécanisme attend les mots de l'atelier (TD-759)");
+            CollectionAssert.AreEquivalent(new[] { "famille.vide.au_repos_stock.low", "famille.vide.au_repos_stock.medium", "famille.vide.au_repos_stock.high" },
+                Libelle.ClesEnRepli.Where(k => k.StartsWith("famille.vide.au_repos_stock.")).ToArray(), "sans bundle, chacune des trois clés dérivées de la VALEUR est demandée, une fois");
+            Assert.IsNull(LieutenantScreenController.PhraseDeLAtelier("NONE"), "NONE n'en a pas besoin : c'est la phrase d'avant");
+            Assert.IsNull(LieutenantScreenController.PhraseDeLAtelier(null));
         }
 
         [Test]

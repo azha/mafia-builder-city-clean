@@ -2747,11 +2747,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public static readonly string[] BandesDeStock = { "NONE", "LOW", "MEDIUM", "HIGH" };
 
         /// <summary>⑥ — le texte de la case d'un cuisinier AU REPOS, qui doit SUIVRE le stock du labo servi au roster (`precursor_stock_band`).
-        /// ⛔ REVUE ⊥ DE CLIENT-2 (M3, 07/10) : les trois phrases LOW / MEDIUM / HIGH que j'avais dérivées étaient INVENTÉES, et « HIGH ⇒ la réserve est
-        /// pleine » refaisait la faute de ㉟ (HIGH = stock > 50 en ABSOLU, pas plein) sans le renvoi à ㉚. Décision de f2 : tant que l'ATELIER n'a pas
-        /// ratifié une phrase par valeur, TOUTE bande (NONE, LOW, MEDIUM, HIGH, absente, inconnue) dit les deux phrases d'avant — « rien à cuire » +
-        /// le renvoi à ㉚ ; la bande est LUE et sa valeur est épinglée (S1-S3), le mécanisme attend les mots : <see cref="PhraseDeLAtelier"/>
-        /// rend null partout (TD-759). Pure.</summary>
+        /// ⛔ REVUE ⊥ DE CLIENT-2 (M3, 07/10) : les trois phrases que j'avais dérivées étaient INVENTÉES (« HIGH ⇒ la réserve est pleine » : faux, HIGH = stock > 50
+        /// en ABSOLU). Elles sont désormais celles que l'ATELIER a ratifiées (08/10, <see cref="PhraseDeLAtelier"/>) pour LOW / MEDIUM / HIGH, renvoi à ㉚ compris ;
+        /// NONE, absente ou inconnue disent les deux phrases d'avant — « rien à cuire » + le renvoi à ㉚. La bande est LUE et sa valeur épinglée (S1-S3). Pure.</summary>
         public static string TexteDuCuisinierAuRepos(RosterRow row)
         {
             string bande = row != null ? row.precursor_stock_band : null;
@@ -2762,9 +2760,18 @@ namespace MafiaCleanCity.Operational.Lieutenant
         }
 
         /// <summary>La phrase RATIFIÉE par l'atelier pour une bande de stock (LOW / MEDIUM / HIGH ; clé `famille.vide.au_repos_stock.<valeur>`), ou null
-        /// tant qu'il n'en a pas écrit. NONE n'en a pas besoin : c'est la phrase d'avant. Le jour où les mots arrivent : les poser ici avec leur clé, retirer
-        /// la dette TD-759, et l'écran suit sans autre changement.</summary>
-        public static string PhraseDeLAtelier(string bande) => null;
+        /// pour NONE (qui n'en a pas besoin : c'est la phrase d'avant), la bande absente ou inconnue. Posées le 08/10 (TD-759) ; l'écran suit.</summary>
+        public static string PhraseDeLAtelier(string bande) =>
+            bande != null && PhrasesDeLAtelier.TryGetValue(bande, out string phrase) ? phrase : null;
+
+        /// <summary>Les trois phrases ratifiées (MOTS-GENERES 08/10, ligne 2), par VALEUR servie de `StockBand` : le repli de `famille.vide.au_repos_stock.<valeur>`,
+        /// recopié à l'octet du document (U+00A0 devant « : », U+2019). Aucune ne dit « plein » (HIGH = plus de 50 en absolu) ; toutes gardent le renvoi à ㉚.</summary>
+        private static readonly System.Collections.Generic.Dictionary<string, string> PhrasesDeLAtelier = new System.Collections.Generic.Dictionary<string, string>
+        {
+            { "LOW", "Au repos\u00A0: il ne reste presque rien à cuire. Commandez de la matière depuis la chaîne d’appro." },
+            { "MEDIUM", "Au repos, alors qu’il y a de la matière au labo. La chaîne d’appro dit ce qui arrive." },
+            { "HIGH", "Au repos, et la matière s’entasse au labo. La chaîne d’appro dit ce qui arrive." },
+        };
 
         /// <summary>Test hook : combien de fois la case d'un cuisinier au repos a mené à ㉚.</summary>
         public int RenvoisALaChaineDAppro { get; private set; }
