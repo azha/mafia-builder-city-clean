@@ -612,6 +612,17 @@ namespace MafiaCleanCity.Operational.Tests
         private static float Ecart(Color a, Color b) =>
             Mathf.Max(Mathf.Abs(a.r - b.r), Mathf.Max(Mathf.Abs(a.g - b.g), Mathf.Abs(a.b - b.b))) * 255f;
 
+        /// <summary>Les pixels du rect `r` qui diffèrent de plus de 30/255 du `fond` : de l'ENCRE. Un rect sans texte rend 0.</summary>
+        private static int EncreDans(Texture2D t, BancEcran banc, RectTransform r, Color fond)
+        {
+            Vector2Int a = banc.Pixel(r, 0f, 0f), b = banc.Pixel(r, 1f, 1f);
+            int n = 0;
+            for (int x = Mathf.Max(0, Mathf.Min(a.x, b.x)); x <= Mathf.Min(BancEcran.W - 1, Mathf.Max(a.x, b.x)); x++)
+                for (int y = Mathf.Max(0, Mathf.Min(a.y, b.y)); y <= Mathf.Min(BancEcran.H - 1, Mathf.Max(a.y, b.y)); y++)
+                    if (Ecart(t.GetPixel(x, y), fond) > 30f) n++;
+            return n;
+        }
+
         /// <summary>Compte, sur le segment de `n` pixels qui part de (x, y) dans la direction (dx, dy), ceux à `tol`/255 de `cible`.</summary>
         private static int Compter(Texture2D t, int x, int y, int dx, int dy, int n, Color cible, float tol)
         {
@@ -665,25 +676,11 @@ namespace MafiaCleanCity.Operational.Tests
                 Assert.That(Compter(t, bas.x, bas.y, 0, 1, 12, dore, 10f), Is.InRange(ep2 - 1, ep2 + 1), "l'or de la fenêtre « ici », en bas");
                 Assert.AreEqual(0, Compter(t, haut.x, haut.y - 11, 0, 1, 12, dore, 10f), "pas d'or en haut de la fenêtre « ici »");
 
-                // de l'ENCRE là où le texte doit être : la note sous les pistes, le « — » d'une piste éteinte
-                RectTransform note = (RectTransform)Sous("Elast/NotePistes");
-                int encre = 0;
-                for (int ix = 0; ix < 40; ix++)
-                    for (int iy = 0; iy < 6; iy++)
-                    {
-                        Vector2Int q = banc.Pixel(note, ix / 40f, 0.3f + iy * 0.08f);
-                        if (Ecart(t.GetPixel(q.x, q.y), DesignTokens.Current.onSurfaceSecondary) <= 12f) encre++;
-                    }
-                Assert.GreaterOrEqual(encre, 6, "la note « Les livres et le train de vie… » a de l'encre");
-                RectTransform tiret = (RectTransform)Sous("Elast/Pistes/Piste0/Mot");
-                int encreTiret = 0;
-                for (int ix = 0; ix < 40; ix++)
-                    for (int iy = 0; iy < 6; iy++)
-                    {
-                        Vector2Int q = banc.Pixel(tiret, ix / 40f, 0.2f + iy * 0.12f);
-                        if (Ecart(t.GetPixel(q.x, q.y), new Color32(0x7A, 0x83, 0x8D, 0xFF)) <= 12f) encreTiret++;
-                    }
-                Assert.GreaterOrEqual(encreTiret, 2, "le « — » de la piste éteinte a de l'encre `#7a838d`");
+                // de l'ENCRE là où le texte doit être (des pixels qui DIFFÈRENT du fond : le texte antialiasé n'a presque jamais sa couleur exacte)
+                Color fondElast = DesignTokens.Current.surfaceBase, fondPiste = DesignTokens.Current.lieutenantMedallionOuter;
+                Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/NotePistes"), fondElast), 20, "la note « Les livres et le train de vie… » a de l'encre");
+                Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/Pistes/Piste0/Mot"), fondPiste), 4, "le « — » de la piste éteinte a de l'encre");
+                Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/Pistes/Piste0/Cle"), fondPiste), 10, "« pas encore sur la table » a de l'encre");
 
                 // (2) la vue acteurs : la ligne « parti » est à 45 %
                 ecran.Basculer();

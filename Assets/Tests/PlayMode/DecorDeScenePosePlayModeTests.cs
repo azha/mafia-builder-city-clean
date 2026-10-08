@@ -89,7 +89,7 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   PlItem/PlItemLache, PlAlerte, PlRien, Tag* : états d'une affaire ACTIVE, non servie (`GET /v1/me/legal` : activeCases: [])
             //   — non construits (CLIENT-1). PlTete, PlBas, PlGeste*, PlVitre, PlAv, Mano : en-tête, pied, vitre, avatar, cadran —
             //   blocs de CLIENT-1, à déléguer à Filets.
-            { "㉛", new[] { "Mano", "PlAlerte", "PlAv", "PlBas", "PlGeste", "PlGesteRouge", "PlItem", "PlItemLache", "PlRien", "PlTete", "PlVitre", "Tag", "Tag_2", "Tag_3" } },
+            { "㉛", new[] { "Mano", "PlAlerte", "PlAv", "PlBas", "PlGeste", "PlGesteRouge", "PlItem", "PlItemLache", "PlTete", "PlVitre" } },   // PlRien, Tag, Tag_2, Tag_3 RETIRÉES le 08/10 (CLIENT-2, créneau du dossier) : le cumul (5e430bb5, CLIENT-1) les branche — D6b rougissait sur le cumul
             // ㉟ (08/10) — Enseigne et Fen posées. Dl/DlMort/DlPris/DlPrisMort (les rangées de points de vente), Gd, Pann/Pann_2 (le
             //   panneau d'état) : déjà tracés par `ProceduralUI` dans le contrôleur (rangées, pastilles) — à migrer vers Filets ; Elast
             //   (la boîte), Cta6/Cta6Eteint (le pied), Mano (le cadran) : à classer au juge.
