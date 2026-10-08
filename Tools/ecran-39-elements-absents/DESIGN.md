@@ -1,4 +1,4 @@
-# ㊴ Le dossier — les éléments ABSENTS de la maquette `.dos6` (CLIENT-2, 08/10) — DESIGN v3 (règles de f2 + cadres 150-151 de CLIENT-3), à revoir ⊥
+# ㊴ Le dossier — les éléments ABSENTS de la maquette `.dos6` (CLIENT-2, 08/10) — DESIGN v3.1 (règles de f2 + cadres 150-151 de CLIENT-3, atelier c4c3151), à revoir ⊥
 
 **Commande** (f2, 08/10) : après le décor de scène, construire sur ㊴ ce que la maquette montre et que le client ne construit pas — les
 compteurs, la boîte des pistes, le pied « acheter du renseignement », les acteurs — d'après les cadres de ㊴, le geste éteint s'il n'a pas
@@ -88,11 +88,19 @@ glyphe absolu à droite), `.ac .rg` (lisere, texte éteint).
 - **Écart du dessin restant (à CLIENT-3)** : 150 dessine les 2 pistes constantes comme VIVANTES (« on regarde / watched », « discret /
   quiet ») — R3 (f2 Q3) n'y est pas, et le texte de la note des pistes éteintes manque toujours ; 151 et 150 écrivent « /3 » (P3).
 
+## 4ter. v3.1 — atelier master c4c3151 (Q3 de f2 dessinée) : R3 et R4 FERMÉS par le dessin
+Mesuré sur 150 : `.pi.eteinte` ×2 (la comptabilité, le train de vie) — crans au liseré, mot « — », à la place de la clé « pas encore sur
+la table » ; `.pi` vivante : l'effluent (« ça se voit », `visible`) ; sous les pistes `.notepi` (italique serif, `#8a979c`) : « Les livres
+et le train de vie : personne ne regarde par là. Pour l’instant. » — texte de f2, étiquette du cadre marquée **PROPOSÉ** ⇒ clé i18n
+posée avec ce texte, à re-mesurer si l'atelier le change. « 01/1 pistes chaudes » sur 150 ET sur la porte de 151 ⇒ **R4 = le dessin**
+(dénominateur = pistes vivantes), **P3 fermé**. R3 : la clé brute des pistes éteintes n'est PAS affichée (remplacée par la phrase).
+Recettes neuves à générer (`generer-filets.py`) : `PiEteinte`, `Notepi`, `FenIci`, `FenPorte`, `Rg`.
+
 ## 5. Points ouverts pour la revue ⊥ (et f2)
 - P1 : FERMÉ par 150-151 (§4bis).
 - P2 : le panneau de 133 (« deux types listés, cinq achetables », « la route accepte… ») parle de la ROUTE au joueur : texte d'état
   joueur ou note de chantier comme 136 ? Proposé : remplacé par le panneau de 134 tant que l'atelier ne tranche pas.
-- P3 : R4 — un dénominateur « /1 » s'écarte du dessin « /3 » ; écart A assumé (vérité de la donnée) ou C ?
+- P3 : FERMÉ par c4c3151 (§4ter).
 
 ## 6. Gardes prévues
 Pixels/structure : 3 `.pi` côte à côte dans `Elast` (ordre, 4 crans chacun, cran servi coloré), `PiBout` au dernier cran ; une ligne par
