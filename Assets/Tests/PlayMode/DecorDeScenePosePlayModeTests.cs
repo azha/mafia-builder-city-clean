@@ -24,7 +24,7 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉓", "⑮", "⑰", "⑭", "㉒",   // ㊵, ㊳, ㉜, ㉚, ㉛ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ (à CLIENT-2, f2)
+            "③", "⑤", "㊲", "㉓", "⑭", "㉒",   // ㊵, ㊳, ㉜, ㉚, ㉛ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ ⑮ ⑰ (à CLIENT-2, f2)
             "㉘", "㉝", "㉞", "㉙", "㉔", "⑱",
         };
 
@@ -44,6 +44,12 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ⑰ (08/10) — le liège posé ; les recettes de blocs (registre, feuilles, cartes punaisées, gestes) : construites par le
+            //   contrôleur avec ses propres traits, ou absentes — à migrer vers Filets / à classer au juge.
+            { "⑰", new[] { "CachetR", "Cols", "CompteR", "Corkboard", "DepT", "EnteteCork", "EtatP", "EtatP_2", "EtatP_3", "Mano", "NoteP", "PerfD", "PerfG", "Photo", "PiedL", "TamponDep", "TeteL" } },
+            // ⑮ (08/10) — le liège posé ; les recettes de blocs (registre, feuilles, cartes punaisées, gestes) : construites par le
+            //   contrôleur avec ses propres traits, ou absentes — à migrer vers Filets / à classer au juge.
+            { "⑮", new[] { "CachetR", "Cols", "CompteR", "Corkboard", "DepT", "EnteteCork", "EtatP", "EtatP_2", "EtatP_3", "Mano", "NoteP", "PerfD", "PerfG", "Photo", "PiedL", "TamponDep", "TeteL" } },
             // ㊱ (08/10) — Enseigne, Fen, Elast, Pann posées ; Ct/CtRecule par Etats.Horizon (servi : predicate_regressed). CtPris,
             //   CtPrisRecule, CtHs : `view_status` (adopted, dismissed…) est servi, mais sa correspondance avec `.pris`/`.hs` n'est pas
             //   établie — à trancher au juge ; Recul (filet haut de la mention « ça s'est éloigné »), Cta6 (le pied), Mano (cadran).
