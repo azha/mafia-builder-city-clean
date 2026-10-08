@@ -456,9 +456,15 @@ public static class MafiaCI
         private readonly System.Collections.Generic.HashSet<string> nomsTrouves = new System.Collections.Generic.HashSet<string>();
         public Callbacks(string[] categories, string[] noms = null) { filtre = categories; filtreNoms = noms; }
 
-        private int CompterFeuillesFiltrees(ITestAdaptor n, string[] heritees)
+        // ⛔ (08/10 nuit, mesuré par CLIENT-2 au créneau) : un filtre ANCRÉ (`^EcranVitrine$`) exécutait les bons tests et ce compteur rendait
+        //    « déclarés 0 » ⇒ FILTRE VIDE ⇒ VERDICT code=1 sur un run VERT. Il comparait par ÉGALITÉ, et ne lisait que les catégories PROPRES
+        //    d'un test (ou, faute, celles de son parent). Il applique maintenant LA règle d'Unity (`FiltreDeCategories.Pris`, lue dans la
+        //    source du paquet) : les catégories de TOUT le chemin, `Regex.IsMatch` non ancrée. Garde : GardeCategories F1 (ancré et nu).
+        private int CompterFeuillesFiltrees(ITestAdaptor n, System.Collections.Generic.List<string> heritees)
         {
-            string[] cats = (n.Categories != null && n.Categories.Length > 0) ? n.Categories : heritees;
+            var cats = new System.Collections.Generic.List<string>();
+            if (heritees != null) cats.AddRange(heritees);
+            if (n.Categories != null) cats.AddRange(n.Categories);
             if (!n.IsSuite && filtreNoms != null)
             {
                 if (System.Array.IndexOf(filtreNoms, n.FullName) < 0) return 0;
@@ -466,9 +472,7 @@ public static class MafiaCI
                 return 1;
             }
             if (!n.IsSuite)
-                return (filtre == null || filtre.Length == 0
-                        || (cats != null && System.Array.Exists(cats, c => System.Array.IndexOf(filtre, c) >= 0)))
-                       ? 1 : 0;
+                return MafiaCleanCity.Shell.FiltreDeCategories.Pris(cats, filtre) ? 1 : 0;
             int total = 0;
             if (n.Children != null)
                 foreach (ITestAdaptor enfant in n.Children) total += CompterFeuillesFiltrees(enfant, cats);
@@ -518,7 +522,7 @@ public static class MafiaCI
                 {
                     var surprises = new System.Collections.Generic.List<string>();
                     foreach (string c in categoriesVues)
-                        if (System.Array.IndexOf(filtre, c) < 0) surprises.Add(c);
+                        if (!MafiaCleanCity.Shell.FiltreDeCategories.Demandee(c, filtre)) surprises.Add(c);   // `^X$` demande X : pas une surprise
                     if (surprises.Count > 0)
                         Debug.LogWarning("MafiaCI: ⚠️ CATÉGORIES NON DEMANDÉES EXÉCUTÉES ["
                             + string.Join(", ", surprises) + "] — le filtre d'Unity correspond par "

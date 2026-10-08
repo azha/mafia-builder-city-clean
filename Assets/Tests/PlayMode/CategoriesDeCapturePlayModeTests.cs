@@ -201,6 +201,45 @@ namespace MafiaCleanCity.CityMap.Tests
                 + "seconde avec la première : " + string.Join(" · ", ViolationsK0(categories)));
         }
 
+        /// <summary>F1 — le compteur de « déclarés » de `MafiaCI` lit le filtre COMME UNITY (08/10 nuit : un filtre ancré `^EcranVitrine$`
+        /// exécutait les bons tests et le compteur rendait 0 ⇒ VERDICT code=1 sur un run vert). La règle (`FiltreDeCategories.Pris`, lue dans la
+        /// source du paquet : `CategoryFilterExtended { IsRegex = true }`, catégories du chemin ENTIER, « Uncategorized » à défaut) est vérifiée
+        /// pure, puis sur les tests RÉELS du dépôt : ancré et nu comptent JUSTE, avec un contrôle négatif (l'ancienne égalité ne voit rien
+        /// sous un filtre ancré) ; et `MafiaCI` l'appelle (garde de source).</summary>
+        [Test]
+        public void F1_LeCompteurDesDeclares_LitLeFiltreCommeUnity_AncreEtNu()
+        {
+            System.Func<string[], string[], bool> pris = (cats, f) => MafiaCleanCity.Shell.FiltreDeCategories.Pris(cats, f);
+            Assert.IsTrue(pris(new[] { "EcranVitrine" }, new[] { "^EcranVitrine$" }), "ancré : le nom exact est pris");
+            Assert.IsFalse(pris(new[] { "PhotoVitrine" }, new[] { "^Vitrine$" }), "ancré : une catégorie qui le CONTIENT n'est pas prise");
+            Assert.IsTrue(pris(new[] { "PhotoVitrine" }, new[] { "Vitrine" }), "nu : regex NON ANCRÉE, une catégorie qui le contient est prise (le piège K0)");
+            Assert.IsTrue(pris(new[] { "ClasseX", "ClicheY" }, new[] { "^ClasseX$" }), "les catégories des ANCÊTRES comptent (GetAllCategoriesFromTest)");
+            Assert.IsTrue(pris(new string[0], new[] { "^Uncategorized$" }), "sans catégorie : « Uncategorized »");
+            Assert.IsFalse(pris(new string[0], new[] { "^EcranVitrine$" }), "sans catégorie : pas pris par un autre nom");
+            Assert.IsTrue(pris(new[] { "X" }, null), "filtre vide : tout est pris");
+            Assert.AreEqual("EcranVitrine", MafiaCleanCity.Shell.FiltreDeCategories.NomDemande("^EcranVitrine$"));
+            Assert.AreEqual("EcranVitrine", MafiaCleanCity.Shell.FiltreDeCategories.NomDemande("EcranVitrine"));
+            Assert.IsTrue(MafiaCleanCity.Shell.FiltreDeCategories.Demandee("EcranVitrine", new[] { "^EcranVitrine$" }), "ancré : la catégorie est DEMANDÉE, pas une surprise");
+            Assert.IsFalse(MafiaCleanCity.Shell.FiltreDeCategories.Demandee("PhotoVitrine", new[] { "Vitrine" }), "nu et contenu : une SURPRISE");
+
+            // Sur les tests RÉELS du dépôt (lus dans la source) : un nom qu'aucune catégorie ne contient (K0) compte PAREIL ancré et nu.
+            var tests = Sources().SelectMany(Tests).ToList();
+            Assert.Greater(tests.Count, 500, "anti-vacuité : les tests du dépôt sont lus");
+            int Compte(params string[] f) => tests.Count(t => MafiaCleanCity.Shell.FiltreDeCategories.Pris(t.cats, f));
+            int ancre = Compte("^EcranVitrine$"), nu = Compte("EcranVitrine");
+            Assert.Greater(ancre, 0, "CONTRÔLE POSITIF : sous le filtre ancré, les tests de ㉓ sont COMPTÉS (le défaut rendait 0)");
+            Assert.AreEqual(tests.Count(t => t.cats.Contains("EcranVitrine")), ancre, "ancré : exactement les tests qui PORTENT la catégorie");
+            Assert.AreEqual(ancre, nu, "nu : le même compte (aucune catégorie ne contient EcranVitrine, K0)");
+            Assert.AreEqual(0, tests.Count(t => t.cats.Any(c => System.Array.IndexOf(new[] { "^EcranVitrine$" }, c) >= 0)),
+                "CONTRÔLE NÉGATIF : l'ancienne égalité ne voyait RIEN sous un filtre ancré — c'est le défaut");
+            Assert.AreEqual(Compte("^EcranVitrine$", "^GardeCategories$"), ancre + Compte("^GardeCategories$"), "deux filtres ancrés : la somme (catégories disjointes)");
+
+            string ci = File.ReadAllText(Path.Combine(Application.dataPath, "Editor", "MafiaCI.cs"));
+            StringAssert.Contains("MafiaCleanCity.Shell.FiltreDeCategories.Pris(cats, filtre)", ci, "MafiaCI compte avec LA règle d'Unity");
+            StringAssert.Contains("MafiaCleanCity.Shell.FiltreDeCategories.Demandee(c, filtre)", ci, "MafiaCI nomme les surprises avec la même lecture du filtre");
+            StringAssert.DoesNotContain("System.Array.IndexOf(filtre, c)", ci, "plus d'égalité nue sur le filtre");
+        }
+
         [Test]
         public void K2_AucunTestDeCapture_NePorteUneCategorieDEcran_NiParSaClasse()
         {
