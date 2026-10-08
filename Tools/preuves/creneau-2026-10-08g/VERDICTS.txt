@@ -1,0 +1,30 @@
+# Créneau du 08/10 soir (CLIENT-2, porte 11:43-11:52, tête = HEAD du lot mots client) — lignes de verdict extraites des journaux (journaux complets hors dépôt)
+# run1 (1er) = MotsDesEnumeres,CuisinierAuRepos,Inspection,BundleReel,Replis,ChainesDev,I18n : 62/63, seul rouge MomentsEnDur.M3 (CatalogueHud.cs, cumul E2a) ; correctif commité ; run1b = mêmes catégories : 63/63 ; run2 = ClichePlanchesParEcran ; run3 = ManometreOracle SEUL (gel connu)
+== run1-premier.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [MotsDesEnumeres, CuisinierAuRepos, Inspection, BundleReel, Replis, ChainesDev, I18n]
+MafiaCI: RunPlayModeTests started — 1280 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 63
+MafiaCI: FAIL MafiaCleanCity.Tests.MomentsEnDurPlayModeTests.M3_AucunMomentEnDur_HorsExceptionsNommees —   un en-tête qui dit l'heure lit day_phase SERVI (Moment.Dire) — ou une exception NOMMÉE :
+MafiaCI: RunPlayModeTests finished — passed=62 failed=1 skipped=0 inconclusive=0 declares=63 comptes=63
+MafiaCI: catégories RÉELLEMENT exécutées = [BundleReel, CatalogueEnLigne, ChainesDev, CuisinierAuRepos, I18n, Inspection, MotsDesEnumeres, Replis]
+MafiaCI: VERDICT code=1 (failed=1 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+MafiaCI-harness: elapsed=122s timeout=1800s issue=[sortie normale (RC=1) · CHIEN DE GARDE: marqueur de tests vu (travail fini), sortie bloquée par le hook MCP ⇒ process terminé par nous]
+== run1b.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [MotsDesEnumeres, CuisinierAuRepos, Inspection, BundleReel, Replis, ChainesDev, I18n]
+MafiaCI: RunPlayModeTests started — 1280 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 63
+MafiaCI: RunPlayModeTests finished — passed=63 failed=0 skipped=0 inconclusive=0 declares=63 comptes=63
+MafiaCI: catégories RÉELLEMENT exécutées = [BundleReel, CatalogueEnLigne, ChainesDev, CuisinierAuRepos, I18n, Inspection, MotsDesEnumeres, Replis]
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+MafiaCI-harness: elapsed=119s timeout=1800s issue=[sortie normale (RC=0) · CHIEN DE GARDE: marqueur de tests vu (travail fini), sortie bloquée par le hook MCP ⇒ process terminé par nous]
+== run2.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ClichePlanchesParEcran]
+MafiaCI: RunPlayModeTests started — 1280 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 5
+MafiaCI: RunPlayModeTests finished — passed=5 failed=0 skipped=0 inconclusive=0 declares=5 comptes=5
+MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+MafiaCI-harness: elapsed=115s timeout=2400s issue=[sortie normale (RC=0) · CHIEN DE GARDE: marqueur de tests vu (travail fini), sortie bloquée par le hook MCP ⇒ process terminé par nous]
+== run3.log
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [ManometreOracle]
+MafiaCI: RunPlayModeTests started — 1280 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 5
+MafiaCI-harness: elapsed=463s timeout=1800s issue=[TEST GELÉ (RC=5) — « MafiaCleanCity.Shell.Tests.ManometreOraclePlayModeTests.Oracle1_Ring_UniqueLaitonFamily_On360_CalmAndAlarm_NeverRawDanger » : journal muet 420s ou plus, éditeur tué par le chien de garde de gel]
+== run3.stdout
+MafiaCI-harness: elapsed=463s timeout=1800s issue=[TEST GELÉ (RC=5) — « MafiaCleanCity.Shell.Tests.ManometreOraclePlayModeTests.Oracle1_Ring_UniqueLaitonFamily_On360_CalmAndAlarm_NeverRawDanger » : journal muet 420s ou plus, éditeur tué par le chien de garde de gel]
