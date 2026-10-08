@@ -351,13 +351,15 @@ namespace MafiaCleanCity.CoreLoops.Compression
             RectTransform selfRt = GetComponent<RectTransform>();
             if (selfRt == null) selfRt = gameObject.AddComponent<RectTransform>();
 
-            Image voile = gameObject.AddComponent<Image>();
-            voile.color = DesignTokens.Current.surfaceBase;
-            voile.raycastTarget = true;
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,62, le voile,
+            // et la TÔLE (`Points` tous les 26 px CSS sur un 90° #2a2e33 → #23272b → #2a2e33) — DÉCLARÉS au catalogue. Il remplace
+            // l'aplat `surfaceBase` ; son `Decor/Capteur` garde le bloqueur de raycast que portait cet aplat.
+            DecorPose decor = DecorDeScene.Poser(transform, DecorsDeScene.Compression);
 
+            // ⚠️ `v` est LA pile de l'écran (le VerticalLayoutGroup du GameObject lui-même) : CLIENT-3 y construira le manomètre.
             VerticalLayoutGroup v = gameObject.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset((int)Px(10f), (int)Px(10f),
-                                       (int)ShellChrome.TopInsetPx + (int)Px(8f),
+                                       0,   // le haut : sous la bande de scène (ReserverLaBande, juste dessous)
                                        (int)ShellChrome.BottomInsetPx + (int)Px(8f));
             v.spacing = Px(8f);
             v.childControlWidth = true;
@@ -365,6 +367,8 @@ namespace MafiaCleanCity.CoreLoops.Compression
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
             v.childAlignment = TextAnchor.UpperCenter;
+            // §5.6 du design : la pile commence SOUS max(barre, bande de scène 35 %), comme la tôle de la maquette.
+            DecorDeScene.ReserverLaBande(v, decor, Px(8f));
 
             // ⛔ OR VIF, PAS OR. Mesuré sur `reference-1080x2102.png` : le titre d'état rend
             //    (242,201,107) = `hudMoneyGold`. Il était posé en `--or` (217,171,78) — le bon

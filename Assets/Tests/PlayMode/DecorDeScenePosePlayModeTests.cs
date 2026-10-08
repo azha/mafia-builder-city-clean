@@ -24,7 +24,7 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉓", "⑭",   // ㊵, ㊳, ㉜, ㉚, ㉛, ㉝, ㉞ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ ⑮ ⑰ ㉒ ㉔ (à CLIENT-2, f2)
+            "③", "⑤", "㊲", "㉓",   // ㊵, ㊳, ㉜, ㉚, ㉛, ㉝, ㉞ posés le 08/10 (feu vert CLIENT-1) ; ㊴ ㉟ ㊱ ⑮ ⑰ ㉒ ㉔ ⑭ (à CLIENT-2, f2)
             "㉘", "㉙", "⑱",
         };
 
@@ -44,6 +44,9 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
+            // ⑭ (08/10) — la tôle posée ; les blocs de l'écran (le manomètre de CLIENT-3 à venir, les fiches de la semaine) :
+            //   traits propres du contrôleur ou absents — à migrer vers Filets / à classer au juge.
+            { "⑭", new[] { "Anneau", "BoutonFer", "BoutonFerSecondaire", "CadranFer", "Ecarter", "Jf", "JfPris", "Mano", "Pf", "PfPersiste", "PfRevele", "PfTraitee", "PlaqueFerTexte", "Regler", "Span", "Tole" } },
             // ㉞ (08/10) — toutes les recettes de blocs (en-tête, carnet, composeur, pied) : blocs de CLIENT-1 — à déléguer à Filets.
             { "㉞", new[] { "CnBas", "CnGeste", "CnGesteMort", "CnGesteRouge", "CnNouvelle", "CnNouvelleVue", "CnPol", "CnPolActif", "CnRien", "CnSeq", "CnSeqVerrou", "CnSlotVide", "CnTete", "Contre", "Mano", "Tag" } },
             // ㉔ (08/10) — le burner posé ; l'écran est une carte fixe (600×640) d'avant la série 6 : l'écran LCD, les bulles, les
