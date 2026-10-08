@@ -28,6 +28,9 @@ Usage :  python3 Tools/juge-visuel/construire-dossiers.py [--controle] [--sans-r
 import json, os, re, subprocess, sys
 
 CLIENT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Le CODE (Assets : AppShell, contrôleurs, planches) peut être lu dans un AUTRE arbre que celui des outils : l'arbre DA part de main et
+# prend du retard sur le client (payé le 2026-09-23 : ⑪ retiré au cumul 9be2fe9d, encore monté dans l'arbre DA). `--client <arbre>`.
+ARBRE_CODE = os.path.abspath(os.path.expanduser(sys.argv[sys.argv.index("--client") + 1])) if "--client" in sys.argv else CLIENT
 ATELIER = os.path.expanduser("~/project/atelier3d-mafia")
 BACK = os.path.expanduser("~/project/mafia-clean-city")
 JV = os.path.join(CLIENT, "Tools", "juge-visuel")
@@ -48,34 +51,25 @@ TABLE = [
       nominal_note="cadre 22, Brennar la nuit",
       extras=[("carte/reference-chez-vous-1080x2102.png", "cadre 24 « approcher : chez vous », rendu le 2026-09-22 (atelier 868ab87) — la bande de La Lisière liste les quatre bâtiments du joueur : « le labo, la planque, la façade, la banque » (money_holding = « la banque », ④ d4)")]),
  dict(sym="④", ctl="DashboardController", dossier="accueil", chemin="surimpression à l'ouverture de session (acquisition), puis Accueil",
-      cadres=[], nominal=None, planche="planche_l_accueil_1080x2400.png",
-      confiance="aucune", note="AUCUNE maquette (front.md:1609 « [ ] maquetté ») — les cadres 20-21 « Le Bureau du patron » sont ⑱ le menu Plus (front.md:1567), corrigé par l'orchestrateur le 03/09"),
+      cadres=[("ecrans-brennar-accueil.html", [0, 1, 2, 3])], nominal=None, planche="planche_l_accueil_1080x2400.png",
+      confiance="mesurée", note="MAQUETTE À RATIFIER depuis le 23/09 (atelier 25 §2.2, table 45 : la carte de tête en forme honnête) — aucune référence RATIFIÉE (front.md:1609) ; "
+      "les cadres 20-21 « Le Bureau du patron » sont ⑱ le menu Plus (front.md:1567). dossier du `accueil/r1-2026-09-23/` (preparer-dossiers-2026-09-23.py, commande f2 du 23/09) : référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps",
+      extras=[(f"accueil/maquette-2026-09-23/cadre-{i}-1080x2102.png", f"MAQUETTE À RATIFIER, pas une référence — {e}") for i, e in
+              enumerate(["rien à trancher", "la carte de tête, forme honnête", "des rapports à lire", "la file sous pression"])]),
  dict(sym="⑤", ctl="DecisionDetailScreenController", dossier="decision-du-jour", chemin="surimpression depuis la carte de tête (hl_card) de l'Accueil",
       cadres=[(S4, list(range(4, 9))), (S6, list(range(4, 9)))], nominal=(S4, 4), planche="decision_du_jour_1080x2400.png",
       confiance="mesurée", note="série 4 cadres 4-8 RATIFIÉS par l'user (« ok top on garde comme ça », 2026-08-26)"),
  dict(sym="⑥", ctl="LieutenantScreenController", dossier="famille", chemin="onglet FAMILLE",
       cadres=[(S1, ["organigramme (rangée « La Famille »)"])], nominal=None, planche="famille_1080x2400.png",
-      confiance="mesurée", note="référence = Tools/family-organigramme-reference-1120.png (1120×1850) et famille/ecran-canon.png ; ⑦ ⑧ sont des sections du même contrôleur"),
- dict(sym="⑪", ctl="LaunderingController", dossier="coffre", chemin="onglet FILIÈRE",
-      cadres=[], nominal=None, planche="planche_la_filiere_1080x2400.png",
-      confiance="aucune", note="aucun cadre de série 4/6 ne dessine le pipeline ; coffre/ecran-canon.png est le seul canon. "
-                               "✅ PLANCHE RÉTABLIE le 2026-09-07, par MESURE cette fois : la suite écrit "
-                               "CapturerLocataire<LaunderingController>(shell, \"la_filiere\", …) "
-                               "(PlancheEcransManquantsCapturePlayModeTests.cs:128) et le fichier existe. "
-                               "⇒ La planche de ⑪ est planche_la_filiere, jamais planche_le_coffre — "
-                               "cette dernière est écrite en montant ProfileScreenController, c'est celle de ㉒. "
-                               "Le doublon ne se tranchait donc pas au NOM mais au LOCATAIRE MONTÉ par la suite. "
-                               "⛔ PLANCHE RETIRÉE le 2026-09-07 : cette ligne portait planche_le_coffre_1080x2400.png, "
-                               "que ㉒ porte AUSSI — un seul fichier, deux écrans, deux contrôleurs. Mon attribution ici "
-                               "reposait sur le seul NOM (dossier « coffre » ≈ nom du fichier), celle de ㉒ sur une note "
-                               "explicite. Un rattachement par ressemblance de mot est exactement le critère qui a produit "
-                               "un faux positif sur icon_sandpile ici. Ce que cette planche MONTRE se lit sur l'image : "
-                               "à re-remplir par mesure, jamais par le nom."),
+      confiance="mesurée", note="référence = Tools/family-organigramme-reference-1120.png (1120×1850) et famille/ecran-canon.png ; ⑦ ⑧ sont des sections du même contrôleur. "
+      "⑦ (la fiche du lieutenant, la mécanique) : MAQUETTE À RATIFIER du 23/09 (`ecrans-brennar-7-lieutenant.html`, 4 cadres ; atelier 26, 41, 42) — dossier du `famille/r1-⑦-2026-09-23/` (preparer-dossiers-2026-09-23.py, commande f2 du 23/09) : référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps",
+      extras=[(f"famille/maquette-7-2026-09-23/cadre-{i}-1080x2102.png", f"⑦ MAQUETTE À RATIFIER — {e}") for i, e in
+              enumerate(["la fiche nominale", "le signal dérive", "l'ordre expire bientôt", "« Donner un ordre » : l'éditeur de ⑧ en ordre permanent"])]),
  dict(sym="⑯", ctl="DailyReviewScreenController", dossier="revue-du-jour", chemin="Plus → LA REVUE DU JOUR",
       cadres=[(S4, list(range(0, 4))), (S6, list(range(0, 4)))], nominal=(S4, 0), planche="revue_du_jour_seuil-force-0.1_1080x2400.png",
       confiance="mesurée", note="série 4 cadres 0-3 = le canon ratifié (revue-du-jour/v4-0..3.png)"),
  dict(sym="㊲", ctl="ReputationScreenController", dossier="reputation", chemin="Plus → LA RÉPUTATION",
-      cadres=[(S6, list(range(119, 125)))], nominal=(S6, 120), planche="screen_b3_reputation_sous_chrome_1080x2400.png",
+      cadres=[(S6, list(range(119, 125)) + [144])], nominal=(S6, 120), planche="screen_b3_reputation_sous_chrome_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite m-120.png",
       # ⛔ Le nominal est le cadre 120 — MESURÉ le 2026-09-22 (PNG commité ↔ rendu de 120 : 2,4 % ; ↔ 119 : 24,6 %) ;
       #    l'INDEX écrit à la main disait « cadre 119 ». Re-rendu le 2026-09-22 (atelier 20d006d : « personne ne jugera »).
@@ -100,18 +94,18 @@ TABLE = [
       cadres=[(S4, list(range(25, 31))), (S6, list(range(14, 20)))], nominal=(S4, 25), planche="planche_la_semaine_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite série 4 cadres 25-30 (non ratifiée au 02/09)"),
  dict(sym="㊴", ctl="ForensicScreenController", dossier="screen_b7", chemin="Plus → LE DOSSIER",
-      cadres=[(S6, list(range(131, 137)))], nominal=(S6, 131), planche="screen_b7_dossier_sous_chrome_1080x2400.png",
+      cadres=[(S6, list(range(131, 137)) + [143])], nominal=(S6, 131), planche="screen_b7_dossier_sous_chrome_1080x2400.png",
       confiance="déduite", note="cadres 131-136 « Le dossier » par le titre",
       nominal_note="cadre 131, RE-RENDUE le 2026-09-06 : E1 — le palier de train de vie est celui d'UN LIEUTENANT, pas du joueur",
       extras=[("screen_b7/reference-vocabulaire-1080x2102.png", "cadre 143, LES 12 CRANS — les cadres d'état n'en montrent que 6 ; c'est le témoin que le juge réclamait en classant « l'échelle de chaque piste a disparu »")]),
  dict(sym="㊳", ctl="JournalScreenController", dossier="screen_c1", chemin="Plus → LE JOURNAL & LA RUE",
-      cadres=[(S6, list(range(125, 131)))], nominal=(S6, 125), planche="screen_c1_journal_sous_chrome_1080x2400.png",
+      cadres=[(S6, list(range(125, 131)) + [145])], nominal=(S6, 125), planche="screen_c1_journal_sous_chrome_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite les cadres 125 et 129",
       nominal_note="cadre 125",
       extras=[("screen_c1/reference-vocabulaire-1080x2102.png", "cadre 145, LES 11 CRANS — `fading` et `lingering` sont servis et n'avaient aucun dessin")]),
- dict(sym="㊵", ctl="FiliereScreenController", dossier="screen_c2", chemin="Plus → LA FILIÈRE",
+ dict(sym="㊵", ctl="FiliereScreenController", dossier="screen_c2", chemin="onglet FILIÈRE du dock (AppShell.cs:272) · la nav Filière de l'Accueil · Plus → LA FILIÈRE",
       cadres=[(S6, list(range(137, 143)))], nominal=(S6, 137), planche="screen_c2_filiere_sous_chrome_1080x2400.png",
-      confiance="mesurée", note="le contrôleur cite le cadre 142 (« ce qui manque encore »)"),
+      confiance="mesurée", note="★ PORTE LA FILIÈRE (2026-09-23, tranché) — ⑪ (LaunderingController) et ⑫ (PipelineOverviewController) sont RETIRÉS du client (cumul 9be2fe9d, code mort depuis D6 : 0 chemin joueur, 0 GUID en scène) ; leur entrée et le dossier « coffre » quittent cette table ; ㊵ lit deviation_active et l'ordre stage_index depuis a7b6b920 (les deux conditions ci-dessous sont TENUES). l'onglet Filière du dock monte ㊵ ; ⑪ (LaunderingController) et ⑫ (PipelineOverviewController) sortent du chemin joueur et ne sont PLUS À JUGER (atelier 25-… §1). Deux conditions à vérifier au jugement : ㊵ lit `deviation_active` (seul ⑪ le lisait), et l'ordre des étapes vient de `stage_index` (0 lecteur au 23/09 : l'ordre affiché était DÉDUIT). — le contrôleur cite le cadre 142 (« ce qui manque encore »)"),
  dict(sym="㉕", ctl="TutorialScreenController", dossier="compte", chemin="Plus → LA PREMIÈRE FOIS",
       cadres=[], nominal=None, planche="planche_la_premiere_fois_1080x2400.png",
       confiance="aucune", note="canon compte/tutoriel-canon.png ; aucun cadre de série 4/6 identifié"),
@@ -119,8 +113,10 @@ TABLE = [
       cadres=[(S6, [95, 96, 97])], nominal=(S6, 95), planche="planche_le_coffre_1080x2400.png",
       confiance="déduite", note="déduit par titre (95-97 « Le compte ») — le contrôleur dit « cadres 45-47 », autre numérotation ; canon compte/profil-canon.png ; ⚠️ sa planche s'appelle planche_le_coffre"),
  dict(sym="⑲", ctl="SettingsScreenController", dossier="compte", chemin="Plus → LES RÉGLAGES",
-      cadres=[], nominal=None, planche="planche_les_reglages_1080x2400.png",
-      confiance="aucune", note="canon compte/reglages-canon.png ; aucun cadre de série 4/6 identifié"),
+      cadres=[(S6, [95, 96, 97])], nominal=None, planche="planche_les_reglages_1080x2400.png",
+      confiance="mesurée", note="front.md ⑲ (l.1847) : « fusionnée avec screen_c1 dans « LE PROFIL » … cadres 45-47 » (ancienne numérotation) "
+      "= 95-97 « Le compte », tiroir « Le jeu » (la langue, « On vous explique encore ») ; ratifiée par délégation le 02/09 (front.md l.22). "
+      "Référence : celle de ㉒ (même porte, cadre 95) — pas de rendu propre. Corrigé le 2026-09-23 (atelier, commande f2) : l'INDEX disait « aucune »"),
  dict(sym="㊱", ctl="HorizonScreenController", dossier="screen_c6", chemin="Plus → L'HORIZON DES POSSIBLES",
       cadres=[(S6, list(range(113, 119)))], nominal=(S6, 113), planche="screen_c6_horizon_etat-vide_sous_chrome_1080x2400.png",
       confiance="déduite", note="cadres 113-118 « L'horizon » par le titre ; liste vide par construction sur le compte de démo"),
@@ -178,10 +174,13 @@ TABLE = [
 HORS_APPSHELL = [
  dict(sym="①", ctl="DistrictInteriorScreenController", dossier="ecran-principal", chemin="depuis la carte : ENTRER dans le quartier",
       cadres=[("hud-brennar.html", ["le HUD de Brennar"])], nominal=None, planche="screen_1_district_sous_chrome_1080x2400.png",
-      confiance="mesurée", note="hors canon (front.md ①) ; canon ecran-principal/ecran-canon.png + mesure-canon.txt"),
+      confiance="mesurée", note="ÉCART ASSUMÉ (2026-09-23, tranché par l'orchestrateur) : la bande du nom de district sous la barre est ABSENTE du canon (hud-brennar.html : aucun nom de district dans .tel ; la place l.82/l.176 est celle du bandeau éphémère QUAND IL PARLE) — elle reste, et CÈDE la place au bandeau ; sources : front.md §4 L (25/08, « le lieu en bandeau sous la barre ») et cette mesure. Ne pas la re-noter. — ÉCART ASSUMÉ (2026-09-23, décision f2) : l'anneau CRÈME autour du badge du bâtiment dont la fiche est ouverte (CLIENT-2 e9db74eb) — le canon n'a pas d'état de sélection, et le joueur doit voir quel bâtiment sa fiche décrit (r9 M6) ; crème, pas or, un seul à la fois. Ne pas le re-noter. — hors canon (front.md ①) ; canon ecran-principal/ecran-canon.png + mesure-canon.txt"),
  dict(sym="②", ctl="BuildingCardController", dossier="fiche-batiment", chemin="depuis l'intérieur de district : toucher un bâtiment",
-      cadres=[], nominal=None, planche="screen_2a_fiche_sous_chrome_1080x2400.png",
-      confiance="aucune", note="dossier juge-donnees existant, aucun dossier juge-visuel ; cadres labo/serre/ash (S6 36-47, 92-94) = variantes par type, non rattachées"),
+      cadres=[(S6, list(range(36, 48)) + [92, 93, 94])], nominal=None, planche="screen_2a_fiche_sous_chrome_1080x2400.png",
+      confiance="mesurée", note="dossier juge-donnees existant, aucun dossier juge-visuel. Cadres rattachés le 2026-09-23 (atelier, commande f2) : "
+      "les matières de ② par type — la serre 36-38, le labo 39-44, le fourneau et l'affinage 45-46, la descente 47 (son panneau dit « ② Le fourneau »), "
+      "Ash 92-94 (le rendez-vous : les routes /v1/operational/appointment sont dans BuildingCardController/Client) ; front.md ② (l.801-950 : serre, "
+      "fourneau, « le labo devenu un écran », « Ash sort de la chimie », numérotation d'alors). Pas de nominal : la .fiche de ② est dessinée par ① (22 §5)"),
  dict(sym="⑨", ctl="ExceptionQueueController", dossier="exceptions", chemin="Accueil → la file d'exceptions",
       cadres=[(S4, [14, 16, 17, 18]), (S6, [9, 11, 12, 13])], nominal=(S4, 14), planche="screen_5_exceptions_sous_chrome_1080x2400.png",
       confiance="mesurée", note="le contrôleur cite série 4 cadre 14, ratifié (« ok c'est bien », 2026-08-26)"),
@@ -208,8 +207,41 @@ HORS_APPSHELL = [
 ]
 
 
+# ---------------------------------------------------------------------------------------------
+# MISE À JOUR du 2026-09-23 (commande f2 : dossiers de juge des écrans travaillés la nuit) — ajoutée ICI, par symbole, pour que la
+# donnée vive dans le générateur (une régénération ne l'efface pas) sans réécrire des notes longues. Les dossiers datés sont produits
+# par `preparer-dossiers-2026-09-23.py` ; les maquettes « à ratifier » sont des EXTRAS, jamais des nominaux (ce ne sont pas des références).
+# ---------------------------------------------------------------------------------------------
+def _maj_2026_09_23():
+    par = {r["sym"]: r for r in TABLE + HORS_APPSHELL}
+    D = "dossier daté du 23/09 : `{}` (référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps et leur fraîcheur)"
+    par["㉕"].update(cadres=[("ecrans-brennar-25-tutoriel.html", [0, 1, 2, 3])], confiance="mesurée",
+                     note="canon RATIFIÉ par délégation (02/09, front.md l.22, l.1803) : compte/tutoriel-canon.png et tutoriel-vide.png (série 2, cadres 31-32, 900×1752) ; "
+                          "MAQUETTE À RATIFIER du 23/09 autour des données servies (atelier 33, `ad616c56`). " + D.format("compte/r1-㉕-2026-09-23/")
+                          + " ⛔ la refonte du client (CLIENT-2 `049a863e`) n'est pas fusionnée au cumul : capture jugeable après fusion.")
+    par["㉕"]["extras"] = [(f"compte/maquette-25-2026-09-23/cadre-{i}-1080x2102.png", f"MAQUETTE À RATIFIER — {e}") for i, e in
+                          enumerate(["1ʳᵉ session, bulle sur la carte pré-semée", "1ʳᵉ session, file vidée", "2ᵉ session, page sous Plus", "le refus"])]
+    par["⑲"]["note"] += (" — MISE À JOUR 23/09 : la porte « ce que le back sert aujourd'hui » (dérivée du 97 ratifié), MAQUETTE À RATIFIER. "
+                         + D.format("compte/r1-⑲-2026-09-23/") + " ⛔ le branchement du client (CLIENT-2 `19ddc253`, `9e298c64`) n'est pas fusionné au cumul.")
+    par["⑲"].setdefault("extras", []).append(("compte/porte-2026-09-23/cadre-0-1080x2102.png", "MAQUETTE À RATIFIER, pas une référence — la porte mise à jour (`7d00782d`)"))
+    par["㉙"]["note"] += (" — 23/09 : le geste vise un AXE (atelier 40, `997d6ab4`) ; ㉙ n'est PAS ratifiée (décision f2 : front.md l.22, l.1328) — "
+                         "ses références sont des MAQUETTES À RATIFIER ; mots genrés en formes épicènes (D13, table 40 v3). " + D.format("ecran_conflit/r3-2026-09-23/"))
+    par["①"]["note"] += (" — 23/09 : la référence est `ecran-canon-propre.png`, **1176×2091 à ×3,0** (392 CSS) — le r10 annonçait ×3,6 à tort. "
+                         + D.format("ecran-principal/r11-2026-09-23/"))
+    par["②"]["note"] += (" — 23/09 : ⛔ AUCUNE référence à jour rendue (v6/m-36…94 = 900×1752 du 03/09, avant DejaVu et le chrome ratifié) : à rendre au "
+                         "prochain signal avant de juger — FAIT au tour du 23/09 08:29 (15 cadres en extras) ; lots 1, 4, 6 de CLIENT-2 non fusionnés au cumul. " + D.format("fiche-batiment/r1-2026-09-23/"))
+    # rendus du tour de 08:29:53 (rendre-tour-2026-09-23b.py) : ② ses 15 cadres, ㉙ sa maquette à jour
+    par["②"].setdefault("extras", []).extend((f"fiche-batiment/serie6-2026-09-23/cadre-{n}-1080x2102.png", f"cadre {n}, rendu le 23/09 (DejaVu, chrome ratifié)")
+                                             for n in list(range(36, 48)) + [92, 93, 94])
+    par["㉙"]["extras"].extend((f"ecran_conflit/maquette-2026-09-23/cadre-{n}-1080x2102.png", f"cadre {n}, MAQUETTE À RATIFIER, texte à jour (atelier 9f38a24)")
+                              for n in range(60, 64))
+
+
+_maj_2026_09_23()
+
+
 def montages_appshell():
-    src = open(os.path.join(CLIENT, "Assets/Scripts/Shell/AppShell.cs"), encoding="utf-8").read()
+    src = open(os.path.join(ARBRE_CODE, "Assets/Scripts/Shell/AppShell.cs"), encoding="utf-8").read()
     return sorted(set(re.findall(r"(?:MountTenant|MonterLocataireEnSurimpression)<([A-Za-z]+Controller)>\(\)", src)))
 
 
@@ -233,7 +265,7 @@ def front_md():
 
 
 def routes_du_controleur(ctl):
-    chemin = subprocess.run(["grep", "-rl", f"class {ctl}\\b", os.path.join(CLIENT, "Assets/Scripts"), "--include=*.cs"],
+    chemin = subprocess.run(["grep", "-rl", f"class {ctl}\\b", os.path.join(ARBRE_CODE, "Assets/Scripts"), "--include=*.cs"],
                             capture_output=True, text=True).stdout.split()
     if not chemin:
         return [], ""
@@ -338,7 +370,7 @@ def main(argv):
         for fichier, pourquoi in r.get("extras", []):
             ref += f" + `{fichier}` ({pourquoi})"
         planche = r["planche"]
-        pe = ("existe" if planche and os.path.exists(os.path.join(CLIENT, "Assets/Screenshots", planche)) else ("ABSENTE" if planche else "—"))
+        pe = ("existe" if planche and os.path.exists(os.path.join(ARBRE_CODE, "Assets/Screenshots", planche)) else ("ABSENTE" if planche else "—"))
         corps = "—"
         for nom_idx in (f"_index-{r['sym']}.json", "_index.json"):
             chemin_idx = os.path.join(JV, r["dossier"], "corps-reels", nom_idx)
@@ -350,6 +382,17 @@ def main(argv):
                     corps = "index illisible"
                 break
         lignes.append(f"| {r['sym']} | {f.get('nom', '?')} `{f.get('id', '')}` | `{r['ctl']}` | `{r['dossier']}` | {cad} | {ref} | `{planche}` ({pe}) | {f.get('reste', '') or '—'} | {r['confiance']} | {corps} |")
+    # les dossiers DATÉS les plus récents (lus sur le disque, jamais écrits à la main) — le juge part de l'INDEX et doit les trouver
+    import glob as _g
+    dates = sorted({m.group(1) for d in _g.glob(os.path.join(JV, "*", "r*-20*")) for m in [re.search(r"(20\d\d-\d\d-\d\d)$", d)] if m})
+    if dates:
+        der = dates[-1]
+        lignes += ["", f"**Dossiers de juge datés du {der}** (préparés, captures à poser au créneau) — à lire AVANT le mandat de l'écran :", ""]
+        for d in sorted(_g.glob(os.path.join(JV, "*", f"r*-{der}"))):
+            jd = [x for x in _g.glob(os.path.join(CLIENT, "Tools", "juge-donnees", os.path.basename(os.path.dirname(d)), f"*{der}")) if os.path.isdir(x)]
+            sym = re.search(r"-([①-㊿])-", os.path.basename(d))   # dossier partagé (compte : ⑲, ㉕) : le jumeau du MÊME symbole
+            if sym: jd = [x for x in jd if sym.group(1) in os.path.basename(x)]
+            lignes.append(f"- `{os.path.relpath(d, JV)}/dossier.md`" + (" · juge-données : " + ", ".join(f"`{os.path.relpath(x, CLIENT)}/`" for x in sorted(jd)) if jd else ""))
     lignes += ["", f"Montés par `AppShell.cs` : {len(montes)} contrôleurs distincts ({', '.join(montes)}) — tous indexés (garde du script). "
                f"Lignes hors AppShell : {len(HORS_APPSHELL)}."]
     index = "\n".join(lignes) + "\n"
@@ -382,7 +425,7 @@ def main(argv):
             if canon.endswith("-canon.png") or canon.startswith("ecran-canon"):
                 ref_rows.append(f"| `{r['dossier']}/{canon}` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |")
         routes, fichier = routes_du_controleur(r["ctl"])
-        planche_etat = "existe" if r["planche"] and os.path.exists(os.path.join(CLIENT, "Assets/Screenshots", r["planche"])) else "ABSENTE — à capturer"
+        planche_etat = "existe" if r["planche"] and os.path.exists(os.path.join(ARBRE_CODE, "Assets/Screenshots", r["planche"])) else "ABSENTE — à capturer"
         mandat = MANDAT.format(sym=r["sym"], nom=f.get("nom", "?"), dossier=r["dossier"], date=date, id=f.get("id") or "sans id canon (écran neuf)", ctl=r["ctl"],
                                montre=f.get("montre") or "non fourni (front.md ne porte pas de puce « Montre » pour cet écran)",
                                chemin=r["chemin"], routes=(", ".join(f"`{x}`" for x in routes) or "aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees)") + (f" (`{fichier}`)" if fichier else ""),

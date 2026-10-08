@@ -130,15 +130,18 @@ choisi de ne PAS inventer de clé (« la clé se crée côté back, au lot i18n 
 |---|---|---|---|---|---|
 | gravité | `SEVERE` | grave | ratifié (cadres 14, 15, 18) | grave | severe |
 | gravité | `MODERATE` | modérée | ratifié (cadres 14, 17, 18) | modérée | moderate |
-| gravité | `MILD` | « Légère » (client) | **non ratifié**, jamais dessiné | **légère** — la suite naturelle de « grave · modérée » | mild |
+| gravité | `MILD` | « Légère » (client) | **non ratifié**, jamais dessiné | légère | mild |
 | priorité | `critical` | critique | ratifié (cadres 14, 15, 18) | critique | critical |
 | priorité | `urgent` | urgente | ratifié (cadres 14, 17, 18) | urgente | urgent |
 | priorité | `watching` | « À surveiller » (client) | **non ratifié** | **à surveiller** | to watch |
-| priorité | `silent` | « Silencieuse » (client) | **non ratifié** | **sans urgence** — « silencieuse » décrit la carte, pas son rang ; la suite se lit « critique · urgente · à surveiller · sans urgence » | no rush |
+| priorité | `silent` | « Silencieuse » (client) | **non ratifié** | sans urgence | no rush |
 | confiance | `confident` | il est sûr | ratifié (cadre 15, `.chip.conf.conf-h`) | il est sûr | they’re sure |
 | confiance | `likely` | — (aucun mot, ni maquette ni client) | **absent** | **il le croit** | they think so |
 | confiance | `tentative` | — | **absent** | **il hésite** | they’re unsure |
 
+- ⚠️ **Correction du 2026-09-23** : les cellules « fr proposé » de `MILD` et `silent` portaient le mot ET sa raison ; le back a servi la raison
+  avec le mot. La valeur est le mot seul — **« légère »** (la suite naturelle de « grave · modérée ») et **« sans urgence »** (« silencieuse »
+  décrit la carte, pas son rang ; la suite se lit « critique · urgente · à surveiller · sans urgence »).
 - La confiance dit **ce que le lieutenant pense de sa propre suggestion** (le flottant [0..1] de la carte). « il est sûr » est ratifié ;
   « il le croit » et « il hésite » en sont les deux crans du dessous, dans la même voix. En en, « they » : le lieutenant peut être une
   lieutenante.
@@ -321,3 +324,128 @@ Le tiret et les guillemets autour de l'adresse sont composés par le code (`"« 
 | `exceptions.bloc.au_batiment_touche` | au bâtiment touché | at the building that was hit | `:557`, le lieu quand une issue vise un bâtiment (cadre 14) |
 
 Mêmes mots que le §3.3 (« Boss — ») et le §3.5 (« · citywide », « at the building that was hit ») : une traduction par mot.
+
+---
+
+## 3.10 ⑨-6 — après le tampon : une phrase par issue, et les comptes sans chiffre (2026-09-23)
+
+Client : `0253eb80` (arbre F, `ecrans/2026-09-23`), `ExceptionQueueController.cs` — `TitreApres` (`:518-529`) n'écrit que la phrase de
+`REPAIRING` et, pour les autres issues, lit la conséquence servie de l'action ; la ligne de file compose « {nombre en lettres} attendent
+encore » en dur (`:281`, `:286-287`, R2.2 : pas de chiffre isolé dans un texte suivi) ; `AmbianceVide` (`:384-394`) ne lit que la branche
+`=0` de `exceptions.file.ambiance`, parce que `other` pose `#` en chiffres.
+
+### A. `exceptions.apres.<issue>` — la phrase sous le cachet, une par issue
+
+Les 10 issues sont celles des effets du back (`exceptions/effects/*.handler.ts`, `4841d7ad`, §3.7). Registre du cadre 17 : une courte
+phrase de conséquence, sans genre ; au « vous » quand elle s'adresse au joueur. Chacune dit **ce qui s'est passé**, pas ce qui était
+projeté.
+
+| clé | issue | fr | en |
+|---|---|---|---|
+| `exceptions.apres.repairing` | le bâtiment passe en réparation | Le bâtiment se remet en marche, avec le temps | The building is coming back, in its own time |
+| `exceptions.apres.repairing_slow` | réparation au rabais, plus longue | Le bâtiment se remet en marche, lentement — c'est moins cher | The building is coming back slowly — it costs less |
+| `exceptions.apres.bribe_succeeded` | le pot-de-vin a marché : bâtiment remis, chaleur en baisse | La descente n'a pas eu lieu : le bâtiment repart, la chaleur baisse | The raid never happened: the building is back up, the heat eases |
+| `exceptions.apres.bribe_failed` | l'argent est parti, le bâtiment reste touché, la chaleur monte | L'argent est parti, et ça s'est retourné : la chaleur monte | The money's gone and it backfired: the heat is rising |
+| `exceptions.apres.laid_low` | on se fait oublier ; le bâtiment reste touché | On se fait oublier : la chaleur retombe, le bâtiment reste touché | Lying low: the heat eases, the building stays damaged |
+| `exceptions.apres.taught` | une règle ajoutée au script du lieutenant | C'est une règle, désormais : la prochaine fois, ça se règle sans vous | It's a rule now: next time, it's handled without you |
+| `exceptions.apres.deferred` | réparation remise, bâtiment à l'arrêt | Réparation remise : le bâtiment reste à l'arrêt | Repair put off: the building stays shut |
+| `exceptions.apres.demolished` | le bâtiment est rasé, l'îlot se libère | Le bâtiment est rasé ; l'îlot est libre | The building is razed; the block is free |
+| `exceptions.apres.escalated` | archivée pour relecture | Archivé : à relire à tête reposée | Archived: to go over with a clear head |
+| `exceptions.apres.resolved` | traitée une fois, sans effet | C'est réglé, pour cette fois | Handled, this once |
+
+- La phrase de `REPAIRING` est celle de la maquette, à l'octet du littéral du client (sans point final) : sa clé permet au client de ne plus
+  la garder en dur.
+- « descente », « se faire oublier », « à relire à tête reposée », « une règle » : les mots déjà servis ou ratifiés pour le même geste (§3.4,
+  §3.7, §3.8). Aucun participe accordé à une personne ; « vous » seulement dans `taught`, qui parle au joueur.
+
+### B. Les comptes en lettres, servis — une clé par phrase, un pluriel ICU à branches EXACTES, jamais `#`
+
+Proposition : **une clé par phrase**, en pluriel ICU dont chaque valeur de 1 à 6 a sa branche `=N` écrite en lettres, et `other` dit
+« plusieurs ». Pas de `#`, donc aucun chiffre dans le texte suivi ; l'accord (« un seul attend » / « deux attendent ») vit dans la valeur
+servie, pas dans le code ; le placeholder reste `{count}` (le client passe le nombre, il ne l'affiche jamais). ⚠️ En français, la
+catégorie CLDR `one` couvre **0 et 1** : les branches exactes `=0`, `=1` passent avant, et `one` n'est pas utilisée.
+
+| clé | fr | en |
+|---|---|---|
+| `exceptions.file.attendent_encore` (neuve, cadre 17) | `{count, plural, =1 {Un seul attend encore} =2 {Deux attendent encore} =3 {Trois attendent encore} =4 {Quatre attendent encore} =5 {Cinq attendent encore} =6 {Six attendent encore} other {Plusieurs attendent encore}}` | `{count, plural, =1 {Only one still waiting} =2 {Two still waiting} =3 {Three still waiting} =4 {Four still waiting} =5 {Five still waiting} =6 {Six still waiting} other {Several still waiting}}` |
+| `exceptions.file.ambiance` (réécrite, cadres 14 et 16) | `{count, plural, =0 {Personne ne fait la queue — la routine tient} =1 {Un seul attend vos ordres — la file est calme} =2 {Deux attendent vos ordres — la file est calme} =3 {Trois attendent vos ordres — la file est calme} =4 {Quatre attendent vos ordres — la file est calme} =5 {Cinq attendent vos ordres — la file est calme} =6 {Six attendent vos ordres — la file est calme} other {Plusieurs attendent vos ordres — la file est calme}}` | `{count, plural, =0 {Nobody's waiting — the routine holds} =1 {Only one is waiting for your orders — the queue is calm} =2 {Two are waiting for your orders — the queue is calm} =3 {Three are waiting for your orders — the queue is calm} =4 {Four are waiting for your orders — the queue is calm} =5 {Five are waiting for your orders — the queue is calm} =6 {Six are waiting for your orders — the queue is calm} other {Several are waiting for your orders — the queue is calm}}` |
+
+- La branche `=0` de l'ambiance garde la valeur servie aujourd'hui (réalignée sur la maquette, `aea5ef7c`) : le client la lit déjà.
+- Côté client (CLIENT-2) : `Traduire(clé, {count})` remplace la composition `EnLettres(n) + " attendent …"` ; `exceptions.nombre.*` reste
+  pour ses autres usages.
+- Contrôle écrit avec ce paquet : aucune branche ne contient de chiffre ni de `#`, et chaque clé a les mêmes branches en fr et en en.
+
+---
+
+## 3.11 S03 — la cible nommée : `{enseigne}`, sans article ni genre (2026-09-23)
+
+> Le back sert le bâtiment visé sur la carte (`406ae440`, `building: { id, name_i18n } | null`, `params.enseigne`). L'enseigne est **nue** :
+> les 72 de `common/building-signs.ts` (6 par type) sont des noms propres sans article : « Pressing Varne », « Laverie du Quai »,
+> « Consigne de la Threnny », « Épargne Sallo ». On ne sait ni leur article ni leur genre (« Laverie » est féminin, « Pressing » masculin).
+> **Règle de ce lot** : `{enseigne}` n'est jamais précédée d'un article ou d'une contraction (au, du, le…), ni suivie d'un mot qui s'accorde
+> avec elle (participe, adjectif, pronom). Clés composées par le client, placeholder `{enseigne}`. fr avec `’`.
+> Vérifié : `python3 Tools/atelier-2026-09-22/verifier-11-enseigne.py` (clés dérivées, placeholder, article, accord ; la longueur du tampon sur les 72 enseignes).
+
+### 1. Le lieu de la bulle, quand la cible a un nom
+
+| clé | fr | en | remplace |
+|---|---|---|---|
+| `exceptions.bloc.chez_enseigne` | chez {enseigne} | at {enseigne} | « au bâtiment touché » (`exceptions.bloc.au_batiment_touche`), dans `Contexte` (`ExceptionQueueController.cs:743`, partagé ⑨/⑩), quand `building.name_i18n` est servi |
+
+- **« chez »**, pas « au bâtiment {enseigne} » : « à » appelle l'article, et c'est lui qu'on ne connaît pas. « Chez » prend un nom propre
+  **nu**, et c'est ainsi qu'on désigne une enseigne en français (« chez Pressing Varne », « chez Laverie du Quai »). « Au bâtiment Laverie
+  du Quai » se lit, mais comme une adresse administrative. La maquette dit « au Verge d’Or » parce que ce nom-là porte son article.
+- La bulle compose « · rôle · chez Pressing Varne ». Le « · » reste au code.
+- Sans nom (`building` null, ou `name_i18n` null : le bâtiment n'est plus au joueur) : « au bâtiment touché », inchangé.
+
+### 2. Le libellé du tampon, pour une réparation nommée
+
+| clé | fr | en | remplace |
+|---|---|---|---|
+| `exceptions.bloc.reparer_enseigne` | Réparer {enseigne} | Repair {enseigne} | `exception.raid.repair.label` « Réparer le bâtiment » / « Repair the building » |
+
+- Le client le passe en capitales, comme aujourd'hui : « RÉPARER PRESSING VARNE ». C'est le « RÉPARER {LE VERGE D’OR} » du cadre 18, sans
+  l'article que seul ce nom-là porte. Au tampon, qui est un ordre de travail, l'article tombe naturellement.
+- **Seulement là où le libellé dit « le bâtiment »** : le nom le remplace, il ne s'ajoute pas. « Réparer tout de suite » et « Réparer
+  lentement (moins cher) » (`exception.equipment_failure.repair_{immediate,slow}.label`) ne nomment rien et restent tels quels : la bulle, juste
+  au-dessus, dit déjà « chez {enseigne} ».
+- ⚠️ **Longueur** (à mesurer par CLIENT-2 dans le tampon) : la maquette pose « RÉPARER LE VERGE D’OR », 21 signes. La plus longue des 72
+  donne **32 signes** : « RÉPARER TRAITEMENT DES EAUX DORN ». Si ça ne tient pas, on réduit le corps du texte ; on ne coupe pas le nom.
+
+### 3. La phrase d'après, quand la réparation est nommée
+
+Même patron que `exceptions.apres.<issue>` (§3.10 A), avec un segment `.enseigne`, comme `game.fiction.building.name.rang` à côté de
+`game.fiction.building.name`. Le client prend la variante nommée si `building.name_i18n` est servi, sinon la phrase actuelle.
+
+| clé | fr | en |
+|---|---|---|
+| `exceptions.apres.repairing.enseigne` | {enseigne} se remet en marche, avec le temps | {enseigne} is coming back, in its own time |
+| `exceptions.apres.repairing_slow.enseigne` | {enseigne} se remet en marche, lentement — c’est moins cher | {enseigne} is coming back slowly — it costs less |
+| `exceptions.apres.deferred.enseigne` | Réparation remise : {enseigne} reste à l’arrêt | Repair put off: {enseigne} stays shut |
+
+- Les trois phrases de §3.10 qui disent « le bâtiment », à un mot près. Le nom est le sujet, et aucun mot ne s'accorde avec lui : « se
+  remet », « reste » ne varient pas (« Laverie du Quai se remet en marche », « Pressing Varne reste à l’arrêt »).
+- **`demolished` reste sans nom** : « Pressing Varne est rasé », mais « Laverie du Quai est rasée ». Le participe prendrait le genre de
+  l'enseigne, et on ne le connaît pas. « Le bâtiment est rasé ; l’îlot est libre » dit tout.
+- En en, les trois phrases font du nom le sujet, comme en fr (*it*, *its* pour un commerce : aucun genre).
+
+### 4. L'en des deux sous-titres du tampon de ⑩ (`ExceptionDetailController.cs:450-451`, `SousTitreMain`)
+
+Clés dérivées par `Libelle.De("exception_detail", "bloc", …)` (`:641-642`) ; aucune n'est servie à `83b4f291`.
+
+| clé | fr (le littéral du client) | en |
+|---|---|---|
+| `exception_detail.bloc.appui_long_la_carte_se_ferme_le_batiment_lui_se_repare_avec_le_temps` | appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps | long press — the card closes; the building mends in its own time |
+| `exception_detail.bloc.appui_long_la_carte_se_ferme` | appui long — la carte se ferme | long press — the card closes |
+
+- Le premier est déjà au §3.5 (cadre 15) : même en, mot pour mot.
+- **Il reste sans nom**, exprès : « {enseigne}, lui, se répare » demanderait « lui » ou « elle » selon l'enseigne. Le tampon, juste
+  au-dessus, porte déjà le nom (« RÉPARER PRESSING VARNE »).
+
+### 5. Deux points pour le back (vus en mesurant)
+
+- **Le repli `Local sans enseigne`** (`building-signs.ts:41`, pour un type hors domaine) donnerait « chez Local sans enseigne » et « RÉPARER
+  LOCAL SANS ENSEIGNE ». Sur la carte, mieux vaut `name_i18n: null` dans ce cas : le client retombe alors sur « au bâtiment touché », sans
+  avoir à comparer une chaîne.
+- « Remise du 3 » porte un chiffre, mais c'est le nom lui-même, pas un scalaire. Ce n'est pas un cas R2.2, et c'est déjà servi ailleurs.
+

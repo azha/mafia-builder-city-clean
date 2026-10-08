@@ -21,7 +21,13 @@ def rendre(html, sortie, largeur_css, hauteur_css, echelle):
         f"--window-size={largeur_css + marge},{hauteur_css + marge}",
         f"--screenshot={sortie}", f"file://{os.path.abspath(html)}",
     ]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+    # ARBITRAGES-user-2026-09-07 point 18 (2026-09-23) : les références se rendent en DejaVu, la police du client. Sans ce
+    # réglage, fontconfig donne Georgia → Noto Serif et Segoe UI/Roboto → Noto Sans sur cette machine. `POLICES=systeme`
+    # rend l'ancien comportement (témoin du contrôle positif seulement).
+    env = dict(os.environ)
+    if os.environ.get('POLICES') != 'systeme':
+        env['FONTCONFIG_FILE'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'polices', 'fonts-dejavu.conf')
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=180, env=env)
     if not os.path.exists(sortie):
         print("ÉCHEC rendu:", r.stderr[-800:]); sys.exit(1)
     from PIL import Image

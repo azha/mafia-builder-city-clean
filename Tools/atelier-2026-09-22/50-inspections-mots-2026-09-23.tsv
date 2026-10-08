@@ -1,0 +1,54 @@
+mot	cadres	classe	clé	fr	en	note
+BPD · REGISTRE DE DISPATCH	32	proposée	inspection.bloc.registre_de_dispatch	Registre de dispatch	Dispatch log	titre du registre (32) ; « BPD » : sigle de fiction retiré (pas une donnée)
+DISTRICT	32	proposée	inspection.bloc.district	district	district	colonne
+N	32	note				colonne d’un nombre de dossiers : `total_queue_length` n’est pas servi au joueur (R2.2) — ne pas l’afficher
+CHARGE	32	proposée	inspection.bloc.charge	charge	load	colonne `queue_load`
+REGIME	32	proposée	inspection.bloc.regime	régime	regime	colonne `dispatcher_regime` (l’accent manquait à la maquette)
+ORIGINES	32	proposée	inspection.bloc.origines	origines	sources	colonne `type_distribution`
+LEGERE	32	proposée	inspection.charge.light	légère	light	`queue_load` = LIGHT (ratifié, accent rétabli) ; §compléments
+NOMINAL	32	proposée	inspection.regime.nominal	nominal	nominal	`dispatcher_regime` = NOMINAL (ratifié)
+PROGRAMMEE ▓▓▓ INDIC ▓	32	proposée	inspection.origine.scheduled + inspection.presence.predominant + inspection.origine.informant + inspection.presence.some	programmée · surtout · indic · un peu	scheduled · mostly · informant · a little	les barres ▓ codaient `PresenceBand` : D11 — le MOT de la bande (`inspection.presence.*`) et le type (`inspection.origine.*`) les remplacent
+PROGRAMMEE ▓	32	proposée	inspection.origine.scheduled + inspection.presence.some			les barres ▓ codaient `PresenceBand` : D11 — le MOT de la bande (`inspection.presence.*`) et le type (`inspection.origine.*`) les remplacent
+ARRIERE	32	proposée	inspection.regime.backlogged	arriéré	backlogged	= BACKLOGGED (ratifié, accents rétablis)
+PROGRAMMEE ▓▓ FORENSIQUE ▓▓	32	proposée	inspection.origine.scheduled + inspection.presence.many + inspection.origine.forensic + inspection.presence.many			les barres ▓ codaient `PresenceBand` : D11 — le MOT de la bande (`inspection.presence.*`) et le type (`inspection.origine.*`) les remplacent
+CASCADE ▓	32	proposée	inspection.origine.cascade + inspection.presence.some			les barres ▓ codaient `PresenceBand` : D11 — le MOT de la bande (`inspection.presence.*`) et le type (`inspection.origine.*`) les remplacent
+PROGRAMMEE ▓▓	32	proposée	inspection.origine.scheduled + inspection.presence.many			les barres ▓ codaient `PresenceBand` : D11 — le MOT de la bande (`inspection.presence.*`) et le type (`inspection.origine.*`) les remplacent
+INDIC ▓	32	proposée	inspection.origine.informant + inspection.presence.some			les barres ▓ codaient `PresenceBand` : D11 — le MOT de la bande (`inspection.presence.*`) et le type (`inspection.origine.*`) les remplacent
+PROGRAMMEE ▓▓ FORENSIQUE ▓	32	proposée	inspection.origine.scheduled + inspection.presence.many + inspection.origine.forensic + inspection.presence.some			les barres ▓ codaient `PresenceBand` : D11 — le MOT de la bande (`inspection.presence.*`) et le type (`inspection.origine.*`) les remplacent
+18 DISTRICTS · TOUT OU RIEN : LA POLICE OUVRE SES FILES PARTOUT À LA FOIS	32	note				explication de DA dans le téléphone — pas un libellé
+LE COUP FOURRÉ	33	proposée	inspection.bloc.le_coup_fourre	Le coup fourré	The dirty trick	titre (33) : le faux signalement
+on leur donne un os à ronger	33	proposée	inspection.bloc.on_leur_donne_un_os_a_ronger	on leur donne un os à ronger	we throw them a bone	
+DÉPOSER UN SIGNALEMENT	33	proposée	inspection.bloc.deposer_un_signalement	Déposer un signalement	File a report	geste À ROUTE (`POST /v1/city/inspection/report`)
+SUR	33	proposée	inspection.bloc.sur_un_batiment_de_quartier	sur un bâtiment de {quartier}	on a building in {quartier}	une phrase en deux nœuds ; `building_id`
+un bâtiment de La Lisière	33	proposée	inspection.bloc.sur_un_batiment_de_quartier			même phrase (« La Lisière » → `{quartier}`)
+PRIX	33	proposée	inspection.bloc.prix	prix	cost	la ligne de `cost_resolved` (rendu par la route, une bande)
+annoncé par le serveur — rien n’est débité aujourd’hui	33	note				explication de DA dans le téléphone — pas un libellé (« le serveur »)
+EFFET	33	proposée	inspection.bloc.effet	effet	effect	
+une entrée de plus dans leur file	33	proposée	inspection.bloc.une_entree_de_plus_dans_leur_file	une entrée de plus dans leur file	one more entry in their queue	
+DÉPOSER	33	proposée	inspection.bloc.deposer	Déposer	File	la confirmation du geste (même route)
+⚠ au bout de plusieurs, la police se retourne	33	proposée	inspection.bloc.au_bout_de_plusieurs_la_police_se_retourne	au bout de plusieurs, la police se retourne	after several, the police turn around	D11 : le glyphe ⚠ retiré, le mot suffit
+LE RETOUR DE BÂTON	34	proposée	inspection.bloc.le_retour_de_baton	Le retour de bâton	The backlash	titre (34) : `backlash_triggered` = vrai
+ils ont compris	34	proposée	inspection.bloc.ils_ont_compris_que_les_signalements_venaient_de_vous	ils ont compris que les signalements venaient de vous	they worked out the reports came from you	une phrase en deux nœuds
+ils ont compris que les signalements venaient de vous	34	proposée	inspection.bloc.ils_ont_compris_que_les_signalements_venaient_de_vous			même phrase
+RETOURNÉE	34	proposée	inspection.bloc.retournee	retournée	turned	la marque de la police après le retour de bâton ; s’accorde à « la police »
+Le huitième signalement a fait basculer la police.	34	note				D15 : le seuil est un RAPPORT faux:vrais sur 30 jours (8:1, `inspection.controller.ts:110-111`), pas le « huitième » dépôt — la maquette présume un compte
+Elle vous rend la monnaie	34	proposée	inspection.bloc.elle_vous_rend_la_monnaie	Elle vous rend la monnaie	They pay you back	« Elle » = la police
+— huit fois.	34	note				D15 : aucun compte servi
+représailles restantes ·	34	note				D15 : aucun compte de représailles servi
+dépôts dans la fenêtre	34	note				D15 : aucun compte servi
+(complément de famille)		proposée	inspection.charge.empty	vide	empty	PROPOSÉ
+(complément de famille)		proposée	inspection.charge.moderate	moyenne	moderate	PROPOSÉ
+(complément de famille)		proposée	inspection.charge.heavy	lourde	heavy	PROPOSÉ
+(complément de famille)		proposée	inspection.charge.saturated	saturée	saturated	PROPOSÉ
+(complément de famille)		proposée	inspection.regime.budget_cut	budget coupé	budget cut	PROPOSÉ
+(complément de famille)		proposée	inspection.regime.surge	en renfort	surging	PROPOSÉ
+(complément de famille)		proposée	inspection.origine.scheduled	programmée	scheduled	ratifié (32)
+(complément de famille)		proposée	inspection.origine.informant	indic	informant	ratifié (32)
+(complément de famille)		proposée	inspection.origine.cascade	cascade	cascade	ratifié (32)
+(complément de famille)		proposée	inspection.origine.forensic	forensique	forensic	ratifié (32)
+(complément de famille)		proposée	inspection.origine.false_report	faux signalement	false report	PROPOSÉ
+(complément de famille)		proposée	inspection.origine.genuine_report	signalement	report	PROPOSÉ
+(complément de famille)		proposée	inspection.presence.none	aucune	none	PROPOSÉ (D11 : la bande en mot)
+(complément de famille)		proposée	inspection.presence.some	un peu	a little	PROPOSÉ (▓)
+(complément de famille)		proposée	inspection.presence.many	beaucoup	a lot	PROPOSÉ (▓▓)
+(complément de famille)		proposée	inspection.presence.predominant	surtout	mostly	PROPOSÉ (▓▓▓)

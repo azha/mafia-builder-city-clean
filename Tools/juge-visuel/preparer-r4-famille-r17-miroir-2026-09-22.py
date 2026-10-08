@@ -185,12 +185,14 @@ def dossier_md(d, fm):
 
 - **Source HTML/CSS** : {', '.join(f'`{c[0]}`' for c in r['cadres'])} (atelier `{SHA_ATELIER}`) — aide de lecture, ne prime JAMAIS sur l'image.
   {('⚠️ ' + r['note']) if r.get('note') else ''}
-- **Polices — ce qui a RÉELLEMENT rendu la référence** (`fc-match` exécuté à la génération de ce dossier) :
+- **Polices — ce qui a RÉELLEMENT rendu la référence** : **DejaVu**, depuis le 2026-09-23 (ARBITRAGES du 07/09, point 18) — `Tools/rendre-maquette.py`
+  passe `Tools/polices/fonts-dejavu.conf` à Chrome, prouvé par `Tools/polices/controle-polices.py` (chasse à l'encre = DejaVu à 1 px). `fc-match` sous ce réglage :
 
 {polices}
 
-  Le client embarque **DejaVu Sans** / **DejaVu Serif** ⇒ un écart de FAMILLE ou de chasse sur le sérif est un **ARBITRAGE** ;
-  la hauteur de capitale, elle, se compare.
+  Le client embarque **DejaVu Sans** / **DejaVu Serif** : la référence est rendue dans la **même** famille ⇒ un écart de famille, de graisse
+  ou de chasse **se compare** (ce n'est plus un arbitrage). ⚠️ Une référence d'avant le 2026-09-23 ne l'était pas : Chrome rendait Georgia en
+  **Liberation Serif** (et non en Noto Serif, comme `fc-match` le disait alors) et Segoe UI en Noto Sans.
 
 ## Captures en jeu (Play Mode réel, compte de capture, SOUS le chrome du shell) — À POSER AU CRÉNEAU
 

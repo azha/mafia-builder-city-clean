@@ -68,13 +68,13 @@
   "constats-a-rejuger-⑰.md"
  ],
  "polices_fc_match": {
-  "Georgia": "\"Noto Serif\" \"Regular\"",
+  "Georgia": "\"DejaVu Serif\" \"Book\"",
   "DejaVu Sans": "\"DejaVu Sans\" \"Book\"",
   "Courier New": "\"Liberation Mono\" \"Regular\"",
-  "sans-serif": "\"Noto Sans\" \"Regular\"",
-  "serif": "\"Noto Serif\" \"Regular\"",
-  "Times New Roman": "\"Liberation Serif\" \"Regular\"",
-  "Segoe UI": "\"Noto Sans\" \"Regular\""
+  "sans-serif": "\"DejaVu Sans\" \"Book\"",
+  "serif": "\"DejaVu Serif\" \"Book\"",
+  "Times New Roman": "\"DejaVu Serif\" \"Book\"",
+  "Segoe UI": "\"DejaVu Sans\" \"Book\""
  },
  "captures": []
 }

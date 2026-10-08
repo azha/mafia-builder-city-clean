@@ -1,0 +1,2 @@
+clé	fr	en	statut
+carte.presence.batiments	{n, plural, one {# bâtiment} other {# bâtiments}}	{n, plural, one {# building} other {# buildings}}	PROPOSÉ

@@ -1,0 +1,18 @@
+en-tête	day_phase	clé	fr	en	statut	note
+1 ㊳ surtitre	DAWN	journal.moment.titre.dawn	Ce qui se dit ce matin	What’s being said this morning	PROPOSÉ	JournalScreenController.cs:262 ; capitales = style
+1 ㊳ surtitre	DAY	journal.moment.titre.day	Ce qui se dit aujourd’hui	What’s being said today	PROPOSÉ	JournalScreenController.cs:262 ; capitales = style
+1 ㊳ surtitre	DUSK	journal.moment.titre.dusk	Ce qui se dit ce soir	What’s being said tonight	PROPOSÉ	JournalScreenController.cs:262 ; capitales = style
+1 ㊳ surtitre	NIGHT	journal.moment.titre.night	Ce qui se dit cette nuit	What’s being said late tonight	PROPOSÉ	JournalScreenController.cs:262 ; capitales = style
+1 ㊳ surtitre	null ⇒ inconnu	journal.moment.titre.inconnu	Ce qui se dit	What’s being said	PROPOSÉ	JournalScreenController.cs:262 ; capitales = style
+2 ㊳ état vide	DAWN	journal.moment.vide.dawn	Rien ce matin.\nLa ville a passé une nuit tranquille.	Nothing this morning.\nThe city had a quiet night.	PROPOSÉ	JournalScreenController.cs:355 ; « \n » = saut de ligne (deux lignes, comme aujourd’hui) ; la 2ᵉ ligne dit le moment écoulé : « une nuit tranquille » seulement au matin
+2 ㊳ état vide	DAY	journal.moment.vide.day	Rien aujourd’hui.\nLa ville est calme.	Nothing today.\nThe city is calm.	PROPOSÉ	JournalScreenController.cs:355 ; « \n » = saut de ligne (deux lignes, comme aujourd’hui) ; la 2ᵉ ligne dit le moment écoulé : « une nuit tranquille » seulement au matin
+2 ㊳ état vide	DUSK	journal.moment.vide.dusk	Rien ce soir.\nLa journée a été tranquille.	Nothing tonight.\nIt was a quiet day.	PROPOSÉ	JournalScreenController.cs:355 ; « \n » = saut de ligne (deux lignes, comme aujourd’hui) ; la 2ᵉ ligne dit le moment écoulé : « une nuit tranquille » seulement au matin
+2 ㊳ état vide	NIGHT	journal.moment.vide.night	Rien cette nuit.\nLa ville se tient tranquille.	Nothing tonight.\nThe city is keeping quiet.	PROPOSÉ	JournalScreenController.cs:355 ; « \n » = saut de ligne (deux lignes, comme aujourd’hui) ; la 2ᵉ ligne dit le moment écoulé : « une nuit tranquille » seulement au matin
+2 ㊳ état vide	null ⇒ inconnu	journal.moment.vide.inconnu	Rien pour l’instant.\nLa ville est calme.	Nothing for now.\nThe city is calm.	PROPOSÉ	JournalScreenController.cs:355 ; « \n » = saut de ligne (deux lignes, comme aujourd’hui) ; la 2ᵉ ligne dit le moment écoulé : « une nuit tranquille » seulement au matin
+3 ⑤ vide	DAWN	decision.moment.vide.dawn	Rien ne se détache du sabot ce matin.	Nothing stands out from the shoe this morning.	PROPOSÉ	DecisionDetailScreenController.cs:363
+3 ⑤ vide	DAY	decision.moment.vide.day	Rien ne se détache du sabot aujourd’hui.	Nothing stands out from the shoe today.	PROPOSÉ	DecisionDetailScreenController.cs:363
+3 ⑤ vide	DUSK	decision.moment.vide.dusk	Rien ne se détache du sabot ce soir.	Nothing stands out from the shoe tonight.	PROPOSÉ	DecisionDetailScreenController.cs:363
+3 ⑤ vide	NIGHT	decision.moment.vide.night	Rien ne se détache du sabot cette nuit.	Nothing stands out from the shoe late tonight.	PROPOSÉ	DecisionDetailScreenController.cs:363
+3 ⑤ vide	null ⇒ inconnu	decision.moment.vide.inconnu	Rien ne se détache du sabot pour l’instant.	Nothing stands out from the shoe for now.	PROPOSÉ	DecisionDetailScreenController.cs:363
+⑯	—	(réutilisée) exceptions.moment.<phase>	—	—	NOTE	« Ce matin, au Verge d’Or » de ⑯ prend exceptions.moment.* (77) : validé, aucune clé neuve
+—	—	—	—	—	NOTE	ParValeur(domaine, « moment.… », day_phase) ; valeurs couvertes : DAWN, DAY, DUSK, NIGHT (DayPhase, day-phase-quarter.ts:45) + null ⇒ inconnu ; la fraîcheur « ce matin » de la table 49 (:502) n’est pas la phase : inchangée

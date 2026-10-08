@@ -1,6 +1,6 @@
 # Mandat pré-rempli — ⑥ Org Chart — dossier `famille`
 
-> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-22 (§DA-3). Le juge lit ceci, puis
+> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-23 (§DA-3). Le juge lit ceci, puis
 > `.claude/skills/juge-visuel/mandat-juge.md` (dépôt back) qui est LA méthode. Tout ce qui est marqué
 > « pré-rempli » vient d'une lecture mécanique (front.md, AppShell.cs, le contrôleur) : à confronter
 > à l'image, jamais à croire sur parole.
@@ -9,15 +9,15 @@
 - **Nom** : Org Chart (⑥, canon `screen_3`) — contrôleur `LieutenantScreenController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : l'organigramme Don → lieutenants → hommes, avec chips de résumé.
 - **Chemin joueur pour y arriver** : onglet FAMILLE
-- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`Assets/Scripts/Operational/Lieutenant/*.cs`)
+- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`../mafia-builder-city-clean/Assets/Scripts/Operational/Lieutenant/*.cs`)
 - **État `front.md`** (en-tête) : · « La Famille »  ★ *déclencheur de §S4*
 
 ## Référence (fait autorité : l'IMAGE)
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `famille/ecran-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : `ecrans-brennar.html` organigramme (rangée « La Famille ») — atelier `ec4c09a`. Cadres d'ÉTATS : les autres numéros du groupe.
-- **Attribution cadre ↔ écran** : mesurée. référence = Tools/family-organigramme-reference-1120.png (1120×1850) et famille/ecran-canon.png ; ⑦ ⑧ sont des sections du même contrôleur
+- **Cadres de la maquette** : `ecrans-brennar.html` organigramme (rangée « La Famille ») — atelier `9f38a24`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Attribution cadre ↔ écran** : mesurée. référence = Tools/family-organigramme-reference-1120.png (1120×1850) et famille/ecran-canon.png ; ⑦ ⑧ sont des sections du même contrôleur. ⑦ (la fiche du lieutenant, la mécanique) : MAQUETTE À RATIFIER du 23/09 (`ecrans-brennar-7-lieutenant.html`, 4 cadres ; atelier 26, 41, 42) — dossier du `famille/r1-⑦-2026-09-23/` (preparer-dossiers-2026-09-23.py, commande f2 du 23/09) : référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.
 - Polices : le rendu passe par Chrome sur cette machine (`fc-match Georgia` → Noto Serif, `fc-match

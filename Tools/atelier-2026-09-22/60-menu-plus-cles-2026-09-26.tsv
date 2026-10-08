@@ -1,0 +1,26 @@
+clé	fr	en	statut	note
+plus.groupe.vos_journees	Vos journées	Your days	PROPOSÉ	titre de groupe du menu Plus (G5)
+plus.groupe.vos_affaires	Vos affaires	Your business	PROPOSÉ	titre de groupe du menu Plus (G5)
+plus.groupe.ce_qui_se_dit	Ce qui se dit	What people say	PROPOSÉ	titre de groupe du menu Plus (G5)
+plus.groupe.ce_qui_vous_guette	Ce qui vous guette	What’s watching you	PROPOSÉ	titre de groupe du menu Plus (G5)
+plus.groupe.vous	Vous	You	PROPOSÉ	titre de groupe du menu Plus (G5)
+plus.entree.la_revue_du_jour	La revue du jour	Today’s review	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé ; même valeur que la clé servie accueil.chrome.la_revue_du_jour
+plus.entree.les_ordres_du_soir	Les ordres du soir	Evening orders	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.ce_que_vous_avez_confie	Ce que vous avez confié	What you’ve handed over	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé ; même valeur que la clé servie delegation.bloc.ce_que_vous_avez_confie
+plus.entree.la_semaine	La semaine	The week	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.la_chaine_d_appro	La chaîne d’appro	The supply chain	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.la_distribution	La distribution	Distribution	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.la_vente	La vente	Selling	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.raser_un_site	Raser un site	Raze a site	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.le_journal_la_rue	Le journal & la rue	The paper & the street	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.la_reputation	La réputation	Reputation	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.le_conflit	Le conflit	The conflict	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé ; même valeur que la clé servie conflit.titre.le_conflit
+plus.entree.la_loi	La loi	The law	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.les_inspections	Les inspections	Inspections	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.le_commissariat	Le commissariat	The precinct	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.le_dossier	Le dossier	The file	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.l_horizon_des_possibles	L’horizon des possibles	The horizon	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.votre_profil	Votre profil	Your profile	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.la_vitrine	La vitrine	The shop window	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.la_premiere_fois	La première fois	The first time	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé
+plus.entree.les_reglages	Les réglages	Settings	PROPOSÉ	littéral du client (AppShell.cs DestinationsPlus, e575a536), mot inchangé

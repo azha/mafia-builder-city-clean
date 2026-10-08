@@ -1,0 +1,12 @@
+clé	fr	en	statut	note
+vente.geste.un_dealer_tient_ce_point_de_vente	Un dealer tient ce coin de vente.	A dealer is working this corner now.	PROPOSÉ	clé gardée (nommée par le client, non servie) ; valeur ≠ slug : D12 « coin de vente » ; retour du geste Poster, succès
+vente.geste.le_dealer_n_a_pas_ete_poste	Le poste n’a pas pu être pourvu	The post couldn’t be filled	PROPOSÉ	valeur ≠ slug : D13 (aucun participe accordé à la personne) ; retour du geste Poster, échec
+vente.geste.aucun_bloc_libre_dans_votre_quartier	Aucun bloc libre dans votre quartier.	No free block in your district.	PROPOSÉ	repli du client gardé
+vente.geste.point_de_vente_achete_ouvrez_le_depuis_sa_fiche	Coin de vente acheté. Reste à l’ouvrir, depuis sa fiche.	Corner bought. It still has to be opened, from its card.	PROPOSÉ	clé gardée (nommée par le client, non servie) ; valeur ≠ slug : D12 « coin de vente » ; retour du geste Acheter, succès
+vente.geste.l_achat_n_a_pas_abouti	L’achat n’a pas abouti	The purchase fell through	PROPOSÉ	repli du client gardé ; retour du geste Acheter, échec
+vente.vide.aucun_dealer_au_travail	Aucun dealer au travail.	No dealer at work.	PROPOSÉ	« au travail » = mot ratifié de ㉟ (D14)
+vente.geste.point_de_vente_sans_dealer	Coin de vente sans dealer	Corner with no dealer	PROPOSÉ	clé gardée (nommée par le client, non servie) ; valeur ≠ slug : D12 « coin de vente » ; titre de la rangée
+vente.geste.poster_un_dealer	Poster un dealer	Post a dealer	PROPOSÉ	bouton ; casse de phrase (les capitales sont du style)
+vente.geste.vous_n_avez_aucun_point_de_vente	Vous n’avez aucun coin de vente	You have no corner	PROPOSÉ	clé gardée (nommée par le client, non servie) ; valeur ≠ slug : D12 « coin de vente » ; titre de la rangée
+vente.geste.acheter_un_point_de_vente	Acheter un coin de vente	Buy a corner	PROPOSÉ	clé gardée (nommée par le client, non servie) ; valeur ≠ slug : D12 « coin de vente » ; bouton ; casse de phrase
+vente.geste.coute_de_l_argent_et_la_decision_de_structure_de_cette_session_il_faudra_ensuite_l_ouvrir_depuis_sa_fiche	Coûte de l’argent et votre décision de structure du jour ; l’ouvrir ensuite, depuis sa fiche, en demandera une autre, demain.	Costs money and today’s structural decision; opening it afterwards, from its card, takes another one, tomorrow.	PROPOSÉ	dit AVANT l’appui ; sans montant ; D18 (session = « du jour », la suivante = « demain » : une décision de structure par jour) ; le repli du client portait U+00A0 avant « ; », D17 veut U+202F

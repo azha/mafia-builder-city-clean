@@ -1,0 +1,92 @@
+mot	cadres	classe	clé	fr	en	note
+trois pistes, et elles ne se mélangent pas	131	proposée	forensic.bloc.trois_pistes_et_elles_ne_se_melangent_pas	trois pistes, et elles ne se mélangent pas	three tracks, and they don’t mix	sous-titre (131)
+pistes chaudes	131,132,135,136	proposée	forensic.bloc.pistes_chaudes	pistes chaudes	hot tracks	le compte des pistes au-dessus du premier cran (dérivé des 3 bandes)
+franchies	131,132,135,136	proposée	forensic.bloc.franchies	franchies	crossed	le compte des pistes au dernier cran (un événement)
+qui tiennent	131,132	proposée	forensic.bloc.qui_tiennent	qui tiennent	holding	le compte des acteurs `steady` (« /4 »)
+on regarde	131,143	proposée	forensic.cran.on_regarde	on regarde	they’re watching	`audit_risk_bucket` = watched
+watched	131,143	note				identifiant brut montré EXPRÈS dans le cadre témoin (143, « aucune valeur servie sans dessin ») — pas un libellé
+ce qui sort des cuves	131,132,143	proposée	forensic.bloc.ce_qui_sort_des_cuves	ce qui sort des cuves	what comes out of the vats	sous-titre de la piste `effluent` (le titre servi : `forensic.bloc.visibilite_des_rejets`)
+visible	131,132,143	note				identifiant brut montré EXPRÈS dans le cadre témoin (143, « aucune valeur servie sans dessin ») — pas un libellé (et la valeur `visible` → « ça se voit », `forensic.cran.ca_se_voit`)
+le train de vie d’un lieutenant	131,132,143	proposée	forensic.bloc.le_train_de_vie_d_un_lieutenant	le train de vie d’un lieutenant	a lieutenant’s lifestyle	sous-titre de la piste `lifestyle` (titre servi : `forensic.bloc.train_de_vie`)
+discret	131,143	proposée	forensic.cran.discret	discret	low-key	`lifestyle_alarm_bucket` = quiet ; s’accorde au train de vie
+quiet	131,143	note				identifiant brut montré EXPRÈS dans le cadre témoin (143, « aucune valeur servie sans dessin ») — pas un libellé
+pourquoi trois colonnes	131	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé
+On peut être propre sur deux et pris sur la troisième	131	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé
+la comptabilité, les rejets et le train de vie sont	131	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé
+suivis séparément	131	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé
+. Les moyenner effacerait la seule chose utile :	131	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé
+par où ça fuit	131	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé
+ACHETER DU RENSEIGNEMENT	131,132	proposée	forensic.bloc.acheter_du_renseignement	Acheter du renseignement	Buy intelligence	geste À ROUTE (`POST /v1/me/internal-affairs/actors/:ref/intel`)
+sur un acteur, pas sur une piste —	131,132	proposée	forensic.bloc.sur_un_acteur_pas_sur_une_piste_on_n_achete_pas_un_dossier	sur un acteur, pas sur une piste — on n’achète pas un dossier	on an actor, not a track — you don’t buy a file	une phrase en deux nœuds
+on n’achète pas un dossier	131,132	proposée	forensic.bloc.sur_un_acteur_pas_sur_une_piste_on_n_achete_pas_un_dossier			même phrase
+audited	132,143	note				identifiant brut montré EXPRÈS dans le cadre témoin (143, « aucune valeur servie sans dessin ») — pas un libellé
+convoqué	132,143	servie	forensic.evenement.convocation_recue			`subpoenaed` : le servi « Convocation reçue » est épicène ; le ratifié « convoqué » est GENRÉ → gardé le servi, « convoqué » à la liste de l’user (D13/D14)
+subpoenaed	132,143	note				identifiant brut montré EXPRÈS dans le cadre témoin (143, « aucune valeur servie sans dessin ») — pas un libellé
+le dernier cran	132	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé (132)
+Ce n’est plus une surveillance	132	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé (132)
+« ils sont venus » et « convoqué » ne sont pas des crans de plus :	132	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé (132)
+quelque chose a eu lieu	132	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé (132)
+. Deux pistes sur trois ont franchi.	132	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé (132)
+qui parle, et qui a peur	133	proposée	forensic.bloc.qui_parle_et_qui_a_peur	qui parle, et qui a peur	who talks, and who’s scared	sous-titre (133) : les acteurs
+acteurs connus	133,134,135	proposée	forensic.bloc.acteurs_connus	acteurs connus	known actors	le compte de `actors[]`
+qui ont peur	133,134	proposée	forensic.bloc.qui_ont_peur	qui ont peur	scared	le compte des `nervous`
+partis	133,134	proposée	forensic.bloc.partis	partis	gone	le compte des `gone` ; ⚠️ D14 : accord masculin (« partis ») → liste de l’user
+Avocat	133,134	proposée	forensic.acteur.lawyer	Avocat	Lawyer	`actorType` = lawyer (ratifié) ; ⚠️ nom de métier au masculin → liste de l’user (D13)
+il tient	133,134	proposée	forensic.statut.steady	il tient	holding	`status` = steady (ratifié) ; ⚠️ D14 : « il » genré → liste de l’user
+Greffier	133,134	proposée	forensic.acteur.clerk	Greffier	Clerk	`actorType` = clerk (ratifié) ; ⚠️ masculin → liste de l’user
+il a peur	133,134	proposée	forensic.statut.nervous	il a peur	scared	= nervous (ratifié) ; ⚠️ « il » genré
+injoignable	133,134	proposée	forensic.statut.unavailable	injoignable	unreachable	= unavailable (ratifié ; épicène)
+parti	133,134	proposée	forensic.statut.gone	parti	gone	= gone (ratifié) ; ⚠️ genré → liste de l’user
+deux types listés, cinq achetables	133	note				panneau des lots (136) — pas un libellé (L1, 133)
+Trois acteurs que rien ne vous montre	133	note				panneau des lots (136) — pas un libellé (L1)
+la route accepte d’acheter du renseignement sur	133	note				panneau des lots (136) — pas un libellé (L1)
+cinq types	133	note				panneau des lots (136) — pas un libellé (L1)
+— l’inspecteur du port, le courtier, le greffier du juge — mais la liste n’en rend que	133	note				panneau des lots (136) — pas un libellé (L1)
+. Les trois autres existent sans être visibles.	133	note				panneau des lots (136) — pas un libellé (L1)
+il ne reviendra pas	134	proposée	forensic.bloc.il_ne_reviendra_pas	il ne reviendra pas	they won’t be back	sous-titre (134) ; ⚠️ D14 : « il » genré
+parti n’est pas injoignable	134	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé (134)
+Celui-là ne reviendra pas	134	proposée	forensic.bloc.celui_la_ne_reviendra_pas	Celui-là ne reviendra pas	That one won’t be back	⚠️ D14 : « Celui-là » genré
+un acteur	134	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé (134)
+revient. Un acteur	134	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé (134)
+est une perte définitive — la seule chose à en faire est de ne plus compter dessus.	134	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé (134)
+rien à votre nom	135	proposée	forensic.bloc.rien_a_votre_nom			sous-titre de l’état vide (135) : les MÊMES mots que le titre (la casse est un style) — même clé, une seule valeur (repéré par `somme-table.py`)
+Rien à votre nom.	135	proposée	forensic.bloc.rien_a_votre_nom	Rien à votre nom.	Nothing in your name.	titre (135)
+Personne n’a encore eu de raison de vous ouvrir un dossier.	135	proposée	forensic.bloc.personne_n_a_encore_eu_de_raison_de_vous_ouvrir_un_dossier	Personne n’a encore eu de raison de vous ouvrir un dossier.	Nobody has had a reason to open a file on you yet.	
+ce n’est pas une bonne nouvelle	135	proposée	forensic.bloc.ce_n_est_pas_une_bonne_nouvelle	ce n’est pas une bonne nouvelle	it isn’t good news	
+C’est juste une nouvelle	135	proposée	forensic.bloc.c_est_juste_une_nouvelle	C’est juste une nouvelle	It’s just news	
+les trois pistes montent avec ce que vous faites. À zéro, elles ne disent pas que vous êtes prudent : elles disent que	135	proposée	forensic.bloc.les_trois_pistes_montent_avec_ce_que_vous_faites_a_zero_elles_ne_disent_pas_que_vous_etes_prudent_elles_disent_que_vous_n_avez_pas_encore_commence	les trois pistes montent avec ce que vous faites. À zéro, elles ne disent pas que vous êtes prudent : elles disent que vous n’avez pas encore commencé.	the three tracks rise with what you do. At zero, they don’t say you’re careful: they say you haven’t started yet.	une phrase en deux nœuds ; D17 ; ⚠️ « prudent » s’accorde au joueur → liste de l’user (D13)
+vous n’avez pas encore commencé	135	proposée	forensic.bloc.les_trois_pistes_montent_avec_ce_que_vous_faites_a_zero_elles_ne_disent_pas_que_vous_etes_prudent_elles_disent_que_vous_n_avez_pas_encore_commence			même phrase
+acteurs	136	note				panneau des lots (136) — pas un libellé
+L1	136	note				panneau des lots (136) — pas un libellé
+Lister les cinq types d’acteurs	136	note				panneau des lots (136) — pas un libellé
+la route en achète cinq, la projection en rend deux — trois sont hors de vue	136	note				panneau des lots (136) — pas un libellé
+L2	136	note				panneau des lots (136) — pas un libellé
+Donner un nom aux acteurs	136	note				panneau des lots (136) — pas un libellé
+`actorRef` est un identifiant ; sixième écran à buter sur les libellés manquants	136	note				panneau des lots (136) — pas un libellé
+L3	136	note				panneau des lots (136) — pas un libellé
+Dire le prix du renseignement	136	note				panneau des lots (136) — pas un libellé
+on achète sans savoir combien ; aucun champ ne le porte	136	note				panneau des lots (136) — pas un libellé
+L4	136	note				panneau des lots (136) — pas un libellé
+Dire ce que le renseignement a donné	136	note				panneau des lots (136) — pas un libellé
+la route retourne un résultat qu’aucune lecture ne conserve	136	note				panneau des lots (136) — pas un libellé
+les douze crans, tous	143	note				sous-titre du cadre TÉMOIN (143) — pas un écran du joueur
+pistes	143	proposée	forensic.bloc.pistes	pistes	tracks	compteur (143) ; même mot que 131
+crans	143	note				compteur du cadre témoin
+moyennés	143	note				compteur du cadre témoin
+clean	143	note				identifiant brut montré EXPRÈS dans le cadre témoin (143, « aucune valeur servie sans dessin ») — pas un libellé
+flagged	143	note				identifiant brut montré EXPRÈS dans le cadre témoin (143, « aucune valeur servie sans dessin ») — pas un libellé
+clear	143	note				identifiant brut montré EXPRÈS dans le cadre témoin (143, « aucune valeur servie sans dessin ») — pas un libellé
+invisible	143	proposée	forensic.cran.invisible	invisible	unseen	`effluent_visibility_bucket` = clear
+faint	143	note				identifiant brut montré EXPRÈS dans le cadre témoin (143, « aucune valeur servie sans dessin ») — pas un libellé
+des traces	143	proposée	forensic.cran.des_traces	des traces	traces	= faint
+glaring	143	note				identifiant brut montré EXPRÈS dans le cadre témoin (143, « aucune valeur servie sans dessin ») — pas un libellé
+noticed	143	note				identifiant brut montré EXPRÈS dans le cadre témoin (143, « aucune valeur servie sans dessin ») — pas un libellé
+remarqué	143	proposée	forensic.cran.remarque	remarqué	noticed	`lifestyle_alarm_bucket` = noticed ; s’accorde au train de vie
+suivi	143	proposée	forensic.cran.suivi	suivi	followed	= watched ; s’accorde au train de vie
+pourquoi tous les crans	143	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé
+Le dernier de chaque piste est un événement, pas un cran de plus	143	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé
+ils sont venus · ça saute aux yeux · convoqué — on ne vous surveille plus. L’écran les montre	143	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé
+tous	143	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé
+pour qu’aucune valeur servie ne soit sans dessin.	143	note				explication de DA dans le téléphone (pourquoi trois colonnes / tous les crans) — pas un libellé
+(complément de famille)		proposée	forensic.cran.rien_a_signaler	rien à signaler	nothing to report	`audit_risk_bucket` = clean (ratifié 143 ; le mot est servi ailleurs : `accueil.carte.rien_a_signaler`)
+(complément de famille)		proposée	forensic.cran.ca_se_voit	ça se voit	it shows	`effluent_visibility_bucket` = visible (ratifié 131, 143)

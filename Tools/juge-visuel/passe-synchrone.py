@@ -23,11 +23,24 @@ main dans une fenêtre courte : il s'exécute.
    Le script imprime laquelle des deux il emploie. Un dispositif qui ne déclare pas son régime
    ressemble trait pour trait à celui qui applique le bon.
 
-Usage : passe-synchrone.py --compte <email> [--player-id <uuid>]   (mot de passe : MAFIA_CAPTURE_PASSWORD ; --motdepasse déconseillé)
+   Troisième régime (décision f2 du 2026-09-23 : « ne le demande pas à la main ») :
+     --player-id-me       le `player_id` est DÉRIVÉ au lancement : `POST /v1/auth/signin` avec la paire, puis `GET /v1/me`
+                          (`player_id`, S1-b). Ni l'un ni l'autre n'appelle `session/open` : signin établit une session
+                          d'AUTH (`auth.service.ts:194`), `me` est une lecture (`auth.controller.ts:410`) — l'horloge du
+                          monde ne bouge pas, l'empreinte « avant » reste celle du monde laissé par unity. Un paramètre
+                          manuel est une occasion de viser le mauvais compte ; l'identité connectée, non.
+                          Le `player_id` est imprimé par son EMPREINTE, jamais sa valeur.
+
+Usage : passe-synchrone.py (--compte-env | --compte <email>) (--player-id-me | --player-id <uuid>)
+        (--compte-env : l'identifiant vient de MAFIA_CAPTURE_IDENTIFIER, masqué partout ; mot de passe : MAFIA_CAPTURE_PASSWORD)
 """
+import importlib.util
+import json
 import os
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 CAPTURE = os.path.join(ICI, 'capturer-corps-reels.py')
@@ -58,9 +71,37 @@ def empreinte(player_id):
     except SystemExit:
         pass
     emp, erreurs = e.empreinte(player_id)
-    if erreurs:
-        return None, ' · '.join(erreurs)
+    if erreurs:   # psql peut recopier la requête dans son erreur : le player_id n'en sort que masqué
+        return None, ' · '.join(erreurs).replace(player_id, _capteur().masquer(player_id))
     return emp, 'horloge · lieutenants (nombre ET NOMS) · bâtiments · planques · cartes'
+
+
+def _capteur():
+    spec = importlib.util.spec_from_file_location('ccr', CAPTURE)
+    ccr = importlib.util.module_from_spec(spec); spec.loader.exec_module(ccr)
+    return ccr
+
+
+def player_id_par_me(compte, mdp, base):
+    """signin + GET /v1/me — AUCUN session/open. Rend (player_id, None) ou (None, raison) ; la raison ne porte aucune valeur."""
+    def appel(methode, route, corps=None, jeton=None):
+        req = urllib.request.Request(base + route, method=methode, data=json.dumps(corps).encode() if corps is not None else None)
+        req.add_header('Content-Type', 'application/json')
+        if jeton: req.add_header('Authorization', 'Bearer ' + jeton)
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                return r.status, json.loads(r.read().decode('utf-8', 'replace'))
+        except urllib.error.HTTPError as e:
+            return e.code, None
+        except Exception as e:
+            return None, type(e).__name__
+    st, b = appel('POST', '/v1/auth/signin', {'identifier': compte, 'password': mdp})
+    if st != 200 or not isinstance(b, dict):
+        return None, f'signin : {st if st else b}'
+    jeton = ((b.get('payload') or {}).get('data') or {}).get('access_token')
+    st, b = appel('GET', '/v1/me', jeton=jeton)
+    pid = (((b or {}).get('payload') or {}).get('data') or {}).get('player_id') if isinstance(b, dict) else None
+    return (pid, None) if pid else (None, f'GET /v1/me : {st}, pas de player_id')
 
 
 def arg(nom, defaut=None):
@@ -68,13 +109,22 @@ def arg(nom, defaut=None):
 
 
 def main():
-    compte = arg('--compte')
+    compte_env = '--compte-env' in sys.argv
+    compte = (os.environ.get('MAFIA_CAPTURE_IDENTIFIER') or '').strip() if compte_env else arg('--compte')
+    if compte_env and arg('--compte'):
+        print('⛔ --compte-env et --compte s’excluent.'); sys.exit(2)
     if not compte:
-        print('⛔ --compte <email> est obligatoire : cette passe ne tourne JAMAIS sur le compte')
+        print('⛔ --compte-env (MAFIA_CAPTURE_IDENTIFIER) ou --compte <email> est obligatoire : cette passe ne tourne JAMAIS sur le compte')
         print('   par défaut. Le compte capturé doit être celui dont unity a pris les planches.')
         sys.exit(2)
     mdp = arg('--motdepasse')
     player_id = arg('--player-id')
+    valeur = None
+    par_me = '--player-id-me' in sys.argv
+    if par_me and player_id:
+        print('⛔ --player-id-me et --player-id s’excluent.'); sys.exit(2)
+    ccr = _capteur()
+    print('compte : %s (source : %s)' % (ccr.masquer(compte), 'MAFIA_CAPTURE_IDENTIFIER' if compte_env else '--compte'))
 
     # ⛔ Décision du 2026-09-22 : la paire du compte de capture n'existe que sous `MAFIA_CAPTURE_*`. `MAFIA_DEMO_*` posé dans le
     #    shell du créneau est une FAUTE : une suite fonctionnelle lancée dans ce shell effacerait et recruterait sur le compte
@@ -88,14 +138,12 @@ def main():
         print('⚠️ --motdepasse : la valeur est visible dans la liste des processus ; préférer MAFIA_CAPTURE_PASSWORD.')
     else:
         # le mot de passe est résolu par le capteur, avec la MÊME fonction : on l'annonce ici par son NOM, jamais sa valeur
-        import importlib.util
-        spec = importlib.util.spec_from_file_location('ccr', CAPTURE)
-        ccr = importlib.util.module_from_spec(spec); spec.loader.exec_module(ccr)
         valeur, source = ccr.resoudre_mot_de_passe(compte, os.environ)
         if valeur is None:
-            print('⛔ ' + source); sys.exit(2)
+            print('⛔ ' + source.replace(compte, ccr.masquer(compte))); sys.exit(2)
         print('mot de passe : lu dans %s' % source)
-        del valeur
+        if not par_me:
+            del valeur
 
     occupe = gate_en_cours()
     if occupe is None:
@@ -103,7 +151,14 @@ def main():
     if occupe:
         print('⛔ un gate E2E tourne (%d conteneurs). Rien lancé.' % len(occupe)); sys.exit(1)
 
-    if player_id:
+    if par_me:
+        pid, raison = player_id_par_me(compte, mdp or valeur, ccr.BASE)
+        valeur = None
+        if not pid:
+            print('⛔ `player_id` non dérivé (%s) — rien lancé.' % raison); sys.exit(1)
+        player_id = pid
+        print('RÉGIME : `player_id` DÉRIVÉ par GET /v1/me (signin + lecture, aucun session/open) : %s' % ccr.masquer(player_id))
+    elif player_id:
         print('RÉGIME : `player_id` fourni ⇒ aucune session ouverte avant la mesure (forme juste)')
     else:
         print('⚠️ RÉGIME : `player_id` NON fourni ⇒ ce script va ouvrir une session pour le lire.')
@@ -122,8 +177,8 @@ def main():
         print('⛔ pas d’empreinte de départ ⇒ la comparaison finale ne prouverait rien. Rien lancé.')
         sys.exit(1)
 
-    cmd = [sys.executable, CAPTURE, '--compte', compte] + (['--motdepasse', mdp] if mdp else [])
-    print('\n── capture des corps : %s\n' % ' '.join(cmd))
+    cmd = [sys.executable, CAPTURE] + (['--compte-env'] if compte_env else ['--compte', compte]) + (['--motdepasse', mdp] if mdp else [])
+    print('\n── capture des corps : %s\n' % ' '.join(cmd).replace(compte, ccr.masquer(compte)).replace(mdp or '\0', '***'))
     r = subprocess.run(cmd)
     code_capture = r.returncode
 

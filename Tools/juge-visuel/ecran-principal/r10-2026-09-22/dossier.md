@@ -33,7 +33,7 @@
 
 | fichier (dans ce dossier) | rôle | taille px | facteur | largeur CSS ↔ largeur écran |
 |---|---|---|---|---|
-| `hud-canon-1176.png` | le canon du HUD (`hud-brennar.html`, `.tel` de 392 CSS × 3 = 1176 px) — c'est LA référence de ① ; aucun cadre de série 4/6 | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
+| `ecran-canon-propre.png` | le canon du HUD (`hud-brennar.html`, `.tel` de 392 CSS × 3 = 1176 px) — c'est LA référence de ① ; aucun cadre de série 4/6 | 1080×2102 | ×3,6 | 300 CSS = 1080 px |
 | `etats/*-canon.png`, `etats/*-vide.png` (s'ils existent) | canons antérieurs (série 2, ×3,0) — témoins d'ÉTAT, jamais la référence | 900×1752 | ×3,0 | 300 CSS = 900 px |
 
 - **Source HTML/CSS** (aide de lecture, ne prime JAMAIS sur l'image) : `/home/erutheone/project/atelier3d-mafia/hud-brennar.html` (atelier `868ab87`).
@@ -42,19 +42,20 @@
   ⚠️ hors canon (front.md ①) ; canon ecran-principal/ecran-canon.png + mesure-canon.txt
 - **Rendu** : `Tools/rendre-tel.py <page> <index> <sortie> 3.6` — Chrome sans tête, recadrage à 300×584 CSS × 3,6 = 1080×2102,
   assertion de taille en sortie. Références nominales re-vérifiées le 2026-09-22 (⑮ ⑰ ㊲ re-rendues ; voir l'INDEX).
-- **Polices — ce qui a RÉELLEMENT rendu la référence** (`fc-match` sur cette machine, exécuté à la génération de ce dossier le 2026-09-22) :
+- **Polices — ce qui a RÉELLEMENT rendu la référence** : **DejaVu**, depuis le 2026-09-23 (ARBITRAGES du 07/09, point 18) — `Tools/rendre-maquette.py`
+  passe `Tools/polices/fonts-dejavu.conf` à Chrome, prouvé par `Tools/polices/controle-polices.py` (chasse à l'encre = DejaVu à 1 px). `fc-match` sous ce réglage :
 
-      Georgia            →  "Noto Serif" "Regular"
+      Georgia            →  "DejaVu Serif" "Book"
       DejaVu Sans        →  "DejaVu Sans" "Book"
       Courier New        →  "Liberation Mono" "Regular"
-      sans-serif         →  "Noto Sans" "Regular"
-      serif              →  "Noto Serif" "Regular"
-      Times New Roman    →  "Liberation Serif" "Regular"
-      Segoe UI           →  "Noto Sans" "Regular"
+      sans-serif         →  "DejaVu Sans" "Book"
+      serif              →  "DejaVu Serif" "Book"
+      Times New Roman    →  "DejaVu Serif" "Book"
+      Segoe UI           →  "DejaVu Sans" "Book"
 
-  Le client embarque **DejaVu Sans** / **DejaVu Serif**. La série 6 demande `'DejaVu Sans'` (même police des deux côtés) et
-  `Georgia,serif` (→ Noto Serif à la référence, DejaVu Serif au client) ⇒ un écart de FAMILLE ou de chasse sur le sérif est un
-  **ARBITRAGE** ; la hauteur de capitale, elle, se compare.
+  Le client embarque **DejaVu Sans** / **DejaVu Serif** : la référence est rendue dans la **même** famille ⇒ un écart de famille, de graisse
+  ou de chasse **se compare** (ce n'est plus un arbitrage). ⚠️ Une référence d'avant le 2026-09-23 ne l'était pas : Chrome rendait Georgia en
+  **Liberation Serif** (et non en Noto Serif, comme `fc-match` le disait alors) et Segoe UI en Noto Sans.
 
 ## Captures en jeu (Play Mode réel, compte de capture, SOUS le chrome du shell) — À POSER AU CRÉNEAU
 
@@ -80,7 +81,7 @@
 | | | **rapport capture ÷ référence** | **1,00** |
 
 - Contenu : même échelle des deux côtés, un écart de taille est RÉEL. Le CHROME (bandeau, dock) n'est PAS à cette échelle :
-  `AppShell.Px(css) = css × 1280/392` (×2,755) — il se juge contre `hud-canon-1176.png`, le contenu contre le cadre de série 6.
+  `AppShell.Px(css) = css × 1280/392` (×2,755) — il se juge contre `ecran-canon-propre.png`, le contenu contre le cadre de série 6.
 - Hauteurs : référence 584 CSS (2102 px) ; capture 666,7 CSS (2400 px) — aligner par PARTIES entre bandeau et dock.
 - Les rapports INTERNES sont invariants d'échelle et restent des défauts réels.
 
@@ -99,7 +100,8 @@
 
 | ce qu'on voit | pourquoi (mesuré, avec sa source) | ce qui le ferait SORTIR de l'assumé |
 |---|---|---|
-| (à compléter par l'orchestrateur au top, depuis le `juge-donnees` mode maquette de l'écran s'il existe) | | |
+| la bande du nom de district sous la barre, absente du canon | front.md §4 L (ruling user du 25/08, doctrine v3.2 : « le lieu en bandeau sous la barre ») ; mesure atelier du 2026-09-23 : `hud-brennar.html` (5983267) n'a AUCUN nom de district dans `.tel` — la place sous la barre, `.bandeau-alerte{top:78px}` (l.82) / élément l.176 (390 × 33,81 CSS en (1, 79)), est celle du bandeau éphémère QUAND IL PARLE. Tranché par l'orchestrateur le 2026-09-23 : la bande de lieu reste et CÈDE la place au bandeau éphémère. | la bande reste affichée PENDANT que le bandeau éphémère parle (chevauchement ou décalage) ; ou un nom qui n'est pas `interior.name` |
+| l'anneau **crème** autour du badge du bâtiment dont la fiche est ouverte, absent du canon | r9 M6 (« aucun retour de sélection sur la carte : la fiche ne dit pas quel marqueur ») et décision f2 du 2026-09-23 : le canon `hud-brennar.html` n'a AUCUN état de sélection, et le joueur doit voir quel bâtiment sa fiche décrit (CLIENT-2 `e9db74eb`). | un anneau **or** (l'or est réservé à l'argent), plus d'un anneau à la fois, ou un anneau sans fiche ouverte |
 
 ## Format du RAPPORT — imposé
 

@@ -31,8 +31,13 @@ def fond_embarque(page, classe):
     s = open(page, encoding='utf-8').read()
     # `classe` seule ⇒ `.scene.<classe>` (séries 4 et 6) ; un sélecteur complet commençant par « . » est pris tel quel
     # (série 1 : `.fond-ville`, posé dans un <style> en FIN de page — ajouté le 2026-09-23).
-    sel = classe if classe.startswith('.') else '.scene.' + classe
-    m = re.search(re.escape(sel) + r'\s*\{\s*background-image:\s*url\(data:image/\w+;base64,([A-Za-z0-9+/=]+)\)', s)
+    # un `#id` ⇒ le fond est dans l'attribut `style` de l'élément (`hud-brennar.html` : `#fond-nuit`, `#fond-jour` — ajouté le 2026-09-23).
+    if classe.startswith('#'):
+        m = re.search(r'id="' + re.escape(classe[1:]) + r'"[^>]*style="background-image:url\(data:image/\w+;base64,([A-Za-z0-9+/=]+)\)', s)
+        sel = classe
+    else:
+        sel = classe if classe.startswith('.') else '.scene.' + classe
+        m = re.search(re.escape(sel) + r'\s*\{\s*background-image:\s*url\(data:image/\w+;base64,([A-Za-z0-9+/=]+)\)', s)
     if not m:
         sys.exit(f'FAUTE : aucune règle `{sel}` à fond embarqué dans {page}')
     data = base64.b64decode(m.group(1))

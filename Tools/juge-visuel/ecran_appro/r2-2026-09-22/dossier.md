@@ -44,19 +44,20 @@
   ⚠️ le contrôleur cite m-48 (repos) .. m-53 (délégué)
 - **Rendu** : `Tools/rendre-tel.py <page> <index> <sortie> 3.6` — Chrome sans tête, recadrage à 300×584 CSS × 3,6 = 1080×2102,
   assertion de taille en sortie. Références nominales re-vérifiées le 2026-09-22 (⑮ ⑰ ㊲ re-rendues ; voir l'INDEX).
-- **Polices — ce qui a RÉELLEMENT rendu la référence** (`fc-match` sur cette machine, exécuté à la génération de ce dossier le 2026-09-22) :
+- **Polices — ce qui a RÉELLEMENT rendu la référence** : **DejaVu**, depuis le 2026-09-23 (ARBITRAGES du 07/09, point 18) — `Tools/rendre-maquette.py`
+  passe `Tools/polices/fonts-dejavu.conf` à Chrome, prouvé par `Tools/polices/controle-polices.py` (chasse à l'encre = DejaVu à 1 px). `fc-match` sous ce réglage :
 
-      Georgia            →  "Noto Serif" "Regular"
+      Georgia            →  "DejaVu Serif" "Book"
       DejaVu Sans        →  "DejaVu Sans" "Book"
       Courier New        →  "Liberation Mono" "Regular"
-      sans-serif         →  "Noto Sans" "Regular"
-      serif              →  "Noto Serif" "Regular"
-      Times New Roman    →  "Liberation Serif" "Regular"
-      Segoe UI           →  "Noto Sans" "Regular"
+      sans-serif         →  "DejaVu Sans" "Book"
+      serif              →  "DejaVu Serif" "Book"
+      Times New Roman    →  "DejaVu Serif" "Book"
+      Segoe UI           →  "DejaVu Sans" "Book"
 
-  Le client embarque **DejaVu Sans** / **DejaVu Serif**. La série 6 demande `'DejaVu Sans'` (même police des deux côtés) et
-  `Georgia,serif` (→ Noto Serif à la référence, DejaVu Serif au client) ⇒ un écart de FAMILLE ou de chasse sur le sérif est un
-  **ARBITRAGE** ; la hauteur de capitale, elle, se compare.
+  Le client embarque **DejaVu Sans** / **DejaVu Serif** : la référence est rendue dans la **même** famille ⇒ un écart de famille, de graisse
+  ou de chasse **se compare** (ce n'est plus un arbitrage). ⚠️ Une référence d'avant le 2026-09-23 ne l'était pas : Chrome rendait Georgia en
+  **Liberation Serif** (et non en Noto Serif, comme `fc-match` le disait alors) et Segoe UI en Noto Sans.
 
 ## Captures en jeu (Play Mode réel, compte de capture, SOUS le chrome du shell) — À POSER AU CRÉNEAU
 

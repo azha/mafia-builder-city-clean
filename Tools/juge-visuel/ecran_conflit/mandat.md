@@ -1,6 +1,6 @@
 # Mandat pré-rempli — ㉙ Le conflit — dossier `ecran_conflit`
 
-> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-22 (§DA-3). Le juge lit ceci, puis
+> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-23 (§DA-3). Le juge lit ceci, puis
 > `.claude/skills/juge-visuel/mandat-juge.md` (dépôt back) qui est LA méthode. Tout ce qui est marqué
 > « pré-rempli » vient d'une lecture mécanique (front.md, AppShell.cs, le contrôleur) : à confronter
 > à l'image, jamais à croire sur parole.
@@ -9,15 +9,15 @@
 - **Nom** : Le conflit (㉙, canon `sans id canon (écran neuf)`) — contrôleur `ConflitScreenController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : non fourni (front.md ne porte pas de puce « Montre » pour cet écran)
 - **Chemin joueur pour y arriver** : Plus → LE CONFLIT
-- **Routes lues dans le contrôleur** : `/v1/lieutenants`, `/v1/me/engagements` (`Assets/Scripts/Operational/Conflit/*.cs`)
+- **Routes lues dans le contrôleur** : `/v1/lieutenants`, `/v1/me/engagements` (`../mafia-builder-city-clean/Assets/Scripts/Operational/Conflit/*.cs`)
 - **État `front.md`** (en-tête) : — « la table du fond » · **ÉCRAN NEUF** · **2 des 8 écrans a1→a8** (2026-08-27)
 
 ## Référence (fait autorité : l'IMAGE)
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | `ecran_conflit/reference-1080x2102.png` | cadre nominal `ecrans-brennar-6.html` #59 rendu | 1080×2102 | ×3.6 | 300 CSS = 1080 px |
-- **Cadres de la maquette** : `ecrans-brennar-6.html` 59, 60, 61, 62, 63, 64, 65, 66 — atelier `ec4c09a`. Cadres d'ÉTATS : les autres numéros du groupe.
-- **Attribution cadre ↔ écran** : déduite. cadres 59-66 (la table du fond) par le titre ; rivaux en noms de fiction NON servis (§C-2)
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 59, 60, 61, 62, 63, 64, 65, 66 — atelier `9f38a24`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Attribution cadre ↔ écran** : déduite. cadres 59-66 (la table du fond) par le titre ; rivaux en noms de fiction NON servis (§C-2) — 23/09 : le geste vise un AXE (atelier 40, `997d6ab4`) ; ㉙ n'est PAS ratifiée (décision f2 : front.md l.22, l.1328) — ses références sont des MAQUETTES À RATIFIER ; mots genrés en formes épicènes (D13, table 40 v3). dossier daté du 23/09 : `ecran_conflit/r3-2026-09-23/` (référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps et leur fraîcheur)
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.
 - Polices : le rendu passe par Chrome sur cette machine (`fc-match Georgia` → Noto Serif, `fc-match

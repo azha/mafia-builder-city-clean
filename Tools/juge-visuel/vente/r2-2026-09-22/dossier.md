@@ -48,19 +48,20 @@
   ⚠️ ⛔ RÉTABLI 107-112 / nominal 107 le 2026-09-22, MESURÉ sur le TEXTE AFFICHÉ (pas sur une classe CSS) : le cadre 107 porte l'étiquette « La vente — qui vend et ce qu'il y a dans la caisse » et dessine les six dealers + « AFFECTER UN DEALER » (c'est l'état nominal) ; 108 est « La caisse de Oskar » (un état) ; 113 est « L'horizon — ce qui s'ouvre et à quel prix » (㊱, déjà dans SA plage 113-118). Le PNG commité `vente/reference-1080x2102.png` EST le cadre 107 (7,1 % d'écart, dû au lot de vocabulaire de l'atelier ; 34,3 % contre 108) — le juge r1 a comparé au bon cadre. La « correction » du 2026-09-07 (107-112 -> 108-113, « #107 appartient à ㉗ : ses 47 occurrences de `vnt6` sont le bloc <style> ») déduisait l'appartenance d'un cadre de l'endroit où sa CSS est déclarée : le segment de 107 CONTIENT le <style> de la rangée ET son contenu — une déclaration dense n'exclut pas l'usage, elle le précède. ⇒ 5e mécanisme d'attribution fausse : corriger une table sur un compte de classe CSS sans relire le cadre. dealers en prénoms servis (§DA-2)
 - **Rendu** : `Tools/rendre-tel.py <page> <index> <sortie> 3.6` — Chrome sans tête, recadrage à 300×584 CSS × 3,6 = 1080×2102,
   assertion de taille en sortie. Références nominales re-vérifiées le 2026-09-22 (⑮ ⑰ ㊲ re-rendues ; voir l'INDEX).
-- **Polices — ce qui a RÉELLEMENT rendu la référence** (`fc-match` sur cette machine, exécuté à la génération de ce dossier le 2026-09-22) :
+- **Polices — ce qui a RÉELLEMENT rendu la référence** : **DejaVu**, depuis le 2026-09-23 (ARBITRAGES du 07/09, point 18) — `Tools/rendre-maquette.py`
+  passe `Tools/polices/fonts-dejavu.conf` à Chrome, prouvé par `Tools/polices/controle-polices.py` (chasse à l'encre = DejaVu à 1 px). `fc-match` sous ce réglage :
 
-      Georgia            →  "Noto Serif" "Regular"
+      Georgia            →  "DejaVu Serif" "Book"
       DejaVu Sans        →  "DejaVu Sans" "Book"
       Courier New        →  "Liberation Mono" "Regular"
-      sans-serif         →  "Noto Sans" "Regular"
-      serif              →  "Noto Serif" "Regular"
-      Times New Roman    →  "Liberation Serif" "Regular"
-      Segoe UI           →  "Noto Sans" "Regular"
+      sans-serif         →  "DejaVu Sans" "Book"
+      serif              →  "DejaVu Serif" "Book"
+      Times New Roman    →  "DejaVu Serif" "Book"
+      Segoe UI           →  "DejaVu Sans" "Book"
 
-  Le client embarque **DejaVu Sans** / **DejaVu Serif**. La série 6 demande `'DejaVu Sans'` (même police des deux côtés) et
-  `Georgia,serif` (→ Noto Serif à la référence, DejaVu Serif au client) ⇒ un écart de FAMILLE ou de chasse sur le sérif est un
-  **ARBITRAGE** ; la hauteur de capitale, elle, se compare.
+  Le client embarque **DejaVu Sans** / **DejaVu Serif** : la référence est rendue dans la **même** famille ⇒ un écart de famille, de graisse
+  ou de chasse **se compare** (ce n'est plus un arbitrage). ⚠️ Une référence d'avant le 2026-09-23 ne l'était pas : Chrome rendait Georgia en
+  **Liberation Serif** (et non en Noto Serif, comme `fc-match` le disait alors) et Segoe UI en Noto Sans.
 
 ## Captures en jeu (Play Mode réel, compte de capture, SOUS le chrome du shell) — À POSER AU CRÉNEAU
 

@@ -1,7 +1,7 @@
 {
  "_": "EMPREINTE DE RÉFÉRENCE du compte de capture, après TD-642. Toute passe (corps OU planches) la prend AVANT et APRÈS et exige l'égalité : si une colonne bouge, le monde a changé entre les deux et la base est à refaire. Six colonnes, pas une — l'empreinte précédente ne lisait que l'horloge, et c'est ainsi qu'un re-semis des lieutenants est passé (TD-642).",
  "back_main": "fc944b62",
- "compte": "demo_capture@example.test",
+ "compte": "défini (empreinte sha256:801126eb)",
  "empreinte": {
   "batiments_n": "17",
   "cartes_levier_n": "7",

@@ -1,6 +1,6 @@
 # Mandat pré-rempli — ② Building Card — dossier `fiche-batiment`
 
-> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-22 (§DA-3). Le juge lit ceci, puis
+> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-23 (§DA-3). Le juge lit ceci, puis
 > `.claude/skills/juge-visuel/mandat-juge.md` (dépôt back) qui est LA méthode. Tout ce qui est marqué
 > « pré-rempli » vient d'une lecture mécanique (front.md, AppShell.cs, le contrôleur) : à confronter
 > à l'image, jamais à croire sur parole.
@@ -9,15 +9,15 @@
 - **Nom** : Building Card (②, canon `screen_2a`) — contrôleur `BuildingCardController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : titre + type + 3 stats (À collecter · Revenus · Heat local) + 3 actions
 - **Chemin joueur pour y arriver** : depuis l'intérieur de district : toucher un bâtiment
-- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`Assets/Scripts/Operational/BuildingCard/*.cs`)
+- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`../mafia-builder-city-clean/Assets/Scripts/Operational/BuildingCard/*.cs`)
 - **État `front.md`** (en-tête) : · la `.fiche`
 
 ## Référence (fait autorité : l'IMAGE)
 | fichier | rôle | taille px | facteur | largeur CSS ↔ largeur Unity |
 |---|---|---|---|---|
 | — | aucune référence rendue (aucune maquette de série 4/6) | — | — | — |
-- **Cadres de la maquette** : aucune — atelier `ec4c09a`. Cadres d'ÉTATS : les autres numéros du groupe.
-- **Attribution cadre ↔ écran** : aucune. dossier juge-donnees existant, aucun dossier juge-visuel ; cadres labo/serre/ash (S6 36-47, 92-94) = variantes par type, non rattachées
+- **Cadres de la maquette** : `ecrans-brennar-6.html` 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 92, 93, 94 — atelier `9f38a24`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Attribution cadre ↔ écran** : mesurée. dossier juge-donnees existant, aucun dossier juge-visuel. Cadres rattachés le 2026-09-23 (atelier, commande f2) : les matières de ② par type — la serre 36-38, le labo 39-44, le fourneau et l'affinage 45-46, la descente 47 (son panneau dit « ② Le fourneau »), Ash 92-94 (le rendez-vous : les routes /v1/operational/appointment sont dans BuildingCardController/Client) ; front.md ② (l.801-950 : serre, fourneau, « le labo devenu un écran », « Ash sort de la chimie », numérotation d'alors). Pas de nominal : la .fiche de ② est dessinée par ① (22 §5) — 23/09 : ⛔ AUCUNE référence à jour rendue (v6/m-36…94 = 900×1752 du 03/09, avant DejaVu et le chrome ratifié) : à rendre au prochain signal avant de juger — FAIT au tour du 23/09 08:29 (15 cadres en extras) ; lots 1, 4, 6 de CLIENT-2 non fusionnés au cumul. dossier daté du 23/09 : `fiche-batiment/r1-2026-09-23/` (référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps et leur fraîcheur)
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.
 - Polices : le rendu passe par Chrome sur cette machine (`fc-match Georgia` → Noto Serif, `fc-match

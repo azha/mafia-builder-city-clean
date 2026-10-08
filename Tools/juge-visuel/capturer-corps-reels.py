@@ -27,10 +27,12 @@ X-Server-Processed-At). `_index.json` par dossier récapitule. `INDEX.md` gagne 
 via `construire-dossiers.py --sans-rendu` (lancé à la fin).
 
 Usage :  python3 Tools/juge-visuel/capturer-corps-reels.py [--controle] [--base http://localhost]
-Env    :  sans --compte : MAFIA_DEMO_IDENTIFIER / MAFIA_DEMO_PASSWORD (repli : le compte de provision-demo-riche.mjs)
+Env    :  --compte-env (la forme de la recapture) : l'identifiant ET le mot de passe viennent de MAFIA_CAPTURE_* — rien sur la ligne de commande ;
+          l'identifiant est MASQUÉ partout (journal, provenance des corps, index) : `masquer()`, décision f2 du 23/09
+          sans --compte : MAFIA_DEMO_IDENTIFIER / MAFIA_DEMO_PASSWORD (repli : le compte de provision-demo-riche.mjs)
           avec --compte : le mot de passe vient de MAFIA_CAPTURE_PASSWORD, puis MAFIA_DEMO_PASSWORD (voir `resoudre_mot_de_passe`)
 """
-import datetime, importlib.util, json, os, re, subprocess, sys, urllib.request, urllib.error, uuid
+import datetime, hashlib, importlib.util, json, os, re, subprocess, sys, urllib.request, urllib.error, uuid
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 CLIENT = os.path.abspath(os.path.join(ICI, "..", ".."))
@@ -42,6 +44,14 @@ BASE = os.environ.get("STACK_BASE_URL", "http://localhost")
 IDENT = os.environ.get("MAFIA_DEMO_IDENTIFIER", "operational_demo@example.test")
 PASSWD = os.environ.get("MAFIA_DEMO_PASSWORD", "operational-demo-pw")
 DEMO_DEFAUT = ("operational_demo@example.test", "operational-demo-pw")
+
+
+def masquer(valeur):
+    """⛔ Décision f2 du 2026-09-23 : l'identifiant du compte capturé n'apparaît JAMAIS en clair — ni au journal, ni dans les corps écrits
+    (les journaux se commitent parfois, les corps toujours ; l'identifiant est la moitié de la paire). On imprime et on écrit « défini
+    (empreinte sha256:xxxxxxxx) » : 8 caractères, de quoi comparer deux passes sans révéler la valeur."""
+    v = (valeur or "").strip()
+    return f"défini (empreinte sha256:{hashlib.sha256(v.encode('utf-8')).hexdigest()[:8]})" if v else "non défini"
 
 
 def resoudre_mot_de_passe(compte, env):
@@ -289,7 +299,7 @@ class Pile:
     def connecter(self):
         st, b, _ = self.appel("POST", "/v1/auth/signin", {"identifier": IDENT, "password": PASSWD})
         if st != 200 or "error" in b.get("payload", {}):
-            raise SystemExit(f"signin {st} : {b}")
+            raise SystemExit(f"signin {st} : {b}".replace(IDENT, masquer(IDENT)).replace(PASSWD, "***"))
         self.token = b["payload"]["data"]["access_token"]
         st, b, h = self.appel("POST", "/v1/session/open", {"client_version": "da4-corps-reels-" + datetime.date.today().isoformat()}, cle=str(uuid.uuid4()))
         self.corps["session/open"] = b; self.entetes["session/open"] = (st, h)
@@ -407,14 +417,14 @@ def _lire_drapeaux(argv):
     décrit le mauvais monde, sans un mot dans le log — la famille « l'outil rend un succès
     plausible pour n'avoir rien fait ».
     """
-    connus = {"--controle"}
+    connus = {"--controle", "--compte-env"}
     avec_valeur = {"--compte": "ident", "--motdepasse": "passwd"}
-    opts = {"controle": False, "ident": None, "passwd": None}
+    opts = {"controle": False, "ident": None, "passwd": None, "compte_env": False}
     i = 1
     while i < len(argv):
         a = argv[i]
         if a in connus:
-            opts["controle"] = True; i += 1
+            opts["controle" if a == "--controle" else "compte_env"] = True; i += 1
         elif a in avec_valeur:
             if i + 1 >= len(argv):
                 print(f"⛔ {a} attend une valeur"); sys.exit(2)
@@ -423,7 +433,7 @@ def _lire_drapeaux(argv):
             k, v = a.split("=", 1); opts[avec_valeur[k]] = v; i += 1
         else:
             print(f"⛔ drapeau inconnu : {a}")
-            print(f"   connus : --controle · --compte <email> · --motdepasse <mdp>")
+            print(f"   connus : --controle · --compte-env · --compte <email> · --motdepasse <mdp>")
             print("   (ignorer un drapeau ferait capturer le mauvais compte en silence)")
             sys.exit(2)
     return opts
@@ -474,17 +484,25 @@ def main(argv):
     opts = _lire_drapeaux(argv)
     controle = opts["controle"]
     source_mdp = "MAFIA_DEMO_PASSWORD ou défaut"
+    if opts["compte_env"]:
+        # l'identifiant ne passe ni par la ligne de commande (visible dans la liste des processus) ni par le journal
+        if opts["ident"]:
+            print("⛔ --compte-env et --compte s'excluent"); sys.exit(2)
+        opts["ident"] = (os.environ.get("MAFIA_CAPTURE_IDENTIFIER") or "").strip()
+        if not opts["ident"]:
+            print("⛔ --compte-env : MAFIA_CAPTURE_IDENTIFIER absente"); sys.exit(2)
     if opts["ident"]:
         IDENT = opts["ident"]
         if not opts["passwd"]:
             PASSWD, source_mdp = resoudre_mot_de_passe(IDENT, os.environ)
             if PASSWD is None:
-                print("⛔ " + source_mdp); sys.exit(2)
+                print("⛔ " + source_mdp.replace(IDENT, masquer(IDENT))); sys.exit(2)
     if opts["passwd"]:
         PASSWD = opts["passwd"]
         source_mdp = "--motdepasse (⚠️ visible dans la liste des processus)"
-    print(f"COMPTE CAPTURÉ : {IDENT}   (source : "
-          f"{'--compte' if opts['ident'] else 'MAFIA_DEMO_IDENTIFIER ou défaut'}) · mot de passe : {source_mdp}")
+    print(f"COMPTE CAPTURÉ : {masquer(IDENT)}   (source : "
+          f"{'MAFIA_CAPTURE_IDENTIFIER' if opts['compte_env'] else '--compte' if opts['ident'] else 'MAFIA_DEMO_IDENTIFIER ou défaut'})"
+          f" · mot de passe : {source_mdp}")
     date = datetime.datetime.now().isoformat(timespec="seconds")
     back_sha = subprocess.run(["git", "-C", BACK, "rev-parse", "--short", "main"], capture_output=True, text=True).stdout.strip()
     image = subprocess.run(["docker", "inspect", "-f", "{{.Config.Image}} {{.Created}}", "mafia-clean-city-game-back-1"], capture_output=True, text=True).stdout.strip()
@@ -556,7 +574,7 @@ def main(argv):
             # `jour_de_jeu` : la seule horloge que ce compte expose à cet outil. C'est un JOUR,
             # pas la minute que lit l'empreinte du back — l'écrire quand même, daté et nommé,
             # vaut mieux qu'une base de preuve sans aucune horloge.
-            prov = {"date": date, "back_main": back_sha, "back_served": back_served, "game_back": image, "compte": IDENT,
+            prov = {"date": date, "back_main": back_sha, "back_served": back_served, "game_back": image, "compte": masquer(IDENT),
                     "jour_de_jeu": jour_de_jeu,
                     "horloge_game_minute": minute_de_jeu,
                     "horloge_source": source_horloge,
@@ -614,7 +632,7 @@ def main(argv):
         if not controle:
             partage = sum(1 for x in cd.TABLE + cd.HORS_APPSHELL if x["dossier"] == r["dossier"]) > 1
             nom_index = f"_index-{r['sym']}.json" if partage else "_index.json"
-            json.dump({"dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"], "date": date, "back_main": back_sha, "back_served": back_served, "horloge_game_minute": minute_de_jeu, "jour_de_jeu": jour_de_jeu, "compte": IDENT,
+            json.dump({"dossier": r["dossier"], "symbole": r["sym"], "controleur": r["ctl"], "date": date, "back_main": back_sha, "back_served": back_served, "horloge_game_minute": minute_de_jeu, "jour_de_jeu": jour_de_jeu, "compte": masquer(IDENT),
                        "note": "routes = celles du DOSSIER de code du contrôleur et de ses classes *Client. DEUX SENS, et le second manquait : elles sont parfois PLUS LARGES que l'écran (le juge-donnees filtre), et parfois PLUS ÉTROITES que le domaine — une route du domaine que le code de l'écran n'appelle pas N'APPARAÎT PAS ICI, par construction et non par échec. Mesuré le 2026-09-06 sur screen_c2 : POST .../laundering/stage existe côté back et le client la référence 0 fois, donc elle est absente de cet index. ⛔ Une absence ici se lit « pas dans la surface de code de l'écran », JAMAIS « pas de corps » ni « pas regardée » — confronter au mandat du dossier pour la trancher.",
                        "comptes": c, "routes": idx}, open(os.path.join(d, nom_index), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
         for k in total: total[k] += c[k]

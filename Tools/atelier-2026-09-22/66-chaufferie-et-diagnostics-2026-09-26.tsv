@@ -1,0 +1,13 @@
+clé	fr	en	statut	note
+compression.week_state.warning	la pression monte	pressure’s building	PROPOSÉ	valeur servie warning (GET /v1/compression/state : week_state ∈ none|warning|active, compression-projection.controller.ts:5) ; bandeau « La chaufferie — <mot> » ; none éteint le bandeau
+compression.week_state.active	semaine de compression	compression week	PROPOSÉ	valeur servie active (gel D6 engagé) ; « Semaine de compression » = mot servi du tutoriel (tutorial.compression_week)
+accueil.bandeau.la_chaufferie_etat	La chaufferie — {etat}	The boiler room — {etat}	PROPOSÉ	le gabarit du bandeau lui-même, aujourd’hui littéral (HomeChromeController.cs:145) ; {etat} = une des deux valeurs ci-dessus
+lieutenant.editeur.ces_regles_ne_passent_pas	Ces règles ne passent pas.	These rules don’t go through.	PROPOSÉ	en-tête du refus, à la place de « Script rejected. » (LieutenantScreenController.cs:895)
+lieutenant.editeur.ligne_colonne_message	Ligne {ligne}, colonne {colonne} — {message}	Line {ligne}, column {colonne} — {message}	PROPOSÉ	le gabarit entier plutôt que le mot « Line » seul (:912) : l’ordre des mots reste dans la langue ; {message} = le mot du kind ci-dessous, repli le message anglais servi
+lieutenant.diagnostic.syntax_error	Cette ligne ne se lit pas : un mot manque, ou n’est pas à sa place.	This line doesn’t read: a word is missing, or out of place.	PROPOSÉ	kind SYNTAX_ERROR (dsl-errors.ts, 18dfa633)
+lieutenant.diagnostic.tier_not_unlocked	Pas encore à votre portée.	Not within your reach yet.	PROPOSÉ	kind TIER_NOT_UNLOCKED ; l’éditeur marque déjà ces jetons « pas encore »
+lieutenant.diagnostic.not_supported_yet	Cet ordre existe, mais personne ne l’exécute encore.	This order exists, but nobody carries it out yet.	PROPOSÉ	kind NOT_SUPPORTED_YET : se lit, sans effet aujourd’hui — dit tel quel
+lieutenant.diagnostic.rule_count_exceeded	Trop de règles pour un seul lieutenant : retirez-en une.	Too many rules for one lieutenant: take one out.	PROPOSÉ	kind RULE_COUNT_EXCEEDED ; sans chiffre (le plafond est un réglage)
+lieutenant.diagnostic.priority_out_of_bounds	Cette priorité sort de l’échelle.	This priority is off the scale.	PROPOSÉ	kind PRIORITY_OUT_OF_BOUNDS
+lieutenant.diagnostic.condition_depth_exceeded	Trop de conditions les unes dans les autres : simplifiez.	Too many conditions nested inside each other: simplify.	PROPOSÉ	kind CONDITION_DEPTH_EXCEEDED
+lieutenant.diagnostic.tenure_peer_scope_violation	Un lieutenant ne lit pas l’ancienneté d’un autre.	One lieutenant can’t read another’s seniority.	PROPOSÉ	kind TENURE_PEER_SCOPE_VIOLATION (canon : un pair ne lit pas l’ancienneté d’un autre)

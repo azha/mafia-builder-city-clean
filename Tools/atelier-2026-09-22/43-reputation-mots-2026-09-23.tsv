@@ -1,0 +1,86 @@
+mot	cadres	classe	clé	fr	en	note
+ce qu’il a pris de vous se voit sur lui	119	proposée	reputation.bloc.ce_qu_il_a_pris_de_vous_se_voit_sur_lui	ce qu’il a pris de vous se voit sur lui	what they’ve taken from you shows on them	sous-titre du miroir ; ⚠️ D14 : « il », « lui » genrés → liste de l’user
+règles données	119,120,121,122,124,144	proposée	reputation.bloc.regles_donnees	règles données	rules given	le compte de `declared_rules[]` (servi, dérivé de la liste)
+absorbées	119,120,121,144	proposée	reputation.bloc.absorbees	absorbées	absorbed	le compte des 4 indices de tenue au bon côté (« /4 ») ; s’accorde aux règles
+enfreintes	119,120,121,122,124,144	note				le compte des règles enfreintes n’est PAS servi (L3 : « le rule_id enfreint est en base, jamais projeté ») — ne pas l’afficher
+Lt. Hara, votre lieutenant	119,120,121,144	proposée	reputation.bloc.nom_votre_lieutenant	{nom}, votre lieutenant	{nom}, your lieutenant	le nom est servi par `GET /v1/lieutenants/:id` ; « Lt. Hara » est un exemple → `{nom}`
+lieutenant.name — non projeté (L0.4)	119,120,121,123,144	note				annotation de lot de la maquette (le nom est servi aujourd’hui par `GET /v1/lieutenants/:id`) — pas un libellé
+col boutonné	119,121,144	proposée	reputation.col.buttoned	col boutonné	collar buttoned	`uniform_tells.collar` = buttoned (ratifié 119)
+manches basses	119,120,123,144	proposée	reputation.manches.down	manches basses	sleeves down	`sleeves` = down
+montre visible	119,121,144	proposée	reputation.montre.visible	montre visible	watch showing	`watch` = visible
+gants sales	119,120,123,144	proposée	reputation.gants.dirty	gants sales	gloves dirty	`gloves` = dirty
+la règle du jeu	119	proposée	reputation.bloc.la_regle_du_jeu	la règle du jeu	how it works	le surtitre du panneau d’explication (voix du joueur, 119)
+Vous vous lisez sur lui	119	proposée	reputation.bloc.vous_vous_lisez_sur_lui	Vous vous lisez sur lui	You can read yourself on them	⚠️ D14 : « lui » genré → liste de l’user
+chaque vertu qu’il vous voit tenir finit sur sa tenue — col, manches, montre, gants. Une règle déclarée tient	119	proposée	reputation.bloc.chaque_vertu_qu_il_vous_voit_tenir_finit_sur_sa_tenue_col_manches_montre_gants	chaque vertu qu’il vous voit tenir finit sur sa tenue — col, manches, montre, gants.	every virtue they see you keep ends up on their outfit — collar, sleeves, watch, gloves.	la phrase COUPÉE à « gants. » : la suite (« Une règle déclarée tient jusqu’à ce que vous la retiriez publiquement… ») promet le retrait (L2) ; ⚠️ D14 : « il » genré
+jusqu’à ce que vous la retiriez publiquement	119	note				le RETRAIT n’a aucune route (L2) : un mot qui le promet ou le nomme attend L2
+: la donner, c’est se donner une corde.	119	note				le RETRAIT n’a aucune route (L2) : un mot qui le promet ou le nomme attend L2 (fin de la même phrase)
+un lieutenant neuf n’a encore rien absorbé	120	proposée	reputation.bloc.un_lieutenant_neuf_n_a_encore_rien_absorbe	un lieutenant neuf n’a encore rien absorbé	a new lieutenant hasn’t absorbed anything yet	sous-titre de l’état vide (120) ; ⚠️ D14 : « neuf » s’accorde à « lieutenant », pas à la personne — rien à signaler
+col ouvert	120,123	proposée	reputation.col.open	col ouvert	collar open	= open (ratifié 120, 123)
+montre cachée	120,123	proposée	reputation.montre.hidden	montre cachée	watch hidden	= hidden
+« pas jugeable » n’est pas « moyen »	120	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur)
+Rien n’a encore déteint	120	proposée	reputation.bloc.rien_n_a_encore_deteint	Rien n’a encore déteint	Nothing has rubbed off yet	titre de l’état vide (120)
+ses quatre voyants sont éteints parce qu’il n’a	120	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur)
+rien pris de vous	120	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur)
+— pas parce qu’il est médiocre. Et personne ne jugera votre constance tant qu’il n’a pas assez vu :	120	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur)
+indéterminé	120	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur) ; la valeur servie est « Pas encore jugeable » (`reputation.etat.pas_encore_jugeable`)
+, jamais au milieu d’une jauge.	120	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur)
+DONNER UNE PREMIÈRE RÈGLE	120	proposée	reputation.bloc.donner_une_premiere_regle	Donner une première règle	Give a first rule	geste À ROUTE (`POST /v1/me/house-rules`) ; ⚠️ L4 : rien ne liste les règles possibles
+vous vous écartez de vos propres règles	121	proposée	reputation.bloc.vous_vous_ecartez_de_vos_propres_regles	vous vous écartez de vos propres règles	you’re straying from your own rules	sous-titre de `consistency_cue` = drifting (121)
+manches roulées	121	proposée	reputation.manches.rolled	manches roulées	sleeves rolled	= rolled
+gants propres	121	proposée	reputation.gants.clean	gants propres	gloves clean	= clean
+ce qui a changé	121	proposée	reputation.bloc.ce_qui_a_change	ce qui a changé	what changed	
+Une règle donnée, une règle enfreinte	121	note				le compte des enfreintes n’est pas servi (L3)
+vous avez laissé passer ce que vous aviez interdit. Les deux cercles l’enregistrent — le vôtre et le sien. ⚠️ on vous dit que vous dérivez,	121	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur) (porte un ⚠️)
+jamais sur quelle règle	121	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur) (L3)
+: ce n’est pas un choix, c’est ce qui manque encore.	121	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur)
+retirées	122	note				le RETRAIT n’a aucune route (L2) : un mot qui le promet ou le nomme attend L2
+On ne touche pas aux familles	122	note				texte de règle d’EXEMPLE : `declared_rules` ne sert que `rule_id` (L1) — dette de maquette
+Personne ne travaille le dimanche	122	note				idem (L1)
+Jamais de crick chez les gosses	122	note				idem (L1)
+retirer une règle	122	note				le RETRAIT n’a aucune route (L2) : un mot qui le promet ou le nomme attend L2
+Le geste n’existe pas encore	122	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur) (L2)
+le canon veut qu’une règle se retire	122	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur) (L2)
+en public	122	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur) (L2)
+; le code du retrait existe mais	122	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur) (L2)
+aucune route de production ne l’appelle	122	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur) (L2)
+. Tant que ce maillon manque, une règle donnée est définitive.	122	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur) (L2)
+un lieutenant rappelé — on demande des gages	123	note				le cadre des gages n’est pas atteignable : rien ne liste les rappelés (L5)
+rappelé	123	note				le cadre des gages n’est pas atteignable : rien ne liste les rappelés (L5)
+règlements	123	note				le cadre des gages n’est pas atteignable : rien ne liste les rappelés (L5) ; L6
+noms — lot back	123	note				le cadre des gages n’est pas atteignable : rien ne liste les rappelés (L5) ; L6
+Le rappelé, votre lieutenant	123	note				le cadre des gages n’est pas atteignable : rien ne liste les rappelés (L5) ; ⚠️ D14 : « rappelé » genré → liste de l’user
+les gages	123	note				le cadre des gages n’est pas atteignable : rien ne liste les rappelés (L5)
+On vient, mais avec des garanties	123	servie · D14	reputation.etat.on_demande_des_gages	On vient, mais avec des garanties	We’ll come, but with guarantees	servi « On demande des gages » pour la même offre ; D14 : la phrase ratifiée l’emporte, la clé reste (exception à la dérivation) — à confirmer : le cadre est inatteignable (L5)
+ses derniers règlements sont au registre —	123	note				le cadre des gages n’est pas atteignable : rien ne liste les rappelés (L5) ; L6
+sans nom	123	note				L6 : aucune table de noms des contreparties
+: la maison ne tient pas encore de table des contreparties.	123	note				L6
+règlement n°12	123	note				L6 : identifiant « settlement-N », aucun nom
+règlement n°13	123	note				L6
+règlement n°14	123	note				L6
+CHOISIR UN RAPPELÉ — AUCUNE LISTE	123	note				le cadre des gages n’est pas atteignable : rien ne liste les rappelés (L5) ; geste SANS route
+ce cadre n’est pas atteignable aujourd’hui : rien ne liste les lieutenants rappelés —	123	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur) (L5)
+lot back L5	123	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur)
+maillons	124	note				panneau des lots (124) — titre : les maillons manquants ; pas un libellé
+L1 — Écrire le texte des règles	124	note				panneau des lots (124) — L1 : le texte des règles ; pas un libellé
+rule_id est un identifiant ; aucun libellé n’existe	124	note				panneau des lots (124) — L1 :  ; pas un libellé
+L2 — Retirer une règle	124	note				panneau des lots (124) — L2 : le retrait ; pas un libellé
+le code existe, aucun appelant de production	124	note				panneau des lots (124) — L2 :  ; pas un libellé
+L3 — Dire QUELLE règle a été enfreinte	124	note				panneau des lots (124) — L3 : la règle enfreinte ; pas un libellé
+le rule_id enfreint est en base, jamais projeté	124	note				panneau des lots (124) — L3 :  ; pas un libellé
+L4 — La liste des règles possibles	124	note				panneau des lots (124) — L4 : les règles possibles ; pas un libellé
+déclarer exige un id ; rien ne dit lesquels existent	124	note				panneau des lots (124) — L4 :  ; pas un libellé
+L5 — Lister les lieutenants rappelés	124	note				panneau des lots (124) — L5 : les rappelés ; pas un libellé
+sans elle, le cadre des gages est inatteignable	124	note				panneau des lots (124) — L5 :  ; pas un libellé
+L6 — Nommer les contreparties	124	note				panneau des lots (124) — L6 : les contreparties ; pas un libellé
+« settlement-N » ; aucune table de noms	124	note				panneau des lots (124) — L6 :  ; pas un libellé
+L7 — Projeter le nom du lieutenant	124	note				panneau des lots (124) — L7 : le nom — servi aujourd’hui par `GET /v1/lieutenants/:id` ; pas un libellé
+en base NOT NULL, absent des 2 projections — L0.4	124	note				panneau des lots (124) — L7 :  ; pas un libellé
+le plus court d’abord	124	note				panneau des lots (124) — ordre :  ; pas un libellé
+L5 débloque un cadre entier	124	note				panneau des lots (124) — ordre :  ; pas un libellé
+la liste des rappelés rend les gages atteignables ; L6 et L7 rejoignent la table de noms du Lot 0.	124	note				panneau des lots (124) — ordre :  ; pas un libellé
+il a déjà pris de vous, pas encore de quoi le lire	144	proposée	reputation.bloc.il_a_deja_pris_de_vous_pas_encore_de_quoi_le_lire	il a déjà pris de vous, pas encore de quoi le lire	they’ve already taken from you, not enough to read yet	sous-titre de `consistency_cue` = indeterminate AVEC de l’absorbé (144) ; ⚠️ D14 : « il » genré
+ni l’un ni l’autre	144	proposée	reputation.bloc.ni_l_un_ni_l_autre	ni l’un ni l’autre	neither one nor the other	la cohérence indéterminée (144)
+Deux vertus sur lui, pas encore un verdict	144	proposée	reputation.bloc.n_vertus_sur_lui_pas_encore_un_verdict	{n, plural, one {Une vertu sur lui} other {# vertus sur lui}}, pas encore un verdict	{n, plural, one {One virtue on them} other {# virtues on them}}, no verdict yet	D15 : « Deux » vient du compte des indices au bon côté → ICU ; ⚠️ D14 : « lui » genré
+il a retenu des choses de vous — et le serveur ne dit	144	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur) (« le serveur »)
+toujours pas	144	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur)
+si vous vous y tenez. Ce n’est pas un cran entre les deux : c’est l’absence de verdict, avec de l’absorbé.	144	note				note de DA dans le téléphone (explication de la maquette, pas un libellé du joueur)

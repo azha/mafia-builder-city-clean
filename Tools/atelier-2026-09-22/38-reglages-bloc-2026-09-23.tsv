@@ -1,0 +1,16 @@
+clé	fr	en	statut	source
+reglages.bloc.la_langue_de_la_maison	La langue de la maison	The house language	RATIFIÉ	Profil série 6, cadres 95-96 (ratifiés par délégation)
+reglages.bloc.le_jeu	Le jeu	The game	RATIFIÉ	Profil série 6, cadres 95-97 : le tiroir
+reglages.bloc.on_vous_explique_encore	On vous explique encore	Keep explaining	RATIFIÉ	Profil série 6, cadres 95-96 (ratifiés par délégation) — même en que 36
+reglages.bloc.decochez_le_jour_ou_vous_n_avez_plus_besoin_qu_on_vous_tienne_la_main	décochez le jour où vous n’avez plus besoin qu’on vous tienne la main	untick it the day you no longer need your hand held	RATIFIÉ	Profil série 6, cadres 95-96 (ratifiés par délégation) — même en que 36
+reglages.bloc.dire_mes_prix_au_marche	Dire mes prix au marché	Share my prices with the market	RATIFIÉ	Profil série 6, cadre 97 (ratifié par délégation)
+reglages.bloc.sans_ca_le_marche_de_region_ne_vous_dit_rien_non_plus	sans ça, le marché de région ne vous dit rien non plus	without it, the regional market tells you nothing either	RATIFIÉ	Profil série 6, cadre 97 (ratifié par délégation)
+reglages.bloc.le_coffre_est_ferme	Le coffre est fermé.	The vault is closed.	PROPOSÉ	l’état après « Fermer le coffre » (aucune maquette de l’après : voir la réponse Q2 du 23/09)
+reglages.bloc.rouvrir_le_coffre	Rouvrir le coffre	Reopen the vault	PROPOSÉ	tranché par f2 le 23/09 : la forme minimale de l’entrée (le geste qui rejoue le lancement après « Le coffre est fermé. ») ; aucune maquette (Q2) ; pas encore dans le client
+reglages.bloc.fermer_le_coffre	Fermer le coffre	Close the vault	RATIFIÉ	Profil série 6, cadres 95-96 (ratifiés par délégation) (« FERMER LE COFFRE »)
+reglages.bloc.cette_session_seulement	cette session seulement	this session only	RATIFIÉ	Profil série 6, cadres 95-96 (ratifiés par délégation)
+reglages.bloc.ce_qui_ne_s_ouvre_pas_encore	Ce qui ne s’ouvre pas encore	What doesn’t open yet	littéral du client	`SettingsScreenController.cs` (section)
+reglages.bloc.fermer_partout	Fermer partout	Close everywhere	RATIFIÉ	Profil série 6, cadre 97 (ratifié par délégation) (« FERMER PARTOUT », L11)
+reglages.bloc.pas_encore_toutes_les_sessions_ouvertes_n_ont_pas_encore_de_guichet	pas encore : toutes les sessions ouvertes n’ont pas encore de guichet	not yet: there’s no counter yet for every open session	littéral du client	la raison éteinte de L11 ; D17 : insécable avant « : »
+reglages.bloc.tout_effacer	Tout effacer	Wipe everything	RATIFIÉ	Profil série 6, cadre 97 (ratifié par délégation) (« TOUT EFFACER », L10)
+reglages.bloc.pas_encore_et_ne_plus_jamais_revenir_n_a_pas_encore_de_guichet	pas encore : « et ne plus jamais revenir » n’a pas encore de guichet	not yet: “and never come back” has no counter yet	littéral du client	la raison éteinte de L10 ; cite le sous-titre ratifié du 97 ; D17 : insécables avant « : » et dans « »

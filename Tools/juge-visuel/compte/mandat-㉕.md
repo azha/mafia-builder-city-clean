@@ -1,6 +1,6 @@
 # Mandat pré-rempli — ㉕ First-time Tutorial — dossier `compte`
 
-> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-22 (§DA-3). Le juge lit ceci, puis
+> Généré par `Tools/juge-visuel/construire-dossiers.py` le 2026-09-23 (§DA-3). Le juge lit ceci, puis
 > `.claude/skills/juge-visuel/mandat-juge.md` (dépôt back) qui est LA méthode. Tout ce qui est marqué
 > « pré-rempli » vient d'une lecture mécanique (front.md, AppShell.cs, le contrôleur) : à confronter
 > à l'image, jamais à croire sur parole.
@@ -9,7 +9,7 @@
 - **Nom** : First-time Tutorial (㉕, canon `screen_c8`) — contrôleur `TutorialScreenController`
 - **Ce qu'on vient y faire** (pré-rempli, front.md « Montre ») : les overlays de découverte progressive, l'opt-out.
 - **Chemin joueur pour y arriver** : Plus → LA PREMIÈRE FOIS
-- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`Assets/Scripts/Onboarding/*.cs`)
+- **Routes lues dans le contrôleur** : aucune chaîne `/v1/` dans le dossier du contrôleur (les routes vivent dans un client partagé ailleurs — voir juge-donnees) (`../mafia-builder-city-clean/Assets/Scripts/Onboarding/*.cs`)
 - **État `front.md`** (en-tête) : —
 
 ## Référence (fait autorité : l'IMAGE)
@@ -19,8 +19,8 @@
 | `compte/profil-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `compte/reglages-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
 | `compte/tutoriel-canon.png` | canon existant (900×1752, ×3) | — | ×3 | 300 CSS = 900 px |
-- **Cadres de la maquette** : aucune — atelier `ec4c09a`. Cadres d'ÉTATS : les autres numéros du groupe.
-- **Attribution cadre ↔ écran** : aucune. canon compte/tutoriel-canon.png ; aucun cadre de série 4/6 identifié
+- **Cadres de la maquette** : `ecrans-brennar-25-tutoriel.html` 0, 1, 2, 3 — atelier `9f38a24`. Cadres d'ÉTATS : les autres numéros du groupe.
+- **Attribution cadre ↔ écran** : mesurée. canon RATIFIÉ par délégation (02/09, front.md l.22, l.1803) : compte/tutoriel-canon.png et tutoriel-vide.png (série 2, cadres 31-32, 900×1752) ; MAQUETTE À RATIFIER du 23/09 autour des données servies (atelier 33, `ad616c56`). dossier daté du 23/09 : `compte/r1-㉕-2026-09-23/` (référence et statut, écarts ASSUMÉS, à ne pas noter, ouverts, corps et leur fraîcheur) ⛔ la refonte du client (CLIENT-2 `049a863e`) n'est pas fusionnée au cumul : capture jugeable après fusion.
 - ⚠️ La référence fait **1080×2102** (le `.tel` de l'atelier est en 9:17,5) ; la capture fait 1080×2400
   (9:20). On aligne par PARTIES, en % de la largeur — pas par le pixel absolu.
 - Polices : le rendu passe par Chrome sur cette machine (`fc-match Georgia` → Noto Serif, `fc-match
