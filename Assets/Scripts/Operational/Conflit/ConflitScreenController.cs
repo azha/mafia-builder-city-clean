@@ -1192,10 +1192,11 @@ namespace MafiaCleanCity.Operational
             GameObject racine = NouveauUI("ConflitRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            racine.AddComponent<CanvasRenderer>();
-            VerticalGradientImage matiere = racine.AddComponent<VerticalGradientImage>();
-            matiere.SetColors(CouleurLocale("#2a1e14"), CouleurLocale("#141014"));
-            matiere.raycastTarget = false;
+            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la VRAIE scène du district à 0,2 sous
+            // son voile, et le support B de `.cfl6` à 3 arrêts (#2a1e14 → #1d1610 46 % → #141014) — DÉCLARÉS au catalogue. Il remplace
+            // la « matière » à 2 arrêts ET les silhouettes procédurales de `ConstruireSceneHaute` (retirées : le `.cfl6` de l'atelier
+            // 7d88a65 ne dessine aucune silhouette, elles ne tenaient que la place de la scène — mesuré par CLIENT-1, 08/10).
+            DecorDeScene.Poser(racine.transform, DecorsDeScene.Conflit);
             racinePleinEcran.SetAsLastSibling();
 
             // ⛔ L'ÉCHELLE AVANT TOUTE CONVERSION — un RectTransform qui vient d'être étiré n'a
@@ -1207,15 +1208,13 @@ namespace MafiaCleanCity.Operational
             // (bornée aux insets du chrome, `RectMask2D` : rien ne dessine sur le dock, `ScrollRect` vertical : rien n'est
             // injoignable) ; `Contenu` est ce qui défile, dimensionné sur ses enfants (`ContentSizeFitter`) — patron
             // `DelegationScreenController.ConstruireZoneCentrale`. Toutes les sections se parentent sous `Contenu`.
-            float hauteurScene = Px(56f);
-            float recouvrementSousManometre = Px(25f);
-            ConstruireSceneHaute(racine.transform, hauteurScene, recouvrementSousManometre);
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
             RectTransform corps = (RectTransform)corpsGo.transform;
             corps.anchorMin = Vector2.zero;
-            corps.anchorMax = Vector2.one;
+            // §5.6 du design : la fenêtre commence SOUS la bande de scène (21 %, au-dessus de TopInsetPx ≈ 10 %), comme `.cfl6`.
+            corps.anchorMax = new Vector2(1f, 1f - DecorsDeScene.Conflit.Bande);
             corps.offsetMin = new Vector2(0f, ShellChrome.BottomInsetPx);
-            corps.offsetMax = new Vector2(0f, -(ShellChrome.TopInsetPx + hauteurScene));
+            corps.offsetMax = Vector2.zero;
             corpsGo.AddComponent<RectMask2D>();
             ScrollRect defilement = corpsGo.AddComponent<ScrollRect>();
             defilement.horizontal = false;
@@ -1314,38 +1313,6 @@ namespace MafiaCleanCity.Operational
         }
 
         private Transform tableRoot, piedRoot, erreurRoot, rentreRoot, enCoursRoot, coupRoot;
-
-        /// <summary>La maquette fait vivre le chrome dans une silhouette de Brennar. Le TopBar
-        /// partagé reste intact ; cette tranche en prolonge seulement la scène jusqu'au début du
-        /// dossier, avec des masses procédurales (aucune donnée de district fabriquée).</summary>
-        private void ConstruireSceneHaute(Transform parent, float hauteurSousChrome, float recouvrementSousManometre)
-        {
-            GameObject scene = NouveauUI("SceneHaute", parent);
-            RectTransform rt = (RectTransform)scene.transform;
-            rt.anchorMin = new Vector2(0f, 1f);
-            rt.anchorMax = new Vector2(1f, 1f);
-            rt.pivot = new Vector2(0.5f, 1f);
-            rt.offsetMin = new Vector2(0f, -ShellChrome.TopInsetPx - hauteurSousChrome);
-            rt.offsetMax = new Vector2(0f, -ShellChrome.TopInsetPx + recouvrementSousManometre);
-            Image ciel = AjouterFond(scene, DesignTokens.Current.hudGaugeFaceOuter);   // #090d14 était à 2,45 de ce jeton : une recopie (restauration 24/09)
-            ciel.raycastTarget = false;
-
-            float[] debuts = { -0.04f, 0.08f, 0.23f, 0.36f, 0.51f, 0.67f, 0.82f };
-            float[] fins =   {  0.12f, 0.27f, 0.41f, 0.56f, 0.72f, 0.87f, 1.04f };
-            float[] hauts =  {  0.38f, 0.67f, 0.49f, 0.82f, 0.58f, 0.74f, 0.45f };
-            for (int i = 0; i < debuts.Length; i++)
-            {
-                GameObject masse = NouveauUI("Silhouette_" + i, scene.transform);
-                Image encre = AjouterFond(masse, CouleurLocale(i % 2 == 0 ? "#05080d" : "#070a10"));
-                encre.raycastTarget = false;
-                RectTransform mrt = (RectTransform)masse.transform;
-                mrt.anchorMin = new Vector2(debuts[i], 0f);
-                mrt.anchorMax = new Vector2(fins[i], hauts[i]);
-                mrt.offsetMin = Vector2.zero;
-                mrt.offsetMax = Vector2.zero;
-                mrt.localRotation = Quaternion.Euler(0f, 0f, i % 2 == 0 ? -3f : 3f);
-            }
-        }
 
         /// <summary>Une section verticale vide (hauteur nulle tant qu'elle n'a pas d'enfant).</summary>
         private Transform NouvelleSection(Transform parent, string nom)
