@@ -21,7 +21,8 @@ namespace MafiaCleanCity.Operational
 
     /// <summary>Un avocat du roster — 5 clés MESURÉES (2026-09-03, `GET /v1/me/legal` et
     /// `POST .../lawyers` en succès réel, compte de démo ET compte frais) :
-    /// `{lawyerId, lawyerLabel, tier, retainer, activeCaseCount}`.
+    /// `{lawyerId, lawyerLabel, tier, retainer, activeCaseCount}` — plus, mesurées le 08/10 et ADDITIVES : `lawyerNameI18n` (le nom de la
+    /// personne, lu par ㊴) et `lawyerLabelI18n` (le tier, non lu).
     /// ⚠️ `lawyerLabel` EST DE LA PROSE ANGLAISE SERVIE PAR LE BACK (mesuré : "Boutique Counsel"
     /// pour tier="boutique") — même famille que TD-452. Affiché TEL QUEL par ce lot (consigne du
     /// brief) : ne JAMAIS le traduire côté client, ce serait inventer une clé qui n'existe pas.
@@ -30,11 +31,17 @@ namespace MafiaCleanCity.Operational
     /// 422 "tier must be 'boutique' or 'corruption_pipeline'." — jamais observé sur la valeur
     /// SERVIE en retour) — `LoiResolvers.TierLabelCourt` garde donc un repli gracieux, patron
     /// `DistributionResolvers.TexteVehicule`.</summary>
+    [Serializable] public class LawyerNomParams { public string nom; }
+    [Serializable] public class LawyerNomI18nDto { public string key; public LawyerNomParams @params; }
+
     [Serializable]
     public class LawyerDto
     {
         public string lawyerId;
         public string lawyerLabel;
+        /// <summary>Le NOM de la personne (`game.fiction.lawyer.name`, gabarit `'{nom}'`) — ADDITIF, MESURÉ le 08/10 (`"Maître Norwan"`).
+        /// ≠ `lawyerLabelI18n` (le TIER, jamais lu ici). `params.nom == "unknown_lawyer"` = SENTINELLE du back (colonne nulle), pas un nom.</summary>
+        public LawyerNomI18nDto lawyerNameI18n;
         public string tier;
         public bool retainer;
         public int activeCaseCount;
