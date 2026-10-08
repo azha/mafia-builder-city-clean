@@ -1,0 +1,19 @@
+  [E03_Chanedappro_1080x2400.png] image 1080x2400
+    centre=(539.5,108.1) [centre x attendu 540.0]  anneau: ajusté 88.42px, extérieur 91.07px (1336 px)
+    arc: 1097 px, rayon médian 51.21px  =>  rapport 0.5623  (maquette 0.5556, delta +0.0067)
+  [E03_Chanedappro_1080x1920.png] image 1080x1920
+    centre=(539.5,108.1) [centre x attendu 540.0]  anneau: ajusté 88.42px, extérieur 91.07px (1336 px)
+    arc: 1097 px, rayon médian 51.21px  =>  rapport 0.5623  (maquette 0.5556, delta +0.0067)
+  [E09_Inspections_1080x2400.png] image 1080x2400
+    centre=(539.5,108.1) [centre x attendu 540.0]  anneau: ajusté 88.42px, extérieur 91.07px (1336 px)
+    arc: 1097 px, rayon médian 51.21px  =>  rapport 0.5623  (maquette 0.5556, delta +0.0067)
+  [E09_Inspections_1080x1920.png] image 1080x1920
+    centre=(539.5,108.1) [centre x attendu 540.0]  anneau: ajusté 88.42px, extérieur 91.07px (1336 px)
+    arc: 1097 px, rayon médian 51.21px  =>  rapport 0.5623  (maquette 0.5556, delta +0.0067)
+  [contrôle négatif] l'ancien canon 0,45 donnerait 0.4500 ; mesuré 0.5623 => discrimine : True
+[identité du HUD entre planches : sha256 du bandeau 380..700 x 0..130]
+  E03_Chanedappro_1080x2400 (1080, 2400) fe45cf5b75a4
+  E03_Chanedappro_1080x1920 (1080, 1920) 3230f5059336
+  E09_Inspections_1080x2400 (1080, 2400) 866380a019aa
+  E09_Inspections_1080x1920 (1080, 1920) 8020beb88896
+  E05_Loi_1080x2400 (1080, 2400) fe45cf5b75a4
