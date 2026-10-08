@@ -156,6 +156,28 @@ namespace MafiaCleanCity.Shell
                                     Arret.EnPxCss(18f, Teinte.Hex("#2b120c"))),
             }));
 
+        /// <summary>Les recettes COMPOSÉES (㊴, DESIGN v5.2 §5) : une recette GÉNÉRÉE (`Filets.<Ecran>.<Nom>`, le bord mesuré) PROLONGÉE d'une
+        /// bande que le bord ne dit pas. Hors du fichier généré (`Filets` n'est pas `partial`, son `F(…)` est privé) ; jamais une
+        /// copie : les premières specs SONT, par référence, celles de la recette générée — un re-mesure la change ici aussi (garde
+        /// D6e, `DecorDeScenePosePlayModeTests`). Le contrôleur les pose par `Filets.Poser` comme n'importe quelle recette.</summary>
+        public static class FiletsComposes
+        {
+            /// <summary>㊴ `.fen.ici` (cadres 150-151) : le bord 1 px `#2a3648` de `.fen` (`Filets.Forensic.FenIci`) PUIS
+            /// `box-shadow:inset 0 -2px 0 #f2c96b` — 2 px pleins d'or, sans flou ni étalement, collés au bas de la fenêtre EN DEDANS
+            /// du bord (`inset: 1f` : le bord fait 1 px CSS). `#f2c96b` EST le jeton `hudMoneyGold` (TD-612).</summary>
+            public static readonly SpecFilet[] FenIciOr = Composer(Filets.Forensic.FenIci,
+                new SpecFilet(Cotes.Bas, 2f, StyleFilet.Plein, Teinte.Jeton("hudMoneyGold", t => t.hudMoneyGold, 1f),
+                              inset: 1f, couleurCss: "f2c96b"));
+
+            private static SpecFilet[] Composer(SpecFilet[] generee, params SpecFilet[] enPlus)
+            {
+                var r = new SpecFilet[generee.Length + enPlus.Length];
+                System.Array.Copy(generee, r, generee.Length);
+                System.Array.Copy(enPlus, 0, r, generee.Length, enPlus.Length);
+                return r;
+            }
+        }
+
         /// <summary>Les BORDS D'ÉTAT (§3.4) : fond ET bord d'un bloc, posés ensemble par `Filets.Etat` (qui refuse un bord égal au
         /// fond — le défaut mesuré par le juge sur ㉛). Fonds : la CSS de la maquette ; bords : les recettes MESURÉES.</summary>
         public static class Etats

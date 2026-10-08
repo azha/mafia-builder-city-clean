@@ -72,6 +72,25 @@ namespace MafiaCleanCity.Operational.Tests
             // ㉚ B3 (CLIENT-1, 08/10 ; juge groupé du 07/10) : la LÉGENDE du geste « EN COMMANDER » (cadre 48, `.geste small`) — mot de la maquette, clé
             // dérivée par `Libelle.De`, NON servie à 256de0f8 (mesuré : `string_table.ts` du back) ; à servir par la table de l'atelier (via f2). 1 entrée.
             "appro.bouton.ca_part_du_compte_tout_de_suite",
+            // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : les mots de la vue pistes / acteurs / vide — clés dérivées par
+            // `Libelle.De` du texte de la maquette, NON servies au HEAD du back (mesuré : `string_table.ts`, 16 des 37 clés de l'écran le SONT et
+            // n'y figurent donc pas) ; à servir par la table de l'atelier (via f2). 16 entrées (les statuts et types d'acteur sont lus par la VALEUR servie : `forensic.statut.*`, `forensic.acteur.lawyer|clerk` — déjà servis).
+            "forensic.enseigne.rien_a_votre_nom",   // le sous-titre de l'enseigne du cadre 135 (sans point) : son rôle propre, la clé bloc.* est celle du texte `.rien`
+            "forensic.bloc.acteurs_qui_tiennent",
+            "forensic.bloc.ceux_qui_ne_sont_pas_sur_la_liste",
+            "forensic.bloc.d_autres_parlent_et_vous_ne_les_voyez_pas",
+            "forensic.bloc.la_comptabilite",
+            "forensic.bloc.la_comptabilite_les_rejets_et_le_train_de_vie_ne_se_melangent_pas_pour_voir_qui_parle_la_fenetre_des_acteurs_en_haut_a_droite",
+            "forensic.bloc.le_dossier",
+            "forensic.bloc.le_renseignement_s_achete_acteur_par_acteur_eteint_tant_que_le_prix_n_est_pas_servi_on_n_achete_pas_sans_savoir_combien",
+            "forensic.bloc.les_livres_et_le_train_de_vie_personne_ne_regarde_par_la_pour_l_instant",
+            "forensic.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_tout_va_bien_c_est_on_ne_sait_pas",
+            "forensic.bloc.on_peut_etre_propre_sur_deux_et_pris_sur_la_troisieme",
+            "forensic.bloc.pas_encore_sur_la_table",
+            "forensic.bloc.pourquoi_trois_colonnes",
+            "forensic.bloc.renseignement",
+            "forensic.bloc.sur_un_acteur_pas_sur_une_piste_eteint_le_prix_n_est_pas_servi",
+            "forensic.bloc.un_inspecteur_du_port_un_courtier_le_greffier_d_un_juge_ils_se_paient_comme_les_autres_mais_personne_ne_vous_a_encore_donne_leur_nom",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun

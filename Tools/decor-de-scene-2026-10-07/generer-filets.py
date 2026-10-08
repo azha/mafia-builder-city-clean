@@ -85,6 +85,12 @@ def generer():
         if e[3] and e[3].get('cadres') and e[0] in noms:
             cadres_de[e[0]] = sorted(e[3]['cadres'])
     par_cadre = {r['i']: r['el'] for r in filets}
+    # Étape 0 de ㊴ (revue ⊥ v5.1 m1) : un cadre de l'index SANS mesure ne doit pas être avalé en silence (`par_cadre.get(c, [])`
+    # rendait des recettes en moins, sans erreur) : fail-fast, au plus près de la faute.
+    manquants = sorted((sym, c) for sym, cs in cadres_de.items() for c in cs if c not in par_cadre)
+    if manquants:
+        sys.exit('⛔ cadre(s) de l\'index absent(s) de mesure-filets.json : ' + ', '.join(f'{s} cadre {c}' for s, c in manquants)
+                 + ' — lancer mesurer-filets.cjs sur ces cadres et les fusionner')
 
     L = ['// ⛔ GÉNÉRÉ par Tools/decor-de-scene-2026-10-07/generer-filets.py depuis mesure-filets.json — NE PAS ÉDITER.',
          '//    Régénérer (et `--verifier`) après toute nouvelle mesure ; la garde D6(a) compare ce fichier à la mesure.',

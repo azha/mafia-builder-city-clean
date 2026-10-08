@@ -38,6 +38,10 @@ namespace MafiaCleanCity.Shell
             if (recette == null) return;
             RectTransform racine = RacinePleinEcran();
             Rect r = ((RectTransform)transform).rect;
+            // Les côtés déjà posés par une spec PRÉCÉDENTE de cette recette : la seconde bande d'un même côté (le liseré d'une
+            // enseigne sur son bord haut, l'or d'une fenêtre sur son bord bas) a son PROPRE nœud — sans quoi elle écraserait la
+            // première (㊴, DESIGN v5.2 §5). Recalculé à chaque `Maj()` : les noms sont stables d'un appel à l'autre.
+            var poses = new HashSet<string>();
             for (int i = 0; i < recette.Length; i++)
             {
                 SpecFilet f = recette[i];
@@ -48,45 +52,50 @@ namespace MafiaCleanCity.Shell
                 if (arrondi) Contour(i, f, c, t, inset, r, racine);
                 else
                 {
-                    if ((f.Cotes & Cotes.Haut) != 0) Cote("Haut", f, c, t, inset);
-                    if ((f.Cotes & Cotes.Droite) != 0) Cote("Droite", f, c, t, inset);
-                    if ((f.Cotes & Cotes.Bas) != 0) Cote("Bas", f, c, t, inset);
-                    if ((f.Cotes & Cotes.Gauche) != 0) Cote("Gauche", f, c, t, inset);
+                    if ((f.Cotes & Cotes.Haut) != 0) Cote(Noeud("Haut", i, poses), "Haut", f, c, t, inset);
+                    if ((f.Cotes & Cotes.Droite) != 0) Cote(Noeud("Droite", i, poses), "Droite", f, c, t, inset);
+                    if ((f.Cotes & Cotes.Bas) != 0) Cote(Noeud("Bas", i, poses), "Bas", f, c, t, inset);
+                    if ((f.Cotes & Cotes.Gauche) != 0) Cote(Noeud("Gauche", i, poses), "Gauche", f, c, t, inset);
                 }
             }
         }
 
         // ───────────────────────────────────────────────────────────────────────────── côtés droits
 
-        private void Cote(string nom, SpecFilet f, Color c, int t, float d)
+        /// <summary>Le NŒUD d'un côté : son nom seul pour la première spec qui le pose (les noms existants, lus par des gardes,
+        /// ne bougent pas), `<Côté><rang de la spec>` pour une suivante. ⚠️ Le nœud n'est qu'un nom : la GÉOMÉTRIE vient du `cote`
+        /// (`Bande`), jamais du nœud — `Bas1` est ancré en bas. `Contour` suffixe, lui, dès que la recette a plusieurs specs.</summary>
+        private static string Noeud(string cote, int rang, HashSet<string> poses) => poses.Add(cote) ? cote : cote + rang;
+
+        private void Cote(string noeud, string cote, SpecFilet f, Color c, int t, float d)
         {
             if (f.Style == StyleFilet.Double)
             {
                 int un = Mathf.Max(1, Mathf.RoundToInt(t / 3f));
-                Bande(ImageDe(nom, transform), nom, d, un, c, f, false);
-                Bande(ImageDe("Interieur", images[nom].transform), nom, 0f, un, c, f, true, t - un);
+                Bande(ImageDe(noeud, transform), cote, d, un, c, f, false);
+                Bande(ImageDe("Interieur", images[noeud].transform), cote, 0f, un, c, f, true, t - un);
                 return;
             }
-            Bande(ImageDe(nom, transform), nom, d, t, c, f, false);
+            Bande(ImageDe(noeud, transform), cote, d, t, c, f, false);
         }
 
-        /// <summary>Une bande sur le côté `nom`, à `d` du bord, d'épaisseur `t`. `interieur` : relative à la bande
+        /// <summary>Une bande sur le côté `cote`, à `d` du bord, d'épaisseur `t`. `interieur` : relative à la bande
         /// extérieure du `double`, décalée de `decalage` vers l'intérieur.</summary>
-        private void Bande(Image img, string nom, float d, int t, Color c, SpecFilet f, bool interieur, int decalage = 0)
+        private void Bande(Image img, string cote, float d, int t, Color c, SpecFilet f, bool interieur, int decalage = 0)
         {
             RectTransform rt = img.rectTransform;
-            bool vertical = nom == "Gauche" || nom == "Droite";
+            bool vertical = cote == "Gauche" || cote == "Droite";
             if (interieur)
             {
                 // Relatif à la bande extérieure : même longueur, décalée vers le centre du bloc.
                 rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
-                float dx = nom == "Gauche" ? decalage : nom == "Droite" ? -decalage : 0f;
-                float dy = nom == "Bas" ? decalage : nom == "Haut" ? -decalage : 0f;
+                float dx = cote == "Gauche" ? decalage : cote == "Droite" ? -decalage : 0f;
+                float dy = cote == "Bas" ? decalage : cote == "Haut" ? -decalage : 0f;
                 rt.offsetMin = new Vector2(dx, dy); rt.offsetMax = new Vector2(dx, dy);
             }
             else
             {
-                switch (nom)
+                switch (cote)
                 {
                     case "Haut": rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = Vector2.one;
                         rt.offsetMin = new Vector2(d, -d - t); rt.offsetMax = new Vector2(-d, -d); break;

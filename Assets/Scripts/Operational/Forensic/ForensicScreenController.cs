@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -7,21 +8,19 @@ using MafiaCleanCity.Theme;
 
 namespace MafiaCleanCity.Operational
 {
-    /// <summary>screen_b7 « Forensic » — squelette généré par Tools/nouvel-ecran.py.
+    /// <summary>Les trois VUES du dossier (cadres 150, 151, 135 de `ecrans-brennar-6.html`, `.dos6`). Pistes par défaut ; Acteurs par la
+    /// 3ᵉ fenêtre (la bascule, `.fen.porte`) ; Vide = l'état « rien à votre nom », sans bascule (décision f2 du 08/10).</summary>
+    public enum VueDossier { Pistes, Acteurs, Vide }
+
+    /// <summary>screen_b7 « Forensic » ㊴ — LE DOSSIER, d'après les cadres 150 (les pistes), 151 (les acteurs) et 135 (l'état vide) de la
+    /// maquette, DESIGN `Tools/ecran-39-elements-absents/DESIGN.md` (v5.2, revue ⊥ APPROVED).
     ///
-    /// Patron : `ReputationScreenController` (㊲, `pilote-B` — le seul écran construit ET jugé
-    /// par juge-visuel ET juge-données). Ce squelette pose le contrat `IShellTenant`, un fond
-    /// CanvasRenderer-safe et un résolveur exhaustif d'exemple ; il NE POSE PAS la géométrie de
-    /// la maquette — ça, c'est `// MÉTIER ICI`, une fois la maquette lue.
+    /// Ce que l'écran montre est ce que le back SERT : trois bandes (`GET /v1/me/forensic`, dont UNE seule vivante) et le roster des
+    /// acteurs (`GET /v1/me/internal-affairs/actors`). Il n'ACHÈTE rien : le prix d'un renseignement n'est servi par aucune route
+    /// avant l'achat — le pied et le geste par ligne sont dessinés ÉTEINTS, et rien d'éteint n'émet de requête.
     ///
-    /// GÉOMÉTRIE — deux règles héritées, non négociables (mesurées ailleurs dans ce dépôt) :
-    ///  · aucune valeur dérivée de `Screen.*` ni d'un `rect` lu au montage — passer par
-    ///    `EchelleMaquette.Px(...)` avec la largeur DÉCLARÉE de LA maquette de cet écran
-    ///    (`EchelleMaquette.LargeurEcransBrennar` = 300 par défaut pour les écrans de la famille
-    ///    `ecrans-brennar.html` — // MÉTIER ICI : vérifier laquelle des 3 maquettes est la
-    ///    source, ou ajouter une constante `Largeur<Nom>` si c'en est une quatrième).
-    ///  · `Canvas.scaleFactor` lu la frame de la création rend 1,0 — plausible et faux. Toute
-    ///    lecture de géométrie attend `yield return null` après la construction.</summary>
+    /// GÉOMÉTRIE — aucune valeur dérivée de `Screen.*` ni d'un `rect` lu au montage : `EchelleMaquette.Px(...)` sur la largeur DÉCLARÉE
+    /// de la maquette de la série 6. `Canvas.scaleFactor` lu la frame de la création rend 1,0 : toute lecture attend `yield return null`.</summary>
     public class ForensicScreenController : MonoBehaviour, IShellTenant
     {
         [Header("Backend")]
@@ -38,53 +37,34 @@ namespace MafiaCleanCity.Operational
         public GetForensicResponseDto DernierChargement { get; private set; }
         public string DerniereErreur { get; private set; }
         public long DernierCodeErreur { get; private set; }
+        /// <summary>Le roster servi (null : pas encore reçu OU route en erreur — voir <see cref="ActeursIndisponibles"/>).</summary>
+        public ActeurDto[] DerniersActeurs { get; private set; }
+        public bool ActeursIndisponibles { get; private set; }
+        /// <summary>La vue MONTRÉE (l'état vide l'emporte sur le choix du joueur).</summary>
+        public VueDossier Vue { get; private set; } = VueDossier.Pistes;
+        /// <summary>Les requêtes envoyées par l'écran (compteur des gardes « un geste éteint n'émet rien »).</summary>
+        public int RequetesEmises => client != null ? client.RequetesEmises : 0;
 
         private RectTransform racinePleinEcran;
         private ForensicClient client;
         private bool initialise;
+        private bool veutLesActeurs;   // le choix du joueur (la porte) ; ne vaut que si l'état n'est pas vide
 
         private float Px(float css) =>
-            EchelleMaquette.Px(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar);
+            EchelleMaquette.Px(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar6);
         private int PxTrait(float css) =>
-            EchelleMaquette.PxTrait(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar);
+            EchelleMaquette.PxTrait(css, racinePleinEcran, EchelleMaquette.LargeurEcransBrennar6);
 
-        // ⛔ `Start()`, PAS `Awake()` — MESURÉ le 2026-09-03 au premier montage réel de ㊴ sous
-        // chrome : sa racine était bâtie sous le CANVAS et non sous `ContentSlot`.
-        //     Tenant_ForensicScreenController ⊂ ContentSlot
-        //     ForensicRoot                    ⊂ Canvas          ← échappé du slot
-        // ⚠️ `Awake()` s'exécute DANS `AddComponent`, donc AVANT que `MountTenant<T>` ait appelé
-        // `SetMountParent(ContentSlot)` : l'écran bâtissait avant de savoir OÙ, retombait sur sa
-        // racine de repli (`FindFirstObjectByType<Canvas>()`) et n'atteignait jamais le slot. Or
-        // c'est l'appartenance à `ContentSlot` — index 0, sous les barres — qui garantit la
-        // non-occlusion par l'ordre de fratrie. Hors du slot, cette garantie ne s'applique plus.
-        // ★ ET LA LEÇON ÉTAIT DÉJÀ ÉCRITE, à un écran d'ici : ㊲ porte ce même diagnostic daté de
-        //   la veille — « il bâtit donc AVANT de savoir où : il retombe sur sa racine de repli et
-        //   n'atteint jamais le slot de contenu ». Corrigé là-bas, jamais propagé ici. Une règle
-        //   juste ne protège que l'endroit où elle a été écrite.
-        // ⇒ Balayé plutôt que corrigé au cas par cas : sur les 15 locataires classables, QUATRE
-        //   bâtissaient dans `Awake` — mais deux (HomeChrome, OrgVitalsPanel) ne sont montés par
-        //   aucun `MountTenant` et ne peuvent donc pas porter ce défaut. Restaient ㊴ et la Revue
-        //   du jour. *Compter en accusait quatre ; classer en laisse deux.*
+        // ⛔ `Start()`, PAS `Awake()` — MESURÉ le 2026-09-03 au premier montage réel de ㊴ sous chrome : sa racine était bâtie sous le
+        // CANVAS et non sous `ContentSlot` (`Awake()` s'exécute DANS `AddComponent`, donc AVANT `SetMountParent`). C'est l'appartenance
+        // à `ContentSlot` — index 0, sous les barres — qui garantit la non-occlusion par l'ordre de fratrie.
         private void Start()
         {
             EnsureInitialized();
             amorce = StartCoroutine(Amorcer());
         }
 
-        /// <summary>Charger ce que l'écran montre, une fois monté — MESURÉ MANQUANT le 2026-09-03.
-        ///
-        /// ⛔ `Charger()` existait et N'ÉTAIT APPELÉ PAR PERSONNE : ni ici, ni par le shell. Monté
-        /// par un vrai geste joueur, ㊴ dessinait son squelette et restait vide POUR TOUJOURS —
-        /// trois lignes de signaux sans libellé, valeur « — », un panneau bas vide.
-        /// ⚠️ Et l'image ne le disait pas : cet état est visuellement IDENTIQUE à « le serveur n'a
-        /// rien à montrer sur un compte du premier jour ». C'est en voulant garder la capture
-        /// contre un échec silencieux que je l'ai trouvé — la garde que j'écrivais
-        /// (`DerniereErreur == null`) était VRAIE À VIDE, puisque rien ne chargeait jamais.
-        /// ★ Une garde vraie à vide est pire que pas de garde : elle donne le vert ET la
-        ///   conscience tranquille. C'est le fait de vérifier qu'elle mordait qui a révélé le
-        ///   défaut qu'elle était censée surveiller.
-        /// ⇒ Patron de ㊲ (`Amorcer`), repris tel quel : hors session on ne charge rien et on
-        ///   reste sur l'état vide NOMMÉ, plutôt que d'échouer.</summary>
+        /// <summary>Hors session on ne charge rien et on reste sur l'état NOMMÉ (patron ㊲) ; un test qui tient l'écran le dit.</summary>
         private IEnumerator Amorcer()
         {
             if (string.IsNullOrEmpty(token)) yield break;   // monté hors session : rien à charger
@@ -98,165 +78,348 @@ namespace MafiaCleanCity.Operational
             initialise = true;
             client = new ForensicClient { BaseUrl = baseUrl };
             BuildLayout();
+            Rendre();   // la coquille NOMMÉE : trois fenêtres à « — », trois pistes éteintes, jamais un écran noir
         }
 
         // ═══ Chargement ══════════════════════════════════════════════════════════════════════
 
-        /// <summary>Charge la surface. // MÉTIER ICI si `GetForensic` a des paramètres
-        /// de chemin (id, etc.) — ajouter les arguments correspondants ici et les faire
-        /// remonter depuis l'appelant (le shell, ou un `RendrePourTest`).</summary>
+        /// <summary>Charge les deux surfaces : les bandes, puis le roster. Les deux erreurs sont INDÉPENDANTES : le roster en erreur
+        /// laisse les pistes ; les bandes en erreur laissent les acteurs.</summary>
         public IEnumerator Charger()
         {
             EnsureInitialized();
             DerniereErreur = null;
             DernierCodeErreur = 0;
+            DernierChargement = null;
+            DerniersActeurs = null;
+            ActeursIndisponibles = false;
 
             yield return client.GetForensic(token,
                 dto => DernierChargement = dto,
                 (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
+            yield return client.GetActeurs(token,
+                acteurs => DerniersActeurs = acteurs,
+                (code, msg) => { ActeursIndisponibles = true; if (DerniereErreur == null) { DernierCodeErreur = code; DerniereErreur = msg; } });
 
-            // La frame de création rend des rects non résolus : on attend le layout AVANT de
-            // rendre quoi que ce soit qui lise une géométrie.
+            // La frame de création rend des rects non résolus : on attend le layout AVANT de rendre quoi que ce soit qui lise une géométrie.
             yield return null;
-
-            if (DernierChargement == null) { RendreEtatIndisponible(); yield break; }
-            AppliquerEtat(DernierChargement);
+            Rendre();
         }
 
-        /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
-        /// `RendrePourTest`). Ne prouve jamais que le back émet ce corps, seulement ce que
-        /// l'écran EN FAIT.</summary>
-        /// <summary>⛔ FERME LA COURSE ENTRE `Start()` ET LE RENDU DE TEST. Une suite qui pose un
-        /// VRAI jeton puis appelle `RendrePourTest` laisse `Amorcer()` partir en parallèle :
-        /// l'auto-chargement va chercher les données réelles et ÉCRASE le corps fabriqué, à une
-        /// frame près. *Un test qui perd cette course lit une vérité — celle d'un autre monde que
-        /// le sien*, et son rouge accuse alors le résolveur au lieu de l'ordonnancement.
-        /// ⚠️ Le garde-fou `IsNullOrEmpty(token)` NE COUVRE PAS ce cas : il protège l'écran monté
-        /// hors session, pas celui à qui un test donne une identité PUIS impose un corps.
-        /// ⚠️ Relu APRÈS CHAQUE `yield`, jamais seulement à l'entrée : la coroutine peut être déjà
-        /// partie quand le test pose le drapeau. Mesuré sur ⑨ (patron `2efdf2e`).</summary>
+        /// <summary>⛔ FERME LA COURSE ENTRE `Start()` ET LE RENDU DE TEST : un test qui pose un VRAI jeton puis impose un corps laisse
+        /// `Amorcer()` partir en parallèle et écraser le corps fabriqué (mesuré sur ⑨, patron `2efdf2e`). `StopCoroutine`, pas un
+        /// drapeau qu'on espère relu.</summary>
         private bool corpsImposeParUnTest;
         private Coroutine amorce;
 
-        public void RendrePourTest(GetForensicResponseDto dto)
+        /// <summary>Rend des corps FABRIQUÉS, sans réseau — réservé aux tests. Ne prouve jamais que le back émet ces corps, seulement ce
+        /// que l'écran EN FAIT. `acteurs` null = la route est en erreur (« — »), `new ActeurDto[0]` = roster vide servi.</summary>
+        public void RendrePourTest(GetForensicResponseDto dto, ActeurDto[] acteurs = null)
         {
             corpsImposeParUnTest = true;
-            // ⛔ ON ARRÊTE L'AUTO-CHARGEMENT, on ne se contente pas de le décourager. Le drapeau
-            // seul ne ferme que le cas facile (le test rend AVANT que la coroutine ne parte) :
-            // si elle est déjà dans son appel réseau, elle rendra son résultat PAR-DESSUS le corps
-            // du test quelques frames plus tard, et `Charger()` applique son état dans plusieurs
-            // branches — y semer des gardes serait fragile et incomplet.
-            // ★ *Fermer une course en demandant poliment à l'autre de renoncer suppose qu'il
-            //   repasse par un point où on peut le lui dire.* `StopCoroutine` ne le suppose pas.
             if (amorce != null) { StopCoroutine(amorce); amorce = null; }
             EnsureInitialized();
-            AppliquerEtat(dto);
+            DernierChargement = dto;
+            DerniersActeurs = acteurs;
+            ActeursIndisponibles = acteurs == null;
+            Rendre();
         }
 
-        /// <summary>// MÉTIER ICI — TOUT le rendu métier de cet écran part d'ici. Vide à
-        /// dessein : remplir depuis la maquette RATIFIÉE et le corps RÉEL mesuré, jamais depuis
-        /// une supposition sur ce que l'interface TypeScript back "devrait" rendre.</summary>
-        private void AppliquerEtat(GetForensicResponseDto dto)
+        /// <summary>La porte : bascule pistes ↔ acteurs. Sans effet sur l'état vide (rien à basculer). Locale : AUCUNE requête.</summary>
+        public void Basculer()
         {
-            if (dto == null) { RendreEtatIndisponible(); return; }
-
-            MajSignal(0, Lib("RISQUE D'AUDIT"),        dto.audit_risk_bucket);
-            MajSignal(1, Lib("VISIBILITÉ DES REJETS"), dto.effluent_visibility_bucket);
-            MajSignal(2, Lib("TRAIN DE VIE"),          dto.lifestyle_alarm_bucket);
-
-            // ⛔ CE QUE L'ÉCRAN NE PEUT PAS SAVOIR, ET QU'IL DIT QUAND MÊME.
-            // Mesuré le 2026-09-02 par la session back : `lifestyle_alarm_bucket` rend `quiet`
-            // alors que `lifestyle_audit_state` ne porte AUCUNE ligne pour ce joueur — c'est une
-            // valeur PAR DÉFAUT, pas une mesure. Et depuis le corps, rien ne les distingue :
-            // ★ une bande rendue sans ligne source a exactement la même forme qu'une bande
-            //   mesurée. Le client ne peut pas trancher — donc il ne prétend pas trancher : il
-            //   porte l'écart avec SA DATE, comme ㊲ porte les siens.
-            // ⚠️ À re-mesurer : la pile a été reconstruite après cette mesure, et le maillon de
-            //   blanchiment dont dépend l'épingle d'audit a été fermé entre-temps.
-            MajPanneau(Lib("CE QUE LA VILLE NE DIT PAS"),
-                Lib("Une piste posée par habitude ressemble à une piste relevée"),
-                "une piste peut être posée par habitude au lieu d'être relevée, et rien ne les "
-                + "distingue une fois sur le liège. On ne peut donc pas trancher, et on préfère "
-                + "vous le dire que de vous présenter les trois comme des faits.");
+            if (Vue == VueDossier.Vide) return;
+            veutLesActeurs = !veutLesActeurs;
+            Rendre();
         }
 
-        /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
-        /// (patron ㊲ : `Render(null)` a fait planter un autre écran de ce dépôt à la première
-        /// ligne qui lisait le payload).</summary>
-        private void RendreEtatIndisponible()
+        // ═══ Rendu ═══════════════════════════════════════════════════════════════════════════
+
+        private void Rendre()
         {
-            // Les trois signaux repassent à « — » : sans ça, les bandes du chargement précédent
-            // resteraient à l'écran et une panne ressemblerait à un état.
-            MajSignal(0, "RISQUE D'AUDIT",        null);
-            MajSignal(1, "VISIBILITÉ DES REJETS", null);
-            MajSignal(2, "TRAIN DE VIE",          null);
-            MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"),
-                Lib("Pas de réponse"),
-                "on n'a pas eu de réponse. Ce n'est pas « tout va bien » : c'est « on ne sait pas ».");
+            if (racinePleinEcran == null) return;
+            if (DossierCalculs.EtatVide(DernierChargement, DerniersActeurs)) Vue = VueDossier.Vide;
+            else Vue = veutLesActeurs ? VueDossier.Acteurs : VueDossier.Pistes;
+
+            RendreEnseigne();
+            RendreCompteurs();
+            RendreElast();
+            RendrePanneau();
+            RendrePied();
+        }
+
+        private void RendreEnseigne()
+        {
+            switch (Vue)
+            {
+                case VueDossier.Acteurs: sousTitre.text = Lib("qui parle, et qui a peur"); break;
+                // ⛔ PAS `Lib` : `forensic.bloc.rien_a_votre_nom` est la clé du texte `.rien` (« Rien à votre nom. », servie avec son point) — le sous-titre
+                // de l'enseigne (« rien à votre nom », sans point) a son propre rôle, sinon les deux textes ne pourraient jamais diverger.
+                case VueDossier.Vide: sousTitre.text = MafiaCleanCity.I18n.Libelle.De("forensic", "enseigne", "rien à votre nom"); break;
+                default: sousTitre.text = Lib("trois pistes, et elles ne se mélangent pas"); break;
+            }
+        }
+
+        private void RendreCompteurs()
+        {
+            GetForensicResponseDto d = DernierChargement;
+            ActeurDto[] a = DerniersActeurs;
+            int chaudes = d == null ? -1 : DossierCalculs.PistesChaudes(d), vivantes = d == null ? -1 : DossierCalculs.PistesVivantes();
+            int franchies = d == null ? -1 : DossierCalculs.PistesFranchies(d);
+            int tiennent = a == null ? -1 : DossierCalculs.ActeursQuiTiennent(a), connus = a == null ? -1 : a.Length;
+            int peur = a == null ? -1 : DossierCalculs.ActeursQuiOntPeur(a);
+
+            switch (Vue)
+            {
+                case VueDossier.Acteurs:
+                    MajCompteur(0, connus, -1, Lib("acteurs connus"), RecetteIci);
+                    MajCompteur(1, peur, -1, Lib("qui ont peur"), DecorsDeScene.Filets.Forensic.Fen);
+                    MajCompteur(2, chaudes, vivantes, Lib("pistes chaudes"), DecorsDeScene.Filets.Forensic.FenPorte, "‹");
+                    break;
+                case VueDossier.Vide:
+                    // 135 : trois fenêtres NUES, sans ici ni porte. Le dénominateur est celui des pistes VIVANTES (R5, déviation étiquetée).
+                    MajCompteur(0, 0, vivantes, Lib("pistes chaudes"), DecorsDeScene.Filets.Forensic.Fen);
+                    MajCompteur(1, 0, -1, Lib("franchies"), DecorsDeScene.Filets.Forensic.Fen);
+                    MajCompteur(2, 0, -1, Lib("acteurs connus"), DecorsDeScene.Filets.Forensic.Fen);
+                    break;
+                default:
+                    MajCompteur(0, chaudes, vivantes, Lib("pistes chaudes"), RecetteIci);
+                    MajCompteur(1, franchies, -1, Lib("franchies"), DecorsDeScene.Filets.Forensic.Fen);
+                    MajCompteur(2, tiennent, connus, Lib("acteurs qui tiennent"), DecorsDeScene.Filets.Forensic.FenPorte, "›");
+                    break;
+            }
+            bool porte = Vue != VueDossier.Vide;
+            fenPorte.interactable = porte;
+            fenetreFond[2].raycastTarget = porte;
+            fenetreFond[2].color = porte ? DesignTokens.Current.surfaceCard : FondFenetre;
+            compteurNb[2].color = porte ? DesignTokens.Current.hudMoneyGold : DesignTokens.Current.hudGaugeArcCold;
+            fleche.gameObject.SetActive(porte);
+        }
+
+        /// <summary>`.fen.ici` : le bord de `.fen` PUIS l'or de `box-shadow:inset 0 -2px 0` (recette COMPOSÉE, DESIGN §5).</summary>
+        private static SpecFilet[] RecetteIci => DecorsDeScene.FiletsComposes.FenIciOr;
+
+        private void RendreElast()
+        {
+            pistesRoot.gameObject.SetActive(Vue == VueDossier.Pistes);
+            notePi.gameObject.SetActive(Vue == VueDossier.Pistes);
+            acteursRoot.gameObject.SetActive(Vue == VueDossier.Acteurs);
+            rienTexte.gameObject.SetActive(Vue == VueDossier.Vide);
+            if (Vue == VueDossier.Pistes) RendrePistes();
+            if (Vue == VueDossier.Acteurs) RendreActeurs();
+        }
+
+        private void RendrePanneau()
+        {
+            switch (Vue)
+            {
+                case VueDossier.Acteurs:
+                    MajPanneau(Lib("ceux qui ne sont pas sur la liste"), Lib("D’autres parlent, et vous ne les voyez pas"),
+                        Riche(Lib("un inspecteur du port, un courtier, le greffier d’un juge : {ils se paient} comme les autres, mais {personne ne vous a encore donné leur nom}.")),
+                        DesignTokens.Current.accentWarning);
+                    break;
+                case VueDossier.Vide:
+                    MajPanneau(Lib("ce n’est pas une bonne nouvelle"), Lib("C’est juste une nouvelle"),
+                        Riche(Lib("les trois pistes montent avec ce que vous faites. À zéro, elles ne disent pas que vous êtes prudent : elles disent que {vous n’avez pas encore commencé}.")),
+                        DesignTokens.Current.hudCreme);
+                    break;
+                default:
+                    if (DernierChargement == null && DerniereErreur != null)
+                        // Repli NOMMÉ sur échec réseau : « on ne sait pas » n'est pas « tout va bien » (patron ㊲).
+                        MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"), Lib("Pas de réponse"),
+                            Lib("on n'a pas eu de réponse. Ce n'est pas « tout va bien » : c'est « on ne sait pas »."), DesignTokens.Current.hudCreme);
+                    else
+                        MajPanneau(Lib("pourquoi trois colonnes"), Lib("On peut être propre sur deux et pris sur la troisième"),
+                            Riche(Lib("la comptabilité, les rejets et le train de vie {ne se mélangent pas}. Pour voir {qui parle}, la fenêtre des acteurs, en haut à droite.")),
+                            DesignTokens.Current.hudCreme);
+                    break;
+            }
+        }
+
+        private void RendrePied()
+        {
+            pied.gameObject.SetActive(Vue != VueDossier.Vide);
+            boutonAcheter.gameObject.SetActive(Vue == VueDossier.Pistes);
+            note6.text = Vue == VueDossier.Acteurs
+                ? Riche(Lib("le renseignement s’achète {acteur par acteur} — éteint tant que {le prix n’est pas servi} : on n’achète pas sans savoir combien"))
+                : Riche(Lib("sur un acteur, pas sur une piste — éteint : {le prix n’est pas servi}"));
+        }
+
+        // ── les pistes (150) ──────────────────────────────────────────────────────────────────
+
+        private void RendrePistes()
+        {
+            for (int i = 0; i < DossierCalculs.Pistes.Length; i++)
+            {
+                DossierCalculs.Piste piste = DossierCalculs.Pistes[i];
+                string bande = DossierCalculs.BandeDe(DernierChargement, piste.Cle);
+                bool eteinte = !piste.Vivante;
+                int cran = eteinte ? -1 : DossierCalculs.CranDe(piste, bande);
+                bool auBout = cran == DossierCalculs.Crans - 1;
+                Color encre = ForensicResolvers.CouleurPour(ForensicResolvers.NiveauDe(bande));
+                if (auBout) encre = DesignTokens.Current.accentDanger;   // 132 : le dernier cran est un ÉVÉNEMENT, tout en `#ff5a4d`
+
+                piTitre[i].text = Lib(piste.Titre);
+                piTitre[i].color = eteinte ? EncreEteinte : (Color)DesignTokens.Current.onSurfaceSecondary;
+                for (int c = 0; c < DossierCalculs.Crans; c++)
+                    piCran[i, c].color = (!eteinte && c <= cran) ? encre : (Color)TeinteVide;
+                if (eteinte)
+                {
+                    piMot[i].text = "—"; piMot[i].color = EncreEteinte;
+                    piCle[i].text = Lib("pas encore sur la table");
+                }
+                else
+                {
+                    piMot[i].text = ForensicResolvers.Phrase(bande); piMot[i].color = encre;
+                    piCle[i].text = string.IsNullOrEmpty(bande) ? "" : bande;
+                }
+                SpecFilet[] recette = eteinte ? DecorsDeScene.Filets.Forensic.PiEteinte
+                                    : auBout ? DecorsDeScene.Filets.Forensic.PiBout
+                                    : DecorsDeScene.Filets.Forensic.Pi;
+                Filets.Poser(piRoot[i], recette);
+            }
+        }
+
+        // ── les acteurs (151) ─────────────────────────────────────────────────────────────────
+
+        private void RendreActeurs()
+        {
+            for (int i = acteursRoot.childCount - 1; i >= 0; i--)
+            {
+                Transform t = acteursRoot.GetChild(i);
+                t.SetParent(null, false);
+                Destroy(t.gameObject);
+            }
+            if (DerniersActeurs == null) return;   // route en erreur : les compteurs disent « — », la liste ne ment pas
+            for (int i = 0; i < DerniersActeurs.Length; i++) ConstruireLigneActeur(DerniersActeurs[i], i);
+        }
+
+        private void ConstruireLigneActeur(ActeurDto a, int rang)
+        {
+            bool parti = DossierCalculs.EstParti(a.status);
+            GameObject ligne = NouveauUI("Acteur" + rang, acteursRoot);
+            AjouterFond(ligne, DesignTokens.Current.lieutenantMedallionOuter);
+            Filets.Poser((RectTransform)ligne.transform, parti ? DecorsDeScene.Filets.Forensic.AcParti : DecorsDeScene.Filets.Forensic.Ac);
+            if (parti) ligne.AddComponent<CanvasGroup>().alpha = DossierCalculs.AlphaUguiDuParti;   // `.ac.parti{opacity:.45}`, en alpha uGUI (voir la constante)
+            var le = ligne.AddComponent<LayoutElement>();
+            le.minHeight = Px(27f); le.flexibleHeight = 0f;
+            var h = ligne.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(PxTrait(8f), PxTrait(8f), PxTrait(5f), PxTrait(5f));
+            h.spacing = Px(8f);
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+
+            Color encreStatut = DossierCalculs.EncreDuStatut(a.status);
+            GameObject sil = NouveauUI("Silhouette", ligne.transform);
+            Image silImg = AjouterImage(sil);
+            silImg.sprite = Silhouette(encreStatut, DossierCalculs.SilhouetteAChevron(a.status));
+            silImg.raycastTarget = false;
+            var sle = sil.AddComponent<LayoutElement>();
+            sle.minWidth = sle.preferredWidth = Px(15f); sle.minHeight = sle.preferredHeight = Px(15f); sle.flexibleWidth = 0f;
+
+            GameObject col = NouveauUI("Identite", ligne.transform);
+            var colLe = col.AddComponent<LayoutElement>(); colLe.flexibleWidth = 1f; colLe.minWidth = 0f;
+            var v = col.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(2f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            TextMeshProUGUI nom = NouveauTexte(col.transform, "Type", DossierCalculs.NomDuType(a.actorType), Px(8f),
+                                               DesignTokens.Current.hudCreme, DesignTokens.Current.primaryFont);
+            nom.fontStyle = FontStyles.Bold;
+            NouveauTexte(col.transform, "Reference", DossierCalculs.RefAffichee(a.actorRef), Px(5.6f),
+                         EncreEteinte, DesignTokens.Current.primaryFont);
+
+            TextMeshProUGUI st = NouveauTexte(ligne.transform, "Statut", DossierCalculs.MotDuStatut(a.status), Px(5.8f),
+                                              encreStatut, DesignTokens.Current.primaryFont);
+            st.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+            st.characterSpacing = 11f;
+            st.enableWordWrapping = false;
+            var stLe = st.gameObject.AddComponent<LayoutElement>(); stLe.flexibleWidth = 0f;
+
+            if (parti) return;   // `.rg` : DERNIER enfant de chaque ligne sauf `gone`
+            GameObject rg = NouveauUI("Renseignement", ligne.transform);
+            AjouterFond(rg, DesignTokens.Current.hudGaugeFaceOuter);
+            Filets.Poser((RectTransform)rg.transform, DecorsDeScene.Filets.Forensic.Rg);   // `.rg` : 1 px #2a3648 mesuré — ÉTEINT, non cliquable
+            var rgLe = rg.AddComponent<LayoutElement>(); rgLe.flexibleWidth = 0f;
+            var rgH = rg.AddComponent<HorizontalLayoutGroup>();
+            rgH.padding = new RectOffset(PxTrait(5f), PxTrait(5f), PxTrait(4f), PxTrait(4f));
+            rgH.childAlignment = TextAnchor.MiddleCenter;
+            rgH.childControlWidth = true; rgH.childControlHeight = true;
+            TextMeshProUGUI rgT = NouveauTexte(rg.transform, "Libelle", Lib("renseignement"), Px(5.4f), EncreEteinte, DesignTokens.Current.primaryFont);
+            rgT.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+            rgT.characterSpacing = 12f;
+            rgT.enableWordWrapping = false;
         }
 
         // ═══ Construction de la mise en page ═════════════════════════════════════════════════
+
+        private const float CssMargeX    = 13f;
+        private const float CssMargeHaut = 13f;
+        private const float CssMargeBas  = 14f;
+        private const float CssEcart     = 9f;
+        private const float CssHEnseigne = 51f;
+        private const float CssHCompteurs = 42f;
+        private const float CssHPanneau  = 70f;
+
+        /// <summary>`#2a3648` — le cran éteint ET le bord des blocs : aucun jeton à moins de 4/255 (`hudGaugeFaceInner` à 7,5).</summary>
+        private static readonly Color32 TeinteVide = new Color32(0x2A, 0x36, 0x48, 0xFF);
+        /// <summary>`#7a838d` — l'encre éteinte du dossier (`.pi.eteinte`, `.cle`, `.rg`, `.ac span`) : aucun jeton à moins de 4/255.</summary>
+        private static readonly Color32 EncreEteinte = new Color32(0x7A, 0x83, 0x8D, 0xFF);
+        /// <summary>`#0a0e16` — le fond d'une fenêtre de compteur (`.fen`) : le jeton `hudGaugeFaceOuter`.</summary>
+        private static Color FondFenetre => DesignTokens.Current.hudGaugeFaceOuter;
+
+        private TextMeshProUGUI sousTitre;
+        private readonly Image[] fenetreFond = new Image[3];
+        private readonly TextMeshProUGUI[] compteurNb = new TextMeshProUGUI[3];
+        private readonly TextMeshProUGUI[] compteurLib = new TextMeshProUGUI[3];
+        private Button fenPorte;
+        private TextMeshProUGUI fleche;
+        private RectTransform pistesRoot, acteursRoot;
+        private TextMeshProUGUI notePi, rienTexte;
+        private readonly RectTransform[] piRoot = new RectTransform[3];
+        private readonly TextMeshProUGUI[] piTitre = new TextMeshProUGUI[3];
+        private readonly Image[,] piCran = new Image[3, DossierCalculs.Crans];
+        private readonly TextMeshProUGUI[] piMot = new TextMeshProUGUI[3];
+        private readonly TextMeshProUGUI[] piCle = new TextMeshProUGUI[3];
+        private TextMeshProUGUI pannSur, pannTitre, pannTexte;
+        private RectTransform pied;
+        private RectTransform boutonAcheter;
+        private TextMeshProUGUI note6;
 
         private void BuildLayout()
         {
             Canvas canvas = MafiaCleanCity.Shell.CanvasRacine.Resoudre(transform, mountParent);
             Transform root = mountParent != null ? mountParent : canvas.transform;
 
-            // La racine PLEIN ÉCRAN — jamais un panneau intermédiaire : c'est elle qui sert de
-            // référence d'échelle à `Px()`/`PxTrait()` (un conteneur plus étroit fausserait
-            // TOUTE la mise à l'échelle par un facteur muet).
+            // La racine PLEIN ÉCRAN — jamais un panneau intermédiaire : c'est elle qui sert de référence d'échelle à `Px()`/`PxTrait()`.
             GameObject racine = NouveauUI("ForensicRoot", root);
             racinePleinEcran = (RectTransform)racine.transform;
             Etirer(racinePleinEcran);
-            // LE DÉCOR DE SCÈNE (CLIENT-2, design `Tools/decor-de-scene-2026-10-07/DESIGN.md`) : la scène du district à 0,24, le voile,
-            // le support A de `.dos6` (halos or et cyan sur le 178°) et le cerne d'or — DÉCLARÉS au catalogue, plus de fond plat ici.
+            // LE DÉCOR DE SCÈNE (CLIENT-2) : la scène du district à 0,24, le voile, le support A de `.dos6` et le cerne d'or — DÉCLARÉS au catalogue.
             DecorPose decor = DecorDeScene.Poser(racine.transform, DecorsDeScene.Forensic);
 
-            // ⚠️ AUCUNE MAQUETTE RATIFIÉE POUR CET ÉCRAN — et c'est mesuré, pas supposé :
-            // `front.md` porte `maquette ❌` pour `screen_b7`, et note que **20 des 24 écrans
-            // v1.x n'en ont aucune**. La mise en page ci-dessous suit donc les CONVENTIONS du
-            // châssis de la série 6 (enseigne / blocs / panneau bas), pas un dessin ratifié.
-            // ⇒ Elle n'est pas opposable comme « conforme à la maquette » : il n'y en a pas.
-            //   Ce qui EST opposable, c'est qu'elle ne montre que des bandes servies.
+            // ⛔ L'ÉCHELLE AVANT TOUTE CONVERSION : un RectTransform qui vient d'être étiré n'a pas son `rect` résolu, et `Px()` le lit.
+            Canvas.ForceUpdateCanvases();
+
             VerticalLayoutGroup pile = racine.AddComponent<VerticalLayoutGroup>();
-            // ⛔ LE CHROME MANGE SA PART, EN HAUT ET EN BAS — posé AVANT toute capture sous
-            // chrome, parce que trois écrans sur trois portaient ce défaut le même jour (⑨ et ②
-            // en bas, ㊱ aux deux bouts) et que 42 est un écran PLEIN comme ㊱.
-            // ⚠️ NON VÉRIFIÉ SOUS CHROME : 42 n'est monté nulle part, donc aucune capture ne le
-            // prouve. C'est un correctif par ANALOGIE, et je le dis plutôt que de le présenter
-            // comme mesuré — la garde viendra avec le montage.
-            // Hors shell les insets valent 0 et l'écran remplit tout.
+            // ⛔ LE CHROME MANGE SA PART, EN BAS (le haut : sous la bande de scène, posé et recalculé par ReserverLaBande). Hors shell = 0.
             pile.padding = new RectOffset(
-                (int)Px(CssMargeX), (int)Px(CssMargeX),
-                0,   // le haut : sous la bande de scène, posé (et recalculé à chaque rect) par ReserverLaBande juste dessous
-                (int)(Px(CssMargeY) + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx));
+                PxTrait(CssMargeX), PxTrait(CssMargeX), 0,
+                (int)(Px(CssMargeBas) + MafiaCleanCity.Shell.ShellChrome.BottomInsetPx));
             pile.spacing = Px(CssEcart);
             pile.childControlWidth = true;  pile.childControlHeight = true;
             pile.childForceExpandWidth = true; pile.childForceExpandHeight = false;
 
-            // §5.6 du design : la pile commence SOUS max(barre, bande de scène 21 %), comme le panneau de la maquette.
-            DecorDeScene.ReserverLaBande(pile, decor, Px(CssMargeY));
+            // §5.6 du design décor : la pile commence SOUS max(barre, bande de scène 21 %), comme le panneau de la maquette.
+            DecorDeScene.ReserverLaBande(pile, decor, Px(CssMargeHaut));
 
             ConstruireEnseigne(racine.transform);
-            signalRoot = ConstruireSignaux(racine.transform);
-            ConstruireEspaceur(racine.transform);
+            ConstruireCompteurs(racine.transform);
+            ConstruireElast(racine.transform);
             ConstruirePanneau(racine.transform);
+            ConstruirePied(racine.transform);
         }
-
-        // ═══ Blocs ═══════════════════════════════════════════════════════════════════════════
-
-        private const float CssMargeX   = 11f;
-        private const float CssMargeY   = 14f;
-        private const float CssEcart    = 10f;
-        private const float CssHEnseigne = 51f;
-        private const float CssHSignal   = 62f;
-        private const float CssHPanneau  = 92f;
-
-        private RectTransform signalRoot;
-        private readonly TextMeshProUGUI[] sigLib = new TextMeshProUGUI[3];
-        private readonly TextMeshProUGUI[] sigVal = new TextMeshProUGUI[3];
-        private readonly Image[] sigRail = new Image[3];
-        private TextMeshProUGUI pannSur, pannTitre, pannTexte;
 
         private void ConstruireEnseigne(Transform parent)
         {
@@ -267,119 +430,243 @@ namespace MafiaCleanCity.Operational
             AjouterHauteur(go, Px(CssHEnseigne));
             var v = go.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.MiddleCenter;
+            v.spacing = Px(5f);   // `.enseigne i{margin-top:5px}`
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
-            // ⛔ `hudMoneyGold`, PAS `accentGold` — voir la note de `ForensicResolvers.CouleurPour`.
-            //    L'or de cette maquette est `--or-vif` #f2c96b ; `accentGold` vaut #ffd23f, 43/255
-            //    plus bas sur le bleu. J'avais vérifié « est-ce de l'or ? », jamais « LEQUEL ».
-            NouveauTexte(go.transform, "Titre", Lib("Ce qui se voit"), Px(19f),
-                         DesignTokens.Current.hudMoneyGold, DesignTokens.Current.hudSerifFont)
-                .alignment = TextAlignmentOptions.Center;
-            NouveauTexte(go.transform, "SousTitre", Lib("TROIS SIGNAUX, TROIS BANDES"), Px(8.5f),
-                         DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont)
-                .alignment = TextAlignmentOptions.Center;
+            // ⛔ `hudMoneyGold`, PAS `accentGold` : l'or de cette maquette est `--or-vif` #f2c96b ; `accentGold` vaut #ffd23f (43/255 plus bas sur le bleu).
+            TextMeshProUGUI titre = NouveauTexte(go.transform, "Titre", Lib("Le dossier"), Px(17f),
+                                                 DesignTokens.Current.hudMoneyGold, DesignTokens.Current.hudSerifFont);
+            titre.alignment = TextAlignmentOptions.Center;
+            titre.fontStyle = FontStyles.Bold;
+            titre.characterSpacing = 20f;
+            sousTitre = NouveauTexte(go.transform, "SousTitre", "", Px(6.4f),
+                                     DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            sousTitre.alignment = TextAlignmentOptions.Center;
+            sousTitre.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+            sousTitre.characterSpacing = 34f;
         }
 
-        /// <summary>Les trois signaux. Chacun : son nom, sa bande EN MOTS, et un rail coloré.
-        /// ⛔ Le rail ne porte JAMAIS l'information seul — la phrase la porte aussi (a11y : la
-        /// gravité ne doit jamais tenir dans la couleur, convention globale du dépôt).</summary>
-        private RectTransform ConstruireSignaux(Transform parent)
+        private void ConstruireCompteurs(Transform parent)
         {
-            GameObject bloc = NouveauUI("Signaux", parent);
-            var v = bloc.AddComponent<VerticalLayoutGroup>();
-            v.spacing = Px(CssEcart);
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            GameObject go = NouveauUI("Compteurs", parent);
+            AjouterHauteur(go, Px(CssHCompteurs));
+            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = Px(6f);
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = true; h.childForceExpandHeight = true;
 
             for (int i = 0; i < 3; i++)
             {
-                GameObject ligne = NouveauUI($"Signal{i}", bloc.transform);
-                AjouterFond(ligne, DesignTokens.Current.surfaceCard);
-                Filets.Poser((RectTransform)ligne.transform, DecorsDeScene.Filets.Forensic.Pi);   // `.pi` (une piste) : 1 px #2a3648 mesuré
-                AjouterHauteur(ligne, Px(CssHSignal));
-                var lv = ligne.AddComponent<VerticalLayoutGroup>();
-                lv.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(8f), (int)Px(8f));
-                lv.spacing = Px(3f);
-                lv.childControlWidth = true; lv.childControlHeight = true;
-                lv.childForceExpandWidth = true; lv.childForceExpandHeight = false;
+                GameObject fen = NouveauUI("Fenetre" + i, go.transform);
+                fenetreFond[i] = AjouterFond(fen, FondFenetre);
+                // Trois tiers ÉGAUX : sans `preferredWidth = 0`, la largeur vient du CONTENU (payé sur ㊲).
+                LayoutElement le = fen.AddComponent<LayoutElement>();
+                le.minWidth = 0f; le.preferredWidth = 0f; le.flexibleWidth = 1f;
+                VerticalLayoutGroup v = fen.AddComponent<VerticalLayoutGroup>();
+                v.padding = new RectOffset(0, 0, PxTrait(4f), PxTrait(3f));
+                v.spacing = Px(3f);
+                v.childControlWidth = true; v.childControlHeight = true;
+                v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+                v.childAlignment = TextAnchor.MiddleCenter;
 
-                sigLib[i] = NouveauTexte(ligne.transform, "Libelle", "", Px(8.5f),
-                    DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
-                sigVal[i] = NouveauTexte(ligne.transform, "Valeur", "—", Px(13f),
-                    DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
-
-                GameObject rail = NouveauUI("Rail", ligne.transform);
-                sigRail[i] = AjouterFond(rail, DesignTokens.Current.onSurfaceMuted);
-                AjouterHauteur(rail, PxTrait(2f));
+                compteurNb[i] = NouveauTexte(fen.transform, "Nombre", "—", Px(14f), DesignTokens.Current.hudGaugeArcCold, DesignTokens.Current.primaryFont);
+                compteurNb[i].alignment = TextAlignmentOptions.Center;
+                compteurNb[i].fontStyle = FontStyles.Bold;
+                compteurLib[i] = NouveauTexte(fen.transform, "Libelle", "", Px(5.4f), DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.primaryFont);
+                compteurLib[i].alignment = TextAlignmentOptions.Center;
+                compteurLib[i].fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+                compteurLib[i].characterSpacing = 16f;
             }
-            return (RectTransform)bloc.transform;
+
+            // LA PORTE : la 3ᵉ fenêtre est un BOUTON (bascule locale, aucune requête). Sa flèche est posée en haut à droite, hors mise en page.
+            GameObject porte = go.transform.Find("Fenetre2").gameObject;
+            fenPorte = porte.AddComponent<Button>();
+            fenPorte.targetGraphic = fenetreFond[2];
+            fenPorte.transition = Selectable.Transition.None;
+            fenPorte.onClick.AddListener(Basculer);
+            fleche = NouveauTexte(porte.transform, "Fleche", "›", Px(9f), DesignTokens.Current.hudMoneyGold, DesignTokens.Current.primaryFont);
+            fleche.fontStyle = FontStyles.Bold;
+            fleche.alignment = TextAlignmentOptions.TopRight;
+            fleche.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform fr = fleche.rectTransform;
+            fr.anchorMin = Vector2.zero; fr.anchorMax = Vector2.one;
+            fr.offsetMin = new Vector2(0f, 0f); fr.offsetMax = new Vector2(-Px(4f), -Px(3f));
         }
 
-        private void ConstruireEspaceur(Transform parent)
+        /// <summary>`bascule` : la flèche de la porte (« › » vers les acteurs, « ‹ » vers les pistes) ; null pour une fenêtre sans porte.</summary>
+        private void MajCompteur(int i, int valeur, int total, string libelle, SpecFilet[] recette, string bascule = null)
         {
-            GameObject go = NouveauUI("Espaceur", parent);
+            // `valeur < 0` ⇒ « — » : le trou se montre, il ne se comble pas par un zéro (un « 0 » dirait « mesuré à zéro »).
+            string nombre = "—";
+            if (valeur >= 0)
+            {
+                nombre = valeur.ToString("00");
+                if (total >= 0)
+                    nombre += $"<size=64%><color=#{ColorUtility.ToHtmlStringRGB(DesignTokens.Current.onSurfaceSecondary)}>/{total}</color></size>";
+            }
+            compteurNb[i].text = nombre;
+            compteurLib[i].text = libelle;
+            Filets.Poser((RectTransform)fenetreFond[i].transform, recette);
+            if (bascule != null) fleche.text = bascule;
+        }
+
+        /// <summary>La boîte ÉLASTIQUE (`.elast`, `flex:1`) : elle prend ce que la pile laisse. Un seul de ses trois contenus est montré.</summary>
+        private void ConstruireElast(Transform parent)
+        {
+            GameObject go = NouveauUI("Elast", parent);
+            AjouterFond(go, DesignTokens.Current.surfaceBase);
+            Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Forensic.Elast);   // `.elast` : 1 px #2a3648 mesuré
             var le = go.AddComponent<LayoutElement>();
-            le.flexibleHeight = 1f; le.minHeight = 0f;
+            le.minHeight = Px(60f); le.flexibleHeight = 1f;
+            go.AddComponent<RectMask2D>();   // `.elast{overflow:hidden}` : une liste trop longue est rognée, elle ne recouvre pas le panneau
+            var v = go.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset(PxTrait(8f), PxTrait(8f), PxTrait(7f), PxTrait(7f));
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            // (150) les trois pistes côte à côte, puis la note sous elles
+            GameObject pistes = NouveauUI("Pistes", go.transform);
+            pistesRoot = (RectTransform)pistes.transform;
+            var ph = pistes.AddComponent<HorizontalLayoutGroup>();
+            ph.spacing = Px(5f);
+            ph.childControlWidth = true; ph.childControlHeight = true;
+            ph.childForceExpandWidth = true; ph.childForceExpandHeight = true;
+            for (int i = 0; i < DossierCalculs.Pistes.Length; i++) ConstruirePiste(i, pistes.transform);
+
+            notePi = NouveauTexte(go.transform, "NotePistes",
+                Lib("Les livres et le train de vie : personne ne regarde par là. Pour l’instant."), Px(7f),
+                DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.hudSerifFont);
+            notePi.fontStyle = FontStyles.Italic;
+            notePi.alignment = TextAlignmentOptions.Center;
+            notePi.margin = new Vector4(Px(4f), Px(6f), Px(4f), 0f);
+
+            // (151) la liste des acteurs
+            GameObject acteurs = NouveauUI("Acteurs", go.transform);
+            acteursRoot = (RectTransform)acteurs.transform;
+            var av = acteurs.AddComponent<VerticalLayoutGroup>();
+            av.spacing = Px(3f);
+            av.childControlWidth = true; av.childControlHeight = true;
+            av.childForceExpandWidth = true; av.childForceExpandHeight = false;
+
+            // (135) « rien à votre nom », centré dans la boîte
+            rienTexte = NouveauTexte(go.transform, "Rien",
+                Lib("Rien à votre nom.") + "\n" + Lib("Personne n’a encore eu de raison de vous ouvrir un dossier."), Px(8f),
+                EncreEteinte, DesignTokens.Current.hudSerifFont);
+            rienTexte.fontStyle = FontStyles.Italic;
+            rienTexte.alignment = TextAlignmentOptions.Center;
+            rienTexte.margin = new Vector4(Px(22f), 0f, Px(22f), 0f);
+            rienTexte.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
+        }
+
+        /// <summary>Une piste (`.pi`) : son titre, ses quatre crans (le premier EN BAS : `column-reverse`), son mot, sa clé.</summary>
+        private void ConstruirePiste(int i, Transform parent)
+        {
+            GameObject pi = NouveauUI("Piste" + i, parent);
+            piRoot[i] = (RectTransform)pi.transform;
+            AjouterFond(pi, DesignTokens.Current.lieutenantMedallionOuter);
+            var le = pi.AddComponent<LayoutElement>();
+            le.minWidth = 0f; le.preferredWidth = 0f; le.flexibleWidth = 1f;
+            var v = pi.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset(PxTrait(6f), PxTrait(6f), PxTrait(7f), PxTrait(8f));
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            piTitre[i] = NouveauTexte(pi.transform, "Titre", "", Px(5.4f), DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.primaryFont);
+            piTitre[i].alignment = TextAlignmentOptions.Top;
+            piTitre[i].fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+            piTitre[i].characterSpacing = 11f;
+            piTitre[i].gameObject.AddComponent<LayoutElement>().minHeight = Px(14f);
+
+            GameObject crans = NouveauUI("Crans", pi.transform);
+            var cv = crans.AddComponent<VerticalLayoutGroup>();
+            cv.padding = new RectOffset(0, 0, PxTrait(6f), PxTrait(5f));
+            cv.spacing = Px(2f);
+            cv.childControlWidth = true; cv.childControlHeight = true;
+            cv.childForceExpandWidth = true; cv.childForceExpandHeight = false;
+            for (int c = DossierCalculs.Crans - 1; c >= 0; c--)   // le cran 0 est le plus BAS
+            {
+                GameObject u = NouveauUI("Cran" + c, crans.transform);
+                piCran[i, c] = AjouterFond(u, TeinteVide);
+                var ule = u.AddComponent<LayoutElement>();
+                ule.minHeight = ule.preferredHeight = Px(6f); ule.flexibleHeight = 0f;
+            }
+
+            piMot[i] = NouveauTexte(pi.transform, "Mot", "—", Px(7.6f), EncreEteinte, DesignTokens.Current.hudSerifFont);
+            piMot[i].alignment = TextAlignmentOptions.Top;
+            piMot[i].fontStyle = FontStyles.Bold;
+            piCle[i] = NouveauTexte(pi.transform, "Cle", "", Px(5.2f), EncreEteinte, DesignTokens.Current.primaryFont);
+            piCle[i].alignment = TextAlignmentOptions.Top;
+            piCle[i].margin = new Vector4(0f, Px(3f), 0f, 0f);
         }
 
         private void ConstruirePanneau(Transform parent)
         {
             GameObject go = NouveauUI("Panneau", parent);
-            AjouterFond(go, DesignTokens.Current.surfaceCard);
+            AjouterFond(go, DesignTokens.Current.lieutenantMedallionOuter);
             Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Forensic.Pann);   // `.pann` : 1 px #2a3648 mesuré
-
-            // ⛔ HAUTEUR PLANCHER, PAS HAUTEUR FIGÉE — mesuré sur la première capture sous chrome
-            // de ㊴ (2026-09-03) : à `preferredHeight` verrouillé, le titre passait sur deux
-            // lignes, CHEVAUCHAIT le corps, et le corps débordait sous le fond du panneau, par
-            // dessus le dock.
-            // ⚠️ La cause n'est pas le texte : c'est qu'un cadre de hauteur fixe reçoit un contenu
-            // de longueur VARIABLE. Les trois lignes du haut portent des bandes courtes et tiennent
-            // ; ce panneau porte une PHRASE, et sa longueur dépend de ce que le serveur a servi.
-            // ★ Les hauteurs figées du châssis de la série 6 valent pour les blocs à contenu
-            //   calibré. Les appliquer à un bloc qui argumente revient à décider d'avance combien
-            //   de mots l'argument aura le droit de faire.
-            // ⇒ `minHeight` conserve la silhouette du châssis quand le texte est court ;
-            //   `preferredHeight` laissé au layout la rend au contenu quand il est long.
-            var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
-            le.minHeight = Px(CssHPanneau);
-            le.preferredHeight = -1f;     // ⇒ calculée depuis les enfants, jamais imposée
-            le.flexibleHeight = 0f;
+            // ⛔ HAUTEUR PLANCHER, PAS HAUTEUR FIGÉE (mesuré sur ㊴, 2026-09-03) : un cadre de hauteur fixe reçoit un contenu de longueur
+            // VARIABLE ; `minHeight` garde la silhouette quand le texte est court, le layout rend la hauteur au contenu quand il est long.
+            var le = go.AddComponent<LayoutElement>();
+            le.minHeight = Px(CssHPanneau); le.preferredHeight = -1f; le.flexibleHeight = 0f;
             var v = go.AddComponent<VerticalLayoutGroup>();
-            v.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(9f), (int)Px(9f));
-            v.spacing = Px(3f);
+            v.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(8f), PxTrait(9f));
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
-            pannSur = NouveauTexte(go.transform, "SurTitre", "", Px(7.5f),
-                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
-            pannTitre = NouveauTexte(go.transform, "Titre", "", Px(13f),
-                DesignTokens.Current.hudMoneyGold, DesignTokens.Current.hudSerifFont);
-            pannTexte = NouveauTexte(go.transform, "Texte", "", Px(9f),
-                DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            pannSur = NouveauTexte(go.transform, "SurTitre", "", Px(5.6f), DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.primaryFont);
+            pannSur.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+            pannSur.characterSpacing = 19f;
+            pannTitre = NouveauTexte(go.transform, "Titre", "", Px(13f), DesignTokens.Current.hudCreme, DesignTokens.Current.hudSerifFont);
+            pannTitre.fontStyle = FontStyles.Bold;
+            pannTitre.margin = new Vector4(0f, Px(5f), 0f, 0f);
+            pannTexte = NouveauTexte(go.transform, "Texte", "", Px(6.6f), DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
+            pannTexte.margin = new Vector4(0f, Px(4f), 0f, 0f);
         }
 
-        private void MajSignal(int i, string libelle, string bande)
+        /// <summary>`.pied` : le geste ÉTEINT (« ACHETER DU RENSEIGNEMENT », vue pistes) et sa note. Rien ici n'est cliquable : le prix
+        /// d'un renseignement n'est servi par aucune route avant l'achat.</summary>
+        private void ConstruirePied(Transform parent)
         {
-            if (sigLib[i] == null) return;
-            sigLib[i].text = libelle;
-            sigVal[i].text = ForensicResolvers.Phrase(bande);
-            sigRail[i].color = ForensicResolvers.CouleurPour(ForensicResolvers.NiveauDe(bande));
+            GameObject go = NouveauUI("Pied", parent);
+            pied = (RectTransform)go.transform;
+            go.AddComponent<LayoutElement>().flexibleHeight = 0f;
+            var v = go.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(5f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+
+            GameObject cta = NouveauUI("BoutonAcheter", go.transform);
+            boutonAcheter = (RectTransform)cta.transform;
+            var (fond, _, libelle) = PiedDEcran.Couleurs(PiedDEcran.Forme.Cta6, PiedDEcran.Etat.Eteint);
+            AjouterFond(cta, fond);
+            Filets.Poser(boutonAcheter, DecorsDeScene.Filets.Forensic.Cta6Eteint);   // `.cta6.eteint` : 1 px #2a3648 mesuré
+            var ch = cta.AddComponent<HorizontalLayoutGroup>();
+            ch.padding = new RectOffset(PxTrait(8f), PxTrait(8f), PxTrait(8f), PxTrait(8f));
+            ch.childAlignment = TextAnchor.MiddleCenter;
+            ch.childControlWidth = true; ch.childControlHeight = true;
+            TextMeshProUGUI t = NouveauTexte(cta.transform, "Libelle", Lib("Acheter du renseignement"), Px(8.5f), libelle, DesignTokens.Current.primaryFont);
+            t.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+            t.characterSpacing = 11f;
+            t.alignment = TextAlignmentOptions.Center;
+
+            note6 = NouveauTexte(go.transform, "Note", "", Px(6.4f), DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.primaryFont);
+            note6.alignment = TextAlignmentOptions.Center;
         }
 
-        private void MajPanneau(string sur, string titre, string texte)
+        private void MajPanneau(string sur, string titre, string texte, Color encreTitre)
         {
-            if (pannSur == null) return;
             pannSur.text = sur; pannTitre.text = titre; pannTexte.text = texte;
+            pannTitre.color = encreTitre;
         }
 
-        /// <summary>Item 0.6 — un littéral STATIQUE de 42 passe par `forensic.bloc.<slug>`,
-        /// repli sur le littéral.
-        /// ⛔ N'Y PASSE PAS : la BANDE INCONNUE. `Phrase()` rend le mot du serveur TEL QUEL quand
-        /// il n'est pas reconnu (`return bande;`) — c'est délibéré, et le keyer inverserait le
-        /// choix : le joueur verrait une paraphrase rassurante au lieu du mot que le serveur a
-        /// réellement envoyé.
-        /// ★ Sur cet écran, montrer un mot non traduit est une INFORMATION, pas un manque.</summary>
+        /// <summary>`<u>` de la maquette : `{…}` devient du texte or gras (`color:#f2c96b;font-weight:700`). Les accolades vivent DANS la
+        /// phrase traduite, pour qu'une phrase servie garde ses emphases.</summary>
+        private static string Riche(string phrase) =>
+            phrase.Replace("{", $"<b><color=#{ColorUtility.ToHtmlStringRGB(DesignTokens.Current.hudMoneyGold)}>").Replace("}", "</color></b>");
+
+        /// <summary>Item 0.6 — un littéral STATIQUE de ㊴ passe par `forensic.bloc.<slug>`, repli sur le littéral.
+        /// ⛔ N'Y PASSE PAS : la BANDE SERVIE. `Phrase()` rend le mot du serveur tel quel quand il n'est pas reconnu — délibéré.</summary>
         private static string Lib(string litteral) =>
             MafiaCleanCity.I18n.Libelle.De("forensic", "bloc", litteral);
 
@@ -389,8 +676,63 @@ namespace MafiaCleanCity.Operational
             le.minHeight = hauteur; le.preferredHeight = hauteur; le.flexibleHeight = 0f;
         }
 
-        // ═══ Primitives — dupliquées par convention (aucun fichier du dépôt ne les partage,
-        // mesuré sur `main` le 2026-09-02) ═════════════════════════════════════════════════════
+        // ── la silhouette (`.sil`, SVG 16×16 de la maquette) — rastérisée une fois par (couleur, motif) ──
+
+        private static readonly Dictionary<(int, bool), Sprite> silhouettes = new Dictionary<(int, bool), Sprite>();
+
+        /// <summary>La tête (cercle r 3,2 en (8, 5)), les épaules (demi-ellipse de (8, 16), rayons 6,5 × 7,4) et la marque sombre :
+        /// un chevron (« il tient », « parti ») ou une porte close (« il a peur », « injoignable »). Surfaces anticrénelées en 2×2.</summary>
+        private static Sprite Silhouette(Color couleur, bool chevron)
+        {
+            Color32 c32 = couleur;
+            var cle = ((c32.r << 16) | (c32.g << 8) | c32.b, chevron);
+            if (silhouettes.TryGetValue(cle, out Sprite deja) && deja != null && deja.texture != null) return deja;   // la Texture2D peut mourir seule
+            const int N = 64;
+            Color marque = DesignTokens.Current.hudGaugeFaceOuter;
+            var tex = new Texture2D(N, N, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+            var px = new Color32[N * N];
+            float echelle = 16f / N;
+            for (int y = 0; y < N; y++)
+                for (int x = 0; x < N; x++)
+                {
+                    float forme = 0f, sombre = 0f;
+                    for (int sy = 0; sy < 2; sy++)
+                        for (int sx = 0; sx < 2; sx++)
+                        {
+                            float u = (x + 0.25f + 0.5f * sx) * echelle;
+                            float v = 16f - (y + 0.25f + 0.5f * sy) * echelle;   // la texture a son origine EN BAS : v descend du haut du SVG
+                            bool tete = (u - 8f) * (u - 8f) + (v - 5f) * (v - 5f) <= 3.2f * 3.2f;
+                            float ex = (u - 8f) / 6.5f, ey = (v - 16f) / 7.4f;
+                            bool epaules = v >= 8.6f && ex * ex + ey * ey <= 1f;
+                            if (tete || epaules) forme += 0.25f;
+                            if (epaules && MarqueSombre(u, v, chevron)) sombre += 0.25f;
+                        }
+                    Color f = couleur; f.a = forme;
+                    Color m = Color.Lerp(f, marque, forme > 0f ? sombre / forme : 0f); m.a = forme;
+                    px[y * N + x] = m;
+                }
+            tex.SetPixels32(px); tex.Apply();
+            Sprite s = Sprite.Create(tex, new Rect(0, 0, N, N), new Vector2(0.5f, 0.5f), N);
+            silhouettes[cle] = s;
+            return s;
+        }
+
+        private static bool MarqueSombre(float u, float v, bool chevron)
+        {
+            if (!chevron) return u >= 5.6f && u <= 10.4f && v >= 10f;   // `<rect x=5.6 y=10 width=4.8 height=6>`
+            // `<path d="M5 12 L8 8.8 L11 12" stroke-width=1.1>` : à moins de 0,55 de l'un des deux segments
+            return DistanceAuSegment(u, v, 5f, 12f, 8f, 8.8f) <= 0.55f || DistanceAuSegment(u, v, 8f, 8.8f, 11f, 12f) <= 0.55f;
+        }
+
+        private static float DistanceAuSegment(float px, float py, float ax, float ay, float bx, float by)
+        {
+            float dx = bx - ax, dy = by - ay;
+            float t = Mathf.Clamp01(((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy));
+            float qx = ax + t * dx - px, qy = ay + t * dy - py;
+            return Mathf.Sqrt(qx * qx + qy * qy);
+        }
+
+        // ═══ Primitives — dupliquées par convention (aucun fichier du dépôt ne les partage) ═════
 
         private static GameObject NouveauUI(string nom, Transform parent)
         {
@@ -399,14 +741,9 @@ namespace MafiaCleanCity.Operational
             return go;
         }
 
-        /// <summary>⛔ TOUTE Image passe par ici. `AddComponent&lt;T&gt;()` à l'exécution
-        /// n'honore PAS le `[RequireComponent(CanvasRenderer)]` d'une classe de base — sans
-        /// `CanvasRenderer`, un `Graphic` ne dessine RIEN, sans la moindre erreur console
-        /// (mesuré sur ce dépôt : `VerticalGradientImage`, deux panneaux jamais visibles).
-        /// Et un `Image` standard `UnityEngine.UI.Image` (utilisée ici) EST déjà `MaskableGraphic`
-        /// — elle passe donc sous un `Mask` parent sans rien de plus à faire ; seul un `Graphic`
-        /// personnalisé dérivé directement de `Graphic` (pas `MaskableGraphic`) aurait besoin
-        /// d'un correctif de base en plus de ce `CanvasRenderer` explicite.</summary>
+        /// <summary>⛔ TOUTE Image passe par ici. `AddComponent&lt;T&gt;()` à l'exécution n'honore PAS le `[RequireComponent(CanvasRenderer)]`
+        /// d'une classe de base — sans `CanvasRenderer`, un `Graphic` ne dessine RIEN, sans la moindre erreur console. `Image` EST déjà
+        /// un `MaskableGraphic` : elle passe sous un `Mask` parent sans rien de plus.</summary>
         private static Image AjouterImage(GameObject go)
         {
             if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
@@ -441,6 +778,170 @@ namespace MafiaCleanCity.Operational
             rt.anchorMax = Vector2.one;
             rt.offsetMin = new Vector2(marge, marge);
             rt.offsetMax = new Vector2(-marge, -marge);
+        }
+    }
+
+    /// <summary>Le CALCUL du dossier — pur, sans Unity : les pistes et leurs échelles, les compteurs, l'état vide, les mots des acteurs.
+    /// Tout ce que l'écran compte l'est ICI, sur des corps qu'un test peut fabriquer.</summary>
+    public static class DossierCalculs
+    {
+        public const int Crans = 4;
+        /// <summary>`.ac.parti{opacity:.45}` (cadre 151, mesuré) — l'opacité de la MAQUETTE, composée en sRGB.</summary>
+        public const float OpaciteDuParti = 0.45f;
+        /// <summary>⛔ L'alpha uGUI qui REND ce que `OpaciteDuParti` rend dans la maquette. Unity compose en LINÉAIRE, la maquette en sRGB :
+        /// recopier 0,45 rend la tête rouge de la silhouette à (179, 63, 55) au lieu de (122, 49, 43) — MESURÉ au créneau du 08/10 (garde
+        /// `ScreenB7P1`), et le calcul linéaire donne (179, 62, 54) : le modèle est juste. 0,2 donne (124, 43, 38), à 6/255 de la cible
+        /// (le canal le plus bas ne se rattrape pas avec un seul alpha) ; ses fonds sombres, eux, restent à ≤ 3/255.</summary>
+        public const float AlphaUguiDuParti = 0.2f;
+
+        public sealed class Piste
+        {
+            public readonly string Cle, Titre;
+            public readonly string[] Echelle;
+            public readonly bool Vivante;
+            public Piste(string cle, string titre, bool vivante, params string[] echelle) { Cle = cle; Titre = titre; Vivante = vivante; Echelle = echelle; }
+        }
+
+        /// <summary>⛔ UN SEUL SITE (TD-881) : les pistes dont le back ne sert qu'une valeur CONSTANTE. `audit_risk_bucket` (source
+        /// `ledger_entry_ring`, TD-358) et `lifestyle_alarm_bucket` (source `lifestyle_audit_state`) rendent la même bande pour tout
+        /// joueur (`forensic.controller.ts:11-19`) et AUCUN champ ne le dit : le client le sait, ici, à la main. Sortie de la dette : le
+        /// back sert la vivacité de chaque piste (transmis à BACK-1).</summary>
+        public static readonly string[] PistesConstantes = { "audit_risk_bucket", "lifestyle_alarm_bucket" };
+
+        /// <summary>Les trois pistes DANS L'ORDRE de la maquette (150) : la comptabilité, les cuves, le train de vie. Échelles lues dans le
+        /// back (`forensic.projection.service.ts:79/98/118`, domaines CLOS à quatre crans).</summary>
+        public static readonly Piste[] Pistes =
+        {
+            new Piste("audit_risk_bucket", "la comptabilité", EstVivante("audit_risk_bucket"), "clean", "watched", "flagged", "audited"),
+            new Piste("effluent_visibility_bucket", "ce qui sort des cuves", EstVivante("effluent_visibility_bucket"), "clear", "faint", "visible", "glaring"),
+            new Piste("lifestyle_alarm_bucket", "le train de vie d’un lieutenant", EstVivante("lifestyle_alarm_bucket"), "quiet", "noticed", "watched", "subpoenaed"),
+        };
+
+        private static bool EstVivante(string cle) => System.Array.IndexOf(PistesConstantes, cle) < 0;
+
+        public static string BandeDe(GetForensicResponseDto d, string cle)
+        {
+            if (d == null) return null;
+            switch (cle)
+            {
+                case "audit_risk_bucket": return d.audit_risk_bucket;
+                case "effluent_visibility_bucket": return d.effluent_visibility_bucket;
+                case "lifestyle_alarm_bucket": return d.lifestyle_alarm_bucket;
+                default: throw new System.ArgumentOutOfRangeException(nameof(cle), cle, "DossierCalculs.BandeDe : piste inconnue.");
+            }
+        }
+
+        /// <summary>Le rang de la bande dans l'échelle de SA piste (0 = le premier cran, 3 = le dernier), -1 si le mot n'y est pas —
+        /// jamais un rang par défaut : une bande jamais vue ne prend pas l'apparence d'une bande mesurée.</summary>
+        public static int CranDe(Piste p, string bande)
+        {
+            if (string.IsNullOrEmpty(bande)) return -1;
+            return System.Array.IndexOf(p.Echelle, bande.Trim().ToLowerInvariant());
+        }
+
+        public static int PistesVivantes()
+        {
+            int n = 0;
+            foreach (Piste p in Pistes) if (p.Vivante) n++;
+            return n;
+        }
+
+        /// <summary>« pistes chaudes » : les pistes VIVANTES hors de leur premier cran (R4). Une bande inconnue n'est pas « chaude ».</summary>
+        public static int PistesChaudes(GetForensicResponseDto d)
+        {
+            int n = 0;
+            foreach (Piste p in Pistes) if (p.Vivante && CranDe(p, BandeDe(d, p.Cle)) > 0) n++;
+            return n;
+        }
+
+        /// <summary>« franchies » : les pistes VIVANTES au dernier cran (un événement a eu lieu).</summary>
+        public static int PistesFranchies(GetForensicResponseDto d)
+        {
+            int n = 0;
+            foreach (Piste p in Pistes) if (p.Vivante && CranDe(p, BandeDe(d, p.Cle)) == Crans - 1) n++;
+            return n;
+        }
+
+        public static int ActeursQuiTiennent(ActeurDto[] a) => Compter(a, "steady");
+        public static int ActeursQuiOntPeur(ActeurDto[] a) => Compter(a, "nervous");
+
+        private static int Compter(ActeurDto[] a, string statut)
+        {
+            int n = 0;
+            if (a != null) foreach (ActeurDto x in a) if (x != null && x.status == statut) n++;
+            return n;
+        }
+
+        /// <summary>R5 — l'état vide (135) ⇔ les bandes SERVIES, toutes les pistes vivantes au PREMIER cran, ET un roster SERVI vide. Une route
+        /// en erreur (null) n'est jamais « vide » : on ne sait pas.</summary>
+        public static bool EtatVide(GetForensicResponseDto d, ActeurDto[] acteurs)
+        {
+            if (d == null || acteurs == null || acteurs.Length != 0) return false;
+            foreach (Piste p in Pistes) if (p.Vivante && CranDe(p, BandeDe(d, p.Cle)) != 0) return false;
+            return true;
+        }
+
+        // ── les acteurs ────────────────────────────────────────────────────────────────────────
+
+        public static bool EstParti(string statut) => statut == "gone";
+
+        /// <summary>`steady` « il tient » · `nervous` « il a peur » · `unavailable` « injoignable » · `gone` « parti » (cadre 151). Un statut
+        /// que le back inventerait s'affiche TEL QUEL (jamais rabattu sur un mot rassurant).</summary>
+        public static string MotDuStatut(string statut) =>
+            MafiaCleanCity.I18n.Libelle.ParValeur("forensic", "statut", statut, RepliDuStatut(statut));
+
+        /// <summary>Le REPLI de `ParValeur` : le mot de la maquette, tant que la clé `forensic.statut.<valeur>` n'est pas servie (allowlist N2
+        /// nommée, patron `CollecteMots.RepliDeLaBande`). Un statut que le back inventerait s'affiche TEL QUEL.</summary>
+        private static string RepliDuStatut(string statut)
+        {
+            switch (statut)
+            {
+                case "steady": return "il tient";
+                case "nervous": return "il a peur";
+                case "unavailable": return "injoignable";
+                case "gone": return "parti";
+                default: return string.IsNullOrEmpty(statut) ? "—" : statut;
+            }
+        }
+
+        /// <summary>L'encre du statut (cadre 151) : vert, orange, gris, rouge. Un statut inconnu : l'encre éteinte, jamais le vert.</summary>
+        public static Color EncreDuStatut(string statut)
+        {
+            switch (statut)
+            {
+                case "steady": return DesignTokens.Current.accentCalm;
+                case "nervous": return DesignTokens.Current.accentWarning;
+                case "unavailable": return DesignTokens.Current.onSurfaceSecondary;
+                case "gone": return DesignTokens.Current.accentDanger;
+                default: return DesignTokens.Current.onSurfaceMuted;
+            }
+        }
+
+        /// <summary>La marque sombre de la silhouette : un chevron pour « il tient » et « parti », une porte close pour « il a peur » et « injoignable ».</summary>
+        public static bool SilhouetteAChevron(string statut) => statut == "steady" || statut == "gone";
+
+        /// <summary>`lawyer` « Avocat » · `clerk` « Greffier » : par la VALEUR SERVIE (`forensic.acteur.<type>`, servie FR et EN) ; un type
+        /// inconnu s'affiche tel quel.</summary>
+        public static string NomDuType(string type) =>
+            MafiaCleanCity.I18n.Libelle.ParValeur("forensic", "acteur", type, RepliDuType(type));
+
+        private static string RepliDuType(string type)
+        {
+            switch (type)
+            {
+                case "lawyer": return "Avocat";
+                case "clerk": return "Greffier";
+                default: return string.IsNullOrEmpty(type) ? "—" : type;
+            }
+        }
+
+        /// <summary>L'identifiant montré (« ia.actor.4f21 » dans la maquette) : les quatre premiers caractères du `actorRef` servi — PROPOSÉ,
+        /// la maquette n'en dit pas la règle ; jamais un nom inventé.</summary>
+        public static string RefAffichee(string actorRef)
+        {
+            if (string.IsNullOrEmpty(actorRef)) return "—";
+            string court = actorRef.Length > 4 ? actorRef.Substring(0, 4) : actorRef;
+            return "ia.actor." + court;
         }
     }
 
@@ -560,8 +1061,8 @@ namespace MafiaCleanCity.Operational
                 //      référence pour son RÔLE (de l'or à ce rang) sans en mesurer la VALEUR.
                 case Gravite.Surveille: return DesignTokens.Current.hudMoneyGold;
                 case Gravite.Criant:    return DesignTokens.Current.accentWarning;
-                // la couleur d'un événement n'est pas dessinée à part par la maquette : celle du cran le plus haut, dit ici
-                case Gravite.Franchi:   return DesignTokens.Current.accentWarning;
+                // cadre 132 (la piste au bout) : le mot, les quatre crans et le bord du bloc sont `#ff5a4d` — la couleur d'un ÉVÉNEMENT
+                case Gravite.Franchi:   return DesignTokens.Current.accentDanger;
                 case Gravite.Inconnu:   return DesignTokens.Current.onSurfaceMuted;
                 default: throw new System.ArgumentOutOfRangeException(nameof(g), g,
                     "ForensicResolvers.CouleurPour : membre de Gravite non résolu.");

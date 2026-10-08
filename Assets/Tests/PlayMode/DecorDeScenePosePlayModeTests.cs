@@ -89,7 +89,7 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   PlItem/PlItemLache, PlAlerte, PlRien, Tag* : états d'une affaire ACTIVE, non servie (`GET /v1/me/legal` : activeCases: [])
             //   — non construits (CLIENT-1). PlTete, PlBas, PlGeste*, PlVitre, PlAv, Mano : en-tête, pied, vitre, avatar, cadran —
             //   blocs de CLIENT-1, à déléguer à Filets.
-            { "㉛", new[] { "Mano", "PlAlerte", "PlAv", "PlBas", "PlGeste", "PlGesteRouge", "PlItem", "PlItemLache", "PlRien", "PlTete", "PlVitre", "Tag", "Tag_2", "Tag_3" } },
+            { "㉛", new[] { "Mano", "PlAlerte", "PlAv", "PlBas", "PlGeste", "PlGesteRouge", "PlItem", "PlItemLache", "PlTete", "PlVitre" } },   // PlRien, Tag, Tag_2, Tag_3 RETIRÉES le 08/10 (CLIENT-2, créneau du dossier) : le cumul (5e430bb5, CLIENT-1) les branche — D6b rougissait sur le cumul
             // ㉟ (08/10) — Enseigne et Fen posées. Dl/DlMort/DlPris/DlPrisMort (les rangées de points de vente), Gd, Pann/Pann_2 (le
             //   panneau d'état) : déjà tracés par `ProceduralUI` dans le contrôleur (rangées, pastilles) — à migrer vers Filets ; Elast
             //   (la boîte), Cta6/Cta6Eteint (le pied), Mano (le cadran) : à classer au juge.
@@ -97,11 +97,10 @@ namespace MafiaCleanCity.Tests.PlayMode
             // ㉚ (08/10) — L posée (les filets pointillés du bon). Le reste : en-tête (EnteteDEcran), pied (PiedDEcran), chaîne
             //   (nœuds, tuyaux, pics, états, gestes, rien, cadran) — blocs de CLIENT-1, à déléguer à Filets.
             { "㉚", new[] { "Bas", "Entete", "Etat", "Etat_2", "Geste", "GesteMort", "Mano", "Noeud", "NoeudFlou", "NoeudTrouve", "Pic", "Pic_2", "Rien", "Tuyau", "TuyauRefoule" } },
-            // ㊴ (08/10) — Fen (×3 compteurs), Elast (la boîte des pistes), Cta6 (le pied « acheter du renseignement »), Ac/AcParti
-            //   (les acteurs), Mano (le cadran) : éléments de la maquette `.dos6` que le contrôleur NE CONSTRUIT PAS (structure du
-            //   client : enseigne, 3 signaux, panneau) — signalé à f2, à classer au juge (A s'ils manquent au joueur). PiBout : la
-            //   piste « au bout » (bord accentDanger), état non exprimé par le contrôleur.
-            { "㊴", new[] { "Ac", "AcParti", "Cta6", "Elast", "Fen", "Mano", "PiBout" } },
+            // ㊴ (08/10, DESIGN v5.2) — la vue pistes/acteurs/vide est construite d'après les cadres 150, 151 et 135 : toutes les recettes de
+            //   `.dos6` sont posées SAUF deux. Cta6 : le pied « acheter du renseignement » ALLUMÉ des cadres 131-132, dessin ANCIEN (le pied
+            //   qui fait foi est Cta6Eteint, 150 : le prix n'est pas servi). Mano : le cadran des cadres 131-134, que le client ne construit pas.
+            { "㊴", new[] { "Cta6", "Mano" } },
             // ㉜ (08/10) — toutes les recettes de blocs (tête, bas, plaques, réserves, jetons, gestes, aperçu, rien, ligne pointillée,
             //   cadran) : blocs de CLIENT-1, tracés par ses propres bords (`Bord`, `FiletG`, `Filet`) — à déléguer à Filets avec Cerner.
             { "㉜", new[] { "L", "Mano", "Rond", "Rond_2", "SvApercu", "SvBas", "SvGeste", "SvGesteMort", "SvJeton", "SvJetonUse", "SvPlaque", "SvPlaqueConfiee", "SvPlaqueGris", "SvPlaqueViser", "SvRien", "SvTete" } },
@@ -142,10 +141,18 @@ namespace MafiaCleanCity.Tests.PlayMode
             return d;
         }
 
+        /// <summary>Les recettes COMPOSÉES (`DecorsDeScene.FiletsComposes.<Nom>`) : champ du catalogue → (composée → générée qu'elle
+        /// prolonge). D6e exige qu'aucune composée n'y manque et qu'aucune entrée n'y soit périmée.</summary>
+        internal static readonly Dictionary<string, Dictionary<string, string>> Composees = new Dictionary<string, Dictionary<string, string>>
+        {
+            { "Forensic", new Dictionary<string, string> { { "FenIciOr", "FenIci" } } },
+        };
+
         /// <summary>D6b : les recettes de `ecran` que la source ne référence pas — ni directement (`Filets.&lt;Ecran&gt;.&lt;Nom&gt;`), ni
         /// par un ÉTAT référencé (`Etats.&lt;Ecran&gt;.&lt;État&gt;` dont le bord EST la recette : `parEtat[état]` = ses recettes). Pure.</summary>
         internal static List<string> RecettesOrphelines(string source, string ecran, IEnumerable<string> recettes,
-                                                        IDictionary<string, string[]> parEtat = null)
+                                                        IDictionary<string, string[]> parEtat = null,
+                                                        IDictionary<string, string> composees = null)
         {
             string s = SansCommentaires(source);
             var viaEtats = new HashSet<string>();
@@ -153,6 +160,10 @@ namespace MafiaCleanCity.Tests.PlayMode
                 foreach (var kv in parEtat)
                     if (Regex.IsMatch(s, @"Etats\." + Regex.Escape(ecran) + @"\." + Regex.Escape(kv.Key) + @"\b"))
                         foreach (string r in kv.Value) viaEtats.Add(r);
+            // Une recette COMPOSÉE référencée (`FiletsComposes.<Nom>`) vaut référence à la recette GÉNÉRÉE qu'elle prolonge.
+            if (composees != null)
+                foreach (var kv in composees)
+                    if (Regex.IsMatch(s, @"FiletsComposes\." + Regex.Escape(kv.Key) + @"\b")) viaEtats.Add(kv.Value);
             return recettes.Where(r => !PoseesParLeDecor.Contains(r) && !viaEtats.Contains(r)
                                        && !Regex.IsMatch(s, @"Filets\." + Regex.Escape(ecran) + @"\." + Regex.Escape(r) + @"\b"))
                            .OrderBy(r => r).ToList();
@@ -251,6 +262,53 @@ namespace MafiaCleanCity.Tests.PlayMode
                 RecettesOrphelines("return DecorsDeScene.Etats.Loi.Pris;", "Loi", new[] { "PlChoixPris", "PlChoixRisque" }, parEtat),
                 "une recette portée par un état RÉFÉRENCÉ compte ; celle d'un état non référencé reste orpheline");
             Assert.IsNotEmpty(RecettesParEtat("Loi")["Pris"], "le bord de Etats.Loi.Pris EST une recette mesurée de ㉛ (référence)");
+            // Une recette COMPOSÉE référencée vaut référence à la générée qu'elle prolonge (㊴ : FenIciOr → FenIci) ; en commentaire, non.
+            var compo = new Dictionary<string, string> { { "FenIciOr", "FenIci" } };
+            CollectionAssert.AreEqual(new[] { "Fen" }, RecettesOrphelines("Filets.Poser(b, DecorsDeScene.FiletsComposes.FenIciOr);", "Forensic",
+                new[] { "Fen", "FenIci" }, null, compo), "FenIciOr posée ⇒ FenIci référencée ; Fen reste orpheline");
+            CollectionAssert.AreEqual(new[] { "Fen", "FenIci" }, RecettesOrphelines("// DecorsDeScene.FiletsComposes.FenIciOr", "Forensic",
+                new[] { "Fen", "FenIci" }, null, compo), "une référence en commentaire ne compte pas");
+            var generee = new[] { new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1f)) };
+            var composee = new[] { generee[0], new SpecFilet(Cotes.Bas, 2f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1f), inset: 1f) };
+            Assert.IsTrue(PrefixeIdentique(composee, generee), "les premières specs SONT celles de la générée (même référence)");
+            Assert.IsFalse(PrefixeIdentique(new[] { new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, Teinte.Hex("#2a3648", 1f)), composee[1] }, generee),
+                "une COPIE égale en valeur n'est pas la générée : un re-mesure ne la suivrait pas");
+            Assert.IsFalse(PrefixeIdentique(generee, generee), "une composée qui n'ajoute rien n'en est pas une");
+        }
+
+        /// <summary>Pure : `composee` commence, par RÉFÉRENCE, par toutes les specs de `generee` et en ajoute au moins une.</summary>
+        internal static bool PrefixeIdentique(SpecFilet[] composee, SpecFilet[] generee)
+        {
+            if (composee.Length <= generee.Length) return false;
+            for (int k = 0; k < generee.Length; k++) if (!ReferenceEquals(composee[k], generee[k])) return false;
+            return true;
+        }
+
+        /// <summary>D6e : chaque recette COMPOSÉE du catalogue (`FiletsComposes`) prolonge, par référence, la recette GÉNÉRÉE que
+        /// `Composees` lui assigne ; aucune composée sans entrée, aucune entrée sans composée.</summary>
+        [Test]
+        public void D6e_ChaqueRecetteComposeeProlongeLaGenereeParReference()
+        {
+            FieldInfo[] champs = typeof(DecorsDeScene.FiletsComposes).GetFields(BindingFlags.Public | BindingFlags.Static)
+                                                                      .Where(f => f.FieldType == typeof(SpecFilet[])).ToArray();
+            Assert.IsNotEmpty(champs, "anti-vacuité : au moins une recette composée");
+            var vues = new HashSet<string>();
+            foreach (var ec in Composees)
+            {
+                System.Type filets = typeof(DecorsDeScene.Filets).GetNestedType(ec.Key, BindingFlags.Public | BindingFlags.Static);
+                Assert.IsNotNull(filets, $"DecorsDeScene.Filets.{ec.Key} absent");
+                foreach (var kv in ec.Value)
+                {
+                    FieldInfo composee = champs.FirstOrDefault(f => f.Name == kv.Key);
+                    Assert.IsNotNull(composee, $"Composees[{ec.Key}] nomme {kv.Key} : absente de FiletsComposes (entrée périmée)");
+                    FieldInfo generee = filets.GetField(kv.Value, BindingFlags.Public | BindingFlags.Static);
+                    Assert.IsNotNull(generee, $"Filets.{ec.Key}.{kv.Value} absente (renommée par un re-mesure ?)");
+                    Assert.IsTrue(PrefixeIdentique((SpecFilet[])composee.GetValue(null), (SpecFilet[])generee.GetValue(null)),
+                        $"FiletsComposes.{kv.Key} ne prolonge pas Filets.{ec.Key}.{kv.Value} par référence");
+                    vues.Add(kv.Key);
+                }
+            }
+            CollectionAssert.AreEquivalent(champs.Select(f => f.Name).ToArray(), vues.ToArray(), "toute composée a son entrée dans Composees");
         }
 
         [Test]
@@ -287,7 +345,8 @@ namespace MafiaCleanCity.Tests.PlayMode
             foreach (SpecDecor s in DecorsDeScene.Tous.Where(e => e.Statut == StatutDecor.Pose && !PoseEnAttente.Contains(e.Symbole)))
             {
                 string champ = NomDeChamp(s);
-                List<string> orphelines = RecettesOrphelines(SourceDe(s), champ, RecettesDe(champ), RecettesParEtat(champ));
+                List<string> orphelines = RecettesOrphelines(SourceDe(s), champ, RecettesDe(champ), RecettesParEtat(champ),
+                                                              Composees.TryGetValue(champ, out var compo) ? compo : null);
                 RecettesEnAttente.TryGetValue(s.Symbole, out string[] attente);
                 attente = attente ?? new string[0];
                 foreach (string o in orphelines.Except(attente)) echecs.Add($"{s.Symbole} {champ}.{o} : recette mesurée jamais posée");

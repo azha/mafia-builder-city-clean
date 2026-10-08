@@ -20,7 +20,7 @@ namespace MafiaCleanCity.Shell
     ///
     /// Sous le bloc : un conteneur `Filets` (nom figé, DISTINCT du `Cerne` de `PiedDEcran.Cerner`), hors mise en page,
     /// premier enfant (au-dessus du fond du bloc, sous son contenu), qui porte `Haut|Droite|Bas|Gauche` (côtés droits) ou
-    /// `Contour` (4 côtés arrondis). Ni `Canvas` ni `CanvasGroup` ; chaque `Graphic` naît avec son `CanvasRenderer`.
+    /// `Contour` (4 côtés arrondis). Une 2ᵉ bande sur un côté déjà posé par une spec précédente a son nœud `<Côté><rang>` (`Bas1`, `Haut2`) ; la première garde son nom. Ni `Canvas` ni `CanvasGroup` ; chaque `Graphic` naît avec son `CanvasRenderer`.
     /// Épaisseur = `EchelleMaquette.PxTrait(css, racine plein écran, LargeurEcransBrennar6)` — jamais une constante K —,
     /// recalculée à chaque changement de rect (`FiletsPoses`).</summary>
     public static class Filets

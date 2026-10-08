@@ -94,8 +94,8 @@ namespace MafiaCleanCity.Tests.PlayMode
         public void D6a_RecettesGenerees_EgalesALaMesure_ParEcran_SurTousSesCadres()
         {
             Mesure m = LireMesure();
-            Assert.AreEqual(128, m.r.Length, "anti-vacuité : les 128 cadres mesurés");
-            Assert.AreEqual(1560, m.r.Sum(c => c.el.Length), "anti-vacuité : les 1560 éléments bordés du design (§3.4)");
+            Assert.AreEqual(130, m.r.Length, "anti-vacuité : les 130 cadres mesurés (㊴ : 150-151 ajoutés le 08/10)");
+            Assert.AreEqual(1587, m.r.Sum(c => c.el.Length), "anti-vacuité : les 1587 éléments bordés du design (§3.4)");
             Dictionary<int, Cadre> parCadre = m.r.ToDictionary(c => c.i);
 
             var noms = new HashSet<string>(DecorsDeScene.Tous.Select(s =>
@@ -340,6 +340,102 @@ namespace MafiaCleanCity.Tests.PlayMode
                 Color laiton = DesignTokens.Current.hudHairlineGold;
                 for (int y = bas; y < bas + 8; y++) if (Ecart255(t.GetPixel(W / 2, y), laiton) <= 6f) n++;
                 Assert.That(n, Is.InRange(3, 5), $"filet bas laiton : {n} px pour 2 px CSS (= 4)");
+            }
+            finally { if (t != null) UnityEngine.Object.DestroyImmediate(t); banc.Dispose(); }
+        }
+
+        // ═════════════════════════════════════════════ deux bandes du MÊME côté (㊴, DESIGN v5.2 §5, étape 1)
+
+        private static bool AncreAu(RectTransform rt, string cote)
+        {
+            switch (cote)
+            {
+                case "Haut": return rt.anchorMin.y == 1f && rt.anchorMax.y == 1f;
+                case "Bas": return rt.anchorMin.y == 0f && rt.anchorMax.y == 0f;
+                case "Gauche": return rt.anchorMin.x == 0f && rt.anchorMax.x == 0f;
+                default: return rt.anchorMin.x == 1f && rt.anchorMax.x == 1f;
+            }
+        }
+
+        /// <summary>Le bord d'une fenêtre (`Forensic.FenIci`, 4 côtés, 1 px) PLUS une bande d'or de 2 px sur son côté BAS, en dedans
+        /// du bord (`inset 0 -2px 0 #f2c96b`, le cadre 150) : (1) deux bandes du même côté ⇒ deux nœuds DISTINCTS, la première
+        /// (`Bas`) intacte, la seconde suffixée par son rang ; (2) le nœud suffixé garde la géométrie de SON côté (ancré en bas,
+        /// jamais à droite : la faute d'un nom pris pour un côté) ; (3) EFFET : sur la colonne centrale, du bas vers le haut, le bord
+        /// `#2a3648` PUIS l'or, chacun à `PxTrait ± 1` rangée, et AUCUNE rangée or en haut.</summary>
+        [UnityTest]
+        public IEnumerator D6c_DeuxBandesDuMemeCote_DeuxNoeuds_BordPuisOr_SansEcrasement()
+        {
+            SpecFilet[] fen = DecorsDeScene.Filets.Forensic.FenIci;
+            var or = new SpecFilet(Cotes.Bas, 2f, StyleFilet.Plein, Teinte.Jeton("hudMoneyGold", d => d.hudMoneyGold, 1f), inset: 1f);
+            var recette = new SpecFilet[fen.Length + 1];
+            Array.Copy(fen, recette, fen.Length); recette[fen.Length] = or;
+            var banc = new Banc(new Vector2(400f, 200f));
+            Texture2D t = null;
+            try
+            {
+                yield return null;
+                GameObject c = Filets.Poser(banc.Bloc, recette);
+                VerifierStructure(c);
+                CollectionAssert.AreEquivalent(new[] { "Haut", "Droite", "Bas", "Gauche", "Bas1" }, c.transform.Cast<Transform>().Select(x => x.name),
+                    "deux bandes sur Bas ⇒ deux nœuds ; la première garde son nom");
+                var bas = (RectTransform)c.transform.Find("Bas"); var bas1 = (RectTransform)c.transform.Find("Bas1");
+                Color bord = fen[0].Couleur.Resoudre(), dore = or.Couleur.Resoudre();
+                Assert.AreEqual((Color32)bord, (Color32)bas.GetComponent<Image>().color, "la première bande (Bas) est INTACTE : le bord");
+                Assert.AreEqual((Color32)dore, (Color32)bas1.GetComponent<Image>().color, "la seconde (Bas1) est l'or");
+                Assert.IsTrue(AncreAu(bas1, "Bas"), "Bas1 est ancré en BAS (la géométrie vient du côté, pas du nom du nœud)");
+                Assert.Greater(bas1.rect.width, bas1.rect.height, "Bas1 est une bande horizontale, pas une barre verticale à droite");
+                Assert.Less(c.transform.Find("Bas").GetSiblingIndex(), bas1.GetSiblingIndex(), "l'or est AU-DESSUS du bord");
+                yield return null;
+                t = banc.Rendre();
+                Assert.Greater(Ecart255(bord, dore), 30f, "prémisse : le bord et l'or se distinguent");
+                int ep = EchelleMaquette.PxTrait(1f, banc.Racine, EchelleMaquette.LargeurEcransBrennar6);
+                int epOr = EchelleMaquette.PxTrait(2f, banc.Racine, EchelleMaquette.LargeurEcransBrennar6);
+                int pied = H / 2 - 100, nBord = 0, nOr = 0, premierOr = -1;
+                for (int y = pied; y < pied + 14; y++)
+                {
+                    Color px = t.GetPixel(W / 2, y);
+                    if (Ecart255(px, bord) <= 6f) nBord++;
+                    else if (Ecart255(px, dore) <= 6f) { nOr++; if (premierOr < 0) premierOr = y - pied; }
+                }
+                Assert.That(nBord, Is.InRange(ep - 1, ep + 1), $"le bord bas SUBSISTE : {nBord} rangée(s) `#2a3648` pour PxTrait = {ep}");
+                Assert.That(nOr, Is.InRange(epOr - 1, epOr + 1), $"l'or : {nOr} rangée(s) pour PxTrait(2) = {epOr}");
+                Assert.That(premierOr, Is.InRange(ep - 1, ep + 1), "l'or commence juste AU-DESSUS du bord (en dedans), pas dessous");
+                int haut = H / 2 + 100 - 1, orHaut = 0;
+                for (int y = haut; y > haut - 14; y--) if (Ecart255(t.GetPixel(W / 2, y), dore) <= 6f) orHaut++;
+                Assert.AreEqual(0, orHaut, "aucune rangée or en HAUT du bloc");
+            }
+            finally { if (t != null) UnityEngine.Object.DestroyImmediate(t); banc.Dispose(); }
+        }
+
+        /// <summary>Le cas RÉEL d'aujourd'hui : `HabillerEnseigne` ajoute le liseré blanc du haut à une recette `Enseigne` qui couvre
+        /// déjà `Haut` (bord 1 px `#2a3648`). Avant l'étape 1 le liseré ÉCRASAIT le bord haut ; la maquette montre le bord PUIS le liseré
+        /// en dedans. Le liseré a son nœud (`Haut2` : rang 2) ANCRÉ EN HAUT, et la première rangée du haut est la couleur du bord.</summary>
+        [UnityTest]
+        public IEnumerator D6c_Enseigne_LeBordHautSubsiste_LeLisereAUnNoeudAncreEnHaut()
+        {
+            SpecFilet[] rec = DecorsDeScene.Filets.Reputation.Enseigne;
+            SpecFilet bordHaut = Array.Find(rec, x => (x.Cotes & Cotes.Haut) != 0);
+            Assert.IsNotNull(bordHaut, "prémisse : la recette mesurée de l'enseigne couvre déjà le haut");
+            var banc = new Banc(new Vector2(480f, 80f));
+            Texture2D t = null;
+            try
+            {
+                yield return null;
+                DecorDeScene.HabillerEnseigne(banc.Bloc, rec, DecorsDeScene.Reputation);
+                Transform filets = banc.Bloc.Find(Filets.NomConteneur);
+                string[] noms = filets.Cast<Transform>().Select(x => x.name).ToArray();
+                string lisere = "Haut" + rec.Length;
+                CollectionAssert.Contains(noms, "Haut", "le bord haut mesuré garde son nœud");
+                CollectionAssert.Contains(noms, lisere, "le liseré a son PROPRE nœud (rang = nombre de specs mesurées)");
+                Assert.IsTrue(AncreAu((RectTransform)filets.Find(lisere), "Haut"), "le liseré est ancré en HAUT");
+                Assert.IsTrue(AncreAu((RectTransform)filets.Find("Droite"), "Droite"), "le bord droit reste à droite");
+                yield return null;
+                t = banc.Rendre();
+                Color bord = bordHaut.Couleur.Resoudre();
+                int ep = EchelleMaquette.PxTrait(1f, banc.Racine, EchelleMaquette.LargeurEcransBrennar6);
+                int haut = H / 2 + 40 - 1, n = 0;
+                for (int y = haut; y > haut - 8; y--) if (Ecart255(t.GetPixel(W / 2, y), bord) <= 6f) n++;
+                Assert.That(n, Is.InRange(ep - 1, ep + 1), $"le bord haut SUBSISTE : {n} rangée(s) `#2a3648` en haut de l'enseigne pour PxTrait = {ep}");
             }
             finally { if (t != null) UnityEngine.Object.DestroyImmediate(t); banc.Dispose(); }
         }
