@@ -215,12 +215,12 @@ namespace MafiaCleanCity.Operational
             {
                 case VueDossier.Acteurs:
                     MajPanneau(Lib("ceux qui ne sont pas sur la liste"), Lib("D’autres parlent, et vous ne les voyez pas"),
-                        Riche(Lib("un inspecteur du port, un courtier, le greffier d’un juge : {ils se paient} comme les autres, mais {personne ne vous a encore donné leur nom}.")),
+                        Riche("un inspecteur du port, un courtier, le greffier d’un juge : {ils se paient} comme les autres, mais {personne ne vous a encore donné leur nom}."),
                         DesignTokens.Current.accentWarning);
                     break;
                 case VueDossier.Vide:
                     MajPanneau(Lib("ce n’est pas une bonne nouvelle"), Lib("C’est juste une nouvelle"),
-                        Riche(Lib("les trois pistes montent avec ce que vous faites. À zéro, elles ne disent pas que vous êtes prudent : elles disent que {vous n’avez pas encore commencé}.")),
+                        Riche("les trois pistes montent avec ce que vous faites. À zéro, elles ne disent pas que vous êtes prudent : elles disent que {vous n’avez pas encore commencé}."),
                         DesignTokens.Current.hudCreme);
                     break;
                 default:
@@ -230,7 +230,7 @@ namespace MafiaCleanCity.Operational
                             Lib("on n'a pas eu de réponse. Ce n'est pas « tout va bien » : c'est « on ne sait pas »."), DesignTokens.Current.hudCreme);
                     else
                         MajPanneau(Lib("pourquoi trois colonnes"), Lib("On peut être propre sur deux et pris sur la troisième"),
-                            Riche(Lib("la comptabilité, les rejets et le train de vie {ne se mélangent pas}. Pour voir {qui parle}, la fenêtre des acteurs, en haut à droite.")),
+                            Riche("la comptabilité, les rejets et le train de vie {ne se mélangent pas}. Pour voir {qui parle}, la fenêtre des acteurs, en haut à droite."),
                             DesignTokens.Current.hudCreme);
                     break;
             }
@@ -241,8 +241,8 @@ namespace MafiaCleanCity.Operational
             pied.gameObject.SetActive(Vue != VueDossier.Vide);
             boutonAcheter.gameObject.SetActive(Vue == VueDossier.Pistes);
             note6.text = Vue == VueDossier.Acteurs
-                ? Riche(Lib("le renseignement s’achète {acteur par acteur} — éteint tant que {le prix n’est pas servi} : on n’achète pas sans savoir combien"))
-                : Riche(Lib("sur un acteur, pas sur une piste — éteint : {le prix n’est pas servi}"));
+                ? Riche("le renseignement s’achète {acteur par acteur} — éteint tant que {le prix n’est pas servi} : on n’achète pas sans savoir combien")
+                : Riche("sur un acteur, pas sur une piste — éteint : {le prix n’est pas servi}");
         }
 
         // ── les pistes (150) ──────────────────────────────────────────────────────────────────
@@ -377,6 +377,9 @@ namespace MafiaCleanCity.Operational
         private TextMeshProUGUI fleche;
         private RectTransform pistesRoot, acteursRoot;
         private TextMeshProUGUI notePi, rienTexte;
+        private ListeDefilante listeElast;
+        /// <summary>La fenêtre défilante de la boîte élastique (garde : le contenu qui dépasse défile, il n'est jamais tranché).</summary>
+        public ListeDefilante FenetreDefilante => listeElast;
         private readonly RectTransform[] piRoot = new RectTransform[3];
         private readonly TextMeshProUGUI[] piTitre = new TextMeshProUGUI[3];
         private readonly Image[,] piCran = new Image[3, DossierCalculs.Crans];
@@ -519,22 +522,35 @@ namespace MafiaCleanCity.Operational
             Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Forensic.Elast);   // `.elast` : 1 px #2a3648 mesuré
             var le = go.AddComponent<LayoutElement>();
             le.minHeight = Px(60f); le.flexibleHeight = 1f;
-            go.AddComponent<RectMask2D>();   // `.elast{overflow:hidden}` : une liste trop longue est rognée, elle ne recouvre pas le panneau
-            var v = go.AddComponent<VerticalLayoutGroup>();
+            go.AddComponent<RectMask2D>();   // `.elast{overflow:hidden}` — la FENÊTRE ; ce qui la dépasse défile (ListeDefilante : fondu + ascenseur), il n'est ni tranché ni imprimé sur le reste
+
+            // ⛔ LA CAUSE COMMUNE de F1/F2/F5 (juge visuel r1, 08/10) : les enfants étaient dans un VerticalLayoutGroup SANS défilement, et la rangée des pistes (HorizontalLayoutGroup,
+            // `childForceExpandHeight`) rendait son `flexibleHeight` à la pile : elle prenait TOUT ce que le panneau laissait (80 % au lieu de 48 %) ; à 1920 le contenu, plus haut que la
+            // fenêtre, était écrasé sous sa hauteur préférée (texte hors de sa carte, 4ᵉ acteur tranché). Le CONTENU épouse maintenant ses enfants (ContentSizeFitter) et la FENÊTRE défile.
+            GameObject contenu = NouveauUI("Contenu", go.transform);
+            RectTransform contenuRt = (RectTransform)contenu.transform;
+            contenuRt.anchorMin = new Vector2(0f, 1f); contenuRt.anchorMax = new Vector2(1f, 1f);
+            contenuRt.pivot = new Vector2(0.5f, 1f);
+            contenuRt.offsetMin = Vector2.zero; contenuRt.offsetMax = Vector2.zero;
+            var v = contenu.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset(PxTrait(8f), PxTrait(8f), PxTrait(7f), PxTrait(7f));
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            contenu.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            listeElast = ListeDefilante.Equiper((RectTransform)go.transform, contenuRt, DesignTokens.Current.surfaceBase);
 
             // (150) les trois pistes côte à côte, puis la note sous elles
-            GameObject pistes = NouveauUI("Pistes", go.transform);
+            GameObject pistes = NouveauUI("Pistes", contenu.transform);
             pistesRoot = (RectTransform)pistes.transform;
+            // la rangée vaut la hauteur de sa plus haute carte, jamais davantage : `flexibleHeight = 0` l'emporte (LayoutElement) sur le « force expand » du groupe, qui ne sert plus qu'à égaliser les cartes
+            var pistesLe = pistes.AddComponent<LayoutElement>(); pistesLe.flexibleHeight = 0f;
             var ph = pistes.AddComponent<HorizontalLayoutGroup>();
             ph.spacing = Px(5f);
             ph.childControlWidth = true; ph.childControlHeight = true;
             ph.childForceExpandWidth = true; ph.childForceExpandHeight = true;
             for (int i = 0; i < DossierCalculs.Pistes.Length; i++) ConstruirePiste(i, pistes.transform);
 
-            notePi = NouveauTexte(go.transform, "NotePistes",
+            notePi = NouveauTexte(contenu.transform, "NotePistes",
                 Lib("Les livres et le train de vie : personne ne regarde par là. Pour l’instant."), Px(7f),
                 DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.hudSerifFont);
             notePi.fontStyle = FontStyles.Italic;
@@ -542,7 +558,7 @@ namespace MafiaCleanCity.Operational
             notePi.margin = new Vector4(Px(4f), Px(6f), Px(4f), 0f);
 
             // (151) la liste des acteurs
-            GameObject acteurs = NouveauUI("Acteurs", go.transform);
+            GameObject acteurs = NouveauUI("Acteurs", contenu.transform);
             acteursRoot = (RectTransform)acteurs.transform;
             var av = acteurs.AddComponent<VerticalLayoutGroup>();
             av.spacing = Px(3f);
@@ -556,7 +572,10 @@ namespace MafiaCleanCity.Operational
             rienTexte.fontStyle = FontStyles.Italic;
             rienTexte.alignment = TextAlignmentOptions.Center;
             rienTexte.margin = new Vector4(Px(22f), 0f, Px(22f), 0f);
-            rienTexte.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
+            // hors du contenu défilant : il occupe la fenêtre ENTIÈRE et se centre dedans (rien ne défile dans l'état vide)
+            RectTransform rienRt = rienTexte.rectTransform;
+            rienRt.anchorMin = Vector2.zero; rienRt.anchorMax = Vector2.one; rienRt.offsetMin = Vector2.zero; rienRt.offsetMax = Vector2.zero;
+            rienTexte.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
         /// <summary>Une piste (`.pi`) : son titre, ses quatre crans (le premier EN BAS : `column-reverse`), son mot, sa clé.</summary>
@@ -662,8 +681,25 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>`<u>` de la maquette : `{…}` devient du texte or gras (`color:#f2c96b;font-weight:700`). Les accolades vivent DANS la
         /// phrase traduite, pour qu'une phrase servie garde ses emphases.</summary>
-        private static string Riche(string phrase) =>
-            phrase.Replace("{", $"<b><color=#{ColorUtility.ToHtmlStringRGB(DesignTokens.Current.hudMoneyGold)}>").Replace("}", "</color></b>");
+        private static string Riche(string litteral) =>
+            ReposerLesEmphases(Lib(litteral), litteral)
+                .Replace("{", $"<b><color=#{ColorUtility.ToHtmlStringRGB(DesignTokens.Current.hudMoneyGold)}>").Replace("}", "</color></b>");
+
+        /// <summary>⛔ F4 (juge visuel r1, 08/10) : le bundle SERT « …elles disent que vous n’avez pas encore commencé. » SANS accolades — la valeur servie gagne, et l'emphase or+gras de la maquette
+        /// disparaissait (0 % d'encre claire, contre 21 % ; les chaînes encore en repli, elles, la gardaient). Une valeur servie qui n'a pas ses accolades les reprend ici : chaque fragment que le
+        /// littéral met entre accolades, retrouvé tel quel dans le texte servi, est ré-entouré. Un texte servi qui porte déjà des accolades est laissé tel quel ; un fragment introuvable
+        /// (autre langue) n'est pas forcé. Pure.</summary>
+        public static string ReposerLesEmphases(string servi, string litteral)
+        {
+            if (string.IsNullOrEmpty(servi) || string.IsNullOrEmpty(litteral) || servi.IndexOf('{') >= 0) return servi;
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(litteral, @"\{([^{}]+)\}"))
+            {
+                string fragment = m.Groups[1].Value;
+                int i = servi.IndexOf(fragment, System.StringComparison.Ordinal);
+                if (i >= 0) servi = servi.Substring(0, i) + "{" + fragment + "}" + servi.Substring(i + fragment.Length);
+            }
+            return servi;
+        }
 
         /// <summary>Item 0.6 — un littéral STATIQUE de ㊴ passe par `forensic.bloc.<slug>`, repli sur le littéral.
         /// ⛔ N'Y PASSE PAS : la BANDE SERVIE. `Phrase()` rend le mot du serveur tel quel quand il n'est pas reconnu — délibéré.</summary>
@@ -1085,6 +1121,11 @@ namespace MafiaCleanCity.Operational
                 case "flagged":    return MafiaCleanCity.I18n.Libelle.De("forensic", "cran", "Un dossier est ouvert");
                 case "audited":    return MafiaCleanCity.I18n.Libelle.De("forensic", "evenement", "Ils sont venus");
                 case "glaring":    return MafiaCleanCity.I18n.Libelle.De("forensic", "evenement", "Ça saute aux yeux");
+                // ⛔ F3 (juge visuel r1, 08/10) : « visible » n'avait PAS son mot et tombait sur la phrase de sa GRAVITÉ (« Ça se voit de loin », 2 lignes, qui n'est aucun des quatre crans ratifiés de
+                // l'effluent, cadre 143 : invisible · des traces · ça se voit · ça saute aux yeux). Les trois premiers prennent leur mot de cran, servi (`forensic.cran.*`).
+                case "clear":      return MafiaCleanCity.I18n.Libelle.De("forensic", "cran", "invisible");
+                case "faint":      return MafiaCleanCity.I18n.Libelle.De("forensic", "cran", "des traces");
+                case "visible":    return MafiaCleanCity.I18n.Libelle.De("forensic", "cran", "ça se voit");
                 case "subpoenaed": return MafiaCleanCity.I18n.Libelle.De("forensic", "evenement", "Convocation reçue");
             }
             switch (NiveauDe(bande))
