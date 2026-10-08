@@ -69,6 +69,40 @@ namespace MafiaCleanCity.Operational.Tests
             return ecran;
         }
 
+        /// <summary>㉘ B1 (juge du 07/10 ; décision de f2 du 08/10) : la règle d'achat d'un relais (« … sur le port ou dans les cheminées seulement ») est dite UNE fois à
+        /// l'écran — dans le sous-titre quand AUCUN geste n'est offert, au-dessus du geste (le coût, avant l'appui) quand il l'est. Gardes d'EFFET : les textes
+        /// ACTIFS rendus, pas les paramètres. La maquette ne montre ni l'une ni l'autre (aucun cadre de cet état) : rien n'est inventé, un doublon est retiré.</summary>
+        [Test]
+        public void EcranDistributionB1_AucunRelais_LaReglePortCheminees_EstDiteUneSeuleFois()
+        {
+            var ecran = MonterEcran();
+            const string regle = "sur le port ou dans les cheminées seulement";
+
+            int Compte()
+            {
+                int n = 0;
+                foreach (TMPro.TextMeshProUGUI x in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(false))
+                    if (x.gameObject.activeInHierarchy && !string.IsNullOrEmpty(x.text) && x.text.Contains(regle)) n++;
+                return n;
+            }
+            string TousLesTextes()
+            {
+                var l = new List<string>();
+                foreach (TMPro.TextMeshProUGUI x in RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(false))
+                    if (x.gameObject.activeInHierarchy && !string.IsNullOrEmpty(x.text)) l.Add(x.text);
+                return string.Join(" | ", l);
+            }
+
+            ecran.MontrerAucunRelaisPourTest(gesteOffert: false);
+            Assert.AreEqual(1, Compte(), "sans geste : la règle est dite UNE fois, dans le sous-titre — " + TousLesTextes());
+            StringAssert.Contains("Un relais s", TousLesTextes(), "sans geste, le sous-titre garde la règle d'achat (seul endroit qui la dit)");
+
+            ecran.MontrerAucunRelaisPourTest(gesteOffert: true);   // le geste est trouvé APRÈS la recherche d'un bloc libre : le sous-titre se raccourcit
+            Assert.AreEqual(1, Compte(), "avec le geste : la règle n'est dite qu'UNE fois (au-dessus du bouton, plus dans le sous-titre) — " + TousLesTextes());
+            StringAssert.Contains("Coûte de l", TousLesTextes(), "avec le geste, le coût se dit AVANT l'appui (table 71, D18)");
+            StringAssert.DoesNotContain("Un relais s", TousLesTextes(), "avec le geste, le sous-titre ne répète pas la règle");
+        }
+
         // ═══ 1. GARDE STRUCTURELLE — ne lit aucun pixel, ne dépend d'aucune résolution ═══════
 
         /// <summary>⛔ TOUT `Graphic` PORTE SON `CanvasRenderer`, et TOUT Graphic sous ce fond

@@ -21,3 +21,9 @@ MafiaCI: RunPlayModeTests started — 1154 test(s) découverts (arbre PlayMode e
 MafiaCI: RunPlayModeTests finished — passed=4 failed=0 skipped=0 inconclusive=0 declares=4 comptes=4
 MafiaCI: catégories RÉELLEMENT exécutées = [ClichePlanchesParEcran]
 MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)
+== run4.log (EcranDistribution, noms nus ; ㉘ B1 : la règle d'achat dite une fois)
+MafiaCI: filtre SURCHARGÉ par MAFIA_CI_CATEGORIES = [EcranDistribution]
+MafiaCI: RunPlayModeTests started — 1155 test(s) découverts (arbre PlayMode entier ; le filtre de catégories s'applique à l'exécution, voir passed= ci-dessous) — DÉCLARÉS SOUS LE FILTRE : 24
+MafiaCI: RunPlayModeTests finished — passed=24 failed=0 skipped=0 inconclusive=0 declares=24 comptes=24
+MafiaCI: catégories RÉELLEMENT exécutées = [EcranDistribution]
+MafiaCI: VERDICT code=0 (failed=0 tronquee=0 filtreVide=0 catalogueSurvivant=0)

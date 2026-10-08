@@ -866,6 +866,8 @@ namespace MafiaCleanCity.Operational
         private void RendreGesteAchatDeRelais()
         {
             MontrerLesZones(couriers: false, pied: true);
+            sousTitreTexte.text = SousTitreDuVide(gesteOffert: true);   // ㉘ B1 : la règle d'achat n'est pas redite ici, elle l'est au-dessus du geste
+            TrackText(sousTitreTexte.text);
             // le coût, dit AVANT l'appui (table 71 ; D18 « demain »), sans montant
             TextMeshProUGUI cout = NouveauTexteFiche(piedRoot, "CoutAchatRelais", Libelle.Gabarit(
                 "distribution.geste.coute_de_l_argent_et_votre_decision_de_structure_du_jour_il_s_ouvre_ensuite_depuis_sa_fiche_sur_le_port_ou_dans_les_cheminees_seulement_et_en_demandera_une_autre_demain",
@@ -930,6 +932,30 @@ namespace MafiaCleanCity.Operational
         /// <summary>État vide (table 63, client 8979d626) : aucun `distribution_hub` possédé. Ce qui est vrai, et ce qu'on peut faire.</summary>
         public bool AucunRelais { get; private set; }
 
+        /// <summary>Le sous-titre de l'état « aucun relais ». ㉘ B1 (juge du 07/10 ; décision de f2 du 08/10) : la règle d'achat était dite DEUX fois quand le geste
+        /// d'achat est offert — ici, puis au-dessus du bouton (table 71, D18 : le coût se dit AVANT l'appui). La maquette ne montre ni l'une ni l'autre
+        /// (aucun cadre de cet état) : on n'invente rien, on n'écrit qu'UNE fois ce que le back sert. Geste offert ⇒ la phrase du geste seule garde la règle,
+        /// le sous-titre ne dit que ce que l'écran n'explique pas ailleurs ; sans geste, la règle d'achat reste ici (c'est alors le seul endroit qui la dit).</summary>
+        private static string SousTitreDuVide(bool gesteOffert)
+        {
+            string base_ = Libelle.Gabarit("distribution.vide.sans_relais_rien_ne_part_c_est_de_la_que_vos_coursiers_livrent",
+                                      "Sans relais, rien ne part\u00A0: c’est de là que vos coursiers livrent.");
+            if (gesteOffert) return base_;
+            // addendum 63 (client 33b422c5, 26/09) : « s'obtient en reconvertissant un de vos locaux » était FAUX
+            // (le back refuse de reconvertir un local du kit, real-estate.service.ts:355) — REMPLACÉE.
+            return base_ + "\n" + Libelle.Gabarit("distribution.vide.un_relais_s_achete_sur_un_bloc_libre_puis_s_ouvre_depuis_sa_fiche",
+                                      "Un relais s\u2019achète sur un bloc libre, puis s\u2019ouvre depuis sa fiche, sur le port ou dans les cheminées seulement \u2014 de l\u2019argent et deux décisions de structure, sur deux jours.");
+        }
+
+        /// <summary>Crochet de test : l'état « aucun relais », avec ou sans le geste d'achat (la recherche d'un bloc libre passe par le réseau).</summary>
+        public void MontrerAucunRelaisPourTest(bool gesteOffert)
+        {
+            EnsureInitialized();
+            AucunRelais = true;
+            RendreAucunRelais();
+            if (gesteOffert) RendreGesteAchatDeRelais();
+        }
+
         private void RendreAucunRelais()
         {
             ViderEnfants(corkboardRoot);
@@ -937,12 +963,7 @@ namespace MafiaCleanCity.Operational
             ViderEnfants(piedRoot);
             MontrerLesZones(couriers: false, pied: false);   // la bande basse revient avec le geste d'achat, s'il est offert
             titreTexte.text = Libelle.Gabarit("distribution.vide.pas_encore_de_relais", "Pas encore de relais.");
-            sousTitreTexte.text = Libelle.Gabarit("distribution.vide.sans_relais_rien_ne_part_c_est_de_la_que_vos_coursiers_livrent",
-                                      "Sans relais, rien ne part\u00A0: c’est de là que vos coursiers livrent.")
-                                  // addendum 63 (client 33b422c5, 26/09) : « s'obtient en reconvertissant un de vos locaux » était FAUX
-                                  // (le back refuse de reconvertir un local du kit, real-estate.service.ts:355) — REMPLACÉE.
-                                  + "\n" + Libelle.Gabarit("distribution.vide.un_relais_s_achete_sur_un_bloc_libre_puis_s_ouvre_depuis_sa_fiche",
-                                      "Un relais s\u2019achète sur un bloc libre, puis s\u2019ouvre depuis sa fiche, sur le port ou dans les cheminées seulement \u2014 de l\u2019argent et deux décisions de structure, sur deux jours.");
+            sousTitreTexte.text = SousTitreDuVide(gesteOffert: false);
             TrackText(titreTexte.text);
             TrackText(sousTitreTexte.text);
         }
