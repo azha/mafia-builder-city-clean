@@ -348,6 +348,10 @@ namespace MafiaCleanCity.Capture.Tests
                 if (!ProductionClickSupport.Click(entree)) { Noter(e.Pas, e.Nom, "ÉCHEC : l'entrée refuse le clic de production", e.Reference); yield break; }
             }
             for (int i = 0; i < 12; i++) yield return null;
+            // F6 (juge d'ensemble r3) : le toast `BandeauEphemere` (canon `hud-brennar.html:82`, top:78px, 5 s) est posé sur le losange du manomètre ; la maquette ne le porte dans aucun des cadres de la série 6
+            // et la planche le photographiait sur la SEULE première page (E01) : on l'efface avant chaque cliché, comme une animation se prend à t=0.
+            foreach (BandeauEphemere b in UnityEngine.Object.FindObjectsByType<BandeauEphemere>(FindObjectsSortMode.None)) b.Effacer();
+            yield return null;
             MonoBehaviour monte = shell.MountedTenantGameObject != null ? shell.MountedTenantGameObject.GetComponent(shell.MountedTenantType) as MonoBehaviour : null;
             if (monte == null) { Noter(e.Pas, e.Nom, "ÉCHEC : aucun locataire monté", e.Reference); yield break; }
             string etat = null;

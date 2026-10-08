@@ -65,7 +65,8 @@ namespace MafiaCleanCity.Tests.PlayMode
             { "㉙", new[] { "Av", "Av_2", "Bas", "Doss", "Ecu", "Ecu_2", "Entete", "Env", "Fam", "FamVisee", "Geste", "GesteRouge", "L", "Mano", "Rappel", "Res", "Res_2", "Res_3", "Res_4", "Rien", "ViseeTag" } },
             // ⑭ (08/10) — la tôle posée ; les blocs de l'écran (le manomètre de CLIENT-3 à venir, les fiches de la semaine) :
             //   traits propres du contrôleur ou absents — à migrer vers Filets / à classer au juge.
-            { "⑭", new[] { "Anneau", "BoutonFer", "BoutonFerSecondaire", "CadranFer", "Ecarter", "Jf", "JfPris", "Mano", "Pf", "PfPersiste", "PfRevele", "PfTraitee", "PlaqueFerTexte", "Regler", "Span", "Tole" } },
+            //   Tole BRANCHÉE le 08/10 (juge d'ensemble r3, F3 : le filet d'or du bord haut de la tôle, `Filets.Poser` sur un hôte du `Decor/Support`) — retirée de la dette.
+            { "⑭", new[] { "Anneau", "BoutonFer", "BoutonFerSecondaire", "CadranFer", "Ecarter", "Jf", "JfPris", "Mano", "Pf", "PfPersiste", "PfRevele", "PfTraitee", "PlaqueFerTexte", "Regler", "Span" } },
             // ㉞ (08/10) — toutes les recettes de blocs (en-tête, carnet, composeur, pied) : blocs de CLIENT-1 — à déléguer à Filets.
             { "㉞", new[] { "CnBas", "CnGeste", "CnGesteMort", "CnGesteRouge", "CnNouvelle", "CnNouvelleVue", "CnPol", "CnPolActif", "CnRien", "CnSeq", "CnSeqVerrou", "CnSlotVide", "CnTete", "Contre", "Mano", "Tag" } },
             // ㉔ (08/10) — le burner posé ; l'écran est une carte fixe (600×640) d'avant la série 6 : l'écran LCD, les bulles, les

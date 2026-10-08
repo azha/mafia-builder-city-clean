@@ -283,6 +283,56 @@ namespace MafiaCleanCity.CityMap.Tests
             }
         }
 
+        // ═══ J6 — le FILET D'OR de la tôle (juge d'ensemble r3, F3) ═══════════════════════════════════════════════════════
+
+        /// <summary>F3 (r3) : maquette série 6, `.tole{border-top:4px solid #b08d3e}` — un filet d'or PLEINE LARGEUR, 4 px CSS (cadre 18 : 14 lignes d'image, (176,141,62), ≥ 880 px de large), entre la scène et le
+        /// corps. Il manquait entièrement. Garde d'EFFET : on rend ⑭ et on lit les lignes de pixels sous le bord haut du `Decor/Support` — des lignes dont (presque) tous les pixels sont de l'or du jeton
+        /// `hudHairlineGold`, au nombre de l'épaisseur de la maquette (4 px CSS ≈ 8,5 px du banc), contiguës et collées au bord haut du support. CONTRÔLE NÉGATIF : plus bas dans la tôle, AUCUNE ligne d'or
+        /// (sinon l'instrument verrait de l'or partout). Structure : un Graphic sous le `RectMask2D` du support est un `MaskableGraphic` et porte son `CanvasRenderer`.</summary>
+        [UnityTest]
+        public IEnumerator J6_LeFiletDOr_SeparePleineLargeurLaSceneDuCorps_PixelsRendus()
+        {
+            using (var banc = new Banc())
+            {
+                Monter(banc, "calm", true);
+                yield return Poser();
+                Texture2D t = banc.Rendre();
+                try
+                {
+                    RectTransform support = (RectTransform)Sous("Decor/Support");
+                    Transform tole = support.Find("Tole");
+                    Assert.IsNotNull(tole, "le filet d'or (`Filets.Compression.Tole`) est posé sur un hôte du Support");
+                    Assert.AreEqual(support.childCount - 1, tole.GetSiblingIndex(), "l'hôte du filet est le DERNIER enfant du Support : sous les couches (dégradé opaque) il serait recouvert");
+                    foreach (Graphic g in tole.GetComponentsInChildren<Graphic>(true))
+                    {
+                        Assert.IsTrue(g is MaskableGraphic, $"{g.name} : un Graphic sous le RectMask2D du Support est un MaskableGraphic");
+                        Assert.IsNotNull(g.GetComponent<CanvasRenderer>(), $"{g.name} : tout Graphic porte son CanvasRenderer");
+                    }
+
+                    Color laiton = DesignTokens.Current.hudHairlineGold;
+                    int haut = banc.Pixel(support, 0.5f, 1f).y;   // la rangée du bord haut du support (origine en BAS)
+                    System.Func<int, float> partOr = y =>
+                    {
+                        if (y < 0 || y >= Banc.H) return 0f;
+                        int or = 0;
+                        for (int x = 0; x < Banc.W; x++) if (Ecart(t.GetPixel(x, y), laiton) <= 14f) or++;
+                        return or / (float)Banc.W;
+                    };
+                    var rangees = new System.Collections.Generic.List<int>();
+                    for (int y = haut + 2; y >= haut - 16; y--) if (partOr(y) >= 0.95f) rangees.Add(y);
+                    float attendu = Px(4f) * 0.5f;   // 4 px CSS en pixels du banc : Px() rend des unités de canvas (1 unité = 0,5 px)
+                    Assert.IsNotEmpty(rangees, "aucune rangée d'or PLEINE LARGEUR sous le bord haut de la tôle : le filet d'or de ⑭ est absent (F3 du juge r3)");
+                    int plus = rangees[0], moins = rangees[rangees.Count - 1];   // balayage de haut en bas : décroissant
+                    Assert.AreEqual(plus - moins + 1, rangees.Count, "le filet est d'un seul tenant (contigu)");
+                    Assert.AreEqual(attendu, rangees.Count, 2.0f, $"épaisseur : {rangees.Count} rangées, la maquette en demande ≈ {attendu:F1} (4 px CSS)");
+                    Assert.GreaterOrEqual(plus, haut - 2, "le filet est COLLÉ au bord haut de la tôle (c'est son `border-top`)");
+                    for (int y = haut - 24; y >= haut - 40; y--)
+                        Assert.Less(partOr(y), 0.05f, $"contrôle négatif : la rangée {y} (sous le filet) n'est pas de l'or");
+                }
+                finally { Object.DestroyImmediate(t); }
+            }
+        }
+
         // ═══ J4 — aucun texte écrasé sous sa hauteur préférée ═════════════════════════════════════════════════════════════
 
         [UnityTest]

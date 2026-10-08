@@ -619,5 +619,81 @@ namespace MafiaCleanCity.Shell.Tests
             }
             finally { banc.Dispose(); }
         }
+
+        // ═══ juge d'ensemble r3 (08/10) — F4 : l'eyebrow sur le feutre ; F5 : le liseré de la carte est or ═══════════════
+
+        /// <summary>F4 — `.grave` (`ecrans-brennar-6.html:243`) est AU-DESSUS de la table, sur le feutre, CENTRÉ, en or vif, en capitales à l'affichage. Le jeu le logeait dans la carte (rouge, calé à gauche).
+        /// Mesure du juge (`m10b`) : maquette (241,200,105) x=162..909 centre 535,5 ; jeu (147,64,42) dans la carte, x=136..696.</summary>
+        [UnityTest]
+        [Category("DecisionCarte")]
+        public IEnumerator F4_LEyebrow_EstSurLeFeutre_AuDessusDeLaCarte_Centre_EnOrVif_EnCapitales()
+        {
+            var banc = new Banc(540, 960);
+            Texture2D t = null;
+            try
+            {
+                DecisionDetailScreenController e = null;
+                yield return Monter(banc, x => e = x);
+                RectTransform carte = e.CarteRect;
+                Assert.IsNull(carte.Find("Kicker"), "l'eyebrow n'est plus DANS la carte (rouge brique, 4,47:1 sur la crème)");
+                RectTransform pile = (RectTransform)Sous(e, "Fenetre/Defile/Pile");
+                TextMeshProUGUI grave = Sous(e, "Fenetre/Defile/Pile/Grave").GetComponent<TextMeshProUGUI>();
+                Assert.IsTrue(grave.gameObject.activeInHierarchy, "l'eyebrow se montre quand il y a une carte");
+                Assert.IsFalse(grave.transform.IsChildOf(carte), "l'eyebrow est un enfant du feutre, pas de la carte");
+                Rect rg = Dans(pile, grave.rectTransform), rt = Dans(pile, (RectTransform)Sous(e, "Fenetre/Defile/Pile/TableDeJeu"));
+                Assert.GreaterOrEqual(rg.yMin, rt.yMax - 1f, "il est AU-DESSUS de la table (donc de la carte)");
+                Assert.AreEqual(pile.rect.center.x, rg.center.x, PxCss(4f), "CENTRÉ (`text-align:center`) : maquette centre 535,5 pour 540");
+                Assert.AreEqual(TextAlignmentOptions.Center, grave.alignment, "alignement centré");
+                Assert.AreEqual(DesignTokens.Current.hudMoneyGold, grave.color, "or vif `#f2c96b` (maquette (241,200,105) mesuré), jeton hudMoneyGold");
+                Assert.IsTrue((grave.fontStyle & FontStyles.UpperCase) != 0, "capitales À L'AFFICHAGE (`text-transform:uppercase`)");
+
+                // L'EFFET : de l'or sur le feutre, dans la boîte du texte (le feutre est vert sombre : tout pixel doré est de l'encre) — et pas de rouge brique à cet endroit
+                t = banc.Rendre();
+                Vector2Int a = banc.Pixel(grave.rectTransform, 0f, 0f), b = banc.Pixel(grave.rectTransform, 1f, 1f);
+                int x0 = Mathf.Min(a.x, b.x), x1 = Mathf.Max(a.x, b.x), y0 = Mathf.Min(a.y, b.y), y1 = Mathf.Max(a.y, b.y);
+                int dore = 0, brique = 0, gauche = int.MaxValue, droite = int.MinValue;
+                for (int x = Mathf.Max(0, x0); x <= Mathf.Min(t.width - 1, x1); x++)
+                    for (int y = Mathf.Max(0, y0); y <= Mathf.Min(t.height - 1, y1); y++)
+                    {
+                        Color32 c = t.GetPixel(x, y);
+                        if (c.r > 180 && c.g > 140 && c.b < 150 && c.r > c.b + 60) { dore++; gauche = Mathf.Min(gauche, x); droite = Mathf.Max(droite, x); }
+                        if (c.r > 120 && c.r < 175 && c.g < 90 && c.b < 70) brique++;
+                    }
+                Assert.GreaterOrEqual(dore, 30, $"l'eyebrow rendu a de l'or ({dore} px) — « un réglage valide et non nul peut ne produire AUCUN pixel »");
+                Assert.AreEqual(0, brique, "aucun rouge brique à la place de l'eyebrow");
+                float centreEncre = (gauche + droite) / 2f;
+                Assert.AreEqual(t.width / 2f, centreEncre, t.width * 0.03f, $"l'ENCRE est centrée sur l'écran (x={gauche}..{droite}, centre {centreEncre:0} pour {t.width / 2f:0})");
+            }
+            finally { if (t != null) Object.DestroyImmediate(t); banc.Dispose(); }
+        }
+
+        /// <summary>F5 — le liseré INTÉRIEUR de la carte est le laiton `#b08d3e` (`inset 0 0 0 5px #b08d3e`) ; aucun état de la maquette ne le fait rouge. Mesure du juge (`m05d`) : maquette (176,141,62), jeu (147,64,44).
+        /// Le trait est un sprite dont la couleur est CUITE : on en lit les pixels opaques (× la teinte de l'Image).</summary>
+        [UnityTest]
+        [Category("DecisionCarte")]
+        public IEnumerator F5_LeLisereInterieurDeLaCarte_EstOr_PasRouge()
+        {
+            var banc = new Banc(540, 960);
+            try
+            {
+                DecisionDetailScreenController e = null;
+                yield return Monter(banc, x => e = x);
+                Image filet = e.CarteRect.Find("FiletCarte").GetComponent<Image>();
+                Texture2D tex = filet.sprite.texture;
+                var r = new List<float>(); var g = new List<float>(); var bl = new List<float>();
+                Color32[] px = tex.GetPixels32();
+                foreach (Color32 c in px)
+                    if (c.a > 230) { r.Add(c.r / 255f * filet.color.r); g.Add(c.g / 255f * filet.color.g); bl.Add(c.b / 255f * filet.color.b); }
+                Assert.Greater(r.Count, 20, "le sprite du liseré a des pixels opaques");
+                r.Sort(); g.Sort(); bl.Sort();
+                var med = new Color32((byte)Mathf.RoundToInt(r[r.Count / 2] * 255f), (byte)Mathf.RoundToInt(g[g.Count / 2] * 255f), (byte)Mathf.RoundToInt(bl[bl.Count / 2] * 255f), 255);
+                Color32 laiton = DesignTokens.Current.hudHairlineGold;
+                Assert.AreEqual(laiton.r, med.r, 6, $"R du liseré rendu : {med.r} (or {laiton.r}) — le rouge brique avait R=147");
+                Assert.AreEqual(laiton.g, med.g, 6, $"G du liseré rendu : {med.g} (or {laiton.g}) — le rouge brique avait G=64");
+                Assert.AreEqual(laiton.b, med.b, 6, $"B du liseré rendu : {med.b} (or {laiton.b})");
+                Assert.Greater(med.g, 120, "contrôle : le rouge brique (G=64) ferait rougir cette garde");
+            }
+            finally { banc.Dispose(); }
+        }
     }
 }

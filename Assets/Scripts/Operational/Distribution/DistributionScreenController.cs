@@ -570,7 +570,26 @@ namespace MafiaCleanCity.Operational
         /// <summary>F3 (juge d'ensemble r2) : la plaque du panneau (`.cadre-b`) n'a PLUS de fond — l'aplat opaque brun recouvrait la planche déclarée au catalogue (grain, dégradé : p99 0 contre 10
         /// sur le `Support` voisin) et son cadre de 5 px n'était pas tracé. La planche (grain + dégradé) est le `Support` du décor ; le cadre est la recette MESURÉE `Filets.Distribution.CadreB`.</summary>
         private static void PoserLeCadreB(GameObject plaque) =>
-            Filets.Poser((RectTransform)plaque.transform, DecorsDeScene.Filets.Distribution.CadreB);
+            Filets.Poser((RectTransform)plaque.transform, RecetteCadreB);
+
+        /// <summary>F2 (juge d'ensemble r3, 08/10) : la planche de la maquette est du kraft à DOUBLE encadrement. `.lieg6 .cadre-b{position:absolute;inset:5px;border:5px solid #4a3722;border-radius:3px;
+        /// box-shadow:inset 0 0 0 1px #00000044,0 0 0 1px #2a1e12}` : une bague de 1 px `#2a1e12` DEHORS, le bord de 5 px (la recette MESURÉE `Filets.Distribution.CadreB`, lue par valeur — un re-mesure la suit),
+        /// et un liseré de 1 px DEDANS (`#00000044` sur le kraft, mesuré (93,71,44) : 0,27 d'alpha CSS ne se recopie pas, Unity compose en LINÉAIRE — la COULEUR opaque est posée). Tout est RETRAIT de la plaque
+        /// (`Inset`), qui ne dit que 5 px CSS de kraft nu autour : la bague à 4, le bord à 5, le liseré à 10 (le bord fait 5). Mesuré sur le cadre 54 : transitions à x=17-21 et 39-43 px d'image.
+        /// ⚠️ Cause de l'aplat brun (r3) : le `Contour` du bord de 5 px (18 px d'image) sur un rayon de 3 px (11 px) donnait un sprite de 25 px dont la bande épaisse couvrait TOUT le sprite — le centre étiré
+        /// était opaque et masquait la planche ; corrigé à la source (`ProceduralUI.RoundedRectOutline` : la découpe suit l'épaisseur).</summary>
+        private static readonly SpecFilet[] RecetteCadreB = ComposerCadreB();
+
+        private static SpecFilet[] ComposerCadreB()
+        {
+            SpecFilet mesure = DecorsDeScene.Filets.Distribution.CadreB[0];
+            return new[]
+            {
+                new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, Teinte.Hex("#2a1e12"), rayon: mesure.Rayon + 1f, inset: 4f, couleurCss: "2a1e12"),
+                new SpecFilet(mesure.Cotes, mesure.EpaisseurCss, mesure.Style, mesure.Couleur, rayon: mesure.Rayon, inset: 5f, couleurCss: mesure.CouleurCss),
+                new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, Teinte.Hex("#5d472c"), rayon: 0f, inset: 5f + mesure.EpaisseurCss, couleurCss: "5d472c"),
+            };
+        }
 
         /// <summary>Rend le `GameObject` de la fiche — TD-558 : `RendreCorkboard` lit ses
         /// coordonnées réelles APRÈS coup pour y ancrer la ficelle, jamais des constantes.</summary>
@@ -1122,7 +1141,7 @@ namespace MafiaCleanCity.Operational
             // §5.6 du design : l'en-tête commence SOUS max(barre, bande de scène 21 %), comme le panneau de la maquette.
             DecorDeScene.ReserverLaBande(EnteteDEcran.PoserLaPile(racine, 0, (int)ShellChrome.BottomInsetPx), decor, 0f);
             var (titreDuBandeau, sousTitreDuBandeau) = EnteteDEcran.Construire(racine.transform, EnteteDEcran.Distribution, Px,
-                DesignTokens.Current.hudSerifFont, DesignTokens.Current.primaryFont, DesignTokens.Current.onSurfaceSecondary, 10f);
+                DesignTokens.Current.hudSerifFont, DesignTokens.Current.primaryFont, DesignTokens.Current.onSurfaceSecondary, 7f);
             GameObject corpsGo = NouveauUI("Corps", racine.transform);
             LayoutElement corpsLe = corpsGo.AddComponent<LayoutElement>();
             corpsLe.flexibleHeight = 1f; corpsLe.minHeight = 0f;

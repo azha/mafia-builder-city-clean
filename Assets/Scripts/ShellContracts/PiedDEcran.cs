@@ -158,6 +158,9 @@ namespace MafiaCleanCity.Shell
             go.AddComponent<LayoutElement>().minHeight = px(26f);
             TextMeshProUGUI lib = Texte(go.transform, "Libelle", libelle, px(9.5f), police, true);
             lib.characterSpacing = 7f;   // `.7px` sur 9,5 px ≈ .074em
+            // ㉞ F7 (juge d'ensemble r3, 08/10) : la maquette écrit ses gestes en CAPITALES (« LANCER LA SOIRÉE », `.cn-geste`) ; la valeur SERVIE du Carnet est en casse de phrase (« Lancer la soirée »), rendue telle quelle
+            // (hauteurs de glyphes 26/20/20/20). Les capitales sont une affaire d'AFFICHAGE : `UpperCase` du TMP, jamais la clé ni la valeur (un libellé déjà en capitales n'en change pas).
+            lib.fontStyle |= FontStyles.UpperCase;
             lib.enableWordWrapping = true;
             lib.gameObject.GetComponent<LayoutElement>().flexibleWidth = 1f;
             if (!string.IsNullOrEmpty(legende))

@@ -69,6 +69,10 @@ namespace MafiaCleanCity.Shell
         // propre à cet écran, pas une recopie. La convertir demanderait de CRÉER un token, donc un
         // arbitrage de palette qui appartient à l'atelier. *Substituer ne serait pas ranger.*
         private static readonly Color Rouge = Hex("#93402c");
+        /// <summary>⑤ F5 — LE LISERÉ INTÉRIEUR DE LA CARTE est OR : `.carte-or{box-shadow:inset 0 0 0 4px #fbf3dc,inset 0 0 0 5px #b08d3e}` (`ecrans-brennar-6.html:245`). Aucun état de la maquette ne le fait
+        /// rouge (`.tranchee` ne fait que `saturate(.8)`) ; le rouge brique `#93402c` est celui du coin, du titre, des pips, des bandes. Mesuré (juge r3, `m05d`) : maquette (176,141,62), jeu (147,64,44).
+        /// Le laiton du jeton, `hudHairlineGold` (`#b08d3e`).</summary>
+        public static Color FiletDeLaCarte => DesignTokens.Current.hudHairlineGold;
 
         // ⑤ F4 (CLIENT-3 / juge r1, décision de f2 du 07/10 : « fidèle à la maquette ») — la MATIÈRE CRÈME de la carte. La carte était un CONTOUR sans matière (`RoundedRectOutline` seul : l'intérieur transparent
         // laissait voir le zinc noir) : 0 px crème en jeu. Mesure du juge : matière de la carte REF (219,206,171).
@@ -119,7 +123,7 @@ namespace MafiaCleanCity.Shell
         private const float InclinaisonCarteDeg = 2f;
 
         private RectTransform pipsPortee, pipsUrgence;
-        private TextMeshProUGUI porteeLibelle, urgenceLibelle, sabotTexte;
+        private TextMeshProUGUI porteeLibelle, urgenceLibelle, sabotTexte, grave;
         private RectTransform pile;
         private ListeDefilante listeDefilante;
         private PileDeDecision pileDeDecision;
@@ -223,6 +227,7 @@ namespace MafiaCleanCity.Shell
             // « non applicable » (arbitrage JD-E4, canon re-basé). Ce n'est pas une erreur : c'est
             // qu'aucune carte ne se détache aujourd'hui, et l'écran le dit dans ces mots.
             carteRoot.gameObject.SetActive(carte != null);
+            grave.gameObject.SetActive(carte != null);
             if (carte == null) sabotTexte.text = PhraseDuSabot();   // la phase servie peut avoir changé depuis le montage
             sabotTexte.gameObject.SetActive(carte == null);
             tampon.SetActive(carte != null);
@@ -406,6 +411,17 @@ namespace MafiaCleanCity.Shell
             fondDuBas.a = 1f;
             listeDefilante = ListeDefilante.Equiper(fenetreRt, defileRt, fondDuBas);
 
+            // ⑤ F4 (juge d'ensemble r3, 08/10) — L'EYEBROW N'EST PAS DANS LA CARTE : `.grave` (`ecrans-brennar-6.html:243`) est un enfant du `.tapis-feutre`, AU-DESSUS de `.table` :
+            // `text-align:center;font:9.5px Georgia;letter-spacing:.3em;text-transform:uppercase;color:#f2c96b;margin-top:4px` — or vif (`hudMoneyGold`) sur le feutre, CENTRÉ. Le jeu le logeait dans la carte
+            // (rouge brique 4,47:1 sur la crème, calé à gauche). Capitales À L'AFFICHAGE (`UpperCase`) ; le texte reste celui du client. Masqué avec la carte (le sabot a sa propre phrase).
+            grave = Texte(pile, "Grave", "CE QUI PÈSE LE PLUS AUJOURD'HUI", Px(9.5f), OrVif,
+                          DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
+            grave.fontStyle |= FontStyles.UpperCase;
+            grave.characterSpacing = 30f;   // `.3em` — 100 = 1 em dans TMP
+            grave.enableWordWrapping = true;
+            grave.margin = new Vector4(0f, Px(4f), 0f, 0f);   // `margin-top:4px`
+            grave.GetComponent<LayoutElement>().preferredWidth = 0f;
+
             // ── la table de jeu : la carte + le jeton structurel, côte à côte ────────────────
             // `.tapis-feutre .table{display:flex;align-items:flex-end;justify-content:center;gap:14px;padding:4px 0 0}` : centrée, chacun à SA largeur.
             GameObject table = Bloc("TableDeJeu", pile, horizontal: true, espace: Px(14f));
@@ -441,7 +457,7 @@ namespace MafiaCleanCity.Shell
             fond.color = MatiereDeLaCarte;
             fond.type = Image.Type.Sliced;
             Cerner(carte.transform, "BordCarte", (int)Px(14f), Px(1.5f), Hex("#8a6a2c"), 0f);
-            Cerner(carte.transform, "FiletCarte", (int)Px(11f), Px(1f), Rouge, Px(3f));
+            Cerner(carte.transform, "FiletCarte", (int)Px(11f), Px(1f), FiletDeLaCarte, Px(3f));
             VerticalLayoutGroup cv = carte.GetComponent<VerticalLayoutGroup>();
             cv.padding = new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(12f));
             // ⛔ F13 (a) — LA CARTE EST UN PORTRAIT : `.carte-or{width:176px;min-height:212px}`. Elle prenait toute la largeur que le jeton lui laissait
@@ -457,14 +473,6 @@ namespace MafiaCleanCity.Shell
             Texte(coin.transform, "Cachet", "♦", Px(13f), Rouge, DesignTokens.Current.primaryFont);
             coinLibelle = PetitesCapitales(Texte(coin.transform, "Nature", "tactique", Px(7.5f), Rouge,
                                 DesignTokens.Current.primaryFont));
-
-            // Le kicker tient dans les 152 CSS de la carte PORTRAIT : `.carte-jour .kicker{font-size:6.5px;letter-spacing:.14em;text-align:center}` (série 4 — la série 6 n'a pas de kicker dans la
-            // carte). À 7,5 CSS et aligné à gauche il faisait ≈ 172 CSS et sortait de la carte ; il se CENTRE, et passe à la ligne s'il ne tient pas plutôt que de déborder.
-            TextMeshProUGUI kicker = Texte(carte.transform, "Kicker", "CE QUI PÈSE LE PLUS AUJOURD'HUI",
-                                           Px(6.5f), Rouge, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
-            kicker.characterSpacing = 14f;
-            kicker.enableWordWrapping = true;
-            kicker.GetComponent<LayoutElement>().preferredWidth = 0f;
 
             // F13 (e) — `.carte-or .titre{text-align:center;font-weight:700;margin:auto 2px;padding:24px 0 8px}` : en GRAS, centré dans ce que le plancher de la carte laisse (`margin:auto` ⇒
             // la boîte du titre est ÉLASTIQUE, son texte au milieu), jamais collé en haut.

@@ -778,6 +778,9 @@ namespace MafiaCleanCity.Operational
             // (la maquette l'appelle INJECTER ; les mots ratifiés de la table 77 disent BLANCHIR : on garde le mot ratifié). Sa PLACE : le pied, sous le panneau (A3 du juge groupé du 07/10).
             libelleBlanchir.fontStyle = FontStyles.Bold;
             libelleBlanchir.characterSpacing = 11f;
+            // ㊵ F9 (juge d'ensemble r3, 08/10) : `.cta6{display:block;text-align:center}` — le libellé se CENTRE. Le groupe horizontal étire l'enfant sur toute la largeur (`childForceExpandWidth`) : sans alignement du TEXTE, il
+            // restait calé à gauche (encre x=84..288, centre 186 px pour un cadre centré sur 540 — mesuré, `m12c`) ; la maquette (« INJECTER ») : centre 538.
+            libelleBlanchir.alignment = TextAlignmentOptions.Center;
             PiedDEcran.StylerLeBouton(bouton, libelleBlanchir);
             // sous BLANCHIR (table 77, ligne 5) : ce que le geste fait — `.note6`, centrée, gris
             TextMeshProUGUI note = NouveauTexte(pied, "SousBlanchir", MafiaCleanCity.I18n.Libelle.Gabarit("filiere.etat.l_argent_passe_de_la_planque_a_la_filiere",

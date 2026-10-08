@@ -364,6 +364,22 @@ namespace MafiaCleanCity.CoreLoops.Compression
             return (MafiaCleanCity.I18n.MotsDesEnumeres.NomTension + " " + tension + " · " + semaine).ToUpperInvariant();
         }
 
+        /// <summary>F3 (juge d'ensemble r3, 08/10) : le FILET D'OR pleine largeur qui sépare la scène du corps. Maquette série 6 : `.tole{border-top:4px solid #b08d3e}` (`ecrans-brennar-6.html:286`) — le bord HAUT de la tôle,
+        /// 4 px CSS (cadre 18 : 14 lignes d'image, (176,141,62), ≥ 880 px de large). La tôle EST le `Decor/Support` (sous la bande de scène) : le filet est la recette MESURÉE `Filets.Compression.Tole` (jeton `hudHairlineGold`),
+        /// posée sur un hôte qui épouse le Support et reste son DERNIER enfant — sous le `Filets` d'un bloc il serait recouvert par les couches (dégradé opaque, tôle perforée). Il ne touche ni la pile ni son
+        /// `padding.top` (`ReserveDeBande` seule le commande, note E4 du §17) : le contenu commence 8 px CSS plus bas, le filet vit dans la bande que la scène laisse au support.</summary>
+        private static void PoserLeFiletDOr(DecorPose decor)
+        {
+            if (decor == null || decor.Support == null) return;
+            var hote = new GameObject("Tole", typeof(RectTransform));
+            hote.transform.SetParent(decor.Support, false);
+            var rt = (RectTransform)hote.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+            rt.SetAsLastSibling();
+            Filets.Poser(rt, DecorsDeScene.Filets.Compression.Tole);
+        }
+
         private ListeDefilante fenetre;
         /// <summary>La fenêtre défilante du corps (garde : le contenu qui dépasse défile, il n'est jamais tranché ni écrasé).</summary>
         public ListeDefilante FenetreDefilante => fenetre;
@@ -391,6 +407,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
             v.childAlignment = TextAnchor.UpperCenter;
             // §5.6 du design : la pile commence SOUS max(barre, bande de scène 35 %), comme la tôle de la maquette.
             DecorDeScene.ReserverLaBande(v, decor, Px(8f));
+            PoserLeFiletDOr(decor);
 
             // ⛔ UN DÉBORDEMENT NE PART PAS EN DETTE (f2, 08/10 ; même classe que ㊴ r1 F1/F2) : la jauge ajoute ~120 px CSS à la pile ; à 1080×1920 elle dépasse la fenêtre d'environ 35 px CSS et le
             // `VerticalLayoutGroup` l'écrasait sous sa hauteur préférée (texte hors de sa boîte). Le CORPS est donc une FENÊTRE défilante (`ListeDefilante` : fondu + ascenseur) sur un CONTENU qui épouse
