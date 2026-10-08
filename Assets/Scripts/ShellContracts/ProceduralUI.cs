@@ -1535,6 +1535,113 @@ namespace MafiaCleanCity.Shell
             return Terminer(tex, pixels, key);
         }
 
+        /// <summary>Un DISQUE À FOYER DÉCENTRÉ — `radial-gradient(circle at fx fy, c0, c1 p1, c2)` sur la boîte carrée du disque
+        /// (⑤ : le cachet de cire `circle at 40% 35%`, la pièce du jeton `circle at 40% 32%`) — avec, en option, la TRANCHE
+        /// `inset 0 0 0 Npx` : un anneau OPAQUE de `anneauPx` posé à `retraitPx` du bord (la bordure qui le recouvre en CSS).
+        /// `RadialDisc` est centré, sans tranche : un disque plat. Le rayon du dégradé est celui de CSS (`farthest-corner` de la
+        /// boîte, `RayonCoinLePlusLoin`), jamais le rayon du disque : au bord le dégradé n'a pas fini sa course.
+        /// ⚠️ Pixels OPAQUES, mélangés ici en sRGB (comme le navigateur) : rien n'est composé par Unity en linéaire, donc aucune
+        /// opacité CSS à convertir. Texels = unités de canvas (comme `Filets`) : l'Image est posée à `diametrePx` unités.</summary>
+        public static Sprite DisqueAFoyer(int diametrePx, Vector2 foyer, (float pos, Color c)[] arrets, float anneauPx, Color anneau,
+                                          float retraitPx = 0f) =>
+            CuireUnDisque(diametrePx, foyer, arrets, anneauPx, anneau, retraitPx, 0f, 0f, 0f, Color.white, 0f);
+
+        /// <summary>Le disque de `DisqueAFoyer` + la TRANCHE MOLETÉE : `border: 2px dashed #fff6` — un anneau de `bordurePx` au bord, fait de
+        /// tirets de `periodePx` (arc) dont la part `fractionTiret` est peinte (Chromium dessine un tiret de 2 px à 6 pour 4 : période
+        /// 10 px, 0,6), en `tiret` à l'opacité CSS `opaciteTiret`, MÉLANGÉE ICI en sRGB sur le dégradé : le résultat est opaque, donc
+        /// l'espace colorimétrique d'Unity ne s'en mêle pas (opacité recopiée = 1,7× à 4× trop forte, spec-cachet-et-jeton.md).
+        /// L'alternance tiret / vide est ce qui crante le bord — `Filets` ne sait pas la tracer sur un cercle (`RoundedRectDashedOutline`
+        /// d'un côté égal à deux rayons n'a plus de section répétée : un anneau PLEIN).
+        /// Le nombre de tirets est entier (`round(circonférence / période)`) : ils se répartissent à parts égales.</summary>
+        public static Sprite DisqueMolete(int diametrePx, Vector2 foyer, (float pos, Color c)[] arrets, float anneauPx, Color anneau,
+                                          float bordurePx, float periodePx, float fractionTiret, Color tiret, float opaciteTiret) =>
+            CuireUnDisque(diametrePx, foyer, arrets, anneauPx, anneau, bordurePx, bordurePx, periodePx, fractionTiret, tiret, opaciteTiret);
+
+        /// <summary>Le nombre de tirets d'une tranche moletée : entier, au moins 3. Pure (lue par la garde).</summary>
+        public static int NombreDeTirets(float diametrePx, float bordurePx, float periodePx)
+        {
+            float rayonMoyen = diametrePx * 0.5f - bordurePx * 0.5f;
+            return Mathf.Max(3, Mathf.RoundToInt(2f * Mathf.PI * rayonMoyen / Mathf.Max(1f, periodePx)));
+        }
+
+        private static Sprite CuireUnDisque(int diametrePx, Vector2 foyer, (float pos, Color c)[] arrets, float anneauPx, Color anneau,
+                                            float retraitPx, float bordurePx, float periodePx, float fractionTiret, Color tiret, float opaciteTiret)
+        {
+            int d = Mathf.Max(8, diametrePx);
+            string key = $"discfoyer:{d}:{foyer.x:F3},{foyer.y:F3}:{CleArrets(arrets)}:{anneauPx:F2}:{retraitPx:F2}:{ColorKey(anneau)}" +
+                         $":{bordurePx:F2}:{periodePx:F2}:{fractionTiret:F2}:{ColorKey(tiret)}:{opaciteTiret:F3}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            var tex = NewTexture(d);
+            float r = d / 2f;
+            float rayonDuDegrade = Mathf.Max(1e-4f, RayonCoinLePlusLoin(d, d, foyer.x, foyer.y));
+            var f = new Vector2(foyer.x * d, (1f - foyer.y) * d);   // y CSS (depuis le HAUT) → y de texture (depuis le bas)
+            bool moletee = bordurePx > 0f && opaciteTiret > 0f && periodePx > 0f && fractionTiret > 0f;
+            int n = moletee ? NombreDeTirets(d, bordurePx, periodePx) : 0;
+            float rayonDesTirets = r - bordurePx * 0.5f;
+            float periodeReelle = n > 0 ? 2f * Mathf.PI * rayonDesTirets / n : 1f;   // longueur d'arc d'UN tiret + son vide
+            var pixels = new Color[d * d];
+            for (int y = 0; y < d; y++)
+            {
+                for (int x = 0; x < d; x++)
+                {
+                    var p = new Vector2(x + 0.5f, y + 0.5f);
+                    float dist = Vector2.Distance(p, new Vector2(r, r));
+                    Color c = EchantillonDeDegrade(arrets, Vector2.Distance(p, f) / rayonDuDegrade);
+
+                    if (anneauPx > 0f)
+                    {
+                        // la tranche : opaque entre `r − retrait − anneau` et `r − retrait`, un pixel de rampe de chaque côté
+                        float couverture = Mathf.Clamp01(dist - (r - retraitPx - anneauPx) + 0.5f) * Mathf.Clamp01((r - retraitPx) - dist + 0.5f);
+                        c = Color.Lerp(c, anneau, couverture);
+                    }
+                    if (moletee)
+                    {
+                        float angle = Mathf.Atan2(p.y - r, p.x - r);                       // (−π, π]
+                        float u = (angle + Mathf.PI) / (2f * Mathf.PI) * n;                // tirets parcourus
+                        float frac = u - Mathf.Floor(u);
+                        // distance SIGNÉE (px, le long de l'arc) au bord du tiret le plus proche : > 0 dedans, < 0 dans le vide
+                        float profondeur = frac < fractionTiret
+                            ? Mathf.Min(frac, fractionTiret - frac) * periodeReelle
+                            : -Mathf.Min(frac - fractionTiret, 1f - frac) * periodeReelle;
+                        float dansLeTiret = Mathf.Clamp01(profondeur + 0.5f);
+                        float dansLaBordure = Mathf.Clamp01(dist - (r - bordurePx) + 0.5f);   // le bord extérieur est celui de l'alpha
+                        c = Color.Lerp(c, tiret, dansLeTiret * dansLaBordure * opaciteTiret);
+                    }
+                    c.a *= Mathf.Clamp01((r - dist) / RampeAntiCrenelagePx);
+                    pixels[y * d + x] = c;
+                }
+            }
+            return Terminer(tex, pixels, key);
+        }
+
+        /// <summary>L'OMBRE PORTÉE d'un DISQUE — `box-shadow: 0 Ypx Bpx couleur` d'un `border-radius:50%`. Sprite carré de `diametrePx + 2·flouPx` :
+        /// la couleur pleine jusqu'à `flouPx` en deçà du bord du disque, 50 % AU bord, nulle `flouPx` au-delà (cosinus). Contrairement à
+        /// `RoundedRectShadow`, l'intérieur est PEINT (le disque posé dessus le recouvre ; l'ombre décalée dépasse du côté du décalage). Le décalage
+        /// vertical se fait en POSITIONNANT l'image. L'opacité est celle de `couleur.a` — à convertir par l'appelant pour le mélange linéaire
+        /// (`AlphaVoileSurFondQuelconque` : le fond sous une ombre n'est pas unique).</summary>
+        public static Sprite OmbreDeDisque(int diametrePx, int flouPx, Color couleur)
+        {
+            int dd = Mathf.Max(4, diametrePx), f = Mathf.Max(1, flouPx);
+            string key = $"ombredisque:{dd}:{f}:{ColorKey(couleur)}";
+            if (cache.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+
+            int d = dd + 2 * f;
+            var tex = NewTexture(d);
+            float r = dd / 2f, centre = d / 2f;
+            var pixels = new Color[d * d];
+            for (int y = 0; y < d; y++)
+                for (int x = 0; x < d; x++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(centre, centre));
+                    float a = 0.5f * (1f + Mathf.Cos(Mathf.PI * Mathf.Clamp01((dist - (r - f)) / (2f * f))));
+                    Color c = couleur;
+                    c.a *= a;
+                    pixels[y * d + x] = c;
+                }
+            return Terminer(tex, pixels, key);
+        }
+
         private static float DistanceEnroulee(float a, float b, float periode)
         {
             float d = Mathf.Abs(a - b);

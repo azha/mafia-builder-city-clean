@@ -58,7 +58,8 @@ namespace MafiaCleanCity.Tests.PlayMode
             { "㉘", new[] { "Av", "Bas", "CadreB", "Cliche", "Entete", "FicheDroite", "FicheGauche", "Geste", "Iss", "IssOr", "IssRouge", "L", "Lecture", "Mano", "Rien" } },
             // ⑤ (08/10) — le feutre posé ; la carte (BordCarte, FiletCarte), le jeton, les pips, le tampon, le pied : traits propres du
             //   contrôleur (CLIENT-1) — à déléguer à Filets.
-            { "⑤", new[] { "Bandes", "CarteOr", "CarteOrTranchee", "Deja", "I", "I_2", "LigneOr", "Mano", "On", "Piece", "Piece_2", "PlaqueLaiton", "TamponDiag", "TapisFeutre" } },
+            //   Bandes BRANCHÉE le 08/10 (F13 : le filet haut de PORTÉE / URGENCE, `Filets.Poser`) — retirée de la dette.
+            { "⑤", new[] { "CarteOr", "CarteOrTranchee", "Deja", "I", "I_2", "LigneOr", "Mano", "On", "Piece", "Piece_2", "PlaqueLaiton", "TamponDiag", "TapisFeutre" } },
             // ㉙ (08/10) — toutes les recettes de blocs (tableau, sections, coups, pied) : blocs de CLIENT-1 — à déléguer à Filets.
             { "㉙", new[] { "Av", "Av_2", "Bas", "Doss", "Ecu", "Ecu_2", "Entete", "Env", "Fam", "FamVisee", "Geste", "GesteRouge", "L", "Mano", "Rappel", "Res", "Res_2", "Res_3", "Res_4", "Rien", "ViseeTag" } },
             // ⑭ (08/10) — la tôle posée ; les blocs de l'écran (le manomètre de CLIENT-3 à venir, les fiches de la semaine) :
