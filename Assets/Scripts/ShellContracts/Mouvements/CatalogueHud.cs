@@ -25,6 +25,10 @@ namespace MafiaCleanCity.Mouvements
     {
         // ---- pouls / tremble / gyrophare : les constantes de TopBarController et de Gyrophare, nommées une fois ici
         private const float PoulsPeriodeS = 1.1f, PoulsCreux = 0.45f;
+        // Décision f2 (08/10, dette 17) : sous « Mouvement réduit », on retire le MOUVEMENT, pas le signal. Le cerclage
+        // se fige à α ≈ 0,72, « en alerte » sans être éteint. Ni le creux 0,45 (éteint, immobile = « rien ne se passe »),
+        // ni la crête 1 (c'est le repos : G3). Valeur sur la courbe `ease` du premier demi-cycle : t = 0,1638 s ⇒ α = 0,7200.
+        private const float PoulsPoseReduitS = 0.1638f;
         private const float TremblePeriodeS = 0.14f, TrembleAmplitudeDeg = -4f;   // repère Unity : vers le chaud = −
         private const float GyroPeriodeS = 0.9f, GyroRotationDeg = -140f;
         private const int GyroTeinte = 0xff5a3c;
@@ -49,7 +53,7 @@ namespace MafiaCleanCity.Mouvements
                         new ImageCle(1f, 1f, Aisance.Ease),
                     }),
                 },
-                Iteration.InfiniFois, alterne: false, poseDeReposS: PoulsPeriodeS * 0.5f),
+                Iteration.InfiniFois, alterne: false, poseDeReposS: PoulsPoseReduitS),
             pistes: 2, bloquante: false, hote: Entree.HoteClient);
 
         public static readonly Entree Tremble = new Entree(

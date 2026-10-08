@@ -932,7 +932,7 @@ namespace MafiaCleanCity.Mouvements.Tests
             regie.Attacher(CatalogueHud.Pouls, c, Reglage.Defaut);
             regie.Politique = PolitiqueMouvement.Reduit;
             regie.Tick(0f); regie.Tick(0.2f); regie.Tick(0.4f);
-            Assert.AreEqual(0.45f, c.GetComponent<CanvasGroup>().alpha, 1e-3f, "figé à la pose (le creux du pouls)");
+            Assert.AreEqual(0.72f, c.GetComponent<CanvasGroup>().alpha, 2e-3f, "figé à la pose : α 0,72, en alerte sans être éteint (décision f2, dette 17)");
             regie.Politique = PolitiqueMouvement.Plein;
             regie.Tick(0.8f);
             Assert.Greater(Mathf.Abs(c.GetComponent<CanvasGroup>().alpha - 0.45f), 0.01f, "contrôle négatif : en Plein il bat");

@@ -23,6 +23,6 @@ Le design ne tranchait pas ces points ; E1 a choisi, les tests épinglent le cho
 14. **Gel d'un `Retour`** : sans `PoseDeReposS` déclarée, figé au repos (« sans échelle »), pas sauté à sa fin. Le voile `Alpha` est gardé sous `Reduit` parce qu'il ne déclare pas de pose ; `carnet.en-main` en déclare une et gèle. ⚠️ Règle IMPLICITE : E2 la rendra explicite (un drapeau ou l'`Id` `retour.appui-voile`), §17 bornant l'exception au voile.
 15. **`Reglage.Dx` et `Chute`** portés, non appliqués (aucun usage en E1 ; `bascule.course` en aura besoin en E2/E4).
 16. **API ajoutée** au §3 : `Regie.Admettre(Entree)` (entrées synthétiques des tests), `EstVivant`, `Delestage`, `Evaluations`, `Ecritures`, `RegieMouvement.PoserPolitique`.
-17. **Chrome sous `Reduit`** : le pouls est figé à son creux (α 0,45, pose 0,55 s) pendant une descente : cerclage sombre et immobile. **Question DA à f2.**
+17. ✅ **FERMÉE (f2, 08/10)** — chrome sous `Reduit` : le pouls se fige à **α 0,72** (pose 0,1638 s sur la courbe `ease`), « en alerte » sans être éteint. Ni le creux 0,45 (immobile et sombre se lit « rien ne se passe »), ni la crête 1 (le repos : G3). Constante `PoulsPoseReduitS` dans `CatalogueHud.cs`.
 18. **Design §1** : « à p = 0,125, 0,914 pour 0,775 » se lit `SmoothStep` 0,914 contre `ease` 0,7753 (oracle 0,775319) ; les tests exigent 0,7753.
 19. **`.meta`** des 17 fichiers et du dossier `Mouvements/` créés à la main (format minimal du dépôt, GUID neufs) pour qu'aucun arbre n'en génère d'autres à l'import.
