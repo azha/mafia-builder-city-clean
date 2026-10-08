@@ -44,11 +44,11 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   Liste (ListeDefilante, CLIENT-1, non touchée). Cta6, Cta6Eteint : le pied (`PiedDEcran`, CLIENT-1). Cpl, CplVide6 (cadre
             //   128), Jrn (cadre 125), Mano (cadran) : éléments que le contrôleur ne construit pas — à classer au juge.
             { "㊳", new[] { "Angle", "Brv", "Cpl", "CplVide6", "Cta6", "Cta6Eteint", "Elast", "EvtPerm", "Jrn", "Mano", "Une" } },
-            // ㉛ (08/10) — PlChoix/PlChoixPris/PlChoixRisque : les états des trois cartes d'avocat (Filets.Etat), commit suivant.
+            // ㉛ (08/10) — PlChoix/PlChoixPris/PlChoixRisque POSÉS (états des cartes d'avocat, Filets.Etat).
             //   PlItem/PlItemLache, PlAlerte, PlRien, Tag* : états d'une affaire ACTIVE, non servie (`GET /v1/me/legal` : activeCases: [])
             //   — non construits (CLIENT-1). PlTete, PlBas, PlGeste*, PlVitre, PlAv, Mano : en-tête, pied, vitre, avatar, cadran —
             //   blocs de CLIENT-1, à déléguer à Filets.
-            { "㉛", new[] { "Mano", "PlAlerte", "PlAv", "PlBas", "PlChoix", "PlChoixPris", "PlChoixRisque", "PlGeste", "PlGesteRouge", "PlItem", "PlItemLache", "PlRien", "PlTete", "PlVitre", "Tag", "Tag_2", "Tag_3" } },
+            { "㉛", new[] { "Mano", "PlAlerte", "PlAv", "PlBas", "PlGeste", "PlGesteRouge", "PlItem", "PlItemLache", "PlRien", "PlTete", "PlVitre", "Tag", "Tag_2", "Tag_3" } },
             // ㉟ (08/10) — Enseigne et Fen posées. Dl/DlMort/DlPris/DlPrisMort (les rangées de points de vente), Gd, Pann/Pann_2 (le
             //   panneau d'état) : déjà tracés par `ProceduralUI` dans le contrôleur (rangées, pastilles) — à migrer vers Filets ; Elast
             //   (la boîte), Cta6/Cta6Eteint (le pied), Mano (le cadran) : à classer au juge.
@@ -101,13 +101,38 @@ namespace MafiaCleanCity.Tests.PlayMode
             return d;
         }
 
-        /// <summary>D6b : les recettes de `ecran` que la source ne référence pas. Pure.</summary>
-        internal static List<string> RecettesOrphelines(string source, string ecran, IEnumerable<string> recettes)
+        /// <summary>D6b : les recettes de `ecran` que la source ne référence pas — ni directement (`Filets.&lt;Ecran&gt;.&lt;Nom&gt;`), ni
+        /// par un ÉTAT référencé (`Etats.&lt;Ecran&gt;.&lt;État&gt;` dont le bord EST la recette : `parEtat[état]` = ses recettes). Pure.</summary>
+        internal static List<string> RecettesOrphelines(string source, string ecran, IEnumerable<string> recettes,
+                                                        IDictionary<string, string[]> parEtat = null)
         {
             string s = SansCommentaires(source);
-            return recettes.Where(r => !PoseesParLeDecor.Contains(r)
+            var viaEtats = new HashSet<string>();
+            if (parEtat != null)
+                foreach (var kv in parEtat)
+                    if (Regex.IsMatch(s, @"Etats\." + Regex.Escape(ecran) + @"\." + Regex.Escape(kv.Key) + @"\b"))
+                        foreach (string r in kv.Value) viaEtats.Add(r);
+            return recettes.Where(r => !PoseesParLeDecor.Contains(r) && !viaEtats.Contains(r)
                                        && !Regex.IsMatch(s, @"Filets\." + Regex.Escape(ecran) + @"\." + Regex.Escape(r) + @"\b"))
                            .OrderBy(r => r).ToList();
+        }
+
+        /// <summary>Pour `DecorsDeScene.Etats.&lt;champ&gt;` (s'il existe) : état → noms des recettes de `Filets.&lt;champ&gt;` qui
+        /// SONT son bord (égalité de référence, pas de nom).</summary>
+        private static Dictionary<string, string[]> RecettesParEtat(string champ)
+        {
+            var r = new Dictionary<string, string[]>();
+            System.Type etats = typeof(DecorsDeScene.Etats).GetNestedType(champ, BindingFlags.Public | BindingFlags.Static);
+            System.Type filets = typeof(DecorsDeScene.Filets).GetNestedType(champ, BindingFlags.Public | BindingFlags.Static);
+            if (etats == null || filets == null) return r;
+            var recettes = filets.GetFields(BindingFlags.Public | BindingFlags.Static).Where(f => f.FieldType == typeof(SpecFilet[]))
+                                 .Select(f => (f.Name, (SpecFilet[])f.GetValue(null))).ToList();
+            foreach (FieldInfo e in etats.GetFields(BindingFlags.Public | BindingFlags.Static).Where(f => f.FieldType == typeof(EtatDeBloc)))
+            {
+                var etat = (EtatDeBloc)e.GetValue(null);
+                r[e.Name] = recettes.Where(x => ReferenceEquals(x.Item2, etat.Bord)).Select(x => x.Item1).ToArray();
+            }
+            return r;
         }
 
         // ════════════════════════════════════════════════════════════════════════════ sources
@@ -156,6 +181,11 @@ namespace MafiaCleanCity.Tests.PlayMode
             Assert.IsEmpty(ChiffresDeDecor("// \"Scenes/x\" brightness"), "les commentaires ne comptent pas");
             CollectionAssert.AreEqual(new[] { "Pann" }, RecettesOrphelines(bon, "Filiere", new[] { "Fen", "Pann", "Cerne" }),
                 "la recette non référencée est vue ; Cerne (posée par le décor) ne l'est pas");
+            var parEtat = new Dictionary<string, string[]> { { "Pris", new[] { "PlChoixPris" } }, { "Risque", new[] { "PlChoixRisque" } } };
+            CollectionAssert.AreEqual(new[] { "PlChoixRisque" },
+                RecettesOrphelines("return DecorsDeScene.Etats.Loi.Pris;", "Loi", new[] { "PlChoixPris", "PlChoixRisque" }, parEtat),
+                "une recette portée par un état RÉFÉRENCÉ compte ; celle d'un état non référencé reste orpheline");
+            Assert.IsNotEmpty(RecettesParEtat("Loi")["Pris"], "le bord de Etats.Loi.Pris EST une recette mesurée de ㉛ (référence)");
         }
 
         [Test]
@@ -192,7 +222,7 @@ namespace MafiaCleanCity.Tests.PlayMode
             foreach (SpecDecor s in DecorsDeScene.Tous.Where(e => e.Statut == StatutDecor.Pose && !PoseEnAttente.Contains(e.Symbole)))
             {
                 string champ = NomDeChamp(s);
-                List<string> orphelines = RecettesOrphelines(SourceDe(s), champ, RecettesDe(champ));
+                List<string> orphelines = RecettesOrphelines(SourceDe(s), champ, RecettesDe(champ), RecettesParEtat(champ));
                 RecettesEnAttente.TryGetValue(s.Symbole, out string[] attente);
                 attente = attente ?? new string[0];
                 foreach (string o in orphelines.Except(attente)) echecs.Add($"{s.Symbole} {champ}.{o} : recette mesurée jamais posée");

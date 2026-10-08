@@ -431,11 +431,24 @@ namespace MafiaCleanCity.Operational
         /// <summary>Une carte de m-68 — verbatim (titre/sous-titre/badge). `tier == null` ⇒
         /// carte informative sans bouton (« Commis d'office » : aucune route ne le recrute, il
         /// est le repli par défaut). `tier != null` ⇒ bouton câblé sur `RecruterAvocat(tier)`.</summary>
+        /// <summary>L'état de chaque carte d'avocat (cadre 68, correspondance de CLIENT-1 du 08/10) : FIXE par carte.</summary>
+        private static EtatDeBloc EtatDeLaCarte(string idStable)
+        {
+            switch (idStable)
+            {
+                case "commis_d_office": return DecorsDeScene.Etats.Loi.Pris;
+                case "la_filiere": return DecorsDeScene.Etats.Loi.Risque;
+                default: return DecorsDeScene.Etats.Loi.Neutre;
+            }
+        }
+
         private void ConstruireCarteAvocat(Transform parent, string idStable, string titreLitteral,
             string sousTitreLitteral, string badgeLitteral, Color couleurBadge, string tier)
         {
             GameObject carte = NouveauUI("Carte_" + idStable, parent);
-            AjouterFond(carte, DesignTokens.Current.surfaceRow);
+            // `.pl-choix` : l'ÉTAT de la carte (fond ET bord ensemble, `Filets.Etat` refuse un bord égal au fond — le A du juge sur ㉛).
+            Image fondCarte = AjouterFond(carte, DesignTokens.Current.surfaceRow);
+            Filets.Etat((RectTransform)carte.transform, fondCarte, EtatDeLaCarte(idStable));
             VerticalLayoutGroup v = carte.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset(PxTrait(10f), PxTrait(10f), PxTrait(8f), PxTrait(8f));
             v.spacing = Px(3f);

@@ -154,6 +154,20 @@ namespace MafiaCleanCity.Shell
                                     Arret.EnPxCss(18f, Teinte.Hex("#2b120c"))),
             }));
 
+        /// <summary>Les BORDS D'ÉTAT (§3.4) : fond ET bord d'un bloc, posés ensemble par `Filets.Etat` (qui refuse un bord égal au
+        /// fond — le défaut mesuré par le juge sur ㉛). Fonds : la CSS de la maquette ; bords : les recettes MESURÉES.</summary>
+        public static class Etats
+        {
+            /// <summary>㉛ `.pl-choix` (cadre 68, « Lui trouver un avocat ») — correspondance donnée par CLIENT-1 le 08/10 :
+            /// commis d'office = `.pris` (« EN PLACE »), un cabinet = neutre (« DISPONIBLE »), la filière = `.risque`.</summary>
+            public static class Loi
+            {
+                public static readonly EtatDeBloc Pris = new EtatDeBloc(Teinte.Hex("#22301f"), Filets.Loi.PlChoixPris);
+                public static readonly EtatDeBloc Neutre = new EtatDeBloc(Teinte.Hex("#1e242b"), Filets.Loi.PlChoix);
+                public static readonly EtatDeBloc Risque = new EtatDeBloc(Teinte.Hex("#2e2114"), Filets.Loi.PlChoixRisque);
+            }
+        }
+
         /// <summary>Les 26 entrées, dans l'ordre du §4. Lu par D1 (périmètre = INDEX) et D2 (pose).</summary>
         public static readonly SpecDecor[] Tous =
         {
