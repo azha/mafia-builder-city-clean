@@ -701,6 +701,54 @@ namespace MafiaCleanCity.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator D4n_Mesure_FonduDuMenuPlus_SurLeBureau()
+        {
+            // ⑱ consigné (C) : le fondu de fin de course du menu (`ListeDefilante.Indiquer(…, surfaceBase)`, AppShell) se fond dans
+            // surfaceBase, pas dans le bureau posé dessous. MESURE, pas garde : la même pile rendue deux fois — fondu à opacité 1
+            // (haut de course) puis fondu éteint (le décor seul) — et les octets journalisés sur la colonne centrale (l'ascenseur vit
+            // à droite). Seul contrôle : le fondu PRODUIT des pixels (un réglage valide peut n'en produire aucun).
+            SpecDecor s = DecorsDeScene.MenuPlus;
+            var banc = new Banc();
+            Texture2D avec = null, sans = null;
+            try
+            {
+                DecorDeScene.Poser(banc.Racine, s);
+                var fen = new GameObject("Fenetre", typeof(RectTransform));
+                fen.transform.SetParent(banc.Racine, false);
+                RectTransform fenRt = (RectTransform)fen.transform;
+                EtirerPlein(fenRt);
+                var cont = new GameObject("Contenu", typeof(RectTransform));
+                cont.transform.SetParent(fenRt, false);
+                RectTransform contRt = (RectTransform)cont.transform;
+                contRt.anchorMin = new Vector2(0f, 1f); contRt.anchorMax = new Vector2(1f, 1f); contRt.pivot = new Vector2(0.5f, 1f);
+                contRt.sizeDelta = new Vector2(0f, 3f * H);   // déborde : le fondu est à opacité pleine en haut de course
+                ListeDefilante l = ListeDefilante.Equiper(fenRt, contRt, DesignTokens.Current.surfaceBase);
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                l.Rafraichir();
+                Assert.IsTrue(l.ContenuDepasse, "prémisse : le contenu déborde, sinon le fondu est éteint et rien n'est mesuré");
+                Assert.AreEqual(1f, l.OpaciteCourante, 1e-4f, "prémisse : haut de course ⇒ opacité pleine");
+                avec = banc.Rendre();
+                l.enabled = false;            // LateUpdate ne rallume rien entre les deux rendus
+                l.Fondu.enabled = false;
+                sans = banc.Rendre();
+
+                Color32 sb = DesignTokens.Current.surfaceBase;
+                Debug.Log($"[MESURE-FONDU] surfaceBase = ({sb.r},{sb.g},{sb.b}) · HauteurDuFondu = {ListeDefilante.HauteurDuFondu} u · banc {W}×{H}, x = {W / 2}");
+                float ecartBas = 0f;
+                foreach (int y in new[] { 0, 1, 9, 18, 27, 36, 45, 54, 63, 71, 80 })
+                {
+                    Color32 a = avec.GetPixel(W / 2, y), b = sans.GetPixel(W / 2, y);
+                    float e = Ecart(avec.GetPixel(W / 2, y), sans.GetPixel(W / 2, y)) * 255f;
+                    if (y == 0) ecartBas = e;
+                    Debug.Log($"[MESURE-FONDU] y={y,2} (depuis le bas) : avec ({a.r},{a.g},{a.b}) · bureau seul ({b.r},{b.g},{b.b}) · écart max {e:0.#}/255");
+                }
+                Assert.Greater(ecartBas, 4f, "contrôle : au pied du fondu, l'image AVEC diffère du décor seul (la sonde mesure quelque chose)");
+            }
+            finally { Detruire(avec); Detruire(sans); banc.Dispose(); }
+        }
+
+        [UnityTest]
         public IEnumerator D4h_Points_TuileALEchelleDeLaMaquette()
         {
             SpecDecor s = DecorsDeScene.Compression;   // ⑭ : points tous les 26 px CSS
