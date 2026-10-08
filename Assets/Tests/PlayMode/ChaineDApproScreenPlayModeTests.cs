@@ -301,6 +301,65 @@ namespace MafiaCleanCity.Operational.Tests
                 "scarcity_active=true ne produit pas la bannière");
         }
 
+        private static Rect Monde(RectTransform rt)
+        {
+            var c = new Vector3[4];
+            rt.GetWorldCorners(c);
+            return Rect.MinMaxRect(c[0].x, c[0].y, c[2].x, c[2].y);
+        }
+
+        private static Transform Trouver(Transform racine, string nom)
+        {
+            foreach (Transform x in racine.GetComponentsInChildren<Transform>(true))
+                if (x.name == nom) return x;
+            return null;
+        }
+
+        /// <summary>㉚ B2 / B3 (juge du 07/10, corrigés le 08/10) — gardes d'EFFET : la perforation a des texels opaques ET des vides, sur toute la largeur du bon,
+        /// et le geste porte sa légende À DROITE de son libellé. La perforation est reposée quand le bon est RE-rendu.</summary>
+        [UnityTest]
+        public IEnumerator EcranApproE1b_PerforationDuBon_EtLegendeDuGeste()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTest(CorpsFabrique());
+            yield return null;
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            Transform racine = RacineEcran().transform;
+
+            Transform fiche = Trouver(racine, "Fiche");
+            Transform perfo = Trouver(fiche, "Perforation");
+            Assert.IsNotNull(perfo, "B2 : le bon porte sa perforation (`.bon::after`)");
+            Image img = perfo.GetComponent<Image>();
+            Assert.IsNotNull(perfo.GetComponent<CanvasRenderer>());
+            Assert.AreEqual(Image.Type.Tiled, img.type, "un motif répété, pas un aplat");
+            Texture2D tex = img.sprite.texture;
+            int opaques = 0, vides = 0;
+            foreach (Color32 px in tex.GetPixels32()) { if (px.a > 0) opaques++; else vides++; }
+            Assert.Greater(opaques, 0, "B2 : des créneaux opaques");
+            Assert.Greater(vides, 0, "B2 : …séparés de vides (`#cbbfa4 0 4px, transparent 4px 8px`)");
+            Assert.AreEqual(opaques, vides, "B2 : trait = vide (4 px / 4 px)");
+            Rect rf = Monde((RectTransform)fiche), rp = Monde((RectTransform)perfo);
+            Assert.AreEqual(rf.width, rp.width, 0.5f, "B2 : sur toute la largeur du bon (`left:0;right:0`)");
+            Assert.AreEqual(rf.yMin, rp.yMin, 0.5f, "B2 : au bas du bon (`bottom:0`)");
+            Assert.Greater(rp.height, 0.4f, "B2 : une hauteur RENDUE");
+
+            // B3 : la légende du geste, à droite de son libellé
+            Transform geste = Trouver(racine, "Geste");
+            Assert.IsNotNull(geste, "le geste de la bande basse");
+            var lib = Trouver(geste, "Libelle").GetComponent<TMPro.TextMeshProUGUI>();
+            var leg = Trouver(geste, "Legende").GetComponent<TMPro.TextMeshProUGUI>();
+            Assert.AreEqual("EN COMMANDER", lib.text);
+            Assert.AreEqual("ça part du compte tout de suite", leg.text, "B3 : la note de droite du geste (cadre 48)");
+            Assert.Greater(Monde(leg.rectTransform).center.x, Monde(lib.rectTransform).center.x, "B3 : à DROITE du libellé");
+            Assert.Less(Monde(leg.rectTransform).xMax, Monde((RectTransform)geste).xMax, "B3 : dans le geste");
+
+            // le bon re-rendu (commande en cours) garde sa perforation
+            ecran.RendrePourTest(CorpsFabrique(enCours: true, penurie: false));
+            yield return null;
+            Assert.IsNotNull(Trouver(Trouver(RacineEcran().transform, "Fiche"), "Perforation"), "B2 : reposée après un nouveau rendu");
+        }
+
         [UnityTest]
         public IEnumerator EcranApproE2_EtatCommandeEnCours_AfficheLaLigneCommandeSansBouton()
         {

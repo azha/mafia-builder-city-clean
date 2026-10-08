@@ -421,7 +421,7 @@ namespace MafiaCleanCity.Operational
         /// (« LA COMMANDE ») seulement en cours, et l'encart pénurie sur `scarcity_active`.</summary>
         private void RendreFiche(GetOperationalPrecursorsResponseDto dto, bool enCours, bool arrivee)
         {
-            ViderEnfants(ficheRoot);
+            ViderLaFiche();
 
             GameObject entete = NouveauUI("Entete", ficheRoot);
             HorizontalLayoutGroup h = entete.AddComponent<HorizontalLayoutGroup>();
@@ -581,28 +581,18 @@ namespace MafiaCleanCity.Operational
                 }
             }
 
-            GameObject bouton = NouveauUI("BoutonCommander", piedRoot);
-            Image fond = bouton.AddComponent<Image>();
-            fond.color = Or;
-            Button b = bouton.AddComponent<Button>();
-            b.targetGraphic = fond;
-            b.onClick.AddListener(PasserCommande);
-            HorizontalLayoutGroup hb = bouton.AddComponent<HorizontalLayoutGroup>();
-            hb.padding = new RectOffset(PxTrait(14f), PxTrait(14f), PxTrait(10f), PxTrait(10f));
-            hb.childControlWidth = true; hb.childControlHeight = true;
-            hb.childForceExpandWidth = false; hb.childForceExpandHeight = false;
-            hb.childAlignment = TextAnchor.MiddleLeft;
-            AddLayoutElement(bouton, preferredHeight: Px(38f));
-
-            TextMeshProUGUI libBouton = NouveauTexteFiche(bouton.transform, "Libelle",
-                Libelle.De("appro", "bouton", "EN COMMANDER"), 11f, EncreSombre, true);
-            libBouton.characterSpacing = 4f;
+            // cause 3 (CLIENT-3 ㉚ M4, 07/10) : « CTA sombre cerné d'or, libellé or / aplat or plein, encre sombre — gros bouton jaune » : la forme `.geste` de SON cadre (`.appr6 .geste` : fond #241c11,
+            // cerne #5a4a2a, libellé #d9ab4e) — pas la `.cta6` des écrans de lecture. ㉚ B3 (juge du 07/10) : et sa LÉGENDE `small` à droite (cadre 48 :
+            // « ça part du compte tout de suite ») — `PiedDEcran.Geste` pose les deux, comme ㉞ Carnet.
+            Button b = PiedDEcran.Geste(piedRoot, Px, DesignTokens.Current.primaryFont,
+                Libelle.De("appro", "bouton", "EN COMMANDER"),
+                Libelle.De("appro", "bouton", "ça part du compte tout de suite"),
+                PiedDEcran.Etat.Allume, PasserCommande);
+            TextMeshProUGUI libBouton = b.transform.Find("Libelle").GetComponent<TextMeshProUGUI>();
             TrackText(libBouton.text);
+            TrackText(b.transform.Find("Legende").GetComponent<TextMeshProUGUI>().text);
             boutonCommanderTexte = libBouton;
             boutonCommander = b;
-            // cause 3 (CLIENT-3 ㉚ M4, 07/10) : « CTA sombre cerné d'or, libellé or / aplat or plein, encre sombre — gros bouton jaune » : la forme `.geste` de SON cadre (`.appr6 .geste` : fond #241c11,
-            // cerne #5a4a2a, libellé #d9ab4e) — pas la `.cta6` des écrans de lecture
-            PiedDEcran.StylerLeBouton(bouton, libBouton, PiedDEcran.Forme.Geste);
         }
 
         // ═══ §3 — La chaîne, en état vide honnête ═══════════════════════════════════════════════
@@ -650,7 +640,7 @@ namespace MafiaCleanCity.Operational
         /// ligne qui lisait le payload).</summary>
         private void RendreEtatIndisponible()
         {
-            ViderEnfants(ficheRoot);
+            ViderLaFiche();
             ViderEnfants(piedRoot);
             ViderEnfants(chaineRoot);
             titreTexte.text = Libelle.De("appro", "titre", "La chaîne d'appro n'a pas répondu");
@@ -810,6 +800,8 @@ namespace MafiaCleanCity.Operational
         /// <summary>A2 (juge groupé du 07/10, f2) : le rouge des valeurs SUR LE PAPIER du bon — `.bon .l b.rouge` `#a8402f` (4,96:1 sur le papier) ; `accentDanger` `#ff5a4d` (pensé pour le fond sombre) n'y fait que 2,34:1,
         /// sous le plancher de 3:1. Aucun jeton n'est à ce rouge (le plus proche est à plus de 60/255) : une couleur propre au bon, en aplat exact (jamais un jeton substitué).</summary>
         public static Color RougeDuBon => new Color32(0xa8, 0x40, 0x2f, 255);
+        /// <summary>`.bon::after` : le créneau de la perforation (#cbbfa4) — à 31/255 du jeton le plus proche (hudCremeSecondary) : une couleur du cadre, pas une recopie.</summary>
+        private static Color PerforationDuBon => new Color32(0xcb, 0xbf, 0xa4, 255);
         private static Color VertBon => DesignTokens.Current.accentSuccess;
 
         private static Color Hex(string h)
@@ -868,6 +860,34 @@ namespace MafiaCleanCity.Operational
         private void TrackText(string texte)
         {
             if (!string.IsNullOrEmpty(texte)) renderedTexts.Add(texte);
+        }
+
+        /// <summary>Vide le bon, PUIS repose sa perforation (elle est un enfant du bon : le vidage la détruirait).</summary>
+        private void ViderLaFiche()
+        {
+            ViderEnfants(ficheRoot);
+            PoserLaPerforation(ficheRoot);
+        }
+
+        /// <summary>`.bon::after{position:absolute;left:0;right:0;bottom:0;height:5px;background:repeating-linear-gradient(90deg,#cbbfa4 0 4px,transparent 4px 8px)}`
+        /// (㉚ B2, juge du 07/10) : la bande de créneaux au bas du papier — un trait de 4 px, un vide de 4 px, sur toute la largeur. Hors mise en page.</summary>
+        private void PoserLaPerforation(Transform bon)
+        {
+            if (bon == null) return;
+            GameObject go = NouveauUI("Perforation", bon);
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = new Vector2(1f, 0f); rt.pivot = new Vector2(0.5f, 0f);
+            rt.offsetMin = Vector2.zero; rt.offsetMax = new Vector2(0f, Px(5f));
+            if (go.GetComponent<CanvasRenderer>() == null) go.AddComponent<CanvasRenderer>();
+            Image img = go.AddComponent<Image>();
+            int pas = Mathf.Max(1, Mathf.RoundToInt(Px(4f)));
+            img.sprite = ProceduralUI.TuileTirets(pas, pas, Mathf.Max(1, Mathf.RoundToInt(Px(5f))), PerforationDuBon, false);
+            img.type = Image.Type.Tiled;
+            img.color = Color.white;
+            img.raycastTarget = false;
+            Canvas cv = img.canvas;   // un texel = une unité de canvas (comme `FiletsPoses`)
+            img.pixelsPerUnitMultiplier = (cv != null ? cv.referencePixelsPerUnit : 100f) / img.sprite.pixelsPerUnit;
         }
 
         private static void ViderEnfants(Transform parent)

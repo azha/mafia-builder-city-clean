@@ -66,6 +66,9 @@ namespace MafiaCleanCity.Operational.Tests
             "compression.tension.calm", "compression.semaine.none",
             "journal.bouton.y_preter_attention",
             "loi.bouton.lui_trouver_un_avocat", "loi.bloc.le_commis_d_office_fait_ce_qu_il_peut",
+            // ㉚ B3 (CLIENT-1, 08/10 ; juge groupé du 07/10) : la LÉGENDE du geste « EN COMMANDER » (cadre 48, `.geste small`) — mot de la maquette, clé
+            // dérivée par `Libelle.De`, NON servie à 256de0f8 (mesuré : `string_table.ts` du back) ; à servir par la table de l'atelier (via f2). 1 entrée.
+            "appro.bouton.ca_part_du_compte_tout_de_suite",
         };
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
