@@ -554,6 +554,48 @@ namespace MafiaCleanCity.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator D4k_Shop_UnClicHorsDuContenu_TombeSurLeCapteur_EtNeTraversePas()
+        {
+            // ㉓ : même EFFET que ⑤ (D4j) — l'aplat qui avalait les clics est remplacé par le décor ; un clic dans la bande de scène
+            // tombe sur `Decor/Capteur` de ㉓, jamais sur l'écran de dessous.
+            var banc = new Banc();
+            GameObject dessous = null, ecranGo = null;
+            try
+            {
+                dessous = new GameObject("EcranDeDessous", typeof(RectTransform), typeof(CanvasRenderer));
+                dessous.transform.SetParent(banc.Racine, false);
+                EtirerPlein((RectTransform)dessous.transform);
+                Image piege = dessous.AddComponent<Image>();
+                piege.color = Color.clear;
+                piege.raycastTarget = true;
+
+                ecranGo = new GameObject("EcranVitrine", typeof(RectTransform));
+                ecranGo.transform.SetParent(banc.Racine, false);
+                EtirerPlein((RectTransform)ecranGo.transform);
+                ecranGo.AddComponent<MafiaCleanCity.Economy.Shop.ShopScreenController>();
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+
+                Assert.IsNull(ecranGo.GetComponent<Image>(), "plus d'aplat sur le nœud de l'écran : le décor tient le rôle");
+                Assert.IsNotNull(ecranGo.GetComponentInChildren<DecorPose>(true), "le décor de scène est posé sur ㉓");
+                Assert.AreEqual(0, ecranGo.GetComponentInChildren<DecorPose>(true).transform.GetSiblingIndex(), "Decor est le premier enfant");
+                var ped = new PointerEventData(EventSystem.current) { position = new Vector2(W / 2f, H * 0.9f) };
+                var hits = new List<RaycastResult>();
+                banc.Canvas.GetComponent<GraphicRaycaster>().Raycast(ped, hits);
+                Assert.IsNotEmpty(hits, "le clic touche quelque chose");
+                Assert.AreEqual("Capteur", hits[0].gameObject.name, "premier touché : " + string.Join(", ", hits.Select(h => h.gameObject.name)));
+                Assert.IsTrue(hits[0].gameObject.transform.IsChildOf(ecranGo.transform), "le Capteur est celui de ㉓");
+                Assert.AreNotSame(dessous, hits[0].gameObject, "le clic ne traverse pas vers l'écran de dessous");
+            }
+            finally
+            {
+                if (ecranGo != null) UnityEngine.Object.DestroyImmediate(ecranGo);
+                if (dessous != null) UnityEngine.Object.DestroyImmediate(dessous);
+                banc.Dispose();
+            }
+        }
+
+        [UnityTest]
         public IEnumerator D4h_Points_TuileALEchelleDeLaMaquette()
         {
             SpecDecor s = DecorsDeScene.Compression;   // ⑭ : points tous les 26 px CSS

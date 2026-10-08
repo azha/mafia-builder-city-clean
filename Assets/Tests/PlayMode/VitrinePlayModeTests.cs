@@ -53,7 +53,9 @@ namespace MafiaCleanCity.CityMap.Tests
         public void V2_Garde_LeControleurPasseParLesGabarits_PlusDeDisqueUniqueNiDeBoutonAcheter()
         {
             string s = Source("Economy", "Shop", "ShopScreenController.cs");
-            StringAssert.Contains("EnteteDEcran.PoserLaPile(gameObject, (int)ShellChrome.TopInsetPx, (int)ShellChrome.BottomInsetPx)", s, "la racine est la pile du gabarit");
+            // Le décor de scène (CLIENT-2, 08/10) : le HAUT de la pile est la bande de scène (ReserverLaBande, §5.6 du design), plus TopInsetPx.
+            StringAssert.Contains("EnteteDEcran.PoserLaPile(gameObject, 0, (int)ShellChrome.BottomInsetPx)", s, "la racine est la pile du gabarit");
+            StringAssert.Contains("DecorDeScene.ReserverLaBande(", s, "la racine est la pile du gabarit : son haut est sous la bande de scène");
             StringAssert.Contains("VitrinePictogrammes.Dessiner(art.transform, VitrinePictogrammes.MotifDe(s.kind, s.sku_id)", s, "A3 : un dessin par article");
             StringAssert.Contains("PiedDEcran.BandeDeVoix(transform, Px, Socle, Rebord)", s, "A4 : la bande basse `.voix`, par le gabarit");
             StringAssert.Contains("ListeDefilante.Indiquer(defil, VitreBas)", s, "cause 7 : le défilement est indiqué");
