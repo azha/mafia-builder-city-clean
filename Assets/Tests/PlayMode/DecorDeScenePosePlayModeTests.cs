@@ -24,12 +24,21 @@ namespace MafiaCleanCity.Tests.PlayMode
         /// rétrécit d'une entrée à chaque pose, avec le feu vert du propriétaire du contrôleur (CLIENT-1).</summary>
         internal static readonly HashSet<string> PoseEnAttente = new HashSet<string>
         {
-            "③", "⑤", "㊲", "㉟", "㉓", "⑮", "⑰", "⑭", "㊴", "㊳", "㊵", "㉒", "㊱", "㉜", "㉚", "㉘", "㉛", "㉝", "㉞", "㉙", "㉔", "⑱",
+            "③", "⑤", "㊲", "㉟", "㉓", "⑮", "⑰", "⑭", "㊴", "㊳", "㉒",   // ㊵ posé le 08/10 (feu vert CLIENT-1)
+            "㊱", "㉜", "㉚", "㉘", "㉛", "㉝", "㉞", "㉙", "㉔", "⑱",
         };
 
         /// <summary>DETTE DATÉE : par écran POSÉ, les recettes de filets pas encore branchées, chacune avec sa raison. Ne fait
         /// que rétrécir.</summary>
-        internal static readonly Dictionary<string, string[]> RecettesEnAttente = new Dictionary<string, string[]>();
+        internal static readonly Dictionary<string, string[]> RecettesEnAttente = new Dictionary<string, string[]>
+        {
+            // ㊵ (08/10) — Elast, Et6, Et6Alerte, Cuve : la boîte, les étapes et leurs cuves sont CERNÉES par `PiedDEcran.Cerner`
+            //   (CLIENT-1) ; elles passeront par la délégation Cerner → Filets que CLIENT-1 a acceptée après la fusion (noms
+            //   `Cerne/Haut|Bas|Gauche|Droite` gardés). Cta6 : le geste du pied, stylé par `PiedDEcran` (CLIENT-1). Mano, MailFlou,
+            //   MailTenu, N, N_2 : éléments de cadres d'état que le contrôleur ne construit pas (cadran, maillons, pastilles) —
+            //   à classer au juge (A s'ils manquent au joueur, sinon C).
+            { "㊵", new[] { "Cta6", "Cuve", "Elast", "Et6", "Et6Alerte", "MailFlou", "MailTenu", "Mano", "N", "N_2" } },
+        };
 
         /// <summary>Recettes posées par le décor lui-même (le cerne A : `Decor/Cerne`), jamais par le contrôleur.</summary>
         private static readonly HashSet<string> PoseesParLeDecor = new HashSet<string> { "Cerne" };
