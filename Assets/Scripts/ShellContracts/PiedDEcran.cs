@@ -78,7 +78,11 @@ namespace MafiaCleanCity.Shell
             fond.color = PlaqueDuBas;
             fond.raycastTarget = false;
             UnityEngine.UI.VerticalLayoutGroup v = bas.AddComponent<UnityEngine.UI.VerticalLayoutGroup>();
-            v.padding = new RectOffset((int)px(13f), (int)px(13f), (int)px(9f) + (int)px(2f), (int)px(15f));
+            // F2 (juge d'ensemble r4, 09/10) : `.bas{padding:9px 13px 15px}` est le padding de la PLAQUE pleine largeur. Posée dans une colonne qui a DÉJÀ ses 13 CSS px de marge (㉞ : `debord` = ces 13 px), la plaque en déborde
+            // et le contenu ne doit PAS les payer deux fois : le bouton du Carnet tenait 893 px (marge de 26 CSS) là où la maquette en tient 980 (50 px = 13 CSS + 1 de cerne) — d'où la légende « … reprend pas » cassée.
+            // Le padding du contenu = 13 CSS − ce que la colonne porte déjà (0 si la plaque est posée sur une racine sans marges : inchangé pour ㉚ et ㉘).
+            int padG = Mathf.Max(0, (int)px(13f) - (int)debordGauche), padD = Mathf.Max(0, (int)px(13f) - (int)debordDroite);
+            v.padding = new RectOffset(padG, padD, (int)px(9f) + (int)px(2f), (int)px(15f));
             v.spacing = px(5f);
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
