@@ -1,0 +1,84 @@
+================================================================================================
+Q4 — graisse du titre du bandeau de titre. Echelle : x3,6 des DEUX cotes (dossier.md).
+================================================================================================
+
+--- CONTROLE NEGATIF/POSITIF SYNTHETIQUE (polices locales, meme hauteur de capitale) ---
+  DejaVu Serif BOLD taille=42 cap=32 -> hampe moyenne 7.10 px (n=604, mode=[(7, 428), (8, 129), (3, 21)])
+  DejaVu Serif BOOK taille=42 cap=32 -> hampe moyenne 3.98 px (n=600, mode=[(4, 375), (3, 109), (5, 95)])
+  DejaVu Serif BOLD taille=44 cap=33 -> hampe moyenne 7.26 px (n=590, mode=[(7, 300), (8, 208), (9, 45)])
+  DejaVu Serif BOOK taille=44 cap=33 -> hampe moyenne 4.19 px (n=596, mode=[(4, 404), (5, 138), (3, 33)])
+  => l'instrument separe BOLD (~7,2 px a cap 33) de BOOK (~4,2 px) : il mesure bien une graisse.
+
+--- MESURES ---
+
+### E03 ㉚
+  [ouvre] reference/E03-cadre-48.png  taille=(1080, 2102)  mode=RGB
+    REF     : ligne de titre y=477..520 (h=44px img) ; x=52..945 largeur=894 px img = 248.3 px CSS
+              hampe moyenne = 8.05 px img = 2.235 px CSS (n=473, mode=[(8, 200), (7, 109), (4, 24)], rangees 502..514)
+  [ouvre] captures/E03_Chanedappro_1080x2400.png  taille=(1080, 2400)  mode=RGB
+    CAP2400 : ligne de titre y=553..597 (h=45px img) ; x=59..955 largeur=897 px img = 249.2 px CSS
+              hampe moyenne = 8.50 px img = 2.362 px CSS (n=450, mode=[(8, 217), (9, 95), (14, 37)], rangees 579..591)
+  [ouvre] captures/E03_Chanedappro_1080x1920.png  taille=(1080, 1920)  mode=RGB
+    CAP1920 : ligne de titre y=452..497 (h=46px img) ; x=59..955 largeur=897 px img = 249.2 px CSS
+              hampe moyenne = 8.63 px img = 2.398 px CSS (n=426, mode=[(8, 207), (9, 93), (14, 42)], rangees 479..491)
+    >>> CAP2400 / REF : hampe x1.057 (+0.127 px CSS) ; largeur du titre 897 vs 894 px img (+0.3 %)
+    >>> CAP1920 / REF : hampe x1.073 (+0.162 px CSS) ; largeur du titre 897 vs 894 px img (+0.3 %)
+    [E03 est le SEUL couple a TEXTE IDENTIQUE : son sous-titre ancre aussi la taille]
+  [ouvre] reference/E03-cadre-48.png  taille=(1080, 2102)  mode=RGB
+        REF     sous-titre : y=543..564 ; x=52..907 largeur=856 px img = 237.8 px CSS
+  [ouvre] captures/E03_Chanedappro_1080x2400.png  taille=(1080, 2400)  mode=RGB
+        CAP2400 sous-titre : y=615..636 ; x=59..915 largeur=857 px img = 238.1 px CSS
+  [ouvre] captures/E03_Chanedappro_1080x1920.png  taille=(1080, 1920)  mode=RGB
+        CAP1920 sous-titre : y=514..535 ; x=59..915 largeur=857 px img = 238.1 px CSS
+
+### E04 ㉘
+  [ouvre] reference/E04-cadre-54.png  taille=(1080, 2102)  mode=RGB
+    REF     : ligne de titre y=479..512 (h=34px img) ; x=52..481 largeur=430 px img = 119.4 px CSS
+              hampe moyenne = 7.29 px img = 2.024 px CSS (n=266, mode=[(8, 176), (7, 49), (3, 21)], rangees 494..506)
+  [ouvre] captures/E04_Distribution_1080x2400.png  taille=(1080, 2400)  mode=RGB
+    CAP2400 : ligne de titre y=555..589 (h=35px img) ; x=59..576 largeur=518 px img = 143.9 px CSS
+              hampe moyenne = 7.76 px img = 2.155 px CSS (n=293, mode=[(8, 179), (9, 71), (3, 19)], rangees 571..583)
+  [ouvre] captures/E04_Distribution_1080x1920.png  taille=(1080, 1920)  mode=RGB
+    CAP1920 : ligne de titre y=454..488 (h=35px img) ; x=59..576 largeur=518 px img = 143.9 px CSS
+              hampe moyenne = 7.87 px img = 2.185 px CSS (n=292, mode=[(8, 178), (9, 69), (3, 16)], rangees 470..482)
+    >>> CAP2400 / REF : hampe x1.065 (+0.131 px CSS) ; largeur du titre 518 vs 430 px img (+20.5 %)
+    >>> CAP1920 / REF : hampe x1.080 (+0.161 px CSS) ; largeur du titre 518 vs 430 px img (+20.5 %)
+
+### E05 ㉛
+  [ouvre] reference/E05-cadre-67.png  taille=(1080, 2102)  mode=RGB
+    REF     : ligne de titre y=477..520 (h=44px img) ; x=52..827 largeur=776 px img = 215.6 px CSS
+              hampe moyenne = 7.90 px img = 2.195 px CSS (n=391, mode=[(8, 159), (7, 86), (9, 32)], rangees 502..514)
+  [ouvre] captures/E05_Loi_1080x2400.png  taille=(1080, 2400)  mode=RGB
+    CAP2400 : ligne de titre y=555..597 (h=43px img) ; x=59..305 largeur=247 px img = 68.6 px CSS
+              hampe moyenne = 8.32 px img = 2.311 px CSS (n=110, mode=[(9, 49), (8, 35), (3, 6)], rangees 579..591)
+  [ouvre] captures/E05_Loi_1080x1920.png  taille=(1080, 1920)  mode=RGB
+    CAP1920 : ligne de titre y=454..497 (h=44px img) ; x=59..305 largeur=247 px img = 68.6 px CSS
+              hampe moyenne = 8.26 px img = 2.296 px CSS (n=102, mode=[(9, 52), (8, 33), (3, 5)], rangees 479..491)
+    >>> CAP2400 / REF : hampe x1.053 (+0.116 px CSS) ; largeur du titre 247 vs 776 px img (-68.2 %)
+    >>> CAP1920 / REF : hampe x1.046 (+0.101 px CSS) ; largeur du titre 247 vs 776 px img (-68.2 %)
+
+### E02 ㉞
+  [ouvre] reference/E02-cadre-85.png  taille=(1080, 2102)  mode=RGB
+    REF     : ligne de titre y=479..512 (h=34px img) ; x=52..573 largeur=522 px img = 145.0 px CSS
+              hampe moyenne = 7.36 px img = 2.043 px CSS (n=301, mode=[(8, 160), (7, 71), (9, 27)], rangees 494..506)
+  [ouvre] captures/E02_Carnet_1080x2400.png  taille=(1080, 2400)  mode=RGB
+    CAP2400 : ligne de titre y=560..596 (h=37px img) ; x=55..536 largeur=482 px img = 133.9 px CSS
+              hampe moyenne = 7.93 px img = 2.202 px CSS (n=279, mode=[(8, 137), (9, 96), (3, 16)], rangees 578..590)
+  [ouvre] captures/E02_Carnet_1080x1920.png  taille=(1080, 1920)  mode=RGB
+    CAP1920 : ligne de titre y=460..496 (h=37px img) ; x=55..536 largeur=482 px img = 133.9 px CSS
+              hampe moyenne = 7.87 px img = 2.187 px CSS (n=281, mode=[(8, 146), (9, 92), (3, 15)], rangees 478..490)
+    >>> CAP2400 / REF : hampe x1.078 (+0.159 px CSS) ; largeur du titre 482 vs 522 px img (-7.7 %)
+    >>> CAP1920 / REF : hampe x1.070 (+0.143 px CSS) ; largeur du titre 482 vs 522 px img (-7.7 %)
+
+### E06 ㉝ (TEMOIN)
+  [ouvre] reference/E06-cadre-79.png  taille=(1080, 2102)  mode=RGB
+    REF     : ligne de titre y=479..521 (h=43px img) ; x=52..563 largeur=512 px img = 142.2 px CSS
+              hampe moyenne = 7.79 px img = 2.165 px CSS (n=258, mode=[(8, 89), (7, 78), (3, 17)], rangees 503..515)
+  [ouvre] captures/E06_Dmolition_1080x2400.png  taille=(1080, 2400)  mode=RGB
+    CAP2400 : ligne de titre y=549..593 (h=45px img) ; x=48..948 largeur=901 px img = 250.3 px CSS
+              hampe moyenne = 8.09 px img = 2.246 px CSS (n=401, mode=[(8, 182), (9, 55), (4, 37)], rangees 575..587)
+  [ouvre] captures/E06_Dmolition_1080x1920.png  taille=(1080, 1920)  mode=RGB
+    CAP1920 : ligne de titre y=449..492 (h=44px img) ; x=48..948 largeur=901 px img = 250.3 px CSS
+              hampe moyenne = 8.30 px img = 2.304 px CSS (n=419, mode=[(8, 199), (9, 61), (14, 39)], rangees 474..486)
+    >>> CAP2400 / REF : hampe x1.038 (+0.081 px CSS) ; largeur du titre 901 vs 512 px img (+76.0 %)
+    >>> CAP1920 / REF : hampe x1.064 (+0.139 px CSS) ; largeur du titre 901 vs 512 px img (+76.0 %)

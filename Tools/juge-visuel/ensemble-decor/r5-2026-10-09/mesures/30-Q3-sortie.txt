@@ -1,0 +1,86 @@
+==================================================================================================
+Q3 — titre de la fiche « D'OÙ ÇA PART » (㉘ E04). Echelle x3,6 des DEUX cotes (dossier.md).
+==================================================================================================
+  [ouvre] reference/E04-cadre-54.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E04-cadre-55.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] captures/E04_Distribution_1080x2400.png  taille=(1080, 2400)  mode=RGB
+  [ouvre] captures/E04_Distribution_1080x1920.png  taille=(1080, 1920)  mode=RGB
+
+--- TAILLE : hauteur de capitale de l'initiale du titre de fiche ---
+    REF  cadre 54  « A » d'Atelier  : y=731..754  cap = 24 px img = 6.67 px CSS
+    REF  cadre 55  « A » d'Atelier  : y=731..754  cap = 24 px img = 6.67 px CSS
+    CAP  2400      « A » d'Aucune   : y=817..840  cap = 24 px img = 6.67 px CSS
+    CAP  1920      « A » d'Aucune   : y=717..740  cap = 24 px img = 6.67 px CSS
+
+--- FAMILLE : avance de la capitale initiale (meme hauteur de capitale) ---
+    CAP  2400  « A » x=195..221  avance = 27 px img
+    CAP  1920  « A » x=195..221  avance = 27 px img
+    REF  cadre 54 « A » x=85..123 : bande FUSIONNEE avec le « t » suivant (crenage + rotation de la fiche) -> avance NON mesurable, non utilisee.
+
+--- GRAISSE : hampe moyenne dans la zone d'oeil ---
+    REF  cadre 54 : 5.89 px img = 1.635 px CSS (n=159, mode=[(6, 68), (5, 26), (2, 18)], rangees 740..750)
+    REF  cadre 55 : 5.89 px img = 1.635 px CSS (n=159, mode=[(6, 68), (5, 26), (2, 18)], rangees 740..750)
+    CAP  2400     : 5.08 px img = 1.411 px CSS (n=503, mode=[(5, 391), (6, 68), (4, 18)], rangees 826..836)
+    CAP  1920     : 5.09 px img = 1.413 px CSS (n=497, mode=[(5, 394), (6, 67), (4, 15)], rangees 726..736)
+
+--- CONTROLES SYNTHETIQUES (polices LOCALES, meme hauteur de capitale = 24 px img) ---
+    DejaVu Serif BOLD taille=33 cap=24 : avance A = 26 px img ; hampe moyenne = 5.51 px img ; mode=[(6, 271), (5, 175), (2, 27)]
+    DejaVu Serif BOOK taille=33 cap=24 : avance A = 24 px img ; hampe moyenne = 2.95 px img ; mode=[(3, 335), (2, 118), (4, 45)]
+    DejaVu Sans  BOLD taille=33 cap=24 : avance A = 25 px img ; hampe moyenne = 5.96 px img ; mode=[(6, 238), (5, 136), (7, 46)]
+    => BOLD ~6 px / BOOK ~3 px : l'instrument separe les graisses.
+    => avance du A : Serif Bold et Sans Bold different : il separe les familles.
+
+--- FAMILLE (2e instrument, DECISIF) : appariement de FORME sur le PREMIER MOT ---
+    Le 1er mot est rendu localement dans 4 polices candidates, a la taille qui donne
+    la MEME avance, puis on compare les masques binaires (IoU), offset balaye a +-3 px.
+    Le 1er mot seulement : sur une phrase entiere, la derive de chasse (Unity vs PIL)
+    desaligne la fin et l'IoU ne discrimine plus — instrument verifie, puis borne.
+    CONTROLE POSITIF de CET instrument : le MEME test sur la REFERENCE doit elire
+    « Serif BOLD », qui est la pile declaree par dossier.md pour les titres serif.
+    La fiche de la REFERENCE est TOURNEE (epingle) : ligne de base y=754 au 1er glyphe
+    (x~95) et y=724 au dernier (x~805) -> angle = +2.42 deg. Les rendus de controle
+    de la reference sont tournes d'autant avant l'appariement.
+    REF  cadre 54 (« Atelier ») : boite (85, 725, 239, 754) largeur=155 px img, 1318 px d'encre
+        DejaVu Serif BOLD (taille 41, largeur 154) : IoU = 0.261
+        DejaVu Serif BOOK (taille 46, largeur 156) : IoU = 0.167
+        DejaVu Sans  BOLD (taille 41, largeur 153) : IoU = 0.238
+        DejaVu Sans  BOOK (taille 47, largeur 151) : IoU = 0.192
+        => elu : DejaVu Serif BOLD (IoU 0.261)
+    CAP  2400     (« Aucune ») : boite (195, 817, 336, 840) largeur=142 px img, 1012 px d'encre
+        DejaVu Serif BOLD (taille 34, largeur 141) : IoU = 0.748
+        DejaVu Serif BOOK (taille 38, largeur 142) : IoU = 0.497
+        DejaVu Sans  BOLD (taille 34, largeur 140) : IoU = 0.585
+        DejaVu Sans  BOOK (taille 39, largeur 143) : IoU = 0.423
+        => elu : DejaVu Serif BOLD (IoU 0.748)
+    CAP  1920     (« Aucune ») : boite (195, 717, 336, 740) largeur=142 px img, 1030 px d'encre
+        DejaVu Serif BOLD (taille 34, largeur 141) : IoU = 0.768
+        DejaVu Serif BOOK (taille 38, largeur 142) : IoU = 0.503
+        DejaVu Sans  BOLD (taille 34, largeur 140) : IoU = 0.585
+        DejaVu Sans  BOOK (taille 39, largeur 143) : IoU = 0.427
+        => elu : DejaVu Serif BOLD (IoU 0.768)
+
+--- CONTROLE POSITIF : surtitre « D'OÙ ÇA PART » (MEME texte des deux cotes) ---
+    REF  cadre 54 : « D » y=778..793 cap = 16 px img ; ligne entiere x=88..273 (avance totale 186 px img)
+    CAP  2400     : « D » y=855..870 cap = 16 px img ; ligne entiere x=457..624 (avance totale 168 px img)
+    CAP  1920     : « D » y=754..770 cap = 17 px img ; ligne entiere x=457..624 (avance totale 168 px img)
+
+--- HORS PERIMETRE, observe en mesurant Q3 : ALIGNEMENT du texte sur le papier ---
+    REF  cadre 54 : papier x=53..848 (largeur 796, centre 450.5)
+        titre    x=85..790 centre=437.5 ; marge G=32 px img, marge D=58 px img
+        surtitre x=88..273 centre=180.5 ; marge G=35 px img, marge D=575 px img
+    CAP  2400     : papier x=108..971 (largeur 864, centre 539.5)
+        titre    x=195..880 centre=537.5 ; marge G=87 px img, marge D=91 px img
+        surtitre x=457..624 centre=540.5 ; marge G=349 px img, marge D=347 px img
+    CAP  1920     : papier x=108..971 (largeur 864, centre 539.5)
+        titre    x=195..880 centre=537.5 ; marge G=87 px img, marge D=91 px img
+        surtitre x=457..624 centre=540.5 ; marge G=349 px img, marge D=347 px img
+    REF : marges G du titre et du surtitre EGALES et petites, marge D grande -> FER A GAUCHE.
+    CAP : marges G et D voisines et centres ~= centre du papier -> CENTRE.
+
+--- CONTROLE POSITIF : papier de la fiche et encre du titre ---
+    REF  papier : (239, 230, 212)  encre (coeur) : (36, 31, 28)
+    CAP  papier : (234, 224, 200)  encre (coeur) : (34, 22, 0)
+
+--- SYNTHESE Q3 ---
+    taille  : REF 24 px img  vs  CAP 24 px img  (delta +0 px img = +0.00 px CSS)
+    graisse : REF 5.89  vs  CAP 5.08 px img  (x0.863) — BOLD synthetique ~6,0 ; BOOK synthetique ~3,0

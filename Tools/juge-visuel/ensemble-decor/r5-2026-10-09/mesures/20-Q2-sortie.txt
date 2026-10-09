@@ -1,0 +1,58 @@
+==================================================================================================
+Q2 — bande basse de ㉞ E02 (libelle + legende du geste principal) vs cadre 85.
+Echelle x3,6 des DEUX cotes : 1 px CSS = 3,6 px image (dossier.md).
+==================================================================================================
+  [ouvre] reference/E02-cadre-85.png  taille=(1080, 2102)  mode=RGB
+
+--- REFERENCE cadre 85 ---
+    boite du geste : y=1938..2042 hauteur=105 px img = 29.17 px CSS
+    bord EXTERIEUR du lisere : x=50..1029
+    LARGEUR DU BOUTON = 980 px img = 272.22 px CSS
+    MARGE GAUCHE = 50 px img = 13.89 px CSS ; MARGE DROITE = 50 px img = 13.89 px CSS
+    rangees de texte DANS le bouton : [(1969, 1973), (1976, 2002)]  -> 1 ligne(s) de corps
+    LIBELLE  x=(96, 490) avance=395 px img = 109.72 px CSS (retrait interieur gauche = 46 px img = 12.78 px CSS)
+    LEGENDE  x=(564, 986) avance=423 px img = 117.50 px CSS (retrait interieur droit = 43 px img = 11.94 px CSS)
+    ecart libelle/legende = 74 px img = 20.56 px CSS
+    hauteur de capitale du « L » de LANCER : (1976, 2000) -> 25 px img = 6.94 px CSS
+    encre libelle=(217, 171, 78) legende=(154, 138, 106) fond=(36, 28, 17) ; contrastes 7.91 / 4.98
+
+--- CAPTURES (4 fichiers E02 : 2 resolutions x 2 positions de liste) ---
+  [ouvre] captures/E02_Carnet_1080x2400.png  taille=(1080, 2400)  mode=RGB
+    E02_Carnet_1080x2400.png
+      boite y=1958..2061 hauteur=104 px img = 28.89 px CSS (REF 105)
+      LARGEUR DU BOUTON = 988 px img = 274.44 px CSS (REF 980 px img = 272.22 px CSS ; ecart +8 px img = +2.22 px CSS = +0.82 %)
+      MARGE G = 46 px img = 12.78 px CSS (REF 13.89) ; MARGE D = 46 px img = 12.78 px CSS (REF 13.89)
+      rangees de texte DANS le bouton : [(1990, 1993), (1996, 2021)] -> 1 ligne(s) de corps => libelle UNE ligne et legende UNE ligne : OUI
+      LIBELLE x=(88, 481) avance=394 px img (REF 394) ; LEGENDE x=(571, 993) avance=423 px img (REF 422) ; ecart=90 px img
+      hauteur de capitale « L » = 24 px img = 6.67 px CSS
+      encre libelle=(152, 121, 121) legende=(150, 122, 122) fond=(22, 21, 25) ; contrastes 4.63 / 4.64 (doctrine : >= 3:1 grand texte, >= 4,5:1 petit)
+  [ouvre] captures/E02_Carnet_bas_1080x2400.png  taille=(1080, 2400)  mode=RGB
+    E02_Carnet_bas_1080x2400.png
+      boite y=1958..2061 hauteur=104 px img = 28.89 px CSS (REF 105)
+      LARGEUR DU BOUTON = 988 px img = 274.44 px CSS (REF 980 px img = 272.22 px CSS ; ecart +8 px img = +2.22 px CSS = +0.82 %)
+      MARGE G = 46 px img = 12.78 px CSS (REF 13.89) ; MARGE D = 46 px img = 12.78 px CSS (REF 13.89)
+      rangees de texte DANS le bouton : [(1990, 1993), (1996, 2021)] -> 1 ligne(s) de corps => libelle UNE ligne et legende UNE ligne : OUI
+      LIBELLE x=(88, 481) avance=394 px img (REF 394) ; LEGENDE x=(571, 993) avance=423 px img (REF 422) ; ecart=90 px img
+      hauteur de capitale « L » = 24 px img = 6.67 px CSS
+      encre libelle=(152, 121, 121) legende=(150, 122, 122) fond=(22, 21, 25) ; contrastes 4.63 / 4.64 (doctrine : >= 3:1 grand texte, >= 4,5:1 petit)
+  [ouvre] captures/E02_Carnet_1080x1920.png  taille=(1080, 1920)  mode=RGB
+    E02_Carnet_1080x1920.png
+      boite y=1478..1581 hauteur=104 px img = 28.89 px CSS (REF 105)
+      LARGEUR DU BOUTON = 988 px img = 274.44 px CSS (REF 980 px img = 272.22 px CSS ; ecart +8 px img = +2.22 px CSS = +0.82 %)
+      MARGE G = 46 px img = 12.78 px CSS (REF 13.89) ; MARGE D = 46 px img = 12.78 px CSS (REF 13.89)
+      rangees de texte DANS le bouton : [(1510, 1513), (1516, 1541)] -> 1 ligne(s) de corps => libelle UNE ligne et legende UNE ligne : OUI
+      LIBELLE x=(88, 481) avance=394 px img (REF 394) ; LEGENDE x=(571, 993) avance=423 px img (REF 422) ; ecart=90 px img
+      hauteur de capitale « L » = 24 px img = 6.67 px CSS
+      encre libelle=(152, 121, 121) legende=(150, 122, 122) fond=(22, 21, 25) ; contrastes 4.63 / 4.64 (doctrine : >= 3:1 grand texte, >= 4,5:1 petit)
+  [ouvre] captures/E02_Carnet_bas_1080x1920.png  taille=(1080, 1920)  mode=RGB
+    E02_Carnet_bas_1080x1920.png
+      boite y=1478..1581 hauteur=104 px img = 28.89 px CSS (REF 105)
+      LARGEUR DU BOUTON = 988 px img = 274.44 px CSS (REF 980 px img = 272.22 px CSS ; ecart +8 px img = +2.22 px CSS = +0.82 %)
+      MARGE G = 46 px img = 12.78 px CSS (REF 13.89) ; MARGE D = 46 px img = 12.78 px CSS (REF 13.89)
+      rangees de texte DANS le bouton : [(1510, 1513), (1516, 1541)] -> 1 ligne(s) de corps => libelle UNE ligne et legende UNE ligne : OUI
+      LIBELLE x=(88, 481) avance=394 px img (REF 394) ; LEGENDE x=(571, 993) avance=423 px img (REF 422) ; ecart=90 px img
+      hauteur de capitale « L » = 24 px img = 6.67 px CSS
+      encre libelle=(152, 121, 121) legende=(150, 122, 122) fond=(22, 21, 25) ; contrastes 4.63 / 4.64 (doctrine : >= 3:1 grand texte, >= 4,5:1 petit)
+
+--- CONTROLE NEGATIF : largeurs trouvees sur les 4 captures = [988] ---
+    une seule valeur => l'instrument est stable ; et 988 != 1080 => il detecte bien un lisere, pas le bord de l'image.

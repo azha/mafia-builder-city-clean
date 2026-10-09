@@ -1,0 +1,82 @@
+--- CAPTURES : empreinte sha256 (12 premiers) + taille ---
+  [ouvre] captures/A01_AccueilFile2Cartes_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      A01_AccueilFile2Cartes_1080x1920                     63a5cfc21fa5  OK
+  [ouvre] captures/A01_AccueilFile2Cartes_1080x2400.png  taille=(1080, 2400)  mode=RGB
+      A01_AccueilFile2Cartes_1080x2400                     250e77b16129  OK
+  [ouvre] captures/A01_AccueilFile2Cartes_TeteDeuxOptions_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      A01_AccueilFile2Cartes_TeteDeuxOptions_1080x1920     bee22ffdb100  OK
+  [ouvre] captures/A01_AccueilFile2Cartes_TeteDeuxOptions_1080x2400.png  taille=(1080, 2400)  mode=RGB
+      A01_AccueilFile2Cartes_TeteDeuxOptions_1080x2400     5b8a7eb06382  OK
+  [ouvre] captures/A01_AccueilFile2Cartes_TeteNonRapports_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      A01_AccueilFile2Cartes_TeteNonRapports_1080x1920     6a83e8da9a1d  OK
+  [ouvre] captures/A01_AccueilFile2Cartes_TeteNonRapports_1080x2400.png  taille=(1080, 2400)  mode=RGB
+      A01_AccueilFile2Cartes_TeteNonRapports_1080x2400     5cf8817bf4e3  OK
+  [ouvre] captures/A01_AccueilFile2Cartes_TeteRaisonLongue_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      A01_AccueilFile2Cartes_TeteRaisonLongue_1080x1920    967f67cbf6cf  OK
+  [ouvre] captures/A01_AccueilFile2Cartes_TeteRaisonLongue_1080x2400.png  taille=(1080, 2400)  mode=RGB
+      A01_AccueilFile2Cartes_TeteRaisonLongue_1080x2400    8f32c8a968fa  OK
+  [ouvre] captures/E02_Carnet_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      E02_Carnet_1080x1920                                 80f77dab5d2f  OK
+  [ouvre] captures/E02_Carnet_1080x2400.png  taille=(1080, 2400)  mode=RGB
+      E02_Carnet_1080x2400                                 e8033be20ee1  OK
+  [ouvre] captures/E02_Carnet_bas_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      E02_Carnet_bas_1080x1920                             737a0d794ad5  OK
+  [ouvre] captures/E02_Carnet_bas_1080x2400.png  taille=(1080, 2400)  mode=RGB
+      E02_Carnet_bas_1080x2400                             435307ab3857  OK
+  [ouvre] captures/E03_Chanedappro_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      E03_Chanedappro_1080x1920                            24785246bf8c  OK
+  [ouvre] captures/E03_Chanedappro_1080x2400.png  taille=(1080, 2400)  mode=RGB
+      E03_Chanedappro_1080x2400                            ce199f0e4fb4  OK
+  [ouvre] captures/E04_Distribution_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      E04_Distribution_1080x1920                           9d6f4205341d  OK
+  [ouvre] captures/E04_Distribution_1080x2400.png  taille=(1080, 2400)  mode=RGB
+      E04_Distribution_1080x2400                           dcdd3f94228b  OK
+  [ouvre] captures/E05_Loi_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      E05_Loi_1080x1920                                    35e7708aaaf8  OK
+  [ouvre] captures/E05_Loi_1080x2400.png  taille=(1080, 2400)  mode=RGB
+      E05_Loi_1080x2400                                    813b79f2f374  OK
+  [ouvre] captures/E05_Loi_bas_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      E05_Loi_bas_1080x1920                                027fef5be10e  OK
+  [ouvre] captures/E06_Dmolition_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      E06_Dmolition_1080x1920                              4ad4d42bda5c  OK
+  [ouvre] captures/E06_Dmolition_1080x2400.png  taille=(1080, 2400)  mode=RGB
+      E06_Dmolition_1080x2400                              65b7d5a24181  OK
+  [ouvre] captures/E06_Dmolition_bas_1080x1920.png  taille=(1080, 1920)  mode=RGB
+      E06_Dmolition_bas_1080x1920                          f224cfda995b  OK
+    22 captures ; 22 empreintes attendues ; 0 desaccord(s) : []
+
+--- REFERENCES : taille (toutes doivent etre 1080x2102) ---
+  [ouvre] reference/A01-cadre-4-la-suite.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/A01-cadre-5-tete-sur-ligne-haute.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E02-cadre-85.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E02-cadre-86.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E02-cadre-87.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E02-cadre-88.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E02-cadre-89.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E02-cadre-90.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E02-cadre-91.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E03-cadre-48.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E03-cadre-49.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E03-cadre-50.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E03-cadre-51.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E03-cadre-52.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E03-cadre-53.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E04-cadre-54.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E04-cadre-55.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E04-cadre-56.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E04-cadre-57.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E04-cadre-58.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E05-cadre-67.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E05-cadre-68.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E05-cadre-69.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E05-cadre-70.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E05-cadre-71.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E05-cadre-72.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E06-cadre-79.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E06-cadre-80.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E06-cadre-81.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E06-cadre-82.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E06-cadre-83.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] reference/E06-cadre-84.png  taille=(1080, 2102)  mode=RGB
+    32 references ; tailles distinctes = {(1080, 2102)}
+    CONTROLE NEGATIF : (900, 1752) present ? False

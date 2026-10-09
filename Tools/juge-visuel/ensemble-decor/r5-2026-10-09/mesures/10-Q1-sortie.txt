@@ -1,0 +1,125 @@
+==================================================================================================
+Q1 — bandes de consequence sous chaque option (④ A01 _TeteNonRapports vs cadre 5)
+==================================================================================================
+  [ouvre] reference/A01-cadre-5-tete-sur-ligne-haute.png  taille=(1080, 2102)  mode=RGB
+  [ouvre] captures/A01_AccueilFile2Cartes_TeteNonRapports_1080x2400.png  taille=(1080, 2400)  mode=RGB
+  [ouvre] captures/A01_AccueilFile2Cartes_TeteNonRapports_1080x1920.png  taille=(1080, 1920)  mode=RGB
+  [ouvre] captures/A01_AccueilFile2Cartes_TeteDeuxOptions_1080x2400.png  taille=(1080, 2400)  mode=RGB
+
+--- CONTROLE POSITIF 1 : rectangle de la carte de tete ---
+    REF  : x=46..1033  largeur=988 px img = 274.44 px CSS ; centre=539.5
+    CAP  : x=47..1032  largeur=986 px img = 273.89 px CSS ; centre=539.5
+    (le lisere est le seul pixel > lum 32 de la rangee : interieur ~17-22, exterieur ~25-29)
+    MILIEU DU GROUPE DE 2 COLONNES rapporte au CENTRE DE LA CARTE :
+      REF  : 539.6 - 539.5 = +0.1 px img
+      CAP  : 549.3 - 539.5 = +9.8 px img = +2.72 px CSS = +0.99 % de la carte
+
+--- CONTROLE POSITIF 2 : surtitre « CE QU'ON PEUT FAIRE » (MEME texte des 3 cotes) ---
+    Il sert aussi d'ANCRE : meme texte, centre sur la carte, present partout.
+    REF     : y=1078..1099 hauteur de capitale=22 px img ; x=332..740 largeur=409 ; centre=536.0
+    CAP2400 : y=1317..1338 hauteur de capitale=22 px img ; x=334..745 largeur=412 ; centre=539.5
+    CAP1920 : y=872..893 hauteur de capitale=22 px img ; x=337..741 largeur=405 ; centre=539.0
+    ORIGINE Y commune : surtitre REF y=1078 / CAP2400 y=1317 / CAP1920 y=872
+
+--- CONTROLE NEGATIF : l'echantillonneur doit SEPARER l'or du texte courant ---
+    REF titre de carte (or) : (242, 201, 107)
+    CAP titre de carte (or) : (242, 201, 106)
+    REF consequence         : (185, 173, 146)
+    CAP consequence         : (185, 173, 146)
+
+--- STRUCTURE : rangees de la colonne GAUCHE, du surtitre au bas du bloc ---
+
+  >>> REFERENCE cadre 5 (colonne gauche)
+      rangee 0: y=1078..1099 (h=22) — surtitre
+      rangee 1: y=1141..1275 (h=135) — BOUTON « METTRE EN RÉPARATION » (fond or)
+      rangee 2: y=1300..1328 (h=29) — consequence L1
+      rangee 3: y=1340..1367 (h=28) — consequence L2
+      rangee 4: y=1379..1406 (h=28) — consequence L3
+      rangee 5: y=1417..1445 (h=29) — consequence L4
+
+  >>> CAPTURE 2400 (colonne gauche)
+      rangee 0: y=1317..1338 (h=22) — surtitre
+      rangee 1: y=1362..1391 (h=30) — libelle d'option « Mettre en réparation »
+      rangee 2: y=1403..1431 (h=29) — consequence L1
+      rangee 3: y=1437..1465 (h=29) — consequence L2
+      rangee 4: y=1471..1496 (h=26) — consequence L3
+      rangee 5: y=1503..1532 (h=30) — consequence L4
+
+  >>> CAPTURE 1920 (colonne gauche)
+      rangee 0: y=872..893 (h=22) — surtitre
+      rangee 1: y=916..945 (h=30) — libelle d'option « Mettre en réparation »
+      rangee 2: y=956..985 (h=30) — consequence L1
+      rangee 3: y=991..1018 (h=28) — consequence L2
+      rangee 4: y=1024..1048 (h=25) — consequence L3
+      rangee 5: y=1056..1084 (h=29) — consequence L4
+
+--- NOMBRE DE BANDES et POSITION : une bande par option, sous son option ---
+    REF  cadre 5 :
+        ligne y=1300: colonne G x=(123, 501) centre=312.0 | gouttiere=114 | colonne D x=(615, 921) centre=768.0
+        ligne y=1340: colonne G x=(152, 472) centre=312.0 | gouttiere=131 | colonne D x=(603, 931) centre=767.0
+        ligne y=1379: colonne G x=(136, 490) centre=313.0 | gouttiere=141 | colonne D x=(631, 904) centre=767.5
+        ligne y=1417: colonne G x=(147, 475) centre=311.0 | gouttiere=120 | colonne D x=(595, 938) centre=766.5
+        => 2 bandes (une par option). Centres moyens G=312.0 D=767.2 ; ANCRE (centre du surtitre)=536.0 ; ecarts -224.0 / +231.2 px img (milieu du groupe +3.6 px img = +1.01 px CSS)
+        interlignage : tops [1300, 1340, 1379, 1417] -> pas [40, 39, 38], moyenne 39.00 px img = 10.83 px CSS
+    CAP  2400    :
+        ligne y=1403: colonne G x=(132, 510) centre=321.0 | gouttiere=94 | colonne D x=(604, 953) centre=778.5
+        ligne y=1437: colonne G x=(100, 542) centre=321.0 | gouttiere=39 | colonne D x=(581, 974) centre=777.5
+        ligne y=1471: colonne G x=(165, 476) centre=320.5 | gouttiere=143 | colonne D x=(619, 936) centre=777.5
+        ligne y=1503: colonne G x=(197, 445) centre=321.0 | gouttiere=237 | colonne D x=(682, 872) centre=777.0
+        => 2 bandes (une par option). Centres moyens G=320.9 D=777.6 ; ANCRE (centre du surtitre)=539.5 ; ecarts -218.6 / +238.1 px img (milieu du groupe +9.8 px img = +2.71 px CSS)
+        libelles d'option : G x=(175, 467) centre=321.0 | D x=(666, 892) centre=779.0  -> la consequence est bien SOUS son option et dans la MEME colonne
+        interlignage : tops [1403, 1437, 1471, 1503] -> pas [34, 34, 32], moyenne 33.33 px img = 9.26 px CSS
+    CAP  1920    :
+        ligne y=956: colonne G x=(138, 511) centre=324.5 | gouttiere=92 | colonne D x=(603, 947) centre=775.0
+        ligne y=991: colonne G x=(107, 542) centre=324.5 | gouttiere=38 | colonne D x=(580, 967) centre=773.5
+        ligne y=1024: colonne G x=(171, 477) centre=324.0 | gouttiere=141 | colonne D x=(618, 930) centre=774.0
+        ligne y=1056: colonne G x=(202, 447) centre=324.5 | gouttiere=233 | colonne D x=(680, 867) centre=773.5
+        => 2 bandes (une par option). Centres moyens G=324.4 D=774.0 ; ANCRE (centre du surtitre)=539.0 ; ecarts -214.6 / +235.0 px img (milieu du groupe +10.2 px img = +2.83 px CSS)
+        libelles d'option : G x=(181, 468) centre=324.5 | D x=(664, 887) centre=775.5  -> la consequence est bien SOUS son option et dans la MEME colonne
+        interlignage : tops [956, 991, 1024, 1056] -> pas [35, 33, 32], moyenne 33.33 px img = 9.26 px CSS
+
+--- HAUTEUR DE CAPITALE et CASSE de la consequence (« C » puis « a » de Chaque) ---
+    REF  cadre 5 : capitale « C » y=(1302, 1323) -> 22 px img = 6.11 px CSS ; bas-de-casse « a » y=(1307, 1322) -> 16 px ; rapport oeil/capitale = 0.727 (> 0 ⇒ la casse est de PHRASE, pas de capitales)
+    CAP  2400    : capitale « C » y=(1404, 1426) -> 23 px img = 6.39 px CSS ; bas-de-casse « a » y=(1410, 1426) -> 17 px ; rapport oeil/capitale = 0.739 (> 0 ⇒ la casse est de PHRASE, pas de capitales)
+    CAP  1920    : capitale « C » y=(958, 979) -> 22 px img = 6.11 px CSS ; bas-de-casse « a » y=(963, 979) -> 17 px ; rapport oeil/capitale = 0.773 (> 0 ⇒ la casse est de PHRASE, pas de capitales)
+
+--- COULEUR de la consequence (coeur de glyphe) et fond du panneau ---
+    REF  cadre 5 G : encre = (185, 173, 146)
+    REF  cadre 5 D : encre = (185, 173, 146)
+    CAP  2400    G : encre = (185, 173, 146)
+    CAP  2400    D : encre = (185, 173, 146)
+    CAP  1920    G : encre = (185, 173, 146)
+    CAP  1920    D : encre = (185, 173, 146)
+    fond du panneau : REF (8, 13, 23)  CAP (10, 15, 26) ; contraste REF 8.75 / CAP 8.63
+
+--- SOULIGNEMENT POINTILLE (assume 3 du dossier : « propose, non ratifie ») ---
+    REF : une bande de 3 px sous CHACUNE des 4 lignes (cf. STRUCTURE ci-dessus : 1330-1332, 1369-1371, 1408-1410, 1447-1449) ET sous le surtitre (1103-1104).
+    CAP : AUCUNE bande intercalaire entre les lignes (cf. STRUCTURE) -> soulignement absent,
+          et absent PARTOUT (pas de demi-trait, pas de reste) : assume rendu proprement.
+
+--- RAPPORT INTERNE option / consequence (invariant d'echelle, cf. dossier.md) ---
+    Hampe moyenne sur 9 rangees de la zone d'oeil, meme methode des deux cotes.
+    REF  cadre 5 : libelle d'option (bouton droit, ligne 1) : hampe moyenne = 6.84 px img (n=82)
+    REF  cadre 5 : consequence L1 : hampe moyenne = 3.29 px img (n=289)
+    CAP  2400    : libelle d'option G : hampe moyenne = 3.71 px img (n=228)
+    CAP  2400    : consequence L1 : hampe moyenne = 3.89 px img (n=279)
+    CAP  1920    : libelle d'option G : hampe moyenne = 3.41 px img (n=227)
+    CAP  1920    : consequence L1 : hampe moyenne = 3.79 px img (n=283)
+    RAPPORT consequence/option — REF  : 0.48
+    RAPPORT consequence/option — CAP2400 : 1.05
+    RAPPORT consequence/option — CAP1920 : 1.11
+    (REF << 1 : l'option est NETTEMENT plus grasse que sa consequence.
+     CAP ~ 1  : option et consequence ont la MEME graisse.)
+    Couleurs : option et consequence du jeu, coeur de glyphe :
+      CAP2400 option     : (185, 173, 146)
+      CAP2400 consequence: (185, 173, 146)
+    Hauteurs de capitale : option « M » et consequence « C » :
+      CAP2400 : « M » 22 px img ; « C » 23 px img
+      CAP1920 : « M » 22 px img ; « C » 22 px img
+
+--- ETAT _TeteDeuxOptions (carte des RAPPORTS) : est-il PROPRE ? ---
+    rangees d'encre de la carte : [(1404, 1406), (1454, 1512), (1543, 1545), (1547, 1576), (1625, 1716)]
+    attendu (assume 2) : titre / PORTEE-URGENCE / UN geste — ni surtitre « CE QU'ON PEUT
+    FAIRE », ni option, ni consequence, ni libelle de repli.
+    titre : x=238..842
+    bouton du geste : x=40..981 largeur=942 px img = 261.7 px CSS

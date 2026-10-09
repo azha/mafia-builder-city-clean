@@ -1,0 +1,25 @@
+  [㉚ réf] reference/E03-cadre-48.png (1080, 2102)
+    bande y=479..511 (h=33px) · hampe médiane 7.0px · hampe/hauteur = 0.2121
+  [㉚ jeu] captures/E03_Chanedappro_1080x2400.png (1080, 2400)
+    bande y=565..588 (h=24px) · hampe médiane 4.0px · hampe/hauteur = 0.1667
+  => ㉚: jeu/réf = 0.786
+  [㉘ réf] reference/E04-cadre-54.png (1080, 2102)
+    bande y=489..511 (h=23px) · hampe médiane 7.0px · hampe/hauteur = 0.3043
+  [㉘ jeu] captures/E04_Distribution_1080x2400.png (1080, 2400)
+    bande y=565..588 (h=24px) · hampe médiane 4.0px · hampe/hauteur = 0.1667
+  => ㉘: jeu/réf = 0.548
+  [㉛ réf] reference/E05-cadre-67.png (1080, 2102)
+    bande y=479..511 (h=33px) · hampe médiane 7.0px · hampe/hauteur = 0.2121
+  [㉛ jeu] captures/E05_Loi_1080x2400.png (1080, 2400)
+    bande y=565..587 (h=23px) · hampe médiane 4.0px · hampe/hauteur = 0.1739
+  => ㉛: jeu/réf = 0.820
+  [㉞ réf] reference/E02-cadre-85.png (1080, 2102)
+    bande y=489..511 (h=23px) · hampe médiane 7.0px · hampe/hauteur = 0.3043
+  [㉞ jeu] captures/E02_Carnet_1080x2400.png (1080, 2400)
+    bande y=572..595 (h=24px) · hampe médiane 4.0px · hampe/hauteur = 0.1667
+  => ㉞: jeu/réf = 0.548
+  [㉝ réf] reference/E06-cadre-79.png (1080, 2102)
+    bande y=481..511 (h=31px) · hampe médiane 7.0px · hampe/hauteur = 0.2258
+  [㉝ jeu] captures/E06_Dmolition_1080x2400.png (1080, 2400)
+    bande y=553..583 (h=31px) · hampe médiane 7.0px · hampe/hauteur = 0.2258
+  => ㉝: jeu/réf = 1.000
