@@ -73,8 +73,42 @@ namespace MafiaCleanCity.Shell.Tests
                 "on n'allume pas une pastille sur une valeur qu'on n'a pas comprise");
         }
 
+        /// <summary>LES 8 TITRES DE `decision.type.*` TELS QUE LE BACK LES SERT (`string_table.ts`, bloc fr, au SHA de la pile —
+        /// recopiés, pas réécrits). 3 sont des PLURIELS ICU dont le `n` n'est servi par personne : ce sont eux qui rendaient des
+        /// accolades à l'écran (juge-données ④ r2). Le test amorçait « §Réparer », une valeur SIMPLE : vert en couvrant autre chose.</summary>
+        private static readonly (string cle, string servi, string attendu, bool pluriel)[] TitresServis =
+        {
+            ("DAMAGED_BUILDING_REPAIR", "{n, plural, one {Un local à remettre en état} other {Des locaux à remettre en état}}", "Des locaux à remettre en état", true),
+            ("SEVERED_ROUTE_REBUILD", "{n, plural, one {Une route coupée} other {Des routes coupées}}", "Des routes coupées", true),
+            ("ESCALATION_BACKLOG_REVIEW", "Des remontées en attente", "Des remontées en attente", false),
+            ("AUTONOMY_REPORTS_PENDING", "Des rapports à lire", "Des rapports à lire", false),
+            ("LEGAL_CASE_DECISION", "Une affaire chez le juge", "Une affaire chez le juge", false),
+            ("BACKPRESSURE_CRITICAL_TRACE", "Un engorgement critique", "Un engorgement critique", false),
+            ("MYCELIAL_STRESSED_LEG", "{n, plural, one {Un maillon sous tension} other {Des maillons sous tension}}", "Des maillons sous tension", true),
+            ("CUE_CASCADE_FALLOUT", "Une cascade de signaux", "Une cascade de signaux", false),
+        };
+
+        private static Dictionary<string, string> BundleDesTitresServis()
+        {
+            var d = new Dictionary<string, string>();
+            foreach (var t in TitresServis) d["decision.type." + t.cle] = t.servi;
+            return d;
+        }
+
+        /// <summary>LA PROPRIÉTÉ, énoncée une fois : un titre RENDU ne porte ni accolade ni chiffre. Pure — le contrôle positif
+        /// l'appelle sur des entrées qu'elle DOIT refuser.</summary>
+        private static void ExigerTitreSansAccolade(string titre, string contexte)
+        {
+            Assert.IsNotEmpty(titre, $"{contexte} : titre vide");
+            Assert.AreEqual(-1, titre.IndexOfAny(new[] { '{', '}' }),
+                $"{contexte} : accolade BRUTE à l'écran — « {titre} » (motif ICU non résolu)");
+            Assert.IsFalse(Regex.IsMatch(titre, "[0-9]"),
+                $"{contexte} : un nombre dans le titre — « {titre} » (le back ne sert aucun compte, on n'en invente pas)");
+        }
+
         /// <summary>Revue i18n du back (26/09) : un `decision_type_key` servi trouve SA clé, casse gardée (le back sert
-        /// `decision.type.DAMAGED_BUILDING_REPAIR`) ; la forme en minuscules que le slug fabriquait ne la trouve pas.</summary>
+        /// `decision.type.DAMAGED_BUILDING_REPAIR`) ; la forme en minuscules que le slug fabriquait ne la trouve pas.
+        /// 09/10 (juge-données ④ r2) : amorcé avec la VALEUR SERVIE (un pluriel ICU), plus avec un texte simple.</summary>
         [Test]
         public void LeTypeServi_TrouveSaCle_CasseGardee()
         {
@@ -82,16 +116,76 @@ namespace MafiaCleanCity.Shell.Tests
             {
                 MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string>
                 {
-                    { "decision.type.DAMAGED_BUILDING_REPAIR", "§Réparer" },
+                    { "decision.type.DAMAGED_BUILDING_REPAIR", TitresServis[0].servi },
                     { "decision.type.severed_route_rebuild", "§minuscules" },
                 });
-                Assert.AreEqual("§Réparer", LibellesDecision.Type("DAMAGED_BUILDING_REPAIR"), "le type servi lit SA clé, en majuscules");
+                Assert.AreEqual("Des locaux à remettre en état", LibellesDecision.Type("DAMAGED_BUILDING_REPAIR"),
+                    "le type servi lit SA clé, en majuscules, et le pluriel sans `n` dit la branche générique");
                 Assert.AreNotEqual("§minuscules", LibellesDecision.Type("SEVERED_ROUTE_REBUILD"),
                     "une clé en minuscules n'est pas la clé du type servi");
                 StringAssert.DoesNotContain("_", LibellesDecision.Type("SEVERED_ROUTE_REBUILD"), "non servie : la lecture dé-sluggée, jamais la clé machine");
                 Assert.AreEqual("", LibellesDecision.Type(null));
             }
             finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
+        }
+
+        /// <summary>LES 8 FOURNISSEURS, valeurs SERVIES : aucun titre n'a d'accolade ni de chiffre, chacun dit son texte (le pluriel
+        /// sans `n` : sa branche `other`, jamais « Un local »). Le défaut d'origine : 3 des 8 rendaient le motif ICU brut.</summary>
+        [Test]
+        public void LesHuitTitresServis_NeRendentJamaisUneAccolade()
+        {
+            try
+            {
+                // ANTI-VACUITÉ : 8 fournisseurs (hl-card-types.ts), dont 3 pluriels — un bundle vidé rendrait tout vrai.
+                Assert.AreEqual(8, TitresServis.Length, "le back sert 8 fournisseurs HL");
+                Assert.AreEqual(3, TitresServis.Count(t => t.pluriel), "3 titres sont des pluriels ICU dans le bundle servi");
+
+                MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", BundleDesTitresServis());
+                foreach (var t in TitresServis)
+                {
+                    string titre = LibellesDecision.Type(t.cle);
+                    ExigerTitreSansAccolade(titre, t.cle);
+                    Assert.AreEqual(t.attendu, titre, $"{t.cle} : le titre rendu n'est pas la valeur servie (branche générique)");
+                    Assert.AreNotEqual(Lisible(t.cle), titre, $"{t.cle} : le titre est le repli dé-slugé, pas la valeur servie");
+                }
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
+        }
+
+        /// <summary>CONTRÔLE POSITIF : le détecteur ROUGIT sur une accolade brute. (1) pur — un motif ICU et un chiffre sont refusés ;
+        /// (2) sur l'ENTRÉE NON SERVIE qui a produit le défaut : lire le pluriel servi SANS `n` (l'ancien appel) rend bien des
+        /// accolades pour les 3 pluriels et aucune pour les 5 autres — la population du défaut, mesurée dans le test.</summary>
+        [Test]
+        public void ControlePositif_UneAccoladeBruteDansLeTitreFaitRougir()
+        {
+            Assert.Throws<AssertionException>(() => ExigerTitreSansAccolade("{n, plural, one {Un local} other {Des locaux}}", "pur"));
+            Assert.Throws<AssertionException>(() => ExigerTitreSansAccolade("Des locaux {", "pur"));
+            Assert.Throws<AssertionException>(() => ExigerTitreSansAccolade("Des locaux }", "pur"));
+            Assert.Throws<AssertionException>(() => ExigerTitreSansAccolade("2 locaux", "pur"));
+            Assert.DoesNotThrow(() => ExigerTitreSansAccolade("Des locaux à remettre en état", "pur"));
+
+            try
+            {
+                MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", BundleDesTitresServis());
+                int rougis = 0;
+                foreach (var t in TitresServis)
+                {
+                    // L'ancien appel : le motif servi, SANS paramètre.
+                    string ancien = MafiaCleanCity.I18n.I18nCatalog.Traduire("decision.type." + t.cle, null);
+                    bool rougit = false;
+                    try { ExigerTitreSansAccolade(ancien, t.cle); } catch (AssertionException) { rougit = true; }
+                    Assert.AreEqual(t.pluriel, rougit, $"{t.cle} : le détecteur doit rougir exactement sur les pluriels sans `n` (rendu « {ancien} »)");
+                    if (rougit) rougis++;
+                }
+                Assert.AreEqual(3, rougis, "l'entrée non servie reproduit le défaut sur 3 fournisseurs");
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
+        }
+
+        private static string Lisible(string cle)
+        {
+            string d = cle.Replace('_', ' ');
+            return char.ToUpperInvariant(d[0]) + d.Substring(1).ToLowerInvariant();
         }
 
         [Test]
