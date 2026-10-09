@@ -1,0 +1,6 @@
+PRIS par juge — lance maintenant, release à la fin (avant ton dernier commit) ; suivant : 
+MafiaCI-harness: ⛔ TEST GELÉ — journal muet depuis 421s (STALL_S=420) pendant « MafiaCleanCity.Shell.Tests.ManometreOraclePlayModeTests.Oracle1_Ring_UniqueLaitonFamily_On360_CalmAndAlarm_NeverRawDanger » ⇒ éditeur tué
+timeout: the monitored command dumped core
+./Tools/run-unity-check.sh: line 149: 39353 Segmentation fault      timeout "$TIMEOUT_S" "$UNITY" -batchmode "${EXTRA_ARGS[@]}" -projectPath "$WT" -logFile "$LOG" "$@" > >(tee -a "$CONSOLE") 2>&1
+MafiaCI-harness: elapsed=473s timeout=900s issue=[TEST GELÉ (RC=5) — « MafiaCleanCity.Shell.Tests.ManometreOraclePlayModeTests.Oracle1_Ring_UniqueLaitonFamily_On360_CalmAndAlarm_NeverRawDanger » : journal muet 420s ou plus, éditeur tué par le chien de garde de gel]
+RC=5

@@ -1,0 +1,2 @@
+MafiaCI-harness: elapsed=17s timeout=900s issue=[sortie normale (RC=1) · CHIEN DE GARDE: marqueur de tests vu (travail fini), sortie bloquée par le hook MCP ⇒ process terminé par nous]
+RC=1

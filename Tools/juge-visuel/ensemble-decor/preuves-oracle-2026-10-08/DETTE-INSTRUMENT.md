@@ -1,0 +1,3 @@
+# Dette d'instrument — ManometreOracle (08/10/2026, JUGE, cumul 39eae281)
+
+- **ManometreOracle : Oracle1 (gel + SIGSEGV, tué à 421 s), Oracle3 et Oracle4 (« UnityTest yielded WaitForEndOfFrame, which is not evoked in batchmode ») ne sont pas exécutables en batchmode ; Oracle2 et Oracle5 passent.** Détecteur : `MAFIA_CI_CATEGORIES=ManometreOracle ./Tools/run-unity-check.sh -executeMethod MafiaCI.RunPlayModeTests` ⇒ « Oracle1/3/4 non exécutables en batchmode » (journaux : `oracle-run.log`, `oracle-24.log`). Remplacement décidé par f2 le 08/10 : le cadran 15/27 R se valide par mesure sur planches (`../mesures-manometre/rayon-cadran.py`).
