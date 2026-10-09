@@ -879,6 +879,7 @@ namespace MafiaCleanCity.Operational
             EnteteDEcran.Habiller(ens, EnteteDEcran.Carnet, Px(13f), Px(13f), Px(10f), Px(1f));
             titreEcran = NouveauTexte(ens.transform, "Titre", "", Px(EnteteDEcran.TitreCss),
                 EnteteDEcran.TitreEncre, DesignTokens.Current.hudSerifFont);
+            titreEcran.fontStyle = EnteteDEcran.TitreStyle;   // F4 (juge r4) : DejaVu Serif BOLD comme les trois autres bandeaux
             sousTitre = NouveauTexte(ens.transform, "SousTitre", "", Px(7f),
                 DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont);
 

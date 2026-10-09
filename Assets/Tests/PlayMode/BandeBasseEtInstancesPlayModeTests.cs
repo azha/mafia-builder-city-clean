@@ -119,6 +119,10 @@ namespace MafiaCleanCity.CityMap.Tests
                 for (int i = 0; i < lib.textInfo.characterCount; i++) sb.Append(lib.textInfo.characterInfo[i].character);
                 Assert.AreEqual(sb.ToString().ToUpperInvariant(), sb.ToString(), "ce qui est AFFICHÉ est en capitales (le jeu : « Lancer la soirée », capitale puis bas-de-casse)");
                 Assert.AreEqual("LANCER LA SOIRÉE", sb.ToString());
+                // F2 (juge d'ensemble r4, 09/10) : le libellé tient sur UNE ligne (maquette : 1 bande), à sa largeur de CONTENU — jamais cassé dans une moitié de bouton partagée avec la légende
+                Canvas.ForceUpdateCanvases();
+                Assert.AreEqual(1, lib.textInfo.lineCount, "F2 : « LANCER LA SOIRÉE » sur une seule ligne");
+                Assert.GreaterOrEqual(((RectTransform)lib.transform).rect.width + 1f, lib.preferredWidth, "F2 : la colonne du libellé est au moins aussi large que son texte (sinon il se casse)");
                 Color32 c = lib.color;
                 Assert.AreEqual((0x98, 0x79, 0x79), ((int)c.r, (int)c.g, (int)c.b), "`.cn-geste.mort{color:#987979}` : (152,121,121) est la couleur de la maquette pour un geste éteint");
             }

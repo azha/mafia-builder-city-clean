@@ -83,7 +83,7 @@ namespace MafiaCleanCity.Shell
         // sont DESCRIPTIVES (`hl-card-types.ts:99-102`) — commit ne reçoit aucun indice d'option et ne produit aucun effet pour les 8
         // fournisseurs (il enregistre une décision de session). « Réparer via la file » sur le bouton du tampon mentirait. Les boutons
         // gardent leurs libellés jusqu'aux mots de l'atelier (demandés par f2). Et l'entrée du rapport quand la carte est celle des rapports.
-        private TextMeshProUGUI commitLabel, rapportText, recommandationText, alternativeText, surtitreText, noteText;
+        private TextMeshProUGUI commitLabel, rapportText, recommandationText, alternativeText, surtitreText, noteText, consequenceRecommandationText, consequenceAlternativeText;
         // Table 45 de l'atelier (a0ff6cba, accueil.carte.*) : les boutons disent ce qu'ils FONT — [Prendre acte] = commit (une décision de
         // session) — et la carte des rapports garde [Lire maintenant], qui OUVRE les rapports (navigation réelle, jamais le commit).
         // [Pas maintenant] et [Laisser en attente] (= skip) sont RETIRÉS (f2 08/10 nuit : gestes morts, voir `RequestSkip`).
@@ -240,6 +240,8 @@ namespace MafiaCleanCity.Shell
             if (rapportText != null) rapportText.text = "";
             if (recommandationText != null) recommandationText.text = "";
             if (alternativeText != null) alternativeText.text = "";
+            if (consequenceRecommandationText != null) consequenceRecommandationText.text = "";
+            if (consequenceAlternativeText != null) consequenceAlternativeText.text = "";
             if (lireLabel != null) lireLabel.text = "";
             if (surtitreText != null) surtitreText.text = "";
             if (noteText != null) noteText.text = "";
@@ -299,7 +301,7 @@ namespace MafiaCleanCity.Shell
         /// puis le bloc est ajusté à sa bande.</summary>
         private void Visibilites()
         {
-            foreach (TextMeshProUGUI t in new[] { titleText, stateText, rapportText, surtitreText, noteText })
+            foreach (TextMeshProUGUI t in new[] { titleText, stateText, rapportText, surtitreText, noteText, consequenceRecommandationText, consequenceAlternativeText })
                 if (t != null) t.gameObject.SetActive(!string.IsNullOrEmpty(t.text));
             if (niveauxGo != null) niveauxGo.SetActive(!string.IsNullOrEmpty(impactText.text) || !string.IsNullOrEmpty(urgencyText.text));
             if (optionsGo != null) optionsGo.SetActive(!string.IsNullOrEmpty(recommandationText.text) || !string.IsNullOrEmpty(alternativeText.text));
@@ -328,6 +330,10 @@ namespace MafiaCleanCity.Shell
                     if (surtitreText != null) surtitreText.text = Lib("carte", "Ce qu’on peut faire");
                     if (recommandationText != null) recommandationText.text = agir;
                     if (alternativeText != null) alternativeText.text = laisser;
+                    if (consequenceRecommandationText != null) consequenceRecommandationText.text = ConsequenceDe(o[0].label);
+                    if (consequenceAlternativeText != null) consequenceAlternativeText.text = ConsequenceDe(o[1].label);
+                    Track(consequenceRecommandationText != null ? consequenceRecommandationText.text : null);
+                    Track(consequenceAlternativeText != null ? consequenceAlternativeText.text : null);
                     if (noteText != null) noteText.text = Lib("carte", "prendre acte n’agit pas à votre place");
                     Track(surtitreText != null ? surtitreText.text : null);
                     Track(noteText != null ? noteText.text : null);
@@ -437,10 +443,10 @@ namespace MafiaCleanCity.Shell
             surtitreText = Texte(c, "CeQuOnPeutFaire", 6.6f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Bold | FontStyles.UpperCase, 28f, margeHaut: 10f);
             // LES OPTIONS — des FAITS, en TEXTE `.csq4` (8 px, #b9ad92, centrées, deux colonnes à `gap:8px`) : ni cerne, ni plaque, ni flèche (f2)
             optionsGo = Rangee(c, "Options", U(8f), margeHaut: 5f);
-            recommandationText = Texte(optionsGo.transform, "Recommandation", 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f);
-            alternativeText = Texte(optionsGo.transform, "Alternative", 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f);
-            foreach (TextMeshProUGUI o in new[] { recommandationText, alternativeText })
-                o.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            // F1(b) (juge r4, 09/10 ; f2 : élément ABSENT, classe A) : SOUS CHAQUE OPTION, sa CONSÉQUENCE (`.csq4-rang .csq4` — 8 px, `#b9ad92`, centrée, `margin-top:2px`) : la clé
+            // SERVIE `<label>.projected_consequence`, lue au catalogue, jamais une chaîne en dur. Chaque colonne empile l'option puis sa conséquence.
+            (recommandationText, consequenceRecommandationText) = ColonneDOption(optionsGo.transform, "Recommandation");
+            (alternativeText, consequenceAlternativeText) = ColonneDOption(optionsGo.transform, "Alternative");
 
             // LE GESTE `.g.or` (margin-top 11 px) — « PRENDRE ACTE » à appui long ; un appui COURT révèle la saisie (alternative du canon)
             CommitButton = Geste(c, "CommitButton", out commitLabel).AddComponent<LongPressButton>();
@@ -561,6 +567,31 @@ namespace MafiaCleanCity.Shell
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandWidth = false; h.childForceExpandHeight = false;
             return go;
+        }
+
+        /// <summary>Une COLONNE d'option (`flex:1`) : le texte de l'option, puis sa conséquence dessous (`.csq4`, `margin-top:2px`). Un texte vide est retiré par `Visibilites`/`Render` (il prendrait sa ligne).</summary>
+        private static (TextMeshProUGUI option, TextMeshProUGUI consequence) ColonneDOption(Transform parent, string nom)
+        {
+            GameObject col = new GameObject(nom + "_Colonne", typeof(RectTransform));
+            col.transform.SetParent(parent, false);
+            VerticalLayoutGroup v = col.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 0f;
+            v.childAlignment = TextAnchor.UpperCenter;
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            col.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            TextMeshProUGUI option = Texte(col.transform, nom, 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f);
+            TextMeshProUGUI consequence = Texte(col.transform, nom + "Consequence", 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f, margeHaut: 2f);
+            return (option, consequence);
+        }
+
+        /// <summary>LA CONSÉQUENCE servie d'une option : la clé `<label>.projected_consequence` si le catalogue la SERT, sinon rien (jamais un repli inventé : une conséquence fausse vaut moins qu'une absence).</summary>
+        private static string ConsequenceDe(string labelCle)
+        {
+            if (string.IsNullOrEmpty(labelCle)) return "";
+            string cle = labelCle + ".projected_consequence";
+            if (!MafiaCleanCity.I18n.Libelle.EstServie(cle)) return "";
+            return MafiaCleanCity.I18n.Libelle.Gabarit(cle, "");
         }
 
         /// <summary>LE GESTE `.g.or` du cadre : la pilule LUSTRÉE de « LA SUITE » (plaque ficheCtaOrBas qui sert de masque, dégradé ficheCtaOrHaut →

@@ -15,6 +15,10 @@ namespace MafiaCleanCity.Shell
         /// <summary>L'échelle du titre : capitale de 33 px sur l'image de 1080 ⇒ corps de 33 / 0,729 (hauteur de capitale de DejaVu Serif) = 45,3 px ⇒ 12,5 px CSS sur 300 (le jeu posait 17 à 18 px CSS en sans-serif : +36 % à +52 %).</summary>
         public const float TitreCss = 12.5f;
 
+        /// <summary>La GRAISSE du titre : DejaVu Serif BOLD dans les cinq références (juge d'ensemble r4, F4 du 09/10 : fût médian 7 px mesuré sur la référence contre 4 px rendus en graisse normale sur ㉚ ㉘ ㉛ ㉞ ; ㉝, qui pose son titre en Bold, rend 7 = 7).
+        /// Une source, comme l'échelle : le bandeau (`Construire`) et le titre habillé de ㉞ (`Habiller`) la lisent ici.</summary>
+        public const FontStyles TitreStyle = FontStyles.Bold;
+
         /// <summary>L'encre du titre : `#f0dfc4` (mesurée sur la référence ; le jeton le plus proche, hudCreme `#eae0c8`, est à 8/255).</summary>
         public static Color TitreEncre => new Color32(0xf0, 0xdf, 0xc4, 255);
 
@@ -71,6 +75,7 @@ namespace MafiaCleanCity.Shell
             plaque.AddComponent<LayoutElement>().flexibleHeight = 0f;
 
             TextMeshProUGUI titre = Texte(plaque.transform, "Titre", px(TitreCss), TitreEncre, serif);
+            titre.fontStyle = TitreStyle;
             titre.enableWordWrapping = true;
             TextMeshProUGUI sous = Texte(plaque.transform, "SousTitre", px(tailleSousTitreCss), encreSousTitre, texte);
             sous.enableWordWrapping = true;

@@ -161,8 +161,10 @@ namespace MafiaCleanCity.Shell
             // ㉞ F7 (juge d'ensemble r3, 08/10) : la maquette écrit ses gestes en CAPITALES (« LANCER LA SOIRÉE », `.cn-geste`) ; la valeur SERVIE du Carnet est en casse de phrase (« Lancer la soirée »), rendue telle quelle
             // (hauteurs de glyphes 26/20/20/20). Les capitales sont une affaire d'AFFICHAGE : `UpperCase` du TMP, jamais la clé ni la valeur (un libellé déjà en capitales n'en change pas).
             lib.fontStyle |= FontStyles.UpperCase;
-            lib.enableWordWrapping = true;
-            lib.gameObject.GetComponent<LayoutElement>().flexibleWidth = 1f;
+            // ㉞ F2 (juge d'ensemble r4, 09/10) : `.cn-geste{display:flex;justify-content:space-between}` — le LIBELLÉ prend sa largeur de CONTENU, sur UNE ligne, et la légende `small` prend le reste (à droite). Deux colonnes
+            // `flexibleWidth=1` se partageaient la largeur à parts égales : « LANCER LA SOIRÉE » (≈ 450 px) cassait en deux dans une moitié de 431 px, au milieu d'un bouton de 970 px (maquette : 1 ligne, 1 bande).
+            lib.enableWordWrapping = false;
+            lib.gameObject.GetComponent<LayoutElement>().flexibleWidth = 0f;
             if (!string.IsNullOrEmpty(legende))
             {
                 TextMeshProUGUI leg = Texte(go.transform, "Legende", legende, px(6.5f), police, false);
