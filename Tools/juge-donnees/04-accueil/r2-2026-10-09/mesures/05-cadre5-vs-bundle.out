@@ -1,0 +1,37 @@
+cadres trouves (0-based 0..5) = 6
+cadre 5 etiquette = ④ L’ouverture — une carte de tête AU-DESSUS d’une ligne de file haute (la raison, « Plusie
+
+|.csq4| (lignes de consequence)  = 2
+|.g / .g.or| (gestes)            = 2  -> ['Mettre en réparation', 'Laisser en l’état']
+|.titre|                         = 1  -> ['Un local à remettre en état']
+|.sur|                           = 1  -> ['Ce qu’on peut faire']
+niveaux libelles                 = ['Portée', 'Urgence']  valeurs = ['modérée', 'faible']
+
+=== EGALITE BINAIRE texte du cadre 5 <-> valeur SERVIE par le bundle fr ===
+  [OK ] geste 1 (.g.or)
+        maquette = 'Mettre en réparation'
+        servi    = 'Mettre en réparation'   (cle hl.option.damaged_building.repair_via_queue)
+  [OK ] geste 2 (.g)
+        maquette = 'Laisser en l’état'
+        servi    = 'Laisser en l’état'   (cle hl.option.damaged_building.leave_damaged)
+  [OK ] csq4 #1
+        maquette = 'Chaque réparation se paie tout de suite, tant que l’argent suit\u202f; les travaux finis, l’activité reprend.'
+        servi    = 'Chaque réparation se paie tout de suite, tant que l’argent suit\u202f; les travaux finis, l’activité reprend.'   (cle hl.option.damaged_building.repair_via_queue.projected_consequence)
+  [OK ] csq4 #2
+        maquette = 'Rien n’est payé, mais ce qui est endommagé reste à l’arrêt, et le manque à gagner court.'
+        servi    = 'Rien n’est payé, mais ce qui est endommagé reste à l’arrêt, et le manque à gagner court.'   (cle hl.option.damaged_building.leave_damaged.projected_consequence)
+  [KO ] titre
+        maquette = 'Un local à remettre en état'
+        servi    = '{n, plural, one {Un local à remettre en état} other {Des locaux à remettre en état}}'   (cle decision.type.DAMAGED_BUILDING_REPAIR)
+
+paires egales = 4/5
+
+=== mots du FRONT cherches dans TOUT le fichier de maquette ===
+  'Prendre acte'                             present = True
+  'n’agit pas à votre place'                 present = False
+  "n'agit pas à votre place"                 present = False
+  'Rien à signaler'                          present = True
+  'Lire maintenant'                          present = True
+  'Laisser en attente'                       present = True
+  'Ce qu’on peut faire'                      present = True
+  'Limite de structure'                      present = False

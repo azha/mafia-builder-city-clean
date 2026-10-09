@@ -1,0 +1,55 @@
+=== mots passes par Lib("carte", ...) : cle derivee -> servie ou NON ===
+  [SERVIE ] HighestLeverageCardController.cs:260  titre, etat NoCard
+            cle       = accueil.carte.rien_a_signaler
+            servi     = 'Rien à signaler'   (identique au litteral: True)
+  [SERVIE ] HighestLeverageCardController.cs:263  sous, etat NoCard
+            cle       = accueil.carte.aucune_decision_en_attente
+            servi     = 'Aucune décision en attente'   (identique au litteral: True)
+  [SERVIE ] HighestLeverageCardController.cs:271  sous, etat CapBlocked
+            cle       = accueil.carte.limite_de_structure_atteinte
+            servi     = 'Limite de structure atteinte'   (identique au litteral: True)
+  [EN DUR ] HighestLeverageCardController.cs:283  geste, repli carte des rapports
+            litteral  = 'Lire maintenant'
+            cle       = accueil.carte.lire_maintenant  -> ABSENTE du bundle fr
+  [SERVIE ] HighestLeverageCardController.cs:328  surtitre .sur
+            cle       = accueil.carte.ce_qu_on_peut_faire
+            servi     = 'Ce qu’on peut faire'   (identique au litteral: True)
+  [SERVIE ] HighestLeverageCardController.cs:331  note .csq4 sous le geste
+            cle       = accueil.carte.prendre_acte_n_agit_pas_a_votre_place
+            servi     = 'prendre acte n’agit pas à votre place'   (identique au litteral: True)
+  [SERVIE ] HighestLeverageCardController.cs:340  libelle du geste (RendreLesOptions)
+            cle       = accueil.carte.prendre_acte
+            servi     = 'Prendre acte'   (identique au litteral: True)
+  [SERVIE ] HighestLeverageCardController.cs:449  libelle du geste (BuildLayout)
+            cle       = accueil.carte.prendre_acte
+            servi     = 'Prendre acte'   (identique au litteral: True)
+  [SERVIE ] HighestLeverageCardController.cs:432  libelle des niveaux
+            cle       = accueil.carte.portee
+            servi     = 'Portée'   (identique au litteral: True)
+  [SERVIE ] HighestLeverageCardController.cs:432  libelle des niveaux
+            cle       = accueil.carte.urgence
+            servi     = 'Urgence'   (identique au litteral: True)
+
+|servies| = 9 ; |en dur (repli C#)| = 1 ; total sites = 10
+
+=== autres cles citees par le front ===
+  chrome.bandeau.rapport                           -> '{nom} a un rapport pour vous'
+  accueil.carte.tapez_mot                          -> 'tapez {mot}'
+  accueil.carte.la_decision_n_a_pas_ete_prise      -> 'La décision n’a pas été prise.'
+  decision.portee.moderee                          -> 'modérée'
+  decision.urgence.faible                          -> 'faible'
+
+=== CONTROLE POSITIF du Slug (une cle accueil.carte.* reellement servie) ===
+  |accueil.carte.*| servies = 12
+    accueil.carte.aucune_decision_en_attente                 = 'Aucune décision en attente'
+    accueil.carte.ce_qu_on_peut_faire                        = 'Ce qu’on peut faire'
+    accueil.carte.la_decision_n_a_pas_ete_prise              = 'La décision n’a pas été prise.'
+    accueil.carte.limite_de_structure_atteinte               = 'Limite de structure atteinte'
+    accueil.carte.pas_maintenant                             = 'Pas maintenant'
+    accueil.carte.portee                                     = 'Portée'
+    accueil.carte.prendre_acte                               = 'Prendre acte'
+    accueil.carte.prendre_acte_n_agit_pas_a_votre_place      = 'prendre acte n’agit pas à votre place'
+    accueil.carte.pret                                       = 'Prêt'
+    accueil.carte.rien_a_signaler                            = 'Rien à signaler'
+    accueil.carte.tapez_mot                                  = 'tapez {mot}'
+    accueil.carte.urgence                                    = 'Urgence'

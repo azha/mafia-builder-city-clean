@@ -1,0 +1,11 @@
+autonomy-reports.provider.ts:67  n_options=2  ['hl.option.autonomy_reports.review_now', 'hl.option.autonomy_reports.leave_pending']
+backpressure-critical-trace.provider.ts:84  n_options=2  ['hl.option.backpressure_critical_trace.trace_now', 'hl.option.backpressure_critical_trace.leave_pending']
+cue-cascade-fallout.provider.ts:81  n_options=2  ['hl.option.cue_cascade_fallout.review_now', 'hl.option.cue_cascade_fallout.leave_pending']
+damaged-building.provider.ts:82  n_options=2  ['hl.option.damaged_building.repair_via_queue', 'hl.option.damaged_building.leave_damaged']
+escalation-backlog.provider.ts:60  n_options=2  ['hl.option.escalation_backlog.review_now', 'hl.option.escalation_backlog.leave_pending']
+legal-case.provider.ts:66  n_options=2  ['hl.option.legal_case.accept_plea_deal', 'hl.option.legal_case.let_ride']
+mycelial-stressed-leg.provider.ts:71  n_options=2  ['hl.option.mycelial_stressed_leg.maintain_now', 'hl.option.mycelial_stressed_leg.leave_stressed']
+severed-route.provider.ts:59  n_options=2  ['hl.option.severed_route.reroute_now', 'hl.option.severed_route.leave_severed']
+
+fournisseurs = 8
+total libelles = 16

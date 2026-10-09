@@ -1,0 +1,35 @@
+cle `decision.type.<PROVIDER>` pour les 8 fournisseurs HL (catalogue hl-card-types.ts:86-97)
+
+  DAMAGED_BUILDING_REPAIR        PLURIEL ICU -> ACCOLADES A L ECRAN
+      servi = '{n, plural, one {Un local à remettre en état} other {Des locaux à remettre en état}}'
+  SEVERED_ROUTE_REBUILD          PLURIEL ICU -> ACCOLADES A L ECRAN
+      servi = '{n, plural, one {Une route coupée} other {Des routes coupées}}'
+  ESCALATION_BACKLOG_REVIEW      texte simple -> OK
+      servi = 'Des remontées en attente'
+  AUTONOMY_REPORTS_PENDING       texte simple -> OK
+      servi = 'Des rapports à lire'
+  LEGAL_CASE_DECISION            texte simple -> OK
+      servi = 'Une affaire chez le juge'
+  BACKPRESSURE_CRITICAL_TRACE    texte simple -> OK
+      servi = 'Un engorgement critique'
+  MYCELIAL_STRESSED_LEG          PLURIEL ICU -> ACCOLADES A L ECRAN
+      servi = '{n, plural, one {Un maillon sous tension} other {Des maillons sous tension}}'
+  CUE_CASCADE_FALLOUT            texte simple -> OK
+      servi = 'Une cascade de signaux'
+
+|pluriels ICU| = 3  -> ['DAMAGED_BUILDING_REPAIR', 'SEVERED_ROUTE_REBUILD', 'MYCELIAL_STRESSED_LEG']
+|texte simple| = 5  -> ['ESCALATION_BACKLOG_REVIEW', 'AUTONOMY_REPORTS_PENDING', 'LEGAL_CASE_DECISION', 'BACKPRESSURE_CRITICAL_TRACE', 'CUE_CASCADE_FALLOUT']
+|absents|      = 0  -> []
+somme = 8 / 8 fournisseurs
+
+=== CONTROLE POSITIF du detecteur (cles citees par I18nCatalog.cs:151-153 comme pluriel/select) ===
+  game.lieutenant.assignment.summary pluriel_detecte=True
+      servi = '{count, plural, =0 {Aucun lieutenant assigné} one {{count} lieutenant assigné} other {{count} lieutenants assignés}}'
+  game.lieutenant.recap.actions_taken pluriel_detecte=True
+      servi = '{gender, select, feminine {{count, plural, one {Elle a mené 1 action ce cycle.} other {Elle a mené # actions ce cycle.}}} masculine {{count, plural, o'
+
+=== CONTROLE NEGATIF (une cle qu on sait SANS accolade) ===
+  hl.option.damaged_building.repair_via_queue pluriel_detecte=False  servi='Mettre en réparation'
+
+=== combien de `decision.type.*` servies au total, et combien pluriels ===
+  |decision.type.*| servies = 24 ; dont pluriels ICU = 3

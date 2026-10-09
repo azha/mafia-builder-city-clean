@@ -1,0 +1,11 @@
+        new HlCardProviderRegistry([
+          damagedBuilding,
+          severedRoute,
+          escalationBacklog,
+          autonomyReports,
+          legalCase,
+          backpressureCriticalTrace,
+          mycelialStressedLeg,
+          cueCascadeFallout,
+        ]),
+      inject: [
