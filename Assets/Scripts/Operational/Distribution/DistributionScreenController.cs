@@ -989,6 +989,11 @@ namespace MafiaCleanCity.Operational
         public void MontrerAucunRelaisPourTest(bool gesteOffert)
         {
             EnsureInitialized();
+            // ⛔ Même classe que `RendrePourTest` (voir `coroutineChargement`) : un rendu EXPLICITE arrête l'auto-chargement. Sans cela, le 401 du banc revient quelques frames plus tard, l'état
+            // d'erreur reconstruit l'écran et détruit la plaque que le test est en train de lire (F2r3, run du 09/10 : MissingReferenceException sur un RectTransform détruit).
+            renduExpliciteDemande = true;
+            if (coroutineChargement != null) { StopCoroutine(coroutineChargement); coroutineChargement = null; }
+            chargementAmorce = true;
             AucunRelais = true;
             RendreAucunRelais();
             if (gesteOffert) RendreGesteAchatDeRelais();

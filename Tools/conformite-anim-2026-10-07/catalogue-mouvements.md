@@ -329,6 +329,14 @@ paires du chrome. Contrôle : 34 + 46 = 80. **En `Entree`** (l'unité de E1) : 4
 
 ### I.4 La projection exacte sur le modèle — une ligne par `Entree` (44)
 
+> **Note ciblée (08/10, arbitrage f2 — design `design-couche-mouvement.md` v4.8 §8 et §17, revue ⊥ n°4 du §17, B2).**
+> La ligne **`retour.appui`** perd son canal **`Echelle` Mult (sous condition)** : le retour d'appui est **teinte et
+> opacité seules**, et la règle « échelle seulement si la plus grande dimension du bouton ≤ 1/3 du cadre » est
+> **ANNULÉE** (aucun chemin d'implémentation sous un `Id` unique : les canaux sont une donnée statique partagée par les
+> 67 boutons, et `AttacherRetourAppui` impose `Reglage.Defaut`). **Pas de 3ᵉ `Id`.** Seule cette cellule change ici :
+> la colonne `Pistes` reste 1, donc **§V et les comptes de G4 sont inchangés**. Le geste perdu est une dette
+> (`dettes-design-mouvement.md`, 29), pas un correctif. Le reste de ce fichier n'est pas relu par cette note.
+
 C'est la table que E1 recopie dans `Catalogue`. Les colonnes absentes valent la même chose pour toutes les
 `Entree` : **`Bloquante = false`** (aucune entrée ne refuse l'entrée du joueur, X8, G8) · **`Alterne = false`**
 · **`Source`, `Cause`** : celles de la ligne de §II. `Fonctionnelle = true` pour la seule `retour.appui-long`.
@@ -340,7 +348,7 @@ repos sur chaque canal (G3) ; le gel évalue le mouvement à `PoseDeReposS` **sa
 
 | `Entree.Id` | `Ecrans` | `Genre` | cible | canaux (`Propriete` · `Mode`) | `Iteration`, durée ou période | `PoseDeReposS` (s) | `CouleurA` → `CouleurB` | `Hote` | `Pistes` |
 |---|---|---|---|---|---|---|---|---|---:|
-| `retour.appui` | `*` | Retour | la surface qui `RendSurface` au `PointerDown` : la `surface` nommée, sinon `targetGraphic`, **à défaut le `Graphic` porté par le GameObject du bouton** (9 sites sur 67 ont un `targetGraphic` nul) ; appel **obligatoire** par `Regie.AttacherRetourAppui` (design §17 cas 0, G14) | `Echelle` Mult (sous condition) · `Melange` Abs | appui 90 ms puis relâché 140 ms | — | `Cible` → `Cible × 0,85` | client | 1 |
+| `retour.appui` | `*` | Retour | la surface qui `RendSurface` au `PointerDown` : la `surface` nommée, sinon `targetGraphic`, **à défaut le `Graphic` porté par le GameObject du bouton** (9 sites sur 67 ont un `targetGraphic` nul) ; appel **obligatoire** par `Regie.AttacherRetourAppui` (design §17 cas 0, G14) | `Melange` Abs | appui 90 ms puis relâché 140 ms | — | `Cible` → `Cible × 0,85` | client | 1 |
 | `retour.appui-voile` | `*` | Retour | le `Button` s'il `Peint`, sinon son parent direct (aire ≤ 2×) ; sinon aucun (compté, déclaré) — aussi quand le plafond `Melange` est plein (cas 0) ; appel par `Regie.AttacherRetourAppui` | `Alpha` Mult | appui 90 ms puis relâché 140 ms | — | — | client | 1 |
 | `retour.appui-long` | `*` (5 instances : ④ ⑤ ⑨ ⑩ ⑯) | Retour | un `Ring` `Filled` posé sur l'objet pressé | `Remplissage` Abs | Fois 1, 1 000 ms | — | — | client (anneau à créer) · **`Fonctionnelle`** | 1 |
 | `shell.entree` | `*` | Transition | la racine du locataire | `Alpha` Mult | 160 ms | — | — | client | 1 |

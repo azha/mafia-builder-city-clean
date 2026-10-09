@@ -337,13 +337,18 @@ namespace MafiaCleanCity.Shell.Tests
 
         // ═══ F12 — le feutre épouse le contenu ; ce qui dépasse défile ════════════════════════════════════════════
 
-        /// <summary>La part de feutre VIDE au-dessus de la carte : (haut du feutre − haut de la carte) / hauteur du feutre, dans le repère du banc (la carte inclinée : son coin le plus haut).</summary>
+        /// <summary>La part de feutre VIDE au-dessus du contenu : (haut du feutre − haut du contenu) / hauteur du feutre, dans le repère du banc. Le contenu le plus haut est l'EYEBROW (`.grave`, posé
+        /// SUR le feutre au-dessus de la table depuis ⑤ F4) quand il est actif, sinon la carte (inclinée : son coin le plus haut). Mesurer jusqu'à la carte comptait l'eyebrow — du contenu — comme du
+        /// vide (run du 09/10 : 8,5 % contre 2 % avant que l'eyebrow ne quitte la carte). Maquette : 3 (filet) + 10 (padding) + 4 (marge de `.grave`) = 17 CSS sur ≈ 262 ⇒ ≈ 6,5 % jusqu'à l'eyebrow.</summary>
         private static float PartDeFeutreVide(Banc banc, DecisionDetailScreenController e, out float hauteurFeutre)
         {
             DecorPose pose = e.GetComponentInChildren<DecorPose>(true);
             Rect feutre = Dans(banc.Racine, pose.Support), carte = Dans(banc.Racine, e.CarteRect);
             hauteurFeutre = feutre.height;
-            return (feutre.yMax - carte.yMax) / feutre.height;
+            float hautDuContenu = carte.yMax;
+            Transform grave = e.transform.Find("Fenetre/Defile/Pile/Grave");
+            if (grave != null && grave.gameObject.activeInHierarchy) hautDuContenu = Mathf.Max(hautDuContenu, Dans(banc.Racine, (RectTransform)grave).yMax);
+            return (feutre.yMax - hautDuContenu) / feutre.height;
         }
 
         [UnityTest]
@@ -360,7 +365,7 @@ namespace MafiaCleanCity.Shell.Tests
                     PileDeDecision pile = e.LaPile;
                     Assert.IsFalse(pile.Deborde, $"{hauteur} : prémisse — le contenu TIENT dans la fenêtre ({pile.HauteurPreferee:0} pour {pile.HauteurDeLaFenetre:0})");
                     float vide = PartDeFeutreVide(banc, e, out float hFeutre);
-                    Assert.Less(vide, 0.08f, $"{hauteur} : {vide:P1} de feutre vide au-dessus de la carte (maquette : 2 % ; le jeu : 55 % avec le support ancré à 34 %)");
+                    Assert.Less(vide, 0.08f, $"{hauteur} : {vide:P1} de feutre vide au-dessus du contenu (maquette ≈ 6,5 % jusqu'à l'eyebrow ; le jeu : 55 % avec le support ancré à 34 %)");
                     Assert.Greater(vide, -0.001f, $"{hauteur} : la carte ne dépasse pas le haut du feutre ({vide:P1})");
                     // le haut du feutre calculé EST le haut de la pile mesurée
                     RectTransform pileRt = (RectTransform)Sous(e, "Fenetre/Defile/Pile");
@@ -651,13 +656,20 @@ namespace MafiaCleanCity.Shell.Tests
                 t = banc.Rendre();
                 Vector2Int a = banc.Pixel(grave.rectTransform, 0f, 0f), b = banc.Pixel(grave.rectTransform, 1f, 1f);
                 int x0 = Mathf.Min(a.x, b.x), x1 = Mathf.Max(a.x, b.x), y0 = Mathf.Min(a.y, b.y), y1 = Mathf.Max(a.y, b.y);
+                // Le CACHET DE CIRE (brique, `.cachet{right:-10px;top:-14px}`) déborde de 14 CSS au-dessus de la carte, donc dans la boîte de l'eyebrow : c'est du rouge brique LÉGITIME, d'un autre objet
+                // (run du 09/10 : le compte de « brique » le prenait pour l'eyebrow). On ne compte pas ce qui est dans son rect (marge de 3 px pour le halo).
+                RectTransform cachet = (RectTransform)carte.Find("CachetDeCire");
+                Assert.IsNotNull(cachet, "prémisse : le cachet de cire est dans la carte");
+                Vector2Int pa = banc.Pixel(cachet, 0f, 0f), pb = banc.Pixel(cachet, 1f, 1f);
+                int cx0 = Mathf.Min(pa.x, pb.x) - 3, cx1 = Mathf.Max(pa.x, pb.x) + 3, cy0 = Mathf.Min(pa.y, pb.y) - 3, cy1 = Mathf.Max(pa.y, pb.y) + 3;
                 int dore = 0, brique = 0, gauche = int.MaxValue, droite = int.MinValue;
                 for (int x = Mathf.Max(0, x0); x <= Mathf.Min(t.width - 1, x1); x++)
                     for (int y = Mathf.Max(0, y0); y <= Mathf.Min(t.height - 1, y1); y++)
                     {
                         Color32 c = t.GetPixel(x, y);
                         if (c.r > 180 && c.g > 140 && c.b < 150 && c.r > c.b + 60) { dore++; gauche = Mathf.Min(gauche, x); droite = Mathf.Max(droite, x); }
-                        if (c.r > 120 && c.r < 175 && c.g < 90 && c.b < 70) brique++;
+                        bool surLeCachet = x >= cx0 && x <= cx1 && y >= cy0 && y <= cy1;
+                        if (!surLeCachet && c.r > 120 && c.r < 175 && c.g < 90 && c.b < 70) brique++;
                     }
                 Assert.GreaterOrEqual(dore, 30, $"l'eyebrow rendu a de l'or ({dore} px) — « un réglage valide et non nul peut ne produire AUCUN pixel »");
                 Assert.AreEqual(0, brique, "aucun rouge brique à la place de l'eyebrow");

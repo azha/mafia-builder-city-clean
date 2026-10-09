@@ -1760,10 +1760,20 @@ namespace MafiaCleanCity.Shell
         /// <summary>L'écart entre le haut RÉEL de la ligne de file et le bas de ce qui est au-dessus (tête, suite) : 10 px sur 406 aux cadres 1-5 (0,0246 mesuré).</summary>
         public const float MargeAuDessusDeLaLigne = 0.025f;
 
-        /// <summary>Le haut de la ligne de file, en fraction de la zone sûre : jamais sous la bande MESURÉE pour son état (`bandeFile.max`), plus haut quand
-        /// son contenu veut plus (`voulueU` u, sur une zone sûre de `zoneU` u). Pure.</summary>
-        public static float HautDeLaLigne((float min, float max) bandeFile, float voulueU, float zoneU) =>
-            zoneU <= 0f ? bandeFile.max : Mathf.Max(bandeFile.max, bandeFile.min + voulueU / zoneU);
+        /// <summary>La zone sûre DE LA MAQUETTE en u de canvas : 406 px CSS (110 → 516, l'instrument de l'UX) × 1280/300 u par px CSS = 1 732,3 u. Les bandes (`BandeFile`, `BandeFileHaute`) sont des
+        /// fractions de CETTE zone-là ; sur une zone plus haute (1080×2400 : 2 275 u) la fraction étire la ligne alors que la maquette la pose à hauteur d'encre (F3, juge r6 : 388 px contre 294).</summary>
+        public const float ZoneSureDeLaMaquetteU = 406f * ReferenceResolutionWidth / 300f;
+
+        /// <summary>Le haut de la ligne de file, en fraction de la zone sûre : la bande MESURÉE pour son état (`bandeFile.max`) — mais jamais plus HAUTE, en u, que dans la maquette
+        /// (F3, juge r6 08/10 : la bande est une fraction, donc à 2400 la ligne gonflait de 32 % et son contenu centré laissait ×2,9 de marge ; à 1920 la zone est de 1 707 u, sous les
+        /// 1 732 de la maquette, le plafond ne mord pas et la ligne est inchangée) —, plus haut quand son contenu veut plus (`voulueU` u, sur une zone sûre de `zoneU` u) : le contenu
+        /// GAGNE toujours sur le plafond. Pure.</summary>
+        public static float HautDeLaLigne((float min, float max) bandeFile, float voulueU, float zoneU)
+        {
+            if (zoneU <= 0f) return bandeFile.max;
+            float plafond = Mathf.Min(bandeFile.max, bandeFile.min + (bandeFile.max - bandeFile.min) * ZoneSureDeLaMaquetteU / zoneU);
+            return Mathf.Max(plafond, bandeFile.min + voulueU / zoneU);
+        }
 
         /// <summary>La bande de la carte de tête posée sur une ligne dont le haut est `hautDeLaLigne` : la marge, puis la hauteur de la tête des cadres (0,5),
         /// BORNÉE au haut de la zone sûre (1) — mesuré au créneau du 08/10 nuit (A12c, zone de 391 u du banc) : une ligne qui grandit (raison sur deux

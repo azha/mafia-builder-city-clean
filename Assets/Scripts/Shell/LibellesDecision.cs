@@ -37,6 +37,12 @@ namespace MafiaCleanCity.Shell
         public static readonly string[] PorteesServies = { "minor", "moderate", "major" };
         public static readonly string[] UrgencesServies = { "low", "elevated", "pressing" };
 
+        /// <summary>Le compte du pluriel quand le back n'en sert PAS : tout entier ≠ 1 mène à la branche `other` d'un `plural` ICU, et
+        /// c'est la seule chose qu'il fait — voir `Type`. Un nombre qui n'est lu par personne, pas une donnée du joueur.</summary>
+        private static readonly System.Collections.Generic.IDictionary<string, string> CompteNonServi =
+            new System.Collections.Generic.Dictionary<string, string> { { "n", "2" } };
+        private static readonly char[] Accolades = { '{', '}' };
+
         /// <summary>Le type de décision. Interroge le catalogue ; à défaut, rend la clé machine
         /// dé-sluggée plutôt que la clé elle-même — `Libelle.De` rend le LITTÉRAL quand la clé
         /// manque, et ici le littéral EST la clé machine (`AUTONOMY_REPORTS_PENDING`). L'afficher
@@ -47,8 +53,19 @@ namespace MafiaCleanCity.Shell
             // ⛔ Revue i18n du back (26/09) : la clé se compose avec le `decision_type_key` TEL QUE SERVI, casse gardée
             //    (`decision.type.DAMAGED_BUILDING_REPAIR`, `string_table.ts`). `Libelle.De` dérivait un slug en minuscules
             //    (`decision.type.damaged_building_repair`) : clé injoignable, le titre retombait toujours sur le repli. Même piège
-            //    que `political.event.E-POL-*`. Pas de `n` servi aujourd'hui (target_count viendra avec le lot HL) : branche « one ».
-            string traduit = MafiaCleanCity.I18n.Libelle.Gabarit("decision.type." + cle, null);
+            //    que `political.event.E-POL-*`.
+            // ⛔ Revue juge-données ④ r2 (09/10) : 3 des 8 titres HL servis sont des PLURIELS ICU (`{n, plural, one {…} other {…}}` :
+            //    DAMAGED_BUILDING_REPAIR, SEVERED_ROUTE_REBUILD, MYCELIAL_STRESSED_LEG). Le back ne sert AUCUN `n` (la carte porte
+            //    `decision_type_key`, deux bandes, `options`, `structural` — `hl-card-projection.ts:114`), et sans `n` le résolveur ICU
+            //    rend le bloc BRUT, accolades comprises (`I18nCatalog` : `plural` sans entier ⇒ `"{" + corps + "}"`). L'ancien commentaire
+            //    (« branche one ») était une déduction FAUSSE : `one` n'est atteinte qu'APRÈS un entier valide. ⇒ Sans compte servi, le
+            //    titre dit la branche GÉNÉRIQUE (`other`, le pluriel : « Des locaux à remettre en état ») — jamais « Un local » (ce serait
+            //    affirmer qu'il n'y en a qu'un) et jamais un nombre à l'écran. `CompteNonServi` ne sert qu'à CHOISIR la branche ; aucune
+            //    valeur servie ne l'affiche (le test balaie les 8 titres et refuse accolade ET chiffre). Quand le back servira le compte
+            //    (target_count, lot HL), il passera ICI, à la place de cette constante.
+            string traduit = MafiaCleanCity.I18n.Libelle.Gabarit("decision.type." + cle, null, CompteNonServi);
+            // Dernière ligne de défense : un motif que le résolveur ne sait pas rendre ressortirait avec ses accolades.
+            if (traduit != null && traduit.IndexOfAny(Accolades) >= 0) traduit = null;
             return string.IsNullOrWhiteSpace(traduit) ? Lisible(cle) : traduit;
         }
 

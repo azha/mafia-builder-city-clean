@@ -326,8 +326,20 @@ namespace MafiaCleanCity.CityMap.Tests
                     Assert.AreEqual(plus - moins + 1, rangees.Count, "le filet est d'un seul tenant (contigu)");
                     Assert.AreEqual(attendu, rangees.Count, 2.0f, $"épaisseur : {rangees.Count} rangées, la maquette en demande ≈ {attendu:F1} (4 px CSS)");
                     Assert.GreaterOrEqual(plus, haut - 2, "le filet est COLLÉ au bord haut de la tôle (c'est son `border-top`)");
+                    // le BORD LAITON du cadran (`--laiton`, même jeton que le filet) affleure dans cette bande : c'est de l'or LÉGITIME, d'une corde étroite (≈ 16 % de la rangée au run du 09/10). Le contrôle négatif
+                    // vise « de l'or PLEINE LARGEUR ailleurs que dans le filet » : on ne compte donc pas ce qui est dans la largeur du cadran (halo compris).
+                    RectTransform cadran = (RectTransform)Sous("Corps/Contenu/Jauge/Cadran");
+                    Vector2Int ca = banc.Pixel(cadran, 0f, 0f), cb = banc.Pixel(cadran, 1f, 1f);
+                    int marge = Mathf.CeilToInt(Px(8f) * 0.5f);
+                    int cx0 = Mathf.Min(ca.x, cb.x) - marge, cx1 = Mathf.Max(ca.x, cb.x) + marge;
+                    System.Func<int, float> partOrHorsCadran = y =>
+                    {
+                        int or = 0;
+                        for (int x = 0; x < Banc.W; x++) if ((x < cx0 || x > cx1) && Ecart(t.GetPixel(x, y), laiton) <= 14f) or++;
+                        return or / (float)Banc.W;
+                    };
                     for (int y = haut - 24; y >= haut - 40; y--)
-                        Assert.Less(partOr(y), 0.05f, $"contrôle négatif : la rangée {y} (sous le filet) n'est pas de l'or");
+                        Assert.Less(partOrHorsCadran(y), 0.05f, $"contrôle négatif : la rangée {y} (sous le filet), hors du cadran, n'est pas de l'or (cadran x={cx0}..{cx1}, or total {partOr(y):P1})");
                 }
                 finally { Object.DestroyImmediate(t); }
             }

@@ -358,7 +358,8 @@ namespace MafiaCleanCity.Shell.Tests
             yield return RouvrirParEmpire();
             float part = PartEtAttendue("suite + deux cartes", out ExceptionQueuePanelController file, out float zone);
             Assert.AreEqual(Attendue(AppShell.BandeFileHaute, file, zone), part, 0.005f, "la ligne haute du cadre 4 (424 → 506 sur 406), ou plus si son contenu le veut");
-            Assert.GreaterOrEqual(part, 0.227f - 0.025f - 0.005f, "jamais moins que la bande haute du cadre 4");
+            // F3 : la bande est plafonnée à la hauteur de la maquette (en u) — sur une zone plus haute que celle de la maquette (1 732 u) la part est celle du plafond
+            Assert.GreaterOrEqual(part, Mathf.Min(0.227f - 0.025f, (0.227f - 0.025f) * AppShell.ZoneSureDeLaMaquetteU / zone) - 0.005f, "jamais moins que la bande haute du cadre 4 (plafonnée à la hauteur de la maquette)");
             Assert.IsNotNull(file.PlusieursRendu, "anti-vacuité : le pluriel est rendu dans la ligne haute");
             LaSuitePanelController suite = shell.ContentSlot.GetComponentsInChildren<LaSuitePanelController>(false).LastOrDefault();
             Assert.IsTrue(suite != null && suite.Visible, "précondition : la suite se montre");
@@ -612,6 +613,34 @@ namespace MafiaCleanCity.Shell.Tests
             float tresHaute = AppShell.HautDeLaLigne(AppShell.BandeFileHaute, 600f, 1000f);   // 0,625
             Assert.AreEqual(1f, AppShell.BandeTeteSur(tresHaute).max, 1e-4f, "la tête est bornée au haut de la zone sûre");
             Assert.LessOrEqual(AppShell.BandeSuiteSur(0.99f, AppShell.BandeSuite.max).max, 1f, "la suite aussi");
+        }
+
+        /// <summary>A12e — F3 (juge r6, 08/10) : la ligne de file ne gonfle PAS avec la zone. La bande est une fraction de la zone sûre, la maquette pose la ligne à hauteur d'encre :
+        /// cadre 4 (haute) 424 → 506 = 82 px CSS (81,67 mesurés), cadres 1-3 464 → 506 = 42 px CSS ; 1 px CSS = 1280/300 u. À 1080×2400 (zone (2400−480)/0,84375 = 2 275 u) la
+        /// ligne mesurait 388 px (107,78 CSS, +32 %) ; à 1080×1920 (zone 1 707 u) 291 px (80,83 CSS, −1 %), qui doivent rester tels quels. Un contenu qui veut plus l'emporte sur le plafond.
+        /// Pure (la règle, sans scène).</summary>
+        [Test]
+        public void A12e_LaLigneDeFile_NeGonflePasAvecLaZone_PlafondDeLaMaquette()
+        {
+            const float uParCss = 1280f / 300f, uParPx = 1280f / 1080f;
+            float zone2400 = (2400f - 480f) * uParPx, zone1920 = (1920f - 480f) * uParPx;
+            float Hauteur((float min, float max) bande, float voulue, float zone) => (AppShell.HautDeLaLigne(bande, voulue, zone) - bande.min) * zone;
+
+            // 2400 : la ligne tient dans sa hauteur de maquette (+1 %), haute comme basse
+            Assert.AreEqual(82f * uParCss, Hauteur(AppShell.BandeFileHaute, 270f, zone2400), 82f * uParCss * 0.01f, "2400, ligne haute : 82 px CSS (81,67 mesurés), pas 107,78");
+            Assert.AreEqual(42f * uParCss, Hauteur(AppShell.BandeFile, 130f, zone2400), 42f * uParCss * 0.01f, "2400, ligne des cadres 1-3 : 42 px CSS");
+            Assert.LessOrEqual(Hauteur(AppShell.BandeFileHaute, 270f, zone2400) / uParCss, 81.67f * 1.01f, "2400 : au plus la maquette mesurée + 1 %");
+            // 1920 : INCHANGÉE, la même valeur que l'ancienne règle (la bande telle quelle)
+            Assert.AreEqual(AppShell.BandeFileHaute.max, AppShell.HautDeLaLigne(AppShell.BandeFileHaute, 270f, zone1920), 1e-6f, "1920, ligne haute : la bande, exactement");
+            Assert.AreEqual(AppShell.BandeFile.max, AppShell.HautDeLaLigne(AppShell.BandeFile, 130f, zone1920), 1e-6f, "1920, ligne basse : la bande, exactement");
+            Assert.AreEqual(80.83f, Hauteur(AppShell.BandeFileHaute, 270f, zone1920) / uParCss, 80.83f * 0.01f, "1920 : 80,83 px CSS comme mesuré (−1 % de la maquette)");
+            // une ligne HAUTE (raison sur 2 lignes + pluriel) n'est jamais écrasée sous son contenu voulu, même plafonnée
+            Assert.GreaterOrEqual(Hauteur(AppShell.BandeFileHaute, 282f, zone2400), 282f - 0.01f, "2400 : la raison sur 3 lignes (≈ 282 u voulus) n'est pas écrasée");
+            float tresVoulue = 500f;
+            Assert.AreEqual(AppShell.BandeFileHaute.min + tresVoulue / zone2400, AppShell.HautDeLaLigne(AppShell.BandeFileHaute, tresVoulue, zone2400), 1e-5f, "2400 : un contenu bien plus haut que la maquette fait grandir la ligne");
+            // contrôle : la zone de la maquette elle-même retrouve la bande ; une zone nulle aussi
+            Assert.AreEqual(AppShell.BandeFileHaute.max, AppShell.HautDeLaLigne(AppShell.BandeFileHaute, 0f, AppShell.ZoneSureDeLaMaquetteU), 1e-5f, "la zone de la maquette : la bande mesurée");
+            Assert.AreEqual(406f * uParCss, AppShell.ZoneSureDeLaMaquetteU, 1e-3f, "406 px CSS de zone sûre");
         }
 
         private sealed class SourceTemoin : ISourceDeLaSuite
