@@ -302,8 +302,8 @@ namespace MafiaCleanCity.Shell
             qui.overflowMode = TextOverflowModes.Ellipsis;
             qui.enableWordWrapping = false;
             TextMeshProUGUI gravite = NewText(gauche.transform, SeverityLabel(card.severity_band).ToUpperInvariant(), -1);
-            gravite.fontSize = 22;
-            gravite.characterSpacing = 8;
+            gravite.fontSize = TailleDeLaGravite;                 // F4 (juge r6, 08/10) : 22 → 32, le corps nominal de `.plus` (les deux sont à 7,6 px dans la maquette)
+            gravite.characterSpacing = InterlettrageDeLaGravite;  // F4 : 8 → 14 (0,14 em de la maquette)
             gravite.color = GraviteSurLAccueil(card.severity_band);
             renderedSeverityLabels.Add(SeverityLabel(card.severity_band));
 
@@ -411,6 +411,12 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>R2 (juge ⊥ r4, 07/10) : les tailles de « Lt. … attend vos ordres » et de TRANCHER (×1,19 et ×1,21 : mêmes polices, la maquette est plus grande).</summary>
         public const float TailleDuQui = 40f, TailleDuTrancher = 36f;
+
+        /// <summary>F4 (juge r6, 08/10 ; mesuré dans Chromium sur le MÊME mot, « MODÉRÉE » en `.qui small` de la maquette : 7,6 px, 0,14 em, DejaVu Sans, rendu ×3,6 → accent→ligne de base 27 px,
+        /// capitale 20 px, encre 157 px = 22,4 px/lettre ; le jeu à 22 u / 8 : 18 px et 100 px, −33 % et −36 %). `.qui small` et `.plus` ont le MÊME corps nominal (7,6 px) : la gravité prend la
+        /// taille de « Plusieurs attendent encore » (`TailleDuPlusieurs`), jamais en dessous. TMP rend 1 u de corps = 0,84375 px (1080/1280) sans échelle de police, donc 32 u = 27,0 px d'em
+        /// contre 27,36 en maquette (−1,3 %, comme `.plus`). L'interlettrage TMP est en CENTIÈMES D'EM du corps (`TMP_Text` : `characterSpacing × fontSize × 0,01`) : 0,14 em ⇒ 14. Pures.</summary>
+        public const float TailleDeLaGravite = TailleDuPlusieurs, InterlettrageDeLaGravite = 14f;
 
         /// <summary>F17 (arbitrage f2, 26/09 ; cadres 2 et 4 re-rendus @65be0216) — sur l'Accueil, la gravité n'est PAS une couleur : la
         /// couleur est réservée à l'alarme. LÉGÈRE en gris chaud éteint (140,130,114 = `#8c8272`), MODÉRÉE en gris intermédiaire (`#a39985`), GRAVE

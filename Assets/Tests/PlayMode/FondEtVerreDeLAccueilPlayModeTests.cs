@@ -170,6 +170,23 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(55f, LaSuitePanelController.RetraitDuFilet, "14 CSS px × 3,6 = 46 px = 55 u de chaque côté");
         }
 
+        /// <summary>F4 (juge r6, 08/10) — l'étiquette de gravité de la ligne de file : le corps de `.plus` (même 7,6 px nominal que `.qui small`, jamais en dessous), l'interlettrage 0,14 em en
+        /// centièmes d'em TMP, et ce que ça rend : l'em en px (0,84375 px/u) et l'encre de « MODÉRÉE » dans les 3 % de ce que Chromium rend de la maquette (27,36 px d'em, 157 px d'encre). Pure.</summary>
+        [Test]
+        public void V10b_F4_LaGravite_PrendLeCorpsDePlus_EtLInterlettrageDeLaMaquette()
+        {
+            Assert.AreEqual(32f, ExceptionQueuePanelController.TailleDeLaGravite, "F4 : 22 → 32 u");
+            Assert.AreEqual(14f, ExceptionQueuePanelController.InterlettrageDeLaGravite, "F4 : 0,14 em = 14 centièmes d'em TMP");
+            Assert.GreaterOrEqual(ExceptionQueuePanelController.TailleDeLaGravite, ExceptionQueuePanelController.TailleDuPlusieurs, "la gravité ne passe pas sous « Plusieurs attendent encore »");
+            const float pxParU = 1080f / 1280f, emMaquettePx = 7.6f * 3.6f;
+            float em = ExceptionQueuePanelController.TailleDeLaGravite * pxParU;
+            Assert.AreEqual(emMaquettePx, em, emMaquettePx * 0.03f, "l'em rendu : 27,0 px contre 27,36 en maquette");
+            Assert.AreEqual(0.14f, ExceptionQueuePanelController.InterlettrageDeLaGravite / 100f, 1e-6f, "0,14 em de la maquette");
+            // l'encre de « MODÉRÉE » (7 lettres, 6 interstices) : 134 px sans interlettrage à 27,36 px d'em (Chromium), plus 6 interstices
+            float encre = 134f * em / emMaquettePx + 6f * ExceptionQueuePanelController.InterlettrageDeLaGravite / 100f * em;
+            Assert.AreEqual(157f, encre, 157f * 0.03f, "encre de MODÉRÉE : 157 px dans Chromium");
+        }
+
         /// <summary>Le mot, mesuré avec la VRAIE police du client (TMP), comme le fait le code de production. Pure côté réseau.</summary>
         private static float Mesure(string mot, float taille)
         {
