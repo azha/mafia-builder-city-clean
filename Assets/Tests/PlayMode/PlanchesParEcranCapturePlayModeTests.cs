@@ -223,7 +223,8 @@ namespace MafiaCleanCity.Capture.Tests
             const string RaisonCourte = "L’étagère est vide. Sans pyralin, je ne rallume pas.";
             const string RaisonLongue = "L’étagère est vide depuis hier soir, et sans pyralin je ne rallume pas le labo : il me faut une livraison avant la nuit.";
             var debordements = new List<string>();
-            foreach ((string variante, string raison, bool avecTete) in new[] { ("", RaisonCourte, false), ("_TeteRaisonLongue", RaisonLongue, true) })
+            // (3) la tête SERVIE AVEC SES DEUX OPTIONS (juge 09/10, F1/F2 : moitié basse de la carte de tête, pavé or) — les clés que le back sert pour cette carte (`autonomy-reports.provider.ts`), raison courte.
+            foreach ((string variante, string raison, bool avecTete, bool avecOptions) in new[] { ("", RaisonCourte, false, false), ("_TeteRaisonLongue", RaisonLongue, true, false), ("_TeteDeuxOptions", RaisonCourte, true, true) })
             {
                 var cartes = new[]
                 {
@@ -246,7 +247,8 @@ namespace MafiaCleanCity.Capture.Tests
                 fabriquee.JourDeFamilleALOuverture = reelle.JourDeFamilleALOuverture;
                 fabriquee.JourDeFamilleServi = reelle.JourDeFamilleServi;
                 // la tête FABRIQUÉE est celle de E11 (même carte, NON servie) ; sans tête, « LA SUITE » prend le dessus de la ligne
-                fabriquee.hl_card = avecTete ? new HlCardDto { card_id = "carte-fabriquee", decision_type_key = "AUTONOMY_REPORTS_PENDING", impact_bucket = "moderate", urgency_bucket = "low", structural = false } : null;
+                fabriquee.hl_card = avecTete ? new HlCardDto { card_id = "carte-fabriquee", decision_type_key = "AUTONOMY_REPORTS_PENDING", impact_bucket = "moderate", urgency_bucket = "low", structural = false,
+                    options = avecOptions ? new[] { new DecisionOptionDto { label = "hl.option.autonomy_reports.review_now" }, new DecisionOptionDto { label = "hl.option.autonomy_reports.leave_pending" } } : null } : null;
                 fabriquee.queue = cartes;
                 shell.TransportDeSessionPourTest = new SessionFabriquee { Reponse = fabriquee };
                 // ⛔ (créneau du 08/10 soir) EMPIRE ne ROUVRE l'Accueil que sur la carte SANS RIEN DESSUS (`SurLaCarteSansRienDessus`, geste G1) : après
