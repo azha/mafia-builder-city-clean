@@ -78,7 +78,11 @@ namespace MafiaCleanCity.Shell
             fond.color = PlaqueDuBas;
             fond.raycastTarget = false;
             UnityEngine.UI.VerticalLayoutGroup v = bas.AddComponent<UnityEngine.UI.VerticalLayoutGroup>();
-            v.padding = new RectOffset((int)px(13f), (int)px(13f), (int)px(9f) + (int)px(2f), (int)px(15f));
+            // F2 (juge d'ensemble r4, 09/10) : `.bas{padding:9px 13px 15px}` est le padding de la PLAQUE pleine largeur. Posée dans une colonne qui a DÉJÀ ses 13 CSS px de marge (㉞ : `debord` = ces 13 px), la plaque en déborde
+            // et le contenu ne doit PAS les payer deux fois : le bouton du Carnet tenait 893 px (marge de 26 CSS) là où la maquette en tient 980 (50 px = 13 CSS + 1 de cerne) — d'où la légende « … reprend pas » cassée.
+            // Le padding du contenu = 13 CSS − ce que la colonne porte déjà (0 si la plaque est posée sur une racine sans marges : inchangé pour ㉚ et ㉘).
+            int padG = Mathf.Max(0, (int)px(13f) - (int)debordGauche), padD = Mathf.Max(0, (int)px(13f) - (int)debordDroite);
+            v.padding = new RectOffset(padG, padD, (int)px(9f) + (int)px(2f), (int)px(15f));
             v.spacing = px(5f);
             v.childControlWidth = true; v.childControlHeight = true;
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
@@ -161,8 +165,10 @@ namespace MafiaCleanCity.Shell
             // ㉞ F7 (juge d'ensemble r3, 08/10) : la maquette écrit ses gestes en CAPITALES (« LANCER LA SOIRÉE », `.cn-geste`) ; la valeur SERVIE du Carnet est en casse de phrase (« Lancer la soirée »), rendue telle quelle
             // (hauteurs de glyphes 26/20/20/20). Les capitales sont une affaire d'AFFICHAGE : `UpperCase` du TMP, jamais la clé ni la valeur (un libellé déjà en capitales n'en change pas).
             lib.fontStyle |= FontStyles.UpperCase;
-            lib.enableWordWrapping = true;
-            lib.gameObject.GetComponent<LayoutElement>().flexibleWidth = 1f;
+            // ㉞ F2 (juge d'ensemble r4, 09/10) : `.cn-geste{display:flex;justify-content:space-between}` — le LIBELLÉ prend sa largeur de CONTENU, sur UNE ligne, et la légende `small` prend le reste (à droite). Deux colonnes
+            // `flexibleWidth=1` se partageaient la largeur à parts égales : « LANCER LA SOIRÉE » (≈ 450 px) cassait en deux dans une moitié de 431 px, au milieu d'un bouton de 970 px (maquette : 1 ligne, 1 bande).
+            lib.enableWordWrapping = false;
+            lib.gameObject.GetComponent<LayoutElement>().flexibleWidth = 0f;
             if (!string.IsNullOrEmpty(legende))
             {
                 TextMeshProUGUI leg = Texte(go.transform, "Legende", legende, px(6.5f), police, false);

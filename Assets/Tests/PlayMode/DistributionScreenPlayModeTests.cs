@@ -121,7 +121,12 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNotNull(chip, "le panneau porte l'étiquette crème");
             Assert.AreEqual("D'OÙ ÇA PART", chip.Find("SousTitre").GetComponent<TMPro.TextMeshProUGUI>().text.ToUpperInvariant().Replace('’', '\''), "la même grammaire que la fiche d'une route");
             // F6 (juge d'ensemble r2) : la ligne 1 d'une fiche est la SOURCE ; ici il n'y en a pas — la fiche ne RÉPÈTE plus le titre du bandeau, elle dit la phrase déjà servie de l'état sans route.
-            string ligne1 = chip.Find("Titre").GetComponent<TMPro.TextMeshProUGUI>().text;
+            // F3 (juge r4, 09/10) : la fiche porte son titre en DejaVu SERIF Bold (`.lieg6 .fiche b`), pas en Sans (empattement 1,00 contre 1,57) — la police RENDUE, avec son témoin : le label reste en Sans.
+            TMPro.TextMeshProUGUI titreFiche = chip.Find("Titre").GetComponent<TMPro.TextMeshProUGUI>();
+            Assert.AreEqual(MafiaCleanCity.Theme.DesignTokens.Current.hudSerifFont, titreFiche.font, "F3 : le titre de la fiche est en DejaVu Serif");
+            Assert.AreEqual(TMPro.FontStyles.Bold, titreFiche.fontStyle & TMPro.FontStyles.Bold, "F3 : en gras (`font:700`)");
+            Assert.AreEqual(MafiaCleanCity.Theme.DesignTokens.Current.primaryFont, chip.Find("SousTitre").GetComponent<TMPro.TextMeshProUGUI>().font, "témoin : le label « D'OÙ ÇA PART » reste en Sans (juge r4 : égal)");
+            string ligne1 = titreFiche.text;
             Assert.AreNotEqual(racine.Find("Entete/Titre").GetComponent<TMPro.TextMeshProUGUI>().text, ligne1, "la fiche ne répète pas le titre de l'état (juge r2 F6)");
             Assert.AreEqual(MafiaCleanCity.I18n.Libelle.De("distribution", "bloc", "Aucune route tendue pour l’instant."), ligne1, "ligne 1 = la clé déjà servie, aucun mot inventé");
             RectTransform panneau = (RectTransform)vide, etiquette = (RectTransform)chip;

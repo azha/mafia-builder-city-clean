@@ -607,6 +607,9 @@ namespace MafiaCleanCity.Operational
             // `titreBrut` = donnée DÉCOUVERTE (nom de bâtiment réel), jamais passée par
             // `Libelle.De` — ce n'est pas une phrase fermée d'interface, c'est du contenu.
             TextMeshProUGUI titre = NouveauTexteFiche(chip.transform, "Titre", titreBrut, 9.5f, EncreSombre, true);
+            // F3 (juge d'ensemble r4, 09/10) : `.lieg6 .fiche b{font:700 9px 'DejaVu Serif'}` — le titre de la fiche est SERIF BOLD ; `NouveauTexteFiche` pose la police
+            // du texte courant (DejaVu Sans, indice d'empattement 1,00 mesuré contre 1,57 sur la référence). La cause est la police DEMANDÉE, pas une substitution : les deux sont embarquées.
+            titre.font = DesignTokens.Current.hudSerifFont;
             titre.alignment = alignement;
             titre.enableWordWrapping = true;
             TrackText(titre.text);

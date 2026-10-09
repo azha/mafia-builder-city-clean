@@ -87,6 +87,15 @@ namespace MafiaCleanCity.CityMap.Tests
                 Transform bas = carnet.GesteDuPied.transform.parent;
                 Assert.AreEqual("Bas", bas.name);
                 Assert.IsNotNull(bas.Find("Filet"), "le filet haut de 2 px");
+                // F2 (juge d'ensemble r4, 09/10) : la plaque DÉBORDE des 13 CSS px de marge de la colonne ; le contenu ne paie pas ces 13 px une seconde fois — le bouton va jusqu'au bord de la colonne
+                // (maquette : 50 px sur 1080 = 13 CSS + le cerne ; le jeu : 93 px = 26 CSS, bouton de 893 px au lieu de 980, légende cassée en deux lignes)
+                var pad = bas.GetComponent<VerticalLayoutGroup>().padding;
+                Assert.AreEqual((0, 0), (pad.left, pad.right), "F2 : aucun second padding latéral de 13 CSS dans la colonne qui porte déjà sa marge");
+                Canvas.ForceUpdateCanvases();
+                var cb = new Vector3[4]; var cg = new Vector3[4];
+                ((RectTransform)bas).GetWorldCorners(cb); ((RectTransform)carnet.GesteDuPied.transform).GetWorldCorners(cg);
+                Assert.AreEqual(cb[0].x, cg[0].x, 0.5f, "F2 : le bouton commence au bord gauche de la colonne de la bande (pas 13 CSS plus loin)");
+                Assert.AreEqual(cb[2].x, cg[2].x, 0.5f, "F2 : et finit à son bord droit");
                 int pastilles = 0, regles = 0;
                 foreach (Transform t in GameObject.Find("CarnetRoot").GetComponentsInChildren<Transform>(true)) { if (t.name == "Pastille") pastilles++; if (t.name == "Regle") regles++; }
                 Assert.AreEqual(8, pastilles, "huit rangs, huit pastilles (A2 : 8 sur 8 absentes)");
@@ -119,6 +128,10 @@ namespace MafiaCleanCity.CityMap.Tests
                 for (int i = 0; i < lib.textInfo.characterCount; i++) sb.Append(lib.textInfo.characterInfo[i].character);
                 Assert.AreEqual(sb.ToString().ToUpperInvariant(), sb.ToString(), "ce qui est AFFICHÉ est en capitales (le jeu : « Lancer la soirée », capitale puis bas-de-casse)");
                 Assert.AreEqual("LANCER LA SOIRÉE", sb.ToString());
+                // F2 (juge d'ensemble r4, 09/10) : le libellé tient sur UNE ligne (maquette : 1 bande), à sa largeur de CONTENU — jamais cassé dans une moitié de bouton partagée avec la légende
+                Canvas.ForceUpdateCanvases();
+                Assert.AreEqual(1, lib.textInfo.lineCount, "F2 : « LANCER LA SOIRÉE » sur une seule ligne");
+                Assert.GreaterOrEqual(((RectTransform)lib.transform).rect.width + 1f, lib.preferredWidth, "F2 : la colonne du libellé est au moins aussi large que son texte (sinon il se casse)");
                 Color32 c = lib.color;
                 Assert.AreEqual((0x98, 0x79, 0x79), ((int)c.r, (int)c.g, (int)c.b), "`.cn-geste.mort{color:#987979}` : (152,121,121) est la couleur de la maquette pour un geste éteint");
             }

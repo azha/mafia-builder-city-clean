@@ -28,6 +28,7 @@ namespace MafiaCleanCity.CityMap.Tests
         {
             Assert.AreEqual(12.5f, EnteteDEcran.TitreCss, "capitale de 33 px sur 1080 = corps de 45,3 px = 12,5 px CSS");
             Assert.AreEqual((0xf0, 0xdf, 0xc4), Trio(EnteteDEcran.TitreEncre));
+            Assert.AreEqual(FontStyles.Bold, EnteteDEcran.TitreStyle, "F4 : graisse Bold des cinq références");
             Assert.AreEqual(((0x1e, 0x1b, 0x16), (0x3a, 0x35, 0x2c)), ((Trio(EnteteDEcran.Appro.Plaque)), Trio(EnteteDEcran.Appro.Filet)), "㉚ `.entete`");
             Assert.AreEqual(((0x20, 0x18, 0x0f), (0x3d, 0x30, 0x24)), ((Trio(EnteteDEcran.Distribution.Plaque)), Trio(EnteteDEcran.Distribution.Filet)), "㉘ `.entete`");
             Assert.AreEqual(((0x1a, 0x1f, 0x26), (0x33, 0x3c, 0x46)), ((Trio(EnteteDEcran.Loi.Plaque)), Trio(EnteteDEcran.Loi.Filet)), "㉛ `.pl-tete`");
@@ -47,6 +48,7 @@ namespace MafiaCleanCity.CityMap.Tests
             StringAssert.Contains("EnteteDEcran.Construire(racine.transform, EnteteDEcran.Loi", loi);
             StringAssert.Contains("EnteteDEcran.Habiller(ens, EnteteDEcran.Carnet", carnet);
             StringAssert.Contains("Px(EnteteDEcran.TitreCss)", carnet, "㉞ : l'échelle UNIQUE du titre");
+            StringAssert.Contains("titreEcran.fontStyle = EnteteDEcran.TitreStyle", carnet, "㉞ : la graisse UNIQUE du titre (F4 du juge r4 : Bold perdu)");
             foreach ((string nom, string src) in new[] { ("Appro", appro), ("Distribution", distrib), ("Loi", loi) })
             {
                 StringAssert.DoesNotContain("NouveauTexteFiche(corpsGo.transform, \"Titre\"", src, nom + " : le titre est celui du bandeau, plus un texte posé à la main dans le corps");
@@ -83,6 +85,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 TextMeshProUGUI titre = entete.Find("Titre").GetComponent<TextMeshProUGUI>();
                 Assert.AreEqual(DesignTokens.Current.hudSerifFont, titre.font, "DejaVu Serif, plus le sans-serif blanc");
                 Assert.AreEqual((0xf0, 0xdf, 0xc4), Trio(titre.color));
+                Assert.AreEqual(FontStyles.Bold, titre.fontStyle & FontStyles.Bold, "F4 (juge r4) : DejaVu Serif BOLD, pas la graisse normale (fût 7 px de la référence contre 4 px)");
                 Assert.IsFalse(string.IsNullOrEmpty(titre.text), "le titre est écrit par le contrôleur dans le bandeau");
                 Assert.IsNull(racine.Find("Corps").GetComponentInChildren<ScrollRect>().content.Find("Titre"), "plus de titre dans le corps défilant (B1 : le fragment de titre coupé)");
                 RectTransform rt = (RectTransform)entete;
