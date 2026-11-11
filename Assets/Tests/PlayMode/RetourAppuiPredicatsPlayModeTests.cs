@@ -66,6 +66,31 @@ namespace MafiaCleanCity.Tests
         private static PointerEventData Doigt() => new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left };
 
         // ------------------------------------------------------------------------------ GS1 : le scan de source (fonction pure)
+        /// <summary>GS1 sur l'ARBRE RÉEL (E-R5, design §4) : 0 création de `Button` dans `Assets/Scripts` hors du guichet. Deux gardes de vacuité :
+        /// le nombre de fichiers lus (un dossier vide serait vert) et le guichet lui-même, que le scan DOIT voir quand on le range sous un autre
+        /// chemin (sans quoi un scan aveugle rendrait 0 partout).</summary>
+        [Test]
+        public void Gs1_ArbreReel_AucunButtonCreeHorsDuGuichet()
+        {
+            string dossier = System.IO.Path.Combine(Application.dataPath, "Scripts");
+            string[] fichiers = System.IO.Directory.GetFiles(dossier, "*.cs", System.IO.SearchOption.AllDirectories);
+            Assert.Greater(fichiers.Length, 200, "anti-vacuité : trop peu de sources lues dans " + dossier + " (" + fichiers.Length + ")");
+
+            var rouges = new System.Collections.Generic.List<string>();
+            string guichet = null;
+            foreach (string f in fichiers)
+            {
+                string chemin = "Assets/Scripts/" + f.Substring(dossier.Length).TrimStart('/', '\\').Replace('\\', '/');
+                string contenu = System.IO.File.ReadAllText(f);
+                rouges.AddRange(Retour.ScanCreationsDeBouton(chemin, contenu));
+                if (chemin == "Assets/Scripts/ShellContracts/Retour.cs") guichet = contenu;
+            }
+            Assert.IsNotNull(guichet, "anti-vacuité : ShellContracts/Retour.cs n'a pas été lu");
+            Assert.GreaterOrEqual(Retour.ScanCreationsDeBouton("Assets/Scripts/Shell/Ailleurs.cs", guichet).Count, 1,
+                "contrôle positif : le guichet rangé ailleurs DOIT rougir — sinon le scan est aveugle");
+            Assert.AreEqual(0, rouges.Count, string.Join("\n", rouges));
+        }
+
         [Test]
         public void Gs1_UnButtonCreeAilleurs_RougitAvecLeMessageExige()
         {
