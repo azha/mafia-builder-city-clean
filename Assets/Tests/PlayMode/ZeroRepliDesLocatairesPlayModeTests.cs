@@ -61,6 +61,10 @@ namespace MafiaCleanCity.Operational.Tests
             // ⚠️ COUPE du 2026-10-11 (CLIENT-2, cumul back `gate/cumul-2026-10-10` @14ba96b3, `string_table.ts`, fr ET en) : SERVIES, donc retirées — ⑭ `semaine.bloc.tension` / `semaine.bloc.vos_affaires_respirent` et ㊴ Q5 `forensic.bloc.le_train_de_vie_de_nom` (fr `le train de vie de {nom}` · en `{nom}’s lifestyle`, égales au gabarit du client ; le nom lui-même vient de `lifestyle_lieutenant_name`, lot Q5 @d64941bd). Restent, non servies : `journal.bouton.y_preter_attention`, `forensic.enseigne.rien_a_votre_nom`.
             // ㊳ le pied éteint (CAUSES 3 ET 4, CLIENT-1) : mot de la maquette, clé dérivée, non servie. 1 entrée.
             "journal.bouton.y_preter_attention",
+            // ④/⑤ l'APRÈS-GESTE (11/11, relevé par CLIENT-1, demandé par f2) : le petit texte du jeton, `ApresGesteHl.PetitTexteDuJeton` (`Lib("jeton", "votre grande décision du jour")`), clé dérivée NON servie à la pile dev
+            // (8d0184a4) ; repli = « votre grande décision du jour », octet pour octet le texte ratifié (maquette r2 `01-inventaire-M-b2ceebeb.txt` L803/809, é = U+00E9 NFC). LEVÉE : la clé est servie sur la pile
+            // (lot/couts-30 de BACK-1 @87820327, tranche suivante) — la règle (2) rougit alors et la retire d'ici.
+            "accueil.jeton.votre_grande_decision_du_jour",
             // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : une clé restante, non servie à la pile du 08/10 (les 15 autres le sont : retirées ci-dessus). Les statuts et types d'acteur
             // sont lus par la VALEUR servie (`forensic.statut.*`, `forensic.acteur.lawyer|clerk`).
             "forensic.enseigne.rien_a_votre_nom",   // le sous-titre de l'enseigne du cadre 135 (sans point) : son rôle propre, la clé bloc.* est celle du texte `.rien`
