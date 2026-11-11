@@ -1,0 +1,4 @@
+# session/open — Authorization: Bearer ***
+$ curl -s -X POST http://localhost/v1/session/open -H 'Authorization: Bearer ***' -H 'Idempotency-Key: ***' -d '{"client_version":"jd4-juge-donnees"}'
+(corps tronqué aux clés de 1er niveau — hors périmètre ㊴)
+clés payload.data: ['backlog_badge', 'compression_glance', 'day_phase', 'family_day', 'flag_review', 'friction_glance', 'hl_card', 'onboarding', 'opened_family_day', 'opened_game_day', 'opened_game_minute', 'queue', 'queue_pressure_band', 'session_id', 'settling_glance', 'structural_budget']
