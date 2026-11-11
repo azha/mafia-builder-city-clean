@@ -696,7 +696,9 @@ namespace MafiaCleanCity.CityMap.Tests
         //       sortie, qu'il ne doit jamais faire au compte de démo partagé), ParcoursJoueurNeufCapturePlayModeTests.cs (1,
         //       ClicheParcours — ajouté le 2026-09-26 : la passe UX photographie un JOUEUR NEUF ; le compte de démo et le compte
         //       de capture sont riches, et c'est précisément ce que ces planches ne doivent pas montrer).
-        //   ⇒ 8 appels sur 6 fichiers.
+        //       PlanchesParEcranCapturePlayModeTests.cs (1, P0/P1 — ajouté le 2026-11-11, chunk 3c b56d837e : le compte est
+        //       INSCRIT par le test (`auth.SignUp`, SafeCallsign) juste avant `shell.SetIdentity` ; classe C, jamais le compte de démo).
+        //   ⇒ 9 appels sur 7 fichiers.
         // Les 4 appels de VuePrincipaleCapturePlayModeTests ont été retirés volontairement : les
         // captures doivent photographier le compte servi, pas quatre comptes frais et vides. La
         // garde n'avait pas été rebasée sur ce retrait pourtant explicite (146e5198).
@@ -712,9 +714,10 @@ namespace MafiaCleanCity.CityMap.Tests
             "PlayMode/HudPlayModeTests.cs",
             "PlayMode/CoffrePlayModeTests.cs",
             "PlayMode/ParcoursJoueurNeufCapturePlayModeTests.cs",
+            "PlayMode/PlanchesParEcranCapturePlayModeTests.cs",
         };
 
-        private const int ExpectedExplicitIdentityOverrideCount = 8;
+        private const int ExpectedExplicitIdentityOverrideCount = 9;
 
         // Chemin, relatif à Assets/Tests, du fichier hébergeant CE scanner et ses `[TestCase]`
         // fabriqués — voir ScanDirectoryExcludingFile ci-dessus.
