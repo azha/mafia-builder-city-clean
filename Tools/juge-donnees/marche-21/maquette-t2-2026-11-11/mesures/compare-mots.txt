@@ -1,0 +1,108 @@
+clés FR lues (lignes 3303-3333) : 31 · clés EN lues (lignes 333-363) : 31
+
+=== 1. enseigne / sous-titre / compteurs / colonne / substances / formes (cadre 101) ===
+  OK    101 enseigne b (marche.titre.le_marche)
+        dessiné  = 'LE MARCHÉ'
+        attendu  = 'LE MARCHÉ'
+  OK    101 enseigne i (marche.sous_titre.tableau_du_verge_d_or)
+        dessiné  = 'tableau du Verge d’Or'
+        attendu  = 'tableau du Verge d’Or'
+  compteurs trouvés : 3
+        <b>='03<span style="color:#8a979c">/72'  <span>='lignes connues'
+        <b>='01'  <span>='sûres'
+        <b>='15'  <span>='quartiers noirs'
+  OK    101 libellé compteur (marche.compteur.lignes_connues)
+        dessiné  = 'lignes connues'
+        attendu  = 'lignes connues'
+  OK    101 libellé compteur (marche.compteur.sures)
+        dessiné  = 'sûres'
+        attendu  = 'sûres'
+  OK    101 libellé compteur (marche.compteur.quartiers_noirs)
+        dessiné  = 'quartiers noirs'
+        attendu  = 'quartiers noirs'
+  en-têtes de colonne trouvés : 5 -> ['quartier', 'brindle', 'crick', 'hush', 'ash']
+  OK    101 en-tête (marche.colonne.quartier)
+        dessiné  = 'quartier'
+        attendu  = 'quartier'
+  OK    101 en-tête (marche.substance.brindle)
+        dessiné  = 'brindle'
+        attendu  = 'brindle'
+  OK    101 en-tête (marche.substance.crick)
+        dessiné  = 'crick'
+        attendu  = 'crick'
+  OK    101 en-tête (marche.substance.hush)
+        dessiné  = 'hush'
+        attendu  = 'hush'
+  OK    101 en-tête (marche.substance.ash)
+        dessiné  = 'ash'
+        attendu  = 'ash'
+  onglets trouvés : 4 -> [('brindle', 'briques'), ('crick', 'cristaux'), ('hush', 'plaque'), ('ash', 'prismes')]
+  OK    101 onglet substance (marche.substance.brindle)
+        dessiné  = 'brindle'
+        attendu  = 'brindle'
+  OK    101 onglet forme (marche.forme.briques)
+        dessiné  = 'briques'
+        attendu  = 'briques'
+  OK    101 onglet substance (marche.substance.crick)
+        dessiné  = 'crick'
+        attendu  = 'crick'
+  OK    101 onglet forme (marche.forme.cristaux)
+        dessiné  = 'cristaux'
+        attendu  = 'cristaux'
+  OK    101 onglet substance (marche.substance.hush)
+        dessiné  = 'hush'
+        attendu  = 'hush'
+  OK    101 onglet forme (marche.forme.plaque)
+        dessiné  = 'plaque'
+        attendu  = 'plaque'
+  OK    101 onglet substance (marche.substance.ash)
+        dessiné  = 'ash'
+        attendu  = 'ash'
+  OK    101 onglet forme (marche.forme.prismes)
+        dessiné  = 'prismes'
+        attendu  = 'prismes'
+
+=== 2. P3 — phrase du bas, cadre 101 (ICU marche.phrase.bilan_lignes, n=3 total=72) ===
+  OK    101 phrase du bas (marche.phrase.bilan_lignes (branche other, n=3))
+        dessiné  = '3 lignes sur 72. Le reste, personne des nôtres n’y a jamais traité.'
+        attendu  = '3 lignes sur 72. Le reste, personne des nôtres n’y a jamais traité.'
+        ICU brut = '{n, plural, =0 {Aucune ligne sur {total}\xa0: personne des nôtres n’a encore traité nulle part.} one {Une ligne sur {total}. Le reste, personne des nôtres n’y a jamais traité.} other {# lignes sur {total}. Le reste, personne des nôtres n’y a jamais traité.}}'
+
+=== 3. P2 — cadre 146 : titre + phrase(s) de la case ash ===
+  contenu brut de .pt = '<i>ash · lys de verre</i><b style="color:#7a838d">LE VERRE · HORS DU TABLEAU</b><small>la poudre grise ne se vend pas à un dealer\xa0: elle se place, au rendez-vous, chez ceux du Verre.</small>'
+  nb <small> dans .pt = 1 · nb <b> = 1 · nb <i> = 1
+  OK    146 titre (après «LE VERRE · ») (marche.titre.hors_du_tableau)
+        dessiné  = 'HORS DU TABLEAU'
+        attendu  = 'HORS DU TABLEAU'
+  OK    146 ligne substance·origine (marche.substance.ash + marche.origine.lys_de_verre)
+        dessiné  = 'ash · lys de verre'
+        attendu  = 'ash · lys de verre'
+  OK    146 phrase ash (marche.phrase.case_ash)
+        dessiné  = 'la poudre grise ne se vend pas à un dealer\xa0: elle se place, au rendez-vous, chez ceux du Verre.'
+        attendu  = 'la poudre grise ne se vend pas à un dealer\xa0: elle se place, au rendez-vous, chez ceux du Verre.'
+
+=== 4. cadres 102 / 103 : titres composés + phrases ===
+  cadre 102 titre dessiné = 'DÉPÔT-EST · RECOUPÉ' (quartier en capitales + « · » + libellé)
+  OK    102 2e membre du titre (marche.confiance.recoupe (.upper()))
+        dessiné  = 'RECOUPÉ'
+        attendu  = 'RECOUPÉ'
+  ECART 102 phrase (marche.phrase.bande_moderate)
+        dessiné  = 'deux sources concordantes — ni une rumeur, ni une certitude. On ne vous dira pas le prix, ni ce qui s’écoule : seulement à quel point on peut s’y fier.'
+        attendu  = 'deux sources concordantes — ni une rumeur, ni une certitude. On ne vous dira pas le prix, ni ce qui s’écoule\xa0: seulement à quel point on peut s’y fier.'
+        1re divergence à l'index 108 : dessiné=' : seulement' attendu='\xa0: seulement'
+  OK    102 ligne substance·origine (substance + marche.origine.extrait_de_racine)
+        dessiné  = 'crick · extrait de racine'
+        attendu  = 'crick · extrait de racine'
+  cadre 103 titre dessiné = 'LA CHANCELLERIE · VOYANT ÉTEINT' (quartier en capitales + « · » + libellé)
+  OK    103 2e membre du titre (marche.titre.voyant_eteint (.upper()))
+        dessiné  = 'VOYANT ÉTEINT'
+        attendu  = 'VOYANT ÉTEINT'
+  ECART 103 phrase (marche.phrase.case_sans_ligne)
+        dessiné  = 'aucun des nôtres n’a jamais rien écoulé là-bas. Ce n’est pas une ligne à zéro : c’est une ligne jamais ouverte. Elle s’allumera le jour où un de vos dealers y traitera.'
+        attendu  = 'aucun des nôtres n’a jamais rien écoulé là-bas. Ce n’est pas une ligne à zéro\xa0: c’est une ligne jamais ouverte. Elle s’allumera le jour où un de vos dealers y traitera.'
+        1re divergence à l'index 77 : dessiné=' : c’est une' attendu='\xa0: c’est une'
+  OK    103 ligne substance·origine (substance + marche.origine.resine_de_lull)
+        dessiné  = 'hush · résine de lull'
+        attendu  = 'hush · résine de lull'
+
+=== BILAN : 26 conformes · 2 écarts ===
