@@ -91,11 +91,19 @@ namespace MafiaCleanCity.Operational
         public bool bypassed;
     }
 
-    /// <summary>Une route de la chaîne. ⛔ FORME JAMAIS MESURÉE, même traitement que
-    /// `SupplyChainNodeDto` — placeholder de désérialisation, pas une UI.</summary>
+    /// <summary>Une route de la chaîne — les 7 clés SERVIES, recopiées du code back (`supply-chain.controller.ts:92-99` et `:141-148`, main 6040a213 ;
+    /// TD-1013, 11/11 : le placeholder vide d'avant jetait les 7 clés, forme G). Que des bandes et des références (mur R2.2 du contrôleur, `:115-120` :
+    /// jamais `sinuosity_index` ni le compte à rebours `rebuild_completes_at_tick`). Aucun écran ne les lit encore (le rendu de la chaîne attend TD-985).</summary>
     [Serializable]
     public class SupplyChainRouteDto
     {
+        public string route_id;
+        public string origin_building_id;
+        public string destination_building_id;
+        public string sinuosity_stress_bucket;   // pristine | stressed | critical | severed (`sinuosity-stress-bucket.ts:34`)
+        public string time_to_collapse_bucket;   // distant | approaching | imminent | na (`time-to-collapse-bucket.ts:24`)
+        public string state;                     // draft | active | saturated | severed
+        public bool rebuilding;                  // l'arrêt de reconstruction, qualitatif (jamais le compte à rebours)
     }
 
     /// <summary>`GET /v1/supply-chain/graph` — réponse mesurée (2026-09-03) : `{nodes, legs,
