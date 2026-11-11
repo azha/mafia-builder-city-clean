@@ -25,9 +25,12 @@ namespace MafiaCleanCity.Operational
     ///   · `friction_consumed_bucket` : `low` | `medium` | `high` | null — `FrictionBand`, `combat.types.ts:39` ;
     ///   · `heat_increment_bucket` : `string | null` côté type ; seul `medium` est produit aujourd'hui
     ///     (`ASSAULT_HEAT_INCREMENT_BUCKET`, provisoire) — les mots couvrent low/medium/high (table 40) ;
-    ///   · `target_axis_i18n`, `lieutenant` et `strike_index` : PAS ENCORE SERVIS (le back les ajoute après le gate du 23/09 ; noms
-    ///     figés par l'orchestrateur le même jour). Déclarés AVANT d'être servis (forme G) ; absents, ils se lisent
-    ///     `key` vide / `name` vide, et rien ne s'affiche à leur place (aucun axe ni nom deviné).
+    ///   · `target_axis_i18n`, `lieutenant` et `strike_index` : SERVIS par le lot conflit de BACK-3 (`lot/conflit-seq` @59564b70,
+    ///     `combat.service.ts:104-115`, recopié V15 le 11/11 : `strike_index: number` (rang dans la famille, ≥ 1), `target_axis_i18n:
+    ///     I18nRef | null` (`{key: 'conflit.axe.<axe>', params: {}}`), `lieutenant: {id, name} | null`) — forme fermée à 10 clés. Déclarés
+    ///     avant d'être servis (forme G) ; absents (back antérieur), ils se lisent `key` vide / `name` vide / 0, et rien ne s'affiche.
+    ///   · `heat_increment_bucket` servi en BANDE `low | medium | high` (`engagement-projection.ts:41`) ; lu insensible à la casse
+    ///     (`ConflitResolvers.Chaleur`).
     /// ⚠️ JsonUtility rend `""` pour une chaîne `null` servie, et une INSTANCE VIDE pour un objet `null` :
     /// l'absence se lit chaîne vide.</summary>
     [Serializable]
