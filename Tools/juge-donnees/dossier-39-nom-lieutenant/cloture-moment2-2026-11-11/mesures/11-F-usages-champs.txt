@@ -1,0 +1,37 @@
+# F — usages de chaque champ de DTO dans les fichiers de l'écran (commit c35c3250)
+# portée : ForensicScreenController.cs + ForensicClient.cs (ForensicDtos.cs = la déclaration, exclue du compte d'usage)
+--- .audit_risk_bucket : 1 usage(s)
+ForensicScreenController.cs:908:                case "audit_risk_bucket": return d.audit_risk_bucket;
+--- .effluent_visibility_bucket : 1 usage(s)
+ForensicScreenController.cs:909:                case "effluent_visibility_bucket": return d.effluent_visibility_bucket;
+--- .lifestyle_alarm_bucket : 1 usage(s)
+ForensicScreenController.cs:910:                case "lifestyle_alarm_bucket": return d.lifestyle_alarm_bucket;
+--- .lifestyle_lieutenant_name : 1 usage(s)
+ForensicScreenController.cs:732:            string nom = d?.lifestyle_lieutenant_name;
+--- .audit_risk_label_key : 3 usage(s)
+ForensicScreenController.cs:1204:                    case "audit_risk_bucket": if (!string.IsNullOrEmpty(d.audit_risk_label_key) && MafiaCleanCity.I18n.I18nCatalog.Connait(d.audit_risk_label_key)) return MafiaCleanCity.I18n.I18nCatalog.Traduire(d.audit_risk_label_key); break;
+--- .effluent_visibility_label_key : 3 usage(s)
+ForensicScreenController.cs:1205:                    case "effluent_visibility_bucket": if (!string.IsNullOrEmpty(d.effluent_visibility_label_key) && MafiaCleanCity.I18n.I18nCatalog.Connait(d.effluent_visibility_label_key)) return MafiaCleanCity.I18n.I18nCatalog.Traduire(d.effluent_visibility_label_key); break;
+--- .lifestyle_alarm_label_key : 3 usage(s)
+ForensicScreenController.cs:1206:                    case "lifestyle_alarm_bucket": if (!string.IsNullOrEmpty(d.lifestyle_alarm_label_key) && MafiaCleanCity.I18n.I18nCatalog.Connait(d.lifestyle_alarm_label_key)) return MafiaCleanCity.I18n.I18nCatalog.Traduire(d.lifestyle_alarm_label_key); break;
+--- .actorRef : 3 usage(s)
+ForensicScreenController.cs:1033:            if (a != null && a.actorType == "lawyer" && noms != null && a.actorRef != null
+ForensicScreenController.cs:1034:                && noms.TryGetValue(a.actorRef, out string nom) && !string.IsNullOrWhiteSpace(nom))
+ForensicScreenController.cs:1036:            return RefAffichee(a?.actorRef);
+--- .actorType : 3 usage(s)
+ForensicScreenController.cs:343:            TextMeshProUGUI nom = NouveauTexte(col.transform, "Type", DossierCalculs.NomDuType(a.actorType), Px(8f),
+ForensicScreenController.cs:1033:            if (a != null && a.actorType == "lawyer" && noms != null && a.actorRef != null
+ForensicScreenController.cs:1058:            if (acteurs != null) foreach (ActeurDto x in acteurs) if (x != null && x.actorType == "lawyer") return true;
+--- .status : 5 usage(s)
+ForensicScreenController.cs:312:            bool parti = DossierCalculs.EstParti(a.status);
+ForensicScreenController.cs:326:            Color encreStatut = DossierCalculs.EncreDuStatut(a.status);
+ForensicScreenController.cs:329:            silImg.sprite = Silhouette(encreStatut, DossierCalculs.SilhouetteAChevron(a.status));
+ForensicScreenController.cs:351:            TextMeshProUGUI st = NouveauTexte(ligne.transform, "Statut", DossierCalculs.MotDuStatut(a.status), Px(5.8f),
+ForensicScreenController.cs:952:            if (a != null) foreach (ActeurDto x in a) if (x != null && x.status == statut) n++;
+--- .actors : 4 usage(s)
+ForensicClient.cs:49:        /// <summary>`GET /v1/me/internal-affairs/actors` → `payload.data.actors[]` (le roster du joueur : `actorRef`, `actorType`, `status`).
+ForensicClient.cs:62:                    if (dto == null || dto.actors == null) { onErr?.Invoke(0, "corps sans `payload.data.actors` (GetActeurs)"); yield break; }
+ForensicClient.cs:63:                    onOk?.Invoke(dto.actors);
+--- .intelCostCents : 0 usage(s)
+
+# CONTRÔLE POSITIF du motif : un champ CONNU pour être lu (.lifestyle_lieutenant_name:732) et un champ ABSENT du code (.intelCostCents) doivent se distinguer — voir ci-dessus.

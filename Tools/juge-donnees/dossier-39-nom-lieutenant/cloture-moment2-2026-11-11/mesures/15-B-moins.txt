@@ -1,0 +1,27 @@
+# B⁻ — colonnes des tables du domaine forensic que la projection joueur ne porte PAS (pile 8d0184a4)
+$ docker exec mafia-clean-city-pg-1 psql -U mafia -d mafia_clean_city -At -c "select table_name || ' | ' || string_agg(column_name,', ' order by ordinal_position) ..."
+block_effluent_register | block_id, player_id, district_id, effluent_window, baseline_effluent, last_deviation, last_scan_tick
+ledger_entry_ring | front_id, player_id, ring, ring_head, last_audit_tick, last_chi_square, soft_flag_count, front_dark_until_tick
+lifestyle_audit_state | lieutenant_id, player_id, declared_cut_cents, visible_standard_index, consecutive_flag_months, last_gap, tail_ramp_stage, tail_started_tick, last_month_id
+
+# les 7 clés SERVIES par GET /v1/me/forensic (mesurées) : audit_risk_bucket, effluent_visibility_bucket,
+# lifestyle_alarm_bucket, lifestyle_lieutenant_name, audit_risk_label_key, effluent_visibility_label_key, lifestyle_alarm_label_key
+# ⇒ AUCUNE colonne de ces trois tables n'est projetée telle quelle (mur P5) : les bandes sont DÉRIVÉES.
+
+# lieutenant : la colonne name EST désormais projetée (lifestyle_lieutenant_name) — le B⁻ précédent est FERMÉ.
+$ ... \d lifestyle_audit_state (clé primaire, FK, déclencheur)
+    "lifestyle_audit_state_pkey" PRIMARY KEY, btree (lieutenant_id)
+    "lifestyle_audit_state_player_idx" btree (player_id)
+Foreign-key constraints:
+    "lifestyle_audit_state_lieutenant_id_fkey" FOREIGN KEY (lieutenant_id) REFERENCES lieutenant(lieutenant_id) ON DELETE CASCADE
+    "lifestyle_audit_state_player_id_fkey" FOREIGN KEY (player_id) REFERENCES player(player_id) ON DELETE CASCADE
+Triggers:
+    lifestyle_audit_state_ownership_immutable BEFORE UPDATE ON lifestyle_audit_state FOR EACH ROW EXECUTE FUNCTION forbid_ownership_reassignment()
+
+
+# CONTRÔLE M2 (lieutenant d'un AUTRE joueur) — INATTEIGNABLE sous la licence du dossier :
+$ UPDATE lifestyle_audit_state SET lieutenant_id='<lt du jetable B>' WHERE player_id='<A>' AND lieutenant_id='<lt de A>';
+ERROR:  duplicate key value violates unique constraint "lifestyle_audit_state_pkey"
+DETAIL:  Key (lieutenant_id)=(01a1cc06-7e9c-7723-86d5-0ac840240b7a) already exists.
+# ⇒ la PK porte sur lieutenant_id SEUL (le lieutenant de B a déjà sa ligne) ET un déclencheur
+#   lifestyle_audit_state_ownership_immutable interdit la réassignation de propriété.

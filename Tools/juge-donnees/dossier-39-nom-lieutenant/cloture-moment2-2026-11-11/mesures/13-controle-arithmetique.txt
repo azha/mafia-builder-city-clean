@@ -1,0 +1,18 @@
+=== CONTRÔLE POSITIF ===
+|clés B|              = 14  (attendu 14)
+|M non appariés|      = 9  (attendu 9)
+|F sans source|       = 1  (attendu 1)
+somme                 = 24
+lignes de la table    = 24
+OK
+rc=0
+
+=== CONTRÔLE NÉGATIF (doit rougir) ===
+|clés B|              = 14  (attendu 14)
+|M non appariés|      = 9  (attendu 9)
+|F sans source|       = 1  (attendu 1)
+somme                 = 24
+lignes de la table    = 25
+ÉCHEC : 24 ≠ 25 — une ligne n’a pas d’origine comptée
+ROUGE
+rc=1

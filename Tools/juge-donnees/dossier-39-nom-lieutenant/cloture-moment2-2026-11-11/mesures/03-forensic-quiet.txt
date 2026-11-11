@@ -1,0 +1,26 @@
+# GET /v1/me/forensic — compte jetable jd4-1794423905, état NATUREL (aucun UPDATE)
+$ curl -s -H 'Authorization: Bearer ***' http://localhost/v1/me/forensic | python3 -m json.tool
+## X-Server-Build : X-Server-Build: 8d0184a4
+{
+    "response_meta": {
+        "request_id_echo": "d333b685-5e1d-4629-a6fa-d9a14683cba1",
+        "server_processed_at": "2026-11-11T19:05:05.455Z",
+        "api_version": 1,
+        "correlation_id_echo": null,
+        "server_build_ref": {
+            "git_sha": "8d0184a4",
+            "built_at": "2026-11-11T18:17:52Z"
+        }
+    },
+    "payload": {
+        "data": {
+            "audit_risk_bucket": "clean",
+            "effluent_visibility_bucket": "clear",
+            "lifestyle_alarm_bucket": "quiet",
+            "lifestyle_lieutenant_name": null,
+            "audit_risk_label_key": "forensic.cran.rien_a_signaler",
+            "effluent_visibility_label_key": "forensic.cran.invisible",
+            "lifestyle_alarm_label_key": "forensic.gravite.rien_ne_depasse"
+        }
+    }
+}
