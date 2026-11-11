@@ -206,13 +206,257 @@ Statiques de référence AVANT le lot (même arbre, avant la première écriture
 APRÈS : cliquet 0 écart, population 1450 → 1454 (+4 chaînes de feuille : mots de bande et phrases) ; TD-612 621 → 621 ; N3 {} (aucun ternaire à deux littéraux ajouté : le mot de bande passe par un `switch`) — aucune dette à ajuster.
 
 # ── Déviations (quoi / pourquoi / ce que la spec disait) ──
-1. `ChaineDApproDtos.cs` touché (hors des 4 + 2 fichiers cités) : DTO VIDE `GetSupplyChainUpkeepCostsResponseDto` + enveloppe, patron `PostSupplyChainLegsMaintainResponseDto`. Pourquoi : reconnaître `payload.data` avec `JsonUtility` ; comme `JsonUtility` ne dit pas si un objet imbriqué était absent, `LireCouts` vérifie AUSSI sa présence dans le corps brut (regex `"payload":{…"data":{`). Spec : « présence lue dans le CORPS BRUT » — pas de DTO prescrit.
-2. `LireCouts` — cas que la spec ne tranchait pas, option conservatrice (= ne sert PAS) : `cost_cents` doit être un entier JSON NON NÉGATIF (`-5`, `1e3`, `"5000"`, `5000.5`, `null` ⇒ non servi) ; un champ `cost_cents`/`duration_band`/`mode` répété dans UNE ligne ⇒ ce champ n'est pas servi (même règle que « mode en double ») ; une ligne illisible est ignorée. Spec : « absent ou non entier ⇒ non servi ; mode en double ⇒ non servi ».
-3. La bande est indépendante du coût : un mode sans `cost_cents` mais avec une bande valide garde sa bande (`BandeServie` non null), son sous-titre peut donc dire « quelques minutes · … » sur un mode éteint. Spec : « bande non servie ⇒ conséquence seule » ; elle ne dit rien d'un mode éteint portant une bande.
+1. [REVUE ⊥ 1 — révisée] Plus aucun DTO pour les coûts : `ChaineDApproDtos.cs` est de nouveau IDENTIQUE à cec8de29 (le DTO vide et l'enveloppe sont retirés). `LireCouts` n'appelle plus `JsonUtility` : la présence de `payload.data` se lit dans le corps brut (regex) et les analyseurs stricts décident ligne par ligne — l'indulgence de `JsonUtility` envers un corps mal formé n'est pas mesurée, et G-V1b épingle des lignes mal formées. Spec : « présence lue dans le CORPS BRUT » — pas de DTO prescrit.
+2. `LireCouts` — cas que la spec ne tranchait pas, option conservatrice (= ne sert PAS) : `cost_cents` doit être un entier JSON NON NÉGATIF (`-5`, `1e3`, `"5000"`, `5000.5`, `null` ⇒ non servi) ; un champ `cost_cents`/`duration_band`/`mode` répété dans UNE ligne ⇒ ce champ n'est pas servi (même règle que « mode en double ») ; une ligne illisible est ignorée — ANALYSE STRICTE depuis la revue ⊥ 1 B1 (`ChampsAuPremierNiveau` EXIGE une virgule entre deux membres ; virgule de tête / finale / double, membre sans virgule, littéral nu mal formé ⇒ ligne illisible). Spec : « absent ou non entier ⇒ non servi ; mode en double ⇒ non servi ».
+3. [REVUE ⊥ 1 M1, décision CLIENT-1 — remplace la version d'avant] Un mode dont le coût n'est PAS servi n'affiche PAS de bande, seulement la conséquence : la bande n'est dite que si le coût ET la bande de la ligne sont servis (`SousTitreDuMode`). `BandeServie` reste lue (la ligne sans `cost_cents` garde sa bande côté données) ; gardes : G-V1c lit le « Sous » de `reroute_bypass` sans `cost_cents` mais avec bande `immediate` ⇒ conséquence seule, contrôle positif `cost_cents` servi ⇒ « tout de suite · … ». Spec d'origine : « bande non servie ⇒ conséquence seule », muette sur ce cas ; DESIGN §1.5 complété d'une ligne.
 4. `ModeDeGeste` / `SpecDeGeste` : les champs `CleLibelle`, `CleSousTitre`, `CleTitre`, `CleCommun` SORTENT (la clé d'une entrée `De` se DÉRIVE du mot de repli ; G-V6 prouve que mot dérivé == clé du contrat) ; `CleConsequence` reste (entrée `Gabarit`, valeur ≠ slug) ; `SpecDeGeste` gagne `DitLaBande` (entretien : vrai ; reconstruction : faux). Spec : « entrée `De` » pour titre / étiquette / sous_titre / coût, « `Gabarit` » pour la conséquence.
 5. Crochets de test ajoutés au contrôleur : `CoutsApresLecture` (statique pure : la règle « une injection survit, un échec rend CoutsNonServis »), `RelireLesCoutsPourTest`, `PoserLAdresseDuBackPourTest` — `RechargerChaine` est privée et réseau : sans eux G-V5 ne serait pas testable (le port fermé et la pile). Spec : G-V5 sans moyen prescrit.
 6. G-V5 en trois tests : V5a (règle pure + contrôle positif), V5b (port fermé : injection non écrasée ; CoutsServis → CoutsNonServis ; `DerniereErreur` / `PhraseDuRefus` / code inchangés), V5c (contre la pile : `CoutsNonServis` aujourd'hui — 404 —, `CoutsServis` COMPLET 3 + 3 lignes le jour où c'est servi). V5c est inerte côté « servi » tant que BACK-1 n'est pas sur la pile.
-7. `RechargerChaine` : aucun `yield break` ajouté entre la lecture des coûts et celle du graphe (comportement d'avant conservé : le graphe est lu même si un test a rendu pendant l'attente).
+7. [REVUE ⊥ 1 m3 — retirée] `RechargerChaine` porte de nouveau `if (renduExpliciteDemande) yield break;` après `RelireLesCouts` (patron du reste du fichier).
 8. D4 ouvre aussi la feuille d'entretien AVEC bandes (les trois mots de bande ne sont demandés que si une bande est servie) ; B1 lit désormais ses coûts par `LireCouts` sur un corps à trois lignes de reconstruction (`MODERATE_RESTRUCTURE` lue, jamais demandée) au lieu de `CoutsDeTest.Servi`.
 9. `dettes-client1.md` : TD-1046/1047/1048 — le constat est réécrit (le « nom de la clé est inconnu » et le « le back dit state_conflict » étaient faux au contrat @87820327), statut « code client prêt (branche lot/client1-couts-30-v15-2026-11-11), en attente du service sur la pile », OUVERTES ; la mention « accueil.jeton… servi » de TD-1048 est corrigée. TD-1080 et TD-1049 inchangées.
 10. Le repli du coût absent passe de `Gabarit("appro.cout.on_ne_sait_pas_encore_combien", …)` à `De("appro", "cout", "On ne sait pas encore combien.")` (même clé, spec : « entrée `De` »).
+11. [REVUE ⊥ 1 m2 — laissée en l'état, constat] `ObjetsDuTableau` balaie le corps entier (pas borné à `payload.data`) : même laxité que `LireGraphe` d'avant le lot, non régressif ; le back n'émet aucun `maintenance`/`rebuild` hors de `payload.data`.
+12. [REVUE ⊥ 1 m1] G-V1b exerce la branche `doubles` : `cost_cents`, `duration_band` et `mode` répétés dans UNE même ligne.
+
+$ python3 -I /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/ec7de204-77d1-4bd9-850b-01167f7ca062/scratchpad/vectors.py
+OK    V1a contrat lisible
+OK    V1a quick_patch centimes=5000
+OK    V1a quick_patch bande=brief
+OK    V1a structural_reinforce centimes=30000
+OK    V1a structural_reinforce bande=extended
+OK    V1a reroute_bypass centimes=5000
+OK    V1a reroute_bypass bande=immediate
+OK    V1a MINIMAL_REROUTE centimes=10000
+OK    V1a MINIMAL_REROUTE bande=extended
+OK    V1a MODERATE_RESTRUCTURE centimes=40000
+OK    V1a MODERATE_RESTRUCTURE bande=extended
+OK    V1a FULL_GEOMETRIC_RESET centimes=100000
+OK    V1a FULL_GEOMETRIC_RESET bande=extended
+OK    V1a INCONNU/None nuls
+OK    V1a CONTRÔLE cost_cents retiré => reroute_bypass non servi
+OK    V1a quick_patch reste servi
+OK    V1a bande de la ligne sans coût reste LUE
+OK    V1b cost_cents=5000.5 non servi
+OK    V1b cost_cents="5000" non servi
+OK    V1b cost_cents=null non servi
+OK    V1b cost_cents=1e3 non servi
+OK    V1b cost_cents=-5 non servi
+OK    V1b cost_cents=true non servi
+OK    V1b cost_cents=[5000] non servi
+OK    V1b cost_cents={"v":5000} non servi
+OK    V1b montant > int64 intact
+OK    V1b cost_cents de sous-objet / dans une chaîne ignoré
+OK    V1b mode sur deux lignes => ni coût ni bande
+OK    V1b voisins servis
+OK    V1b bandes hors union nulles
+OK    V1b coûts de ces lignes servis
+OK    V1b CONTRÔLE bande immediate lue
+OK    V1b ligne illisible ignorée : {"mode":"quick_patch" "cost_cents":1}
+OK    V1b ligne illisible ignorée : {"mode":"quick_patch","cost_cents":1 "duration_band":"brief"}
+OK    V1b ligne illisible ignorée : {,"mode":"quick_patch","cost_cents":1}
+OK    V1b ligne illisible ignorée : {"mode":"quick_patch","cost_cents":1,}
+OK    V1b ligne illisible ignorée : {"mode":"quick_patch",,"cost_cents":1}
+OK    V1b ligne illisible ignorée : {"mode":"quick_patch","cost_cents":1 2}
+ROUGE V1b ligne illisible ignorée : {"mode":"quick_patch","cost_cents":1  ({}, {})
+OK    V1b CONTRÔLE POSITIF blancs permis => lue
+OK    V1b vecteur d'origine (revue B1) : quick_patch null, reroute_bypass 5000
+OK    m1 cost_cents répété => non servi, bande servie
+OK    m1 duration_band répétée => coût servi, bande nulle
+OK    m1 mode répété => aucun mode servi par cette ligne ; voisin intact
+OK    V1b {"payload":{}} => null
+OK    V1b pas du json => null
+OK    V1b None => null
+OK    V1b data vide => non null, rien de servi
+OK    M1 reroute_bypass sans coût MAIS bande immediate => conséquence seule
+OK    M1 quick_patch (coût+bande) => « quelques minutes · … »
+OK    M1 CONTRÔLE POSITIF cost_cents servi => « tout de suite · … »
+OK    V1c un seul mode sans coût sur les 5
+OK    V2 quick_patch = 35000 (corps de test, aucun montant du contrat)
+OK    V2 structural_reinforce = 210000 (corps de test, aucun montant du contrat)
+OK    V2 reroute_bypass = 35000 (corps de test, aucun montant du contrat)
+OK    V2 MINIMAL_REROUTE = 70000 (corps de test, aucun montant du contrat)
+OK    V2 FULL_GEOMETRIC_RESET = 700000 (corps de test, aucun montant du contrat)
+OK    V2 MODERATE_RESTRUCTURE = 280000 (corps de test, aucun montant du contrat)
+OK    V3 brief/structural => quelques minutes · l’usure est effacée
+OK    V3 immediate/quick_patch => tout de suite · …
+OK    V3 bande absente => conséquence seule
+OK    V3 CONTRÔLE extended => plus longtemps · …
+OK    V3 brief/quick_patch
+OK    V3 reconstruction : conséquence seule malgré bandes lues
+OK    B1 MODERATE_RESTRUCTURE lue = 280000
+
+65 vecteurs · 64 OK · 1 ROUGE
+rc=1
+
+$ python3 -I /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/ec7de204-77d1-4bd9-850b-01167f7ca062/scratchpad/vectors.py
+OK    V1a contrat lisible
+OK    V1a quick_patch centimes=5000
+OK    V1a quick_patch bande=brief
+OK    V1a structural_reinforce centimes=30000
+OK    V1a structural_reinforce bande=extended
+OK    V1a reroute_bypass centimes=5000
+OK    V1a reroute_bypass bande=immediate
+OK    V1a MINIMAL_REROUTE centimes=10000
+OK    V1a MINIMAL_REROUTE bande=extended
+OK    V1a MODERATE_RESTRUCTURE centimes=40000
+OK    V1a MODERATE_RESTRUCTURE bande=extended
+OK    V1a FULL_GEOMETRIC_RESET centimes=100000
+OK    V1a FULL_GEOMETRIC_RESET bande=extended
+OK    V1a INCONNU/None nuls
+OK    V1a CONTRÔLE cost_cents retiré => reroute_bypass non servi
+OK    V1a quick_patch reste servi
+OK    V1a bande de la ligne sans coût reste LUE
+OK    V1b cost_cents=5000.5 non servi
+OK    V1b cost_cents="5000" non servi
+OK    V1b cost_cents=null non servi
+OK    V1b cost_cents=1e3 non servi
+OK    V1b cost_cents=-5 non servi
+OK    V1b cost_cents=true non servi
+OK    V1b cost_cents=[5000] non servi
+OK    V1b cost_cents={"v":5000} non servi
+OK    V1b montant > int64 intact
+OK    V1b cost_cents de sous-objet / dans une chaîne ignoré
+Traceback (most recent call last):
+  File "/tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/ec7de204-77d1-4bd9-850b-01167f7ca062/scratchpad/vectors.py", line 166, in <module>
+    ok("V1b corps tronqué => rien de servi (non null)", tr is not None and tr.centimes("quick_patch") is None)
+                                                        ^^
+NameError: name 'tr' is not defined. Did you mean: 'dtr'?
+rc=1
+
+$ python3 -I /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/ec7de204-77d1-4bd9-850b-01167f7ca062/scratchpad/vectors.py
+OK    V1a contrat lisible
+OK    V1a quick_patch centimes=5000
+OK    V1a quick_patch bande=brief
+OK    V1a structural_reinforce centimes=30000
+OK    V1a structural_reinforce bande=extended
+OK    V1a reroute_bypass centimes=5000
+OK    V1a reroute_bypass bande=immediate
+OK    V1a MINIMAL_REROUTE centimes=10000
+OK    V1a MINIMAL_REROUTE bande=extended
+OK    V1a MODERATE_RESTRUCTURE centimes=40000
+OK    V1a MODERATE_RESTRUCTURE bande=extended
+OK    V1a FULL_GEOMETRIC_RESET centimes=100000
+OK    V1a FULL_GEOMETRIC_RESET bande=extended
+OK    V1a INCONNU/None nuls
+OK    V1a CONTRÔLE cost_cents retiré => reroute_bypass non servi
+OK    V1a quick_patch reste servi
+OK    V1a bande de la ligne sans coût reste LUE
+OK    V1b cost_cents=5000.5 non servi
+OK    V1b cost_cents="5000" non servi
+OK    V1b cost_cents=null non servi
+OK    V1b cost_cents=1e3 non servi
+OK    V1b cost_cents=-5 non servi
+OK    V1b cost_cents=true non servi
+OK    V1b cost_cents=[5000] non servi
+OK    V1b cost_cents={"v":5000} non servi
+OK    V1b montant > int64 intact
+OK    V1b cost_cents de sous-objet / dans une chaîne ignoré
+OK    V1b mode sur deux lignes => ni coût ni bande
+OK    V1b voisins servis
+OK    V1b bandes hors union nulles
+OK    V1b coûts de ces lignes servis
+OK    V1b CONTRÔLE bande immediate lue
+OK    V1b ligne illisible ignorée : {"mode":"quick_patch" "cost_cents":1}
+OK    V1b ligne illisible ignorée : {"mode":"quick_patch","cost_cents":1 "duration_band":"brief"}
+OK    V1b ligne illisible ignorée : {,"mode":"quick_patch","cost_cents":1}
+OK    V1b ligne illisible ignorée : {"mode":"quick_patch","cost_cents":1,}
+OK    V1b ligne illisible ignorée : {"mode":"quick_patch",,"cost_cents":1}
+OK    V1b ligne illisible ignorée : {"mode":"quick_patch","cost_cents":1 2}
+OK    V1b corps tronqué => rien de servi (non null)
+OK    V1b CONTRÔLE POSITIF blancs permis => lue
+OK    V1b vecteur d'origine (revue B1) : quick_patch null, reroute_bypass 5000
+OK    m1 cost_cents répété => non servi, bande servie
+OK    m1 duration_band répétée => coût servi, bande nulle
+OK    m1 mode répété => aucun mode servi par cette ligne ; voisin intact
+OK    V1b {"payload":{}} => null
+OK    V1b pas du json => null
+OK    V1b None => null
+OK    V1b data vide => non null, rien de servi
+OK    M1 reroute_bypass sans coût MAIS bande immediate => conséquence seule
+OK    M1 quick_patch (coût+bande) => « quelques minutes · … »
+OK    M1 CONTRÔLE POSITIF cost_cents servi => « tout de suite · … »
+OK    V1c un seul mode sans coût sur les 5
+OK    V2 quick_patch = 35000 (corps de test, aucun montant du contrat)
+OK    V2 structural_reinforce = 210000 (corps de test, aucun montant du contrat)
+OK    V2 reroute_bypass = 35000 (corps de test, aucun montant du contrat)
+OK    V2 MINIMAL_REROUTE = 70000 (corps de test, aucun montant du contrat)
+OK    V2 FULL_GEOMETRIC_RESET = 700000 (corps de test, aucun montant du contrat)
+OK    V2 MODERATE_RESTRUCTURE = 280000 (corps de test, aucun montant du contrat)
+OK    V3 brief/structural => quelques minutes · l’usure est effacée
+OK    V3 immediate/quick_patch => tout de suite · …
+OK    V3 bande absente => conséquence seule
+OK    V3 CONTRÔLE extended => plus longtemps · …
+OK    V3 brief/quick_patch
+OK    V3 reconstruction : conséquence seule malgré bandes lues
+OK    B1 MODERATE_RESTRUCTURE lue = 280000
+
+65 vecteurs · 65 OK · 0 ROUGE
+rc=0
+
+# ══ TOUR 2 (revue ⊥ 1 : B1 M1 m1 m3 ; m2 laissée) ══
+
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts Operational.csproj Assets/Scripts/Operational/ChaineDAppro/ChaineDApproClient.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+Operational.csproj: 72 sources (+2 hors .csproj) · 292 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Scripts/Operational/ChaineDAppro/ChaineDApproClient.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+rc=0
+
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts Operational.csproj Assets/Scripts/Operational/ChaineDAppro/ChaineDApproDtos.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+Operational.csproj: 72 sources (+2 hors .csproj) · 292 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Scripts/Operational/ChaineDAppro/ChaineDApproDtos.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+rc=0
+
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts Operational.csproj Assets/Scripts/Operational/ChaineDAppro/ChaineDApproFeuille.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+Operational.csproj: 72 sources (+2 hors .csproj) · 292 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Scripts/Operational/ChaineDAppro/ChaineDApproFeuille.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+rc=0
+
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts Operational.csproj Assets/Scripts/Operational/ChaineDAppro/ChaineDApproGestes.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+Operational.csproj: 72 sources (+2 hors .csproj) · 292 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Scripts/Operational/ChaineDAppro/ChaineDApproGestes.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+rc=0
+
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts Operational.csproj Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+Operational.csproj: 72 sources (+2 hors .csproj) · 292 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+rc=0
+
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts --frais Operational --frais Economy --frais CityMap --frais CitySim --frais Shell CityMap.PlayMode.Tests.csproj Assets/Tests/PlayMode/ChaineDApproGestesPlayModeTests.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Operational.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Economy.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] CityMap.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] CitySim.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Shell.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+CityMap.PlayMode.Tests.csproj: 251 sources (+2 hors .csproj) · 281 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Tests/PlayMode/ChaineDApproGestesPlayModeTests.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+rc=0
+
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts --frais Operational --frais Economy --frais CityMap --frais CitySim --frais Shell CityMap.PlayMode.Tests.csproj Assets/Tests/PlayMode/ZeroRepliDesLocatairesPlayModeTests.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Operational.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Economy.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] CityMap.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] CitySim.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Shell.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+CityMap.PlayMode.Tests.csproj: 251 sources (+2 hors .csproj) · 281 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Tests/PlayMode/ZeroRepliDesLocatairesPlayModeTests.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+rc=0
+
+$ python3 Tools/chaines-joueur-classer.py --verifier
+127 motifs · 109 témoins de source · 0 écart(s) · population 1454
+rc=0
+
+$ python3 Tools/apparier-litteraux-aux-tokens.py --bilan
+palette : 75 tokens lus sur DesignTokens.asset
+621 littéraux actifs dans 40 fichiers · 0 à moins de 4 d'un token, dans 0 fichiers
+rc=0
+
+$ python3 Tools/juge-donnees/i18n/n3-ternaires-portage.py
+None écarts (mesuré, dette) : {}
+rc=0

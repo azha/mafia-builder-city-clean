@@ -25,7 +25,7 @@ le lot rend l'écran **juste le jour où c'est servi**, sans autre retouche.
    Repli de `consequence.contourner` : **U+00A0** devant « : » (aujourd'hui espace ordinaire). Apostrophes U+2019.
 5. **Sous-titre d'un mode d'ENTRETIEN** = `<mot de la bande servie> · <conséquence>` (séparateur du poseur, `poser-chaine-gestes.py:50-52`). Mot :
    `immediate`→`De("appro","etiquette","tout de suite")`, `brief`→`"quelques minutes"`, `extended`→`"plus longtemps"` (la bande n'entre jamais dans l'espace
-   i18n, §1.2). **Bande non servie ⇒ conséquence seule** (on ne devine pas une durée ; le mode est alors éteint de toute façon). Modes de RECONSTRUCTION :
+   i18n, §1.2). **Bande non servie ⇒ conséquence seule** (on ne devine pas une durée ; le mode est alors éteint de toute façon). **Coût non servi ⇒ conséquence seule aussi** (un mode éteint n'annonce pas de durée, même si sa bande est servie : la bande n'est dite que si le coût ET la bande de la ligne sont servis — décision CLIENT-1, revue ⊥ 1 M1). Modes de RECONSTRUCTION :
    conséquence seule, comme le cadre ratifié (la durée est dite par la phrase commune « Pendant les travaux… » ; `rebuild[].duration_band` est identique
    sur les 3 lignes par construction, il ne discrimine rien) — lue, non affichée.
 6. **`accueil.jeton.votre_grande_decision_du_jour` n'est PAS servie** (0 à back main 51cece7d et au cumul 74c5a0b0 ; le lot BACK-1 l'ajoute, contrat « 22 libres

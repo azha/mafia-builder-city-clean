@@ -317,6 +317,7 @@ namespace MafiaCleanCity.Operational
         {
             // ㉚ V15 : les coûts AVANT le graphe (la feuille les lit à l'ouverture), et relus avec lui après chaque geste
             yield return RelireLesCouts();
+            if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
             GetSupplyChainGraphResponseDto graphe = null;
             yield return client.GetSupplyChainGraph(token,
                 dto => graphe = dto,

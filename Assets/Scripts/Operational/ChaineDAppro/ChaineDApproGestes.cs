@@ -147,12 +147,13 @@ namespace MafiaCleanCity.Operational
             }
         }
 
-        /// <summary>Le sous-titre d'un mode : `<mot de la bande servie> · <conséquence>` pour un mode d'ENTRETIEN (`DitLaBande`), la conséquence SEULE sinon — et quand la bande n'est pas servie (le mode est alors éteint de toute façon).
+        /// <summary>Le sous-titre d'un mode : `<mot de la bande servie> · <conséquence>` pour un mode d'ENTRETIEN (`DitLaBande`) dont le COÛT et la BANDE sont servis ; la conséquence SEULE sinon — bande non servie, ou coût non servi
+        /// (un mode éteint n'annonce pas de durée : règle (3), on ne devine rien ; décision CLIENT-1, revue ⊥ 1 M1).
         /// La conséquence est LA valeur servie (`appro.consequence.<suffixe>`), ou son repli.</summary>
         public static string SousTitreDuMode(SpecDeGeste spec, ModeDeGeste mode, ICoutsParMode couts)
         {
             string consequence = Libelle.Gabarit(mode.CleConsequence, mode.RepliConsequence);
-            string mot = spec != null && spec.DitLaBande && couts != null ? MotDeLaBande(couts.BandeServie(mode.Id)) : null;
+            string mot = spec != null && spec.DitLaBande && couts != null && CentimesLisibles(couts, mode.Id) != null ? MotDeLaBande(couts.BandeServie(mode.Id)) : null;
             return string.IsNullOrEmpty(mot) ? consequence : mot + SeparateurDeBande + consequence;
         }
 

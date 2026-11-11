@@ -139,6 +139,7 @@ namespace MafiaCleanCity.Operational
 
         private static readonly Regex ValeurBooleenne = new Regex("\\G\\s*:\\s*(true|false)\\b");
         private static readonly Regex DeuxPoints = new Regex("\\G\\s*:\\s*");
+        private static readonly Regex LitteralNu = new Regex("^(-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?|true|false|null)$");
         private static readonly Regex EntierJson = new Regex("^(0|[1-9][0-9]*)$");
         private static readonly Regex PayloadData = new Regex("\"payload\"\\s*:\\s*\\{.*\"data\"\\s*:\\s*\\{", RegexOptions.Singleline);
 
@@ -187,15 +188,13 @@ namespace MafiaCleanCity.Operational
         /// · `cost_cents` absent, ou pas un ENTIER JSON non négatif (`5000.5`, `"5000"`, `1e3`, `null`) ⇒ ce mode n'a PAS de coût servi (et la feuille l'éteint) ;
         /// · un `mode` servi sur DEUX lignes (même tableau ou l'autre) ⇒ ce mode n'est PAS servi du tout : on ne choisit pas ; un champ répété dans une ligne ⇒ ce champ n'est pas servi ;
         /// · `duration_band` ∉ {immediate, brief, extended} (absent, autre mot) ⇒ pas de bande (`BandeServie` null) ; la bande ne se devine pas ;
-        /// · une ligne illisible est ignorée ; `MODERATE_RESTRUCTURE` est lue comme les autres et jamais demandée (la feuille n'a pas ce mode).
+        /// · une ligne illisible est ignorée — ANALYSE STRICTE : entre deux membres, exactement UNE virgule (blancs permis) ; virgule de tête, virgule finale, deux virgules de suite, membre sans virgule, littéral nu mal formé ⇒ illisible ; `MODERATE_RESTRUCTURE` est lue comme les autres et jamais demandée (la feuille n'a pas ce mode).
         /// Aucun montant, seuil ou bande n'est codé ici. Null si le corps n'a pas `payload.data` (ou est illisible). `static` : un test lui donne un corps brut, sans réseau.</summary>
         public static CoutsServis LireCouts(string corps)
         {
-            GetSupplyChainUpkeepCostsResponseDto dto = null;
-            try { dto = JsonUtility.FromJson<GetSupplyChainUpkeepCostsEnvelope>(corps ?? "")?.payload?.data; }
-            catch (Exception) { return null; }
-            // `JsonUtility` ne dit pas si `payload.data` était ABSENT ou vide : la présence de l'objet se lit aussi dans le corps brut
-            if (dto == null || !PayloadData.IsMatch(corps)) return null;
+            // la présence de `payload.data` se lit dans le corps BRUT : `JsonUtility` instancie les objets imbriqués absents, et son indulgence envers un corps mal formé n'est pas mesurée — ce sont les analyseurs
+            // stricts ci-dessous qui décident ligne par ligne
+            if (string.IsNullOrEmpty(corps) || !PayloadData.IsMatch(corps)) return null;
 
             var lignes = new List<(string mode, string centimes, string bande)>();
             var parMode = new Dictionary<string, int>();
@@ -229,19 +228,18 @@ namespace MafiaCleanCity.Operational
         }
 
         /// <summary>Les champs du PREMIER niveau de l'objet brut `objet` : nom → valeur brute (chaîne AVEC ses guillemets, nombre, littéral, sous-objet tel quel). `doubles` reçoit les noms vus deux fois (le premier est gardé).
-        /// Null si l'objet est mal formé.</summary>
+        /// Null si l'objet est mal formé : STRICT — chaque membre est suivi d'UNE virgule (puis d'un autre membre) ou de `}` ; jamais de virgule de tête, finale ou double, jamais deux membres sans virgule.</summary>
         private static Dictionary<string, string> ChampsAuPremierNiveau(string objet, HashSet<string> doubles)
         {
             var champs = new Dictionary<string, string>();
             int i = objet.IndexOf('{');
             if (i < 0) return null;
             i++;
+            while (i < objet.Length && char.IsWhiteSpace(objet[i])) i++;
+            if (i < objet.Length && objet[i] == '}') return champs;   // `{}`
             while (true)
             {
-                while (i < objet.Length && (char.IsWhiteSpace(objet[i]) || objet[i] == ',')) i++;
-                if (i >= objet.Length) return null;
-                if (objet[i] == '}') return champs;
-                if (objet[i] != '"') return null;
+                if (i >= objet.Length || objet[i] != '"') return null;   // aussi : virgule de tête, virgule finale (`,}`), deux virgules de suite
                 int fin = FinDeChaine(objet, i);
                 if (fin < 0) return null;
                 string nom = objet.Substring(i + 1, fin - i - 1);
@@ -251,8 +249,16 @@ namespace MafiaCleanCity.Operational
                 int finValeur = FinDeValeur(objet, debutValeur);
                 if (finValeur < 0) return null;
                 string brut = objet.Substring(debutValeur, finValeur - debutValeur).Trim();
+                if (brut.Length == 0) return null;
+                if (brut[0] != '"' && brut[0] != '{' && brut[0] != '[' && !LitteralNu.IsMatch(brut)) return null;   // un littéral nu est un nombre, `true`, `false` ou `null`
                 if (champs.ContainsKey(nom)) doubles.Add(nom); else champs[nom] = brut;
                 i = finValeur;
+                while (i < objet.Length && char.IsWhiteSpace(objet[i])) i++;
+                if (i >= objet.Length) return null;
+                if (objet[i] == '}') return champs;
+                if (objet[i] != ',') return null;   // deux membres sans virgule
+                i++;
+                while (i < objet.Length && char.IsWhiteSpace(objet[i])) i++;
             }
         }
 

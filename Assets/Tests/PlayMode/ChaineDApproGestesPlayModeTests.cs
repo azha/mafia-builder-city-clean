@@ -967,6 +967,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(sans.CentimesServis("reroute_bypass"), "CONTRÔLE POSITIF : `cost_cents` absent ⇒ ce mode n'est PAS servi (JsonUtility l'aurait lu 0)");
             Assert.IsFalse(ChaineDApproGestes.Actionnable(ChaineDApproGestes.Entretien.Modes[2], ChaineDApproGestes.CentimesLisibles(sans, "reroute_bypass"), true), "…donc éteint");
             Assert.AreEqual("5000", sans.CentimesServis("quick_patch"), "…et les autres modes restent servis");
+            Assert.AreEqual("immediate", sans.BandeServie("reroute_bypass"), "la bande de la ligne reste LUE (c'est `SousTitreDuMode` qui ne la dit pas sans coût : G-V1c)");
         }
 
         [Test]
@@ -999,9 +1000,36 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(bandes.BandeServie("quick_patch")); Assert.IsNull(bandes.BandeServie("structural_reinforce")); Assert.IsNull(bandes.BandeServie("MINIMAL_REROUTE"));
             Assert.AreEqual("5000", bandes.CentimesServis("quick_patch")); Assert.AreEqual("30000", bandes.CentimesServis("structural_reinforce"));
             Assert.AreEqual("immediate", bandes.BandeServie("reroute_bypass"), "CONTRÔLE POSITIF : une bande de l'union est lue");
-            // une ligne illisible est ignorée, les autres sont lues
-            CoutsServis abime = ChaineDApproClient.LireCouts("{\"payload\":{\"data\":{\"maintenance\":[{\"mode\":\"quick_patch\" \"cost_cents\":1},{\"mode\":\"reroute_bypass\",\"cost_cents\":5000,\"duration_band\":\"immediate\"}],\"rebuild\":[]}}}");
-            Assert.IsNull(abime.CentimesServis("quick_patch")); Assert.AreEqual("5000", abime.CentimesServis("reroute_bypass"));
+            // une ligne illisible est ignorée, les autres sont lues — ANALYSE STRICTE : entre deux membres, exactement UNE virgule (blancs permis)
+            string voisine = LigneDeCout("reroute_bypass", "5000", "immediate");
+            foreach (string abime in new[]
+            {
+                "{\"mode\":\"quick_patch\" \"cost_cents\":1}",                                           // deux membres SANS virgule
+                "{\"mode\":\"quick_patch\",\"cost_cents\":1 \"duration_band\":\"brief\"}",              // sans virgule, après un nombre
+                "{,\"mode\":\"quick_patch\",\"cost_cents\":1}",                                          // virgule de TÊTE
+                "{\"mode\":\"quick_patch\",\"cost_cents\":1,}",                                          // virgule FINALE
+                "{\"mode\":\"quick_patch\",,\"cost_cents\":1}",                                          // DEUX virgules de suite
+                "{\"mode\":\"quick_patch\",\"cost_cents\":1 2}",                                         // littéral nu mal formé
+            })
+            {
+                CoutsServis c = ChaineDApproClient.LireCouts(CorpsDeCouts(new[] { abime, voisine }, new string[0]));
+                Assert.IsNotNull(c, abime);
+                Assert.IsNull(c.CentimesServis("quick_patch"), "ligne illisible ⇒ ignorée : " + abime);
+                Assert.AreEqual("5000", c.CentimesServis("reroute_bypass"), "…et la ligne voisine est lue : " + abime);
+            }
+            // une ligne TRONQUÉE emporte son tableau (l'objet ne se referme jamais) : aucun coût servi, jamais un coût lu dans un corps qui n'en est pas un
+            CoutsServis tronque = ChaineDApproClient.LireCouts("{\"payload\":{\"data\":{\"maintenance\":[{\"mode\":\"quick_patch\",\"cost_cents\":1");
+            Assert.IsNull(tronque.CentimesServis("quick_patch"), "corps tronqué ⇒ rien de servi");
+            // CONTRÔLE POSITIF : la même ligne BIEN formée, avec des blancs partout autour des virgules et des deux-points, est lue
+            CoutsServis blancs = ChaineDApproClient.LireCouts(CorpsDeCouts(new[] { "{ \"mode\" : \"quick_patch\" ,\n \"cost_cents\" : 1 , \"duration_band\" : \"brief\" }", voisine }, new string[0]));
+            Assert.AreEqual("1", blancs.CentimesServis("quick_patch"), "CONTRÔLE POSITIF : une virgule et des blancs permis ⇒ lue"); Assert.AreEqual("brief", blancs.BandeServie("quick_patch"));
+            // un champ RÉPÉTÉ dans UNE MÊME ligne (≠ un mode sur deux lignes) : CE champ n'est pas servi, les autres le restent
+            CoutsServis cDouble = ChaineDApproClient.LireCouts(CorpsDeCouts(new[] { "{\"mode\":\"quick_patch\",\"cost_cents\":1,\"cost_cents\":2,\"duration_band\":\"brief\"}", voisine }, new string[0]));
+            Assert.IsNull(cDouble.CentimesServis("quick_patch"), "`cost_cents` répété dans la ligne ⇒ non servi"); Assert.AreEqual("brief", cDouble.BandeServie("quick_patch"), "…la bande, non répétée, l'est");
+            CoutsServis bDouble = ChaineDApproClient.LireCouts(CorpsDeCouts(new[] { "{\"mode\":\"quick_patch\",\"cost_cents\":5000,\"duration_band\":\"brief\",\"duration_band\":\"extended\"}", voisine }, new string[0]));
+            Assert.AreEqual("5000", bDouble.CentimesServis("quick_patch")); Assert.IsNull(bDouble.BandeServie("quick_patch"), "`duration_band` répétée dans la ligne ⇒ pas de bande");
+            CoutsServis mDouble = ChaineDApproClient.LireCouts(CorpsDeCouts(new[] { "{\"mode\":\"quick_patch\",\"mode\":\"reroute_bypass\",\"cost_cents\":7}", voisine }, new string[0]));
+            Assert.IsNull(mDouble.CentimesServis("quick_patch"), "`mode` répété dans la ligne ⇒ la ligne ne sert aucun mode"); Assert.AreEqual("5000", mDouble.CentimesServis("reroute_bypass"), "…et ne prend pas la place de la ligne voisine");
             // un corps sans `payload.data`, vide ou illisible ⇒ null (comme `LireGraphe`), jamais une exception
             Assert.IsNull(ChaineDApproClient.LireCouts("{\"payload\":{}}"));
             Assert.IsNull(ChaineDApproClient.LireCouts("pas du json"));
@@ -1029,6 +1057,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsTrue(ecran.Feuille.BoutonDuMode("quick_patch").interactable); Assert.IsTrue(ecran.Feuille.BoutonDuMode("structural_reinforce").interactable);
             Assert.AreEqual(absent, TexteDe(LigneDuMode(ecran.Feuille, "reroute_bypass"), "Cout"), "…et dit « On ne sait pas encore combien. »");
             Assert.AreEqual(1, Regex.Matches(string.Join("|", ecran.Feuille.Textes), Regex.Escape(absent)).Count, "UN seul mode est sans coût");
+            // M1 (revue ⊥ 1) : un mode dont le coût n'est PAS servi n'annonce pas de durée — sa bande (`immediate`, servie) n'est PAS dite : la conséquence SEULE
+            Assert.AreEqual("la liaison se repose : plus rien n’y passe tant qu’elle n’a pas récupéré", TexteDe(LigneDuMode(ecran.Feuille, "reroute_bypass"), "Sous"), "coût non servi (bande servie) ⇒ conséquence seule, ni « tout de suite » ni séparateur");
+            Assert.AreEqual("quelques minutes" + Sep + "l’usure retombe, sans disparaître", TexteDe(LigneDuMode(ecran.Feuille, "quick_patch"), "Sous"), "…alors qu'un mode dont le coût ET la bande sont servis la dit");
 
             // CONTRÔLE POSITIF : le corps COMPLET ⇒ les trois modes agissent, plus aucun « On ne sait pas encore combien. »
             ecran.Couts = ChaineDApproClient.LireCouts(CorpsDuContrat);
@@ -1036,6 +1067,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
             foreach (ModeDeGeste m in ChaineDApproGestes.Entretien.Modes) Assert.IsTrue(ecran.Feuille.BoutonDuMode(m.Id).interactable, "CONTRÔLE POSITIF : " + m.Id + " servi ⇒ actionnable (jeton libre)");
             CollectionAssert.DoesNotContain(ecran.Feuille.Textes, absent, "CONTRÔLE POSITIF : le corps complet ne laisse aucun mode sans coût");
+            Assert.AreEqual("tout de suite" + Sep + "la liaison se repose : plus rien n’y passe tant qu’elle n’a pas récupéré", TexteDe(LigneDuMode(ecran.Feuille, "reroute_bypass"), "Sous"), "CONTRÔLE POSITIF (M1) : `cost_cents` servi ⇒ la bande `immediate` est dite — la garde ci-dessus pouvait rougir");
             ecran.OuvrirLaFeuillePourTest(ChaineDApproGestes.Reconstruction, CibleRoute());
             yield return null;
             foreach (ModeDeGeste m in ChaineDApproGestes.Reconstruction.Modes) Assert.IsTrue(ecran.Feuille.BoutonDuMode(m.Id).interactable, "CONTRÔLE POSITIF : " + m.Id + " servi ⇒ actionnable");
