@@ -102,6 +102,9 @@ namespace MafiaCleanCity.Tests
                                              SiteMembre = inerte != null ? inerte.SiteMembre : "", SiteLigne = inerte != null ? inerte.SiteLigne : 0 });
                     continue;
                 }
+                // la feuille qui défile : le joueur ferait défiler jusqu'au bouton (ruling f2 11/11) ; le défilement change l'image, le repos partagé
+                // n'est plus celui de l'état où l'on appuie. Un bouton déjà entièrement visible ne déclenche rien.
+                if (RetourReleveHelper.AmenerDansLeCadre(b, canvas, largeur, hauteur)) reposPris = false;
                 if (ambiance || !reposPris)
                 {
                     repos = PhotographierRepos(canvas, largeur, hauteur, regie);
@@ -190,6 +193,11 @@ namespace MafiaCleanCity.Tests
                 SiteMembre = ra != null ? ra.SiteMembre : "", SiteLigne = ra != null ? ra.SiteLigne : 0,
             };
 
+            // pour le journal du détail des rouges : la cible (celle de la piste créée, à défaut celle que `Decider` désignait) et la zone mesurée
+            Transform cibleVue = decision.Melange != null ? decision.Melange.transform : (decision.CibleVoile != null ? (Transform)decision.CibleVoile : null);
+            RectInt zoneVue = default;
+            bool zoneMesuree = false;
+
             if (appui.Count == 1)
             {
                 Entree entree = apres[appui[0]].Entree;
@@ -200,6 +208,9 @@ namespace MafiaCleanCity.Tests
                 Avancer(regie);
                 Color32[] sousLeDoigt = RetourReleveHelper.Photographier(canvas, largeur, hauteur);
                 RectInt zone = cible != null ? RetourReleveHelper.RectPixels(cible, canvas, largeur, hauteur) : default;
+                if (cible != null) cibleVue = cible;
+                zoneVue = zone;
+                zoneMesuree = true;
                 if (cible == null || zone.width <= 0 || zone.height <= 0)
                 {
                     ligne.Pixels = 0;
@@ -230,6 +241,9 @@ namespace MafiaCleanCity.Tests
                 }
             }
 
+            // le détail d'un rouge, pris SOUS LE DOIGT (couleurs écrites par la piste comprises) : aucun changement de comportement
+            if (ligne.Verdict != null) JournaliserDetail(ligne, b, cibleVue, zoneMesuree, zoneVue);
+
             // Detacher (Relacher) + Tick APRÈS chaque bouton : sans quoi les premiers cas 1-2 remplissent le plafond `Melange` (design §4)
             RetourReleveHelper.Relacher(b.gameObject);
             if (!handle.EstNul) regie.Detacher(handle);
@@ -241,6 +255,59 @@ namespace MafiaCleanCity.Tests
             }
             Avancer(regie);
             return ligne;
+        }
+
+        // ------------------------------------------------------------------------------ le détail d'un rouge
+        private const int DetailGraphicsMax = 30;
+
+        /// <summary>Produit des `CanvasGroup.alpha` de `t` et de ses ancêtres, en s'arrêtant au groupe qui pose `ignoreParentGroups` (le même calcul
+        /// que `Retour.AlphaCumule`, privé : recalculé ici, jamais appelé).</summary>
+        private static float AlphaCumule(Transform t)
+        {
+            float a = 1f;
+            for (Transform x = t; x != null; x = x.parent)
+            {
+                if (!x.TryGetComponent(out CanvasGroup cg)) continue;
+                a *= cg.alpha;
+                if (cg.ignoreParentGroups) break;
+            }
+            return a;
+        }
+
+        /// <summary>`[GP-DETAIL]` : une ligne pour un rouge — le cas, la cible, les pixels, la zone, et chaque `Graphic` du bouton puis de la cible
+        /// (nom, type, couleur, activé, taille du rect, alpha cumulé des groupes, `RendSurface`). Un `Graphic` déjà listé n'est pas répété.</summary>
+        private static void JournaliserDetail(LigneGp ligne, Button b, Transform cible, bool zoneMesuree, RectInt zone)
+        {
+            var sb = new StringBuilder();
+            sb.Append("[GP-DETAIL] ").Append(ligne.Chemin).Append(" cas=").Append((int)ligne.Cas).Append('(').Append(ligne.Cas).Append(") cible=")
+              .Append(ligne.NomCible).Append(" id=").Append(ligne.Id ?? "-").Append(" handleNul=").Append(ligne.HandleNul)
+              .Append(" pixels=").Append(ligne.Pixels)
+              .Append(" zone=").Append(zoneMesuree ? zone.width + "x" + zone.height + "@" + zone.x + "," + zone.y : "non mesurée")
+              .Append(" peint(bouton)=").Append(Retour.Peint(b.transform))
+              .Append(" peint(cible)=").Append(cible != null ? Retour.Peint(cible).ToString() : "-");
+            var vus = new List<Graphic>();
+            AjouterGraphics(sb, " | bouton", b.transform, vus);
+            if (cible != null) AjouterGraphics(sb, " | cible", cible, vus);
+            Debug.Log(sb.ToString());
+        }
+
+        private static void AjouterGraphics(StringBuilder sb, string etiquette, Transform racine, List<Graphic> vus)
+        {
+            Graphic[] gs = racine.GetComponentsInChildren<Graphic>(true);
+            sb.Append(etiquette).Append(" [").Append(gs.Length).Append(" graphic]");
+            int ecrits = 0;
+            for (int i = 0; i < gs.Length; i++)
+            {
+                if (vus.Contains(gs[i])) continue;
+                vus.Add(gs[i]);
+                if (ecrits++ >= DetailGraphicsMax) { sb.Append(" …"); break; }
+                Rect rc = gs[i].rectTransform.rect;
+                sb.Append(" {").Append(gs[i].name).Append('<').Append(gs[i].GetType().Name).Append("> col=#").Append(ColorUtility.ToHtmlStringRGBA(gs[i].color))
+                  .Append(" actif=").Append(gs[i].enabled && gs[i].gameObject.activeInHierarchy)
+                  .Append(" rect=").Append(Mathf.RoundToInt(rc.width)).Append('x').Append(Mathf.RoundToInt(rc.height))
+                  .Append(" alphaGroupes=").Append(AlphaCumule(gs[i].transform).ToString("0.###", System.Globalization.CultureInfo.InvariantCulture))
+                  .Append(" rendSurface=").Append(Retour.RendSurface(gs[i])).Append('}');
+            }
         }
 
         private static int CompterEffet(Color32[] repos, Color32[] sousLeDoigt, bool[] instable, int largeur, RectInt zone)

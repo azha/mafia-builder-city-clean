@@ -156,6 +156,63 @@ namespace MafiaCleanCity.Tests
             }
         }
 
+        /// <summary>Tolérance (unités locales du viewport) de « entièrement visible » : un rect qui déborde de moins d'un demi-pixel n'est pas défilé.</summary>
+        private const float EpsilonVisible = 0.5f;
+
+        /// <summary>Le relevé FAIT DÉFILER (ruling f2 11/11 : le joueur ferait défiler aussi). Pour chaque `ScrollRect` ancêtre de `b` (le plus
+        /// proche d'abord) dont le viewport ne montre pas tout le rect du bouton : le centre du bouton est amené au centre du viewport, par la
+        /// position normalisée CLAMPÉE à 0..1 (jamais hors bornes, donc sans élasticité), sur l'axe vertical et/ou horizontal que le `ScrollRect`
+        /// permet et que le content autorise. Tout se passe dans le MÊME cadrage que la photo (le canvas est à la taille de l'image : en overlay,
+        /// la taille de l'écran donnerait une autre géométrie). Rend vrai si le content a bougé : les photos de repos prises avant ne valent plus.
+        /// Un bouton sans `ScrollRect` ancêtre, ou déjà entièrement visible, ne provoque aucun défilement (et le premier cas ne rend rien).</summary>
+        public static bool AmenerDansLeCadre(Button b, Canvas canvas, int largeur, int hauteur)
+        {
+            if (b == null) throw new ArgumentNullException(nameof(b));
+            if (canvas == null) throw new ArgumentNullException(nameof(canvas));
+            var cible = b.transform as RectTransform;
+            if (cible == null || b.GetComponentInParent<ScrollRect>() == null) return false;
+            bool bouge = false;
+            using (new Cadrage(canvas, largeur, hauteur))
+            {
+                Canvas.ForceUpdateCanvases();
+                for (ScrollRect sr = b.GetComponentInParent<ScrollRect>(); sr != null;
+                     sr = sr.transform.parent != null ? sr.transform.parent.GetComponentInParent<ScrollRect>() : null)
+                    bouge |= CentrerDansLeViewport(sr, cible);
+                Canvas.ForceUpdateCanvases();
+            }
+            return bouge;
+        }
+
+        private static bool CentrerDansLeViewport(ScrollRect sr, RectTransform cible)
+        {
+            RectTransform viewport = sr.viewport != null ? sr.viewport : (RectTransform)sr.transform;
+            RectTransform content = sr.content;
+            if (content == null) return false;
+            Vector2 avant = content.anchoredPosition;
+
+            var coins = new Vector3[4];
+            cible.GetWorldCorners(coins);
+            float xMin = float.MaxValue, yMin = float.MaxValue, xMax = float.MinValue, yMax = float.MinValue;
+            for (int i = 0; i < coins.Length; i++)
+            {
+                Vector3 p = viewport.InverseTransformPoint(coins[i]);
+                xMin = Mathf.Min(xMin, p.x); xMax = Mathf.Max(xMax, p.x);
+                yMin = Mathf.Min(yMin, p.y); yMax = Mathf.Max(yMax, p.y);
+            }
+            Rect vue = viewport.rect;
+            if (xMin >= vue.xMin - EpsilonVisible && xMax <= vue.xMax + EpsilonVisible
+                && yMin >= vue.yMin - EpsilonVisible && yMax <= vue.yMax + EpsilonVisible) return false;
+
+            Bounds corps = RectTransformUtility.CalculateRelativeRectTransformBounds(viewport, content);
+            Vector2 ecart = new Vector2((xMin + xMax) * 0.5f, (yMin + yMax) * 0.5f) - vue.center;   // du centre du viewport au centre du bouton
+            float cacheV = corps.size.y - vue.height, cacheH = corps.size.x - vue.width;            // ce que le content cache, par axe
+            sr.StopMovement();
+            // 1 = haut / 0 = gauche : un bouton sous le centre (ecart.y < 0) fait descendre la position, un bouton à droite (ecart.x > 0) la fait monter
+            if (sr.vertical && cacheV > 0f) sr.verticalNormalizedPosition = Mathf.Clamp01(sr.verticalNormalizedPosition + ecart.y / cacheV);
+            if (sr.horizontal && cacheH > 0f) sr.horizontalNormalizedPosition = Mathf.Clamp01(sr.horizontalNormalizedPosition + ecart.x / cacheH);
+            return (content.anchoredPosition - avant).sqrMagnitude > 1e-6f;
+        }
+
         /// <summary>Le nombre de pixels de `zone` dont le plus grand écart de canal R/G/B (octets) entre `a` et `b` atteint `seuilCanal`.</summary>
         public static int CompterEcart(Color32[] a, Color32[] b, int largeur, RectInt zone, int seuilCanal)
         {
