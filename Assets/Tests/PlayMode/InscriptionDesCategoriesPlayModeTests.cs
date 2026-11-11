@@ -35,6 +35,7 @@ namespace MafiaCleanCity.Tests
         {
             { "SondeFuiteCatalogue", "contrôle positif de la garde de sortie « catalogue » (TD-576) : laisse le catalogue chargé, exprès" },
             { "SondeGelVolontaire", "contrôle positif du chien de garde de gel : gèle le fil principal sous MAFIA_SONDE_GEL=1" },
+            { "SpikeE0", "spike, pas une garde : E0 MESURE les inconnues d'uGUI (batches, SetPass, GC, reconstruction de canvas), il ne juge pas ; lancé SEUL au créneau (MAFIA_CI_CATEGORIES=SpikeE0), sortie en TSV" },
         };
 
         /// <summary>DETTE DATÉE (26/09) : catégories FONCTIONNELLES portées, jamais inscrites. Chacune se lance seule au prochain créneau
