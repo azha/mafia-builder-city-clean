@@ -80,7 +80,7 @@ namespace MafiaCleanCity.CityMap
     [Serializable] public class WhisperEnvelope { public WhisperPayload payload; }
     [Serializable] public class WhisperPayload { public WhisperDto data; }
 
-    // inspection  GET /v1/city/district/:id/inspection { district, queue_load, dispatcher_regime, ... }  (404 until 12h tick)
+    // inspection  GET /v1/city/district/:id/inspection { district, queue_load, dispatcher_regime, ... }  (back servi au 2026-11-11 : 404 until 12h tick ; back TD-879 de BACK-2 : 200 queue_load EMPTY)
     [Serializable] public class InspectionDto { public string district; public string queue_load; public string dispatcher_regime; }
     [Serializable] public class InspectionEnvelope { public InspectionPayload payload; }
     [Serializable] public class InspectionPayload { public InspectionDto data; }
