@@ -180,7 +180,7 @@ namespace MafiaCleanCity.Mouvements
                 float dureeMs = e.Mouvement.DureeTotaleS * 1000f;
                 if (e.Bloquante && dureeMs > UiTimingTunables.AnimMaxBlockMs)
                     v.Add("G8 " + e.Id + " : bloquante et " + (float.IsInfinity(dureeMs) ? "infinie" : dureeMs + " ms") + " > " + UiTimingTunables.AnimMaxBlockMs + " ms");
-                if ((e.Id == "retour.appui" || e.Id == "retour.appui-voile") && dureeMs > UiTimingTunables.AnimMaxBlockMs)
+                if ((e.Id == CatalogueHud.IdRetourAppui || e.Id == CatalogueHud.IdRetourAppuiVoile) && dureeMs > UiTimingTunables.AnimMaxBlockMs)
                     v.Add("G8 " + e.Id + " : un retour d'appui dure " + dureeMs + " ms > " + UiTimingTunables.AnimMaxBlockMs + " ms");
             }
             return v;

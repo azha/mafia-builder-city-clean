@@ -145,10 +145,46 @@ namespace MafiaCleanCity.Mouvements
             "L'enseigne d'un bâtiment dont l'entretien est en retard grésille : le tube fatigue, la tension flanche, et personne n'est encore venu le réparer.",
             AmbianceCreuxScintillement, pistes: 1);
 
-        /// <summary>Les entrées du HUD, dans l'ordre de déclaration : le chrome, puis les boucles ambiantes du ①.</summary>
+        // ---- le retour d'appui (design retour d'appui v5, E-R2) : DEUX entrées, SANS champ public à leur nom. Elles ne se prennent
+        // que par `Id` — la régie les pose elle-même (`AttacherRetourAppui` / `AttacherVoileDAppui`, E-R3), aucun site d'écran ne les
+        // nomme (G14) ; un champ public inviterait un `Attacher(CatalogueHud.RetourAppui, …)` qui contourne la règle de classement.
+        // Les amplitudes sont des décisions DU CLIENT (aucun oracle CSS : « aucune animation d'appui écrite », inventaire-animations.md:81).
+        // L'appui MONTE en 90 ms puis TIENT ; le relâchement est la restitution de `Detacher` (immédiate, dette 32), donc pas de retour animé.
+        public const string IdRetourAppui = "retour.appui";
+        public const string IdRetourAppuiVoile = "retour.appui-voile";
+        private const float RetourAppuiDureeS = 0.09f, RetourAppuiK = 0.85f, RetourAppuiVoileAlpha = 0.80f;
+
+        private static readonly Entree RetourAppui = new Entree(
+            IdRetourAppui, TousLesEcrans, "PROPOSE: retour d'appui v5 (design-retour-appui-v5.md §2, P4)",
+            "Un bouton pressé s'assombrit sous le doigt, comme une touche qu'on enfonce : la surface qui le peint passe à 85 % de sa teinte en quatre-vingt-dix millisecondes et y reste tant que le doigt reste.",
+            Genre.Retour,
+            new MouvementDefini("appui", Genre.Retour, RetourAppuiDureeS,
+                new[] { new Canal(Propriete.Melange, Mode.Absolu, Progres(Aisance.EaseOut)) },
+                Iteration.Fois(1),
+                couleurA: CouleurSpec.Cible, couleurB: CouleurSpec.CibleFois(RetourAppuiK)),
+            pistes: 1, bloquante: false, hote: Entree.HoteClient);
+
+        private static readonly Entree RetourAppuiVoile = new Entree(
+            IdRetourAppuiVoile, TousLesEcrans, "PROPOSE: retour d'appui v5 (design-retour-appui-v5.md §3.1, cas 3-4)",
+            "Un bouton dont la matière ne se laisse pas assombrir s'estompe à 80 % sous le doigt : même geste, par la transparence, tant que le doigt reste.",
+            Genre.Retour,
+            new MouvementDefini("appui.voile", Genre.Retour, RetourAppuiDureeS,
+                new[]
+                {
+                    new Canal(Propriete.Alpha, Mode.Multiplicatif, new[]
+                    {
+                        new ImageCle(0f, 1f, Aisance.EaseOut),
+                        new ImageCle(1f, RetourAppuiVoileAlpha, Aisance.Lineaire),
+                    }),
+                },
+                Iteration.Fois(1)),   // PAS de `PoseDeReposS` (GD1) : sous `Reduit` un voile gelé à mi-course ne serait pas rendu
+            pistes: 1, bloquante: false, hote: Entree.HoteClient);
+
+        /// <summary>Les entrées du HUD, dans l'ordre de déclaration : le chrome, les boucles ambiantes du ①, puis les deux retours d'appui.</summary>
         public static readonly IReadOnlyList<Entree> Entrees = new List<Entree>
         {
             Pouls, Tremble, Gyrophare, FiletVirage, AnneauVirage, AiguilleBalayage, BandeauSortie, Neon, Fumee, Scintillement,
+            RetourAppui, RetourAppuiVoile,
         }.AsReadOnly();
 
         /// <summary>La courbe de progrès d'une `Transitionner` : 0 → 1, l'aisance sur le segment.</summary>
