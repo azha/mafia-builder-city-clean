@@ -1503,5 +1503,126 @@ namespace MafiaCleanCity.Operational.Tests
         [UnityTest]
         public IEnumerator GestesE2_Rebuild_UneRouteInexistante_EstRefusee_LaFeuilleResteOuverte() =>
             UnGesteSurUneCibleInexistante(ChaineDApproGestes.Reconstruction, "MINIMAL_REROUTE");
+
+        // ═══ GP — le retour d'appui des boutons de ㉚ (design retour d'appui v5 §4 ; ordre f2 du 12/11) ═══════════════
+        // Les trois sites de ㉚ ramenés au guichet `Retour.NouveauBouton` (GS1, intégration du 12/11) : `PoserLeGeste` (ligne de liaison / de route),
+        // `ConstruireUnMode` (ligne d'un mode de la feuille) et `ConstruireAnnuler`. ÉCRITS SANS ÊTRE JOUÉS : seule la compilation est prouvée.
+        // Catégorie `RetourAppui` EN PLUS d'`EcranAppro` : la couverture des sites est CUMULÉE sur le run de GP (`PublicationGp`).
+        // ⚠️ À lire au créneau, sans préjuger : « Annuler » a un fond TRANSPARENT (la surface du mélange ne peint rien) et un mode éteint est
+        // non pressable — GP dira si le premier est un rouge « sous le plancher » ; le second ne doit porter AUCUN effet.
+        private const int LargeurGp = 1080, HauteurGp = 1920;
+        private bool regieGpPrise;
+
+        /// <summary>La régie de test, prise AVANT le montage (les contrôleurs s'attachent à la régie courante). Rendue par `RendreLaRegieGp`.</summary>
+        private MafiaCleanCity.Mouvements.Regie PrendreLaRegieGp()
+        {
+            MafiaCleanCity.Mouvements.RegieMouvement.Oublier();
+            regieGpPrise = true;
+            return MafiaCleanCity.Mouvements.RegieMouvement.PourTest();
+        }
+
+        [TearDown]
+        public void RendreLaRegieGp()
+        {
+            if (!regieGpPrise) return;
+            MafiaCleanCity.Mouvements.RegieMouvement.Oublier();   // la régie est un global statique (TD-576) : rendue même si le test a rougi
+            regieGpPrise = false;
+        }
+
+        /// <summary>Publie le relevé, puis asserte l'anti-vacuité (N pressables LU du relevé) et l'absence de rouge — le verdict de `RetourGpLotAPlayModeTests`.</summary>
+        internal static void VerdictGp(string scenario, List<LigneGp> lignes)
+        {
+            PublicationGp.Publier(lignes);
+            int n = RetourGpReleve.Pressables(lignes);
+            Debug.Log("[GP] " + scenario + " : N pressables relevés = " + n + " sur " + lignes.Count + " boutons montés");
+            Assert.Greater(n, 0, scenario + " — anti-vacuité : " + n + " pressable relevé sur " + lignes.Count + " boutons montés");
+            List<string> rouges = RetourGpReleve.Rouges(lignes);
+            Assert.IsEmpty(rouges, scenario + " — " + rouges.Count + " rouge(s) sur " + n + " pressables :\n" + string.Join("\n", rouges));
+        }
+
+        /// <summary>Le site (membre du `Retour.NouveauBouton`) a été relevé sur au moins un bouton PRESSABLE : sinon GP ne le compte pas « couvert ».</summary>
+        internal static void SiteCouvert(List<LigneGp> lignes, string membre, string scenario)
+        {
+            Assert.IsTrue(lignes.Exists(l => l.Pressable && l.SiteMembre == membre && l.SiteLigne > 0),
+                scenario + " — aucun bouton pressable né de `" + membre + "` dans le relevé : le site resterait « non couvert »");
+        }
+
+        private static Canvas CanvasDe(GameObject racine)
+        {
+            Canvas c = racine.GetComponentInParent<Canvas>();
+            Assert.IsNotNull(c, "précondition GP : " + racine.name + " n'a pas de Canvas parent");
+            return c.rootCanvas;
+        }
+
+        /// <summary>Le panneau de la feuille ouverte : le parent des lignes de mode ET d'« Annuler » (le relevé se fait sur la feuille seule :
+        /// sous le voile, les lignes de la liste sont recouvertes PAR CONSTRUCTION, ce n'est pas l'état qu'on relève ici).</summary>
+        private static GameObject PanneauDeLaFeuille(ChaineDApproScreenController ecran, SpecDeGeste spec)
+        {
+            Assert.IsTrue(ecran.Feuille != null && ecran.Feuille.EstOuverte, "précondition GP : la feuille est ouverte");
+            Button mode = ecran.Feuille.BoutonDuMode(spec.Modes[0].Id);
+            Assert.IsNotNull(mode, "précondition GP : la feuille porte son premier mode");
+            return mode.transform.parent.gameObject;
+        }
+
+        [UnityTest, Category("RetourAppui")]
+        public IEnumerator GP_Appro_Liste_LesLignesDeLiaisonEtDeRoute()
+        {
+            MafiaCleanCity.Mouvements.Regie regie = PrendreLaRegieGp();
+            Servir();
+            Monte();
+            yield return null;
+            GameObject racine = RacineEcran();
+            List<LigneGp> lignes = RetourGpReleve.Relever("Appro", "liste", racine, CanvasDe(racine), regie, LargeurGp, HauteurGp);
+            VerdictGp("Appro/liste", lignes);
+            SiteCouvert(lignes, "PoserLeGeste", "Appro/liste");
+            // la route en reconstruction (r1) est éteinte : elle est montée, relevée, et NON pressable (cible inerte)
+            Assert.IsTrue(lignes.Exists(l => !l.Pressable && l.SiteMembre == "PoserLeGeste"), "Appro/liste — la ligne de la route en reconstruction est relevée non pressable");
+        }
+
+        [UnityTest, Category("RetourAppui")]
+        public IEnumerator GP_Appro_Feuille_ModesAllumes_EtAnnuler()
+        {
+            MafiaCleanCity.Mouvements.Regie regie = PrendreLaRegieGp();
+            Servir();
+            ChaineDApproScreenController ecran = Monte();
+            yield return null;
+            ecran.Couts = new CoutsDeTest().ToutServi("12300");   // coûts servis (injectés) ⇒ modes actionnables, jeton libre
+            foreach (SpecDeGeste spec in new[] { ChaineDApproGestes.Entretien, ChaineDApproGestes.Reconstruction })
+            {
+                ecran.OuvrirLaFeuillePourTest(spec, spec == ChaineDApproGestes.Entretien ? CibleLiaison() : CibleRoute());
+                yield return null;
+                foreach (ModeDeGeste m in spec.Modes)
+                    Assert.IsTrue(ecran.Feuille.BoutonDuMode(m.Id).interactable, "précondition GP : " + m.Id + " est allumé");
+                GameObject panneau = PanneauDeLaFeuille(ecran, spec);
+                string scenario = "Appro/feuille allumée/" + spec.Modes[0].Id;
+                List<LigneGp> lignes = RetourGpReleve.Relever("Appro", "feuille allumée/" + spec.Modes[0].Id, panneau, CanvasDe(panneau), regie, LargeurGp, HauteurGp);
+                VerdictGp(scenario, lignes);
+                SiteCouvert(lignes, "ConstruireUnMode", scenario);
+                SiteCouvert(lignes, "ConstruireAnnuler", scenario);
+                Assert.AreEqual(spec.Modes.Length + 1, RetourGpReleve.Pressables(lignes), scenario + " — chaque mode et « Annuler » sont pressables");
+                ecran.Feuille.Fermer();
+                yield return null;
+            }
+        }
+
+        [UnityTest, Category("RetourAppui")]
+        public IEnumerator GP_Appro_Feuille_ModesEteints_SeulAnnulerEstPressable()
+        {
+            MafiaCleanCity.Mouvements.Regie regie = PrendreLaRegieGp();
+            Servir();
+            ChaineDApproScreenController ecran = Monte();
+            yield return null;
+            Assert.IsInstanceOf<CoutsNonServis>(ecran.Couts, "précondition GP : aucun coût servi ⇒ les modes sont éteints");
+            ecran.OuvrirLaFeuillePourTest(ChaineDApproGestes.Entretien, CibleLiaison());
+            yield return null;
+            GameObject panneau = PanneauDeLaFeuille(ecran, ChaineDApproGestes.Entretien);
+            List<LigneGp> lignes = RetourGpReleve.Relever("Appro", "feuille éteinte", panneau, CanvasDe(panneau), regie, LargeurGp, HauteurGp);
+            VerdictGp("Appro/feuille éteinte", lignes);
+            SiteCouvert(lignes, "ConstruireAnnuler", "Appro/feuille éteinte");
+            Assert.AreEqual(1, RetourGpReleve.Pressables(lignes), "Appro/feuille éteinte — « Annuler » seul est pressable");
+            // un mode éteint est MONTÉ et relevé, jamais pressable : le retour d'appui ne s'y joue pas (l'extinction se dit par le cadre)
+            Assert.AreEqual(ChaineDApproGestes.Entretien.Modes.Length, lignes.FindAll(l => !l.Pressable && l.SiteMembre == "ConstruireUnMode").Count,
+                "Appro/feuille éteinte — les modes éteints sont relevés non pressables");
+        }
     }
 }

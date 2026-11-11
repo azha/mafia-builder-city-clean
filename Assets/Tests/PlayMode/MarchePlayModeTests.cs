@@ -8,6 +8,7 @@ using UnityEngine.TestTools;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap;
 using MafiaCleanCity.Operational.Marche;
+using MafiaCleanCity.Tests;   // LigneGp, RetourGpReleve (GP)
 using Object = UnityEngine.Object;
 
 namespace MafiaCleanCity.Operational.Tests
@@ -267,6 +268,33 @@ namespace MafiaCleanCity.Operational.Tests
             StringAssert.StartsWith("Une ligne sur 72", une);
             StringAssert.StartsWith("3 lignes sur 72", trois, "les nombres en chiffres (écart C ratifié)");
             Assert.IsFalse(trois.Contains("{"), "aucune accolade brute : les paramètres sont des entiers de chaîne");
+        }
+
+        // ═══ GP — le retour d'appui des cases de ㉑ (design retour d'appui v5 §4 ; ordre f2 du 12/11) ═══════════════
+        // Le site `Case` (ramené au guichet `Retour.NouveauBouton`, GS1, intégration du 12/11). ÉCRIT SANS ÊTRE JOUÉ : seule la compilation est prouvée.
+        // Catégorie `RetourAppui` EN PLUS d'`EcranMarche` : la couverture des sites est CUMULÉE sur le run de GP. Le relevé porte sur UNE rangée
+        // (Dépôt-Est : une case allumée, deux éteintes, la case `ash` hors du tableau) : les 72 cases naissent du même site, 4 le couvrent.
+        [UnityTest, Category("RetourAppui")]
+        public IEnumerator GP_Marche_UneRangee_CaseAllumee_CasesEteintes()
+        {
+            MafiaCleanCity.Mouvements.RegieMouvement.Oublier();
+            MafiaCleanCity.Mouvements.Regie regie = MafiaCleanCity.Mouvements.RegieMouvement.PourTest();   // AVANT le montage
+            try
+            {
+                IEnumerator montage = Monter(() => (200, Corps((12, "crick", "HIGH"))));
+                while (montage.MoveNext()) yield return montage.Current;
+                Assert.AreEqual(72, Courant.CasesRendues, "précondition GP : la grille porte ses 72 cases");
+                Transform rangee = Racine().GetComponentsInChildren<Transform>(false).First(t => t.name == "R_12");
+                Canvas canvas = bancGo.GetComponent<Canvas>().rootCanvas;
+                List<LigneGp> lignes = RetourGpReleve.Relever("Marche", "rangée Dépôt-Est", rangee.gameObject, canvas, regie, 1080, 1920);
+                Assert.AreEqual(rangee.GetComponentsInChildren<Button>(true).Length, lignes.Count, "Marche — chaque case de la rangée est relevée");
+                ChaineDApproGestesPlayModeTests.VerdictGp("Marche/rangée Dépôt-Est", lignes);
+                ChaineDApproGestesPlayModeTests.SiteCouvert(lignes, "Case", "Marche/rangée Dépôt-Est");
+            }
+            finally
+            {
+                MafiaCleanCity.Mouvements.RegieMouvement.Oublier();   // la régie est un global statique : rendue même si le test a rougi
+            }
         }
     }
 }
