@@ -283,7 +283,7 @@ namespace MafiaCleanCity.Operational
                 }
                 else
                 {
-                    piMot[i].text = ForensicResolvers.Phrase(bande); piMot[i].color = encre;
+                    piMot[i].text = ForensicResolvers.MotDeLaPiste(DernierChargement, piste.Cle, bande); piMot[i].color = encre;
                     piCle[i].text = string.IsNullOrEmpty(bande) ? "" : bande;
                 }
                 SpecFilet[] recette = eteinte ? DecorsDeScene.Filets.Forensic.PiEteinte
@@ -569,7 +569,7 @@ namespace MafiaCleanCity.Operational
             for (int i = 0; i < DossierCalculs.Pistes.Length; i++) ConstruirePiste(i, pistes.transform);
 
             notePi = NouveauTexte(contenu.transform, "NotePistes",
-                Lib("Les livres : personne ne regarde par là. Pour l’instant."), Px(7f),   // TD-935 : clé servie `forensic.bloc.les_livres_personne_ne_regarde_par_la_pour_l_instant` (cumul back 9b401fdd)
+                Lib("Les livres\u00A0: personne ne regarde par là. Pour l’instant."), Px(7f),   // TD-935 : clé servie `forensic.bloc.les_livres_personne_ne_regarde_par_la_pour_l_instant` (cumul back 9b401fdd)
                 DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.hudSerifFont);
             notePi.fontStyle = FontStyles.Italic;
             notePi.alignment = TextAlignmentOptions.Center;
@@ -883,7 +883,11 @@ namespace MafiaCleanCity.Operational
         /// (`ledger_entry_ring` « n'a AUCUN écrivain de production »). Les écrivains de TICK existent (`leading-digit-audit.service.ts` WEEKLY, `standing-gap-heat.service.ts` mensuel) mais n'ont pas été
         /// exercés sur un compte qui blanchit : CE QUI N'EST PAS MESURÉ est donc que la bande ne variera jamais par un chemin joueur. Le jour où le back sert la vivacité (ou qu'un compte mesuré montre une
         /// bande ≠ premier cran), rallumer les deux pistes (de l'information au joueur) et supprimer cette liste.</summary>
-        public static readonly string[] PistesConstantes = { "audit_risk_bucket", "lifestyle_alarm_bucket" };
+        // ⛔ 11/11 (TD-881, partie LIFESTYLE FERMÉE) : `lifestyle_alarm_bucket` n'est plus constante. Le lot écrivain-lifestyle du back (@8d0184a4) écrit `lifestyle_audit_state` à chaque recrutement
+        // (`lieutenant.repository.ts:924`) et la bande suit la ligne : MESURÉ sur un compte jetable de la pile, la ligne de Lt. Ilm passée à consecutive_flag_months=2 / tail_ramp_stage='passive' (UPDATE SQL, déclaré)
+        // fait servir `lifestyle_alarm_bucket:"watched"`, `lifestyle_lieutenant_name:"Lt. Ilm"`, `lifestyle_alarm_label_key:"forensic.gravite.on_vous_regarde"` (corps collé : ScreenB7Q5d). Tenue pour constante, la piste
+        // restait ÉTEINTE (« — ») et `TitreAffiche` (qui exige `Vivante`) ne posait JAMAIS le nom servi. `audit_risk_bucket` reste constante (source `ledger_entry_ring`, TD-358, aucun écrivain de production).
+        public static readonly string[] PistesConstantes = { "audit_risk_bucket" };
 
         /// <summary>Les trois pistes DANS L'ORDRE de la maquette (150) : la comptabilité, les cuves, le train de vie. Échelles lues dans le
         /// back (`forensic.projection.service.ts:79/98/118`, domaines CLOS à quatre crans).</summary>
@@ -1178,6 +1182,21 @@ namespace MafiaCleanCity.Operational
                 default: throw new System.ArgumentOutOfRangeException(nameof(g), g,
                     "ForensicResolvers.CouleurPour : membre de Gravite non résolu.");
             }
+        }
+
+        /// <summary>Le mot de la bande d'une piste : la CLÉ i18n SERVIE (`*_label_key` de `GET /v1/me/forensic`, lot écrivain-lifestyle du back ; mesuré @8d0184a4 : `forensic.cran.rien_a_signaler`,
+        /// `forensic.cran.invisible`, `forensic.gravite.on_vous_regarde`) quand elle est là ET connue du catalogue — UNE ligne par clé (V20 ; la garde `I18nHorsLibelle` L2 ne reconnaît qu'une référence
+        /// servie lue sous son nom `…_key`) —, sinon le mot de la bande (`Phrase`).</summary>
+        public static string MotDeLaPiste(GetForensicResponseDto d, string cle, string bande)
+        {
+            if (d != null)
+                switch (cle)
+                {
+                    case "audit_risk_bucket": if (!string.IsNullOrEmpty(d.audit_risk_label_key) && MafiaCleanCity.I18n.I18nCatalog.Connait(d.audit_risk_label_key)) return MafiaCleanCity.I18n.I18nCatalog.Traduire(d.audit_risk_label_key); break;
+                    case "effluent_visibility_bucket": if (!string.IsNullOrEmpty(d.effluent_visibility_label_key) && MafiaCleanCity.I18n.I18nCatalog.Connait(d.effluent_visibility_label_key)) return MafiaCleanCity.I18n.I18nCatalog.Traduire(d.effluent_visibility_label_key); break;
+                    case "lifestyle_alarm_bucket": if (!string.IsNullOrEmpty(d.lifestyle_alarm_label_key) && MafiaCleanCity.I18n.I18nCatalog.Connait(d.lifestyle_alarm_label_key)) return MafiaCleanCity.I18n.I18nCatalog.Traduire(d.lifestyle_alarm_label_key); break;
+                }
+            return Phrase(bande);
         }
 
         /// <summary>La bande, en mots. ⛔ Une bande inconnue s'affiche TELLE QUELLE, jamais

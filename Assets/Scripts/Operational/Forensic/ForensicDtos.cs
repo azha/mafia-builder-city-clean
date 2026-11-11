@@ -24,6 +24,10 @@ namespace MafiaCleanCity.Operational
         /// porte les trois maxima, sinon null). ABSENT de la pile tant que le back ne l'a pas codé (dette de fin de tranche) : null ⇒ le libellé de la
         /// maquette, inchangé. Jamais un identifiant ni un scalaire (mur P5).</summary>
         public string lifestyle_lieutenant_name;
+        /// <summary>Les trois CLÉS i18n du mot de chaque bande, SERVIES (`forensic.cran.*`, `forensic.gravite.*` ; mesuré @8d0184a4 sur un compte jetable). Lues quand elles sont là et connues du catalogue ; sinon le mot de la bande (repli). Jamais un scalaire.</summary>
+        public string audit_risk_label_key;
+        public string effluent_visibility_label_key;
+        public string lifestyle_alarm_label_key;
     }
 
     /// <summary>Une ligne de `GET /v1/me/internal-affairs/actors` (`ActorSummary`, `ia-projection.service.ts`, mesuré @accc9605) : TROIS
