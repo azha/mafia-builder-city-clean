@@ -132,6 +132,15 @@ namespace MafiaCleanCity.Operational.Tests
             "marche.titre.le_marche",
             "marche.titre.voyant_eteint",
             "plus.entree.le_marche",
+            // TD-823 (11/11, CLIENT-1, décision f2) : la voix des lieutenants (㉛) et de Wexler (㉓) — 8 clés, 0 servie sur back main (mesuré dans
+            // `string_table.ts`). BACK-2 les sert sur `lot/td-823-voix` (noms à figer pour boutique.dit.* : clés DÉRIVÉES ici jusqu'à son SHA, puis V15).
+            "loi.dit.pour_l_instant_il_n_a_rien_dit_ca_ne_durera_pas_tout_seul",
+            "loi.dit.il_a_commence_a_parler_ce_qui_est_sorti_ne_rentrera_pas",
+            "loi.dit.il_a_tout_vide_il_n_y_a_plus_rien_a_sauver_de_ce_cote",
+            "boutique.locuteur.nom", "boutique.locuteur.role",
+            "boutique.dit.vous_avez_tout_claque_d_un_coup_ce_qui_reste_au_mur_vous_ne_l_aurez_pas_avec_de_la_bonne_volonte",
+            "boutique.dit.ce_qui_est_la_est_a_vendre_ce_qui_est_trop_cher_pour_vous_je_le_laisse_en_vitrine_ca_vous_fera_un_but",
+            "boutique.dit.les_marks_c_est_dehors_qu_on_les_achete_moi_je_vous_les_compte_je_ne_les_vends_pas",
 
 
 

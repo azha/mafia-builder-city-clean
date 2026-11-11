@@ -513,5 +513,56 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("LIBÉRER", LoiResolvers.TexteBoutonRetainer(true));
             Assert.AreEqual("METTRE SOUS RÉTENTION", LoiResolvers.TexteBoutonRetainer(false));
         }
+    
+        // ═══ TD-823 — la voix du lieutenant (`.pl-dit`), f2 11/11, design BACK-2 dette/b2 @949e5613 §6.2 ═══════════════════════
+
+        private static LegalCaseDto Affaire(string leak) => new LegalCaseDto { caseId = System.Guid.NewGuid().ToString(), defendantLabel = "Courier #3",
+            chargeSeverity = "felony_low", daysRemaining = 9, leak = leak };
+
+        /// <summary>TD-823 (pur) : la PIRE bande parmi les affaires (ordre de `LeakBandBucket`), la réplique de chaque bande, `low` et `significant`
+        /// disent la même ; hors domaine ⇒ rien. CONTRÔLE : une bande inconnue n'écrase pas une bande connue.</summary>
+        [Test]
+        public void EcranLoiTD823_LaPireFuite_EtLaRepliqueDeChaqueBande()
+        {
+            Assert.AreEqual("full_dump", LoiResolvers.PireFuite(new[] { Affaire("silent"), Affaire("full_dump"), Affaire("low") }));
+            Assert.AreEqual("significant", LoiResolvers.PireFuite(new[] { Affaire("low"), Affaire("significant") }));
+            Assert.AreEqual("silent", LoiResolvers.PireFuite(new[] { Affaire("bavard"), Affaire("silent") }), "CONTRÔLE : l'inconnue est ignorée");
+            Assert.IsNull(LoiResolvers.PireFuite(new LegalCaseDto[0]));
+            Assert.IsNull(LoiResolvers.PireFuite(null));
+            Assert.AreEqual("loi.dit.pour_l_instant_il_n_a_rien_dit_ca_ne_durera_pas_tout_seul", LoiResolvers.RepliqueDeFuite("silent").Value.cle);
+            Assert.AreEqual(LoiResolvers.RepliqueDeFuite("low").Value.cle, LoiResolvers.RepliqueDeFuite("significant").Value.cle, "low et significant : la même phrase");
+            Assert.AreEqual("loi.dit.il_a_tout_vide_il_n_y_a_plus_rien_a_sauver_de_ce_cote", LoiResolvers.RepliqueDeFuite("full_dump").Value.cle);
+            Assert.IsNull(LoiResolvers.RepliqueDeFuite("bavard"));
+            foreach (string b in new[] { "silent", "low", "full_dump" })
+            {
+                string r = LoiResolvers.RepliqueDeFuite(b).Value.repli;
+                Assert.IsTrue(r.StartsWith("{nom}\u00A0: «\u00A0") && r.EndsWith("\u00A0»"), $"{b} : recette §6.1, 3 × U+00A0");
+            }
+            Assert.IsNull(LoiResolvers.NomDuLocuteur(new LocuteurServiDto()), "`speaker: null` (JsonUtility : instance vide) ⇒ personne");
+            Assert.AreEqual("Lt. Rin", LoiResolvers.NomDuLocuteur(new LocuteurServiDto { id = "r", name = "Lt. Rin" }));
+        }
+
+        /// <summary>TD-823 (EFFET) : une affaire qui a commencé à parler + `speaker` servi ⇒ la bande dit « Lt. Rin : « Il a commencé à parler… » »,
+        /// AVANT le geste. CONTRÔLES : `speaker` null ⇒ rien ; aucune affaire ⇒ rien ; jamais de nom de repli.</summary>
+        [UnityTest]
+        public IEnumerator EcranLoiTD823_LaVoixDuLieutenant_SeulementAvecUnLocuteurServiEtUneAffaire()
+        {
+            var ecran = MonterEcran();
+            var rin = new LocuteurServiDto { id = "r", name = "Lt. Rin" };
+            ecran.RendrePourTest(new GetLegalResponseDto { lawyerRoster = new LawyerDto[0], activeCases = new[] { Affaire("significant") }, speaker = rin });
+            yield return null;
+            Assert.IsNotNull(ecran.RepliqueRendue, "une affaire et un locuteur : la voix parle");
+            StringAssert.StartsWith("Lt. Rin", ecran.RepliqueRendue, "le nom SERVI, en tête, sans préfixe client");
+            StringAssert.Contains("Ce qui est sorti ne rentrera pas.", ecran.RepliqueRendue);
+            Assert.IsFalse(ecran.RepliqueRendue.Contains("Lt. Lt."), "« Lt. » n'est jamais doublé");
+
+            ecran.RendrePourTest(new GetLegalResponseDto { lawyerRoster = new LawyerDto[0], activeCases = new[] { Affaire("significant") }, speaker = new LocuteurServiDto() });
+            yield return null;
+            Assert.IsNull(ecran.RepliqueRendue, "CONTRÔLE : `speaker: null` ⇒ aucune voix, jamais un nom de repli");
+
+            ecran.RendrePourTest(new GetLegalResponseDto { lawyerRoster = new LawyerDto[0], activeCases = new LegalCaseDto[0], speaker = rin });
+            yield return null;
+            Assert.IsNull(ecran.RepliqueRendue, "CONTRÔLE : aucune affaire ⇒ aucune voix (l'état vide a déjà ses mots)");
+        }
     }
 }

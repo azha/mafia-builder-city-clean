@@ -207,7 +207,7 @@ namespace MafiaCleanCity.Operational
             RendreRecrutement();
             RendreAffaires(dto.activeCases);
             RendreMessageErreur();
-            RendreBande(dto.lawyerRoster);
+            RendreBande(dto);
         }
 
         // ═══ ㉛ B1 — la bande basse : le geste « LUI TROUVER UN AVOCAT » (cause 3, CLIENT-3 ; décision de f2 07/10) ═══════════════════════════
@@ -227,10 +227,12 @@ namespace MafiaCleanCity.Operational
         /// du cadre #67). ⚠️ SANS LA VOIX du lieutenant (`.dit`) : quel lieutenant parle et quelle phrase est une donnée que le back ne sert pas (TD-848) — rien n'est inventé. Le geste NE RECRUTE PAS :
         /// les trois façons de défendre (commis, cabinet, filière) sont les cartes de l'écran, et c'est ELLES qui engagent ; le geste y CONDUIT (le corps défile jusqu'à elles). Un geste qui paierait
         /// un cabinet sans le dire serait un bouton qui ment.</summary>
-        private void RendreBande(LawyerDto[] roster)
+        private void RendreBande(GetLegalResponseDto dto)
         {
+            LawyerDto[] roster = dto?.lawyerRoster;
             ViderEnfants(basRoot, garder: "Filet");
             BoutonDuPied = null;
+            RendreLaVoix(dto);   // `.pl-dit` AVANT `.pl-geste` (cadres #67-#72)
             if (!GesteDeBasOffert(roster)) return;
 
             GameObject bouton = NouveauUI("BoutonDuPied", basRoot);
@@ -263,6 +265,45 @@ namespace MafiaCleanCity.Operational
 
             PiedDEcran.StylerLeBouton(bouton, lib, PiedDEcran.Forme.Geste);
             BoutonDuPied = b;
+        }
+
+        /// <summary>La réplique RENDUE de la voix (crochet de test) : le texte visible, sans balise ; null si rien n'est dit.</summary>
+        public string RepliqueRendue { get; private set; }
+
+        // `.pl-dit{font:italic 8.6px/1.4 'DejaVu Serif';color:#cdd6e0}` · `.pl-dit b{font-style:normal;color:#eef3f9;font-weight:700}`
+        private static Color EncreDuDit => new Color32(0xcd, 0xd6, 0xe0, 255);
+        private static Color EncreDuNomDuDit => new Color32(0xee, 0xf3, 0xf9, 255);
+
+        /// <summary>TD-823 (f2 11/11 ; design BACK-2 dette/b2 @949e5613 §6.2, §9) — LA VOIX DU LIEUTENANT (`.pl-dit`) : « <b>{nom} :</b> « … » »,
+        /// le nom SERVI (`speaker`, à la racine de `GET /v1/me/legal`) en gras DROIT, la phrase en italique, choisie sur le `leak` de la PIRE
+        /// affaire active (`LoiResolvers.RepliqueDeFuite`). Rien n'est dit si `speaker` est null, s'il n'y a aucune affaire active, ou si la bande
+        /// est hors domaine — jamais un nom de repli, jamais une phrase sans nom. Le gabarit est rendu ENTIER avec un marqueur à la place du nom,
+        /// puis coupé autour (patron `DemolitionScreenController.Dit`) ; EXIGEANT : une valeur servie sans `{nom}` compte comme non servie.</summary>
+        private void RendreLaVoix(GetLegalResponseDto dto)
+        {
+            RepliqueRendue = null;
+            string nom = LoiResolvers.NomDuLocuteur(dto?.speaker);
+            string fuite = LoiResolvers.PireFuite(dto?.activeCases);
+            if (nom == null || fuite == null) return;
+            var replique = LoiResolvers.RepliqueDeFuite(fuite);
+            if (replique == null) return;
+            const string Marque = "\u241E";
+            string t = Libelle.GabaritExigeant(replique.Value.cle, replique.Value.repli,
+                new System.Collections.Generic.Dictionary<string, string> { { "nom", Marque } }, "nom");
+            int i = t.IndexOf(Marque, System.StringComparison.Ordinal);
+            string avant = i < 0 ? t : t.Substring(0, i), apres = i < 0 ? "" : t.Substring(i + Marque.Length), gras = i < 0 ? "" : nom;
+            TextMeshProUGUI dit = NouveauTexteFiche(basRoot, "Dit",
+                (avant.Length > 0 ? "<i>" + avant + "</i>" : "")
+                + (gras.Length > 0 ? "<b><color=#" + ColorUtility.ToHtmlStringRGB(EncreDuNomDuDit) + ">" + gras + "</color></b>" : "")
+                + (apres.Length > 0 ? "<i>" + apres + "</i>" : ""),
+                8.6f, EncreDuDit, false);
+            dit.font = DesignTokens.Current.hudSerifFont;
+            dit.richText = true;
+            dit.enableWordWrapping = true;
+            dit.lineSpacing = 0f;
+            AddLayoutElement(dit.gameObject, flexibleHeight: 0);
+            RepliqueRendue = avant + gras + apres;
+            TrackText(RepliqueRendue);
         }
 
         /// <summary>Le geste du pied : fait défiler le corps jusqu'aux trois façons de défendre. Sans défilement possible (tout tient), il ne fait rien — les cartes sont déjà là.</summary>
@@ -859,6 +900,56 @@ namespace MafiaCleanCity.Operational
     /// portée par l'ordre d'un tableau ou par un commentaire.</summary>
     public static class LoiResolvers
     {
+        /// <summary>TD-823 — le rang d'une bande de fuite, dans l'ordre RECOPIÉ de `LeakBandBucket` (`legal.types.ts:63`, back main) :
+        /// silent < low < significant < full_dump. Hors domaine ⇒ -1 (ignorée).</summary>
+        public static int RangDeFuite(string leak)
+        {
+            switch (leak)
+            {
+                case "silent": return 0;
+                case "low": return 1;
+                case "significant": return 2;
+                case "full_dump": return 3;
+                default: return -1;
+            }
+        }
+
+        /// <summary>TD-823 — la PIRE bande de fuite parmi les affaires actives ; null si aucune affaire (ou aucune bande connue). Pure.</summary>
+        public static string PireFuite(LegalCaseDto[] affaires)
+        {
+            if (affaires == null) return null;
+            string pire = null;
+            foreach (LegalCaseDto a in affaires)
+                if (a != null && RangDeFuite(a.leak) >= 0 && (pire == null || RangDeFuite(a.leak) > RangDeFuite(pire))) pire = a.leak;
+            return pire;
+        }
+
+        /// <summary>TD-823 — la réplique d'une bande (design BACK-2 §6.2, mots RATIFIÉS) : clé `loi.dit.*` et repli FR, gabarit `{nom}` + U+00A0 +
+        /// « : « » + U+00A0 + phrase + U+00A0 + « » » (recette §6.1, 3 × U+00A0). `low` et `significant` disent la même phrase (la variante qui
+        /// nomme l'élément fuité n'est pas servie). null hors domaine. Pure.</summary>
+        public static (string cle, string repli)? RepliqueDeFuite(string leak)
+        {
+            switch (leak)
+            {
+                case "silent":
+                    return ("loi.dit.pour_l_instant_il_n_a_rien_dit_ca_ne_durera_pas_tout_seul",
+                            "{nom}\u00A0: «\u00A0Pour l’instant il n’a rien dit. Ça ne durera pas tout seul.\u00A0»");
+                case "low":
+                case "significant":
+                    return ("loi.dit.il_a_commence_a_parler_ce_qui_est_sorti_ne_rentrera_pas",
+                            "{nom}\u00A0: «\u00A0Il a commencé à parler. Ce qui est sorti ne rentrera pas.\u00A0»");
+                case "full_dump":
+                    return ("loi.dit.il_a_tout_vide_il_n_y_a_plus_rien_a_sauver_de_ce_cote",
+                            "{nom}\u00A0: «\u00A0Il a tout vidé. Il n’y a plus rien à sauver de ce côté.\u00A0»");
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>TD-823 — le nom SERVI du locuteur (`speaker.name`, « Lt. » compris) ; null si `speaker` est null (JsonUtility : instance vide). Pure.</summary>
+        public static string NomDuLocuteur(LocuteurServiDto speaker) =>
+            speaker == null || string.IsNullOrWhiteSpace(speaker.name) ? null : speaker.name;
+
         /// <summary>`tier` — domaine ANNONCÉ FERMÉ par le 422 de `POST /v1/me/legal/lawyers`
         /// (mesuré : "tier must be 'boutique' or 'corruption_pipeline'.") — mais CE message
         /// ferme le corps ENVOYÉ à la création, pas la valeur SERVIE dans `lawyerRoster[].tier`

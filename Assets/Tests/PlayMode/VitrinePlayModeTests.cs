@@ -245,5 +245,83 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.Fail("introuvable : " + nom);
             return null;
         }
+    
+        // ═══ TD-823 — la voix de Wexler (`.voix`), PNJ fixe ; règle de f2 du 11/11 : UNE réplique, par priorité ═══════════════════
+
+        /// <summary>TD-823 (pur) — RÈGLE FINALE f2 11/11 : (1) solde 0 ET ≥ 1 acquis ⇒ « tout claqué » ; (2) sinon « à vendre » si ≥ 1 article À PORTÉE ; (3) sinon « dehors ».
+        /// Les 3 états couverts, trois répliques distinctes. CONTRÔLE POSITIF (le cas que le juge a prouvé inatteignable) : grant de 50 + article à 50 ⇒ « à vendre » ;
+        /// et un joueur à 50 Marks devant des articles tous à plus de 50 ⇒ « dehors » (l'ancienne règle disait « à vendre »).</summary>
+        [Test]
+        public void VitrineTD823_UneRepliqueParEtat_RegleFinale_TroisEtats()
+        {
+            string claque = ShopScreenController.RepliqueDeWexler(0, 1, -1), vendre = ShopScreenController.RepliqueDeWexler(50, 0, 1),
+                   dehors = ShopScreenController.RepliqueDeWexler(50, 0, 0);
+            StringAssert.Contains("Vous avez tout claqué d’un coup.", claque);
+            StringAssert.Contains("Ce qui est là est à vendre.", vendre);
+            StringAssert.Contains("Les Marks, c’est dehors qu’on les achète.", dehors);
+            Assert.AreEqual(3, new System.Collections.Generic.HashSet<string> { claque, vendre, dehors }.Count, "trois états, trois répliques");
+            // (1) a priorité sur tout
+            Assert.AreEqual(claque, ShopScreenController.RepliqueDeWexler(0, 3, 0), "solde 0 + acquis ⇒ tout claqué");
+            Assert.AreNotEqual(claque, ShopScreenController.RepliqueDeWexler(0, 0, 0), "CONTRÔLE : joueur neuf à 0 ⇒ JAMAIS « tout claqué »");
+            Assert.AreEqual(dehors, ShopScreenController.RepliqueDeWexler(0, 0, 0), "joueur neuf à 0, rien à portée ⇒ dehors");
+            // (2) et (3) : l'article à portée décide, plus le seul solde
+            Assert.AreEqual(vendre, ShopScreenController.RepliqueDeWexler(500, 4, 2), "solde > 0 avec acquis et un article à portée ⇒ à vendre");
+            Assert.AreEqual(dehors, ShopScreenController.RepliqueDeWexler(500, 4, 0), "solde > 0 mais RIEN à portée ⇒ dehors, acquis ou pas");
+            // ce qu'on ne sait pas ne se dit pas
+            Assert.IsNull(ShopScreenController.RepliqueDeWexler(-1, 2, 1), "solde non lu ⇒ rien n'est dit");
+            Assert.IsNull(ShopScreenController.RepliqueDeWexler(0, -1, 0), "solde 0 et possessions NON LUES ⇒ rien");
+            Assert.IsNull(ShopScreenController.RepliqueDeWexler(100, 0, -1), "solde > 0 et catalogue NON LU ⇒ rien (ni « à vendre » ni « dehors »)");
+            foreach (string r in new[] { claque, vendre, dehors })
+                Assert.IsTrue(r.StartsWith("«\u00A0") && r.EndsWith("\u00A0»") && !r.Contains("Wexler"), "sans {nom} (la bande dit qui parle), guillemets à U+00A0");
+        }
+
+        /// <summary>TD-823 — « à portée » : la MÊME règle que la carte (`abordable`). CONTRÔLE POSITIF du juge : grant de 50 + UN article à 50 (le seul prix du catalogue) ⇒ 1 à portée
+        /// ⇒ « à vendre » ; à 49 ⇒ 0 ⇒ « dehors » ; la monnaie réelle (MARKS_PACK, SUPPORT) n'est jamais « à portée » ; un article déjà possédé non plus ; catalogue non lu ⇒ -1.</summary>
+        [Test]
+        public void VitrineTD823_ArticlesAPortee_GrantDe50EtArticleA50_EstAVendre()
+        {
+            SkuDto[] seul = { Sku("cosm_callsign_color", "COSMETIC", prixMarks: 50) };
+            Assert.AreEqual(1, ShopScreenController.ArticlesAPortee(seul, 50, null), "CONTRÔLE POSITIF : 50 Marks devant un article à 50 ⇒ à portée");
+            Assert.AreEqual(ShopScreenController.RepliqueDeWexler(50, 0, 1), ShopScreenController.RepliqueDeWexler(50, 0, ShopScreenController.ArticlesAPortee(seul, 50, null)));
+            StringAssert.Contains("Ce qui est là est à vendre.", ShopScreenController.RepliqueDeWexler(50, 0, ShopScreenController.ArticlesAPortee(seul, 50, null)),
+                "le joueur neuf doté de 50 Marks devant le seul article à 50 entend « à vendre »");
+            Assert.AreEqual(0, ShopScreenController.ArticlesAPortee(seul, 49, null), "49 < 50 : rien à portée");
+            StringAssert.Contains("c’est dehors", ShopScreenController.RepliqueDeWexler(49, 0, ShopScreenController.ArticlesAPortee(seul, 49, null)),
+                "49 Marks devant un article à 50 ⇒ « dehors » (atteignable : le juge l'avait déclaré inatteignable)");
+            Assert.AreEqual(0, ShopScreenController.ArticlesAPortee(seul, 50, new[] { "cosm_callsign_color" }), "déjà possédé ⇒ pas à portée");
+            Assert.AreEqual(0, ShopScreenController.ArticlesAPortee(CatalogueFabrique(), 49, null), "le catalogue fabriqué : le moins cher est à 50 ; les packs d'argent réel ne comptent jamais");
+            Assert.AreEqual(1, ShopScreenController.ArticlesAPortee(CatalogueFabrique(), 50, null), "CONTRÔLE : à 50, exactement un article du catalogue fabriqué");
+            Assert.AreEqual(-1, ShopScreenController.ArticlesAPortee(null, 50, null), "catalogue non lu ⇒ -1");
+            Assert.AreEqual(-1, ShopScreenController.ArticlesAPortee(new SkuDto[0], 50, null), "catalogue vide ⇒ -1 (« aucun » ≠ « pas lu »)");
+        }
+
+        /// <summary>TD-823 (EFFET) : la bande `.voix` porte « Wexler », « derrière le comptoir » et la réplique de l'état ; le joueur neuf à 0
+        /// entend « dehors », le joueur à 0 avec un acquis entend « tout claqué ».</summary>
+        [UnityTest]
+        public IEnumerator VitrineTD823_LaBandeDitWexler_SonRole_EtLaRepliqueDeLEtat()
+        {
+            canvasGo = new GameObject("CanvasVitrine", typeof(RectTransform), typeof(Canvas));
+            canvasGo.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            var hote = new GameObject("Vitrine", typeof(RectTransform));
+            hote.transform.SetParent(canvasGo.transform, false);
+            ShopScreenController ecran = hote.AddComponent<ShopScreenController>();
+            yield return null;
+            ecran.RendrePourTest(CatalogueFabrique(), 0, new string[0]);
+            yield return null;
+            Transform voix = hote.transform.Cast<Transform>().SelectMany(t => t.GetComponentsInChildren<Transform>(true)).FirstOrDefault(t => t.name == "Voix");
+            Assert.IsNotNull(voix, "la colonne de la voix existe");
+            Assert.AreEqual(MafiaCleanCity.Tests.ValeurAttendue.Cle("boutique.locuteur.nom", "Wexler"), voix.Find("Nom").GetComponent<TextMeshProUGUI>().text);
+            Assert.AreEqual(MafiaCleanCity.Tests.ValeurAttendue.Cle("boutique.locuteur.role", "derrière le comptoir"), voix.Find("Role").GetComponent<TextMeshProUGUI>().text);
+            Assert.AreEqual(ShopScreenController.RepliqueDeWexler(0, 0, 0), ecran.RepliqueAffichee, "joueur neuf à 0 : « dehors »");
+            ecran.RendrePourTest(CatalogueFabrique(), 0, new[] { "cosm_callsign_color" });
+            yield return null;
+            Assert.AreEqual(ShopScreenController.RepliqueDeWexler(0, 1, 0), ecran.RepliqueAffichee, "à 0 avec un acquis : « tout claqué »");
+            ecran.RendrePourTest(CatalogueFabrique(), 50, new string[0]);
+            yield return null;
+            Assert.AreEqual(ShopScreenController.RepliqueDeWexler(50, 0, 1), ecran.RepliqueAffichee, "EFFET : grant de 50 + article à 50 ⇒ « à vendre » à l'écran");
+            ecran.RendrePourTest(CatalogueFabrique(), 49, new string[0]);
+            yield return null;
+            Assert.AreEqual(ShopScreenController.RepliqueDeWexler(49, 0, 0), ecran.RepliqueAffichee, "EFFET : 49 Marks, rien à portée ⇒ « dehors » à l'écran");
+        }
     }
 }
