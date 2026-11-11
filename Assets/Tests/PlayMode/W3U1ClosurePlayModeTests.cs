@@ -32,6 +32,10 @@ namespace MafiaCleanCity.Shell.Tests
             { "onboarding", "C7" },
             { "opened_game_day", "C2 (D3/§3-bis — la 12e clé)" },
             { "day_phase", "F14 (23/09, 14e clé — AppShell.PhaseHorsDistrict → TopBar.SetDayPhase hors district)" },
+            // L1 (11/11, 15e et 16e clés) — les deux jours de la famille, CONSOMMÉS par le cycle de session (B4 : `CycleDeSession.Decider`). PORTÉES par deux
+            // PROPRIÉTÉS nullables lues du corps brut, pas par des champs : voir `SessionOpenDto.ClesPortees`.
+            { "family_day", "B4 (CycleDeSession — L1, 15e clé)" },
+            { "opened_family_day", "B4 (CycleDeSession — L1, 16e clé)" },
         };
 
         // La SEULE clé explicitement classée NON consommée par ce lot (design §3-bis).
@@ -41,17 +45,15 @@ namespace MafiaCleanCity.Shell.Tests
         private const string DeclaredNonConsumedF14 = "opened_game_minute";
 
         [Test]
-        public void C9F2_ClosedKeySet_10ConsumedPlus1ClassifiedPlus1TwelfthKeyPlusF14_Equals14()
+        public void C9F2_ClosedKeySet_10ConsumedPlus1ClassifiedPlus1TwelfthKeyPlusF14PlusL1_Equals16()
         {
             // Côté contrat : TOUTES les clés de premier niveau de SessionOpenDto — reflection sur
             // le TYPE (jamais un motif texte, jamais recopiées à la main — la même discipline que
             // C3-F2, qui protège CE total contre une divergence silencieuse).
-            FieldInfo[] fields = typeof(SessionOpenDto).GetFields(
-                BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-            var interfaceKeys = new HashSet<string>();
-            foreach (FieldInfo f in fields) interfaceKeys.Add(f.Name);
+            // L1 (11/11) : les clés PORTÉES = les champs publics + les 2 propriétés nullables des jours de la famille (`SessionOpenDto.ClesPortees`).
+            var interfaceKeys = new HashSet<string>(SessionOpenDto.ClesPortees());
 
-            Assert.AreEqual(14, interfaceKeys.Count, "SessionOpenDto declares EXACTLY 14 top-level keys (12 + F14 : opened_game_minute, day_phase)");
+            Assert.AreEqual(16, interfaceKeys.Count, "SessionOpenDto carries EXACTLY 16 top-level keys (12 + F14 : opened_game_minute, day_phase + L1 : family_day, opened_family_day)");
 
             // Chaque clé consommée doit exister dans l'interface — un chunk qui prétend consommer
             // une clé qui n'existe pas plus/qui a été renommée doit faire rougir CE test.
@@ -67,7 +69,7 @@ namespace MafiaCleanCity.Shell.Tests
             // consommée (settling_glance) + 1 NOUVELLE clé (opened_game_day, elle-même consommée) = 12.
             int consumedFromOriginal11 = 0;
             foreach (string k in ConsumedByChunk.Keys)
-                if (k != "opened_game_day" && k != "day_phase") consumedFromOriginal11++;
+                if (k != "opened_game_day" && k != "day_phase" && k != "family_day" && k != "opened_family_day") consumedFromOriginal11++;
             Assert.AreEqual(10, consumedFromOriginal11, "10 des 11 clés ORIGINALES sont consommées");
             Assert.AreEqual(1, interfaceKeys.Contains(DeclaredNonConsumed) ? 1 : 0, "settling_glance reste l'UNIQUE non-consommée");
             Assert.IsTrue(ConsumedByChunk.ContainsKey("opened_game_day"), "opened_game_day (12e clé) EST consommée — par C2");
@@ -75,8 +77,10 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsTrue(ConsumedByChunk.ContainsKey("day_phase"), "day_phase (14e clé) EST consommée — par F14");
             Assert.IsTrue(interfaceKeys.Contains(DeclaredNonConsumedF14), $"'{DeclaredNonConsumedF14}' (déclarée NON consommée, F14) doit exister");
             Assert.IsFalse(ConsumedByChunk.ContainsKey(DeclaredNonConsumedF14), "opened_game_minute ne peut pas être À LA FOIS consommée et déclarée non-consommée");
-            int total = consumedFromOriginal11 + 1 /* settling_glance */ + 1 /* opened_game_day */ + 1 /* day_phase */ + 1 /* opened_game_minute */;
-            Assert.AreEqual(14, total, "10 + 1 + 1 + (F14 : 1 consommée + 1 déclarée) = 14 — la somme de contrôle du découpage");
+            Assert.IsTrue(ConsumedByChunk.ContainsKey("family_day") && ConsumedByChunk.ContainsKey("opened_family_day"), "les deux jours de la famille (L1) sont consommés par B4");
+            int total = consumedFromOriginal11 + 1 /* settling_glance */ + 1 /* opened_game_day */ + 1 /* day_phase */ + 1 /* opened_game_minute */
+                        + 1 /* family_day */ + 1 /* opened_family_day */;
+            Assert.AreEqual(16, total, "10 + 1 + 1 + (F14 : 1 consommée + 1 déclarée) + (L1 : 2 consommées) = 16 — la somme de contrôle du découpage");
             Assert.AreEqual(interfaceKeys.Count, total,
                 "la somme de contrôle ÉGALE le compte de champs du DTO CLIENT — si un chunk classait " +
                 "une clé absente du DTO, ou classait deux fois la même, CE test rougirait.");

@@ -179,7 +179,12 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.GreaterOrEqual(Contraste(sous, ProceduralUI.EchantillonDeDegrade(arrets, 0.7f)), 2.8f, "contraste de la sous-ligne (8 CSS, 80 %) mesuré à 2,92:1 — c'est la maquette");
             // la source : le bord est POSÉ par `Filets` (recette PlaqueLaiton), la crème et le cerne rouge du tampon ont disparu
             string src = File.ReadAllText(Path.Combine(Application.dataPath, "Scripts", "Shell", "DecisionDetailScreenController.cs"));
-            StringAssert.Contains("fond.color = MatiereDeLaCarte;", src, "la carte a sa matière (surface pleine)");
+            // F5/F6 (juge ⊥ 11/11) : la matière de la carte est le DÉGRADÉ `linear-gradient(170deg,#fbf3dc,#e6d8b3 60%,#d6c69a)` d'un enfant `Papier` masqué (plus l'aplat sur la carte) ; l'effet est jugé sur les
+            // pixels par `ApresGesteDecisionPlayModeTests.F5F6_…`.
+            StringAssert.Contains("PoserLePapier(carte.transform);", src, "la carte a sa matière : un papier en dégradé");
+            StringAssert.Contains("ProceduralUI.DegradeLineaire(170f, arrets", src, "170°, comme `.carte-or`");
+            foreach (string stop in new[] { "#fbf3dc", "#e6d8b3", "#d6c69a" }) StringAssert.Contains(stop, src, "arrêt du dégradé du papier");
+            StringAssert.DoesNotContain("fond.color = MatiereDeLaCarte;", src, "l'aplat (219,206,171) n'est plus posé sur la carte");
             StringAssert.DoesNotContain("RoundedRectOutline((int)Px(14f), Px(1.5f), bordCarte)", src, "plus de carte réduite à un contour sans matière");
             int d = src.IndexOf("tampon = Bloc(\"Tampon\"", System.StringComparison.Ordinal), f = src.IndexOf("BoutonLire = tampon.AddComponent<LongPressButton>();", System.StringComparison.Ordinal);
             Assert.That(d, Is.GreaterThan(0)); Assert.That(f, Is.GreaterThan(d));

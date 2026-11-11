@@ -146,19 +146,98 @@ namespace MafiaCleanCity.Shell.Tests
             yield return ctrl.RequestCommitViaTypedConfirm("nope");
             Assert.AreEqual(0, ctrl.CommitRequestCount, "a WRONG keyword emits zero requests");
 
-            yield return ctrl.RequestCommitViaTypedConfirm(HighestLeverageCardController.MotCle.ToLowerInvariant()); // case-insensitive ; le mot-clé = le libellé du geste (08/10 nuit)
+            yield return ctrl.RequestCommitViaTypedConfirm(ctrl.MotCle.ToLowerInvariant()); // case-insensitive ; le mot-clé = le libellé du geste touché (08/10 nuit ; chunk 3 : SON option)
             Assert.AreEqual(1, ctrl.CommitRequestCount, "the CORRECT keyword routes to RequestCommit() — exactly one request");
             Assert.IsNull(ctrl.LastCommitError, $"commit errored: {ctrl.LastCommitError}");
             Assert.AreEqual(true, ctrl.LastCommitCommitted, "committed through the SAME payload.data path as the long-press trigger");
             // ⛔ GESTE MORT fermé (f2 08/10 nuit) : le commit ACCEPTÉ est annoncé au shell (qui relit l'Accueil) — une fois, aucun refus montré.
             Assert.AreEqual(1, ctrl.DecisionsTranchees, "le commit accepté lève OnDecisionTranchee (le shell relit l'Accueil)");
             Assert.IsNull(ctrl.RefusRendu, "aucun refus après un commit accepté");
+            // L'APRÈS-GESTE (chunk 3) : quand le back SERT le mot (`outcome_i18n_key`), ④ lève `OnApresGeste` (le shell monte ⑤ en mode après : cadres 6-7) et n'annonce pas
+            // `OnDecisionTranchee` (⑤ l'annoncera au « Retour à l'accueil ») ; tant qu'il ne le sert pas, elle remonte tout de suite.
+            if (ctrl.DerniereVue != null)
+            {
+                Assert.IsFalse(string.IsNullOrWhiteSpace(ctrl.DerniereVue.Mot), "l'après-geste dit un mot SERVI");
+                Assert.IsFalse(string.IsNullOrWhiteSpace(ctrl.DerniereVue.Action), "« Retour à l'accueil » est le geste de la ligne-or");
+            }
             // …et un REFUS se dit : la même carte, déjà tranchée (terminale), rend 409 — la phrase est MONTRÉE, jamais une erreur muette.
-            yield return ctrl.RequestCommitViaTypedConfirm(HighestLeverageCardController.MotCle);
+            yield return ctrl.RequestCommitViaTypedConfirm(ctrl.MotCle);
             Assert.IsNotNull(ctrl.LastCommitError, "précondition : la carte déjà tranchée est refusée par le back (409)");
             Assert.AreEqual(1, ctrl.DecisionsTranchees, "un refus n'annonce AUCUNE décision");
             Assert.IsFalse(string.IsNullOrEmpty(ctrl.RefusRendu), "le refus a une phrase");
             CollectionAssert.Contains(ctrl.RenderedTexts, ctrl.RefusRendu, "la phrase du refus est RENDUE sur la carte");
+        }
+
+        private static string EtatDeLaRoute(string playerId) =>
+            SeederSupport.RunDevPsql($"SELECT state FROM route WHERE player_id = '{playerId}';");
+
+        /// <summary>CHUNK 3 — `chosen_option:0` AGIT VRAIMENT contre le vrai back, et l'EFFET est lu AU BACK (psql), pas seulement le 200 :
+        /// la route coupée du joueur passe de `severed` à `active`. TÉMOIN : le MÊME geste avec l'option 1 (laisser) rend `noted` et la route reste `severed` — sans lui, un back qui
+        /// répare toujours (ou jamais) passerait pour correct. DÉTECTEUR (f2 11/11) : sur le bundle SERVI par la pile (pas celui du design), la 2ᵉ pose de la même carte rend
+        /// 409 `already_resolved` et la vue est « C’était déjà tranché » (cadre 6, pastille, pas de tampon neuf), jamais le cadre 7 ; les phrases d'après-geste servies se résolvent.</summary>
+        [UnityTest]
+        public IEnumerator ChosenOption0_Agit_EffetLuAuBack_Temoin_Option1_Et_DetecteurAlreadyResolved_SurLeBundleServi()
+        {
+            try
+            {
+                string tokenA = null, callsignA = null;
+                yield return SignUp((t, c) => { tokenA = t; callsignA = c; });
+                string playerA = SeederSupport.RunDevPsql($"SELECT player_id FROM player WHERE callsign = '{callsignA}';");
+                SeedSeveredRoute(playerA);
+                Assert.AreEqual("severed", EtatDeLaRoute(playerA), "précondition : la route est coupée avant le geste");
+
+                var sessionClient = new SessionClient { BaseUrl = BaseUrl };
+                SessionOpenDto payloadA = null;
+                yield return sessionClient.OpenSession(tokenA, "e2e-w3u1-c3-agir", dto => payloadA = dto, (c, m) => Assert.Fail($"{c}: {m}"));
+                Assert.IsNotNull(payloadA?.hl_card);
+                Assert.AreEqual("SEVERED_ROUTE_REBUILD", payloadA.hl_card.decision_type_key);
+
+                var ctrl = NewBareController();
+                ctrl.SetPayload(tokenA, payloadA.hl_card, payloadA.structural_budget);
+                Assert.AreEqual(2, payloadA.hl_card.options.Length, "la carte réelle sert deux options");
+                Assert.AreEqual(2, ctrl.LibellesDesBoutons.Count, "DEUX gestes (agir, laisser) sur une carte de décision à deux options (TD-724 livré)");
+                yield return ctrl.RequestCommit(HlCardClient.OptionAgir);
+                Assert.IsNull(ctrl.LastCommitError, $"commit errored: {ctrl.LastCommitError}");
+                CommitResponseDto d = ctrl.DerniereReponse;
+                Assert.IsNotNull(d);
+                Assert.AreEqual("executed", d.outcome, "option 0 : le geste AGIT");
+                Assert.AreEqual(1, d.executed_ids.Length, "une cible exécutée");
+                Assert.AreEqual("hl.outcome.severed_route.executed", d.outcome_i18n_key);
+                Assert.AreEqual("active", EtatDeLaRoute(playerA), "EFFET lu au back : la route a été réparée (severed → active)");
+
+                // TÉMOIN — l'option 1 (laisser) n'agit PAS : noted, aucune cible exécutée, la route reste coupée
+                string tokenB = null, callsignB = null;
+                yield return SignUp((t, c) => { tokenB = t; callsignB = c; });
+                string playerB = SeederSupport.RunDevPsql($"SELECT player_id FROM player WHERE callsign = '{callsignB}';");
+                SeedSeveredRoute(playerB);
+                SessionOpenDto payloadB = null;
+                yield return sessionClient.OpenSession(tokenB, "e2e-w3u1-c3-laisser", dto => payloadB = dto, (c, m) => Assert.Fail($"{c}: {m}"));
+                HighestLeverageCardController ctrlB = NewBareController();
+                ctrlB.SetPayload(tokenB, payloadB.hl_card, payloadB.structural_budget);
+                yield return ctrlB.RequestCommit(HlCardClient.OptionLaisser);
+                Assert.IsNull(ctrlB.LastCommitError, $"commit errored: {ctrlB.LastCommitError}");
+                Assert.AreEqual("noted", ctrlB.DerniereReponse.outcome);
+                Assert.AreEqual(0, ctrlB.DerniereReponse.executed_ids.Length);
+                Assert.AreEqual("severed", EtatDeLaRoute(playerB), "témoin : l'option 1 ne touche pas la route — sinon l'effet de l'option 0 ne prouverait rien");
+
+                // DÉTECTEUR sur le bundle SERVI par la pile
+                MafiaCleanCity.I18n.I18nCatalog.Oublier();
+                yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(new MafiaCleanCity.I18n.I18nClient { BaseUrl = BaseUrl }, tokenA);
+                Assert.IsTrue(MafiaCleanCity.I18n.I18nCatalog.Connait("error.hl_card.already_resolved"), "le bundle SERVI porte la clé du 409 (back @35bdd6cb)");
+                Assert.AreEqual("Le chantier de la route est lancé et payé. Les livraisons repassent à la fin des travaux.",
+                    ApresGesteHl.Mot(d, payloadA.hl_card.target_count), "la phrase d'après-geste SERVIE se résout avec n");
+                Assert.AreEqual("Rien ne bouge. On en reparlera si ça empire.", ApresGesteHl.Mot(ctrlB.DerniereReponse, payloadB.hl_card.target_count));
+
+                ctrl.SetPayload(tokenA, payloadA.hl_card, payloadA.structural_budget);   // la MÊME carte, désormais tranchée côté back
+                yield return ctrl.RequestCommit(HlCardClient.OptionAgir);
+                Assert.IsNotNull(ctrl.LastCommitError, "précondition : la carte déjà tranchée est refusée (409)");
+                ApresGesteHl.VueApres v = ctrl.DerniereVue;
+                Assert.IsNotNull(v, "un refus dont la clé est SERVIE lève l'après-geste");
+                Assert.AreEqual(ApresGesteHl.Issue.DejaTranchee, v.Issue, "409 already_resolved SERVI : « déjà tranché », jamais « La carte reste sur la table »");
+                Assert.AreEqual("C’était déjà tranché", v.Grave);
+                Assert.IsTrue(v.Deja); Assert.IsFalse(v.Tampon); Assert.IsNull(v.Mot);
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
         }
 
         // C4-F1 (à travers l'enveloppe aussi, via C4-F4) — un tap simple n'émet AUCUNE requête ;
@@ -199,9 +278,10 @@ namespace MafiaCleanCity.Shell.Tests
 
             // A SHORT TAP must emit ZERO requests (the long-press gate is not merely decorative).
             Assert.AreEqual(0, ctrl.CommitRequestCount);
-            ctrl.CommitButton.SimulateShortTap();
+            ctrl.LaisserButton.SimulateShortTap();
+            ctrl.AgirButton.SimulateShortTap();
             yield return null;
-            Assert.AreEqual(0, ctrl.CommitRequestCount, "a short tap NEVER emits a commit request");
+            Assert.AreEqual(0, ctrl.CommitRequestCount, "a short tap NEVER emits a commit request (ni sur LAISSER ni sur AGIR)");
 
             // A COMPLETED long press emits EXACTLY one — a REAL request, through payload.data.
             // SimulateCompletedLongPress fires OnLongPressCompleted synchronously, whose listener
@@ -210,7 +290,7 @@ namespace MafiaCleanCity.Shell.Tests
             // return client.Commit(...)`) is already visible right after this call. The REAL HTTP
             // round-trip inside client.Commit is NOT synchronous though — wait for it explicitly
             // (a couple of frames is not enough for an actual network round-trip in batchmode).
-            ctrl.CommitButton.SimulateCompletedLongPress();
+            ctrl.LaisserButton.SimulateCompletedLongPress();   // LAISSER (option 1) : le commit d'avant, déterministe ; AGIR dépense — jouée au créneau contre la pile
             Assert.AreEqual(1, ctrl.CommitRequestCount, "a completed long press emits EXACTLY one commit request (synchronous up to the first yield)");
             float waited = 0f;
             while (ctrl.LastCommitCommitted == null && ctrl.LastCommitError == null && waited < 10f)
@@ -222,7 +302,7 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(true, ctrl.LastCommitCommitted, "commit response.data.committed read through payload.data");
 
             // Firing the SAME completed gesture again must NOT double-count (LongPressButton fires once per press).
-            ctrl.CommitButton.SimulateShortTap(); // a distinct, later gesture — still zero-effect (already committed/terminal card)
+            ctrl.LaisserButton.SimulateShortTap(); // a distinct, later gesture — still zero-effect (already committed/terminal card)
             yield return null;
             Assert.AreEqual(1, ctrl.CommitRequestCount, "a later short tap still emits nothing");
         }

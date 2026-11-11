@@ -71,19 +71,25 @@ namespace MafiaCleanCity.Shell
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
         private readonly List<string> renderedTexts = new List<string>();
 
-        public LongPressButton CommitButton { get; private set; }
+        /// <summary>LES DEUX GESTES de la carte (cadre 5, TD-724 livré) : AGIR (`.g.or`, option 0 — la recommandation) et LAISSER (`.g`, option 1 —
+        /// n'agit pas). Chacun à APPUI LONG : aucun tap nu ne tranche (décision f2 11/11). Quand la carte ne sert pas exactement deux options, seul
+        /// LAISSER reste, sous « Prendre acte » (le geste d'avant : option 1).</summary>
+        public LongPressButton AgirButton { get; private set; }
+        public LongPressButton LaisserButton { get; private set; }
         private TMP_InputField typedConfirmInput;
         private Button typedConfirmButton;
+        private TextMeshProUGUI typedConfirmLabel, indicationDeSaisie;
+        /// <summary>L'option que la saisie va poster (celle du geste touché en dernier) : 0 = agir, 1 = laisser.</summary>
+        public int OptionDeLaSaisie { get; private set; } = HlCardClient.OptionLaisser;
+        private GameObject gestesGo;
         private TextMeshProUGUI titleText;
         private TextMeshProUGUI impactText;
         private TextMeshProUGUI urgencyText;
         private TextMeshProUGUI stateText;
-        // ④ (2026-09-23, maquette atelier 25 §2.2, non ratifiée : la MÉCANIQUE, pas le pixel) — les deux options SERVIES de la carte,
-        // montrées comme une RECOMMANDATION (options[0], puis [1] en alternative) et JAMAIS sur un bouton : mesuré par le back, elles
-        // sont DESCRIPTIVES (`hl-card-types.ts:99-102`) — commit ne reçoit aucun indice d'option et ne produit aucun effet pour les 8
-        // fournisseurs (il enregistre une décision de session). « Réparer via la file » sur le bouton du tampon mentirait. Les boutons
-        // gardent leurs libellés jusqu'aux mots de l'atelier (demandés par f2). Et l'entrée du rapport quand la carte est celle des rapports.
-        private TextMeshProUGUI commitLabel, rapportText, recommandationText, alternativeText, surtitreText, noteText, consequenceRecommandationText, consequenceAlternativeText;
+        // ④ (2026-09-23, maquette atelier 25 §2.2) — les deux options SERVIES de la carte. Jusqu'au chunk 3 (11/11) elles étaient DESCRIPTIVES (`commit` ne
+        // recevait aucune option, TD-724) et montrées en texte, jamais sur un bouton ; depuis, `commit` reçoit `chosen_option` : ce sont les LIBELLÉS des deux
+        // gestes (agir = option 0, laisser = option 1), chacun avec sa conséquence dessous. Et l'entrée du rapport quand la carte est celle des rapports.
+        private TextMeshProUGUI agirLabel, laisserLabel, rapportText, surtitreText, consequenceRecommandationText, consequenceAlternativeText;
         // Table 45 de l'atelier (a0ff6cba, accueil.carte.*) : les boutons disent ce qu'ils FONT — [Prendre acte] = commit (une décision de
         // session) — et la carte des rapports garde [Lire maintenant], qui OUVRE les rapports (navigation réelle, jamais le commit).
         // [Pas maintenant] et [Laisser en attente] (= skip) sont RETIRÉS (f2 08/10 nuit : gestes morts, voir `RequestSkip`).
@@ -92,13 +98,32 @@ namespace MafiaCleanCity.Shell
         private GameObject typedRowGo;
         /// <summary>Crochet de test : les deux options RENDUES en recommandation ([0], puis [1]), vide sans carte.</summary>
         public IReadOnlyList<string> OptionsRendues => optionsRendues;
-        /// <summary>Crochet de test : les libellés des boutons de la carte (le tampon seul depuis le retrait de « Pas maintenant », f2 08/10) — la garde
-        /// vérifie qu'aucun ne porte une option.</summary>
-        public IReadOnlyList<string> LibellesDesBoutons =>
-            new List<string> { commitLabel != null ? commitLabel.text : null };
+        /// <summary>Crochet de test : les libellés des gestes MONTRÉS (agir puis laisser ; le seul « Prendre acte » quand la carte ne sert pas deux options).
+        /// Depuis TD-724, un geste dit son option : le libellé est celui de l'option servie, jamais un mot du client.</summary>
+        public IReadOnlyList<string> LibellesDesBoutons
+        {
+            get
+            {
+                var l = new List<string>();
+                if (AgirButton != null && AgirButton.gameObject.activeInHierarchy && agirLabel != null) l.Add(agirLabel.text);
+                if (LaisserButton != null && LaisserButton.gameObject.activeInHierarchy && laisserLabel != null) l.Add(laisserLabel.text);
+                return l;
+            }
+        }
         /// <summary>Crochet de test : le libellé de [Lire maintenant] (carte des rapports), null s'il est caché.</summary>
         public string LibelleLire => lireButton != null && lireButton.gameObject.activeSelf && lireLabel != null ? lireLabel.text : null;
-        public bool TamponVisible => CommitButton != null && CommitButton.gameObject.activeSelf;
+        public bool TamponVisible => (AgirButton != null && AgirButton.gameObject.activeInHierarchy) || (LaisserButton != null && LaisserButton.gameObject.activeInHierarchy);
+        /// <summary>La dernière réponse de `commit` acceptée, et l'option postée.</summary>
+        public CommitResponseDto DerniereReponse { get; private set; }
+        public int? DerniereOptionPosee { get; private set; }
+        /// <summary>L'APRÈS-GESTE (cadres 6-7) n'est PAS rendu ici : ④ lève `OnApresGeste(carte, vue)` et le shell le monte dans ⑤ (la table feutre) — UN SEUL producteur, `ApresGesteHl.Vue`.
+        /// Levé après un commit accepté qui sert un mot, ET après un refus dont le back a servi la clé (404/409 de la carte, erreur de la 1ʳᵉ cible : cadres 6-7).</summary>
+        public event System.Action<HlCardDto, ApresGesteHl.VueApres> OnApresGeste;
+        /// <summary>La dernière vue d'après-geste levée (crochet de test), null sans.</summary>
+        public ApresGesteHl.VueApres DerniereVue { get; private set; }
+        /// <summary>La file de l'Accueil (`session/open`.`queue`), posée par le shell : la sous-ligne de la ligne-or dit si d'autres attendent.</summary>
+        public int FileEnAttente { get; set; }
+        private StructuralBudgetDto budgetServi;
         private readonly List<string> optionsRendues = new List<string>();
         /// <summary>Crochet de test : « Lire maintenant » a-t-il ouvert les rapports ?</summary>
         public bool RapportsOuverts { get; private set; }
@@ -130,6 +155,7 @@ namespace MafiaCleanCity.Shell
             EnsureInitialized();
             token = bearerToken;
             CurrentCard = card;
+            budgetServi = budget;
             CapReached = budget != null && budget.cap_reached;
 
             if (card == null || string.IsNullOrEmpty(card.card_id))
@@ -169,50 +195,72 @@ namespace MafiaCleanCity.Shell
             Render();
         }
 
-        /// <summary>Wired to `CommitButton.OnLongPressCompleted` — design C4-F1: a short tap NEVER
+        /// <summary>Wired to `AgirButton`/`LaisserButton` `.OnLongPressCompleted` — design C4-F1: a short tap NEVER
         /// reaches this (the gesture layer already filtered it out); this method itself refuses to
         /// emit anything while `CapBlocked` (design C4-F3 — client-side refusal, never even attempted
-        /// against the server, which would ALSO 409 STRUCTURAL_CAP_EXHAUSTED).</summary>
-        public IEnumerator RequestCommit()
+        /// against the server, which would ALSO 409 STRUCTURAL_CAP_EXHAUSTED).
+        /// `option` : 0 = AGIR, 1 = laisser (`HlCardClient.OptionAgir/OptionLaisser`) — TOUJOURS posée (TD-724 : un `{}` ferait « n'agit pas »
+        /// derrière un geste qui dit « agir »).</summary>
+        public IEnumerator RequestCommit(int option)
         {
             EnsureInitialized();
             if (RenderedState != CardState.Available || CurrentCard == null) yield break; // CapBlocked/NoCard -> refused, zero requests
             CommitRequestCount++;
             LastCommitError = null;
             LastCommitCommitted = null;
+            DerniereReponse = null;
+            DerniereOptionPosee = option;
             RefusRendu = null;
             yield return client.Commit(token, CurrentCard.card_id,
-                dto => LastCommitCommitted = dto.committed,
-                (code, msg) => LastCommitError = $"{code}: {msg}");
+                dto => { DerniereReponse = dto; LastCommitCommitted = dto.committed; },
+                (code, msg) => LastCommitError = $"{code}: {msg}",
+                option);
             if (this == null) yield break;
-            if (LastCommitError == null && LastCommitCommitted == true) { TrancheePourDeBon(); yield break; }
-            // un refus se DIT : la phrase servie (`error.core_loops.structural_cap_exhausted`…), sinon celle de la carte — jamais une erreur muette
+            if (LastCommitError == null && LastCommitCommitted == true) { TrancheePourDeBon(DerniereReponse); yield break; }
+            // un refus se DIT : la phrase servie (`error.hl_card.*` du lot back « après-geste », `error.core_loops.structural_cap_exhausted`…), sinon celle de la carte — jamais une erreur muette
             RefusRendu = client.DernierePhraseDeRefus
                          ?? MafiaCleanCity.I18n.Libelle.Gabarit("accueil.carte.la_decision_n_a_pas_ete_prise", "La décision n\u2019a pas été prise.");
             if (stateText != null) { stateText.text = RefusRendu; Track(RefusRendu); Visibilites(); }
+            // le back a SERVI la clé du refus : c'est un cadre d'après-geste (carte qui reste, déjà tranchée, disparue, rien à agir) — le shell le monte dans ⑤
+            LeverLApres(new ApresGesteHl.IssueDuGeste { Carte = CurrentCard, CleDeRefus = client.DerniereCleDeRefus, PhraseDeRefus = client.DernierePhraseDeRefus });
         }
 
-        /// <summary>La décision est ACCEPTÉE par le back : on le compte et on l'annonce au shell (qui relit la session et remonte l'Accueil).</summary>
-        private void TrancheePourDeBon()
+        /// <summary>La décision est ACCEPTÉE par le back : on le compte. ⚠️ L'ANNONCE ATTEND L'APRÈS-GESTE quand le back en sert le mot : la carte tranchée dit CE QUI S'EST PASSÉ
+        /// (`ApresGesteHl.Vue`, clés servies, jamais dérivées) — ④ lève `OnApresGeste`, le shell monte ⑤ en mode après, et c'est ⑤ qui annonce au « Retour à l'accueil ». Sans mot
+        /// (`navigate`, ou clé que le back ne sert pas encore) il n'y a rien à lire : la carte remonte tout de suite, comme avant (plus de geste mort ; TD-938 : `navigate_screen` non suivi).</summary>
+        private void TrancheePourDeBon(CommitResponseDto reponse = null)
         {
             DecisionsTranchees++;
+            if (LeverLApres(new ApresGesteHl.IssueDuGeste { Carte = CurrentCard, Reponse = reponse })) return;
             OnDecisionTranchee?.Invoke();
         }
 
+        /// <summary>Calcule la vue et la lève ; faux = rien à lire (l'appelant garde son comportement d'avant).</summary>
+        private bool LeverLApres(ApresGesteHl.IssueDuGeste issue)
+        {
+            DerniereVue = null;
+            ApresGesteHl.VueApres vue = ApresGesteHl.Vue(issue, CurrentCard != null ? CurrentCard.target_count : 0, FileEnAttente, budgetServi);
+            if (vue == null) return false;
+            DerniereVue = vue;
+            OnApresGeste?.Invoke(CurrentCard, vue);
+            return true;
+        }
+
         /// <summary>⛔ Réservé aux tests hors réseau : rejoue EXACTEMENT ce qu'un commit accepté déclenche (le compte et l'annonce au shell).</summary>
-        public void DecisionAccepteePourTest() => TrancheePourDeBon();
+        public void DecisionAccepteePourTest(CommitResponseDto reponse = null) => TrancheePourDeBon(reponse);
 
         /// <summary>The accessible ALTERNATIVE to the long press (canon: "alternative typed-confirm
         /// obligatoire — utilisateurs sans accès haptique", F2). A tap on the confirm button ALONE
         /// never commits — the typed text must match `MotCle` (case-insensitive; the
         /// SAME "no bare tap confirms a destructive action" rule the canon states for BOTH paths).
-        /// Routes through the SAME `RequestCommit()` — one behaviour, two triggers, never two
+        /// Le mot est celui du geste TOUCHÉ en dernier (`OptionDeLaSaisie`) : la saisie poste SON option.
+        /// Routes through the SAME `RequestCommit(option)` — one behaviour, two triggers, never two
         /// divergent request paths that could drift apart.</summary>
         public IEnumerator RequestCommitViaTypedConfirm(string typedText)
         {
             if (!string.Equals((typedText ?? "").Trim(), MotCle, StringComparison.OrdinalIgnoreCase))
                 yield break; // wrong/empty keyword -> refused, zero requests (mirrors the CapBlocked refusal)
-            yield return RequestCommit();
+            yield return RequestCommit(OptionDeLaSaisie);
         }
 
         /// <summary>La route `skip` (design §8 « carry semantics »). ⛔ AUCUN GESTE NE L'APPELLE PLUS (f2 08/10 nuit, option (c)) : « Pas
@@ -238,20 +286,19 @@ namespace MafiaCleanCity.Shell
             renderedTexts.Clear();
             optionsRendues.Clear();
             if (rapportText != null) rapportText.text = "";
-            if (recommandationText != null) recommandationText.text = "";
-            if (alternativeText != null) alternativeText.text = "";
+            if (agirLabel != null) agirLabel.text = "";
+            if (laisserLabel != null) laisserLabel.text = "";
             if (consequenceRecommandationText != null) consequenceRecommandationText.text = "";
             if (consequenceAlternativeText != null) consequenceAlternativeText.text = "";
             if (lireLabel != null) lireLabel.text = "";
             if (surtitreText != null) surtitreText.text = "";
-            if (noteText != null) noteText.text = "";
             bool rapports = RenderedState == CardState.Available && EstCarteDesRapports;
             // ⛔ PASSE UX 26/09 (§G P1) — sans carte (« Rien à signaler »), l'Accueil montrait QUAND MÊME le bloc « Tamponner — appui
             //    long », « Skip » et la rangée « Type "COMMIT" » : des gestes sur rien. Les gestes n'existent que s'il y a une carte.
             // 08/10 nuit (cadre 5) : le geste n'existe que s'il AGIT — pas sans carte, pas sur la carte des rapports (elle se LIT), pas quand la limite
             // de structure est atteinte (`RequestCommit` refuserait : un geste qui refuse toujours serait un geste mort). La saisie est cachée au repos.
             Montrer(lireButton, rapports);
-            Montrer(CommitButton, RenderedState == CardState.Available && !rapports);
+            if (gestesGo != null) gestesGo.SetActive(RenderedState == CardState.Available && !rapports);
             if (typedRowGo != null) typedRowGo.SetActive(false);
             if (stateText != null) stateText.text = "";
             switch (RenderedState)
@@ -267,7 +314,7 @@ namespace MafiaCleanCity.Shell
                     Track(stateText.text);
                     break;
                 case CardState.CapBlocked:
-                    titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key);
+                    titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key, CurrentCard.target_count);
                     impactText.text = ImpactLabel(CurrentCard.impact_bucket);
                     urgencyText.text = UrgencyLabel(CurrentCard.urgency_bucket);
                     stateText.text = Lib("carte", "Limite de structure atteinte");
@@ -285,7 +332,7 @@ namespace MafiaCleanCity.Shell
                         lireLabel.text = Lib("carte", "Lire maintenant");
                         Track(lireLabel.text);
                     }
-                    titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key);
+                    titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key, CurrentCard.target_count);
                     impactText.text = ImpactLabel(CurrentCard.impact_bucket);
                     urgencyText.text = UrgencyLabel(CurrentCard.urgency_bucket);
                     // « Prêt » n'est plus dit : le cadre 5 n'a pas de ligne d'état ; le geste dit qu'on peut agir.
@@ -301,19 +348,21 @@ namespace MafiaCleanCity.Shell
         /// puis le bloc est ajusté à sa bande.</summary>
         private void Visibilites()
         {
-            foreach (TextMeshProUGUI t in new[] { titleText, stateText, rapportText, surtitreText, noteText, consequenceRecommandationText, consequenceAlternativeText })
+            foreach (TextMeshProUGUI t in new[] { titleText, stateText, rapportText, surtitreText, consequenceRecommandationText, consequenceAlternativeText })
                 if (t != null) t.gameObject.SetActive(!string.IsNullOrEmpty(t.text));
             if (niveauxGo != null) niveauxGo.SetActive(!string.IsNullOrEmpty(impactText.text) || !string.IsNullOrEmpty(urgencyText.text));
-            if (optionsGo != null) optionsGo.SetActive(!string.IsNullOrEmpty(recommandationText.text) || !string.IsNullOrEmpty(alternativeText.text));
+            if (optionsGo != null) optionsGo.SetActive(!string.IsNullOrEmpty(consequenceRecommandationText.text) || !string.IsNullOrEmpty(consequenceAlternativeText.text));
             Ajuster();
         }
 
-        /// <summary>④ les deux options SERVIES (clés `hl.option.*`, traduites par le catalogue) en RECOMMANDATION, exactement deux, sinon
-        /// rien — jamais sur les boutons (options descriptives, voir les champs). L'entrée du rapport quand le nom est lu.</summary>
+        /// <summary>④ les deux options SERVIES (clés `hl.option.*`, traduites par le catalogue) sont les LIBELLÉS des deux gestes (cadre 5, TD-724 livré :
+        /// « Mettre en réparation » / « Laisser en l'état »), chacune avec sa CONSÉQUENCE dessous ; exactement deux, sinon le seul geste « Prendre acte »
+        /// (option 1 : il n'agit pas, comme avant). L'entrée du rapport quand le nom est lu.</summary>
         private void RendreLesOptions()
         {
             DecisionOptionDto[] o = CurrentCard != null ? CurrentCard.options : null;
-            if (o != null && o.Length == 2 && o[0] != null && o[1] != null)
+            bool deux = o != null && o.Length == 2 && o[0] != null && o[1] != null;
+            if (deux)
             {
                 string agir = MafiaCleanCity.I18n.Libelle.Gabarit(o[0].label, "—");
                 string laisser = MafiaCleanCity.I18n.Libelle.Gabarit(o[1].label, "—");
@@ -328,22 +377,24 @@ namespace MafiaCleanCity.Shell
                 else
                 {
                     if (surtitreText != null) surtitreText.text = Lib("carte", "Ce qu’on peut faire");
-                    if (recommandationText != null) recommandationText.text = agir;
-                    if (alternativeText != null) alternativeText.text = laisser;
-                    if (consequenceRecommandationText != null) consequenceRecommandationText.text = ConsequenceDe(o[0].label);
-                    if (consequenceAlternativeText != null) consequenceAlternativeText.text = ConsequenceDe(o[1].label);
+                    if (agirLabel != null) agirLabel.text = agir;
+                    if (laisserLabel != null) laisserLabel.text = laisser;
+                    if (consequenceRecommandationText != null) consequenceRecommandationText.text = ConsequenceDe(o[0]);
+                    if (consequenceAlternativeText != null) consequenceAlternativeText.text = ConsequenceDe(o[1]);
                     Track(consequenceRecommandationText != null ? consequenceRecommandationText.text : null);
                     Track(consequenceAlternativeText != null ? consequenceAlternativeText.text : null);
-                    if (noteText != null) noteText.text = Lib("carte", "prendre acte n’agit pas à votre place");
                     Track(surtitreText != null ? surtitreText.text : null);
-                    Track(noteText != null ? noteText.text : null);
                 }
                 Track(agir);
                 Track(laisser);
             }
             if (!EstCarteDesRapports)
             {
-                if (commitLabel != null) commitLabel.text = Lib("carte", "Prendre acte");
+                if (AgirButton != null) Montrer(AgirButton, deux);
+                if (!deux && laisserLabel != null) laisserLabel.text = Lib("carte", "Prendre acte");
+                if (!deux) Track(laisserLabel != null ? laisserLabel.text : null);
+                OptionDeLaSaisie = HlCardClient.OptionLaisser;
+                MettreAJourLaSaisie();
             }
             if (EstCarteDesRapports && !string.IsNullOrWhiteSpace(NomDuRapport) && rapportText != null)
             {
@@ -377,12 +428,12 @@ namespace MafiaCleanCity.Shell
         // L'ancien widget W3U1 (textes de 14-18 u en haut à gauche, rangée d'actions étirée en aplat jaune `accentGold`) n'était construit
         // sur AUCUN cadre — mesuré sur la planche A01 « tête » du créneau du 08/10 nuit. La carte prend maintenant la structure, la typographie,
         // la matière et la place du cadre 5 de `ecrans-brennar-accueil.html` (atelier master 5240cec, règles `.acc4 .verre/.titre/.niveaux/.sur/
-        // .gestes/.g/.g.or/.csq4/.sous`), avec deux règles de f2 tant que TD-724 (hl-card « agit ») n'est pas livré — le commit ne reçoit AUCUNE
-        // option (mesuré : `hl-card.controller.ts:41-46`, `DecisionOption` « descriptive flavor ») :
-        //   · les OPTIONS sont des FAITS de la carte, en TEXTE (`.csq4`) — rien qui ait l'air d'un bouton : ni cerne, ni plaque, ni flèche ;
-        //   · UN seul geste, « PRENDRE ACTE », dans la grammaire `.g.or` du cadre (pilule lustrée ficheCtaOrHaut → ficheCtaOrBas, bord ficheCtaOrBord,
-        //     encre ficheCtaOrEncre — les jetons égalent le CSS au 1/255), à APPUI LONG ; l'alternative par SAISIE du canon (global_conventions_core
-        //     .md:129-138) est DISCRÈTE : invisible au repos, un appui COURT sur le geste la révèle (patron ㉓).
+        // .gestes/.g/.g.or/.csq4/.sous`), avec TD-724 LIVRÉ (chunk 3, 11/11) :
+        //   · DEUX gestes, un par option servie — AGIR `.g.or` (pilule lustrée ficheCtaOrHaut → ficheCtaOrBas, bord ficheCtaOrBord, encre ficheCtaOrEncre,
+        //     les jetons égalent le CSS au 1/255) et LAISSER `.g` (plaque sombre) — chacun à APPUI LONG ; l'option posée est TOUJOURS `chosen_option` ;
+        //   · sous chacun, sa CONSÉQUENCE servie (`.csq4`) ; l'alternative par SAISIE du canon (global_conventions_core.md:129-138) est DISCRÈTE : invisible
+        //     au repos, un appui COURT sur un geste la révèle, pour SON option (patron ㉓).
+        //   · après un commit accepté (ou un refus servi), l'APRÈS-GESTE (`ApresGesteHl.Vue`) n'est PAS rendu ici : ④ lève `OnApresGeste`, le shell monte ⑤ (table feutre, cadres 6-7).
         // La carte des rapports (cadre 2) garde son geste RÉEL « LIRE MAINTENANT » (navigation, aucun commit), même grammaire. Le calme (cadre 0) : le
         // titre et sa phrase. Le verre est CELUI de « LA SUITE » (`LaSuitePanelController.PoserLeVerre`) : ancré en BAS de la bande, à sa hauteur
         // préférée, réduit à l'échelle s'il dépasse (`Ajuster`) — son bas reste à la marge de la ligne de file (l'ancrage de ④).
@@ -441,18 +492,21 @@ namespace MafiaCleanCity.Shell
 
             // `.sur{font:700 6.6px/1 'DejaVu Sans';letter-spacing:.28em;text-transform:uppercase;color:#b9ad92;text-align:center}` (margin-top 10 px)
             surtitreText = Texte(c, "CeQuOnPeutFaire", 6.6f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Bold | FontStyles.UpperCase, 28f, margeHaut: 10f);
-            // LES OPTIONS — des FAITS, en TEXTE `.csq4` (8 px, #b9ad92, centrées, deux colonnes à `gap:8px`) : ni cerne, ni plaque, ni flèche (f2)
-            optionsGo = Rangee(c, "Options", U(8f), margeHaut: 5f);
-            // F1(b) (juge r4, 09/10 ; f2 : élément ABSENT, classe A) : SOUS CHAQUE OPTION, sa CONSÉQUENCE (`.csq4-rang .csq4` — 8 px, `#b9ad92`, centrée, `margin-top:2px`) : la clé
-            // SERVIE `<label>.projected_consequence`, lue au catalogue, jamais une chaîne en dur. Chaque colonne empile l'option puis sa conséquence.
-            (recommandationText, consequenceRecommandationText) = ColonneDOption(optionsGo.transform, "Recommandation");
-            (alternativeText, consequenceAlternativeText) = ColonneDOption(optionsGo.transform, "Alternative");
+            // LES DEUX GESTES `.gestes{display:flex;gap:8px;margin-top:11px}` : AGIR (`.g.or`, la pilule lustrée) et LAISSER (`.g`, la plaque sombre), chacun à
+            // APPUI LONG (aucun tap nu ne tranche, f2 11/11) ; un appui COURT sur l'un révèle la saisie du canon, pour SON option.
+            gestesGo = Rangee(c, "Gestes", U(8f), margeHaut: 11f);
+            AgirButton = Geste(gestesGo.transform, "AgirButton", out agirLabel, margeHaute: false, replie: true).AddComponent<LongPressButton>();
+            AgirButton.OnLongPressCompleted += () => StartCoroutine(RequestCommit(HlCardClient.OptionAgir));
+            AgirButton.OnShortTap += () => RevelerLaSaisie(HlCardClient.OptionAgir);
+            LaisserButton = Geste(gestesGo.transform, "LaisserButton", out laisserLabel, margeHaute: false, sombre: true, replie: true).AddComponent<LongPressButton>();
+            LaisserButton.OnLongPressCompleted += () => StartCoroutine(RequestCommit(HlCardClient.OptionLaisser));
+            LaisserButton.OnShortTap += () => RevelerLaSaisie(HlCardClient.OptionLaisser);
 
-            // LE GESTE `.g.or` (margin-top 11 px) — « PRENDRE ACTE » à appui long ; un appui COURT révèle la saisie (alternative du canon)
-            CommitButton = Geste(c, "CommitButton", out commitLabel).AddComponent<LongPressButton>();
-            CommitButton.OnLongPressCompleted += () => StartCoroutine(RequestCommit());
-            CommitButton.OnShortTap += RevelerLaSaisie;
-            commitLabel.text = Lib("carte", "Prendre acte");   // table 45 (servie)
+            // `.csq4-rang` : SOUS CHAQUE GESTE, sa CONSÉQUENCE (8 px, `#b9ad92`, centrée, deux colonnes à `gap:8px`) : la clé SERVIE `<label>.projected_consequence`,
+            // lue au catalogue, jamais une chaîne en dur (F1(b) du juge r4, 09/10).
+            optionsGo = Rangee(c, "Consequences", U(8f), margeHaut: 5f);
+            consequenceRecommandationText = ColonneDeConsequence(optionsGo.transform, "RecommandationConsequence");
+            consequenceAlternativeText = ColonneDeConsequence(optionsGo.transform, "AlternativeConsequence");
 
             // ④ [Lire maintenant] — la carte des rapports seulement : OUVRE les rapports, sans tampon (table 45). Même grammaire `.g.or`.
             GameObject lireGo = Geste(c, "LireButton", out lireLabel);
@@ -460,9 +514,6 @@ namespace MafiaCleanCity.Shell
             lireButton.targetGraphic = lireGo.GetComponent<Image>();
             lireButton.onClick.AddListener(OuvrirLesRapports);
             lireGo.SetActive(false);
-
-            // `.csq4` sous le geste : « prendre acte n'agit pas à votre place » (clé servie) — la conséquence vraie du geste
-            noteText = Texte(c, "PrendreActeNote", 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f, margeHaut: 5f);
 
             // L'ALTERNATIVE PAR SAISIE (canon : obligatoire pour l'accessibilité) — discrète : cachée au repos, révélée par un appui court sur le geste.
             // Le champ au style de la plaque sombre du cadre (`.g` : fond à peine levé, filet clair) ; « tapez PRENDRE ACTE » en indication.
@@ -483,15 +534,13 @@ namespace MafiaCleanCity.Shell
             typedConfirmInput = inputGo.AddComponent<TMP_InputField>();
             TextMeshProUGUI inputText = ChampTexte(inputGo.transform, "Text", DesignTokens.Current.hudCreme);
             TextMeshProUGUI indication = ChampTexte(inputGo.transform, "Indication", DesignTokens.Current.hudCremeSecondary);
-            indication.text = MafiaCleanCity.I18n.Libelle.Gabarit("accueil.carte.tapez_mot", "tapez {mot}",
-                new Dictionary<string, string> { { "mot", MotCle } });
+            indicationDeSaisie = indication;
             indication.fontStyle = FontStyles.Italic;
             typedConfirmInput.textComponent = inputText;
             typedConfirmInput.placeholder = indication;
 
-            GameObject typedConfirmGo = Geste(typedRow.transform, "TypedConfirmButton", out TextMeshProUGUI typedConfirmLabel, margeHaute: false);
+            GameObject typedConfirmGo = Geste(typedRow.transform, "TypedConfirmButton", out typedConfirmLabel, margeHaute: false);
             typedConfirmGo.GetComponent<LayoutElement>().flexibleWidth = 0f;
-            typedConfirmLabel.text = Lib("carte", "Prendre acte");
             typedConfirmButton = typedConfirmGo.AddComponent<Button>();
             typedConfirmButton.targetGraphic = typedConfirmGo.GetComponent<Image>();
             typedConfirmButton.onClick.AddListener(() => StartCoroutine(RequestCommitViaTypedConfirm(typedConfirmInput.text)));
@@ -499,18 +548,37 @@ namespace MafiaCleanCity.Shell
             typedRow.SetActive(false);
         }
 
-        /// <summary>Le mot-clé de la saisie : le libellé MÊME du geste, en capitales (localisé avec lui).</summary>
-        public static string MotCle => Lib("carte", "Prendre acte").ToUpperInvariant();
+        /// <summary>Le mot-clé de la saisie : le libellé MÊME du geste touché (`OptionDeLaSaisie`), en capitales (localisé avec lui) ; « Prendre acte » quand la
+        /// carte ne sert pas deux options (seul geste : laisser).</summary>
+        public string MotCle => MotCleDe(OptionDeLaSaisie);
+
+        public string MotCleDe(int option)
+        {
+            string libelle = option >= 0 && option < optionsRendues.Count ? optionsRendues[option] : Lib("carte", "Prendre acte");
+            return libelle.ToUpperInvariant();
+        }
 
         /// <summary>Crochet de test : la saisie est-elle montrée ?</summary>
         public bool SaisieVisible => typedRowGo != null && typedRowGo.activeSelf;
 
-        /// <summary>Un appui COURT sur le geste révèle l'alternative par saisie (elle reste cachée au repos : discrète).</summary>
-        public void RevelerLaSaisie()
+        /// <summary>Un appui COURT sur un geste révèle l'alternative par saisie, pour SON option (elle reste cachée au repos : discrète).</summary>
+        public void RevelerLaSaisie(int option)
         {
             if (typedRowGo == null || RenderedState != CardState.Available || EstCarteDesRapports) return;
+            OptionDeLaSaisie = option;
+            MettreAJourLaSaisie();
             typedRowGo.SetActive(true);
             Ajuster();
+        }
+
+        /// <summary>Le bouton et l'indication de la saisie disent le mot du geste touché.</summary>
+        private void MettreAJourLaSaisie()
+        {
+            if (typedConfirmLabel == null || indicationDeSaisie == null) return;
+            string libelle = OptionDeLaSaisie >= 0 && OptionDeLaSaisie < optionsRendues.Count ? optionsRendues[OptionDeLaSaisie] : Lib("carte", "Prendre acte");
+            typedConfirmLabel.text = libelle;
+            indicationDeSaisie.text = MafiaCleanCity.I18n.Libelle.Gabarit("accueil.carte.tapez_mot", "tapez {mot}",
+                new Dictionary<string, string> { { "mot", libelle.ToUpperInvariant() } });
         }
 
         /// <summary>Le bloc ne sort JAMAIS de sa bande : plus haut qu'elle (petit écran, titre long), il se réduit à l'échelle depuis son pied
@@ -569,27 +637,28 @@ namespace MafiaCleanCity.Shell
             return go;
         }
 
-        /// <summary>Une COLONNE d'option (`flex:1`) : le texte de l'option, puis sa conséquence dessous (`.csq4`, `margin-top:2px`). Un texte vide est retiré par `Visibilites`/`Render` (il prendrait sa ligne).</summary>
-        private static (TextMeshProUGUI option, TextMeshProUGUI consequence) ColonneDOption(Transform parent, string nom)
+        /// <summary>Une COLONNE de conséquence (`flex:1`, `.csq4`, 8 px, `margin-top:2px`) sous son geste. Un texte vide est retiré par `Visibilites`/`Render` (il prendrait sa ligne).</summary>
+        private static TextMeshProUGUI ColonneDeConsequence(Transform parent, string nom)
         {
-            GameObject col = new GameObject(nom + "_Colonne", typeof(RectTransform));
-            col.transform.SetParent(parent, false);
-            VerticalLayoutGroup v = col.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 0f;
-            v.childAlignment = TextAnchor.UpperCenter;
-            v.childControlWidth = true; v.childControlHeight = true;
-            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
-            col.AddComponent<LayoutElement>().flexibleWidth = 1f;
-            TextMeshProUGUI option = Texte(col.transform, nom, 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f);
-            TextMeshProUGUI consequence = Texte(col.transform, nom + "Consequence", 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f, margeHaut: 2f);
-            return (option, consequence);
+            TextMeshProUGUI consequence = Texte(parent, nom, 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f, margeHaut: 2f);
+            // `.csq4-rang .csq4{flex:1}` = `flex: 1 1 0%` : la BASE est 0, les deux colonnes se partagent la rangée à parts ÉGALES, comme les deux gestes au-dessus. Sans `preferredWidth = 0`, la largeur
+            // PRÉFÉRÉE du texte (sa ligne naturelle, ~550 px pour une longue conséquence) sert de base : la colonne de gauche court sous le bouton de droite et la couture glisse de x=528 à x=670,5
+            // (juge visuel ⊥ tour 2, F1 : on lisait la mauvaise conséquence sous un geste). `minWidth = 0` laisse le texte REFLUER dans sa colonne.
+            LayoutElement colonne = consequence.gameObject.AddComponent<LayoutElement>();
+            colonne.flexibleWidth = 1f;
+            colonne.preferredWidth = 0f;
+            colonne.minWidth = 0f;
+            return consequence;
         }
 
-        /// <summary>LA CONSÉQUENCE servie d'une option : la clé `<label>.projected_consequence` si le catalogue la SERT, sinon rien (jamais un repli inventé : une conséquence fausse vaut moins qu'une absence).</summary>
-        private static string ConsequenceDe(string labelCle)
+        /// <summary>LA CONSÉQUENCE servie d'une option : la clé SERVIE `projected_consequence` (à défaut `<label>.projected_consequence`) si le catalogue la SERT, sinon rien (jamais un repli inventé : une conséquence fausse vaut moins qu'une absence).</summary>
+        private static string ConsequenceDe(DecisionOptionDto option)
         {
-            if (string.IsNullOrEmpty(labelCle)) return "";
-            string cle = labelCle + ".projected_consequence";
+            if (option == null) return "";
+            // V20 : la clé SERVIE (`projected_consequence`) ; la concaténation `<label>.projected_consequence` ne sert que si la réponse ne porte pas le champ
+            string cle = !string.IsNullOrEmpty(option.projected_consequence) ? option.projected_consequence
+                : string.IsNullOrEmpty(option.label) ? null : option.label + ".projected_consequence";
+            if (string.IsNullOrEmpty(cle)) return "";
             if (!MafiaCleanCity.I18n.Libelle.EstServie(cle)) return "";
             return MafiaCleanCity.I18n.Libelle.Gabarit(cle, "");
         }
@@ -597,7 +666,7 @@ namespace MafiaCleanCity.Shell
         /// <summary>LE GESTE `.g.or` du cadre : la pilule LUSTRÉE de « LA SUITE » (plaque ficheCtaOrBas qui sert de masque, dégradé ficheCtaOrHaut →
         /// ficheCtaOrBas, bord ficheCtaOrBord, rayon `RayonGeste`), libellé ficheCtaOrEncre, 9 px gras, capitales `.12em` ; `margin-top:11px`,
         /// pleine largeur (un seul geste : `flex:1`).</summary>
-        private static GameObject Geste(Transform parent, string nom, out TextMeshProUGUI libelle, bool margeHaute = true)
+        private static GameObject Geste(Transform parent, string nom, out TextMeshProUGUI libelle, bool margeHaute = true, bool sombre = false, bool replie = false)
         {
             Transform hote = parent;
             if (margeHaute)
@@ -615,7 +684,7 @@ namespace MafiaCleanCity.Shell
             GameObject geste = new GameObject(nom, typeof(RectTransform));
             geste.transform.SetParent(hote, false);
             Image im = geste.AddComponent<Image>();
-            LaSuitePanelController.Arrondir(im, LaSuitePanelController.RayonGeste, DesignTokens.Current.ficheCtaOrBas);
+            LaSuitePanelController.Arrondir(im, LaSuitePanelController.RayonGeste, sombre ? LaSuitePanelController.FondGesteSombre : DesignTokens.Current.ficheCtaOrBas);
             geste.AddComponent<Mask>().showMaskGraphic = false;
             GameObject lustre = new GameObject("Degrade", typeof(RectTransform));
             lustre.transform.SetParent(geste.transform, false);
@@ -625,15 +694,19 @@ namespace MafiaCleanCity.Shell
             Image degrade = lustre.AddComponent<Image>();
             degrade.sprite = ProceduralUI.VerticalGradient(64, DesignTokens.Current.ficheCtaOrHaut, DesignTokens.Current.ficheCtaOrBas);
             degrade.raycastTarget = false;
-            LaSuitePanelController.Lisere(geste.transform, LaSuitePanelController.RayonGeste, DesignTokens.Current.ficheCtaOrBord);
+            lustre.SetActive(!sombre);   // `.g` (sombre) : la plaque seule, sans lustre
+            LaSuitePanelController.Lisere(geste.transform, LaSuitePanelController.RayonGeste, sombre ? LaSuitePanelController.BordDeGesteSombre : DesignTokens.Current.ficheCtaOrBord);
             HorizontalLayoutGroup bh = geste.AddComponent<HorizontalLayoutGroup>();
             bh.padding = new RectOffset(Mathf.RoundToInt(U(4f)), Mathf.RoundToInt(U(4f)), 0, 0);
             bh.childAlignment = TextAnchor.MiddleCenter;
             bh.childControlWidth = true; bh.childControlHeight = true;
             bh.childForceExpandWidth = false; bh.childForceExpandHeight = false;
             LayoutElement le = geste.AddComponent<LayoutElement>();
-            le.minHeight = le.preferredHeight = LaSuitePanelController.HauteurDuGeste;
+            le.minHeight = le.preferredHeight = replie ? U(35.8f) : LaSuitePanelController.HauteurDuGeste;   // `.acc4 .g` : 35,8 px CSS — le libellé d'une option (« Mettre en réparation ») tient sur DEUX lignes
             le.flexibleWidth = 1f;
+            // `.acc4 .g{flex:1}` = `flex: 1 1 0%` : dans la rangée des DEUX gestes, la base est 0 et les deux boutons se partagent la rangée à parts ÉGALES — pas à la longueur de leur libellé (un libellé long
+            // faisait un bouton de 566 contre 448). Les conséquences en dessous prennent les mêmes colonnes (`ColonneDeConsequence`), donc la même couture (juge visuel ⊥ tour 2, F1).
+            if (replie) { le.preferredWidth = 0f; le.minWidth = 0f; }
             GameObject motGo = new GameObject("Label", typeof(RectTransform));
             motGo.transform.SetParent(geste.transform, false);
             libelle = motGo.AddComponent<TextMeshProUGUI>();
@@ -641,10 +714,11 @@ namespace MafiaCleanCity.Shell
             libelle.fontSize = U(9f);
             libelle.fontStyle = FontStyles.Bold | FontStyles.UpperCase;   // la casse est un STYLE : le texte servi reste intact
             libelle.characterSpacing = 12f;
-            libelle.color = DesignTokens.Current.ficheCtaOrEncre;
+            libelle.color = sombre ? DesignTokens.Current.hudCreme : DesignTokens.Current.ficheCtaOrEncre;
             libelle.alignment = TextAlignmentOptions.Center;
-            libelle.enableWordWrapping = false;
+            libelle.enableWordWrapping = replie;
             libelle.raycastTarget = false;
+            if (replie) { LayoutElement ll = motGo.AddComponent<LayoutElement>(); ll.flexibleWidth = 1f; ll.minWidth = 0f; }   // le libellé remplit le geste et REFLUE (sinon il déborde)
             return geste;
         }
 

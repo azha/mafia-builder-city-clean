@@ -38,7 +38,7 @@ namespace MafiaCleanCity.Mouvements.Tests
         /// (`TopBarController.Update`, `Gyrophare.Update`, `AmbientPulseLoop.Update`), 9 nommés ici. `ListeDefilante.LateUpdate` écrit l'alpha du
         /// fondu et la position de l'ascenseur : ils sont fonction de la POSITION de défilement, jamais du temps (mise en page, comme
         /// `LaSuitePanelController`) — consigné en dette 25. `LaSuitePanelController.LateUpdate` écrit une échelle (`Ajuster` → `localScale`) :
-        /// de la mise en page (ajustement à la bande), pas du mouvement. Elle ne fait que RÉTRÉCIR : un ajout est une décision nommée.</summary>
+        /// de la mise en page (ajustement à la bande), pas du mouvement. `DecisionDetailScreenController.LateUpdate` (⑤, ajouté le 11/11 — décision f2 11/11, proposée par CLIENT-2) resynchronise les retraits de la zone sûre : de la mise en page, comme `LaSuitePanelController`, présente depuis le 08/10 (F12/F13) et jamais vue par cette garde, hors du filtre. Elle ne fait que RÉTRÉCIR : un ajout est une décision nommée.</summary>
         internal static readonly string[] UpdateAdmis =
         {
             "CityMap/DistrictMapNavigation.cs:Update",                       // pan/zoom au doigt
@@ -46,6 +46,7 @@ namespace MafiaCleanCity.Mouvements.Tests
             "Operational/Exceptions/ExceptionQueueController.cs:LateUpdate", // `CalerLeZinc`, mise en page
             "Operational/Reputation/ReputationScreenController.cs:LateUpdate", // visibilité de l'ascenseur
             "Shell/AppShell.cs:Update",                                      // la touche retour
+            "Shell/DecisionDetailScreenController.cs:LateUpdate",            // ⑤ (décision f2 11/11) : retrait haut / marge basse de la zone sûre (`ShellChrome` → `offsetMax`, `padding.bottom`) + relance de la mise en page ; aucune écriture de mouvement
             "Shell/LaSuitePanelController.cs:LateUpdate",                    // `Ajuster` → `localScale` d'ajustement à la bande
             "ShellContracts/LongPressButton.cs:Update",                      // minuterie, aucune écriture visuelle
             "ShellContracts/ListeDefilante.cs:LateUpdate",                   // fondu et ascenseur d'une liste : fonction de la position, pas du temps

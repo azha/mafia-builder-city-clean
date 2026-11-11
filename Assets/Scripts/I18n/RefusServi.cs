@@ -96,6 +96,14 @@ namespace MafiaCleanCity.I18n
             return m.Success && m.Groups[1].Value.Length > 0 ? m.Groups[1].Value : null;
         }
 
+        /// <summary>La phrase d'une clé de refus DÉJÀ LUE (celle que `commit` sert à côté d'un arrêt partiel : `stopped_at_i18n_key`, lot back
+        /// `hl-card-apres-geste-servi` D7) — mêmes règles que `Phrase` : null si la clé est vide, GÉNÉRIQUE (l'écran garde sa phrase) ou non servie.</summary>
+        public static string PhraseDeLaCle(string cle)
+        {
+            if (string.IsNullOrEmpty(cle) || EstGenerique(cle)) return null;
+            return Libelle.Gabarit(cle, null);
+        }
+
         /// <summary>La phrase servie du refus, trous remplis par ses `payload_vars` RÉSOLUES ; null si aucune clé servie, ou si la
         /// clé est GÉNÉRIQUE (`EstGenerique`) — l'écran garde alors sa phrase.</summary>
         public static string Phrase(string corps)

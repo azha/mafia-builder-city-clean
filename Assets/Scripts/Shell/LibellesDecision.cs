@@ -37,17 +37,13 @@ namespace MafiaCleanCity.Shell
         public static readonly string[] PorteesServies = { "minor", "moderate", "major" };
         public static readonly string[] UrgencesServies = { "low", "elevated", "pressing" };
 
-        /// <summary>Le compte du pluriel quand le back n'en sert PAS : tout entier ≠ 1 mène à la branche `other` d'un `plural` ICU, et
-        /// c'est la seule chose qu'il fait — voir `Type`. Un nombre qui n'est lu par personne, pas une donnée du joueur.</summary>
-        private static readonly System.Collections.Generic.IDictionary<string, string> CompteNonServi =
-            new System.Collections.Generic.Dictionary<string, string> { { "n", "2" } };
         private static readonly char[] Accolades = { '{', '}' };
 
         /// <summary>Le type de décision. Interroge le catalogue ; à défaut, rend la clé machine
         /// dé-sluggée plutôt que la clé elle-même — `Libelle.De` rend le LITTÉRAL quand la clé
         /// manque, et ici le littéral EST la clé machine (`AUTONOMY_REPORTS_PENDING`). L'afficher
         /// serait pire que le défaut qu'on corrige.</summary>
-        public static string Type(string cle)
+        public static string Type(string cle, int cibles)
         {
             if (string.IsNullOrEmpty(cle)) return "";
             // ⛔ Revue i18n du back (26/09) : la clé se compose avec le `decision_type_key` TEL QUE SERVI, casse gardée
@@ -60,10 +56,14 @@ namespace MafiaCleanCity.Shell
             //    rend le bloc BRUT, accolades comprises (`I18nCatalog` : `plural` sans entier ⇒ `"{" + corps + "}"`). L'ancien commentaire
             //    (« branche one ») était une déduction FAUSSE : `one` n'est atteinte qu'APRÈS un entier valide. ⇒ Sans compte servi, le
             //    titre dit la branche GÉNÉRIQUE (`other`, le pluriel : « Des locaux à remettre en état ») — jamais « Un local » (ce serait
-            //    affirmer qu'il n'y en a qu'un) et jamais un nombre à l'écran. `CompteNonServi` ne sert qu'à CHOISIR la branche ; aucune
-            //    valeur servie ne l'affiche (le test balaie les 8 titres et refuse accolade ET chiffre). Quand le back servira le compte
-            //    (target_count, lot HL), il passera ICI, à la place de cette constante.
-            string traduit = MafiaCleanCity.I18n.Libelle.Gabarit("decision.type." + cle, null, CompteNonServi);
+            //    affirmer qu'il n'y en a qu'un) et jamais un nombre à l'écran. l'ancienne constante locale ne servait qu'à CHOISIR la branche ; aucune
+            //    valeur servie ne l'affiche (le test balaie les 8 titres et refuse accolade ET chiffre).
+            // ★ TD-886 FERMÉE (chunk 3, 11/11) : le back SERT le compte (`target_count`, `hl-card-projection.ts:128,142`, additif du lot « agit » §2-bis (1)) ;
+            //    `cibles` le porte ICI, à la place de l'ancienne constante locale (supprimée). 1 → « Un local à remettre en état » (la branche `one`, qui
+            //    n'est atteinte QUE pour n == 1), ≥ 2 → le pluriel ; 0 (carte de navigation, code hors table, cible vide) → `other`, la branche générique de
+            //    l'ancien repli. Le pluriel ne porte aucun `#` dans les 3 titres servis : jamais un nombre à l'écran.
+            string traduit = MafiaCleanCity.I18n.Libelle.Gabarit("decision.type." + cle, null,
+                new System.Collections.Generic.Dictionary<string, string> { { "n", cibles.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
             // Dernière ligne de défense : un motif que le résolveur ne sait pas rendre ressortirait avec ses accolades.
             if (traduit != null && traduit.IndexOfAny(Accolades) >= 0) traduit = null;
             return string.IsNullOrWhiteSpace(traduit) ? Lisible(cle) : traduit;

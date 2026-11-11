@@ -56,8 +56,12 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNull(file.TexteSuivante, "file vide : pas de suivante");
         }
 
+        /// <summary>REMPLACE « LesOptionsSontUneRecommandation_JamaisUnBouton » : cette propriété n'était vraie que tant que `commit` ne recevait aucune option (TD-724).
+        /// Cause : le chunk 3 poste `chosen_option` ; les deux options servies SONT désormais les libellés des deux gestes (cadre 5 : « Mettre en réparation »
+        /// / « Laisser en l'état »), chacun en appui long. Garde d'EFFET : les gestes DISENT les options servies, dans l'ordre ; le mot « Prendre acte » du
+        /// client ne revient QUE sans deux options (seul geste, option 1).</summary>
         [Test]
-        public void Etat2_CarteDeTete_LesOptionsSontUneRecommandation_JamaisUnBouton()
+        public void Etat2_CarteDeTete_LesDeuxOptionsSontLesDeuxGestes()
         {
             var hl = Monter<HighestLeverageCardController>();
             var carte = Carte("DAMAGED_BUILDING", "hl.option.damaged_building.repair_via_queue", "hl.option.damaged_building.leave_damaged");
@@ -66,21 +70,22 @@ namespace MafiaCleanCity.Shell.Tests
             string agir = MafiaCleanCity.I18n.Libelle.Gabarit(carte.options[0].label, "—");
             string laisser = MafiaCleanCity.I18n.Libelle.Gabarit(carte.options[1].label, "—");
             CollectionAssert.AreEqual(new[] { agir, laisser }, hl.OptionsRendues.ToList(), "les deux options SERVIES, dans l'ordre");
-            CollectionAssert.DoesNotContain(hl.LibellesDesBoutons.ToList(), agir, "le bouton du tampon ne porte PAS l'option : elle ne fait rien");
-            CollectionAssert.DoesNotContain(hl.LibellesDesBoutons.ToList(), laisser, "aucun bouton ne porte l'option non plus");
-            // Table 45 : le bouton dit ce qu'il FAIT. [Pas maintenant] (= skip) est RETIRÉ (f2 08/10 nuit : un geste mort, la carte restait).
-            CollectionAssert.AreEqual(new[] { MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Prendre acte") },
-                hl.LibellesDesBoutons.ToList(), "[Prendre acte] = commit, seul");
+            CollectionAssert.AreEqual(new[] { agir, laisser }, hl.LibellesDesBoutons.ToList(), "les deux gestes DISENT les deux options : agir d'abord");
+            CollectionAssert.DoesNotContain(hl.LibellesDesBoutons.ToList(), MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Prendre acte"), "pas de mot du client quand deux options sont servies");
             Assert.IsTrue(hl.RenderedTexts.Contains(MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Ce qu’on peut faire")),
                 "le surtitre des options");
-            Assert.IsTrue(hl.TamponVisible, "une carte ordinaire se tamponne");
+            Assert.IsTrue(hl.TamponVisible, "une carte ordinaire se tranche");
             Assert.IsNull(hl.LibelleLire, "pas de [Lire maintenant] hors de la carte des rapports");
 
-            // Pas exactement deux options : aucune recommandation (jamais une moitié de choix).
+            // Pas exactement deux options : jamais une moitié de choix — le SEUL geste « Prendre acte » (option 1 : il n'agit pas).
             var boiteuse = Carte("DAMAGED_BUILDING", "a", "b");
             boiteuse.options = new[] { new DecisionOptionDto { label = "a" } };
             hl.SetPayload(null, boiteuse, null);
             Assert.IsEmpty(hl.OptionsRendues);
+            CollectionAssert.AreEqual(new[] { MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Prendre acte") }, hl.LibellesDesBoutons.ToList(),
+                "sans deux options : le seul geste d'avant, « Prendre acte » (LAISSER, option 1)");
+            Assert.IsFalse(hl.AgirButton.gameObject.activeInHierarchy, "AGIR n'est jamais montré sans option à agir");
+            Assert.AreEqual("PRENDRE ACTE", hl.MotCle, "la saisie dit le mot du seul geste");
         }
 
         /// <summary>④ F1(b) (juge d'ensemble r4, 09/10 ; f2 : élément ABSENT, classe A) — SOUS CHAQUE OPTION de la carte non-rapports, sa CONSÉQUENCE : la clé servie `<label>.projected_consequence`, lue au catalogue (jamais en dur).
@@ -102,9 +107,10 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(phraseA, ca.text, "sous l'option 1 : SA conséquence servie");
             Assert.AreEqual(phraseB, cb.text, "sous l'option 2 : SA conséquence servie");
             Assert.IsTrue(ca.gameObject.activeSelf && cb.gameObject.activeSelf, "les deux conséquences sont montrées");
-            Assert.AreEqual(Texte("Recommandation").transform.parent, ca.transform.parent, "la conséquence est DANS la colonne de son option (dessous)");
-            Assert.Greater(Texte("Recommandation").transform.GetSiblingIndex(), -1);
-            Assert.Less(Texte("Recommandation").transform.GetSiblingIndex(), ca.transform.GetSiblingIndex(), "dessous : après l'option dans la colonne");
+            Assert.AreEqual(ca.transform.parent, cb.transform.parent, "les deux conséquences sont dans UNE rangée (`.csq4-rang`)");
+            Assert.AreEqual(hl.AgirButton.transform.parent.parent, ca.transform.parent.parent, "la rangée des conséquences est dans le verre, comme celle des gestes");
+            Assert.Less(hl.AgirButton.transform.parent.GetSiblingIndex(), ca.transform.parent.GetSiblingIndex(), "dessous : la rangée des conséquences suit celle des gestes");
+            Assert.AreEqual(hl.AgirButton.transform.parent, hl.LaisserButton.transform.parent, "les deux gestes sont côte à côte (`.gestes`)");
             CollectionAssert.IsSupersetOf(hl.RenderedTexts.ToList(), new[] { phraseA, phraseB }, "les conséquences sont des textes rendus (suivis)");
 
             // témoin : clé non servie ⇒ rien (le catalogue ne sert que la conséquence de l'option 1)
@@ -126,6 +132,98 @@ namespace MafiaCleanCity.Shell.Tests
             hl.SetPayload(null, Carte("AUTONOMY_REPORTS_PENDING", rA, rB), null);
             Assert.AreEqual("", Texte("RecommandationConsequence").text, "carte des rapports : inchangée, aucune conséquence");
             Assert.AreEqual("", Texte("AlternativeConsequence").text);
+        }
+
+        /// <summary>V20 (juge-données moment 2, 11/11) — `options[].projected_consequence` est servi : le DTO le DÉCLARE (JsonUtility ne remplit que ce qui est déclaré) et le client lit la clé SERVIE, jamais
+        /// la concaténation. DÉTECTEUR : une clé servie qui DIFFÈRE de `<label>.projected_consequence` doit gagner (avec la concaténation seule, la phrase de la clé reconstruite s'afficherait) ; le CONTRÔLE POSITIF
+        /// (sans le champ) retombe sur la concaténation — sinon le détecteur ne distinguerait rien.</summary>
+        [Test]
+        public void V20_LaCleServieDeLaConsequence_GagneSurLaCleReconstruite()
+        {
+            string cleA = "hl.option.damaged_building.repair_via_queue", cleB = "hl.option.damaged_building.leave_damaged";
+            string servieA = "hl.option.damaged_building.repair_via_queue.autre_consequence";
+            const string phraseServie = "La phrase de la clé SERVIE.", phraseReconstruite = "La phrase de la clé RECONSTRUITE.";
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new System.Collections.Generic.Dictionary<string, string>
+            {
+                { cleA, "Mettre en réparation" }, { cleB, "Laisser en l’état" },
+                { cleA + ".projected_consequence", phraseReconstruite }, { servieA, phraseServie },
+            });
+            // le DTO déclare le champ : un corps réel le remplit (sinon la clé servie est jetée, la faute d'origine)
+            var dto = JsonUtility.FromJson<DecisionOptionDto>("{\"label\":\"" + cleA + "\",\"projected_consequence\":\"" + servieA + "\"}");
+            Assert.AreEqual(servieA, dto.projected_consequence, "le champ servi est LU par le DTO");
+            var hl = Monter<HighestLeverageCardController>();
+            HlCardDto carte = Carte("DAMAGED_BUILDING_REPAIR", cleA, cleB);
+            carte.options[0].projected_consequence = servieA;
+            hl.SetPayload(null, carte, null);
+            TMPro.TextMeshProUGUI Texte(string nom) => hl.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).First(t => t.name == nom);
+            Assert.AreEqual(phraseServie, Texte("RecommandationConsequence").text, "la clé SERVIE gagne sur la clé reconstruite");
+            // CONTRÔLE POSITIF : sans le champ, la concaténation reste le repli (le détecteur distingue les deux sources)
+            carte.options[0].projected_consequence = null;
+            hl.SetPayload(null, carte, null);
+            Assert.AreEqual(phraseReconstruite, Texte("RecommandationConsequence").text, "sans champ servi : la clé reconstruite (compatibilité)");
+        }
+
+        /// <summary>Les violations de « chaque conséquence est SOUS son option » : le rect (x min / x max) de la conséquence doit être celui de la colonne de SON bouton, à `tolerance` u près. Pure sur des rects monde.</summary>
+        private static System.Collections.Generic.List<string> ConsequencesHorsDeLeurColonne(HighestLeverageCardController hl, float tolerance)
+        {
+            (float min, float max) X(Transform t) { var c = new Vector3[4]; ((RectTransform)t).GetWorldCorners(c); return (c[0].x, c[2].x); }
+            TMPro.TextMeshProUGUI Texte(string nom) => hl.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).First(x => x.name == nom);
+            var v = new System.Collections.Generic.List<string>();
+            foreach (var (bouton, nom) in new[] { (hl.AgirButton.transform, "RecommandationConsequence"), (hl.LaisserButton.transform, "AlternativeConsequence") })
+            {
+                var b = X(bouton); var c = X(Texte(nom).transform);
+                if (Mathf.Abs(c.min - b.min) > tolerance || Mathf.Abs(c.max - b.max) > tolerance)
+                    v.Add($"{nom} [{c.min:0.#}..{c.max:0.#}] hors de la colonne de son bouton [{b.min:0.#}..{b.max:0.#}]");
+            }
+            return v;
+        }
+
+        /// <summary>F1 du juge visuel ⊥ tour 2 (11/11, MAJEUR) — la couture entre les deux options passait de x=528 (boutons) à x=670,5 (conséquences) : le bloc de gauche (552 px, texte long) courait sous le bouton de droite,
+        /// on pouvait lire la MAUVAISE conséquence. Garde STRUCTURELLE : le rect de chaque conséquence est contenu dans la colonne de son bouton (même x min / x max). CONTRÔLE POSITIF : la forme d'avant (largeur préférée du
+        /// texte comme base, `preferredWidth` libre) avec un texte long à gauche DOIT être vue par la même garde.</summary>
+        [Test]
+        public void F1T2_ChaqueConsequence_EstDansLaColonneDeSonBouton_ControlePositifTexteLongAGauche()
+        {
+            string cleA = "hl.option.damaged_building.repair_via_queue", cleB = "hl.option.damaged_building.leave_damaged";
+            string longue = string.Concat(Enumerable.Repeat("Chaque réparation se paie tout de suite, tant que l’argent suit ; les travaux finis, l’activité reprend. ", 3)).Trim();
+            const string courte = "Rien n’est payé.";
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new System.Collections.Generic.Dictionary<string, string>
+            {
+                { cleA, "Mettre en réparation" }, { cleB, "Laisser en l’état" }, { cleA + ".projected_consequence", longue }, { cleB + ".projected_consequence", courte },
+            });
+            hote = new GameObject("CanvasF1T2", typeof(Canvas));
+            hote.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            var go = new GameObject("HL", typeof(RectTransform));
+            go.transform.SetParent(hote.transform, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(1280f, 1400f);
+            var hl = go.AddComponent<HighestLeverageCardController>();
+            hl.SetPayload(null, Carte("DAMAGED_BUILDING_REPAIR", cleA, cleB), null);
+            Canvas.ForceUpdateCanvases();
+            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(hl.Bloc);
+            TMPro.TextMeshProUGUI Texte(string nom) => hl.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).First(x => x.name == nom);
+            var ca = Texte("RecommandationConsequence"); var cb = Texte("AlternativeConsequence");
+            // anti-vacuité : la mise en page est réalisée (des largeurs réelles) et les deux textes sont là
+            Assert.AreEqual(longue, ca.text); Assert.AreEqual(courte, cb.text);
+            var wb = new Vector3[4]; ((RectTransform)hl.AgirButton.transform).GetWorldCorners(wb);
+            Assert.Greater(wb[2].x - wb[0].x, 100f, "anti-vacuité : le bouton a une largeur réelle");
+            // `.g{flex:1}` : les deux BOUTONS sont à parts égales (leurs libellés n'ont pas la même longueur : « Mettre en réparation » / « Laisser en l’état »)
+            var wg = new Vector3[4]; var wg2 = new Vector3[4];
+            ((RectTransform)hl.AgirButton.transform).GetWorldCorners(wg); ((RectTransform)hl.LaisserButton.transform).GetWorldCorners(wg2);
+            Assert.AreEqual(wg[2].x - wg[0].x, wg2[2].x - wg2[0].x, 2f, "les deux gestes ont la MÊME largeur (flex:1), quelle que soit la longueur de leur libellé");
+            Assert.IsEmpty(ConsequencesHorsDeLeurColonne(hl, 2f), "chaque conséquence est SOUS son option, dans la colonne de son bouton (texte long à gauche)");
+            // la couture : les deux conséquences ont la MÊME largeur que les deux boutons (parts égales), donc la même couture
+            var wa = new Vector3[4]; var wl = new Vector3[4];
+            ((RectTransform)ca.transform).GetWorldCorners(wa); ((RectTransform)cb.transform).GetWorldCorners(wl);
+            ((RectTransform)hl.LaisserButton.transform).GetWorldCorners(wb);
+            Assert.AreEqual(wb[0].x, wl[0].x, 2f, "la couture entre les conséquences est celle des boutons");
+
+            // CONTRÔLE POSITIF : la forme d'AVANT (la largeur préférée du texte sert de base) avec le même texte long à gauche — la garde la voit
+            foreach (var t in new[] { ca, cb }) { var le = t.GetComponent<UnityEngine.UI.LayoutElement>(); le.preferredWidth = -1f; }
+            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(hl.Bloc);
+            var violations = ConsequencesHorsDeLeurColonne(hl, 2f);
+            Assert.IsNotEmpty(violations, "CONTRÔLE POSITIF : sans `preferredWidth = 0`, un texte long à gauche fait glisser la couture et la garde le voit");
         }
 
         [Test]

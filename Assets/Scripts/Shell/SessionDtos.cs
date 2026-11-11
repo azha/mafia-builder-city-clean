@@ -16,6 +16,10 @@ namespace MafiaCleanCity.Shell
     public class DecisionOptionDto
     {
         public string label;
+        /// <summary>V20 — la CLÉ SERVIE de la conséquence de l'option (`<label>.projected_consequence` au back, `hl-option-table.ts`). Elle était servie PUIS JETÉE (le DTO ne la déclarait pas) et le client la
+        /// reconstruisait par concaténation (identique 16/16 le 11/11, mais deux sources d'une même vérité) : on lit désormais la clé servie ; la concaténation ne reste que pour une réponse qui ne porte pas
+        /// le champ (back plus ancien, fixtures).</summary>
+        public string projected_consequence;
     }
 
     // HighestLeverageCardProjection (`hl-card-projection.ts:114-121`).
@@ -28,6 +32,9 @@ namespace MafiaCleanCity.Shell
         public string urgency_bucket;  // low | elevated | pressing
         public DecisionOptionDto[] options;
         public bool structural;
+        /// <summary>Le nombre de cibles que `commit` AGIRAIT (le contenu du joueur : `hl-card-projection.ts:128,142`, `targetCountFor`). 0 pour une carte de
+        /// navigation, un code hors table ou une cible vide. Le compte `n` du titre pluriel (TD-886) et le `{total}` de l'arrêt partiel (TD-889).</summary>
+        public int target_count;
     }
 
     [Serializable]
@@ -78,7 +85,7 @@ namespace MafiaCleanCity.Shell
         public bool first_decision_recorded;
     }
 
-    // The FULL `POST /v1/session/open` response — a closed set of 14 top-level keys (12 → 14 : F14, back f4883b7c)
+    // The FULL `POST /v1/session/open` response — a closed set of 16 top-level keys (12 → 14 : F14, back f4883b7c ; 14 → 16 : L1, `family_day` + `opened_family_day`, portées par DEUX PROPRIÉTÉS — voir `ClesPortees`)
     // (`session-open-sequence.service.ts:229-246`, W3.U1 C2 GREW it additively with
     // `opened_game_day`). §3-bis of the design is the falsifiable that keeps this DTO's field COUNT
     // in lockstep with the server interface (C3-F2 — parity of FORM, never a re-typed shape check).
@@ -97,6 +104,20 @@ namespace MafiaCleanCity.Shell
         /// ⚠️ Aujourd'hui : PROPRIÉTÉS parce que la parité de forme compte les CHAMPS publics du DTO.</summary>
         public int? JourDeFamille { get; set; }
         public int? JourDeFamilleALOuverture { get; set; }
+        /// <summary>LES CLÉS DE `session/open` QUE CE DTO PORTE, par leur NOM SERVI : les champs publics (lus par `JsonUtility`) PLUS les deux propriétés
+        /// nullables ci-dessus (lues du corps brut, sous `CycleDeSession.ChampsServis`). Une SEULE définition de « la forme du DTO » pour les gardes de parité
+        /// (C3-F2, C3-F3, C9F2) : compter les champs seuls fait rougir 14 ≠ 16 depuis que le back sert `family_day` et `opened_family_day`
+        /// (`session-open-sequence.service.ts:262,266`, construits `:370-371`) ; ajouter deux champs `int` serait la faute documentée ci-dessus.</summary>
+        public static string[] ClesPortees()
+        {
+            var noms = new System.Collections.Generic.List<string>();
+            foreach (System.Reflection.FieldInfo f in typeof(SessionOpenDto).GetFields(
+                         System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly))
+                noms.Add(f.Name);
+            noms.Add(CycleDeSession.ChampsServis.JourDeFamille);
+            noms.Add(CycleDeSession.ChampsServis.JourDeFamilleALOuverture);
+            return noms.ToArray();
+        }
         /// <summary>La clé `family_day` est DANS le corps (même à null) — la différence entre « pas d'ancre » (servi null : on ne déclenche RIEN) et « le
         /// back ne la sert pas » (le repli de 48 min). `opened_family_day` n'a pas de drapeau : null avec une ancre = le repli, quelle que soit la raison.</summary>
         public bool JourDeFamilleServi { get; set; }

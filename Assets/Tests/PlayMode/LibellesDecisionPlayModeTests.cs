@@ -103,7 +103,7 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(-1, titre.IndexOfAny(new[] { '{', '}' }),
                 $"{contexte} : accolade BRUTE à l'écran — « {titre} » (motif ICU non résolu)");
             Assert.IsFalse(Regex.IsMatch(titre, "[0-9]"),
-                $"{contexte} : un nombre dans le titre — « {titre} » (le back ne sert aucun compte, on n'en invente pas)");
+                $"{contexte} : un nombre dans le titre — « {titre} » (le titre choisit une branche, il n'affiche jamais le compte)");
         }
 
         /// <summary>Revue i18n du back (26/09) : un `decision_type_key` servi trouve SA clé, casse gardée (le back sert
@@ -119,18 +119,18 @@ namespace MafiaCleanCity.Shell.Tests
                     { "decision.type.DAMAGED_BUILDING_REPAIR", TitresServis[0].servi },
                     { "decision.type.severed_route_rebuild", "§minuscules" },
                 });
-                Assert.AreEqual("Des locaux à remettre en état", LibellesDecision.Type("DAMAGED_BUILDING_REPAIR"),
-                    "le type servi lit SA clé, en majuscules, et le pluriel sans `n` dit la branche générique");
-                Assert.AreNotEqual("§minuscules", LibellesDecision.Type("SEVERED_ROUTE_REBUILD"),
+                Assert.AreEqual("Des locaux à remettre en état", LibellesDecision.Type("DAMAGED_BUILDING_REPAIR", 2),
+                    "le type servi lit SA clé, en majuscules, et un compte ≥ 2 dit le pluriel");
+                Assert.AreNotEqual("§minuscules", LibellesDecision.Type("SEVERED_ROUTE_REBUILD", 2),
                     "une clé en minuscules n'est pas la clé du type servi");
-                StringAssert.DoesNotContain("_", LibellesDecision.Type("SEVERED_ROUTE_REBUILD"), "non servie : la lecture dé-sluggée, jamais la clé machine");
-                Assert.AreEqual("", LibellesDecision.Type(null));
+                StringAssert.DoesNotContain("_", LibellesDecision.Type("SEVERED_ROUTE_REBUILD", 2), "non servie : la lecture dé-sluggée, jamais la clé machine");
+                Assert.AreEqual("", LibellesDecision.Type(null, 2));
             }
             finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
         }
 
         /// <summary>LES 8 FOURNISSEURS, valeurs SERVIES : aucun titre n'a d'accolade ni de chiffre, chacun dit son texte (le pluriel
-        /// sans `n` : sa branche `other`, jamais « Un local »). Le défaut d'origine : 3 des 8 rendaient le motif ICU brut.</summary>
+        /// à `n = 2` : sa branche `other`). Le défaut d'origine : 3 des 8 rendaient le motif ICU brut.</summary>
         [Test]
         public void LesHuitTitresServis_NeRendentJamaisUneAccolade()
         {
@@ -143,11 +143,35 @@ namespace MafiaCleanCity.Shell.Tests
                 MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", BundleDesTitresServis());
                 foreach (var t in TitresServis)
                 {
-                    string titre = LibellesDecision.Type(t.cle);
+                    string titre = LibellesDecision.Type(t.cle, 2);
                     ExigerTitreSansAccolade(titre, t.cle);
                     Assert.AreEqual(t.attendu, titre, $"{t.cle} : le titre rendu n'est pas la valeur servie (branche générique)");
                     Assert.AreNotEqual(Lisible(t.cle), titre, $"{t.cle} : le titre est le repli dé-slugé, pas la valeur servie");
                 }
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
+        }
+
+        /// <summary>TD-886 FERMÉE : le compte SERVI (`target_count`) choisit la branche du pluriel, il ne s'affiche jamais. 1 → `one` (« Un local… »,
+        /// la seule branche qu'un entier valide atteint pour 1), 2 → `other`, 0 (carte de navigation, code hors table) → `other` aussi. Le contrôle
+        /// positif est la ligne `n = 1` : une constante non servie (l'ancien `CompteNonServi = 2`) la rendrait « Des locaux ».</summary>
+        [Test]
+        public void LeCompteServi_ChoisitLaBrancheDuPluriel_JamaisUnNombre()
+        {
+            try
+            {
+                MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", BundleDesTitresServis());
+                Assert.AreEqual("Un local à remettre en état", LibellesDecision.Type("DAMAGED_BUILDING_REPAIR", 1));
+                Assert.AreEqual("Des locaux à remettre en état", LibellesDecision.Type("DAMAGED_BUILDING_REPAIR", 2));
+                Assert.AreEqual("Des locaux à remettre en état", LibellesDecision.Type("DAMAGED_BUILDING_REPAIR", 0), "0 : la branche générique, jamais `one`");
+                Assert.AreEqual("Une route coupée", LibellesDecision.Type("SEVERED_ROUTE_REBUILD", 1));
+                Assert.AreEqual("Un maillon sous tension", LibellesDecision.Type("MYCELIAL_STRESSED_LEG", 1));
+                foreach (var t in TitresServis)
+                    foreach (int n in new[] { 0, 1, 2, 7 })
+                        ExigerTitreSansAccolade(LibellesDecision.Type(t.cle, n), $"{t.cle} n={n}");
+                // un titre sans pluriel ne dépend pas du compte
+                Assert.AreEqual("Des rapports à lire", LibellesDecision.Type("AUTONOMY_REPORTS_PENDING", 1));
+                Assert.AreEqual("Des rapports à lire", LibellesDecision.Type("AUTONOMY_REPORTS_PENDING", 5));
             }
             finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
         }
@@ -186,6 +210,27 @@ namespace MafiaCleanCity.Shell.Tests
         {
             string d = cle.Replace('_', ' ');
             return char.ToUpperInvariant(d[0]) + d.Substring(1).ToLowerInvariant();
+        }
+
+        /// <summary>DÉTECTEUR DE TD-886 : le compte du pluriel vient de `target_count` SERVI. Le champ existe sur `HlCardDto` ⇒ la constante locale
+        /// `CompteNonServi` (un « 2 » qui ne servait qu'à choisir `other`) ne doit plus exister, dans AUCUN fichier du jeu. Contrôle positif : la
+        /// population est non vide (le fichier de `LibellesDecision` est lu) et le motif rougit sur une copie qui la contiendrait.</summary>
+        [Test]
+        public void LaConstanteCompteNonServi_N_ExistePlus_ParceQueLeBackServLeCompte()
+        {
+            var champ = typeof(MafiaCleanCity.Shell.HlCardDto).GetField("target_count");
+            Assert.IsNotNull(champ, "`HlCardDto.target_count` doit être déclaré (forme G : JsonUtility jette la clé sinon)");
+            var motif = new Regex(@"\bCompteNonServi\b");
+            string racine = Path.Combine(Application.dataPath, "Scripts");
+            int lus = 0; var fautifs = new List<string>();
+            foreach (string chemin in Directory.GetFiles(racine, "*.cs", SearchOption.AllDirectories))
+            {
+                lus++;
+                if (motif.IsMatch(File.ReadAllText(chemin))) fautifs.Add(Path.GetFileName(chemin));
+            }
+            Assert.Greater(lus, 100, "population : les sources du jeu sont lues");
+            Assert.IsTrue(motif.IsMatch("private static readonly IDictionary<string, string> CompteNonServi = null;"), "contrôle positif : le motif voit la constante");
+            CollectionAssert.IsEmpty(fautifs, "la constante `CompteNonServi` est revenue : le compte vient de `target_count`");
         }
 
         [Test]

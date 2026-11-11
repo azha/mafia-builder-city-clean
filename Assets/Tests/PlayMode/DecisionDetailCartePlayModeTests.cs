@@ -514,9 +514,9 @@ namespace MafiaCleanCity.Shell.Tests
                 var bas = Mediane(banc, t, plaque, 0.03f, 0.08f, 0.15f, 0.22f);
                 Assert.Greater(haut.r, med.r + 15, $"le haut de la plaque est plus clair (#e8c87a → #b08d3e) : haut {haut}, milieu {med}");
                 Assert.Less(bas.r, med.r - 10, $"le bas de la plaque est plus sombre (#b08d3e → #8a6a22) : bas {bas}, milieu {med}");
-                // CONTRÔLE POSITIF de l'instrument : sur la matière crème de la carte (219,206,171) la même médiane lit du CRÈME — et la plaque n'en est pas (la plaque crème de la série 4 : (216,202,167))
+                // CONTRÔLE POSITIF de l'instrument : sur le papier de la carte (dégradé, ici ≈ (234,221,187)) la même médiane lit du CRÈME — et la plaque n'en est pas (la plaque crème de la série 4 : (216,202,167))
                 var creme = Mediane(banc, t, e.CarteRect, 0.035f, 0.055f, 0.40f, 0.50f);
-                Assert.LessOrEqual(Ecart(creme, 219, 206, 171), 8f, $"contrôle positif : la médiane lit le crème de la carte (vu {creme})");
+                Assert.LessOrEqual(Ecart(creme, 234, 221, 187), 8f, $"contrôle positif : la médiane lit le papier de la carte (dégradé `#fbf3dc → #e6d8b3 60 %`, t≈0,485 à ce point : 234,221,187 ; vu {creme})");
                 Assert.Greater(Ecart(med, 216, 202, 167), 40f, "le geste n'est PLUS la plaque crème de la série 4");
                 // l'encre sombre : des pixels d'encre (#3a2a0a) dans le libellé ; aucun dans la bande de fond
                 RectTransform lib = (RectTransform)Sous(e, "Fenetre/Defile/Pile/Tampon/Lib");

@@ -335,6 +335,161 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.IsEmpty(debordements, "④ la ligne de file ne tient pas (colonne préférée > disponible) ou ce qui est au-dessus la RECOUPE :\n" + string.Join("\n", debordements));
         }
 
+        // ══════════ APRÈS-GESTE hl-card (chunk 3c, f2 11/11 : « captures avant les juges ») ══════════
+        // ⑤ en mode après (cadres 6-7 de `ecrans-brennar-accueil.html`) : cinq issues, et ④ cadre 5 (les DEUX gestes), aux deux résolutions, chaque fichier SIGNÉ
+        // `c<HEAD client>_b<X-Server-Build>` (le HEAD vient de `MAFIA_CAPTURE_HEAD`, le build est LU sur `/v1/health` ; `MAFIA_CAPTURE_BUILD` le fait ÉCHOUER s'il diffère).
+        // ⚠️ L'ÉTAT est dit au journal : le compte est NEUF et le shell réel (catalogue = le bundle SERVI par la pile) ; les RÉPONSES de `commit` et les corps de refus sont FABRIQUÉS avec
+        // les clés que le back sert (`hl.outcome.severed_route.executed`, `hl.after_choice.noted`, `error.hl_card.*`, `error.core_loops.structural_cap_exhausted`) — les PHRASES sont celles du bundle
+        // servi, passées par `ApresGesteHl.Vue` (l'unique producteur). L'effet du geste sur le back est prouvé ailleurs (créneau 11/11-c) ; ici on juge le RENDU.
+        private string signature;
+
+        private IEnumerator Signer()
+        {
+            string tete = System.Environment.GetEnvironmentVariable("MAFIA_CAPTURE_HEAD");
+            Assert.IsTrue(!string.IsNullOrWhiteSpace(tete) && System.Text.RegularExpressions.Regex.IsMatch(tete.Trim(), "^[0-9a-f]{7,40}$"),
+                "signature : MAFIA_CAPTURE_HEAD (SHA du HEAD client, hexadécimal) est exigé — une planche sans HEAD ne dit pas de quel code elle vient");
+            string build = null;
+            using (var req = UnityEngine.Networking.UnityWebRequest.Get(MafiaCleanCity.AdresseDuBack.Url + "/v1/health"))
+            {
+                yield return req.SendWebRequest();
+                build = req.GetResponseHeader("X-Server-Build");
+            }
+            Assert.IsFalse(string.IsNullOrWhiteSpace(build), "signature : /v1/health ne sert pas X-Server-Build — la pile visée est inconnue");
+            string attendu = System.Environment.GetEnvironmentVariable("MAFIA_CAPTURE_BUILD");
+            if (!string.IsNullOrWhiteSpace(attendu)) Assert.AreEqual(attendu.Trim(), build.Trim(), "signature : la pile sert un autre build que celui attendu — on ne photographie pas contre le mauvais back");
+            signature = $"c{tete.Trim()}_b{build.Trim()}";
+            Noter("S0", "signature", $"HEAD client {tete.Trim()} · X-Server-Build {build.Trim()} · back {MafiaCleanCity.AdresseDuBack.Url}", "—");
+        }
+
+        private static HlCardDto CarteRoute() => new HlCardDto
+        {
+            card_id = "carte-fabriquee-route", decision_type_key = "SEVERED_ROUTE_REBUILD", impact_bucket = "major", urgency_bucket = "pressing", structural = false, target_count = 2,
+            options = new[] { new DecisionOptionDto { label = "hl.option.severed_route.reroute_now" }, new DecisionOptionDto { label = "hl.option.severed_route.leave_severed" } },
+        };
+
+        /// <summary>Le toast `BandeauEphemere` (5 s) d'un test précédent (A01 : « Lt. Kane attend vos ordres ») survivait sur H01 et contredisait « Aucune exception en attente » : effacé avant chaque cliché, comme `Photographier`.</summary>
+        private static void EffacerLesToasts()
+        {
+            foreach (BandeauEphemere b in UnityEngine.Object.FindObjectsByType<BandeauEphemere>(FindObjectsSortMode.None)) b.Effacer();
+        }
+
+        private static string Corps(string code, string cle) => "{\"error\":{\"code\":\"" + code + "\",\"user_facing_i18n_key\":\"" + cle + "\"}}";
+
+        [UnityTest]
+        [Category("ClicheApresGeste")]
+        [Timeout(900000)]
+        public IEnumerator Planches_ApresGeste_CinqIssues_Cadres6Et7()
+        {
+            yield return Ouvrir();
+            yield return Signer();
+            shell.MonterLocataireEnSurimpression<DecisionDetailScreenController>();
+            DecisionDetailScreenController ecran = null;
+            for (float f = Time.realtimeSinceStartup + 15f; ecran == null && Time.realtimeSinceStartup < f;)
+            {
+                ecran = shell.ContentSlot.GetComponentInChildren<DecisionDetailScreenController>(true);
+                yield return null;
+            }
+            if (ecran == null) { Noter("G00", "⑤ après-geste", "ÉCHEC : ⑤ non monté", "ecrans-brennar-accueil.html cadres 6-7"); Assert.Fail("⑤ non monté : rien n'a été photographié"); }
+            for (int i = 0; i < 10; i++) yield return null;
+            HlCardDto carte = CarteRoute();
+            var budget = new StructuralBudgetDto { used = 0, cap_reached = false };
+            ecran.Afficher(carte, budget);
+            for (int i = 0; i < 10; i++) yield return null;
+
+            // `committed` / `structural` comme le back les sert (`hl-card.service.ts`) : `executed` tranche ; `noted` d'une carte consultative NE tranche PAS (l.265, committed=false) ;
+            // `noted` d'une carte structurelle CONSOMME la décision de la session (l.245, committed=true, structural=true).
+            CommitResponseDto Reponse(string outcome, string cleMot, int faits, bool committed = true, bool structural = false) => new CommitResponseDto
+            {
+                committed = committed, structural = structural, outcome = outcome, outcome_i18n_key = cleMot,
+                executed_ids = Enumerable.Range(0, faits).Select(i => "t" + i).ToArray(), stopped_at_id = "", stopped_at_i18n_key = "", navigate_ids = new string[0],
+            };
+            ApresGesteHl.IssueDuGeste Refus(string corps) => new ApresGesteHl.IssueDuGeste { Carte = carte, CleDeRefus = MafiaCleanCity.I18n.RefusServi.Cle(corps), PhraseDeRefus = MafiaCleanCity.I18n.RefusServi.Phrase(corps) };
+
+            const string Ref6 = "ecrans-brennar-accueil.html cadre 6 (carte tranchée, tampon, mot-or, ligne-or, jeton)", Ref7 = "ecrans-brennar-accueil.html cadre 7 (la carte reste, mot rouge)";
+            var issues = new (string pas, string nom, ApresGesteHl.IssueDuGeste issue, ApresGesteHl.Issue attendue, string dit, string reference)[]
+            {
+                ("G01", "executed", new ApresGesteHl.IssueDuGeste { Carte = carte, Reponse = Reponse("executed", "hl.outcome.severed_route.executed", 2) }, ApresGesteHl.Issue.Executee,
+                    "commit 200 `executed` · 2 cibles faites · clé hl.outcome.severed_route.executed", Ref6),
+                ("G02", "noted", new ApresGesteHl.IssueDuGeste { Carte = carte, Reponse = Reponse("noted", "hl.after_choice.noted", 0, committed: false) }, ApresGesteHl.Issue.Notee,
+                    "commit 200 `noted` (option « laisser », carte consultative : committed=false, rien n'est tranché) · clé hl.after_choice.noted", Ref6),
+                ("G06", "noted_structurelle", new ApresGesteHl.IssueDuGeste { Carte = carte, Reponse = Reponse("noted", "hl.after_choice.noted", 0, committed: true, structural: true) }, ApresGesteHl.Issue.Notee,
+                    "commit 200 `noted` d'une carte STRUCTURELLE (committed=true, structural=true : la décision de la session est consommée, jeton « pris ») · clé hl.after_choice.noted", Ref6),
+                ("G03", "deja_tranchee", Refus(Corps("HL_CARD_ALREADY_RESOLVED", "error.hl_card.already_resolved")), ApresGesteHl.Issue.DejaTranchee,
+                    "409 HL_CARD_ALREADY_RESOLVED · clé error.hl_card.already_resolved", Ref6),
+                ("G04", "404_plus_la", Refus(Corps("HL_CARD_NOT_FOUND", "error.hl_card.not_found")), ApresGesteHl.Issue.Disparue,
+                    "404 HL_CARD_NOT_FOUND (y c. carte `superseded`) · clé error.hl_card.not_found", Ref6),
+                ("G05", "premiere_cible_en_echec", Refus(Corps("CORE_LOOPS_STRUCTURAL_CAP_EXHAUSTED", "error.core_loops.structural_cap_exhausted")), ApresGesteHl.Issue.CarteReste,
+                    "refus de la 1ʳᵉ cible · clé error.core_loops.structural_cap_exhausted (domaine, phrase servie)", Ref7),
+            };
+            foreach (var (pas, nom, issue, attendue, dit, reference) in issues)
+            {
+                ApresGesteHl.VueApres vue = ApresGesteHl.Vue(issue, carte.target_count, 0, budget);
+                if (vue == null || vue.Issue != attendue)
+                {
+                    Noter(pas, "⑤ après-geste " + nom, $"ÉCHEC : la vue est {(vue == null ? "NULLE" : vue.Issue.ToString())}, pas {attendue} — {dit}", reference);
+                    continue;
+                }
+                ecran.AfficherApresGeste(carte, vue);
+                for (int i = 0; i < 20; i++) yield return null;
+                EffacerLesToasts();
+                yield return null;
+                if (!ecran.EnApres || ecran.GraveRendu != vue.Grave || ecran.MotOrRendu != vue.Mot)
+                {
+                    Noter(pas, "⑤ après-geste " + nom, $"ÉCHEC : ⑤ ne rend pas la vue (EnApres={ecran.EnApres}, grave=«{ecran.GraveRendu}», mot=«{ecran.MotOrRendu}»)", reference);
+                    continue;
+                }
+                foreach ((int largeur, int hauteur) in Resolutions)
+                    yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"{pas}_ApresGeste_{nom}_{signature}_{largeur}x{hauteur}.png"), false, null);
+                Noter(pas, "⑤ après-geste " + nom, $"{dit} · grave=«{ecran.GraveRendu}» · mot=«{ecran.MotOrRendu}»{(ecran.MotOrRouge ? " (rouge)" : "")} · tampon={ecran.TamponDiagVisible} · déjà={ecran.DejaVisible} · "
+                      + $"ligne-or=«{ecran.LigneOrRendue}» · sous-ligne=«{ecran.SousLigneRendue}» · jeton={ecran.JetonEtatRendu} — réponse FABRIQUÉE, phrases du bundle SERVI, compte neuf", reference);
+            }
+            Assert.IsEmpty(echecsNotes, "issue(s) non photographiée(s) — un ÉCHEC noté au journal n'est pas un vert :\n" + string.Join("\n", echecsNotes));
+        }
+
+        /// <summary>④ cadre 5 — la carte de tête AVEC SES DEUX GESTES (agir / laisser), montée sur l'Accueil par le vrai shell (session fabriquée : un compte neuf n'a pas de carte de tête servie),
+        /// les libellés des options sont ceux du bundle SERVI (`hl.option.severed_route.*`). Même signature que ⑤.</summary>
+        [UnityTest]
+        [Category("ClicheApresGeste")]
+        [Timeout(600000)]
+        public IEnumerator Planche_AccueilTete_Cadre5_DeuxGestes_Signee()
+        {
+            yield return Ouvrir();
+            yield return Signer();
+            const string Ref = "ecrans-brennar-accueil.html cadre 5 (la carte de tête, deux gestes)";
+            SessionOpenDto reelle = shell.LastSessionOpen;
+            Assert.IsNotNull(reelle, "précondition : la session du compte neuf est ouverte");
+            SessionOpenDto fabriquee = JsonUtility.FromJson<SessionOpenDto>(JsonUtility.ToJson(reelle));
+            fabriquee.JourDeFamille = reelle.JourDeFamille;
+            fabriquee.JourDeFamilleALOuverture = reelle.JourDeFamilleALOuverture;
+            fabriquee.JourDeFamilleServi = reelle.JourDeFamilleServi;
+            fabriquee.hl_card = CarteRoute();
+            fabriquee.queue = new MafiaCleanCity.Operational.Exceptions.ExceptionCardDto[0];
+            shell.TransportDeSessionPourTest = new SessionFabriquee { Reponse = fabriquee };
+            while (shell.SurimpressionOuverte) { shell.Depiler(); yield return null; }
+            if (shell.MountedTenantType != typeof(CityMapController)) { shell.ActivateTab(AppShell.Tab.Empire); for (int i = 0; i < 5; i++) yield return null; }
+            Assert.IsTrue(shell.SurLaCarteSansRienDessus, "précondition : la carte, sans rien dessus — sinon EMPIRE ne rouvre pas l'Accueil");
+            ProductionClickSupport.Click(shell.TabBarRoot.Find("Tab_Empire").GetComponent<Button>());
+            HighestLeverageCardController tete = null;
+            for (float fin = Time.realtimeSinceStartup + 20f; Time.realtimeSinceStartup < fin;)
+            {
+                tete = shell.ContentSlot.GetComponentsInChildren<HighestLeverageCardController>(false).LastOrDefault();
+                if (tete != null && tete.AgirButton != null && tete.LaisserButton != null && tete.AgirButton.gameObject.activeInHierarchy) break;
+                yield return null;
+            }
+            if (tete == null || tete.AgirButton == null || !tete.AgirButton.gameObject.activeInHierarchy)
+            {
+                Noter("H01", "④ cadre 5", "ÉCHEC : la carte de tête et ses deux gestes ne sont pas montés sur l'Accueil", Ref);
+                Assert.Fail("④ cadre 5 non monté : rien n'a été photographié");
+            }
+            for (int i = 0; i < 10; i++) yield return null;
+            EffacerLesToasts();
+            yield return null;
+            foreach ((int largeur, int hauteur) in Resolutions)
+                yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"H01_AccueilTete_Cadre5_{signature}_{largeur}x{hauteur}.png"), true, null);
+            Noter("H01", "④ cadre 5", $"HighestLeverageCardController · carte SEVERED_ROUTE_REBUILD FABRIQUÉE (session fabriquée, 2 options) · gestes=«{string.Join(" | ", tete.LibellesDesBoutons)}» · options=«{string.Join(" | ", tete.OptionsRendues)}» · compte neuf, bundle SERVI", Ref);
+            Assert.IsEmpty(echecsNotes, "cadre 5 non photographié — un ÉCHEC noté au journal n'est pas un vert :\n" + string.Join("\n", echecsNotes));
+        }
+
         /// <summary>Une réponse `session/open` FABRIQUÉE (le re-montage de l'Accueil de A01) — le patron de `AccueilCanonPlayModeTests.TransportTemoin`.</summary>
         private sealed class SessionFabriquee : ITransportDeSession
         {

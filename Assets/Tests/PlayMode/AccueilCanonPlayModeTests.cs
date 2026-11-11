@@ -133,9 +133,15 @@ namespace MafiaCleanCity.Shell.Tests
             VerifierGeometrie(quand, (RectTransform)tete.transform, (RectTransform)file.transform);
 
             Assert.AreEqual(HighestLeverageCardController.CardState.NoCard, tete.RenderedState, $"{quand} : précondition, pas de carte (hors réseau)");
-            foreach (string geste in new[] { "CommitButton", "SkipButton", "TypedConfirmRow" })
-                foreach (Transform t in tete.GetComponentsInChildren<Transform>(true).Where(x => x.name == geste))
+            // (chunk 3c, 11/11) « RetourButton » est RETIRÉ de ④ : l'après-geste (cadres 6-7) est rendu par ⑤ (`ligne-or`), plus par la carte de tête — chercher ce nom ferait échouer l'anti-vacuité sur un objet qui n'existe plus, exprès.
+            // (chunk 3) les deux gestes de décision s'appellent AgirButton / LaisserButton : l'ancien nom « CommitButton » ne désignerait plus RIEN et la garde passerait à vide
+            foreach (string geste in new[] { "AgirButton", "LaisserButton", "SkipButton", "TypedConfirmRow" })
+            {
+                var trouves = tete.GetComponentsInChildren<Transform>(true).Where(x => x.name == geste).ToList();
+                if (geste != "SkipButton") Assert.IsNotEmpty(trouves, $"{quand} : anti-vacuité — « {geste} » existe (caché), sinon la garde ne défend rien");
+                foreach (Transform t in trouves)
                     Assert.IsFalse(t.gameObject.activeInHierarchy, $"{quand} : sans carte, « {geste} » n'est pas montré (des gestes sur rien)");
+            }
 
             var textes = new List<string>();
             foreach (Component hote in new Component[] { tete, file })
@@ -481,7 +487,10 @@ namespace MafiaCleanCity.Shell.Tests
             HighestLeverageCardController tete = Tete();
             Assert.AreEqual(HighestLeverageCardController.CardState.Available, tete.RenderedState, "précondition : une carte est montrée");
             Assert.IsNull(tete.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "SkipButton"), "« Pas maintenant » n'existe plus (geste mort)");
-            Assert.AreEqual(1, tete.LibellesDesBoutons.Count, "un seul bouton : le tampon");
+            // La carte du banc (`AvecCarte`) est celle des RAPPORTS (`AUTONOMY_REPORTS_PENDING`) : elle se LIT, elle ne se tranche pas. Son SEUL geste est [Lire maintenant] ; ni agir ni laisser (ils n'existent que sur une carte
+            // de décision à deux options : prouvé contre le vrai back dans `ChosenOption0_Agit…`, W3U1). « Un seul geste » reste donc vrai ici — la lecture 11/11 (« deux gestes ») confondait les deux cartes.
+            Assert.IsNotNull(tete.LibelleLire, "la carte des rapports porte son geste [Lire maintenant]");
+            Assert.AreEqual(0, tete.LibellesDesBoutons.Count, "la carte des rapports ne porte ni AGIR ni LAISSER");
             int relectures = shell.RelecturesApresDecision, ouvertures = transport.Ouvertures;
             yield return TrancherPuisAttendre(() => tete.DecisionAccepteePourTest(), ouvertures);
             Assert.AreEqual(relectures + 1, shell.RelecturesApresDecision, "la décision acceptée a fait relire l'Accueil");
@@ -508,12 +517,15 @@ namespace MafiaCleanCity.Shell.Tests
 
         /// <summary>A14 — LA CARTE DE TÊTE DU CADRE 5 (f2 08/10 nuit : l'ancien widget W3U1 était un A visible — textes minuscules, aplat jaune).
         /// Vrai shell, hors réseau, une carte ordinaire FABRIQUÉE avec ses deux options servies. Garde d'EFFET et de structure : le verre est ANCRÉ en
-        /// bas de sa bande et y tient ; UN seul geste cliquable (« Prendre acte ») ; les options sont des FAITS en texte — aucune plaque, aucun cerne,
-        /// aucun sélecteur entre elles et le verre (f2 : « rien ne doit avoir l'air d'un bouton ») ; le geste a la grammaire `.g.or` (encre
-        /// ficheCtaOrEncre), jamais l'aplat `accentGold` ; le titre a le corps du cadre (16 px CSS × 1280/300) en or `hudMoneyGold` ; la saisie
-        /// du canon est cachée au repos et révélée par un appui court, sans faire sortir le verre de sa bande.</summary>
+        /// bas de sa bande et y tient ; DEUX gestes (TD-724 livré, chunk 3, décision f2 11/11 : « les deux en appui long, aucun tap nu ne tranche »),
+        /// un par option servie, dont le libellé EST l'option, chacun un `LongPressButton` et AUCUN un `Button` (un `Button` laisserait un tap nu trancher) ;
+        /// AGIR a la grammaire `.g.or` (encre ficheCtaOrEncre, lustre), LAISSER la plaque sombre `.g`, jamais l'aplat `accentGold` ; le titre a le corps du
+        /// cadre (16 px CSS × 1280/300) en or `hudMoneyGold` ; la saisie du canon est cachée au repos, révélée par un appui court, avec LE MOT DU GESTE touché,
+        /// sans faire sortir le verre de sa bande.
+        /// ⚠️ REMPLACE « UnSeulGeste_OptionsEnTexte » : cette propriété (un seul geste « Prendre acte », options en texte) n'était vraie que tant que `commit` ne
+        /// recevait aucune option (TD-724). Cause : le chunk 3 poste `chosen_option` ; garder « un seul geste » l'aurait rendue FAUSSE.</summary>
         [UnityTest]
-        public IEnumerator A14_LaCarteDeTete_EstCelleDuCadre5_UnSeulGeste_OptionsEnTexte_SaisieDiscrete()
+        public IEnumerator A14_LaCarteDeTete_EstCelleDuCadre5_DeuxGestes_ChacunEnAppuiLong_SaisieDuGesteTouche()
         {
             LogAssert.ignoreFailingMessages = true;
             shellGo = new GameObject("AppShell_Cadre5");
@@ -541,35 +553,39 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(cb[0].y, cv[0].y, 1.5f / Mathf.Max(u, 1e-4f), "le verre est ancré au BAS de sa bande");
             Assert.LessOrEqual(cv[1].y, cb[1].y + 1f / Mathf.Max(u, 1e-4f), "le verre ne sort pas de sa bande");
 
-            // UN seul geste cliquable : « Prendre acte » (la surface du verre ouvre ⑤, ce n'est pas un geste de la carte)
+            // DEUX gestes cliquables, un par option (la surface du verre ouvre ⑤, ce n'est pas un geste de la carte)
             // (créneau du 08/10 matin) un geste est un `Selectable` OU un `LongPressButton` (qui n'en est pas un : la 1ʳᵉ version de cette garde ne voyait AUCUN geste)
             var gestes = tete.GetComponentsInChildren<Component>(false)
                 .Where(x => (x is UnityEngine.UI.Selectable || x is LongPressButton) && x != tete.SurfaceButton)
-                .Select(x => x.gameObject.name).Distinct().ToList();
-            CollectionAssert.AreEqual(new[] { "CommitButton" }, gestes, "un seul geste : Prendre acte");
+                .Select(x => x.gameObject.name).Distinct().OrderBy(n => n, System.StringComparer.Ordinal).ToList();
+            CollectionAssert.AreEqual(new[] { "AgirButton", "LaisserButton" }, gestes, "deux gestes : agir et laisser");
             Assert.IsNull(tete.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "SkipButton"), "aucun « Pas maintenant »");
 
-            // les OPTIONS : des faits en TEXTE — ni plaque, ni cerne, ni sélecteur entre elles et le verre
-            int options = 0;
-            foreach (string nom in new[] { "Recommandation", "Alternative" })
-            {
-                TMPro.TextMeshProUGUI o = tete.GetComponentsInChildren<TMPro.TextMeshProUGUI>(false).FirstOrDefault(t => t.name == nom);
-                Assert.IsNotNull(o, $"l'option « {nom} » est rendue");
-                Assert.IsFalse(string.IsNullOrEmpty(o.text), $"anti-vacuité : l'option « {nom} » a un texte");
-                options++;
-                for (Transform a = o.transform; a != null && a != tete.Bloc; a = a.parent)
-                {
-                    Assert.IsNull(a.GetComponent<UnityEngine.UI.Selectable>(), $"« {nom} » : aucun sélecteur ({a.name})");
-                    Assert.IsTrue(a == o.transform || a.GetComponent<UnityEngine.UI.Image>() == null, $"« {nom} » : aucune plaque ni cerne ({a.name})");
-                }
-                Assert.AreEqual(0, o.transform.parent.Cast<Transform>().Count(ch => ch.GetComponent<UnityEngine.UI.Image>() != null), $"« {nom} » : aucun cerne frère");
-            }
-            Assert.AreEqual(2, options);
+            // CHACUN en appui long, AUCUN en tap nu : un `Button` sur un geste de décision laisserait un tap trancher
+            Assert.IsNotNull(tete.AgirButton.GetComponent<LongPressButton>());
+            Assert.IsNotNull(tete.LaisserButton.GetComponent<LongPressButton>());
+            Assert.IsNull(tete.AgirButton.GetComponent<UnityEngine.UI.Button>(), "AGIR : aucun tap nu ne tranche");
+            Assert.IsNull(tete.LaisserButton.GetComponent<UnityEngine.UI.Button>(), "LAISSER : aucun tap nu ne tranche");
+            // ★ CONTRÔLE POSITIF : le détecteur voit un tap nu — sur un clone, un `Button` ajouté est bien trouvé
+            var clone = Object.Instantiate(tete.AgirButton.gameObject);
+            clone.AddComponent<UnityEngine.UI.Button>();
+            Assert.IsNotNull(clone.GetComponent<UnityEngine.UI.Button>(), "le détecteur rougirait : un geste de décision porte un `Button`");
+            Object.Destroy(clone);
 
-            // la grammaire `.g.or`, jamais l'aplat accentGold
-            TMPro.TextMeshProUGUI lib = tete.CommitButton.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).First();
-            Assert.AreEqual(Trio(MafiaCleanCity.Theme.DesignTokens.Current.ficheCtaOrEncre), Trio(lib.color), "le libellé du geste : l'encre de la pilule or");
-            Assert.IsNotNull(tete.CommitButton.transform.Find("Degrade"), "la pilule lustrée (dégradé ficheCtaOrHaut → ficheCtaOrBas)");
+            // chaque geste DIT son option (le libellé servi, traduit), jamais un mot du client ; les deux sont distincts
+            var libelles = tete.LibellesDesBoutons;
+            Assert.AreEqual(2, libelles.Count, "deux libellés montrés");
+            Assert.IsFalse(string.IsNullOrEmpty(libelles[0]) || string.IsNullOrEmpty(libelles[1]), "anti-vacuité : les deux gestes ont un mot");
+            CollectionAssert.AreEqual(tete.OptionsRendues.ToList(), libelles.ToList(), "le geste dit l'option : agir d'abord, laisser ensuite");
+            // (run 11/11-b : hors pile, aucune clé `hl.option.*` n'est servie ⇒ les deux libellés sont le repli « — » ; la distinction des deux mots est
+            //  prouvée par Etat2/Etat2b, qui chargent un bundle, pas ici. Une inégalité exigée sans bundle rougit sur le repli, pas sur le code.)
+
+            // la grammaire : AGIR `.g.or` (encre or, lustre) ; LAISSER `.g` (plaque sombre, sans lustre) ; jamais l'aplat accentGold
+            TMPro.TextMeshProUGUI lib = tete.AgirButton.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).First();
+            Assert.AreEqual(Trio(MafiaCleanCity.Theme.DesignTokens.Current.ficheCtaOrEncre), Trio(lib.color), "le libellé d'AGIR : l'encre de la pilule or");
+            Assert.IsTrue(tete.AgirButton.transform.Find("Degrade").gameObject.activeSelf, "la pilule lustrée (dégradé ficheCtaOrHaut → ficheCtaOrBas)");
+            Assert.IsFalse(tete.LaisserButton.transform.Find("Degrade").gameObject.activeSelf, "LAISSER : la plaque sombre, sans lustre");
+            Assert.AreEqual(Trio(LaSuitePanelController.FondGesteSombre), Trio(tete.LaisserButton.GetComponent<UnityEngine.UI.Image>().color), "LAISSER : le fond sombre `.g`");
             Assert.IsFalse(tete.GetComponentsInChildren<UnityEngine.UI.Image>(true).Any(im => Trio(im.color) == Trio(MafiaCleanCity.Theme.DesignTokens.Current.accentGold)), "aucun aplat accentGold");
 
             // typographie du cadre : le titre en or, au corps de 16 px CSS
@@ -579,10 +595,14 @@ namespace MafiaCleanCity.Shell.Tests
 
             // la saisie du canon : discrète (cachée au repos), révélée par un appui court, le verre reste dans sa bande
             Assert.IsFalse(tete.SaisieVisible, "la saisie est cachée au repos");
-            tete.RevelerLaSaisie();
+            tete.RevelerLaSaisie(HlCardClient.OptionAgir);
             yield return null;
             Canvas.ForceUpdateCanvases();
             Assert.IsTrue(tete.SaisieVisible, "un appui court révèle la saisie");
+            Assert.AreEqual(libelles[0].ToUpperInvariant(), tete.MotCle, "la saisie d'AGIR : le mot est le libellé d'AGIR");
+            tete.RevelerLaSaisie(HlCardClient.OptionLaisser);
+            Assert.AreEqual(libelles[1].ToUpperInvariant(), tete.MotCle, "la saisie de LAISSER : le mot est le libellé de LAISSER");
+            Assert.AreEqual(HlCardClient.OptionLaisser, tete.OptionDeLaSaisie);
             tete.Bloc.GetWorldCorners(cv);
             Assert.LessOrEqual(cv[1].y, cb[1].y + 1f / Mathf.Max(u, 1e-4f), "avec la saisie, le verre tient encore dans sa bande (réduit au besoin)");
         }
@@ -898,7 +918,7 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNull(shell.ContentSlot.GetComponentsInChildren<Transform>(false).FirstOrDefault(t => t.name == "Nav_CityMap"),
                 "« La carte » de l'ancienne feuille n'est plus visible sur l'Accueil (G4 : plus rien à recouvrir)");
             var gestes = Tete().GetComponentsInChildren<Transform>(false)
-                .Where(t => t.name == "CommitButton" || t.name == "SkipButton" || t.name == "LireButton" || t.name == "TypedConfirmButton").ToList();
+                .Where(t => t.name == "AgirButton" || t.name == "LaisserButton" || t.name == "SkipButton" || t.name == "LireButton" || t.name == "TypedConfirmButton").ToList();
             Assert.IsNotEmpty(gestes, "anti-vacuité : avec une carte, la tête montre des gestes");
             foreach (Transform g in gestes)
             {

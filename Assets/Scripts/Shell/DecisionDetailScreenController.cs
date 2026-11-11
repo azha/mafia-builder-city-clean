@@ -48,6 +48,23 @@ namespace MafiaCleanCity.Shell
         public int DecisionsTranchees { get; private set; }
         public LongPressButton BoutonLire { get; private set; }
 
+        // ── le MODE « APRÈS-GESTE » (cadres 6-7 de l'atelier) : la même table feutre, la carte tranchée (ou qui reste), le tampon TRANCHÉE, le mot-or, la ligne-or ──────
+        /// <summary>La vue d'après-geste posée (null : l'écran est avant le geste). Un SEUL producteur de l'après-geste : `ApresGesteHl.Vue`, appelée par ④ (via le shell) ou par ce tampon.</summary>
+        public ApresGesteHl.VueApres VueApres { get; private set; }
+        public bool EnApres => VueApres != null;
+        public string GraveRendu => grave != null && grave.gameObject.activeInHierarchy ? grave.text : null;
+        public string MotOrRendu => motOr != null && motOr.gameObject.activeSelf ? motOr.text : null;
+        public string LigneOrRendue => ligneOrLibelle != null && ligneOr != null && ligneOr.gameObject.activeSelf ? ligneOrLibelle.text : null;
+        public string SousLigneRendue => ligneOrSous != null && ligneOr != null && ligneOr.gameObject.activeSelf ? ligneOrSous.text : null;
+        public bool TamponDiagVisible => tamponDiag != null && tamponDiag.activeSelf;
+        public bool DejaVisible => deja != null && deja.activeSelf;
+        public bool TamponLaitonVisible => tampon != null && tampon.activeSelf;
+        public string JetonEtatRendu => jetonEtat != null ? jetonEtat.text : null;
+        public string JetonSousRendu => jetonSous != null ? jetonSous.text : null;
+        public bool JetonChiffreVisible => jetonChiffre != null && jetonChiffre.gameObject.activeSelf;
+        public bool MotOrRouge => motOr != null && motOr.gameObject.activeSelf && VueApres != null && VueApres.MotRouge;
+        public Button BoutonRetour => ligneOr;
+
         private const float K = 1280f / 300f;
         private static float Px(float cssPx) => cssPx * K;
 
@@ -79,7 +96,7 @@ namespace MafiaCleanCity.Shell
         // ⑤ F7 (juge d'ensemble r2, 08/10) — LE GESTE PRINCIPAL N'EST PLUS UNE PLAQUE CRÈME : la série 4 (`.tampon`, crème / brique) a été remplacée par la série 6, dont le cadre 5 ne porte que la
         // `.plaque-laiton` (`ecrans-brennar-6.html:263-264`) : `linear-gradient(180deg,#e8c87a,#b08d3e 55%,#8a6a22)`, bord 1 px `#6b4a12` rayon 6 (POSÉ par `Filets`, recette `PlaqueLaiton`), encre `#3a2a0a`,
         // `small` en `#3a2a0acc`. `PiedDEcran.PlaqueCreme` reste, pour ⑮ DÉPOSER.
-        /// <summary>La matière de la carte : REF (219,206,171). Aplat opaque (aucune conversion sRGB → linéaire).</summary>
+        /// <summary>La matière MOYENNE mesurée une fois sur un autre cadre : REF (219,206,171). N'est PLUS le papier de la carte (dégradé, `PoserLePapier`) : elle reste pour ses lecteurs historiques.</summary>
         public static Color MatiereDeLaCarte => new Color32(219, 206, 171, 255);
         /// <summary>`.plaque-laiton` : les trois arrêts du dégradé vertical (180°) — clair `#e8c87a` à 0 %, le laiton du jeton `hudHairlineGold` (`#b08d3e`, = le remplissage médian mesuré (173,138,60)) à 55 %, sombre `#8a6a22` à 100 %.
         /// Des pixels OPAQUES cuits dans le sprite : aucune opacité à convertir pour le mélange linéaire.</summary>
@@ -102,7 +119,8 @@ namespace MafiaCleanCity.Shell
         }
         /// <summary>L'encre sombre sur la matière crème (le titre) et sa version affaiblie (les libellés) — l'encre de la carte de la maquette.</summary>
         private static Color Encre => Hex("#2a1c12");
-        private static Color EncreFaible => Hex("#6f5f4d");
+        /// <summary>`.carte-or .bande span{color:#5a4629}` (F5 : #6f5f4d rendait PORTÉE/URGENCE à 3,91:1 sur le papier, la maquette à 6,02:1).</summary>
+        private static Color EncreFaible => Hex("#5a4629");
 
         private static Color Hex(string h)
         {
@@ -144,6 +162,15 @@ namespace MafiaCleanCity.Shell
                 { "NIGHT", "Rien ne se détache du sabot cette nuit." },
             }, "Rien ne se détache du sabot pour l\u2019instant.");
         private GameObject tampon;
+        private TextMeshProUGUI motOr, ligneOrLibelle, ligneOrSous, jetonSous, dejaMot, tamponMot;
+        private Button ligneOr;
+        private GameObject tamponDiag, deja;
+        private Image carteFond;
+        /// <summary>Le papier de la carte : un dégradé `linear-gradient(170deg,#fbf3dc,#e6d8b3 60%,#d6c69a)` (F5/F6, juge ⊥ 11/11), en deux sprites — normal et `.tranchee{filter:saturate(.8)}`.</summary>
+        private Image papierDegrade;
+        private Sprite papierNormal, papierTranchee;
+        /// <summary>Le cachet de cire : un élément de l'écran AVANT le geste ; les cadres 6-7 de la maquette ne le dessinent pas (F2-F4, juge ⊥ 11/11).</summary>
+        private GameObject cachetDeCire;
 
         private void Awake() => Init();
 
@@ -210,6 +237,7 @@ namespace MafiaCleanCity.Shell
             token = bearer;
             // La carte n'a pas de route à elle : on lit celle que le shell a déjà reçue à
             // l'ouverture. C'est la limite S11-a, respectée telle quelle.
+            if (VueApres != null) return;   // monté EN MODE APRÈS par le shell : la relecture à l'ouverture n'écrase pas l'après-geste
             AppShell shell = FindFirstObjectByType<AppShell>();
             if (shell != null && shell.LastSessionOpen != null)
                 Afficher(shell.LastSessionOpen.hl_card, shell.LastSessionOpen.structural_budget);
@@ -220,6 +248,7 @@ namespace MafiaCleanCity.Shell
         public void Afficher(HlCardDto carte, StructuralBudgetDto budget)
         {
             Init();
+            QuitterLApres();
             CarteAffichee = carte;
             EtatSabot = carte == null;
 
@@ -235,7 +264,7 @@ namespace MafiaCleanCity.Shell
 
             bool structurelle = carte.structural;
             coinLibelle.text = structurelle ? "structurelle" : "tactique";
-            titre.text = LibellesDecision.Type(carte.decision_type_key);
+            titre.text = LibellesDecision.Type(carte.decision_type_key, carte.target_count);
             noteZinc.text = structurelle
                 ? "Structurelle — trancher consomme votre décision de la session."
                 : "Tactique — trancher ne touche pas à votre décision structurelle.";
@@ -323,16 +352,119 @@ namespace MafiaCleanCity.Shell
             CommitCount++;
             DerniereErreur = null;
             RefusRendu = null;
-            bool accepte = false;
-            yield return client.Commit(token, CarteAffichee.card_id, dto => accepte = dto.committed,
+            CommitResponseDto reponse = null;
+            yield return client.Commit(token, CarteAffichee.card_id, dto => reponse = dto,
                                        (c, m) => DerniereErreur = $"{c}: {m}");
             if (this == null) yield break;
-            if (DerniereErreur == null && accepte) { TrancheePourDeBon(); yield break; }
-            // un refus se DIT, sous la carte (la note du zinc) : la phrase servie, sinon celle de la carte — jamais une erreur muette
+            if (DerniereErreur == null && reponse != null && reponse.committed)
+            {
+                // l'après-geste SERVI s'il y en a un (clés servies par le back) ; sinon, comme avant : l'annonce au shell, qui remonte l'Accueil
+                if (!PoserLApres(new ApresGesteHl.IssueDuGeste { Carte = CarteAffichee, Reponse = reponse })) TrancheePourDeBon();
+                yield break;
+            }
+            // un refus se DIT : la phrase servie, sinon celle de la carte — jamais une erreur muette. Quand le back a SERVI la clé du refus (404/409 de la carte, ou l'erreur de la
+            // 1ʳᵉ cible), c'est le cadre 7 / 6 (même table feutre) ; sans clé servie (réseau), la phrase reste sous la carte, comme avant.
             RefusRendu = client.DernierePhraseDeRefus
                          ?? MafiaCleanCity.I18n.Libelle.Gabarit("accueil.carte.la_decision_n_a_pas_ete_prise", "La décision n\u2019a pas été prise.");
+            if (PoserLApres(new ApresGesteHl.IssueDuGeste { Carte = CarteAffichee, CleDeRefus = client.DerniereCleDeRefus, PhraseDeRefus = client.DernierePhraseDeRefus })) yield break;
             if (noteZinc != null) noteZinc.text = RefusRendu;
         }
+
+        /// <summary>Calcule la vue (la file de l'Accueil et le budget : ceux de `session/open`) et la pose. Faux = il n'y a rien à lire (voir `ApresGesteHl.Vue`) : l'appelant garde son comportement d'avant.</summary>
+        private bool PoserLApres(ApresGesteHl.IssueDuGeste issue)
+        {
+            AppShell shell = FindFirstObjectByType<AppShell>();
+            SessionOpenDto ouverture = shell != null ? shell.LastSessionOpen : null;
+            int enAttente = ouverture != null && ouverture.queue != null ? ouverture.queue.Length : 0;
+            ApresGesteHl.VueApres vue = ApresGesteHl.Vue(issue, issue.Carte != null ? issue.Carte.target_count : 0, enAttente, ouverture != null ? ouverture.structural_budget : null);
+            if (vue == null) return false;
+            AfficherApresGeste(issue.Carte, vue);
+            return true;
+        }
+
+        /// <summary>Le MODE APRÈS-GESTE (cadres 6-7) : la carte reste affichée, ses pips aussi ; le grave dit l'issue, le tampon TRANCHÉE se pose (ou pas), la plaque « LES LIRE MAINTENANT » et la note du zinc
+        /// s'effacent, le mot-or et la ligne-or (« Retour à l’accueil ») prennent leur place ; le jeton passe à trois états sans chiffre. Appelé par le shell (④ a levé l'issue) ou par ce tampon.</summary>
+        public void AfficherApresGeste(HlCardDto carte, ApresGesteHl.VueApres vue)
+        {
+            Init();
+            if (carte == null || vue == null) return;
+            VueApres = null;   // `Afficher` repose l'écran « avant » (et remet la carte) ; l'après se pose ensuite
+            Afficher(carte, null);
+            VueApres = vue;
+            tampon.SetActive(false);
+            noteZinc.gameObject.SetActive(false);
+            grave.gameObject.SetActive(!string.IsNullOrWhiteSpace(vue.Grave));
+            grave.text = vue.Grave ?? "";
+            motOr.gameObject.SetActive(!string.IsNullOrWhiteSpace(vue.Mot));
+            motOr.text = vue.Mot ?? "";
+            bool rouge = vue.MotRouge;
+            motOr.color = rouge ? MotRouge : OrVif;               // `.mot-or.rouge{color:#ffb39e;font-style:italic;font-size:9.5px}`
+            motOr.fontSize = Px(rouge ? 9.5f : 11.5f);
+            motOr.fontStyle = rouge ? FontStyles.Italic : FontStyles.Normal;
+            ligneOr.gameObject.SetActive(true);
+            ligneOrLibelle.text = vue.Action ?? "";
+            ligneOrSous.text = vue.SousLigne ?? "";
+            ligneOrSous.gameObject.SetActive(!string.IsNullOrWhiteSpace(vue.SousLigne));
+            if (vue.Tampon) tamponMot.text = MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "TRANCHÉE");
+            if (vue.Deja) dejaMot.text = MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Déjà tranchée");
+            tamponDiag.SetActive(vue.Tampon);
+            deja.SetActive(vue.Deja);
+            papierDegrade.sprite = vue.CarteTranchee ? papierTranchee : papierNormal;   // `.carte-or.tranchee{filter:saturate(.8)}`
+            DesaturerLesTextes(vue.CarteTranchee);
+            cachetDeCire.SetActive(false);   // F2-F4 : le cachet n'existe pas dans les cadres 6-7
+            // le jeton : trois états, AUCUN chiffre ; son petit texte dit « votre grande décision du jour »
+            jetonChiffre.gameObject.SetActive(false);
+            jetonEtat.text = ApresGesteHl.MotDuJeton(vue.Jeton);
+            jetonEtat.color = vue.Jeton == ApresGesteHl.EtatDuJeton.Libre ? OrVif : Creme2;
+            jetonSous.text = ApresGesteHl.PetitTexteDuJeton();
+        }
+
+        /// <summary>« Retour à l'accueil » (la `.ligne-or`) : le shell relit la session et remonte l'Accueil — `OnDecisionTranchee`, le même évènement que le tampon d'avant. Compté `DecisionsTranchees` seulement quand la carte EST tranchée.</summary>
+        public void RetourALAccueil()
+        {
+            if (VueApres == null) return;
+            if (VueApres.CarteTranchee) DecisionsTranchees++;
+            OnDecisionTranchee?.Invoke();
+        }
+
+        private void QuitterLApres()
+        {
+            if (VueApres == null) return;
+            VueApres = null;
+            noteZinc.gameObject.SetActive(true);
+            motOr.gameObject.SetActive(false);
+            ligneOr.gameObject.SetActive(false);
+            tamponDiag.SetActive(false);
+            deja.SetActive(false);
+            papierDegrade.sprite = papierNormal;
+            DesaturerLesTextes(false);
+            cachetDeCire.SetActive(true);
+            jetonChiffre.gameObject.SetActive(true);
+            jetonSous.text = "votre décision structurelle de la session";
+        }
+
+        private System.Collections.Generic.Dictionary<TextMeshProUGUI, Color> textesDeLaCarte;
+
+        /// <summary>`.carte-or.tranchee{filter:saturate(.8)}` s'applique à TOUT le sous-arbre de la carte — le papier ET ses textes (titre, nature, libellés, valeurs, pastille, tampon). Le papier a son second
+        /// sprite ; les textes reprennent ici leur couleur d'origine désaturée (pastille « déjà tranchée » : la maquette tient ≥ 4,5:1 parce que son encre brique est désaturée avec le papier — mesuré,
+        /// le jeu qui ne désaturait que le fond tombait à 4,3:1). Restituées à l'identique quand la carte n'est plus tranchée. Reste de TD-938 : filets, pips et cerne (non désaturés).</summary>
+        private void DesaturerLesTextes(bool tranchee)
+        {
+            if (textesDeLaCarte == null)
+            {
+                textesDeLaCarte = new System.Collections.Generic.Dictionary<TextMeshProUGUI, Color>();
+                foreach (TextMeshProUGUI t in carteRoot.GetComponentsInChildren<TextMeshProUGUI>(true)) textesDeLaCarte[t] = t.color;
+            }
+            foreach (var kv in textesDeLaCarte) if (kv.Key != null) kv.Key.color = tranchee ? Desaturee(kv.Value, 0.8f) : kv.Value;
+        }
+
+        /// <summary>`filter:saturate(f)` sur une couleur opaque (matrice sRGB de la spec CSS, luminance Rec. 709 — la carte n'est pas translucide : aucune opacité à convertir).</summary>
+        public static Color Desaturee(Color c, float f)
+        {
+            float l = 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+            return new Color(Mathf.Clamp01(l + (c.r - l) * f), Mathf.Clamp01(l + (c.g - l) * f), Mathf.Clamp01(l + (c.b - l) * f), c.a);
+        }
+        private static Color MotRouge => Hex("#ffb39e");
 
         private void TrancheePourDeBon()
         {
@@ -454,10 +586,12 @@ namespace MafiaCleanCity.Shell
             //    bouger deux choses à la fois, et plus rien ne départagerait laquelle a agi.
             // ⑤ F4 : la MATIÈRE crème d'abord (surface pleine), puis le bord d'or-brun et le filet rouge intérieur de la maquette, en enfants hors mise en page
             fond.sprite = ProceduralUI.RoundedRectMask((int)Px(14f));
-            fond.color = MatiereDeLaCarte;
+            fond.color = Color.clear;   // le papier est son enfant `Papier` (dégradé masqué par le rectangle arrondi)
             fond.type = Image.Type.Sliced;
+            carteFond = fond;
             Cerner(carte.transform, "BordCarte", (int)Px(14f), Px(1.5f), Hex("#8a6a2c"), 0f);
             Cerner(carte.transform, "FiletCarte", (int)Px(11f), Px(1f), FiletDeLaCarte, Px(3f));
+            PoserLePapier(carte.transform);
             VerticalLayoutGroup cv = carte.GetComponent<VerticalLayoutGroup>();
             cv.padding = new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(12f));
             // ⛔ F13 (a) — LA CARTE EST UN PORTRAIT : `.carte-or{width:176px;min-height:212px}`. Elle prenait toute la largeur que le jeton lui laissait
@@ -500,7 +634,9 @@ namespace MafiaCleanCity.Shell
             ressortLe.preferredWidth = 0f;
             ressortLe.flexibleWidth = 1f;
             pipsUrgence = BandeDePips(bandes.transform, "Urgence", out urgenceLibelle);
-            Filets.Poser((RectTransform)bandes.transform, DecorsDeScene.Filets.DecisionDetail.Bandes, MatiereDeLaCarte);
+            Filets.Poser((RectTransform)bandes.transform, DecorsDeScene.Filets.DecisionDetail.Bandes, PapierEn(0.85f));
+
+            PoserLesElementsDeLApres(carte.transform);
 
             // F13 (c) — LE CACHET DE CIRE, posé EN DERNIER (il recouvre le coin haut-droit de la carte, à cheval sur son bord).
             PoserLeCachetDeCire(carte.transform);
@@ -532,9 +668,9 @@ namespace MafiaCleanCity.Shell
                                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center, true);
             jetonEtat = PetitesCapitales(Texte(colonne.transform, "Etat", "libre", Px(7.5f), OrVif,
                               DesignTokens.Current.primaryFont, TextAlignmentOptions.Center));
-            Texte(colonne.transform, "Sous", "votre décision structurelle de la session", Px(6.3f),
-                  Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
-                .enableWordWrapping = true;
+            jetonSous = Texte(colonne.transform, "Sous", "votre décision structurelle de la session", Px(6.3f),
+                  Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            jetonSous.enableWordWrapping = true;
 
             // ── l'état SABOT : aucune carte ne se détache ────────────────────────────────────
             sabotTexte = Texte(pile, "Sabot",
@@ -580,6 +716,146 @@ namespace MafiaCleanCity.Shell
                 .enableWordWrapping = true;
             BoutonLire = tampon.AddComponent<LongPressButton>();
             BoutonLire.OnLongPressCompleted += () => StartCoroutine(Commit());
+
+            PoserLeMotEtLaLigneDeLApres();
+        }
+
+        /// <summary>Le MOT-OR et la LIGNE-OR de l'après-geste, en fin de pile (`.mot-or`, `.ligne-or` : cadres 6-7), cachés tant que l'écran est AVANT le geste.
+        /// `.mot-or{text-align:center;font:11.5px Georgia;line-height:1.3;color:#f2c96b;padding:0 8px}` ; `.ligne-or{text-align:center;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+        /// color:#f2c96b;padding:6px;border-top/bottom:1px solid #f2c96b55}` (le filet est POSÉ par `Filets`, recette `LigneOr`) ; `small{display:block;font-size:7.5px;letter-spacing:.02em;
+        /// text-transform:none;color:#cfe3d3aa;margin-top:1px}`. La couleur de la sous-ligne est l'OPAQUE que le navigateur produit (mélange sRGB de `#cfe3d3` à 67 % sur le bas du feutre).</summary>
+        private void PoserLeMotEtLaLigneDeLApres()
+        {
+            motOr = Texte(pile, "MotOr", "", Px(11.5f), OrVif, DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
+            motOr.enableWordWrapping = true;
+            motOr.lineSpacing = 0f;
+            motOr.margin = new Vector4(Px(8f), 0f, Px(8f), 0f);
+            motOr.GetComponent<LayoutElement>().preferredWidth = 0f;
+            motOr.gameObject.SetActive(false);
+
+            GameObject ligne = Bloc("LigneOr", pile, horizontal: false, espace: Px(1f));
+            VerticalLayoutGroup lv = ligne.GetComponent<VerticalLayoutGroup>();
+            lv.childAlignment = TextAnchor.MiddleCenter;
+            lv.padding = new RectOffset((int)Px(6f), (int)Px(6f), (int)Px(6f), (int)Px(6f));
+            if (ligne.GetComponent<CanvasRenderer>() == null) ligne.AddComponent<CanvasRenderer>();   // `AddComponent` à l'exécution n'honore pas `[RequireComponent]`
+            Image cible = ligne.AddComponent<Image>();   // la cible du toucher (transparente)
+            cible.color = Color.clear;
+            ligneOr = ligne.AddComponent<Button>();
+            ligneOr.transition = Selectable.Transition.None;
+            ligneOr.onClick.AddListener(RetourALAccueil);
+            ligneOrLibelle = Texte(ligne.transform, "Libelle", "", Px(9.5f), OrVif, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            ligneOrLibelle.fontStyle |= FontStyles.UpperCase;
+            ligneOrLibelle.characterSpacing = 16f;   // `.16em`
+            ligneOrLibelle.raycastTarget = false;
+            Color fondDuBas = DecorsDeScene.DecisionDetail.Support.Couches[0].Arrets[2].Couleur.Resoudre();
+            fondDuBas.a = 1f;
+            Color sousCouleur = Color.Lerp(fondDuBas, Hex("#cfe3d3"), 0.667f);
+            sousCouleur.a = 1f;
+            ligneOrSous = Texte(ligne.transform, "Sous", "", Px(7.5f), sousCouleur, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            ligneOrSous.characterSpacing = 2f;   // `.02em`
+            ligneOrSous.enableWordWrapping = true;
+            ligneOrSous.raycastTarget = false;
+            Filets.Poser((RectTransform)ligne.transform, DecorsDeScene.Filets.DecisionDetail.LigneOr);
+            ligne.SetActive(false);
+        }
+
+        /// <summary>F5/F6 — LE PAPIER : `.carte-or{background:linear-gradient(170deg,#fbf3dc,#e6d8b3 60%,#d6c69a)}` (atelier épinglé 8f59cf94, l.245), pas l'aplat (219,206,171) mesuré une fois sur un autre cadre.
+        /// Un enfant `Papier` (rectangle arrondi qui MASQUE, hors mise en page, au PREMIER rang : sous le cerne et le filet) porte le dégradé ; la carte elle-même ne masque pas (le cachet de cire déborde de son coin).
+        /// Pixels OPAQUES cuits dans le sprite : aucune opacité à convertir pour le mélange linéaire. `.tranchee{filter:saturate(.8)}` = le même dégradé aux arrêts désaturés (second sprite).</summary>
+        /// <summary>Le papier à `t` (0 = haut, 1 = bas du dégradé) : le FOND CONNU sous un filet translucide posé à cette hauteur de la carte (`Filets.Poser(…, fondConnu)` en tire l'opaque exact).</summary>
+        private static Color PapierEn(float t)
+        {
+            Color c = ProceduralUI.EchantillonDeDegrade(new (float pos, Color c)[] { (0f, Hex("#fbf3dc")), (0.6f, Hex("#e6d8b3")), (1f, Hex("#d6c69a")) }, t);
+            c.a = 1f;
+            return c;
+        }
+
+        private void PoserLePapier(Transform carte)
+        {
+            var arrets = new (float pos, Color c)[] { (0f, Hex("#fbf3dc")), (0.6f, Hex("#e6d8b3")), (1f, Hex("#d6c69a")) };
+            var desat = new (float pos, Color c)[] { (0f, Desaturee(arrets[0].c, 0.8f)), (0.6f, Desaturee(arrets[1].c, 0.8f)), (1f, Desaturee(arrets[2].c, 0.8f)) };
+            papierNormal = ProceduralUI.DegradeLineaire(170f, arrets, Px(176f), Px(212f));
+            papierTranchee = ProceduralUI.DegradeLineaire(170f, desat, Px(176f), Px(212f));
+
+            GameObject go = new GameObject("Papier", typeof(RectTransform), typeof(CanvasRenderer));
+            go.transform.SetParent(carte, false);
+            go.transform.SetAsFirstSibling();
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+            Image masque = go.AddComponent<Image>();
+            masque.sprite = ProceduralUI.RoundedRectMask((int)Px(14f));
+            masque.type = Image.Type.Sliced;
+            masque.raycastTarget = false;
+            go.AddComponent<Mask>().showMaskGraphic = false;   // seul le canal ALPHA du rectangle sert de stencil
+            papierDegrade = NouvelleImage("Degrade", go.transform);
+            papierDegrade.sprite = papierNormal;
+            Etirer((RectTransform)papierDegrade.transform);
+        }
+
+        /// <summary>Dans la CARTE, hors mise en page : la pastille `.deja` (« Déjà tranchée », tiretée) et le TAMPON `.tampon-diag` « TRANCHÉE » (centré, tourné de −18° CSS = +18° Unity, 19 CSS, `.22em`, 800,
+        /// `#93402c`, trait de 3 CSS posé par `Filets` (recette `TamponDiag`), fond `#efe4c6aa` — l'OPAQUE que le navigateur produit sur la matière de la carte —, halo `0 0 0 2px #efe4c6`).</summary>
+        private void PoserLesElementsDeLApres(Transform carte)
+        {
+            GameObject dj = Bloc("Deja", carte, horizontal: true, espace: 0f);
+            dj.GetComponent<HorizontalLayoutGroup>().padding = new RectOffset((int)Px(4f), (int)Px(4f), (int)Px(2f), (int)Px(2f));
+            dj.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+            LayoutElement dle = dj.AddComponent<LayoutElement>();
+            dle.flexibleHeight = 0f;
+            // le MOT est posé par `AfficherApresGeste` (jamais à la construction : ⑤ est monté « avant », et un `Libelle.De` ici compterait un repli à l'ARRIVÉE — garde ZeroRepli)
+            TextMeshProUGUI djTexte = Texte(dj.transform, "Mot", "", Px(6.5f), Rouge,
+                                            DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            djTexte.fontStyle |= FontStyles.UpperCase;
+            djTexte.characterSpacing = 12f;
+            dejaMot = djTexte;
+            Filets.Poser((RectTransform)dj.transform, DecorsDeScene.Filets.DecisionDetail.Deja, PapierEn(0.88f));
+            deja = dj;
+            dj.SetActive(false);
+
+            GameObject halo = new GameObject("TamponDiag", typeof(RectTransform), typeof(CanvasRenderer));
+            halo.transform.SetParent(carte, false);
+            halo.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform ht = (RectTransform)halo.transform;
+            ht.anchorMin = ht.anchorMax = ht.pivot = new Vector2(0.5f, 0.5f);
+            ht.anchoredPosition = Vector2.zero;
+            ht.localRotation = Quaternion.Euler(0f, 0f, 18f);
+            Image haloImg = halo.AddComponent<Image>();
+            // le halo `0 0 0 2px #efe4c6` est un ANNEAU de 2 CSS AUTOUR de la boîte (une ombre extérieure n'est jamais dessinée sous l'élément) : un contour creux, pas un aplat — sinon il
+            // rendrait la plaque opaque sous elle (F1 : 2,9 % de pixels de titre sous la plaque, 32 % dans la maquette).
+            haloImg.sprite = ProceduralUI.RoundedRectOutline((int)Px(8f), Px(2f), Hex("#efe4c6"));
+            haloImg.type = Image.Type.Sliced;
+            haloImg.raycastTarget = false;
+            HorizontalLayoutGroup hh = halo.AddComponent<HorizontalLayoutGroup>();
+            hh.padding = new RectOffset((int)Px(2f), (int)Px(2f), (int)Px(2f), (int)Px(2f));
+            hh.childControlWidth = true; hh.childControlHeight = true;
+            hh.childForceExpandWidth = false; hh.childForceExpandHeight = false;   // un groupe horizontal qui force sa hauteur rend sa hauteur flexible à la pile (garde F12)
+            ContentSizeFitter hf = halo.AddComponent<ContentSizeFitter>();
+            hf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize; hf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            GameObject corps = new GameObject("Corps", typeof(RectTransform), typeof(CanvasRenderer));
+            corps.transform.SetParent(halo.transform, false);
+            Image corpsImg = corps.AddComponent<Image>();
+            corpsImg.sprite = ProceduralUI.RoundedRectMask((int)Px(6f));
+            corpsImg.type = Image.Type.Sliced;
+            // F1 — `background:#efe4c6aa` : la plaque est TRANSLUCIDE (170/255 = 0,667) et le titre se lit à travers. L'alpha CSS recopié en alpha uGUI donnerait un mélange LINÉAIRE trop opaque ; l'alpha
+            // uGUI est celui qui redonne, en linéaire, ce que le navigateur produit (mélange sRGB) là où ça compte — la plaque sur l'ENCRE du titre ; sur le papier, plaque et fond sont presque de la même teinte.
+            Color plaque = Hex("#efe4c6");
+            plaque.a = ProceduralUI.AlphaSrgbVersLineaire(plaque, Encre, 170f / 255f);
+            corpsImg.color = plaque;
+            corpsImg.raycastTarget = false;
+            HorizontalLayoutGroup ch = corps.AddComponent<HorizontalLayoutGroup>();
+            ch.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(4f), (int)Px(4f));
+            ch.childControlWidth = true; ch.childControlHeight = true;
+            ch.childForceExpandWidth = false; ch.childForceExpandHeight = false;
+            TextMeshProUGUI mot = Texte(corps.transform, "Mot", "", Px(19f), Rouge,
+                                        DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
+            mot.fontStyle = FontStyles.Bold;
+            mot.characterSpacing = 22f;
+            mot.raycastTarget = false;
+            tamponMot = mot;
+            Filets.Poser((RectTransform)corps.transform, DecorsDeScene.Filets.DecisionDetail.TamponDiag);   // trait de 3 CSS opaque : aucun fond à connaître
+            tamponDiag = halo;
+            halo.SetActive(false);
         }
 
         /// <summary>F13 (c) — LE CACHET DE CIRE (`.carte-or .cachet`, recette `spec-cachet-et-jeton.md`) : 36 CSS, `radial-gradient(circle at 40% 35%, #c9432c, #7a1f12 70%)`, anneau
@@ -589,6 +865,7 @@ namespace MafiaCleanCity.Shell
         private void PoserLeCachetDeCire(Transform carte)
         {
             GameObject go = new GameObject("CachetDeCire", typeof(RectTransform));
+            cachetDeCire = go;
             go.transform.SetParent(carte, false);
             go.AddComponent<LayoutElement>().ignoreLayout = true;
             RectTransform rt = (RectTransform)go.transform;
@@ -674,7 +951,9 @@ namespace MafiaCleanCity.Shell
             // URGENCE, LIBRE), mais les VALEURS sont en bas de casse (« modérée », « faible »).
             // *Une cause unique ne veut pas dire une population unique* — j'ai failli fermer le
             // finding en en créant un autre, et seule l'image l'a montré.
-            libelle = Texte(bande.transform, "Val", "—", Px(7.5f), Encre, DesignTokens.Current.primaryFont,
+            // F9 — `.carte-or .bande em{font-family:Georgia,serif;font-size:9px;font-style:normal}` : les VALEURS (modérée, majeure, faible…) sont en SÉRIF ; les libellés (PORTÉE, URGENCE) restent en linéale
+            // (la maquette les hérite de `Segoe UI`) — lu sur le crop `ref7_pied.png` du juge.
+            libelle = Texte(bande.transform, "Val", "—", Px(9f), Encre, DesignTokens.Current.hudSerifFont,
                             TextAlignmentOptions.Center);
             return (RectTransform)pips.transform;
         }

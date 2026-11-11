@@ -354,6 +354,15 @@ public static class MafiaCI
         // DecorDeScene (CLIENT-2, 08/10) : verte SEULE au créneau du 08/10 (passed=38 failed=0 declares=38, HEAD feat/decor-de-scene) —
         // primitives, Poser, catalogue = INDEX, rendu 540×960, filets D6, gardes statiques D2/D3/D6b.
         "DecorDeScene",
+        // ⛔ I1 SOLDÉE LE 11/11 (décision f2, créneau d'après-geste) : la garde `GardeCategories.I1` rougissait depuis le 08/10 sur QUATRE catégories déclarées que rien ne lançait — mesuré identique sur le cumul
+        // 8fecec7a et sur la tête (149/110 → 150/110), donc préexistant à ce lot. Trois sont inscrites ici, la quatrième (SpikeE0) est exclue nommément dans la garde (« spike, pas une garde »).
+        // DecisionCarte (CLIENT-2, ⑤ : DecisionDetailCarte + ApresGeste, depuis le 08/10) — verte à chacun de ses créneaux, avec la garde de pixels de l'après-geste (F1, F2, F5/F6, F9).
+        "DecisionCarte",
+        // JaugeDeTension (⑭, juge d'ensemble r1 F3) et Mouvement (régie des mouvements E1/E2a : MouvementsRegie, Courbes, Gardes, GardesE2, Reduit) — mesurées SEULES le 11/11 (créneau d'après-geste,
+        // pile 35bdd6cb) : 110 déclarés (9 + 101), 109 passés, UN rouge — G10, le `LateUpdate` de ⑤ absent de la liste fermée (mise en page, présent depuis le 08/10, jamais vu : la catégorie n'était
+        // au gate de personne) : admis dans `UpdateAdmis` (commit « G10 », décision nommée soumise à f2) ; vertes au créneau final.
+        "JaugeDeTension",
+        "Mouvement",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

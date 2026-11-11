@@ -35,6 +35,7 @@ namespace MafiaCleanCity.Tests
         {
             { "SondeFuiteCatalogue", "contrôle positif de la garde de sortie « catalogue » (TD-576) : laisse le catalogue chargé, exprès" },
             { "SondeGelVolontaire", "contrôle positif du chien de garde de gel : gèle le fil principal sous MAFIA_SONDE_GEL=1" },
+            { "SpikeE0", "spike, pas une garde : E0 MESURE les inconnues d'uGUI (batches, SetPass, GC, reconstruction de canvas), il ne juge pas ; lancé SEUL au créneau (MAFIA_CI_CATEGORIES=SpikeE0), sortie en TSV" },
         };
 
         /// <summary>DETTE DATÉE (26/09) : catégories FONCTIONNELLES portées, jamais inscrites. Chacune se lance seule au prochain créneau
@@ -85,6 +86,23 @@ namespace MafiaCleanCity.Tests
                 "les déclarations en commentaire ne comptent pas ; la forme combinée, si");
         }
 
+        /// <summary>11/11 (f2) — `ClicheApresGeste` (les planches de l'après-geste, ⑤ cadres 6-7 et ④ cadre 5) est VUE par la garde (déclarée dans un test) ET couverte : par la famille exclue « Cliche » (planches pour le juge,
+        /// lancées à la demande), jamais par le filtre du gate. Anti-vacuité : la déclaration est comptée sur les sources réelles ; CONTRÔLE POSITIF : une famille inventée, absente de la liste, ne couvre rien.</summary>
+        [Test]
+        public void I2_ClicheApresGeste_EstVue_EtCouverteParLaFamilleCliche_PasParLeFiltre()
+        {
+            var declarees = Directory.GetFiles(Path.Combine(Application.dataPath, "Tests"), "*.cs", SearchOption.AllDirectories)
+                .SelectMany(f => Declarees(File.ReadAllText(f))).ToList();
+            int occurrences = declarees.Count(c => c == "ClicheApresGeste");
+            Debug.Log($"[GardeCategories] ClicheApresGeste : {occurrences} déclaration(s) sur {declarees.Distinct().Count()} catégories distinctes");
+            Assert.GreaterOrEqual(occurrences, 2, "la catégorie est VUE : déclarée sur les deux tests de l'après-geste");
+            List<string> inscrites = Inscrites(File.ReadAllText(Path.Combine(Application.dataPath, "Editor", "MafiaCI.cs")));
+            Assert.IsFalse(inscrites.Any(p => Regex.IsMatch("ClicheApresGeste", p)), "elle n'est PAS au filtre du gate (planches, à la demande)");
+            Assert.IsTrue(FamillesExclues.Keys.Any(f => "ClicheApresGeste".StartsWith(f, System.StringComparison.Ordinal)), "elle est couverte par la famille exclue « Cliche »");
+            CollectionAssert.DoesNotContain(NonCouvertes(new[] { "ClicheApresGeste" }, inscrites), "ClicheApresGeste", "la garde la compte pour couverte");
+            CollectionAssert.Contains(NonCouvertes(new[] { "ZzzApresGeste" }, inscrites), "ZzzApresGeste", "CONTRÔLE POSITIF : une catégorie neuve hors famille est, elle, VUE comme non couverte");
+        }
+
         [Test]
         public void I1_ToutCategorieDeclaree_EstInscrite_OuExclueNommement()
         {
@@ -96,6 +114,8 @@ namespace MafiaCleanCity.Tests
                 .SelectMany(f => Declarees(File.ReadAllText(f))).ToList();
             Assert.Greater(declarees.Distinct().Count(), 80, $"anti-vacuité : {declarees.Distinct().Count()} catégories déclarées");
 
+            // le COMPTE des catégories vues, écrit au journal : une garde qui ne dit pas combien elle a regardé ne prouve pas qu'elle a regardé
+            Debug.Log($"[GardeCategories] {declarees.Distinct().Count()} catégories déclarées distinctes · {inscrites.Count} entrées au filtre · {FamillesExclues.Count} familles exclues · {NonInscritesConnues.Count} en dette");
             List<string> neuves = NonCouvertes(declarees, inscrites);
             Assert.IsEmpty(neuves, $"{neuves.Count} catégorie(s) déclarée(s) que AUCUN gate ne lance : [{string.Join(", ", neuves)}]. " +
                 "L'inscrire dans MafiaCI.Categories après un run vert seul — ou l'exclure NOMMÉMENT ici, avec sa raison.");
