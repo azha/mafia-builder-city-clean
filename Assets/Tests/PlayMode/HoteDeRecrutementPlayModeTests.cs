@@ -1,4 +1,9 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 using MafiaCleanCity.Operational;
 using MafiaCleanCity.Operational.Lieutenant;
 using MafiaCleanCity.Shell;
@@ -94,6 +99,146 @@ namespace MafiaCleanCity.CityMap.Tests
             StringAssert.Contains(mot, retour, "le mot SERVI de l'archétype");
             StringAssert.DoesNotContain("COOK", retour, "jamais l'identifiant brut");
             StringAssert.DoesNotContain("recruté", retour, "jamais accordé à la personne (D13)");
+        }
+
+        // ---- TD-878 (11/11) — host-eligibility sert `structural_budget_band` ∈ {AVAILABLE, SPENT} et `roster_room_band` ∈ {ROOM, FULL} (back @8d0184a4, budget-bands.ts).
+        //   H7  la lecture : SPENT ⇒ BudgetDepense, FULL ⇒ EquipeComplete, les deux ⇒ les deux ; AVAILABLE/ROOM, absente, vide, inconnue ⇒ Aucun (jamais grisé sur l'ignorance)
+        //   H8  l'écran : bande ⇒ bouton « Recruter » grisé + la RAISON (budget : la phrase SERVIE ; équipe : le mot ratifié f2) ; bande ouverte ⇒ rouvert
+        //   H9  le contrôle d'état (ExigerEtat) n'est pas vide : il REFUSE un bouton resté ouvert sous une bande qui dit « plus rien » (le garde-fou du grisage de production est H8/H10, pas H9)
+        //   H11 une lecture en ÉCHEC rouvre le bouton grisé (jamais grisé sur l'ignorance) ; une lecture réussie le regrise
+        private static string Bandes(string budget, string equipe) =>
+            "{\"payload\":{\"data\":{\"archetypes\":[]" + (budget == null ? "" : ",\"structural_budget_band\":\"" + budget + "\"") +
+            (equipe == null ? "" : ",\"roster_room_band\":\"" + equipe + "\"") + "}}}";
+
+        [Test]
+        public void H7_LesBandesServies_DisentCeQueLeBackRefuseraitEtRienDePlus()
+        {
+            Assert.AreEqual(BlocageRecrutement.BudgetDepense, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes("SPENT", "ROOM"))));
+            Assert.AreEqual(BlocageRecrutement.EquipeComplete, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes("AVAILABLE", "FULL"))));
+            Assert.AreEqual(BlocageRecrutement.BudgetDepense | BlocageRecrutement.EquipeComplete, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes("SPENT", "FULL"))));
+            Assert.AreEqual(BlocageRecrutement.Aucun, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes("AVAILABLE", "ROOM"))));
+            Assert.AreEqual(BlocageRecrutement.Aucun, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes(null, null))), "bandes non servies : on ne sait pas, rien n'est grisé");
+            Assert.AreEqual(BlocageRecrutement.Aucun, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes("", "PLEIN"))), "vide ou valeur inconnue : rien n'est grisé");
+            Assert.AreEqual(BlocageRecrutement.Aucun, HostBlocage.Lire(null), "sans réponse : rien n'est grisé");
+        }
+
+        private GameObject hote;
+
+        [TearDown]
+        public void NettoyerEcran()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            Canvas c = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+            if (c != null) UnityEngine.Object.Destroy(c.gameObject);
+            if (hote != null) UnityEngine.Object.Destroy(hote);
+        }
+
+        /// <summary>L'état attendu du bouton « Recruter » sous `attendu` : cliquable ssi Aucun ; sinon grisé ET une raison non vide qui contient `phrase`.</summary>
+        private static void ExigerEtat(LieutenantScreenController ecran, BlocageRecrutement attendu, params string[] phrases)
+        {
+            Assert.AreEqual(attendu, ecran.BlocageDuRecrutement);
+            Assert.AreEqual(attendu == BlocageRecrutement.Aucun, ecran.RecruitButtonInteractable, "bouton « Recruter » cliquable ssi la bande ne dit pas « plus rien »");
+            // le SEUL signe visible du grisage (le bouton n'a pas de transition) : le libellé s'éteint ; retirer cette ligne de production doit rougir ici
+            Assert.AreEqual(attendu == BlocageRecrutement.Aucun ? MafiaCleanCity.Theme.DesignTokens.Current.accentGold : MafiaCleanCity.Theme.DesignTokens.Current.onSurfaceMuted,
+                ecran.RecruitLabelColor, "libellé du bouton : encre d'appel quand ouvert, encre secondaire quand grisé");
+            if (attendu == BlocageRecrutement.Aucun) { Assert.AreEqual("", ecran.RecruitReason, "rien à dire quand le recrutement est ouvert"); return; }
+            Assert.IsNotEmpty(ecran.RecruitReason, "grisé SANS raison : le joueur ne sait pas pourquoi");
+            foreach (string p in phrases) StringAssert.Contains(p, ecran.RecruitReason);
+        }
+
+        [UnityTest]
+        public IEnumerator H8_UneBandeQuiDitPlusRien_GriseLeBoutonEtDitPourquoi()
+        {
+            // la phrase du budget est SERVIE (registre d'erreurs du back) : servie ⇒ c'est elle, pas le repli
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { HostBlocage.CleBudgetDepense, "PHRASE SERVIE DU PLAFOND" } });
+            hote = new GameObject("LieutenantScreenController_Bandes");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            ExigerEtat(ecran, BlocageRecrutement.Aucun);
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "ROOM")));
+            ExigerEtat(ecran, BlocageRecrutement.BudgetDepense, "PHRASE SERVIE DU PLAFOND");
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("AVAILABLE", "FULL")));
+            ExigerEtat(ecran, BlocageRecrutement.EquipeComplete, "Votre équipe est au complet.");
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "FULL")));
+            ExigerEtat(ecran, BlocageRecrutement.BudgetDepense | BlocageRecrutement.EquipeComplete, "PHRASE SERVIE DU PLAFOND", "Votre équipe est au complet.");
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("AVAILABLE", "ROOM")));
+            ExigerEtat(ecran, BlocageRecrutement.Aucun);
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "ROOM")));
+            ecran.AppliquerHostEligibilite(null);
+            ExigerEtat(ecran, BlocageRecrutement.Aucun);   // rouvert quand la réponse manque : le back tranche
+        }
+
+        [UnityTest]
+        public IEnumerator H8b_SansPhraseServie_LeRepliEstLeMotFrancais()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            Assert.AreEqual("Votre décision de structure d’aujourd’hui est prise. Reprenez demain.", LieutenantScreenController.PhraseDeBlocage(BlocageRecrutement.BudgetDepense));
+            Assert.AreEqual("Votre équipe est au complet.", LieutenantScreenController.PhraseDeBlocage(BlocageRecrutement.EquipeComplete));
+            Assert.AreEqual("", LieutenantScreenController.PhraseDeBlocage(BlocageRecrutement.Aucun));
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator H9_ControlePositif_UnBoutonResteOuvertSousUneBandePleineFaitRougir()
+        {
+            hote = new GameObject("LieutenantScreenController_BandesControle");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("AVAILABLE", "FULL")));
+            ExigerEtat(ecran, BlocageRecrutement.EquipeComplete, "au complet");
+            // la faute : on rouvre le bouton à la main, la bande dit toujours FULL — le contrôle d'état doit le voir
+            UnityEngine.UI.Button bouton = Array.Find(hote.GetComponentsInChildren<UnityEngine.UI.Button>(true), b => b.name == "Action_recruter");
+            Assert.IsNotNull(bouton, "le bouton « Recruter » doit être trouvé pour la faute injectée");
+            bouton.interactable = true;
+            Assert.Throws<AssertionException>(() => ExigerEtat(ecran, BlocageRecrutement.EquipeComplete, "au complet"), "un bouton ouvert sous FULL doit rougir");
+        }
+
+        // H10 — PREUVE D'ARRIVÉE (corps RÉELS de la pile @8d0184a4, compte jetable, 11/11 ; sans SQL, par des gestes de joueur ; enveloppe `response_meta` retirée, le reste intact) :
+        //   SPENT = GET host-eligibility après UN recrutement réel (Logs/td-878/23-host-apres.json) ; FULL = après 3 recrutements sur 3 sessions rouvertes, 4ᵉ ouverture (Logs/td-878/25-host-full.json).
+        private const string CorpsReelSpent = "{\"payload\":{\"data\":{\"archetypes\":[{\"archetype\":\"COOK\",\"eligible_host_building_ids\":[\"7d5dcb3d-ed25-49f9-9260-87c1d76dfb3d\"],\"blocked\":[{\"building_id\":\"d45b8609-2214-4b92-9c0d-ed51e45a4539\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"0b8af29c-7b0b-41f7-aec4-7a7350209f53\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"e2d44603-f426-4a07-8896-ae0ebd780368\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"e7b1a8d7-35bb-4d69-a32c-8a2a2143ecf6\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"}],\"valid_target_building_ids\":null},{\"archetype\":\"SECURITY\",\"eligible_host_building_ids\":[\"7d5dcb3d-ed25-49f9-9260-87c1d76dfb3d\",\"d45b8609-2214-4b92-9c0d-ed51e45a4539\",\"0b8af29c-7b0b-41f7-aec4-7a7350209f53\",\"e2d44603-f426-4a07-8896-ae0ebd780368\",\"e7b1a8d7-35bb-4d69-a32c-8a2a2143ecf6\"],\"blocked\":[],\"valid_target_building_ids\":null},{\"archetype\":\"BOOKKEEPER\",\"eligible_host_building_ids\":[\"0b8af29c-7b0b-41f7-aec4-7a7350209f53\"],\"blocked\":[{\"building_id\":\"7d5dcb3d-ed25-49f9-9260-87c1d76dfb3d\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"d45b8609-2214-4b92-9c0d-ed51e45a4539\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"e2d44603-f426-4a07-8896-ae0ebd780368\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"e7b1a8d7-35bb-4d69-a32c-8a2a2143ecf6\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"}],\"valid_target_building_ids\":null},{\"archetype\":\"LOGISTICS\",\"eligible_host_building_ids\":[\"7d5dcb3d-ed25-49f9-9260-87c1d76dfb3d\",\"d45b8609-2214-4b92-9c0d-ed51e45a4539\",\"0b8af29c-7b0b-41f7-aec4-7a7350209f53\",\"e2d44603-f426-4a07-8896-ae0ebd780368\",\"e7b1a8d7-35bb-4d69-a32c-8a2a2143ecf6\"],\"blocked\":[],\"valid_target_building_ids\":[\"7d5dcb3d-ed25-49f9-9260-87c1d76dfb3d\",\"d45b8609-2214-4b92-9c0d-ed51e45a4539\",\"0b8af29c-7b0b-41f7-aec4-7a7350209f53\",\"e2d44603-f426-4a07-8896-ae0ebd780368\",\"e7b1a8d7-35bb-4d69-a32c-8a2a2143ecf6\"]},{\"archetype\":\"LAUNDERING\",\"eligible_host_building_ids\":[],\"blocked\":[{\"building_id\":\"7d5dcb3d-ed25-49f9-9260-87c1d76dfb3d\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"d45b8609-2214-4b92-9c0d-ed51e45a4539\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"0b8af29c-7b0b-41f7-aec4-7a7350209f53\",\"blocked_reason\":\"MISSING_STAGE1_NODE\",\"blocked_reason_i18n\":\"famille.refus.ce_commerce_n_a_pas_encore_de_premiere_etape_de_blanchiment\"},{\"building_id\":\"e2d44603-f426-4a07-8896-ae0ebd780368\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"e7b1a8d7-35bb-4d69-a32c-8a2a2143ecf6\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"}],\"valid_target_building_ids\":[\"e2d44603-f426-4a07-8896-ae0ebd780368\"]},{\"archetype\":\"DISTRIBUTION\",\"eligible_host_building_ids\":[\"e7b1a8d7-35bb-4d69-a32c-8a2a2143ecf6\"],\"blocked\":[{\"building_id\":\"7d5dcb3d-ed25-49f9-9260-87c1d76dfb3d\",\"blocked_reason\":\"NO_DEALER_ON_SPOT\",\"blocked_reason_i18n\":\"famille.refus.aucun_dealer_ne_tient_ce_point_de_vente\"},{\"building_id\":\"d45b8609-2214-4b92-9c0d-ed51e45a4539\",\"blocked_reason\":\"NO_DEALER_ON_SPOT\",\"blocked_reason_i18n\":\"famille.refus.aucun_dealer_ne_tient_ce_point_de_vente\"},{\"building_id\":\"0b8af29c-7b0b-41f7-aec4-7a7350209f53\",\"blocked_reason\":\"NO_DEALER_ON_SPOT\",\"blocked_reason_i18n\":\"famille.refus.aucun_dealer_ne_tient_ce_point_de_vente\"},{\"building_id\":\"e2d44603-f426-4a07-8896-ae0ebd780368\",\"blocked_reason\":\"NO_DEALER_ON_SPOT\",\"blocked_reason_i18n\":\"famille.refus.aucun_dealer_ne_tient_ce_point_de_vente\"}],\"valid_target_building_ids\":[\"e2d44603-f426-4a07-8896-ae0ebd780368\"]},{\"archetype\":\"MUSCLE\",\"eligible_host_building_ids\":[\"7d5dcb3d-ed25-49f9-9260-87c1d76dfb3d\",\"d45b8609-2214-4b92-9c0d-ed51e45a4539\",\"0b8af29c-7b0b-41f7-aec4-7a7350209f53\",\"e2d44603-f426-4a07-8896-ae0ebd780368\",\"e7b1a8d7-35bb-4d69-a32c-8a2a2143ecf6\"],\"blocked\":[],\"valid_target_building_ids\":null},{\"archetype\":\"INTELLIGENCE\",\"eligible_host_building_ids\":[\"7d5dcb3d-ed25-49f9-9260-87c1d76dfb3d\",\"d45b8609-2214-4b92-9c0d-ed51e45a4539\",\"0b8af29c-7b0b-41f7-aec4-7a7350209f53\",\"e2d44603-f426-4a07-8896-ae0ebd780368\",\"e7b1a8d7-35bb-4d69-a32c-8a2a2143ecf6\"],\"blocked\":[],\"valid_target_building_ids\":null},{\"archetype\":\"FACILITY_MANAGER\",\"eligible_host_building_ids\":[\"7d5dcb3d-ed25-49f9-9260-87c1d76dfb3d\",\"d45b8609-2214-4b92-9c0d-ed51e45a4539\",\"0b8af29c-7b0b-41f7-aec4-7a7350209f53\",\"e2d44603-f426-4a07-8896-ae0ebd780368\",\"e7b1a8d7-35bb-4d69-a32c-8a2a2143ecf6\"],\"blocked\":[],\"valid_target_building_ids\":null}],\"structural_budget_band\":\"SPENT\",\"roster_room_band\":\"ROOM\"}}}";
+        private const string CorpsReelFull = "{\"payload\":{\"data\":{\"archetypes\":[{\"archetype\":\"COOK\",\"eligible_host_building_ids\":[\"e6586775-d618-4241-9f6a-4223327499bb\"],\"blocked\":[{\"building_id\":\"6d6dd7ac-5c37-466f-970e-cb4dbf068f21\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"5f2585f7-089e-4ec8-9005-93f213ea0fae\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"af3ba2d2-9ade-4ca9-9571-479f0011e7f8\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"}],\"valid_target_building_ids\":null},{\"archetype\":\"SECURITY\",\"eligible_host_building_ids\":[\"e6586775-d618-4241-9f6a-4223327499bb\",\"6d6dd7ac-5c37-466f-970e-cb4dbf068f21\",\"5f2585f7-089e-4ec8-9005-93f213ea0fae\",\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\",\"af3ba2d2-9ade-4ca9-9571-479f0011e7f8\"],\"blocked\":[],\"valid_target_building_ids\":null},{\"archetype\":\"BOOKKEEPER\",\"eligible_host_building_ids\":[\"5f2585f7-089e-4ec8-9005-93f213ea0fae\"],\"blocked\":[{\"building_id\":\"e6586775-d618-4241-9f6a-4223327499bb\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"6d6dd7ac-5c37-466f-970e-cb4dbf068f21\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"af3ba2d2-9ade-4ca9-9571-479f0011e7f8\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"}],\"valid_target_building_ids\":null},{\"archetype\":\"LOGISTICS\",\"eligible_host_building_ids\":[\"e6586775-d618-4241-9f6a-4223327499bb\",\"6d6dd7ac-5c37-466f-970e-cb4dbf068f21\",\"5f2585f7-089e-4ec8-9005-93f213ea0fae\",\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\",\"af3ba2d2-9ade-4ca9-9571-479f0011e7f8\"],\"blocked\":[],\"valid_target_building_ids\":[\"e6586775-d618-4241-9f6a-4223327499bb\",\"6d6dd7ac-5c37-466f-970e-cb4dbf068f21\",\"5f2585f7-089e-4ec8-9005-93f213ea0fae\",\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\",\"af3ba2d2-9ade-4ca9-9571-479f0011e7f8\"]},{\"archetype\":\"LAUNDERING\",\"eligible_host_building_ids\":[],\"blocked\":[{\"building_id\":\"e6586775-d618-4241-9f6a-4223327499bb\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"6d6dd7ac-5c37-466f-970e-cb4dbf068f21\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"5f2585f7-089e-4ec8-9005-93f213ea0fae\",\"blocked_reason\":\"MISSING_STAGE1_NODE\",\"blocked_reason_i18n\":\"famille.refus.ce_commerce_n_a_pas_encore_de_premiere_etape_de_blanchiment\"},{\"building_id\":\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"},{\"building_id\":\"af3ba2d2-9ade-4ca9-9571-479f0011e7f8\",\"blocked_reason\":\"WRONG_HOST_TYPE\",\"blocked_reason_i18n\":\"famille.refus.ce_type_de_batiment_ne_convient_pas_a_ce_role\"}],\"valid_target_building_ids\":[\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\"]},{\"archetype\":\"DISTRIBUTION\",\"eligible_host_building_ids\":[\"af3ba2d2-9ade-4ca9-9571-479f0011e7f8\"],\"blocked\":[{\"building_id\":\"e6586775-d618-4241-9f6a-4223327499bb\",\"blocked_reason\":\"NO_DEALER_ON_SPOT\",\"blocked_reason_i18n\":\"famille.refus.aucun_dealer_ne_tient_ce_point_de_vente\"},{\"building_id\":\"6d6dd7ac-5c37-466f-970e-cb4dbf068f21\",\"blocked_reason\":\"NO_DEALER_ON_SPOT\",\"blocked_reason_i18n\":\"famille.refus.aucun_dealer_ne_tient_ce_point_de_vente\"},{\"building_id\":\"5f2585f7-089e-4ec8-9005-93f213ea0fae\",\"blocked_reason\":\"NO_DEALER_ON_SPOT\",\"blocked_reason_i18n\":\"famille.refus.aucun_dealer_ne_tient_ce_point_de_vente\"},{\"building_id\":\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\",\"blocked_reason\":\"NO_DEALER_ON_SPOT\",\"blocked_reason_i18n\":\"famille.refus.aucun_dealer_ne_tient_ce_point_de_vente\"}],\"valid_target_building_ids\":[\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\"]},{\"archetype\":\"MUSCLE\",\"eligible_host_building_ids\":[\"e6586775-d618-4241-9f6a-4223327499bb\",\"6d6dd7ac-5c37-466f-970e-cb4dbf068f21\",\"5f2585f7-089e-4ec8-9005-93f213ea0fae\",\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\",\"af3ba2d2-9ade-4ca9-9571-479f0011e7f8\"],\"blocked\":[],\"valid_target_building_ids\":null},{\"archetype\":\"INTELLIGENCE\",\"eligible_host_building_ids\":[\"e6586775-d618-4241-9f6a-4223327499bb\",\"6d6dd7ac-5c37-466f-970e-cb4dbf068f21\",\"5f2585f7-089e-4ec8-9005-93f213ea0fae\",\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\",\"af3ba2d2-9ade-4ca9-9571-479f0011e7f8\"],\"blocked\":[],\"valid_target_building_ids\":null},{\"archetype\":\"FACILITY_MANAGER\",\"eligible_host_building_ids\":[\"e6586775-d618-4241-9f6a-4223327499bb\",\"6d6dd7ac-5c37-466f-970e-cb4dbf068f21\",\"5f2585f7-089e-4ec8-9005-93f213ea0fae\",\"63ea3e6f-a4ce-4371-9fbb-8b0cfdd8b8dd\",\"af3ba2d2-9ade-4ca9-9571-479f0011e7f8\"],\"blocked\":[],\"valid_target_building_ids\":null}],\"structural_budget_band\":\"AVAILABLE\",\"roster_room_band\":\"FULL\"}}}";
+
+        [UnityTest]
+        public IEnumerator H10_LesCorpsReelsDeLaPile_GrisentLeBoutonAvecLaPhraseServie()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { HostBlocage.CleBudgetDepense, "Votre décision de structure d’aujourd’hui est prise. Reprenez demain." } });
+            HostEligibiliteData spent = HostEligibilite.LireCorps(CorpsReelSpent), full = HostEligibilite.LireCorps(CorpsReelFull);
+            Assert.AreEqual("SPENT", spent.structural_budget_band, "le corps réel après un recrutement sert SPENT");
+            Assert.AreEqual("FULL", full.roster_room_band, "le corps réel au roster atteint sert FULL");
+            Assert.AreEqual(9, spent.archetypes.Length, "les neuf lignes réelles sont toujours lues à côté des bandes");
+            hote = new GameObject("LieutenantScreenController_CorpsReels");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            ecran.AppliquerHostEligibilite(spent);
+            ExigerEtat(ecran, BlocageRecrutement.BudgetDepense, "Votre décision de structure d’aujourd’hui est prise. Reprenez demain.");
+            ecran.AppliquerHostEligibilite(full);
+            ExigerEtat(ecran, BlocageRecrutement.EquipeComplete, "Votre équipe est au complet.");
+        }
+
+        [UnityTest]
+        public IEnumerator H11_UneLectureEnEchec_RouvreLeBoutonGrise()
+        {
+            hote = new GameObject("LieutenantScreenController_LectureEnEchec");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            HostEligibiliteData spent = HostEligibilite.LireCorps(Bandes("SPENT", "ROOM"));
+            bool echec = false;
+            ecran.LectureHostEligibilite = (ok, ko) => EnsembleDeLecture(echec ? null : spent, echec ? (500L, "panne") : (0L, null), ok, ko);
+            yield return ecran.RafraichirBlocageRecrutement();
+            ExigerEtat(ecran, BlocageRecrutement.BudgetDepense, "décision de structure");
+            echec = true;   // la relecture tombe en panne : l'état d'un instant d'avant n'est plus connu
+            yield return ecran.RafraichirBlocageRecrutement();
+            ExigerEtat(ecran, BlocageRecrutement.Aucun);
+        }
+
+        private static IEnumerator EnsembleDeLecture(HostEligibiliteData servie, (long code, string message) erreur, Action<HostEligibiliteData> ok, Action<long, string> ko)
+        {
+            if (servie != null) ok(servie); else ko(erreur.code, erreur.message);
+            yield break;
         }
 }
 }
