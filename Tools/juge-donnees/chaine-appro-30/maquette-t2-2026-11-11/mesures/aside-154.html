@@ -1,0 +1,9 @@
+<aside><h2>㉚ La chaîne vue du graphe — ce que dit la liste</h2>
+  <ul>
+    <li><b>La flèche « ↳ refoule vers » n’est que sur le maillon qui la porte</b> (<code>has_arrow</code>) : un maillon engorgé <b>sans</b> flèche est la <b>cause</b>, pas un maillon qui subit. Elle n’est liée à aucune bande — mesuré : 1 maillon sur 3 <code>warm</code>.</li>
+    <li><b>La liste défile</b> : le back sert N maillons et N liaisons, sans limite ni pagination (5 maillons sur un compte neuf). Aucune boîte fixe ne les coupe.</li>
+    <li><b>L’ordre est une règle d’affichage du CLIENT</b>, pas un ordre servi (le back n’en sert aucun, et l’ordre brut n’est pas stable) : par bande, de la pire à la meilleure (maillons <i>Ne livre plus</i> → <i>Rien ne bloque</i> ; liaisons <i>Rompu</i> → <i>Entretenu</i>), puis par nom servi.</li>
+    <li><b>Le nom du bâtiment est servi</b> : <code>GET /v1/me/buildings</code>, <code>name_i18n</code> (« {enseigne} — {district}, îlot {block} »), jointure sur <code>building_id</code> ; repli : le type (<code>building.type.*</code>). Les cinq noms ci-dessus sont les valeurs mesurées.</li>
+    <li>⚠️ <b>Dette nommée, hors de ce cadre</b> : les <code>routes</code> (<code>time_to_collapse_bucket</code>, <code>state</code>, <code>rebuilding</code>, <code>sinuosity_stress_bucket</code>) et <code>legs[].leg_id</code>.</li>
+  </ul>
+</aside>
