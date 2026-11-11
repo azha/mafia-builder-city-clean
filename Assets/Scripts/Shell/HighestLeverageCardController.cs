@@ -641,7 +641,13 @@ namespace MafiaCleanCity.Shell
         private static TextMeshProUGUI ColonneDeConsequence(Transform parent, string nom)
         {
             TextMeshProUGUI consequence = Texte(parent, nom, 8f, DesignTokens.Current.hudCremeSecondary, DesignTokens.Current.primaryFont, FontStyles.Normal, 0f, margeHaut: 2f);
-            consequence.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            // `.csq4-rang .csq4{flex:1}` = `flex: 1 1 0%` : la BASE est 0, les deux colonnes se partagent la rangée à parts ÉGALES, comme les deux gestes au-dessus. Sans `preferredWidth = 0`, la largeur
+            // PRÉFÉRÉE du texte (sa ligne naturelle, ~550 px pour une longue conséquence) sert de base : la colonne de gauche court sous le bouton de droite et la couture glisse de x=528 à x=670,5
+            // (juge visuel ⊥ tour 2, F1 : on lisait la mauvaise conséquence sous un geste). `minWidth = 0` laisse le texte REFLUER dans sa colonne.
+            LayoutElement colonne = consequence.gameObject.AddComponent<LayoutElement>();
+            colonne.flexibleWidth = 1f;
+            colonne.preferredWidth = 0f;
+            colonne.minWidth = 0f;
             return consequence;
         }
 
