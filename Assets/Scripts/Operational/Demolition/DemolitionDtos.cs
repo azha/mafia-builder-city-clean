@@ -68,6 +68,10 @@ namespace MafiaCleanCity.Operational
         /// <summary>⚠️ LE SEUL NOMBRE BRUT DE CET ÉCRAN, et il est servi tel quel. Tout le reste
         /// est en bandes fermées (R2.2) ; celui-ci se compte, donc il se montre.</summary>
         public int neighbor_count;
+        /// <summary>TD-823 (BACK-2 C2b, `c5837e39`) — le locuteur SERVI, à la RACINE de la fiche (6ᵉ clé, additive) : `{id, name} | null`, même règle O2′ que `friction/state`
+        /// (le bras droit du joueur). JsonUtility rend une instance VIDE pour `null` ou clé absente : « personne » = `name` vide, jamais l'objet nul. Sur la fiche, le
+        /// lieutenant du site visé (`lieutenant_ids`) garde la préférence ; ceci est le repli (`DemolitionScreenController.LocuteurServiDeLaFiche`).</summary>
+        public LocuteurServiDto speaker;
     }
 
     [Serializable] public class GetFrictionNodesPayload { public GetFrictionNodesResponseDto data; }

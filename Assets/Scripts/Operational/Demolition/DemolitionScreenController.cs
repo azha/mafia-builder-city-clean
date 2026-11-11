@@ -636,7 +636,7 @@ namespace MafiaCleanCity.Operational
             {
                 Dit(pied, "demolition.dit.celui_la_on_le_garde_par_habitude_il_gene_les_voisins_et_il_ne_rend_presque_rien",
                     "{nom}\u00A0: «\u00A0Celui-là, on le garde par habitude. Il gêne les voisins et il ne rend presque rien.\u00A0»",
-                    Locuteur(Roster, batimentVise != null ? batimentVise.lieutenant_ids : null, DerniereFriction?.speaker));
+                    Locuteur(Roster, batimentVise != null ? batimentVise.lieutenant_ids : null, LocuteurServiDeLaFiche(DerniereFiche, DerniereFriction)));
                 ConstruireGeste(pied, "LE RASER",
                                 bloque ? "un lieutenant y travaille"
                                        : !JetonDisponible ? "plus de décision aujourd'hui"
@@ -1246,6 +1246,14 @@ namespace MafiaCleanCity.Operational
                     foreach (MafiaCleanCity.Operational.Lieutenant.RosterRow r in roster)
                         if (r != null && r.lieutenant_id == id && !string.IsNullOrWhiteSpace(r.name)) return r.name;
             return servi != null && !string.IsNullOrWhiteSpace(servi.name) ? servi.name : null;
+        }
+
+        /// <summary>TD-823 (BACK-2 C2b) : le locuteur SERVI à opposer au lieutenant du site, sur la FICHE : le `speaker` de la fiche (`friction/nodes/:id`) s'il porte un nom ;
+        /// sinon celui de `friction/state` (même règle O2′ côté back) ; personne ⇒ null. Jamais une position de liste. Pure.</summary>
+        public static LocuteurServiDto LocuteurServiDeLaFiche(GetFrictionNodesResponseDto fiche, GetFrictionStateResponseDto etat)
+        {
+            if (fiche != null && fiche.speaker != null && !string.IsNullOrWhiteSpace(fiche.speaker.name)) return fiche.speaker;
+            return etat != null ? etat.speaker : null;
         }
 
         /// <summary>Une réplique SERVIE « {nom} : « … » » : le nom en gras DROIT, le reste en italique (`.dm-dit`). Le gabarit est
