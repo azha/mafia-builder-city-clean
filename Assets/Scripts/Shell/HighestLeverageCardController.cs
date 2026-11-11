@@ -267,7 +267,7 @@ namespace MafiaCleanCity.Shell
                     Track(stateText.text);
                     break;
                 case CardState.CapBlocked:
-                    titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key);
+                    titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key, CurrentCard.target_count);
                     impactText.text = ImpactLabel(CurrentCard.impact_bucket);
                     urgencyText.text = UrgencyLabel(CurrentCard.urgency_bucket);
                     stateText.text = Lib("carte", "Limite de structure atteinte");
@@ -285,7 +285,7 @@ namespace MafiaCleanCity.Shell
                         lireLabel.text = Lib("carte", "Lire maintenant");
                         Track(lireLabel.text);
                     }
-                    titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key);
+                    titleText.text = LibellesDecision.Type(CurrentCard.decision_type_key, CurrentCard.target_count);
                     impactText.text = ImpactLabel(CurrentCard.impact_bucket);
                     urgencyText.text = UrgencyLabel(CurrentCard.urgency_bucket);
                     // « Prêt » n'est plus dit : le cadre 5 n'a pas de ligne d'état ; le geste dit qu'on peut agir.

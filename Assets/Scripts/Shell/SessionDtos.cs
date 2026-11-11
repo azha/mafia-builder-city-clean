@@ -28,6 +28,9 @@ namespace MafiaCleanCity.Shell
         public string urgency_bucket;  // low | elevated | pressing
         public DecisionOptionDto[] options;
         public bool structural;
+        /// <summary>Le nombre de cibles que `commit` AGIRAIT (le contenu du joueur : `hl-card-projection.ts:128,142`, `targetCountFor`). 0 pour une carte de
+        /// navigation, un code hors table ou une cible vide. Le compte `n` du titre pluriel (TD-886) et le `{total}` de l'arrêt partiel (TD-889).</summary>
+        public int target_count;
     }
 
     [Serializable]

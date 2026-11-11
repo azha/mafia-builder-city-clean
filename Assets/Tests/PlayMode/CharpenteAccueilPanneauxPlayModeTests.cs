@@ -353,7 +353,7 @@ namespace MafiaCleanCity.Shell.Tests
             //    ⚠️ Avec ses deux mondes dégénérés nommés : un libellé VIDE, et un libellé qui
             //      serait celui de l'état « rien à signaler » — les deux satisferaient un simple
             //      « le texte contient quelque chose ».
-            string libelleAttendu = MafiaCleanCity.Shell.LibellesDecision.Type(hlCard.CurrentCard.decision_type_key);
+            string libelleAttendu = MafiaCleanCity.Shell.LibellesDecision.Type(hlCard.CurrentCard.decision_type_key, hlCard.CurrentCard.target_count);
             Assert.IsNotEmpty(libelleAttendu,
                 "le résolveur ne rend rien pour la clé reçue — le panneau afficherait un titre vide");
             Assert.IsTrue(hlCard.RenderedTexts.Any(x => x == libelleAttendu),

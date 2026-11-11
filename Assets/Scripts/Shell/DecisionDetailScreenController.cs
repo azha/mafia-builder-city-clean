@@ -235,7 +235,7 @@ namespace MafiaCleanCity.Shell
 
             bool structurelle = carte.structural;
             coinLibelle.text = structurelle ? "structurelle" : "tactique";
-            titre.text = LibellesDecision.Type(carte.decision_type_key);
+            titre.text = LibellesDecision.Type(carte.decision_type_key, carte.target_count);
             noteZinc.text = structurelle
                 ? "Structurelle — trancher consomme votre décision de la session."
                 : "Tactique — trancher ne touche pas à votre décision structurelle.";
