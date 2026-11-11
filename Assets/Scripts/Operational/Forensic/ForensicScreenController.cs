@@ -569,7 +569,7 @@ namespace MafiaCleanCity.Operational
             for (int i = 0; i < DossierCalculs.Pistes.Length; i++) ConstruirePiste(i, pistes.transform);
 
             notePi = NouveauTexte(contenu.transform, "NotePistes",
-                Lib("Les livres et le train de vie : personne ne regarde par là. Pour l’instant."), Px(7f),
+                Lib("Les livres : personne ne regarde par là. Pour l’instant."), Px(7f),   // TD-935 : clé servie `forensic.bloc.les_livres_personne_ne_regarde_par_la_pour_l_instant` (cumul back 9b401fdd)
                 DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.hudSerifFont);
             notePi.fontStyle = FontStyles.Italic;
             notePi.alignment = TextAlignmentOptions.Center;

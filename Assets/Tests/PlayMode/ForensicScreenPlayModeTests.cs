@@ -678,7 +678,7 @@ namespace MafiaCleanCity.Operational.Tests
 
                 // de l'ENCRE là où le texte doit être (des pixels qui DIFFÈRENT du fond : le texte antialiasé n'a presque jamais sa couleur exacte)
                 Color fondElast = DesignTokens.Current.surfaceBase, fondPiste = DesignTokens.Current.lieutenantMedallionOuter;
-                Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/Contenu/NotePistes"), fondElast), 20, "la note « Les livres et le train de vie… » a de l'encre");
+                Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/Contenu/NotePistes"), fondElast), 20, "la note « Les livres : personne ne regarde par là… » a de l'encre");
                 Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/Contenu/Pistes/Piste0/Mot"), fondPiste), 4, "le « — » de la piste éteinte a de l'encre");
                 Assert.GreaterOrEqual(EncreDans(t, banc, (RectTransform)Sous("Elast/Contenu/Pistes/Piste0/Cle"), fondPiste), 10, "« pas encore sur la table » a de l'encre");
 
