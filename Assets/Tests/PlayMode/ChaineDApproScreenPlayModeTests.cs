@@ -395,13 +395,16 @@ namespace MafiaCleanCity.Operational.Tests
                 "un cran de la maquette d'enquête a été fabriqué alors qu'aucune donnée ne le porte");
         }
 
-        /// <summary>⛔ DÉTECTEUR TD-985 (classe A/B, f2 11/11, relevé par CLIENT-1 en instruisant TD-938) : la section chaîne SE TAIT dès qu'un nœud
-        /// servi n'est pas `silent` — précisément quand il y a quelque chose à voir (`AppliquerChaine` : le titre, puis un message `null`). Ce test
-        /// ASSERTE LE TROU tel qu'il est : il ROUGIT le jour où les nœuds non silencieux seront rendus (ticket suivant) — alors le remplacer par la
-        /// garde d'EFFET du rendu, et mener la carte 106 (`supply_chain_trace`) à ㉚ (fermeture de TD-981).</summary>
+        /// <summary>⛔ TD-985 (classe A/B, f2 11/11) — GARDE de la phrase provisoire ET DÉTECTEUR du trou. Un nœud servi non `silent` : la section chaîne
+        /// ne rend toujours aucun maillon (aucun mot de bande ni nom servi : TD-1016), mais elle ne se TAIT plus — la phrase SERVIE
+        /// `appro.bloc.des_maillons_existent_mais_cet_ecran_ne_sait_pas_encore_les_afficher` (Q1 de f2), vraie dans CE cas. CONTRÔLE POSITIF : tout `silent`
+        /// ⇒ « rien ne circule encore », et la phrase provisoire est ABSENTE (elle était fausse là, d'où son retrait du 26/09). Le compte d'enfants
+        /// (titre + une phrase = 2) ROUGIT le jour où les maillons seront rendus : remplacer alors par la garde d'effet du rendu, retirer la phrase
+        /// provisoire, et mener 106 (`supply_chain_trace`) à ㉚ (fermeture de TD-981).</summary>
         [UnityTest]
-        public IEnumerator EcranApproTD985_Detecteur_UnNoeudNonSilencieux_LaSectionChaineNeMontreQueSonTitre()
+        public IEnumerator EcranApproTD985_NoeudNonSilencieux_LaPhraseServieDitQueLEcranNeSaitPas_Detecteur()
         {
+            string provisoire = ValeurAttendue.De("appro", "bloc", "Des maillons existent, mais cet écran ne sait pas encore les afficher.");
             var ecran = MonterEcran();
             ecran.RendrePourTestChaine(new GetSupplyChainGraphResponseDto
             {
@@ -413,10 +416,11 @@ namespace MafiaCleanCity.Operational.Tests
             Transform chaine = null;
             foreach (Transform t in hostGo.GetComponentsInChildren<Transform>(true)) if (t.name == "Chaine") { chaine = t; break; }
             Assert.IsNotNull(chaine, "anti-vacuité : la section « Chaine » existe sous l'écran");
-            Assert.AreEqual(1, chaine.childCount,
-                "TD-985 SE FERME : un nœud `critical` rend désormais autre chose que le seul titre — remplacer ce détecteur par la garde d'effet du rendu, mener 106 à ㉚");
+            Assert.AreEqual(2, chaine.childCount,
+                "TD-985 : titre + la phrase provisoire — si plus, les maillons sont rendus : remplacer ce détecteur par la garde d'effet, retirer la phrase, mener 106 à ㉚");
+            CollectionAssert.Contains(ecran.RenderedTexts, provisoire, "un nœud non silencieux : l'écran ne se tait plus, il dit la phrase SERVIE");
 
-            // CONTRÔLE POSITIF : tout `silent` ⇒ le titre ET son message (« rien ne circule encore ») — le compte d'enfants voit bien un message
+            // CONTRÔLE POSITIF : tout `silent` ⇒ « rien ne circule encore », JAMAIS la phrase provisoire (fausse au joueur neuf)
             ecran.RendrePourTestChaine(new GetSupplyChainGraphResponseDto
             {
                 nodes = new[] { new SupplyChainNodeDto { building_id = "b-calme", bucket = "silent" } },
@@ -425,6 +429,10 @@ namespace MafiaCleanCity.Operational.Tests
             });
             yield return null;
             Assert.AreEqual(2, chaine.childCount, "CONTRÔLE : tout silencieux ⇒ titre + message");
+            string message = null;
+            foreach (Transform t in chaine) if (t.name == "ChaineMessage") message = t.GetComponent<TMPro.TextMeshProUGUI>().text;
+            Assert.IsNotNull(message, "anti-vacuité : le message de la section est lu");
+            Assert.AreNotEqual(provisoire, message, "CONTRÔLE : tout silencieux, la phrase provisoire n'apparaît PAS");
         }
 
         // ═══ R — Résolveurs : domaine FERMÉ annoncé, contrôle positif ET négatif ═══════════════

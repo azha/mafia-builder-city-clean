@@ -621,14 +621,18 @@ namespace MafiaCleanCity.Operational
             bool vide = dto == null || dto.nodes == null || dto.nodes.Length == 0;
             // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26, table 63) : « Des maillons existent, mais cet écran ne sait pas encore les afficher »
             // était un texte de CHANTIER, montré au joueur neuf dont les maillons sont tous `silent`. Ce qui est vrai alors : rien ne
-            // circule. Des nœuds non silencieux : l'écran n'a pas de rendu dédié — il se TAIT plutôt que de parler de lui.
+            // circule. Des nœuds non silencieux : l'écran n'a pas de rendu dédié.
+            // ⏳ TD-985 (ruling f2 11/11, Q1) : se TAIRE quand il y a quelque chose à voir est pire — dans CE SEUL cas, la phrase SERVIE revient
+            // (`string_table.ts:3621` FR @2ed39589) : elle y est vraie mot pour mot. Elle parle de l'ÉCRAN, pas de la fiction (classe « chaîne qui
+            // parle du système ») : PROVISOIRE, elle tombe avec le rendu des maillons (mots des bandes TD-1016, noms de bâtiments, cadre d'atelier).
             string message = vide
                 // MESURÉ (2026-09-03, compte `operational_demo@example.test`) : `nodes: []`.
                 ? Libelle.De("appro", "bloc", "Rien à remonter pour l’instant — la chaîne ne connaît aucun maillon sur ce compte.")
                 : ToutSilencieux(dto)
                     ? Libelle.Gabarit("appro.vide.rien_ne_circule_encore_vos_maillons_attendent_une_premiere_commande",
                         "Rien ne circule encore\u00A0: vos maillons attendent une première commande.")
-                    : null;
+                    : Libelle.Gabarit("appro.bloc.des_maillons_existent_mais_cet_ecran_ne_sait_pas_encore_les_afficher",
+                        "Des maillons existent, mais cet écran ne sait pas encore les afficher.");
             if (message != null)
             {
                 TextMeshProUGUI msg = NouveauTexteFiche(chaineRoot, "ChaineMessage", message, 9f, DesignTokens.Current.onSurfaceMuted, false);
