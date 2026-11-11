@@ -1,0 +1,51 @@
+######## pl-dit
+--- L4890  [etq idx 74 @L4890] « Lui trouver un avocat »
+   RAW : <div class="pl-dit"><b>Lt. Rin :</b> « Pour l’instant il n’a rien dit. Ça ne durera pas tout seul. »</div>
+   TXT : |Lt. Rin :| « Pour l’instant il n’a rien dit. Ça ne durera pas tout seul. »|
+--- L4892  [etq idx 75 @L4892] « Il commence à parler »
+   RAW : <div class="pl-dit"><b>Lt. Rin :</b> « Le commis d’office ne coûte rien et ne gagne rien. Le cabinet coûte. La filière, elle, se paie deux fois. »</div>
+   TXT : |Lt. Rin :| « Le commis d’office ne coûte rien et ne gagne rien. Le cabinet coûte. La filière, elle, se paie deux fois. »|
+--- L4894  [etq idx 76 @L4894] « Il a tout dit »
+   RAW : <div class="pl-dit"><b>Lt. Rin :</b> « Il a donné la planque et le nom de Lt. Hara. Ce qui est sorti ne rentrera pas. »</div>
+   TXT : |Lt. Rin :| « Il a donné la planque et le nom de Lt. Hara. Ce qui est sorti ne rentrera pas. »|
+--- L4896  [etq idx 77 @L4896] « Il y a un arrangement »
+   RAW : <div class="pl-dit"><b>Lt. Rin :</b> « Il a tout vidé. Il n’y a plus rien à sauver de ce côté. »</div>
+   TXT : |Lt. Rin :| « Il a tout vidé. Il n’y a plus rien à sauver de ce côté. »|
+--- L4898  [etq idx 78 @L4898] « Votre avocat est nerveux »
+   RAW : <div class="pl-dit"><b>Lt. Rin :</b> « À vous de dire. L’accord ferme le dossier proprement. La filière le fait disparaître, mais elle s’en souviendra. »</div>
+   TXT : |Lt. Rin :| « À vous de dire. L’accord ferme le dossier proprement. La filière le fait disparaître, mais elle s’en souviendra. »|
+--- L4900  [etq idx 78 @L4898] « Votre avocat est nerveux »
+   RAW : <div class="pl-dit"><b>Lt. Rin :</b> « Je ne peux pas vous dire s’il va tenir. Personne ne peut. »</div>
+   TXT : |Lt. Rin :| « Je ne peux pas vous dire s’il va tenir. Personne ne peut. »|
+######## voix
+--- L5467  [etq idx 104 @L5465] « La vitrine — les extras »
+   RAW : <div class="voix"><div class="av"><svg viewBox="0 0 32 32"><use href="#buste-homburg"/></svg></div><div><b>Wexler</b><i>derrière le comptoir</i><p>« Ce qui est là est à vendre. Ce qui est trop cher pour vous, je le laisse en vitrine — ça vous fera un but. »</p></div></div>
+   TXT : |Wexler|derrière le comptoir|« Ce qui est là est à vendre. Ce qui est trop cher pour vous, je le laisse en vitrine — ça vous fera un but. »|
+--- L5470  [etq idx 105 @L5468] « La caisse — les Marks »
+   RAW : <div class="voix"><div class="av"><svg viewBox="0 0 32 32"><use href="#buste-homburg"/></svg></div><div><b>Wexler</b><i>derrière le comptoir</i><p>« Les Marks, c’est dehors qu’on les achète. Moi je vous les compte, je ne les vends pas. »</p></div></div>
+   TXT : |Wexler|derrière le comptoir|« Les Marks, c’est dehors qu’on les achète. Moi je vous les compte, je ne les vends pas. »|
+--- L5473  [etq idx 106 @L5471] « Zéro Mark — l’état terminal »
+   RAW : <div class="voix"><div class="av"><svg viewBox="0 0 32 32"><use href="#buste-homburg"/></svg></div><div><b>Wexler</b><i>derrière le comptoir</i><p>« Vous avez tout claqué d’un coup. Ce qui reste au mur, vous ne l’aurez pas avec de la bonne volonté. »</p></div></div>
+   TXT : |Wexler|derrière le comptoir|« Vous avez tout claqué d’un coup. Ce qui reste au mur, vous ne l’aurez pas avec de la bonne volonté. »|
+######## dm-dit
+--- L5069  [etq idx 86 @L5069] « Ce bâtiment vous coûte »
+   RAW : <div class="dm-dit"><b>Lt. Rin :</b> « On a trop de choses au même endroit. Il va falloir en enlever une. »</div>
+   TXT : |Lt. Rin :| « On a trop de choses au même endroit. Il va falloir en enlever une. »|
+--- L5071  [etq idx 87 @L5071] « Le raser — confirmer »
+   RAW : <div class="dm-dit"><b>Lt. Rin :</b> « Celui-là, on le garde par habitude. Il gêne les trois d’à côté et il ne rend presque rien. »</div>
+   TXT : |Lt. Rin :| « Celui-là, on le garde par habitude. Il gêne les trois d’à côté et il ne rend presque rien. »|
+--- L5073  [etq idx 88 @L5073] « Vous avez déjà tranché aujourd’hui »
+   RAW : <div class="dm-dit">Une fois rasé, <b>on ne le remet pas</b>. La parcelle restera libre le temps de choisir quoi y mettre.</div>
+   TXT : |Une fois rasé, |on ne le remet pas|. La parcelle restera libre le temps de choisir quoi y mettre.|
+--- L5075  [etq idx 89 @L5075] « La parcelle est libre »
+   RAW : <div class="dm-dit">Vous avez déjà tranché une chose de structure aujourd’hui.</div>
+   TXT : |Vous avez déjà tranché une chose de structure aujourd’hui.|
+--- L5077  [etq idx 90 @L5077] « L’offre s’est fermée »
+   RAW : <div class="dm-dit"><b>Lt. Rin :</b> « Deux propositions. La première est mieux placée. Elles ne resteront pas sur la table. »</div>
+   TXT : |Lt. Rin :| « Deux propositions. La première est mieux placée. Elles ne resteront pas sur la table. »|
+--- L5079  [etq idx 90 @L5077] « L’offre s’est fermée »
+   RAW : <div class="dm-dit"><b>Lt. Rin :</b> « Trop tard pour celle-là. »</div>
+   TXT : |Lt. Rin :| « Trop tard pour celle-là. »|
+--- L6826  [etq idx 155 @L6824] « Vos 4 sites — la liste qui mène à la fiche »
+   RAW : <div class="dm-dit"><b>Lt. Rin :</b> « On a trop de choses au même endroit. Il va falloir en enlever une. »</div>
+   TXT : |Lt. Rin :| « On a trop de choses au même endroit. Il va falloir en enlever une. »|

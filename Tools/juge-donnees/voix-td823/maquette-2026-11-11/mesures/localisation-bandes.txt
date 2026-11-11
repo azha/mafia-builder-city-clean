@@ -1,0 +1,23 @@
+=== motif: pl-dit
+  L4873  occ=1  len=66
+  L4874  occ=1  len=65
+  L4890  occ=1  len=1865
+  L4892  occ=1  len=1683
+  L4894  occ=1  len=1880
+  L4896  occ=1  len=1879
+  L4898  occ=1  len=1753
+  L4900  occ=1  len=1251
+=== motif: class="voix
+  L5467  occ=1  len=5305
+  L5470  occ=1  len=6497
+  L5473  occ=1  len=4995
+=== motif: dm-dit
+  L5053  occ=1  len=66
+  L5054  occ=1  len=65
+  L5069  occ=1  len=1289
+  L5071  occ=1  len=1590
+  L5073  occ=1  len=1568
+  L5075  occ=1  len=1682
+  L5077  occ=1  len=1530
+  L5079  occ=1  len=1240
+  L6826  occ=1  len=1669

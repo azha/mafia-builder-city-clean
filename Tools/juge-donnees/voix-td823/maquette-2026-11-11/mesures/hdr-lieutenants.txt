@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Content-Length: 672
+Content-Type: application/json; charset=utf-8
+Date: Wed, 11 Nov 2026 19:56:55 GMT
+Etag: W/"2a0-PV5WspkJAaMfHo2DxUzbVQsyxHE"
+X-Api-Version: 1
+X-Powered-By: Express
+X-Request-Id: 59bbf930-1e18-40ee-ae1a-41bfb49de5b5
+X-Server-Build: 8d0184a4
+X-Server-Processed-At: 2026-11-11T19:56:55.777Z
+

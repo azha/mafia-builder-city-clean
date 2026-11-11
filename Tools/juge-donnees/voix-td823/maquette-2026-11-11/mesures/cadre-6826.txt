@@ -1,0 +1,35 @@
+cadre index (base 170, 0-based) = 149
+etiquette: Vos 4 sites — la liste qui mène à la fiche
+classes de panneau: ['demo6']
+--- TEXTE DU CADRE ---
+|Vos 4 sites — la liste qui mène à la fiche|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|L'organisation frotte|Plus vous tenez de choses, plus elles se gênent entre elles.|7|Ça grince partout|7 endroits se gênent entre eux. Chacun coûte un peu de ce que les autres rapportent.|Tout produit moins en ce moment.| Tant que ça grince, chaque site rend en dessous de ce qu'il devrait. Ça s'arrête quand on allège.|VOS 4 SITES|Imprimerie Skeld|Les Friches, îlot 1604 · une presse · |il coûte plus qu'il ne rapporte|libre|Atelier Vesk|Hautes-Marches, îlot 412 · un labo|quelqu'un y travaille|Réserve Nock|Le Treillis, îlot 708 · un entrepôt|libre|Clés-Minute Rook|Le Treillis, îlot 703 · une façade|quelqu'un y travaille|Lt. Rin :| « On a trop de choses au même endroit. Il va falloir en enlever une. »|VOIR CE QUI COÛTE LE PLUS|le plus mauvais rapport|
+
+|
+|
+
+|
+|
+/* ═══ SÉRIE 6 — ㊴ LE DOSSIER — LA BASCULE PISTES ↔ ACTEURS (2026-10-08) ═══ */
+
+/* ── la bascule : une fenêtre de compteur de l'AUTRE vue, cernée d'or, et la fenêtre de la vue courante soulignée ── */
+.dos6 .fen.ici{box-shadow:inset 0 -2px 0 #f2c96b}
+.dos6 .fen.porte{border-color:#b08d3e;background:#16191b;position:relative}
+.dos6 .fen.porte b{color:#f2c96b}
+.dos6 .fen.porte i{position:absolute;right:4px;top:3px;font:700 9px/1 'DejaVu Sans';font-style:normal;color:#f2c96b}
+/* ── Q3 (f2, 08/10) : les pistes CONSTANTES sont éteintes — crans au liseré, « — », et une note dans la fiction ── */
+.dos6 .pi.eteinte i{color:#7a838d}
+.dos6 .notepi{margin:6px 4px 0;font:italic 7px/1.4 'DejaVu Serif';color:#8a979c;text-align:center}
+/* ── le geste par ligne, éteint ── */
+.dos6 .ac .rg{flex:none;font:700 5.4px/1 'DejaVu Sans';letter-spacing:.12em;text-transform:uppercase;
+  padding:4px 5px;border:1px solid #2a3648;color:#7a838d;background:#0a0e16}
+|
+
+|
+  |
+
+
+=== apostrophes des h3 « organisation frotte » ===
+ L 5069 'L’organisation frotte'
+ L 6826 "L'organisation frotte"

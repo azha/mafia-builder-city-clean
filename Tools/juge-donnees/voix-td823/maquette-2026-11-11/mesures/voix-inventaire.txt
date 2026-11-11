@@ -1,0 +1,37 @@
+cadres= 170  etiquettes= 176
+
+######## pl-dit
+  cadre#67 L4890  etq=« Ils ont arrêté un de vos coursiers »  h3=« Ils ont arrêté quelqu’un à vous »
+     Lt. Rin :| « Pour l’instant il n’a rien dit. Ça ne durera pas tout seul. »
+  cadre#68 L4892  etq=« Lui trouver un avocat »  h3=« Lui trouver un avocat »
+     Lt. Rin :| « Le commis d’office ne coûte rien et ne gagne rien. Le cabinet coûte. La filière, elle, se paie deux fois. »
+  cadre#69 L4894  etq=« Il commence à parler »  h3=« Il commence à parler »
+     Lt. Rin :| « Il a donné la planque et le nom de Lt. Hara. Ce qui est sorti ne rentrera pas. »
+  cadre#70 L4896  etq=« Il a tout dit »  h3=« Il a tout dit »
+     Lt. Rin :| « Il a tout vidé. Il n’y a plus rien à sauver de ce côté. »
+  cadre#71 L4898  etq=« Il y a un arrangement »  h3=« Il y a un arrangement possible »
+     Lt. Rin :| « À vous de dire. L’accord ferme le dossier proprement. La filière le fait disparaître, mais elle s’en souviendra. »
+  cadre#72 L4900  etq=« Votre avocat est nerveux »  h3=« Votre avocat est nerveux »
+     Lt. Rin :| « Je ne peux pas vous dire s’il va tenir. Personne ne peut. »
+######## voix
+  cadre#98 L5467  etq=« La vitrine — les extras »  h3=« Les extras — payés en Marks »
+     Wexler|derrière le comptoir|« Ce qui est là est à vendre. Ce qui est trop cher pour vous, je le laisse en vitrine — ça vous fera un but. »
+  cadre#99 L5470  etq=« La caisse — les Marks »  h3=« Les Marks — payés au magasin »
+     Wexler|derrière le comptoir|« Les Marks, c’est dehors qu’on les achète. Moi je vous les compte, je ne les vends pas. »
+  cadre#100 L5473  etq=« Zéro Mark — l’état terminal »  h3=« Les extras — payés en Marks »
+     Wexler|derrière le comptoir|« Vous avez tout claqué d’un coup. Ce qui reste au mur, vous ne l’aurez pas avec de la bonne volonté. »
+######## dm-dit
+  cadre#79 L5069  etq=« L’organisation frotte »  h3=« L’organisation frotte »
+     Lt. Rin :| « On a trop de choses au même endroit. Il va falloir en enlever une. »
+  cadre#80 L5071  etq=« Ce bâtiment vous coûte »  h3=« Ce bâtiment vous coûte »
+     Lt. Rin :| « Celui-là, on le garde par habitude. Il gêne les trois d’à côté et il ne rend presque rien. »
+  cadre#81 L5073  etq=« Le raser — confirmer »  h3=« Le raser »
+     Une fois rasé, |on ne le remet pas|. La parcelle restera libre le temps de choisir quoi y mettre.
+  cadre#82 L5075  etq=« Vous avez déjà tranché aujourd’hui »  h3=« Le raser »
+     Vous avez déjà tranché une chose de structure aujourd’hui.
+  cadre#83 L5077  etq=« La parcelle est libre »  h3=« La parcelle est libre »
+     Lt. Rin :| « Deux propositions. La première est mieux placée. Elles ne resteront pas sur la table. »
+  cadre#84 L5079  etq=« L’offre s’est fermée »  h3=« Cette offre est fermée »
+     Lt. Rin :| « Trop tard pour celle-là. »
+  cadre#149 L6826  etq=« Vos 4 sites — la liste qui mène à la fiche »  h3=« L'organisation frotte »
+     Lt. Rin :| « On a trop de choses au même endroit. Il va falloir en enlever une. »
