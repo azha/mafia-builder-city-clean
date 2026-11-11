@@ -1,0 +1,49 @@
+scénario	instant	mesure	valeur	fichier
+shell-entree	avant	alpha ContentSlot (avant le rendu)	1.000	shell-entree_avant_1080x1920.png
+shell-entree	avant	alpha ContentSlot (après le rendu)	1.000	shell-entree_avant_1080x1920.png
+shell-entree	t0	alpha ContentSlot (avant le rendu)	0.000	shell-entree_t0_1080x1920.png
+shell-entree	t0	alpha ContentSlot (après le rendu)	0.000	shell-entree_t0_1080x1920.png
+shell-entree	échantillon 20 ms	alpha ContentSlot	0.199	—
+shell-entree	échantillon 40 ms	alpha ContentSlot	0.378	—
+shell-entree	échantillon 60 ms	alpha ContentSlot	0.541	—
+shell-entree	t80ms	alpha ContentSlot (avant le rendu)	0.685	shell-entree_t80ms_1080x1920.png
+shell-entree	t80ms	alpha ContentSlot (après le rendu)	0.685	shell-entree_t80ms_1080x1920.png
+shell-entree	échantillon 100 ms	alpha ContentSlot	0.808	—
+shell-entree	échantillon 120 ms	alpha ContentSlot	0.907	—
+shell-entree	échantillon 140 ms	alpha ContentSlot	0.974	—
+shell-entree	t160ms	alpha ContentSlot (avant le rendu)	1.000	shell-entree_t160ms_1080x1920.png
+shell-entree	t160ms	alpha ContentSlot (après le rendu)	1.000	shell-entree_t160ms_1080x1920.png
+bandeau-entree	avant	repos y	-78.00	—
+bandeau-entree	t0	bandeau (avant le rendu)	y−repos=10.00 u · alpha=0.000	bandeau-entree_t0_1080x1920.png
+bandeau-entree	t0	bandeau (après le rendu)	y−repos=10.00 u · alpha=0.000	bandeau-entree_t0_1080x1920.png
+bandeau-entree	t50ms	bandeau (avant le rendu)	y−repos=6.22 u · alpha=0.378	bandeau-entree_t50ms_1080x1920.png
+bandeau-entree	t50ms	bandeau (après le rendu)	y−repos=6.22 u · alpha=0.378	bandeau-entree_t50ms_1080x1920.png
+bandeau-entree	t70ms	bandeau (avant le rendu)	y−repos=4.91 u · alpha=0.509	bandeau-entree_t70ms_1080x1920.png
+bandeau-entree	t70ms	bandeau (après le rendu)	y−repos=4.91 u · alpha=0.509	bandeau-entree_t70ms_1080x1920.png
+bandeau-entree	t100ms	bandeau (avant le rendu)	y−repos=3.15 u · alpha=0.685	bandeau-entree_t100ms_1080x1920.png
+bandeau-entree	t100ms	bandeau (après le rendu)	y−repos=3.15 u · alpha=0.685	bandeau-entree_t100ms_1080x1920.png
+bandeau-entree	t200ms	bandeau (avant le rendu)	y−repos=0.00 u · alpha=1.000	bandeau-entree_t200ms_1080x1920.png
+bandeau-entree	t200ms	bandeau (après le rendu)	y−repos=0.00 u · alpha=1.000	bandeau-entree_t200ms_1080x1920.png
+bascule-course	montage de ⑲ (horloge encore figée sur le scénario d'avant)	état de shell.entree	alpha ContentSlot 1.000 · piste shell.entree VIVANTE · locataire #-14770	—
+bascule-course	1er tick après le montage	état de shell.entree	alpha ContentSlot 0.000 · piste shell.entree VIVANTE · locataire #-14770	—
+bascule-course	+300 ms simulées	état de shell.entree	alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	—
+bascule-course-marche-sens1	avant	curseur (avant le rendu)	curseur x=-4.27 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens1_avant_1080x1920.png
+bascule-course-marche-sens1	avant	curseur (après le rendu)	curseur x=-4.27 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens1_avant_1080x1920.png
+bascule-course-marche-sens1	naissance	ms après le geste avant l'écriture du départ	1	—
+bascule-course-marche-sens1	t0	curseur (avant le rendu)	curseur x=46.93 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens1_t0_1080x1920.png
+bascule-course-marche-sens1	t0	curseur (après le rendu)	curseur x=46.93 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens1_t0_1080x1920.png
+bascule-course-marche-sens1	t70ms	curseur (avant le rendu)	curseur x=17.70 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens1_t70ms_1080x1920.png
+bascule-course-marche-sens1	t70ms	curseur (après le rendu)	curseur x=17.70 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens1_t70ms_1080x1920.png
+bascule-course-marche-sens1	t140ms	curseur (avant le rendu)	curseur x=4.27 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens1_t140ms_1080x1920.png
+bascule-course-marche-sens1	t140ms	curseur (après le rendu)	curseur x=4.27 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens1_t140ms_1080x1920.png
+bascule-course-marche-sens2	naissance	ms après le geste avant l'écriture du départ	1	—
+bascule-course-marche-sens2	t0	curseur (avant le rendu)	curseur x=-46.93 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens2_t0_1080x1920.png
+bascule-course-marche-sens2	t0	curseur (après le rendu)	curseur x=-46.93 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens2_t0_1080x1920.png
+bascule-course-marche-sens2	t70ms	curseur (avant le rendu)	curseur x=-17.78 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens2_t70ms_1080x1920.png
+bascule-course-marche-sens2	t70ms	curseur (après le rendu)	curseur x=-17.78 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens2_t70ms_1080x1920.png
+bascule-course-marche-sens2	t140ms	curseur (avant le rendu)	curseur x=-4.27 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens2_t140ms_1080x1920.png
+bascule-course-marche-sens2	t140ms	curseur (après le rendu)	curseur x=-4.27 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	bascule-course-marche-sens2_t140ms_1080x1920.png
+bascule-course-tutoriels-sens1	naissance	ms après le geste avant l'écriture du départ	1	—
+bascule-course-tutoriels-sens1	t0	curseur	curseur x=46.93 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	—
+bascule-course-tutoriels-sens1	t70ms	curseur	curseur x=17.78 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	—
+bascule-course-tutoriels-sens1	t140ms	curseur	curseur x=4.27 u · alpha ContentSlot 1.000 · piste shell.entree finie · locataire #-14770	—
