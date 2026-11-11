@@ -208,7 +208,7 @@ namespace MafiaCleanCity.Capture.Tests
         // Pas de corps fabriqué : l'écran se charge LUI-MÊME (`GET /v1/me/forensic`, `GET /v1/me/internal-affairs/actors`) sous le vrai shell, avec le bundle i18n SERVI (FR, puis EN : le catalogue est
         // rechargé par `GET /v1/i18n/bundle?locale=en` et l'écran recharge ses données). Les comptes sont JETABLES et PRÉPARÉS HORS DU TEST (`MAFIA_DOSSIER_COMPTES` = « callsign,callsign,callsign », mot de passe
         // `pw-<callsign>`) : (1) « quiet » — état NATUREL du compte (la ligne `lifestyle_audit_state` écrite par le recrutement, à zéro), rien posé ; (2) « noticed » et (3) « watched » — l'état est POSÉ PAR SQL
-        // (UPDATE de la ligne de Lt. Ilm : noticed = last_gap 15000 / consecutive_flag_months 1 ; watched = last_gap 15000 / consecutive_flag_months 2 / tail_ramp_stage 'passive') : ce n'est PAS l'atteinte réelle,
+        // (UPDATE de la ligne du premier lieutenant du compte : noticed = last_gap 15000 / consecutive_flag_months 1 ; watched = last_gap 15000 / consecutive_flag_months 2 / tail_ramp_stage 'passive') : ce n'est PAS l'atteinte réelle,
         // qui passe par le tick standing-gap-heat. Tout le reste (bandes, nom, clés, mots) est ce que la pile sert. Chaque planche DIT cet état au journal.
         private const string VariableComptesDossier = "MAFIA_DOSSIER_COMPTES";
 
@@ -256,8 +256,8 @@ namespace MafiaCleanCity.Capture.Tests
             string[] poses =
             {
                 "état NATUREL du compte (ligne lifestyle_audit_state écrite par le recrutement, à zéro) — RIEN posé",
-                "état POSÉ PAR SQL : UPDATE de la ligne de Lt. Ilm (last_gap 15000, consecutive_flag_months 1, tail_ramp_stage none) — l'atteinte réelle passe par le tick standing-gap-heat",
-                "état POSÉ PAR SQL : UPDATE de la ligne de Lt. Ilm (last_gap 15000, consecutive_flag_months 2, tail_ramp_stage passive) — l'atteinte réelle passe par le tick standing-gap-heat",
+                "état POSÉ PAR SQL : UPDATE de la ligne du premier lieutenant du compte (last_gap 15000, consecutive_flag_months 1, tail_ramp_stage none) — l'atteinte réelle passe par le tick standing-gap-heat",
+                "état POSÉ PAR SQL : UPDATE de la ligne du premier lieutenant du compte (last_gap 15000, consecutive_flag_months 2, tail_ramp_stage passive) — l'atteinte réelle passe par le tick standing-gap-heat",
             };
             for (int k = 0; k < 3; k++)
             {
