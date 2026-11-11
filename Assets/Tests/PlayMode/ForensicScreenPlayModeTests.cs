@@ -1008,7 +1008,7 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.Basculer();
             yield return null;
             Assert.IsEmpty(NotesDuPiedVisibles(), "prix servi : la note des acteurs ne s'affiche pas non plus");
-            Assert.AreEqual(requetes, ecran.RequetesEmises, "aucune requête : le geste est éteint");
+            Assert.AreEqual(requetes, ecran.RequetesEmises, "rendre et basculer avec un prix servi n'émettent aucune requête (le geste éteint est gardé ailleurs)");
         }
 
         /// <summary>Q5 : le corps se lit (clé additive, `JsonUtility`), et son ABSENCE donne null.</summary>
