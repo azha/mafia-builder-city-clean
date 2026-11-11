@@ -220,7 +220,23 @@ namespace MafiaCleanCity.Operational.Tests
             foreach (int d in Noms.Keys) foreach (string s in MarcheScreenController.Substances) toutes.Add((d, s, "LOW"));
             yield return Monter(() => (200, Corps(toutes.ToArray())));
             Assert.AreEqual(MarcheScreenController.Etat.Pleine, Courant.EtatRendu);
-            Assert.AreEqual(72, Courant.CasesAllumees);
+            Assert.AreEqual(18, Courant.LignesAshServies, "les 18 lignes ash servies sont détectées (TD-1018)");
+            Assert.AreEqual(54, Courant.CasesAllumees, "72 servies, mais la colonne ash reste éteinte (ruling A) : 72 − 18");
+        }
+
+        /// <summary>G6c — revue ⊥ du code : une panne des QUARTIERS (`world/districts`) est une erreur nommée, jamais 18 rangées « — ». CONTRÔLE : quartiers
+        /// servis ⇒ pas d'erreur (G6). Et le DÉTECTEUR TD-1018 : une ligne `ash` servie est comptée, la case reste éteinte.</summary>
+        [UnityTest]
+        public IEnumerator G6c_PanneDesQuartiers_EstUneErreur_EtUneLigneAshServieEstDetectee()
+        {
+            yield return Monter(() => (200, Corps((12, "crick", "MODERATE"))), e => e.DistrictsPourTest = new List<DistrictDto>());
+            Assert.AreEqual(MarcheScreenController.Etat.Erreur, Courant.EtatRendu, "sans les noms des quartiers, le tableau n'est pas dessiné");
+            Assert.AreEqual(0, Courant.CasesRendues);
+            Assert.IsNotEmpty(Courant.TexteDeLEtat, "l'erreur est DITE");
+            Nettoyer();
+            yield return Monter(() => (200, Corps((13, "ash", "HIGH"), (12, "crick", "MODERATE"))));
+            Assert.AreEqual(1, Courant.LignesAshServies, "DÉTECTEUR TD-1018 : la ligne ash servie est comptée");
+            Assert.AreEqual(1, Courant.CasesAllumees, "seule la case crick s'allume : la colonne ash reste éteinte (ruling A)");
         }
 
         // ═══ G7 — les pieds ═════════════════════════════════════════════════════════════════════════════════════════════

@@ -47,6 +47,9 @@ namespace MafiaCleanCity.Operational.Marche
         public int RendusEffectues { get; private set; }
         public int CasesRendues { get; private set; }
         public int CasesAllumees { get; private set; }
+        /// <summary>⛔ DÉTECTEUR TD-1018 : combien de lignes `ash` le back a servies (attendu : 0, TD-966). La case reste éteinte (ruling A) ; une ligne
+        /// servie est COMPTÉE et journalisée, jamais montrée sous un pied qui dit « HORS DU TABLEAU ».</summary>
+        public int LignesAshServies { get; private set; }
         /// <summary>Les compteurs du cadre 106, DÉRIVÉS par le client (rien n'est servi, TD-1019) — `-1` avant le premier rendu.</summary>
         public int LignesConnues { get; private set; } = -1;
         public int LignesSures { get; private set; } = -1;
@@ -93,7 +96,14 @@ namespace MafiaCleanCity.Operational.Marche
             Construire();
         }
 
-        public void SetMountParent(Transform parent) { mountParent = parent; }
+        /// <summary>Le shell parente l'hôte sous son ContentSlot AVANT `AddComponent` (`AppShell.ConstruireLocataire`) : à l'`Awake`, la mise en page est
+        /// bâtie sous l'hôte, déjà dans le slot. Un parent DIFFÉRENT reçu ensuite REPARENTE la racine (patron ⑯) — jamais une UI laissée ailleurs.</summary>
+        public void SetMountParent(Transform parent)
+        {
+            mountParent = parent;
+            Init();
+            if (parent != null && racine != null && racine.parent != parent) { racine.SetParent(parent, false); Etirer(racine); }
+        }
 
         public void SetToken(string bearer)
         {
@@ -210,7 +220,8 @@ namespace MafiaCleanCity.Operational.Marche
             for (int i = grille.childCount - 1; i >= 0; i--) Destroy(grille.GetChild(i).gameObject);
             CasesRendues = 0; CasesAllumees = 0;
             pied.gameObject.SetActive(false);
-            if (Lanes == null)
+            // une panne des QUARTIERS est une erreur aussi : sans leurs noms, aucune rangée n'est identifiable (revue ⊥ du code)
+            if (Lanes == null || Districts == null || Districts.Count == 0)
             {
                 EtatRendu = Etat.Erreur;
                 RendreLEtat(client.DernierePhraseDeRefus ?? Lib("etat", "Le tableau ne répond pas."));
@@ -223,6 +234,8 @@ namespace MafiaCleanCity.Operational.Marche
             etatTexte.gameObject.SetActive(false);
             int quartiers = NombreDeQuartiers();
             (LignesConnues, LignesSures, QuartiersNoirs) = Compter(Lanes, quartiers);
+            LignesAshServies = Lanes.Count(l => l != null && l.substance_type == SubstanceHorsDuTableau);
+            if (LignesAshServies > 0) Debug.LogWarning($"[Marché] {LignesAshServies} ligne(s) `ash` servie(s) : la colonne reste éteinte (ruling A) — TD-1018/TD-966 à ré-instruire");
             EtatRendu = LignesConnues == 0 ? Etat.Nue : LignesConnues >= Denominateur ? Etat.Pleine : Etat.Partielle;
             compteConnues.text = LignesConnues.ToString("00", CultureInfo.InvariantCulture) + " /" + Denominateur.ToString(CultureInfo.InvariantCulture);
             compteSures.text = LignesSures.ToString("00", CultureInfo.InvariantCulture);
@@ -242,7 +255,7 @@ namespace MafiaCleanCity.Operational.Marche
 
         private void Case(Transform rangee, int quartier, string substance)
         {
-            LaneConfidenceRowDto l = Ligne(quartier, substance);
+            LaneConfidenceRowDto l = substance == SubstanceHorsDuTableau ? null : Ligne(quartier, substance);   // ash : éteinte, toujours (TD-1018)
             bool allumee = l != null;
             GameObject c = new GameObject("C_" + substance, typeof(RectTransform), typeof(CanvasRenderer));
             c.transform.SetParent(rangee, false);
