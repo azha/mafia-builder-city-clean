@@ -410,6 +410,7 @@ namespace MafiaCleanCity.Shell
             tamponDiag.SetActive(vue.Tampon);
             deja.SetActive(vue.Deja);
             papierDegrade.sprite = vue.CarteTranchee ? papierTranchee : papierNormal;   // `.carte-or.tranchee{filter:saturate(.8)}`
+            DesaturerLesTextes(vue.CarteTranchee);
             cachetDeCire.SetActive(false);   // F2-F4 : le cachet n'existe pas dans les cadres 6-7
             // le jeton : trois états, AUCUN chiffre ; son petit texte dit « votre grande décision du jour »
             jetonChiffre.gameObject.SetActive(false);
@@ -436,9 +437,25 @@ namespace MafiaCleanCity.Shell
             tamponDiag.SetActive(false);
             deja.SetActive(false);
             papierDegrade.sprite = papierNormal;
+            DesaturerLesTextes(false);
             cachetDeCire.SetActive(true);
             jetonChiffre.gameObject.SetActive(true);
             jetonSous.text = "votre décision structurelle de la session";
+        }
+
+        private System.Collections.Generic.Dictionary<TextMeshProUGUI, Color> textesDeLaCarte;
+
+        /// <summary>`.carte-or.tranchee{filter:saturate(.8)}` s'applique à TOUT le sous-arbre de la carte — le papier ET ses textes (titre, nature, libellés, valeurs, pastille, tampon). Le papier a son second
+        /// sprite ; les textes reprennent ici leur couleur d'origine désaturée (pastille « déjà tranchée » : la maquette tient ≥ 4,5:1 parce que son encre brique est désaturée avec le papier — mesuré,
+        /// le jeu qui ne désaturait que le fond tombait à 4,3:1). Restituées à l'identique quand la carte n'est plus tranchée. Reste de TD-938 : filets, pips et cerne (non désaturés).</summary>
+        private void DesaturerLesTextes(bool tranchee)
+        {
+            if (textesDeLaCarte == null)
+            {
+                textesDeLaCarte = new System.Collections.Generic.Dictionary<TextMeshProUGUI, Color>();
+                foreach (TextMeshProUGUI t in carteRoot.GetComponentsInChildren<TextMeshProUGUI>(true)) textesDeLaCarte[t] = t.color;
+            }
+            foreach (var kv in textesDeLaCarte) if (kv.Key != null) kv.Key.color = tranchee ? Desaturee(kv.Value, 0.8f) : kv.Value;
         }
 
         /// <summary>`filter:saturate(f)` sur une couleur opaque (matrice sRGB de la spec CSS, luminance Rec. 709 — la carte n'est pas translucide : aucune opacité à convertir).</summary>

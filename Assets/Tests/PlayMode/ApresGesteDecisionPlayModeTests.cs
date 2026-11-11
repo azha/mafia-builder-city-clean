@@ -377,7 +377,13 @@ namespace MafiaCleanCity.Shell.Tests
             Color32 sous = new Color32((byte)rs[rs.Count / 2], (byte)gs[gs.Count / 2], (byte)bs[bs.Count / 2], 255);
             Object.DestroyImmediate(d);
             TMPro.TextMeshProUGUI mot = Texte(e, "Deja/Mot");
-            Assert.GreaterOrEqual(Contraste(mot.color, sous), 4.5f, $"pastille DÉJÀ TRANCHÉE sur le papier désaturé ({sous}) : maquette 6,14:1, jeu avant 4,45:1");
+            Assert.GreaterOrEqual(Contraste(mot.color, sous), 4.5f, $"pastille DÉJÀ TRANCHÉE sur le papier désaturé ({sous}) : jeu avant correction 4,45:1 (la maquette désature papier ET encre : `.carte-or.tranchee{{filter:saturate(.8)}}`)");
+            // la désaturation touche les TEXTES de la carte tranchée (pas seulement son papier), et se rend quand la carte ne l'est plus
+            Color32 brique = new Color32(0x93, 0x40, 0x2c, 255), desat = nature.color;
+            Assert.AreNotEqual((brique.r, brique.g, brique.b), (((Color32)desat).r, ((Color32)desat).g, ((Color32)desat).b), "TACTIQUE est désaturé sur une carte tranchée");
+            e.Afficher(Carte(), new StructuralBudgetDto { used = 0, cap_reached = false });
+            yield return Stabiliser();
+            Assert.AreEqual((brique.r, brique.g, brique.b), (((Color32)nature.color).r, ((Color32)nature.color).g, ((Color32)nature.color).b), "l'écran « avant » rend la couleur d'origine de TACTIQUE");
         }
 
         /// <summary>F9 — les VALEURS de la carte (modérée, majeure, faible…) sont en SÉRIF (`.bande em{font-family:Georgia}`), les libellés (PORTÉE, URGENCE) en linéale : lu sur la référence.</summary>
