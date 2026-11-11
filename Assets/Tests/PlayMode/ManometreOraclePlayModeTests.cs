@@ -47,12 +47,77 @@ namespace MafiaCleanCity.Shell.Tests
     {
         private GameObject scaffoldCanvasGo;
 
+        // TD-884 (design v2, D1) — SOURCE DES PIXELS : une caméra + une RenderTexture FIXE, qui
+        // PERSISTENT pour tout le test (la projection `Px` en a besoin tant qu'on mesure) et que
+        // `TearDown` détruit. Plus d'attente de fin de trame ni de capture d'écran : elles ne rendent rien
+        // en batchmode (« not evoked in batchmode », « failed to generate texture » : TD-884).
+        private const int RtLargeur = 1280, RtHauteur = 720;
+        private GameObject rendCamGo;
+        private Camera rendCam;
+        private RenderTexture rendRt;
+
         [TearDown]
         public void TearDown()
         {
+            // DestroyImmediate comme V31 : un `Destroy` différé laisserait la caméra viser une RT déjà
+            // relâchée jusqu'à la fin de la trame (Oracle1 démonte et reconstruit en plein test).
+            if (rendCamGo != null) Object.DestroyImmediate(rendCamGo);
+            rendCamGo = null; rendCam = null;
+            if (rendRt != null) { rendRt.Release(); Object.DestroyImmediate(rendRt); }
+            rendRt = null;
             if (scaffoldCanvasGo != null) Object.Destroy(scaffoldCanvasGo);
             scaffoldCanvasGo = null;
             LogAssert.ignoreFailingMessages = false;
+        }
+
+        /// <summary>D1 — le canvas du scaffold passe en `ScreenSpaceCamera`, vers une RT 1280×720
+        /// FIXE : l'hôte batchmode rend à 640×480 (`scaleFactor` 0,5, mesuré), donc toutes les
+        /// constantes en px de ce fichier (anneau ~3 px, bande ±2,5, gap de 19 px…) y étaient
+        /// fausses d'un facteur 2. Une RT fixe rend l'oracle indépendant de l'hôte et ramène
+        /// `scaleFactor` à 1, où elles sont vraies. `orthographicSize` n'est PAS posé (V31 non
+        /// plus : en `ScreenSpaceCamera` le canvas épouse le frustum, `Px` annule échelle et cadrage).</summary>
+        private void BuildRendu()
+        {
+            var canvas = scaffoldCanvasGo.GetComponent<Canvas>();
+            rendRt = new RenderTexture(RtLargeur, RtHauteur, 24, RenderTextureFormat.ARGB32);
+            rendRt.Create();
+            rendCamGo = new GameObject("OracleCam");
+            rendCam = rendCamGo.AddComponent<Camera>();
+            rendCam.targetTexture = rendRt;
+            rendCam.clearFlags = CameraClearFlags.SolidColor;
+            rendCam.backgroundColor = Color.black;
+            rendCam.orthographic = true;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = rendCam;
+            canvas.planeDistance = 10f;
+            Canvas.ForceUpdateCanvases();
+        }
+
+        /// <summary>Rend la scène dans la RT et la lit — À CHAQUE FOIS qu'un état change.</summary>
+        private Texture2D Capturer()
+        {
+            Canvas.ForceUpdateCanvases();
+            rendCam.Render();
+            RenderTexture prev = RenderTexture.active;
+            RenderTexture.active = rendRt;
+            var tex = new Texture2D(RtLargeur, RtHauteur, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, RtLargeur, RtHauteur), 0, 0);
+            tex.Apply();
+            RenderTexture.active = prev;
+            return tex;
+        }
+
+        /// <summary>D2 — projection monde → pixel de la RT (origine bas-gauche, comme `ReadPixels`).
+        /// Valable parce que `targetTexture` fixe le `pixelRect` de la caméra à la RT.</summary>
+        private static Vector2 Px(Camera cam, Vector3 monde) => cam.WorldToScreenPoint(monde);
+
+        /// <summary>Les 4 coins d'un rect, PROJETÉS en pixels (même ordre que `GetWorldCorners` :
+        /// bas-gauche, haut-gauche, haut-droit, bas-droit).</summary>
+        private static Vector2[] CoinsPx(Camera cam, RectTransform rt)
+        {
+            var w = new Vector3[4];
+            rt.GetWorldCorners(w);
+            return new[] { Px(cam, w[0]), Px(cam, w[1]), Px(cam, w[2]), Px(cam, w[3]) };
         }
 
         /// <summary>Scaffold LÉGER — REUSE exact de la construction Canvas/TopBarSlot d'`AppShell.
@@ -101,21 +166,18 @@ namespace MafiaCleanCity.Shell.Tests
             public float ArcRadius;       // rayon MESURÉ de la piste d'arc (`ArcTrack`), coordonnées ÉCRAN
         }
 
-        private static Geo MeasureGeo(TopBarController topBar, RectTransform topBarSlot)
+        private static Geo MeasureGeo(Camera cam, TopBarController topBar, RectTransform topBarSlot)
         {
             Transform manoT = topBar.transform.Find("Manometre");
             Assert.IsNotNull(manoT, "Manometre doit exister comme enfant DIRECT du TopBar");
             var manoRect = (RectTransform)manoT;
-            var mc = new Vector3[4];
-            manoRect.GetWorldCorners(mc);
+            Vector2[] mc = CoinsPx(cam, manoRect);   // D2 : coins PROJETÉS en pixels de la RT
 
-            var bc = new Vector3[4];
-            topBarSlot.GetWorldCorners(bc);
+            Vector2[] bc = CoinsPx(cam, topBarSlot);
 
             Transform hairlineT = topBar.transform.Find("Hairline");
             Assert.IsNotNull(hairlineT, "Hairline doit exister comme enfant DIRECT du TopBar (BuildHairline)");
-            var hc = new Vector3[4];
-            ((RectTransform)hairlineT).GetWorldCorners(hc);
+            Vector2[] hc = CoinsPx(cam, (RectTransform)hairlineT);
 
             return new Geo
             {
@@ -126,7 +188,7 @@ namespace MafiaCleanCity.Shell.Tests
                 BarBottomY = bc[0].y, // bas de la barre
                 HairlineTopY = hc[1].y,
                 HairlineBottomY = hc[0].y,
-                TextZone = UnionMonde(manoT, "GaugeValue", "GaugeCaption"),
+                TextZone = UnionMonde(cam, manoT, "GaugeValue", "GaugeCaption"),
                 // ⚠️ LE TEXTE N'EST PAS LE SEUL ÉLÉMENT LÉGITIME SUR LE CHEMIN D'UN BALAYAGE.
                 // `BoitierLosange` — l'ornement doré suspendu SOUS le cadran — est du laiton, comme
                 // l'anneau : un balayage radial à 270° le compte comme un SECOND passage et conclut
@@ -136,10 +198,10 @@ namespace MafiaCleanCity.Shell.Tests
                 // exclusion révèle ce qu'elle couvrait sans le dire.*
                 ZonesExclues = new[]
                 {
-                    UnionMonde(manoT, "GaugeValue", "GaugeCaption"),
-                    UnionMonde(manoT, "BoitierLosange"),
+                    UnionMonde(cam, manoT, "GaugeValue", "GaugeCaption"),
+                    UnionMonde(cam, manoT, "BoitierLosange"),
                 },
-                ArcRadius = RayonMesure(manoT, "ArcTrack"),
+                ArcRadius = RayonMesure(cam, manoT, "ArcTrack"),
             };
         }
 
@@ -153,19 +215,18 @@ namespace MafiaCleanCity.Shell.Tests
         /// comme un résidu d'arc dans l'hémicycle inférieur. Un nombre DÉRIVÉ puis GELÉ est une
         /// prose datée avec un `const` devant — et celui-ci portait sa propre péremption écrite
         /// dans son commentaire, sous la forme d'un « 64 » qui n'était plus vrai.</summary>
-        private static float RayonMesure(Transform racine, string nom)
+        private static float RayonMesure(Camera cam, Transform racine, string nom)
         {
             Transform t = null;
             foreach (Transform c in racine.GetComponentsInChildren<Transform>(true))
                 if (c.name == nom) { t = c; break; }
             Assert.IsNotNull(t, $"'{nom}' introuvable sous le manomètre — le rayon d'arc serait deviné");
-            var c4 = new Vector3[4];
-            ((RectTransform)t).GetWorldCorners(c4);
+            Vector2[] c4 = CoinsPx(cam, (RectTransform)t);   // D2 : les DEUX coins projetés, puis soustraits
             return (c4[2].x - c4[0].x) / 2f;
         }
 
         /// <summary>Union, en coordonnées ÉCRAN, des rectangles de plusieurs descendants nommés.</summary>
-        private static Rect UnionMonde(Transform racine, params string[] noms)
+        private static Rect UnionMonde(Camera cam, Transform racine, params string[] noms)
         {
             float x0 = float.MaxValue, y0 = float.MaxValue, x1 = float.MinValue, y1 = float.MinValue;
             int vus = 0;
@@ -176,9 +237,8 @@ namespace MafiaCleanCity.Shell.Tests
                     if (c.name == nom) { t = c; break; }
                 Assert.IsNotNull(t, $"'{nom}' introuvable sous le manomètre — la zone morte serait vide, " +
                                     "et l'oracle accuserait le texte d'être un résidu d'arc");
-                var c4 = new Vector3[4];
-                ((RectTransform)t).GetWorldCorners(c4);
-                foreach (Vector3 p in c4)
+                Vector2[] c4 = CoinsPx(cam, (RectTransform)t);
+                foreach (Vector2 p in c4)
                 {
                     x0 = Mathf.Min(x0, p.x); y0 = Mathf.Min(y0, p.y);
                     x1 = Mathf.Max(x1, p.x); y1 = Mathf.Max(y1, p.y);
@@ -289,6 +349,59 @@ namespace MafiaCleanCity.Shell.Tests
         // qui lit la boîte RÉELLE des deux libellés. Voir le docblock de cette méthode.)
 
         // ══════════════════════════════════════════════════════════════════════════════════════
+        // D3 — GARDES D'EFFET, en TÊTE de chaque oracle de pixels. Un instrument aveugle doit
+        // rougir « INSTRUMENT », jamais rendre un vert sur du noir. On ne lit pas le PARAMÈTRE
+        // (`scaleFactor`) : on mesure son RÉSULTAT.
+        // ══════════════════════════════════════════════════════════════════════════════════════
+
+        private const float RayonMedaillonAttenduPx = 34f;   // 68 / 2 à l'échelle 1 (`TopBarController.ManometreDiameter` = 68)
+        private const float RayonMedaillonTolerancePx = 0.5f;
+        // Seuil CHOISI (pas hérité) : le disque fait ≈ 3 600 px ; V31 compte `sampled > 100` pour
+        // son patron avant/sans. En deçà, le manomètre n'est pas dans l'image rendue.
+        private const int MinPixelsTemoin = 100;
+        private const float TemoinEpsilon = 0.02f;
+
+        /// <summary>Le manomètre rendu, sans lui : deux rendus qui ne diffèrent QUE par
+        /// `Manometre.SetActive(false)` (témoin à un facteur).</summary>
+        private Texture2D CapturerSansManometre(TopBarController topBar)
+        {
+            GameObject mano = topBar.transform.Find("Manometre").gameObject;
+            mano.SetActive(false);
+            Texture2D sans = Capturer();
+            mano.SetActive(true);
+            return sans;
+        }
+
+        private void GardesInstrument(string oracle, Geo g, Texture2D avec, Texture2D sans)
+        {
+            Debug.Log($"[{oracle}] RT={rendRt.width}x{rendRt.height} (texture {avec.width}x{avec.height}) " +
+                      $"rayon du médaillon projeté={g.MedallionRadius:F2} px (attendu {RayonMedaillonAttenduPx} ± {RayonMedaillonTolerancePx})");
+            // (a) EFFET de l'échelle — le rayon PROJETÉ, pas `scaleFactor`.
+            Assert.AreEqual(RayonMedaillonAttenduPx, g.MedallionRadius, RayonMedaillonTolerancePx,
+                $"INSTRUMENT : le rayon du médaillon projeté vaut {g.MedallionRadius:F2} px, pas {RayonMedaillonAttenduPx} — " +
+                "l'échelle de la RT n'est pas 1 : toutes les constantes en px de ce fichier sont fausses.");
+            // (b) le centre et le disque sont dans la texture (le haut peut mordre de 2 px : MaxTopOverflowPx).
+            float r = g.MedallionRadius;
+            Assert.IsTrue(g.Cx - r >= 0f && g.Cx + r <= avec.width && g.Cy - r >= 0f && g.Cy >= 0f && g.Cy <= avec.height,
+                $"INSTRUMENT : le médaillon (centre {g.Cx:F1},{g.Cy:F1} rayon {r:F1}) n'est pas dans la texture {avec.width}x{avec.height}.");
+            // (c) témoin à un facteur : le manomètre est dans l'image (≥ MinPixelsTemoin pixels du disque changent sans lui).
+            int diffs = 0;
+            int x0 = Mathf.Max(0, Mathf.FloorToInt(g.Cx - r)), x1 = Mathf.Min(avec.width - 1, Mathf.CeilToInt(g.Cx + r));
+            int y0 = Mathf.Max(0, Mathf.FloorToInt(g.Cy - r)), y1 = Mathf.Min(avec.height - 1, Mathf.CeilToInt(g.Cy + r));
+            for (int y = y0; y <= y1; y++)
+                for (int x = x0; x <= x1; x++)
+                {
+                    float dx = x + 0.5f - g.Cx, dy = y + 0.5f - g.Cy;
+                    if (dx * dx + dy * dy > r * r) continue;
+                    if (ColorDistance(avec.GetPixel(x, y), sans.GetPixel(x, y)) > TemoinEpsilon) diffs++;
+                }
+            Debug.Log($"[{oracle}] témoin : {diffs} pixels du disque diffèrent sans Manometre (minimum {MinPixelsTemoin})");
+            Assert.GreaterOrEqual(diffs, MinPixelsTemoin,
+                $"INSTRUMENT : seuls {diffs} pixels du disque diffèrent quand on retire le manomètre (minimum {MinPixelsTemoin}) — " +
+                "le rendu est aveugle (noir ou fond seul) : aucun verdict de pixels ne vaut quoi que ce soit.");
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════════════
         // CHECK 1 — l'anneau est UNIQUE et laiton sur 360° : jamais rouge vif brut, jamais doublé.
         // ══════════════════════════════════════════════════════════════════════════════════════
 
@@ -331,17 +444,21 @@ namespace MafiaCleanCity.Shell.Tests
             return runs;
         }
 
-        private IEnumerator MeasureRingColor(bool alarm, System.Action<Texture2D, Geo, Color> onMeasured)
+        private IEnumerator MeasureRingColor(bool alarm, System.Action<Texture2D, Geo, Color> onMeasured,
+            System.Action<TopBarController> mutation = null)
         {
             var (topBar, topBarSlot) = BuildScaffold();
+            BuildRendu();
             topBar.SetCitywideHeatBucket(alarm ? "BURNING" : "WARM");
             yield return null;
-            yield return new WaitForEndOfFrame();
+            mutation?.Invoke(topBar);   // D4 : la faute vit sur la SCÈNE, avant la capture
 
-            Geo geo = MeasureGeo(topBar, topBarSlot);
-            Texture2D tex = ScreenCapture.CaptureScreenshotAsTexture();
+            Geo geo = MeasureGeo(rendCam, topBar, topBarSlot);
+            Texture2D tex = Capturer();
+            Texture2D sans = CapturerSansManometre(topBar);
             try
             {
+                GardesInstrument("Oracle1", geo, tex, sans);
                 // Couleur de référence de l'anneau : moyenne de 8 échantillons répartis (évite un
                 // seul point d'AA) au rayon nominal (medallionRadius - épaisseur/2 ≈ bord du trait).
                 float ringR = geo.MedallionRadius - 1.5f;
@@ -357,35 +474,62 @@ namespace MafiaCleanCity.Shell.Tests
                 Color avgRing = new Color(sum.r / n, sum.g / n, sum.b / n);
                 onMeasured(tex, geo, avgRing);
             }
-            finally { Object.Destroy(tex); }
+            finally { Object.Destroy(tex); Object.Destroy(sans); }
+        }
+
+        /// <summary>Les deux prises d'Oracle1 (calme, alarme) : des COPIES de texture, détruites par l'appelant.</summary>
+        private class PriseRing
+        {
+            public Texture2D CalmTex, AlarmTex;
+            public Geo CalmGeo, AlarmGeo;
+            public Color CalmRing, AlarmRing;
+            public void Detruire()
+            {
+                if (CalmTex != null) Object.Destroy(CalmTex);
+                if (AlarmTex != null) Object.Destroy(AlarmTex);
+            }
+        }
+
+        private static Texture2D Copie(Texture2D tex)
+        {
+            var copie = new Texture2D(tex.width, tex.height, TextureFormat.RGBA32, false);
+            copie.SetPixels(tex.GetPixels());
+            copie.Apply();
+            return copie;
+        }
+
+        /// <summary>Capture : calme PUIS alarme (deux scaffolds INDÉPENDANTS, chacun sa propre prise —
+        /// jamais de comparaison entre deux trames d'un même scaffold qui aurait pu dériver).
+        /// `mutationAlarme` ≠ null : la faute n'est posée que sur la scène d'alarme (D4).</summary>
+        private IEnumerator PrendreLesDeuxEtats(PriseRing prise, System.Action<TopBarController> mutationAlarme)
+        {
+            yield return MeasureRingColor(alarm: false, onMeasured: (tex, geo, ring) =>
+            {
+                prise.CalmRing = ring; prise.CalmGeo = geo; prise.CalmTex = Copie(tex);
+            });
+            TearDown();   // caméra, RT et scaffold du calme démontés (la géométrie est déjà en pixels)
+            yield return MeasureRingColor(alarm: true, onMeasured: (tex, geo, ring) =>
+            {
+                prise.AlarmRing = ring; prise.AlarmGeo = geo; prise.AlarmTex = Copie(tex);
+            }, mutationAlarme);
         }
 
         [UnityTest]
         public IEnumerator Oracle1_Ring_UniqueLaitonFamily_On360_CalmAndAlarm_NeverRawDanger()
         {
-            Color calmRing = default, alarmRing = default;
-            Geo calmGeo = default, alarmGeo = default;
-            Texture2D calmTexCopy = null, alarmTexCopy = null;
+            var prise = new PriseRing();
+            yield return PrendreLesDeuxEtats(prise, mutationAlarme: null);
+            try { VerdictRing(prise); }
+            finally { prise.Detruire(); }
+        }
 
-            yield return MeasureRingColor(alarm: false, onMeasured: (tex, geo, ring) =>
-            {
-                calmRing = ring; calmGeo = geo;
-                calmTexCopy = new Texture2D(tex.width, tex.height, TextureFormat.RGBA32, false);
-                calmTexCopy.SetPixels(tex.GetPixels());
-                calmTexCopy.Apply();
-            });
-            // TearDown puis re-boot pour l'état alarme — deux scaffolds INDÉPENDANTS, chacun sa
-            // propre capture (jamais de comparaison entre deux frames d'un même scaffold qui aurait
-            // pu dériver).
-            TearDown();
-            yield return MeasureRingColor(alarm: true, onMeasured: (tex, geo, ring) =>
-            {
-                alarmRing = ring; alarmGeo = geo;
-                alarmTexCopy = new Texture2D(tex.width, tex.height, TextureFormat.RGBA32, false);
-                alarmTexCopy.SetPixels(tex.GetPixels());
-                alarmTexCopy.Apply();
-            });
-
+        /// <summary>Le VERDICT d'Oracle1 : SYNCHRONE, sur des données déjà capturées (un `yield` dans un
+        /// `Assert.Throws` donnerait « aucune exception »). Les mutations l'appellent sur une scène fautive.</summary>
+        private static void VerdictRing(PriseRing prise)
+        {
+            Color calmRing = prise.CalmRing, alarmRing = prise.AlarmRing;
+            Geo calmGeo = prise.CalmGeo, alarmGeo = prise.AlarmGeo;
+            Texture2D calmTexCopy = prise.CalmTex, alarmTexCopy = prise.AlarmTex;
             try
             {
                 // ── propriété 1 : l'anneau RÉAGIT à l'état (sinon "jamais rouge vif" est vide de sens) ──
@@ -629,13 +773,24 @@ namespace MafiaCleanCity.Shell.Tests
         public IEnumerator Oracle3_ArcCoversEveryUpperSector_AbsentInLowerHalf()
         {
             var (topBar, topBarSlot) = BuildScaffold();
+            BuildRendu();
             topBar.SetCitywideHeatBucket("WARM");
             yield return null;
-            yield return new WaitForEndOfFrame();
 
-            Geo geo = MeasureGeo(topBar, topBarSlot);
-            Texture2D tex = ScreenCapture.CaptureScreenshotAsTexture();
+            Geo geo = MeasureGeo(rendCam, topBar, topBarSlot);
+            Texture2D tex = Capturer();
+            Texture2D sans = CapturerSansManometre(topBar);
             try
+            {
+                GardesInstrument("Oracle3", geo, tex, sans);
+                VerdictArc(topBar, geo, tex);
+            }
+            finally { Object.Destroy(tex); Object.Destroy(sans); }
+        }
+
+        /// <summary>Le VERDICT d'Oracle3 : SYNCHRONE (voir `VerdictRing`).</summary>
+        private static void VerdictArc(TopBarController topBar, Geo geo, Texture2D tex)
+        {
             {
                 float arcR = geo.ArcRadius;
 
@@ -781,7 +936,6 @@ namespace MafiaCleanCity.Shell.Tests
                     "couleur de l'arc réel) DOIT être détectée par la sonde du demi-cercle inférieur — sinon le " +
                     "'vide' mesuré plus haut ne prouve rien");
             }
-            finally { Object.Destroy(tex); }
         }
 
         // ══════════════════════════════════════════════════════════════════════════════════════
@@ -823,27 +977,43 @@ namespace MafiaCleanCity.Shell.Tests
             return new Color(sum.r / take, sum.g / take, sum.b / take);
         }
 
+        /// <summary>Le rect de `GaugeValue` en PIXELS de la RT (coins projetés — D2).</summary>
+        private static Rect EcranDeGaugeValue(Camera cam, TopBarController topBar)
+        {
+            Transform gaugeValueT = topBar.transform.Find("Manometre/GaugeValue");
+            Assert.IsNotNull(gaugeValueT, "GaugeValue doit exister sous Manometre");
+            Vector2[] corners = CoinsPx(cam, (RectTransform)gaugeValueT);
+            return new Rect(corners[0].x, corners[0].y, corners[2].x - corners[0].x, corners[1].y - corners[0].y);
+        }
+
+        /// <summary>fond LOCAL : un point sur le cadran, à la même hauteur Y, hors de la boîte de texte.</summary>
+        private static Color FondLocal(Texture2D tex, Geo geo, Rect screenRect)
+            => tex.GetPixel(Mathf.RoundToInt(geo.Cx - screenRect.width), Mathf.RoundToInt(screenRect.center.y));
+
         [UnityTest]
         public IEnumerator Oracle4_CentralText_MeetsMinimumContrast()
         {
             var (topBar, topBarSlot) = BuildScaffold();
+            BuildRendu();
             topBar.SetCitywideHeatBucket("WARM");
             yield return null;
-            yield return new WaitForEndOfFrame();
 
-            Transform gaugeValueT = topBar.transform.Find("Manometre/GaugeValue");
-            Assert.IsNotNull(gaugeValueT, "GaugeValue doit exister sous Manometre");
-            var gvRect = (RectTransform)gaugeValueT;
-            var corners = new Vector3[4];
-            gvRect.GetWorldCorners(corners);
-            var screenRect = new Rect(corners[0].x, corners[0].y, corners[2].x - corners[0].x, corners[1].y - corners[0].y);
-
-            Geo geo = MeasureGeo(topBar, topBarSlot);
-            Texture2D tex = ScreenCapture.CaptureScreenshotAsTexture();
+            Rect screenRect = EcranDeGaugeValue(rendCam, topBar);
+            Geo geo = MeasureGeo(rendCam, topBar, topBarSlot);
+            Texture2D tex = Capturer();
+            Texture2D sans = CapturerSansManometre(topBar);
             try
             {
-                // fond LOCAL : un point sur le cadran, à la même hauteur Y, hors de la boîte de texte.
-                Color localBg = tex.GetPixel(Mathf.RoundToInt(geo.Cx - screenRect.width), Mathf.RoundToInt(screenRect.center.y));
+                GardesInstrument("Oracle4", geo, tex, sans);
+                VerdictContraste(tex, screenRect, FondLocal(tex, geo, screenRect));
+            }
+            finally { Object.Destroy(tex); Object.Destroy(sans); }
+        }
+
+        /// <summary>Le VERDICT d'Oracle4 : SYNCHRONE (voir `VerdictRing`).</summary>
+        private static void VerdictContraste(Texture2D tex, Rect screenRect, Color localBg)
+        {
+            {
                 Color ink = BrightestPixelsAverage(tex, screenRect, 0.10f);
                 float ratio = ContrastRatio(ink, localBg);
 
@@ -870,7 +1040,98 @@ namespace MafiaCleanCity.Shell.Tests
                     $"contraste — trouvé {degradedRatio:F2}, seuil {MinContrastRatio}");
                 Object.Destroy(degraded);
             }
-            finally { Object.Destroy(tex); }
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════════════
+        // D4 — CONTRÔLES DE MUTATION SUR LA SCÈNE. Les contrôles positifs ci-dessus dégradent la
+        // TEXTURE après capture : ils ne voient pas une scène qui rend faux. Ici la FAUTE est posée
+        // sur la scène, capturée, puis le verdict SYNCHRONE doit la refuser — et le MESSAGE de
+        // l'assertion qui rougit doit être celui de l'assertion VISÉE : sinon un autre garde (D3,
+        // anti-vacuité, contrôle positif) aurait rougi pour une autre raison, et le test serait
+        // « rouge pour la mauvaise raison » (ou, pire, vert).
+        // Ces tests PASSENT quand l'assertion visée tombe.
+        // ══════════════════════════════════════════════════════════════════════════════════════
+
+        private static void ExigerRougeParCetteAssertion(System.Action verdict, string phraseVisee)
+        {
+            var ex = Assert.Throws<AssertionException>(() => verdict(),
+                "la scène fautive doit être REFUSÉE par le verdict — il l'a laissée passer");
+            StringAssert.Contains(phraseVisee, ex.Message,
+                "le verdict a rougi, mais PAS par l'assertion visée (« rouge pour la mauvaise raison »)");
+        }
+
+        /// <summary>M1 — `BoitierRing` forcé à `accentDanger` BRUT sous alarme : la propriété 1 (l'anneau
+        /// réagit à l'état) doit PASSER, la propriété 2 (« pas le rouge d'alerte brut ») doit tomber.</summary>
+        [UnityTest]
+        public IEnumerator Mutation_M1_AnneauAlarmeEnDangerBrut_RougitLaProprieteDeux()
+        {
+            var prise = new PriseRing();
+            yield return PrendreLesDeuxEtats(prise, mutationAlarme: topBar =>
+            {
+                Transform ringT = topBar.transform.Find("Manometre/BoitierRing");
+                Assert.IsNotNull(ringT, "BoitierRing doit exister sous Manometre");
+                ringT.GetComponent<Image>().color = DesignTokens.Current.accentDanger;
+            });
+            try { ExigerRougeParCetteAssertion(() => VerdictRing(prise), "trop proche de accentDanger brut"); }
+            finally { prise.Detruire(); }
+        }
+
+        /// <summary>M2 — `ArcTrack` masqué : le fond radial reste, l'ABSENCE de la piste rougit les secteurs
+        /// du demi-cercle supérieur.</summary>
+        [UnityTest]
+        public IEnumerator Mutation_M2_ArcTrackMasque_RougitLesSecteursSuperieurs()
+        {
+            var (topBar, topBarSlot) = BuildScaffold();
+            BuildRendu();
+            topBar.SetCitywideHeatBucket("WARM");
+            yield return null;
+
+            Geo geo = MeasureGeo(rendCam, topBar, topBarSlot);   // mesuré AVANT la faute
+            Transform trackT = topBar.transform.Find("Manometre/ArcTrack");
+            Assert.IsNotNull(trackT, "ArcTrack doit exister sous Manometre");
+            trackT.gameObject.SetActive(false);
+            Texture2D tex = Capturer();
+            Texture2D sans = CapturerSansManometre(topBar);
+            try
+            {
+                GardesInstrument("Mutation_M2", geo, tex, sans);
+                ExigerRougeParCetteAssertion(() => VerdictArc(topBar, geo, tex),
+                    "trou dans l'arc du demi-cercle SUPÉRIEUR");
+            }
+            finally { Object.Destroy(tex); Object.Destroy(sans); }
+        }
+
+        /// <summary>M3 — `GaugeValue` à la couleur du fond local : DEUX passes (le fond local n'est connu
+        /// qu'après une 1ʳᵉ capture). Le contraste minimum doit tomber.</summary>
+        [UnityTest]
+        public IEnumerator Mutation_M3_ValeurALaCouleurDuFond_RougitLeContraste()
+        {
+            var (topBar, topBarSlot) = BuildScaffold();
+            BuildRendu();
+            topBar.SetCitywideHeatBucket("WARM");
+            yield return null;
+
+            Rect screenRect = EcranDeGaugeValue(rendCam, topBar);
+            Geo geo = MeasureGeo(rendCam, topBar, topBarSlot);
+            Texture2D premiere = Capturer();
+            Texture2D sans = CapturerSansManometre(topBar);
+            Texture2D seconde = null;
+            try
+            {
+                GardesInstrument("Mutation_M3", geo, premiere, sans);
+                Color localBg = FondLocal(premiere, geo, screenRect);
+                var texte = topBar.transform.Find("Manometre/GaugeValue").GetComponent<TMPro.TMP_Text>();
+                Assert.IsNotNull(texte, "GaugeValue doit porter un TMP_Text");
+                texte.color = localBg;
+                seconde = Capturer();
+                ExigerRougeParCetteAssertion(() => VerdictContraste(seconde, screenRect, localBg),
+                    "texte illisible");
+            }
+            finally
+            {
+                Object.Destroy(premiere); Object.Destroy(sans);
+                if (seconde != null) Object.Destroy(seconde);
+            }
         }
 
         // ══════════════════════════════════════════════════════════════════════════════════════
