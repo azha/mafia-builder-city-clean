@@ -357,5 +357,45 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.GreaterOrEqual(Contraste(lib.color, papier), 4.5f, "lisible sur le papier du carnet");
             Assert.Less(Contraste(new Color32(0xd9, 0xab, 0x4e, 255), papier), 3f, "contrôle négatif : l'or de la maquette serait illisible ici — l'instrument discrimine");
         }
+
+        // ── TD-882 : la VOIX du lieutenant en pied (`.cn-dit`) — l'EFFET (un texte rendu, de hauteur non nulle, au-dessus du geste), pas le seul paramètre ──
+        [UnityTest]
+        public IEnumerator V1_LaVoixDuPied_DitLeCompte_QuandLeBrouillonPeutPartir_EtSeTaitSinon()
+        {
+            var cibles = CinqCibles();
+            yield return Monter(cibles, e =>
+            {
+                foreach (CibleDuCarnet c in cibles[ComposeurDuCarnet.Entretien].Take(2)) e.Brouillon.Poser(c);
+                e.PoserLeLocuteurPourTest("Lt. Rin");
+                e.FermerLeComposeur();
+            });
+            TextMeshProUGUI voix = ecran.VoixDuPied;
+            Assert.IsNotNull(voix, "la bande basse porte sa ligne de voix");
+            Assert.IsFalse(voix.gameObject.activeSelf, "2 ordres : « partir comme ça » serait faux (il en faut 4) — la voix se tait");
+
+            foreach (CibleDuCarnet c in cibles[ComposeurDuCarnet.Entretien].Skip(2).Take(1)) ecran.Brouillon.Poser(c);
+            ecran.Brouillon.Poser(cibles[ComposeurDuCarnet.Ardoise][0]);
+            ecran.FermerLeComposeur();
+            yield return null; yield return null;
+            Assert.AreEqual(4, ecran.Brouillon.Compte);
+            Assert.IsTrue(voix.gameObject.activeSelf, "4 ordres : la voix parle");
+            Assert.AreEqual("<b>Lt. Rin :</b> <i>\u00ab 4 ordres. On peut en mettre 4 de plus, ou partir comme \u00e7a. \u00bb</i>", voix.text,
+                "le nom SERVI en gras droit, la phrase servie en italique ; `reste` = 8 \u2212 4");
+            Assert.Greater(((RectTransform)voix.transform).rect.height, 1f, "rendue : une hauteur non nulle (un r\u00e9glage valide peut ne produire aucun pixel)");
+            Assert.Greater(voix.preferredHeight, 1f);
+            Transform bas = ecran.GesteDuPied.transform.parent;
+            Assert.AreEqual(bas, voix.transform.parent, "dans la bande basse, avec le geste");
+            Assert.Less(voix.transform.GetSiblingIndex(), ecran.GesteDuPied.transform.GetSiblingIndex(), "AU-DESSUS du geste (`.cn-dit` puis `.cn-geste`)");
+            Assert.Greater(voix.transform.position.y, ecran.GesteDuPied.transform.position.y, "et plus haute \u00e0 l'\u00e9cran");
+
+            ecran.Brouillon.Poser(cibles[ComposeurDuCarnet.Entretien][3]);
+            ecran.FermerLeComposeur();
+            yield return null;
+            StringAssert.Contains("5 ordres. On peut en mettre 3 de plus", voix.text, "5 ordres : la phrase suit le compte");
+
+            ecran.PoserLeLocuteurPourTest(null);
+            yield return null;
+            StringAssert.StartsWith("<i>", voix.text, "roster vide : la voix se dit SANS nom \u2014 jamais un nom invent\u00e9");
+        }
     }
 }
