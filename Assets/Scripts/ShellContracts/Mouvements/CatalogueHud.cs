@@ -180,11 +180,68 @@ namespace MafiaCleanCity.Mouvements
                 Iteration.Fois(1)),   // PAS de `PoseDeReposS` (GD1) : sous `Reduit` un voile gelé à mi-course ne serait pas rendu
             pistes: 1, bloquante: false, hote: Entree.HoteClient);
 
-        /// <summary>Les entrées du HUD, dans l'ordre de déclaration : le chrome, les boucles ambiantes du ①, puis les deux retours d'appui.</summary>
+        // ---- L1 (11/11, design Tools/anim-l1/design-l1.md, ratifié f2) : les trois entrées de PASSAGE. Hôtes existants, 0 Melange, 0 masque.
+        private const float ShellEntreeDureeS = 0.16f, BandeauEntreeDureeS = 0.20f, BasculeCourseDureeS = 0.14f;
+        /// <summary>Le bandeau part 10 UNITÉS au-dessus de son repos (le canal écrit la valeur telle quelle dans `anchoredPosition`, sous `TopBarEchelle` ×≈3,265 :
+        /// 10 × 3,265 × 0,84375 ≈ 27,6 px ÉCRAN — les « 27,6 px » du catalogue ne sont pas l'unité du canal, revue ⊥ B3). Repère Unity : au-dessus = +.</summary>
+        public const float BandeauEntreeDecalageU = 10f;
+
+        /// <summary>L'écran d'un onglet qu'on vient d'ouvrir se découvre (fondu 160 ms, une fois) au lieu de remplacer l'ancien d'un coup. Cible : `ContentSlot`
+        /// (le locataire n'a pas encore de racine : son UI naît au `Start()` suivant). Montages d'ONGLET seulement : une surimpression ne détruit pas l'écran dessous.</summary>
+        public static readonly Entree ShellEntree = new Entree(
+            "shell.entree", TousLesEcrans, "PROPOSE: entrée d'un écran d'onglet (catalogue l.360, amendé 11/11 : cible ContentSlot, onglets seuls)",
+            "On ne se téléporte pas d'une pièce à l'autre : on pousse une porte, et ce qu'il y a derrière se découvre le temps du geste.",
+            Genre.Transition,
+            new MouvementDefini("shell.entree", Genre.Transition, ShellEntreeDureeS,
+                new[]
+                {
+                    new Canal(Propriete.Alpha, Mode.Multiplicatif, new[]
+                    {
+                        new ImageCle(0f, 0f, Aisance.EaseOut),
+                        new ImageCle(1f, 1f, Aisance.Lineaire),
+                    }),
+                },
+                Iteration.Fois(1)),
+            pistes: 1, bloquante: false, hote: Entree.HoteClient);
+
+        public static readonly Entree BandeauEntree = new Entree(
+            "bandeau.entree", TousLesEcrans, "PROPOSE: entrée du bandeau d'annonce (catalogue l.361, amendé 11/11 : canal à 10 unités)",
+            "Une annonce descend de la barre comme un billet qu'on vous passe par-dessus le comptoir : elle arrive, elle n'était pas là.",
+            Genre.Transition,
+            new MouvementDefini("bandeau.entree", Genre.Transition, BandeauEntreeDureeS,
+                new[]
+                {
+                    new Canal(Propriete.TranslationY, Mode.Additif, new[]
+                    {
+                        new ImageCle(0f, BandeauEntreeDecalageU, Aisance.EaseOut),
+                        new ImageCle(1f, 0f, Aisance.Lineaire),
+                    }),
+                    new Canal(Propriete.Alpha, Mode.Multiplicatif, new[]
+                    {
+                        new ImageCle(0f, 0f, Aisance.EaseOut),
+                        new ImageCle(1f, 1f, Aisance.Lineaire),
+                    }),
+                },
+                Iteration.Fois(1)),
+            pistes: 1, bloquante: false, hote: Entree.HoteClient);
+
+        /// <summary>Un interrupteur a une course : le curseur passe d'un bout de la piste à l'autre sous le pouce. Une `Transitionner` `Absolu` de → vers
+        /// (catalogue l.365 amendé 11/11 : `Reglage.Dx` n'est pas appliqué par la régie) ; le contrôleur donne les deux positions d'`anchoredPosition.x`.</summary>
+        public static readonly Entree BasculeCourse = new Entree(
+            "bascule.course", new[] { "⑲", "㉕" }, "PROPOSE: course du curseur d'une bascule (catalogue l.365, amendé 11/11 : Absolu de/vers)",
+            "Un interrupteur a une course : le curseur passe d'un bout de la piste à l'autre sous le pouce, et le laiton de la piste s'allume quand il arrive au bout.",
+            Genre.Transition,
+            new MouvementDefini("bascule.course", Genre.Transition, BasculeCourseDureeS,
+                new[] { new Canal(Propriete.TranslationX, Mode.Absolu, Progres(Aisance.EaseOut)) },
+                Iteration.Fois(1)),
+            pistes: 1, bloquante: false, hote: Entree.HoteClient);
+
+        /// <summary>Les entrées du HUD, dans l'ordre de déclaration : le chrome, les boucles ambiantes du ①, les deux retours d'appui, puis (L1) les trois passages.</summary>
         public static readonly IReadOnlyList<Entree> Entrees = new List<Entree>
         {
             Pouls, Tremble, Gyrophare, FiletVirage, AnneauVirage, AiguilleBalayage, BandeauSortie, Neon, Fumee, Scintillement,
             RetourAppui, RetourAppuiVoile,
+            ShellEntree, BandeauEntree, BasculeCourse,
         }.AsReadOnly();
 
         /// <summary>La courbe de progrès d'une `Transitionner` : 0 → 1, l'aisance sur le segment.</summary>

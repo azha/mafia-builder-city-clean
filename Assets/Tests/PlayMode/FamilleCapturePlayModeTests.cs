@@ -22,6 +22,7 @@ namespace MafiaCleanCity.Shell.Tests
     // du 2026-09-01 avait été prise par un autre chemin, non consigné. Même patron que
     // `CaptureDistrict` / `CaptureReputation`.
     [Category("CaptureFamille")]
+    [MafiaCleanCity.Tests.PhotoSansEntree]
     public class FamilleCapturePlayModeTests
     {
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un

@@ -20,6 +20,7 @@ namespace MafiaCleanCity.Capture.Tests
     // (shell monté, district entré, bâtiments réellement rendus). Le pilotage manuel de l'éditeur
     // s'étant révélé peu fiable (une commande sur deux sans réponse), tout est scripté ici.
     [Category("Capture")]
+    [MafiaCleanCity.Tests.PhotoSansEntree]
     public class VuePrincipaleCapturePlayModeTests
     {
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un

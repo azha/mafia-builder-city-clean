@@ -25,6 +25,7 @@ namespace MafiaCleanCity.Capture.Tests
     // Quand un écran est une LISTE DÉFILANTE dont le contenu déborde À LA RÉSOLUTION DE CAPTURE (mesuré dans le régime de capture, cause 7), une seconde planche `<pas>_bas` le montre défilé jusqu'au bout ; une liste qui ne l'atteint pas rougit le test.
     // Sortie : `MAFIA_PLANCHES_SORTIE` si posée, sinon `Logs/planches-par-ecran/<horodatage>/` — JAMAIS dans `Assets/`. Cible : `MAFIA_PARCOURS_BACK_URL` (mêmes gardes, `CibleDuParcours`).
     // ⚠️ Catégorie PROPRE de la famille capture (`ClichePlanchesParEcran`), hors du filtre MafiaCI ; elle se lance nommément, sur la pile dev, et crée un compte à chaque exécution.
+    [MafiaCleanCity.Tests.PhotoSansEntree]
     public class PlanchesParEcranCapturePlayModeTests
     {
         private const string MotDePasse = "planches-neuf-pw";

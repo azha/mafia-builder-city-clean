@@ -19,6 +19,7 @@ namespace MafiaCleanCity.Tests
     // pas une garde ; il se joue par son nom, jamais par catégorie de CI). Ne vaut que SOUS un périphérique graphique (pas `-nographics`).
     // Compilable sur l'arbre « avant » comme sur l'arbre « après » : il n'emploie que des coutures qui existaient déjà.
     [Category("PhotoBancPlanchesV5")]
+    [MafiaCleanCity.Tests.PhotoSansEntree]
     public class AccueilPlanchesRetourAppuiPlayModeTests
     {
         private static readonly int[][] Resolutions = { new[] { 1080, 1920 }, new[] { 1080, 2400 } };

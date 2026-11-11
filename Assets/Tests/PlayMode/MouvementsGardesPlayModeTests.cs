@@ -45,7 +45,7 @@ namespace MafiaCleanCity.Mouvements.Tests
         {
             // §10/E1 — contrôle POSITIF : G1 G3 G4 G5 G8 G12 G13 sur les sept entrées du chrome, plus (E2a) les trois boucles
             // ambiantes du ① : néon, fumée, scintillement de dette
-            Assert.AreEqual(12, CatalogueHud.Entrees.Count, "10 du chrome et du ① + les deux retours d'appui (E-R2)");
+            Assert.AreEqual(15, CatalogueHud.Entrees.Count, "10 du chrome et du ① + les deux retours d'appui (E-R2) + les trois passages de L1 (shell.entree, bandeau.entree, bascule.course)");
             List<string> v = Gardes.Toutes(CatalogueHud.Entrees, ContexteRendu.Defaut);
             Assert.IsEmpty(v, string.Join("\n", v));
         }
