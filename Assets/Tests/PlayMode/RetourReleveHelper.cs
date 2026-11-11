@@ -165,6 +165,19 @@ namespace MafiaCleanCity.Tests
         /// permet et que le content autorise. Tout se passe dans le MÊME cadrage que la photo (le canvas est à la taille de l'image : en overlay,
         /// la taille de l'écran donnerait une autre géométrie). Rend vrai si le content a bougé : les photos de repos prises avant ne valent plus.
         /// Un bouton sans `ScrollRect` ancêtre, ou déjà entièrement visible, ne provoque aucun défilement (et le premier cas ne rend rien).</summary>
+        /// <summary>Évalue `mesure` DANS le cadre de la photo (canvas en `ScreenSpaceCamera` à la taille l × h, tout restauré ensuite) : la géométrie d'un
+        /// canvas en overlay est celle de l'ÉCRAN du banc, pas celle de l'image (les mises en page diffèrent). Toute mesure de position qui doit
+        /// s'accorder avec les photos passe par ici.</summary>
+        public static T DansLeCadre<T>(Canvas canvas, int largeur, int hauteur, Func<T> mesure)
+        {
+            if (canvas == null) throw new ArgumentNullException(nameof(canvas));
+            using (new Cadrage(canvas, largeur, hauteur))
+            {
+                Canvas.ForceUpdateCanvases();
+                return mesure();
+            }
+        }
+
         public static bool AmenerDansLeCadre(Button b, Canvas canvas, int largeur, int hauteur)
         {
             if (b == null) throw new ArgumentNullException(nameof(b));

@@ -33,6 +33,9 @@ namespace MafiaCleanCity.Tests
         /// `RetourAppui`). Un site n'est « couvert » que par un bouton PRESSABLE jugé : un site non exercé n'est pas prouvé.</summary>
         public string SiteMembre;
         public int SiteLigne;
+        /// <summary>Le `Graphic` étranger (raycastTarget, dessiné AU-DESSUS) qui recouvre le CENTRE du bouton ; nul = atteignable. Un bouton actif que
+        /// personne ne peut toucher est un défaut (ruling f2 11/11) : rouge, jamais neutre.</summary>
+        public string Recouvert;
     }
 
     /// <summary>
@@ -110,7 +113,15 @@ namespace MafiaCleanCity.Tests
                     repos = PhotographierRepos(canvas, largeur, hauteur, regie);
                     reposPris = true;
                 }
-                lignes.Add(Appuyer(ecran, etat, chemin, b, canvas, regie, largeur, hauteur, repos));
+                LigneGp lg = Appuyer(ecran, etat, chemin, b, canvas, regie, largeur, hauteur, repos);
+                string couvreur = RetourReleveHelper.DansLeCadre(canvas, largeur, hauteur, () => Atteignabilite.QuiRecouvreLeCentre(b));   // la géométrie de la PHOTO, pas celle de l'écran du banc
+                if (couvreur != null)
+                {
+                    lg.Recouvert = couvreur;
+                    lg.Verdict = "GP-RECOUVERT : " + ecran + "/" + chemin + " — le centre du bouton est recouvert par « " + couvreur
+                                 + " » (raycastTarget, dessiné au-dessus) : un bouton actif que personne ne peut toucher ni voir";
+                }
+                lignes.Add(lg);
                 if (regie.PistesVivantes != pistesAEntree) ambiance = true;   // le bouton a laissé la régie autrement : le repos partagé n'est plus sûr
             }
             return lignes;
@@ -372,6 +383,67 @@ namespace MafiaCleanCity.Tests
         }
     }
 
+    /// <summary>L'ATTEIGNABILITÉ d'un bouton (ruling f2 11/11) : le centre de son rect est-il recouvert par un `Graphic` ÉTRANGER à raycastTarget,
+    /// dessiné AU-DESSUS (même canvas : plus tard dans la hiérarchie ; autre canvas : `sortingOrder` plus grand) ? Calcul de géométrie, pas de
+    /// rendu, sans `EventSystem`. Étranger = ni dans le sous-arbre du bouton ni un ancêtre. Un `CanvasGroup` qui ne bloque pas les raycasts
+    /// (ou un `Graphic` inactif / désactivé) ne recouvre rien.</summary>
+    public static class Atteignabilite
+    {
+        public static string QuiRecouvreLeCentre(Button b)
+        {
+            var rt = b.transform as RectTransform;
+            if (rt == null) return null;
+            Vector3 monde = rt.TransformPoint(rt.rect.center);
+            Canvas racine = b.GetComponentInParent<Canvas>();
+            if (racine == null) return null;
+            racine = racine.rootCanvas;
+            Graphic[] tous = racine.GetComponentsInChildren<Graphic>(false);
+            int rangDuBouton = IndexDuDernierDuSousArbre(tous, b.transform);
+            if (rangDuBouton < 0) return null;
+            int ordreBouton = b.GetComponentInParent<Canvas>().sortingOrder;
+            string couvreur = null;
+            for (int i = 0; i < tous.Length; i++)
+            {
+                Graphic g = tous[i];
+                if (g == null || !g.raycastTarget || !g.enabled || !g.gameObject.activeInHierarchy) continue;
+                Transform t = g.transform;
+                if (t.IsChildOf(b.transform) || b.transform.IsChildOf(t)) continue;   // son propre sous-arbre, ses ancêtres
+                if (!BloqueLesRaycasts(t)) continue;
+                int ordre = g.canvas != null ? g.canvas.sortingOrder : 0;
+                bool audessus = ordre > ordreBouton || (ordre == ordreBouton && i > rangDuBouton);
+                if (!audessus) continue;
+                Vector3 local = g.rectTransform.InverseTransformPoint(monde);
+                if (!g.rectTransform.rect.Contains(new Vector2(local.x, local.y))) continue;
+                Rect rc = g.rectTransform.rect;
+                couvreur = (g.transform.parent != null ? g.transform.parent.name + "/" + g.name : g.name)
+                           + " [" + g.GetType().Name + " " + Mathf.RoundToInt(rc.width) + "x" + Mathf.RoundToInt(rc.height) + " couleur " + ColorUtility.ToHtmlStringRGBA(g.color) + "]";   // le DERNIER (le plus haut) gagne
+            }
+            return couvreur;
+        }
+
+        private static int IndexDuDernierDuSousArbre(Graphic[] tous, Transform racine)
+        {
+            int dernier = -1;
+            for (int i = 0; i < tous.Length; i++) if (tous[i] != null && tous[i].transform.IsChildOf(racine)) dernier = i;
+            if (dernier >= 0) return dernier;
+            // un bouton sans Graphic dans son sous-arbre : sa place est celle du premier Graphic qui le SUIT dans la hiérarchie
+            for (int i = 0; i < tous.Length; i++)
+                if (tous[i] != null && tous[i].transform.IsChildOf(racine.parent != null ? racine.parent : racine)) return i;
+            return tous.Length > 0 ? 0 : -1;
+        }
+
+        private static bool BloqueLesRaycasts(Transform t)
+        {
+            for (Transform x = t; x != null; x = x.parent)
+            {
+                if (!x.TryGetComponent(out CanvasGroup cg)) continue;
+                if (!cg.blocksRaycasts) return false;
+                if (cg.ignoreParentGroups) break;
+            }
+            return true;
+        }
+    }
+
     /// <summary>La publication du relevé : un journal par écran / état, lisible dans le journal batchmode. `Debug.Log`, JAMAIS
     /// `TestContext.Progress` (il n'atteint pas ce journal).</summary>
     public static class PublicationGp
@@ -401,7 +473,7 @@ namespace MafiaCleanCity.Tests
                 string cle = lignes[i].Ecran + "/" + lignes[i].Etat;
                 if (vus.Contains(cle)) continue;
                 vus.Add(cle);
-                int montes = 0, pressables = 0, nonPressables = 0, sous = 0, plafond = 0, ecarts = 0, rouges = 0;
+                int montes = 0, pressables = 0, nonPressables = 0, sous = 0, plafond = 0, ecarts = 0, rouges = 0, recouverts = 0;
                 for (int k = 0; k < lignes.Count; k++)
                 {
                     LigneGp l = lignes[k];
@@ -411,11 +483,12 @@ namespace MafiaCleanCity.Tests
                     if (l.BasculeSousPlancher) sous++;
                     if (l.BasculeAuPlafond) plafond++;
                     if (l.EcartPredicatPixels) ecarts++;
+                    if (l.Recouvert != null) recouverts++;
                     if (l.Verdict != null) rouges++;
                 }
                 Debug.Log("[GP] " + cle + " : montés " + montes + " · pressables " + pressables + " · non pressables " + nonPressables
                           + " · basculés (sous plancher) " + sous + " · basculés au plafond " + plafond
-                          + " · écarts prédicat↔pixels " + ecarts + " · rouges " + rouges);
+                          + " · écarts prédicat↔pixels " + ecarts + " · recouverts " + recouverts + " · rouges " + rouges);
             }
             for (int i = 0; i < lignes.Count; i++)
             {
