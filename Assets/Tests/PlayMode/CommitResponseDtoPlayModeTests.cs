@@ -92,6 +92,8 @@ namespace MafiaCleanCity.Shell.Tests
             { "hl.after_choice.partial_stop", "Fait pour {n} sur {total} : " },
             { "hl.after_choice.noted", "Rien ne bouge. On en reparlera si ça empire." },
             { "error.hl_card.not_found", "Cette carte n’est plus là." },
+            { "error.hl_card.already_resolved", "C’était déjà tranché" },
+            { "error.hl_card.nothing_to_act_on", "Plus rien à faire sur cette carte." },
         };
 
         private static CommitResponseDto Reponse(string outcome, string cleMot, int faits, string arretId = "", string cleArret = "") => new CommitResponseDto
@@ -285,10 +287,41 @@ namespace MafiaCleanCity.Shell.Tests
                 Assert.AreEqual(ApresGesteHl.EtatDuJeton.Pris, ApresGesteHl.Vue(Ok(d, true), 1, 0, ouverture).Jeton);
                 d.structural = false;
                 Assert.AreEqual(ApresGesteHl.EtatDuJeton.Libre, ApresGesteHl.Vue(Ok(d), 1, 0, ouverture).Jeton, "tactique : le jeton ne bouge pas");
+                // PROVENANCE (f2 11/11) : « pris » vient de `commit.structural` + `commit.committed`, PAS du budget — il se pose même sans budget, et chacune des deux clés compte
+                d.structural = true;
+                Assert.AreEqual(ApresGesteHl.EtatDuJeton.Pris, ApresGesteHl.Vue(Ok(d, true), 1, 0, null).Jeton, "sans budget du tout : `structural` + `committed` suffisent");
+                d.committed = false;
+                Assert.AreEqual(ApresGesteHl.EtatDuJeton.Libre, ApresGesteHl.Vue(Ok(d, true), 1, 0, ouverture).Jeton, "structurelle mais NON `committed` : le jeton ne se prend pas");
+                d.committed = true; d.structural = false;
+                Assert.AreEqual(ApresGesteHl.EtatDuJeton.Libre, ApresGesteHl.Vue(Ok(d, true), 1, 0, null).Jeton, "`committed` sans `structural` (la carte du client dit structurelle, la RÉPONSE non) : la réponse décide");
                 Assert.AreEqual("libre", ApresGesteHl.MotDuJeton(ApresGesteHl.EtatDuJeton.Libre));
                 Assert.AreEqual("pris", ApresGesteHl.MotDuJeton(ApresGesteHl.EtatDuJeton.Pris));
                 Assert.AreEqual("fermée aujourd’hui", ApresGesteHl.MotDuJeton(ApresGesteHl.EtatDuJeton.FermeeAujourdhui));
                 Assert.AreEqual("votre grande décision du jour", ApresGesteHl.PetitTexteDuJeton());
+            }
+            finally { I18nCatalog.Oublier(); }
+        }
+
+        /// <summary>DÉTECTEUR (f2 11/11) du repli transitoire : un VRAI corps de refus (`user_facing_i18n_key`) lu par `RefusServi` (clé + phrase) puis passé à `Vue` — le chemin que `HlCardClient`
+        /// emprunte. Un 409 `already_resolved` SERVI doit rendre « C’était déjà tranché » (cadre 6, pastille, pas de tampon neuf) et JAMAIS « La carte reste sur la table » (cadre 7) ; le même
+        /// 409 avec la clé GÉNÉRIQUE (le back d'avant le lot) tombe, lui, dans le cadre 7 — le CONTRÔLE POSITIF : si ce second cas cessait de se distinguer du premier, le détecteur ne verrait plus rien.</summary>
+        [Test]
+        public void Detecteur_Un409AlreadyResolvedServi_RendDejaTranche_PasLeCadreSept()
+        {
+            try
+            {
+                I18nCatalog.ChargerPourTest("fr", BundleDuDesign());
+                const string servi = "{\"error\":{\"code\":\"HL_CARD_ALREADY_RESOLVED\",\"user_facing_i18n_key\":\"error.hl_card.already_resolved\"}}";
+                const string ancien = "{\"error\":{\"code\":\"RESOURCE_STATE_CONFLICT\",\"user_facing_i18n_key\":\"error.resource.state_conflict\"}}";
+                ApresGesteHl.VueApres v = ApresGesteHl.Vue(new ApresGesteHl.IssueDuGeste { Carte = Carte(), CleDeRefus = RefusServi.Cle(servi), PhraseDeRefus = RefusServi.Phrase(servi) }, 2, 0, null);
+                Assert.AreEqual(ApresGesteHl.Issue.DejaTranchee, v.Issue, "409 already_resolved SERVI : le cadre 6 « déjà tranché »");
+                Assert.AreEqual("C’était déjà tranché", v.Grave);
+                Assert.IsTrue(v.Deja); Assert.IsFalse(v.Tampon); Assert.IsNull(v.Mot);
+                Assert.AreNotEqual("La carte reste sur la table", v.Grave, "jamais le cadre 7 pour un 409 servi");
+
+                ApresGesteHl.VueApres t = ApresGesteHl.Vue(new ApresGesteHl.IssueDuGeste { Carte = Carte(), CleDeRefus = RefusServi.Cle(ancien), PhraseDeRefus = RefusServi.Phrase(ancien) }, 2, 0, null);
+                Assert.AreEqual(ApresGesteHl.Issue.CarteReste, t.Issue, "CONTRÔLE POSITIF : la clé générique d'avant le lot tombe dans le cadre 7 — le détecteur distingue bien les deux");
+                Assert.AreNotEqual(v.Issue, t.Issue);
             }
             finally { I18nCatalog.Oublier(); }
         }
