@@ -56,8 +56,12 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNull(file.TexteSuivante, "file vide : pas de suivante");
         }
 
+        /// <summary>REMPLACE « LesOptionsSontUneRecommandation_JamaisUnBouton » : cette propriété n'était vraie que tant que `commit` ne recevait aucune option (TD-724).
+        /// Cause : le chunk 3 poste `chosen_option` ; les deux options servies SONT désormais les libellés des deux gestes (cadre 5 : « Mettre en réparation »
+        /// / « Laisser en l'état »), chacun en appui long. Garde d'EFFET : les gestes DISENT les options servies, dans l'ordre ; le mot « Prendre acte » du
+        /// client ne revient QUE sans deux options (seul geste, option 1).</summary>
         [Test]
-        public void Etat2_CarteDeTete_LesOptionsSontUneRecommandation_JamaisUnBouton()
+        public void Etat2_CarteDeTete_LesDeuxOptionsSontLesDeuxGestes()
         {
             var hl = Monter<HighestLeverageCardController>();
             var carte = Carte("DAMAGED_BUILDING", "hl.option.damaged_building.repair_via_queue", "hl.option.damaged_building.leave_damaged");
@@ -66,21 +70,22 @@ namespace MafiaCleanCity.Shell.Tests
             string agir = MafiaCleanCity.I18n.Libelle.Gabarit(carte.options[0].label, "—");
             string laisser = MafiaCleanCity.I18n.Libelle.Gabarit(carte.options[1].label, "—");
             CollectionAssert.AreEqual(new[] { agir, laisser }, hl.OptionsRendues.ToList(), "les deux options SERVIES, dans l'ordre");
-            CollectionAssert.DoesNotContain(hl.LibellesDesBoutons.ToList(), agir, "le bouton du tampon ne porte PAS l'option : elle ne fait rien");
-            CollectionAssert.DoesNotContain(hl.LibellesDesBoutons.ToList(), laisser, "aucun bouton ne porte l'option non plus");
-            // Table 45 : le bouton dit ce qu'il FAIT. [Pas maintenant] (= skip) est RETIRÉ (f2 08/10 nuit : un geste mort, la carte restait).
-            CollectionAssert.AreEqual(new[] { MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Prendre acte") },
-                hl.LibellesDesBoutons.ToList(), "[Prendre acte] = commit, seul");
+            CollectionAssert.AreEqual(new[] { agir, laisser }, hl.LibellesDesBoutons.ToList(), "les deux gestes DISENT les deux options : agir d'abord");
+            CollectionAssert.DoesNotContain(hl.LibellesDesBoutons.ToList(), MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Prendre acte"), "pas de mot du client quand deux options sont servies");
             Assert.IsTrue(hl.RenderedTexts.Contains(MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Ce qu’on peut faire")),
                 "le surtitre des options");
-            Assert.IsTrue(hl.TamponVisible, "une carte ordinaire se tamponne");
+            Assert.IsTrue(hl.TamponVisible, "une carte ordinaire se tranche");
             Assert.IsNull(hl.LibelleLire, "pas de [Lire maintenant] hors de la carte des rapports");
 
-            // Pas exactement deux options : aucune recommandation (jamais une moitié de choix).
+            // Pas exactement deux options : jamais une moitié de choix — le SEUL geste « Prendre acte » (option 1 : il n'agit pas).
             var boiteuse = Carte("DAMAGED_BUILDING", "a", "b");
             boiteuse.options = new[] { new DecisionOptionDto { label = "a" } };
             hl.SetPayload(null, boiteuse, null);
             Assert.IsEmpty(hl.OptionsRendues);
+            CollectionAssert.AreEqual(new[] { MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Prendre acte") }, hl.LibellesDesBoutons.ToList(),
+                "sans deux options : le seul geste d'avant, « Prendre acte » (LAISSER, option 1)");
+            Assert.IsFalse(hl.AgirButton.gameObject.activeInHierarchy, "AGIR n'est jamais montré sans option à agir");
+            Assert.AreEqual("PRENDRE ACTE", hl.MotCle, "la saisie dit le mot du seul geste");
         }
 
         /// <summary>④ F1(b) (juge d'ensemble r4, 09/10 ; f2 : élément ABSENT, classe A) — SOUS CHAQUE OPTION de la carte non-rapports, sa CONSÉQUENCE : la clé servie `<label>.projected_consequence`, lue au catalogue (jamais en dur).
@@ -102,9 +107,10 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(phraseA, ca.text, "sous l'option 1 : SA conséquence servie");
             Assert.AreEqual(phraseB, cb.text, "sous l'option 2 : SA conséquence servie");
             Assert.IsTrue(ca.gameObject.activeSelf && cb.gameObject.activeSelf, "les deux conséquences sont montrées");
-            Assert.AreEqual(Texte("Recommandation").transform.parent, ca.transform.parent, "la conséquence est DANS la colonne de son option (dessous)");
-            Assert.Greater(Texte("Recommandation").transform.GetSiblingIndex(), -1);
-            Assert.Less(Texte("Recommandation").transform.GetSiblingIndex(), ca.transform.GetSiblingIndex(), "dessous : après l'option dans la colonne");
+            Assert.AreEqual(ca.transform.parent, cb.transform.parent, "les deux conséquences sont dans UNE rangée (`.csq4-rang`)");
+            Assert.AreEqual(hl.AgirButton.transform.parent.parent, ca.transform.parent.parent, "la rangée des conséquences est dans le verre, comme celle des gestes");
+            Assert.Less(hl.AgirButton.transform.parent.GetSiblingIndex(), ca.transform.parent.GetSiblingIndex(), "dessous : la rangée des conséquences suit celle des gestes");
+            Assert.AreEqual(hl.AgirButton.transform.parent, hl.LaisserButton.transform.parent, "les deux gestes sont côte à côte (`.gestes`)");
             CollectionAssert.IsSupersetOf(hl.RenderedTexts.ToList(), new[] { phraseA, phraseB }, "les conséquences sont des textes rendus (suivis)");
 
             // témoin : clé non servie ⇒ rien (le catalogue ne sert que la conséquence de l'option 1)

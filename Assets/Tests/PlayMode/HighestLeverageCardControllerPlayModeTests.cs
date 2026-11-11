@@ -146,15 +146,23 @@ namespace MafiaCleanCity.Shell.Tests
             yield return ctrl.RequestCommitViaTypedConfirm("nope");
             Assert.AreEqual(0, ctrl.CommitRequestCount, "a WRONG keyword emits zero requests");
 
-            yield return ctrl.RequestCommitViaTypedConfirm(HighestLeverageCardController.MotCle.ToLowerInvariant()); // case-insensitive ; le mot-clé = le libellé du geste (08/10 nuit)
+            yield return ctrl.RequestCommitViaTypedConfirm(ctrl.MotCle.ToLowerInvariant()); // case-insensitive ; le mot-clé = le libellé du geste touché (08/10 nuit ; chunk 3 : SON option)
             Assert.AreEqual(1, ctrl.CommitRequestCount, "the CORRECT keyword routes to RequestCommit() — exactly one request");
             Assert.IsNull(ctrl.LastCommitError, $"commit errored: {ctrl.LastCommitError}");
             Assert.AreEqual(true, ctrl.LastCommitCommitted, "committed through the SAME payload.data path as the long-press trigger");
             // ⛔ GESTE MORT fermé (f2 08/10 nuit) : le commit ACCEPTÉ est annoncé au shell (qui relit l'Accueil) — une fois, aucun refus montré.
             Assert.AreEqual(1, ctrl.DecisionsTranchees, "le commit accepté lève OnDecisionTranchee (le shell relit l'Accueil)");
             Assert.IsNull(ctrl.RefusRendu, "aucun refus après un commit accepté");
+            // L'APRÈS-GESTE (chunk 3) : quand le back SERT le mot (`outcome_i18n_key`), la carte le dit et n'annonce qu'au « Retour à l'accueil » ;
+            // tant qu'il ne le sert pas, elle remonte tout de suite (DecisionsTranchees déjà compté ci-dessus dans les deux cas).
+            if (ctrl.RenderedState == HighestLeverageCardController.CardState.ApresGeste)
+            {
+                Assert.IsFalse(string.IsNullOrWhiteSpace(ctrl.ApresMot), "l'après-geste dit un mot SERVI");
+                Assert.IsTrue(ctrl.RetourVisible, "« Retour à l'accueil » est le seul geste de la carte tranchée");
+                ctrl.SetPayload(token, payload.hl_card, payload.structural_budget);   // la MÊME carte (terminale côté back) : le 409 se teste sur une carte fraîche du client
+            }
             // …et un REFUS se dit : la même carte, déjà tranchée (terminale), rend 409 — la phrase est MONTRÉE, jamais une erreur muette.
-            yield return ctrl.RequestCommitViaTypedConfirm(HighestLeverageCardController.MotCle);
+            yield return ctrl.RequestCommitViaTypedConfirm(ctrl.MotCle);
             Assert.IsNotNull(ctrl.LastCommitError, "précondition : la carte déjà tranchée est refusée par le back (409)");
             Assert.AreEqual(1, ctrl.DecisionsTranchees, "un refus n'annonce AUCUNE décision");
             Assert.IsFalse(string.IsNullOrEmpty(ctrl.RefusRendu), "le refus a une phrase");
@@ -199,9 +207,10 @@ namespace MafiaCleanCity.Shell.Tests
 
             // A SHORT TAP must emit ZERO requests (the long-press gate is not merely decorative).
             Assert.AreEqual(0, ctrl.CommitRequestCount);
-            ctrl.CommitButton.SimulateShortTap();
+            ctrl.LaisserButton.SimulateShortTap();
+            ctrl.AgirButton.SimulateShortTap();
             yield return null;
-            Assert.AreEqual(0, ctrl.CommitRequestCount, "a short tap NEVER emits a commit request");
+            Assert.AreEqual(0, ctrl.CommitRequestCount, "a short tap NEVER emits a commit request (ni sur LAISSER ni sur AGIR)");
 
             // A COMPLETED long press emits EXACTLY one — a REAL request, through payload.data.
             // SimulateCompletedLongPress fires OnLongPressCompleted synchronously, whose listener
@@ -210,7 +219,7 @@ namespace MafiaCleanCity.Shell.Tests
             // return client.Commit(...)`) is already visible right after this call. The REAL HTTP
             // round-trip inside client.Commit is NOT synchronous though — wait for it explicitly
             // (a couple of frames is not enough for an actual network round-trip in batchmode).
-            ctrl.CommitButton.SimulateCompletedLongPress();
+            ctrl.LaisserButton.SimulateCompletedLongPress();   // LAISSER (option 1) : le commit d'avant, déterministe ; AGIR dépense — jouée au créneau contre la pile
             Assert.AreEqual(1, ctrl.CommitRequestCount, "a completed long press emits EXACTLY one commit request (synchronous up to the first yield)");
             float waited = 0f;
             while (ctrl.LastCommitCommitted == null && ctrl.LastCommitError == null && waited < 10f)
@@ -222,7 +231,7 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(true, ctrl.LastCommitCommitted, "commit response.data.committed read through payload.data");
 
             // Firing the SAME completed gesture again must NOT double-count (LongPressButton fires once per press).
-            ctrl.CommitButton.SimulateShortTap(); // a distinct, later gesture — still zero-effect (already committed/terminal card)
+            ctrl.LaisserButton.SimulateShortTap(); // a distinct, later gesture — still zero-effect (already committed/terminal card)
             yield return null;
             Assert.AreEqual(1, ctrl.CommitRequestCount, "a later short tap still emits nothing");
         }
