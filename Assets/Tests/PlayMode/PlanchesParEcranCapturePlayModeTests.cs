@@ -396,9 +396,11 @@ namespace MafiaCleanCity.Capture.Tests
             ecran.Afficher(carte, budget);
             for (int i = 0; i < 10; i++) yield return null;
 
-            CommitResponseDto Reponse(string outcome, string cleMot, int faits) => new CommitResponseDto
+            // `committed` / `structural` comme le back les sert (`hl-card.service.ts`) : `executed` tranche ; `noted` d'une carte consultative NE tranche PAS (l.265, committed=false) ;
+            // `noted` d'une carte structurelle CONSOMME la décision de la session (l.245, committed=true, structural=true).
+            CommitResponseDto Reponse(string outcome, string cleMot, int faits, bool committed = true, bool structural = false) => new CommitResponseDto
             {
-                committed = true, structural = false, outcome = outcome, outcome_i18n_key = cleMot,
+                committed = committed, structural = structural, outcome = outcome, outcome_i18n_key = cleMot,
                 executed_ids = Enumerable.Range(0, faits).Select(i => "t" + i).ToArray(), stopped_at_id = "", stopped_at_i18n_key = "", navigate_ids = new string[0],
             };
             ApresGesteHl.IssueDuGeste Refus(string corps) => new ApresGesteHl.IssueDuGeste { Carte = carte, CleDeRefus = MafiaCleanCity.I18n.RefusServi.Cle(corps), PhraseDeRefus = MafiaCleanCity.I18n.RefusServi.Phrase(corps) };
@@ -408,8 +410,10 @@ namespace MafiaCleanCity.Capture.Tests
             {
                 ("G01", "executed", new ApresGesteHl.IssueDuGeste { Carte = carte, Reponse = Reponse("executed", "hl.outcome.severed_route.executed", 2) }, ApresGesteHl.Issue.Executee,
                     "commit 200 `executed` · 2 cibles faites · clé hl.outcome.severed_route.executed", Ref6),
-                ("G02", "noted", new ApresGesteHl.IssueDuGeste { Carte = carte, Reponse = Reponse("noted", "hl.after_choice.noted", 0) }, ApresGesteHl.Issue.Notee,
-                    "commit 200 `noted` (option « laisser ») · clé hl.after_choice.noted", Ref6),
+                ("G02", "noted", new ApresGesteHl.IssueDuGeste { Carte = carte, Reponse = Reponse("noted", "hl.after_choice.noted", 0, committed: false) }, ApresGesteHl.Issue.Notee,
+                    "commit 200 `noted` (option « laisser », carte consultative : committed=false, rien n'est tranché) · clé hl.after_choice.noted", Ref6),
+                ("G06", "noted_structurelle", new ApresGesteHl.IssueDuGeste { Carte = carte, Reponse = Reponse("noted", "hl.after_choice.noted", 0, committed: true, structural: true) }, ApresGesteHl.Issue.Notee,
+                    "commit 200 `noted` d'une carte STRUCTURELLE (committed=true, structural=true : la décision de la session est consommée, jeton « pris ») · clé hl.after_choice.noted", Ref6),
                 ("G03", "deja_tranchee", Refus(Corps("HL_CARD_ALREADY_RESOLVED", "error.hl_card.already_resolved")), ApresGesteHl.Issue.DejaTranchee,
                     "409 HL_CARD_ALREADY_RESOLVED · clé error.hl_card.already_resolved", Ref6),
                 ("G04", "404_plus_la", Refus(Corps("HL_CARD_NOT_FOUND", "error.hl_card.not_found")), ApresGesteHl.Issue.Disparue,
