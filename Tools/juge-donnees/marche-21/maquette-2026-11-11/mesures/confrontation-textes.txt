@@ -1,0 +1,45 @@
+MOTIF (dans le CONTENU D ECRAN seulement)      cadres
+marche.phrase.bilan_lignes rendu en CHIFFRES   '3 lignes sur 72'            ABSENT
+bilan en LETTRES (dessine)                     'Trois lignes sur soixante-d [101]
+marche.confiance.oui_dire                      'ouï-dire'                   ABSENT
+marche.confiance.recoupe                       'recoupé'                    ABSENT
+marche.confiance.sur (mot nu)                  'sûr'                        [101, 106]
+marche.titre.hors_du_tableau                   'HORS DU TABLEAU'            ABSENT
+marche.titre.voyant_eteint                     'voyant éteint'              ABSENT
+marche.etat.chargement                         'On interroge le tableau'    ABSENT
+marche.etat.echec                              'Le tableau ne répond pas'   ABSENT
+marche.origine.herbe_des_friches               'herbe des friches'          ABSENT
+marche.phrase.bande_low                        'une seule source, jamais re ABSENT
+marche.phrase.bande_high                       'plusieurs des nôtres y ont  ABSENT
+marche.phrase.bande_moderate                   'deux sources concordantes'  [102]
+marche.phrase.case_sans_ligne                  'aucun des nôtres n’a jamais [103]
+marche.phrase.case_ash                         'la poudre grise ne se vend  [146]
+libelle colonne REGION (sans cle)              'genre'                      [104, 105]
+compteur region (sans cle)                     'signaux de région'          [104, 105]
+compteur (sans cle)                            'genres d’endroit'           [104]
+compteur (sans cle)                            'substances'                 [104]
+mur (sans cle)                                 'vous ne dites rien'         [105]
+mur (sans cle)                                 'on ne dit rien'             [105]
+titre bulle ash (sans cle)                     'une ligne qui tient'        ABSENT
+phrase ash en trop (sans cle)                  'Le tableau dit seulement si [146]
+direction MONTE                                'MONTE'                      [104]
+direction TIENT                                'TIENT'                      [104, 146]
+direction DESCEND                              'DESCEND'                    [104]
+
+=== citation exacte : la bulle du cadre 101 ===
+'<i>crick · extrait de racine</i><p>Trois lignes sur soixante-douze. Le reste, <em>personne des nôtres n’y a jamais traité.</em></p>'
+
+=== citation exacte : la bulle du cadre 146 ===
+
+######## RELECTURE CASSE-INSENSIBLE (le CSS .bulle i uppercase) ########
+oui_dire               ouï-dire             ABSENT
+recoupe                recoupé              [102]
+sur (borne mot)        \bsûr\b              ABSENT
+sures                  sûres                [101, 106]
+voyant_eteint          voyant éteint        [103]
+hors du tableau        hors du tableau      ABSENT
+
+######## les <i> de bulle (titre) et <p> (phrase), par cadre ########
+cadre 101
+   <i> : 'crick · extrait de racine'
+   <p> : 'Trois lignes sur soixante-douze. Le reste, personne des nôtres n’y a jamais traité.'

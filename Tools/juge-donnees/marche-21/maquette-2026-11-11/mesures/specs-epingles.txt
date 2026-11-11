@@ -1,0 +1,48 @@
+=== marche_ardoise_enumerateur.engine.spec.ts : les clés épinglées ===
+3:// COUCHE 1 (moteur, no-mock-DB) : `GET /v1/me/market/lanes` rend les lignes de `lane_pricing_state` QUI EXISTENT, ordonnées, bornées au
+9:// LA TABLE EST GLOBALE ET LE SHARD EST CO-TENANT : l'espace contendu n'est pas le joueur, c'est la PAIRE (district_id, substance_type) — 72 pour
+58:/** L'ordre du pgEnum `substance_type` (operational_chain.ts:40) : l'`ASC` SQL d'un enum suit l'ordre de DÉCLARATION. */
+60:const CLES_DE_LIGNE = ['district_id', 'lane_confidence_bucket', 'substance_type'];
+65:interface Ligne { district_id: number; substance_type: string; lane_confidence_bucket: string }
+66:const cle = (l: { district_id?: number; districtId?: number; substance_type?: string; substanceType?: string }): string =>
+67:  `${l.district_id ?? l.districtId}:${l.substance_type ?? l.substanceType}`;
+69:const filtrerReservees = (lanes: Ligne[]): Ligne[] => lanes.filter((l) => reservees.has(cle(l)));
+115:/** `GET /v1/me/market/lanes` : statut, corps brut (pour le mur R2.2) et la liste décodée. */
+116:async function listerLanes(request: Req, token?: string): Promise<{ status: number; raw: string; lanes: Ligne[] }> {
+117:  const res = await request.get(`${BASE_URL}/v1/me/market/lanes`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+119:  let lanes: Ligne[] = [];
+120:  if (res.status() === 200) lanes = (JSON.parse(raw) as { payload: { data: { lanes: Ligne[] } } }).payload.data.lanes;
+121:  return { status: res.status(), raw, lanes };
+124:  const res = await request.get(`${BASE_URL}/v1/me/market/lanes/${p.districtId}/${p.substanceType}`, { headers: { Authorization: `Bearer ${token}` } });
+134:  runsql(`UPDATE lane_pricing_state SET c = ${c} WHERE district_id = ${p.districtId} AND substance_type = '${p.substanceType}';`);
+178:    expect(collisions, 'E-0 : aucun district réservé ne touche l\'union des trois classes d\'écrivains (cliquet daté 2026-11-11, TD-967)').toEqual([]);
+185:    expect(r.status, `GET /v1/me/market/lanes -> 200 (${r.raw.slice(0, 200)})`).toBe(200);
+187:    const miennes = filtrerReservees(r.lanes);
+188:    expect(miennes.map(cle).sort(), 'les quatre paires positives sont dans la liste').toEqual(POSITIVES.map(cle).sort());
+190:    for (const l of r.lanes) {
+191:      expect(Object.keys(l).sort(), `les clés de l'élément ${cle(l)}`).toEqual(CLES_DE_LIGNE);
+192:      expect(BANDES.has(l.lane_confidence_bucket), `bande dans le domaine fermé (${cle(l)} -> ${l.lane_confidence_bucket})`).toBe(true);
+195:    console.log(`[marche-ardoise E-1] cardinal total de la réponse (IMPRIMÉ, jamais épinglé) : ${r.lanes.length} ; réservées vues : ${miennes.length}`);
+198:  test('E-2 — l\'ORDRE servi (restreint aux réservées) est district_id ASC puis substance_type dans l\'ordre du pgEnum — semées À L\'ENVERS', async ({ request }) => {
+203:    expect(semis, 'l\'ordre d\'insertion ≠ l\'ordre attendu').not.toEqual(attendu);
+209:    expect(filtrerReservees(r.lanes).map(cle), 'ordre servi des paires réservées').toEqual(attendu);
+212:  test('E-3 — la VALEUR de lane_confidence_bucket : LOW sous laneCLo, MODERATE entre, HIGH au-dessus de laneCHi (seuils LUS — le bas sur le SERVEUR —, jamais recopiés)', async ({ request }) => {
+234:      const l = r.lanes.find((x) => cle(x) === k);
+236:      expect(l!.lane_confidence_bucket, `c=${t.c} sur ${k} (laneCLo EFFECTIF=${lo}, laneCHi=${hi})`).toBe(t.bande);
+246:    const miennes = filtrerReservees(r.lanes);
+249:      const u = await lireUnitaire(request, token, { districtId: l.district_id, substanceType: l.substance_type });
+251:      expect(u.body, `${cle(l)} : le corps unitaire est égal à l'élément de la liste`).toEqual(l);
+260:    const nAvant = filtrerReservees(avant.lanes).length;
+262:    expect(avant.lanes.some((l) => cle(l) === cle(cibleRetrait)), 'la paire cible est présente avant').toBe(true);
+263:    expect(avant.lanes.some((l) => cle(l) === cle(TEMOIN_NEGATIF)), 'témoin négatif absent avant').toBe(false);
+268:    expect(apres.lanes.some((l) => cle(l) === cle(cibleRetrait)), 'la paire retirée a DISPARU de la liste').toBe(false);
+269:    expect(filtrerReservees(apres.lanes).length, 'les autres positives sont toujours là').toBe(POSITIVES.length - 1);
+270:    expect(apres.lanes.some((l) => cle(l) === cle(TEMOIN_NEGATIF)), 'témoin négatif absent après (robuste par CONSTRUCTION : zéro écrivain)').toBe(false);
+271:    console.log(`[marche-ardoise E-5] réservées avant/après retrait : ${nAvant} -> ${filtrerReservees(apres.lanes).length} ; cardinal total ${avant.lanes.length} -> ${apres.lanes.length}`);
+280:    expect(bas.lanes.find((l) => cle(l) === cle(p))?.lane_confidence_bucket, `c=0 sur ${cle(p)}`).toBe('LOW');
+283:    expect(haut.lanes.find((l) => cle(l) === cle(p))?.lane_confidence_bucket, `c=1 sur ${cle(p)}`).toBe('HIGH');
+
+=== spec i18n des 31 paires ===
+/home/erutheone/project/mafia-lot-mots/tests/e2e/conventions/i18n_staging_pont.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/e2e/operational/recruitment/loyaute_derivee_district.engine.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/unit/i18n/marche_mots_21_unit.spec.ts

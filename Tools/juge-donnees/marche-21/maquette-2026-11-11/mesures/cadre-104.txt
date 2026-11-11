@@ -1,0 +1,252 @@
+######## /home/erutheone/project/mafia-builder-city-clean/Tools/juge-donnees/marche-21/maquette-2026-11-11/mesures/cadre-104.html
+<div class='cadre'
+  <div class='etiquette'
+    | Le tableau de région — six genres d’endroit
+  </div>
+  <div class='tel'
+    <div class='scene district' style='background-position:center 50%;filter:brightness(.24)'
+    </div>
+    <div class='voile-scene'
+    </div>
+    <div class='ecran'
+      <div class='barre'
+        <div class='aile'
+          <span class='lib'
+            | ARGENT
+          </span>
+          <span class='val'
+            | 24 850 €
+          </span>
+        </div>
+        <div class='mano'
+          <svg 
+          </svg> (5 enfants)
+          <span class='val'
+            | Tiède
+          </span>
+          <span class='lib'
+            | CHALEUR
+          </span>
+        </div>
+        <div class='aile droite'
+          <span class='lib'
+            | JOUR 12
+          </span>
+          <span class='val'
+            | Plein jour
+          </span>
+        </div>
+      </div>
+      <div class='panneau'
+        <div class='mar6' style='height:462px'
+          <div class='cerne'
+          </div>
+          <div class='enseigne'
+            <b 
+              | LE MARCHÉ
+            </b>
+            <i 
+              | tableau du Verge d’Or
+            </i>
+          </div>
+          <div class='compteurs'
+            <div class='fen'
+              <b 
+                | 03
+                <span style='color:#8a979c'
+                  | /24
+                </span>
+              </b>
+              <span 
+                | signaux de région
+              </span>
+            </div>
+            <div class='fen'
+              <b 
+                | 06
+              </b>
+              <span 
+                | genres d’endroit
+              </span>
+            </div>
+            <div class='fen'
+              <b 
+                | 04
+              </b>
+              <span 
+                | substances
+              </span>
+            </div>
+          </div>
+          <div class='tablo court'
+            <div class='entete'
+              <span 
+                | genre
+              </span>
+              <span style='color:#f2c96b;border-bottom-color:#f2c96b'
+                | brindle
+              </span>
+              <span style='color:#7fd4d9;border-bottom-color:#7fd4d9'
+                | crick
+              </span>
+              <span style='color:#c9a8e0;border-bottom-color:#c9a8e0'
+                | hush
+              </span>
+              <span style='color:#efe9da;border-bottom-color:#efe9da'
+                | ash
+              </span>
+            </div>
+            <div class='grid' style='grid-template-rows:repeat(6,1fr);gap:4px'
+              <div class='rg'
+                <span class='qn on'
+                  | tidewater
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn on'
+                  | spine
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn on'
+                  | stack
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy on' style="background:#43e0c0;display:flex;align-items:center;justify-content:center;font:700 6px/1 'DejaVu Sans';color:#0b1016;box-shadow:0 0 8px #43e0c088"
+                  | ▲ MONTE
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn on'
+                  | lattice
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn on'
+                  | glass
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy on' style="background:#ff5a4d;display:flex;align-items:center;justify-content:center;font:700 6px/1 'DejaVu Sans';color:#0b1016;box-shadow:0 0 8px #ff5a4d88"
+                  | ▼ DESCEND
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn on'
+                  | verge
+                </span>
+                <div class='vy on' style="background:#ffd23f;display:flex;align-items:center;justify-content:center;font:700 6px/1 'DejaVu Sans';color:#0b1016;box-shadow:0 0 8px #ffd23f88"
+                  | = TIENT
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class='pann'
+            <i 
+              | le tableau de région
+            </i>
+            <b 
+              | Six genres d’endroit, pas dix-huit quartiers
+            </b>
+            <small 
+              | les autres maisons ne parlent pas par quartier : elles parlent par
+              <u 
+                | genre
+              </u>
+              | . Et elles disent une direction, jamais un chiffre.
+            </small>
+          </div>
+          <div class='onglets'
+            <div class='og'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#f2c96b'
+                | brindle
+              </b>
+              <small 
+                | briques
+              </small>
+            </div>
+            <div class='og pris'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#7fd4d9'
+                | crick
+              </b>
+              <small 
+                | cristaux
+              </small>
+            </div>
+            <div class='og'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#c9a8e0'
+                | hush
+              </b>
+              <small 
+                | plaque
+              </small>
+            </div>
+            <div class='og'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#efe9da'
+                | ash
+              </b>
+              <small 
+                | prismes
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,100 @@
+=== isLuxurySubstance : definition ===
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/production/production.projection.service.ts:190:    if (!isLuxurySubstance(substance)) return null; // no purity grade on a non-luxury substance — skip the read.
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/production/production.projection.service.ts:43:  isLuxurySubstance,
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:133:    // — its only sale path is the appointment honor at a Glass venue. ONE registry-derived guard (!isLuxurySubstance):
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:138:      (d) => !isLuxurySubstance(d.substance_type),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:54:import { substanceDescriptor, isLuxurySubstance } from '../substance/substance-config';
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/substance/substance-config.ts:306: * Mirrors the *shape* of `isLuxurySubstance` (a curated set, NOT registry-derived — plant-origin is intrinsic, no
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/substance/substance-config.ts:382:export function isLuxurySubstance(substance: string): substance is ConfiguredSubstanceType {
+
+=== la source (fonction + table des substances) ===
+FICHIER: /home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/substance/substance-config.ts
+298-/** The list of growable (plant-derived) precursor type strings — the grow_house cultivation domain (T2 plant gate). */
+299-export function growablePrecursorTypes(): PrecursorType[] {
+300-  return [...GROWABLE_PRECURSOR_TYPES];
+301-}
+302-
+303-/**
+304- * Whether a precursor type is GROWABLE in a grow_house — i.e. plant-derived (verdant_root_extract / lull_resin /
+305- * glass_lily TRUE; the synthetic Brindle precursors pyralin / thalmite / garnet_salt FALSE; an unknown string FALSE).
+306: * Mirrors the *shape* of `isLuxurySubstance` (a curated set, NOT registry-derived — plant-origin is intrinsic, no
+307- * per-precursor flag exists). The T2 plant action gates the chosen precursor through this (a non-growable
+308- * precursor → 422). DETERMINISTIC, no DB.
+309- */
+310-export function isGrowablePrecursor(precursorType: string): precursorType is PrecursorType {
+311-  return GROWABLE_PRECURSOR_TYPES.has(precursorType as PrecursorType);
+312-}
+313-
+314-/**
+315- * The set of CONFIGURED substances that require a cold chain — the substances whose descriptor has `coldChain=true`
+316- * (Crick today; Brindle is false → excluded). DERIVED from the registry, never a hardcoded literal set (the SAME
+317- * derivation pattern as CONFIGURED_PRECURSOR_TYPES): the cold-chain degrade tick (T5) targets exactly the substances
+318- * the registry flags as cold-chain, so a future cold-chain substance (e.g. a chilled Hush variant) is automatically
+319- * included when its descriptor lands, and Brindle is NEVER included. Computed once at module load (the registry is
+320- * static). Used by ColdChainRepository to scope the set-based degrade SQL to cold-chain substance rows only.
+--
+374-);
+375-
+376-/** The list of luxury-channel substance type strings (registry-derived — Ash today). For the T8 DEALER_SELL skip + honor sale. */
+377-export function luxurySubstanceTypes(): ConfiguredSubstanceType[] {
+378-  return [...LUXURY_SUBSTANCE_TYPES];
+379-}
+380-
+381-/** Whether a substance moves through the luxury channel (registry `luxuryChannel` trait — Ash true, others false). */
+382:export function isLuxurySubstance(substance: string): substance is ConfiguredSubstanceType {
+383-  return LUXURY_SUBSTANCE_TYPES.has(substance as ConfiguredSubstanceType);
+384-}
+385-
+386-/**
+387- * Resolve the precursor a building's operational TYPE sources — the substance whose `buildingType` matches the
+388- * building's operational type, then that substance's `precursorType` (a refinery → crick → verdant_root_extract; a
+389- * lab → brindle → pyralin). Returns null when no shipped substance is produced at that building type (e.g. a generic
+390- * stash — the caller decides the fallback). Used by the per-building precursor projection so the surfaced precursor
+391- * stays registry-driven (never hardcoded pyralin).
+392- */
+393-export function precursorForBuildingType(buildingType: string): PrecursorType | null {
+394-  const descriptor = Object.values(SUBSTANCE_CONFIG).find(
+395-    (d): d is SubstanceDescriptor => d != null && d.buildingType === buildingType,
+396-  );
+
+=== le descripteur : luxury par substance ===
+19:// vector #2), Hush (addiction, vector #2b) and Ash (luxury-channel, vector #2c) — every substance_type enum member has
+26: * `['brindle','crick','hush','ash']`). READ from 09, never redefined (R9.3). All four members now ship a descriptor
+30:export type SubstanceType = 'brindle' | 'crick' | 'hush' | 'ash';
+34: * Ash = vector #2c — the luxury-channel substance).
+36:export type ConfiguredSubstanceType = 'brindle' | 'crick' | 'hush' | 'ash';
+65:  | 'cash_safehouse'
+66:  | 'stash'
+104:   * resolved at T5 from gdd/14 §Operational chain — production `production.hush.addiction_*`).
+108:   * Whether this substance moves through the luxury channel — no dealer-spot / lek selling: the substance is SKIPPED
+110:   * production_secondaries.md §Ash — "luxury-channel logistics"). Brindle/Crick/Hush false. NOT a numeric balance value
+112:   * resolved at their own tasks — gdd/14 `purity.*` / `specialized_lab.*` / `ash.appointment_window_ticks`).
+114:  luxuryChannel: boolean;
+119:   * Brindle/Crick/Hush — they accept no refining passes, so they have no per-pass duration). gdd/14 `production.ash.
+126:   * non-zero refiningPasses on a non-refining substance is rejected). gdd/14 `production.ash.max_refining_passes`.
+144: *   - The categorical fields (coldChain / addiction / luxuryChannel / precursorType / buildingType) are structural
+149: * BRINDLE = the CURRENT M1 constants (substanceTunables.brindle mirrors production-tunables.ts via the SAME env vars +
+151: * cold-chain, no addiction, no luxury-channel. Encoding Brindle here changes NO Brindle behavior — it is the existing
+156: * addiction, no luxury-channel.
+160: * (the distinct Hush trait — sticky NPC demand + selling boost, wired at T5), no luxury-channel. NOT cold-by-nature
+163: * ASH = the luxury-channel substance (gdd/14 §Substances + §Operational chain — production): glass_lily precursor,
+165: * addiction, luxuryChannel TRUE (the distinct Ash trait — no dealer-spot/lek selling; the Ash sale is the appointment
+174:  brindle: {
+177:    cookStageCount: substanceTunables.brindle.cookStages,
+178:    stageDurationTicks: substanceTunables.brindle.cookStageDurationTicks,
+179:    yieldGrams: substanceTunables.brindle.yieldGrams,
+180:    precursorUnitsPerBatch: substanceTunables.brindle.precursorUnitsPerBatch,
+181:    marginMultiplierVsBrindle: substanceTunables.brindle.marginMultiplierVsBrindle,
+184:    luxuryChannel: false,
+186:  crick: {
+189:    cookStageCount: substanceTunables.crick.cookStages,
+190:    stageDurationTicks: substanceTunables.crick.cookStageDurationTicks,
+191:    yieldGrams: substanceTunables.crick.yieldGrams,
+192:    precursorUnitsPerBatch: substanceTunables.crick.precursorUnitsPerBatch,
+193:    marginMultiplierVsBrindle: substanceTunables.crick.marginMultiplierVsBrindle,
+196:    luxuryChannel: false,
+198:  hush: {
+201:    cookStageCount: substanceTunables.hush.cookStages,
+202:    stageDurationTicks: substanceTunables.hush.cookStageDurationTicks,
+203:    yieldGrams: substanceTunables.hush.yieldGrams,
+204:    precursorUnitsPerBatch: substanceTunables.hush.precursorUnitsPerBatch,

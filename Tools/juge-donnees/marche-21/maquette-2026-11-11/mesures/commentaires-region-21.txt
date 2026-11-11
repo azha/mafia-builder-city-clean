@@ -1,0 +1,13 @@
+ * ═══ ㉑ LE MARCHÉ (2026-08-27) ═══
+
+ * SÉRIE 6 · ㉑ LE MARCHÉ (screen_b1) : le tableau du Verge d’Or (backglass). STATIQUE. Générateur : generateur-marche.py + geo_brennar.py (la ville de ③, RÉUTILISÉE). REMPLACE la v2 (catalogue) ET la v3 (table d’admic). Réfutations : juge données 2026-08-25 (5 infos sur 18) + ruling user « ça fait pas très jeu ».
+
+ * ㉑ cadre « Ce qui manque encore » corrigé le 2026-11-11 (demande f2) : L1 (l’énumérateur des lignes) et L3 (les quartiers portent un nom) sont LIVRÉS, ils ne sont plus des maillons manquants. L1 : `GET /v1/me/market/lanes`, market.controller.ts:90 (BACK-3, lot/marche-ardoise-enumerateur, revue ⊥ 49f10ab4 — pas encore sur main). L3 : `nomDeDistrict`, citysim/world/district-names.ts:40 (18 noms), servi par district-interior.controller.ts:50 et player-buildings.controller.ts:45. Restent L2 et L4, inchangés.
+
+##### REGION ASH #####
+ * ═══ ㉑ LE MARCHÉ — LA TUILE ASH (2026-10-07) ═══
+
+ * ㉑ LE MARCHÉ — LA TUILE ASH (2026-10-07) · généré par generateur-marche-ash.py
+
+##### ASIDE region ASH #####
+0

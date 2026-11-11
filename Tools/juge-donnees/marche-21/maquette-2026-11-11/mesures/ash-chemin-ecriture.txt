@@ -1,0 +1,64 @@
+=== selling-sell.service.ts:200-230 (le site d appel) ===
+      // Counts NPC customer refusals via MarketService.recordRefusal(). Flagged D1c residual (not implemented here).
+      const substanceType = d.substance_type as SubstanceTypeValue;
+
+      // C6 BLOCKING A1 FIX: get the REALISED (scattered) price BEFORE calling processDealAttempt.
+      // scatter = ±W·(1−c) via deterministic RNG (getRealisedPriceCents, C6 fix).
+      // When c=1.0: scatter=0 → realised = p_cents exactly.
+      // When no lane row exists yet: returns modalPCentsSeed=2500 with zero scatter (fresh lane guard —
+      //   preserves the 13 selling E2E tests: float delta = DEAL_GRAMS × 2500 on fresh lanes).
+      const realisedLanePriceCents = await this.laneCollapse.getRealisedPriceCents(
+        d.district_id,
+        substanceType,
+        ctx.gameMinute,
+      );
+
+      // The priceDealt for processDealAttempt is ALWAYS the modal p_cents (in-lane deal → c rises).
+      // We use getLanePriceForDeal to get p_cents; the c update uses p_cents, NOT the scattered price.
+      const modalLanePriceCents = await this.getLanePriceForDeal(d.district_id, substanceType, brindleBaseValuePerGram);
+      await this.laneCollapse.processDealAttempt(
+        d.district_id,
+        substanceType,
+        modalLanePriceCents, // priceDealt = modal p_cents → in-lane → c ← c + α·(1−c)
+      );
+
+      // Realized price per gram = scattered realised price × the substance's margin multiplier.
+      // C6 A1: realisedLanePriceCents replaces the flat laneRow.p_cents used before this fix.
+      const lanePricePerGram = Math.max(0, realisedLanePriceCents);
+      const valuePerGram = Math.max(0, Math.round(lanePricePerGram * descriptor.marginMultiplierVsBrindle));
+
+      // ADDICTION BOOST: a Hush (addiction=true) DEPENDENT dealer-spot sells at rate × loyalty_boost_multiplier (=2);
+      // below DEPENDENT (and for any non-addiction substance) the boost is 1× (the base rate — behavior-preserving).
+      // The boost factor is read from the spot's score AT THE START of the tick (the Map above).
+      const boost =
+        descriptor.addiction === true
+
+=== d ou vient substance_type cote selling ? ===
+138:      (d) => !isLuxurySubstance(d.substance_type),
+158:          .filter((d) => substanceDescriptor(d.substance_type)?.addiction === true)
+175:      const descriptor = substanceDescriptor(d.substance_type);
+201:      const substanceType = d.substance_type as SubstanceTypeValue;
+210:        substanceType,
+216:      const modalLanePriceCents = await this.getLanePriceForDeal(d.district_id, substanceType, brindleBaseValuePerGram);
+219:        substanceType,
+244:        substance_type: d.substance_type,
+291:    // 04d-C C6 FIX C4 MINOR-1 — dedup emit by (substance_type, district_id) BEFORE Promise.all.
+298:    // Fix: dedup by (substance_type, district_id) first. Keep the first occurrence per unique key
+305:      // Build a dedup map: key=(substance_type:district_id) → { substance, districtId, priceCents }
+312:        const key = `${m.substance_type}:${d.district_id}`;
+315:            substance:  m.substance_type,
+343:          .filter((m) => m.grams_sold > 0 && substanceDescriptor(m.substance_type)?.addiction === true)
+403:   * Fetch (or seed) the current modal lane price p_cents for a (districtId, substanceType) pair.
+414:    substanceType: SubstanceTypeValue,
+418:    await this.laneCollapse.ensureLane(districtId, substanceType);
+420:    const row = await this.laneCollapse.getLaneRow(districtId, substanceType);
+
+=== une garde qui exclut ash cote selling / dealer ? ===
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling.projection.service.ts:265:      case 'ash':
+--- ash ailleurs dans le flux vente/stockage ---
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/plan-depot.ts:13:// — a TRANSPORT effect: it scales what is carried, never what is left): the cash is debited `D_brut`, the safehouse
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling.controller.ts:153:   * entry per dealer with an activity band + a cash band — NEVER the raw float / tile / grams. Requires a PLAYER JWT.
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling.service.ts:62:    // System 9 (Erlang Stash) — CONSUMED for the occupation/blocking read (never reimplemented). Its module exports
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling.repository.ts:567:        if (plan.kind !== 'ok') return plan; // cash_empty | safehouse_full — decided before ANY write.
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling.projection.service.ts:5://             never the raw cents) + §How a deal works (the cash float dealer.float_cents — internal) +
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling.projection.service.ts:103:  /** The qualitative cash-float band (NONE / LOW / MODERATE / HIGH / FULL — never the raw float cents; R2.2). */
