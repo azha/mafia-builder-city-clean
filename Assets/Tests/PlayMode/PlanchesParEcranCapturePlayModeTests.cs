@@ -367,10 +367,16 @@ namespace MafiaCleanCity.Capture.Tests
             options = new[] { new DecisionOptionDto { label = "hl.option.severed_route.reroute_now" }, new DecisionOptionDto { label = "hl.option.severed_route.leave_severed" } },
         };
 
+        /// <summary>Le toast `BandeauEphemere` (5 s) d'un test précédent (A01 : « Lt. Kane attend vos ordres ») survivait sur H01 et contredisait « Aucune exception en attente » : effacé avant chaque cliché, comme `Photographier`.</summary>
+        private static void EffacerLesToasts()
+        {
+            foreach (BandeauEphemere b in UnityEngine.Object.FindObjectsByType<BandeauEphemere>(FindObjectsSortMode.None)) b.Effacer();
+        }
+
         private static string Corps(string code, string cle) => "{\"error\":{\"code\":\"" + code + "\",\"user_facing_i18n_key\":\"" + cle + "\"}}";
 
         [UnityTest]
-        [Category("ClichePlanchesParEcran")]
+        [Category("ClicheApresGeste")]
         [Timeout(900000)]
         public IEnumerator Planches_ApresGeste_CinqIssues_Cadres6Et7()
         {
@@ -421,6 +427,8 @@ namespace MafiaCleanCity.Capture.Tests
                 }
                 ecran.AfficherApresGeste(carte, vue);
                 for (int i = 0; i < 20; i++) yield return null;
+                EffacerLesToasts();
+                yield return null;
                 if (!ecran.EnApres || ecran.GraveRendu != vue.Grave || ecran.MotOrRendu != vue.Mot)
                 {
                     Noter(pas, "⑤ après-geste " + nom, $"ÉCHEC : ⑤ ne rend pas la vue (EnApres={ecran.EnApres}, grave=«{ecran.GraveRendu}», mot=«{ecran.MotOrRendu}»)", reference);
@@ -437,7 +445,7 @@ namespace MafiaCleanCity.Capture.Tests
         /// <summary>④ cadre 5 — la carte de tête AVEC SES DEUX GESTES (agir / laisser), montée sur l'Accueil par le vrai shell (session fabriquée : un compte neuf n'a pas de carte de tête servie),
         /// les libellés des options sont ceux du bundle SERVI (`hl.option.severed_route.*`). Même signature que ⑤.</summary>
         [UnityTest]
-        [Category("ClichePlanchesParEcran")]
+        [Category("ClicheApresGeste")]
         [Timeout(600000)]
         public IEnumerator Planche_AccueilTete_Cadre5_DeuxGestes_Signee()
         {
@@ -470,6 +478,8 @@ namespace MafiaCleanCity.Capture.Tests
                 Assert.Fail("④ cadre 5 non monté : rien n'a été photographié");
             }
             for (int i = 0; i < 10; i++) yield return null;
+            EffacerLesToasts();
+            yield return null;
             foreach ((int largeur, int hauteur) in Resolutions)
                 yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"H01_AccueilTete_Cadre5_{signature}_{largeur}x{hauteur}.png"), true, null);
             Noter("H01", "④ cadre 5", $"HighestLeverageCardController · carte SEVERED_ROUTE_REBUILD FABRIQUÉE (session fabriquée, 2 options) · gestes=«{string.Join(" | ", tete.LibellesDesBoutons)}» · options=«{string.Join(" | ", tete.OptionsRendues)}» · compte neuf, bundle SERVI", Ref);
