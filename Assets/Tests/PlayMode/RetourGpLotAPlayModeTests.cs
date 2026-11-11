@@ -181,7 +181,7 @@ namespace MafiaCleanCity.Tests
         };
 
         // Montage SYNCHRONE : `Start` (qui chargerait les districts par le réseau) ne tourne jamais, l'hôte est détruit avant la première image.
-        private CityMapController MonterCarte(out Canvas canvas)
+        private CityMapController MonterCarte(out Canvas canvas, bool repliEnColonnes = false)
         {
             var hote = new GameObject("CarteGp");
             montes.Add(hote);
@@ -189,7 +189,7 @@ namespace MafiaCleanCity.Tests
             carte.MonterPourTest(new List<DistrictDto>
             {
                 District(1, "Tidewater-1", "Le Port"), District(2, "Tidewater-2", "Marne-Basse"), District(3, "Tidewater-3", "Les Friches"),
-            });
+            }, repliEnColonnes);
             canvas = hote.GetComponentInChildren<Canvas>(true).rootCanvas;
             return carte;
         }
@@ -225,6 +225,44 @@ namespace MafiaCleanCity.Tests
             }
             finally { DetruireMontes(); }
             Verifier("CityMap/détail ouvert", lignes);
+            yield break;
+        }
+
+        // le REPLI en deux colonnes (`BuildListeEnColonnes`, sans ville peinte) : c'est là que vit `BuildCell` (CityMapController:690) — la couture
+        // `MonterPourTest(…, repliEnColonnes: true)` le monte même quand les assets de la ville peinte existent
+        [UnityTest]
+        public IEnumerator GP_CityMap_ListeEnColonnes_SansVillePeinte()
+        {
+            List<LigneGp> lignes;
+            try
+            {
+                CityMapController carte = MonterCarte(out Canvas canvas, repliEnColonnes: true);
+                Assert.IsFalse(carte.VillePeinteMontee, "précondition : le repli en colonnes est monté, pas la ville peinte");
+                lignes = RetourGpReleve.Relever("CityMap", "liste en colonnes", canvas.gameObject, canvas, regie, LargeurEcran, HauteurEcran);
+            }
+            finally { DetruireMontes(); }
+            Verifier("CityMap/liste en colonnes", lignes);
+            yield break;
+        }
+
+        // « Entrer » (CityMapController:1069) n'est pressable qu'avec une session : `PoserUneSessionPourTest` la FEINT (aucun jeton, aucune requête)
+        [UnityTest]
+        public IEnumerator GP_CityMap_PanneauDeDetail_SessionFactice()
+        {
+            List<LigneGp> lignes;
+            try
+            {
+                CityMapController carte = MonterCarte(out Canvas canvas);
+                carte.SelectDistrict(1);
+                carte.PoserUneSessionPourTest();
+                Transform panneau = canvas.transform.Find(NomPanneauDetail);
+                Assert.IsNotNull(panneau, "le panneau de détail (" + NomPanneauDetail + ") est sous le canvas");
+                Assert.IsTrue(panneau.gameObject.activeSelf, "précondition : SelectDistrict a ouvert le panneau");
+                lignes = RetourGpReleve.Relever("CityMap", "détail ouvert, session factice", panneau.gameObject, canvas, regie, LargeurEcran, HauteurEcran);
+                Assert.IsTrue(lignes.Any(l => l.Chemin.EndsWith("/EnterButton") && l.Pressable), "précondition : « Entrer » est pressable avec la session factice");
+            }
+            finally { DetruireMontes(); }
+            Verifier("CityMap/détail ouvert, session factice", lignes);
             yield break;
         }
 

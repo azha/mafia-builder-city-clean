@@ -61,6 +61,16 @@ namespace MafiaCleanCity.CityMap
         private RectTransform northContent;
         private RectTransform southContent;
         private TextMeshProUGUI toggleLabel;
+        private GameObject piedRoot;
+        private bool piedMasque;
+
+        /// <summary>À l'Accueil (Empire = la carte), le pied de la ville peinte (bascule « Chaleur : … ») tombe SOUS la plaque de la file : un
+        /// bouton actif, ni visible ni atteignable ; la maquette ne le montre pas. Le shell le masque (appelable AVANT `Start`, qui bâtit la mise en page).</summary>
+        public void MasquerLePiedALAccueil()
+        {
+            piedMasque = true;
+            if (piedRoot != null) piedRoot.SetActive(false);
+        }
         private TMP_FontAsset font;
 
         private GameObject detailPanel;
@@ -247,6 +257,14 @@ namespace MafiaCleanCity.CityMap
             IsAuthenticated = !string.IsNullOrEmpty(token);
         }
 
+        /// <summary>Crochet de test (GP) : une session FACTICE — `IsAuthenticated` vrai sans jeton ni requête, puis le même rafraîchissement de « Entrer » que
+        /// la prod (§3.2). Ne lance aucune coroutine ; ne prouve jamais qu'une authentification réussit.</summary>
+        public void PoserUneSessionPourTest()
+        {
+            IsAuthenticated = true;
+            RefreshEnterInteractable();
+        }
+
         /// <summary>Fetch the heat projection for every district and badge each cell.</summary>
         public IEnumerator LoadHeat()
         {
@@ -328,8 +346,13 @@ namespace MafiaCleanCity.CityMap
         }
 
         /// <summary>Test HORS RÉSEAU : bâtit l'écran et pose les districts donnés, sans `Start` ni requête.</summary>
-        public void MonterPourTest(List<DistrictDto> districts)
+        /// <summary>Crochet de test (GP) : `repliEnColonnes` monte la liste en deux colonnes (le repli sans ville peinte, où vit `BuildCell`) même quand les
+        /// assets de la ville peinte existent. Faux par défaut : le chemin de prod et les tests existants sont inchangés.</summary>
+        private bool repliEnColonnesPourTest;
+
+        public void MonterPourTest(List<DistrictDto> districts, bool repliEnColonnes = false)
         {
+            repliEnColonnesPourTest = repliEnColonnes;
             font = DesignTokens.Current.primaryFont;
             BuildLayout();
             ClearCells();
@@ -428,7 +451,7 @@ namespace MafiaCleanCity.CityMap
 
             Sprite peinture = Resources.Load<Sprite>(CheminPeinture);
             TextAsset ancresJson = Resources.Load<TextAsset>(CheminAncres);
-            if (peinture != null && ancresJson != null)
+            if (!repliEnColonnesPourTest && peinture != null && ancresJson != null)
             {
                 BuildVillePeinte(root.transform, peinture, ancresJson);
             }
@@ -496,6 +519,8 @@ namespace MafiaCleanCity.CityMap
             hlg.childForceExpandWidth = false;
             hlg.childForceExpandHeight = false;
             BuildToggleButton(pied.transform);
+            piedRoot = pied;
+            if (piedMasque) pied.SetActive(false);
             // ⛔ PLUS DE LÉGENDE À PASTILLES SUR LA VILLE PEINTE (F6). Le juge ⊥ l'a mesurée comme
             // les SEULS aplats saturés de l'écran — (242,189,49), (61,178,86), (209,66,66) — sur un
             // écran dont la palette dominante plafonne à (85,87,77), et texte en blanc PUR

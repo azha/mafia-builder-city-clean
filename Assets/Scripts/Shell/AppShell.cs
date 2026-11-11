@@ -311,7 +311,11 @@ namespace MafiaCleanCity.Shell
                 case Tab.Empire:
                     MountTenant<CityMapController>();
                     CityMapController cityMap = MountedTenantGameObject.GetComponent<CityMapController>();
-                    if (cityMap != null) cityMap.OnEnterDistrict += EnterDistrict; // §3.3 — subscribed at mount time
+                    if (cityMap != null)
+                    {
+                        cityMap.OnEnterDistrict += EnterDistrict; // §3.3 — subscribed at mount time
+                        cityMap.MasquerLePiedALAccueil();         // GP (11/11) : le toggle Chaleur est sous la plaque de la file, hors maquette
+                    }
                     break;
                 case Tab.Org: MountTenant<LieutenantScreenController>(); break;
                 case Tab.Pipeline: MountTenant<FiliereScreenController>(); break;   // ㊵ porte la filière (ruling de f2, 2026-09-23) ; ⑪ et ⑫ sortent du chemin joueur
