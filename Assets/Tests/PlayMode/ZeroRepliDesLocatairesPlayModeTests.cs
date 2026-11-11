@@ -97,6 +97,42 @@ namespace MafiaCleanCity.Operational.Tests
             "appro.cout.on_ne_sait_pas_encore_combien",
             "appro.etiquette.en_entretien", "appro.titre.les_routes",
             "appro.etat.active", "appro.etat.saturated", "appro.etat.severed", "appro.etat.en_reconstruction",
+            // ㉑ LE MARCHÉ (CLIENT-1, 11/11 ; TD-1017 BASCULÉE) : les 31 clés `marche.*` SERVIES par BACK-3 sous leurs noms FIGÉS (`lot/marche-mots` @163402f1,
+            // recopiées de string_table.ts à ce SHA, V15) — NON servies sur le back `main` tant que ce lot n'y est pas fusionné : la règle (2) rougira le jour
+            // où la pile les sert ⇒ les retirer alors. + l'entrée du menu Plus (non servie).
+            "marche.colonne.quartier",
+            "marche.compteur.lignes_connues",
+            "marche.compteur.quartiers_noirs",
+            "marche.compteur.sures",
+            "marche.confiance.oui_dire",
+            "marche.confiance.recoupe",
+            "marche.confiance.sur",
+            "marche.etat.chargement",
+            "marche.etat.echec",
+            "marche.forme.briques",
+            "marche.forme.cristaux",
+            "marche.forme.plaque",
+            "marche.forme.prismes",
+            "marche.origine.extrait_de_racine",
+            "marche.origine.herbe_des_friches",
+            "marche.origine.lys_de_verre",
+            "marche.origine.resine_de_lull",
+            "marche.phrase.bande_high",
+            "marche.phrase.bande_low",
+            "marche.phrase.bande_moderate",
+            "marche.phrase.bilan_lignes",
+            "marche.phrase.case_ash",
+            "marche.phrase.case_sans_ligne",
+            "marche.sous_titre.tableau_du_verge_d_or",
+            "marche.substance.ash",
+            "marche.substance.brindle",
+            "marche.substance.crick",
+            "marche.substance.hush",
+            "marche.titre.hors_du_tableau",
+            "marche.titre.le_marche",
+            "marche.titre.voyant_eteint",
+            "plus.entree.le_marche",
+
 
 
 
@@ -152,6 +188,8 @@ namespace MafiaCleanCity.Operational.Tests
             // l'exclusion « aucun site Libelle » était PÉRIMÉE ; la garde doit maintenant les voir à 0 repli sur la pile.
             ("PrecinctScreenController",         s => s.MonterLocataireEnSurimpression<MafiaCleanCity.CitySim.Precinct.PrecinctScreenController>()),
             ("SellingScreenController",          s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Selling.SellingScreenController>()),
+            // ㉑ (CLIENT-1, 11/11) : MESURÉ — tous ses mots passent par `Libelle` ; tant que BACK-3 ne les sert pas, ses replis sont dans la DetteDatee ci-dessus.
+            ("MarcheScreenController",           s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Marche.MarcheScreenController>()),
             // MESURÉ depuis le 2026-09-23 : ses 7 clés `tutoriel.ecran.*` sont servies à e7f52351 (7/7) — l'épingle de son exclusion
             // datée était devenue PÉRIMÉE, comme elle le prévoyait.
             ("TutorialScreenController",         s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Onboarding.TutorialScreenController>()),
