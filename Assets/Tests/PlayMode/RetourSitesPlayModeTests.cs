@@ -151,6 +151,17 @@ namespace MafiaCleanCity.Tests
             Assert.Less(chrono.ElapsedMilliseconds, 1000, "le scan d'une ligne de 60 mots sans parenthèse a pris " + chrono.ElapsedMilliseconds + " ms");
         }
 
+        // La ligne de continuation d'un ternaire ne vole pas le membre : `? Autre(row)` avant l'appel (cas réel : LieutenantScreenController:2847).
+        [Test]
+        public void Scan_LigneDeContinuationDUnTernaire_NeVolePasLeMembre()
+        {
+            string source = "class C\n{\n    private void BuildSlot(int a, string b)\n    {\n        string t = ok\n            ? Autre(b)\n            : Ailleurs(b);\n"
+                          + "        if (ok)\n        {\n            Retour.NouveauBouton(h);\n        }\n    }\n}\n";
+            List<Retour.SiteBouton> sites = Retour.ScanSitesDeNouveauBouton(source);
+            Assert.AreEqual(1, sites.Count);
+            Assert.AreEqual("BuildSlot", sites[0].Membre, "le membre est la déclaration, jamais la ligne `? Autre(b)`");
+        }
+
         [Test]
         public void Inventaire_ArbreReel_69Sites_ChacunUnMembre_EtUniqueParMembreEtLigne()
         {

@@ -264,9 +264,12 @@ namespace MafiaCleanCity.Shell
                 {
                     string l = lignes[k];
                     if (l.TrimEnd().EndsWith(";", StringComparison.Ordinal) || l.IndexOf('=') >= 0 && l.IndexOf('=') < l.IndexOf('(')) continue;
+                    string premier = l.TrimStart();
+                    // une ligne de CONTINUATION (`? a(x)` / `: b(y)` d'un ternaire) n'est jamais une déclaration : `?` est dans la classe des types, donc
+                    // `? TexteDuCuisinierAuRepos(row)` se lisait « type ? nom( » et volait le membre de LieutenantScreenController:2847 (GP, 11/11)
+                    if (premier.StartsWith("?", StringComparison.Ordinal) || premier.StartsWith(":", StringComparison.Ordinal)) continue;
                     Match d = MotifMembre.Match(l);
                     if (!d.Success) continue;
-                    string premier = l.TrimStart();
                     bool controle = false;
                     for (int c = 0; c < MotsDeControle.Length && !controle; c++)
                         controle = premier.StartsWith(MotsDeControle[c] + " ", StringComparison.Ordinal) || premier.StartsWith(MotsDeControle[c] + "(", StringComparison.Ordinal);
