@@ -239,8 +239,8 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(0, tete.NavigationsSuivies, "aucune navigation sur un refus");
             for (int f = 0; f < 4; f++) yield return null;
 
+            Assert.AreEqual(1, Montes<AutonomyInboxController>(), "EFFET : les rapports sont montés QUAND MÊME (le joueur a demandé à lire), une fois");
             AutonomyInboxController boite = shell.ContentSlot.GetComponentsInChildren<AutonomyInboxController>(false).LastOrDefault();
-            Assert.IsNotNull(boite, "EFFET : les rapports sont montés QUAND MÊME (le joueur a demandé à lire)");
             Assert.AreEqual(tete.ClientPourTest.DernierePhraseDeRefus, boite.PhraseDuRefus, "la phrase SERVIE du refus est annoncée aux rapports");
             Assert.AreEqual(0, Montes<DecisionDetailScreenController>(), "jamais la table feutre de ⑤ sous les rapports (deux écrans pour un geste)");
         }
@@ -258,10 +258,32 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotNull(tete.RefusRendu, "anti-vacuité : la carte, elle, a retombé sur sa phrase (la phrase qui ne DOIT PAS passer aux rapports)");
             for (int f = 0; f < 4; f++) yield return null;
 
+            Assert.AreEqual(1, Montes<AutonomyInboxController>(), "les rapports s'ouvrent quand même, une fois");
             AutonomyInboxController boite = shell.ContentSlot.GetComponentsInChildren<AutonomyInboxController>(false).LastOrDefault();
-            Assert.IsNotNull(boite, "les rapports s'ouvrent quand même");
             Assert.IsNull(boite.PhraseDuRefus, "refus MUET : aucune phrase annoncée — jamais la phrase de repli du client");
             Assert.AreNotEqual(tete.RefusRendu, boite.PhraseDuRefus);
+        }
+
+        /// <summary>G5 (d) — revue ⊥ du code (IMPORTANT) : une décision ACCEPTÉE qui n'est PAS `navigate` a déjà sa suite (`TrancheePourDeBon`) ; le repli
+        /// de [Lire maintenant] ne monte PAS les rapports en plus (deux écrans pour un geste). Inatteignable au back @35bdd6cb (104 : option 0 ⇒ toujours
+        /// `navigate`) : garde DÉFENSIVE du repli, pas un scénario de jeu.</summary>
+        [UnityTest]
+        public IEnumerator G5d_LireMaintenant_AccepteeSansNavigation_LeRepliNeMontePasLesRapportsEnPlus()
+        {
+            yield return MonterLeShellAvecUneCarte("AppShell_G5d", "AUTONOMY_REPORTS_PENDING");
+            HighestLeverageCardController tete = Tete();
+            Assert.IsTrue(tete != null && tete.EstCarteDesRapports, "précondition : la carte des RAPPORTS est montrée");
+            tete.ClientPourTest.ReponsePourTest = _ => (200, CorpsNavigation("autonomy_reports").Replace("\"navigate\",", "\"noted\",").Replace("\"autonomy_reports\"", "null"));
+            int relectures = shell.RelecturesApresDecision;
+
+            yield return tete.LireLesRapports();
+            Assert.AreEqual(true, tete.LastCommitCommitted, "précondition : la décision est ACCEPTÉE");
+            Assert.AreEqual("noted", tete.DerniereReponse != null ? tete.DerniereReponse.outcome : null, "précondition : la réponse n'est pas une navigation");
+            Assert.IsFalse(tete.RapportsOuverts, "le repli ne monte PAS les rapports sur une décision acceptée");
+            yield return AttendreQue(() => shell.RelecturesApresDecision > relectures);
+            Assert.AreEqual(relectures + 1, shell.RelecturesApresDecision, "la suite de la décision acceptée a eu lieu (l'Accueil est relu)");
+            for (int f = 0; f < 4; f++) yield return null;
+            Assert.AreEqual(0, Montes<AutonomyInboxController>(), "aucun écran des rapports en plus");
         }
 
         /// <summary>G5 (c) — l'EFFET du puits : la phrase annoncée AVANT le premier rendu est dans la ligne `Error` du MÊME `Render()` qu'un chargement

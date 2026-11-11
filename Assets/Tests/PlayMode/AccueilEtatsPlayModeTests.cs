@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 using MafiaCleanCity.Operational.Exceptions;
 using Object = UnityEngine.Object;
 
@@ -226,8 +227,8 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotEmpty(violations, "CONTRÔLE POSITIF : sans `preferredWidth = 0`, un texte long à gauche fait glisser la couture et la garde le voit");
         }
 
-        [Test]
-        public void Etat3_LaCarteDesRapportsEstReconnue()
+        [UnityTest]
+        public System.Collections.IEnumerator Etat3_LaCarteDesRapportsEstReconnue()
         {
             var hl = Monter<HighestLeverageCardController>();
             var carte = Carte("AUTONOMY_REPORTS_PENDING", "hl.option.autonomy_reports.review_now", "hl.option.autonomy_reports.leave_pending");
@@ -244,6 +245,7 @@ namespace MafiaCleanCity.Shell.Tests
             int tampons = hl.CommitRequestCount;
             hl.ClientPourTest.ReponsePourTest = _ => (503, "{}");   // hors réseau
             hl.OuvrirLesRapports();
+            yield return null;   // aucune hypothèse sur l'avance synchrone des coroutines imbriquées
             Assert.AreEqual(tampons + 1, hl.CommitRequestCount, "[Lire maintenant] poste UN commit (la carte disparaît une fois lue)");
             Assert.AreEqual(HlCardClient.OptionAgir, hl.DerniereOptionPosee, "…avec l'option AGIR (0)");
             Assert.IsNull(hl.NomDuRapport, "sans jeton, la route des rapports n'est pas lue : pas de nom, jamais un nom inventé");

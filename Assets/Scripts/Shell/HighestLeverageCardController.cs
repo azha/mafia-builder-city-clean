@@ -197,10 +197,14 @@ namespace MafiaCleanCity.Shell
         public IEnumerator LireLesRapports()
         {
             if (!EstCarteDesRapports) yield break;
+            int requetesAvant = CommitRequestCount;
             yield return Commettre(HlCardClient.OptionAgir, leverLApresSurRefus: false);
             if (this == null) yield break;
-            bool mene = LastCommitError == null && LastCommitCommitted == true && NavigationApresGeste.EstUneNavigation(DerniereReponse);
-            if (!mene) MonterLesRapports(client.DernierePhraseDeRefus);
+            // Le repli est réservé au REFUS / à l'ÉCHEC (ou à l'absence de requête : carte non actionnable). Une décision ACCEPTÉE a déjà sa suite
+            // (`TrancheePourDeBon` : navigation, après-geste de ⑤ ou Accueil relu) — y monter AUSSI les rapports ferait deux écrans pour un geste.
+            bool requete = CommitRequestCount > requetesAvant;
+            bool acceptee = requete && LastCommitError == null && LastCommitCommitted == true;
+            if (!acceptee) MonterLesRapports(requete ? client.DernierePhraseDeRefus : null);
         }
 
         /// <summary>Le repli de [Lire maintenant] : monte les rapports par le navigateur du shell et leur annonce la phrase SERVIE du refus
