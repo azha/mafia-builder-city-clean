@@ -1643,14 +1643,15 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public bool AttachButtonInteractable { get { return attacherButton == null || attacherButton.interactable; } }
         public string ReassignReason { get { return reassignReasonText != null && reassignReasonText.gameObject.activeSelf ? reassignReasonText.text : ""; } }
         public string AttachReason { get { return attachReasonText != null && attachReasonText.gameObject.activeSelf ? attachReasonText.text : ""; } }
-        public Color AttachLabelColor { get { return attacherButton != null ? attacherButton.GetComponentInChildren<TextMeshProUGUI>().color : Color.clear; } }
-        public Color ReassignLabelColor { get { return boutonReaffecter != null ? boutonReaffecter.GetComponentInChildren<TextMeshProUGUI>().color : Color.clear; } }
+        public Color AttachLabelColor { get { TextMeshProUGUI l = attacherButton != null ? attacherButton.GetComponentInChildren<TextMeshProUGUI>() : null; return l != null ? l.color : Color.clear; } }
+        public Color ReassignLabelColor { get { TextMeshProUGUI l = boutonReaffecter != null ? boutonReaffecter.GetComponentInChildren<TextMeshProUGUI>() : null; return l != null ? l.color : Color.clear; } }
 
         private void AppliquerBudgetAuxGestesStructurels()
         {
             bool depense = BudgetStructurelDepense;
             GriserBouton(attacherButton, depense);
-            PoserRaison(attachReasonText, depense ? PhraseDeBlocage(BlocageRecrutement.BudgetDepense) : "");
+            // pas de raison orpheline : en mode « donner un ordre », « Attacher » est masqué et sa raison avec lui (revue ⊥ 11/11, BLOCKING 2)
+            PoserRaison(attachReasonText, depense && !ModeOrdre ? PhraseDeBlocage(BlocageRecrutement.BudgetDepense) : "");
             RenderReassignSection();   // compose avec la disponibilité servie du lieutenant
         }
 
@@ -3145,8 +3146,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
             {
                 string dispo = CurrentBands != null ? CurrentBands.reassign_availability : null;
                 bool disponible = string.IsNullOrEmpty(dispo) || dispo == "AVAILABLE";
-                // TD-878 (suite) : grisé aussi quand le budget structurel du jour est dépensé, avec la même raison que le recrutement
-                GriserBouton(boutonReaffecter, !disponible || BudgetStructurelDepense);
+                // TD-878 (suite) : grisé VISIBLEMENT (libellé éteint + raison) quand le budget structurel du jour est dépensé. La disponibilité servie du lieutenant
+                // (reassign_availability) garde son effet d'avant — `interactable` seul, sans libellé éteint — : on n'éteint JAMAIS un bouton sans lui dire pourquoi
+                // (revue ⊥ 11/11, BLOCKING 1) ; la raison de la disponibilité est une dette séparée.
+                GriserBouton(boutonReaffecter, BudgetStructurelDepense);
+                if (!disponible) boutonReaffecter.interactable = false;
                 PoserRaison(reassignReasonText, BudgetStructurelDepense ? PhraseDeBlocage(BlocageRecrutement.BudgetDepense) : "");
                 SuivreLaRaison();
             }
@@ -3494,6 +3498,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // UN ordre = UNE règle (le back refuse tout autre compte en 422) : pas d'ajout ; et on SIGNE, on n'attache pas.
             if (ajouterRegleButton != null) ajouterRegleButton.gameObject.SetActive(!ModeOrdre);
             if (attacherButton != null) attacherButton.gameObject.SetActive(!ModeOrdre);
+            AppliquerBudgetAuxGestesStructurels();   // la raison d'« Attacher » suit son bouton
             foreach (var kv in lapseButtons)
                 if (kv.Value != null && kv.Value.targetGraphic != null)
                     kv.Value.targetGraphic.color = kv.Key == LapseChoisi ? LapseChoisiTeinte : lapseTeinteRepos;

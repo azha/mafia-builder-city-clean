@@ -274,5 +274,33 @@ namespace MafiaCleanCity.CityMap.Tests
             ecran.AppliquerHostEligibilite(null);   // lecture en échec ⇒ tout rouvert
             ExigerGestesStructurels(ecran, false, null);
         }
+
+        [UnityTest]
+        public IEnumerator H13_ReaffecterEtAttacher_JamaisEteintsSansRaison_JamaisUneRaisonOrpheline()
+        {
+            hote = new GameObject("LieutenantScreenController_RaisonsStructurelles");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            // (1) disponibilité servie ≠ AVAILABLE, budget intact : le bouton est inerte comme avant, mais son libellé n'est PAS éteint (sinon : bouton mort sans raison)
+            ecran.RendreBandesPourTest(new LieutenantBands { archetype = "COOK", reassign_availability = "COOLDOWN" });
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("AVAILABLE", "ROOM")));
+            Assert.IsFalse(ecran.ReassignButtonInteractable, "disponibilité servie non AVAILABLE : « Réaffecter… » reste inerte (comportement d'avant)");
+            Assert.AreEqual(MafiaCleanCity.Theme.DesignTokens.Current.accentGold, ecran.ReassignLabelColor, "libellé non éteint : aucune raison à donner sur ce motif");
+            Assert.AreEqual("", ecran.ReassignReason);
+            // (2) la même disponibilité + budget dépensé : grisé visiblement ET avec la raison du budget
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "ROOM")));
+            Assert.IsFalse(ecran.ReassignButtonInteractable);
+            Assert.AreEqual(MafiaCleanCity.Theme.DesignTokens.Current.onSurfaceMuted, ecran.ReassignLabelColor);
+            StringAssert.Contains("décision de structure", ecran.ReassignReason);
+            // (3) mode « donner un ordre » : « Attacher » est masqué, sa raison aussi — et elle revient avec lui
+            Assert.IsNotEmpty(ecran.AttachReason, "budget dépensé, hors mode ordre : la raison d'« Attacher » est affichée");
+            ecran.OuvrirModeOrdre();
+            Assert.IsTrue(ecran.ModeOrdre);
+            Assert.AreEqual("", ecran.AttachReason, "mode ordre : plus de raison orpheline sans son bouton");
+            ecran.OuvrirModeOrdre();
+            Assert.IsFalse(ecran.ModeOrdre);
+            StringAssert.Contains("décision de structure", ecran.AttachReason);
+        }
 }
 }
