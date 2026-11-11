@@ -1,0 +1,18 @@
+# Les 4 phrases de bande DESSINEES vs les 4 valeurs FR SERVIES
+# source servie : services/game-back/src/i18n/string_table.ts:6057-6060 @74c5a0b0
+# source dessinee : <div class="note6"> des cadres 155/156/157/158
+$ python3 -I comparer-phrases.py
+band=full  EGAL=True
+  maquette  : 'On vous a vu. La rue s’en souviendra.'
+  string_tab: 'On vous a vu. La rue s’en souviendra.'
+band=reduced  EGAL=True
+  maquette  : 'On vous a vu, mais vous étiez déjà passé aujourd’hui.'
+  string_tab: 'On vous a vu, mais vous étiez déjà passé aujourd’hui.'
+band=minimal  EGAL=True
+  maquette  : 'Encore vous\u202f? La rue n’y prête plus guère attention aujourd’hui.'
+  string_tab: 'Encore vous\u202f? La rue n’y prête plus guère attention aujourd’hui.'
+band=none  EGAL=True
+  maquette  : 'Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte.'
+  string_tab: 'Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte.'
+RC=0
+RC=0
