@@ -1,0 +1,24 @@
+# Contrôle des MOTS aux DEUX SHA (pile 8d0184a4 vs cumul back 74c5a0b0)
+# NB zsh : ${sha}: obligatoire — $sha:… est mangé comme modificateur (1er essai = 10 faux zéros).
+## 8d0184a4  (6448 lignes)
+   La route est coupée              1
+   Ça va lâcher                     1
+   Rien ne bloque                   1
+   Rompu                            1
+   appro.titre.la_chaine'           0
+   appro.etiquette.contournee       0
+   Les routes                       0
+   En reconstruction                0
+   En préparation                   0
+   Saturée                          0
+## 74c5a0b0  (6462 lignes)
+   La route est coupée              1
+   Ça va lâcher                     1
+   Rien ne bloque                   1
+   Rompu                            1
+   appro.titre.la_chaine'           2
+   appro.etiquette.contournee       2
+   Les routes                       0
+   En reconstruction                0
+   En préparation                   0
+   Saturée                          0

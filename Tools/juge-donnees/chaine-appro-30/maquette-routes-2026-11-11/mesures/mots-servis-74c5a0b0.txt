@@ -1,0 +1,44 @@
+classe       occ   texte
+CTRL+        1     La route est coupée
+CTRL+        1     On ne sait pas encore
+CTRL+        1     Que des détours
+CTRL+        1     Ça va lâcher
+CTRL+        1     Ça fait des détours
+CTRL+        1     Ça ne tiendra pas longtemps
+CTRL+        1     Droit au but
+CTRL+        1     Ça tient encore
+CTRL+        6     La chaîne
+CTRL+        1     Chaque maillon, sa pression ; chaque liaison, son entretien.
+CTRL+        1     Les maillons
+CTRL+        1     Les liaisons
+CTRL+        1     contournée
+state        0     En préparation
+state        2     Ouverte
+state        0     Saturée
+state        1     Coupée
+rebuilding   0     En reconstruction
+titre        0     Les routes
+maintaining  0     en entretien
+feuille      0     Entretenir la liaison
+feuille      0     Rafistoler
+feuille      0     Renforcer
+feuille      0     Contourner
+feuille      0     quelques minutes · l'usure retombe, sans disparaître
+feuille      0     plus longtemps · l'usure est effacée
+feuille      0     tout de suite · la liaison se repose : plus rien n'y passe tant qu'elle n'a pas récupéré
+feuille      0     votre grande décision du jour
+feuille      1     ça part du compte tout de suite
+feuille      1     Annuler
+feuille      0     Reconstruire la route
+feuille      0     Petit détour
+feuille      1     Remaniement
+feuille      0     Remise à plat
+feuille      0     on contourne ce qui gêne, au plus près
+feuille      0     on redessine une bonne partie du trajet
+feuille      0     on repart d'un trajet droit, sans tenir compte de l'usure
+feuille      0     Pendant les travaux, plus rien ne passe sur cette route.
+refus        0     Pas assez d'argent pour ça.
+refus        1     Un entretien est en cours sur place. Il s'achèvera de lui-même.
+refus        1     Une reconstruction est déjà en cours. Attendez qu'elle s'achève.
+refus        1     Vous avez confié cette catégorie à un lieutenant. Reprenez-la pour décider vous-même.
+refus        1     Votre décision de structure d'aujourd'hui est prise. Reprenez demain.
