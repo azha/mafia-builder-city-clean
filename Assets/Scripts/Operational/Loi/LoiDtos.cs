@@ -47,19 +47,25 @@ namespace MafiaCleanCity.Operational
         public int activeCaseCount;
     }
 
-    /// <summary>Une affaire — ⛔⛔ JAMAIS MESURÉ. `activeCases` est resté VIDE sur les DEUX comptes
-    /// sondés (démo ET frais) : aucune affaire ne naît d'un geste de ce parloir, une affaire naît
-    /// d'une descente (mécanisme hors des 4 routes données). N'INVENTE PAS `chargeSeverity` /
-    /// `daysRemaining` / `leak` / `burn_risk_score` que la maquette (m-67..m-72) laisse deviner :
-    /// aucun corps mesuré ne les confirme, voir Tools/loi-implementation-notes.md § Deviations.
-    /// Ce type reste donc un placeholder DÉLIBÉRÉMENT vide — le contrôleur ne lit AUCUN champ
-    /// dessus, seulement `activeCases.Length` (toujours 0 mesuré).</summary>
+    /// <summary>Une affaire — `ActiveCaseView`, 5 clés, RECOPIÉES du CODE (V15) : `legal.types.ts:147-167` (back main) — `caseId`,
+    /// `defendantLabel`, `chargeSeverity` (misdemeanor | felony_low | felony_high | major_crime, `:41`), `daysRemaining`, `leak`
+    /// (`LeakBandBucket` = silent | low | significant | full_dump, `:63`). Déclarées pour TD-823 (f2 11/11) : la voix du lieutenant de ㉛
+    /// se choisit sur le `leak` de la PIRE affaire active. Toujours AUCUN corps non vide mesuré (une affaire naît d'une descente) : la forme
+    /// vient du code, et le contrôleur ne lit que `leak`. Forme G : les 5 clés servies sont déclarées, aucune n'est jetée.</summary>
     [Serializable]
     public class LegalCaseDto
     {
-        // MÉTIER ICI — jamais mesuré, voir le commentaire de classe. Ne pas remplir sans un corps
-        // RÉEL observé (activeCases non vide) — juge-données ⊥ le jour où une affaire existe.
+        public string caseId;
+        public string defendantLabel;
+        public string chargeSeverity;
+        public int daysRemaining;
+        public string leak;
     }
+
+    /// <summary>TD-823 (BACK-2, design dette/b2 @949e5613 §4) — QUI parle : `speaker {id, name} | null`, à la RACINE de `GET /v1/me/legal` et de
+    /// `GET /v1/friction/state`. Le bras droit (règle O2′ : le plus ancien primaire ; null si aucun, ex æquo, ou placeholder). `name` porte déjà
+    /// « Lt. » : aucun préfixe client. ⚠️ JsonUtility rend une INSTANCE VIDE pour un objet `null` : l'absence se lit `name` vide.</summary>
+    [Serializable] public class LocuteurServiDto { public string id; public string name; }
 
     // ── `GET /v1/me/legal` ──────────────────────────────────────────────────────────────────────
     /// <summary>R2.2 : `activeCases`/`lawyerRoster` sont des PROJECTIONS P5 (listes), jamais
@@ -69,6 +75,8 @@ namespace MafiaCleanCity.Operational
     {
         public LegalCaseDto[] activeCases;
         public LawyerDto[] lawyerRoster;
+        /// <summary>TD-823 : la 3ᵉ clé de racine (additive), `{id, name} | null`.</summary>
+        public LocuteurServiDto speaker;
     }
     [Serializable] public class GetLegalPayload { public GetLegalResponseDto data; }
     [Serializable] public class GetLegalEnvelope { public GetLegalPayload payload; }

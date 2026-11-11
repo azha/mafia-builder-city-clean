@@ -35,6 +35,10 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le nombre d'endroits qui se gênent entre eux. SERVI et DESSINÉ : c'est le gros
         /// chiffre du cadre m-79.</summary>
         public int friction_node_count;
+
+        /// <summary>TD-823 (BACK-2) — le locuteur SERVI, à la racine (6ᵉ clé, additive) : `{id, name} | null`. Remplace le repli « premier du
+        /// roster » de `Locuteur` ; la préférence pour le lieutenant du site visé reste (design §5.1).</summary>
+        public LocuteurServiDto speaker;
     }
 
     [Serializable] public class GetFrictionStatePayload { public GetFrictionStateResponseDto data; }
