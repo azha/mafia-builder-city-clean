@@ -171,6 +171,7 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
             Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.FilesOuvertes, "18 files servies en 200");
             Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.FilesVides, "18 files VIDES (queue_load EMPTY)");
             Assert.AreEqual(0, ecran.Files404);
+            Assert.IsNull(ecran.DerniereErreur, $"aucune panne : {ecran.DerniereErreur}");
             Assert.IsFalse(ecran.EtatVide, "une ville vide servie en 200 n'est pas « rien nulle part »");
             Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.LignesRendues, "le registre a ses 18 lignes");
             Assert.AreEqual("", ecran.TexteDuVide, "aucune fiche d'état vide au-dessus du registre");
@@ -213,12 +214,12 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
                 Assert.AreEqual(0, e.FilesVides, "un 404 n'est JAMAIS une file vide (réintroduire « 404 ⇒ FileVide » ferait mentir l'écran à un compte sans profil)");
                 Assert.IsTrue(e.EtatVide);
                 Assert.AreEqual(0, e.LignesRendues);
-                Nettoyer(); NettoyerLeCanevas();
+                Nettoyer();
             }
             yield return MonterAvecDesFiles(_ => (500, Corps500));
             Assert.AreEqual(0, ecranCourant.Files404, "un 500 n'est pas un 404");
             Assert.IsNotNull(ecranCourant.DerniereErreur, "un 500 est une panne");
-            Nettoyer(); NettoyerLeCanevas();
+            Nettoyer();
 
             yield return MonterAvecDesFiles(id => (200, CorpsFile(id, "EMPTY")));
             Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecranCourant.FilesVides, "CONTRÔLE POSITIF : le 200 EMPTY ⇒ 18 files vides");
@@ -244,11 +245,14 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
         public IEnumerator G3_PanneTotale_DitLaPanne_PannePartielle_GardeLeRegistre()
         {
             yield return MonterAvecDesFiles(_ => (500, Corps500));
+            // la cause est ISOLÉE (revue ⊥ du code) : `DerniereErreur` peut venir aussi de `LireDistricts` (pile réelle) — ces deux comptes disent que ce sont les FILES qui ont failli
+            Assert.AreEqual(0, ecranCourant.Files404, "18 × 500 : aucun n'est compté 404");
+            Assert.AreEqual(0, ecranCourant.FilesOuvertes, "18 × 500 : aucune file ouverte");
             Assert.IsTrue(ecranCourant.EtatVide);
             Assert.IsNotNull(ecranCourant.DerniereErreur);
             Assert.AreEqual("La file n'a pas répondu.", ecranCourant.TexteDuVide, "une panne totale est dite comme une panne");
             Assert.AreEqual(0, ecranCourant.LignesRendues);
-            Nettoyer(); NettoyerLeCanevas();
+            Nettoyer();
 
             yield return MonterAvecDesFiles(id => id == 7 ? (500, Corps500) : (200, CorpsFile(id, "EMPTY")));
             Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecranCourant.LignesRendues, "CONTRÔLE : panne partielle ⇒ les 18 lignes (la défaillante éteinte)");
