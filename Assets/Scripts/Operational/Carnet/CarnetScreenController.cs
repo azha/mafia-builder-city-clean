@@ -421,6 +421,7 @@ namespace MafiaCleanCity.Operational
                 BrancherLigne(ligne, i - 1, c);
             }
             RendreComposeur(composer);
+            RendreLaVoix(composer);
 
             if (CodeSuitesNommees == 403)
             {
@@ -838,6 +839,26 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le geste ÉTEINT de la bande basse (crochet de test) — jamais interactif tant qu'aucune route ne l'active.</summary>
         public Button GesteDuPied { get; private set; }
 
+        // ═══ TD-882 — LA VOIX DU LIEUTENANT EN PIED (`.cn-dit`, cadre « Cinq ordres. On peut en mettre trois de plus, ou partir comme ça. ») ═══
+        /// <summary>La ligne de voix de la bande basse (crochet de test) ; null tant que l'écran n'est pas construit.</summary>
+        public TextMeshProUGUI VoixDuPied { get; private set; }
+        // ⛔ JAMAIS DE NOM NON SERVI (ruling f2 11/11) : le carnet n'est lié à aucun lieutenant (`CarnetCourantDto` n'en porte pas) ; choisir un locuteur par POSITION dans le roster serait une inférence sans auteur,
+        //    et le joueur lirait un nom faux. La voix se dit donc SANS NOM tant que le back ne sert pas le locuteur (TD-952). Ce contrôleur ne lit PAS le roster (garde V2).
+
+        /// <summary>La voix du pied : la phrase SERVIE (`carnet.bloc.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca`, pluriel ICU `n`, `reste` = places restantes) quand le brouillon PEUT partir
+        /// (4 à 8 ordres) — en dessous, « partir comme ça » serait faux (le composeur dit déjà « Encore n ordres à poser ») et rien n'est rendu. Le nom en gras DROIT, la réplique en italique (`.cn-dit b{font-style:normal}`).</summary>
+        private void RendreLaVoix(bool composer)
+        {
+            if (VoixDuPied == null) return;
+            bool dit = composer && Brouillon.PeutLancer;
+            VoixDuPied.gameObject.SetActive(dit);
+            if (!dit) return;
+            string phrase = MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca",
+                "« {n, plural, one {Un ordre} other {# ordres}}. On peut en mettre {reste} de plus, ou partir comme ça. »",
+                new Dictionary<string, string> { { "n", Brouillon.Compte.ToString() }, { "reste", (ComposeurDuCarnet.Maximum - Brouillon.Compte).ToString() } });
+            VoixDuPied.text = "<i>" + phrase + "</i>";
+        }
+
         private void BuildLayout()
         {
             Canvas canvas = MafiaCleanCity.Shell.CanvasRacine.Resoudre(transform, mountParent);
@@ -932,8 +953,12 @@ namespace MafiaCleanCity.Operational
 
             ConstruirePanneau(racine.transform);
             // C-c (juge groupé du 07/10, f2 ; A4) : la BANDE BASSE `.cn-bas` de la maquette — plaque #141a21 + filet 2 px, et le geste « LANCER LA SOIRÉE » posé ÉTEINT (`.cn-geste.mort`, même règle que ㊳ : aucune route
-            // n'active ce geste ici — sans mentir). La VOIX du lieutenant (« N ordres. On peut en mettre {reste} de plus, ou partir comme ça. », clé `carnet.bloc.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca`) EST servie, mais ce contrôleur ne la lit pas encore : TD-882 (ce n'est PAS TD-823, qui ne vaut que pour ㉛ ; juge d'ensemble r2 F2, f2 08/10). Les mots sont ceux du cadre de la maquette.
+            // n'active ce geste ici — sans mentir). La VOIX du lieutenant (« N ordres. On peut en mettre {reste} de plus, ou partir comme ça. », clé `carnet.bloc.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca`) EST servie, et ce contrôleur la LIT (TD-882, `RendreLaVoix`) ; ce n'est PAS TD-823, qui ne vaut que pour ㉛. Les mots sont ceux du cadre de la maquette.
             GameObject bandeBasse = PiedDEcran.Bande(racine.transform, Px, Px(13f), Px(13f));
+            // TD-882 : la voix `.cn-dit` AU-DESSUS du geste (italic 8.6 DejaVu Serif #cdd6e0) ; éteinte tant que le brouillon ne peut pas partir.
+            VoixDuPied = NouveauTexte(bandeBasse.transform, "Dit", "", Px(8.6f), PiedDEcran.VoixDuLieutenant, DesignTokens.Current.hudSerifFont);
+            VoixDuPied.richText = true;
+            VoixDuPied.gameObject.SetActive(false);
             Button gesteDuCarnet = PiedDEcran.Geste(bandeBasse.transform, Px, DesignTokens.Current.primaryFont,
                 Lib("LANCER LA SOIRÉE"), Lib("une fois partie, on ne la reprend pas"), PiedDEcran.Etat.Mort);
             GesteDuPied = gesteDuCarnet;

@@ -357,5 +357,55 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.GreaterOrEqual(Contraste(lib.color, papier), 4.5f, "lisible sur le papier du carnet");
             Assert.Less(Contraste(new Color32(0xd9, 0xab, 0x4e, 255), papier), 3f, "contrôle négatif : l'or de la maquette serait illisible ici — l'instrument discrimine");
         }
+
+        // ── TD-882 : la VOIX du lieutenant en pied (`.cn-dit`) — l'EFFET (un texte rendu, de hauteur non nulle, au-dessus du geste), pas le seul paramètre ──
+        [UnityTest]
+        public IEnumerator V1_LaVoixDuPied_DitLeCompte_QuandLeBrouillonPeutPartir_EtSeTaitSinon()
+        {
+            var cibles = CinqCibles();
+            yield return Monter(cibles, e =>
+            {
+                foreach (CibleDuCarnet c in cibles[ComposeurDuCarnet.Entretien].Take(2)) e.Brouillon.Poser(c);
+                e.FermerLeComposeur();
+            });
+            TextMeshProUGUI voix = ecran.VoixDuPied;
+            Assert.IsNotNull(voix, "la bande basse porte sa ligne de voix");
+            Assert.IsFalse(voix.gameObject.activeSelf, "2 ordres : « partir comme ça » serait faux (il en faut 4) — la voix se tait");
+
+            foreach (CibleDuCarnet c in cibles[ComposeurDuCarnet.Entretien].Skip(2).Take(1)) ecran.Brouillon.Poser(c);
+            ecran.Brouillon.Poser(cibles[ComposeurDuCarnet.Ardoise][0]);
+            ecran.FermerLeComposeur();
+            yield return null; yield return null;
+            Assert.AreEqual(4, ecran.Brouillon.Compte);
+            Assert.IsTrue(voix.gameObject.activeSelf, "4 ordres : la voix parle");
+            Assert.AreEqual("<i>\u00ab 4 ordres. On peut en mettre 4 de plus, ou partir comme \u00e7a. \u00bb</i>", voix.text,
+                "la phrase servie en italique, SANS nom (le locuteur n'est pas servi : TD-952) ; `reste` = 8 \u2212 4");
+            Assert.Greater(((RectTransform)voix.transform).rect.height, 1f, "rendue : une hauteur non nulle (un r\u00e9glage valide peut ne produire aucun pixel)");
+            Assert.Greater(voix.preferredHeight, 1f);
+            Transform bas = ecran.GesteDuPied.transform.parent;
+            Assert.AreEqual(bas, voix.transform.parent, "dans la bande basse, avec le geste");
+            Assert.Less(voix.transform.GetSiblingIndex(), ecran.GesteDuPied.transform.GetSiblingIndex(), "AU-DESSUS du geste (`.cn-dit` puis `.cn-geste`)");
+            Assert.Greater(voix.transform.position.y, ecran.GesteDuPied.transform.position.y, "et plus haute \u00e0 l'\u00e9cran");
+
+            ecran.Brouillon.Poser(cibles[ComposeurDuCarnet.Entretien][3]);
+            ecran.FermerLeComposeur();
+            yield return null;
+            StringAssert.Contains("5 ordres. On peut en mettre 3 de plus", voix.text, "5 ordres : la phrase suit le compte");
+        }
+
+        // ── TD-882/TD-952 : JAMAIS DE NOM NON SERVI — le carnet ne lit pas le roster pour nommer un locuteur (ruling f2 11/11). Garde de SOURCE (la structure qui ferme la classe) + contrôle positif. ──
+        [Test]
+        public void V2_LeCarnet_NeNommeJamaisUnLocuteurNonServi_IlNeLitPasLeRoster()
+        {
+            string src = System.IO.File.ReadAllText(System.IO.Path.Combine(Application.dataPath, "Scripts/Operational/Carnet/CarnetScreenController.cs"));
+            var motif = new System.Text.RegularExpressions.Regex(@"\b(ListLieutenants|RosterRow|LieutenantClient|Locuteur)\b");
+            // les mentions en commentaire (`//`, `///`) sont des mots, pas du code : on retire les lignes de commentaire entières et les fins de ligne `// …`
+            string code = string.Join("\n", src.Split('\n').Select(l => { int i = l.IndexOf("//", System.StringComparison.Ordinal); return i < 0 ? l : l.Substring(0, i); }));
+            var trouvees = motif.Matches(code).Cast<System.Text.RegularExpressions.Match>().Select(m => m.Value).Distinct().ToArray();
+            Assert.IsEmpty(trouvees, "le carnet ne lit pas le roster ni ne porte de locuteur : un nom choisi par POSITION serait un nom non servi — " + string.Join(", ", trouvees));
+            // contrôle positif : le motif voit la lecture du roster telle qu'elle était écrite avant ce ruling
+            Assert.IsTrue(motif.IsMatch("yield return new LieutenantClient { BaseUrl = baseUrl }.ListLieutenants(token, lignes => x = lignes[0].name, (c, m) => { });"),
+                "contrôle positif : le motif voit la lecture du roster");
+        }
     }
 }
