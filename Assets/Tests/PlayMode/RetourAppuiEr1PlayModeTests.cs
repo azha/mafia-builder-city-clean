@@ -14,7 +14,8 @@ namespace MafiaCleanCity.Tests
     //   (1) le Button a RÉAGI (sa teinte « pressée » est posée sur le CanvasRenderer, fondu 0) — contrôle positif : il ne s'agit pas
     //       d'une sonde qui reçoit tout seule dans un monde où le Button ne reçoit plus rien ;
     //   (2) la sonde (`LongPressButton`, le vrai voisin du dépôt, TamponAuComptoir.cs:92/:102) a reçu l'appui (`IsPressing`).
-    // Volontairement SANS catégorie (« Uncategorized ») : une mesure d'uGUI, lancée à la demande par nom (`MAFIA_CI_TESTS`).
+    // Catégorie « RetourAppui » (celle du lot), inscrite au filtre de MafiaCI : sans elle aucun gate ne la lancerait jamais.
+    [Category("RetourAppui")]
     public class RetourAppuiEr1PlayModeTests
     {
         private GameObject hote;
