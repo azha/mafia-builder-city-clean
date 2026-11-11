@@ -191,6 +191,18 @@ namespace MafiaCleanCity.Operational.Selling
             if (!string.IsNullOrEmpty(bearer)) StartCoroutine(Charger(bearer));
         }
 
+        /// <summary>Crochet de test (patron `RendrePourTest`) : pose les dealers, les bâtiments possédés et la planque FABRIQUÉS, puis appelle le
+        /// MÊME `Rendre()` que `Charger()`, sans réseau ni jeton. Avec une planque et une caisse non vide, « RAMASSER » (:441) est pressable ;
+        /// avec un point de vente possédé sans dealer, « Poster un dealer » (`BoutonDeGeste`, :503) naît. Ne prouve jamais que le back sert ces corps.</summary>
+        public void RendrePourTest(DealerDto[] dealers, BatimentPossedeDto[] possedes, string planque)
+        {
+            Init();
+            Dealers = dealers;
+            Possedes = possedes;
+            SafehouseId = planque;
+            Rendre();
+        }
+
         private IEnumerator Charger(string bearer)
         {
             DerniereErreur = null;

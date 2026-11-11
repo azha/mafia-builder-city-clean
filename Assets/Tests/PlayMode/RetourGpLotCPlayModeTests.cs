@@ -9,6 +9,7 @@ using MafiaCleanCity.I18n;
 using MafiaCleanCity.Mouvements;
 using MafiaCleanCity.Operational;
 using MafiaCleanCity.Operational.Lieutenant;
+using MafiaCleanCity.Operational.Selling;
 using MafiaCleanCity.Operational.Tests;   // AdresseDuBackPlayModeTests.Racines
 using MafiaCleanCity.Shell;
 using Object = UnityEngine.Object;
@@ -26,12 +27,10 @@ namespace MafiaCleanCity.Tests
     //   Carnet (3) : composeur vide, étape « quel ordre », étape « sur quoi », quatre ordres posés, une ligne en main, confirmation servie ;
     //   Conflit (3) : table + hommes + axes, sans gros bras, envoi en route, dernier retour, ordre prêt ; Distribution (3) : repos, aucun relais ;
     //   Loi (3) : roster vide, avocat sous rétention ; Delegation (1) : tableau, confier, reprendre, réserve ; Demolition (1) : global, fiche,
-    //   confirmation, parcelle ; Filiere (1) : planque nominale ; Forensic (1) : la porte des pistes.
+    //   confirmation, parcelle ; Filiere (1) : planque nominale ; Forensic (1) : la porte des pistes ;
+    //   Selling (2) : un dealer avec planque (RAMASSER) et un point de vente sans dealer (Poster un dealer).
     //
     // NON MONTÉ — le relevé n'invente rien ; la ligne « couverture sites k / N » (`PublicationGp`) nommera les sites que ces écrans portent :
-    // // NON MONTÉ : Operational/Selling/SellingScreenController (`Ramasser` :441, `BoutonDeGeste` :503) — les rangées ne naissent que dans `Rendre()`,
-    //    privé, appelé par `Charger()` / `Recharger()` / `Collecter()` seuls (réseau + authentification) ; `Dealers` et `Possedes` ont un setter privé ;
-    //    aucune couture `…PourTest`. Monté nu, l'écran n'a aucune rangée, donc aucun de ces deux boutons.
     // // NON MONTÉ : Operational/Autonomy/AutonomyInboxController (`Btn_A` / `Btn_B`, :370) — le bouton « Choose » naît dans `Render()`, privé, appelé
     //    par `LoadReports()` seul (réseau + authentification) ; `Reports` a un setter privé ; aucune couture `…PourTest`.
     // // NON COUVRABLE : Operational/Reputation/ReputationScreenController (`CtaDonnerRegle`, :1429) — `interactable = false` par construction
@@ -693,6 +692,35 @@ namespace MafiaCleanCity.Tests
             Assert.AreEqual(VueDossier.Pistes, ecran.Vue, "précondition : la vue des pistes (la porte est interactive hors état vide)");
             Monte(canvas, "pistes", "la porte vers les acteurs (:505)", b => b.name == "Fenetre2");
             Verifier("Forensic/pistes, la porte", Relever("Forensic", "pistes, la porte", canvas));
+        }
+
+        // ================================================================================ Selling
+        [UnityTest]
+        public IEnumerator GP_Selling_RamasserEtPoster()
+        {
+            List<LigneGp> lignes;
+            try
+            {
+                var ecran = MonterSousCanvas<SellingScreenController>("SellingGp", out Canvas canvas);
+                // un dealer posté sur « b-1 » à la caisse non vide, une planque (⇒ RAMASSER pressable, :441) et un second point de vente
+                // possédé SANS dealer (⇒ « Poster un dealer », `BoutonDeGeste` :503) : la couture appelle le MÊME `Rendre()` que `Charger()`
+                var dealers = new[]
+                {
+                    new DealerDto { dealer = "d-1", dealer_spot_id = "b-1", activity_band = "WORKING", cash_band = "LOW", substance = "WEED", margin_band = "STANDARD" },
+                };
+                var possedes = new[]
+                {
+                    new BatimentPossedeDto { building = "b-1", block_id = 1, district_id = 1, district_name = "La Lisière", operational_type = PointsDeVente.TypePointDeVente },
+                    new BatimentPossedeDto { building = "b-2", block_id = 2, district_id = 1, district_name = "La Lisière", operational_type = PointsDeVente.TypePointDeVente },
+                };
+                ecran.RendrePourTest(dealers, possedes, "s-1");
+                Monte(canvas, "dealer et point de vente", "RAMASSER (:441)", b => SousParent(b, "Dealer_d-1") && b.name == "Ramasser" && b.interactable);
+                Monte(canvas, "dealer et point de vente", "Poster un dealer (:503)", b => b.name == "Poster" && b.interactable);
+                lignes = Relever("Selling", "un dealer avec planque, un point de vente sans dealer", canvas);
+            }
+            finally { DetruireMontes(); }
+            Verifier("Selling/un dealer avec planque, un point de vente sans dealer", lignes);
+            yield break;
         }
 
         // ================================================================================ Reputation
