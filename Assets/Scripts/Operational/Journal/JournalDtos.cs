@@ -111,24 +111,25 @@ namespace MafiaCleanCity.Operational
 
     [Serializable] public class GetAmbientFeedPayload { public GetAmbientFeedResponseDto data; }
     [Serializable] public class GetAmbientFeedEnvelope { public GetAmbientFeedPayload payload; }
-    /// <summary>`POST /v1/ambient/attend/:id` — réponse. // MÉTIER ICI : lister les champs depuis le
-    /// CORPS RÉEL mesuré (juge-données ⊥), jamais de l'interface TypeScript back lue seule.
-    /// R2.2 — si un champ est une PROJECTION P5 (bande/liste), ne JAMAIS le réduire à un
-    /// scalaire ici (ex. `declared_rules[]`, pas un compte).</summary>
+    /// <summary>`POST /v1/ambient/attend/:id` — réponse (TD-822, 11/11). Recopié au CODE de BACK-2 (V15) : `ambient.projection.service.ts`, `AmbientAttendView`
+    /// `{ event_id, district: "district-<n>", status: 'attended', residue_band }` ; `status` vaut TOUJOURS `attended` sur un succès (404 id inconnu, 409 déjà
+    /// attendu / expiré / course perdue : le contrôleur lève avant). `residue_band` ∈ { full, reduced, minimal, none } (bande close : `none` quand la cohésion
+    /// n'a pas été appliquée) — JAMAIS un scalaire (R2.2). Les MOTS de `residue_band` passent par f2 : l'écran ne les affiche pas encore.</summary>
     [Serializable]
     public class PostAmbientAttendResponseDto
     {
-        // MÉTIER ICI
+        public string event_id;
+        public string district;
+        public string status;
+        public string residue_band;
     }
 
     [Serializable] public class PostAmbientAttendPayload { public PostAmbientAttendResponseDto data; }
     [Serializable] public class PostAmbientAttendEnvelope { public PostAmbientAttendPayload payload; }
-    /// <summary>Corps envoyé à `POST /v1/ambient/attend/:id`. // MÉTIER ICI : lister les champs attendus
-    /// par la route back (`*.controller.ts`) — jamais deviner un nom de clé.</summary>
+    /// <summary>Corps envoyé à `POST /v1/ambient/attend/:id` : AUCUN (le contrôleur n'a que `:id` ; le joueur vient du JWT, jamais du corps, R-ID-3) — `{}`.</summary>
     [Serializable]
     public class PostAmbientAttendBody
     {
-        // MÉTIER ICI
     }
     /// <summary>`GET /v1/random-world/active` — réponse. // MÉTIER ICI : lister les champs depuis le
     /// CORPS RÉEL mesuré (juge-données ⊥), jamais de l'interface TypeScript back lue seule.
