@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 using MafiaCleanCity.Operational.Exceptions;
 using Object = UnityEngine.Object;
 
@@ -226,8 +227,8 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.IsNotEmpty(violations, "CONTRÔLE POSITIF : sans `preferredWidth = 0`, un texte long à gauche fait glisser la couture et la garde le voit");
         }
 
-        [Test]
-        public void Etat3_LaCarteDesRapportsEstReconnue()
+        [UnityTest]
+        public System.Collections.IEnumerator Etat3_LaCarteDesRapportsEstReconnue()
         {
             var hl = Monter<HighestLeverageCardController>();
             var carte = Carte("AUTONOMY_REPORTS_PENDING", "hl.option.autonomy_reports.review_now", "hl.option.autonomy_reports.leave_pending");
@@ -238,10 +239,15 @@ namespace MafiaCleanCity.Shell.Tests
             CollectionAssert.DoesNotContain(hl.LibellesDesBoutons.ToList(), MafiaCleanCity.I18n.Libelle.Gabarit(carte.options[1].label, "—"),
                 "[Laisser en attente] n'est plus un bouton");
             Assert.IsFalse(hl.TamponVisible, "la carte des rapports ne se tamponne pas d'ici");
+            // TD-938, ruling f2 11/11 (Q1) — REMPLACE « ouvre les rapports sans AUCUN tampon » : sans commit, la carte n'était jamais réclamée et
+            // revenait à chaque ouverture (une boucle). La lecture passe désormais par commit(0) ; l'ouverture des rapports (shell sur `navigate`, ou
+            // repli de ④ sur un refus) est gardée par `NavigationApresGestePlayModeTests` G5.
             int tampons = hl.CommitRequestCount;
+            hl.ClientPourTest.ReponsePourTest = _ => (503, "{}");   // hors réseau
             hl.OuvrirLesRapports();
-            Assert.IsTrue(hl.RapportsOuverts, "[Lire maintenant] ouvre les rapports");
-            Assert.AreEqual(tampons, hl.CommitRequestCount, "…sans AUCUN tampon");
+            yield return null;   // aucune hypothèse sur l'avance synchrone des coroutines imbriquées
+            Assert.AreEqual(tampons + 1, hl.CommitRequestCount, "[Lire maintenant] poste UN commit (la carte disparaît une fois lue)");
+            Assert.AreEqual(HlCardClient.OptionAgir, hl.DerniereOptionPosee, "…avec l'option AGIR (0)");
             Assert.IsNull(hl.NomDuRapport, "sans jeton, la route des rapports n'est pas lue : pas de nom, jamais un nom inventé");
             hl.SetPayload(null, Carte("DAMAGED_BUILDING", "a", "b"), null);
             Assert.IsFalse(hl.EstCarteDesRapports);

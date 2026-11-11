@@ -71,6 +71,15 @@ namespace MafiaCleanCity.Operational.Tests
             // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : une clé restante, non servie à la pile du 08/10 (les 15 autres le sont : retirées ci-dessus). Les statuts et types d'acteur
             // sont lus par la VALEUR servie (`forensic.statut.*`, `forensic.acteur.lawyer|clerk`).
             "forensic.enseigne.rien_a_votre_nom",   // le sous-titre de l'enseigne du cadre 135 (sans point) : son rôle propre, la clé bloc.* est celle du texte `.rien`
+            // ㉚ CADRE 154 « La chaîne vue du graphe » (11/11, CLIENT-1, décision f2) : 18 clés, 0 servie sur back main 6040a213 (mesuré dans
+            // `string_table.ts`). 11 sont servies par BACK-1 (`lot/chaine-bandes-2` @1845e0e8 : les 8 bandes et les 3 du fournisseur) ; les 7 de
+            // structure (noms FIGÉS par BACK-1, design a7df3592) ne le sont pas encore — code BACK-1 en cours. À RETIRER quand la règle (2) rougit.
+            "appro.pression.silent", "appro.pression.mild", "appro.pression.warm", "appro.pression.critical",
+            "appro.dette.fresh", "appro.dette.accruing", "appro.dette.stressed", "appro.dette.fractured",
+            "appro.fournisseur.fresh", "appro.fournisseur.used", "appro.fournisseur.strained",
+            "appro.titre.la_chaine", "appro.sous_titre.chaque_maillon_sa_pression_chaque_liaison_son_entretien",
+            "appro.titre.les_maillons", "appro.titre.les_liaisons", "appro.etiquette.refoule_vers", "appro.etiquette.contournee",
+            "appro.etiquette.un_batiment_detruit",
 
 
 

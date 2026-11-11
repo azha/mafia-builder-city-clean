@@ -581,6 +581,50 @@ namespace MafiaCleanCity.Shell
             if (SurLaCarteSansRienDessus) RouvrirLAccueil();
         }
 
+        /// <summary>TD-938 (a) — un AGIR que le back a répondu `navigate` (④ ou ⑤ lèvent `OnNavigate`) : le shell referme ④/⑤ et MÈNE à l'écran
+        /// servi (`NavigationApresGeste`). Aucun `session/open` ici : toute réouverture de l'Accueil le relit déjà, la carte tranchée n'y sera plus.
+        /// Écran INCONNU (null, vide, hors table ; `supply_chain_trace` mène à ㉚ depuis TD-981 fermée) : comportement d'avant — l'Accueil relu — compté et journalisé, jamais un
+        /// écran deviné. Les `ids` ne sont lus par aucun écran mené (TD-982).</summary>
+        public void SuivreLaNavigation(string ecranServi, string[] ids) { if (this != null) StartCoroutine(SuivreLaNavigationCo(ecranServi)); }
+
+        /// <summary>Crochet de test : combien de navigations servies sont tombées dans la branche INCONNUE.</summary>
+        public int NavigationsInconnues { get; private set; }
+
+        private IEnumerator SuivreLaNavigationCo(string ecranServi)
+        {
+            yield return null;   // la coroutine du locataire qui annonce finit avant le démontage (patron de `RelireLAccueilApresUneDecisionCo`)
+            if (this == null) yield break;
+            if (SurimpressionOuverte) Depiler();   // ④ et ⑤ se dépilent ENSEMBLE vers la carte
+            yield return null;
+            if (this == null) yield break;
+            switch (NavigationApresGeste.Pour(ecranServi))
+            {
+                case NavigationApresGeste.Cible.FileDesExceptions:
+                    MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Exceptions.ExceptionQueueController>();
+                    break;
+                case NavigationApresGeste.Cible.BoiteDesRapports:
+                    MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Autonomy.AutonomyInboxController>();
+                    break;
+                case NavigationApresGeste.Cible.ChaineDAppro:   // 106 `supply_chain_trace` (TD-981 fermée) : ㉚ découvre son propre bâtiment (TD-1015)
+                    MonterLocataireEnSurimpression<MafiaCleanCity.Operational.ChaineDApproScreenController>();
+                    break;
+                default:
+                    NavigationsInconnues++;
+                    Debug.LogWarning($"[AppShell] navigate_screen « {ecranServi ?? "null"} » : aucun écran client ne le montre — l'Accueil est relu (TD-938)");
+                    RelireLAccueilApresUneDecision();
+                    break;
+            }
+        }
+
+        /// <summary>⑤ en surimpression, ses DEUX annonces câblées en UN site (comme `MonterLAccueil` : pas de dérive entre les lambdas qui le montent).</summary>
+        private DecisionDetailScreenController MonterLeDetail()
+        {
+            DecisionDetailScreenController detail = MonterLocataireEnSurimpression<DecisionDetailScreenController>();
+            detail.OnDecisionTranchee += RelireLAccueilApresUneDecision;
+            detail.OnNavigate += SuivreLaNavigation;
+            return detail;
+        }
+
         /// <summary>Geste (2) : dépile UN niveau. Rend ce qui a été dépilé — `surimpression`, `fiche`, `district`, `entree` (du menu
         /// Plus), `onglet` — ou `racine` quand on est déjà sur la carte (et rien n'est fait).</summary>
         public string Depiler()
@@ -1874,14 +1918,14 @@ namespace MafiaCleanCity.Shell
                 // ⑤ `screen_1a` — le DÉTAIL de la carte, en surimpression. L'écran existe (maquette ratifiée « ok top on garde comme
                 // ça »), et sans ce fil il ne serait montable par personne : *un écran construit que rien ne monte est un écran que le
                 // joueur ne voit jamais* — c'est le défaut exact qui laissait la Revue du jour invisible depuis W3.U1.
-                hlCard.OnOuvrirDetail += () => MonterLocataireEnSurimpression<DecisionDetailScreenController>().OnDecisionTranchee += RelireLAccueilApresUneDecision;
+                hlCard.OnOuvrirDetail += () => MonterLeDetail();
                 hlCard.OnDecisionTranchee += RelireLAccueilApresUneDecision;   // f2 08/10 nuit : plus de geste mort
+                hlCard.OnNavigate += SuivreLaNavigation;                       // TD-938 (a) : l'AGIR mène à l'écran servi
                 // L'APRÈS-GESTE (cadres 6-7) : ④ lève l'issue (vue d'`ApresGesteHl`), ⑤ la rend sur sa table feutre ; son « Retour à l'accueil » relit l'Accueil comme tout le reste.
                 hlCard.FileEnAttente = dto.queue != null ? dto.queue.Length : 0;
                 hlCard.OnApresGeste += (carte, vue) =>
                 {
-                    DecisionDetailScreenController detail = MonterLocataireEnSurimpression<DecisionDetailScreenController>();
-                    detail.OnDecisionTranchee += RelireLAccueilApresUneDecision;
+                    DecisionDetailScreenController detail = MonterLeDetail();
                     detail.AfficherApresGeste(carte, vue);
                 };
                 hlCard.SetPayload(Token, dto.hl_card, dto.structural_budget);
@@ -1893,7 +1937,7 @@ namespace MafiaCleanCity.Shell
                 if (!avecFile)
                 {
                     calme = NouveauPanneauAccueil<HighestLeverageCardController>("AccueilHlCard", BandeTeteVide.min, BandeTeteVide.max);
-                    calme.OnOuvrirDetail += () => MonterLocataireEnSurimpression<DecisionDetailScreenController>().OnDecisionTranchee += RelireLAccueilApresUneDecision;
+                    calme.OnOuvrirDetail += () => MonterLeDetail();
                     calme.SetPayload(Token, null, dto?.structural_budget);
                 }
                 // « LA SUITE » (cadre 4, table 72) : le vide du joueur neuf rempli par ses objectifs. Elle lit son état ; si une ligne est

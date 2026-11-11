@@ -27,14 +27,6 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual("appro.bloc.nestor_l_etagere_est_vide_sans_pyralin_je_ne_rallume_pas", ChaineDApproScreenController.CleRepliqueNestor);
         }
 
-        [Test]
-        public void S3_RienNeCircule_QuandToutEstSilencieux()
-        {
-            SupplyChainNodeDto N(string b) => new SupplyChainNodeDto { building_id = "x", bucket = b };
-            Assert.IsTrue(ChaineDApproScreenController.ToutSilencieux(new GetSupplyChainGraphResponseDto { nodes = new[] { N("silent"), N("silent") } }));
-            Assert.IsFalse(ChaineDApproScreenController.ToutSilencieux(new GetSupplyChainGraphResponseDto { nodes = new[] { N("silent"), N("mild") } }));
-            Assert.IsFalse(ChaineDApproScreenController.ToutSilencieux(new GetSupplyChainGraphResponseDto { nodes = new SupplyChainNodeDto[0] }), "vide ≠ silencieux");
-            Assert.IsFalse(ChaineDApproScreenController.ToutSilencieux(null));
-        }
+        // S3 (`ToutSilencieux`, table 63) RETIRÉ le 11/11 avec sa fonction : dès ≥ 1 nœud, ㉚ rend la liste du cadre 154 (ruling f2 (a)).
     }
 }

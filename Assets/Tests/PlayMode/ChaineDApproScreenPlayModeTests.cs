@@ -395,6 +395,283 @@ namespace MafiaCleanCity.Operational.Tests
                 "un cran de la maquette d'enquête a été fabriqué alors qu'aucune donnée ne le porte");
         }
 
+        // ═══ G — Cadre 154 « La chaîne vue du graphe » (atelier 4ae50cca, RATIFIÉ ; design `Tools/appro-maillons/DESIGN.md`) ═══════════
+        //
+        // ⛔ TD-985 FERMÉE : le détecteur « titre + phrase provisoire = 2 enfants » est REMPLACÉ par les gardes d'effet ci-dessous (la phrase
+        // provisoire et celle de la table 63 sont retirées, rulings f2 (A) et (a) du 11/11). Le corps de G1 est le cadre MÊME : 5 maillons
+        // dont 2 « Engorgé » et 1 flèche, 4 liaisons dont 1 contournée — donné au contrôleur dans le DÉSORDRE (le back ne sert aucun ordre).
+
+        private const string GabaritNom = "{enseigne} — {district}, îlot {block}";
+
+        private static MafiaCleanCity.Shell.BatimentPossedeDto Batiment(string id, string enseigne, string block) =>
+            new MafiaCleanCity.Shell.BatimentPossedeDto
+            {
+                building = id,
+                name_i18n = new MafiaCleanCity.Shell.NomDeBatimentI18nDto
+                {
+                    key = "game.fiction.building.name",
+                    @params = new MafiaCleanCity.Shell.NomDeBatimentParamsDto { enseigne = enseigne, district = "La Lisière", block = block },
+                },
+            };
+
+        private static MafiaCleanCity.Shell.BatimentPossedeDto[] BatimentsDuCadre() => new[]
+        {
+            Batiment("b1501", "Soudure Varne", "1501"), Batiment("b1502", "Réserve Nock", "1502"), Batiment("b1503", "Clés-Minute Rook", "1503"),
+            Batiment("b1504", "Consigne de la Threnny", "1504"), Batiment("b1505", "Billard Marr", "1505"),
+        };
+
+        private static SupplyChainNodeDto Noeud(string id, string bucket, string vers = null) =>
+            new SupplyChainNodeDto { building_id = id, bucket = bucket, has_arrow = vers != null, arrow_to_building_id = vers };
+
+        private static SupplyChainLegDto Lien(string id, string de, string vers, string dette, bool contournee = false) =>
+            new SupplyChainLegDto { leg_id = id, origin_building_id = de, destination_building_id = vers, debt_bucket = dette, bypassed = contournee };
+
+        /// <summary>Le graphe du cadre 154, dans un ordre BROUILLÉ.</summary>
+        private static GetSupplyChainGraphResponseDto GrapheDuCadre() => new GetSupplyChainGraphResponseDto
+        {
+            nodes = new[]
+            {
+                Noeud("b1502", "silent"), Noeud("b1503", "warm", vers: "b1501"), Noeud("b1504", "mild"), Noeud("b1501", "critical"), Noeud("b1505", "warm"),
+            },
+            legs = new[]
+            {
+                Lien("l4", "b1502", "b1505", "fresh"), Lien("l2", "b1505", "b1503", "stressed", contournee: true),
+                Lien("l1", "b1503", "b1501", "fractured"), Lien("l3", "b1504", "b1502", "accruing"),
+            },
+            routes = new SupplyChainRouteDto[0],
+        };
+
+        private static string Nom(string enseigne, string block) =>
+            ValeurAttendue.Cle("game.fiction.building.name", GabaritNom,
+                new Dictionary<string, string> { { "enseigne", enseigne }, { "district", "La Lisière" }, { "block", block } });
+
+        private static void ServirLeNomDesBatiments() =>
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { "game.fiction.building.name", GabaritNom } });
+
+        private Transform ContenuDeLaChaine()
+        {
+            Transform c = Trouver(hostGo.transform, "ContenuChaine");
+            if (c == null) c = Trouver(RacineEcran().transform, "ContenuChaine");
+            return c;
+        }
+
+        private static List<Transform> Enfants(Transform parent, string nom)
+        {
+            var l = new List<Transform>();
+            if (parent == null) return l;
+            foreach (Transform t in parent) if (t.name == nom) l.Add(t);
+            return l;
+        }
+
+        private static string TexteDe(Transform racine, string nom)
+        {
+            Transform t = Trouver(racine, nom);
+            return t != null ? t.GetComponent<TMPro.TextMeshProUGUI>().text : null;
+        }
+
+        /// <summary>G1 — l'ORDRE et l'EFFET : les noms SERVIS, dans l'ordre du cadre (bande de la pire à la meilleure, puis nom affiché), chaque
+        /// maillon dit sa bande ; les liaisons idem (Rompu → Entretenu). CONTRÔLE : le corps est donné brouillé — un rendu dans l'ordre servi
+        /// rougirait. Et la phrase provisoire de TD-985 n'apparaît plus.</summary>
+        [UnityTest]
+        public IEnumerator EcranApproG1_Cadre154_LesMaillonsEtLesLiaisonsDansLOrdreDuCadre_AvecLeursBandes()
+        {
+            ServirLeNomDesBatiments();
+            var ecran = MonterEcran();
+            ecran.RendrePourTestChaine(GrapheDuCadre(), BatimentsDuCadre());
+            yield return null;
+            Transform contenu = ContenuDeLaChaine();
+            Assert.IsNotNull(contenu, "anti-vacuité : la fenêtre de la chaîne est construite");
+
+            List<Transform> maillons = Enfants(contenu, "Maillon");
+            CollectionAssert.AreEqual(
+                new[] { Nom("Soudure Varne", "1501"), Nom("Billard Marr", "1505"), Nom("Clés-Minute Rook", "1503"),
+                        Nom("Consigne de la Threnny", "1504"), Nom("Réserve Nock", "1502") },
+                maillons.ConvertAll(m => TexteDe(m, "Nom")), "l'ordre du cadre 154 : bande (pire → meilleure), puis nom affiché");
+            CollectionAssert.AreEqual(
+                new[] { ValeurAttendue.Cle("appro.pression.critical", "Ne livre plus"), ValeurAttendue.Cle("appro.pression.warm", "Engorgé"),
+                        ValeurAttendue.Cle("appro.pression.warm", "Engorgé"), ValeurAttendue.Cle("appro.pression.mild", "Ça commence à s’accumuler"),
+                        ValeurAttendue.Cle("appro.pression.silent", "Rien ne bloque") },
+                maillons.ConvertAll(m => TexteDe(m, "Mot")), "chaque maillon dit sa bande, par la clé de sa VALEUR servie");
+
+            var liaisons = new List<Transform>();
+            foreach (Transform t in contenu) if (t.name == "Liaison" || t.name == "LiaisonContournee") liaisons.Add(t);
+            CollectionAssert.AreEqual(
+                new[] { Nom("Clés-Minute Rook", "1503"), Nom("Billard Marr", "1505"), Nom("Consigne de la Threnny", "1504"), Nom("Réserve Nock", "1502") },
+                liaisons.ConvertAll(l => TexteDe(l, "Origine")), "les liaisons : dette (Rompu → Entretenu)");
+            CollectionAssert.AreEqual(
+                new[] { ValeurAttendue.Cle("appro.dette.fractured", "Rompu"), ValeurAttendue.Cle("appro.dette.stressed", "Tient à peine"),
+                        ValeurAttendue.Cle("appro.dette.accruing", "L’entretien prend du retard"), ValeurAttendue.Cle("appro.dette.fresh", "Entretenu") },
+                liaisons.ConvertAll(l => TexteDe(l, "Mot")));
+
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.Cle("appro.titre.la_chaine", "La chaîne"), "l'en-tête du cadre remplace « LA CHAÎNE, EN REMONTANT »");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, ValeurAttendue.De("appro", "bloc", "LA CHAÎNE, EN REMONTANT"));
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts,
+                ValeurAttendue.Cle("appro.bloc.des_maillons_existent_mais_cet_ecran_ne_sait_pas_encore_les_afficher",
+                    "Des maillons existent, mais cet écran ne sait pas encore les afficher."), "TD-985 fermée : la phrase provisoire est retirée");
+        }
+
+        /// <summary>G2 — la flèche suit `has_arrow`, POINT (P1 du juge du cadre) : deux maillons `warm`, un seul la porte ⇒ UN « refoule vers »,
+        /// sur Clés-Minute Rook, vers Soudure Varne. CONTRÔLE : `has_arrow=false` partout, MÊME avec `arrow_to_building_id` renseigné ⇒ 0.</summary>
+        [UnityTest]
+        public IEnumerator EcranApproG2_LaFlecheSuitHasArrow_EtRienDAutre()
+        {
+            ServirLeNomDesBatiments();
+            var ecran = MonterEcran();
+            ecran.RendrePourTestChaine(GrapheDuCadre(), BatimentsDuCadre());
+            yield return null;
+            var avecFleche = new List<string>();
+            foreach (Transform m in Enfants(ContenuDeLaChaine(), "Maillon")) if (Trouver(m, "Refoule") != null) avecFleche.Add(TexteDe(m, "Nom"));
+            CollectionAssert.AreEqual(new[] { Nom("Clés-Minute Rook", "1503") }, avecFleche, "une seule flèche, sur le seul maillon qui la porte");
+            CollectionAssert.Contains(ecran.RenderedTexts, "↳ " + ValeurAttendue.Cle("appro.etiquette.refoule_vers", "refoule vers") + " " + Nom("Soudure Varne", "1501"),
+                "la flèche nomme le bâtiment vers lequel il refoule");
+
+            // CONTRÔLE : la clé seule décide — un `arrow_to_building_id` sans `has_arrow` ne dessine rien
+            GetSupplyChainGraphResponseDto sansFleche = GrapheDuCadre();
+            foreach (SupplyChainNodeDto n in sansFleche.nodes) { n.has_arrow = false; n.arrow_to_building_id = "b1501"; }
+            ecran.RendrePourTestChaine(sansFleche, BatimentsDuCadre());
+            yield return null;
+            int n0 = 0;
+            foreach (Transform m in Enfants(ContenuDeLaChaine(), "Maillon")) if (Trouver(m, "Refoule") != null) n0++;
+            Assert.AreEqual(0, n0, "has_arrow=false partout ⇒ aucune flèche");
+            Assert.AreEqual(5, Enfants(ContenuDeLaChaine(), "Maillon").Count, "anti-vacuité : les 5 maillons sont rendus");
+        }
+
+        /// <summary>G3 — un bâtiment absent de `me/buildings` est un bâtiment DÉMOLI (la route exclut `demolished`) : repli RATIFIÉ « un bâtiment
+        /// détruit », jamais l'identifiant. CONTRÔLE : présent ⇒ son nom servi.</summary>
+        [UnityTest]
+        public IEnumerator EcranApproG3_UnBatimentAbsentDeLaListe_EstUnBatimentDetruit()
+        {
+            ServirLeNomDesBatiments();
+            var ecran = MonterEcran();
+            ecran.RendrePourTestChaine(new GetSupplyChainGraphResponseDto
+            {
+                nodes = new[] { Noeud("b-rase", "warm"), Noeud("b1501", "warm") },
+                legs = new SupplyChainLegDto[0], routes = new SupplyChainRouteDto[0],
+            }, BatimentsDuCadre());
+            yield return null;
+            var noms = Enfants(ContenuDeLaChaine(), "Maillon").ConvertAll(m => TexteDe(m, "Nom"));
+            CollectionAssert.AreEquivalent(new[] { ValeurAttendue.Cle("appro.etiquette.un_batiment_detruit", "un bâtiment détruit"), Nom("Soudure Varne", "1501") }, noms);
+            CollectionAssert.DoesNotContain(noms, "b-rase", "jamais l'identifiant à la place d'un nom");
+            Assert.IsNull(Trouver(ContenuDeLaChaine(), "TitronLiaisons"), "aucune liaison ⇒ pas de titre « Les liaisons »");
+        }
+
+        /// <summary>G4 — STRUCTURE (avant toute valeur) : la fenêtre est un `ScrollRect` sous `ListeDefilante` avec son `RectMask2D` ; tout
+        /// `Graphic` de la chaîne porte son `CanvasRenderer` et est masquable ; le filet TIRETÉ n'est QUE sur la liaison contournée, et il est
+        /// DESSINÉ (des images sous son conteneur `Filets`, avec un sprite) — une garde sur la recette seule ne dirait rien de l'effet.</summary>
+        [UnityTest]
+        public IEnumerator EcranApproG4_Structure_FenetreDefilante_CanvasRenderer_TireteSurLaSeuleContournee()
+        {
+            ServirLeNomDesBatiments();
+            var ecran = MonterEcran();
+            ecran.RendrePourTestChaine(GrapheDuCadre(), BatimentsDuCadre());
+            yield return null;
+            yield return null;
+            Transform fenetre = Trouver(RacineEcran().transform, "FenetreChaine");
+            Assert.IsNotNull(fenetre, "la fenêtre de la chaîne existe");
+            Assert.IsNotNull(fenetre.GetComponent<ScrollRect>(), "la fenêtre défile");
+            Assert.IsNotNull(fenetre.GetComponent<RectMask2D>(), "la fenêtre coupe ce qui dépasse");
+            Assert.IsNotNull(fenetre.GetComponent<MafiaCleanCity.Shell.ListeDefilante>(), "et elle le dit (fondu + ascenseur)");
+
+            Transform chaine = Trouver(RacineEcran().transform, "Chaine");
+            int graphiques = 0;
+            foreach (Graphic g in chaine.GetComponentsInChildren<Graphic>(true))
+            {
+                graphiques++;
+                Assert.IsNotNull(g.GetComponent<CanvasRenderer>(), $"{g.name} : un Graphic sans CanvasRenderer ne dessine rien");
+                Assert.IsTrue(g is MaskableGraphic, $"{g.name} : sous un RectMask2D, tout Graphic doit être masquable");
+            }
+            Assert.Greater(graphiques, 20, "anti-vacuité : la chaîne a construit ses graphiques");
+
+            Transform contenu = ContenuDeLaChaine();
+            List<Transform> contournees = Enfants(contenu, "LiaisonContournee");
+            // ⚠️ CONTRAT IMPLICITE : `ConstruireLiaison` NOMME l'objet « Liaison », puis « LiaisonContournee » si `bypassed` — ces deux comptes en dépendent.
+            Assert.AreEqual(1, contournees.Count, "une seule liaison bypassed dans le cadre");
+            Assert.AreEqual(3, Enfants(contenu, "Liaison").Count);
+            var poses = contournees[0].Find(MafiaCleanCity.Shell.Filets.NomConteneur).GetComponent<MafiaCleanCity.Shell.FiletsPoses>();
+            Assert.AreEqual(MafiaCleanCity.Shell.StyleFilet.Tirete, poses.Recette[0].Style, "la contournée : trait tireté");
+            int dessines = 0;
+            foreach (Image im in poses.GetComponentsInChildren<Image>(true)) if (im.sprite != null && im.enabled) dessines++;
+            Assert.Greater(dessines, 0, "EFFET : le tireté est dessiné (au moins une image avec son sprite)");
+            CollectionAssert.Contains(ecran.RenderedTexts, ValeurAttendue.Cle("appro.etiquette.contournee", "contournée"));
+            foreach (Transform l in Enfants(contenu, "Liaison"))
+                Assert.AreEqual(MafiaCleanCity.Shell.StyleFilet.Plein,
+                    l.Find(MafiaCleanCity.Shell.Filets.NomConteneur).GetComponent<MafiaCleanCity.Shell.FiletsPoses>().Recette[0].Style,
+                    "CONTRÔLE : une liaison non contournée garde son trait plein");
+        }
+
+        /// <summary>G5 — la liste DÉFILE (E2 du juge : N maillons, sans pagination) : 30 maillons ⇒ le contenu dépasse la fenêtre.
+        /// CONTRÔLE : 1 maillon ⇒ tout tient, ni fondu ni course.</summary>
+        [UnityTest]
+        public IEnumerator EcranApproG5_TrenteMaillons_DepassentLaFenetre_UnTient()
+        {
+            ServirLeNomDesBatiments();
+            var ecran = MonterEcran();
+            var trente = new SupplyChainNodeDto[30];
+            for (int i = 0; i < trente.Length; i++) trente[i] = Noeud("b-" + i.ToString("00"), "mild");
+            ecran.RendrePourTestChaine(new GetSupplyChainGraphResponseDto { nodes = trente, legs = new SupplyChainLegDto[0], routes = new SupplyChainRouteDto[0] });
+            for (int f = 0; f < 3; f++) yield return null;
+            var liste = Trouver(RacineEcran().transform, "FenetreChaine").GetComponent<MafiaCleanCity.Shell.ListeDefilante>();
+            liste.Rafraichir();
+            Assert.IsTrue(liste.ContenuDepasse, "30 maillons : la liste dépasse sa fenêtre (elle défile)");
+
+            ecran.RendrePourTestChaine(new GetSupplyChainGraphResponseDto { nodes = new[] { Noeud("b1501", "mild") }, legs = new SupplyChainLegDto[0], routes = new SupplyChainRouteDto[0] },
+                BatimentsDuCadre());
+            for (int f = 0; f < 3; f++) yield return null;
+            liste = Trouver(RacineEcran().transform, "FenetreChaine").GetComponent<MafiaCleanCity.Shell.ListeDefilante>();
+            liste.Rafraichir();
+            Assert.IsFalse(liste.ContenuDepasse, "CONTRÔLE : un maillon tient dans la fenêtre");
+        }
+
+        /// <summary>G7 — une bande HORS DOMAINE (5ᵉ valeur inventée) : le mot GÉNÉRIQUE « état inconnu » (`Repli.Etat`, jamais la valeur brute) et le
+        /// rang DERNIER (après `silent` / `fresh`). CONTRÔLE : les valeurs connues gardent leur mot et leur rang.</summary>
+        [UnityTest]
+        public IEnumerator EcranApproG7_UneBandeHorsDomaine_DitEtatInconnu_EtPasseEnDernier()
+        {
+            ServirLeNomDesBatiments();
+            string inconnu = ValeurAttendue.De("commun", "repli", "état inconnu");
+            Assert.AreEqual(inconnu, ChaineDApproGraphe.MotPression("boiling"));
+            Assert.AreEqual(inconnu, ChaineDApproGraphe.MotDette("rusted"));
+            Assert.AreEqual(ChaineDApproGraphe.RangHorsDomaine, ChaineDApproGraphe.RangPression("boiling"));
+            Assert.Greater(ChaineDApproGraphe.RangPression("boiling"), ChaineDApproGraphe.RangPression("silent"), "hors domaine : après la meilleure bande");
+            Assert.Greater(ChaineDApproGraphe.RangDette("rusted"), ChaineDApproGraphe.RangDette("fresh"));
+            Assert.AreEqual(ValeurAttendue.Cle("appro.pression.silent", "Rien ne bloque"), ChaineDApproGraphe.MotPression("silent"), "CONTRÔLE : une valeur connue garde son mot");
+
+            var ecran = MonterEcran();
+            ecran.RendrePourTestChaine(new GetSupplyChainGraphResponseDto
+            {
+                nodes = new[] { Noeud("b1501", "boiling"), Noeud("b1502", "silent") },
+                legs = new SupplyChainLegDto[0], routes = new SupplyChainRouteDto[0],
+            }, BatimentsDuCadre());
+            yield return null;
+            var mots = Enfants(ContenuDeLaChaine(), "Maillon").ConvertAll(m => TexteDe(m, "Mot"));
+            CollectionAssert.AreEqual(new[] { ValeurAttendue.Cle("appro.pression.silent", "Rien ne bloque"), inconnu }, mots, "la bande inconnue est rendue en DERNIER");
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "boiling", "jamais la valeur brute");
+        }
+
+        /// <summary>G6 — les clés : chaque mot NEUF de la chaîne et du fournisseur, s'il n'est pas servi, est dans la DetteDatee de ZeroRepli
+        /// (règle (1) de cette garde, appliquée ici sans dépendre de l'état d'arrivée de l'écran). Anti-vacuité : les 18 clés (7 de structure, 4 + 4 bandes, 3 du fournisseur).</summary>
+        [UnityTest]
+        public IEnumerator EcranApproG6_LesClesNonServiesDeLaChaine_SontEnDetteDatee()
+        {
+            ServirLeNomDesBatiments();
+            var ecran = MonterEcran();
+            // un premier rendu construit la mise en page (en-tête d'écran, bon…) : ses clés sont servies en vrai, pas dans ce catalogue de test
+            ecran.RendrePourTestChaine(new GetSupplyChainGraphResponseDto { nodes = new SupplyChainNodeDto[0], legs = new SupplyChainLegDto[0], routes = new SupplyChainRouteDto[0] });
+            yield return null;
+            MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
+            GetSupplyChainGraphResponseDto g = GrapheDuCadre();
+            var nodes = new List<SupplyChainNodeDto>(g.nodes) { Noeud("b-rase", "silent") };
+            g.nodes = nodes.ToArray();
+            ecran.RendrePourTestChaine(g, BatimentsDuCadre());
+            foreach (string b in new[] { "FRESH", "USED", "STRAINED" }) ChaineDApproResolvers.TextePressionFournisseur(b);
+            yield return null;
+            var observees = new List<string>(MafiaCleanCity.I18n.Libelle.ClesEnRepli);
+            Assert.GreaterOrEqual(observees.Count, 18, "anti-vacuité : " + string.Join(" · ", observees));
+            var horsDette = observees.FindAll(k => !MafiaCleanCity.I18n.I18nCatalog.Connait(k)
+                                                   && !ZeroRepliDesLocatairesPlayModeTests.DetteDatee.Contains(k));
+            Assert.IsEmpty(horsDette, "clé non servie hors de la DetteDatee : " + string.Join(" · ", horsDette));
+        }
+
         // ═══ R — Résolveurs : domaine FERMÉ annoncé, contrôle positif ET négatif ═══════════════
         //
         // `supplier_pressure_bucket` est le SEUL des trois domaines de ㉚ confirmé fermé (message
@@ -405,11 +682,12 @@ namespace MafiaCleanCity.Operational.Tests
         [Test]
         public void EcranApproR1_ResolveurPression_CouvreLesTroisValeursAnnoncees()
         {
-            Assert.AreEqual("il vous prend encore au sérieux",
+            // 11/11 (f2) : lu par la clé de la VALEUR servie (`appro.fournisseur.*`, BACK-1 @1845e0e8), repli = le texte des maquettes
+            Assert.AreEqual(ValeurAttendue.Cle("appro.fournisseur.fresh", "il vous prend encore au sérieux"),
                 ChaineDApproResolvers.TextePressionFournisseur("FRESH"));
-            Assert.AreEqual("il commence à traîner",
+            Assert.AreEqual(ValeurAttendue.Cle("appro.fournisseur.used", "il commence à traîner"),
                 ChaineDApproResolvers.TextePressionFournisseur("USED"));
-            Assert.AreEqual("il vous fait attendre exprès",
+            Assert.AreEqual(ValeurAttendue.Cle("appro.fournisseur.strained", "il vous fait attendre exprès"),
                 ChaineDApproResolvers.TextePressionFournisseur("STRAINED"));
         }
 

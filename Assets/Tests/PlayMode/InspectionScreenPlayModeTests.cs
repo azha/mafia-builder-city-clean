@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using MafiaCleanCity.CityMap;
 using MafiaCleanCity.CitySim.Inspection;
 using MafiaCleanCity.Shell;
@@ -46,6 +47,7 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
         public void Nettoyer()
         {
             if (host != null) Object.Destroy(host);
+            NettoyerLeCanevas();
         }
 
         private InspectionScreenController Monter()
@@ -100,7 +102,8 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
                 "le monde ne sert pas 18 districts — le cardinal du pied serait faux");
             Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.FilesOuvertes,
                 "⛔ tout ou rien : le compte semé doit avoir ses 18 files (la pile a-t-elle vécu le tick de " +
-                "dispatch de 12 h ? S12-d — sur pile neuve, 18 × 404 est l'état normal, pas un défaut du client)");
+                "dispatch de 12 h ? S12-d — au 2026-11-11, sur le back servi, une pile neuve rend 18 × 404 ; le back TD-879 de BACK-2 y rend " +
+                "18 × 200 EMPTY — ni l'un ni l'autre n'est un défaut du client)");
             Assert.IsFalse(ecran.EtatVide, "18 files ouvertes et l'écran se dit vide");
             Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.LignesRendues,
                 "le registre n'a pas 18 lignes — avant D2, il en avait UNE, toujours le district 1");
@@ -108,19 +111,162 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
                 Assert.IsNotNull(ecran.Files[k], $"district {k + 1} : file absente alors que le registre est ouvert");
         }
 
+        // ═══ TD-879 (design `Tools/td-879-inspection-vide/DESIGN.md` v3.1, ruling f2 11/11) ═════════════════════════════════════
+        // `Registre_CompteFrais_RienNullePart_18Fois404` est REMPLACÉ par deux propriétés disjointes : (i) le 200 EMPTY (back TD-879 de
+        // BACK-2) rend 18 lignes « VIDE » ; (ii) le 404 (back servi) garde l'état vide d'aujourd'hui, avec le DÉTECTEUR de l'énoncé daté.
+        // Un 404 n'est JAMAIS traduit en file vide : « pas de file » et « pas de profil » sont indiscernables par ce qui est servi (TD-1010).
+
+        private GameObject canevasGo;
+
+        private void NettoyerLeCanevas() { if (canevasGo != null) Object.Destroy(canevasGo); canevasGo = null; }
+
+        /// <summary>L'écran sous un Canvas propre (sa mise en page vit sous `host`, ses lignes `L_1..L_18` y sont cherchables), les 18 files
+        /// servies par le seam (statut, corps) — les noms des districts et les bâtiments restent ceux de la pile (route publique / dépôt).</summary>
+        private IEnumerator MonterAvecDesFiles(System.Func<int, (long, string)> files)
+        {
+            canevasGo = new GameObject("CanevasInspection", typeof(RectTransform), typeof(Canvas));
+            host = new GameObject("InspectionHost", typeof(RectTransform));
+            host.transform.SetParent(canevasGo.transform, false);
+            var ecran = host.AddComponent<InspectionScreenController>();
+            ecran.ClientPourTest.ReponsePourTest = id => files(id);
+            ecran.SetToken("jeton-de-test");
+            yield return AttendreLeRendu(ecran);
+            yield return null;   // les lignes du rendu précédent sont détruites en fin d'image
+            ecranCourant = ecran;
+        }
+        private InspectionScreenController ecranCourant;
+
+        /// <summary>Les textes de la colonne `Charge` des lignes `L_1..L_18` rendues.</summary>
+        private string[] ChargesRendues()
+        {
+            var r = new System.Collections.Generic.List<string>();
+            foreach (Transform t in host.GetComponentsInChildren<Transform>(false))
+                if (t.name.StartsWith("L_", System.StringComparison.Ordinal))
+                {
+                    Transform c = t.Find("Charge");
+                    if (c != null) r.Add(c.GetComponent<TMPro.TextMeshProUGUI>().text);
+                }
+            return r.ToArray();
+        }
+
+        /// <summary>Le corps 200 d'une file — la forme RECOPIÉE du back (`inspection.projection.service.ts:97-155` @3bb33665 ; clés racine épinglées par
+        /// `15_17_police.parcours.spec.ts:198-200`) : une file vide est `EMPTY` / `NOMINAL` / toutes bandes `NONE`.</summary>
+        private static string CorpsFile(int id, string charge, string programmee = "NONE") =>
+            "{\"payload\":{\"data\":{\"district\":\"district-" + id + "\",\"queue_load\":\"" + charge + "\",\"dispatcher_regime\":\"NOMINAL\","
+            + "\"severity_distribution\":{\"LOW\":\"NONE\",\"MEDIUM\":\"NONE\",\"HIGH\":\"NONE\",\"CRITICAL\":\"NONE\"},"
+            + "\"type_distribution\":{\"SCHEDULED\":\"" + programmee + "\",\"INFORMANT\":\"NONE\",\"FALSE_REPORT\":\"NONE\",\"GENUINE_REPORT\":\"NONE\",\"CASCADE\":\"NONE\",\"FORENSIC\":\"NONE\"}}}}";
+
+        /// <summary>Les deux 404 du back servi (`inspection.controller.ts:93` et `:97-100`, `main` 2ed39589) : MÊME code, MÊME clé, aucun `details` —
+        /// seul le message anglais diffère (non servi au joueur, jamais lu).</summary>
+        private const string Corps404FilePasSemee = "{\"payload\":{\"error\":{\"code\":\"RESOURCE_NOT_FOUND\",\"message\":\"No inspection queue for this player yet (the city sim has not ticked the 12h dispatch).\",\"user_facing_i18n_key\":\"error.resource.not_found\"}}}";
+        private const string Corps404SansProfil = "{\"payload\":{\"error\":{\"code\":\"RESOURCE_NOT_FOUND\",\"message\":\"No player profile for this account.\",\"user_facing_i18n_key\":\"error.resource.not_found\"}}}";
+        private const string Corps500 = "{\"payload\":{\"error\":{\"code\":\"INTERNAL_ERROR\",\"message\":\"boom\"}}}";
+
+        /// <summary>(i) — le 200 EMPTY (back TD-879) ⇒ 18 lignes « VIDE » au format du cadre 32 (VIDE / NOMINAL / —), pas de fiche d'état vide.</summary>
         [UnityTest]
-        public IEnumerator Registre_CompteFrais_RienNullePart_18Fois404()
+        public IEnumerator Registre_DixHuitLignesVides_SurLe200Vide()
+        {
+            yield return MonterAvecDesFiles(id => (200, CorpsFile(id, "EMPTY")));
+            var ecran = ecranCourant;
+            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.FilesOuvertes, "18 files servies en 200");
+            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.FilesVides, "18 files VIDES (queue_load EMPTY)");
+            Assert.AreEqual(0, ecran.Files404);
+            Assert.IsNull(ecran.DerniereErreur, $"aucune panne : {ecran.DerniereErreur}");
+            Assert.IsFalse(ecran.EtatVide, "une ville vide servie en 200 n'est pas « rien nulle part »");
+            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.LignesRendues, "le registre a ses 18 lignes");
+            Assert.AreEqual("", ecran.TexteDuVide, "aucune fiche d'état vide au-dessus du registre");
+            string vide = MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.ChargeDeLaFile, "EMPTY");
+            string[] charges = ChargesRendues();
+            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, charges.Length, "anti-vacuité : 18 colonnes « Charge » lues");
+            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, charges.Count(c => c == vide), $"18 lignes disent « {vide} » (le cadre 32 : VIDE)");
+        }
+
+        /// <summary>(ii) — le 404 du back SERVI (compte frais réel) ⇒ l'état vide d'aujourd'hui, inchangé (fiche + phrase de la police).
+        /// ⏳ DÉTECTEUR de l'énoncé daté de `InspectionScreenController.Rendre` : `FilesVides == 0` rougit le jour où la pile sert 200 EMPTY.</summary>
+        [UnityTest]
+        public IEnumerator EtatVide_SurUn404DeFile_DitLaPhraseDeLaPolice()
         {
             yield return OuvrirUnCompteFrais();
             var ecran = Monter();
             ecran.SetToken(token);
             yield return AttendreLeRendu(ecran);
 
-            Assert.IsNull(ecran.DerniereErreur,
-                $"un 404 est un ÉTAT, pas une panne — et l'écran a enregistré : {ecran.DerniereErreur}");
-            Assert.AreEqual(0, ecran.FilesOuvertes, "un compte frais n'a aucune file : la police n'a pas encore ouvert");
-            Assert.IsTrue(ecran.EtatVide, "0 file ouverte et l'écran ne se dit pas vide");
-            Assert.AreEqual(0, ecran.LignesRendues, "tout ou rien : 0 file ⇒ 0 ligne, jamais 18 lignes éteintes");
+            Assert.AreEqual(0, ecran.FilesVides,
+                "TD-879 : la pile sert désormais 200 EMPTY sur un compte frais — retirer la phrase de la police (InspectionScreenController.Rendre, " +
+                "branche EtatVide, « La police n'a pas encore ouvert ses files ») et cet énoncé daté");
+            Assert.IsNull(ecran.DerniereErreur, $"un 404 est un ÉTAT, pas une panne — et l'écran a enregistré : {ecran.DerniereErreur}");
+            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.Files404, "un compte frais : 18 × 404 sur le back servi");
+            Assert.IsTrue(ecran.EtatVide, "0 file ouverte : l'état vide d'aujourd'hui");
+            Assert.AreEqual(0, ecran.LignesRendues, "un 404 n'est jamais traduit en ligne « VIDE » (TD-1010)");
+            StringAssert.StartsWith("La police n'a pas encore ouvert", ecran.TexteDuVide);
+        }
+
+        /// <summary>G1 — un 404 n'est JAMAIS traduit en file vide, quelle que soit sa cause (les deux corps sont indiscernables : TD-1010) ; 404 ≠ 500.
+        /// CONTRÔLE POSITIF : le corps 200 EMPTY ⇒ 18 files vides — la garde voit une file vide quand il y en a une.</summary>
+        [UnityTest]
+        public IEnumerator G1_Un404NEstJamaisUneFileVide_404DifferentDe500_ControleLe200Vide()
+        {
+            foreach (string corps404 in new[] { Corps404FilePasSemee, Corps404SansProfil })
+            {
+                yield return MonterAvecDesFiles(_ => (404, corps404));
+                var e = ecranCourant;
+                Assert.AreEqual(InspectionScreenController.NombreDeDistricts, e.Files404, "18 × 404 comptés");
+                Assert.AreEqual(0, e.FilesVides, "un 404 n'est JAMAIS une file vide (réintroduire « 404 ⇒ FileVide » ferait mentir l'écran à un compte sans profil)");
+                Assert.IsTrue(e.EtatVide);
+                Assert.AreEqual(0, e.LignesRendues);
+                Nettoyer();
+            }
+            yield return MonterAvecDesFiles(_ => (500, Corps500));
+            Assert.AreEqual(0, ecranCourant.Files404, "un 500 n'est pas un 404");
+            Assert.IsNotNull(ecranCourant.DerniereErreur, "un 500 est une panne");
+            Nettoyer();
+
+            yield return MonterAvecDesFiles(id => (200, CorpsFile(id, "EMPTY")));
+            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecranCourant.FilesVides, "CONTRÔLE POSITIF : le 200 EMPTY ⇒ 18 files vides");
+            Assert.AreEqual(0, ecranCourant.Files404, "CONTRÔLE POSITIF : aucun 404");
+            Assert.IsFalse(ecranCourant.EtatVide, "CONTRÔLE POSITIF : le registre s'ouvre");
+        }
+
+        /// <summary>G2 — anti-vacuité de (i) : un registre MIXTE (la distribution du cadre 32 : 10 vides, 8 pleines) rend 10 « VIDE », pas 18.</summary>
+        [UnityTest]
+        public IEnumerator G2_RegistreMixte_DixLignesVides_PasDixHuit()
+        {
+            yield return MonterAvecDesFiles(id => id <= 10 ? (200, CorpsFile(id, "EMPTY")) : (200, CorpsFile(id, "LIGHT", "SOME")));
+            string vide = MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.ChargeDeLaFile, "EMPTY");
+            string[] charges = ChargesRendues();
+            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, charges.Length, "18 lignes");
+            Assert.AreEqual(10, charges.Count(c => c == vide), "10 lignes « VIDE » sur un registre mixte : le compte distingue les lignes vides des pleines");
+            Assert.AreEqual(10, ecranCourant.FilesVides);
+        }
+
+        /// <summary>G3 — ERREUR ≠ VIDE : 18 × 500 ⇒ la fiche dit la panne, jamais une ville vide. CONTRÔLE : 17 EMPTY + 1 × 500 ⇒ le registre de 18 lignes
+        /// ET l'erreur enregistrée (la panne partielle ne bascule pas en fiche).</summary>
+        [UnityTest]
+        public IEnumerator G3_PanneTotale_DitLaPanne_PannePartielle_GardeLeRegistre()
+        {
+            yield return MonterAvecDesFiles(_ => (500, Corps500));
+            // la cause est ISOLÉE (revue ⊥ du code) : `DerniereErreur` peut venir aussi de `LireDistricts` (pile réelle) — ces deux comptes disent que ce sont les FILES qui ont failli
+            Assert.AreEqual(0, ecranCourant.Files404, "18 × 500 : aucun n'est compté 404");
+            Assert.AreEqual(0, ecranCourant.FilesOuvertes, "18 × 500 : aucune file ouverte");
+            Assert.IsTrue(ecranCourant.EtatVide);
+            Assert.IsNotNull(ecranCourant.DerniereErreur);
+            Assert.AreEqual("La file n'a pas répondu.", ecranCourant.TexteDuVide, "une panne totale est dite comme une panne");
+            Assert.AreEqual(0, ecranCourant.LignesRendues);
+            Nettoyer();
+
+            yield return MonterAvecDesFiles(id => id == 7 ? (500, Corps500) : (200, CorpsFile(id, "EMPTY")));
+            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecranCourant.LignesRendues, "CONTRÔLE : panne partielle ⇒ les 18 lignes (la défaillante éteinte)");
+            Assert.IsNotNull(ecranCourant.DerniereErreur, "CONTRÔLE : …et la panne est enregistrée");
+            Assert.AreEqual(17, ecranCourant.FilesVides);
+        }
+
+        /// <summary>G4 — la source des mots de la ligne VIDE : les domaines fermés portent `EMPTY` et `NOMINAL` (sinon le registre dirait l'énuméré brut).</summary>
+        [Test]
+        public void G4_LesMotsDeLaLigneVideExistent()
+        {
+            Assert.IsTrue(MafiaCleanCity.I18n.MotsDesEnumeres.ChargeDeLaFile.Mots.ContainsKey("EMPTY"), "`EMPTY` a son mot (« vide »)");
+            Assert.IsTrue(MafiaCleanCity.I18n.MotsDesEnumeres.Regime.Mots.ContainsKey("NOMINAL"), "`NOMINAL` a son mot (« nominal »)");
+            Assert.AreNotEqual("EMPTY", MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MafiaCleanCity.I18n.MotsDesEnumeres.ChargeDeLaFile, "EMPTY"));
         }
 
         // ═══ F7 (juge d'ensemble r1, 08/10) — le dépôt est une FICHE de papier, pas du texte clair sur le liège ═══════════════════════

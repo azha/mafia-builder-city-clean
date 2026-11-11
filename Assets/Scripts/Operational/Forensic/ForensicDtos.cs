@@ -32,8 +32,9 @@ namespace MafiaCleanCity.Operational
 
     /// <summary>Une ligne de `GET /v1/me/internal-affairs/actors` (`ActorSummary`, `ia-projection.service.ts`, mesuré @accc9605) : TROIS
     /// champs, jamais de niveau de soupçon (mur P5). `actorType` ∈ {lawyer, clerk} ; `status` ∈ {steady, nervous, unavailable, gone}.
-    /// ⚠️ Le PRIX d'un renseignement n'est servi par aucune route avant l'achat (`costCents` n'existe que dans le RÉSULTAT du POST) :
-    /// l'écran n'achète donc rien (㊴, R2 du design).</summary>
+    /// Le PRIX d'un renseignement : jusqu'au back `dette/b2-fin-tranche-2026-11-11` @36bd4b0e (TD-891, BACK-2), il n'était servi qu'au RÉSULTAT du
+    /// POST d'achat ; depuis, `intelCostCents` est servi à la RACINE de cette réponse (voir `GetActeursResponseDto`). L'écran n'achète toujours rien
+    /// (㊴, R2 du design ; le geste et l'affichage du montant attendent le lot « acheter du renseignement », TD-988).</summary>
     [Serializable]
     public class ActeurDto
     {
@@ -42,7 +43,16 @@ namespace MafiaCleanCity.Operational
         public string status;
     }
 
-    [Serializable] public class GetActeursResponseDto { public ActeurDto[] actors; }
+    /// <summary>`GET /v1/me/internal-affairs/actors` → `payload.data` : `{ actors, intelCostCents }` — RECOPIÉ (V15) de
+    /// `internal-affairs.controller.ts:63-66` @36bd4b0e (`intelCostCents: number`, = `intelPurchaseCostCents`, 800000 par défaut). Déclarée ICI pour
+    /// que `JsonUtility` ne la jette pas (forme G). Clé absente (back plus ancien) ⇒ 0 ⇒ « non servi » : le prix n'est JAMAIS 0.</summary>
+    [Serializable] public class GetActeursResponseDto
+    {
+        public ActeurDto[] actors;
+        public long intelCostCents;
+        /// <summary>Le prix SERVI en cents, ou null (clé absente, ou ≤ 0 : jamais un prix nul).</summary>
+        public long? PrixServiCents => intelCostCents > 0 ? intelCostCents : (long?)null;
+    }
     [Serializable] public class GetActeursPayload { public GetActeursResponseDto data; }
     [Serializable] public class GetActeursEnvelope { public GetActeursPayload payload; }
 

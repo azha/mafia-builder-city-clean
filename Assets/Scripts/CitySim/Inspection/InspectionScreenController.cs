@@ -62,6 +62,12 @@ namespace MafiaCleanCity.CitySim.Inspection
         public DistrictNomDto[] Districts { get; private set; }     // `world/districts`, tels que servis
         public FileData[] Files { get; private set; }              // index = id − 1 ; null = pas de file (404)
         public int FilesOuvertes { get; private set; }             // combien de districts ont répondu 200
+        public int FilesVides { get; private set; }                // dont `queue_load == "EMPTY"` (TD-879 : le 200 vide d'un compte frais)
+        public int Files404 { get; private set; }                  // combien ont répondu 404 (jamais traduit en file vide : TD-1010)
+        /// <summary>Le texte de la fiche d'état vide, montré ; "" si la fiche est cachée.</summary>
+        public string TexteDuVide => videTexte != null && videTexte.gameObject.activeSelf ? videTexte.text : "";
+        /// <summary>⛔ Réservé aux tests hors réseau : le client des files, pour lui poser `InspectionClient.ReponsePourTest`.</summary>
+        public InspectionClient ClientPourTest { get { Init(); return client; } }
         public int LignesRendues { get; private set; }             // les lignes du registre effectivement dessinées
         public BatimentPossedeDto Cible { get; private set; }      // le bâtiment que le dépôt vise (#33 « SUR »)
         public RapportData DernierRapport { get; private set; }
@@ -163,18 +169,21 @@ namespace MafiaCleanCity.CitySim.Inspection
             Rendre();
         }
 
-        /// <summary>Les 18 files, dans l'ordre des districts. 404 = pas de file (un ÉTAT, S12-d) ;
-        /// tout autre code = une panne, et l'écran le dira.</summary>
+        /// <summary>Les 18 files, dans l'ordre des districts. Un 200 `EMPTY` est une file VIDE et se rend en ligne « VIDE » (TD-879). Un 404
+        /// reste « pas de file » (un ÉTAT, S12-d) et n'est JAMAIS traduit en file vide : il peut aussi vouloir dire « pas de profil », par un
+        /// corps indiscernable (TD-1010, ruling f2 11/11). Tout autre code = une panne, et l'écran le dira.</summary>
         private IEnumerator LireLesFiles(string bearer)
         {
             Files = new FileData[NombreDeDistricts];
             FilesOuvertes = 0;
+            FilesVides = 0;
+            Files404 = 0;
             for (int id = 1; id <= NombreDeDistricts; id++)
             {
                 int k = id - 1;
                 yield return client.LireFile(id, bearer,
-                    f => { Files[k] = f; FilesOuvertes++; },
-                    (c, m) => { if (c != 404) DerniereErreur = $"{c}: {m}"; });
+                    f => { Files[k] = f; FilesOuvertes++; if (f.queue_load == "EMPTY") FilesVides++; },
+                    (c, m) => { if (c != 404) DerniereErreur = $"{c}: {m}"; else Files404++; });
             }
         }
 
@@ -253,6 +262,10 @@ namespace MafiaCleanCity.CitySim.Inspection
                 // table 63 v2 : la phrase de la police, PUIS l'état. Addendum 63 (client 33b422c5, 26/09) : « Rien à faire ici tant
                 // qu'aucune file n'est ouverte » était FAUX au-dessus d'un DÉPOSER actif (D3) — REMPLACÉE par une phrase vraie avec le
                 // dépôt offert. (Le dépôt reste tel que D3 le prévoit — décision de registre du 22/09, rappelée par f2 le 26/09.)
+                // ⏳ ÉNONCÉ DATÉ (TD-879, ruling f2 11/11) : au 2026-11-11, sur le back servi `main` 2ed39589, un compte frais reçoit 18 × 404 et
+                // ⑮ dit ici la phrase de la police. Le back de BACK-2 sert 200 EMPTY : la ville vide devient le registre de 18 lignes « VIDE » et
+                // cette phrase devient inatteignable — à RETIRER alors. Détecteur : `InspectionScreenPlayModeTests.EtatVide_SurUn404DeFile_…`
+                // (`FilesVides == 0` sur un compte frais réel) rougit le jour où la pile sert 200 EMPTY.
                 videTexte.text = DerniereErreur == null
                     ? "La police n'a pas encore ouvert ses files — elle les ouvre sur les 18 districts à la fois."
                       + "\n" + MafiaCleanCity.I18n.Libelle.Gabarit("inspection.vide.aucune_inspection_en_cours", "Aucune inspection en cours.")

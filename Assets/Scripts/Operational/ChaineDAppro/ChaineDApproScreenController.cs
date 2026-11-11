@@ -99,6 +99,10 @@ namespace MafiaCleanCity.Operational
         /// <summary>Table 64 (passe UX 2026-09-26) — les lieutenants SERVIS du labo (`me/buildings`) et le roster (`GET /v1/lieutenants`) :
         /// c'est là qu'est le nom de qui parle. « Nestor » était figé.</summary>
         public string[] LieutenantsDuLabo { get; private set; }
+        /// <summary>Cadre 154 — les bâtiments SERVIS du joueur (`me/buildings`, le même appel que la découverte du labo) : la source des noms
+        /// des maillons. Null : non lus (panne) — la chaîne n'est alors JAMAIS rendue (`Charger` s'arrête sur l'état indisponible avant le
+        /// graphe) : « absent de la liste ⇒ détruit » ne se lit que sur une liste SERVIE.</summary>
+        public BatimentPossedeDto[] BatimentsServis { get; private set; }
         public MafiaCleanCity.Operational.Lieutenant.RosterRow[] Roster { get; private set; }
         /// <summary>Les textes RÉELLEMENT rendus, dans l'ordre — crochet de test (patron
         /// `ExceptionQueueController.RenderedTexts`), pour asserter le contenu sans dépendre de la
@@ -195,6 +199,7 @@ namespace MafiaCleanCity.Operational
             BatimentPossedeDto[] possedes = null;
             long codePanne = 0; string messagePanne = null;
             yield return mes.Lire(token, bs => possedes = bs, (c, m) => { codePanne = c; messagePanne = m; });
+            BatimentsServis = possedes;   // cadre 154 : les NOMS des maillons (jointure sur building_id)
             if (possedes == null)
             {
                 Debug.LogWarning($"[㉚] me/buildings indisponible : {codePanne} {messagePanne}");
@@ -228,14 +233,6 @@ namespace MafiaCleanCity.Operational
                 foreach (MafiaCleanCity.Operational.Lieutenant.RosterRow r in roster)
                     if (r != null && r.lieutenant_id == id && !string.IsNullOrWhiteSpace(r.name)) return r.name;
             return null;
-        }
-
-        /// <summary>Table 63 — tous les nœuds servis sont `silent` (et il y en a au moins un). Pure.</summary>
-        public static bool ToutSilencieux(GetSupplyChainGraphResponseDto g)
-        {
-            if (g == null || g.nodes == null || g.nodes.Length == 0) return false;
-            foreach (SupplyChainNodeDto n in g.nodes) if (n == null || n.bucket != "silent") return false;
-            return true;
         }
 
         /// <summary>Les deux types qui cuisinent, dans le domaine `building_operational_type`.</summary>
@@ -348,14 +345,16 @@ namespace MafiaCleanCity.Operational
             AppliquerEtat(dto);
         }
 
-        /// <summary>Idem pour la section chaîne — voir `RendrePourTest`.</summary>
-        public void RendrePourTestChaine(GetSupplyChainGraphResponseDto dto)
+        /// <summary>Idem pour la section chaîne — voir `RendrePourTest`. `batiments` : les bâtiments servis (`me/buildings`) dont la chaîne lit
+        /// les noms ; omis ⇒ une liste VIDE (chaque maillon est alors un bâtiment détruit), jamais « non lus ».</summary>
+        public void RendrePourTestChaine(GetSupplyChainGraphResponseDto dto, BatimentPossedeDto[] batiments = null)
         {
             // ⛔ Arrêter ce qui est DÉJÀ parti, en plus d'interdire un départ — voir `coroutineChargement`.
             renduExpliciteDemande = true;
             if (coroutineChargement != null) { StopCoroutine(coroutineChargement); coroutineChargement = null; }
             chargementAmorce = true;   // même raison que `RendrePourTest` ci-dessus
             EnsureInitialized();
+            BatimentsServis = batiments ?? new BatimentPossedeDto[0];
             DernierGraphe = dto;
             AppliquerChaine(dto);
         }
@@ -608,33 +607,258 @@ namespace MafiaCleanCity.Operational
         // (la seule action locale scaffoldée dans ce sens, `POST .../legs/:id/maintain`, prend un
         // `leg_id`), elles sont INATTEIGNABLES sans un nœud connu : non câblées, voir
         // `ChaineDApproClient.PostSupplyChainLegsMaintain`.
+        // ★ CADRE 154 « La chaîne vue du graphe » (atelier `4ae50cca`, RATIFIÉ ; design `Tools/appro-maillons/DESIGN.md`, rulings f2 11/11 (A) et (a)) :
+        //   l'en-tête « La chaîne » REMPLACE « LA CHAÎNE, EN REMONTANT » (le titre m-50 d'une trace que le graphe ne porte pas), puis une fenêtre
+        //   qui DÉFILE : les maillons (`nodes`), puis les liaisons (`legs`). TD-985 FERMÉE : la phrase provisoire est retirée ; la phrase de la
+        //   table 63 aussi (dès ≥ 1 nœud, chaque maillon dit sa bande) — leurs clés servies n'ont plus de lecteur côté client, rien ne se renomme.
+        //   0 nœud ET 0 liaison : « Rien à remonter… », inchangé.
         private void AppliquerChaine(GetSupplyChainGraphResponseDto dto)
         {
             ViderEnfants(chaineRoot);
+            ConstruireEnteteDeChaine();
 
-            TextMeshProUGUI label = NouveauTexteFiche(chaineRoot, "ChaineLabel",
-                Libelle.De("appro", "bloc", "LA CHAÎNE, EN REMONTANT"), 8.5f,
-                DesignTokens.Current.onSurfaceSecondary, false);
-            label.characterSpacing = 4f;
-            TrackText(label.text);
-
-            bool vide = dto == null || dto.nodes == null || dto.nodes.Length == 0;
-            // ⛔ ÉTAT VIDE FAUX (passe UX 2026-09-26, table 63) : « Des maillons existent, mais cet écran ne sait pas encore les afficher »
-            // était un texte de CHANTIER, montré au joueur neuf dont les maillons sont tous `silent`. Ce qui est vrai alors : rien ne
-            // circule. Des nœuds non silencieux : l'écran n'a pas de rendu dédié — il se TAIT plutôt que de parler de lui.
-            string message = vide
-                // MESURÉ (2026-09-03, compte `operational_demo@example.test`) : `nodes: []`.
-                ? Libelle.De("appro", "bloc", "Rien à remonter pour l’instant — la chaîne ne connaît aucun maillon sur ce compte.")
-                : ToutSilencieux(dto)
-                    ? Libelle.Gabarit("appro.vide.rien_ne_circule_encore_vos_maillons_attendent_une_premiere_commande",
-                        "Rien ne circule encore\u00A0: vos maillons attendent une première commande.")
-                    : null;
-            if (message != null)
+            Dictionary<string, BatimentPossedeDto> parId = ChaineDApproGraphe.ParId(BatimentsServis);
+            List<ChaineDApproGraphe.Maillon> maillons = ChaineDApproGraphe.Maillons(dto?.nodes, parId);
+            List<ChaineDApproGraphe.Liaison> liaisons = ChaineDApproGraphe.Liaisons(dto?.legs, parId);
+            if (maillons.Count == 0 && liaisons.Count == 0)
             {
-                TextMeshProUGUI msg = NouveauTexteFiche(chaineRoot, "ChaineMessage", message, 9f, DesignTokens.Current.onSurfaceMuted, false);
+                // MESURÉ (2026-09-03, compte `operational_demo@example.test`) : `nodes: []`. Sous l'en-tête, à la marge haute du corps (`.abody` 10 px).
+                GameObject corpsVide = NouveauUI("CorpsVide", chaineRoot);
+                VerticalLayoutGroup cv = corpsVide.AddComponent<VerticalLayoutGroup>();
+                cv.padding = new RectOffset(0, 0, PxTrait(10f), 0);
+                cv.childControlWidth = true; cv.childControlHeight = true;
+                cv.childForceExpandWidth = true; cv.childForceExpandHeight = false;
+                TextMeshProUGUI msg = NouveauTexteFiche(corpsVide.transform, "ChaineMessage",
+                    Libelle.De("appro", "bloc", "Rien à remonter pour l’instant — la chaîne ne connaît aucun maillon sur ce compte."),
+                    9f, DesignTokens.Current.onSurfaceMuted, false);
                 msg.enableWordWrapping = true;
                 TrackText(msg.text);
+                return;
             }
+
+            RectTransform contenu = ConstruireFenetreDeChaine();
+            if (maillons.Count > 0)
+            {
+                Titron(contenu, "TitronMaillons", Libelle.Gabarit("appro.titre.les_maillons", "Les maillons"), 0f);
+                foreach (ChaineDApproGraphe.Maillon m in maillons) ConstruireMaillon(contenu, m);
+            }
+            if (liaisons.Count > 0)
+            {
+                // `.gr30-titron2{margin-top:9px}` — seulement quand une section le précède
+                Titron(contenu, "TitronLiaisons", Libelle.Gabarit("appro.titre.les_liaisons", "Les liaisons"), maillons.Count > 0 ? 9f : 0f);
+                foreach (ChaineDApproGraphe.Liaison l in liaisons) ConstruireLiaison(contenu, l);
+            }
+        }
+
+        // ── les pièces du cadre 154 (CSS `.appr6 .entete`, `.titron`, `.noeud.gr30-n`, `.gr30-l`, `.etat`, recopié du cadre @4ae50cca) ──
+        // Couleurs du cadre en aplat : aucune n'est à moins de 4 d'un jeton (mesuré 11/11), sauf `#d9ab4e` = `hudMoneyUnderlineGold`, lu par
+        // `ChaineDApproGraphe.TeinteDeRang`. Filets : les recettes MESURÉES `ChaineDAppro.Entete` / `.Noeud` quand elles existent — mesurées sur les
+        // cadres 48-53, PAS 154 : leurs valeurs coïncident exactement avec le CSS du cadre 154 (`.entete` / `.noeud` : 1 px `#3a352c`, r 3), mais un
+        // re-mesurage de 48-53 les déplacerait aussi ici (TD-1043) ; sinon une
+        // recette locale recopiée du CSS (patron `DistributionScreenController.RecetteCadreB`) — la mesure Chromium indexe les cadres par
+        // POSITION, et re-mesurer aujourd'hui remuerait les recettes des autres écrans.
+        private static Color FondEntete => Hex("#1e1b16");
+        private static Color EncreTitreChaine => Hex("#f0dfc4");
+        private static Color EncreSousTitreChaine => Hex("#9a8f78");
+        private static Color EncreTitron => Hex("#8a8069");
+        private static Color FondMaillon => Hex("#221f1a");
+        private static Color EncreNomMaillon => Hex("#efe6d4");
+        private static Color EncreFleche => Hex("#91876e");
+        private static Color FondLiaison => Hex("#1d1a16");   // ⚠️ d = 5,00 de `readableTextDark` (seuil TD-612 : 4) — un ajustement de palette peut le faire rougir
+        private static Color EncreNomLiaison => Hex("#d8cfbb");
+        private static SpecFilet[] FiletLiaison => new[] { new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, Teinte.Hex("#38332a"), rayon: 3f, couleurCss: "38332a") };
+        /// <summary>`.gr30-l.gr30-contourne{border-style:dashed;border-color:#6f6656}` — la liaison `bypassed`.</summary>
+        public static SpecFilet[] FiletLiaisonContournee => new[] { new SpecFilet(Cotes.Tous, 1f, StyleFilet.Tirete, Teinte.Hex("#6f6656"), rayon: 3f, couleurCss: "6f6656") };
+        private static SpecFilet[] FiletEtat(Teinte t) => new[] { new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, t, rayon: 2f) };
+
+        /// <summary>CSS `letter-spacing` (px) → TMP `characterSpacing` (centièmes d'em du corps).</summary>
+        private static float Espacement(float cssPx, float corpsCss) => cssPx / corpsCss * 100f;
+
+        private TextMeshProUGUI TexteSerif(Transform parent, string nom, string texte, float corpsCss, Color couleur)
+        {
+            TextMeshProUGUI t = NouveauTexteFiche(parent, nom, texte, corpsCss, couleur, true);
+            t.font = DesignTokens.Current.hudSerifFont;
+            return t;
+        }
+
+        /// <summary>`.appr6 .entete` : « La chaîne » (DejaVu Serif gras 12 px) + le sous-titre (7 px), fond `#1e1b16`, filet bas MESURÉ.</summary>
+        private void ConstruireEnteteDeChaine()
+        {
+            GameObject go = NouveauUI("EnteteChaine", chaineRoot);
+            AjouterFond(go, FondEntete);
+            Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.ChaineDAppro.Entete);
+            VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset(PxTrait(13f), PxTrait(13f), PxTrait(11f), PxTrait(9f));
+            v.spacing = Px(4f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            AddLayoutElement(go, flexibleHeight: 0);
+
+            TextMeshProUGUI titre = TexteSerif(go.transform, "TitreChaine", Libelle.Gabarit("appro.titre.la_chaine", "La chaîne"), 12f, EncreTitreChaine);
+            titre.characterSpacing = Espacement(0.3f, 12f);
+            TrackText(titre.text);
+            TextMeshProUGUI sous = NouveauTexteFiche(go.transform, "SousTitreChaine",
+                Libelle.Gabarit("appro.sous_titre.chaque_maillon_sa_pression_chaque_liaison_son_entretien", "Chaque maillon, sa pression\u202F; chaque liaison, son entretien."), 7f, EncreSousTitreChaine, false);
+            sous.enableWordWrapping = true;
+            TrackText(sous.text);
+        }
+
+        /// <summary>`.abody.gr30-defile{overflow-y:auto}` (E2 du juge : N maillons, N liaisons, sans pagination) — la fenêtre prend la hauteur
+        /// RESTANTE de la section et défile ; `ListeDefilante` (fondu + ascenseur, garde de classe) l'équipe. Rend le CONTENU.</summary>
+        private RectTransform ConstruireFenetreDeChaine()
+        {
+            GameObject fenetre = NouveauUI("FenetreChaine", chaineRoot);
+            LayoutElement le = fenetre.AddComponent<LayoutElement>();
+            le.flexibleHeight = 1f; le.minHeight = 0f; le.preferredHeight = 0f;
+            fenetre.AddComponent<RectMask2D>();
+
+            GameObject contenu = NouveauUI("ContenuChaine", fenetre.transform);
+            RectTransform rtc = (RectTransform)contenu.transform;
+            rtc.anchorMin = new Vector2(0f, 1f); rtc.anchorMax = new Vector2(1f, 1f); rtc.pivot = new Vector2(0.5f, 1f);
+            rtc.offsetMin = Vector2.zero; rtc.offsetMax = Vector2.zero;
+            VerticalLayoutGroup v = contenu.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset(0, 0, PxTrait(10f), PxTrait(10f));
+            v.spacing = Px(4f);   // `.gr30-n` / `.gr30-l` : margin-bottom 4px
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            // Le contenu se dimensionne sur ses enfants : c'est ce qui donne une course au ScrollRect.
+            contenu.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            ListeDefilante.Equiper((RectTransform)fenetre.transform, rtc, DecorsDeScene.ChaineDAppro.Support.CouleurDuBas);
+            return rtc;
+        }
+
+        /// <summary>`.appr6 .titron` : 6,6 px semi-gras, capitales, interlettre 1,5 px, `#8a8069`, marge basse 7 px (le pas de la liste en donne 4).</summary>
+        private void Titron(Transform parent, string nom, string texte, float margeHautCss)
+        {
+            GameObject go = NouveauUI(nom, parent);
+            VerticalLayoutGroup v = go.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset(0, 0, PxTrait(Mathf.Max(0f, margeHautCss - 4f)), PxTrait(3f));
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            TextMeshProUGUI t = NouveauTexteFiche(go.transform, "Texte", texte, 6.6f, EncreTitron, true);
+            t.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+            t.characterSpacing = Espacement(1.5f, 6.6f);
+            TrackText(t.text);
+        }
+
+        /// <summary>Le mot d'une bande, encadré de sa couleur (`.etat{font:700 7.4px;border:1px solid currentColor;border-radius:2px;padding:3px 5px}`).</summary>
+        private void Etat(Transform parent, string mot, int rang)
+        {
+            Teinte teinte = ChaineDApproGraphe.TeinteDeRang(rang);
+            GameObject go = NouveauUI("Etat", parent);
+            Filets.Poser((RectTransform)go.transform, FiletEtat(teinte));
+            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(PxTrait(5f), PxTrait(5f), PxTrait(3f), PxTrait(3f));
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            AddLayoutElement(go, flexibleWidth: 0);
+            TextMeshProUGUI t = NouveauTexteFiche(go.transform, "Mot", mot, 7.4f, teinte.Resoudre(), true);
+            t.enableWordWrapping = false;
+            TrackText(t.text);
+        }
+
+        /// <summary>Un maillon (`.noeud.gr30-n`) : pastille de la bande · nom servi · « ↳ refoule vers {nom} » si et seulement si `has_arrow` · le mot.</summary>
+        private void ConstruireMaillon(Transform parent, ChaineDApproGraphe.Maillon m)
+        {
+            GameObject go = NouveauUI("Maillon", parent);
+            AjouterFond(go, FondMaillon);
+            Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.ChaineDAppro.Noeud);
+            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(PxTrait(9f), PxTrait(9f), PxTrait(6f), PxTrait(6f));
+            h.spacing = Px(9f);
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            AddLayoutElement(go, flexibleHeight: 0);
+
+            GameObject pt = NouveauUI("Pastille", go.transform);
+            Image disque = AjouterFond(pt, ChaineDApproGraphe.TeinteDeRang(m.Rang).Resoudre());
+            disque.sprite = ProceduralUI.RoundedRectMask(Mathf.Max(1, Mathf.RoundToInt(Px(4.5f))));
+            disque.type = Image.Type.Sliced;
+            AddLayoutElement(pt, minWidth: Px(9f), preferredWidth: Px(9f), minHeight: Px(9f), preferredHeight: Px(9f), flexibleWidth: 0);
+
+            GameObject n = NouveauUI("N", go.transform);
+            VerticalLayoutGroup v = n.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(4f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            AddLayoutElement(n, flexibleWidth: 1, minWidth: 0);
+            TextMeshProUGUI nom = TexteSerif(n.transform, "Nom", m.Nom, 8.4f, EncreNomMaillon);
+            nom.enableWordWrapping = true;
+            TrackText(nom.text);
+            if (m.Vers != null)
+            {
+                // `appro.etiquette.refoule_vers` (BACK-1, design a7df3592 : « refoule vers » / « backs up into ») est une ÉTIQUETTE sans paramètre :
+                // le nom la SUIT, comme dans le cadre (`<i class="gr30-fl">↳ refoule vers <span class="gr30-nom">…</span></i>`). Le nom entre balisé à sa
+                // propre taille et son encre (`.gr30-fl .gr30-nom` : 7 px `#d8cfbb`) ; la balise est CALCULÉE (aucun littéral de couleur) ; le texte SUIVI
+                // est le texte visible, sans balise.
+                // (l'appel à `Libelle` reste DANS l'argument du puits d'affichage : le cliquet des chaînes ne suit pas une variable)
+                string balise = "<size=" + Px(7f).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "><color=#"
+                                + ColorUtility.ToHtmlStringRGB(EncreNomLiaison) + ">" + m.Vers + "</color></size>";
+                TextMeshProUGUI fl = NouveauTexteFiche(n.transform, "Refoule",
+                    "↳ " + Libelle.Gabarit("appro.etiquette.refoule_vers", "refoule vers") + " " + balise, 6.4f, EncreFleche, false);
+                fl.richText = true;
+                fl.enableWordWrapping = true;
+                TrackText("↳ " + Libelle.Gabarit("appro.etiquette.refoule_vers", "refoule vers") + " " + m.Vers);
+            }
+            Etat(go.transform, m.Mot, m.Rang);
+        }
+
+        /// <summary>Une liaison (`.gr30-l`) : origine, « → » destination · si `bypassed` : filet TIRETÉ + « contournée » · le mot de la dette.</summary>
+        private void ConstruireLiaison(Transform parent, ChaineDApproGraphe.Liaison l)
+        {
+            GameObject go = NouveauUI("Liaison", parent);
+            if (l.Contournee) go.name = "LiaisonContournee";   // nom d'objet (gardes) — sans ternaire à deux littéraux (garde N3)
+            AjouterFond(go, FondLiaison);
+            Filets.Poser((RectTransform)go.transform, l.Contournee ? FiletLiaisonContournee : FiletLiaison);
+            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(PxTrait(9f), PxTrait(9f), PxTrait(5f), PxTrait(5f));
+            h.spacing = Px(8f);
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            AddLayoutElement(go, flexibleHeight: 0);
+
+            GameObject t = NouveauUI("T", go.transform);
+            VerticalLayoutGroup v = t.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(2f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            AddLayoutElement(t, flexibleWidth: 1, minWidth: 0);
+            TextMeshProUGUI origine = NouveauTexteFiche(t.transform, "Origine", l.Origine, 7.4f, EncreNomLiaison, false);
+            origine.enableWordWrapping = true;
+            TrackText(origine.text);
+
+            GameObject vers = NouveauUI("Vers", t.transform);
+            HorizontalLayoutGroup hv = vers.AddComponent<HorizontalLayoutGroup>();
+            hv.spacing = Px(3f);
+            hv.childAlignment = TextAnchor.UpperLeft;
+            hv.childControlWidth = true; hv.childControlHeight = true;
+            hv.childForceExpandWidth = false; hv.childForceExpandHeight = false;
+            TextMeshProUGUI fleche = NouveauTexteFiche(vers.transform, "Fleche", "→", 9f, EncreTitron, true);   // un signe, pas un mot
+            fleche.enableWordWrapping = false;
+            AddLayoutElement(fleche.gameObject, flexibleWidth: 0);
+            TextMeshProUGUI destination = NouveauTexteFiche(vers.transform, "Destination", l.Destination, 7.4f, EncreNomLiaison, false);
+            destination.enableWordWrapping = true;
+            AddLayoutElement(destination.gameObject, flexibleWidth: 1, minWidth: 0);
+            TrackText(destination.text);
+
+            GameObject dr = NouveauUI("Droite", go.transform);
+            HorizontalLayoutGroup hd = dr.AddComponent<HorizontalLayoutGroup>();
+            hd.spacing = Px(6f);
+            hd.childAlignment = TextAnchor.MiddleRight;
+            hd.childControlWidth = true; hd.childControlHeight = true;
+            hd.childForceExpandWidth = false; hd.childForceExpandHeight = false;
+            AddLayoutElement(dr, flexibleWidth: 0);
+            if (l.Contournee)
+            {
+                TextMeshProUGUI ctn = NouveauTexteFiche(dr.transform, "Contournee", Libelle.Gabarit("appro.etiquette.contournee", "contournée"), 7f, EncreTitron, false);
+                ctn.fontStyle = FontStyles.Italic;
+                ctn.enableWordWrapping = false;
+                TrackText(ctn.text);
+            }
+            Etat(dr.transform, l.Mot, l.Rang);
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
@@ -756,14 +980,14 @@ namespace MafiaCleanCity.Operational
             AddLayoutElement(ficheGo, flexibleHeight: 0);
             ficheRoot = ficheGo.transform;
 
-            // « LA CHAÎNE, EN REMONTANT » — squelette persistant (§3), contenu rempli par
-            // `AppliquerChaine`.
+            // « La chaîne » (cadre 154) — squelette persistant (§3), contenu rempli par `AppliquerChaine`. Elle prend la hauteur RESTANTE
+            // sous le bon (ruling f2 (A), 11/11) : sa fenêtre défile dedans. L'en-tête et la fenêtre se touchent (`.entete` puis `.abody`).
             GameObject chaineGo = NouveauUI("Chaine", corpsGo.transform);
             VerticalLayoutGroup vc = chaineGo.AddComponent<VerticalLayoutGroup>();
-            vc.spacing = Px(4f);
+            vc.spacing = 0f;
             vc.childControlWidth = true; vc.childControlHeight = true;
             vc.childForceExpandWidth = true; vc.childForceExpandHeight = false;
-            AddLayoutElement(chaineGo, flexibleHeight: 0);
+            AddLayoutElement(chaineGo, flexibleHeight: 1, minHeight: 0);
             chaineRoot = chaineGo.transform;
 
             // Le pied — réplique/note + bouton, contenu rempli par `RendrePied`.
@@ -961,13 +1185,15 @@ namespace MafiaCleanCity.Operational
             }
         }
 
+        /// <summary>La clé est la VALEUR servie (`appro.fournisseur.fresh|used|strained`, BACK-1 `lot/chaine-bandes-2` @1845e0e8,
+        /// `string_table.ts:3682-3684` FR) ; le repli est le texte des maquettes, égal au FR servi, et il se COMPTE (11/11, f2).</summary>
         public static string TextePressionFournisseur(PressionFournisseur p)
         {
             switch (p)
             {
-                case PressionFournisseur.Fresh: return "il vous prend encore au sérieux";   // m-49
-                case PressionFournisseur.Used: return "il commence à traîner";              // m-53
-                case PressionFournisseur.Strained: return "il vous fait attendre exprès";   // m-48
+                case PressionFournisseur.Fresh: return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "fournisseur", "fresh", "il vous prend encore au sérieux");   // m-49
+                case PressionFournisseur.Used: return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "fournisseur", "used", "il commence à traîner");              // m-53
+                case PressionFournisseur.Strained: return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "fournisseur", "strained", "il vous fait attendre exprès");   // m-48
                 default: throw new ArgumentOutOfRangeException(nameof(p), p,
                     "ChaineDApproResolvers.TextePressionFournisseur : membre non résolu.");
             }
@@ -1045,6 +1271,191 @@ namespace MafiaCleanCity.Operational
                 mots[i] = char.ToUpperInvariant(mots[i][0]) + mots[i].Substring(1).ToLowerInvariant();
             }
             return string.Join(" ", mots);
+        }
+    }
+
+    /// <summary>㉚ cadre 154 « La chaîne vue du graphe » (atelier `4ae50cca`, RATIFIÉ ; design `Tools/appro-maillons/DESIGN.md`) — la partie
+    /// PURE : rang, mot et couleur de chaque bande, nom servi de chaque bâtiment, et l'ORDRE (règle d'affichage du CLIENT : le back n'en sert
+    /// aucun). Domaines recopiés du CODE (V15, back main `6040a213`) : `BackpressureBucket` = silent|mild|warm|critical
+    /// (`backpressure-bucket.ts:22`), `DebtBucket` = fresh|accruing|stressed|fractured (`debt-bucket.ts:23`). Mots : clé = la VALEUR servie
+    /// (`appro.pression.*` / `appro.dette.*`, BACK-1 `lot/chaine-bandes` @f9d92251 `string_table.ts:3655-3662` FR, @1845e0e8 `:3666-3673`), repli = le FR servi
+    /// (égal à l'octet, apostrophes typographiques comprises — vérifié par la revue ⊥ du 11/11).</summary>
+    public static class ChaineDApproGraphe
+    {
+        /// <summary>Le rang d'affichage d'une bande : 0 = la pire. Hors domaine ⇒ 4 (en dernier, jamais confondu avec une bande connue).</summary>
+        public const int RangHorsDomaine = 4;
+
+        public static int RangPression(string bucket)
+        {
+            switch (bucket)
+            {
+                case "critical": return 0;
+                case "warm": return 1;
+                case "mild": return 2;
+                case "silent": return 3;
+                default: return RangHorsDomaine;
+            }
+        }
+
+        public static int RangDette(string bucket)
+        {
+            switch (bucket)
+            {
+                case "fractured": return 0;
+                case "stressed": return 1;
+                case "accruing": return 2;
+                case "fresh": return 3;
+                default: return RangHorsDomaine;
+            }
+        }
+
+        public static string MotPression(string bucket)
+        {
+            switch (bucket)
+            {
+                case "critical": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "pression", "critical", "Ne livre plus");
+                case "warm": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "pression", "warm", "Engorgé");
+                case "mild": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "pression", "mild", "Ça commence à s’accumuler");
+                case "silent": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "pression", "silent", "Rien ne bloque");
+                default: return MafiaCleanCity.I18n.Repli.Etat(bucket);   // hors domaine : le mot GÉNÉRIQUE « état inconnu » (`commun.repli.etat_inconnu`, servi) ; absent : « — » ; jamais la valeur brute
+            }
+        }
+
+        public static string MotDette(string bucket)
+        {
+            switch (bucket)
+            {
+                case "fractured": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "dette", "fractured", "Rompu");
+                case "stressed": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "dette", "stressed", "Tient à peine");
+                case "accruing": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "dette", "accruing", "L’entretien prend du retard");
+                case "fresh": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "dette", "fresh", "Entretenu");
+                default: return MafiaCleanCity.I18n.Repli.Etat(bucket);
+            }
+        }
+
+        /// <summary>La teinte d'un rang (cadre 154 : `.etat` et `.gr30-pt`, mêmes couleurs pour les maillons et les liaisons). Le rang 2
+        /// (`#d9ab4e`) EST le jeton `hudMoneyUnderlineGold` (distance 0, garde TD-612) : il passe par le jeton.</summary>
+        public static Teinte TeinteDeRang(int rang)
+        {
+            switch (rang)
+            {
+                case 0: return Teinte.Hex("#d97a6a");
+                case 1: return Teinte.Hex("#e08a4a");
+                case 2: return Teinte.Jeton("hudMoneyUnderlineGold", t => t.hudMoneyUnderlineGold);
+                case 3: return Teinte.Hex("#8fb59a");
+                default: return Teinte.Jeton("onSurfaceMuted", t => t.onSurfaceMuted);
+            }
+        }
+
+        /// <summary>Le nom SERVI d'un bâtiment : `me/buildings` → `name_i18n` (OBLIGATOIRE côté back, `player-buildings.controller.ts:134`),
+        /// rendu par le catalogue (patron `BuildingCardController.NomDuBatiment`). Absent de la liste ⇒ un bâtiment DÉMOLI (la route exclut
+        /// `demolished`, `:107`) ⇒ le repli RATIFIÉ « un bâtiment détruit ». Jamais un nom deviné, jamais l'identifiant.</summary>
+        public static string NomDuBatiment(string buildingId, IReadOnlyDictionary<string, BatimentPossedeDto> parId)
+        {
+            if (!string.IsNullOrEmpty(buildingId) && parId != null && parId.TryGetValue(buildingId, out BatimentPossedeDto b)
+                && b != null && b.name_i18n != null && !string.IsNullOrEmpty(b.name_i18n.key))
+            {
+                var p = new Dictionary<string, string>();
+                NomDeBatimentParamsDto pr = b.name_i18n.@params;
+                if (pr != null)
+                {
+                    // on passe ce qu'on reçoit, rien de plus (`rang` est absent au rang 1 et la clé servie alors ne le demande pas)
+                    if (!string.IsNullOrEmpty(pr.enseigne)) p["enseigne"] = pr.enseigne;
+                    if (!string.IsNullOrEmpty(pr.district)) p["district"] = pr.district;
+                    if (!string.IsNullOrEmpty(pr.block)) p["block"] = pr.block;
+                    if (!string.IsNullOrEmpty(pr.rang)) p["rang"] = pr.rang;
+                }
+                return MafiaCleanCity.I18n.I18nCatalog.Traduire(b.name_i18n.key, p);
+            }
+            return MafiaCleanCity.I18n.Libelle.Gabarit("appro.etiquette.un_batiment_detruit", "un bâtiment détruit");
+        }
+
+        public static Dictionary<string, BatimentPossedeDto> ParId(BatimentPossedeDto[] batiments)
+        {
+            var d = new Dictionary<string, BatimentPossedeDto>();
+            if (batiments == null) return d;
+            foreach (BatimentPossedeDto b in batiments)
+                if (b != null && !string.IsNullOrEmpty(b.building)) d[b.building] = b;
+            return d;
+        }
+
+        /// <summary>Un maillon tel qu'il s'affiche. `Vers` : le nom du bâtiment vers lequel il refoule, SEULEMENT si `has_arrow` (la flèche
+        /// suit cette clé et rien d'autre — cadre 154, P1 du juge) ; sinon null.</summary>
+        public sealed class Maillon
+        {
+            public string Id, Nom, Bande, Mot, Vers;
+            public int Rang;
+        }
+
+        /// <summary>Une liaison telle qu'elle s'affiche. `Contournee` = `bypassed` (trait tireté + « contournée »).</summary>
+        public sealed class Liaison
+        {
+            public string Id, Origine, Destination, Bande, Mot;
+            public int Rang;
+            public bool Contournee;
+        }
+
+        private static readonly System.Globalization.CompareInfo Francais = System.Globalization.CultureInfo.GetCultureInfo("fr-FR").CompareInfo;
+        private static int ParNom(string a, string b) => Francais.Compare(a ?? "", b ?? "", System.Globalization.CompareOptions.None);
+
+        /// <summary>Les maillons dans l'ordre d'affichage : rang de bande (pire → meilleure), puis nom AFFICHÉ (fr-FR), puis l'id (ordre
+        /// TOTAL : deux bâtiments détruits ont le même nom). Liste vide si rien n'est servi.</summary>
+        public static List<Maillon> Maillons(SupplyChainNodeDto[] nodes, IReadOnlyDictionary<string, BatimentPossedeDto> parId)
+        {
+            var l = new List<Maillon>();
+            if (nodes == null) return l;
+            foreach (SupplyChainNodeDto n in nodes)
+            {
+                if (n == null) continue;
+                l.Add(new Maillon
+                {
+                    Id = n.building_id ?? "",
+                    Nom = NomDuBatiment(n.building_id, parId),
+                    Bande = n.bucket,
+                    Mot = MotPression(n.bucket),
+                    Rang = RangPression(n.bucket),
+                    Vers = n.has_arrow ? NomDuBatiment(n.arrow_to_building_id, parId) : null,
+                });
+            }
+            l.Sort((a, b) =>
+            {
+                int c = a.Rang.CompareTo(b.Rang);
+                if (c == 0) c = ParNom(a.Nom, b.Nom);
+                if (c == 0) c = string.CompareOrdinal(a.Id, b.Id);
+                return c;
+            });
+            return l;
+        }
+
+        /// <summary>Les liaisons dans l'ordre d'affichage : rang de dette (Rompu → Entretenu), puis origine, puis destination (noms affichés),
+        /// puis `leg_id`.</summary>
+        public static List<Liaison> Liaisons(SupplyChainLegDto[] legs, IReadOnlyDictionary<string, BatimentPossedeDto> parId)
+        {
+            var l = new List<Liaison>();
+            if (legs == null) return l;
+            foreach (SupplyChainLegDto g in legs)
+            {
+                if (g == null) continue;
+                l.Add(new Liaison
+                {
+                    Id = g.leg_id ?? "",
+                    Origine = NomDuBatiment(g.origin_building_id, parId),
+                    Destination = NomDuBatiment(g.destination_building_id, parId),
+                    Bande = g.debt_bucket,
+                    Mot = MotDette(g.debt_bucket),
+                    Rang = RangDette(g.debt_bucket),
+                    Contournee = g.bypassed,
+                });
+            }
+            l.Sort((a, b) =>
+            {
+                int c = a.Rang.CompareTo(b.Rang);
+                if (c == 0) c = ParNom(a.Origine, b.Origine);
+                if (c == 0) c = ParNom(a.Destination, b.Destination);
+                if (c == 0) c = string.CompareOrdinal(a.Id, b.Id);
+                return c;
+            });
+            return l;
         }
     }
 }

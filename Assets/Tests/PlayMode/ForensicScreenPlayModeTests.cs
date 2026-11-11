@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -1083,6 +1084,70 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(maquette, ForensicScreenController.TitreAffiche(vive, null), "corps absent");
             var audit = new DossierCalculs.Piste("audit_risk_bucket", "la comptabilité", true, "clean", "watched", "flagged", "audited");
             Assert.AreEqual(TitreDeMaquette(audit), ForensicScreenController.TitreAffiche(audit, CorpsNomme("watched", "Lt. Marrek")), "le nom ne perce que la piste du train de vie");
+        }
+
+        // ═══ TD-891 — le prix du renseignement, servi AVANT l'achat (back @36bd4b0e) ═════════════════════════════════════════
+
+        /// <summary>TD-891 : `intelCostCents` se lit (racine de `GET /v1/me/internal-affairs/actors`, forme G fermée) ; absent ⇒ null ; 0 ⇒ null (jamais un prix nul).</summary>
+        [Test]
+        [Category("ScreenB7")]
+        public void ScreenB7TD891a_LePrixServiSeLit_AbsentOuNulDonneNull()
+        {
+            var avec = JsonUtility.FromJson<GetActeursEnvelope>("{\"payload\":{\"data\":{\"actors\":[],\"intelCostCents\":800000}}}");
+            Assert.AreEqual(800000L, avec.payload.data.PrixServiCents, "la clé servie n'est pas jetée");
+            var sans = JsonUtility.FromJson<GetActeursEnvelope>("{\"payload\":{\"data\":{\"actors\":[]}}}");
+            Assert.IsNull(sans.payload.data.PrixServiCents, "back plus ancien : non servi");
+            var nul = JsonUtility.FromJson<GetActeursEnvelope>("{\"payload\":{\"data\":{\"actors\":[],\"intelCostCents\":0}}}");
+            Assert.IsNull(nul.payload.data.PrixServiCents, "un prix à 0 n'est jamais un prix");
+        }
+
+        private const string PrixNonServi = "le prix n’est pas servi";
+
+        private int PiedsVisibles() => RacineEcran().GetComponentsInChildren<Transform>(false).Count(t => t.name == "Pied");
+
+        private List<string> NotesDuPiedVisibles() =>
+            RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(false).Select(t => t.text).Where(t => t != null && t.Contains(PrixNonServi)).ToList();
+
+        /// <summary>TD-891 (ruling f2 11/11) : prix SERVI ⇒ les deux notes « le prix n’est pas servi » (vue pistes, vue acteurs) sont RETIRÉES — fausses —
+        /// et rien n'est inventé à leur place ; le geste reste éteint. CONTRÔLE POSITIF : prix absent ⇒ la note est là dans les deux vues (comportement
+        /// d'avant) — le compte voit bien la phrase quand elle existe.</summary>
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7TD891b_PrixServi_LaNoteFausseEstRetiree_ControlePrixAbsent()
+        {
+            var acteurs = new[] { new ActeurDto { actorRef = "ia.actor.4f21", actorType = "lawyer", status = "steady" } };
+            var ecran = MonterEcran();
+            yield return null;
+
+            // CONTRÔLE POSITIF : prix absent (back actuel) ⇒ la note dit vrai et se montre, dans les deux vues
+            ecran.RendrePourTest(Bandes("clean", "clear", "watched"), acteurs);
+            yield return null;
+            Assert.AreEqual(VueDossier.Pistes, ecran.Vue, "précondition : vue des pistes");
+            Assert.AreEqual(1, NotesDuPiedVisibles().Count, "CONTRÔLE : prix absent ⇒ la note des pistes est montrée");
+            Assert.AreEqual(1, PiedsVisibles(), "CONTRÔLE : le pied des pistes est dessiné");
+            ecran.Basculer();
+            yield return null;
+            Assert.AreEqual(VueDossier.Acteurs, ecran.Vue, "précondition : vue des acteurs");
+            Assert.AreEqual(1, NotesDuPiedVisibles().Count, "CONTRÔLE : prix absent ⇒ la note des acteurs est montrée");
+            Assert.AreEqual(1, PiedsVisibles(), "CONTRÔLE POSITIF : prix absent ⇒ le pied des acteurs est dessiné (le compte voit le pied quand il existe)");
+            ecran.Basculer();
+            yield return null;
+
+            // prix SERVI ⇒ aucune des deux notes, dans aucune vue ; le geste éteint reste (vue pistes) ; aucun montant inventé
+            int requetes = ecran.RequetesEmises;
+            ecran.RendrePourTest(Bandes("clean", "clear", "watched"), acteurs, null, 800000L);
+            yield return null;
+            Assert.AreEqual(VueDossier.Pistes, ecran.Vue);
+            Assert.IsEmpty(NotesDuPiedVisibles(), "prix servi : « le prix n’est pas servi » est FAUX, il ne s'affiche pas (vue pistes)");
+            Assert.AreEqual(1, PiedsVisibles(), "prix servi : le pied des PISTES reste (il porte le geste éteint)");
+            Assert.IsTrue(RacineEcran().GetComponentsInChildren<Transform>(false).Any(t => t.name == "BoutonAcheter"), "le geste éteint reste montré (vue pistes)");
+            Assert.IsFalse(RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(false).Any(t => t.text != null && (t.text.Contains("8 000") || t.text.Contains("8000"))),
+                "aucun montant affiché : il attend son cadre (TD-988)");
+            ecran.Basculer();
+            yield return null;
+            Assert.IsEmpty(NotesDuPiedVisibles(), "prix servi : la note des acteurs ne s'affiche pas non plus");
+            Assert.AreEqual(0, PiedsVisibles(), "prix servi : le pied des ACTEURS n'est pas dessiné (il ne portait que la note : une bande vide serait un écart B)");
+            Assert.AreEqual(requetes, ecran.RequetesEmises, "rendre et basculer avec un prix servi n'émettent aucune requête (le geste éteint est gardé ailleurs)");
         }
 
         /// <summary>Q5 : le corps se lit (clé additive, `JsonUtility`), et son ABSENCE donne null.</summary>
