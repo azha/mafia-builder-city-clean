@@ -83,7 +83,7 @@ namespace MafiaCleanCity.Operational.Tests
             // ㉚ « LES DEUX GESTES » (11/11, CLIENT-1, `Tools/gestes-30/DESIGN.md` §6 ; TD-1048) puis V15 « COÛTS PAR MODE » (`Tools/couts-30-v15/DESIGN.md` §2, branche lot/client1-couts-30-v15-2026-11-11) : 24 clés, 0 servie à ce jour
             // sur la pile — les 17 du lot BACK-1 `lot/couts-30` @87820327 (clés RENOMMÉES aux noms SERVIS, FR à l'octet ; pas encore sur la pile : back main 51cece7d, 0/22) et 7 NEUVES du lot précédent. Elles partent au fil du service.
             // Les REUSE ne sont PAS ici : `appro.bouton.ca_part_du_compte_tout_de_suite`, `game.ui_common.cancel_button` (servis), `appro.sinuosite.*` / `appro.effondrement.*` (servis au cumul 74c5a0b0).
-            // ⚠️ `accueil.jeton.votre_grande_decision_du_jour` n'est PAS un REUSE servi (0 à back main 51cece7d et au cumul 74c5a0b0 : le lot BACK-1 l'ajoute) — elle est ICI.
+            // ⚠️ `accueil.jeton.votre_grande_decision_du_jour` n'est PAS un REUSE servi (0 à back main 51cece7d et au cumul 74c5a0b0 : le lot BACK-1 l'ajoute) — elle est dans la dette, UNE fois : inscrite plus haut par le cumul (c5a66a6b, après-geste ④/⑤), donc retirée de ce bloc à l'intégration (23 entrées ici, la 24ᵉ là-haut).
             // Retirées (13 noms disparus du code) : `appro.geste.*` ×2, `appro.mode.*` ×5, `appro.mode_sous.*` ×5, `appro.bloc.pendant_les_travaux_…` ×1. Non lues par le client : `appro.etiquette.remaniement`,
             // `appro.consequence.remaniement`, `error.funds.insufficient` (par la clé du corps du refus).
             "appro.titre.entretenir_la_liaison", "appro.titre.reconstruire_la_route",
@@ -93,7 +93,6 @@ namespace MafiaCleanCity.Operational.Tests
             "appro.consequence.rafistoler", "appro.consequence.renforcer", "appro.consequence.contourner",
             "appro.consequence.petit_detour", "appro.consequence.remise_a_plat",
             "appro.sous_titre.pendant_les_travaux_plus_rien_ne_passe_sur_cette_route",
-            "accueil.jeton.votre_grande_decision_du_jour",
             "appro.cout.on_ne_sait_pas_encore_combien",
             "appro.etiquette.en_entretien", "appro.titre.les_routes",
             "appro.etat.active", "appro.etat.saturated", "appro.etat.severed", "appro.etat.en_reconstruction",
