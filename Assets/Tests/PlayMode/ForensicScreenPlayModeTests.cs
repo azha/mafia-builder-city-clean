@@ -347,13 +347,14 @@ namespace MafiaCleanCity.Operational.Tests
                     Assert.IsTrue(Meme(Sous("Elast/Contenu/Pistes/Piste1/Crans/Cran0").GetComponent<Image>().color, DesignTokens.Current.accentWarning), "le cran allumé est l'orange de `visible`");
                     Assert.IsTrue(Meme(Sous("Elast/Contenu/Pistes/Piste1/Crans/Cran3").GetComponent<Image>().color, vide), "le plus haut cran reste éteint");
                     Assert.AreEqual(ForensicResolvers.Phrase("visible"), Texte("Elast/Contenu/Pistes/Piste1/Mot"));
-                    Assert.AreEqual("visible", Texte("Elast/Contenu/Pistes/Piste1/Cle"), "la clé servie, brute");
+                    Assert.AreEqual(ForensicResolvers.CleDeLaPiste("effluent_visibility_bucket", "visible"), Texte("Elast/Contenu/Pistes/Piste1/Cle"), "la gravité servie « Ça se remarque » (maquette r2), PAS la bande brute « visible »");
+                    Assert.AreEqual("Ça se remarque", Texte("Elast/Contenu/Pistes/Piste1/Cle"));
                 }
                 else if (i == 2)
                 {
                     Assert.AreEqual(1, allumes, "train de vie VIVANT (TD-881 : plus constante), « quiet » = le premier cran : un cran allumé");
                     Assert.AreEqual(ForensicResolvers.Phrase("quiet"), Texte("Elast/Contenu/Pistes/Piste2/Mot"));
-                    Assert.AreEqual("quiet", Texte("Elast/Contenu/Pistes/Piste2/Cle"), "la clé servie, brute");
+                    Assert.AreEqual("", Texte("Elast/Contenu/Pistes/Piste2/Cle"), "aucune ligne sous le mot : jamais la bande brute « quiet »");
                 }
                 else
                 {
@@ -984,7 +985,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null; yield return null;
             StringAssert.Contains("Lt. Ilm", Texte("Elast/Contenu/Pistes/Piste2/Titre"), "le titre nommé est RENDU");
             Assert.AreEqual(ForensicResolvers.Phrase("watched"), Texte("Elast/Contenu/Pistes/Piste2/Mot"), "le mot de la bande (« On vous regarde »), pas « — »");
-            Assert.AreEqual("watched", Texte("Elast/Contenu/Pistes/Piste2/Cle"));
+            Assert.AreEqual("", Texte("Elast/Contenu/Pistes/Piste2/Cle"), "jamais la bande brute « watched » sous le mot servi (B2 du juge r1)");
         }
 
         /// <summary>V20 : la CLÉ servie du mot (`lifestyle_alarm_label_key`) est lue quand elle est là ET connue du catalogue ; inconnue ou absente ⇒ le mot de la bande.</summary>
