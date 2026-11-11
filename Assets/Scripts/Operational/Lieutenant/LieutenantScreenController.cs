@@ -1573,14 +1573,15 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// <summary>Test hook : la raison affichée sous le bouton (vide si le recrutement est ouvert).</summary>
         public string RecruitReason { get { return recruitReasonText != null && recruitReasonText.gameObject.activeSelf ? recruitReasonText.text : ""; } }
 
-        /// <summary>La phrase de blocage : budget dépensé = la phrase SERVIE du registre d'erreurs ; équipe au complet = le mot ratifié par f2 (11/11), repli compté
-        /// tant que le back ne sert pas de clé (refus générique aujourd'hui). Pur.</summary>
-        public static string PhraseDeBlocage(BlocageRecrutement b)
+        /// <summary>La phrase de blocage : budget dépensé = la phrase SERVIE du registre d'erreurs ; équipe au complet = la phrase de la clé SERVIE `roster_room_label_key` (TD-1092, `cleEquipePleine`), et le mot
+        /// ratifié par f2 (11/11) en REPLI COMPTÉ tant que la clé n'est pas servie ou que la pile ne sert pas sa valeur. Pur.</summary>
+        public static string PhraseDeBlocage(BlocageRecrutement b, string cleEquipePleine = null)
         {
             List<string> dit = new List<string>();
             if ((b & BlocageRecrutement.BudgetDepense) != 0)
                 dit.Add(MafiaCleanCity.I18n.RefusServi.PhraseDeLaCle(HostBlocage.CleBudgetDepense) ?? Lib("Votre décision de structure d’aujourd’hui est prise. Reprenez demain."));
-            if ((b & BlocageRecrutement.EquipeComplete) != 0) dit.Add(Lib("Votre équipe est au complet."));
+            if ((b & BlocageRecrutement.EquipeComplete) != 0)
+                dit.Add(MafiaCleanCity.I18n.Libelle.Gabarit(cleEquipePleine, null) ?? Lib("Votre équipe est au complet."));
             return string.Join(" ", dit);
         }
 
@@ -1593,7 +1594,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             GriserBouton(recruitButton, bloque);
             if (recruitReasonText != null)
             {
-                PoserRaison(recruitReasonText, bloque ? PhraseDeBlocage(BlocageDuRecrutement) : "");
+                PoserRaison(recruitReasonText, bloque ? PhraseDeBlocage(BlocageDuRecrutement, donnees?.roster_room_label_key) : "");
             }
             AppliquerBudgetAuxGestesStructurels();
             SuivreLaRaison();

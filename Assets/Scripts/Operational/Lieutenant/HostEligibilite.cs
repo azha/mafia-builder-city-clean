@@ -47,6 +47,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public HostArchetypeDto[] archetypes;
         public string structural_budget_band;
         public string roster_room_band;
+        /// <summary>TD-1092 (back lot/equipe-pleine @ff076d49, `budget-bands.ts` `ROSTER_ROOM_LABEL_KEYS`) — la CLÉ i18n du libellé de `roster_room_band` : FULL → `HostBlocage.CleEquipePleine`, ROOM →
+        /// `famille.rosterroom.il_reste_de_la_place_dans_l_equipe` (non lue : le bouton actif n'a pas de phrase à dire). Vide = non servie (back d'avant le lot) : repli. Une RÉFÉRENCE SERVIE (`…_key`) : la lecture du
+        /// catalogue peut la prendre (garde `I18nHorsLibelle`). Déclarée ICI : JsonUtility jette toute clé que le DTO ne nomme pas (forme G, TD-1092).</summary>
+        public string roster_room_label_key;
     }
     [Serializable] public class HostEligibilitePayload { public HostEligibiliteData data; }
     [Serializable] public class HostEligibiliteEnvelope { public HostEligibilitePayload payload; }
@@ -104,6 +108,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public const string BandeBudgetDepense = "SPENT", BandeEquipePleine = "FULL";
         /// <summary>La clé servie (registre d'erreurs du back) de la phrase « décision de structure prise » ; celle du roster plein n'est pas servie (refus générique).</summary>
         public const string CleBudgetDepense = "error.core_loops.structural_cap_exhausted";
+        /// <summary>La clé du libellé de la bande FULL, telle que le back la sert dans `roster_room_label_key` (lot/equipe-pleine @ff076d49) : « Votre équipe est au complet. » / « Your crew is full. ».
+        /// Le client lit la clé SERVIE ; cette constante n'est que le témoin des tests (jamais une source de lecture).</summary>
+        public const string CleEquipePleine = "famille.rosterroom.votre_equipe_est_au_complet";
 
         /// <summary>Les causes de blocage lues des deux bandes SERVIES. Pur. Bande absente, vide ou inconnue ⇒ pas de blocage (une garde ne bloque pas sur l'ignorance).</summary>
         public static BlocageRecrutement Lire(HostEligibiliteData donnees)
