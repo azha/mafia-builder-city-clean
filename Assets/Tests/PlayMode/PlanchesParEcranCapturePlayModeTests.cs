@@ -204,6 +204,104 @@ namespace MafiaCleanCity.Capture.Tests
             Assert.IsEmpty(echecsNotes, "vue(s) non photographiée(s) — un ÉCHEC noté au journal n'est pas un vert :\n" + string.Join("\n", echecsNotes));
         }
 
+        // ═══ ㊴ LE DOSSIER, SERVI PAR LA VRAIE PILE (f2 11/11, pour le juge-données moment 2) ═══════════════════════════════════════════════════════════════════════════
+        // Pas de corps fabriqué : l'écran se charge LUI-MÊME (`GET /v1/me/forensic`, `GET /v1/me/internal-affairs/actors`) sous le vrai shell, avec le bundle i18n SERVI (FR, puis EN : le catalogue est
+        // rechargé par `GET /v1/i18n/bundle?locale=en` et l'écran recharge ses données). Les comptes sont JETABLES et PRÉPARÉS HORS DU TEST (`MAFIA_DOSSIER_COMPTES` = « callsign,callsign,callsign », mot de passe
+        // `pw-<callsign>`) : (1) « quiet » — état NATUREL du compte (la ligne `lifestyle_audit_state` écrite par le recrutement, à zéro), rien posé ; (2) « noticed » et (3) « watched » — l'état est POSÉ PAR SQL
+        // (UPDATE de la ligne de Lt. Ilm : noticed = last_gap 15000 / consecutive_flag_months 1 ; watched = last_gap 15000 / consecutive_flag_months 2 / tail_ramp_stage 'passive') : ce n'est PAS l'atteinte réelle,
+        // qui passe par le tick standing-gap-heat. Tout le reste (bandes, nom, clés, mots) est ce que la pile sert. Chaque planche DIT cet état au journal.
+        private const string VariableComptesDossier = "MAFIA_DOSSIER_COMPTES";
+
+        private void FermerLeShell()
+        {
+            DemoIdentityResolver.SortirModeCapture(GetType().Name);
+            if (shell != null && shell.ShellCanvas != null) Object.DestroyImmediate(shell.ShellCanvas.gameObject);
+            if (shellGo != null) Object.DestroyImmediate(shellGo);
+            shell = null; shellGo = null;
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+        }
+
+        /// <summary>P0-P1 sous une identité DÉJÀ inscrite (compte jetable préparé hors du test) : le dossier de sortie, le shell ouvert et calme.</summary>
+        private IEnumerator OuvrirSous(string callsign)
+        {
+            string sortie = System.Environment.GetEnvironmentVariable(VariableSortie);
+            dossier = !string.IsNullOrWhiteSpace(sortie) ? sortie.Trim()
+                : Path.Combine("Logs", "planches-par-ecran", System.DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"));
+            Directory.CreateDirectory(dossier);
+            journal = Path.Combine(dossier, "journal.tsv");
+            if (!File.Exists(journal)) File.WriteAllText(journal, "pas\técran\tétat\tréférence\n");
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("PlanchesShell");
+            shell = shellGo.AddComponent<AppShell>();
+            shell.SetIdentity(callsign, "pw-" + callsign);   // AVANT Start()
+            float fin = Time.realtimeSinceStartup + 45f;
+            while (string.IsNullOrEmpty(shell.Token) && Time.realtimeSinceStartup < fin) yield return null;
+            Assert.IsFalse(string.IsNullOrEmpty(shell.Token), "P1 : le shell n'a pas ouvert de session avec le compte jetable préparé");
+            yield return CaptureSousShell.ShellConnecteOuEchoue(shell, callsign, "cliche_planches_par_ecran");
+            var echecs = new List<string>();
+            yield return CaptureSousShell.AttendreUnShellCalme(shell, echecs);
+            Assert.IsEmpty(echecs, "P1 : " + string.Join(" · ", echecs));
+        }
+
+        [UnityTest]
+        [Category("ClicheDossierServi")]
+        [Timeout(900000)]
+        public IEnumerator Planche_Dossier_ServiParLaPile_TroisEtats_FrEtEn()
+        {
+            string comptes = System.Environment.GetEnvironmentVariable(VariableComptesDossier);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(comptes), $"{VariableComptesDossier} est exigé : « quiet,noticed,watched » (callsigns de comptes jetables préparés)");
+            string[] cs = comptes.Split(',');
+            Assert.AreEqual(3, cs.Length, $"{VariableComptesDossier} : trois comptes (quiet, noticed, watched)");
+            string[] etats = { "quiet", "noticed", "watched" };
+            string[] poses =
+            {
+                "état NATUREL du compte (ligne lifestyle_audit_state écrite par le recrutement, à zéro) — RIEN posé",
+                "état POSÉ PAR SQL : UPDATE de la ligne de Lt. Ilm (last_gap 15000, consecutive_flag_months 1, tail_ramp_stage none) — l'atteinte réelle passe par le tick standing-gap-heat",
+                "état POSÉ PAR SQL : UPDATE de la ligne de Lt. Ilm (last_gap 15000, consecutive_flag_months 2, tail_ramp_stage passive) — l'atteinte réelle passe par le tick standing-gap-heat",
+            };
+            for (int k = 0; k < 3; k++)
+            {
+                yield return OuvrirSous(cs[k].Trim());
+                if (k == 0) yield return Signer();
+                shell.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.ForensicScreenController>();
+                MafiaCleanCity.Operational.ForensicScreenController ecran = null;
+                for (float f = Time.realtimeSinceStartup + 15f; ecran == null && Time.realtimeSinceStartup < f;)
+                {
+                    ecran = shell.ContentSlot.GetComponentInChildren<MafiaCleanCity.Operational.ForensicScreenController>(true);
+                    yield return null;
+                }
+                Assert.IsNotNull(ecran, $"㊴ non monté ({etats[k]})");
+                for (float f = Time.realtimeSinceStartup + 25f; ecran.DernierChargement == null && Time.realtimeSinceStartup < f;) yield return null;
+                Assert.IsNotNull(ecran.DernierChargement, $"㊴ ({etats[k]}) : `GET /v1/me/forensic` n'a rien rendu — la pile répond-elle ?");
+                for (int i = 0; i < 30; i++) yield return null;
+                Assert.AreEqual(etats[k], ecran.DernierChargement.lifestyle_alarm_bucket, $"㊴ ({etats[k]}) : la pile sert une autre bande — l'état n'est pas celui annoncé");
+                string nom = ecran.DernierChargement.lifestyle_lieutenant_name;
+                if (k == 0) Assert.IsTrue(string.IsNullOrEmpty(nom), "quiet : aucun nom servi"); else Assert.IsFalse(string.IsNullOrEmpty(nom), $"{etats[k]} : un nom devrait être servi");
+
+                foreach (string langue in new[] { "fr", "en" })
+                {
+                    if (langue == "en")
+                    {
+                        MafiaCleanCity.I18n.I18nCatalog.Oublier();
+                        yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(new MafiaCleanCity.I18n.I18nClient { BaseUrl = MafiaCleanCity.AdresseDuBack.Url, Locale = "en" }, shell.Token);
+                        Assert.AreEqual("en", MafiaCleanCity.I18n.I18nCatalog.Locale, "le bundle servi n'est pas l'anglais");
+                        yield return ecran.Charger();   // l'écran recharge SES données réelles et se re-rend sous le catalogue anglais
+                        for (int i = 0; i < 30; i++) yield return null;
+                    }
+                    else Assert.AreEqual("fr", MafiaCleanCity.I18n.I18nCatalog.Locale, "le bundle servi n'est pas le français");
+                    foreach ((int largeur, int hauteur) in Resolutions)
+                        yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"E13_Dossier_{etats[k]}_{langue}_{largeur}x{hauteur}.png"), false, null);
+                    var d = ecran.DernierChargement;
+                    Noter("E13", $"㊴ Le dossier — {etats[k]} — {langue.ToUpperInvariant()}",
+                          $"ForensicScreenController · vue {ecran.Vue} · SERVI par la pile (vrai shell, compte jetable {DemoIdentityResolver.Empreinte(cs[k].Trim())}, bundle {langue} servi) : audit {d.audit_risk_bucket} · effluent {d.effluent_visibility_bucket} · train de vie {d.lifestyle_alarm_bucket} · nom « {d.lifestyle_lieutenant_name} » · clé du mot {d.lifestyle_alarm_label_key} — {poses[k]}",
+                          "Tools/juge-donnees/dossier-39-nom-lieutenant/maquette-r2-392643c3/reference/ (cadre 152 piste nommée, cadre 153 nom null ; atelier b2ceebeb)");
+                }
+                FermerLeShell();
+                yield return null;
+            }
+            Assert.IsEmpty(echecsNotes, "vue(s) non photographiée(s) — un ÉCHEC noté au journal n'est pas un vert :\n" + string.Join("\n", echecsNotes));
+        }
+
         /// <summary>④ P1 AVEC DEUX CARTES EN FILE (f2 07/10) : un compte NEUF n'a qu'une carte (ou aucune), donc la ligne de pluriel n'existerait pas. L'Accueil est RE-MONTÉ (Empire) avec une
         /// réponse `session/open` dont la file porte deux cartes FABRIQUÉES (transport témoin) — c'est AU MONTAGE que le shell choisit la bande de la ligne (`AppShell.BandeFileHaute`, cadre 4) —, photographié
         /// aux deux résolutions, et MESURÉ : la colonne « qui » (nom, gravité, raison, pluriel) TIENT-ELLE dans la ligne ? Un débordement est un A : le journal le dit et le test ROUGIT.
