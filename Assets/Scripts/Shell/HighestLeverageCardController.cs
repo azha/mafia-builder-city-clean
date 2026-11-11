@@ -704,6 +704,9 @@ namespace MafiaCleanCity.Shell
             LayoutElement le = geste.AddComponent<LayoutElement>();
             le.minHeight = le.preferredHeight = replie ? U(35.8f) : LaSuitePanelController.HauteurDuGeste;   // `.acc4 .g` : 35,8 px CSS — le libellé d'une option (« Mettre en réparation ») tient sur DEUX lignes
             le.flexibleWidth = 1f;
+            // `.acc4 .g{flex:1}` = `flex: 1 1 0%` : dans la rangée des DEUX gestes, la base est 0 et les deux boutons se partagent la rangée à parts ÉGALES — pas à la longueur de leur libellé (un libellé long
+            // faisait un bouton de 566 contre 448). Les conséquences en dessous prennent les mêmes colonnes (`ColonneDeConsequence`), donc la même couture (juge visuel ⊥ tour 2, F1).
+            if (replie) { le.preferredWidth = 0f; le.minWidth = 0f; }
             GameObject motGo = new GameObject("Label", typeof(RectTransform));
             motGo.transform.SetParent(geste.transform, false);
             libelle = motGo.AddComponent<TextMeshProUGUI>();

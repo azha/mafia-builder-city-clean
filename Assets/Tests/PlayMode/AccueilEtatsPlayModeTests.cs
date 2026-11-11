@@ -208,6 +208,10 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(longue, ca.text); Assert.AreEqual(courte, cb.text);
             var wb = new Vector3[4]; ((RectTransform)hl.AgirButton.transform).GetWorldCorners(wb);
             Assert.Greater(wb[2].x - wb[0].x, 100f, "anti-vacuité : le bouton a une largeur réelle");
+            // `.g{flex:1}` : les deux BOUTONS sont à parts égales (leurs libellés n'ont pas la même longueur : « Mettre en réparation » / « Laisser en l’état »)
+            var wg = new Vector3[4]; var wg2 = new Vector3[4];
+            ((RectTransform)hl.AgirButton.transform).GetWorldCorners(wg); ((RectTransform)hl.LaisserButton.transform).GetWorldCorners(wg2);
+            Assert.AreEqual(wg[2].x - wg[0].x, wg2[2].x - wg2[0].x, 2f, "les deux gestes ont la MÊME largeur (flex:1), quelle que soit la longueur de leur libellé");
             Assert.IsEmpty(ConsequencesHorsDeLeurColonne(hl, 2f), "chaque conséquence est SOUS son option, dans la colonne de son bouton (texte long à gauche)");
             // la couture : les deux conséquences ont la MÊME largeur que les deux boutons (parts égales), donc la même couture
             var wa = new Vector3[4]; var wl = new Vector3[4];
