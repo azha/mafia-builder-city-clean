@@ -347,7 +347,7 @@ namespace MafiaCleanCity.Operational.Tests
                     Assert.IsTrue(Meme(Sous("Elast/Contenu/Pistes/Piste1/Crans/Cran0").GetComponent<Image>().color, DesignTokens.Current.accentWarning), "le cran allumé est l'orange de `visible`");
                     Assert.IsTrue(Meme(Sous("Elast/Contenu/Pistes/Piste1/Crans/Cran3").GetComponent<Image>().color, vide), "le plus haut cran reste éteint");
                     Assert.AreEqual(ForensicResolvers.Phrase("visible"), Texte("Elast/Contenu/Pistes/Piste1/Mot"));
-                    Assert.AreEqual(ForensicResolvers.CleDeLaPiste("effluent_visibility_bucket", "visible"), Texte("Elast/Contenu/Pistes/Piste1/Cle"), "la gravité servie « Ça se remarque » (maquette r2), PAS la bande brute « visible »");
+                    Assert.AreEqual(ForensicResolvers.CleDeLaPiste(Bandes("clean", "visible", "quiet"), "effluent_visibility_bucket", "visible"), Texte("Elast/Contenu/Pistes/Piste1/Cle"), "la gravité servie « Ça se remarque » (maquette r2), PAS la bande brute « visible »");
                     Assert.AreEqual("Ça se remarque", Texte("Elast/Contenu/Pistes/Piste1/Cle"));
                 }
                 else if (i == 2)
@@ -986,6 +986,49 @@ namespace MafiaCleanCity.Operational.Tests
             StringAssert.Contains("Lt. Ilm", Texte("Elast/Contenu/Pistes/Piste2/Titre"), "le titre nommé est RENDU");
             Assert.AreEqual(ForensicResolvers.Phrase("watched"), Texte("Elast/Contenu/Pistes/Piste2/Mot"), "le mot de la bande (« On vous regarde »), pas « — »");
             Assert.AreEqual("", Texte("Elast/Contenu/Pistes/Piste2/Cle"), "jamais la bande brute « watched » sous le mot servi (B2 du juge r1)");
+        }
+
+        // ── D2 (juge-données ㊴ clôture 11/11) : à effluent « visible », le MOT et la LIGNE sous le mot sont DEUX textes (cadre 152). Corps RÉEL @8d0184a4, compte jetable dont l'effluent est posé par INSERT SQL (déclaré) :
+        // `Logs/td-pile-8d0184a4/13-forensic-visible.json` (`payload.data` seul) ; la clé servie du mot de l'effluent y est la GRAVITÉ `forensic.gravite.ca_se_remarque`.
+        private const string CorpsForensicEffluentVisibleReel = "{\"payload\":{\"data\":{\"audit_risk_bucket\":\"clean\",\"effluent_visibility_bucket\":\"visible\",\"lifestyle_alarm_bucket\":\"quiet\",\"lifestyle_lieutenant_name\":null,\"audit_risk_label_key\":\"forensic.cran.rien_a_signaler\",\"effluent_visibility_label_key\":\"forensic.gravite.ca_se_remarque\",\"lifestyle_alarm_label_key\":\"forensic.gravite.rien_ne_depasse\"}}}";
+
+        /// <summary>La garde : le mot et la ligne sous lui ne sont jamais la même chaîne (une ligne vide est permise).</summary>
+        private static bool MotEtLigneDistincts(string mot, string ligne) => string.IsNullOrEmpty(ligne) || mot != ligne;
+
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7D2_EffluentVisible_LeMotEtLaLigneSontDeuxTextes_ControlePositif()
+        {
+            GetForensicResponseDto d = JsonUtility.FromJson<GetForensicEnvelope>(CorpsForensicEffluentVisibleReel).payload.data;
+            Assert.AreEqual("visible", d.effluent_visibility_bucket);
+            Assert.AreEqual("forensic.gravite.ca_se_remarque", d.effluent_visibility_label_key, "le corps réel sert la gravité comme clé du mot de l'effluent");
+            // CONTRÔLE POSITIF : un mot et une ligne identiques (le défaut d'avant) DOIVENT faire rougir la garde
+            Assert.IsFalse(MotEtLigneDistincts("Ça se remarque", "Ça se remarque"), "CONTRÔLE POSITIF : deux chaînes identiques ne sont pas deux textes");
+            Assert.IsTrue(MotEtLigneDistincts("ça se voit", "Ça se remarque"));
+            ForensicScreenController ecran = MonterEcran();
+            try
+            {
+                // catalogue SERVI (les deux clés, valeurs du bundle FR de la pile) puis catalogue vide (repli) : DEUX textes dans les deux cas
+                foreach (bool servi in new[] { true, false })
+                {
+                    if (servi) MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { ["forensic.cran.ca_se_voit"] = "ça se voit", ["forensic.gravite.ca_se_remarque"] = "Ça se remarque" });
+                    else MafiaCleanCity.I18n.I18nCatalog.Oublier();
+                    ecran.RendrePourTest(d, RosterDe4());
+                    yield return null; yield return null;
+                    string mot = Texte("Elast/Contenu/Pistes/Piste1/Mot"), ligne = Texte("Elast/Contenu/Pistes/Piste1/Cle");
+                    Assert.AreEqual("ça se voit", mot, "le MOT est le cran servi (catalogue servi : " + servi + ")");
+                    Assert.AreEqual("Ça se remarque", ligne, "la LIGNE est la gravité servie (catalogue servi : " + servi + ")");
+                    Assert.IsTrue(MotEtLigneDistincts(mot, ligne), "mot ≠ ligne");
+                }
+                // et sur TOUTES les bandes de l'effluent : jamais le même texte deux fois
+                foreach (string bande in new[] { "clear", "faint", "visible", "glaring" })
+                {
+                    ecran.RendrePourTest(Bandes("clean", bande, "quiet"), RosterDe4());
+                    yield return null; yield return null;
+                    Assert.IsTrue(MotEtLigneDistincts(Texte("Elast/Contenu/Pistes/Piste1/Mot"), Texte("Elast/Contenu/Pistes/Piste1/Cle")), $"bande {bande} : mot et ligne identiques");
+                }
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
         }
 
         /// <summary>V20 : la CLÉ servie du mot (`lifestyle_alarm_label_key`) est lue quand elle est là ET connue du catalogue ; inconnue ou absente ⇒ le mot de la bande.</summary>

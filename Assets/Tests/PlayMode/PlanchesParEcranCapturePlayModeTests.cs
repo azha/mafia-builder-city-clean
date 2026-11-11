@@ -296,6 +296,24 @@ namespace MafiaCleanCity.Capture.Tests
                     }
                     foreach ((int largeur, int hauteur) in Resolutions)
                         yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"E13_Dossier_{etats[k]}_{langue}_{largeur}x{hauteur}.png"), false, null);
+                    // juge-visuel ㊴ (11/11) : à 1080×1920 le bas des cartes est effacé par le fondu de la fenêtre défilante. La planche « _bas » (watched, FR) montre la fenêtre des pistes DÉFILÉE JUSQU'EN BAS, et
+                    // le journal MESURE la course dans le régime de capture (la liste déborde-t-elle ? le contenu atteint-il son bout ?) — même méthode que `Photographier` (`ListeQuiDeborde` + `DefilerJusquAuBout`).
+                    if (k == 2 && langue == "fr")
+                        foreach ((int largeur, int hauteur) in Resolutions)
+                        {
+                            ListeDefilante liste = null;
+                            MafiaCleanCity.CityMap.Tests.ListeDefilantePlayModeTests.Course course = default;
+                            yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"E13_Dossier_{etats[k]}_fr_bas_{largeur}x{hauteur}.png"), false, () =>
+                            {
+                                liste = ListeQuiDeborde(shell.ContentSlot);
+                                if (liste != null) course = MafiaCleanCity.CityMap.Tests.ListeDefilantePlayModeTests.DefilerJusquAuBout(liste, null);
+                            });
+                            string mesure = liste == null
+                                ? "la fenêtre des pistes NE DÉBORDE PAS dans le régime de capture (contenu − fenêtre < 12 u) : rien à défiler, la planche _bas montre le même état"
+                                : $"la fenêtre des pistes DÉBORDE (fenêtre {course.Fenetre:0.#} u, contenu {course.Contenu:0.#} u, course attendue {course.Attendue:0.#} u, remontée {course.Remontee:0.#} u) et {(course.AtteintLeBout ? "ATTEINT son bout" : "N'ATTEINT PAS son bout")}";
+                            Noter("E13", $"㊴ Le dossier — {etats[k]} — FR — défilé jusqu'en bas — {largeur}x{hauteur}", mesure, "Tools/juge-visuel/39-dossier-nom-lieutenant/fin-ecran-2026-11-11/rapport.md (cartes effacées à 1080×1920)");
+                            if (liste != null && !course.AtteintLeBout) echecsNotes.Add($"㊴ {largeur}x{hauteur} : la liste déborde sans atteindre son bout (contenu inatteignable) : {mesure}");
+                        }
                     var d = ecran.DernierChargement;
                     Noter("E13", $"㊴ Le dossier — {etats[k]} — {langue.ToUpperInvariant()}",
                           $"ForensicScreenController · vue {ecran.Vue} · SERVI par la pile (vrai shell, compte jetable {DemoIdentityResolver.Empreinte(cs[k].Trim())}, bundle {langue} servi posé AVANT le shell) : audit {d.audit_risk_bucket} · effluent {d.effluent_visibility_bucket} · train de vie {d.lifestyle_alarm_bucket} · nom « {d.lifestyle_lieutenant_name} » · clé du mot {d.lifestyle_alarm_label_key} — {poses[k]}",
