@@ -37,7 +37,7 @@ namespace MafiaCleanCity.Operational.Marche
 
         /// <summary>Le mot d'une bande servie ; hors domaine ⇒ le repli de famille « état inconnu », jamais la valeur brute.</summary>
         public static string MotDeBande(string bucket) =>
-            bucket != null && BandeDeLane.TryGetValue(bucket, out var m) ? M(m.cle, m.repli) : MafiaCleanCity.I18n.Repli.Etat(bucket);
+            bucket != null && BandeDeLane.TryGetValue(bucket, out var m) ? MafiaCleanCity.I18n.Libelle.Gabarit(m.cle, m.repli) : MafiaCleanCity.I18n.Repli.Etat(bucket);
 
         /// <summary>⏳ TD-1018 (ruling f2 11/11, (A)) : la colonne `ash` ne s'allume par AUCUN chemin joueur (TD-966, à inscrire par
         /// `lot/marche-ardoise-enumerateur`) — elle est présente, éteinte et NOMMÉE : son pied est « HORS DU TABLEAU ». Ne jamais « corriger » son
@@ -90,10 +90,10 @@ namespace MafiaCleanCity.Operational.Marche
         private static Color Or => DesignTokens.Current.accentGold;
         private static Color Creme => DesignTokens.Current.hudCreme;
 
-        /// <summary>TD-1017 BASCULÉE (11/11) : chaque mot de ㉑ est lu par sa clé SERVIE `marche.*` (BACK-3, `lot/marche-mots` @163402f1, noms figés après sa
-        /// revue ⊥ ; recopiés de `string_table.ts` à ce SHA, V15) ; le repli est la valeur FR servie, à l'octet. Tant que ce lot n'est pas sur la pile, les clés
-        /// sont NON servies : elles sont dans la DetteDatee de `ZeroRepliDesLocatairesPlayModeTests`.</summary>
-        private static string M(string cle, string repli) => MafiaCleanCity.I18n.Libelle.Gabarit(cle, repli);
+        // TD-1017 BASCULÉE (11/11) : chaque mot de ㉑ est lu par sa clé SERVIE `marche.*` (BACK-3, `lot/marche-mots` @163402f1, noms figés après sa
+        // revue ⊥ ; recopiés de `string_table.ts` à ce SHA, V15) ; le repli est la valeur FR servie, à l'octet. Appel DIRECT à `Libelle.Gabarit`, sans aide
+        // intermédiaire (décision f2, 11/11) : le cliquet des chaînes joueur voit ainsi chaque repli. Tant que ce lot n'est pas sur la pile, les clés sont
+        // NON servies : elles sont dans la DetteDatee de `ZeroRepliDesLocatairesPlayModeTests`.
 
         private void Awake() => Init();
 
@@ -128,7 +128,7 @@ namespace MafiaCleanCity.Operational.Marche
             Init();
             EtatRendu = Etat.Chargement;
             DerniereErreur = null;
-            RendreLEtat(M("marche.etat.chargement", "On interroge le tableau…"));
+            RendreLEtat(MafiaCleanCity.I18n.Libelle.Gabarit("marche.etat.chargement", "On interroge le tableau…"));
             if (DistrictsPourTest != null) Districts = DistrictsPourTest;
             else yield return monde.GetDistricts(d => Districts = d, e => DerniereErreur = e);
             LaneConfidenceRowDto[] lues = null;
@@ -166,10 +166,10 @@ namespace MafiaCleanCity.Operational.Marche
         {
             switch (substance)
             {
-                case "brindle": return M("marche.origine.herbe_des_friches", "herbe des friches");
-                case "crick": return M("marche.origine.extrait_de_racine", "extrait de racine");
-                case "hush": return M("marche.origine.resine_de_lull", "résine de lull");
-                case "ash": return M("marche.origine.lys_de_verre", "lys de verre");
+                case "brindle": return MafiaCleanCity.I18n.Libelle.Gabarit("marche.origine.herbe_des_friches", "herbe des friches");
+                case "crick": return MafiaCleanCity.I18n.Libelle.Gabarit("marche.origine.extrait_de_racine", "extrait de racine");
+                case "hush": return MafiaCleanCity.I18n.Libelle.Gabarit("marche.origine.resine_de_lull", "résine de lull");
+                case "ash": return MafiaCleanCity.I18n.Libelle.Gabarit("marche.origine.lys_de_verre", "lys de verre");
                 default: return "—";
             }
         }
@@ -178,10 +178,10 @@ namespace MafiaCleanCity.Operational.Marche
         {
             switch (substance)
             {
-                case "brindle": return M("marche.forme.briques", "briques");
-                case "crick": return M("marche.forme.cristaux", "cristaux");
-                case "hush": return M("marche.forme.plaque", "plaque");
-                case "ash": return M("marche.forme.prismes", "prismes");
+                case "brindle": return MafiaCleanCity.I18n.Libelle.Gabarit("marche.forme.briques", "briques");
+                case "crick": return MafiaCleanCity.I18n.Libelle.Gabarit("marche.forme.cristaux", "cristaux");
+                case "hush": return MafiaCleanCity.I18n.Libelle.Gabarit("marche.forme.plaque", "plaque");
+                case "ash": return MafiaCleanCity.I18n.Libelle.Gabarit("marche.forme.prismes", "prismes");
                 default: return "—";
             }
         }
@@ -192,19 +192,19 @@ namespace MafiaCleanCity.Operational.Marche
         {
             string nom = NomDuQuartier(quartier).ToUpper(CultureInfo.GetCultureInfo("fr-FR"));
             if (substance == SubstanceHorsDuTableau)
-                return (nom + " · " + M("marche.titre.hors_du_tableau", "HORS DU TABLEAU"),
-                        M("marche.phrase.case_ash", "la poudre grise ne se vend pas à un dealer : elle se place, au rendez-vous, chez ceux du Verre."));
+                return (nom + " · " + MafiaCleanCity.I18n.Libelle.Gabarit("marche.titre.hors_du_tableau", "HORS DU TABLEAU"),
+                        MafiaCleanCity.I18n.Libelle.Gabarit("marche.phrase.case_ash", "la poudre grise ne se vend pas à un dealer : elle se place, au rendez-vous, chez ceux du Verre."));
             LaneConfidenceRowDto l = Ligne(quartier, substance);
             if (l == null)
-                return (nom + " · " + M("marche.titre.voyant_eteint", "voyant éteint").ToUpper(CultureInfo.GetCultureInfo("fr-FR")),
-                        M("marche.phrase.case_sans_ligne", "aucun des nôtres n’a jamais rien écoulé là-bas. Ce n’est pas une ligne à zéro : c’est une ligne jamais ouverte. Elle s’allumera le jour où un de vos dealers y traitera."));
+                return (nom + " · " + MafiaCleanCity.I18n.Libelle.Gabarit("marche.titre.voyant_eteint", "voyant éteint").ToUpper(CultureInfo.GetCultureInfo("fr-FR")),
+                        MafiaCleanCity.I18n.Libelle.Gabarit("marche.phrase.case_sans_ligne", "aucun des nôtres n’a jamais rien écoulé là-bas. Ce n’est pas une ligne à zéro : c’est une ligne jamais ouverte. Elle s’allumera le jour où un de vos dealers y traitera."));
             string mot = MotDeBande(l.lane_confidence_bucket);
             string phrase;
             switch (l.lane_confidence_bucket)
             {
-                case "LOW": phrase = M("marche.phrase.bande_low", "une seule source, jamais recoupée — un bruit de comptoir. On ne vous dira pas le prix : seulement qu’on en parle."); break;
-                case "MODERATE": phrase = M("marche.phrase.bande_moderate", "deux sources concordantes — ni une rumeur, ni une certitude. On ne vous dira pas le prix, ni ce qui s’écoule : seulement à quel point on peut s’y fier."); break;
-                case "HIGH": phrase = M("marche.phrase.bande_high", "plusieurs des nôtres y ont traité, les sources se tiennent. On ne vous dira toujours pas le prix : seulement que la ligne tient."); break;
+                case "LOW": phrase = MafiaCleanCity.I18n.Libelle.Gabarit("marche.phrase.bande_low", "une seule source, jamais recoupée — un bruit de comptoir. On ne vous dira pas le prix : seulement qu’on en parle."); break;
+                case "MODERATE": phrase = MafiaCleanCity.I18n.Libelle.Gabarit("marche.phrase.bande_moderate", "deux sources concordantes — ni une rumeur, ni une certitude. On ne vous dira pas le prix, ni ce qui s’écoule : seulement à quel point on peut s’y fier."); break;
+                case "HIGH": phrase = MafiaCleanCity.I18n.Libelle.Gabarit("marche.phrase.bande_high", "plusieurs des nôtres y ont traité, les sources se tiennent. On ne vous dira toujours pas le prix : seulement que la ligne tient."); break;
                 default: phrase = "—"; break;
             }
             return (nom + " · " + mot.ToUpper(CultureInfo.GetCultureInfo("fr-FR")), phrase);
@@ -234,7 +234,7 @@ namespace MafiaCleanCity.Operational.Marche
             if (Lanes == null || Districts == null || Districts.Count == 0)
             {
                 EtatRendu = Etat.Erreur;
-                RendreLEtat(client.DernierePhraseDeRefus ?? M("marche.etat.echec", "Le tableau ne répond pas."));
+                RendreLEtat(client.DernierePhraseDeRefus ?? MafiaCleanCity.I18n.Libelle.Gabarit("marche.etat.echec", "Le tableau ne répond pas."));
                 basTexte.gameObject.SetActive(false);
                 LignesConnues = LignesSures = QuartiersNoirs = -1;
                 compteConnues.text = compteSures.text = compteNoirs.text = "—";
@@ -290,7 +290,7 @@ namespace MafiaCleanCity.Operational.Marche
             pied.gameObject.SetActive(true);
             piedTitre.text = titre;
             piedPhrase.text = phrase;
-            piedLegende.text = M("marche.substance." + substance, substance) + " · " + Origine(substance);
+            piedLegende.text = MafiaCleanCity.I18n.Libelle.Gabarit("marche.substance." + substance, substance) + " · " + Origine(substance);
         }
 
         // ═══ Construction ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -310,23 +310,23 @@ namespace MafiaCleanCity.Operational.Marche
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
             // l'enseigne (cadre 106)
-            TextMeshProUGUI enseigne = Texte(racine, "Enseigne", M("marche.titre.le_marche", "LE MARCHÉ"), Px(13f), Or, TextAlignmentOptions.Center, DesignTokens.Current.hudSerifFont);
+            TextMeshProUGUI enseigne = Texte(racine, "Enseigne", MafiaCleanCity.I18n.Libelle.Gabarit("marche.titre.le_marche", "LE MARCHÉ"), Px(13f), Or, TextAlignmentOptions.Center, DesignTokens.Current.hudSerifFont);
             enseigne.characterSpacing = 18f;
-            Texte(racine, "SousEnseigne", M("marche.sous_titre.tableau_du_verge_d_or", "tableau du Verge d’Or"), Px(8f), Creme, TextAlignmentOptions.Center);
+            Texte(racine, "SousEnseigne", MafiaCleanCity.I18n.Libelle.Gabarit("marche.sous_titre.tableau_du_verge_d_or", "tableau du Verge d’Or"), Px(8f), Creme, TextAlignmentOptions.Center);
 
             // les trois compteurs (cadre 106) — DÉRIVÉS (TD-1019)
             GameObject compteurs = Rangee(racine, "Compteurs");
-            compteConnues = Compteur(compteurs.transform, "LignesConnues", M("marche.compteur.lignes_connues", "lignes connues"));
-            compteSures = Compteur(compteurs.transform, "Sures", M("marche.compteur.sures", "sûres"));
-            compteNoirs = Compteur(compteurs.transform, "QuartiersNoirs", M("marche.compteur.quartiers_noirs", "quartiers noirs"));
+            compteConnues = Compteur(compteurs.transform, "LignesConnues", MafiaCleanCity.I18n.Libelle.Gabarit("marche.compteur.lignes_connues", "lignes connues"));
+            compteSures = Compteur(compteurs.transform, "Sures", MafiaCleanCity.I18n.Libelle.Gabarit("marche.compteur.sures", "sûres"));
+            compteNoirs = Compteur(compteurs.transform, "QuartiersNoirs", MafiaCleanCity.I18n.Libelle.Gabarit("marche.compteur.quartiers_noirs", "quartiers noirs"));
 
             // l'en-tête de la grille : quartier | brindle | crick | hush | ash, chaque substance avec sa forme
             GameObject entete = Rangee(racine, "EnTete");
-            TextMeshProUGUI q = Texte(entete.transform, "Quartier", M("marche.colonne.quartier", "quartier"), Px(6.5f), EncreFaible, TextAlignmentOptions.Left);
+            TextMeshProUGUI q = Texte(entete.transform, "Quartier", MafiaCleanCity.I18n.Libelle.Gabarit("marche.colonne.quartier", "quartier"), Px(6.5f), EncreFaible, TextAlignmentOptions.Left);
             Largeur(q.gameObject, 0f, 1.6f);
             foreach (string s in Substances)
             {
-                TextMeshProUGUI h = Texte(entete.transform, "H_" + s, M("marche.substance." + s, s) + "\n" + Forme(s), Px(6.5f), EncreFaible, TextAlignmentOptions.Center);
+                TextMeshProUGUI h = Texte(entete.transform, "H_" + s, MafiaCleanCity.I18n.Libelle.Gabarit("marche.substance." + s, s) + "\n" + Forme(s), Px(6.5f), EncreFaible, TextAlignmentOptions.Center);
                 h.textWrappingMode = TextWrappingModes.Normal;
                 Largeur(h.gameObject, 0f, 1f);
             }
