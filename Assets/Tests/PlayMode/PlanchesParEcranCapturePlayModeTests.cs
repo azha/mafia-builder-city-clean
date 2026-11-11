@@ -251,17 +251,18 @@ namespace MafiaCleanCity.Capture.Tests
             string comptes = System.Environment.GetEnvironmentVariable(VariableComptesDossier);
             Assert.IsFalse(string.IsNullOrWhiteSpace(comptes), $"{VariableComptesDossier} est exigé : « quiet,noticed,watched » (callsigns de comptes jetables préparés)");
             string[] cs = comptes.Split(',');
-            Assert.AreEqual(3, cs.Length, $"{VariableComptesDossier} : trois comptes (quiet, noticed, watched)");
-            string[] etats = { "quiet", "noticed", "watched" };
+            Assert.IsTrue(cs.Length == 3 || cs.Length == 4, $"{VariableComptesDossier} : trois comptes (quiet, noticed, watched) ou quatre (+ visible : effluent « visible », FR seul)");
+            string[] etats = { "quiet", "noticed", "watched", "visible" };
             string[] poses =
             {
                 "état NATUREL du compte (ligne lifestyle_audit_state écrite par le recrutement, à zéro) — RIEN posé",
                 "état POSÉ PAR SQL : UPDATE de la ligne du premier lieutenant du compte (last_gap 15000, consecutive_flag_months 1, tail_ramp_stage none) — l'atteinte réelle passe par le tick standing-gap-heat",
                 "état POSÉ PAR SQL : UPDATE de la ligne du premier lieutenant du compte (last_gap 15000, consecutive_flag_months 2, tail_ramp_stage passive) — l'atteinte réelle passe par le tick standing-gap-heat",
+                "état POSÉ PAR SQL : INSERT d'UNE ligne block_effluent_register pour ce compte jetable (last_deviation 2.0, soit ≥ σ 1,5 et < 3,0 ⇒ effluent « visible » ; train de vie quiet, rien posé) — l'atteinte réelle passe par le scan d'inspecteur",
             };
             bool signe = false;
-            for (int k = 0; k < 3; k++)
-                foreach (string langue in new[] { "fr", "en" })
+            for (int k = 0; k < cs.Length; k++)
+                foreach (string langue in k == 3 ? new[] { "fr" } : new[] { "fr", "en" })
                 {
                     // L'ANGLAIS se pose AVANT le shell : le shell code le français (ruling fiction) et ne se re-rend pas quand le catalogue change (le HUD resterait « Aube » : la garde d'encre du banc le refuse).
                     // On charge donc le bundle EN SERVI (`GET /v1/i18n/bundle?locale=en`, route publique) ; l'amorçage du shell devient un no-op (`Amorcer` sort si `Charge`) et tout l'écran naît en anglais.
@@ -282,9 +283,17 @@ namespace MafiaCleanCity.Capture.Tests
                     for (float f = Time.realtimeSinceStartup + 25f; ecran.DernierChargement == null && Time.realtimeSinceStartup < f;) yield return null;
                     Assert.IsNotNull(ecran.DernierChargement, $"㊴ ({etats[k]} {langue}) : `GET /v1/me/forensic` n'a rien rendu — la pile répond-elle ?");
                     for (int i = 0; i < 30; i++) yield return null;
-                    Assert.AreEqual(etats[k], ecran.DernierChargement.lifestyle_alarm_bucket, $"㊴ ({etats[k]}) : la pile sert une autre bande — l'état n'est pas celui annoncé");
                     string nom = ecran.DernierChargement.lifestyle_lieutenant_name;
-                    if (k == 0) Assert.IsTrue(string.IsNullOrEmpty(nom), "quiet : aucun nom servi"); else Assert.IsFalse(string.IsNullOrEmpty(nom), $"{etats[k]} : un nom devrait être servi");
+                    if (k == 3)
+                    {
+                        Assert.AreEqual("visible", ecran.DernierChargement.effluent_visibility_bucket, "㊴ (visible) : la pile sert une autre bande d'effluent — l'état n'est pas celui annoncé");
+                        Assert.AreEqual("quiet", ecran.DernierChargement.lifestyle_alarm_bucket, "㊴ (visible) : le train de vie reste naturel");
+                    }
+                    else
+                    {
+                        Assert.AreEqual(etats[k], ecran.DernierChargement.lifestyle_alarm_bucket, $"㊴ ({etats[k]}) : la pile sert une autre bande — l'état n'est pas celui annoncé");
+                        if (k == 0) Assert.IsTrue(string.IsNullOrEmpty(nom), "quiet : aucun nom servi"); else Assert.IsFalse(string.IsNullOrEmpty(nom), $"{etats[k]} : un nom devrait être servi");
+                    }
                     foreach ((int largeur, int hauteur) in Resolutions)
                         yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"E13_Dossier_{etats[k]}_{langue}_{largeur}x{hauteur}.png"), false, null);
                     var d = ecran.DernierChargement;
