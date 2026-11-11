@@ -507,6 +507,7 @@ namespace MafiaCleanCity.Shell.Tests
             public Texture2D CalmTex, AlarmTex;
             public Geo CalmGeo, AlarmGeo;
             public Color CalmRing, AlarmRing;
+            public Color RawRing;   // TÉMOIN d'étalonnage : l'anneau forcé à `accentDanger`, rendu par le même sprite
             public void Detruire()
             {
                 if (CalmTex != null) Object.Destroy(CalmTex);
@@ -536,6 +537,22 @@ namespace MafiaCleanCity.Shell.Tests
             {
                 prise.AlarmRing = ring; prise.AlarmGeo = geo; prise.AlarmTex = Copie(tex);
             }, mutationAlarme);
+            TearDown();
+            // TÉMOIN D'ÉTALONNAGE (TD-884, ruling f2 11/11) : `accentDanger` BRUT, tel que CET instrument le
+            // voit. Le sprite `Ring` (3 px, anti-crénelage de 1,5 px de chaque côté) plafonne à ~0,86 d'alpha :
+            // un anneau forcé à `accentDanger` ressort à 0,86 × sa couleur. Comparer l'alarme à la valeur du
+            // jeton non atténuée gonflait la distance (0,246 mesuré) et rendait la propriété 2 incapable de
+            // voir ce qu'elle garde (M1 : 0,151 > 0,10). On compare donc deux rendus par le même chemin.
+            yield return MeasureRingColor(alarm: true, onMeasured: (tex, geo, ring) => { prise.RawRing = ring; },
+                mutation: ForcerAnneauEnDangerBrut);
+        }
+
+        /// <summary>La faute de M1, et le rendu du témoin : `BoitierRing` à `accentDanger` brut.</summary>
+        private static void ForcerAnneauEnDangerBrut(TopBarController topBar)
+        {
+            Transform ringT = topBar.transform.Find("Manometre/BoitierRing");
+            Assert.IsNotNull(ringT, "BoitierRing doit exister sous Manometre");
+            ringT.GetComponent<Image>().color = DesignTokens.Current.accentDanger;
         }
 
         [UnityTest]
@@ -561,12 +578,16 @@ namespace MafiaCleanCity.Shell.Tests
                     $"l'anneau doit CHANGER de teinte entre calme ({calmRing}) et alarme ({alarmRing})");
 
                 // ── propriété 2 : sous alarme, ce n'est PAS le rouge d'alerte sémantique brut ──
-                Color rawDanger = DesignTokens.Current.accentDanger;
+                // Référence = le TÉMOIN d'étalonnage (`prise.RawRing`), pas la couleur du jeton : voir `PrendreLesDeuxEtats`.
+                Color rawDanger = prise.RawRing;
                 float distToRaw = ColorDistance(alarmRing, rawDanger);
-                Debug.Log($"[VerdictRing] calme={calmRing} alarme={alarmRing} accentDanger={rawDanger} dist(calme,alarme)={ColorDistance(calmRing, alarmRing):F3} dist(alarme,danger)={distToRaw:F3}");
+                Debug.Log($"[VerdictRing] calme={calmRing} alarme={alarmRing} accentDanger rendu={rawDanger} (jeton {DesignTokens.Current.accentDanger}) dist(calme,alarme)={ColorDistance(calmRing, alarmRing):F3} dist(alarme,danger)={distToRaw:F3}");
                 Assert.Greater(distToRaw, NotRawDangerMinDistance,
                     $"l'anneau alarme ({alarmRing}) est trop proche de accentDanger brut ({rawDanger}, " +
-                    $"dist={distToRaw:F3}) — doctrine : une TEINTE du laiton, pas un rouge d'alerte générique dupliqué");
+                    $"dist={distToRaw:F3}) — doctrine : une TEINTE du laiton, pas un rouge d'alerte générique dupliqué. " +
+                    "MARGE RÉELLE ÉTROITE (mesurée le 11/11/2026, mesurée : alarme à 0,113 du rouge brut rendu, mutation à 0,000, pour un seuil de 0,10) : la teinte d'alarme n'est qu'à ~0,11 du rouge " +
+                    $"brut rendu pour un seuil de {NotRawDangerMinDistance}. Un rouge ici, sans changement d'instrument " +
+                    "(rayon projeté 34, témoin de disque), se lit comme un CHANGEMENT DE PALETTE (warmedBrass ou accentDanger), pas comme un flake.");
 
                 // ── propriété 3 : UN SEUL run par angle, sur 360°, dans LES DEUX états ──
                 // Contrôle positif D'ABORD (anti-vacuité, socle CLAUDE.md) : un anneau synthétique à
@@ -794,7 +815,19 @@ namespace MafiaCleanCity.Shell.Tests
             return ColorDistance(sample, baseline) > ArcInkEpsilon;
         }
 
+        // ⛔ [Ignore] (TD-951, ruling f2 11/11) — et la raison est qu'Oracle3 est AVEUGLE, pas seulement bloquée :
+        //   (a) sa bande `arcR ± 2,5` (arcR = rayon EXTÉRIEUR de la piste) contient de l'encre qui n'est PAS la piste
+        //       (arcs cold/hot, lunette) : `Mutation_M2` (piste masquée) garde un écart de 0,10 à 0,33 dans les
+        //       secteurs du haut pour un seuil de 0,05 — l'absence de la piste ne se voit pas ;
+        //   (b) l'hémicycle du bas n'offre que 76 paires jugeables (plancher 100) à l'échelle 1 : la boîte des
+        //       libellés « CHALEUR » (36,5 × 23 px) le couvre presque en entier.
+        //   Un oracle qui ne discrimine pas vaut moins que pas d'oracle. La mesure sur planches (`rayon-cadran.py`)
+        //   reste le juge de l'arc d'ici là. DÉTECTEUR : `Mutation_M2` doit rougir pour la BONNE raison (un secteur
+        //   du haut sous le seuil) AVANT qu'on retire ces deux [Ignore].
         [UnityTest]
+        [Ignore("TD-951 : Oracle3 ne voit pas la piste (bande trop large : l'encre hors piste garde 0,10-0,33 quand " +
+                "ArcTrack est masqué ; bas sous la boîte CHALEUR à l'échelle 1 : 76 paires < 100). " +
+                "Retirer quand Mutation_M2 rougit pour la bonne raison.")]
         public IEnumerator Oracle3_ArcCoversEveryUpperSector_AbsentInLowerHalf()
         {
             var (topBar, topBarSlot) = BuildScaffold();
@@ -1095,12 +1128,7 @@ namespace MafiaCleanCity.Shell.Tests
         public IEnumerator Mutation_M1_AnneauAlarmeEnDangerBrut_RougitLaProprieteDeux()
         {
             var prise = new PriseRing();
-            yield return PrendreLesDeuxEtats(prise, mutationAlarme: topBar =>
-            {
-                Transform ringT = topBar.transform.Find("Manometre/BoitierRing");
-                Assert.IsNotNull(ringT, "BoitierRing doit exister sous Manometre");
-                ringT.GetComponent<Image>().color = DesignTokens.Current.accentDanger;
-            });
+            yield return PrendreLesDeuxEtats(prise, mutationAlarme: ForcerAnneauEnDangerBrut);
             try { ExigerRougeParCetteAssertion(() => VerdictRing(prise), "trop proche de accentDanger brut"); }
             finally { prise.Detruire(); }
         }
@@ -1108,6 +1136,9 @@ namespace MafiaCleanCity.Shell.Tests
         /// <summary>M2 — `ArcTrack` masqué : le fond radial reste, l'ABSENCE de la piste rougit les secteurs
         /// du demi-cercle supérieur.</summary>
         [UnityTest]
+        [Ignore("TD-951 : M2 ne discrimine pas tant que la bande d'Oracle3 contient de l'encre hors piste — il rougit par " +
+                "le plancher du bas (76 paires < 100), pas par un secteur du haut. DÉTECTEUR de la dette : retirer " +
+                "cet [Ignore] (et celui d'Oracle3) seulement quand M2 rougit par « trou dans l'arc du demi-cercle SUPÉRIEUR ».")]
         public IEnumerator Mutation_M2_ArcTrackMasque_RougitLesSecteursSuperieurs()
         {
             var (topBar, topBarSlot) = BuildScaffold();
