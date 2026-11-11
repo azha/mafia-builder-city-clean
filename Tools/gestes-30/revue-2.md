@@ -80,7 +80,7 @@ panneau dans l'espace de la racine et compare à l'inset publié (120 px). Contr
   `PlafondAtteint` **faux** ; la marque disparaît des **deux** gestes ; les modes restent `interactable`. Deux
   contrôles positifs (un mode non structurel ne dépense rien ; `OublierPourTest` ⇒ la marque revient) et la preuve
   que `Publier` du shell **reprend la main** (`:994-998`).
-- TD-1050 ouverte aux **trois** registres : `dettes-client1.md:77` (entrée complète, avec la demande BACK-1
+- TD-1080 ouverte aux **trois** registres : `dettes-client1.md:77` (entrée complète, avec la demande BACK-1
   « servir `cap`, ou une route de relecture du budget hors `session/open` »), `DESIGN.md:71`,
   `implementation-notes.md:10`.
 
@@ -162,14 +162,14 @@ Si une session s'ouvre sur `{used: 1, cap_reached: false}` — possible : le cap
 (`core-loops-tunables.ts:423-434`) — la marque est **cachée alors que le joueur a bien une décision devant lui**.
 Au cap par défaut (1) il n'y a aucune différence visible : le mode est éteint de toute façon. Conservateur, donc
 acceptable ; un drapeau local distinct (« j'ai dépensé pendant CETTE session de l'écran ») serait exact. À
-mentionner à f2 avec TD-1050.
+mentionner à f2 avec TD-1080.
 
 ### n2 — Délégation promeut la dépense locale en valeur « mesurée »
 
 `DelegationScreenController.cs:688`, `:755`, `:798` republient `Publier(JetonDeStructure.Utilises, …)`. Après une
 dépense locale d'Appro, ce `Utilises` **fabriqué** passe avec `Connu = true` et devient indiscernable d'une valeur
 servie. Portée réelle : `MarqueDuJeton` et la chaîne de diagnostic `EtatPublieParLeShell.Decrire()`. Sans effet
-joueur aujourd'hui ; une ligne dans TD-1050 suffit.
+joueur aujourd'hui ; une ligne dans TD-1080 suffit.
 
 ### n3 — le `finally` ne couvre pas la destruction de l'objet
 

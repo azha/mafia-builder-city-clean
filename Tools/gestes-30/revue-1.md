@@ -262,7 +262,7 @@ Le client ne peut donc pas calculer `cap_reached` après son geste. L'option du 
    `implementation-notes.md:10`. Rien dans `DESIGN.md` §7 (TD-1046..1049), rien dans
    `Tools/juge-donnees/dettes-client1.md`. Un trou honnêtement documenté se garde — mais il se garde **dans le
    registre**, pas dans un fichier de notes que le prochain lot ne relira pas.
-   **Correctif exigible ce soir, sans toucher au code** : ouvrir **TD-1050** (plage 1050+ libre ; 1046-1049 pris
+   **Correctif exigible ce soir, sans toucher au code** : ouvrir **TD-1080** (plage 1050+ libre ; 1046-1049 pris
    par ce lot) dans `dettes-client1.md` et dans `DESIGN.md` §7 — « le jeton de structure n'est pas republié après
    un geste structurel de ㉚ : une 2ᵉ décision structurelle de la même session est OFFERTE (marque comprise) et
    finit en 409 servi ; le client ne peut pas calculer `cap_reached` (cap = tunable 1..2, 0 sous fenêtre T4, jamais

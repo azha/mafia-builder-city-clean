@@ -56,7 +56,7 @@ namespace MafiaCleanCity.Shell
         /// <summary>Un geste STRUCTUREL vient de réussir (㉚ Entretenir/Reconstruire, revue ⊥ M2) : le client sait qu'il en a PRIS une, pas s'il en reste. N'incrémente que `Utilises` — `Connu` et
         /// `PlafondAtteint` ne bougent pas : le cap est un tunable (1..2, 0 sous fenêtre d'observation) que le back ne sert JAMAIS (`structural_budget` ne sort que de `session/open`), donc le client ne peut pas
         /// calculer `cap_reached` — le fabriquer (`Publier(1, true)`) serait affirmer une valeur que personne n'a mesurée. L'écran retire la PROMESSE (« votre grande décision du jour ») mais laisse le mode
-        /// actionnable : le back arbitre par son refus servi. Remplacé à la prochaine `Publier` du shell (TD-1050).</summary>
+        /// actionnable : le back arbitre par son refus servi. Remplacé à la prochaine `Publier` du shell (TD-1080).</summary>
         public static void DepenseLocalement() => Utilises++;
 
         /// <summary>Remet l'état « personne n'a mesuré » — réservé aux tests qui doivent prouver le

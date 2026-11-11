@@ -1087,7 +1087,7 @@ namespace MafiaCleanCity.Operational
             finally { gesteEnCours = false; }
         }
 
-        /// <summary>Un 2xx : la feuille se ferme ; une décision STRUCTURELLE est dépensée localement (`JetonDeStructure.DepenseLocalement` : `Utilises` seul, jamais un cap fabriqué — TD-1050).</summary>
+        /// <summary>Un 2xx : la feuille se ferme ; une décision STRUCTURELLE est dépensée localement (`JetonDeStructure.DepenseLocalement` : `Utilises` seul, jamais un cap fabriqué — TD-1080).</summary>
         private void AppliquerLeSucces(ModeDeGeste mode)
         {
             FermerLaFeuille();

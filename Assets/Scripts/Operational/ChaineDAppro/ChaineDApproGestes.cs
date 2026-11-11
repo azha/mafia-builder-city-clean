@@ -91,7 +91,7 @@ namespace MafiaCleanCity.Operational
         public static bool JetonDisponible => !JetonDeStructure.Connu || !JetonDeStructure.PlafondAtteint;
 
         /// <summary>La marque « votre grande décision du jour » est une PROMESSE : elle n'est dessinée que si le jeton est libre ET qu'aucune décision structurelle n'a été dépensée (`Utilises == 0`). Après un geste structurel
-        /// réussi (`JetonDeStructure.DepenseLocalement`) le client sait qu'il en a pris une, pas s'il en reste (le cap n'est jamais servi, TD-1050) : le mode reste actionnable — le back arbitre par son refus servi — mais sans la promesse.</summary>
+        /// réussi (`JetonDeStructure.DepenseLocalement`) le client sait qu'il en a pris une, pas s'il en reste (le cap n'est jamais servi, TD-1080) : le mode reste actionnable — le back arbitre par son refus servi — mais sans la promesse.</summary>
         public static bool MarqueDuJeton => JetonDisponible && JetonDeStructure.Utilises == 0;
 
         /// <summary>Le coût SERVI d'un mode, lisible : les centimes (chaîne BigInt) que l'injection rend, ou null — absent, vide, ou illisible (même règle de lecture que `Argent.DepuisCentimes`).
