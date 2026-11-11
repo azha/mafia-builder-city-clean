@@ -231,9 +231,6 @@ namespace MafiaCleanCity.Operational
         private IEnumerator LireLesCibles()
         {
             if (DernierChargement.slots != null && DernierChargement.slots.Length > 0) yield break;
-            // TD-882 : le locuteur de la voix du pied = la première ligne SERVIE du roster (un échec ne rend rien : la voix se dit sans nom).
-            yield return new MafiaCleanCity.Operational.Lieutenant.LieutenantClient { BaseUrl = baseUrl }.ListLieutenants(token,
-                lignes => Locuteur = lignes != null && lignes.Length > 0 && !string.IsNullOrWhiteSpace(lignes[0].name) ? lignes[0].name : null, (c, m) => { });
             BatimentPossedeDto[] batiments = null;
             RouteSauveeDto[] routes = null;
             MafiaCleanCity.Operational.Exceptions.ExceptionCardDto[] ardoises = null;
@@ -845,11 +842,8 @@ namespace MafiaCleanCity.Operational
         // ═══ TD-882 — LA VOIX DU LIEUTENANT EN PIED (`.cn-dit`, cadre « Cinq ordres. On peut en mettre trois de plus, ou partir comme ça. ») ═══
         /// <summary>La ligne de voix de la bande basse (crochet de test) ; null tant que l'écran n'est pas construit.</summary>
         public TextMeshProUGUI VoixDuPied { get; private set; }
-        /// <summary>Le nom du locuteur, tel que le ROSTER le SERT (`GET /v1/lieutenants`, `RosterRow.name` — « Lt. Rin ») ; null tant que non lu ou roster vide : la voix se dit alors SANS nom (jamais un nom inventé).
-        /// ⚠️ Le carnet n'est lié à aucun lieutenant (`CarnetCourantDto` n'en porte pas) : le locuteur est la PREMIÈRE ligne servie du roster.</summary>
-        public string Locuteur { get; private set; }
-        /// <summary>Pose le locuteur sans réseau — réservé aux tests.</summary>
-        public void PoserLeLocuteurPourTest(string nom) { Locuteur = nom; if (DernierChargement != null) RendreDeNouveau(); }
+        // ⛔ JAMAIS DE NOM NON SERVI (ruling f2 11/11) : le carnet n'est lié à aucun lieutenant (`CarnetCourantDto` n'en porte pas) ; choisir un locuteur par POSITION dans le roster serait une inférence sans auteur,
+        //    et le joueur lirait un nom faux. La voix se dit donc SANS NOM tant que le back ne sert pas le locuteur (TD-952). Ce contrôleur ne lit PAS le roster (garde V2).
 
         /// <summary>La voix du pied : la phrase SERVIE (`carnet.bloc.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca`, pluriel ICU `n`, `reste` = places restantes) quand le brouillon PEUT partir
         /// (4 à 8 ordres) — en dessous, « partir comme ça » serait faux (le composeur dit déjà « Encore n ordres à poser ») et rien n'est rendu. Le nom en gras DROIT, la réplique en italique (`.cn-dit b{font-style:normal}`).</summary>
@@ -862,7 +856,7 @@ namespace MafiaCleanCity.Operational
             string phrase = MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca",
                 "« {n, plural, one {Un ordre} other {# ordres}}. On peut en mettre {reste} de plus, ou partir comme ça. »",
                 new Dictionary<string, string> { { "n", Brouillon.Compte.ToString() }, { "reste", (ComposeurDuCarnet.Maximum - Brouillon.Compte).ToString() } });
-            VoixDuPied.text = (string.IsNullOrEmpty(Locuteur) ? "" : "<b>" + Locuteur + " :</b> ") + "<i>" + phrase + "</i>";
+            VoixDuPied.text = "<i>" + phrase + "</i>";
         }
 
         private void BuildLayout()

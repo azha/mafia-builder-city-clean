@@ -366,7 +366,6 @@ namespace MafiaCleanCity.Operational.Tests
             yield return Monter(cibles, e =>
             {
                 foreach (CibleDuCarnet c in cibles[ComposeurDuCarnet.Entretien].Take(2)) e.Brouillon.Poser(c);
-                e.PoserLeLocuteurPourTest("Lt. Rin");
                 e.FermerLeComposeur();
             });
             TextMeshProUGUI voix = ecran.VoixDuPied;
@@ -379,8 +378,8 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null; yield return null;
             Assert.AreEqual(4, ecran.Brouillon.Compte);
             Assert.IsTrue(voix.gameObject.activeSelf, "4 ordres : la voix parle");
-            Assert.AreEqual("<b>Lt. Rin :</b> <i>\u00ab 4 ordres. On peut en mettre 4 de plus, ou partir comme \u00e7a. \u00bb</i>", voix.text,
-                "le nom SERVI en gras droit, la phrase servie en italique ; `reste` = 8 \u2212 4");
+            Assert.AreEqual("<i>\u00ab 4 ordres. On peut en mettre 4 de plus, ou partir comme \u00e7a. \u00bb</i>", voix.text,
+                "la phrase servie en italique, SANS nom (le locuteur n'est pas servi : TD-952) ; `reste` = 8 \u2212 4");
             Assert.Greater(((RectTransform)voix.transform).rect.height, 1f, "rendue : une hauteur non nulle (un r\u00e9glage valide peut ne produire aucun pixel)");
             Assert.Greater(voix.preferredHeight, 1f);
             Transform bas = ecran.GesteDuPied.transform.parent;
@@ -392,10 +391,21 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.FermerLeComposeur();
             yield return null;
             StringAssert.Contains("5 ordres. On peut en mettre 3 de plus", voix.text, "5 ordres : la phrase suit le compte");
+        }
 
-            ecran.PoserLeLocuteurPourTest(null);
-            yield return null;
-            StringAssert.StartsWith("<i>", voix.text, "roster vide : la voix se dit SANS nom \u2014 jamais un nom invent\u00e9");
+        // ── TD-882/TD-952 : JAMAIS DE NOM NON SERVI — le carnet ne lit pas le roster pour nommer un locuteur (ruling f2 11/11). Garde de SOURCE (la structure qui ferme la classe) + contrôle positif. ──
+        [Test]
+        public void V2_LeCarnet_NeNommeJamaisUnLocuteurNonServi_IlNeLitPasLeRoster()
+        {
+            string src = System.IO.File.ReadAllText(System.IO.Path.Combine(Application.dataPath, "Scripts/Operational/Carnet/CarnetScreenController.cs"));
+            var motif = new System.Text.RegularExpressions.Regex(@"\b(ListLieutenants|RosterRow|LieutenantClient|Locuteur)\b");
+            // les mentions en commentaire (`//`, `///`) sont des mots, pas du code : on retire les lignes de commentaire entières et les fins de ligne `// …`
+            string code = string.Join("\n", src.Split('\n').Select(l => { int i = l.IndexOf("//", System.StringComparison.Ordinal); return i < 0 ? l : l.Substring(0, i); }));
+            var trouvees = motif.Matches(code).Cast<System.Text.RegularExpressions.Match>().Select(m => m.Value).Distinct().ToArray();
+            Assert.IsEmpty(trouvees, "le carnet ne lit pas le roster ni ne porte de locuteur : un nom choisi par POSITION serait un nom non servi — " + string.Join(", ", trouvees));
+            // contrôle positif : le motif voit la lecture du roster telle qu'elle était écrite avant ce ruling
+            Assert.IsTrue(motif.IsMatch("yield return new LieutenantClient { BaseUrl = baseUrl }.ListLieutenants(token, lignes => x = lignes[0].name, (c, m) => { });"),
+                "contrôle positif : le motif voit la lecture du roster");
         }
     }
 }
