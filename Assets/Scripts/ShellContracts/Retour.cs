@@ -239,9 +239,11 @@ namespace MafiaCleanCity.Shell
 
         private static readonly Regex MotifSite = new Regex(@"\bRetour\s*\.\s*(NouveauBouton)\s*\(", RegexOptions.CultureInvariant);
         // une déclaration de membre : [modificateurs] type nom( … sans `=`, sans `.` avant le nom, ne finissant pas par `;`
+        // ⛔ `\s+` ENTRE les mots du type, jamais `\s*` : avec `(?:\s*[\w…]+)*` une ligne de mots sans `(` se découpe de 2^n façons (retour
+        // arrière catastrophique : l'éditeur gèle, run 5 du 11/11, GP_BuildingCard puis GP_CityMap_Carte). Le délai fait LEVER, jamais geler.
         private static readonly Regex MotifMembre = new Regex(
-            @"^\s*(?:(?:public|private|internal|protected|static|override|virtual|sealed|async|unsafe|new|extern|abstract)\s+)*[\w<>\[\],?]+(?:\s*[\w<>\[\],?]+)*\s+(\w+)\s*\(",
-            RegexOptions.CultureInvariant);
+            @"^\s*(?:(?:public|private|internal|protected|static|override|virtual|sealed|async|unsafe|new|extern|abstract)\s+)*[\w<>\[\],?]+(?:\s+[\w<>\[\],?]+)*\s+(\w+)\s*\(",
+            RegexOptions.CultureInvariant, TimeSpan.FromSeconds(5));
         private static readonly string[] MotsDeControle = { "if", "for", "foreach", "while", "switch", "return", "using", "lock", "catch", "else", "new", "await", "throw", "yield", "fixed" };
 
         /// <summary>Les appels à `Retour.NouveauBouton` d'un fichier source : fonction PURE du contenu (commentaires et littéraux ignorés). Sert à

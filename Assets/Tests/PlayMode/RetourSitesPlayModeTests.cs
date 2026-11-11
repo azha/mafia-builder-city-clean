@@ -137,6 +137,20 @@ namespace MafiaCleanCity.Tests
         }
 
         // ------------------------------------------------------------------------------ l'inventaire de l'arbre réel
+        // Le défaut qui a GELÉ l'éditeur au run 5 du 11/11 : `MotifMembre` avec `(?:\s*mot)*` se découpait de 2^n façons sur une ligne de
+        // mots sans `(`. Le garde : une telle ligne, juste avant l'appel, se scanne en un instant (et le délai du Regex lève, jamais ne gèle).
+        [Test]
+        public void Scan_LigneDeMotsSansParenthese_NeGelePas_EtTrouveLeSite()
+        {
+            string mots = string.Join(" ", System.Linq.Enumerable.Repeat("mot", 60));
+            string source = "class C\n{\n    void M()\n    {\n        " + mots + "\n        Retour.NouveauBouton(h);\n    }\n}\n";
+            var chrono = System.Diagnostics.Stopwatch.StartNew();
+            List<Retour.SiteBouton> sites = Retour.ScanSitesDeNouveauBouton(source);
+            chrono.Stop();
+            Assert.AreEqual(1, sites.Count, "le site est trouvé malgré la ligne de mots");
+            Assert.Less(chrono.ElapsedMilliseconds, 1000, "le scan d'une ligne de 60 mots sans parenthèse a pris " + chrono.ElapsedMilliseconds + " ms");
+        }
+
         [Test]
         public void Inventaire_ArbreReel_69Sites_ChacunUnMembre_EtUniqueParMembreEtLigne()
         {
