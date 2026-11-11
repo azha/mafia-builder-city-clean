@@ -243,7 +243,6 @@ namespace MafiaCleanCity.Account.Settings
             t.fontStyle = FontStyles.UpperCase;   // la casse est au RENDU : le catalogue garde « La langue de la maison »
         }
 
-        /// <summary>Une bascule du tiroir « Le jeu » : libellé, sous-ligne, interrupteur (allumé : or, curseur à droite).</summary>
         // L1 `bascule.course` : l'état allumé de chaque bascule au DERNIER rendu, et la bascule que le joueur vient de toucher (CAT:1225 : une entrée
         // d'écran suit un geste). Au rendu qui suit le geste, si l'état d'arrivée diffère de l'état rendu avant ⇒ le curseur COURT ; sinon il est posé.
         private readonly Dictionary<string, bool> basculesRendues = new Dictionary<string, bool>();
@@ -251,6 +250,7 @@ namespace MafiaCleanCity.Account.Settings
         /// <summary>Test hook : la piste de la dernière course lancée (nulle si aucune, ou sans régie).</summary>
         public Handle DerniereCourseDeBascule { get; private set; } = Handle.Nul;
 
+        /// <summary>Une bascule du tiroir « Le jeu » : libellé, sous-ligne, interrupteur (allumé : or, curseur à droite).</summary>
         private void Bascule(string nom, string libelle, string sous, bool allumee, UnityEngine.Events.UnityAction geste, bool course = true)
         {
             UnityEngine.Events.UnityAction gesteNote = () => { basculeEnVol = nom; geste(); };

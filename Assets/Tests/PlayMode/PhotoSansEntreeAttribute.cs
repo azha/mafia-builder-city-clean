@@ -15,7 +15,7 @@ namespace MafiaCleanCity.Tests
     {
         // `AppShell.CreerLaRegie` appelle `MouvementReduit.Appliquer()`, qui RELIT le réglage du joueur et le système et pose la politique : poser la politique seule
         // serait écrasé à la création du shell. On force donc la lecture du SYSTÈME (« animations désactivées » d'Android) — la source que ces tests contrôlent déjà ailleurs.
-        private static System.Func<bool> lectureAvant;
+        private System.Func<bool> lectureAvant;   // champ d'INSTANCE : posé sur la classe ET une méthode, chaque attribut restaure SA lecture (revue ⊥ mineur 3)
         public ActionTargets Targets => ActionTargets.Test;
         public void BeforeTest(ITest test)
         {

@@ -405,5 +405,50 @@ namespace MafiaCleanCity.Shell.Tests
             foreach (Entree e in CatalogueHud.Entrees) if (e.Concerne("①")) sommeUn += e.Pistes;
             Assert.AreEqual(MouvementTunables.PistesParEcranMax, sommeUn, "① est au plafond (marge 0) : toute entrée de plus sur ① ou « * » doit passer par un nouveau chiffre, pas par un oubli");
         }
+        }
+
+    /// <summary>P4 (revue ⊥ du code L1, mineur 1) — le CHEMIN RÉEL de `[PhotoSansEntree]` : un test marqué monte un vrai shell, ouvre un 2ᵉ onglet, et l'écran ne passe
+    /// JAMAIS sous α = 1, sur de vrais frames, horloge RÉELLE. Contrôle : la politique de la régie du shell est `Reduit` (sans l'attribut, elle est `Plein` : P3b). Une
+    /// régie remplacée par `PourTest()` entre le shell et le montage rouvrirait le fondu en silence : ce test le verrait.</summary>
+    [Category("PassagesL1")]
+    [MafiaCleanCity.Tests.PhotoSansEntree]
+    public class PhotoSansEntreeGardePlayModeTests
+    {
+        private GameObject shellGo;
+        private AppShell shell;
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (shell != null && shell.ShellCanvas != null) Object.Destroy(shell.ShellCanvas.gameObject);
+            if (shellGo != null) Object.Destroy(shellGo);
+            shell = null; shellGo = null;
+            RegieMouvement.Oublier();
+            I18nCatalog.Oublier();   // la session du shell amorce le catalogue : il ne survit pas au test (garde `catalogueSurvivant` du harnais)
+            LogAssert.ignoreFailingMessages = false;
+        }
+
+        [UnityTest]
+        public IEnumerator P4_UnTestMarque_MonteUnShellSousReduit_LEcranNeFondJamais()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            shellGo = new GameObject("AppShell");
+            shell = shellGo.AddComponent<AppShell>();
+            float elapsed = 0f;
+            while (shell.CurrentTab != AppShell.Tab.Empire && elapsed < 15f) { elapsed += Time.deltaTime; yield return null; }
+            Assert.AreEqual(AppShell.Tab.Empire, shell.CurrentTab);
+            Assert.AreEqual(PolitiqueMouvement.Reduit, shell.RegieDeMouvement.Politique, "CONTRÔLE : l'attribut a bien atteint la régie DU SHELL (sans lui : Plein)");
+            shell.ActivateTab(AppShell.Tab.Org);
+            float fin = Time.realtimeSinceStartup + 0.4f;   // plus que les 160 ms : l'horloge est RÉELLE, rien n'est figé
+            int frames = 0;
+            while (Time.realtimeSinceStartup < fin)
+            {
+                CanvasGroup g = shell.ContentSlot.GetComponent<CanvasGroup>();
+                Assert.IsTrue(g == null || g.alpha > 0.999f, $"frame {frames} : l'écran fond sous Réduit (alpha {(g != null ? g.alpha : 1f)})");
+                frames++;
+                yield return null;
+            }
+            Assert.Greater(frames, 3, "des frames ont bien été observés");
+        }
     }
 }

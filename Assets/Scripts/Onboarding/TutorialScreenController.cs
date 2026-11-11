@@ -322,14 +322,14 @@ namespace MafiaCleanCity.Onboarding
             Retour.NouveauBouton(b).onClick.AddListener(action);
         }
 
-        /// <summary>« On vous explique encore » — la bascule du Profil (série 6, cadres 95-96, RATIFIÉE), dans le sens du joueur.
-        /// Allumée ⇔ `tutorials_opt_out` faux. Le toucher la bascule et envoie l'opt-out INVERSE (`RefusPourBascule`).</summary>
         // L1 `bascule.course` : l'état rendu au dernier rendu et le geste en vol (voir SettingsScreenController.Bascule).
         private bool? basculeRendue;
         private bool basculeEnVol;
         /// <summary>Test hook : la piste de la dernière course lancée (nulle si aucune, ou sans régie).</summary>
         public Handle DerniereCourseDeBascule { get; private set; } = Handle.Nul;
 
+        /// <summary>« On vous explique encore » — la bascule du Profil (série 6, cadres 95-96, RATIFIÉE), dans le sens du joueur.
+        /// Allumée ⇔ `tutorials_opt_out` faux. Le toucher la bascule et envoie l'opt-out INVERSE (`RefusPourBascule`).</summary>
         private void Bascule()
         {
             bool allumee = BasculeTutoriels.Allumee(Etat.tutorials_opt_out);   // le SEUL lieu de l'inversion (ShellContracts), partagé avec ⑲
