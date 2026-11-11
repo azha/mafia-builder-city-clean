@@ -609,7 +609,7 @@ namespace MafiaCleanCity.Operational.Tests
             {
                 ("full", "On vous a vu. La rue s’en souviendra."),
                 ("reduced", "On vous a vu, mais vous étiez déjà passé aujourd’hui."),
-                ("minimal", "Encore vous\u00A0? La rue n’y prête plus guère attention aujourd’hui."),
+                ("minimal", "Encore vous\u202F? La rue n’y prête plus guère attention aujourd’hui."),
                 ("none", "Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte."),
             };
             foreach (var (bande, phrase) in attendus)
