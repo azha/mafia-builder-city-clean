@@ -240,5 +240,67 @@ namespace MafiaCleanCity.CityMap.Tests
             if (servie != null) ok(servie); else ko(erreur.code, erreur.message);
             yield break;
         }
+
+        // H12 (TD-878 suite) — « Réaffecter… » et « Attacher » : SEUL le budget structurel SPENT les grise (reassign = governor.commit(LIEUTENANT_ROLE_REASSIGN), attache = BEHAVIOR_SCRIPT_REPLACE,
+        // back @8d0184a4 ; aucun ne touche au roster) ; FULL ne les grise pas ; la raison est la même que celle du recrutement ; le libellé s'éteint.
+        private static void ExigerGestesStructurels(LieutenantScreenController e, bool grises, string phrase)
+        {
+            Assert.AreEqual(!grises, e.ReassignButtonInteractable, "« Réaffecter… » cliquable ssi le budget n'est pas dépensé");
+            Assert.AreEqual(!grises, e.AttachButtonInteractable, "« Attacher » cliquable ssi le budget n'est pas dépensé");
+            var tk = MafiaCleanCity.Theme.DesignTokens.Current;
+            Assert.AreEqual(grises ? tk.onSurfaceMuted : tk.accentGold, e.AttachLabelColor, "libellé de « Attacher »");
+            Assert.AreEqual(grises ? tk.onSurfaceMuted : tk.accentGold, e.ReassignLabelColor, "libellé de « Réaffecter… »");
+            if (!grises) { Assert.AreEqual("", e.ReassignReason); Assert.AreEqual("", e.AttachReason); return; }
+            StringAssert.Contains(phrase, e.ReassignReason);
+            StringAssert.Contains(phrase, e.AttachReason);
+        }
+
+        [UnityTest]
+        public IEnumerator H12_LeBudgetDepense_GriseReaffecterEtAttacher_PasLEquipeAuComplet()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { HostBlocage.CleBudgetDepense, "PHRASE SERVIE DU PLAFOND" } });
+            hote = new GameObject("LieutenantScreenController_GestesStructurels");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            ExigerGestesStructurels(ecran, false, null);
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(CorpsReelSpent));
+            ExigerGestesStructurels(ecran, true, "PHRASE SERVIE DU PLAFOND");
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(CorpsReelFull));
+            ExigerGestesStructurels(ecran, false, null);   // l'équipe au complet ne refuse NI la réaffectation NI l'attache
+            ExigerEtat(ecran, BlocageRecrutement.EquipeComplete, "au complet");
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "FULL")));
+            ExigerGestesStructurels(ecran, true, "PHRASE SERVIE DU PLAFOND");
+            ecran.AppliquerHostEligibilite(null);   // lecture en échec ⇒ tout rouvert
+            ExigerGestesStructurels(ecran, false, null);
+        }
+
+        [UnityTest]
+        public IEnumerator H13_ReaffecterEtAttacher_JamaisEteintsSansRaison_JamaisUneRaisonOrpheline()
+        {
+            hote = new GameObject("LieutenantScreenController_RaisonsStructurelles");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            // (1) disponibilité servie ≠ AVAILABLE, budget intact : le bouton est inerte comme avant, mais son libellé n'est PAS éteint (sinon : bouton mort sans raison)
+            ecran.RendreBandesPourTest(new LieutenantBands { archetype = "COOK", reassign_availability = "COOLDOWN" });
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("AVAILABLE", "ROOM")));
+            Assert.IsFalse(ecran.ReassignButtonInteractable, "disponibilité servie non AVAILABLE : « Réaffecter… » reste inerte (comportement d'avant)");
+            Assert.AreEqual(MafiaCleanCity.Theme.DesignTokens.Current.accentGold, ecran.ReassignLabelColor, "libellé non éteint : aucune raison à donner sur ce motif");
+            Assert.AreEqual("", ecran.ReassignReason);
+            // (2) la même disponibilité + budget dépensé : grisé visiblement ET avec la raison du budget
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "ROOM")));
+            Assert.IsFalse(ecran.ReassignButtonInteractable);
+            Assert.AreEqual(MafiaCleanCity.Theme.DesignTokens.Current.onSurfaceMuted, ecran.ReassignLabelColor);
+            StringAssert.Contains("décision de structure", ecran.ReassignReason);
+            // (3) mode « donner un ordre » : « Attacher » est masqué, sa raison aussi — et elle revient avec lui
+            Assert.IsNotEmpty(ecran.AttachReason, "budget dépensé, hors mode ordre : la raison d'« Attacher » est affichée");
+            ecran.OuvrirModeOrdre();
+            Assert.IsTrue(ecran.ModeOrdre);
+            Assert.AreEqual("", ecran.AttachReason, "mode ordre : plus de raison orpheline sans son bouton");
+            ecran.OuvrirModeOrdre();
+            Assert.IsFalse(ecran.ModeOrdre);
+            StringAssert.Contains("décision de structure", ecran.AttachReason);
+        }
 }
 }

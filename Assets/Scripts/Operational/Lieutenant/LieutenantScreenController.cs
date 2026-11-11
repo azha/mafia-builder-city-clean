@@ -651,6 +651,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             LastRecruitedId = id;
             MajVisibiliteDetail();
             StartCoroutine(RefreshBands());
+            StartCoroutine(RafraichirBlocageRecrutement());   // TD-878 : le budget du jour, pour « Réaffecter… » et « Attacher »
         }
 
         // ----------------------------------------------------------- reassign (B2 / Phase-11 tenure inertia)
@@ -732,6 +733,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 SetOutcome(Lib("Réaffecté — ancienneté remise à zéro, période de stabilisation."), AccentMild);
                 // Pull the fresh bands so the card reflects the reset (tenure_bucket → FRESH, op_state_band → SETTLING).
                 yield return RefreshBands();
+                if (!Destroyed) yield return RafraichirBlocageRecrutement();   // TD-878 : cette réaffectation a dépensé le budget du jour
                 if (!Destroyed)
                 {
                     // The lieutenant may now host a different archetype's building — realign the builder palette + re-render
@@ -886,6 +888,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // On a successful attach, pull the fresh bands so the Status section reflects the new script (rule_count_band
             // → FEW + the script_source round-trips). RefreshBands has its own auth/recruit/Destroyed guards.
             if (attached) yield return RefreshBands();
+            if (attached && !Destroyed) yield return RafraichirBlocageRecrutement();   // TD-878 : cette attache a pu dépenser le budget du jour
         }
 
         // Render the structured DSL diagnostics (the 422 `details`) as readable lines in the diagnostics area, plus the
@@ -1525,9 +1528,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             recruitButtonLabel = recruitButton.GetComponentInChildren<TextMeshProUGUI>();
 
             // TD-878 — la RAISON sous le bouton quand les bandes servies disent que le back refuserait ; vide (et sans place) sinon.
-            recruitReasonText = NewText("RecruitReason", actionBar, "", 14, TextAlignmentOptions.Left);
-            recruitReasonText.color = DesignTokens.Current.onSurfaceMuted;
-            recruitReasonText.gameObject.SetActive(false);
+            recruitReasonText = NouvelleRaison("RecruitReason", actionBar);
 
             outcomeText = NewText("Outcome", actionBar, "—", 15, TextAlignmentOptions.Left);
             outcomeText.color = DesignTokens.Current.onSurfaceMuted;
@@ -1586,24 +1587,72 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (Destroyed) return;
             BlocageDuRecrutement = HostBlocage.Lire(donnees);
             bool bloque = BlocageDuRecrutement != BlocageRecrutement.Aucun;
-            if (recruitButton != null) recruitButton.interactable = !bloque;
-            // le bouton n'a pas de transition (Selectable.Transition.None) : `interactable` seul ne se VOIT pas — le libellé s'éteint, comme une encre secondaire
-            if (recruitButtonLabel != null) recruitButtonLabel.color = bloque ? DesignTokens.Current.onSurfaceMuted : CtaColor;
+            GriserBouton(recruitButton, bloque);
             if (recruitReasonText != null)
             {
-                recruitReasonText.text = bloque ? PhraseDeBlocage(BlocageDuRecrutement) : "";
-                recruitReasonText.gameObject.SetActive(bloque);
-                SuivreLaRaison();
+                PoserRaison(recruitReasonText, bloque ? PhraseDeBlocage(BlocageDuRecrutement) : "");
+            }
+            AppliquerBudgetAuxGestesStructurels();
+            SuivreLaRaison();
+        }
+
+        /// <summary>Un bouton d'action grisé : `interactable` ET le libellé éteint — le bouton n'a pas de transition (Selectable.Transition.None), `interactable` seul ne se VOIT pas.</summary>
+        private void GriserBouton(Button b, bool grise)
+        {
+            if (b == null) return;
+            b.interactable = !grise;
+            TextMeshProUGUI l = b.GetComponentInChildren<TextMeshProUGUI>();
+            if (l != null) l.color = grise ? DesignTokens.Current.onSurfaceMuted : CtaColor;
+        }
+
+        private readonly List<TextMeshProUGUI> raisons = new List<TextMeshProUGUI>();
+        private TextMeshProUGUI NouvelleRaison(string nom, Transform parent)
+        {
+            TextMeshProUGUI t = NewText(nom, parent, "", 14, TextAlignmentOptions.Left);
+            t.color = DesignTokens.Current.onSurfaceMuted;
+            t.gameObject.SetActive(false);
+            raisons.Add(t);
+            return t;
+        }
+        private static void PoserRaison(TextMeshProUGUI t, string dit)
+        {
+            if (t == null) return;
+            t.text = string.IsNullOrEmpty(dit) ? "" : dit;
+            t.gameObject.SetActive(!string.IsNullOrEmpty(dit));
+        }
+
+        /// <summary>Les raisons affichées sont du texte vivant de l'écran : dans le corpus du scan « pas de scalaire brut », une fois, et re-posées après `ClearStatusRows`.</summary>
+        private void SuivreLaRaison()
+        {
+            foreach (TextMeshProUGUI r in raisons)
+            {
+                if (r == null) continue;
+                if (!textComponents.Contains(r)) textComponents.Add(r);
+                string t = r.gameObject.activeSelf ? r.text : null;
+                if (!string.IsNullOrEmpty(t) && !renderedTexts.Contains(t)) renderedTexts.Add(t);
             }
         }
 
-        /// <summary>La raison (quand elle est affichée) est du texte vivant de l'écran : dans le corpus du scan « pas de scalaire brut », une fois, et re-posée après `ClearStatusRows`.</summary>
-        private void SuivreLaRaison()
+        // ---- TD-878 (suite) : « Réaffecter… » et « Attacher » (remplacement du script) sont sous le MÊME budget structurel que le recrutement — back @8d0184a4,
+        // lieutenant.controller.ts : reassign = governor.commit(LIEUTENANT_ROLE_REASSIGN), behavior-script = governor.commit(BEHAVIOR_SCRIPT_REPLACE). Ni l'un ni l'autre ne
+        // touche au roster : SEULE la bande du budget (SPENT) les grise ; l'équipe au complet, non.
+        private TextMeshProUGUI reassignReasonText, attachReasonText;
+        private bool BudgetStructurelDepense => (BlocageDuRecrutement & BlocageRecrutement.BudgetDepense) != 0;
+        /// <summary>Test hooks : « Réaffecter… » / « Attacher » cliquables ? raison affichée ? couleur du libellé ?</summary>
+        public bool ReassignButtonInteractable { get { return boutonReaffecter == null || boutonReaffecter.interactable; } }
+        public bool AttachButtonInteractable { get { return attacherButton == null || attacherButton.interactable; } }
+        public string ReassignReason { get { return reassignReasonText != null && reassignReasonText.gameObject.activeSelf ? reassignReasonText.text : ""; } }
+        public string AttachReason { get { return attachReasonText != null && attachReasonText.gameObject.activeSelf ? attachReasonText.text : ""; } }
+        public Color AttachLabelColor { get { TextMeshProUGUI l = attacherButton != null ? attacherButton.GetComponentInChildren<TextMeshProUGUI>() : null; return l != null ? l.color : Color.clear; } }
+        public Color ReassignLabelColor { get { TextMeshProUGUI l = boutonReaffecter != null ? boutonReaffecter.GetComponentInChildren<TextMeshProUGUI>() : null; return l != null ? l.color : Color.clear; } }
+
+        private void AppliquerBudgetAuxGestesStructurels()
         {
-            if (recruitReasonText == null) return;
-            if (!textComponents.Contains(recruitReasonText)) textComponents.Add(recruitReasonText);
-            string t = recruitReasonText.gameObject.activeSelf ? recruitReasonText.text : null;
-            if (!string.IsNullOrEmpty(t) && !renderedTexts.Contains(t)) renderedTexts.Add(t);
+            bool depense = BudgetStructurelDepense;
+            GriserBouton(attacherButton, depense);
+            // pas de raison orpheline : en mode « donner un ordre », « Attacher » est masqué et sa raison avec lui (revue ⊥ 11/11, BLOCKING 2)
+            PoserRaison(attachReasonText, depense && !ModeOrdre ? PhraseDeBlocage(BlocageRecrutement.BudgetDepense) : "");
+            RenderReassignSection();   // compose avec la disponibilité servie du lieutenant
         }
 
         /// <summary>Couture de test : remplace la lecture réseau de host-eligibility (réponse, échec) — pour jouer le chemin d'échec sans pile.</summary>
@@ -3056,6 +3105,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // The "Reassign…" button opens the confirmation (it does NOT move immediately — the player confirms with the
             // projected cost in view). The confirmation's own Confirm button drives ReassignChosen().
             boutonReaffecter = AddActionButton(reassignSection, "reaffecter", Lib("Réaffecter…"), OpenReassign);
+            reassignReasonText = NouvelleRaison("ReassignReason", reassignSection);
 
             // The confirmation block — built empty; RenderReassignConfirm fills it (the projected disruption + tenure/bonus lost
             // + a Confirm/Cancel pair) when ReassignConfirmOpen, and clears it otherwise.
@@ -3095,7 +3145,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (boutonReaffecter != null)
             {
                 string dispo = CurrentBands != null ? CurrentBands.reassign_availability : null;
-                boutonReaffecter.interactable = string.IsNullOrEmpty(dispo) || dispo == "AVAILABLE";
+                bool disponible = string.IsNullOrEmpty(dispo) || dispo == "AVAILABLE";
+                // TD-878 (suite) : grisé VISIBLEMENT (libellé éteint + raison) quand le budget structurel du jour est dépensé. La disponibilité servie du lieutenant
+                // (reassign_availability) garde son effet d'avant — `interactable` seul, sans libellé éteint — : on n'éteint JAMAIS un bouton sans lui dire pourquoi
+                // (revue ⊥ 11/11, BLOCKING 1) ; la raison de la disponibilité est une dette séparée.
+                GriserBouton(boutonReaffecter, BudgetStructurelDepense);
+                if (!disponible) boutonReaffecter.interactable = false;
+                PoserRaison(reassignReasonText, BudgetStructurelDepense ? PhraseDeBlocage(BlocageRecrutement.BudgetDepense) : "");
+                SuivreLaRaison();
             }
         }
 
@@ -3441,6 +3498,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // UN ordre = UNE règle (le back refuse tout autre compte en 422) : pas d'ajout ; et on SIGNE, on n'attache pas.
             if (ajouterRegleButton != null) ajouterRegleButton.gameObject.SetActive(!ModeOrdre);
             if (attacherButton != null) attacherButton.gameObject.SetActive(!ModeOrdre);
+            AppliquerBudgetAuxGestesStructurels();   // la raison d'« Attacher » suit son bouton
             foreach (var kv in lapseButtons)
                 if (kv.Value != null && kv.Value.targetGraphic != null)
                     kv.Value.targetGraphic.color = kv.Key == LapseChoisi ? LapseChoisiTeinte : lapseTeinteRepos;
@@ -3654,6 +3712,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             ajouterRegleButton = AddActionButton(builderSection, "ajouter_une_regle", Lib("+ Ajouter une règle"), () => AddRule(NewDefaultRule()));
             AddActionButton(builderSection, "valider", Lib("Valider"), () => StartCoroutine(ValidateRules()));
             attacherButton = AddActionButton(builderSection, "attacher", Lib("Attacher"), () => StartCoroutine(AttachRules()));
+            attachReasonText = NouvelleRaison("AttachReason", builderSection);
             BuildOrdreModeBlock(builderSection);
 
             // The diagnostics area — RenderDiagnostics lists the 422 details here (cleared on a successful validate/attach).
