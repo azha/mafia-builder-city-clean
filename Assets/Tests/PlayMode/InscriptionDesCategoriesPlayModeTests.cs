@@ -42,9 +42,8 @@ namespace MafiaCleanCity.Tests
         internal static readonly HashSet<string> NonInscritesConnues = new HashSet<string>
         {
             // 16 → 1 le 26/09 (créneau CLIENT-1, pile 256de0f8) : les 15 autres lancées et inscrites vertes (EtatDuShell verte après
-            // de887d7d). Reste ManometreOracle : Oracle1_Ring_… GÈLE le fil principal (reproduit au même créneau : RC=5, 180 s de journal
-            // muet) — la forme exacte que SondeGelVolontaire imite. Elle sortira de la dette quand le gel sera corrigé.
-            "ManometreOracle",
+            // de887d7d). ManometreOracle est SORTIE de la dette le 11/11/2026 (TD-884, CLIENT-2) : réécrite sur RenderTexture + caméra, le
+            // gel d'Oracle1 est mort (0,07 s) ; 6 verts + 2 [Ignore] (TD-951) au créneau ; inscrite au filtre de MafiaCI. La dette est VIDE.
             // DecorDeScene (CLIENT-2) est SORTIE de la dette le 08/10 : verte 38/38 seule à son créneau, inscrite au filtre de MafiaCI.
             // ClientHttp (CLIENT-2, TD-767) est SORTIE de la dette le 07/10 : verte 4/4 au créneau de CLIENT-1 (HEAD 2de97eb4), inscrite au filtre de MafiaCI.
             // CanvasRacine (CLIENT-2, 07/10) est SORTIE de la dette le 07/10 : verte 5/5 au créneau de CLIENT-1, inscrite au filtre de MafiaCI.

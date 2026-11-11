@@ -137,6 +137,7 @@ public static class MafiaCI
     //   `EcranDistrict` = ⑬ de CLIENT-2, 4 tests à 218e2829 + 6 de ①-0/①-1/①-2). Préfixes : `EcranDistrict` emporte
     //   `EcranDistribution`, déjà inscrite ; aucune autre entrée neuve n'emporte une catégorie non inscrite (compteur : 591 → 639 = +48).
     //   Toutes en PARTIE 1 du gate client. Rapport : `Tools/juge-donnees/creneau-2026-09-22/categories-hors-filtre.md`.
+    // ✅ [11/11/2026 : INSCRITE — voir le tableau `Categories`. 8 tests, 6 verts + 2 [Ignore] (TD-951), plus de gel.] Texte du 23/09 conservé :
     // ⛔ `ManometreOracle` (5 tests) RESTE DEHORS — GEL reproduit SEUL le 2026-09-23 : `Oracle1_Ring_UniqueLaitonFamily_On360_…`, filtre
     //   par nom, 1 déclaré : journal muet 245 s après son `RUN`, CPU ≈ 378 %, le délai de test d'Unity ne mord pas (fil principal
     //   gelé) ; tué par le chien de garde du lanceur, puis SIGSEGV au démontage de mono (effet du kill, pas une preuve de crash
@@ -316,7 +317,9 @@ public static class MafiaCI
         "ConflitReel",      //  1 — ㉙ contre le back réel
         // La DETTE DATÉE de la garde « catégorie jamais inscrite » (dba0b20e) rétrécit : les 15 autres catégories fonctionnelles, lancées au créneau
         // CLIENT-1 du 26/09 (pile 256de0f8), vertes — EtatDuShell après de887d7d (S1 avait vu, à raison, un statique mutable de B5).
-        // ManometreOracle reste HORS filtre : Oracle1 GÈLE (reproduit : RC=5, chien de garde à 180 s). Validé par l'orchestrateur.
+        // ManometreOracle est INSCRITE le 11/11/2026 (TD-884, décision f2) : réécrite sur RenderTexture + caméra, plus de gel
+        // (Oracle1 0,07 s), 6 verts + 2 [Ignore] nommés (Oracle3 et M2 : TD-951, bande aveugle) — run5 passed=6 failed=0 skipped=2, VERDICT 0.
+        "ManometreOracle",
         "CeQuiArrive", "ChaineSilencieuse", "CommissariatDuJoueur", "EtatDuShell", "FicheLabo", "GestesDeVente", "HorizonAuMontage",
         "HoteDeRecrutement", "LocuteurReel", "MenuPlus", "ProfilEnMots", "RevueSansRoutine", "SansRelais", "SessionAuRetour", "VariablesDeRefus",
         // C4 (CLIENT-1, 07/10) — l'horloge légère `GET /v1/me/clock` en appel de FOND (`X-Mafia-Background: 1`) : 6 tests hors réseau, sans
