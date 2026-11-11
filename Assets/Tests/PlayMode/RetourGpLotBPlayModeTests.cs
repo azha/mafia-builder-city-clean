@@ -341,7 +341,7 @@ namespace MafiaCleanCity.Tests
             {
                 var journal = MonterSousCanvas<JournalScreenController>("JournalGp", out Canvas canvas);
                 journal.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
-                lignes = Relever("Journal", "pied (Y PRÊTER ATTENTION)", journal.gameObject, canvas);
+                lignes = Relever("Journal", "pied (Y PRÊTER ATTENTION)", canvas.gameObject, canvas);   // la feuille est bâtie sous le canvas RACINE (comme Lieutenant) : le relevé porte sur le canvas, pas sur l'hôte (run 8 : 0 bouton relevé sous l'hôte)
             }
             finally { DetruireMontes(); }
             PublicationGp.Publier(lignes);
