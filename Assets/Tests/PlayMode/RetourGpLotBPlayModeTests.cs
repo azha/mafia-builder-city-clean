@@ -7,6 +7,7 @@ using UnityEngine.TestTools;
 using UnityEngine.UI;
 using MafiaCleanCity.Account.Profile;
 using MafiaCleanCity.Account.Settings;
+using MafiaCleanCity.CitySim.Inspection;
 using MafiaCleanCity.CoreLoops.Compression;
 using MafiaCleanCity.I18n;
 using MafiaCleanCity.Mouvements;
@@ -27,12 +28,9 @@ namespace MafiaCleanCity.Tests
     //   · l'anti-vacuité : N pressables relevés > 0, N LU du relevé (jamais écrit à une valeur devinée) et journalisé.
     // Écrans montés : Exceptions (détail ⑩ ; file ⑨ avec son tampon), panneau de file du shell (liste ; ligne de l'Accueil), Revue du jour,
     // HomeChrome, TopBar, Réglages, Carte à fort levier (3 états), Bandeau éphémère, Décision ⑤ (après-geste), Écran d'échec de démarrage,
-    // La suite, PiedDEcran (le geste), Tutoriel, Compression, Dashboard (les « Aller à »), et le VRAI shell (Accueil sans carte / avec carte ; menu Plus).
+    // La suite, PiedDEcran (le geste), Tutoriel, Compression, Dashboard (les « Aller à »), Inspection (le registre, « DÉPOSER » pressable), et le VRAI shell (Accueil sans carte / avec carte ; menu Plus).
     //
     // NON MONTÉ — le relevé n'invente rien ; la ligne « couverture sites k / N » (`PublicationGp`) nommera les sites que ces écrans portent :
-    // // NON MONTÉ : CitySim/Inspection/InspectionScreenController (« DÉPOSER », :474) — le bouton est posé `interactable = false` et ne devient
-    //    pressable que si `Cible` (setter privé, posée par la lecture réseau du registre) ET le jeton sont là : monté hors réseau, il est
-    //    NON PRESSABLE, donc jamais jugé sur l'effet (un site non exercé n'est pas prouvé).
     // // NON COUVRABLE : Operational/Journal/JournalScreenController (BoutonAssister, :923) — `interactable = false` par construction
     //    (TD-848, aucune route « assister »). Monté et relevé NON PRESSABLE (`GP_Journal_PiedNonPressable`), jamais « couvert ».
     // // NON MONTÉ : Shell/AppShell.cs:1647 (« Rouvrir le coffre ») — le panneau n'existe qu'après une sortie CONFIRMÉE par le back
@@ -601,6 +599,30 @@ namespace MafiaCleanCity.Tests
             }
             finally { DetruireMontes(); }
             Verifier("Dashboard/portefeuille servi, boutons Aller à", lignes);
+            yield break;
+        }
+
+        // ------------------------------------------------------------------------------ Inspection : le registre et « DÉPOSER »
+        [UnityTest]
+        public IEnumerator GP_Inspection_RegistreEtDeposer()
+        {
+            List<LigneGp> lignes;
+            try
+            {
+                var ecran = MonterSousCanvas<InspectionScreenController>("InspectionGp", out Canvas canvas);
+                // dix-huit files servies, un bâtiment visé et un jeton : la couture les pose puis appelle le MÊME `Rendre()` que `Charger()`
+                FileData[] files = Enumerable.Range(1, InspectionScreenController.NombreDeDistricts).Select(i => new FileData
+                {
+                    district = "district-" + i, queue_load = i % 2 == 0 ? "EMPTY" : "LIGHT", dispatcher_regime = "NOMINAL",
+                    severity_distribution = new BandesSeverite(), type_distribution = new BandesSource { SCHEDULED = "SOME" },
+                }).ToArray();
+                ecran.RendrePourTest(files, new BatimentPossedeDto { building = "b-1", district_id = 1, district_name = "La Lisière" }, "jeton-de-test");
+                Assert.IsTrue(ecran.PeutDeposer, "précondition : « DÉPOSER » est pressable (cible ET jeton posés)");
+                Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.LignesRendues, "précondition : le registre rend ses 18 lignes");
+                lignes = Relever("Inspection", "registre, cible et jeton posés", ecran.gameObject, canvas);
+            }
+            finally { DetruireMontes(); }
+            Verifier("Inspection/registre, cible et jeton posés", lignes);
             yield break;
         }
 
