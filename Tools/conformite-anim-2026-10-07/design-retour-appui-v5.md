@@ -1,5 +1,7 @@
 # Design — le RETOUR D'APPUI des boutons du client (**v5**) — document AUTONOME
 
+> **STATUT — APPROUVÉ PAR ARBITRAGE (f2, 11/11/2026), sans seconde revue.** Texte relu par la revue ⊥ n°1 à `327b6afc` (`revue-v5-n1.md` : NOT_APPROVED, 2 BLOCKING + 5 IMPORTANT + 4 mineurs) ; correctifs de l'auteur au commit **`bf014613`**, ratifiés par f2 (« correctif vérifié par l'auteur » : les preuves avant/après sont à l'**annexe C**). Décisions de f2 portées : relâchement qui saute d'une frame (dette 32, classe C), règle de classement « effet mesuré < plancher ⇒ voile, jamais de k plus bas », E-R1 avant tout code. **N = 69** (mesuré, le 67 est périmé). **Aucun code n'existe** : la session suivante commence par E-R1 (§6), puis le code.
+
 **Ce document REMPLACE le §17 de `design-couche-mouvement.md` v4.8.** Le §17 (et la partie « retour
 d'appui » du §8) sont **PÉRIMÉS** à partir d'ici : ils ont été écrits sur l'arbre
 `design/conformite-anim-2026-10-07` (HEAD `b7c522a7`) et **11 de leurs citations `fichier:ligne`
