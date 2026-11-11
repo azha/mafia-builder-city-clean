@@ -89,21 +89,37 @@ namespace MafiaCleanCity.Economy.Shop
         /// <summary>La réplique de Wexler affichée (crochet de test) ; "" si aucune.</summary>
         public string RepliqueAffichee => repliqueTexte != null && repliqueTexte.gameObject.activeSelf ? repliqueTexte.text : "";
 
-        /// <summary>TD-823 (règle de f2 du 11/11, UNE réplique dans la bande `.voix`, par PRIORITÉ) : (1) solde = 0 ET au moins un acquis ⇒
-        /// « Vous avez tout claqué d’un coup… » ; (2) sinon solde > 0 ⇒ « Ce qui est là est à vendre… » ; (3) sinon (solde 0 sans acquis — le joueur
-        /// NEUF) ⇒ « Les Marks, c’est dehors qu’on les achète… », vrai pour lui. Solde NON LU (-1) ⇒ null : rien n'est dit sur une route en panne ;
-        /// possessions NON LUES (`acquis` -1) avec un solde à 0 ⇒ null aussi (revue ⊥ 11/11) : on ne sait pas s'il a « tout claqué », et « dehors »
-        /// serait peut-être faux. Avec un solde > 0, les acquis ne changent rien : « à vendre » reste vrai.
+        /// <summary>TD-823 (RÈGLE FINALE de f2 du 11/11 — le juge a prouvé que la priorité « solde > 0 ⇒ à vendre » rendait « Marks dehors » inatteignable
+        /// pour un joueur neuf doté de 50 Marks devant un seul article à 50) : UNE réplique dans la bande `.voix`, par priorité : (1) solde = 0 ET au moins
+        /// un acquis ⇒ « Vous avez tout claqué d’un coup… » ; (2) sinon « Ce qui est là est à vendre… » si au moins un article est À PORTÉE (`aPortee` ≥ 1 :
+        /// prix ≤ solde, voir <see cref="ArticlesAPortee"/>) ; (3) sinon « Les Marks, c’est dehors qu’on les achète… ».
+        /// Rien n'est dit (null) quand on ne sait pas : solde NON LU (-1) ; solde 0 avec possessions NON LUES (`acquis` -1) — on ne sait pas s'il a « tout claqué » ;
+        /// solde > 0 avec catalogue NON LU (`aPortee` -1) — on ne sait pas si « à vendre » est vrai. À solde 0 aucun article n'est à portée (un prix est > 0).
         /// Valeurs SANS {nom} (la bande dit qui parle), guillemets à U+00A0 ; clés dérivées jusqu'au SHA de BACK-2 (noms à figer). Pure.</summary>
-        public static string RepliqueDeWexler(int solde, int acquis)
+        public static string RepliqueDeWexler(int solde, int acquis, int aPortee)
         {
             if (solde < 0) return null;
             if (solde == 0 && acquis < 0) return null;
             if (solde == 0 && acquis >= 1)
                 return MafiaCleanCity.I18n.Libelle.De("boutique", "dit", "«\u00A0Vous avez tout claqué d’un coup. Ce qui reste au mur, vous ne l’aurez pas avec de la bonne volonté.\u00A0»");
-            if (solde > 0)
+            if (solde > 0 && aPortee < 0) return null;
+            if (solde > 0 && aPortee >= 1)
                 return MafiaCleanCity.I18n.Libelle.De("boutique", "dit", "«\u00A0Ce qui est là est à vendre. Ce qui est trop cher pour vous, je le laisse en vitrine — ça vous fera un but.\u00A0»");
             return MafiaCleanCity.I18n.Libelle.De("boutique", "dit", "«\u00A0Les Marks, c’est dehors qu’on les achète. Moi je vous les compte, je ne les vends pas.\u00A0»");
+        }
+
+        /// <summary>Combien d'articles du catalogue sont À PORTÉE du solde : la MÊME règle que la carte (`Article` : `abordable`) — ni monnaie réelle (MARKS_PACK, SUPPORT),
+        /// prix > 0, prix ≤ solde — et pas déjà possédé (on ne rachète pas). -1 si le catalogue n'est pas lu (null ou vide) : « aucun » ≠ « pas lu ». Pure.</summary>
+        public static int ArticlesAPortee(SkuDto[] catalogue, int solde, ICollection<string> possedes)
+        {
+            if (catalogue == null || catalogue.Length == 0) return -1;
+            int n = 0;
+            foreach (SkuDto s in catalogue)
+            {
+                bool argentReel = s.kind == "MARKS_PACK" || s.kind == "SUPPORT";
+                if (!argentReel && s.price_marks > 0 && solde >= s.price_marks && (possedes == null || !possedes.Contains(s.sku_id))) n++;
+            }
+            return n;
         }
 
         private static TMP_FontAsset Sans => DesignTokens.Current.primaryFont;
@@ -223,7 +239,7 @@ namespace MafiaCleanCity.Economy.Shop
             terminalBloc.SetActive(Solde == 0);
             if (repliqueTexte != null)
             {
-                string r = RepliqueDeWexler(Solde, Possedes == null ? -1 : Possedes.Length);   // possessions NON LUES ⇒ -1, jamais « aucun acquis »
+                string r = RepliqueDeWexler(Solde, Possedes == null ? -1 : Possedes.Length, ArticlesAPortee(Catalogue, Solde, Possedes));   // possessions / catalogue NON LUS ⇒ -1, jamais « aucun »
                 repliqueTexte.text = r ?? "";
                 repliqueTexte.gameObject.SetActive(r != null);
             }

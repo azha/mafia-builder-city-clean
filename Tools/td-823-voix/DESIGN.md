@@ -26,3 +26,8 @@ doit déclarer »). Code back en cours (`lot/td-823-voix`) : clés dérivées + 
 - TD-1045 : V15 des 8 valeurs et des noms `boutique.dit.*` au SHA de BACK-2 ; la liste `docs/content/i18n-cles-du-client-<date>.tsv` (dépôt BACK)
   à régénérer par `Tools/cles-i18n-du-client.py` après ce lot (§9.5 du design back) — à router.
 - Les 3 états de ㉛ non servables (avocat, arrangement, avocat nerveux) : dette du design BACK-2 (§8 de son design, plage TD-974..979 de SON registre, pas de celui-ci).
+
+
+## Règle finale de Wexler (f2 11/11, après le juge-données)
+(1) solde 0 ET ≥ 1 acquis ⇒ « tout claqué » ; (2) sinon « à vendre » si ≥ 1 article À PORTÉE (`ShopScreenController.ArticlesAPortee` : même règle que `abordable` de la carte — hors monnaie réelle, prix > 0, prix ≤ solde, non possédé) ; (3) sinon « dehors ». Catalogue ou possessions non lus ⇒ rien. Garde : `VitrineTD823_*` (3 états + contrôle positif « grant de 50 + article à 50 ⇒ à vendre »).
+㉝ : le `speaker` de la fiche (`friction/nodes/:buildingId`, BACK-2 C2b) n'est pas encore servi ; au moment de le lire : lieutenant du site visé d'abord, repli = `speaker` servi, jamais une position de `lieutenant_ids`.
