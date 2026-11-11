@@ -1573,6 +1573,19 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// <summary>Test hook : la raison affichée sous le bouton (vide si le recrutement est ouvert).</summary>
         public string RecruitReason { get { return recruitReasonText != null && recruitReasonText.gameObject.activeSelf ? recruitReasonText.text : ""; } }
 
+        /// <summary>TD-954 : la clé du libellé d'ON_COOLDOWN telle que le back la sert dans `reassign_availability_label_key` (lot/td-954-reassign @ff5430b2). Témoin des tests, jamais une source de lecture.</summary>
+        public const string CleReaffectationTropTot = "famille.reaffectation.trop_tot_pour_le_deplacer_a_nouveau";
+
+        /// <summary>TD-954 : la raison de « Réaffecter… » quand la disponibilité SERVIE n'est pas AVAILABLE. La phrase de la clé SERVIE l'emporte (toute valeur non disponible) ; à défaut, ON_COOLDOWN seul retombe sur le mot
+        /// ratifié par f2 (12/11), repli COMPTÉ ; une autre valeur sans clé servie n'a pas de phrase (""). AVAILABLE / vide : "" (un bouton actif n'a rien à dire). Pur.</summary>
+        public static string PhraseDeIndisponibilite(string disponibilite, string cleServie)
+        {
+            if (string.IsNullOrEmpty(disponibilite) || disponibilite == "AVAILABLE") return "";
+            string servie = MafiaCleanCity.I18n.Libelle.Gabarit(cleServie, null);
+            if (servie != null) return servie;
+            return disponibilite == "ON_COOLDOWN" ? Lib("Trop tôt pour le déplacer à nouveau.") : "";
+        }
+
         /// <summary>La phrase de blocage : budget dépensé = la phrase SERVIE du registre d'erreurs ; équipe au complet = la phrase de la clé SERVIE `roster_room_label_key` (TD-1092, `cleEquipePleine`), et le mot
         /// ratifié par f2 (11/11) en REPLI COMPTÉ tant que la clé n'est pas servie ou que la pile ne sert pas sa valeur. Pur.</summary>
         public static string PhraseDeBlocage(BlocageRecrutement b, string cleEquipePleine = null)
@@ -3165,12 +3178,14 @@ namespace MafiaCleanCity.Operational.Lieutenant
             {
                 string dispo = CurrentBands != null ? CurrentBands.reassign_availability : null;
                 bool disponible = string.IsNullOrEmpty(dispo) || dispo == "AVAILABLE";
-                // TD-878 (suite) : grisé VISIBLEMENT (libellé éteint + raison) quand le budget structurel du jour est dépensé. La disponibilité servie du lieutenant
-                // (reassign_availability) garde son effet d'avant — `interactable` seul, sans libellé éteint — : on n'éteint JAMAIS un bouton sans lui dire pourquoi
-                // (revue ⊥ 11/11, BLOCKING 1) ; la raison de la disponibilité est une dette séparée.
-                GriserBouton(boutonReaffecter, BudgetStructurelDepense);
+                // TD-878 (suite) : grisé VISIBLEMENT (libellé éteint + raison) quand le budget structurel du jour est dépensé. TD-954 : la disponibilité servie (reassign_availability)
+                // a maintenant SA raison — la phrase de `reassign_availability_label_key` — et grise visiblement quand elle a une phrase à dire. On n'éteint JAMAIS un bouton sans lui dire
+                // pourquoi (revue ⊥ 11/11, BLOCKING 1) : une valeur non disponible SANS phrase (inconnue, clé non servie) garde l'effet d'avant — `interactable` seul, libellé non éteint.
+                string phraseDispo = disponible ? "" : PhraseDeIndisponibilite(dispo, CurrentBands.reassign_availability_label_key);
+                string phraseBudget = BudgetStructurelDepense ? PhraseDeBlocage(BlocageRecrutement.BudgetDepense) : "";
+                GriserBouton(boutonReaffecter, BudgetStructurelDepense || phraseDispo.Length > 0);
                 if (!disponible) boutonReaffecter.interactable = false;
-                PoserRaison(reassignReasonText, BudgetStructurelDepense ? PhraseDeBlocage(BlocageRecrutement.BudgetDepense) : "");
+                PoserRaison(reassignReasonText, string.Join(" ", new[] { phraseBudget, phraseDispo }.Where(p => p.Length > 0)));
                 SuivreLaRaison();
             }
         }

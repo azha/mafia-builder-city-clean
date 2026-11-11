@@ -98,6 +98,11 @@ namespace MafiaCleanCity.Operational.Lieutenant
         ///   *Un geste impossible qu'on laisse cliquer n'est pas une erreur de serveur : c'est
         ///   une promesse que l'écran n'avait pas le droit de faire.*</summary>
         public string reassign_availability;
+        /// <summary>TD-954 / TD-1093 (back lot/td-954-reassign @ff5430b2, 19ᵉ clé racine, additive, sur `GET /v1/lieutenants/:id` et la route qui rend `LieutenantBands`) — la CLÉ i18n du libellé de
+        /// `reassign_availability` : AVAILABLE → `famille.reaffectation.ce_lieutenant_peut_etre_deplace` (non lue : le bouton actif n'a pas de phrase à dire), ON_COOLDOWN →
+        /// `famille.reaffectation.trop_tot_pour_le_deplacer_a_nouveau`. Vide = non servie (back d'avant le lot) : repli. Une RÉFÉRENCE SERVIE (`…_key`). Déclarée ICI : JsonUtility jette toute clé
+        /// que le DTO ne nomme pas (forme G).</summary>
+        public string reassign_availability_label_key;
         /// <summary>⛔ LE MÊME CHAMP, LA MÊME OMISSION, SUR L'AUTRE ROUTE. `name` était servi par
         /// `GET /v1/lieutenants` ET par `GET /v1/lieutenants/:id` — deux routes, un seul contrat
         /// de projection. D-1 a déclaré le champ sur la LISTE et laissé le DÉTAIL sans lui : le

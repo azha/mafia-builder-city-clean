@@ -339,6 +339,56 @@ namespace MafiaCleanCity.CityMap.Tests
             StringAssert.Contains("décision de structure", ecran.AttachReason);
         }
 
+        // ---- TD-954 / TD-1093 (12/11) — `GET /v1/lieutenants/:id` sert `reassign_availability_label_key` (back lot/td-954-reassign @ff5430b2) : le DTO la DÉCLARE (forme G), la raison de « Réaffecter… » la LIT.
+        private const string CorpsBandesCooldown = "{\"archetype\":\"COOK\",\"reassign_availability\":\"ON_COOLDOWN\",\"reassign_availability_label_key\":\"famille.reaffectation.trop_tot_pour_le_deplacer_a_nouveau\"}";
+
+        [Test]
+        public void H54a_LeDtoDeclareLaCleDuLibelleDeLaDisponibilite()
+        {
+            LieutenantBands b = JsonUtility.FromJson<LieutenantBands>(CorpsBandesCooldown);
+            Assert.AreEqual(LieutenantScreenController.CleReaffectationTropTot, b.reassign_availability_label_key, "forme G : la clé servie est lue, pas jetée par JsonUtility");
+            Assert.AreEqual("ON_COOLDOWN", b.reassign_availability);
+            Assert.IsNull(JsonUtility.FromJson<LieutenantBands>("{\"reassign_availability\":\"ON_COOLDOWN\"}").reassign_availability_label_key, "clé non servie (back d'avant le lot) ⇒ null");
+        }
+
+        [Test]
+        public void H54b_LaPhraseLitLaCleServie_EtLeMotRatifieEstLeRepliCompte()
+        {
+            string cle = LieutenantScreenController.CleReaffectationTropTot;
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { cle, "VALEUR SERVIE DU COOLDOWN" } });
+            Assert.AreEqual("VALEUR SERVIE DU COOLDOWN", LieutenantScreenController.PhraseDeIndisponibilite("ON_COOLDOWN", cle), "la valeur servie l'emporte");
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
+            Assert.AreEqual("Trop tôt pour le déplacer à nouveau.", LieutenantScreenController.PhraseDeIndisponibilite("ON_COOLDOWN", cle), "clé annoncée, valeur non servie ⇒ le mot ratifié");
+            CollectionAssert.Contains(MafiaCleanCity.I18n.Libelle.ClesEnRepli, cle, "le repli est COMPTÉ sous la clé servie (la garde zéro-repli le voit)");
+            Assert.AreEqual("Trop tôt pour le déplacer à nouveau.", LieutenantScreenController.PhraseDeIndisponibilite("ON_COOLDOWN", null), "clé absente, ON_COOLDOWN ⇒ le mot ratifié");
+            Assert.AreEqual("", LieutenantScreenController.PhraseDeIndisponibilite("AVAILABLE", cle), "un bouton actif n'a rien à dire");
+            Assert.AreEqual("", LieutenantScreenController.PhraseDeIndisponibilite("", cle));
+            Assert.AreEqual("", LieutenantScreenController.PhraseDeIndisponibilite("COOLDOWN", null), "valeur inconnue sans clé servie : pas de phrase inventée");
+        }
+
+        [UnityTest]
+        public IEnumerator H54c_LEcran_GriseEtDitPourquoi_ApresLaCleServie_Et_JoinLaRaisonDuBudget()
+        {
+            string cle = LieutenantScreenController.CleReaffectationTropTot;
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { cle, "VALEUR SERVIE DU COOLDOWN" }, { HostBlocage.CleBudgetDepense, "PHRASE SERVIE DU PLAFOND" } });
+            hote = new GameObject("LieutenantScreenController_Cooldown");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            ecran.RendreBandesPourTest(JsonUtility.FromJson<LieutenantBands>(CorpsBandesCooldown));
+            Assert.IsFalse(ecran.ReassignButtonInteractable);
+            Assert.AreEqual(MafiaCleanCity.Theme.DesignTokens.Current.onSurfaceMuted, ecran.ReassignLabelColor, "grisé VISIBLEMENT : il dit pourquoi");
+            Assert.AreEqual("VALEUR SERVIE DU COOLDOWN", ecran.ReassignReason);
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "ROOM")));
+            StringAssert.Contains("VALEUR SERVIE DU COOLDOWN", ecran.ReassignReason);
+            StringAssert.Contains("PHRASE SERVIE DU PLAFOND", ecran.ReassignReason, "les deux raisons coexistent");
+            ecran.RendreBandesPourTest(new LieutenantBands { archetype = "COOK", reassign_availability = "AVAILABLE", reassign_availability_label_key = cle });
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("AVAILABLE", "ROOM")));
+            Assert.IsTrue(ecran.ReassignButtonInteractable);
+            Assert.AreEqual("", ecran.ReassignReason, "disponible : plus de raison");
+        }
+
         // H14 (mineur 1 de la revue ⊥ TD-878) — deux relectures concurrentes : la lecture LANCÉE en dernier fait foi, quel que soit l'ordre d'arrivée.
         // La lecture 1 sert SPENT (périmée), la lecture 2 sert AVAILABLE/ROOM (la bonne) ; les deux ordres d'arrivée doivent finir ouverts.
         // Contrôle positif : une lecture lancée seule (la dernière) s'applique bel et bien — la garde ne jette pas tout.
