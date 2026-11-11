@@ -92,8 +92,9 @@ namespace MafiaCleanCity.Operational
     }
 
     /// <summary>Une route de la chaîne — les 7 clés SERVIES, recopiées du code back (`supply-chain.controller.ts:92-99` et `:141-148`, main 6040a213 ;
-    /// TD-1013, 11/11 : le placeholder vide d'avant jetait les 7 clés, forme G). Que des bandes et des références (mur R2.2 du contrôleur, `:115-120` :
-    /// jamais `sinuosity_index` ni le compte à rebours `rebuild_completes_at_tick`). Aucun écran ne les lit encore (le rendu de la chaîne attend TD-985).</summary>
+    /// TD-1013, 11/11 : le placeholder vide d'avant jetait les 7 clés, forme G). Que des bandes et des références (mur R2.2 du contrôleur, `:113-120` :
+    /// jamais `sinuosity_index`, `straight_line_distance`, `stress_streak`, `patch_count` ; et `rebuilding` n'est JAMAIS le compte à rebours brut
+    /// `rebuild_completes_at_tick` : doc de `RouteGraphView`, `supply-chain-graph.service.ts:70`). Aucun écran ne les lit encore (le rendu de la chaîne attend TD-985).</summary>
     [Serializable]
     public class SupplyChainRouteDto
     {
