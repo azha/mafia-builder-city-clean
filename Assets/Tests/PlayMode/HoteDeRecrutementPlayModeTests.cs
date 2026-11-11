@@ -302,5 +302,79 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsFalse(ecran.ModeOrdre);
             StringAssert.Contains("décision de structure", ecran.AttachReason);
         }
+
+        // H14 (mineur 1 de la revue ⊥ TD-878) — deux relectures concurrentes : la lecture LANCÉE en dernier fait foi, quel que soit l'ordre d'arrivée.
+        // La lecture 1 sert SPENT (périmée), la lecture 2 sert AVAILABLE/ROOM (la bonne) ; les deux ordres d'arrivée doivent finir ouverts.
+        // Contrôle positif : une lecture lancée seule (la dernière) s'applique bel et bien — la garde ne jette pas tout.
+        private static IEnumerator LectureEnAttente(HostEligibiliteData donnees, bool[] arrivee, int i, Action<HostEligibiliteData> ok)
+        {
+            while (!arrivee[i]) yield return null;
+            ok(donnees);
+        }
+
+        private IEnumerator DeuxLecturesConcurrentes(bool laPlusRecenteArriveEnPremier, HostEligibiliteData ancienne, HostEligibiliteData recente, LieutenantScreenController ecran)
+        {
+            bool[] arrivee = new bool[2];
+            int appel = 0;
+            ecran.LectureHostEligibilite = (ok, ko) => { int i = appel++; return LectureEnAttente(i == 0 ? ancienne : recente, arrivee, i, ok); };
+            Coroutine c1 = ecran.StartCoroutine(ecran.RafraichirBlocageRecrutement());   // lancée la 1ʳᵉ
+            yield return null;
+            Coroutine c2 = ecran.StartCoroutine(ecran.RafraichirBlocageRecrutement());   // lancée la 2ᵉ : celle qui fait foi
+            yield return null;
+            Assert.AreEqual(2, appel, "les deux lectures sont en vol");
+            arrivee[laPlusRecenteArriveEnPremier ? 1 : 0] = true;
+            yield return null; yield return null;
+            arrivee[laPlusRecenteArriveEnPremier ? 0 : 1] = true;
+            yield return c1; yield return c2;
+        }
+
+        [UnityTest]
+        public IEnumerator H14_DeuxRelecturesConcurrentes_LaPlusRecenteFaitFoi_DansLesDeuxOrdres()
+        {
+            hote = new GameObject("LieutenantScreenController_Generation");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            HostEligibiliteData spent = HostEligibilite.LireCorps(Bandes("SPENT", "ROOM")), ouvert = HostEligibilite.LireCorps(Bandes("AVAILABLE", "ROOM"));
+            // ordre 1 : la récente arrive d'abord, la périmée (SPENT) arrive ENSUITE — sans jeton elle écraserait l'état ouvert
+            yield return DeuxLecturesConcurrentes(true, spent, ouvert, ecran);
+            ExigerEtat(ecran, BlocageRecrutement.Aucun);
+            // ordre 2 : la périmée arrive d'abord, la récente ensuite
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "ROOM")));
+            yield return DeuxLecturesConcurrentes(false, spent, ouvert, ecran);
+            ExigerEtat(ecran, BlocageRecrutement.Aucun);
+            // contrôle positif : la récente seule (SPENT) s'applique — le jeton ne mange pas la lecture qui doit passer
+            yield return DeuxLecturesConcurrentes(true, ouvert, spent, ecran);
+            ExigerEtat(ecran, BlocageRecrutement.BudgetDepense, "décision de structure");
+        }
+
+        // H15 (mineur 2) — la phrase de raison qui n'est plus affichée sort du corpus du scan « pas de scalaire brut » ; celle qu'une autre raison montre encore reste.
+        [UnityTest]
+        public IEnumerator H15_LaPhraseDeRaisonCacheeSortDuCorpus_CelleEncoreMontreeResteDedans()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { HostBlocage.CleBudgetDepense, "PHRASE SERVIE DU PLAFOND" } });
+            hote = new GameObject("LieutenantScreenController_CorpsDesRaisons");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "FULL")));
+            // la raison du recrutement est UNE phrase jointe (budget + équipe au complet) ; « Attacher » ne dit que le budget
+            const string jointe = "PHRASE SERVIE DU PLAFOND Votre équipe est au complet.";
+            CollectionAssert.Contains(ecran.RenderedTexts, jointe);
+            CollectionAssert.Contains(ecran.RenderedTexts, "PHRASE SERVIE DU PLAFOND");
+            // la phrase jointe n'est plus affichée (budget seul) : elle sort du corpus ; celle du budget reste
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "ROOM")));
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, jointe);
+            CollectionAssert.Contains(ecran.RenderedTexts, "PHRASE SERVIE DU PLAFOND");
+            // « Attacher » masqué (mode ordre) : sa raison s'éteint, mais le recrutement montre encore la MÊME phrase ⇒ elle reste
+            ecran.OuvrirModeOrdre();
+            Assert.AreEqual("", ecran.AttachReason);
+            CollectionAssert.Contains(ecran.RenderedTexts, "PHRASE SERVIE DU PLAFOND", "une autre raison la montre encore");
+            ecran.OuvrirModeOrdre();
+            // réouverture : plus aucune raison affichée ⇒ plus aucune phrase de raison dans le corpus
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("AVAILABLE", "ROOM")));
+            Assert.AreEqual("", ecran.RecruitReason);
+            CollectionAssert.DoesNotContain(ecran.RenderedTexts, "PHRASE SERVIE DU PLAFOND", "la phrase cachée est purgée à la réouverture");
+        }
 }
 }
