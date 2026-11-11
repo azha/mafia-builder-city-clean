@@ -21,6 +21,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public string building_id;
         public string blocked_reason;
         public string blocked_reason_i18n;
+        /// <summary>La CLÉ i18n de la phrase de refus (`blocked_reason_i18n` EST une clé, pas un texte : `famille.refus.*`). Lue sous ce nom pour que la garde de classe
+        /// `I18nHorsLibelle` (L2 : une lecture du catalogue ne prend qu'une RÉFÉRENCE SERVIE `….key` / `…_key`) la reconnaisse. Propriété : JsonUtility ne la touche pas.</summary>
+        public string blocked_reason_key => blocked_reason_i18n;
     }
 
     /// <summary>La ligne d'un archétype. `eligible_host_building_ids` peut être `[]` (une valeur, jamais une clé absente).</summary>
@@ -79,6 +82,18 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (hote == null || !ligne.PrendUneCible) return (hote, null);
             string cible = ligne.valid_target_building_ids?.FirstOrDefault(id => !string.IsNullOrEmpty(id) && id != hote);
             return (hote, cible);
+        }
+    }
+
+    public static class HostRefus
+    {
+        /// <summary>TD-877 (ratifié f2 11/11) — le premier hôte REFUSÉ servi pour `archetype`, quand AUCUN hôte éligible n'est servi : sa phrase de refus remplace « Échec du recrutement. ».
+        /// Null s'il n'y a ni éligible ni refusé (rien à dire : la phrase actuelle reste), ou si un hôte éligible existe (le recrutement part).</summary>
+        public static HostBloqueDto Premier(string archetype, HostEligibiliteData donnees)
+        {
+            HostArchetypeDto ligne = donnees?.archetypes?.FirstOrDefault(a => a != null && a.archetype == archetype);
+            if (ligne == null || ligne.eligible_host_building_ids?.Any(id => !string.IsNullOrEmpty(id)) == true) return null;
+            return ligne.blocked?.FirstOrDefault(b => b != null && !string.IsNullOrEmpty(b.blocked_reason_i18n));
         }
     }
 

@@ -72,6 +72,19 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [Test]
+        public void H6_SansHoteEligible_LaPhraseDuPremierRefuse_EstCelleQuiSeDit()
+        {
+            HostBloqueDto refus = HostRefus.Premier("DISTRIBUTION", Servie());
+            Assert.IsNotNull(refus, "DISTRIBUTION : aucun hôte éligible, un refusé servi ⇒ sa phrase remplace « Échec du recrutement. »");
+            Assert.AreEqual("k2", refus.blocked_reason_key, "la CLÉ servie (`blocked_reason_i18n`), que le contrôleur résout par le catalogue");
+            Assert.IsNull(HostRefus.Premier("COOK", Servie()), "un hôte éligible existe : le recrutement part, rien à dire");
+            Assert.IsNull(HostRefus.Premier("SECURITY", Servie()), "aucune ligne : la phrase actuelle reste");
+            Assert.IsNull(HostRefus.Premier("COOK", null), "sans réponse : la phrase actuelle reste");
+            HostEligibiliteData sansRefus = HostEligibilite.LireCorps("{\"payload\":{\"data\":{\"archetypes\":[{\"archetype\":\"COOK\",\"eligible_host_building_ids\":[],\"blocked\":[],\"valid_target_building_ids\":null}]}}}");
+            Assert.IsNull(HostRefus.Premier("COOK", sansRefus), "ni éligible ni refusé : rien de servi à dire, la phrase actuelle reste");
+        }
+
+        [Test]
         public void H4_LeRetourDuRecrutement_NommeLArchetypeParSonMot()
         {
             MafiaCleanCity.I18n.I18nCatalog.Oublier();
