@@ -514,6 +514,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             {
                 LastRecruitedId = id;
                 SetOutcome(RetourDeRecrutement(archetype), AccentMild);
+                if (!Destroyed) StartCoroutine(RafraichirBlocageRecrutement());   // TD-878 : ce recrutement a pu dépenser le budget / remplir l'équipe
                 // Pull the fresh lieutenant bands so the Status section reflects the just-recruited lieutenant (CurrentBands
                 // .archetype set → the rule-builder palette switches to this archetype's fields).
                 yield return RefreshBands();
@@ -1522,7 +1523,12 @@ namespace MafiaCleanCity.Operational.Lieutenant
             recruitButton = AddActionButton(actionBar, "recruter", RecruitButtonText(pickedArchetype), () => StartCoroutine(RecruitChosen()));
             recruitButtonLabel = recruitButton.GetComponentInChildren<TextMeshProUGUI>();
 
-            outcomeText = NewText("Outcome", actionBar, "—", 15, TextAlignmentOptions.Left);
+            // TD-878 — la RAISON sous le bouton quand les bandes servies disent que le back refuserait ; vide (et sans place) sinon.
+            recruitReasonText = NewText("RecruitReason", actionBar, "", 14, TextAlignmentOptions.Left);
+            recruitReasonText.color = DesignTokens.Current.onSurfaceMuted;
+            recruitReasonText.gameObject.SetActive(false);
+
+            outcomeText =NewText("Outcome", actionBar, "—", 15, TextAlignmentOptions.Left);
             outcomeText.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(outcomeText.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(outcomeText, "—");
@@ -1549,6 +1555,55 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (pickerLabel != null) pickerLabel.text = FamilleLabels.Archetype(pickedArchetype);
             if (recruitButtonLabel != null) recruitButtonLabel.text = RecruitButtonText(pickedArchetype);
             if (targetRow != null) targetRow.SetActive(RuleModel.NeedsTarget(pickedArchetype));
+        }
+
+        // ---- TD-878 : griser le recrutement D'AVANCE, avec la raison, d'après les deux bandes SERVIES par host-eligibility.
+        private TextMeshProUGUI recruitReasonText;
+        /// <summary>Test hook : la cause de blocage appliquée au bouton « Recruter » (Aucun tant que les bandes n'ont rien dit).</summary>
+        public BlocageRecrutement BlocageDuRecrutement { get; private set; }
+        /// <summary>Test hook : le bouton « Recruter » est-il cliquable ?</summary>
+        public bool RecruitButtonInteractable { get { return recruitButton == null || recruitButton.interactable; } }
+        /// <summary>Test hook : la raison affichée sous le bouton (vide si le recrutement est ouvert).</summary>
+        public string RecruitReason { get { return recruitReasonText != null && recruitReasonText.gameObject.activeSelf ? recruitReasonText.text : ""; } }
+
+        /// <summary>La phrase de blocage : budget dépensé = la phrase SERVIE du registre d'erreurs ; équipe au complet = le mot ratifié par f2 (11/11), repli compté
+        /// tant que le back ne sert pas de clé (refus générique aujourd'hui). Pur.</summary>
+        public static string PhraseDeBlocage(BlocageRecrutement b)
+        {
+            List<string> dit = new List<string>();
+            if ((b & BlocageRecrutement.BudgetDepense) != 0)
+                dit.Add(MafiaCleanCity.I18n.RefusServi.PhraseDeLaCle(HostBlocage.CleBudgetDepense) ?? Lib("Votre décision de structure d’aujourd’hui est prise. Reprenez demain."));
+            if ((b & BlocageRecrutement.EquipeComplete) != 0) dit.Add(Lib("Votre équipe est au complet."));
+            return string.Join(" ", dit);
+        }
+
+        /// <summary>Pose le blocage lu des bandes de `donnees` : bouton grisé + raison, ou rouvert. Données absentes ⇒ ouvert (le back tranche).</summary>
+        public void AppliquerHostEligibilite(HostEligibiliteData donnees)
+        {
+            if (Destroyed) return;
+            BlocageDuRecrutement = HostBlocage.Lire(donnees);
+            bool bloque = BlocageDuRecrutement != BlocageRecrutement.Aucun;
+            if (recruitButton != null) recruitButton.interactable = !bloque;
+            // le bouton n'a pas de transition (Selectable.Transition.None) : `interactable` seul ne se VOIT pas — le libellé s'éteint, comme une encre secondaire
+            if (recruitButtonLabel != null) recruitButtonLabel.color = bloque ? DesignTokens.Current.onSurfaceMuted : CtaColor;
+            if (recruitReasonText != null)
+            {
+                recruitReasonText.text = bloque ? PhraseDeBlocage(BlocageDuRecrutement) : "";
+                recruitReasonText.gameObject.SetActive(bloque);
+                TrackText(recruitReasonText, recruitReasonText.text);
+            }
+        }
+
+        /// <summary>Relit host-eligibility et applique le blocage. Une lecture en échec laisse l'état d'avant (jamais grisé sur l'ignorance).</summary>
+        public IEnumerator RafraichirBlocageRecrutement()
+        {
+            EnsureInitialized();
+            if (!IsAuthenticated) yield break;
+            HostEligibiliteData servie = null;
+            yield return hostEligibilite.Lire(Token, d => servie = d,
+                (c, m) => Debug.LogWarning($"[Lieutenant] host-eligibility indisponible ({c}) : {m}"));
+            if (Destroyed || servie == null) yield break;
+            AppliquerHostEligibilite(servie);
         }
 
         // The Recruit button caption for an archetype ("Recruit Cook" / "Recruit Security" …).
@@ -1840,6 +1895,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (Destroyed) return;
             recrutementDeplie = !recrutementDeplie;
             MajVisibiliteDetail();
+            if (recrutementDeplie) StartCoroutine(RafraichirBlocageRecrutement());   // TD-878 : les bandes du moment, à l'ouverture du panneau
         }
 
         /// <summary>Montre ou cache les sections de détail selon qu'un lieutenant est ouvert.

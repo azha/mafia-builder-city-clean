@@ -1,4 +1,9 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 using MafiaCleanCity.Operational;
 using MafiaCleanCity.Operational.Lieutenant;
 using MafiaCleanCity.Shell;
@@ -94,6 +99,96 @@ namespace MafiaCleanCity.CityMap.Tests
             StringAssert.Contains(mot, retour, "le mot SERVI de l'archétype");
             StringAssert.DoesNotContain("COOK", retour, "jamais l'identifiant brut");
             StringAssert.DoesNotContain("recruté", retour, "jamais accordé à la personne (D13)");
+        }
+
+        // ---- TD-878 (11/11) — host-eligibility sert `structural_budget_band` ∈ {AVAILABLE, SPENT} et `roster_room_band` ∈ {ROOM, FULL} (back @8d0184a4, budget-bands.ts).
+        //   H7  la lecture : SPENT ⇒ BudgetDepense, FULL ⇒ EquipeComplete, les deux ⇒ les deux ; AVAILABLE/ROOM, absente, vide, inconnue ⇒ Aucun (jamais grisé sur l'ignorance)
+        //   H8  l'écran : bande ⇒ bouton « Recruter » grisé + la RAISON (budget : la phrase SERVIE ; équipe : le mot ratifié f2) ; bande ouverte ⇒ rouvert
+        //   H9  contrôle positif : le contrôle d'état REFUSE un bouton resté ouvert sous une bande qui dit « plus rien » (sinon H8 ne dirait rien)
+        private static string Bandes(string budget, string equipe) =>
+            "{\"payload\":{\"data\":{\"archetypes\":[]" + (budget == null ? "" : ",\"structural_budget_band\":\"" + budget + "\"") +
+            (equipe == null ? "" : ",\"roster_room_band\":\"" + equipe + "\"") + "}}}";
+
+        [Test]
+        public void H7_LesBandesServies_DisentCeQueLeBackRefuseraitEtRienDePlus()
+        {
+            Assert.AreEqual(BlocageRecrutement.BudgetDepense, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes("SPENT", "ROOM"))));
+            Assert.AreEqual(BlocageRecrutement.EquipeComplete, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes("AVAILABLE", "FULL"))));
+            Assert.AreEqual(BlocageRecrutement.BudgetDepense | BlocageRecrutement.EquipeComplete, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes("SPENT", "FULL"))));
+            Assert.AreEqual(BlocageRecrutement.Aucun, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes("AVAILABLE", "ROOM"))));
+            Assert.AreEqual(BlocageRecrutement.Aucun, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes(null, null))), "bandes non servies : on ne sait pas, rien n'est grisé");
+            Assert.AreEqual(BlocageRecrutement.Aucun, HostBlocage.Lire(HostEligibilite.LireCorps(Bandes("", "PLEIN"))), "vide ou valeur inconnue : rien n'est grisé");
+            Assert.AreEqual(BlocageRecrutement.Aucun, HostBlocage.Lire(null), "sans réponse : rien n'est grisé");
+        }
+
+        private GameObject hote;
+
+        [TearDown]
+        public void NettoyerEcran()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            Canvas c = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+            if (c != null) UnityEngine.Object.Destroy(c.gameObject);
+            if (hote != null) UnityEngine.Object.Destroy(hote);
+        }
+
+        /// <summary>L'état attendu du bouton « Recruter » sous `attendu` : cliquable ssi Aucun ; sinon grisé ET une raison non vide qui contient `phrase`.</summary>
+        private static void ExigerEtat(LieutenantScreenController ecran, BlocageRecrutement attendu, params string[] phrases)
+        {
+            Assert.AreEqual(attendu, ecran.BlocageDuRecrutement);
+            Assert.AreEqual(attendu == BlocageRecrutement.Aucun, ecran.RecruitButtonInteractable, "bouton « Recruter » cliquable ssi la bande ne dit pas « plus rien »");
+            if (attendu == BlocageRecrutement.Aucun) { Assert.AreEqual("", ecran.RecruitReason, "rien à dire quand le recrutement est ouvert"); return; }
+            Assert.IsNotEmpty(ecran.RecruitReason, "grisé SANS raison : le joueur ne sait pas pourquoi");
+            foreach (string p in phrases) StringAssert.Contains(p, ecran.RecruitReason);
+        }
+
+        [UnityTest]
+        public IEnumerator H8_UneBandeQuiDitPlusRien_GriseLeBoutonEtDitPourquoi()
+        {
+            // la phrase du budget est SERVIE (registre d'erreurs du back) : servie ⇒ c'est elle, pas le repli
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { HostBlocage.CleBudgetDepense, "PHRASE SERVIE DU PLAFOND" } });
+            hote = new GameObject("LieutenantScreenController_Bandes");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            ExigerEtat(ecran, BlocageRecrutement.Aucun);
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "ROOM")));
+            ExigerEtat(ecran, BlocageRecrutement.BudgetDepense, "PHRASE SERVIE DU PLAFOND");
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("AVAILABLE", "FULL")));
+            ExigerEtat(ecran, BlocageRecrutement.EquipeComplete, "Votre équipe est au complet.");
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "FULL")));
+            ExigerEtat(ecran, BlocageRecrutement.BudgetDepense | BlocageRecrutement.EquipeComplete, "PHRASE SERVIE DU PLAFOND", "Votre équipe est au complet.");
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("AVAILABLE", "ROOM")));
+            ExigerEtat(ecran, BlocageRecrutement.Aucun);
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "ROOM")));
+            ecran.AppliquerHostEligibilite(null);
+            ExigerEtat(ecran, BlocageRecrutement.Aucun);   // rouvert quand la réponse manque : le back tranche
+        }
+
+        [UnityTest]
+        public IEnumerator H8b_SansPhraseServie_LeRepliEstLeMotFrancais()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            Assert.AreEqual("Votre décision de structure d’aujourd’hui est prise. Reprenez demain.", LieutenantScreenController.PhraseDeBlocage(BlocageRecrutement.BudgetDepense));
+            Assert.AreEqual("Votre équipe est au complet.", LieutenantScreenController.PhraseDeBlocage(BlocageRecrutement.EquipeComplete));
+            Assert.AreEqual("", LieutenantScreenController.PhraseDeBlocage(BlocageRecrutement.Aucun));
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator H9_ControlePositif_UnBoutonResteOuvertSousUneBandePleineFaitRougir()
+        {
+            hote = new GameObject("LieutenantScreenController_BandesControle");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("AVAILABLE", "FULL")));
+            ExigerEtat(ecran, BlocageRecrutement.EquipeComplete, "au complet");
+            // la faute : on rouvre le bouton à la main, la bande dit toujours FULL — le contrôle d'état doit le voir
+            UnityEngine.UI.Button bouton = Array.Find(hote.GetComponentsInChildren<UnityEngine.UI.Button>(true), b => b.name == "Action_recruter");
+            Assert.IsNotNull(bouton, "le bouton « Recruter » doit être trouvé pour la faute injectée");
+            bouton.interactable = true;
+            Assert.Throws<AssertionException>(() => ExigerEtat(ecran, BlocageRecrutement.EquipeComplete, "au complet"), "un bouton ouvert sous FULL doit rougir");
         }
 }
 }

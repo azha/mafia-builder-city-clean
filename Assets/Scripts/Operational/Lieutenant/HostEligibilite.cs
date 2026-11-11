@@ -39,7 +39,15 @@ namespace MafiaCleanCity.Operational.Lieutenant
         [NonSerialized] public bool PrendUneCible;
     }
 
-    [Serializable] public class HostEligibiliteData { public HostArchetypeDto[] archetypes; }
+    /// <summary>TD-878 (11/11) — `structural_budget_band` ∈ {AVAILABLE, SPENT} et `roster_room_band` ∈ {ROOM, FULL}, servies à côté des lignes (back @8d0184a4,
+    /// `budget-bands.ts`, deux bandes fermées, jamais un compte). Vide (non servie) = on ne sait pas : rien n'est grisé, c'est le back qui tranche.</summary>
+    [Serializable]
+    public class HostEligibiliteData
+    {
+        public HostArchetypeDto[] archetypes;
+        public string structural_budget_band;
+        public string roster_room_band;
+    }
     [Serializable] public class HostEligibilitePayload { public HostEligibiliteData data; }
     [Serializable] public class HostEligibiliteEnvelope { public HostEligibilitePayload payload; }
 
@@ -82,6 +90,29 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (hote == null || !ligne.PrendUneCible) return (hote, null);
             string cible = ligne.valid_target_building_ids?.FirstOrDefault(id => !string.IsNullOrEmpty(id) && id != hote);
             return (hote, cible);
+        }
+    }
+
+    /// <summary>Pourquoi le recrutement est refusé D'AVANCE (TD-878). Les deux causes que la garde du back refuse réellement : `POST /v1/lieutenants` passe par
+    /// `governor.commit(LIEUTENANT_RECRUIT)` (budget structurel SPENT ⇒ `error.core_loops.structural_cap_exhausted`, 409) puis `rosterIsFull` (FULL ⇒ 409) ; la bande
+    /// est lue du MÊME prédicat que la garde (`budget-bands.ts`).</summary>
+    [Flags]
+    public enum BlocageRecrutement { Aucun = 0, BudgetDepense = 1, EquipeComplete = 2 }
+
+    public static class HostBlocage
+    {
+        public const string BandeBudgetDepense = "SPENT", BandeEquipePleine = "FULL";
+        /// <summary>La clé servie (registre d'erreurs du back) de la phrase « décision de structure prise » ; celle du roster plein n'est pas servie (refus générique).</summary>
+        public const string CleBudgetDepense = "error.core_loops.structural_cap_exhausted";
+
+        /// <summary>Les causes de blocage lues des deux bandes SERVIES. Pur. Bande absente, vide ou inconnue ⇒ pas de blocage (une garde ne bloque pas sur l'ignorance).</summary>
+        public static BlocageRecrutement Lire(HostEligibiliteData donnees)
+        {
+            BlocageRecrutement b = BlocageRecrutement.Aucun;
+            if (donnees == null) return b;
+            if (donnees.structural_budget_band == BandeBudgetDepense) b |= BlocageRecrutement.BudgetDepense;
+            if (donnees.roster_room_band == BandeEquipePleine) b |= BlocageRecrutement.EquipeComplete;
+            return b;
         }
     }
 
