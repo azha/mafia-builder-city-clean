@@ -161,7 +161,7 @@ namespace MafiaCleanCity.Shell
                 { "NIGHT", "Rien ne se détache du sabot cette nuit." },
             }, "Rien ne se détache du sabot pour l\u2019instant.");
         private GameObject tampon;
-        private TextMeshProUGUI motOr, ligneOrLibelle, ligneOrSous, jetonSous;
+        private TextMeshProUGUI motOr, ligneOrLibelle, ligneOrSous, jetonSous, dejaMot, tamponMot;
         private Button ligneOr;
         private GameObject tamponDiag, deja;
         private Image carteFond;
@@ -399,6 +399,8 @@ namespace MafiaCleanCity.Shell
             ligneOrLibelle.text = vue.Action ?? "";
             ligneOrSous.text = vue.SousLigne ?? "";
             ligneOrSous.gameObject.SetActive(!string.IsNullOrWhiteSpace(vue.SousLigne));
+            if (vue.Tampon) tamponMot.text = MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "TRANCHÉE");
+            if (vue.Deja) dejaMot.text = MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Déjà tranchée");
             tamponDiag.SetActive(vue.Tampon);
             deja.SetActive(vue.Deja);
             carteFond.color = vue.CarteTranchee ? Desaturee(MatiereDeLaCarte, 0.8f) : MatiereDeLaCarte;   // `.carte-or.tranchee{filter:saturate(.8)}`
@@ -740,10 +742,12 @@ namespace MafiaCleanCity.Shell
             dj.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
             LayoutElement dle = dj.AddComponent<LayoutElement>();
             dle.flexibleHeight = 0f;
-            TextMeshProUGUI djTexte = Texte(dj.transform, "Mot", MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Déjà tranchée"), Px(6.5f), Rouge,
+            // le MOT est posé par `AfficherApresGeste` (jamais à la construction : ⑤ est monté « avant », et un `Libelle.De` ici compterait un repli à l'ARRIVÉE — garde ZeroRepli)
+            TextMeshProUGUI djTexte = Texte(dj.transform, "Mot", "", Px(6.5f), Rouge,
                                             DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             djTexte.fontStyle |= FontStyles.UpperCase;
             djTexte.characterSpacing = 12f;
+            dejaMot = djTexte;
             Filets.Poser((RectTransform)dj.transform, DecorsDeScene.Filets.DecisionDetail.Deja, MatiereDeLaCarte);
             deja = dj;
             dj.SetActive(false);
@@ -777,11 +781,12 @@ namespace MafiaCleanCity.Shell
             HorizontalLayoutGroup ch = corps.AddComponent<HorizontalLayoutGroup>();
             ch.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(4f), (int)Px(4f));
             ch.childControlWidth = true; ch.childControlHeight = true;
-            TextMeshProUGUI mot = Texte(corps.transform, "Mot", MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "TRANCHÉE"), Px(19f), Rouge,
+            TextMeshProUGUI mot = Texte(corps.transform, "Mot", "", Px(19f), Rouge,
                                         DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             mot.fontStyle = FontStyles.Bold;
             mot.characterSpacing = 22f;
             mot.raycastTarget = false;
+            tamponMot = mot;
             Filets.Poser((RectTransform)corps.transform, DecorsDeScene.Filets.DecisionDetail.TamponDiag, sur);
             tamponDiag = halo;
             halo.SetActive(false);
