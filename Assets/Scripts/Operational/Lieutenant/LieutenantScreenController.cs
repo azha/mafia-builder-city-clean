@@ -1085,6 +1085,9 @@ namespace MafiaCleanCity.Operational.Lieutenant
         private void ClearStatusRows()
         {
             renderedTexts.Clear();
+            // le corpus est vidé : SuivreLaRaison (ci-dessous) re-pose les raisons visibles. Sans ce Clear, son RemoveWhere retirerait d'un corpus
+            // fraîchement refait l'occurrence d'un bilan (LastOutcome) égal à une phrase de raison périmée (revue ⊥ 11/11, MINOR 1 : pas de test dédié).
+            raisonsAjoutees.Clear();
             textComponents.Clear();
             // The outcome line is part of the live screen text too — re-track it so a fresh render keeps it in the scan.
             if (outcomeText != null) { textComponents.Add(outcomeText); if (!string.IsNullOrEmpty(LastOutcome)) renderedTexts.Add(LastOutcome); }
@@ -1624,14 +1627,26 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// <summary>Les raisons affichées sont du texte vivant de l'écran : dans le corpus du scan « pas de scalaire brut », une fois, et re-posées après `ClearStatusRows`.</summary>
         private void SuivreLaRaison()
         {
+            HashSet<string> visibles = new HashSet<string>();
             foreach (TextMeshProUGUI r in raisons)
             {
                 if (r == null) continue;
                 if (!textComponents.Contains(r)) textComponents.Add(r);
                 string t = r.gameObject.activeSelf ? r.text : null;
-                if (!string.IsNullOrEmpty(t) && !renderedTexts.Contains(t)) renderedTexts.Add(t);
+                if (!string.IsNullOrEmpty(t)) visibles.Add(t);
             }
+            // une phrase que NOUS avions posée dans le corpus et qu'aucune raison n'affiche plus en sort (sinon le scan lit un texte qui n'est plus à l'écran) ;
+            // une phrase encore montrée par une autre raison (ex. recrutement + « Attacher ») reste ; celles d'une autre source ne sont jamais touchées.
+            raisonsAjoutees.RemoveWhere(p =>
+            {
+                if (visibles.Contains(p)) return false;
+                renderedTexts.Remove(p);
+                return true;
+            });
+            foreach (string t in visibles)
+                if (!renderedTexts.Contains(t)) { renderedTexts.Add(t); raisonsAjoutees.Add(t); }
         }
+        private readonly HashSet<string> raisonsAjoutees = new HashSet<string>();
 
         // ---- TD-878 (suite) : « Réaffecter… » et « Attacher » (remplacement du script) sont sous le MÊME budget structurel que le recrutement — back @8d0184a4,
         // lieutenant.controller.ts : reassign = governor.commit(LIEUTENANT_ROLE_REASSIGN), behavior-script = governor.commit(BEHAVIOR_SCRIPT_REPLACE). Ni l'un ni l'autre ne
@@ -1664,14 +1679,17 @@ namespace MafiaCleanCity.Operational.Lieutenant
         {
             EnsureInitialized();
             if (!IsAuthenticated && LectureHostEligibilite == null) yield break;
+            int maGeneration = ++generationLectureBlocage;   // jeton : la lecture LANCÉE en dernier fait foi, quel que soit l'ordre d'arrivée des réponses
             HostEligibiliteData servie = null;
             System.Action<long, string> enEchec = (c, m) => Debug.LogWarning($"[Lieutenant] host-eligibility indisponible ({c}) : {m}");
             yield return LectureHostEligibilite != null
                 ? LectureHostEligibilite(d => servie = d, enEchec)
                 : hostEligibilite.Lire(Token, d => servie = d, enEchec);
             if (Destroyed) yield break;
+            if (maGeneration != generationLectureBlocage) yield break;   // une lecture plus récente a été lancée depuis : cette réponse est périmée, elle n'écrase rien
             AppliquerHostEligibilite(servie);   // null (lecture en échec) ⇒ rouvert
         }
+        private int generationLectureBlocage;
 
         // The Recruit button caption for an archetype ("Recruit Cook" / "Recruit Security" …).
         // ⑳ (passe UX 2026-09-26, table 63 v2) : « Recruit Cook » (anglais, brut) → « Recruter — {archetype} » ; {archetype} = le mot SERVI
