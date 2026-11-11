@@ -148,16 +148,6 @@ namespace MafiaCleanCity.Operational.Autonomy
             if (initialized) Render();
         }
 
-        /// <summary>⛔ Réservé aux tests hors réseau (patron `ChaineDApproScreenController.RendrePourTest`) : rend des rapports FABRIQUÉS par le MÊME
-        /// `Render()` qu'un chargement réussi.</summary>
-        public void RendrePourTest(AutonomyReportDto[] rapports)
-        {
-            EnsureInitialized();
-            Reports = rapports ?? Array.Empty<AutonomyReportDto>();
-            ReportsLoaded = true;
-            Render();
-        }
-
         /// <summary>IShellTenant token injection (B1, hud-session-arbitrages-design.md §1.2) — set
         /// directly by the shell BEFORE Start() runs (synchronous MountTenant<T> window). Mirrors
         /// DashboardController.SetToken; SignIn()'s own `if (IsAuthenticated) yield break;` guard
