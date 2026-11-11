@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
 using MafiaCleanCity.Shell;
+using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using Object = UnityEngine.Object;
@@ -80,29 +82,35 @@ namespace MafiaCleanCity.Mouvements.Tests
             Assert.IsFalse(regie.Attacher(a, Rect("a1"), Reglage.Defaut).EstNul, "un Alpha passe encore");
         }
 
+        // Les deux entrées du retour d'appui n'ont PAS de champ public (G14) : un test les prend, comme tout le monde, par `Id` dans le catalogue.
+        private static Entree DuCatalogue(string id)
+        {
+            foreach (Entree e in CatalogueHud.Entrees) if (e.Id == id) return e;
+            Assert.Fail("l'entrée '" + id + "' n'est pas au catalogue du HUD");
+            return null;
+        }
+
+        private List<Handle> RemplirMelange(string prefixe, int n)
+        {
+            Entree m = MelangeDe(prefixe, Genre.Alerte);
+            var tenues = new List<Handle>();
+            for (int i = 0; i < n; i++)
+                tenues.Add(regie.Attacher(m, Img(prefixe + i, Color.white).rectTransform, Reglage.Defaut));
+            return tenues;
+        }
+
         [Test]
         public void E0_RetourDAppui_JamaisRefuse_PlafondPlein_BasculeSurLeVoile()
         {
             // RÈGLE DE CLASSE (f2, 08/10) — « le retour d'appui du joueur n'est JAMAIS celui qu'on refuse ». Plafond Melange plein
             // + un appui ⇒ le retour s'affiche (voile Alpha), AUCUNE piste existante n'est perdue, AUCUN refus compté ; la bascule l'est.
-            Entree m = MelangeDe("t.melange.plein", Genre.Alerte);
-            var tenues = new List<Handle>();
-            for (int i = 0; i < MouvementTunables.PistesMelangeMax; i++)
-                tenues.Add(regie.Attacher(m, Img("p" + i, Color.white).rectTransform, Reglage.Defaut));
+            // (design retour d'appui v5, E-R3 : les entrées sont les VRAIES, résolues par `Id` — plus d'entrées synthétiques en argument.)
+            List<Handle> tenues = RemplirMelange("t.melange.plein", MouvementTunables.PistesMelangeMax);
             Assert.IsFalse(regie.PlaceMelangeLibre, "le plafond est plein");
-
-            var defAppui = new MouvementDefini("t.appui", Genre.Retour, 0.09f,
-                new[] { new Canal(Propriete.Melange, Mode.Absolu, new[] { AidesMouvement.K(0f, 0f), AidesMouvement.K(1f, 1f) }) },
-                Iteration.Fois(1), couleurA: CouleurSpec.Cible, couleurB: CouleurSpec.CibleFois(0.85f));
-            Entree appui = Admise(AidesMouvement.Faire("t.appui", defAppui));
-            var defVoile = new MouvementDefini("t.voile", Genre.Retour, 0.09f,
-                new[] { new Canal(Propriete.Alpha, Mode.Multiplicatif, new[] { AidesMouvement.K(0f, 1f), AidesMouvement.K(1f, 0.8f) }) },
-                Iteration.Fois(1));
-            Entree voile = Admise(AidesMouvement.Faire("t.voile", defVoile));
 
             int refusAvant = regie.Refus;
             Image bouton = Img("bouton", Color.white);
-            Handle h = regie.AttacherRetourAppui(appui, bouton.rectTransform, voile, bouton.rectTransform);
+            Handle h = regie.AttacherRetourAppui(bouton.rectTransform, bouton.rectTransform);
             Assert.IsFalse(h.EstNul, "le retour d'appui S'AFFICHE");
             Assert.AreEqual(1, regie.BasculesVoile, "…par le voile, et la bascule est comptée");
             Assert.AreEqual(refusAvant, regie.Refus, "aucun refus compté");
@@ -113,9 +121,10 @@ namespace MafiaCleanCity.Mouvements.Tests
             // contrôle négatif : avec une place libre, l'appui reste un Melange (pas de bascule)
             regie.Detacher(tenues[0]);
             Image b2 = Img("bouton2", Color.white);
-            Assert.IsFalse(regie.AttacherRetourAppui(appui, b2.rectTransform, voile, b2.rectTransform).EstNul);
+            Assert.IsFalse(regie.AttacherRetourAppui(b2.rectTransform, b2.rectTransform).EstNul);
             Assert.AreEqual(1, regie.BasculesVoile, "pas de nouvelle bascule quand une place existe");
             Assert.AreEqual(MouvementTunables.PistesMelangeMax, regie.PistesMelange);
+            Assert.IsNull(b2.GetComponent<CanvasGroup>(), "…donc pas de voile sur le second bouton : c'est la couleur qui bouge");
         }
 
         [Test]
@@ -133,24 +142,100 @@ namespace MafiaCleanCity.Mouvements.Tests
             Assert.IsTrue(regie.Attacher(a, Rect("aq-de-trop"), Reglage.Defaut).EstNul, "une Alerte ordinaire de plus est refusée : le quota est plein");
             int refusAvant = regie.Refus;
 
-            var defAppui = new MouvementDefini("t.appui.q", Genre.Retour, 0.09f,
-                new[] { new Canal(Propriete.Melange, Mode.Absolu, new[] { AidesMouvement.K(0f, 0f), AidesMouvement.K(1f, 1f) }) },
-                Iteration.Fois(1), couleurA: CouleurSpec.Cible, couleurB: CouleurSpec.CibleFois(0.85f));
-            Entree appui = Admise(AidesMouvement.Faire("t.appui.q", defAppui));
-            var defVoile = new MouvementDefini("t.voile.q", Genre.Retour, 0.09f,
-                new[] { new Canal(Propriete.Alpha, Mode.Multiplicatif, new[] { AidesMouvement.K(0f, 1f), AidesMouvement.K(1f, 0.8f) }) },
-                Iteration.Fois(1));
-            Entree voile = Admise(AidesMouvement.Faire("t.voile.q", defVoile));
             Image bouton = Img("bouton.q", Color.white);
-            Handle h = regie.AttacherRetourAppui(appui, bouton.rectTransform, voile, bouton.rectTransform);
+            Handle h = regie.AttacherRetourAppui(bouton.rectTransform, bouton.rectTransform);
             Assert.IsFalse(h.EstNul, "quota plein ET plafond Melange plein : le retour d'appui s'affiche quand même (place réservée)");
             Assert.AreEqual(refusAvant, regie.Refus, "aucun refus");
             Assert.AreEqual(1, regie.BasculesVoile, "par le voile, la bascule comptée APRÈS le handle");
 
-            // contrôle négatif : par le chemin ordinaire `Attacher`, le même appui est refusé (la réserve n'est qu'à AttacherRetourAppui)
+            // contrôle négatif (revue ⊥ n°1, I1) : un `Retour` ORDINAIRE — entrée SYNTHÉTIQUE dont l'`Id` n'est ni `retour.appui` ni
+            // `retour.appui-voile` (sinon G14 (c) refuserait pour une AUTRE raison et le contrôle serait vide) — est refusé PAR LE QUOTA :
+            // la réserve n'est qu'au retour d'appui. L'assertion porte sur la RAISON (le journal de la régie), pas sur la seule nullité.
             regie.Detacher(h);
-            Assert.IsTrue(regie.Attacher(voile, Img("bouton.q2", Color.white).rectTransform, Reglage.Defaut).EstNul,
+            Entree retourOrdinaire = Constante("t.retour.ordinaire.q", Genre.Retour, Propriete.Alpha, Mode.Multiplicatif, 0.8f);
+            int refusMelangeAvant = regie.RefusMelange;
+            refusAvant = regie.Refus;
+            LogAssert.Expect(LogType.Warning, new Regex(@"refus de t\.retour\.ordinaire\.q : quota Alerte/Retour/Transition atteint"));
+            Assert.IsTrue(regie.Attacher(retourOrdinaire, Img("bouton.q2", Color.white).rectTransform, Reglage.Defaut).EstNul,
                 "hors AttacherRetourAppui, pas de réserve");
+            Assert.AreEqual(refusAvant + 1, regie.Refus);
+            Assert.AreEqual(refusMelangeAvant, regie.RefusMelange, "…le refus n'est pas celui du plafond Melange : c'est bien le quota non-Ambiance");
+        }
+
+        [Test]
+        public void G14c_LesDeuxIdDuRetourDAppui_SontRefuses_HorsDeLeursMethodes()
+        {
+            // G14 (c) (design retour d'appui v5 §5 B1/I2/m4) — le refus est DANS `Creer` (`retourAppui == false`), donc il couvre TOUTES les
+            // voies : `Attacher` et `Transitionner` (les deux appellent `Creer(…, retourAppui: false)`). Handle nul, `Refus` + 1, un
+            // `Debug.LogWarning`. Contrôle positif : les mêmes entrées, par leur méthode, SONT attachées (la garde ne mord que sur la voie).
+            Entree appui = DuCatalogue(CatalogueHud.IdRetourAppui);
+            Entree voile = DuCatalogue(CatalogueHud.IdRetourAppuiVoile);
+            var raison = new Regex(@"refus de retour\.appui(-voile)? : G14 : retour d'appui hors AttacherRetourAppui");
+
+            LogAssert.Expect(LogType.Warning, raison);
+            Assert.IsTrue(regie.Attacher(appui, Img("g14.a", Color.white).rectTransform, Reglage.Defaut).EstNul, "Attacher(retour.appui)");
+            Assert.AreEqual(1, regie.Refus);
+            LogAssert.Expect(LogType.Warning, raison);
+            Assert.IsTrue(regie.Attacher(voile, Img("g14.v", Color.white).rectTransform, Reglage.Defaut).EstNul, "Attacher(retour.appui-voile)");
+            Assert.AreEqual(2, regie.Refus);
+            LogAssert.Expect(LogType.Warning, raison);
+            Assert.IsTrue(regie.Transitionner(appui, Img("g14.t", Color.white).rectTransform, 0f, 1f).EstNul, "Transitionner(retour.appui) : un canal Absolu, donc accepté AVANT Creer");
+            Assert.AreEqual(3, regie.Refus);
+            Assert.AreEqual(0, regie.PistesVivantes, "rien n'a été attaché");
+
+            // contrôle positif : par leurs méthodes, les mêmes deux entrées sont attachées, sans refus
+            Assert.IsFalse(regie.AttacherRetourAppui(Img("g14.ok", Color.white).rectTransform, Rect("g14.ok.voile")).EstNul);
+            Assert.IsFalse(regie.AttacherVoileDAppui(Rect("g14.ok.v2")).EstNul);
+            Assert.AreEqual(3, regie.Refus, "aucun refus de plus");
+            Assert.AreEqual(2, regie.PistesVivantes);
+            Assert.AreEqual(0, regie.BasculesVoile, "AttacherVoileDAppui n'est pas une bascule");
+        }
+
+        [Test]
+        public void GE3_Couture_SansLaReserve_LAppuiEstRefuse()
+        {
+            // GE3 (design retour d'appui v5 §4, contrôle positif (a)) — `PlacesReserveesRetourAppui = 0` : plus de place réservée, le quota
+            // non-Ambiance se remplit à 16 d'Alertes ordinaires, et l'appui (plafond Melange plein ⇒ voile) est REFUSÉ. Prouve en CI que
+            // l'assertion de `E0_RetourDAppui_JamaisRefuse_QuotaNonAmbiancePlein` MORD sur la réserve. Sans toucher au code livré.
+            regie.PlacesReserveesRetourAppui = 0;
+            List<Handle> melanges = RemplirMelange("t.melange.ge3a", MouvementTunables.PistesMelangeMax);
+            Entree a = Constante("t.alerte.ge3a", Genre.Alerte, Propriete.Alpha, Mode.Multiplicatif, 0.9f);
+            for (int i = melanges.Count; i < MouvementTunables.QuotaAlerteRetourTransition; i++)
+                Assert.IsFalse(regie.Attacher(a, Rect("ge3a" + i), Reglage.Defaut).EstNul, "sans réserve, la 16e place se prend : n° " + (i + 1));
+            int refusAvant = regie.Refus;
+
+            Image bouton = Img("bouton.ge3a", Color.white);
+            LogAssert.Expect(LogType.Warning, new Regex(@"refus de retour\.appui-voile : quota Alerte/Retour/Transition atteint"));
+            Assert.IsTrue(regie.AttacherRetourAppui(bouton.rectTransform, bouton.rectTransform).EstNul,
+                "GE3 : appui refusé (quota non-Ambiance) alors que la règle de classe l'interdit — la couture à 0 doit le rendre refusable");
+            Assert.AreEqual(refusAvant + 1, regie.Refus);
+            Assert.AreEqual(0, regie.BasculesVoile, "la bascule n'est comptée qu'APRÈS un handle non nul");
+        }
+
+        [Test]
+        public void GE3_Couture_SansPlaceMelange_LaBasculeTire()
+        {
+            // GE3 (§4, contrôle positif (b)) — `PistesMelangeMax = 0` : tout `Melange` est refusé, donc la BASCULE doit tirer : handle non nul,
+            // `Refus` et `RefusMelange` inchangés, voile posé. Une régie SANS la bascule rendrait ici un handle nul et `Refus` + 1 : ce test
+            // rougit sur sa disparition, à chaque CI.
+            regie.PistesMelangeMax = 0;
+            Assert.IsFalse(regie.PlaceMelangeLibre, "aucune place Melange");
+            int refusAvant = regie.Refus, refusMelangeAvant = regie.RefusMelange;
+
+            Image bouton = Img("bouton.ge3b", Color.white);
+            Handle h = regie.AttacherRetourAppui(bouton.rectTransform, bouton.rectTransform);
+            Assert.IsFalse(h.EstNul, "GE3 : appui refusé alors que la règle de classe l'interdit — la bascule doit tirer");
+            Assert.AreEqual(refusAvant, regie.Refus);
+            Assert.AreEqual(refusMelangeAvant, regie.RefusMelange);
+            Assert.AreEqual(1, regie.BasculesVoile);
+            Assert.AreEqual(0, regie.PistesMelange, "aucune piste Melange : c'est le voile");
+            regie.Tick(0f); regie.Tick(0.05f);
+            Assert.Less(bouton.GetComponent<CanvasGroup>().alpha, 1f, "le voile assombrit réellement le bouton");
+
+            // contrôle : la couture est bien à 0 — un Melange ORDINAIRE est refusé et compté (la bascule est propre au retour d'appui)
+            Entree m = MelangeDe("t.melange.ge3b", Genre.Alerte);
+            Assert.IsTrue(regie.Attacher(m, Img("ge3b.m", Color.white).rectTransform, Reglage.Defaut).EstNul, "un Melange ordinaire est refusé : le plafond est bien à 0");
+            Assert.AreEqual(refusMelangeAvant + 1, regie.RefusMelange);
         }
 
         [Test]
@@ -204,23 +289,25 @@ namespace MafiaCleanCity.Mouvements.Tests
         }
 
         [Test]
-        public void E0_AttacherRetourAppui_HorsCatalogue_Leve_MemeSurLeCheminDuVoile()
+        public void E0_LesDeuxEntreesDuRetourDAppui_SontAdmisesALaConstruction_ParId()
         {
-            // revue ⊥ n°2 du §17, m4 — G1 sur TOUS les chemins : plafond Melange plein ⇒ chemin du voile ; un appui hors catalogue lève quand même
-            Entree m = MelangeDe("t.melange.g1", Genre.Alerte);
-            for (int i = 0; i < MouvementTunables.PistesMelangeMax; i++)
-                regie.Attacher(m, Img("g" + i, Color.white).rectTransform, Reglage.Defaut);
-            Assert.IsFalse(regie.PlaceMelangeLibre);
-            var defVoile = new MouvementDefini("t.voile.g1", Genre.Retour, 0.09f,
-                new[] { new Canal(Propriete.Alpha, Mode.Multiplicatif, new[] { AidesMouvement.K(0f, 1f), AidesMouvement.K(1f, 0.8f) }) }, Iteration.Fois(1));
-            Entree voile = Admise(AidesMouvement.Faire("t.voile.g1", defVoile));
-            var defAppui = new MouvementDefini("t.appui.g1", Genre.Retour, 0.09f,
+            // revue ⊥ n°2 du §17, m4 — G1 sur TOUS les chemins ; depuis E-R3 la méthode résout elle-même ses deux entrées dans `admises`
+            // (on ne peut plus lui passer une entrée hors catalogue) : l'invariant est de CONSTRUCTION. Il est épinglé ici : les deux `Id`
+            // sont admis dès la création d'une régie, et `Admettre` d'une entrée étrangère sous l'un des deux lève (`Regie.Admettre`).
+            Entree appui = DuCatalogue(CatalogueHud.IdRetourAppui);
+            Entree voile = DuCatalogue(CatalogueHud.IdRetourAppuiVoile);
+            Assert.DoesNotThrow(() => regie.Admettre(appui), "retour.appui est déjà admis (même référence : idempotent)");
+            Assert.DoesNotThrow(() => regie.Admettre(voile), "retour.appui-voile est déjà admis (même référence : idempotent)");
+            Assert.IsFalse(regie.AttacherRetourAppui(Img("adm.a", Color.white).rectTransform, Rect("adm.a.v")).EstNul, "résolu par Id, sans rien admettre");
+            Assert.IsFalse(regie.AttacherVoileDAppui(Rect("adm.v")).EstNul);
+
+            var defEtranger = new MouvementDefini("etranger", Genre.Retour, 0.09f,
                 new[] { new Canal(Propriete.Melange, Mode.Absolu, new[] { AidesMouvement.K(0f, 0f), AidesMouvement.K(1f, 1f) }) },
                 Iteration.Fois(1), couleurA: CouleurSpec.Cible, couleurB: CouleurSpec.CibleFois(0.85f));
-            Entree horsCatalogue = AidesMouvement.Faire("t.appui.g1", defAppui);   // NON admise
-            Image b = Img("bouton.g1", Color.white);
-            Assert.Throws<ArgumentException>(() => regie.AttacherRetourAppui(horsCatalogue, b.rectTransform, voile, b.rectTransform));
-            Assert.AreEqual(0, regie.BasculesVoile, "rien n'a été attaché");
+            Entree etrangerSousAppui = AidesMouvement.Faire(CatalogueHud.IdRetourAppui, defEtranger);
+            Assert.Throws<ArgumentException>(() => regie.Admettre(etrangerSousAppui), "aucun test ne peut injecter une autre entrée sous retour.appui");
+            Entree etrangerSousVoile = AidesMouvement.Faire(CatalogueHud.IdRetourAppuiVoile, defEtranger);
+            Assert.Throws<ArgumentException>(() => regie.Admettre(etrangerSousVoile), "…ni sous retour.appui-voile");
         }
 
         [Test]

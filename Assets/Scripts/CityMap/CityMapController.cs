@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -60,6 +61,17 @@ namespace MafiaCleanCity.CityMap
         private RectTransform northContent;
         private RectTransform southContent;
         private TextMeshProUGUI toggleLabel;
+        private GameObject piedRoot;
+        private bool piedMasque;
+
+        /// <summary>Le pied de la ville peinte (bascule « Chaleur : … ») : visible sur la carte NUE (sa seule porte), masqué quand une surimpression — l'Accueil —
+        /// le recouvre (il tombait SOUS la plaque de la file : actif, ni visible ni atteignable ; la maquette de l'Accueil ne le montre pas). Appelée par le
+        /// shell à chaque changement d'état, AVANT comme APRÈS `Start` (qui bâtit la mise en page).</summary>
+        public void MontrerLePied(bool visible)
+        {
+            piedMasque = !visible;
+            if (piedRoot != null && piedRoot.activeSelf != visible) piedRoot.SetActive(visible);
+        }
         private TMP_FontAsset font;
 
         private GameObject detailPanel;
@@ -246,6 +258,14 @@ namespace MafiaCleanCity.CityMap
             IsAuthenticated = !string.IsNullOrEmpty(token);
         }
 
+        /// <summary>Crochet de test (GP) : une session FACTICE — `IsAuthenticated` vrai sans jeton ni requête, puis le même rafraîchissement de « Entrer » que
+        /// la prod (§3.2). Ne lance aucune coroutine ; ne prouve jamais qu'une authentification réussit.</summary>
+        public void PoserUneSessionPourTest()
+        {
+            IsAuthenticated = true;
+            RefreshEnterInteractable();
+        }
+
         /// <summary>Fetch the heat projection for every district and badge each cell.</summary>
         public IEnumerator LoadHeat()
         {
@@ -327,8 +347,13 @@ namespace MafiaCleanCity.CityMap
         }
 
         /// <summary>Test HORS RÉSEAU : bâtit l'écran et pose les districts donnés, sans `Start` ni requête.</summary>
-        public void MonterPourTest(List<DistrictDto> districts)
+        /// <summary>Crochet de test (GP) : `repliEnColonnes` monte la liste en deux colonnes (le repli sans ville peinte, où vit `BuildCell`) même quand les
+        /// assets de la ville peinte existent. Faux par défaut : le chemin de prod et les tests existants sont inchangés.</summary>
+        private bool repliEnColonnesPourTest;
+
+        public void MonterPourTest(List<DistrictDto> districts, bool repliEnColonnes = false)
         {
+            repliEnColonnesPourTest = repliEnColonnes;
             font = DesignTokens.Current.primaryFont;
             BuildLayout();
             ClearCells();
@@ -427,7 +452,7 @@ namespace MafiaCleanCity.CityMap
 
             Sprite peinture = Resources.Load<Sprite>(CheminPeinture);
             TextAsset ancresJson = Resources.Load<TextAsset>(CheminAncres);
-            if (peinture != null && ancresJson != null)
+            if (!repliEnColonnesPourTest && peinture != null && ancresJson != null)
             {
                 BuildVillePeinte(root.transform, peinture, ancresJson);
             }
@@ -495,6 +520,8 @@ namespace MafiaCleanCity.CityMap
             hlg.childForceExpandWidth = false;
             hlg.childForceExpandHeight = false;
             BuildToggleButton(pied.transform);
+            piedRoot = pied;
+            if (piedMasque) pied.SetActive(false);
             // ⛔ PLUS DE LÉGENDE À PASTILLES SUR LA VILLE PEINTE (F6). Le juge ⊥ l'a mesurée comme
             // les SEULS aplats saturés de l'écran — (242,189,49), (61,178,86), (209,66,66) — sur un
             // écran dont la palette dominante plafonne à (85,87,77), et texte en blanc PUR
@@ -583,7 +610,7 @@ namespace MafiaCleanCity.CityMap
             GameObject btn = NewUI("HeatToggle", parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.mapChipBg;
-            Button button = btn.AddComponent<Button>();
+            Button button = Retour.NouveauBouton(btn);
             button.targetGraphic = img;
             AddLayoutElement(btn, minHeight: 36, flexibleHeight: 0, minWidth: 210, preferredWidth: 210);
 
@@ -686,7 +713,7 @@ namespace MafiaCleanCity.CityMap
             view.AttachHeatBadge(badge, badgeBg, badgeLabel);
 
             // The whole cell is a button → opens the district detail panel.
-            Button cellButton = cell.AddComponent<Button>();
+            Button cellButton = Retour.NouveauBouton(cell);
             cellButton.targetGraphic = bg;
             cellButton.onClick.AddListener(() => SelectDistrict(view.Model.id));
 
@@ -891,7 +918,7 @@ namespace MafiaCleanCity.CityMap
             DistrictCellView view = cell.AddComponent<DistrictCellView>();
             view.AttachHeatBadge(badge, badgeBg, badgeLabel);
             view.AttachPresence(sol, presence);
-            Button cellButton = cell.AddComponent<Button>();
+            Button cellButton = Retour.NouveauBouton(cell, halo);
             cellButton.targetGraphic = hit;
             cellButton.onClick.AddListener(() => SelectDistrict(view.Model.id));
             return view;
@@ -1028,7 +1055,7 @@ namespace MafiaCleanCity.CityMap
             GameObject closeBtn = NewUI("Close", header.transform);
             Image closeImg = closeBtn.AddComponent<Image>();
             closeImg.color = DesignTokens.Current.mapCloseButtonBg;
-            Button cb = closeBtn.AddComponent<Button>();
+            Button cb = Retour.NouveauBouton(closeBtn);
             cb.targetGraphic = closeImg;
             cb.onClick.AddListener(HideDetail);
             AddLayoutElement(closeBtn, minHeight: 26, flexibleHeight: 0, minWidth: 30, preferredWidth: 30);
@@ -1065,7 +1092,7 @@ namespace MafiaCleanCity.CityMap
             GameObject enterGo = NewUI("EnterButton", footer.transform);
             Image enterImg = enterGo.AddComponent<Image>();
             enterImg.color = DesignTokens.Current.mapChipBg; // REUSE — même token que HeatToggle (pas accentGold : allowlist C5F2 fermée)
-            enterButton = enterGo.AddComponent<Button>();
+            enterButton = Retour.NouveauBouton(enterGo);
             enterButton.targetGraphic = enterImg;
             enterButton.interactable = false; // aucun jeton au démarrage (nav-F3)
             enterButton.onClick.AddListener(() => OnEnterDistrict?.Invoke(SelectedDistrictId));

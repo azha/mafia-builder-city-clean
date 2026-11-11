@@ -8,6 +8,7 @@ using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer) + WorldApiClient/DistrictHeatDto (heat) + CityMapController (nav)
 using MafiaCleanCity.Operational.Exceptions;
 using MafiaCleanCity.Operational.Autonomy;
+using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -293,6 +294,17 @@ namespace MafiaCleanCity.Operational
         {
             Token = token;
             IsAuthenticated = !string.IsNullOrEmpty(token);
+        }
+
+        /// <summary>Crochet de test (patron `RendrePourTest`) : pose un portefeuille et une chaleur FABRIQUÉS puis appelle le MÊME `Render()` que
+        /// `LoadDashboard()`, sans réseau — ce qui fait naître les boutons « Aller à » (`AddNavButton`). Ne prouve jamais que le back sert ces
+        /// corps, seulement ce que l'écran en fait. Synchrone : `Start()` (qui signe) ne tourne pas tant qu'aucune frame ne passe.</summary>
+        public void RendrePourTest(WalletDto portefeuille, DistrictHeatDto chaleur = null)
+        {
+            EnsureInitialized();
+            CurrentWallet = portefeuille;
+            CurrentHeat = chaleur;
+            Render();
         }
 
         /// <summary>Fetch + render the dashboard: wallet band (headline), citywide heat band +
@@ -794,7 +806,7 @@ namespace MafiaCleanCity.Operational
             GameObject btn = NewUI("Nav_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
-            Button b = btn.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(btn);
             b.targetGraphic = img;
             b.onClick.AddListener(onClick);
             AddLayoutElement(btn, minHeight: 44, flexibleHeight: 0); // ≥ 44 dp tap target (F2)

@@ -247,7 +247,7 @@ namespace MafiaCleanCity.Shell
             Image zone = trancherGo.AddComponent<Image>();
             Color invisible = DesignTokens.Current.surfaceRow; invisible.a = 0f;
             zone.color = invisible;                                   // une zone de toucher, pas un aplat
-            Button b = trancherGo.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(trancherGo);
             b.transition = Selectable.Transition.None;
             b.targetGraphic = zone;
             ExceptionCardDto carte = card;
@@ -339,7 +339,7 @@ namespace MafiaCleanCity.Shell
             Image zone = trancherGo.AddComponent<Image>();
             Color invisible = DesignTokens.Current.surfaceCard; invisible.a = 0f;
             zone.color = invisible;
-            Button b = trancherGo.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(trancherGo);
             b.transition = Selectable.Transition.None;
             b.targetGraphic = zone;
             ExceptionCardDto carte = card;
@@ -347,6 +347,7 @@ namespace MafiaCleanCity.Shell
             LayoutElement btnLe = trancherGo.AddComponent<LayoutElement>();
             btnLe.minWidth = 220; btnLe.preferredWidth = 220;
             btnLe.flexibleWidth = 0f;
+            btnLe.flexibleHeight = 1f;   // GP (11/11) : sans hauteur, la rangée (childControlHeight, sans force-expand) laissait Trancher à 257×0 — aucune aire, donc ni encre pour le retour d'appui (cas 0 « perdu en silence ») ; il épouse maintenant la hauteur de la rangée, le mot reste centré dessus
             TextMeshProUGUI mot = NewText(trancherGo.transform, MafiaCleanCity.I18n.Libelle.De("chrome", "bandeau", "trancher").ToUpperInvariant(), -1);
             mot.fontSize = TailleDuTrancher;   // R2 : 30 → 36 (TRANCHER : capitale 23 → 19 contre la maquette : −17 %)
             mot.fontStyle = FontStyles.Bold;
@@ -523,7 +524,7 @@ namespace MafiaCleanCity.Shell
             viewAllGo.transform.SetParent(transform, false);
             Image vaImg = viewAllGo.AddComponent<Image>();
             vaImg.color = DesignTokens.Current.surfaceRow;
-            Button vaBtn = viewAllGo.AddComponent<Button>();
+            Button vaBtn = Retour.NouveauBouton(viewAllGo);
             vaBtn.targetGraphic = vaImg;
             vaBtn.onClick.AddListener(() => StartCoroutine(ViewAll()));
             LayoutElement vaLe = viewAllGo.AddComponent<LayoutElement>();

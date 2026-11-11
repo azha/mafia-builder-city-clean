@@ -723,7 +723,7 @@ namespace MafiaCleanCity.Operational
                 if (muscleLieutenants.Count > 0)
                 {
                     fondLigne.raycastTarget = true;
-                    Button choix = ligne.AddComponent<Button>();
+                    Button choix = Retour.NouveauBouton(ligne);
                     choix.targetGraphic = fondLigne;
                     string famille = cle;
                     choix.onClick.AddListener(() => ChoisirFamille(famille));
@@ -1108,7 +1108,7 @@ namespace MafiaCleanCity.Operational
             filet.type = Image.Type.Sliced;
             filet.raycastTarget = false;
             Etirer((RectTransform)bord.transform);
-            Button b = bouton.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(bouton);
             b.targetGraphic = fond;
             b.interactable = actif;
             b.onClick.AddListener(geste);
@@ -1139,7 +1139,7 @@ namespace MafiaCleanCity.Operational
             Image fond = AjouterImage(ligne);
             fond.color = choisie ? DesignTokens.Current.surfaceRaised : DesignTokens.Current.surfaceRow;
             fond.raycastTarget = true;
-            Button b = ligne.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(ligne);
             b.targetGraphic = fond;
             b.onClick.AddListener(choisir);
             HorizontalLayoutGroup hl = ligne.AddComponent<HorizontalLayoutGroup>();

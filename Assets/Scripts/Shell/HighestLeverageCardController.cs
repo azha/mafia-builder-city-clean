@@ -468,7 +468,7 @@ namespace MafiaCleanCity.Shell
             // verre n'ouvre rien) ; les gestes, plus profonds, gardent le leur. La plaque-masque reçoit le toucher, elle ne peint rien de plus.
             Image surface = verre.GetComponent<Image>();
             surface.raycastTarget = true;
-            SurfaceButton = verre.AddComponent<Button>();
+            SurfaceButton = Retour.NouveauBouton(verre);
             SurfaceButton.transition = Selectable.Transition.None;
             SurfaceButton.targetGraphic = surface;
             SurfaceButton.onClick.AddListener(DemanderDetail);
@@ -510,7 +510,7 @@ namespace MafiaCleanCity.Shell
 
             // ④ [Lire maintenant] — la carte des rapports seulement : OUVRE les rapports, sans tampon (table 45). Même grammaire `.g.or`.
             GameObject lireGo = Geste(c, "LireButton", out lireLabel);
-            lireButton = lireGo.AddComponent<Button>();
+            lireButton = Retour.NouveauBouton(lireGo);
             lireButton.targetGraphic = lireGo.GetComponent<Image>();
             lireButton.onClick.AddListener(OuvrirLesRapports);
             lireGo.SetActive(false);
@@ -541,7 +541,7 @@ namespace MafiaCleanCity.Shell
 
             GameObject typedConfirmGo = Geste(typedRow.transform, "TypedConfirmButton", out typedConfirmLabel, margeHaute: false);
             typedConfirmGo.GetComponent<LayoutElement>().flexibleWidth = 0f;
-            typedConfirmButton = typedConfirmGo.AddComponent<Button>();
+            typedConfirmButton = Retour.NouveauBouton(typedConfirmGo);
             typedConfirmButton.targetGraphic = typedConfirmGo.GetComponent<Image>();
             typedConfirmButton.onClick.AddListener(() => StartCoroutine(RequestCommitViaTypedConfirm(typedConfirmInput.text)));
             typedRowGo = typedRow;

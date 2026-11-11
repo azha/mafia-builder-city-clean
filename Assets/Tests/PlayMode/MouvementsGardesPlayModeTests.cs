@@ -45,9 +45,59 @@ namespace MafiaCleanCity.Mouvements.Tests
         {
             // §10/E1 — contrôle POSITIF : G1 G3 G4 G5 G8 G12 G13 sur les sept entrées du chrome, plus (E2a) les trois boucles
             // ambiantes du ① : néon, fumée, scintillement de dette
-            Assert.AreEqual(10, CatalogueHud.Entrees.Count);
+            Assert.AreEqual(12, CatalogueHud.Entrees.Count, "10 du chrome et du ① + les deux retours d'appui (E-R2)");
             List<string> v = Gardes.Toutes(CatalogueHud.Entrees, ContexteRendu.Defaut);
             Assert.IsEmpty(v, string.Join("\n", v));
+        }
+
+        // ---- GD1 (design retour d'appui v5, E-R2) : les deux entrées du retour d'appui portent EXACTEMENT leurs canaux ----
+        /// <summary>Vide si l'entrée porte UN seul canal (`p`, `m`), des durées ≤ `AnimMaxBlockMs`, et — pour le voile — AUCUNE pose de
+        /// repos (sinon il gèlerait sous `Reduit`). Sinon : « GD1 &lt;Id&gt; : canaux attendus &lt;…&gt;, trouvés &lt;…&gt; ».</summary>
+        private static string Gd1(Entree e, Propriete p, Mode m, bool poseInterdite)
+        {
+            string attendu = "1 canal " + p + "/" + m + (poseInterdite ? ", sans PoseDeReposS" : "");
+            var trouves = new List<string>();
+            foreach (Canal c in e.Mouvement.Canaux) trouves.Add(c.P + "/" + c.M);
+            string trouve = trouves.Count + " canal(aux) " + string.Join(",", trouves) + (e.Mouvement.PoseDefinie ? ", PoseDeReposS=" + e.Mouvement.PoseDeReposS : "");
+            bool bon = e.Mouvement.Canaux.Length == 1 && e.Mouvement.Canaux[0].P == p && e.Mouvement.Canaux[0].M == m
+                && !(poseInterdite && e.Mouvement.PoseDefinie)
+                && e.Mouvement.DureeTotaleS * 1000f <= UiTimingTunables.AnimMaxBlockMs;
+            return bon ? null : "GD1 " + e.Id + " : canaux attendus <" + attendu + ">, trouvés <" + trouve + ">";
+        }
+
+        private static Entree DuCatalogue(string id)
+        {
+            foreach (Entree e in CatalogueHud.Entrees) if (e.Id == id) return e;
+            Assert.Fail("l'entrée '" + id + "' n'est pas au catalogue du HUD");
+            return null;
+        }
+
+        [Test]
+        public void GD1_LesDeuxRetoursDAppui_PortentExactementLeursCanaux()
+        {
+            Assert.AreEqual("retour.appui", CatalogueHud.IdRetourAppui);
+            Assert.AreEqual("retour.appui-voile", CatalogueHud.IdRetourAppuiVoile);
+            Assert.IsNull(Gd1(DuCatalogue(CatalogueHud.IdRetourAppui), Propriete.Melange, Mode.Absolu, false), "retour.appui");
+            Assert.IsNull(Gd1(DuCatalogue(CatalogueHud.IdRetourAppuiVoile), Propriete.Alpha, Mode.Multiplicatif, true), "retour.appui-voile");
+            Assert.AreEqual(Genre.Retour, DuCatalogue(CatalogueHud.IdRetourAppui).Genre);
+            Assert.AreEqual(Genre.Retour, DuCatalogue(CatalogueHud.IdRetourAppuiVoile).Genre);
+            Assert.AreEqual(0.09f, DuCatalogue(CatalogueHud.IdRetourAppui).Mouvement.DureeTotaleS, 1e-6f, "l'appui monte en 90 ms (D2)");
+        }
+
+        [Test]
+        public void GD1_Controle_UnCanalDeTrop_UnePoseSurLeVoile_UneDureeTrop_RougissentLaGarde()
+        {
+            Canal melange = new Canal(Propriete.Melange, Mode.Absolu, new[] { new ImageCle(0f, 0f, Aisance.Ease), new ImageCle(1f, 1f, Aisance.Lineaire) });
+            Canal echelle = new Canal(Propriete.Echelle, Mode.Absolu, new[] { new ImageCle(0f, 1f, Aisance.Ease), new ImageCle(1f, 0.9f, Aisance.Lineaire) });
+            Canal alpha = new Canal(Propriete.Alpha, Mode.Multiplicatif, new[] { new ImageCle(0f, 1f, Aisance.Ease), new ImageCle(1f, 0.8f, Aisance.Lineaire) });
+            MouvementDefini deux = new MouvementDefini("x", Genre.Retour, 0.09f, new[] { melange, echelle }, Iteration.Fois(1));
+            Assert.IsNotNull(Gd1(Alerte("retour.appui", Genre.Retour, deux), Propriete.Melange, Mode.Absolu, false), "un canal de plus (Echelle) doit rougir");
+            MouvementDefini pose = new MouvementDefini("y", Genre.Retour, 0.09f, new[] { alpha }, Iteration.Fois(1), poseDeReposS: 0.045f);
+            Assert.IsNotNull(Gd1(Alerte("retour.appui-voile", Genre.Retour, pose), Propriete.Alpha, Mode.Multiplicatif, true), "une PoseDeReposS sur le voile doit rougir");
+            MouvementDefini long_ = new MouvementDefini("z", Genre.Retour, 0.3f, new[] { alpha }, Iteration.Fois(1));
+            Assert.IsNotNull(Gd1(Alerte("retour.appui-voile", Genre.Retour, long_), Propriete.Alpha, Mode.Multiplicatif, true), "300 ms > 250 ms doit rougir");
+            MouvementDefini bon = new MouvementDefini("w", Genre.Retour, 0.09f, new[] { alpha }, Iteration.Fois(1));
+            Assert.IsNull(Gd1(Alerte("retour.appui-voile", Genre.Retour, bon), Propriete.Alpha, Mode.Multiplicatif, true), "contrôle positif : l'entrée juste passe");
         }
 
         [Test]

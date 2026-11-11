@@ -763,7 +763,7 @@ namespace MafiaCleanCity.Operational
             pied.gameObject.SetActive(true);
             GameObject bouton = NouveauUI("BoutonBlanchir", pied);
             AjouterFond(bouton, DesignTokens.Current.surfaceRaised);
-            Button b = bouton.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(bouton);
             b.targetGraphic = bouton.GetComponent<Image>();
             b.onClick.AddListener(() => StartCoroutine(Blanchir()));
             var h = bouton.AddComponent<HorizontalLayoutGroup>();

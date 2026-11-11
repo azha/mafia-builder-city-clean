@@ -191,6 +191,18 @@ namespace MafiaCleanCity.Operational.Selling
             if (!string.IsNullOrEmpty(bearer)) StartCoroutine(Charger(bearer));
         }
 
+        /// <summary>Crochet de test (patron `RendrePourTest`) : pose les dealers, les bâtiments possédés et la planque FABRIQUÉS, puis appelle le
+        /// MÊME `Rendre()` que `Charger()`, sans réseau ni jeton. Avec une planque et une caisse non vide, « RAMASSER » (:441) est pressable ;
+        /// avec un point de vente possédé sans dealer, « Poster un dealer » (`BoutonDeGeste`, :503) naît. Ne prouve jamais que le back sert ces corps.</summary>
+        public void RendrePourTest(DealerDto[] dealers, BatimentPossedeDto[] possedes, string planque)
+        {
+            Init();
+            Dealers = dealers;
+            Possedes = possedes;
+            SafehouseId = planque;
+            Rendre();
+        }
+
         private IEnumerator Charger(string bearer)
         {
             DerniereErreur = null;
@@ -438,7 +450,7 @@ namespace MafiaCleanCity.Operational.Selling
             //      préservée quelle que soit la largeur. C'est le précédent maison, déjà employé
             //      par `LieutenantScreenController:2641,2675` — je ne l'invente pas, je l'adopte.
             rf.type = Image.Type.Tiled;
-            Button bouton = ramasser.AddComponent<Button>();
+            Button bouton = Retour.NouveauBouton(ramasser);
             bouton.targetGraphic = rf;
             bouton.interactable = actionPossible;
             if (actionPossible)
@@ -500,7 +512,7 @@ namespace MafiaCleanCity.Operational.Selling
             Image img = g.AddComponent<Image>();
             img.sprite = ProceduralUI.RoundedRectDashedOutline((int)Px(9f), Px(1f), (int)Px(4f), (int)Px(3f), Or);
             img.type = Image.Type.Tiled;
-            Button b = g.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(g);
             b.targetGraphic = img;
             b.onClick.AddListener(action);
             TextMeshProUGUI lib = Texte(g.transform, "Lib", libelle, Px(9f), Or, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);

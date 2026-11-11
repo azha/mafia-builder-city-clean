@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
+using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -2420,7 +2421,7 @@ namespace MafiaCleanCity.Operational
             GameObject btn = NewUI("Action_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
-            Button b = btn.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(btn);
             b.targetGraphic = img;
             b.onClick.AddListener(onClick);
             AddLayoutElement(btn, minHeight: 34, flexibleHeight: 0);

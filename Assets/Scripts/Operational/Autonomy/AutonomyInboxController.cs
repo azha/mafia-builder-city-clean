@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
+using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -144,6 +145,17 @@ namespace MafiaCleanCity.Operational.Autonomy
         {
             Token = token;
             IsAuthenticated = !string.IsNullOrEmpty(token);
+        }
+
+        /// <summary>Crochet de test (patron `RendrePourTest`) : pose des rapports FABRIQUÉS puis appelle le MÊME `Render()` que `LoadReports()`, sans
+        /// réseau — ce qui fait naître les boutons « Choose A » / « Choose B » (`Btn_A` / `Btn_B`, :370). Ne prouve jamais que le back sert ces
+        /// corps. Synchrone : `Start()` (qui signe) ne tourne pas tant qu'aucune frame ne passe.</summary>
+        public void RendrePourTest(AutonomyReportDto[] rapports)
+        {
+            EnsureInitialized();
+            Reports = rapports ?? Array.Empty<AutonomyReportDto>();
+            ReportsLoaded = true;
+            Render();
         }
 
         /// <summary>Fetch pending autonomy reports + render the rows (EmptyState when none). Re-entrancy is SERIALIZED
@@ -367,7 +379,7 @@ namespace MafiaCleanCity.Operational.Autonomy
             GameObject btn = NewUI("Btn_" + choice, optBlock.transform);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
-            Button b = btn.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(btn);
             b.targetGraphic = img;
             string capturedChoice = choice;
             AutonomyReportDto capturedReport = report;

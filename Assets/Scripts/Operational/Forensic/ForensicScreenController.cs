@@ -502,7 +502,7 @@ namespace MafiaCleanCity.Operational
 
             // LA PORTE : la 3ᵉ fenêtre est un BOUTON (bascule locale, aucune requête). Sa flèche est posée en haut à droite, hors mise en page.
             GameObject porte = go.transform.Find("Fenetre2").gameObject;
-            fenPorte = porte.AddComponent<Button>();
+            fenPorte = Retour.NouveauBouton(porte);
             fenPorte.targetGraphic = fenetreFond[2];
             fenPorte.transition = Selectable.Transition.None;
             fenPorte.onClick.AddListener(Basculer);
@@ -569,7 +569,7 @@ namespace MafiaCleanCity.Operational
             for (int i = 0; i < DossierCalculs.Pistes.Length; i++) ConstruirePiste(i, pistes.transform);
 
             notePi = NouveauTexte(contenu.transform, "NotePistes",
-                Lib("Les livres et le train de vie : personne ne regarde par là. Pour l’instant."), Px(7f),
+                Lib("Les livres : personne ne regarde par là. Pour l’instant."), Px(7f),   // TD-935 : clé servie `forensic.bloc.les_livres_personne_ne_regarde_par_la_pour_l_instant` (cumul back 9b401fdd)
                 DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.hudSerifFont);
             notePi.fontStyle = FontStyles.Italic;
             notePi.alignment = TextAlignmentOptions.Center;

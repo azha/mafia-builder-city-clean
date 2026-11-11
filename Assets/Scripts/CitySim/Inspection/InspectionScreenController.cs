@@ -197,6 +197,20 @@ namespace MafiaCleanCity.CitySim.Inspection
         /// donc un signalement FONDÉ : même route, même réponse à 4 clés, jamais de représailles.</summary>
         public IEnumerator DeposerPourTest(string typeEntree) => DeposerCoroutine(typeEntree);
 
+        /// <summary>Crochet de test (patron `RendrePourTest`) : pose les 18 files (index = id − 1, comme `LireLesFiles`), le bâtiment visé et le jeton FABRIQUÉS, puis appelle le MÊME
+        /// `Rendre()` que `Charger()`, sans réseau — le bouton « DÉPOSER » (:474) devient PRESSABLE (`PeutDeposer` : cible ET jeton).
+        /// Ne lance aucune lecture : `SetToken` n'est pas appelé. Ne prouve jamais que le back sert ces corps.</summary>
+        public void RendrePourTest(FileData[] files, BatimentPossedeDto cible, string bearer)
+        {
+            Init();
+            token = bearer;
+            Files = files;
+            FilesOuvertes = 0;
+            if (files != null) foreach (FileData f in files) if (f != null) FilesOuvertes++;
+            Cible = cible;
+            Rendre();
+        }
+
         private IEnumerator DeposerCoroutine(string typeEntree)
         {
             if (Cible == null || string.IsNullOrEmpty(token))
@@ -471,7 +485,7 @@ namespace MafiaCleanCity.CitySim.Inspection
                 fim.sprite = ProceduralUI.RoundedRectOutline((int)Px(5f), Px(epaisseur), rougeDuDepot);
                 fim.type = Image.Type.Sliced; fim.raycastTarget = false;
             }
-            deposerBouton = bGo.AddComponent<Button>();
+            deposerBouton = Retour.NouveauBouton(bGo);
             deposerBouton.targetGraphic = fondBouton;
             deposerBouton.interactable = false;
             deposerBouton.onClick.AddListener(Deposer);

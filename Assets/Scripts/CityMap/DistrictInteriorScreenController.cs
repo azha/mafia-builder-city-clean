@@ -690,7 +690,7 @@ namespace MafiaCleanCity.CityMap
                     Color invisible = Color.white; invisible.a = 0f;
                     zone.color = invisible;
                     zone.raycastTarget = true;
-                    Button tap = cell.AddComponent<Button>();
+                    Button tap = Retour.NouveauBouton(cell);
                     tap.transition = Selectable.Transition.None;
                     tap.targetGraphic = zone;
                     tap.onClick.AddListener(() => ToucherBatiment(capture));   // G2 (a) : re-toucher le bâtiment ouvert referme
@@ -2078,8 +2078,19 @@ namespace MafiaCleanCity.CityMap
             //       marge basse     169,19 − (114,38 + 39,81) = 15,00
             //   Contrôle d'arithmétique du découpage : la somme rend la hauteur totale.
 
+            // ── la TÊTE (titre + type) : le bouton de ① vers ② est le PARENT de ce que le joueur touche ───────────────
+            // Retour d'appui v5, E-R5 (décision f2 du 11/11) : `Tete_OuvrirFiche` n'était qu'une zone α 0 posée PAR-DESSUS le titre et le
+            // type, FRÈRE d'eux sous `Corps` ; rien ne peignait dans son sous-arbre, donc `Retour.Decider` ne trouvait ni matière (cas 1-2),
+            // ni voile sur lui (cas 3), et le parent `Corps` (169,19 de haut, rapport d'aires 4,48 > 2) est refusé au cas 4 : `Aucun`, rouge
+            // certain par construction. Le titre et le type sont désormais ses ENFANTS : la structure dit enfin ce que le joueur voit, et le
+            // voile du cas 3 couvre la tête seule. AUCUN pixel ne bouge : la tête garde son rect (y 17,00 · h 37,74) et ses enfants sont
+            // posés aux offsets recalculés dans SON repère (titre y 0 · h 17,00 ; type y 23,80 · h 13,94 — somme 40,80, bas 37,74 = bas de la tête).
+            const float yTeteCss = 17.00f;
+            GameObject tete = NewUI("Tete_OuvrirFiche", corps.transform);
+            PoserDansFiche((RectTransform)tete.transform, yTeteCss, 40.80f + 13.94f - yTeteCss);
+
             // ── titre (`.fiche .titre .serif`) ────────────────────────────────────────────────
-            ficheTitre = NewText("Titre", corps.transform, "", FDi(16f), TextAlignmentOptions.Center);
+            ficheTitre = NewText("Titre", tete.transform, "", FDi(16f), TextAlignmentOptions.Center);
             ficheTitre.font = DesignTokens.Current.hudSerifFont;
             ficheTitre.characterSpacing = 13f;                       // `.13em`
             ficheTitre.color = DesignTokens.Current.hudMoneyGold;     // --or-vif
@@ -2115,26 +2126,24 @@ namespace MafiaCleanCity.CityMap
             // dessin et non choisi. Si un nom l'atteint, le titre débordera de sa boîte en LARGEUR
             // (visible, donc jugeable) plutôt que de se replier en silence sur deux lignes.
             ficheTitre.fontSizeMin = FDi(10f);
-            PoserDansFiche((RectTransform)ficheTitre.transform, 17.00f, 17.00f);
+            PoserDansFiche((RectTransform)ficheTitre.transform, 17.00f - yTeteCss, 17.00f);
 
-            ficheType = NewText("Type", corps.transform, "", FDi(9f), TextAlignmentOptions.Center);
+            ficheType = NewText("Type", tete.transform, "", FDi(9f), TextAlignmentOptions.Center);
             ficheType.characterSpacing = 20f;                        // `.2em`
             ficheType.fontStyle = FontStyles.UpperCase;              // `.fiche .titre .type{text-transform:uppercase}` (①-2)
             ficheType.color = DesignTokens.Current.hudCremeSecondary;
-            PoserDansFiche((RectTransform)ficheType.transform, 40.80f, 13.94f);
+            PoserDansFiche((RectTransform)ficheType.transform, 40.80f - yTeteCss, 13.94f);
 
             // B1 (passe UX 2026-09-24) — la TÊTE de la fiche (titre + type) ouvre la fiche opérationnelle ② du bâtiment AFFICHÉ,
             // quel que soit son type. AMÉLIORER, montré pour 3 types seulement, était le SEUL chemin vers ② : le kit d'un joueur
             // neuf (`lab`, `stash`, `front_shop`, `cash_safehouse`) n'y arrivait jamais, et la cuisson ne se lance que là.
-            // Une zone de toucher transparente posée par-dessus, comme la cellule du bâtiment ; aucun trait nouveau n'est peint
-            // (le signe de l'affordance est à dessiner par l'atelier).
-            GameObject tete = NewUI("Tete_OuvrirFiche", corps.transform);
-            PoserDansFiche((RectTransform)tete.transform, 17.00f, 40.80f + 13.94f - 17.00f);
+            // Une zone de toucher transparente, comme la cellule du bâtiment (`tete`, créée plus haut, parent du titre et du type) ;
+            // aucun trait nouveau n'est peint (le signe de l'affordance est à dessiner par l'atelier).
             Image zoneTete = tete.AddComponent<Image>();
             Color invisibleTete = Color.white; invisibleTete.a = 0f;
             zoneTete.color = invisibleTete;
             zoneTete.raycastTarget = true;
-            Button tapTete = tete.AddComponent<Button>();
+            Button tapTete = Retour.NouveauBouton(tete);
             tapTete.transition = Selectable.Transition.None;
             tapTete.targetGraphic = zoneTete;
             tapTete.onClick.AddListener(OuvrirFicheOperationnelle);
@@ -2316,7 +2325,7 @@ namespace MafiaCleanCity.CityMap
             Stretch((RectTransform)t.transform, Vector2.zero, Vector2.zero);
             t.raycastTarget = false;
 
-            Button b = go.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(go, fondPeint);
             b.transition = Selectable.Transition.None;
             b.targetGraphic = fond;
             b.onClick.AddListener(action);

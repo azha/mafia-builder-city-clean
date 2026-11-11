@@ -235,7 +235,7 @@ namespace MafiaCleanCity.Operational
 
             GameObject bouton = NouveauUI("BoutonDuPied", basRoot);
             AjouterFond(bouton, PiedDEcran.Couleurs(PiedDEcran.Forme.Geste, PiedDEcran.Etat.Allume).fond);
-            Button b = bouton.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(bouton);
             b.targetGraphic = bouton.GetComponent<Image>();
             b.onClick.AddListener(AllerAuRecrutement);
             HorizontalLayoutGroup h = bouton.AddComponent<HorizontalLayoutGroup>();
@@ -363,7 +363,7 @@ namespace MafiaCleanCity.Operational
                 AjouterFond(bouton, DesignTokens.Current.surfaceRaised);
                 string lawyerId = avocat.lawyerId;
                 bool nouvelEtat = !avocat.retainer;
-                Button b = bouton.AddComponent<Button>();
+                Button b = Retour.NouveauBouton(bouton);
                 b.targetGraphic = bouton.GetComponent<Image>();
                 b.onClick.AddListener(() => BasculerRetainer(lawyerId, nouvelEtat));
                 HorizontalLayoutGroup hb = bouton.AddComponent<HorizontalLayoutGroup>();
@@ -510,7 +510,7 @@ namespace MafiaCleanCity.Operational
 
             if (tier == null) return;   // « Commis d'office » — informatif seul, aucune route.
 
-            Button b = carte.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(carte);
             b.targetGraphic = carte.GetComponent<Image>();
             b.onClick.AddListener(() => RecruterAvocat(tier));
         }

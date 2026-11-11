@@ -1426,7 +1426,7 @@ namespace MafiaCleanCity.Operational
             fond.color = ReputationResolvers.Carte2;
             Contour(cta, ReputationResolvers.OrFilet);
 
-            CtaDonnerRegle = cta.AddComponent<Button>();
+            CtaDonnerRegle = Retour.NouveauBouton(cta);
             CtaDonnerRegle.targetGraphic = fond;
             // ⛔ DÉSACTIVÉ, sans aucun listener (arbitrage Q1 du 24/09) : POST /v1/me/house-rules exige un rule_id, et rien ne dit
             //    lesquels existent ni ne les nomme (lots back L4 et L1, demandés). La maquette ratifiée montre le geste : il est

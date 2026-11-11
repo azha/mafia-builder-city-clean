@@ -366,6 +366,9 @@ public static class MafiaCI
         // au gate de personne) : admis dans `UpdateAdmis` (commit « G10 », décision nommée soumise à f2) ; vertes au créneau final.
         "JaugeDeTension",
         "Mouvement",
+        // RetourAppui (lot du retour d'appui v5, CLIENT-2) : E-R1, la mesure « plusieurs IPointerDownHandler sur un même GameObject » — verte 2/2 AVANT inscription
+        // (créneau groupé du 11/11, pile 35bdd6cb, par noms). Les mesures et gardes suivantes du lot (GP, GE1-GE4, GS) y entrent avec leur compte vert.
+        "RetourAppui",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée
