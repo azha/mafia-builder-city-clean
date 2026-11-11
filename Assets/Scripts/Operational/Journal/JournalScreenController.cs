@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -110,6 +111,47 @@ namespace MafiaCleanCity.Operational
         public void PoserQuartiersPourTest(WorldDistrictDto[] quartiers) => Quartiers = quartiers;
         /// <summary>Crochet de test : pose le fil de la rue sans réseau, AVANT `RendrePourTest` (qui ne rend que les brèves du corps qu'on lui donne).</summary>
         public void PoserLaRuePourTest(GetAmbientFeedResponseDto rue) => DernierAmbient = rue;
+
+        // ------------------------------------------------------------ « Y PRÊTER ATTENTION » (TD-822, 11/11)
+        /// <summary>La route existe (`POST /v1/ambient/attend/:id`, BACK-2) et l'identifiant est SERVI par `GET /v1/ambient/feed` : le geste est rallumé. Il attend
+        /// l'événement le plus récent de la rue (le fil arrive « plus récent d'abord ») ; le back refuse un événement déjà attendu ou expiré (409).</summary>
+        public AmbientEventDto ProchainAAssister =>
+            Rue?.FirstOrDefault(e => e != null && !string.IsNullOrEmpty(e.event_id));
+        /// <summary>La dernière réponse d'attend (null tant qu'aucun geste n'a abouti). Ses MOTS (`residue_band`) passent par f2 : non affichés.</summary>
+        public PostAmbientAttendResponseDto DerniereAssistance { get; private set; }
+        public bool AssistanceEnCours { get; private set; }
+        private Button boutonAssister;
+        private TextMeshProUGUI libelleAssister;
+
+        /// <summary>Le pied suit l'état : allumé et pressable s'il y a un événement à attendre ET un jeton ET pas de geste en vol ; éteint sinon.</summary>
+        private void MettreAJourLePied()
+        {
+            if (boutonAssister == null) return;
+            bool peut = !string.IsNullOrEmpty(token) && !AssistanceEnCours && ProchainAAssister != null;
+            boutonAssister.interactable = peut;
+            PiedDEcran.StylerLeBouton(boutonAssister.gameObject, libelleAssister, PiedDEcran.Forme.Cta6, peut ? PiedDEcran.Etat.Allume : PiedDEcran.Etat.Eteint);
+        }
+
+        /// <summary>Attend l'événement `ProchainAAssister`, puis relit la rue (l'événement attendu n'est plus `live`). Un échec laisse l'écran tel quel.</summary>
+        public IEnumerator Assister()
+        {
+            AmbientEventDto cible = ProchainAAssister;
+            if (cible == null || AssistanceEnCours || string.IsNullOrEmpty(token)) yield break;
+            AssistanceEnCours = true;
+            MettreAJourLePied();
+            PostAmbientAttendResponseDto reponse = null;
+            yield return client.PostAmbientAttend(token, cible.event_id, new PostAmbientAttendBody(), d => reponse = d,
+                (code, msg) => Debug.LogWarning($"[Journal] attend {cible.event_id} refusé ({code}) : {msg}"));
+            if (this == null) yield break;
+            if (reponse != null)
+            {
+                DerniereAssistance = reponse;
+                yield return client.GetAmbientFeed(token, dto => DernierAmbient = dto, (code, msg) => { });
+                if (this == null) yield break;
+            }
+            AssistanceEnCours = false;
+            if (DernierChargement != null) AppliquerEtat(DernierChargement); else MettreAJourLePied();
+        }
         /// <summary>C2 — combien de lignes rendues n'ont PAS de texte servi (leur clé est montrée à la place).</summary>
         public int LignesSansTexte { get; private set; }
 
@@ -256,6 +298,7 @@ namespace MafiaCleanCity.Operational
                 ? DernierMonde.events : new RandomWorldEventDto[0];
 
             Breves = breves; Rue = rue; Monde = monde;
+            MettreAJourLePied();
 
             bool rienNeBouge = breves.Length == 0 && rue.Length == 0 && monde.Length == 0;
 
@@ -906,8 +949,8 @@ namespace MafiaCleanCity.Operational
                 DesignTokens.Current.primaryFont);
         }
 
-        /// <summary>Le pied de la maquette (`.jrn6 .pied` : cadres du Journal, « Y PRÊTER ATTENTION » + sa note) — cause 3, ㊳ B4 (CLIENT-3, 07/10). Grammaire `.cta6` (`PiedDEcran.Forme.Cta6`), ÉTEINT :
-        /// AUCUNE route « assister » côté back (TD-848), donc aucun geste actif — décision de f2 07/10 : poser le pied fidèle au cadre et SANS MENTIR. Le bouton est un `Button` non interactif.</summary>
+        /// <summary>Le pied de la maquette (`.jrn6 .pied` : cadres du Journal, « Y PRÊTER ATTENTION » + sa note) — cause 3, ㊳ B4 (CLIENT-3, 07/10). Grammaire `.cta6` (`PiedDEcran.Forme.Cta6`), ÉTEINT à la pose, ALLUMÉ par `MettreAJourLePied` quand la rue sert un événement à attendre :
+        /// la route `POST /v1/ambient/attend/:id` existe (TD-822, 11/11 ; elle manquait au 07/10, TD-848 : le pied était alors posé fidèle au cadre et SANS MENTIR, éteint).</summary>
         private void ConstruirePied(Transform parent)
         {
             GameObject pied = NouveauUI("Pied", parent);
@@ -922,7 +965,9 @@ namespace MafiaCleanCity.Operational
             AjouterImage(bouton);
             Button b = Retour.NouveauBouton(bouton);
             b.targetGraphic = bouton.GetComponent<Image>();
-            b.interactable = false;
+            b.interactable = false;   // éteint tant qu'aucun événement n'est servi (`MettreAJourLePied`)
+            b.onClick.AddListener(() => StartCoroutine(Assister()));
+            boutonAssister = b;
             var h = bouton.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(8f), (int)Px(8f));
             h.childAlignment = TextAnchor.MiddleCenter;
@@ -935,6 +980,7 @@ namespace MafiaCleanCity.Operational
             lib.characterSpacing = 11f;   // `.cta6` letter-spacing .11em
             lib.alignment = TextAlignmentOptions.Center;
             lib.enableWordWrapping = false;
+            libelleAssister = lib;
             PiedDEcran.StylerLeBouton(bouton, lib, PiedDEcran.Forme.Cta6, PiedDEcran.Etat.Eteint);
 
             // `.note6` : 6,4 px, centrée, #8a979c ; le mot « assister » en or vif gras

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -530,6 +531,64 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("quartier 7", JournalScreenController.NomDuQuartier("district-7", q));
             Assert.AreEqual("Brennar", JournalScreenController.NomDuQuartier("Brennar", q), "pas un slug : rendu tel quel");
             Assert.AreEqual("district-x", JournalScreenController.NomDuQuartier("district-x", null));
+        }
+
+        // ============================================================ « Y PRÊTER ATTENTION » (TD-822, 11/11)
+        // La route `POST /v1/ambient/attend/:id` existe (BACK-2) et l'identifiant est SERVI par `GET /v1/ambient/feed` : le pied est rallumé. Hors réseau : le fil de la
+        // rue est posé, le geste lui-même (POST) est joué au créneau contre le back.
+        //   T1  le corps SERVI de la réponse (event_id, district, status, residue_band) se lit tel quel
+        //   T2  `ProchainAAssister` = le premier événement de la rue qui porte un identifiant
+        //   T3  le pied est éteint sans événement, sans jeton ; allumé avec un événement ET un jeton
+        private static AmbientEventDto Evt(string id) => new AmbientEventDto { event_id = id, descriptor_i18n_key = "ambient.queue_pharmacy", district = "district-16", recency_band = "fresh" };
+
+        [Test]
+        public void T1_LeCorpsServiDeLaReponseDAttend_SeLitTelQuel()
+        {
+            const string corps = "{\"payload\":{\"data\":{\"event_id\":\"3f1a\",\"district\":\"district-16\",\"status\":\"attended\",\"residue_band\":\"reduced\"}}}";
+            PostAmbientAttendResponseDto d = JsonUtility.FromJson<PostAmbientAttendEnvelope>(corps).payload.data;
+            Assert.AreEqual("3f1a", d.event_id);
+            Assert.AreEqual("district-16", d.district);
+            Assert.AreEqual("attended", d.status);
+            Assert.AreEqual("reduced", d.residue_band, "la bande close, jamais un scalaire (R2.2)");
+        }
+
+        [UnityTest]
+        [Category("ScreenC1")]
+        public IEnumerator T2_ProchainAAssister_EstLePremierEvenementQuiPorteUnIdentifiant()
+        {
+            JournalScreenController ecran = MonterEcran();
+            ecran.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt(""), Evt("e-2"), Evt("e-3") } });
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+            Assert.AreEqual("e-2", ecran.ProchainAAssister.event_id, "le premier événement SERVI avec un identifiant (le plus récent d'abord)");
+        }
+
+        private Button BoutonAssister() =>
+            RacineEcran().transform.GetComponentsInChildren<Button>(true).First(b => b.name == "BoutonAssister");
+
+        [UnityTest]
+        [Category("ScreenC1")]
+        public IEnumerator T3_LePied_EteintSansEvenementOuSansJeton_AllumeAvecLesDeux()
+        {
+            JournalScreenController ecran = MonterEcran();
+            ecran.SetToken("jeton-de-test");
+            ecran.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new AmbientEventDto[0] });
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+            Assert.IsFalse(BoutonAssister().interactable, "aucun événement à attendre : éteint");
+
+            ecran.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt("e-1") } });
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+            Assert.IsTrue(BoutonAssister().interactable, "un événement servi ET un jeton : allumé");
+
+            Object.DestroyImmediate(hostGo);
+            hostGo = null;
+            JournalScreenController sansJeton = MonterEcran();
+            sansJeton.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt("e-1") } });
+            sansJeton.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+            Assert.IsFalse(BoutonAssister().interactable, "sans jeton : éteint, jamais un geste qui partirait sans identité");
         }
     }
 }

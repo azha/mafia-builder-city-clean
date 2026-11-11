@@ -31,8 +31,8 @@ namespace MafiaCleanCity.Tests
     // La suite, PiedDEcran (le geste), Tutoriel, Compression, Dashboard (les « Aller à »), Inspection (le registre, « DÉPOSER » pressable), et le VRAI shell (Accueil sans carte / avec carte ; menu Plus ; coffre fermé : « Rouvrir le coffre »).
     //
     // NON MONTÉ — le relevé n'invente rien ; la ligne « couverture sites k / N » (`PublicationGp`) nommera les sites que ces écrans portent :
-    // // NON COUVRABLE : Operational/Journal/JournalScreenController (BoutonAssister, :923) — `interactable = false` par construction
-    //    (TD-848, aucune route « assister »). Monté et relevé NON PRESSABLE (`GP_Journal_PiedNonPressable`), jamais « couvert ».
+    // JOURNAL (BoutonAssister, :923) : COUVRABLE depuis TD-822 (11/11) — la route `POST /v1/ambient/attend/:id` existe, le bouton est allumé dès que la rue sert un
+    //    événement ET qu'un jeton est posé (`GP_Journal_PiedAllume`) ; sans événement il reste éteint et relevé NON PRESSABLE (`GP_Journal_PiedNonPressable`).
     //
     // Les tests rendent par `RenderTexture` à la résolution des vrais écrans : ils exigent un périphérique graphique (pas `-nographics`).
     [Category("RetourAppui")]
@@ -329,13 +329,31 @@ namespace MafiaCleanCity.Tests
             yield break;
         }
 
-        // ------------------------------------------------------------------------------ Journal : le pied éteint
+        // ------------------------------------------------------------------------------ Journal : le pied allumé, puis éteint
+        [UnityTest]
+        public IEnumerator GP_Journal_PiedAllume()
+        {
+            // TD-822 : un événement de la rue SERVI (avec son `event_id`) et un jeton ⇒ « Y PRÊTER ATTENTION » est pressable ; le site (:923) est couvert.
+            List<LigneGp> lignes;
+            try
+            {
+                var journal = MonterSousCanvas<JournalScreenController>("JournalGpAllume", out Canvas canvas);
+                journal.SetToken("jeton-de-test");
+                journal.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { new AmbientEventDto { event_id = "e-1", district = "district-16", descriptor_i18n_key = "ambient.queue_pharmacy", recency_band = "fresh" } } });
+                journal.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+                Assert.IsNotNull(journal.ProchainAAssister, "précondition : un événement à attendre");
+                lignes = Relever("Journal", "pied allumé (Y PRÊTER ATTENTION)", canvas.gameObject, canvas);
+            }
+            finally { DetruireMontes(); }
+            Verifier("Journal/pied allumé", lignes);
+            yield break;
+        }
+
         [UnityTest]
         public IEnumerator GP_Journal_PiedNonPressable()
         {
-            // ⚠️ Le seul `Button` du Journal (BoutonAssister) est NON INTERACTIF par construction (TD-848). Ce test ne peut donc PAS passer par
-            // `Verifier` (N pressables > 0 est faux ici, et l'écrire autrement serait ajuster l'assertion pour passer) : il asserte ce qui est
-            // vrai — le bouton est MONTÉ et relevé, NON PRESSABLE, sans rouge — et le publie. Le site n'est jamais « couvert ».
+            // Sans événement servi (et sans jeton), le bouton du Journal reste ÉTEINT. Ce test ne passe donc PAS par `Verifier` (N pressables > 0 est faux ici, et
+            // l'écrire autrement serait ajuster l'assertion pour passer) : il asserte ce qui est vrai — le bouton est MONTÉ et relevé, NON PRESSABLE, sans rouge.
             List<LigneGp> lignes;
             try
             {
@@ -347,7 +365,7 @@ namespace MafiaCleanCity.Tests
             PublicationGp.Publier(lignes);
             Debug.Log("[GP] Journal/pied : " + lignes.Count + " bouton(s) monté(s), " + RetourGpReleve.Pressables(lignes) + " pressable(s)");
             Assert.Greater(lignes.Count, 0, "Journal/pied — anti-vacuité : le bouton du pied est monté et relevé");
-            Assert.AreEqual(0, RetourGpReleve.Pressables(lignes), "Journal/pied — le bouton du pied est non interactif (TD-848) : s'il devient pressable, ce test doit passer par `Verifier`");
+            Assert.AreEqual(0, RetourGpReleve.Pressables(lignes), "Journal/pied — sans événement servi le bouton du pied est éteint : s'il devient pressable, ce test doit passer par `Verifier`");
             List<string> rouges = RetourGpReleve.Rouges(lignes);
             Assert.IsEmpty(rouges, "Journal/pied — " + rouges.Count + " rouge(s) :\n" + string.Join("\n", rouges));
             yield break;
