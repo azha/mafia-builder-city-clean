@@ -970,6 +970,8 @@ namespace MafiaCleanCity.Operational.Tests
 
         private const string PrixNonServi = "le prix n’est pas servi";
 
+        private int PiedsVisibles() => RacineEcran().GetComponentsInChildren<Transform>(false).Count(t => t.name == "Pied");
+
         private List<string> NotesDuPiedVisibles() =>
             RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(false).Select(t => t.text).Where(t => t != null && t.Contains(PrixNonServi)).ToList();
 
@@ -989,10 +991,12 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
             Assert.AreEqual(VueDossier.Pistes, ecran.Vue, "précondition : vue des pistes");
             Assert.AreEqual(1, NotesDuPiedVisibles().Count, "CONTRÔLE : prix absent ⇒ la note des pistes est montrée");
+            Assert.AreEqual(1, PiedsVisibles(), "CONTRÔLE : le pied des pistes est dessiné");
             ecran.Basculer();
             yield return null;
             Assert.AreEqual(VueDossier.Acteurs, ecran.Vue, "précondition : vue des acteurs");
             Assert.AreEqual(1, NotesDuPiedVisibles().Count, "CONTRÔLE : prix absent ⇒ la note des acteurs est montrée");
+            Assert.AreEqual(1, PiedsVisibles(), "CONTRÔLE POSITIF : prix absent ⇒ le pied des acteurs est dessiné (le compte voit le pied quand il existe)");
             ecran.Basculer();
             yield return null;
 
@@ -1002,12 +1006,14 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
             Assert.AreEqual(VueDossier.Pistes, ecran.Vue);
             Assert.IsEmpty(NotesDuPiedVisibles(), "prix servi : « le prix n’est pas servi » est FAUX, il ne s'affiche pas (vue pistes)");
+            Assert.AreEqual(1, PiedsVisibles(), "prix servi : le pied des PISTES reste (il porte le geste éteint)");
             Assert.IsTrue(RacineEcran().GetComponentsInChildren<Transform>(false).Any(t => t.name == "BoutonAcheter"), "le geste éteint reste montré (vue pistes)");
             Assert.IsFalse(RacineEcran().GetComponentsInChildren<TMPro.TextMeshProUGUI>(false).Any(t => t.text != null && (t.text.Contains("8 000") || t.text.Contains("8000"))),
                 "aucun montant affiché : il attend son cadre (TD-988)");
             ecran.Basculer();
             yield return null;
             Assert.IsEmpty(NotesDuPiedVisibles(), "prix servi : la note des acteurs ne s'affiche pas non plus");
+            Assert.AreEqual(0, PiedsVisibles(), "prix servi : le pied des ACTEURS n'est pas dessiné (il ne portait que la note : une bande vide serait un écart B)");
             Assert.AreEqual(requetes, ecran.RequetesEmises, "rendre et basculer avec un prix servi n'émettent aucune requête (le geste éteint est gardé ailleurs)");
         }
 
