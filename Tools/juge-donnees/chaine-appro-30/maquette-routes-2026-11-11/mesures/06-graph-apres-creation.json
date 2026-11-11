@@ -1,0 +1,60 @@
+{
+  "response_meta": {
+    "request_id_echo": "6c51169b-c425-482b-9735-c86ac1650610",
+    "server_processed_at": "2026-11-11T19:29:27.310Z",
+    "api_version": 1,
+    "correlation_id_echo": null,
+    "server_build_ref": {
+      "git_sha": "8d0184a4",
+      "built_at": "2026-11-11T18:17:52Z"
+    }
+  },
+  "payload": {
+    "data": {
+      "nodes": [
+        {
+          "building_id": "7a50ca0d-60af-4224-9e86-b903725e67a3",
+          "bucket": "silent",
+          "has_arrow": false,
+          "arrow_to_building_id": null
+        },
+        {
+          "building_id": "93b672e5-ca3c-433a-821e-c079cf580877",
+          "bucket": "silent",
+          "has_arrow": false,
+          "arrow_to_building_id": null
+        },
+        {
+          "building_id": "ba22ca24-a79e-44a8-8f03-376341068612",
+          "bucket": "silent",
+          "has_arrow": false,
+          "arrow_to_building_id": null
+        },
+        {
+          "building_id": "e3e02cf0-202d-46ea-a3e2-55604ab90daf",
+          "bucket": "silent",
+          "has_arrow": false,
+          "arrow_to_building_id": null
+        },
+        {
+          "building_id": "fa0abb33-34c5-45fc-9eb8-7dfe1f93063a",
+          "bucket": "silent",
+          "has_arrow": false,
+          "arrow_to_building_id": null
+        }
+      ],
+      "legs": [],
+      "routes": [
+        {
+          "route_id": "a35ba468-23df-4c74-ac49-fb47fe9ccaaf",
+          "origin_building_id": "fa0abb33-34c5-45fc-9eb8-7dfe1f93063a",
+          "destination_building_id": "ba22ca24-a79e-44a8-8f03-376341068612",
+          "sinuosity_stress_bucket": "pristine",
+          "time_to_collapse_bucket": "na",
+          "state": "active",
+          "rebuilding": false
+        }
+      ]
+    }
+  }
+}
