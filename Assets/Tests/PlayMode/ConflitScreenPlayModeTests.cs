@@ -1037,6 +1037,26 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(ConflitResolvers.Chaleur(null));
         }
 
+        /// <summary>Lot conflit de BACK-3 (`lot/conflit-seq` @59564b70, f2 11/11) : les écrivains du back ont deux casses (« LOW » des assauts
+        /// écrits par percolation, « medium » de la constante d'assaut). La chaleur se lit sur LES DEUX formes, par la valeur ET par un corps
+        /// désérialisé. CONTRÔLE : une valeur hors domaine reste « état inconnu » dans les deux casses, et null reste null.</summary>
+        [Test]
+        public void EcranConflitL1b_Chaleur_InsensibleALaCasse_LesDeuxFormes()
+        {
+            foreach (var (bas, haut, mot) in new[] { ("low", "LOW", "un peu"), ("medium", "MEDIUM", "pas mal"), ("high", "HIGH", "beaucoup") })
+            {
+                Assert.AreEqual(mot, ConflitResolvers.Chaleur(bas), $"« {bas} »");
+                Assert.AreEqual(mot, ConflitResolvers.Chaleur(haut), $"« {haut} » : la même bande, en majuscules");
+            }
+            Assert.AreEqual("un peu", ConflitResolvers.Chaleur("Low"), "casse mêlée");
+            Assert.AreEqual("un peu", ConflitResolvers.Chaleur(Premier(CorpsRentre.Replace("\"heat_increment_bucket\":\"medium\"",
+                "\"heat_increment_bucket\":\"LOW\"")).heat_increment_bucket), "un corps servi en MAJUSCULES");
+            Assert.AreEqual("état inconnu", ConflitResolvers.Chaleur("EXTREME"), "CONTRÔLE : hors domaine en majuscules");
+            Assert.AreEqual("état inconnu", ConflitResolvers.Chaleur("extreme"), "CONTRÔLE : hors domaine en minuscules");
+            Assert.IsNull(ConflitResolvers.Chaleur(null));
+            Assert.IsNull(ConflitResolvers.Chaleur(""));
+        }
+
         [Test]
         public void EcranConflitL1_AxeEtNoms_MotsServisOuRienJamaisLaValeurMachine()
         {

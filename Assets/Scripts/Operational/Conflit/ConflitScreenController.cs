@@ -1636,13 +1636,17 @@ namespace MafiaCleanCity.Operational
         /// <summary>㉙ — ce que l'envoi a fait chauffer (`heat_increment_bucket`), table 40, clé `conflit.chaleur.<valeur>`.
         /// Le back ne produit que `medium` aujourd'hui ; les mots couvrent low · medium · high. null ⇒ null (pas de ligne
         /// « la ville a chauffé », ni de suite « , et la ville a chauffé »).</summary>
+        /// ⚠️ INSENSIBLE À LA CASSE (f2 11/11, lot conflit de BACK-3 `lot/conflit-seq` @59564b70) : les ÉCRIVAINS du back ont deux casses
+        /// (`HeatInjectionMagnitude` en MAJUSCULES — « LOW » des assauts écrits par percolation —, la constante d'assaut en minuscules) ; la
+        /// lecture servie les ramène à la BANDE `low | medium | high` (`engagement-projection.ts:41-72`, `servedHeatBand` : `raw.toLowerCase()`).
+        /// Le client lit les deux formes, pour qu'un corps servi en majuscules ne tombe jamais en « état inconnu ».
         public static string Chaleur(string bucket)
         {
-            switch (bucket)
+            switch (bucket?.ToLowerInvariant())
             {
-                case "low":    return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "chaleur", bucket, "un peu");
-                case "medium": return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "chaleur", bucket, "pas mal");
-                case "high":   return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "chaleur", bucket, "beaucoup");
+                case "low":    return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "chaleur", "low", "un peu");
+                case "medium": return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "chaleur", "medium", "pas mal");
+                case "high":   return MafiaCleanCity.I18n.Libelle.ParValeur("conflit", "chaleur", "high", "beaucoup");
                 default: return string.IsNullOrEmpty(bucket) ? null : MafiaCleanCity.I18n.Repli.Etat(bucket);
             }
         }
