@@ -1,5 +1,7 @@
 # Planches de l'Accueil — AVANT / APRÈS, lot « retour d'appui v5 » (11/11/2026)
 
+> ⚠️ **CE BANC NE JUGE QUE DES DELTAS, JAMAIS LA CONFORMITÉ.** Il ne fait PAS la mise en page complète : le bundle i18n n'est pas servi (`I18nCatalog.Oublier`, les libellés sont les replis du code, d'où un titre de carte en anglais « DAMAGED BUILDING REPAIR »), le chrome n'est pas servi (« ARGENT » sans somme, « JOUR — »), les panneaux ne prennent pas leurs largeurs de production, et les phrases de file vide peuvent se croiser. Un juge qui compare ces planches à la MAQUETTE trouvera des écarts qui sont ceux du BANC, pas du lot. La preuve de conformité de l'Accueil est celle du banc `ClicheApresGeste` (vrai shell, pile servie, bundle servi), voir plus bas.
+
 **But** : juger les DEUX changements visibles de l'Accueil — (a) la ligne TRANCHER (`flexibleHeight = 1` : le bouton faisait 257×0, il épouse la hauteur de la rangée) ; (b) l'Accueil sans le Pied de la carte (`MasquerLePiedALAccueil`) — et comparer l'APRÈS à la MAQUETTE (`ecrans-brennar-accueil.html` @ atelier `8f59cf94`).
 
 ## Méthode (acceptée par f2)
@@ -29,3 +31,8 @@
 - **Le juge prend la photo `-2`** (la seconde de la paire) pour **c2, c3 et c6 à 1080×1920** : la photo -1 y porte une bande de texte non composée (13 px de haut, dans la carte de tête).
 - **DETTE DU BANC (à corriger à sa prochaine utilisation)** : attendre **2 frames** avant la 1re photo de chaque cadrage (le texte TMP de la carte de tête n'a pas fini de se composer). Tant que ce n'est pas fait, le critère « paire à 0 » n'est pas tenu à 1080×1920 pour les états qui portent la carte de tête.
 - **LIMITE** : pas de contrôle positif AU NIVEAU DU BANC (aucun vrai changement visuel provoqué pour vérifier que le banc le voit) ; non exigé ici (le juge compare l'APRÈS à la maquette). Le seul contrôle positif est celui de l'outil de diff.
+
+## Écart ASSUMÉ — une correction de GESTE, voulue (déclarée le 11/11 à la revue ⊥ du lot, MAJOR 2)
+- **TRANCHER** (la ligne de l'Accueil) faisait **257 × 0** : un rect de hauteur nulle ne reçoit aucun raycast. Avant le correctif, un appui sur le mot « TRANCHER » **n'ouvrait pas la carte** : il tombait sur la plaque dessous. Après (`flexibleHeight = 1`, la hauteur de la rangée), il **ouvre la carte ⑩** — le geste que le code décrit (« trancher OUVRE la carte, où le joueur choisit »).
+- C'est donc un changement de comportement de classe B (« ce bouton répond maintenant, et ce qui recevait l'appui avant ne le reçoit plus ») **sans changement visuel au repos** (0 pixel sur les 12 cadrages). Je n'ai pas déterminé quelle surface recevait l'appui avant.
+- Le Pied de la carte : masqué SOUS l'Accueil seulement ; visible sur la carte nue (correctif `95a76271`, revue ⊥ BLOCKING 2). Les planches (états Accueil ouvert) restent valides : le Pied y est masqué dans les deux cas.
