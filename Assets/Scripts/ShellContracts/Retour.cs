@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
@@ -86,8 +87,11 @@ namespace MafiaCleanCity.Shell
         // ------------------------------------------------------------------------------ le guichet
         /// <summary>Crée le `Button` de `hote` ET y pose le composant `RetourAppui` (§3.4). `surface` : la matière que le `Melange` assombrit
         /// quand le `targetGraphic` du bouton ne peint pas ; elle vit DANS le sous-arbre de `hote` (sinon la bascule du cas 0 poserait le voile
-        /// sur un sous-arbre qui ne peint rien) — une surface hors sous-arbre est un ROUGE (`LogError`) et n'est pas retenue.</summary>
-        public static Button NouveauBouton(GameObject hote, Graphic surface = null)
+        /// sur un sous-arbre qui ne peint rien) — une surface hors sous-arbre est un ROUGE (`LogError`) et n'est pas retenue.
+        /// `membre` et `ligne` sont posés par le COMPILATEUR (nom du membre appelant, numéro de ligne : deux constantes, aucun chemin de fichier
+        /// ni de machine dans le binaire livré) et mémorisés dans `RetourAppui` : la garde de population (GP) en tire le SITE qui a créé le bouton.</summary>
+        public static Button NouveauBouton(GameObject hote, Graphic surface = null,
+            [CallerMemberName] string membre = "", [CallerLineNumber] int ligne = 0)
         {
             if (hote == null) throw new ArgumentNullException(nameof(hote));
             if (surface != null && !surface.transform.IsChildOf(hote.transform))
@@ -98,7 +102,7 @@ namespace MafiaCleanCity.Shell
             Button b = hote.AddComponent<Button>();
             RetourAppui ra = hote.GetComponent<RetourAppui>();
             if (ra == null) ra = hote.AddComponent<RetourAppui>();
-            ra.Init(b, surface);
+            ra.Init(b, surface, membre, ligne);
             return b;
         }
 
@@ -223,6 +227,54 @@ namespace MafiaCleanCity.Shell
             return res;
         }
 
+        // ------------------------------------------------------------------------------ l'inventaire des SITES (GP, couverture)
+        /// <summary>Un appel à `Retour.NouveauBouton` relevé dans une source : sa ligne (celle du jeton `NouveauBouton`, comme le compilateur la
+        /// numérote) et le membre qui le porte (déclaration la plus proche au-dessus).</summary>
+        public readonly struct SiteBouton
+        {
+            public readonly int Ligne;
+            public readonly string Membre;
+            public SiteBouton(int ligne, string membre) { Ligne = ligne; Membre = membre; }
+        }
+
+        private static readonly Regex MotifSite = new Regex(@"\bRetour\s*\.\s*(NouveauBouton)\s*\(", RegexOptions.CultureInvariant);
+        // une déclaration de membre : [modificateurs] type nom( … sans `=`, sans `.` avant le nom, ne finissant pas par `;`
+        private static readonly Regex MotifMembre = new Regex(
+            @"^\s*(?:(?:public|private|internal|protected|static|override|virtual|sealed|async|unsafe|new|extern|abstract)\s+)*[\w<>\[\],?]+(?:\s*[\w<>\[\],?]+)*\s+(\w+)\s*\(",
+            RegexOptions.CultureInvariant);
+        private static readonly string[] MotsDeControle = { "if", "for", "foreach", "while", "switch", "return", "using", "lock", "catch", "else", "new", "await", "throw", "yield", "fixed" };
+
+        /// <summary>Les appels à `Retour.NouveauBouton` d'un fichier source : fonction PURE du contenu (commentaires et littéraux ignorés). Sert à
+        /// résoudre (membre, ligne) posés par le compilateur vers un site de source, sans aucun chemin de fichier dans le binaire.</summary>
+        public static List<SiteBouton> ScanSitesDeNouveauBouton(string contenu)
+        {
+            var res = new List<SiteBouton>();
+            if (string.IsNullOrEmpty(contenu)) return res;
+            string nu = SansCommentairesNiChaines(contenu);
+            string[] lignes = nu.Split('\n');
+            foreach (Match m in MotifSite.Matches(nu))
+            {
+                Group g = m.Groups[1];
+                int ligne = 1;
+                for (int i = 0; i < g.Index; i++) if (nu[i] == '\n') ligne++;
+                string membre = "";
+                for (int k = ligne - 1; k >= 0 && membre.Length == 0; k--)
+                {
+                    string l = lignes[k];
+                    if (l.TrimEnd().EndsWith(";", StringComparison.Ordinal) || l.IndexOf('=') >= 0 && l.IndexOf('=') < l.IndexOf('(')) continue;
+                    Match d = MotifMembre.Match(l);
+                    if (!d.Success) continue;
+                    string premier = l.TrimStart();
+                    bool controle = false;
+                    for (int c = 0; c < MotsDeControle.Length && !controle; c++)
+                        controle = premier.StartsWith(MotsDeControle[c] + " ", StringComparison.Ordinal) || premier.StartsWith(MotsDeControle[c] + "(", StringComparison.Ordinal);
+                    if (!controle && l.Substring(0, d.Groups[1].Index).IndexOf('.') < 0) membre = d.Groups[1].Value;
+                }
+                res.Add(new SiteBouton(ligne, membre));
+            }
+            return res;
+        }
+
         /// <summary>Le texte avec commentaires (`//`, `/* */`) et littéraux (`"…"`, `@"…"`, `'x'`) blanchis ; les sauts de ligne sont gardés.</summary>
         private static string SansCommentairesNiChaines(string s)
         {
@@ -307,10 +359,16 @@ namespace MafiaCleanCity.Shell
         /// <summary>Cas 0 au dernier appui : plafond `Melange` plein, la régie a basculé l'appui sur le voile (compté par `Regie.BasculesVoile`).</summary>
         public bool BasculeAuPlafond { get; private set; }
 
+        /// <summary>Le membre qui a créé ce bouton, tel que le compilateur l'a posé (« BuildFiche »).</summary>
+        public string SiteMembre { get; private set; } = "";
+        /// <summary>La ligne de l'appel à `Retour.NouveauBouton`, posée par le compilateur ; 0 si inconnue.</summary>
+        public int SiteLigne { get; private set; }
+
         /// <summary>Posé par `Retour.NouveauBouton` seulement.</summary>
-        public void Init(Button b, Graphic surfaceNommee)
+        public void Init(Button b, Graphic surfaceNommee, string membre = "", int ligne = 0)
         {
             bouton = b; surface = surfaceNommee;
+            SiteMembre = membre ?? ""; SiteLigne = ligne;
         }
 
         public void OnPointerDown(PointerEventData eventData)
