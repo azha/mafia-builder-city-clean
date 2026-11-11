@@ -137,9 +137,13 @@ namespace MafiaCleanCity.Shell.Tests
                 // `target_count` non lu (0) : le dénominateur reste un entier cohérent, jamais « sur 0 » ni une accolade
                 Assert.AreEqual("Fait pour 1 sur 2 : Cette carte n’est plus là.", ApresGesteHl.Mot(d, 0));
 
-                // une clé d'arrêt GÉNÉRIQUE ne dit rien de plus que l'écran : la phrase de repli du client
+                // une clé d'arrêt GÉNÉRIQUE (ou non servie) ne dit rien de plus que le préfixe SERVI, sans son « : » final — jamais une phrase de repli du client (f2 11/11)
                 d.stopped_at_i18n_key = "error.resource.not_found";
-                StringAssert.EndsWith(ApresGesteHl.PhraseDeRepli(), ApresGesteHl.Mot(d, 3));
+                Assert.AreEqual("Fait pour 1 sur 3", ApresGesteHl.Mot(d, 3));
+                d.stopped_at_i18n_key = "";
+                Assert.AreEqual("Fait pour 1 sur 3", ApresGesteHl.Mot(d, 3), "aucune clé d'arrêt : le préfixe seul");
+                d.stopped_at_i18n_key = "error.hl_card.inconnue";
+                Assert.AreEqual("Fait pour 1 sur 3", ApresGesteHl.Mot(d, 3), "clé non servie : le préfixe seul");
             }
             finally { I18nCatalog.Oublier(); }
         }
@@ -179,15 +183,112 @@ namespace MafiaCleanCity.Shell.Tests
             finally { I18nCatalog.Oublier(); }
         }
 
+        // ------------------------------------------------------------------ la VUE des cadres 6-7 (pure)
+
+        private static HlCardDto Carte(bool structurelle = false) => new HlCardDto
+        {
+            card_id = "c1", decision_type_key = "DAMAGED_BUILDING", impact_bucket = "major", urgency_bucket = "pressing", structural = structurelle, target_count = 2,
+        };
+
+        private static ApresGesteHl.IssueDuGeste Ok(CommitResponseDto d, bool structurelle = false) => new ApresGesteHl.IssueDuGeste { Carte = Carte(structurelle), Reponse = d };
+
+        private static ApresGesteHl.IssueDuGeste Refus(string cle, string phrase) => new ApresGesteHl.IssueDuGeste { Carte = Carte(), CleDeRefus = cle, PhraseDeRefus = phrase };
+
         [Test]
-        public void LEchecDeLaPremiereCible_DitRienNEstParti_AvecLaPhraseServieOuLeRepli()
+        public void Vue_Executee_CadreSix_TrancheeAvecTampon_MotServi_LigneSelonLaFile()
         {
             try
             {
                 I18nCatalog.ChargerPourTest("fr", BundleDuDesign());
-                Assert.AreEqual("Rien n’est parti : ça n’a pas pu se faire pour l’instant.", ApresGesteHl.RienNEstParti(null));
-                Assert.AreEqual("Rien n’est parti : Cette carte n’est plus là.", ApresGesteHl.RienNEstParti("Cette carte n’est plus là."));
-                Assert.AreEqual(ApresGesteHl.RienNEstParti(null), ApresGesteHl.RienNEstParti("   "), "une phrase vide est un repli");
+                var d = Reponse("executed", "hl.outcome.damaged_building.executed", 2);
+                ApresGesteHl.VueApres v = ApresGesteHl.Vue(Ok(d), 2, 0, null);
+                Assert.AreEqual(ApresGesteHl.Issue.Executee, v.Issue);
+                Assert.AreEqual("Vous avez tranché", v.Grave);
+                Assert.AreEqual("Les travaux sont lancés et payés pour 2 locaux. L’activité reprend à la fin du chantier.", v.Mot);
+                Assert.IsFalse(v.MotRouge);
+                Assert.IsTrue(v.CarteTranchee); Assert.IsTrue(v.Tampon); Assert.IsFalse(v.Deja);
+                Assert.AreEqual("Retour à l’accueil", v.Action);
+                Assert.AreEqual("Rien d’autre à trancher pour l’instant.", v.SousLigne, "file vide");
+                Assert.AreEqual("Plusieurs attendent encore", ApresGesteHl.Vue(Ok(d), 2, 3, null).SousLigne, "file non vide : un MOT, jamais un chiffre");
+                // arrêt partiel : le préfixe servi (+ la phrase servie de l'erreur) ; y compris sans phrase servie : le préfixe SEUL, sans « : »
+                var p = Reponse("executed", "hl.after_choice.partial_stop", 1, "t1", "error.hl_card.not_found");
+                Assert.AreEqual("Fait pour 1 sur 2 : Cette carte n’est plus là.", ApresGesteHl.Vue(Ok(p), 2, 0, null).Mot);
+                p.stopped_at_i18n_key = "";
+                Assert.AreEqual("Fait pour 1 sur 2", ApresGesteHl.Vue(Ok(p), 2, 0, null).Mot);
+            }
+            finally { I18nCatalog.Oublier(); }
+        }
+
+        [Test]
+        public void Vue_Notee_DitCEstNote_Navigate_EtCleNonServie_NeDonnentAucuneVue()
+        {
+            try
+            {
+                I18nCatalog.ChargerPourTest("fr", BundleDuDesign());
+                ApresGesteHl.VueApres v = ApresGesteHl.Vue(Ok(Reponse("noted", "hl.after_choice.noted", 0)), 2, 0, null);
+                Assert.AreEqual(ApresGesteHl.Issue.Notee, v.Issue);
+                Assert.AreEqual("C’est noté", v.Grave);
+                Assert.AreEqual("Rien ne bouge. On en reparlera si ça empire.", v.Mot);
+                Assert.IsTrue(v.Tampon, "la carte est tranchée (committed)");
+                Assert.IsNull(ApresGesteHl.Vue(Ok(Reponse("navigate", null, 0)), 0, 0, null), "navigate : aucun mot servi, aucune vue — la carte remonte tout de suite (TD-938)");
+                Assert.IsNull(ApresGesteHl.Vue(Ok(Reponse("executed", "hl.outcome.inconnue.executed", 1)), 1, 0, null), "clé non servie : rien, jamais un mot du client");
+                Assert.IsNull(ApresGesteHl.Vue(null, 0, 0, null));
+                Assert.IsNull(ApresGesteHl.Vue(Refus(null, null), 0, 0, null), "refus sans clé servie (réseau) : rien à lire, le refus se dit sur place");
+            }
+            finally { I18nCatalog.Oublier(); }
+        }
+
+        [Test]
+        public void Vue_LesTroisCodesHlCard_EtLEchecDeLaPremiereCible()
+        {
+            try
+            {
+                I18nCatalog.ChargerPourTest("fr", BundleDuDesign());
+                // 409 déjà tranché : le TITRE servi en grave, aucun mot-or, la pastille, PAS de tampon neuf
+                ApresGesteHl.VueApres dj = ApresGesteHl.Vue(Refus(ApresGesteHl.CleDejaTranchee, "C’était déjà tranché"), 2, 0, null);
+                Assert.AreEqual(ApresGesteHl.Issue.DejaTranchee, dj.Issue);
+                Assert.AreEqual("C’était déjà tranché", dj.Grave);
+                Assert.IsNull(dj.Mot); Assert.IsTrue(dj.Deja); Assert.IsFalse(dj.Tampon);
+                // 404 (y c. carte `superseded`, B1) et 409 « rien à agir » : aucun grave, le mot = la phrase SERVIE
+                ApresGesteHl.VueApres nf = ApresGesteHl.Vue(Refus(ApresGesteHl.CleIntrouvable, "Cette carte n’est plus là."), 2, 0, null);
+                Assert.AreEqual(ApresGesteHl.Issue.Disparue, nf.Issue);
+                Assert.IsNull(nf.Grave); Assert.AreEqual("Cette carte n’est plus là.", nf.Mot); Assert.IsFalse(nf.Tampon); Assert.IsFalse(nf.MotRouge);
+                ApresGesteHl.VueApres ra = ApresGesteHl.Vue(Refus(ApresGesteHl.CleRienAFaire, "Plus rien à faire sur cette carte."), 2, 0, null);
+                Assert.AreEqual(ApresGesteHl.Issue.RienAFaire, ra.Issue);
+                Assert.IsNull(ra.Grave); Assert.AreEqual("Plus rien à faire sur cette carte.", ra.Mot);
+                // l'échec de la 1ʳᵉ cible : la carte RESTE (ni tampon ni .tranchee), mot rouge = la phrase SERVIE de la route
+                ApresGesteHl.VueApres ec = ApresGesteHl.Vue(Refus("error.core_loops.structural_cap_exhausted", "Votre décision du jour est déjà prise."), 2, 0, null);
+                Assert.AreEqual(ApresGesteHl.Issue.CarteReste, ec.Issue);
+                Assert.AreEqual("La carte reste sur la table", ec.Grave);
+                Assert.AreEqual("Votre décision du jour est déjà prise.", ec.Mot); Assert.IsTrue(ec.MotRouge);
+                Assert.IsFalse(ec.Tampon); Assert.IsFalse(ec.CarteTranchee);
+                Assert.AreEqual("La carte vous attend encore.", ec.SousLigne);
+                // sans phrase servie (clé générique) : la phrase EXISTANTE de la carte, jamais « Rien n'est parti : … »
+                Assert.AreEqual("La décision n’a pas été prise.", ApresGesteHl.Vue(Refus("error.resource.state_conflict", null), 2, 0, null).Mot);
+            }
+            finally { I18nCatalog.Oublier(); }
+        }
+
+        [Test]
+        public void LeJeton_TroisEtats_SansChiffre_EtLaStructurelleTrancheeLePrend()
+        {
+            Assert.AreEqual(ApresGesteHl.EtatDuJeton.Libre, ApresGesteHl.Jeton(null, false));
+            Assert.AreEqual(ApresGesteHl.EtatDuJeton.Libre, ApresGesteHl.Jeton(new StructuralBudgetDto { used = 0, cap_reached = false }, false));
+            Assert.AreEqual(ApresGesteHl.EtatDuJeton.Pris, ApresGesteHl.Jeton(new StructuralBudgetDto { used = 1, cap_reached = true }, false));
+            Assert.AreEqual(ApresGesteHl.EtatDuJeton.FermeeAujourdhui, ApresGesteHl.Jeton(new StructuralBudgetDto { used = 0, cap_reached = true }, false), "cap atteint ET used = 0");
+            Assert.AreEqual(ApresGesteHl.EtatDuJeton.Pris, ApresGesteHl.Jeton(new StructuralBudgetDto { used = 0, cap_reached = false }, true), "une carte structurelle vient d'être tranchée : le budget lu à l'ouverture est périmé");
+            try
+            {
+                I18nCatalog.ChargerPourTest("fr", BundleDuDesign());
+                var ouverture = new StructuralBudgetDto { used = 0, cap_reached = false };
+                var d = Reponse("executed", "hl.outcome.damaged_building.executed", 1); d.structural = true;
+                Assert.AreEqual(ApresGesteHl.EtatDuJeton.Pris, ApresGesteHl.Vue(Ok(d, true), 1, 0, ouverture).Jeton);
+                d.structural = false;
+                Assert.AreEqual(ApresGesteHl.EtatDuJeton.Libre, ApresGesteHl.Vue(Ok(d), 1, 0, ouverture).Jeton, "tactique : le jeton ne bouge pas");
+                Assert.AreEqual("libre", ApresGesteHl.MotDuJeton(ApresGesteHl.EtatDuJeton.Libre));
+                Assert.AreEqual("pris", ApresGesteHl.MotDuJeton(ApresGesteHl.EtatDuJeton.Pris));
+                Assert.AreEqual("fermée aujourd’hui", ApresGesteHl.MotDuJeton(ApresGesteHl.EtatDuJeton.FermeeAujourdhui));
+                Assert.AreEqual("votre grande décision du jour", ApresGesteHl.PetitTexteDuJeton());
             }
             finally { I18nCatalog.Oublier(); }
         }

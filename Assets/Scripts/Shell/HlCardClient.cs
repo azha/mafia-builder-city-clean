@@ -39,6 +39,9 @@ namespace MafiaCleanCity.Shell
         public int TimeoutSeconds = MafiaCleanCity.ClientHttp.DelaiParDefautS;
         /// <summary>La phrase SERVIE du dernier refus (`RefusServi.Phrase` : null si le corps n'en porte pas, ou si la clé est générique) ; null après un succès.</summary>
         public string DernierePhraseDeRefus { get; private set; }
+        /// <summary>La CLÉ servie du dernier refus (`user_facing_i18n_key`, `RefusServi.Cle`) — y compris générique (la phrase est alors null) ; null après un succès ou sans clé servie.
+        /// C'est elle qui dit QUEL refus c'est (`error.hl_card.not_found|already_resolved|nothing_to_act_on`, ou une erreur de la route de la 1ʳᵉ cible).</summary>
+        public string DerniereCleDeRefus { get; private set; }
 
         /// <summary>L'option posée : 0 = AGIR (la recommandation), 1 = ne pas agir (`hl-card.controller.ts`, D1 du lot « agit » : absent/null ⇒ 1).</summary>
         public const int OptionAgir = 0, OptionLaisser = 1;
@@ -82,8 +85,9 @@ namespace MafiaCleanCity.Shell
                 MafiaCleanCity.ClientHttp.Authentifier(req, bearer);
                 MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);
                 yield return req.SendWebRequest();
-                DernierePhraseDeRefus = req.result == UnityWebRequest.Result.Success ? null
-                    : MafiaCleanCity.I18n.RefusServi.Phrase(req.downloadHandler != null ? req.downloadHandler.text : null);
+                string corpsRefus = req.result == UnityWebRequest.Result.Success || req.downloadHandler == null ? null : req.downloadHandler.text;
+                DernierePhraseDeRefus = MafiaCleanCity.I18n.RefusServi.Phrase(corpsRefus);
+                DerniereCleDeRefus = MafiaCleanCity.I18n.RefusServi.Cle(corpsRefus);
 
                 if (req.result == UnityWebRequest.Result.Success) onOk?.Invoke(req.downloadHandler.text);
                 else onErr?.Invoke(req.responseCode, $"{path} failed ({req.responseCode}) {req.error}");

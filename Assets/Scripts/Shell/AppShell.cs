@@ -1843,6 +1843,14 @@ namespace MafiaCleanCity.Shell
                 // joueur ne voit jamais* — c'est le défaut exact qui laissait la Revue du jour invisible depuis W3.U1.
                 hlCard.OnOuvrirDetail += () => MonterLocataireEnSurimpression<DecisionDetailScreenController>().OnDecisionTranchee += RelireLAccueilApresUneDecision;
                 hlCard.OnDecisionTranchee += RelireLAccueilApresUneDecision;   // f2 08/10 nuit : plus de geste mort
+                // L'APRÈS-GESTE (cadres 6-7) : ④ lève l'issue (vue d'`ApresGesteHl`), ⑤ la rend sur sa table feutre ; son « Retour à l'accueil » relit l'Accueil comme tout le reste.
+                hlCard.FileEnAttente = dto.queue != null ? dto.queue.Length : 0;
+                hlCard.OnApresGeste += (carte, vue) =>
+                {
+                    DecisionDetailScreenController detail = MonterLocataireEnSurimpression<DecisionDetailScreenController>();
+                    detail.OnDecisionTranchee += RelireLAccueilApresUneDecision;
+                    detail.AfficherApresGeste(carte, vue);
+                };
                 hlCard.SetPayload(Token, dto.hl_card, dto.structural_budget);
             }
             else

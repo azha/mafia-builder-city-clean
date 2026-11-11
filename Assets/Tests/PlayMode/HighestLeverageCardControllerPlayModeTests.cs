@@ -153,13 +153,12 @@ namespace MafiaCleanCity.Shell.Tests
             // ⛔ GESTE MORT fermé (f2 08/10 nuit) : le commit ACCEPTÉ est annoncé au shell (qui relit l'Accueil) — une fois, aucun refus montré.
             Assert.AreEqual(1, ctrl.DecisionsTranchees, "le commit accepté lève OnDecisionTranchee (le shell relit l'Accueil)");
             Assert.IsNull(ctrl.RefusRendu, "aucun refus après un commit accepté");
-            // L'APRÈS-GESTE (chunk 3) : quand le back SERT le mot (`outcome_i18n_key`), la carte le dit et n'annonce qu'au « Retour à l'accueil » ;
-            // tant qu'il ne le sert pas, elle remonte tout de suite (DecisionsTranchees déjà compté ci-dessus dans les deux cas).
-            if (ctrl.RenderedState == HighestLeverageCardController.CardState.ApresGeste)
+            // L'APRÈS-GESTE (chunk 3) : quand le back SERT le mot (`outcome_i18n_key`), ④ lève `OnApresGeste` (le shell monte ⑤ en mode après : cadres 6-7) et n'annonce pas
+            // `OnDecisionTranchee` (⑤ l'annoncera au « Retour à l'accueil ») ; tant qu'il ne le sert pas, elle remonte tout de suite.
+            if (ctrl.DerniereVue != null)
             {
-                Assert.IsFalse(string.IsNullOrWhiteSpace(ctrl.ApresMot), "l'après-geste dit un mot SERVI");
-                Assert.IsTrue(ctrl.RetourVisible, "« Retour à l'accueil » est le seul geste de la carte tranchée");
-                ctrl.SetPayload(token, payload.hl_card, payload.structural_budget);   // la MÊME carte (terminale côté back) : le 409 se teste sur une carte fraîche du client
+                Assert.IsFalse(string.IsNullOrWhiteSpace(ctrl.DerniereVue.Mot), "l'après-geste dit un mot SERVI");
+                Assert.IsFalse(string.IsNullOrWhiteSpace(ctrl.DerniereVue.Action), "« Retour à l'accueil » est le geste de la ligne-or");
             }
             // …et un REFUS se dit : la même carte, déjà tranchée (terminale), rend 409 — la phrase est MONTRÉE, jamais une erreur muette.
             yield return ctrl.RequestCommitViaTypedConfirm(ctrl.MotCle);
