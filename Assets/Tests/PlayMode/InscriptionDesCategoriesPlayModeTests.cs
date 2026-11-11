@@ -63,11 +63,14 @@ namespace MafiaCleanCity.Tests
         }
 
         /// <summary>Les catégories déclarées que RIEN ne couvre (ni le filtre, ni une exclusion nommée, ni la dette). Pure.</summary>
-        internal static List<string> NonCouvertes(IEnumerable<string> declarees, List<string> inscrites)
+        /// <summary>`dette` : la dette à opposer (défaut : la vraie). Le contrôle I0 en passe une SYNTHÉTIQUE, parce que la vraie est
+        /// vide depuis le 11/11 (ManometreOracle inscrite) — sans cela il n'aurait plus de dette à ne pas voir.</summary>
+        internal static List<string> NonCouvertes(IEnumerable<string> declarees, List<string> inscrites, ISet<string> dette = null)
         {
+            dette = dette ?? NonInscritesConnues;
             bool Prise(string c) => inscrites.Any(p => Regex.IsMatch(c, p));
             bool Exclue(string c) => FamillesExclues.Keys.Any(f => c.StartsWith(f, System.StringComparison.Ordinal)) || SondesExclues.ContainsKey(c);
-            return declarees.Distinct().Where(c => !Prise(c) && !Exclue(c) && !NonInscritesConnues.Contains(c)).OrderBy(c => c).ToList();
+            return declarees.Distinct().Where(c => !Prise(c) && !Exclue(c) && !dette.Contains(c)).OrderBy(c => c).ToList();
         }
 
         private static IEnumerable<string> Declarees(string source) =>
@@ -77,7 +80,7 @@ namespace MafiaCleanCity.Tests
         public void I0_ControlePositif_UneCategorieNeuveEstVue_UneExclueNon()
         {
             var inscrites = new List<string> { "EcranFile" };
-            CollectionAssert.AreEqual(new[] { "ZzzNeuve" }, NonCouvertes(new[] { "ZzzNeuve", "EcranFile", "CaptureZzz", "SondeGelVolontaire", "ManometreOracle" }, inscrites),
+            CollectionAssert.AreEqual(new[] { "ZzzNeuve" }, NonCouvertes(new[] { "ZzzNeuve", "EcranFile", "CaptureZzz", "SondeGelVolontaire", "ZzzEnDette" }, inscrites, new HashSet<string> { "ZzzEnDette" }),
                 "la neuve est VUE ; l'inscrite, la famille exclue, la sonde et la dette ne le sont pas");
             Assert.IsEmpty(NonCouvertes(new[] { "EcranFileN5" }, inscrites), "règle d'Unity : préfixe NON ancré — « EcranFile » prend « EcranFileN5 »");
             Assert.AreEqual(3, Declarees("[Category(\"A\")] x; // [Category(\"B\")]\n[UnityTest, Category(\"C\")] [Category(\"D\")]").Count(),
