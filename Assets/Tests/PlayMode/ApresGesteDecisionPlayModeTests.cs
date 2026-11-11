@@ -369,7 +369,12 @@ namespace MafiaCleanCity.Shell.Tests
             yield return Stabiliser();
             Texture2D d = Rendre();
             RectInt dj = Fenetre((RectTransform)e.GetComponentsInChildren<Transform>(true).First(x => x.name == "Deja"));
-            Color32 sous = d.GetPixel(dj.xMin + 3, dj.yMin + dj.height / 2);
+            // le PAPIER sous la pastille = la MÉDIANE par canal de l'intérieur de sa boîte (le filet pointillé et le texte y sont minoritaires ; un pixel unique tombait sur le trait brique)
+            var rs = new System.Collections.Generic.List<int>(); var gs = new System.Collections.Generic.List<int>(); var bs = new System.Collections.Generic.List<int>();
+            for (int y = dj.yMin + 2; y < dj.yMax - 2; y++) for (int x = dj.xMin + 2; x < dj.xMax - 2; x++) { Color32 p = d.GetPixel(x, y); rs.Add(p.r); gs.Add(p.g); bs.Add(p.b); }
+            Assert.Greater(rs.Count, 100, "fenêtre de la pastille non vide (anti-vacuité)");
+            rs.Sort(); gs.Sort(); bs.Sort();
+            Color32 sous = new Color32((byte)rs[rs.Count / 2], (byte)gs[gs.Count / 2], (byte)bs[bs.Count / 2], 255);
             Object.DestroyImmediate(d);
             TMPro.TextMeshProUGUI mot = Texte(e, "Deja/Mot");
             Assert.GreaterOrEqual(Contraste(mot.color, sous), 4.5f, $"pastille DÉJÀ TRANCHÉE sur le papier désaturé ({sous}) : maquette 6,14:1, jeu avant 4,45:1");

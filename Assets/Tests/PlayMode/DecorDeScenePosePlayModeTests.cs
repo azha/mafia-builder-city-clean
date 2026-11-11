@@ -60,7 +60,8 @@ namespace MafiaCleanCity.Tests.PlayMode
             //   contrôleur (CLIENT-1) — à déléguer à Filets.
             //   Bandes BRANCHÉE le 08/10 (F13 : le filet haut de PORTÉE / URGENCE, `Filets.Poser`) — retirée de la dette.
             //   PlaqueLaiton et TapisFeutre BRANCHÉES le 08/10 (juge d'ensemble r2, F7 + F8 : le geste « LES LIRE MAINTENANT » et le liseré d'or du feutre, `Filets.Poser`) — retirées de la dette.
-            { "⑤", new[] { "CarteOr", "CarteOrTranchee", "Deja", "I", "I_2", "LigneOr", "Mano", "On", "Piece", "Piece_2", "TamponDiag" } },
+            //   Deja, LigneOr et TamponDiag BRANCHÉES (chunk 3c, cadres 6-7 : la pastille `.deja`, la `.ligne-or` et le tampon `.tampon-diag`, `Filets.Poser`) — retirées de la dette (D6b, créneau du 11/11).
+            { "⑤", new[] { "CarteOr", "CarteOrTranchee", "I", "I_2", "Mano", "On", "Piece", "Piece_2" } },
             // ㉙ (08/10) — toutes les recettes de blocs (tableau, sections, coups, pied) : blocs de CLIENT-1 — à déléguer à Filets.
             { "㉙", new[] { "Av", "Av_2", "Bas", "Doss", "Ecu", "Ecu_2", "Entete", "Env", "Fam", "FamVisee", "Geste", "GesteRouge", "L", "Mano", "Rappel", "Res", "Res_2", "Res_3", "Res_4", "Rien", "ViseeTag" } },
             // ⑭ (08/10) — la tôle posée ; les blocs de l'écran (le manomètre de CLIENT-3 à venir, les fiches de la semaine) :
