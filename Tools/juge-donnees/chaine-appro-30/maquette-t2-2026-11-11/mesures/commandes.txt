@@ -1,0 +1,53 @@
+# Juge données ⊥ — ㉚ chaîne d'appro — tour 2 borné — 2026-11-11
+# Tous les jetons sont masqués (Bearer ***). Compte JETABLE : callsign jd2-1794419019.
+# player_id du compte jetable : 01a1cbb5-4e53-718f-bf43-26b6a476f19a (lu en base, lecture seule).
+
+## 0. Pile et build
+docker ps --format '{{.Names}}\t{{.Status}}'
+curl -s -D - -o /dev/null http://localhost/v1/supply-chain/graph   # → HTTP/1.1 401 ; X-Server-Build: 35bdd6cb
+#   corps du 401 conservé : 00-graph-401-sans-jeton.json (code AUTH_TOKEN_MISSING)
+# Le module du domaine est IDENTIQUE entre le build servi (35bdd6cb) et le commit du dossier (6040a213) :
+git -C ~/project/mafia-clean-city diff --name-only 35bdd6cb 6040a213 -- services/game-back/src/core_loops/supply_chain/ | wc -l   # → 0
+git -C ~/project/mafia-clean-city diff --name-only 35bdd6cb 6040a213 -- services/game-back/src/citysim/ | wc -l                  # → 0
+git -C ~/project/mafia-clean-city diff --name-only 35bdd6cb 6040a213 | wc -l                                                    # → 28 (contrôle positif : le diff n'est pas vide)
+
+## 1. Compte jetable + corps réels
+KEY=$(python3 -c 'import uuid;print(uuid.uuid4())'); CS="jd2-$(date +%s)"
+curl -s -X POST http://localhost/v1/auth/signup -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $KEY" -d "{\"callsign\":\"$CS\",\"password\":\"pw-$CS\"}"   # → 01-signup.json (jeton à payload.data.access_token)
+curl -s -X POST http://localhost/v1/session/open -H "Authorization: Bearer ***" -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $KEY2" -d '{}'                                              # → 02-session-open.json : HTTP 422 « client_version is required. »
+                                                                                   #   (le kit de départ est déjà octroyé au signup : 5 bâtiments, 5 nœuds)
+curl -s -H "Authorization: Bearer ***" http://localhost/v1/supply-chain/graph       # → 03-graph-neuf-p1.json / -p2.json (HTTP 200)
+curl -s -H "Authorization: Bearer ***" http://localhost/v1/me/buildings             # → 04-me-buildings.json (HTTP 200)
+
+## 2. Dimensionnement — PAS une action joueur : le seam _test, qui appelle le CODE DE PRODUCTION
+##    (supply-chain-test.controller.ts:94-104 → LegAccrualService.recordThroughput, la vraie formule D5).
+##    Raison : `supply_chain_legs` n'est écrit QUE par une ARRIVÉE de transit
+##    (distribution-transit.service.ts:182) et le tick citysim ne tourne pas sur cette pile
+##    (supply-node-pressure.repository.ts:305 : « CITYSIM_CONTINUOUS_LOOPS n'est posé que sur staging »).
+POST /v1/_test/supply-chain/record-throughput {playerId, origin, destination, cargoGrams, routeSinuosityIndex:1, gameMinute:100}
+  1503→1501 g=6000 · 1505→1503 g=1200 · 1504→1502 g=400 · 1502→1505 g=0 · 1501→1504 g=700
+  # → 05-graph-dimensionne-p1.json (legs=4) puis, avec la 5e, 06-* (legs=5 ; les 4 valeurs de debt_bucket)
+POST /v1/_test/supply-chain/run-backpressure-update {playerId, gameMinute:101}      # → {sourcesAccrued:3, nodesPropagated:2}
+  # → 06-graph-dimensionne-tick-p1.json / -p2.json : 2 nœuds has_arrow=true, bande `silent`
+POST .../run-backpressure-update gameMinute 102..106                               # → 07-graph-6ticks.json : 5 nœuds `mild`, 3 sans flèche (sources), 2 avec
+POST .../run-mycelial-decay {playerId, gameMinute: 200,220,240,260,280,300}         # → dette retombée à `fresh` partout
+POST .../run-backpressure-update {playerId, gameMinute:301}                         # → {sourcesAccrued:0, nodesPropagated:0} (RELIEF)
+  # → 08-graph-apres-relief.json : 3 nœuds `mild`, has_arrow=false — et en base is_blocked_output = f pour les 5
+
+## 3. Vérité en base (lecture seule, compte jetable uniquement)
+docker exec mafia-clean-city-pg-1 psql -tAc "select building_id, round(backpressure_index::numeric,3), is_blocked_output, arrow_to_building_id
+  from supply_node_pressure where player_id='01a1cbb5-4e53-718f-bf43-26b6a476f19a' order by building_id"
+# 118fd731…|0.088|f|   29448617…|0.160|f|   44b2051e…|0.038|f|   6a90732c…|0.160|f|   e7c75e3e…|0.160|f|
+
+## 4. Maquette épinglée
+git -C ~/project/atelier3d-mafia-c2 show 943ee47b:ecrans-brennar-6.html > maquette-943ee47b-ecrans-brennar-6.html
+# 6904 lignes, 2 660 983 octets, sha256 f884ca1527892d1ef959a9b5aa9312c9f37cae79150317475a28f488243bcc42
+# (le dossier annonce « ~570 Ko » : la mesure dit 2,66 Mo — sans effet sur le jugement)
+# 155 <div class="cadre"> ; le cadre portant le libellé ㉚ est l'index 154 en 0-based → cadre-154.html, aside-154.html
+git -C ~/project/atelier3d-mafia-c2 diff --numstat ec35deec 943ee47b   # → 19  9  ecrans-brennar-6.html  (19+9 = 28 lignes) → p5-diff.patch
+
+## 5. Contrôle d'arithmétique
+python3 -I controle-arithmetique.py        # VERT : |B|=21, |M non appariés|=11, somme=32 = 32 lignes
+# contrôles NÉGATIFS (sur copie dans le scratchpad) : clé B mise à « – » → ROUGE ; une ligne retirée → ROUGE (trou [5])

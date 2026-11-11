@@ -1,0 +1,33 @@
+#	cote	information	B	M	statut	classe
+1	B	|nodes| (cardinal de la liste servie)	●	M08 liste « Les maillons », 5 entrées	5 servis sur compte NEUF, dessinés 5	OK
+2	B	nodes[].building_id	●	M10 (clé de jointure du nom)	id opaque, jamais dessiné tel quel ; sert la jointure	OK
+3	B	nodes[].bucket	●	M09 pastille + M11 libellé d'état	4 valeurs, 4 libellés, 4 couleurs	OK
+4	B	nodes[].has_arrow	●	M12 « ↳ refoule vers »	1 flèche sur 5 maillons	OK
+5	B	nodes[].arrow_to_building_id	●	M13 nom cible de la flèche	cible = un maillon de la liste	OK
+6	B	|legs| (cardinal de la liste servie)	●	M15 liste « Les liaisons », 4 entrées	0 sur compte neuf, 5 sur compte dimensionné	OK
+7	B	legs[].leg_id	●	–	ASSUMÉ (dette nommée, cadre suivant)	ASSUME
+8	B	legs[].origin_building_id	●	M16 nom d'origine	nom servi par /me/buildings	OK
+9	B	legs[].destination_building_id	●	M17 nom de destination	nom servi par /me/buildings	OK
+10	B	legs[].debt_bucket	●	M18 libellé d'état de liaison	4 valeurs, 4 libellés	OK
+11	B	legs[].bypassed	●	M19 « contournée » + bordure pointillée	1 liaison sur 4	OK
+12	B	|routes| (cardinal)	●	–	ASSUMÉ (dette nommée, cadre suivant)	ASSUME
+13	B	routes[].route_id	●	–	ASSUMÉ	ASSUME
+14	B	routes[].origin_building_id	●	–	ASSUMÉ	ASSUME
+15	B	routes[].destination_building_id	●	–	ASSUMÉ	ASSUME
+16	B	routes[].sinuosity_stress_bucket	●	–	ASSUMÉ	ASSUME
+17	B	routes[].time_to_collapse_bucket	●	–	ASSUMÉ	ASSUME
+18	B	routes[].state	●	–	ASSUMÉ	ASSUME
+19	B	routes[].rebuilding	●	–	ASSUMÉ	ASSUME
+20	B	buildings[].building (/v1/me/buildings — clé de jointure)	●	–	plomberie : jointure, jamais dessinée	OK
+21	B	buildings[].name_i18n (/v1/me/buildings)	●	M10 + M13 + M16 + M17 (14 noms dessinés)	gabarit FR identique au dessin	OK
+22	M	M01 « ARGENT 24 850 € » (barre)	–	●	chrome HUD, source hors route du cadre	ASSUME
+23	M	M02 « CHALEUR / Tiède » + jauge SVG (barre)	–	●	chrome HUD, source hors route du cadre	ASSUME
+24	M	M03 « JOUR 12 » (barre)	–	●	chrome HUD, source hors route du cadre	ASSUME
+25	M	M04 « Plein jour » (barre)	–	●	chrome HUD, source hors route du cadre	ASSUME
+26	M	M05 titre « La chaîne »	–	●	libellé statique ratifié f2 11/11 ; clé i18n client à créer	ASSUME
+27	M	M06 sous-titre « Chaque maillon, sa pression ; chaque liaison, son entretien. »	–	●	libellé statique ratifié f2 11/11 ; clé i18n client à créer	ASSUME
+28	M	M07 titron « Les maillons »	–	●	libellé statique ratifié f2 11/11 ; clé i18n client à créer	ASSUME
+29	M	M14 titron « Les liaisons »	–	●	libellé statique ratifié f2 11/11 ; clé i18n client à créer	ASSUME
+30	M	M12b littéral « ↳ refoule vers »	–	●	libellé statique ratifié f2 11/11 ; clé i18n client à créer	ASSUME
+31	M	M19b littéral « contournée »	–	●	libellé statique ratifié f2 11/11 ; clé i18n client à créer	ASSUME
+32	M	M17b glyphe « → » (liaison)	–	●	glyphe statique	ASSUME
