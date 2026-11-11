@@ -25,11 +25,23 @@ namespace MafiaCleanCity.CityMap.Tests
     {
         private GameObject hote;
 
-        [SetUp] public void SetUp() { MotsDesEnumeres.OublierLesManquants(); I18nCatalog.Oublier(); }
+        private float hautAvant, basAvant;
+
+        /// <summary>⛔ HERMÉTIQUE AUX INSETS (11/11) : `CompressionScreenController` lit `ShellChrome.BottomInsetPx` (STATIQUE) pour la marge basse de sa pile. Seule, la catégorie part d'un process neuf (insets à 0) et
+        /// passe 9/9 ; dans un run complet, la valeur laissée par un test précédent peut écraser la fenêtre de la pile et la jauge ne dessine plus rien (J3 : 0 pixel d'or, J6 : aucun filet). Le banc pose donc
+        /// ses insets (0, 0) — la condition sous laquelle ses cotes ont été mesurées — et rend ceux qu'il a trouvés.</summary>
+        [SetUp]
+        public void SetUp()
+        {
+            hautAvant = ShellChrome.TopInsetPx; basAvant = ShellChrome.BottomInsetPx;
+            ShellChrome.PublierInsets(0f, 0f);
+            MotsDesEnumeres.OublierLesManquants(); I18nCatalog.Oublier();
+        }
 
         [TearDown]
         public void TearDown()
         {
+            ShellChrome.PublierInsets(hautAvant, basAvant);
             if (hote != null) Object.DestroyImmediate(hote);
             hote = null;
             I18nCatalog.Oublier();
