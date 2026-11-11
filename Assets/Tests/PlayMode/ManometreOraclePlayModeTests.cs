@@ -324,11 +324,21 @@ namespace MafiaCleanCity.Shell.Tests
 
         // angle : convention TRIGONOMÉTRIQUE standard (0°=est/3h, 90°=nord/12h, sens anti-horaire),
         // cohérente avec `Mathf.Cos/Sin` et le docblock de `TopBarController.BuildManometre`.
-        private static Color SamplePolar(Texture2D tex, float cx, float cy, float radius, float angleDeg)
+        /// <summary>L'INDEX du pixel qui CONTIENT le point (cx + r·cos, cy + r·sin), coordonnées continues
+        /// de `WorldToScreenPoint` (le pixel i couvre [i, i+1[). TD-884 : l'ancien `RoundToInt` lisait le
+        /// pixel dont le CENTRE est à +0,5, soit un biais d'un demi-pixel vers le haut et la droite — sans
+        /// effet tant que l'instrument était aveugle, mais à r = 21 px il déplaçait l'échantillon du haut
+        /// de la piste hors de son encre (Oracle3, secteur [80,100]). Même index pour la LECTURE et pour
+        /// l'ÉCRITURE des contrôles positifs.</summary>
+        private static (int px, int py) IndexPx(float cx, float cy, float radius, float angleDeg)
         {
             float rad = angleDeg * Mathf.Deg2Rad;
-            int px = Mathf.RoundToInt(cx + radius * Mathf.Cos(rad));
-            int py = Mathf.RoundToInt(cy + radius * Mathf.Sin(rad));
+            return (Mathf.FloorToInt(cx + radius * Mathf.Cos(rad)), Mathf.FloorToInt(cy + radius * Mathf.Sin(rad)));
+        }
+
+        private static Color SamplePolar(Texture2D tex, float cx, float cy, float radius, float angleDeg)
+        {
+            var (px, py) = IndexPx(cx, cy, radius, angleDeg);
             px = Mathf.Clamp(px, 0, tex.width - 1);
             py = Mathf.Clamp(py, 0, tex.height - 1);
             return tex.GetPixel(px, py);
@@ -375,7 +385,7 @@ namespace MafiaCleanCity.Shell.Tests
         private void GardesInstrument(string oracle, Geo g, Texture2D avec, Texture2D sans)
         {
             Debug.Log($"[{oracle}] RT={rendRt.width}x{rendRt.height} (texture {avec.width}x{avec.height}) " +
-                      $"rayon du médaillon projeté={g.MedallionRadius:F2} px (attendu {RayonMedaillonAttenduPx} ± {RayonMedaillonTolerancePx})");
+                      $"rayon du médaillon projeté={g.MedallionRadius:F2} px (attendu {RayonMedaillonAttenduPx} ± {RayonMedaillonTolerancePx}) centre=({g.Cx:F2},{g.Cy:F2})");
             // (a) EFFET de l'échelle — le rayon PROJETÉ, pas `scaleFactor`.
             Assert.AreEqual(RayonMedaillonAttenduPx, g.MedallionRadius, RayonMedaillonTolerancePx,
                 $"INSTRUMENT : le rayon du médaillon projeté vaut {g.MedallionRadius:F2} px, pas {RayonMedaillonAttenduPx} — " +
@@ -468,7 +478,21 @@ namespace MafiaCleanCity.Shell.Tests
                 {
                     // évite les angles où le filet bas de barre / le losange décoratif dominent
                     if (a > 250f && a < 290f) continue; // proche du "bas" (270°) — laissé de côté ici
-                    sum += SamplePolar(tex, geo.Cx, geo.Cy, ringR, a);
+                    // TD-884 : le PIC, pas un point. L'anneau fait 3 px avec 1,5 px d'anti-crénelage de
+                    // chaque côté : un échantillon à `ringR` lit une couleur mêlée au fond (mesuré : un anneau
+                    // forcé à accentDanger ressortait à 0,143 de lui-même, donc au-dessus du seuil 0,10 de la
+                    // propriété 2 — qui ne pouvait pas voir ce qu'elle garde). On prend, sur la bande de
+                    // l'anneau, le pixel LE PLUS ÉLOIGNÉ du fond du cadran (pris 6 px plus à l'intérieur).
+                    Color fondCadran = SamplePolar(tex, geo.Cx, geo.Cy, geo.MedallionRadius - 6f, a);
+                    Color pic = SamplePolar(tex, geo.Cx, geo.Cy, ringR, a);
+                    float dPic = ColorDistance(pic, fondCadran);
+                    for (float rr = geo.MedallionRadius - 3f; rr <= geo.MedallionRadius; rr += 0.5f)
+                    {
+                        Color c = SamplePolar(tex, geo.Cx, geo.Cy, rr, a);
+                        float d = ColorDistance(c, fondCadran);
+                        if (d > dPic) { dPic = d; pic = c; }
+                    }
+                    sum += pic;
                     n++;
                 }
                 Color avgRing = new Color(sum.r / n, sum.g / n, sum.b / n);
@@ -539,6 +563,7 @@ namespace MafiaCleanCity.Shell.Tests
                 // ── propriété 2 : sous alarme, ce n'est PAS le rouge d'alerte sémantique brut ──
                 Color rawDanger = DesignTokens.Current.accentDanger;
                 float distToRaw = ColorDistance(alarmRing, rawDanger);
+                Debug.Log($"[VerdictRing] calme={calmRing} alarme={alarmRing} accentDanger={rawDanger} dist(calme,alarme)={ColorDistance(calmRing, alarmRing):F3} dist(alarme,danger)={distToRaw:F3}");
                 Assert.Greater(distToRaw, NotRawDangerMinDistance,
                     $"l'anneau alarme ({alarmRing}) est trop proche de accentDanger brut ({rawDanger}, " +
                     $"dist={distToRaw:F3}) — doctrine : une TEINTE du laiton, pas un rouge d'alerte générique dupliqué");
@@ -828,15 +853,23 @@ namespace MafiaCleanCity.Shell.Tests
 
                 for (float sectorStart = 0f; sectorStart < 180f; sectorStart += ArcSectorWidthDeg)
                 {
-                    bool anyInk = false;
-                    for (float a = sectorStart; a < sectorStart + ArcSectorWidthDeg && !anyInk; a += 2f)
-                        for (float r = arcR - 2.5f; r <= arcR + 2.5f && !anyInk; r += 1f)
+                    // TD-884 : pas RADIAL de 0,5 (et non 1) — l'encre de la piste (5 px, bord extérieur à arcR,
+                    // anti-crénelage de 1,5 px) n'est jugeable qu'aux rayons ≥ ~20,4 (en dessous, la boîte des
+                    // libellés couvre tout le bas : pas de fond de référence). Un pas de 1 ne posait qu'UN
+                    // échantillon dans cette frange. La BANDE (arcR ± 2,5) et le seuil (ArcInkEpsilon) sont inchangés.
+                    float meilleure = 0f;
+                    for (float a = sectorStart; a < sectorStart + ArcSectorWidthDeg; a += 2f)
+                        for (float r = arcR - 2.5f; r <= arcR + 2.5f; r += 0.5f)
                         {
                             float ig2;
                             if (!TryAngleDeBaseHorsTexte(geo, r, out ig2)) continue;
-                            if (DiffersFromRadialBaseline(tex, geo, r, a)) anyInk = true;
+                            float aBase = ig2;
+                            Color vu = SamplePolar(tex, geo.Cx, geo.Cy, r, a);
+                            Color fondRef = SamplePolar(tex, geo.Cx, geo.Cy, r, aBase);
+                            meilleure = Mathf.Max(meilleure, ColorDistance(vu, fondRef));
                         }
-                    if (!anyInk) emptyUpperSectors.Add($"[{sectorStart:F0},{sectorStart + ArcSectorWidthDeg:F0}]");
+                    Debug.Log($"[Oracle3] secteur [{sectorStart:F0},{sectorStart + ArcSectorWidthDeg:F0}] : écart maximal à la référence {meilleure:F3} (seuil {ArcInkEpsilon})");
+                    if (!(meilleure > ArcInkEpsilon)) emptyUpperSectors.Add($"[{sectorStart:F0},{sectorStart + ArcSectorWidthDeg:F0}]");
                 }
                 Assert.IsEmpty(emptyUpperSectors,
                     "trou dans l'arc du demi-cercle SUPÉRIEUR (aucune encre track/cold/hot trouvée, comparé " +
@@ -895,9 +928,7 @@ namespace MafiaCleanCity.Shell.Tests
                     {
                         float aB; TryAngleDeBaseHorsTexte(geo, r, out aB);
                         Color baseline = SamplePolar(tex, geo.Cx, geo.Cy, r, aB);
-                        float rad = a * Mathf.Deg2Rad;
-                        int px = Mathf.RoundToInt(geo.Cx + r * Mathf.Cos(rad));
-                        int py = Mathf.RoundToInt(geo.Cy + r * Mathf.Sin(rad));
+                        var (px, py) = IndexPx(geo.Cx, geo.Cy, r, a);
                         if (px >= 0 && py >= 0 && px < tex.width && py < tex.height) tex.SetPixel(px, py, baseline);
                     }
                 tex.Apply();
@@ -922,9 +953,7 @@ namespace MafiaCleanCity.Shell.Tests
                 Color trackColorObserved = SamplePolar(tex, geo.Cx, geo.Cy, arcInkR, 150f); // secteur upper connu peint
                 for (float a = LowerProbeStartDeg; a <= LowerProbeEndDeg; a += 1f)
                 {
-                    float rad = a * Mathf.Deg2Rad;
-                    int px = Mathf.RoundToInt(geo.Cx + arcInkR * Mathf.Cos(rad));
-                    int py = Mathf.RoundToInt(geo.Cy + arcInkR * Mathf.Sin(rad));
+                    var (px, py) = IndexPx(geo.Cx, geo.Cy, arcInkR, a);
                     if (px >= 0 && py >= 0 && px < tex.width && py < tex.height) tex.SetPixel(px, py, trackColorObserved);
                 }
                 tex.Apply();
