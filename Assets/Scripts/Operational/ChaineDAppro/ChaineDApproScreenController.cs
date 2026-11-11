@@ -110,6 +110,17 @@ namespace MafiaCleanCity.Operational
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
         private readonly List<string> renderedTexts = new List<string>();
 
+        /// <summary>㉚ « Les deux gestes » — LE POINT D'INJECTION UNIQUE DES COÛTS par mode (TD-1046). Aucun coût n'est servi aujourd'hui, et son NOM sur le fil est inconnu : le
+        /// client n'en lit aucun (`CoutsNonServis` ⇒ chaque mode est ÉTEINT, règle (3) de f2). BACK-1 servira les coûts ; l'adaptation au corps servi se fait ICI (une
+        /// implémentation de `ICoutsParMode`), pas dans la feuille. Les tests PlayMode injectent des coûts pour prouver le chemin actif (garde G-D1).</summary>
+        public ICoutsParMode Couts = CoutsNonServis.Instance;
+        private ChaineDApproFeuille feuille;
+        /// <summary>La feuille des gestes (voile + panneau) — crochet de test ; null tant qu'aucun geste n'a été ouvert.</summary>
+        public ChaineDApproFeuille Feuille => feuille;
+        private bool gesteEnCours;
+        /// <summary>Un geste est parti et n'a pas encore répondu : toute autre ouverture ou tout autre choix est ignoré (un geste à la fois).</summary>
+        public bool GesteEnCours => gesteEnCours;
+
         private RectTransform racinePleinEcran;
         private ChaineDApproClient client;
         private bool initialise;
@@ -620,7 +631,8 @@ namespace MafiaCleanCity.Operational
             Dictionary<string, BatimentPossedeDto> parId = ChaineDApproGraphe.ParId(BatimentsServis);
             List<ChaineDApproGraphe.Maillon> maillons = ChaineDApproGraphe.Maillons(dto?.nodes, parId);
             List<ChaineDApproGraphe.Liaison> liaisons = ChaineDApproGraphe.Liaisons(dto?.legs, parId);
-            if (maillons.Count == 0 && liaisons.Count == 0)
+            List<ChaineDApproGraphe.Route> routes = ChaineDApproGraphe.Routes(dto?.routes, parId);
+            if (maillons.Count == 0 && liaisons.Count == 0 && routes.Count == 0)
             {
                 // MESURÉ (2026-09-03, compte `operational_demo@example.test`) : `nodes: []`. Sous l'en-tête, à la marge haute du corps (`.abody` 10 px).
                 GameObject corpsVide = NouveauUI("CorpsVide", chaineRoot);
@@ -648,6 +660,12 @@ namespace MafiaCleanCity.Operational
                 Titron(contenu, "TitronLiaisons", Libelle.Gabarit("appro.titre.les_liaisons", "Les liaisons"), maillons.Count > 0 ? 9f : 0f);
                 foreach (ChaineDApproGraphe.Liaison l in liaisons) ConstruireLiaison(contenu, l);
             }
+            if (routes.Count > 0)
+            {
+                // cadre 159 : le titron « Les routes » (`appro.titre.les_routes`, NEUF ratifié f2 — TD-1048) puis une ligne par route ; même marge que « Les liaisons » quand une section le précède
+                Titron(contenu, "TitronRoutes", Libelle.Gabarit("appro.titre.les_routes", "Les routes"), maillons.Count > 0 || liaisons.Count > 0 ? 9f : 0f);
+                foreach (ChaineDApproGraphe.Route r in routes) ConstruireRoute(contenu, r);
+            }
         }
 
         // ── les pièces du cadre 154 (CSS `.appr6 .entete`, `.titron`, `.noeud.gr30-n`, `.gr30-l`, `.etat`, recopié du cadre @4ae50cca) ──
@@ -657,16 +675,16 @@ namespace MafiaCleanCity.Operational
         // re-mesurage de 48-53 les déplacerait aussi ici (TD-1043) ; sinon une
         // recette locale recopiée du CSS (patron `DistributionScreenController.RecetteCadreB`) — la mesure Chromium indexe les cadres par
         // POSITION, et re-mesurer aujourd'hui remuerait les recettes des autres écrans.
-        private static Color FondEntete => Hex("#1e1b16");
-        private static Color EncreTitreChaine => Hex("#f0dfc4");
-        private static Color EncreSousTitreChaine => Hex("#9a8f78");
+        public static Color FondEntete => Hex("#1e1b16");
+        public static Color EncreTitreChaine => Hex("#f0dfc4");
+        public static Color EncreSousTitreChaine => Hex("#9a8f78");
         private static Color EncreTitron => Hex("#8a8069");
-        private static Color FondMaillon => Hex("#221f1a");
-        private static Color EncreNomMaillon => Hex("#efe6d4");
-        private static Color EncreFleche => Hex("#91876e");
-        private static Color FondLiaison => Hex("#1d1a16");   // ⚠️ d = 5,00 de `readableTextDark` (seuil TD-612 : 4) — un ajustement de palette peut le faire rougir
-        private static Color EncreNomLiaison => Hex("#d8cfbb");
-        private static SpecFilet[] FiletLiaison => new[] { new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, Teinte.Hex("#38332a"), rayon: 3f, couleurCss: "38332a") };
+        public static Color FondMaillon => Hex("#221f1a");
+        public static Color EncreNomMaillon => Hex("#efe6d4");
+        public static Color EncreFleche => Hex("#91876e");
+        public static Color FondLiaison => Hex("#1d1a16");   // ⚠️ d = 5,00 de `readableTextDark` (seuil TD-612 : 4) — un ajustement de palette peut le faire rougir
+        public static Color EncreNomLiaison => Hex("#d8cfbb");
+        internal static SpecFilet[] FiletLiaison => new[] { new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, Teinte.Hex("#38332a"), rayon: 3f, couleurCss: "38332a") };
         /// <summary>`.gr30-l.gr30-contourne{border-style:dashed;border-color:#6f6656}` — la liaison `bypassed`.</summary>
         public static SpecFilet[] FiletLiaisonContournee => new[] { new SpecFilet(Cotes.Tous, 1f, StyleFilet.Tirete, Teinte.Hex("#6f6656"), rayon: 3f, couleurCss: "6f6656") };
         private static SpecFilet[] FiletEtat(Teinte t) => new[] { new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, t, rayon: 2f) };
@@ -810,7 +828,7 @@ namespace MafiaCleanCity.Operational
         {
             GameObject go = NouveauUI("Liaison", parent);
             if (l.Contournee) go.name = "LiaisonContournee";   // nom d'objet (gardes) — sans ternaire à deux littéraux (garde N3)
-            AjouterFond(go, FondLiaison);
+            Image fondDeLaLigne = AjouterFond(go, FondLiaison);
             Filets.Poser((RectTransform)go.transform, l.Contournee ? FiletLiaisonContournee : FiletLiaison);
             HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset(PxTrait(9f), PxTrait(9f), PxTrait(5f), PxTrait(5f));
@@ -819,6 +837,9 @@ namespace MafiaCleanCity.Operational
             h.childControlWidth = true; h.childControlHeight = true;
             h.childForceExpandWidth = false; h.childForceExpandHeight = false;
             AddLayoutElement(go, flexibleHeight: 0);
+            // le point d'entrée d'« Entretenir la liaison » : la ligne ENTIÈRE (son fond en est la cible de clic) ; TOUJOURS interactable (§1 : « en entretien » n'est pas servi, le refus servi le dit)
+            PoserLeGeste(go, fondDeLaLigne, ChaineDApproGestes.Entretien,
+                new CibleDeGeste { Id = l.Id, Origine = l.Origine, Destination = l.Destination }, !string.IsNullOrEmpty(l.Id));
 
             GameObject t = NouveauUI("T", go.transform);
             VerticalLayoutGroup v = t.AddComponent<VerticalLayoutGroup>();
@@ -858,7 +879,103 @@ namespace MafiaCleanCity.Operational
                 ctn.enableWordWrapping = false;
                 TrackText(ctn.text);
             }
+            else if (l.EnEntretien)
+            {
+                // `.gr30-ent{font:italic 7px;color:#91876e}` — « en entretien » (`legs[].maintaining`, servi ET vrai), JAMAIS avec « contournée » (E3)
+                TextMeshProUGUI ent = NouveauTexteFiche(dr.transform, "EnEntretien", Libelle.Gabarit("appro.etiquette.en_entretien", "en entretien"), 7f, EncreFleche, false);
+                ent.fontStyle = FontStyles.Italic;
+                ent.enableWordWrapping = false;
+                TrackText(ent.text);
+            }
             Etat(dr.transform, l.Mot, l.Rang);
+        }
+
+        /// <summary>Une route (`.gr30-l.gr30-r`, cadre 159) : origine, « → » destination, les deux bandes (sinuosité · effondrement, chacune dans sa couleur) · « En reconstruction » si `rebuilding` · le mot de l'état.
+        /// La ligne est le point d'entrée de « Reconstruire la route » ; NON interactable pendant la reconstruction (`rebuilding`, servi — la seule extinction côté ligne).</summary>
+        private void ConstruireRoute(Transform parent, ChaineDApproGraphe.Route r)
+        {
+            GameObject go = NouveauUI("Route", parent);
+            if (r.EnReconstruction) go.name = "RouteEnReconstruction";   // nom d'objet (gardes) — sans ternaire à deux littéraux (garde N3)
+            Image fondDeLaLigne = AjouterFond(go, FondLiaison);
+            Filets.Poser((RectTransform)go.transform, FiletLiaison);
+            HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(PxTrait(9f), PxTrait(9f), PxTrait(5f), PxTrait(5f));
+            h.spacing = Px(8f);
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true; h.childControlHeight = true;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            AddLayoutElement(go, flexibleHeight: 0);
+            PoserLeGeste(go, fondDeLaLigne, ChaineDApproGestes.Reconstruction,
+                new CibleDeGeste { Id = r.Id, Origine = r.Origine, Destination = r.Destination }, !r.EnReconstruction && !string.IsNullOrEmpty(r.Id));
+
+            GameObject t = NouveauUI("T", go.transform);
+            VerticalLayoutGroup v = t.AddComponent<VerticalLayoutGroup>();
+            v.spacing = Px(2f);
+            v.childControlWidth = true; v.childControlHeight = true;
+            v.childForceExpandWidth = true; v.childForceExpandHeight = false;
+            AddLayoutElement(t, flexibleWidth: 1, minWidth: 0);
+            TextMeshProUGUI origine = NouveauTexteFiche(t.transform, "Origine", r.Origine, 7.4f, EncreNomLiaison, false);
+            origine.enableWordWrapping = true;
+            TrackText(origine.text);
+
+            GameObject vers = NouveauUI("Vers", t.transform);
+            HorizontalLayoutGroup hv = vers.AddComponent<HorizontalLayoutGroup>();
+            hv.spacing = Px(3f);
+            hv.childAlignment = TextAnchor.UpperLeft;
+            hv.childControlWidth = true; hv.childControlHeight = true;
+            hv.childForceExpandWidth = false; hv.childForceExpandHeight = false;
+            TextMeshProUGUI fleche = NouveauTexteFiche(vers.transform, "Fleche", "→", 9f, EncreTitron, true);   // un signe, pas un mot
+            fleche.enableWordWrapping = false;
+            AddLayoutElement(fleche.gameObject, flexibleWidth: 0);
+            TextMeshProUGUI destination = NouveauTexteFiche(vers.transform, "Destination", r.Destination, 7.4f, EncreNomLiaison, false);
+            destination.enableWordWrapping = true;
+            AddLayoutElement(destination.gameObject, flexibleWidth: 1, minWidth: 0);
+            TrackText(destination.text);
+
+            // `.gr30-bandes{display:flex;flex-wrap:wrap;gap:2px 8px;margin-top:3px;font:6.6px/1.2}` : UN texte qui revient à la ligne, chaque mot dans sa couleur (la bande de l'échelle du cadre 154 ;
+            // les balises sont CALCULÉES — aucun littéral de couleur)
+            GameObject bandes = NouveauUI("Bandes", t.transform);
+            VerticalLayoutGroup vb = bandes.AddComponent<VerticalLayoutGroup>();
+            vb.padding = new RectOffset(0, 0, PxTrait(3f), 0);
+            vb.childControlWidth = true; vb.childControlHeight = true;
+            vb.childForceExpandWidth = true; vb.childForceExpandHeight = false;
+            string couleurSin = ColorUtility.ToHtmlStringRGB(r.TeinteSinuosite.Resoudre());
+            string couleurEff = ColorUtility.ToHtmlStringRGB(r.TeinteEffondrement.Resoudre());
+            string ecart = "<space=" + Px(8f).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + ">";
+            TextMeshProUGUI mots = NouveauTexteFiche(bandes.transform, "Mots",
+                "<color=#" + couleurSin + ">" + r.MotSinuosite + "</color>" + ecart + "<color=#" + couleurEff + ">" + r.MotEffondrement + "</color>", 6.6f, EncreFleche, false);
+            mots.richText = true;
+            mots.enableWordWrapping = true;
+            TrackText(r.MotSinuosite);
+            TrackText(r.MotEffondrement);
+
+            GameObject dr = NouveauUI("Droite", go.transform);
+            HorizontalLayoutGroup hd = dr.AddComponent<HorizontalLayoutGroup>();
+            hd.spacing = Px(6f);
+            hd.childAlignment = TextAnchor.MiddleRight;
+            hd.childControlWidth = true; hd.childControlHeight = true;
+            hd.childForceExpandWidth = false; hd.childForceExpandHeight = false;
+            AddLayoutElement(dr, flexibleWidth: 0);
+            if (r.EnReconstruction)
+            {
+                // `.gr30-rec{font:italic 7px;color:#91876e}` — `routes[].rebuilding` (SERVI, qualitatif : jamais un compte à rebours) ; l'état reste « Ouverte » à côté
+                TextMeshProUGUI rec = NouveauTexteFiche(dr.transform, "EnReconstruction", Libelle.Gabarit("appro.etat.en_reconstruction", "En reconstruction"), 7f, EncreFleche, false);
+                rec.fontStyle = FontStyles.Italic;
+                rec.enableWordWrapping = false;
+                TrackText(rec.text);
+            }
+            Etat(dr.transform, r.MotEtat, r.RangEtat);
+        }
+
+        /// <summary>Pose le point d'entrée d'un geste sur une ligne : son fond devient la cible de clic, et un `Button` (sans transition : l'extinction ne repeint pas la ligne) ouvre la feuille.</summary>
+        private void PoserLeGeste(GameObject ligne, Image fond, SpecDeGeste spec, CibleDeGeste cible, bool interactable)
+        {
+            fond.raycastTarget = true;
+            Button b = ligne.AddComponent<Button>();
+            b.targetGraphic = fond;
+            b.transition = Selectable.Transition.None;
+            b.interactable = interactable;
+            b.onClick.AddListener(() => OuvrirLaFeuille(spec, cible));
         }
 
         /// <summary>Repli NOMMÉ sur échec réseau — jamais une exception, jamais un écran noir
@@ -869,6 +986,7 @@ namespace MafiaCleanCity.Operational
             ViderLaFiche();
             ViderEnfants(piedRoot);
             ViderEnfants(chaineRoot);
+            if (feuille != null) feuille.Fermer();   // plus de ligne sous elle : une feuille ouverte n'aurait plus de cible
             titreTexte.text = Libelle.De("appro", "titre", "La chaîne d'appro n'a pas répondu");
             // la phrase SERVIE du refus, sinon celle de l'écran — jamais `DerniereErreur` (garde de classe des refus)
             sousTitreTexte.text = PhraseDuRefus ?? Libelle.De("appro", "sous_titre", "Réessayez dans un instant.");
@@ -913,6 +1031,105 @@ namespace MafiaCleanCity.Operational
             // « Puis re-lit la route 1 » (brief §2) — pas `Charger()` : le bâtiment est déjà connu,
             // re-découvrir coûterait 1 à 2 appels inutiles.
             yield return RechargerPrecurseurs();
+        }
+
+        // ═══ ㉚ « Les deux gestes » — entretenir une liaison, reconstruire une route ═══════════════════
+        //
+        // Ouvrir (un `Button` sur la ligne) → choisir un mode (la feuille) → POST → 2xx : fermer + RELIRE le graphe (jamais le corps de réponse : E2) · refus : la phrase SERVIE dans la
+        // feuille, qui reste ouverte · échec réseau (`responseCode == 0`) : AUCUNE phrase (G-D5). Design `Tools/gestes-30/DESIGN.md`.
+
+        private void OuvrirLaFeuille(SpecDeGeste spec, CibleDeGeste cible)
+        {
+            if (gesteEnCours || racinePleinEcran == null || spec == null || cible == null || string.IsNullOrEmpty(cible.Id)) return;
+            if (feuille == null) feuille = new ChaineDApproFeuille(racinePleinEcran, Px, PxTrait, ChoisirUnMode, FermerLaFeuille);
+            feuille.Ouvrir(spec, cible, Couts, ChaineDApproGestes.JetonDisponible);
+        }
+
+        private void FermerLaFeuille()
+        {
+            if (feuille != null) feuille.Fermer();
+        }
+
+        /// <summary>Le choix d'un mode dans la feuille est-il permis ? La règle d'extinction est RELUE ici (`Actionnable`), jamais seulement l'état du bouton : un mode éteint ne part pas.</summary>
+        private bool PeutChoisir(ModeDeGeste mode)
+        {
+            if (gesteEnCours || feuille == null || !feuille.EstOuverte || mode == null) return false;
+            return ChaineDApproGestes.Actionnable(mode, ChaineDApproGestes.CentimesLisibles(Couts, mode.Id), ChaineDApproGestes.JetonDisponible);
+        }
+
+        private void ChoisirUnMode(ModeDeGeste mode)
+        {
+            if (PeutChoisir(mode)) StartCoroutine(GesteCoroutine(feuille.SpecOuverte, mode, feuille.CibleOuverte));
+        }
+
+        private IEnumerator GesteCoroutine(SpecDeGeste spec, ModeDeGeste mode, CibleDeGeste cible)
+        {
+            if (gesteEnCours) yield break;
+            gesteEnCours = true;
+            try   // revue ⊥ m5 : le drapeau retombe même si l'écran meurt pendant la relecture
+            {
+                bool ok = false; long code = 0; string erreur = null;
+                if (spec == ChaineDApproGestes.Reconstruction)
+                    yield return client.PostOperationalRoutesRebuild(token, cible.Id, new PostOperationalRoutesRebuildBody { mode = mode.Id },
+                        _ => ok = true, (c, m) => { code = c; erreur = m; });
+                else
+                    yield return client.PostSupplyChainLegsMaintain(token, cible.Id, new PostSupplyChainLegsMaintainBody { mode = mode.Id },
+                        _ => ok = true, (c, m) => { code = c; erreur = m; });
+                if (!ok)
+                {
+                    TraiterLEchecDuGeste(code, erreur, client.DernierePhraseDeRefus);
+                    yield break;
+                }
+                AppliquerLeSucces(mode);
+                // l'après-geste se RELIT (E2 : les deux bandes sont re-dérivées à chaque lecture) — « en entretien » (quand servi) ou « contournée », jamais les deux ; la route « Ouverte » ET « En reconstruction »
+                yield return RechargerChaine();
+            }
+            finally { gesteEnCours = false; }
+        }
+
+        /// <summary>Un 2xx : la feuille se ferme ; une décision STRUCTURELLE est dépensée localement (`JetonDeStructure.DepenseLocalement` : `Utilises` seul, jamais un cap fabriqué — TD-1050).</summary>
+        private void AppliquerLeSucces(ModeDeGeste mode)
+        {
+            FermerLaFeuille();
+            if (mode != null && mode.Structurel) JetonDeStructure.DepenseLocalement();
+        }
+
+        /// <summary>Un refus n'est QUE la phrase servie (`RefusServi.Phrase`, lue par le client) : `responseCode == 0` (réseau, corps vide) n'est PAS un refus — la feuille reste ouverte, sans phrase (G-D5).
+        /// Aucune phrase du client à la place : le « pas assez d'argent » n'est pas servi (TD-1046), la feuille se tait.</summary>
+        public static string PhraseDeRefusAMontrer(long code, string phraseServie)
+        {
+            if (code == 0) return null;
+            return string.IsNullOrEmpty(phraseServie) ? null : phraseServie;
+        }
+
+        private void TraiterLEchecDuGeste(long code, string message, string phraseServie)
+        {
+            DernierCodeErreur = code;
+            DerniereErreur = $"{code}: {message}";   // TECHNIQUE : jamais affichée
+            if (feuille != null) feuille.MontrerRefus(PhraseDeRefusAMontrer(code, phraseServie));
+        }
+
+        // ── crochets de test (patron `RendrePourTest` / `RefuserPourTest`) : ne prouvent jamais que le back émet ce corps, seulement ce que l'écran EN FAIT ──
+
+        /// <summary>Ouvre la feuille d'un geste sur une cible, comme le clic d'une ligne.</summary>
+        public void OuvrirLaFeuillePourTest(SpecDeGeste spec, CibleDeGeste cible) => OuvrirLaFeuille(spec, cible);
+
+        /// <summary>Choisit un mode de la feuille ouverte et ATTEND la fin du geste (POST puis relecture) — awaitable, contrairement au clic (patron `PasserCommandeEtRecharger`).</summary>
+        public IEnumerator ChoisirPourTest(ModeDeGeste mode)
+        {
+            if (!PeutChoisir(mode)) yield break;
+            yield return GesteCoroutine(feuille.SpecOuverte, mode, feuille.CibleOuverte);
+        }
+
+        /// <summary>Un geste a ÉCHOUÉ avec `code` et le corps d'erreur brut `corpsBrut` : la phrase servie de ce corps passe par la même règle que celle du vrai POST.</summary>
+        public void RefuserPourTest(long code, string corpsBrut) =>
+            TraiterLEchecDuGeste(code, "refus de test", MafiaCleanCity.I18n.RefusServi.Phrase(corpsBrut));
+
+        /// <summary>Un geste (de mode `mode`) a RÉUSSI et le graphe relu est `relu` : la feuille se ferme, une décision structurelle est dépensée localement, la chaîne est rendue sur ce corps.</summary>
+        public void ReussirPourTest(GetSupplyChainGraphResponseDto relu, ModeDeGeste mode = null)
+        {
+            AppliquerLeSucces(mode);
+            RendrePourTestChaine(relu, BatimentsServis);
         }
 
         // ═══ Construction de la mise en page ═════════════════════════════════════════════════
@@ -1035,7 +1252,7 @@ namespace MafiaCleanCity.Operational
         private static Color PerforationDuBon => new Color32(0xcb, 0xbf, 0xa4, 255);
         private static Color VertBon => DesignTokens.Current.accentSuccess;
 
-        private static Color Hex(string h)
+        internal static Color Hex(string h)
         {
             ColorUtility.TryParseHtmlString(h, out Color c);
             return c;
@@ -1387,12 +1604,24 @@ namespace MafiaCleanCity.Operational
             public int Rang;
         }
 
-        /// <summary>Une liaison telle qu'elle s'affiche. `Contournee` = `bypassed` (trait tireté + « contournée »).</summary>
+        /// <summary>Une liaison telle qu'elle s'affiche. `Contournee` = `bypassed` (trait tireté + « contournée »). `EnEntretien` = « en entretien » : `legs[].maintaining`
+        /// SERVI et vrai (TD-1047), et JAMAIS avec « contournée » (juge ㉚ E3 : un contournement n'est pas un entretien en cours) — si le corps porte les deux,
+        /// la contournée (déjà servie) garde la place.</summary>
         public sealed class Liaison
         {
             public string Id, Origine, Destination, Bande, Mot;
             public int Rang;
-            public bool Contournee;
+            public bool Contournee, EnEntretien;
+        }
+
+        /// <summary>Une route telle qu'elle s'affiche (cadre 159, `poser-chaine-routes.py`) : les deux noms, l'état (mot + rang de teinte), les deux bandes (sinuosité,
+        /// effondrement : mot + rang de teinte) et `EnReconstruction` = `rebuilding` SERVI (qualitatif — jamais le compte à rebours).</summary>
+        public sealed class Route
+        {
+            public string Id, Origine, Destination, Etat, MotEtat, MotSinuosite, MotEffondrement;
+            public int RangOrdre, RangEtat, RangEffondrement;   // RangOrdre : la place dans la liste (state) ; RangEtat : la teinte du mot
+            public Teinte TeinteSinuosite, TeinteEffondrement;
+            public bool EnReconstruction;
         }
 
         private static readonly System.Globalization.CompareInfo Francais = System.Globalization.CultureInfo.GetCultureInfo("fr-FR").CompareInfo;
@@ -1445,11 +1674,152 @@ namespace MafiaCleanCity.Operational
                     Mot = MotDette(g.debt_bucket),
                     Rang = RangDette(g.debt_bucket),
                     Contournee = g.bypassed,
+                    EnEntretien = g.MaintainingServi && g.maintaining && !g.bypassed,
                 });
             }
             l.Sort((a, b) =>
             {
                 int c = a.Rang.CompareTo(b.Rang);
+                if (c == 0) c = ParNom(a.Origine, b.Origine);
+                if (c == 0) c = ParNom(a.Destination, b.Destination);
+                if (c == 0) c = string.CompareOrdinal(a.Id, b.Id);
+                return c;
+            });
+            return l;
+        }
+
+        // ── les routes (cadre 159) : `state` draft|active|saturated|severed (`draft` n'a AUCUN écrivain en production — juge E1 : jamais dessiné), sinuosité
+        //    pristine|stressed|critical|severed, effondrement distant|approaching|imminent|na. Couleurs : la MÊME échelle que les bandes du cadre 154 (aucune
+        //    couleur neuve) ; le `na` de l'effondrement est neutre `#91876e` (`#8a8069` ne fait que 4,43:1 sur le fond de ligne). ──
+
+        /// <summary>Le rang d'ORDRE d'une route : `severed` → `saturated` → `active` (règle d'affichage du CLIENT, ratifiée f2 11/11 ; le back n'en sert aucun). Hors domaine ⇒ en dernier.</summary>
+        public static int RangEtatDeRoute(string state)
+        {
+            switch (state)
+            {
+                case "severed": return 0;
+                case "saturated": return 1;
+                case "active": return 2;
+                default: return RangHorsDomaine;
+            }
+        }
+
+        /// <summary>Le rang de TEINTE d'un état de route (échelle du cadre 154 : 0 rouge · 1 orange · 2 or · 3 vert) : coupée rouge, saturée orange, ouverte verte.</summary>
+        public static int RangDeTeinteDEtat(string state)
+        {
+            switch (state)
+            {
+                case "severed": return 0;
+                case "saturated": return 1;
+                case "active": return 3;
+                default: return RangHorsDomaine;
+            }
+        }
+
+        public static int RangEffondrement(string bucket)
+        {
+            switch (bucket)
+            {
+                case "imminent": return 0;
+                case "approaching": return 1;
+                case "distant": return 2;
+                case "na": return 3;
+                default: return RangHorsDomaine;
+            }
+        }
+
+        public static Teinte TeinteDeSinuosite(string bucket)
+        {
+            switch (bucket)
+            {
+                case "severed": return TeinteDeRang(0);
+                case "critical": return TeinteDeRang(1);
+                case "stressed": return TeinteDeRang(2);
+                case "pristine": return TeinteDeRang(3);
+                default: return TeinteDeRang(RangHorsDomaine);
+            }
+        }
+
+        public static Teinte TeinteDEffondrement(string bucket)
+        {
+            switch (bucket)
+            {
+                case "imminent": return TeinteDeRang(1);
+                case "approaching": return TeinteDeRang(2);
+                case "distant": return TeinteDeRang(3);
+                case "na": return Teinte.Hex("#91876e");
+                default: return TeinteDeRang(RangHorsDomaine);
+            }
+        }
+
+        /// <summary>Le mot d'un état de route : clé = la VALEUR servie (`appro.etat.active|saturated|severed`, NEUFS ratifiés f2 11/11 — TD-1048, non servis) ; hors domaine ⇒ le mot générique.</summary>
+        public static string MotEtatDeRoute(string state)
+        {
+            switch (state)
+            {
+                case "active": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "etat", "active", "Ouverte");
+                case "saturated": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "etat", "saturated", "Saturée");
+                case "severed": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "etat", "severed", "Coupée");
+                default: return MafiaCleanCity.I18n.Repli.Etat(state);
+            }
+        }
+
+        /// <summary>Le mot de sinuosité : clé = la VALEUR servie (`appro.sinuosite.*`, BACK-1 `lot/chaine-bandes-2` @1845e0e8, servis au cumul `74c5a0b0` — REUSE ; repli = le FR servi, compté).</summary>
+        public static string MotSinuosite(string bucket)
+        {
+            switch (bucket)
+            {
+                case "pristine": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "sinuosite", "pristine", "Droit au but");
+                case "stressed": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "sinuosite", "stressed", "Ça fait des détours");
+                case "critical": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "sinuosite", "critical", "Que des détours");
+                case "severed": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "sinuosite", "severed", "La route est coupée");
+                default: return MafiaCleanCity.I18n.Repli.Etat(bucket);
+            }
+        }
+
+        /// <summary>Le mot d'effondrement : clé = la VALEUR servie (`appro.effondrement.*`, mêmes sources).</summary>
+        public static string MotEffondrement(string bucket)
+        {
+            switch (bucket)
+            {
+                case "distant": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "effondrement", "distant", "Ça tient encore");
+                case "approaching": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "effondrement", "approaching", "Ça ne tiendra pas longtemps");
+                case "imminent": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "effondrement", "imminent", "Ça va lâcher");
+                case "na": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "effondrement", "na", "On ne sait pas encore");
+                default: return MafiaCleanCity.I18n.Repli.Etat(bucket);
+            }
+        }
+
+        /// <summary>Les routes dans l'ordre d'affichage : état (coupée → saturée → ouverte), puis effondrement (imminent → na), puis nom de l'origine (fr-FR), puis destination, puis
+        /// `route_id` (ordre TOTAL). Une route `draft` n'est PAS rendue (E1 : aucun écrivain, aucun mot ratifié). Liste vide si rien n'est servi.</summary>
+        public static List<Route> Routes(SupplyChainRouteDto[] routes, IReadOnlyDictionary<string, BatimentPossedeDto> parId)
+        {
+            var l = new List<Route>();
+            if (routes == null) return l;
+            foreach (SupplyChainRouteDto r in routes)
+            {
+                if (r == null || r.state == "draft") continue;
+                l.Add(new Route
+                {
+                    Id = r.route_id ?? "",
+                    Origine = NomDuBatiment(r.origin_building_id, parId),
+                    Destination = NomDuBatiment(r.destination_building_id, parId),
+                    Etat = r.state,
+                    MotEtat = MotEtatDeRoute(r.state),
+                    RangOrdre = RangEtatDeRoute(r.state),
+                    RangEtat = RangDeTeinteDEtat(r.state),
+                    MotSinuosite = MotSinuosite(r.sinuosity_stress_bucket),
+                    TeinteSinuosite = TeinteDeSinuosite(r.sinuosity_stress_bucket),
+                    MotEffondrement = MotEffondrement(r.time_to_collapse_bucket),
+                    TeinteEffondrement = TeinteDEffondrement(r.time_to_collapse_bucket),
+                    RangEffondrement = RangEffondrement(r.time_to_collapse_bucket),
+                    EnReconstruction = r.rebuilding,
+                });
+            }
+            l.Sort((a, b) =>
+            {
+                int c = a.RangOrdre.CompareTo(b.RangOrdre);
+                if (c == 0) c = a.RangEffondrement.CompareTo(b.RangEffondrement);
                 if (c == 0) c = ParNom(a.Origine, b.Origine);
                 if (c == 0) c = ParNom(a.Destination, b.Destination);
                 if (c == 0) c = string.CompareOrdinal(a.Id, b.Id);
