@@ -39,10 +39,10 @@ namespace MafiaCleanCity.CityMap.Tests
         {
             hautAvant = ShellChrome.TopInsetPx; basAvant = ShellChrome.BottomInsetPx;
             if (basAvant != 0f)
-                TestContext.Progress.WriteLine($"TD-950 : ShellChrome.BottomInsetPx={basAvant:F1} trouvé non nul au début de « {TestContext.CurrentContext.Test.Name} » — dernier test de la classe passé : {testPrecedent} (le TearDown restitue la valeur trouvée : le PREMIER message du process désigne la fuite, venue d'une autre classe si « aucun »)");
+                Debug.Log($"TD-950 : ShellChrome.BottomInsetPx={basAvant:F1} trouvé non nul au début de « {TestContext.CurrentContext.Test.Name} » — dernier test de la classe passé : {testPrecedent} (le TearDown restitue la valeur trouvée : le PREMIER message du process désigne la fuite, venue d'une autre classe si « aucun »)");
             else
                 // TÉMOIN (f2 11/11, socle §5) : un dispositif conditionnel imprime qu'il s'est ACTIVÉ ; sans cette ligne, « 0 fuite » ne se distingue pas de « jamais exécuté ».
-                TestContext.Progress.WriteLine($"TD-950 vérifié : inset=0 au début de {TestContext.CurrentContext.Test.Name}");
+                Debug.Log($"TD-950 vérifié : inset=0 au début de {TestContext.CurrentContext.Test.Name}");
             ShellChrome.PublierInsets(0f, 0f);
             MotsDesEnumeres.OublierLesManquants(); I18nCatalog.Oublier();
         }
