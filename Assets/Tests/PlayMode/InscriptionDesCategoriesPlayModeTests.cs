@@ -42,6 +42,8 @@ namespace MafiaCleanCity.Tests
         /// puis s'inscrit si elle est verte (ou sort avec sa raison). Ne fait que rétrécir.</summary>
         internal static readonly HashSet<string> NonInscritesConnues = new HashSet<string>
         {
+            // ㉑ EcranMarche (CLIENT-1, 11/11/2026) : écran NEUF, jamais joué (consigne statique) — se lance SEULE au prochain créneau, puis s'inscrit au filtre de MafiaCI si verte.
+            "EcranMarche",
             // 16 → 1 le 26/09 (créneau CLIENT-1, pile 256de0f8) : les 15 autres lancées et inscrites vertes (EtatDuShell verte après
             // de887d7d). ManometreOracle est SORTIE de la dette le 11/11/2026 (TD-884, CLIENT-2) : réécrite sur RenderTexture + caméra, le
             // gel d'Oracle1 est mort (0,07 s) ; 6 verts + 2 [Ignore] (TD-951) au créneau ; inscrite au filtre de MafiaCI. La dette est VIDE.

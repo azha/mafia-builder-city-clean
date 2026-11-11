@@ -1234,6 +1234,7 @@ namespace MafiaCleanCity.Shell
             // AUCUN helper i18n (balayage : zéro `I18n.`/`Traduire`/`Localise` dans les écrans), et
             // en introduire un ici serait une décision d'architecture déguisée en ajout de menu.
             ("la_vente", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "La vente"), () => MountTenant<SellingScreenController>()),      // ㉟
+            ("le_marche", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Le marché"), () => MountTenant<MafiaCleanCity.Operational.Marche.MarcheScreenController>()),   // ㉑ l'ardoise du courtier
             ("la_vitrine", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "La vitrine"), () => MountTenant<ShopScreenController>()),         // ㉓
             ("les_inspections", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Les inspections"), () => MountTenant<InspectionScreenController>()),   // ⑮
             ("le_commissariat", MafiaCleanCity.I18n.Libelle.De("plus", "entree", "Le commissariat"), () => MountTenant<PrecinctScreenController>()),     // ⑰
@@ -1514,7 +1515,7 @@ namespace MafiaCleanCity.Shell
             ("vos_journees", MafiaCleanCity.I18n.Libelle.De("plus", "groupe", "Vos journées"),
                 new[] { "la_revue_du_jour", "les_ordres_du_soir", "ce_que_vous_avez_confie", "la_semaine" }),
             ("vos_affaires", MafiaCleanCity.I18n.Libelle.De("plus", "groupe", "Vos affaires"),
-                new[] { "la_chaine_d_appro", "la_distribution", "la_vente", "raser_un_site" }),
+                new[] { "la_chaine_d_appro", "la_distribution", "la_vente", "le_marche", "raser_un_site" }),
             ("ce_qui_se_dit", MafiaCleanCity.I18n.Libelle.De("plus", "groupe", "Ce qui se dit"),
                 new[] { "le_journal_la_rue", "la_reputation", "le_conflit" }),
             ("ce_qui_vous_guette", MafiaCleanCity.I18n.Libelle.De("plus", "groupe", "Ce qui vous guette"),

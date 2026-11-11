@@ -64,6 +64,40 @@ namespace MafiaCleanCity.Operational.Tests
             // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : une clé restante, non servie à la pile du 08/10 (les 15 autres le sont : retirées ci-dessus). Les statuts et types d'acteur
             // sont lus par la VALEUR servie (`forensic.statut.*`, `forensic.acteur.lawyer|clerk`).
             "forensic.enseigne.rien_a_votre_nom",   // le sous-titre de l'enseigne du cadre 135 (sans point) : son rôle propre, la clé bloc.* est celle du texte `.rien`
+            // ㉑ LE MARCHÉ (CLIENT-1, 11/11 ; design Tools/marche-ardoise/DESIGN.md v1.1) : les 29 mots RATIFIÉS par f2 (FR + EN, MOTS-MARCHE-21.md), aucune clé `marche.*`
+            // servie à main 2ed39589 (grep : 0, contrôle positif plus.entree.la_vente = 2) — BACK-3 les servira (TD-1017). 32 clés dérivées (+ 3 par VALEUR de bande, + l'entrée du menu).
+            "marche.etat.on_interroge_le_tableau",
+            "marche.origine.herbe_des_friches",
+            "marche.origine.extrait_de_racine",
+            "marche.origine.resine_de_lull",
+            "marche.origine.lys_de_verre",
+            "marche.forme.briques",
+            "marche.forme.cristaux",
+            "marche.forme.plaque",
+            "marche.forme.prismes",
+            "marche.bande.hors_du_tableau",
+            "marche.pied.la_poudre_grise_ne_se_vend_pas_a_un_dealer_elle_se_place_au_rendez_vous_chez_ceux_du_verre",
+            "marche.bande.voyant_eteint",
+            "marche.pied.aucun_des_notres_n_a_jamais_rien_ecoule_la_bas_ce_n_est_pas_une_ligne_a_zero_c_est_une_ligne_jamais_ouverte_elle_s_allumera_le_jour_ou_un_de_vos_dealers_y_traitera",
+            "marche.pied.une_seule_source_jamais_recoupee_un_bruit_de_comptoir_on_ne_vous_dira_pas_le_prix_seulement_qu_on_en_parle",
+            "marche.pied.deux_sources_concordantes_ni_une_rumeur_ni_une_certitude_on_ne_vous_dira_pas_le_prix_ni_ce_qui_s_ecoule_seulement_a_quel_point_on_peut_s_y_fier",
+            "marche.pied.plusieurs_des_notres_y_ont_traite_les_sources_se_tiennent_on_ne_vous_dira_toujours_pas_le_prix_seulement_que_la_ligne_tient",
+            "marche.etat.le_tableau_ne_repond_pas",
+            "marche.enseigne.le_marche",
+            "marche.enseigne.tableau_du_verge_d_or",
+            "marche.compteur.lignes_connues",
+            "marche.compteur.sures",
+            "marche.compteur.quartiers_noirs",
+            "marche.entete.quartier",
+            "marche.substance.brindle",
+            "marche.substance.crick",
+            "marche.substance.hush",
+            "marche.substance.ash",
+            "marche.bande.low",
+            "marche.bande.moderate",
+            "marche.bande.high",
+            "marche.bas.lignes_sur_le_total",
+            "plus.entree.le_marche",
 
 
 
@@ -120,6 +154,8 @@ namespace MafiaCleanCity.Operational.Tests
             // l'exclusion « aucun site Libelle » était PÉRIMÉE ; la garde doit maintenant les voir à 0 repli sur la pile.
             ("PrecinctScreenController",         s => s.MonterLocataireEnSurimpression<MafiaCleanCity.CitySim.Precinct.PrecinctScreenController>()),
             ("SellingScreenController",          s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Selling.SellingScreenController>()),
+            // ㉑ (CLIENT-1, 11/11) : MESURÉ — tous ses mots passent par `Libelle` ; tant que BACK-3 ne les sert pas, ses replis sont dans la DetteDatee ci-dessus.
+            ("MarcheScreenController",           s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Marche.MarcheScreenController>()),
             // MESURÉ depuis le 2026-09-23 : ses 7 clés `tutoriel.ecran.*` sont servies à e7f52351 (7/7) — l'épingle de son exclusion
             // datée était devenue PÉRIMÉE, comme elle le prévoyait.
             ("TutorialScreenController",         s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Onboarding.TutorialScreenController>()),
