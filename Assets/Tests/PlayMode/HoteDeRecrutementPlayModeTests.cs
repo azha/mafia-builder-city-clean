@@ -240,5 +240,39 @@ namespace MafiaCleanCity.CityMap.Tests
             if (servie != null) ok(servie); else ko(erreur.code, erreur.message);
             yield break;
         }
+
+        // H12 (TD-878 suite) — « Réaffecter… » et « Attacher » : SEUL le budget structurel SPENT les grise (reassign = governor.commit(LIEUTENANT_ROLE_REASSIGN), attache = BEHAVIOR_SCRIPT_REPLACE,
+        // back @8d0184a4 ; aucun ne touche au roster) ; FULL ne les grise pas ; la raison est la même que celle du recrutement ; le libellé s'éteint.
+        private static void ExigerGestesStructurels(LieutenantScreenController e, bool grises, string phrase)
+        {
+            Assert.AreEqual(!grises, e.ReassignButtonInteractable, "« Réaffecter… » cliquable ssi le budget n'est pas dépensé");
+            Assert.AreEqual(!grises, e.AttachButtonInteractable, "« Attacher » cliquable ssi le budget n'est pas dépensé");
+            var tk = MafiaCleanCity.Theme.DesignTokens.Current;
+            Assert.AreEqual(grises ? tk.onSurfaceMuted : tk.accentGold, e.AttachLabelColor, "libellé de « Attacher »");
+            Assert.AreEqual(grises ? tk.onSurfaceMuted : tk.accentGold, e.ReassignLabelColor, "libellé de « Réaffecter… »");
+            if (!grises) { Assert.AreEqual("", e.ReassignReason); Assert.AreEqual("", e.AttachReason); return; }
+            StringAssert.Contains(phrase, e.ReassignReason);
+            StringAssert.Contains(phrase, e.AttachReason);
+        }
+
+        [UnityTest]
+        public IEnumerator H12_LeBudgetDepense_GriseReaffecterEtAttacher_PasLEquipeAuComplet()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { HostBlocage.CleBudgetDepense, "PHRASE SERVIE DU PLAFOND" } });
+            hote = new GameObject("LieutenantScreenController_GestesStructurels");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            ExigerGestesStructurels(ecran, false, null);
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(CorpsReelSpent));
+            ExigerGestesStructurels(ecran, true, "PHRASE SERVIE DU PLAFOND");
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(CorpsReelFull));
+            ExigerGestesStructurels(ecran, false, null);   // l'équipe au complet ne refuse NI la réaffectation NI l'attache
+            ExigerEtat(ecran, BlocageRecrutement.EquipeComplete, "au complet");
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(Bandes("SPENT", "FULL")));
+            ExigerGestesStructurels(ecran, true, "PHRASE SERVIE DU PLAFOND");
+            ecran.AppliquerHostEligibilite(null);   // lecture en échec ⇒ tout rouvert
+            ExigerGestesStructurels(ecran, false, null);
+        }
 }
 }
