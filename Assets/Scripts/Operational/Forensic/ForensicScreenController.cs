@@ -40,6 +40,9 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le roster servi (null : pas encore reçu OU route en erreur — voir <see cref="ActeursIndisponibles"/>).</summary>
         public ActeurDto[] DerniersActeurs { get; private set; }
         public bool ActeursIndisponibles { get; private set; }
+        /// <summary>TD-891 — le prix SERVI d'un renseignement, en cents (null : non servi, back plus ancien, ou route en erreur). Il n'est PAS affiché
+        /// (aucun cadre ne le dessine, ruling f2 11/11 : TD-988) ; servi, il RETIRE les notes « le prix n'est pas servi », devenues fausses.</summary>
+        public long? PrixDuRenseignementCents { get; private set; }
         /// <summary>Q1 — `lawyerId → nom de la personne` (null : pas reçu, route en erreur, ou aucun avocat au roster).</summary>
         public Dictionary<string, string> DerniersNoms { get; private set; }
         public bool NomsIndisponibles { get; private set; }
@@ -96,6 +99,7 @@ namespace MafiaCleanCity.Operational
             DernierChargement = null;
             DerniersActeurs = null;
             ActeursIndisponibles = false;
+            PrixDuRenseignementCents = null;
             DerniersNoms = null;
             NomsIndisponibles = false;
 
@@ -104,7 +108,8 @@ namespace MafiaCleanCity.Operational
                 (code, msg) => { DernierCodeErreur = code; DerniereErreur = msg; });
             yield return client.GetActeurs(token,
                 acteurs => DerniersActeurs = acteurs,
-                (code, msg) => { ActeursIndisponibles = true; if (DerniereErreur == null) { DernierCodeErreur = code; DerniereErreur = msg; } });
+                (code, msg) => { ActeursIndisponibles = true; if (DerniereErreur == null) { DernierCodeErreur = code; DerniereErreur = msg; } },
+                prix => PrixDuRenseignementCents = prix);
 
             // Q1 : les noms ne se demandent que s'il y a un AVOCAT au roster ; leur erreur laisse les références (jamais un bandeau).
             if (DossierCalculs.AUnAvocat(DerniersActeurs))
@@ -125,8 +130,9 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>Rend des corps FABRIQUÉS, sans réseau — réservé aux tests. Ne prouve jamais que le back émet ces corps, seulement ce
         /// que l'écran EN FAIT. `acteurs` null = la route est en erreur (« — »), `new ActeurDto[0]` = roster vide servi.</summary>
-        public void RendrePourTest(GetForensicResponseDto dto, ActeurDto[] acteurs = null, Dictionary<string, string> noms = null)
+        public void RendrePourTest(GetForensicResponseDto dto, ActeurDto[] acteurs = null, Dictionary<string, string> noms = null, long? prixServiCents = null)
         {
+            PrixDuRenseignementCents = prixServiCents;
             corpsImposeParUnTest = true;
             if (amorce != null) { StopCoroutine(amorce); amorce = null; }
             EnsureInitialized();
@@ -251,9 +257,13 @@ namespace MafiaCleanCity.Operational
 
         private void RendrePied()
         {
-            pied.gameObject.SetActive(Vue != VueDossier.Vide);
+            // TD-891 (ruling f2 11/11) : prix SERVI ⇒ les deux notes « le prix n'est pas servi » sont FAUSSES : retirées, rien d'inventé à leur place
+            // (le montant et sa note attendent le cadre du lot « acheter du renseignement », TD-988). Le geste reste éteint.
+            bool noteVraie = !PrixDuRenseignementCents.HasValue;
+            pied.gameObject.SetActive(Vue != VueDossier.Vide && (Vue == VueDossier.Pistes || noteVraie));
             boutonAcheter.gameObject.SetActive(Vue == VueDossier.Pistes);
-            note6.text = Vue == VueDossier.Acteurs
+            note6.gameObject.SetActive(noteVraie);
+            note6.text = !noteVraie ? "" : Vue == VueDossier.Acteurs
                 ? Riche("le renseignement s’achète {acteur par acteur} — éteint tant que {le prix n’est pas servi} : on n’achète pas sans savoir combien")
                 : Riche("sur un acteur, pas sur une piste — éteint : {le prix n’est pas servi}");
         }
