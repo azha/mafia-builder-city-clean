@@ -259,46 +259,41 @@ namespace MafiaCleanCity.Capture.Tests
                 "état POSÉ PAR SQL : UPDATE de la ligne du premier lieutenant du compte (last_gap 15000, consecutive_flag_months 1, tail_ramp_stage none) — l'atteinte réelle passe par le tick standing-gap-heat",
                 "état POSÉ PAR SQL : UPDATE de la ligne du premier lieutenant du compte (last_gap 15000, consecutive_flag_months 2, tail_ramp_stage passive) — l'atteinte réelle passe par le tick standing-gap-heat",
             };
+            bool signe = false;
             for (int k = 0; k < 3; k++)
-            {
-                yield return OuvrirSous(cs[k].Trim());
-                if (k == 0) yield return Signer();
-                shell.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.ForensicScreenController>();
-                MafiaCleanCity.Operational.ForensicScreenController ecran = null;
-                for (float f = Time.realtimeSinceStartup + 15f; ecran == null && Time.realtimeSinceStartup < f;)
-                {
-                    ecran = shell.ContentSlot.GetComponentInChildren<MafiaCleanCity.Operational.ForensicScreenController>(true);
-                    yield return null;
-                }
-                Assert.IsNotNull(ecran, $"㊴ non monté ({etats[k]})");
-                for (float f = Time.realtimeSinceStartup + 25f; ecran.DernierChargement == null && Time.realtimeSinceStartup < f;) yield return null;
-                Assert.IsNotNull(ecran.DernierChargement, $"㊴ ({etats[k]}) : `GET /v1/me/forensic` n'a rien rendu — la pile répond-elle ?");
-                for (int i = 0; i < 30; i++) yield return null;
-                Assert.AreEqual(etats[k], ecran.DernierChargement.lifestyle_alarm_bucket, $"㊴ ({etats[k]}) : la pile sert une autre bande — l'état n'est pas celui annoncé");
-                string nom = ecran.DernierChargement.lifestyle_lieutenant_name;
-                if (k == 0) Assert.IsTrue(string.IsNullOrEmpty(nom), "quiet : aucun nom servi"); else Assert.IsFalse(string.IsNullOrEmpty(nom), $"{etats[k]} : un nom devrait être servi");
-
                 foreach (string langue in new[] { "fr", "en" })
                 {
+                    // L'ANGLAIS se pose AVANT le shell : le shell code le français (ruling fiction) et ne se re-rend pas quand le catalogue change (le HUD resterait « Aube » : la garde d'encre du banc le refuse).
+                    // On charge donc le bundle EN SERVI (`GET /v1/i18n/bundle?locale=en`, route publique) ; l'amorçage du shell devient un no-op (`Amorcer` sort si `Charge`) et tout l'écran naît en anglais.
+                    MafiaCleanCity.I18n.I18nCatalog.Oublier();
                     if (langue == "en")
+                        yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(new MafiaCleanCity.I18n.I18nClient { BaseUrl = MafiaCleanCity.AdresseDuBack.Url, Locale = "en" }, null);
+                    yield return OuvrirSous(cs[k].Trim());
+                    Assert.AreEqual(langue, MafiaCleanCity.I18n.I18nCatalog.Locale, $"le catalogue n'est pas le bundle {langue} servi");
+                    if (!signe) { yield return Signer(); signe = true; }
+                    shell.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.ForensicScreenController>();
+                    MafiaCleanCity.Operational.ForensicScreenController ecran = null;
+                    for (float f = Time.realtimeSinceStartup + 15f; ecran == null && Time.realtimeSinceStartup < f;)
                     {
-                        MafiaCleanCity.I18n.I18nCatalog.Oublier();
-                        yield return MafiaCleanCity.I18n.I18nCatalog.Amorcer(new MafiaCleanCity.I18n.I18nClient { BaseUrl = MafiaCleanCity.AdresseDuBack.Url, Locale = "en" }, shell.Token);
-                        Assert.AreEqual("en", MafiaCleanCity.I18n.I18nCatalog.Locale, "le bundle servi n'est pas l'anglais");
-                        yield return ecran.Charger();   // l'écran recharge SES données réelles et se re-rend sous le catalogue anglais
-                        for (int i = 0; i < 30; i++) yield return null;
+                        ecran = shell.ContentSlot.GetComponentInChildren<MafiaCleanCity.Operational.ForensicScreenController>(true);
+                        yield return null;
                     }
-                    else Assert.AreEqual("fr", MafiaCleanCity.I18n.I18nCatalog.Locale, "le bundle servi n'est pas le français");
+                    Assert.IsNotNull(ecran, $"㊴ non monté ({etats[k]} {langue})");
+                    for (float f = Time.realtimeSinceStartup + 25f; ecran.DernierChargement == null && Time.realtimeSinceStartup < f;) yield return null;
+                    Assert.IsNotNull(ecran.DernierChargement, $"㊴ ({etats[k]} {langue}) : `GET /v1/me/forensic` n'a rien rendu — la pile répond-elle ?");
+                    for (int i = 0; i < 30; i++) yield return null;
+                    Assert.AreEqual(etats[k], ecran.DernierChargement.lifestyle_alarm_bucket, $"㊴ ({etats[k]}) : la pile sert une autre bande — l'état n'est pas celui annoncé");
+                    string nom = ecran.DernierChargement.lifestyle_lieutenant_name;
+                    if (k == 0) Assert.IsTrue(string.IsNullOrEmpty(nom), "quiet : aucun nom servi"); else Assert.IsFalse(string.IsNullOrEmpty(nom), $"{etats[k]} : un nom devrait être servi");
                     foreach ((int largeur, int hauteur) in Resolutions)
                         yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"E13_Dossier_{etats[k]}_{langue}_{largeur}x{hauteur}.png"), false, null);
                     var d = ecran.DernierChargement;
                     Noter("E13", $"㊴ Le dossier — {etats[k]} — {langue.ToUpperInvariant()}",
-                          $"ForensicScreenController · vue {ecran.Vue} · SERVI par la pile (vrai shell, compte jetable {DemoIdentityResolver.Empreinte(cs[k].Trim())}, bundle {langue} servi) : audit {d.audit_risk_bucket} · effluent {d.effluent_visibility_bucket} · train de vie {d.lifestyle_alarm_bucket} · nom « {d.lifestyle_lieutenant_name} » · clé du mot {d.lifestyle_alarm_label_key} — {poses[k]}",
+                          $"ForensicScreenController · vue {ecran.Vue} · SERVI par la pile (vrai shell, compte jetable {DemoIdentityResolver.Empreinte(cs[k].Trim())}, bundle {langue} servi posé AVANT le shell) : audit {d.audit_risk_bucket} · effluent {d.effluent_visibility_bucket} · train de vie {d.lifestyle_alarm_bucket} · nom « {d.lifestyle_lieutenant_name} » · clé du mot {d.lifestyle_alarm_label_key} — {poses[k]}",
                           "Tools/juge-donnees/dossier-39-nom-lieutenant/maquette-r2-392643c3/reference/ (cadre 152 piste nommée, cadre 153 nom null ; atelier b2ceebeb)");
+                    FermerLeShell();
+                    yield return null;
                 }
-                FermerLeShell();
-                yield return null;
-            }
             Assert.IsEmpty(echecsNotes, "vue(s) non photographiée(s) — un ÉCHEC noté au journal n'est pas un vert :\n" + string.Join("\n", echecsNotes));
         }
 
