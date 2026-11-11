@@ -1,0 +1,25 @@
+{
+  "response_meta": {
+    "request_id_echo": "218fa900-eadf-4b98-bc50-2a84123f639e",
+    "server_processed_at": "2026-11-11T17:22:17.831Z",
+    "api_version": 1,
+    "correlation_id_echo": null,
+    "server_build_ref": {
+      "git_sha": "35bdd6cb",
+      "built_at": "2026-11-11T04:53:08Z"
+    }
+  },
+  "payload": {
+    "data": {
+      "access_token": "***",
+      "token_type": "***",
+      "account_kind": "PLAYER",
+      "session_id": "01a1cba1-c095-7a73-825f-15d0bf8c1a38",
+      "expires_in_s": 900,
+      "refresh_token": "***",
+      "refresh_expires_in_s": 2592000,
+      "game_back_access_token": "***",
+      "game_back_session_id": null
+    }
+  }
+}
