@@ -104,7 +104,8 @@ namespace MafiaCleanCity.CityMap.Tests
         // ---- TD-878 (11/11) — host-eligibility sert `structural_budget_band` ∈ {AVAILABLE, SPENT} et `roster_room_band` ∈ {ROOM, FULL} (back @8d0184a4, budget-bands.ts).
         //   H7  la lecture : SPENT ⇒ BudgetDepense, FULL ⇒ EquipeComplete, les deux ⇒ les deux ; AVAILABLE/ROOM, absente, vide, inconnue ⇒ Aucun (jamais grisé sur l'ignorance)
         //   H8  l'écran : bande ⇒ bouton « Recruter » grisé + la RAISON (budget : la phrase SERVIE ; équipe : le mot ratifié f2) ; bande ouverte ⇒ rouvert
-        //   H9  contrôle positif : le contrôle d'état REFUSE un bouton resté ouvert sous une bande qui dit « plus rien » (sinon H8 ne dirait rien)
+        //   H9  le contrôle d'état (ExigerEtat) n'est pas vide : il REFUSE un bouton resté ouvert sous une bande qui dit « plus rien » (le garde-fou du grisage de production est H8/H10, pas H9)
+        //   H11 une lecture en ÉCHEC rouvre le bouton grisé (jamais grisé sur l'ignorance) ; une lecture réussie le regrise
         private static string Bandes(string budget, string equipe) =>
             "{\"payload\":{\"data\":{\"archetypes\":[]" + (budget == null ? "" : ",\"structural_budget_band\":\"" + budget + "\"") +
             (equipe == null ? "" : ",\"roster_room_band\":\"" + equipe + "\"") + "}}}";
@@ -137,6 +138,9 @@ namespace MafiaCleanCity.CityMap.Tests
         {
             Assert.AreEqual(attendu, ecran.BlocageDuRecrutement);
             Assert.AreEqual(attendu == BlocageRecrutement.Aucun, ecran.RecruitButtonInteractable, "bouton « Recruter » cliquable ssi la bande ne dit pas « plus rien »");
+            // le SEUL signe visible du grisage (le bouton n'a pas de transition) : le libellé s'éteint ; retirer cette ligne de production doit rougir ici
+            Assert.AreEqual(attendu == BlocageRecrutement.Aucun ? MafiaCleanCity.Theme.DesignTokens.Current.accentGold : MafiaCleanCity.Theme.DesignTokens.Current.onSurfaceMuted,
+                ecran.RecruitLabelColor, "libellé du bouton : encre d'appel quand ouvert, encre secondaire quand grisé");
             if (attendu == BlocageRecrutement.Aucun) { Assert.AreEqual("", ecran.RecruitReason, "rien à dire quand le recrutement est ouvert"); return; }
             Assert.IsNotEmpty(ecran.RecruitReason, "grisé SANS raison : le joueur ne sait pas pourquoi");
             foreach (string p in phrases) StringAssert.Contains(p, ecran.RecruitReason);
@@ -212,6 +216,29 @@ namespace MafiaCleanCity.CityMap.Tests
             ExigerEtat(ecran, BlocageRecrutement.BudgetDepense, "Votre décision de structure d’aujourd’hui est prise. Reprenez demain.");
             ecran.AppliquerHostEligibilite(full);
             ExigerEtat(ecran, BlocageRecrutement.EquipeComplete, "Votre équipe est au complet.");
+        }
+
+        [UnityTest]
+        public IEnumerator H11_UneLectureEnEchec_RouvreLeBoutonGrise()
+        {
+            hote = new GameObject("LieutenantScreenController_LectureEnEchec");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            HostEligibiliteData spent = HostEligibilite.LireCorps(Bandes("SPENT", "ROOM"));
+            bool echec = false;
+            ecran.LectureHostEligibilite = (ok, ko) => EnsembleDeLecture(echec ? null : spent, echec ? (500L, "panne") : (0L, null), ok, ko);
+            yield return ecran.RafraichirBlocageRecrutement();
+            ExigerEtat(ecran, BlocageRecrutement.BudgetDepense, "décision de structure");
+            echec = true;   // la relecture tombe en panne : l'état d'un instant d'avant n'est plus connu
+            yield return ecran.RafraichirBlocageRecrutement();
+            ExigerEtat(ecran, BlocageRecrutement.Aucun);
+        }
+
+        private static IEnumerator EnsembleDeLecture(HostEligibiliteData servie, (long code, string message) erreur, Action<HostEligibiliteData> ok, Action<long, string> ko)
+        {
+            if (servie != null) ok(servie); else ko(erreur.code, erreur.message);
+            yield break;
         }
 }
 }

@@ -1085,6 +1085,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             textComponents.Clear();
             // The outcome line is part of the live screen text too — re-track it so a fresh render keeps it in the scan.
             if (outcomeText != null) { textComponents.Add(outcomeText); if (!string.IsNullOrEmpty(LastOutcome)) renderedTexts.Add(LastOutcome); }
+            SuivreLaRaison();   // TD-878 : la raison du recrutement grisé reste dans le corpus après un rafraîchissement des bandes
             if (statusRows != null)
                 for (int i = statusRows.childCount - 1; i >= 0; i--)
                     Object.Destroy(statusRows.GetChild(i).gameObject);
@@ -1528,7 +1529,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             recruitReasonText.color = DesignTokens.Current.onSurfaceMuted;
             recruitReasonText.gameObject.SetActive(false);
 
-            outcomeText =NewText("Outcome", actionBar, "—", 15, TextAlignmentOptions.Left);
+            outcomeText = NewText("Outcome", actionBar, "—", 15, TextAlignmentOptions.Left);
             outcomeText.color = DesignTokens.Current.onSurfaceMuted;
             AddLayoutElement(outcomeText.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(outcomeText, "—");
@@ -1563,6 +1564,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public BlocageRecrutement BlocageDuRecrutement { get; private set; }
         /// <summary>Test hook : le bouton « Recruter » est-il cliquable ?</summary>
         public bool RecruitButtonInteractable { get { return recruitButton == null || recruitButton.interactable; } }
+        /// <summary>Test hook : la couleur du libellé du bouton « Recruter » — le SEUL signe visible du grisage (le bouton n'a pas de transition).</summary>
+        public Color RecruitLabelColor { get { return recruitButtonLabel != null ? recruitButtonLabel.color : Color.clear; } }
         /// <summary>Test hook : la raison affichée sous le bouton (vide si le recrutement est ouvert).</summary>
         public string RecruitReason { get { return recruitReasonText != null && recruitReasonText.gameObject.activeSelf ? recruitReasonText.text : ""; } }
 
@@ -1590,20 +1593,35 @@ namespace MafiaCleanCity.Operational.Lieutenant
             {
                 recruitReasonText.text = bloque ? PhraseDeBlocage(BlocageDuRecrutement) : "";
                 recruitReasonText.gameObject.SetActive(bloque);
-                TrackText(recruitReasonText, recruitReasonText.text);
+                SuivreLaRaison();
             }
         }
 
-        /// <summary>Relit host-eligibility et applique le blocage. Une lecture en échec laisse l'état d'avant (jamais grisé sur l'ignorance).</summary>
+        /// <summary>La raison (quand elle est affichée) est du texte vivant de l'écran : dans le corpus du scan « pas de scalaire brut », une fois, et re-posée après `ClearStatusRows`.</summary>
+        private void SuivreLaRaison()
+        {
+            if (recruitReasonText == null) return;
+            if (!textComponents.Contains(recruitReasonText)) textComponents.Add(recruitReasonText);
+            string t = recruitReasonText.gameObject.activeSelf ? recruitReasonText.text : null;
+            if (!string.IsNullOrEmpty(t) && !renderedTexts.Contains(t)) renderedTexts.Add(t);
+        }
+
+        /// <summary>Couture de test : remplace la lecture réseau de host-eligibility (réponse, échec) — pour jouer le chemin d'échec sans pile.</summary>
+        public System.Func<System.Action<HostEligibiliteData>, System.Action<long, string>, IEnumerator> LectureHostEligibilite;
+
+        /// <summary>Relit host-eligibility et applique le blocage. Une lecture en échec (réseau, 5xx, corps sans `archetypes`) ROUVRE le bouton : on ne grise jamais sur l'ignorance,
+        /// et une raison d'un instant d'avant peut être fausse — le back tranche au clic.</summary>
         public IEnumerator RafraichirBlocageRecrutement()
         {
             EnsureInitialized();
-            if (!IsAuthenticated) yield break;
+            if (!IsAuthenticated && LectureHostEligibilite == null) yield break;
             HostEligibiliteData servie = null;
-            yield return hostEligibilite.Lire(Token, d => servie = d,
-                (c, m) => Debug.LogWarning($"[Lieutenant] host-eligibility indisponible ({c}) : {m}"));
-            if (Destroyed || servie == null) yield break;
-            AppliquerHostEligibilite(servie);
+            System.Action<long, string> enEchec = (c, m) => Debug.LogWarning($"[Lieutenant] host-eligibility indisponible ({c}) : {m}");
+            yield return LectureHostEligibilite != null
+                ? LectureHostEligibilite(d => servie = d, enEchec)
+                : hostEligibilite.Lire(Token, d => servie = d, enEchec);
+            if (Destroyed) yield break;
+            AppliquerHostEligibilite(servie);   // null (lecture en échec) ⇒ rouvert
         }
 
         // The Recruit button caption for an archetype ("Recruit Cook" / "Recruit Security" …).
