@@ -25,11 +25,24 @@ namespace MafiaCleanCity.CityMap.Tests
     {
         private GameObject hote;
 
-        [SetUp] public void SetUp() { MotsDesEnumeres.OublierLesManquants(); I18nCatalog.Oublier(); }
+        // TD-950 (détecteur) : le dernier test passé par ce TearDown, pour NOMMER le coupable quand un inset publié fuit jusqu'ici.
+        private static string testPrecedent = "(aucun : premier test de la classe, la fuite vient d'une autre classe)";
+
+        [SetUp]
+        public void SetUp()
+        {
+            // Les tests de ⑭ montent l'écran HORS shell : ils supposent `ShellChrome.BottomInsetPx == 0` (sinon la pile gagne une marge
+            // basse que la maquette n'a pas et les cotes de J1/J6/G1 glissent). Un test qui a laissé un inset publié se paie ici, nommé.
+            Assert.AreEqual(0f, ShellChrome.BottomInsetPx,
+                $"TD-950 : ShellChrome.BottomInsetPx={ShellChrome.BottomInsetPx:F1} au début de « {TestContext.CurrentContext.Test.Name} » — " +
+                $"laissé par le test précédent : {testPrecedent}");
+            MotsDesEnumeres.OublierLesManquants(); I18nCatalog.Oublier();
+        }
 
         [TearDown]
         public void TearDown()
         {
+            testPrecedent = TestContext.CurrentContext.Test.FullName;
             if (hote != null) Object.DestroyImmediate(hote);
             hote = null;
             I18nCatalog.Oublier();
