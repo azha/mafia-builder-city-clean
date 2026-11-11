@@ -1,0 +1,187 @@
+# Inventaire M — b2ceebeb (r2, EPINGLE)
+# fichier : /tmp/claude-1000/-home-erutheone-project-mafia-builder-city-clean/12bb723c-e30b-4127-8b2d-58b0fa9e44d9/scratchpad/m.b2ceebeb.html
+# cadres totaux (litteral <div class="cadre">) : 154
+# cadres ㊴ Q5 trouves : 4 -> index 0-based [150, 151, 152, 153]
+
+====================================================================================================
+CADRE 150 (index 0-based)
+ETIQUETTE : ㊴ · les pistes — la fenêtre des acteurs mène à eux ; deux pistes éteintes, « pas encore sur la table » (PROPOSÉ)
+----------------------------------------------------------------------------------------------------
+CRANS (couleurs, dans l'ordre des pistes) :
+   piste 0 : 4 crans, 0 allume(s) -> ['#2a3648', '#2a3648', '#2a3648', '#2a3648']
+   piste 1 : 4 crans, 3 allume(s) -> ['#ff9e3d', '#ff9e3d', '#ff9e3d', '#2a3648']
+   piste 2 : 4 crans, 0 allume(s) -> ['#2a3648', '#2a3648', '#2a3648', '#2a3648']
+ELEMENTS PORTEURS DE TEXTE (37) :
+   [span     ] lib                        | ARGENT
+   [span     ] val                        | 24 850 €
+   [span     ] val                        | Tiède
+   [span     ] lib                        | CHALEUR
+   [span     ] lib                        | JOUR 12
+   [span     ] val                        | Plein jour
+   [b        ] panneau>dos6>enseigne>b    | Le dossier
+   [i        ] panneau>dos6>enseigne>i    | trois pistes, et elles ne se mélangent pas
+   [b        ] dos6>compteurs>fen ici>b   | 01
+   [span     ] compteurs>fen ici>b>span   | /1
+   [span     ] dos6>compteurs>fen ici>span | pistes chaudes
+   [b        ] dos6>compteurs>fen>b       | 00
+   [span     ] dos6>compteurs>fen>span    | franchies
+   [i        ] dos6>compteurs>fen porte>i | ›
+   [b        ] dos6>compteurs>fen porte>b | 01
+   [span     ] compteurs>fen porte>b>span | /4
+   [span     ] dos6>compteurs>fen porte>span | acteurs qui tiennent
+   [i        ] elast>pistes>pi eteinte>i  | la comptabilité
+   [b        ] elast>pistes>pi eteinte>b  | —
+   [span     ] cle                        | pas encore sur la table
+   [i        ] elast>pistes>pi>i          | ce qui sort des cuves
+   [b        ] elast>pistes>pi>b          | ça se voit
+   [span     ] cle                        | visible
+   [i        ] elast>pistes>pi eteinte>i  | le train de vie d’un lieutenant
+   [b        ] elast>pistes>pi eteinte>b  | —
+   [span     ] cle                        | pas encore sur la table
+   [div      ] notepi                     | Les livres et le train de vie : personne ne regarde par là. Pour l’instant.
+   [i        ] panneau>dos6>pann>i        | pourquoi trois colonnes
+   [b        ] panneau>dos6>pann>b        | On peut être propre sur deux et pris sur la troisième
+   [small    ] panneau>dos6>pann>small    | la comptabilité, les rejets et le train de vie
+   [u        ] dos6>pann>small>u          | ne se mélangent pas
+   [small    ] panneau>dos6>pann>small    | . Pour voir
+   [u        ] dos6>pann>small>u          | qui parle
+   [small    ] panneau>dos6>pann>small    | , la fenêtre des acteurs, en haut à droite.
+   [span     ] cta6 eteint                | ACHETER DU RENSEIGNEMENT
+   [div      ] note6                      | sur un acteur, pas sur une piste — éteint :
+   [u        ] dos6>pied>note6>u          | le prix n’est pas servi
+
+====================================================================================================
+CADRE 151 (index 0-based)
+ETIQUETTE : ㊴ · les acteurs — le renseignement par ligne, éteint ; la fenêtre des pistes ramène ; « ceux qui ne sont pas sur la liste » (PROPOSÉ)
+----------------------------------------------------------------------------------------------------
+CRANS (couleurs, dans l'ordre des pistes) :
+ELEMENTS PORTEURS DE TEXTE (43) :
+   [span     ] lib                        | ARGENT
+   [span     ] val                        | 24 850 €
+   [span     ] val                        | Tiède
+   [span     ] lib                        | CHALEUR
+   [span     ] lib                        | JOUR 12
+   [span     ] val                        | Plein jour
+   [b        ] panneau>dos6>enseigne>b    | Le dossier
+   [i        ] panneau>dos6>enseigne>i    | qui parle, et qui a peur
+   [b        ] dos6>compteurs>fen ici>b   | 04
+   [span     ] dos6>compteurs>fen ici>span | acteurs connus
+   [b        ] dos6>compteurs>fen>b       | 01
+   [span     ] dos6>compteurs>fen>span    | qui ont peur
+   [i        ] dos6>compteurs>fen porte>i | ‹
+   [b        ] dos6>compteurs>fen porte>b | 01
+   [span     ] compteurs>fen porte>b>span | /1
+   [span     ] dos6>compteurs>fen porte>span | pistes chaudes
+   [b        ] acteurs>ac>div>b           | Avocat
+   [span     ] acteurs>ac>div>span        | ia.actor.4f21
+   [span     ] st                         | il tient
+   [span     ] rg                         | renseignement
+   [b        ] acteurs>ac>div>b           | Greffier
+   [span     ] acteurs>ac>div>span        | ia.actor.9c07
+   [span     ] st                         | il a peur
+   [span     ] rg                         | renseignement
+   [b        ] acteurs>ac>div>b           | Greffier
+   [span     ] acteurs>ac>div>span        | ia.actor.1b44
+   [span     ] st                         | injoignable
+   [span     ] rg                         | renseignement
+   [b        ] acteurs>ac parti>div>b     | Avocat
+   [span     ] acteurs>ac parti>div>span  | ia.actor.7e90
+   [span     ] st                         | parti
+   [i        ] panneau>dos6>pann>i        | ceux qui ne sont pas sur la liste
+   [b        ] panneau>dos6>pann>b        | D’autres parlent, et vous ne les voyez pas
+   [small    ] panneau>dos6>pann>small    | un inspecteur du port, un courtier, le greffier d’un juge :
+   [u        ] dos6>pann>small>u          | ils se paient
+   [small    ] panneau>dos6>pann>small    | comme les autres, mais
+   [u        ] dos6>pann>small>u          | personne ne vous a encore donné leur nom
+   [small    ] panneau>dos6>pann>small    | .
+   [div      ] note6                      | le renseignement s’achète
+   [u        ] dos6>pied>note6>u          | acteur par acteur
+   [div      ] note6                      | — éteint tant que
+   [u        ] dos6>pied>note6>u          | le prix n’est pas servi
+   [div      ] note6                      | : on n’achète pas sans savoir combien
+
+====================================================================================================
+CADRE 152 (index 0-based)
+ETIQUETTE : ㊴ · les pistes — « le train de vie de Lt. Marrek » : le back sert le NOM (lifestyle_lieutenant_name), piste vivante, bande « On vous regarde » (état cible Q5, PROPOSÉ) — productible après le lot back de l’écrivain lifestyle
+----------------------------------------------------------------------------------------------------
+CRANS (couleurs, dans l'ordre des pistes) :
+   piste 0 : 4 crans, 1 allume(s) -> ['#7db36a', '#2a3648', '#2a3648', '#2a3648']
+   piste 1 : 4 crans, 3 allume(s) -> ['#ff9e3d', '#ff9e3d', '#ff9e3d', '#2a3648']
+   piste 2 : 4 crans, 3 allume(s) -> ['#f2c96b', '#f2c96b', '#f2c96b', '#2a3648']
+ELEMENTS PORTEURS DE TEXTE (33) :
+   [span     ] lib                        | ARGENT
+   [span     ] val                        | 24 850 €
+   [span     ] val                        | Tiède
+   [span     ] lib                        | CHALEUR
+   [span     ] lib                        | JOUR 12
+   [span     ] val                        | Plein jour
+   [b        ] panneau>dos6>enseigne>b    | Le dossier
+   [i        ] panneau>dos6>enseigne>i    | trois pistes, et elles ne se mélangent pas
+   [b        ] dos6>compteurs>fen ici>b   | 02
+   [span     ] compteurs>fen ici>b>span   | /3
+   [span     ] dos6>compteurs>fen ici>span | pistes chaudes
+   [i        ] dos6>compteurs>fen porte>i | ›
+   [b        ] dos6>compteurs>fen porte>b | 01
+   [span     ] compteurs>fen porte>b>span | /4
+   [span     ] dos6>compteurs>fen porte>span | acteurs qui tiennent
+   [i        ] elast>pistes>pi>i          | la comptabilité
+   [b        ] elast>pistes>pi>b          | rien à signaler
+   [i        ] elast>pistes>pi>i          | ce qui sort des cuves
+   [b        ] elast>pistes>pi>b          | ça se voit
+   [span     ] cle                        | Ça se remarque
+   [i        ] elast>pistes>pi>i          | le train de vie de Lt. Marrek
+   [b        ] elast>pistes>pi>b          | On vous regarde
+   [div      ] notepi                     | Les livres : personne ne regarde par là. Pour l’instant.
+   [i        ] panneau>dos6>pann>i        | pourquoi trois colonnes
+   [b        ] panneau>dos6>pann>b        | On peut être propre sur deux et pris sur la troisième
+   [small    ] panneau>dos6>pann>small    | la comptabilité, les rejets et le train de vie
+   [u        ] dos6>pann>small>u          | ne se mélangent pas
+   [small    ] panneau>dos6>pann>small    | . Pour voir
+   [u        ] dos6>pann>small>u          | qui parle
+   [small    ] panneau>dos6>pann>small    | , la fenêtre des acteurs, en haut à droite.
+   [span     ] cta6 eteint                | ACHETER DU RENSEIGNEMENT
+   [div      ] note6                      | sur un acteur, pas sur une piste — éteint :
+   [u        ] dos6>pied>note6>u          | le prix n’est pas servi
+
+====================================================================================================
+CADRE 153 (index 0-based)
+ETIQUETTE : ㊴ · les pistes — le nom n’est PAS servi (null : aucune ligne unique ne porte les trois maxima, option B) : la piste garde son titre, sans nom ; même piste, même bande (PROPOSÉ) — productible après le lot back de l’écrivain lifestyle
+----------------------------------------------------------------------------------------------------
+CRANS (couleurs, dans l'ordre des pistes) :
+   piste 0 : 4 crans, 1 allume(s) -> ['#7db36a', '#2a3648', '#2a3648', '#2a3648']
+   piste 1 : 4 crans, 3 allume(s) -> ['#ff9e3d', '#ff9e3d', '#ff9e3d', '#2a3648']
+   piste 2 : 4 crans, 3 allume(s) -> ['#f2c96b', '#f2c96b', '#f2c96b', '#2a3648']
+ELEMENTS PORTEURS DE TEXTE (33) :
+   [span     ] lib                        | ARGENT
+   [span     ] val                        | 24 850 €
+   [span     ] val                        | Tiède
+   [span     ] lib                        | CHALEUR
+   [span     ] lib                        | JOUR 12
+   [span     ] val                        | Plein jour
+   [b        ] panneau>dos6>enseigne>b    | Le dossier
+   [i        ] panneau>dos6>enseigne>i    | trois pistes, et elles ne se mélangent pas
+   [b        ] dos6>compteurs>fen ici>b   | 02
+   [span     ] compteurs>fen ici>b>span   | /3
+   [span     ] dos6>compteurs>fen ici>span | pistes chaudes
+   [i        ] dos6>compteurs>fen porte>i | ›
+   [b        ] dos6>compteurs>fen porte>b | 01
+   [span     ] compteurs>fen porte>b>span | /4
+   [span     ] dos6>compteurs>fen porte>span | acteurs qui tiennent
+   [i        ] elast>pistes>pi>i          | la comptabilité
+   [b        ] elast>pistes>pi>b          | rien à signaler
+   [i        ] elast>pistes>pi>i          | ce qui sort des cuves
+   [b        ] elast>pistes>pi>b          | ça se voit
+   [span     ] cle                        | Ça se remarque
+   [i        ] elast>pistes>pi>i          | le train de vie d’un lieutenant
+   [b        ] elast>pistes>pi>b          | On vous regarde
+   [div      ] notepi                     | Les livres : personne ne regarde par là. Pour l’instant.
+   [i        ] panneau>dos6>pann>i        | pourquoi trois colonnes
+   [b        ] panneau>dos6>pann>b        | On peut être propre sur deux et pris sur la troisième
+   [small    ] panneau>dos6>pann>small    | la comptabilité, les rejets et le train de vie
+   [u        ] dos6>pann>small>u          | ne se mélangent pas
+   [small    ] panneau>dos6>pann>small    | . Pour voir
+   [u        ] dos6>pann>small>u          | qui parle
+   [small    ] panneau>dos6>pann>small    | , la fenêtre des acteurs, en haut à droite.
+   [span     ] cta6 eteint                | ACHETER DU RENSEIGNEMENT
+   [div      ] note6                      | sur un acteur, pas sur une piste — éteint :
+   [u        ] dos6>pied>note6>u          | le prix n’est pas servi

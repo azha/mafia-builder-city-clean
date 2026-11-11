@@ -1,0 +1,30 @@
+# USAGES NON COMMENTÉS des champs des DTO, dans les 5 fichiers de ④/⑤ (contrôle positif plus bas)
+
+## CommitResponseDto (10 clés servies par commit)
+  .committed              usages= 6  ['ApresGesteHl.cs:135', 'ApresGesteHl.cs:137', 'ApresGesteHl.cs:32', 'DecisionDetailScreenController.cs:353', 'HighestLeverageCardController.cs:215']
+  .structural             usages= 3  ['ApresGesteHl.cs:137', 'DecisionDetailScreenController.cs:259', 'HighestLeverageCardController.cs:165']
+  .outcome                usages= 1  ['ApresGesteHl.cs:130']
+  .executed_ids           usages= 2  ['ApresGesteHl.cs:26']
+  .stopped_at_id          usages= 1  ['ApresGesteHl.cs:29']
+  .stopped_at_error       usages= 0  []
+  .navigate_screen        usages= 0  []
+  .navigate_ids           usages= 0  []
+  .outcome_i18n_key       usages= 2  ['ApresGesteHl.cs:55', 'ApresGesteHl.cs:56']
+  .stopped_at_i18n_key    usages= 1  ['ApresGesteHl.cs:59']
+
+## HlCardDto (7 clés de hl_card)
+  .card_id                usages= 4  ['DecisionDetailScreenController.cs:350', 'HighestLeverageCardController.cs:161', 'HighestLeverageCardController.cs:214', 'HighestLeverageCardController.cs:277']
+  .decision_type_key      usages= 5  ['DecisionDetailScreenController.cs:261', 'HighestLeverageCardController.cs:134', 'HighestLeverageCardController.cs:135', 'HighestLeverageCardController.cs:317', 'HighestLeverageCardController.cs:335']
+  .impact_bucket          usages= 3  ['DecisionDetailScreenController.cs:266', 'HighestLeverageCardController.cs:318', 'HighestLeverageCardController.cs:336']
+  .urgency_bucket         usages= 3  ['DecisionDetailScreenController.cs:267', 'HighestLeverageCardController.cs:319', 'HighestLeverageCardController.cs:337']
+  .options                usages= 1  ['HighestLeverageCardController.cs:363']
+  .structural             usages= 3  ['ApresGesteHl.cs:137', 'DecisionDetailScreenController.cs:259', 'HighestLeverageCardController.cs:165']
+  .target_count           usages= 5  ['DecisionDetailScreenController.cs:261', 'DecisionDetailScreenController.cs:373', 'HighestLeverageCardController.cs:242', 'HighestLeverageCardController.cs:317', 'HighestLeverageCardController.cs:335']
+
+## StructuralBudgetDto (2 clés)
+  .used                   usages= 1  ['ApresGesteHl.cs:85']
+  .cap_reached            usages= 3  ['ApresGesteHl.cs:84', 'DecisionDetailScreenController.cs:271', 'HighestLeverageCardController.cs:159']
+
+## CONTRÔLE POSITIF — un champ qui EXISTE et un qui N'EXISTE PAS
+  .projected_consequence (champ SERVI par le back, NON déclaré par DecisionOptionDto) : ['HighestLeverageCardController.cs:652']
+  .champ_bidon_inexistant : []

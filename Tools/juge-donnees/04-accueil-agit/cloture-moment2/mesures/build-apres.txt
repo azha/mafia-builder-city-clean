@@ -1,0 +1,26 @@
+# X-Server-Build APRÈS la DERNIÈRE mesure — 2026-11-11T07:00:20+01:00
+$ rtk proxy curl -s -D - -o /dev/null http://localhost/v1/health
+HTTP/1.1 404 Not Found
+Content-Length: 630
+Content-Type: application/json; charset=utf-8
+Date: Wed, 11 Nov 2026 06:00:20 GMT
+Etag: W/"276-tz/5bgOCbjyGJr532m0++/5KeFU"
+X-Api-Version: 1
+X-Powered-By: Express
+X-Request-Id: 175a0fc1-3b5a-4230-862b-e7cdbfa34036
+X-Server-Build: 35bdd6cb
+X-Server-Processed-At: 2026-11-11T06:00:20.962Z
+
+
+# et sur une route du domaine (POST /v1/session/hl-card/<uuid>/skip, sans jeton -> 401, en-tête lu quand même)
+HTTP/1.1 401 Unauthorized
+Content-Length: 649
+Content-Type: application/json; charset=utf-8
+Date: Wed, 11 Nov 2026 06:00:20 GMT
+Etag: W/"289-1vDS0ifSo7p3e15A9ITBa2mf9eE"
+X-Api-Version: 1
+X-Powered-By: Express
+X-Request-Id: b391c910-0320-4624-be01-3092f23393c8
+X-Server-Build: 35bdd6cb
+X-Server-Processed-At: 2026-11-11T06:00:20.975Z
+

@@ -1,0 +1,11 @@
+# Ancrage du SHA — le dossier dit 7807d6c8, le tip de gate/cumul-2026-10-10 est AILLEURS
+tip = 0cfa6a7d83894aa74c421940d923b2cc41ef5838
+7807d6c8 ancêtre du tip ? OUI
+commits 7807d6c8..tip = 3
+seul fichier du lot modifié entre les deux :
+ .../game-back/src/progression/loop10/hl-card.controller.ts     |  6 +++---
+ tests/e2e/conventions/instruments_pins.spec.ts                 | 10 ++++++++--
+ tests/e2e/conventions/p5_p6_instruments.spec.ts                | 10 +++++++---
+ 3 files changed, 18 insertions(+), 8 deletions(-)
+nature du delta = garde 422 rejectUnknownFields remontée au contrôleur (défense en profondeur) ; AUCUNE clé, AUCUN outcome, AUCUNE issue ne change.
+md5 identiques aux deux SHA : hl-card-projection.ts 7f6af451 · hl-card-types.ts 90536ada · hl-option-table.ts c211b343 · hl-card.service.ts a3af9cc5 · session-open-sequence.service.ts 79e5b241

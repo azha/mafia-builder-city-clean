@@ -1,0 +1,37 @@
+# Routes JOUEUR du domaine — compte TROUVÉ (pas la liste du dossier recopiée)
+grep du mot du domaine dans TOUS les contrôleurs, hors _test et hors BO :
+gate/cumul-2026-10-10:services/game-back/src/core_loops/core-loops-admin.controller.ts
+gate/cumul-2026-10-10:services/game-back/src/core_loops/core-loops-test.controller.ts
+gate/cumul-2026-10-10:services/game-back/src/operational/distribution/distribution-test.controller.ts
+gate/cumul-2026-10-10:services/game-back/src/progression/loop10/hl-card.controller.ts
+gate/cumul-2026-10-10:services/game-back/src/session/session.controller.ts
+⇒ core-loops-admin.controller.ts = rôle gm (GET /v1/admin/players/:id/hl-card, l.440-443) — EXCLU (BO)
+⇒ core-loops-test.controller.ts = _test — EXCLU
+⇒ session.controller.ts = ne porte que le COMMENTAIRE du payload (l.18) ; la clé hl_card est servie par POST /v1/session/open
+NB_ROUTES_JOUEUR_DU_DOMAINE = 3 ; dont @Post sous JwtAuthGuard dans hl-card.controller.ts = 2
+  R1 (lecture)  POST /v1/session/open            → clé hl_card (session-open-sequence.service.ts:236, 357)
+  R2 (action)   POST /v1/session/hl-card/:id/commit  (hl-card.controller.ts:49-62)
+  R3 (action)   POST /v1/session/hl-card/:id/skip    (hl-card.controller.ts:66-72)
+
+# ISSUES servies par commit/skip — chacune avec son ancre, et son cadre (ou pas)
+200 outcome=executed · fournisseur 101 réparation   — hl-option-table.ts:72-74   — CADRE 6 (le seul)
+200 outcome=executed · fournisseur 102 route        — hl-option-table.ts:75-77   — pas de cadre ; TEXTE ratifié (variantes l.2)
+200 outcome=executed · fournisseur 107 tronçon      — hl-option-table.ts:90-92   — pas de cadre ; TEXTE ratifié (variantes l.3)
+200 outcome=executed · fournisseur 105 PLAIDOYER    — hl-option-table.ts:84-86   — PAS DE CADRE *ET PAS DE TEXTE*  ⟵ absent de la liste du dossier
+200 outcome=executed + stopped_at_id/_error ≠ null  — hl-card.service.ts:309-319 — pas de cadre ; TEXTE ratifié (variantes l.5), MAIS la cause servie (stopped_at_error) n'est jamais dite
+200 outcome=noted   (option 1, ou corps absent/null)— hl-commit-plan.ts:20,58     — pas de cadre ; TEXTE ratifié (variantes l.4)
+200 outcome=navigate · 4 écrans                     — hl-option-table.ts:79,82,88,94 — pas de cadre DANS CETTE PAGE ; TEXTE ratifié (variantes l.6) qui renvoie à « cadre 7 de la série 6 » — la page épinglée n'a que 7 cadres (0..6)
+200 outcome=noted AVEC structural=true (même sur choix 0) — hl-card.service.ts:246-259 — PAS DE CADRE, PAS DE TEXTE ⟵ absent de la liste ; .jeton-or.pris existe en CSS, 0 usage
+200 skip {skipped:true}                             — hl-card.service.ts:379-393 — PAS DE CADRE, ET AUCUN GESTE ne poste cette route ⟵ absent de la liste
+409 RESOURCE_STATE_CONFLICT · déjà committed/superseded — hl-card.service.ts:426-428 — PAS DE CADRE ⟵ absent ; .carte-or .deja + .mot-or.rouge en CSS, 0 usage
+409 RESOURCE_STATE_CONFLICT · réclamation perdue en course — hl-card.service.ts:397-402 — pas de cadre
+409 RESOURCE_STATE_CONFLICT · « no option [0] to act on » — hl-commit-plan.ts:60-61 — pas de cadre (état servi : options=[], épinglé hl_card.spec.ts:1054)
+409 RESOURCE_STATE_CONFLICT · « no target to act on »     — hl-commit-plan.ts:71     — pas de cadre
+409 STRUCTURAL_CAP_EXHAUSTED (gouverneur)           — hl-card.controller.ts:47    — pas de cadre
+404 RESOURCE_NOT_FOUND · carte inconnue ou d'un AUTRE joueur — hl-card.service.ts:422-425 (IDOR couvert, parcours:222) — pas de cadre
+404 RESOURCE_NOT_FOUND · aucun profil joueur        — hl-card.controller.ts:84-86 — pas de cadre
+422 VALIDATION_FAILED · chosen_option hors {0,1} / champ inconnu — hl-commit-plan.ts:30-32 ; controller:57 — pas de cadre (défaut client)
+XXX l'ERREUR PROPRE de la PREMIÈRE cible, rendue telle quelle (statut et code de la route de domaine : fonds insuffisants, etc.) — hl-card.service.ts:303-307 ; exercée engine.spec:314 « fonds à 0 » — PAS DE CADRE, PAS DE TEXTE ⟵ absent de la liste
+
+NB_ISSUES_RECENSEES = 18 ; NB_AVEC_CADRE = 1 ; NB_AVEC_TEXTE_RATIFIE_SANS_CADRE = 5 ; NB_SANS_CADRE_NI_TEXTE = 12
+La liste du dossier (« route, tronçon, noted, arrêt partiel, navigate ») : les 5 sont EXACTS (vérifiés sans cadre), la liste est INCOMPLÈTE de 12 issues.

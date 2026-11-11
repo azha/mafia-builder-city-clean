@@ -1,0 +1,253 @@
+======================================================================
+CADRE 0  (offset 551298, ligne html 780 -> ligne 782)
+======================================================================
+  L 780 | div.cadre/div.etiquette                            | '④ L’ouverture — rien à trancher'
+  L 780 | div.cadre/div.tel                                  | <div.scene.district STYLE='background-position:center 50%;filter:brightness(.42)'>
+  L 780 | div.ecran/div.barre/span.volute.g                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 780 | div.ecran/div.barre/span.volute.d                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 780 | div.barre/div.aile/span.lib                        | 'ARGENT'
+  L 780 | div.barre/div.aile/span.val                        | '24\u202f850\u202f€'
+  L 781 | div.ecran/div.barre/div.mano                       | '<svg viewBox="0 0 40 26"><path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/><path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/><path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/><line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/><circle cx="20" cy="22" r="1.8" fill="#b08d3e"/></svg>'
+  L 781 | div.barre/div.mano/span.val                        | 'Tiède'
+  L 781 | div.barre/div.mano/span.lib                        | 'CHALEUR'
+  L 782 | div.barre/div.aile.droite/span.lib                 | 'JOUR 12'
+  L 782 | div.barre/div.aile.droite/span.val                 | 'Plein jour'
+  L 782 | div.tel/div.ecran/div.panneau                      | <div.acc4 STYLE='height:406px'>
+  L 782 | div.acc4/div.verre/div.titre                       | 'Rien à signaler'
+  L 782 | div.acc4/div.verre/div.sous                        | 'Aucune décision en attente · Aucune exception en attente'
+  L 782 | div.acc4/div.verre/div.sous                        | 'Personne ne fait la queue — la routine tient'
+  L 782 | div.ecran/div.dock9/div.db.actif                   | 'Empire'
+  L 782 | div.ecran/div.dock9/div.db                         | 'Famille'
+  L 782 | div.ecran/div.dock9/div.db                         | 'Filière'
+  L 782 | div.ecran/div.dock9/div.db                         | 'Plus'
+======================================================================
+CADRE 1  (offset 553336, ligne html 783 -> ligne 785)
+======================================================================
+  L 783 | div.cadre/div.etiquette                            | '④ L’ouverture — une carte de tête · état cible, HL chunk 3 ; en attendant, le client garde Prendre acte / Pas maintenant, sans ligne de conséquence'
+  L 783 | div.cadre/div.tel                                  | <div.scene.district STYLE='background-position:center 50%;filter:brightness(.42)'>
+  L 783 | div.ecran/div.barre/span.volute.g                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 783 | div.ecran/div.barre/span.volute.d                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 783 | div.barre/div.aile/span.lib                        | 'ARGENT'
+  L 783 | div.barre/div.aile/span.val                        | '24\u202f850\u202f€'
+  L 784 | div.ecran/div.barre/div.mano                       | '<svg viewBox="0 0 40 26"><path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/><path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/><path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/><line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/><circle cx="20" cy="22" r="1.8" fill="#b08d3e"/></svg>'
+  L 784 | div.barre/div.mano/span.val                        | 'Tiède'
+  L 784 | div.barre/div.mano/span.lib                        | 'CHALEUR'
+  L 785 | div.barre/div.aile.droite/span.lib                 | 'JOUR 12'
+  L 785 | div.barre/div.aile.droite/span.val                 | 'Plein jour'
+  L 785 | div.tel/div.ecran/div.panneau                      | <div.acc4 STYLE='height:406px'>
+  L 785 | div.acc4/div.verre/div.titre                       | 'Un local à remettre en état'
+  L 785 | div.verre/div.niveaux/span                         | 'Portée'
+  L 785 | div.niveaux/span/b                                 | 'modérée'
+  L 785 | div.verre/div.niveaux/span                         | 'Urgence'
+  L 785 | div.niveaux/span/b                                 | 'faible'
+  L 785 | div.panneau/div.acc4/div.verre                     | <div.sur.prop STYLE='margin-top:10px'>
+  L 785 | div.acc4/div.verre/div.sur.prop                    | 'Ce qu’on peut faire'
+  L 785 | div.verre/div.gestes/div.g.or                      | 'Mettre en réparation'
+  L 785 | div.verre/div.gestes/div.g                         | 'Laisser en l’état'
+  L 785 | div.verre/div.csq4-rang/div.csq4.prop              | 'Chaque réparation se paie tout de suite, tant que l’argent suit\u202f; les travaux finis, l’activité reprend.'
+  L 785 | div.verre/div.csq4-rang/div.csq4.prop              | 'Rien n’est payé, mais ce qui est endommagé reste à l’arrêt, et le manque à gagner court.'
+  L 785 | div.acc4/div.suivant/div.qui                       | 'Lt. Quist attend vos ordres'
+  L 785 | div.suivant/div.qui/small                          | 'grave'
+  L 785 | div.acc4/div.suivant/span.act                      | 'trancher'
+  L 785 | div.ecran/div.dock9/div.db.actif                   | 'Empire'
+  L 785 | div.ecran/div.dock9/div.db                         | 'Famille'
+  L 785 | div.ecran/div.dock9/div.db                         | 'Filière'
+  L 785 | div.ecran/div.dock9/div.db                         | 'Plus'
+======================================================================
+CADRE 2  (offset 556035, ligne html 786 -> ligne 788)
+======================================================================
+  L 786 | div.cadre/div.etiquette                            | '④ L’ouverture — des rapports à lire (l’entrée du rapport)'
+  L 786 | div.cadre/div.tel                                  | <div.scene.district STYLE='background-position:center 50%;filter:brightness(.42)'>
+  L 786 | div.ecran/div.barre/span.volute.g                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 786 | div.ecran/div.barre/span.volute.d                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 786 | div.barre/div.aile/span.lib                        | 'ARGENT'
+  L 786 | div.barre/div.aile/span.val                        | '24\u202f850\u202f€'
+  L 787 | div.ecran/div.barre/div.mano                       | '<svg viewBox="0 0 40 26"><path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/><path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/><path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/><line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/><circle cx="20" cy="22" r="1.8" fill="#b08d3e"/></svg>'
+  L 787 | div.barre/div.mano/span.val                        | 'Tiède'
+  L 787 | div.barre/div.mano/span.lib                        | 'CHALEUR'
+  L 788 | div.barre/div.aile.droite/span.lib                 | 'JOUR 12'
+  L 788 | div.barre/div.aile.droite/span.val                 | 'Plein jour'
+  L 788 | div.tel/div.ecran/div.panneau                      | <div.acc4 STYLE='height:406px'>
+  L 788 | div.acc4/div.verre/div.titre                       | 'Des rapports à lire'
+  L 788 | div.acc4/div.verre/div.sous                        | 'Lt. Quist a un rapport pour vous'
+  L 788 | div.verre/div.gestes/div.g.or                      | 'Lire maintenant'
+  L 788 | div.verre/div.gestes/div.g                         | 'Laisser en attente'
+  L 788 | div.verre/div.csq4-rang/div.csq4.prop              | 'Vous ouvrez les rapports\xa0: chaque point attend votre choix, rien n’est tranché à votre place.'
+  L 788 | div.verre/div.csq4-rang/div.csq4.prop              | 'Les rapports restent à lire\u202f; ils vous attendront demain.'
+  L 788 | div.acc4/div.suivant/div.qui                       | 'Lt. Quist attend vos ordres'
+  L 788 | div.suivant/div.qui/small.g-moderate               | 'modérée'
+  L 788 | div.acc4/div.suivant/span.act                      | 'trancher'
+  L 788 | div.ecran/div.dock9/div.db.actif                   | 'Empire'
+  L 788 | div.ecran/div.dock9/div.db                         | 'Famille'
+  L 788 | div.ecran/div.dock9/div.db                         | 'Filière'
+  L 788 | div.ecran/div.dock9/div.db                         | 'Plus'
+======================================================================
+CADRE 3  (offset 558503, ligne html 789 -> ligne 791)
+======================================================================
+  L 789 | div.cadre/div.etiquette                            | '④ L’ouverture — la file sous pression'
+  L 789 | div.cadre/div.tel                                  | <div.scene.district STYLE='background-position:center 50%;filter:brightness(.42)'>
+  L 789 | div.ecran/div.barre/span.volute.g                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 789 | div.ecran/div.barre/span.volute.d                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 789 | div.barre/div.aile/span.lib                        | 'ARGENT'
+  L 789 | div.barre/div.aile/span.val                        | '24\u202f850\u202f€'
+  L 790 | div.ecran/div.barre/div.mano                       | '<svg viewBox="0 0 40 26"><path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/><path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/><path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/><line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/><circle cx="20" cy="22" r="1.8" fill="#b08d3e"/></svg>'
+  L 790 | div.barre/div.mano/span.val                        | 'Tiède'
+  L 790 | div.barre/div.mano/span.lib                        | 'CHALEUR'
+  L 791 | div.barre/div.aile.droite/span.lib                 | 'JOUR 12'
+  L 791 | div.barre/div.aile.droite/span.val                 | 'Plein jour'
+  L 791 | div.tel/div.ecran/div.panneau                      | <div.acc4 STYLE='height:406px'>
+  L 791 | div.acc4/div.verre/div.sur                         | 'Les exceptions'
+  L 791 | div.verre/div.pression/b                           | 'saturée'
+  L 791 | div.acc4/div.verre/div.titre                       | 'Plusieurs attendent encore'
+  L 791 | div.acc4/div.verre/div.sous.prop                   | 'd’autres attendent au-delà de ce que la file montre'
+  L 791 | div.acc4/div.suivant/div.qui                       | 'Lt. Quist attend vos ordres'
+  L 791 | div.suivant/div.qui/small                          | 'grave'
+  L 791 | div.acc4/div.suivant/span.act                      | 'trancher'
+  L 791 | div.ecran/div.dock9/div.db.actif                   | 'Empire'
+  L 791 | div.ecran/div.dock9/div.db                         | 'Famille'
+  L 791 | div.ecran/div.dock9/div.db                         | 'Filière'
+  L 791 | div.ecran/div.dock9/div.db                         | 'Plus'
+======================================================================
+CADRE 4  (offset 560699, ligne html 792 -> ligne 794)
+======================================================================
+  L 792 | div.cadre/div.etiquette                            | '④ L’ouverture — un joueur neuf, planque non vide : la suite, ordre réel A · B|C · E · D plafonné à 3 (PROPOSÉ)'
+  L 792 | div.cadre/div.tel                                  | <div.scene.district STYLE='background-position:center 50%;filter:brightness(.42)'>
+  L 792 | div.ecran/div.barre/span.volute.g                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 792 | div.ecran/div.barre/span.volute.d                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 792 | div.barre/div.aile/span.lib                        | 'ARGENT'
+  L 792 | div.barre/div.aile/span.val                        | '24\u202f850\u202f€'
+  L 793 | div.ecran/div.barre/div.mano                       | '<svg viewBox="0 0 40 26"><path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/><path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/><path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/><line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/><circle cx="20" cy="22" r="1.8" fill="#b08d3e"/></svg>'
+  L 793 | div.barre/div.mano/span.val                        | 'Tiède'
+  L 793 | div.barre/div.mano/span.lib                        | 'CHALEUR'
+  L 794 | div.barre/div.aile.droite/span.lib                 | 'JOUR 12'
+  L 794 | div.barre/div.aile.droite/span.val                 | 'Plein jour'
+  L 794 | div.tel/div.ecran/div.panneau                      | <div.acc4 STYLE='height:406px'>
+  L 794 | div.acc4/div.verre.suite4/div.sur.prop             | 'La suite'
+  L 794 | div.r4/div.t4/b.prop                               | 'Le labo attend du Pyralin'
+  L 794 | div.r4/div.t4/span.prop                            | 'Sans lui, rien ne cuit.'
+  L 794 | div.verre.suite4/div.r4/div.g4.or.prop             | 'Commander'
+  L 794 | div.r4/div.t4/b.prop                               | 'Personne ne vend encore'
+  L 794 | div.r4/div.t4/span.prop                            | 'Un dealer sur un coin de vente, et la marchandise part.'
+  L 794 | div.verre.suite4/div.r4/div.g4.prop                | 'Voir la vente'
+  L 794 | div.r4/div.t4/b.prop                               | 'De l’argent attend dans la planque'
+  L 794 | div.r4/div.t4/span.prop                            | 'Blanchissez-le\xa0: il ne rapporte rien tant qu’il dort.'
+  L 794 | div.verre.suite4/div.r4/div.g4.prop                | 'Blanchir'
+  L 794 | div.acc4/div.suivant/div.qui                       | 'Lt. Ilm attend vos ordres'
+  L 794 | div.suivant/div.qui/small.g-mild                   | 'légère'
+  L 794 | div.suivant/div.qui/span.rep                       | '« La chaleur est haute — vos opérations sont sous pression. »'
+  L 794 | div.suivant/div.qui/span.plus                      | 'Plusieurs attendent encore'
+  L 794 | div.acc4/div.suivant/span.act                      | 'trancher'
+  L 794 | div.ecran/div.dock9/div.db.actif                   | 'Empire'
+  L 794 | div.ecran/div.dock9/div.db                         | 'Famille'
+  L 794 | div.ecran/div.dock9/div.db                         | 'Filière'
+  L 794 | div.ecran/div.dock9/div.db                         | 'Plus'
+======================================================================
+CADRE 5  (offset 563549, ligne html 794 -> ligne 798)
+======================================================================
+  L 794 | div.cadre/div.etiquette                            | '④ L’ouverture — une carte de tête AU-DESSUS d’une ligne de file haute (la raison, « Plusieurs attendent encore ») · mesure pour le client'
+  L 794 | div.cadre/div.tel                                  | <div.scene.district STYLE='background-position:center 50%;filter:brightness(.42)'>
+  L 794 | div.ecran/div.barre/span.volute.g                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 794 | div.ecran/div.barre/span.volute.d                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 794 | div.barre/div.aile/span.lib                        | 'ARGENT'
+  L 794 | div.barre/div.aile/span.val                        | '24\u202f850\u202f€'
+  L 795 | div.ecran/div.barre/div.mano                       | '<svg viewBox="0 0 40 26"><path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/><path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/><path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/><line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/><circle cx="20" cy="22" r="1.8" fill="#b08d3e"/></svg>'
+  L 795 | div.barre/div.mano/span.val                        | 'Tiède'
+  L 795 | div.barre/div.mano/span.lib                        | 'CHALEUR'
+  L 796 | div.barre/div.aile.droite/span.lib                 | 'JOUR 12'
+  L 796 | div.barre/div.aile.droite/span.val                 | 'Plein jour'
+  L 796 | div.tel/div.ecran/div.panneau                      | <div.acc4 STYLE='height:406px'>
+  L 796 | div.acc4/div.verre/div.titre                       | 'Un local à remettre en état'
+  L 796 | div.verre/div.niveaux/span                         | 'Portée'
+  L 796 | div.niveaux/span/b                                 | 'modérée'
+  L 796 | div.verre/div.niveaux/span                         | 'Urgence'
+  L 796 | div.niveaux/span/b                                 | 'faible'
+  L 796 | div.panneau/div.acc4/div.verre                     | <div.sur.prop STYLE='margin-top:10px'>
+  L 796 | div.acc4/div.verre/div.sur.prop                    | 'Ce qu’on peut faire'
+  L 796 | div.verre/div.gestes/div.g.or                      | 'Mettre en réparation'
+  L 796 | div.verre/div.gestes/div.g                         | 'Laisser en l’état'
+  L 796 | div.verre/div.csq4-rang/div.csq4.prop              | 'Chaque réparation se paie tout de suite, tant que l’argent suit\u202f; les travaux finis, l’activité reprend.'
+  L 796 | div.verre/div.csq4-rang/div.csq4.prop              | 'Rien n’est payé, mais ce qui est endommagé reste à l’arrêt, et le manque à gagner court.'
+  L 796 | div.acc4/div.suivant/div.qui                       | 'Lt. Ilm attend vos ordres'
+  L 796 | div.suivant/div.qui/small.g-mild                   | 'légère'
+  L 796 | div.suivant/div.qui/span.rep                       | '« La chaleur est haute — vos opérations sont sous pression. »'
+  L 796 | div.suivant/div.qui/span.plus                      | 'Plusieurs attendent encore'
+  L 796 | div.acc4/div.suivant/span.act                      | 'trancher'
+  L 796 | div.ecran/div.dock9/div.db.actif                   | 'Empire'
+  L 796 | div.ecran/div.dock9/div.db                         | 'Famille'
+  L 796 | div.ecran/div.dock9/div.db                         | 'Filière'
+  L 796 | div.ecran/div.dock9/div.db                         | 'Plus'
+======================================================================
+CADRE 6  (offset 566474, ligne html 799 -> ligne 804)
+======================================================================
+  L 799 | div.cadre/div.etiquette                            | '④ L’ouverture — l’APRÈS-geste de la carte de tête : la carte tranchée (outcome « executed » : le geste a agi sur 2 locaux) · la ligne-or lit la file (vide : « Rien d’autre à trancher… » ; non vide : « Plusieurs attendent encore ») · PROPOSÉ'
+  L 799 | div.cadre/div.tel                                  | <div.scene.district STYLE='background-position:center 50%;filter:brightness(.42)'>
+  L 799 | div.ecran/div.barre/span.volute.g                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 799 | div.ecran/div.barre/span.volute.d                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 799 | div.barre/div.aile/span.lib                        | 'ARGENT'
+  L 799 | div.barre/div.aile/span.val                        | '24\u202f850\u202f€'
+  L 800 | div.ecran/div.barre/div.mano                       | '<svg viewBox="0 0 40 26"><path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/><path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/><path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/><line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/><circle cx="20" cy="22" r="1.8" fill="#b08d3e"/></svg>'
+  L 800 | div.barre/div.mano/span.val                        | 'Tiède'
+  L 800 | div.barre/div.mano/span.lib                        | 'CHALEUR'
+  L 801 | div.barre/div.aile.droite/span.lib                 | 'JOUR 12'
+  L 801 | div.barre/div.aile.droite/span.val                 | 'Plein jour'
+  L 801 | div.panneau.feutre/div.tapis-feutre/div.grave      | 'Vous avez tranché'
+  L 801 | div.table/div.carte-or.tranchee/div.coin           | '♦'
+  L 801 | div.carte-or.tranchee/div.coin/small               | 'tactique'
+  L 802 | div.table/div.carte-or.tranchee/div.titre          | 'Des locaux à remettre en état'
+  L 803 | div.bandes/div.bande/span                          | 'Portée'
+  L 803 | div.bandes/div.bande/div.pips                      | <i.on/>  (pip)
+  L 803 | div.carte-or.tranchee/div.bandes/div.bande         | <i.on/>  (pip)
+  L 803 | div.table/div.carte-or.tranchee/div.bandes         | <i/>  (pip)
+  L 803 | div.tapis-feutre/div.table/em                      | 'modérée'
+  L 803 | div.tapis-feutre/div.bande/span                    | 'Urgence'
+  L 803 | div.tapis-feutre/div.bande/div.pips                | <i.on/>  (pip)
+  L 803 | div.panneau.feutre/div.tapis-feutre/div.bande      | <i/>  (pip)
+  L 803 | div.ecran/div.panneau.feutre/div.tapis-feutre      | <i/>  (pip)
+  L 803 | div.tel/div.ecran/em                               | 'faible'
+  L 803 | div.cadre/span.tampon-diag                         | 'TRANCHÉE'
+  L 803 | div.jeton-or/span                                  | 'libre'
+  L 803 | div.jeton-or/small                                 | 'votre grande décision du jour'
+  L 803 | div.mot-or                                         | 'Les travaux sont lancés et payés pour 2 locaux. L’activité reprend à la fin du chantier.'
+  L 803 | div.ligne-or                                       | 'Retour à l’accueil'
+  L 803 | div.ligne-or/small                                 | 'Rien d’autre à trancher pour l’instant.'
+  L 803 | div.dock9/div.db.actif                             | 'Empire'
+  L 803 | div.dock9/div.db                                   | 'Famille'
+  L 803 | div.dock9/div.db                                   | 'Filière'
+  L 803 | div.dock9/div.db                                   | 'Plus'
+======================================================================
+CADRE 7  (offset 569390, ligne html 805 -> ligne 811)
+======================================================================
+  L 805 | div.cadre/div.etiquette                            | '④ L’ouverture — l’ÉCHEC DE LA 1re CIBLE (rien n’est parti, la carte reste à vous : NON tranchée, pas de tampon) · le mot est « Rien n’est parti : » + la phrase joueur de l’erreur de la route (repli : « ça n’a pas pu se faire pour l’instant. ») · jamais le code brut · PROPOSÉ'
+  L 805 | div.cadre/div.tel                                  | <div.scene.district STYLE='background-position:center 50%;filter:brightness(.42)'>
+  L 805 | div.ecran/div.barre/span.volute.g                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 805 | div.ecran/div.barre/span.volute.d                  | '<svg viewBox="0 0 34 12" fill="none" stroke="#eae0c8" stroke-width="1"><path d="M1 6 h12 M13 6 c4 0 4 -5 8 -5 c3 0 3 4 0 4 c-2 0 -2 -3 1 -3"/></svg>'
+  L 805 | div.barre/div.aile/span.lib                        | 'ARGENT'
+  L 805 | div.barre/div.aile/span.val                        | '24\u202f850\u202f€'
+  L 806 | div.ecran/div.barre/div.mano                       | '<svg viewBox="0 0 40 26"><path d="M5 22 A15 15 0 0 1 35 22" fill="none" stroke="#ffffff22" stroke-width="3"/><path d="M5 22 A15 15 0 0 1 20 7" fill="none" stroke="#7fd4d955" stroke-width="3"/><path d="M29 10 A15 15 0 0 1 35 22" fill="none" stroke="#e0664a88" stroke-width="3"/><line x1="20" y1="22" x2="20" y2="9" stroke="#eae0c8" stroke-width="1.6" stroke-linecap="round" transform="rotate(-40 20 22)"/><circle cx="20" cy="22" r="1.8" fill="#b08d3e"/></svg>'
+  L 806 | div.barre/div.mano/span.val                        | 'Tiède'
+  L 806 | div.barre/div.mano/span.lib                        | 'CHALEUR'
+  L 807 | div.barre/div.aile.droite/span.lib                 | 'JOUR 12'
+  L 807 | div.barre/div.aile.droite/span.val                 | 'Plein jour'
+  L 807 | div.panneau.feutre/div.tapis-feutre/div.grave      | 'La carte reste sur la table'
+  L 807 | div.table/div.carte-or/div.coin                    | '♦'
+  L 807 | div.carte-or/div.coin/small                        | 'tactique'
+  L 808 | div.table/div.carte-or/div.titre                   | 'Des locaux à remettre en état'
+  L 809 | div.bandes/div.bande/span                          | 'Portée'
+  L 809 | div.bandes/div.bande/div.pips                      | <i.on/>  (pip)
+  L 809 | div.carte-or/div.bandes/div.bande                  | <i.on/>  (pip)
+  L 809 | div.table/div.carte-or/div.bandes                  | <i/>  (pip)
+  L 809 | div.tapis-feutre/div.table/em                      | 'modérée'
+  L 809 | div.tapis-feutre/div.bande/span                    | 'Urgence'
+  L 809 | div.tapis-feutre/div.bande/div.pips                | <i.on/>  (pip)
+  L 809 | div.panneau.feutre/div.tapis-feutre/div.bande      | <i/>  (pip)
+  L 809 | div.ecran/div.panneau.feutre/div.tapis-feutre      | <i/>  (pip)
+  L 809 | div.tel/div.ecran/em                               | 'faible'
+  L 809 | div.jeton-or/span                                  | 'libre'
+  L 809 | div.jeton-or/small                                 | 'votre grande décision du jour'
+  L 809 | div.mot-or.rouge                                   | 'Rien n’est parti : ça n’a pas pu se faire pour l’instant.'
+  L 809 | div.ligne-or                                       | 'Retour à l’accueil'
+  L 809 | div.ligne-or/small                                 | 'La carte vous attend encore.'
+  L 809 | div.dock9/div.db.actif                             | 'Empire'
+  L 809 | div.dock9/div.db                                   | 'Famille'
+  L 809 | div.dock9/div.db                                   | 'Filière'
+  L 809 | div.dock9/div.db                                   | 'Plus'

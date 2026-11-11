@@ -1,0 +1,51 @@
+# Points 2, 4, 6, 7 — ancrages dans le cumul back gate/cumul-2026-10-10 @7807d6c8 (B DEDUIT du source)
+
+## Point 2 — audit_risk_bucket : 'clean' confond-il « jamais audite » et « audite propre » ?
+forensic.projection.service.ts:1+414| function deriveAuditRiskBucket(chi2: number | null, softFlags: number): AuditRiskBucket {
+forensic.projection.service.ts:2+414|   // Anchor on the EXISTING business threshold H (canon :67, benfordChi2ThresholdH = 14.0 default).
+forensic.projection.service.ts:3+414|   const H = forensicTunables.benfordChi2ThresholdH;
+forensic.projection.service.ts:4+414|   const flaggedThreshold = AUDIT_RISK_FLAGGED_CHI2_MULT * H; // [PROPOSED DEFAULT] 1.5 × 14.0 = 21.0
+forensic.projection.service.ts:5+414|   const auditedThreshold = AUDIT_RISK_AUDITED_CHI2_MULT * H; // [PROPOSED DEFAULT] 3.0 × 14.0 = 42.0
+forensic.projection.service.ts:6+414| 
+forensic.projection.service.ts:7+414|   if (chi2 === null) {
+forensic.projection.service.ts:8+414|     // No audit yet — if soft_flag_count > 0 (soft-flags from a previous run), at least 'watched'.
+forensic.projection.service.ts:9+414|     return softFlags > 0 ? 'watched' : 'clean';
+forensic.projection.service.ts:10+414|   }
+forensic.projection.service.ts:11+414| 
+forensic.projection.service.ts:12+414|   if (chi2 >= auditedThreshold) return 'audited';
+forensic.projection.service.ts:13+414|   if (chi2 >= flaggedThreshold) return 'flagged';
+forensic.projection.service.ts:14+414|   if (chi2 >= H) return 'watched';
+forensic.projection.service.ts:15+414|   return 'clean';
+forensic.projection.service.ts:16+414| }
+forensic.projection.service.ts:17+414| 
+=> chi2===null ET softFlags===0  -> 'clean'  (jamais audite)
+=> chi2 < H (=14.0)              -> 'clean'  (audite, propre)
+=> les deux rendent la MEME valeur : non distinguables cote client. CONFORME.
+
+## Point 4 — denominateur 3 : combien de bandes ForensicClientProjection porte-t-il ?
+champs de type bande dans l'interface = 3  (attendu 3)
+140:  audit_risk_bucket: AuditRiskBucket;
+146:  effluent_visibility_bucket: EffluentVisibilityBucket;
+152:  lifestyle_alarm_bucket: LifestyleAlarmBucket;
+160:  lifestyle_lieutenant_name: string | null;
+=> 3 bandes + 1 nom = 4 cles. Le denominateur 3 = les 3 bandes. SOURCE.
+
+## Point 6 — regle du nom (forensic-lifestyle-lieutenant.ts)
+forensic-lifestyle-lieutenant.ts:1+79|   if (bucket === 'quiet' || rows.length === 0) return null;
+forensic-lifestyle-lieutenant.ts:2+79|   const { worstGap, worstConsecutive, worstStage } = maximaTrainDeVie(rows);
+forensic-lifestyle-lieutenant.ts:3+79|   const auMaximum = rows.filter((row) => {
+forensic-lifestyle-lieutenant.ts:4+79|     const { gap, consecutive, stage } = normalise(row);
+forensic-lifestyle-lieutenant.ts:5+79|     return stage === worstStage && consecutive === worstConsecutive && gap === worstGap;
+forensic-lifestyle-lieutenant.ts:6+79|   });
+forensic-lifestyle-lieutenant.ts:7+79|   if (auMaximum.length !== 1) return null;
+forensic-lifestyle-lieutenant.ts:8+79|   const [seule] = auMaximum;
+forensic-lifestyle-lieutenant.ts:9+79|   // M2 : aucune FK composite ne lie `lifestyle_audit_state.player_id` à `lieutenant.player_id` — la
+forensic-lifestyle-lieutenant.ts:10+79|   // jointure SQL est scopée, et on le revérifie ici (le nom d'un lieutenant d'un autre joueur ne sort jamais).
+forensic-lifestyle-lieutenant.ts:11+79|   if (seule.lieutenant_player_id !== playerId) return null;
+forensic-lifestyle-lieutenant.ts:12+79|   if (seule.lieutenant_name === null || seule.lieutenant_name === PLACEHOLDER_NOM_LIEUTENANT) return null;
+forensic-lifestyle-lieutenant.ts:13+79|   return seule.lieutenant_name;
+=> auMaximum.length !== 1 (donc 0 OU >=2) -> null. L'etiquette du 153 dit exactement cela.
+
+## Point 7 — routes JOUEUR du domaine forensic (hors _test, hors admin/BO)
+services/game-back/src/operational/forensic/forensic.controller.ts:55:  @Get('me/forensic')
+=> 1 route joueur de LECTURE, 0 route d'action (@Post) : le CTA « ACHETER DU RENSEIGNEMENT » reste sans route, ce que la maquette dit elle-meme (« le prix n'est pas servi »).

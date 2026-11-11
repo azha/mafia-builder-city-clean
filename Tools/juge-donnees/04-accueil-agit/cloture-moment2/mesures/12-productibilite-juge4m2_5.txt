@@ -1,0 +1,17 @@
+### scénario 5 (juge4m2_5) — PRODUCTIBILITÉ : la SEULE voie joueur trouvée vers une carte (ESCALATION_BACKLOG_REVIEW, code 103) demande >= hl_escalation_backlog_min cartes 'escalated' (défaut 3, core-loops-tunables.ts:463-465).
+## (1) open — la file d'un compte neuf
+hl_card = None
+len(queue) = 1
+exception_ids = ['bbced293-fcd3-45df-b6a4-e8a73506a413']
+methods du 1er = ['ONE_TIME', 'ESCALATE']
+
+## (2) escalate l'unique carte de la file (action JOUEUR, exceptions.controller.ts:112)
+$ rtk proxy curl -s -X POST .../v1/exceptions/bbced293-fcd3-45df-b6a4-e8a73506a413/resolve -d '{"method":"ESCALATE","chosen_action_id":"escalate"}'
+{"data": {"resolved": true, "outcome": "ESCALATED"}}
+
+## (3) escalations servies + file
+total escalated = 1
+
+## (4) session/close puis session/open FRAIS (computeAndPersist ne tourne QUE sur une ouverture FRAÎCHE, hl-card.service.ts:12-13)
+close -> {"data": {"closed": true}}
+APRES 1 escalade + close + open FRAIS : hl_card = None | len(queue) = 0

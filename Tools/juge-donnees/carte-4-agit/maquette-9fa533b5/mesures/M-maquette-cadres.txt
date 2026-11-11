@@ -1,0 +1,30 @@
+# M — maquette épinglée. SHA 8b79f946 (mise à jour orchestrateur) ET 9fa533b5 (dossier) : la PAGE est octet pour octet la MÊME.
+md5 ecrans-brennar-accueil.html @ 9fa533b5 = a4a52036bcd38087b0fc5b3e8359fa84
+md5 ecrans-brennar-accueil.html @ 8b79f946 = a4a52036bcd38087b0fc5b3e8359fa84
+taille (octets) aux deux SHA = 569800
+569800
+
+## cadres de la page (numérotation PROPRE de la page : le 1er div.cadre est le cadre 0 — recoupée sur les commentaires CSS l.727/733/745 « cadre 1 / cadre 2 / cadre 4 »)
+NB_CADRES = 7
+  cadre 0 : ④ L’ouverture — rien à trancher
+  cadre 1 : ④ L’ouverture — une carte de tête · état cible, HL chunk 3 ; en attendant, le client garde Prendre acte / Pas maintenant, sans lig
+  cadre 2 : ④ L’ouverture — des rapports à lire (l’entrée du rapport)
+  cadre 3 : ④ L’ouverture — la file sous pression
+  cadre 4 : ④ L’ouverture — un joueur neuf, planque non vide : la suite, ordre réel A · B|C · E · D plafonné à 3 (PROPOSÉ)
+  cadre 5 : ④ L’ouverture — une carte de tête AU-DESSUS d’une ligne de file haute (la raison, « Plusieurs attendent encore ») · mesure pour le
+  cadre 6 : ④ L’ouverture — l’APRÈS-geste de la carte de tête : la carte tranchée (outcome « executed » : le geste a agi) · PROPOSÉ
+
+## instanciations dans le CORPS (hors bloc <style>) — les états que la page DESSINE vraiment
+  'tapis-feutre'             = 1
+  'carte-or tranchee'        = 1
+  'tampon-diag'              = 1
+  'jeton-or'                 = 1
+  'mot-or'                   = 1
+  'ligne-or'                 = 1
+  'csq4-rang'                = 5
+  'class="cachet"'           = 0
+  'class="deja"'             = 0
+  'jeton-or pris'            = 0
+  'mot-or rouge'             = 0
+  'class="g or"'             = 3
+  'class="bande"'            = 2

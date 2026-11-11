@@ -1,0 +1,30 @@
+# Le NOM dessine (« Lt. Marrek ») est-il une valeur que le back peut servir ?
+lieutenant-name-pool.ts:1+19| // 24 est explicite (suffixe numérique) plutôt que laissé à une collision silencieuse.
+lieutenant-name-pool.ts:2+19| 
+lieutenant-name-pool.ts:3+19| /**
+lieutenant-name-pool.ts:4+19|  * Le placeholder historique (TD-046). ⚠️ Il reste NÉCESSAIRE : il est le DISCRIMINANT qui distingue
+lieutenant-name-pool.ts:5+19|  * « ce lieutenant attend un nom de fiction » de « l'appelant a fourni un vrai nom » (des fixtures en
+lieutenant-name-pool.ts:6+19|  * portent). Le supprimer ferait renommer des lieutenants que des specs assertent nommément.
+lieutenant-name-pool.ts:7+19|  */
+lieutenant-name-pool.ts:8+19| export const PLACEHOLDER_NOM_LIEUTENANT = 'Lieutenant';
+lieutenant-name-pool.ts:9+19| 
+lieutenant-name-pool.ts:10+19| /** Pool « Sec » — la signature Brennar (choix 2, les 12 premiers servis). */
+lieutenant-name-pool.ts:11+19| export const POOL_SEC = [
+lieutenant-name-pool.ts:12+19|   'Hara', 'Rin', 'Voss', 'Kane', 'Tovah', 'Marr',
+lieutenant-name-pool.ts:13+19|   'Vesk', 'Dorne', 'Sallo', 'Tull', 'Brasse', 'Kest',
+lieutenant-name-pool.ts:14+19| ] as const;
+lieutenant-name-pool.ts:15+19| 
+lieutenant-name-pool.ts:16+19| /** Pool « Estuaire » — le DÉBORDEMENT, servi seulement quand un roster dépasse 12. */
+lieutenant-name-pool.ts:17+19| export const POOL_ESTUAIRE = [
+lieutenant-name-pool.ts:18+19|   'Halde', 'Skeld', 'Varne', 'Marrek', 'Rook', 'Sarre',
+lieutenant-name-pool.ts:19+19|   'Wend', 'Quist', 'Oster', 'Nock', 'Ferrand', 'Ilm',
+lieutenant-name-pool.ts:20+19| ] as const;
+lieutenant-name-pool.ts:21+19| 
+lieutenant-name-pool.ts:22+19| /** La séquence servie, dans l'ordre : Sec d'abord, Estuaire en débordement. */
+lieutenant-name-pool.ts:23+19| export const NOMS_LIEUTENANTS: readonly string[] = [...POOL_SEC, ...POOL_ESTUAIRE];
+lieutenant-name-pool.ts:24+19| 
+lieutenant-name-pool.ts:25+19| /** Le préfixe de la forme canon « Lt. Nom ». `lieutenant.name` est un `varchar(64)` — mesuré ; le
+lieutenant-name-pool.ts:26+19|  *  plus long nom servi fait 11 caractères préfixe compris, donc aucune troncature possible. */
+
+## forme stockee = PREFIXE + nom du pool ; 'Marrek' est dans le pool :
+services/game-back/src/operational/lieutenant/lieutenant-name-pool.ts:37:  'Halde', 'Skeld', 'Varne', 'Marrek', 'Rook', 'Sarre',

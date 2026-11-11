@@ -1,0 +1,70 @@
+# F dérive la clé de conséquence par CONCATÉNATION : `labelCle + ".projected_consequence"`
+#   (HighestLeverageCardController.cs:652) — le champ SERVI `options[].projected_consequence` n'est
+#   PAS déclaré par DecisionOptionDto (SessionDtos.cs:16-19) donc JETÉ par JsonUtility.
+# Mesure : pour les 16 options des 8 fournisseurs, la concaténation == le champ servi ? et la clé est-elle servie ?
+  OK  autonomy-reports.ts | label=hl.option.autonomy_reports.review_now
+        servi projected_consequence = hl.option.autonomy_reports.review_now.projected_consequence
+        dérivé par le client        = hl.option.autonomy_reports.review_now.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  autonomy-reports.ts | label=hl.option.autonomy_reports.leave_pending
+        servi projected_consequence = hl.option.autonomy_reports.leave_pending.projected_consequence
+        dérivé par le client        = hl.option.autonomy_reports.leave_pending.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  backpressure-critical-trace.ts | label=hl.option.backpressure_critical_trace.trace_now
+        servi projected_consequence = hl.option.backpressure_critical_trace.trace_now.projected_consequence
+        dérivé par le client        = hl.option.backpressure_critical_trace.trace_now.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  backpressure-critical-trace.ts | label=hl.option.backpressure_critical_trace.leave_pending
+        servi projected_consequence = hl.option.backpressure_critical_trace.leave_pending.projected_consequence
+        dérivé par le client        = hl.option.backpressure_critical_trace.leave_pending.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  cue-cascade-fallout.ts | label=hl.option.cue_cascade_fallout.review_now
+        servi projected_consequence = hl.option.cue_cascade_fallout.review_now.projected_consequence
+        dérivé par le client        = hl.option.cue_cascade_fallout.review_now.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  cue-cascade-fallout.ts | label=hl.option.cue_cascade_fallout.leave_pending
+        servi projected_consequence = hl.option.cue_cascade_fallout.leave_pending.projected_consequence
+        dérivé par le client        = hl.option.cue_cascade_fallout.leave_pending.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  damaged-building.ts | label=hl.option.damaged_building.repair_via_queue
+        servi projected_consequence = hl.option.damaged_building.repair_via_queue.projected_consequence
+        dérivé par le client        = hl.option.damaged_building.repair_via_queue.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  damaged-building.ts | label=hl.option.damaged_building.leave_damaged
+        servi projected_consequence = hl.option.damaged_building.leave_damaged.projected_consequence
+        dérivé par le client        = hl.option.damaged_building.leave_damaged.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  escalation-backlog.ts | label=hl.option.escalation_backlog.review_now
+        servi projected_consequence = hl.option.escalation_backlog.review_now.projected_consequence
+        dérivé par le client        = hl.option.escalation_backlog.review_now.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  escalation-backlog.ts | label=hl.option.escalation_backlog.leave_pending
+        servi projected_consequence = hl.option.escalation_backlog.leave_pending.projected_consequence
+        dérivé par le client        = hl.option.escalation_backlog.leave_pending.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  legal-case.ts | label=hl.option.legal_case.accept_plea_deal
+        servi projected_consequence = hl.option.legal_case.accept_plea_deal.projected_consequence
+        dérivé par le client        = hl.option.legal_case.accept_plea_deal.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  legal-case.ts | label=hl.option.legal_case.let_ride
+        servi projected_consequence = hl.option.legal_case.let_ride.projected_consequence
+        dérivé par le client        = hl.option.legal_case.let_ride.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  mycelial-stressed-leg.ts | label=hl.option.mycelial_stressed_leg.maintain_now
+        servi projected_consequence = hl.option.mycelial_stressed_leg.maintain_now.projected_consequence
+        dérivé par le client        = hl.option.mycelial_stressed_leg.maintain_now.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  mycelial-stressed-leg.ts | label=hl.option.mycelial_stressed_leg.leave_stressed
+        servi projected_consequence = hl.option.mycelial_stressed_leg.leave_stressed.projected_consequence
+        dérivé par le client        = hl.option.mycelial_stressed_leg.leave_stressed.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  severed-route.ts | label=hl.option.severed_route.reroute_now
+        servi projected_consequence = hl.option.severed_route.reroute_now.projected_consequence
+        dérivé par le client        = hl.option.severed_route.reroute_now.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+  OK  severed-route.ts | label=hl.option.severed_route.leave_severed
+        servi projected_consequence = hl.option.severed_route.leave_severed.projected_consequence
+        dérivé par le client        = hl.option.severed_route.leave_severed.projected_consequence  (identique)
+        clé servie par le bundle fr : OUI
+
+TOTAL options lues = 16 | dérivation identique au champ servi = 16/16 | clés servies par le bundle = 16/16

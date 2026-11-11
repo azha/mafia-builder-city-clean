@@ -1,0 +1,122 @@
+# 04 — routes joueur du domaine, authz, et les 2 autres pistes + la vue acteurs
+
+--- balayage EXHAUSTIF des contrôleurs (le dossier propose, le juge compte) ---
+$ git ls-tree -r --name-only 7807d6c8 -- services/game-back/src | grep -c "\.controller\.ts$" => 149
+$ git grep -l -E "forensic|lifestyle|audit_risk|effluent" 7807d6c8 -- "**/*.controller.ts"
+7807d6c8:services/game-back/src/operational/conflict/combat/combat-test.controller.ts
+7807d6c8:services/game-back/src/operational/forensic/forensic-admin.controller.ts
+7807d6c8:services/game-back/src/operational/forensic/forensic-test.controller.ts
+7807d6c8:services/game-back/src/operational/forensic/forensic.controller.ts
+7807d6c8:services/game-back/src/operational/maintenance/maintenance-test.controller.ts
+=> hors _test et admin : UNE seule route joueur porte le domaine des pistes.
+
+--- les 3 routes JOUEUR de l ecran (JwtAuthGuard, ni _test ni admin) ---
+7807d6c8:services/game-back/src/operational/forensic/forensic.controller.ts-54-   */
+7807d6c8:services/game-back/src/operational/forensic/forensic.controller.ts:55:  @Get('me/forensic')
+7807d6c8:services/game-back/src/operational/forensic/forensic.controller.ts-56-  @UseGuards(JwtAuthGuard)
+7807d6c8:services/game-back/src/operational/internal_affairs/internal-affairs.controller.ts:61:  @Get('me/internal-affairs/actors')
+7807d6c8:services/game-back/src/operational/internal_affairs/internal-affairs.controller.ts-62-  @UseGuards(JwtAuthGuard)
+--
+7807d6c8:services/game-back/src/operational/internal_affairs/internal-affairs.controller.ts:76:  @Post('me/internal-affairs/actors/:ref/intel')
+7807d6c8:services/game-back/src/operational/internal_affairs/internal-affairs.controller.ts-77-  @HttpCode(200)
+
+--- authz / IDOR : le playerId ne vient JAMAIS du client ---
+  @Get('me/forensic')
+  @UseGuards(JwtAuthGuard)
+  async getForensicState(@Req() req: RequestWithAccount): Promise<ForensicClientProjection> {
+    const playerId = await this.resolvePlayerId(req.account!.account_id);
+    return this.projection.projectForensicState(playerId);
+  }
+
+  /** Resolve account_id → player_id via the 1-1 Player↔Account link (the GET /v1/me identity
+   *  bridge — duplicated verbatim, the established per-controller convention, never shared). */
+  private async resolvePlayerId(accountId: string): Promise<string> {
+    const rows = await this.db
+      .select({ player_id: player.player_id })
+      .from(player)
+      .innerJoin(account, eq(account.account_id, player.account_id))
+      .where(and(eq(player.account_id, accountId), eq(account.kind, 'PLAYER')))
+      .limit(1);
+    const playerId = rows[0]?.player_id;
+    if (!playerId) {
+      throw new ApiError('RESOURCE_NOT_FOUND', { message: 'No player profile for this account.' });
+    }
+    return playerId;
+  }
+
+--- la jointure du nom est scopee au joueur (ON clause), + re-verification dans le module pur ---
+    const lifestyleRows = await this.db
+      .select({
+        last_gap: lifestyleAuditState.last_gap,
+        consecutive_flag_months: lifestyleAuditState.consecutive_flag_months,
+        tail_ramp_stage: lifestyleAuditState.tail_ramp_stage,
+        lieutenant_player_id: lieutenant.player_id,
+        lieutenant_name: lieutenant.name,
+        // NOTE: last_gap, consecutive_flag_months, tail_ramp_stage read internally — NEVER forwarded.
+        // lieutenant_name n'en sort que par `nomLieutenantTrainDeVie` (un `string | null`, jamais la ligne).
+        // declared_cut_cents, visible_standard_index, tail_started_tick, last_month_id = NOT selected.
+      })
+      .from(lifestyleAuditState)
+      .leftJoin(
+        lieutenant,
+        and(
+          eq(lieutenant.lieutenant_id, lifestyleAuditState.lieutenant_id),
+          eq(lieutenant.player_id, playerId),
+        ),
+      )
+      .where(eq(lifestyleAuditState.player_id, playerId));
+export function nomLieutenantTrainDeVie(
+  rows: readonly LifestyleRowJointe[],
+  playerId: string,
+  bucket: LifestyleAlarmBucket,
+): string | null {
+  if (bucket === 'quiet' || rows.length === 0) return null;
+  const { worstGap, worstConsecutive, worstStage } = maximaTrainDeVie(rows);
+  const auMaximum = rows.filter((row) => {
+    const { gap, consecutive, stage } = normalise(row);
+    return stage === worstStage && consecutive === worstConsecutive && gap === worstGap;
+  });
+  if (auMaximum.length !== 1) return null;
+  const [seule] = auMaximum;
+  // M2 : aucune FK composite ne lie `lifestyle_audit_state.player_id` à `lieutenant.player_id` — la
+  // jointure SQL est scopée, et on le revérifie ici (le nom d'un lieutenant d'un autre joueur ne sort jamais).
+  if (seule.lieutenant_player_id !== playerId) return null;
+  if (seule.lieutenant_name === null || seule.lieutenant_name === PLACEHOLDER_NOM_LIEUTENANT) return null;
+  return seule.lieutenant_name;
+}
+
+--- la regle option B, lue a la source (ce qui decide du null) ---
+export function maximaTrainDeVie(rows: readonly LifestyleRowJointe[]): MaximaTrainDeVie {
+  let worstGap: number | null = null;
+  let worstConsecutive = 0;
+  let worstStage: LifestyleStage = 'none';
+  for (const row of rows) {
+    const { gap, consecutive, stage } = normalise(row);
+    if (LIFESTYLE_STAGE_ORDER[stage] > LIFESTYLE_STAGE_ORDER[worstStage]) worstStage = stage;
+    if (consecutive > worstConsecutive) worstConsecutive = consecutive;
+    if (gap !== null && (worstGap === null || gap > worstGap)) worstGap = gap;
+  }
+  return { worstGap, worstConsecutive, worstStage };
+}
+
+--- les 2 autres pistes ONT-ELLES BOUGE ? le commit Q5 ne touche ni leur derivation ni leur bande ---
+268bf27b08e08229910d659b2484c75bcd734028 2026-10-09 feat(forensic ㊴ Q5): GET /v1/me/forensic gagne lifestyle_lieutenant_name (option B, authz M2)
+
+ .../forensic/forensic-lifestyle-lieutenant.ts      |  93 ++++++++++++++++
+ .../operational/forensic/forensic.controller.ts    |   3 +
+ .../forensic/forensic.projection.service.ts        |  62 ++++++-----
+ .../forensic_lifestyle_lieutenant_unit.spec.ts     | 124 +++++++++++++++++++++
+ 4 files changed, 256 insertions(+), 26 deletions(-)
+$ git diff --stat 7807d6c8 gate/cumul-2026-10-10 -- .../forensic/  (VIDE = rien na bouge depuis lepingle)
+(vide)
+
+--- vue acteurs : la forme servie, inchangee ---
+export type ActorStatusIndicator = 'steady' | 'nervous' | 'unavailable' | 'gone';
+export interface ActorSummary {
+  readonly actorRef: string;
+  readonly actorType: 'lawyer' | 'clerk';
+  readonly status: ActorStatusIndicator;
+}
+$ costCents : servi UNIQUEMENT dans la reponse du POST (jamais en lecture)
+7807d6c8:services/game-back/src/operational/internal_affairs/ia-intel-purchase.service.ts:133:  readonly costCents: number;
+7807d6c8:services/game-back/src/operational/internal_affairs/ia-intel-purchase.service.ts:248:    const costCents = this.tunables.intelPurchaseCostCents; // 800000 default ($8k)

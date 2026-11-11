@@ -1,0 +1,48 @@
+# Delta M : 9fa533b5 (r1) -> b2ceebeb (r2), cadres 152 et 153
+# (le r1 n'est lu que pour CARACTERISER LA CORRECTION ; aucun rapport de juge n'est ouvert)
+
+================================================================================================
+CADRE 152
+-- RETIRE par la correction (present r1, absent r2) :
+   - ETIQUETTE : ㊴ · les pistes — « le train de vie de Lt. Marrek » : le back sert le NOM (lifestyle_lieutenant_name), piste vivante, bande « On vous regarde » (état cible Q5, PROPOSÉ)
+   - piste 0 : 4 crans, 0 allume(s) -> ['#2a3648', '#2a3648', '#2a3648', '#2a3648']
+   - ELEMENTS PORTEURS DE TEXTE (37) :
+   - [span     ] compteurs>fen ici>b>span   | /2
+   - [b        ] dos6>compteurs>fen>b       | 00
+   - [span     ] dos6>compteurs>fen>span    | franchies
+   - [i        ] elast>pistes>pi eteinte>i  | la comptabilité
+   - [b        ] elast>pistes>pi eteinte>b  | —
+   - [span     ] cle                        | pas encore sur la table
+   - [span     ] cle                        | visible
+   - [span     ] cle                        | watched
+-- AJOUTE par la correction (absent r1, present r2) :
+   + ETIQUETTE : ㊴ · les pistes — « le train de vie de Lt. Marrek » : le back sert le NOM (lifestyle_lieutenant_name), piste vivante, bande « On vous regarde » (état cible Q5, PROPOSÉ) — productible après le lot back de l’écrivain lifestyle
+   + piste 0 : 4 crans, 1 allume(s) -> ['#7db36a', '#2a3648', '#2a3648', '#2a3648']
+   + ELEMENTS PORTEURS DE TEXTE (33) :
+   + [span     ] compteurs>fen ici>b>span   | /3
+   + [i        ] elast>pistes>pi>i          | la comptabilité
+   + [b        ] elast>pistes>pi>b          | rien à signaler
+   + [span     ] cle                        | Ça se remarque
+
+================================================================================================
+CADRE 153
+-- RETIRE par la correction (present r1, absent r2) :
+   - ETIQUETTE : ㊴ · les pistes — le nom n’est PAS servi (null : plusieurs lignes d’alarme, option B) : la piste garde son titre, sans nom ; même piste, même bande (PROPOSÉ)
+   - piste 0 : 4 crans, 0 allume(s) -> ['#2a3648', '#2a3648', '#2a3648', '#2a3648']
+   - ELEMENTS PORTEURS DE TEXTE (37) :
+   - [span     ] compteurs>fen ici>b>span   | /2
+   - [b        ] dos6>compteurs>fen>b       | 00
+   - [span     ] dos6>compteurs>fen>span    | franchies
+   - [i        ] elast>pistes>pi eteinte>i  | la comptabilité
+   - [b        ] elast>pistes>pi eteinte>b  | —
+   - [span     ] cle                        | pas encore sur la table
+   - [span     ] cle                        | visible
+   - [span     ] cle                        | watched
+-- AJOUTE par la correction (absent r1, present r2) :
+   + ETIQUETTE : ㊴ · les pistes — le nom n’est PAS servi (null : aucune ligne unique ne porte les trois maxima, option B) : la piste garde son titre, sans nom ; même piste, même bande (PROPOSÉ) — productible après le lot back de l’écrivain lifestyle
+   + piste 0 : 4 crans, 1 allume(s) -> ['#7db36a', '#2a3648', '#2a3648', '#2a3648']
+   + ELEMENTS PORTEURS DE TEXTE (33) :
+   + [span     ] compteurs>fen ici>b>span   | /3
+   + [i        ] elast>pistes>pi>i          | la comptabilité
+   + [b        ] elast>pistes>pi>b          | rien à signaler
+   + [span     ] cle                        | Ça se remarque

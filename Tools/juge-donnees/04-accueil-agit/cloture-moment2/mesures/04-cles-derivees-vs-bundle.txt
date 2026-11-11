@@ -1,0 +1,30 @@
+# Clés DÉRIVÉES (Libelle.De / Lib) des 3 fichiers de ④/⑤, vs le bundle fr RÉEL (GET /v1/i18n/bundle?locale=fr-FR, 2113 clés)
+# règle de slug recopiée de Assets/Scripts/I18n/Libelle.cs (Slug : NFD, marques retirées, alnum minuscule, reste _ replié, trim _)
+
+TOTAL clés dérivées distinctes = 22 | SERVIES = 9 | NON SERVIES = 13
+
+--- NON SERVIES (le client affiche son littéral, repli COMPTÉ par Libelle) ---
+  ABSENTE accueil.carte.c_est_note | littéral: 'C’est noté' | sites: ApresGesteHl.cs:134
+  ABSENTE accueil.carte.deja_tranchee | littéral: 'Déjà tranchée' | sites: DecisionDetailScreenController.cs:403
+  ABSENTE accueil.carte.la_carte_reste_sur_la_table | littéral: 'La carte reste sur la table' | sites: ApresGesteHl.cs:164
+  ABSENTE accueil.carte.la_carte_vous_attend_encore | littéral: 'La carte vous attend encore.' | sites: ApresGesteHl.cs:166
+  ABSENTE accueil.carte.lire_maintenant | littéral: 'Lire maintenant' | sites: HighestLeverageCardController.cs:332
+  ABSENTE accueil.carte.retour_a_l_accueil | littéral: 'Retour à l’accueil' | sites: ApresGesteHl.cs:136,ApresGesteHl.cs:149,ApresGesteHl.cs:158,ApresGesteHl.cs:166
+  ABSENTE accueil.carte.rien_d_autre_a_trancher_pour_l_instant | littéral: 'Rien d’autre à trancher pour l’instant.' | sites: ApresGesteHl.cs:177
+  ABSENTE accueil.carte.tranchee | littéral: 'TRANCHÉE' | sites: DecisionDetailScreenController.cs:402
+  ABSENTE accueil.carte.vous_avez_tranche | littéral: 'Vous avez tranché' | sites: ApresGesteHl.cs:134
+  ABSENTE accueil.jeton.fermee_aujourd_hui | littéral: 'fermée aujourd’hui' | sites: ApresGesteHl.cs:89
+  ABSENTE accueil.jeton.libre | littéral: 'libre' | sites: ApresGesteHl.cs:89
+  ABSENTE accueil.jeton.pris | littéral: 'pris' | sites: ApresGesteHl.cs:89
+  ABSENTE accueil.jeton.votre_grande_decision_du_jour | littéral: 'votre grande décision du jour' | sites: ApresGesteHl.cs:92
+
+--- SERVIES ---
+  SERVIE  accueil.carte.aucune_decision_en_attente = 'Aucune décision en attente' | sites: HighestLeverageCardController.cs:312
+  SERVIE  accueil.carte.ce_qu_on_peut_faire = 'Ce qu’on peut faire' | sites: HighestLeverageCardController.cs:379
+  SERVIE  accueil.carte.la_decision_n_a_pas_ete_prise = 'La décision n’a pas été prise.' | sites: ApresGesteHl.cs:141
+  SERVIE  accueil.carte.limite_de_structure_atteinte = 'Limite de structure atteinte' | sites: HighestLeverageCardController.cs:320
+  SERVIE  accueil.carte.portee = 'Portée' | sites: HighestLeverageCardController.cs:489
+  SERVIE  accueil.carte.prendre_acte = 'Prendre acte' | sites: HighestLeverageCardController.cs:394,HighestLeverageCardController.cs:557,HighestLeverageCardController.cs:578
+  SERVIE  accueil.carte.rien_a_signaler = 'Rien à signaler' | sites: HighestLeverageCardController.cs:309
+  SERVIE  accueil.carte.urgence = 'Urgence' | sites: HighestLeverageCardController.cs:489
+  SERVIE  accueil.file.plusieurs_attendent_encore = 'Plusieurs attendent encore' | sites: ApresGesteHl.cs:177

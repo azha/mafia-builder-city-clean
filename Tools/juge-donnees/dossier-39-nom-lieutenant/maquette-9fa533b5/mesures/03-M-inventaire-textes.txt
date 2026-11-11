@@ -1,0 +1,97 @@
+# 03 — M : inventaire des textes du cadre 152, confrontés à la table i18n du back @7807d6c8
+# (indice de cadre = position 0-based du littéral <div class="cadre">, convention de
+#  Tools/juge-visuel/verifier-indices-cadres.py:40 ; TOTAL = 154 cadres, 152/153 = les deux derniers)
+
+$ python3 -I extraire-cadres.py ecrans-brennar-6.html 131 151 152 153
+TOTAL CADRES (littéral exact) = 154
+===== CADRE 131 — étiquette : Le dossier — trois pistes qui ne se mélangent pas =====
+===== CADRE 151 — étiquette : ㊴ · les acteurs — le renseignement par ligne, éteint ; la fenêtre des pistes ramène ; « ceux qui ne sont pas sur la liste » (PROPOSÉ) =====
+===== CADRE 152 — étiquette : ㊴ · les pistes — « le train de vie de Lt. Marrek » : le back sert le NOM (lifestyle_lieutenant_name), piste vivante, bande « On vous regarde » (état cible Q5, PROPOSÉ) =====
+===== CADRE 153 — étiquette : ㊴ · les pistes — le nom n’est PAS servi (null : plusieurs lignes d’alarme, option B) : la piste garde son titre, sans nom ; même piste, même bande (PROPOSÉ) =====
+
+$ python3 -I textes-cadre.py cadre-152.html string_table.ts
+chemin                             | texte dessiné                                              | clé i18n (table du back)
+------------------------------------------------------------------------------------------------------------------------------------------------------
+div.cadre/div.etiquette            | ㊴ · les pistes — « le train de vie de Lt. Marrek » : le ba | ABSENT
+div.barre/div.aile/span.lib        | ARGENT                                                     | ABSENT
+div.barre/div.aile/span.val        | 24 850 €                                                   | ABSENT
+div.barre/div.mano/span.val        | Tiède                                                      | SERVI heat.bucket.warm
+div.barre/div.mano/span.lib        | CHALEUR                                                    | ABSENT
+div.barre/div.aile droite/span.lib | JOUR 12                                                    | ABSENT
+div.barre/div.aile droite/span.val | Plein jour                                                 | SERVI chrome.phase.plein_jour
+div.dos6/div.enseigne/b            | Le dossier                                                 | SERVI forensic.bloc.le_dossier, plus.entree.le_dossier
+div.dos6/div.enseigne/i            | trois pistes, et elles ne se mélangent pas                 | SERVI forensic.bloc.trois_pistes_et_elles_ne_se_melangent_pas
+div.compteurs/div.fen ici/b        | 02                                                         | ABSENT
+div.fen ici/b/span                 | /2                                                         | ABSENT
+div.compteurs/div.fen ici/span     | pistes chaudes                                             | SERVI forensic.bloc.pistes_chaudes
+div.compteurs/div.fen/b            | 00                                                         | ABSENT
+div.compteurs/div.fen/span         | franchies                                                  | SERVI forensic.bloc.franchies
+div.compteurs/div.fen porte/i      | ›                                                          | ABSENT
+div.compteurs/div.fen porte/b      | 01                                                         | ABSENT
+div.fen porte/b/span               | /4                                                         | ABSENT
+div.compteurs/div.fen porte/span   | acteurs qui tiennent                                       | SERVI forensic.bloc.acteurs_qui_tiennent
+div.pistes/div.pi eteinte/i        | la comptabilité                                            | SERVI forensic.bloc.la_comptabilite
+div.pistes/div.pi eteinte/b        | —                                                          | SERVI building.substance., building.substance.
+div.pistes/div.pi eteinte/span.cle | pas encore sur la table                                    | SERVI forensic.bloc.pas_encore_sur_la_table
+div.pistes/div.pi/i                | ce qui sort des cuves                                      | SERVI forensic.bloc.ce_qui_sort_des_cuves
+div.pistes/div.pi/b                | ça se voit                                                 | SERVI forensic.cran.ca_se_voit
+div.pistes/div.pi/span.cle         | visible                                                    | ABSENT
+div.pistes/div.pi/i                | le train de vie de Lt. Marrek                              | ABSENT
+div.pistes/div.pi/b                | On vous regarde                                            | SERVI forensic.gravite.on_vous_regarde
+div.pistes/div.pi/span.cle         | watched                                                    | ABSENT
+div.dos6/div.elast/div.notepi      | Les livres : personne ne regarde par là. Pour l’instant.   | ABSENT
+div.dos6/div.pann/i                | pourquoi trois colonnes                                    | SERVI forensic.bloc.pourquoi_trois_colonnes
+div.dos6/div.pann/b                | On peut être propre sur deux et pris sur la troisième      | SERVI forensic.bloc.on_peut_etre_propre_sur_deux_et_pris_sur_la_troisieme
+div.dos6/div.pann/small            | la comptabilité, les rejets et le train de vie             | ABSENT
+div.pann/small/u                   | ne se mélangent pas                                        | ABSENT
+div.dos6/div.pann/small            | . Pour voir                                                | ABSENT
+div.pann/small/u                   | qui parle                                                  | ABSENT
+div.dos6/div.pann/small            | , la fenêtre des acteurs, en haut à droite.                | ABSENT
+div.dos6/div.pied/span.cta6 eteint | ACHETER DU RENSEIGNEMENT                                   | SERVI forensic.bloc.acheter_du_renseignement
+div.dos6/div.pied/div.note6        | sur un acteur, pas sur une piste — éteint :                | ABSENT
+div.pied/div.note6/u               | le prix n’est pas servi                                    | ABSENT
+
+--- les fragments marqués ABSENT du bloc .pann et de .note6 sont des MORCEAUX de clés à trous :
+    forensic.bloc.la_comptabilite_les_rejets_et_le_train_de_vie_ne_se_melangent_pas_... (string_table.ts:3241)
+    forensic.bloc.sur_un_acteur_pas_sur_une_piste_eteint_le_prix_n_est_pas_servi (string_table.ts:3250)
+    « le train de vie de Lt. Marrek » = forensic.bloc.le_train_de_vie_de_nom (4525) avec {nom} <- lifestyle_lieutenant_name
+(eval):22: no matches found: (une phrase certainement présente doit se trouver)
+
+--- lignes EXACTES des clés citées (string_table.ts @7807d6c8) ---
+291:  'forensic.gravite.on_vous_regarde': 'You’re being watched',
+310:  'forensic.bloc.pas_encore_sur_la_table': 'not on the table yet',
+1611:  'forensic.cran.on_regarde': 'they’re watching',
+1613:  'forensic.bloc.le_train_de_vie_d_un_lieutenant': 'a lieutenant’s lifestyle',
+1615:  'forensic.bloc.le_train_de_vie_de_nom': '{nom}’s lifestyle',
+1642:  'forensic.cran.ca_se_voit': 'it shows',
+3228:  'forensic.gravite.on_vous_regarde': 'On vous regarde',
+3247:  'forensic.bloc.pas_encore_sur_la_table': 'pas encore sur la table',
+4522:  'forensic.cran.on_regarde': 'on regarde',
+4524:  'forensic.bloc.le_train_de_vie_d_un_lieutenant': 'le train de vie d’un lieutenant',
+4525:  'forensic.bloc.le_train_de_vie_de_nom': 'le train de vie de {nom}',
+4552:  'forensic.cran.ca_se_voit': 'ça se voit',
+
+--- controle positif du motif : une phrase certainement presente DOIT se trouver ---
+$ grep -c "On peut etre propre sur deux et pris sur la troisieme" string_table.ts => 1
+$ grep -n "personne ne regarde par" string_table.ts => la seule cle voisine dit « Les livres ET LE TRAIN DE VIE »
+3244:  'forensic.bloc.les_livres_et_le_train_de_vie_personne_ne_regarde_par_la_pour_l_instant': 'Les livres et le train de vie : personne ne regarde par là. Pour l’instant.',
+$ grep -c -E "watched|visible" en VALEUR NUE dans la table => 3
+1639:  'forensic.cran.remarque': 'noticed',
+1646:  'filiere.bloc.propres': 'clean',
+1664:  'filiere.proprete.clean': 'clean',
+=> aucune de ces 3 valeurs nues ne vaut watched ni visible : les .cle du cadre nont pas de cle i18n.
+
+--- diff CONTENU 152 vs 153 hors etiquette : un seul texte change ---
+-<i>le train de vie de Lt. Marrek
++<i>le train de vie d’un lieutenant
+-</div>
+  
++</div>
+
++</div>
+
++<!-- ═══ fin ㊴ Q5 (2026-10-11) ═══ -->
+
+
++</div>
+

@@ -1,0 +1,53 @@
+# 02 — B DÉDUIT : l'ensemble de clés de GET /v1/me/forensic et son atteignabilité
+# (aucune pile montée — ruling f2 11/11 ; chaque ligne porte DÉDUIT + sa raison)
+
+$ git grep -n "lifestyle_lieutenant_name" 7807d6c8 -- services/game-back/src tests
+7807d6c8:services/game-back/src/i18n/string_table.ts:1614:  // ㊴ Q5 (2026-10-09) — phrase ENTIÈRE à trou : le nom du lieutenant passe devant (`’s`), jamais de concaténation. Servie avec `lifestyle_lieutenant_name`.
+7807d6c8:services/game-back/src/operational/forensic/forensic-lifestyle-lieutenant.ts:1:// IMPLEMENTS: ㊴ Q5 (2026-10-09) — `GET /v1/me/forensic` gagne `lifestyle_lieutenant_name`.
+7807d6c8:services/game-back/src/operational/forensic/forensic.controller.ts:27:// ㊴ Q5 (additif, 2026-10-09): the response also carries `lifestyle_lieutenant_name: string | null` — a NAME
+7807d6c8:services/game-back/src/operational/forensic/forensic.projection.service.ts:41:// (`lifestyle_lieutenant_name`, ㊴ Q5 — a string | null, never a scalar nor an id).
+7807d6c8:services/game-back/src/operational/forensic/forensic.projection.service.ts:160:  lifestyle_lieutenant_name: string | null;
+7807d6c8:services/game-back/src/operational/forensic/forensic.projection.service.ts:382:    //   ✓ lifestyle_lieutenant_name  — a NAME (string | null), never lieutenant_id (㊴ Q5)
+7807d6c8:services/game-back/src/operational/forensic/forensic.projection.service.ts:387:      lifestyle_lieutenant_name: lifestyleLieutenantName,
+7807d6c8:tests/e2e/operational/forensic_lifestyle_lieutenant_name.engine.spec.ts:1:// IMPLEMENTS: ㊴ Q5 (2026-10-09) — `GET /v1/me/forensic` gagne `lifestyle_lieutenant_name: string | null`.
+7807d6c8:tests/e2e/operational/forensic_lifestyle_lieutenant_name.engine.spec.ts:36:const CLES_FORENSIC = ['audit_risk_bucket', 'effluent_visibility_bucket', 'lifestyle_alarm_bucket', 'lifestyle_lieutenant_name'];
+7807d6c8:tests/e2e/operational/forensic_lifestyle_lieutenant_name.engine.spec.ts:92:test.describe('㊴ Q5 — lifestyle_lieutenant_name : option B + authz M2 (moteur, SQL semé)', () => {
+7807d6c8:tests/e2e/operational/forensic_lifestyle_lieutenant_name.engine.spec.ts:101:    expect(data.lifestyle_lieutenant_name).toBe('Lt. Marrek');
+7807d6c8:tests/e2e/operational/forensic_lifestyle_lieutenant_name.engine.spec.ts:113:    expect(data.lifestyle_lieutenant_name, 'aucune ligne ne porte les trois maxima').toBeNull();
+7807d6c8:tests/e2e/operational/forensic_lifestyle_lieutenant_name.engine.spec.ts:123:    expect(data.lifestyle_lieutenant_name, 'le nom de Q ne sort jamais chez P').toBeNull();
+7807d6c8:tests/e2e/operational/forensic_lifestyle_lieutenant_name.engine.spec.ts:128:    expect((await lireForensic(request, p2.accountId)).data.lifestyle_lieutenant_name).toBe('Lt. Quist');
+7807d6c8:tests/e2e/operational/forensic_lifestyle_lieutenant_name.engine.spec.ts:136:    expect(data.lifestyle_lieutenant_name).toBeNull();
+7807d6c8:tests/e2e/operational/forensic_lifestyle_lieutenant_name.engine.spec.ts:144:    expect(data.lifestyle_lieutenant_name).toBeNull();
+7807d6c8:tests/e2e/parcours/36_42_horizon_forensic.parcours.spec.ts:54:      'audit_risk_bucket', 'effluent_visibility_bucket', 'lifestyle_alarm_bucket', 'lifestyle_lieutenant_name',
+7807d6c8:tests/e2e/parcours/36_42_horizon_forensic.parcours.spec.ts:66:    expect(d.lifestyle_lieutenant_name, 'joueur neuf : aucun lieutenant nommé').toBeNull();
+7807d6c8:tests/unit/operational/forensic_lifestyle_lieutenant_unit.spec.ts:1:// IMPLEMENTS: ㊴ Q5 (2026-10-09) — `lifestyle_lieutenant_name` de `GET /v1/me/forensic`, option B (f2 08/10).
+
+--- Qui ÉCRIT lifestyle_audit_state en PRODUCTION ? (seuls insert/upsert, hors schema/migrations) ---
+$ git grep -n -E "insert\(lifestyleAuditState\)" 7807d6c8 -- services/game-back/src
+7807d6c8:services/game-back/src/operational/forensic/forensic.repository.ts:534:      .insert(lifestyleAuditState)
+7807d6c8:services/game-back/src/operational/forensic/standing-gap-heat.service.ts:250:        .insert(lifestyleAuditState)
+
+$ git grep -n -E "populateLifestyleState\(|seedLifestyleState\(" 7807d6c8 -- services/game-back/src   # tous les APPELANTS
+7807d6c8:services/game-back/src/operational/forensic/forensic-test.controller.ts:984:    await this.forensicRepository.seedLifestyleState({
+7807d6c8:services/game-back/src/operational/forensic/forensic-test.controller.ts:2034:    await this.standingGapHeat.populateLifestyleState(
+7807d6c8:services/game-back/src/operational/forensic/forensic-test.controller.ts:2688:    await this.standingGapHeat.populateLifestyleState(playerId, lieutenantId, declaredCutCents, visibleStandardIndex);
+=> les SEULS appelants sont dans forensic-test.controller.ts (routes _test).
+
+$ git grep -c "runMonthlyTick" 7807d6c8 -- .../forensic.module.ts   # la chaîne de tick EST câblée…
+7807d6c8:services/game-back/src/operational/forensic/forensic.module.ts:222:        await this.standingGapHeat.runMonthlyTick(ctx, monthId);
+7807d6c8:services/game-back/src/operational/forensic/forensic.module.ts:226:        await this.standingGapHeat.advanceTailRamp(ctx, dayId);
+… mais runMonthlyTick ne fait que des UPDATE et sort si rows.length === 0 :
+  async runMonthlyTick(ctx: CitySimTickContext, monthId: number): Promise<void> {
+    // Fetch all lifestyle rows for the player.
+    const rows = await this.db
+      .select()
+      .from(lifestyleAuditState)
+      .where(eq(lifestyleAuditState.player_id, ctx.playerId));
+
+    if (rows.length === 0) {
+      // No lifestyle rows → no-op (zero-regression §1.3 — organic no-op for players not tracked).
+      this.logger.debug(
+        `runMonthlyTick: no lifestyle rows for playerId=${ctx.playerId} monthId=${monthId} — no-op (organic)`,
+      );
+      return;
+    }

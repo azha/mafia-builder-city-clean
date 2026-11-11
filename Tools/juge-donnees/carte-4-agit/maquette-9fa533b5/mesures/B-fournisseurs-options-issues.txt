@@ -1,0 +1,45 @@
+# Comptes qui décident — fournisseurs, options, issues (DÉDUIT du source, SHA ci-dessus)
+NB_FOURNISSEURS_CATALOGUE (HL_CARD_PROVIDER_CATALOGUE, codes) = 8
+NB_ENTREES_TABLE_UNIQUE (HL_OPTION_TABLE) = 8
+NB_ACTION_EXECUTE = 4
+NB_ACTION_NAVIGATE = 4
+ECRANS de navigation servis (navigate_screen) :
+screen: 'autonomy_reports'
+screen: 'exceptions_escalations'
+screen: 'exceptions_queue'
+screen: 'supply_chain_trace'
+NB_ECRANS_NAVIGATE_DISTINCTS = 4
+
+## options par fournisseur (label servi) — 8 fichiers de fournisseur lus un à un
+damaged-building               NB_OPTIONS=2 NB_CONSEQUENCES=2
+severed-route                  NB_OPTIONS=2 NB_CONSEQUENCES=2
+escalation-backlog             NB_OPTIONS=2 NB_CONSEQUENCES=2
+autonomy-reports               NB_OPTIONS=2 NB_CONSEQUENCES=2
+legal-case                     NB_OPTIONS=2 NB_CONSEQUENCES=2
+backpressure-critical-trace    NB_OPTIONS=2 NB_CONSEQUENCES=2
+mycelial-stressed-leg          NB_OPTIONS=2 NB_CONSEQUENCES=2
+cue-cascade-fallout            NB_OPTIONS=2 NB_CONSEQUENCES=2
+(contrôle positif : le motif { label: 'hl.option. trouve bien 2 lignes sur damaged-building, cf. B-cles-servies / grep ci-dessus)
+
+## les 4 fournisseurs EXÉCUTANTS, exercés un à un par la suite du back (hl_card_agit.engine.spec.ts:191-217)
+    tag: 'reparation', key: HlCardProviderType.DAMAGED_BUILDING_REPAIR,
+    tag: 'reconstruction', key: HlCardProviderType.SEVERED_ROUTE_REBUILD,
+    tag: 'plaidoyer', key: HlCardProviderType.LEGAL_CASE_DECISION,
+    tag: 'entretien', key: HlCardProviderType.MYCELIAL_STRESSED_LEG,
+## les 4 fournisseurs de NAVIGATION (même spec, NAVIGATIONS)
+    tag: 'escalades', key: HlCardProviderType.ESCALATION_BACKLOG_REVIEW, code: ESCALATION_BACKLOG_CODE,
+    tag: 'cascade', key: HlCardProviderType.CUE_CASCADE_FALLOUT, code: CUE_CASCADE_FALLOUT_CODE,
+    tag: 'autonomie', key: HlCardProviderType.AUTONOMY_REPORTS_PENDING, code: AUTONOMY_REPORTS_CODE,
+    tag: 'engorgement', key: HlCardProviderType.BACKPRESSURE_CRITICAL_TRACE, code: BACKPRESSURE_CRITICAL_TRACE_CODE,
+
+## plafond structurel : le CAP n'est PAS projeté
+  structural_budget: { used: number; cap_reached: boolean };
+      structural_budget: { used, cap_reached: used >= cap },
+  get oneDecisionStructuralPerSessionCap(): number {
+    return clampCoreLoopsTunableToRange('core_loops.one_decision_structural_per_session_cap',
+      TunablesStore.resolveInt('core_loops.one_decision_structural_per_session_cap', 'CORE_LOOPS_ONE_DECISION_STRUCTURAL_PER_SESSION_CAP', 1));
+  },
+  structuralCapForPlayer(playerId: string): number {
+    if (pressureCapCache.hasOpenObservationWindow(playerId)) return 0;
+    return coreLoopsTunables.oneDecisionStructuralPerSessionCap;
+  },

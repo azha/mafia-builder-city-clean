@@ -1,0 +1,119 @@
+### POST /v1/session/open (compte NEUF juge4m2_1) — corps RÉEL via rtk proxy (rtk curl RÉSUME le JSON : jamais pour une mesure)
+$ rtk proxy curl -s -X POST http://localhost/v1/session/open -H 'Authorization: Bearer <T>' -H 'Content-Type: application/json' -d '{"client_version":"juge-donnees"}'
+{
+    "response_meta": {
+        "request_id_echo": "fc8b9e72-5043-4ed3-b492-e146839d9392",
+        "server_processed_at": "2026-11-11T05:50:03.001Z",
+        "api_version": 1,
+        "correlation_id_echo": null,
+        "server_build_ref": {
+            "git_sha": "35bdd6cb",
+            "built_at": "2026-11-11T04:53:08Z"
+        }
+    },
+    "payload": {
+        "data": {
+            "session_id": "5b7990ce-ed16-4a20-8449-46179aa2571e",
+            "hl_card": null,
+            "queue": [
+                {
+                    "exception_id": "a8118267-d640-4fb8-bbda-b2c409f5b59f",
+                    "lieutenant_id": "01a1c927-b6eb-7afc-afcd-cbfa45db47b1",
+                    "lieutenant": {
+                        "id": "01a1c927-b6eb-7afc-afcd-cbfa45db47b1",
+                        "name": "Lt. Rook"
+                    },
+                    "event_descriptor": "onboarding.preseed_exception.card",
+                    "event_descriptor_i18n": {
+                        "key": "onboarding.preseed_exception.card",
+                        "params": {}
+                    },
+                    "building": null,
+                    "candidate_actions": [
+                        {
+                            "id": "acknowledge",
+                            "label": "Acknowledge the lab status",
+                            "method": "ONE_TIME",
+                            "label_i18n": {
+                                "key": "exception.onboarding_preseed.acknowledge.label",
+                                "params": {}
+                            },
+                            "add_rule_dsl": null,
+                            "projected_consequence": "You note it; no automatic action is taken.",
+                            "projected_consequence_i18n": {
+                                "key": "exception.onboarding_preseed.acknowledge.consequence",
+                                "params": {}
+                            }
+                        },
+                        {
+                            "id": "escalate",
+                            "label": "Escalate for review",
+                            "method": "ESCALATE",
+                            "label_i18n": {
+                                "key": "exception.onboarding_preseed.escalate.label",
+                                "params": {}
+                            },
+                            "add_rule_dsl": null,
+                            "projected_consequence": "The card is archived for later review.",
+                            "projected_consequence_i18n": {
+                                "key": "exception.onboarding_preseed.escalate.consequence",
+                                "params": {}
+                            }
+                        }
+                    ],
+                    "suggested_action": {
+                        "id": "acknowledge",
+                        "label": "Acknowledge the lab status",
+                        "method": "ONE_TIME",
+                        "label_i18n": {
+                            "key": "exception.onboarding_preseed.acknowledge.label",
+                            "params": {}
+                        },
+                        "add_rule_dsl": null,
+                        "projected_consequence": "You note it; no automatic action is taken.",
+                        "projected_consequence_i18n": {
+                            "key": "exception.onboarding_preseed.acknowledge.consequence",
+                            "params": {}
+                        }
+                    },
+                    "confidence_band": "confident",
+                    "priority_band": "watching",
+                    "severity_band": "MILD",
+                    "resolution_status": "pending"
+                }
+            ],
+            "backlog_badge": false,
+            "queue_pressure_band": "normal",
+            "structural_budget": {
+                "used": 0,
+                "cap_reached": false
+            },
+            "flag_review": {
+                "pending_review_count": 0,
+                "auto_open": false
+            },
+            "settling_glance": {
+                "settling_count": 0,
+                "all_clear": true
+            },
+            "friction_glance": {
+                "friction_bucket": "light",
+                "penalty_active": false
+            },
+            "compression_glance": {
+                "stress_bucket": "calm",
+                "week_state": "none",
+                "forced": false
+            },
+            "onboarding": {
+                "funnel_step": "HOME_FIRST",
+                "first_decision_recorded": false
+            },
+            "opened_game_day": 1,
+            "opened_game_minute": 1500,
+            "day_phase": "DAWN",
+            "family_day": 1,
+            "opened_family_day": 1
+        }
+    }
+}

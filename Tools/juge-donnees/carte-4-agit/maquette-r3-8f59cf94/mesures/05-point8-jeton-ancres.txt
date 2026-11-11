@@ -1,0 +1,95 @@
+# 05 — point 8 (servi SANS cadre ni variante), jeton, dérive d'ancres — ④ r3 — 2026-11-11
+
+## Dérive d'ancres : le design épingle 0cfa6a7d ; le sommet du cumul (5734e7b2, 1 commit plus loin)
+## RÉÉCRIT exactement les 2 specs que §5 et C5 citent par ligne.
+
+### 0cfa6a7d — hl_card_agit.parcours.spec.ts, lignes 51 / 224 / 226 / 237 / 251
+const CLES_COMMIT = ['committed', 'executed_ids', 'navigate_ids', 'navigate_screen', 'outcome', 'stopped_at_error', 'stopped_
+    expect([bSurA.status, bSurA.code], 'le jeton de B sur la carte de A').toEqual([404, 'RESOURCE_NOT_FOUND']);
+    expect([aSurB.status, aSurB.code], 'le jeton de A sur la carte de B').toEqual([404, 'RESOURCE_NOT_FOUND']);
+    expect(cles(note.data), 'ensemble de clés de la réponse de commit (huit)').toEqual(CLES_COMMIT);
+    expect(cles(agit.data), 'ensemble de clés de la réponse de commit (huit)').toEqual(CLES_COMMIT);
+### 0cfa6a7d — hl_card_agit.engine.spec.ts, lignes 273 / 306 / 327 / 482
+  test('N = 2 bâtiments endommagés, fonds pour un seul : executed_ids = 1, stopped_at_id = le second, stopped_at_error = le
+    expect(r.data?.stopped_at_error, 'FALSIFIABLE: stopped_at_error = le code de fonds de la route (RESOURCE_STATE_CONFLICT)'
+    expect(r.errorCode, 'le code de la route, non remplacé').toBe('RESOURCE_STATE_CONFLICT');
+    test(`${nav.tag} — outcome « navigate », écran et ids de la table, table lue INCHANGÉE, carte committed, decisions_
+
+### 5734e7b2 — hl_card_agit.parcours.spec.ts, lignes 51 / 224 / 226 / 237 / 251
+const CLES_COMMIT = ['committed', 'executed_ids', 'navigate_ids', 'navigate_screen', 'outcome', 'stopped_at_error', 'stopped_
+    expect([bSurA.status, bSurA.code], 'le jeton de B sur la carte de A').toEqual([404, 'RESOURCE_NOT_FOUND']);
+    expect([aSurB.status, aSurB.code], 'le jeton de A sur la carte de B').toEqual([404, 'RESOURCE_NOT_FOUND']);
+    expect(cles(note.data), 'ensemble de clés de la réponse de commit (huit)').toEqual(CLES_COMMIT);
+    // d'une route NON coupée ; le gate du 10/10 a lu 6 là où l'assertion supposait 2. Une route coupée n'est pas balayé
+### 5734e7b2 — hl_card_agit.engine.spec.ts, lignes 273 / 306 / 327 / 482
+// ════════════════════════════════════════�
+    expect(r.status, `l'arrêt est un 200 PARTIEL, jamais un 409 (${JSON.stringify(r)})`).toBe(200);
+    expect(avantDecisions, 'ANTI-VACUITÉ : une session active existe').toBeGreaterThanOrEqual(0);
+];
+
+### Épingles NON dérivées, re-vérifiées au sommet 5734e7b2
+    expect(Object.keys(hlCard!).sort()).toEqual(
+    expect(act.status, `FALSIFIABLE: acting on a card with no option [0] → 409 (${JSON.stringify(act)})`).toBe(409);
+    expect(act.errorCode, 'the existing conflict code (no new error code is introduced by 1a)').toBe('RESOURCE_STATE_CONFLICT');
+    expect(cardRow(cardId).status, 'the refusal wrote NOTHING: the card is still active (the claim never happened)').toBe('active');
+
+## Le jeton dans la maquette 8f59cf94 — 1 état dessiné sur 3, 2 classes CSS sur 3
+classes .jeton-or* : .jeton-or .jeton-or.pris 
+états rendus : '>libre<' = 2 · '>pris<' = 0 · 'fermée aujourd' = 0
+pastille .deja (variante 8) : occurrences de 'deja' comme classe = 0
+
+## Les 8 cadres de la page, par élément d'après-geste
+  cadre 0: jeton-or=0 tampon-diag=0 carte-or=0 mot-or=0 ligne-or=0
+  cadre 1: jeton-or=0 tampon-diag=0 carte-or=0 mot-or=0 ligne-or=0
+  cadre 2: jeton-or=0 tampon-diag=0 carte-or=0 mot-or=0 ligne-or=0
+  cadre 3: jeton-or=0 tampon-diag=0 carte-or=0 mot-or=0 ligne-or=0
+  cadre 4: jeton-or=0 tampon-diag=0 carte-or=0 mot-or=0 ligne-or=0
+  cadre 5: jeton-or=0 tampon-diag=0 carte-or=0 mot-or=0 ligne-or=0
+  cadre 6: jeton-or=1 tampon-diag=1 carte-or=1 mot-or=1 ligne-or=2
+  cadre 7: jeton-or=1 tampon-diag=0 carte-or=1 mot-or=1 ligne-or=1
+
+## Textes de M : servis aujourd'hui dans string_table.ts @ 7807d6c8 ?
+  Retour à l’accueil                 -> 0
+  Rien d’autre à trancher            -> 0
+  Plusieurs attendent encore         -> 2
+  La carte vous attend encore        -> 0
+  Rien n’est parti                   -> 0
+  votre grande décision du jour      -> 0
+  Vous avez tranché                  -> 0
+  La carte reste sur la table        -> 0
+  C’est noté                         -> 1
+  Déjà tranchée                      -> 0
+  ça n’a pas pu se faire             -> 0
+  Rien à faire ici pour l’instant    -> 0
+  TRANCHÉE                           -> 0
+  tactique                           -> 0
+
+## Point 8 — chemins de réponse SANS cadre ni variante (re-comptés sur 7807d6c8)
+  commit, 18 chemins à l'épingle du dossier (19 au design : E3 `rejectUnknownFields` du contrôleur
+  n'existe qu'à partir de 0cfa6a7d — cf. 01, diff 7807d6c8→0cfa6a7d).
+  COUVERTS par un cadre ou une variante — 8 chemins / 5 sites :
+    E8  404 (:424)              -> variante 11
+    E9  409 (:427)              -> variante 8    [cf. constat B1 : 2 statuts, 1 texte]
+    E11 409 (:400)              -> variante 8
+    E14 409 (:400)              -> variante 8
+    E12 409 (:270)              -> variante 12
+    E13 409 (:270)              -> variante 12
+    E16 l'erreur de la route    -> cadre 7
+    E17 200 arrêt partiel       -> variante 6
+  SANS cadre ni variante — 10 chemins :
+    E1  401 AUTH_*                           JwtAuthGuard, hl-card.controller.ts:51
+    E2  422 VALIDATION_FAILED                UuidParam sur :id
+    E4  422 VALIDATION_FAILED                rejectUnknownFields, hl-commit-plan.ts:27
+    E5  422 VALIDATION_FAILED                optionalIntField, hl-commit-plan.ts:28
+    E6  422 VALIDATION_FAILED                parseChosenOption, hl-commit-plan.ts:31
+    E7  404 RESOURCE_NOT_FOUND               resolvePlayerId, hl-card.controller.ts:85 (le COMPTE, pas la carte)
+    E10 409 STRUCTURAL_CAP_EXHAUSTED         gouverneur — ÉCART ASSUMÉ (dossier)
+    E15 500 INTERNAL_ERROR                   executors.get vide, :289-293 — inatteignable post-bootstrap
+    E18 500 INTERNAL_ERROR                   recordAdvisoryDecision, :318 — cibles DÉJÀ exécutées, carte committed (TD-927 b)
+    E19 compensation en échec                :407-417 — loggé, pas un chemin de réponse (perte d'une carte)
+  skip, 3 chemins : 404 (:382) -> variante 11 ; 2× 409 (:385, :389) SANS cadre — ÉCART ASSUMÉ (dossier)
+  200 de commit, 10 clés après le lot : 9 portent un élément de cadre ou de variante ;
+    `stopped_at_error` (code brut, D7) n'est dessiné NULLE PART — volontaire (dev/BO ; la maquette
+    écrit « jamais le code brut », cadre 7 étiquette) ;
+    `committed` est la constante `true` sur tout 200 (hl-card.service.ts:136) — aucune information.
+  TOTAL point 8 : 12 chemins d'erreur (10 commit + 2 skip) + 1 clé de 200 = 13, dont 3 ÉCARTS ASSUMÉS au dossier.

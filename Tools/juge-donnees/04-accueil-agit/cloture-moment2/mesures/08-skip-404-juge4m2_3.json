@@ -1,0 +1,22 @@
+### scénario 3 (juge4m2_3) — skip sur une carte INCONNUE
+# carte tirée : deb7b3ee-038c-48bf-8d4c-20cbc501ea52
+$ rtk proxy curl -s -X POST .../hl-card/deb7b3ee-038c-48bf-8d4c-20cbc501ea52/skip -d '{}'
+{
+  "error": {
+    "code": "HL_CARD_NOT_FOUND",
+    "http_status": 404,
+    "user_facing_i18n_key": "error.hl_card.not_found",
+    "payload_vars": null,
+    "details": null,
+    "message": "No such HighestLeverageCard for this player: deb7b3ee-038c-48bf-8d4c-20cbc501ea52.",
+    "trace": {
+      "request_id_echo": "3f5d627e-6f07-40ed-aa7c-7dfdbe2c2e70",
+      "correlation_id": null,
+      "trace_id": null,
+      "server_emitted_at": "2026-11-11T05:54:23.424Z"
+    },
+    "retryable_class": "NEVER",
+    "retry_after_s": null
+  }
+}
+# git_sha: 35bdd6cb

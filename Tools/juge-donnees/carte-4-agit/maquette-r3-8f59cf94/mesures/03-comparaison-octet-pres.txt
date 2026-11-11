@@ -1,0 +1,41 @@
+=== 5 clés attendues IDENTIQUES à l'octet (design vs atelier 8f59cf94) ===
+hl.outcome.damaged_building.executed
+   FR IDENTIQUE | EN IDENTIQUE
+hl.outcome.severed_route.executed
+   FR IDENTIQUE | EN IDENTIQUE
+hl.outcome.legal_case.executed
+   FR IDENTIQUE | EN IDENTIQUE
+hl.outcome.mycelial_stressed_leg.executed
+   FR IDENTIQUE | EN IDENTIQUE
+hl.after_choice.noted
+   FR IDENTIQUE | EN IDENTIQUE
+-> 5/5 paires identiques FR+EN
+
+=== partial_stop : transformations T1/T2 ===
+   design FR 'Fait pour {n} sur {total}\xa0: '
+   atelier FR 'Fait pour {n} sur {total} : {phrase joueur de l’erreur}   — repli : « ça n’a pas pu se faire pour l’instant. »'
+   prefixe atelier jusqu'au 1er '{phrase' : 'Fait pour {n} sur {total} : '
+   design EN 'Done for {n} of {total}: '
+   atelier EN 'Done for {n} of {total}: {player-facing sentence for the error}   — fallback: “it couldn’t be done for now.”'
+   prefixe atelier EN : 'Done for {n} of {total}: '
+   design FR avec U+0020 au lieu de NBSP == prefixe atelier ? True
+   design EN == prefixe atelier EN ? True
+
+=== 3 clés d'erreur ===
+error.hl_card.not_found
+   FR design='Cette carte n’est plus là.'
+      atelier='Cette carte n’est plus là.'  -> IDENTIQUE
+   EN design='This card is gone.' atelier='This card is gone.' -> IDENTIQUE
+error.hl_card.nothing_to_act_on
+   FR design='Plus rien à faire sur cette carte.'
+      atelier='Plus rien à faire sur cette carte.'  -> IDENTIQUE
+   EN design='Nothing left to do on this card.' atelier='Nothing left to do on this card.' -> IDENTIQUE
+error.hl_card.already_resolved
+   FR design='C’était déjà tranché'
+      atelier='C’était déjà tranché (PROPOSÉ)'  -> T3: atelier == design + " (PROPOSÉ)" ? True
+   EN design='Already decided' atelier='Already decided' -> IDENTIQUE
+
+=== cadre 6 : ICU instancié n=2 ===
+   rendu   'Les travaux sont lancés et payés pour 2 locaux. L’activité reprend à la fin du chantier.'
+   cadre 6 'Les travaux sont lancés et payés pour 2 locaux. L’activité reprend à la fin du chantier.'
+   IDENTIQUE ? True
