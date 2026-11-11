@@ -74,33 +74,52 @@ namespace MafiaCleanCity.Mouvements
         /// <summary>Pistes vivantes portant un canal `Melange` (≤ `MouvementTunables.PistesMelangeMax`).</summary>
         public int PistesMelange => nMelange;
         /// <summary>Vrai s'il reste une place `Melange` (E0).</summary>
-        public bool PlaceMelangeLibre => nMelange < MouvementTunables.PistesMelangeMax;
+        public bool PlaceMelangeLibre => nMelange < PistesMelangeMax;
         /// <summary>Retours d'appui basculés sur le voile faute de place `Melange` (aucun refus : décision f2 du 08/10).</summary>
         public int BasculesVoile { get; private set; }
 
-        /// <summary>RÈGLE DE CLASSE (f2, 08/10) : le RETOUR D'APPUI du joueur n'est JAMAIS celui qu'on refuse. Si le plafond
-        /// `Melange` est atteint, l'appui passe sur le voile `Alpha` (`voile` sur `cibleVoile`) au lieu d'être refusé : aucune
-        /// piste existante n'est évincée (les `Alerte` en régime ne seraient ré-attachées par personne), aucun refus n'est
-        /// compté, la bascule l'est (`BasculesVoile`). Sans place et sans voile possible (`voile` ou `cibleVoile` nuls), le
-        /// refus ordinaire s'applique.</summary>
-        public Handle AttacherRetourAppui(Entree appui, RectTransform surface, Entree voile, RectTransform cibleVoile)
+        /// <summary>COUTURE (design retour d'appui v5, GE3, revue ⊥ n°1 I3) : places non-`Ambiance` réservées au retour d'appui. Initialisée
+        /// depuis la `const` (la source de vérité du canon, comportement de production INCHANGÉ) ; une `const` étant inlinée, aucun
+        /// test ne pourrait la poser à 0 : le test pose CETTE propriété, la production jamais.</summary>
+        public int PlacesReserveesRetourAppui { get; set; } = MouvementTunables.PlacesReserveesRetourAppui;
+        /// <summary>COUTURE (GE3) : plafond de pistes `Melange` vivantes. Même statut que `PlacesReserveesRetourAppui` : défaut = la `const`,
+        /// posée par un test seulement.</summary>
+        public int PistesMelangeMax { get; set; } = MouvementTunables.PistesMelangeMax;
+
+        /// <summary>RÈGLE DE CLASSE (f2, 08/10) : le RETOUR D'APPUI du joueur n'est JAMAIS celui qu'on refuse. Cas 1-2 (design retour
+        /// d'appui v5 §3.1) : `retour.appui` (`Melange`) sur `surface`, l'`Id` posé ICI (G14), jamais passé en argument. Si le plafond
+        /// `Melange` est atteint (cas 0), l'appui passe sur le voile `Alpha` (`retour.appui-voile` sur `cibleVoile`) au lieu d'être
+        /// refusé : aucune piste existante n'est évincée (les `Alerte` en régime ne seraient ré-attachées par personne), aucun refus
+        /// n'est compté, la bascule l'est (`BasculesVoile`). Les cas 3-4 (pas de surface qui rende) passent par `AttacherVoileDAppui`.</summary>
+        public Handle AttacherRetourAppui(RectTransform surface, RectTransform cibleVoile)
         {
-            if (appui == null) throw new ArgumentNullException(nameof(appui));
-            if (appui.Genre != Genre.Retour) throw new ArgumentException("AttacherRetourAppui : une entrée Retour", nameof(appui));
+            Entree appui = EntreeDAppui(CatalogueHud.IdRetourAppui);
             bool melange = false;
             for (int ci = 0; ci < appui.Mouvement.Canaux.Length; ci++)
                 if (appui.Mouvement.Canaux[ci].P == Propriete.Melange) melange = true;
-            VerifierAdmise(appui);   // G1 sur TOUS les chemins, voile compris (revue ⊥ n°2 du §17, m4)
-            if (melange && !PlaceMelangeLibre && voile != null && cibleVoile != null)
+            if (melange && !PlaceMelangeLibre)
             {
-                if (voile.Genre != Genre.Retour) throw new ArgumentException("le voile est un Retour", nameof(voile));
-                VerifierAdmise(voile);
-                Handle hv = Creer(voile, cibleVoile, Reglage.Defaut, false, 0f, 0f, null, true);
+                Handle hv = Creer(EntreeDAppui(CatalogueHud.IdRetourAppuiVoile), cibleVoile, Reglage.Defaut, false, 0f, 0f, null, true);
                 if (!hv.EstNul) BasculesVoile++;   // compté APRÈS un handle non nul (revue ⊥ du §17, B1)
                 return hv;
             }
             return Creer(appui, surface, Reglage.Defaut, false, 0f, 0f, null, true);
         }
+
+        /// <summary>Cas 3-4 du retour d'appui (design v5 §3.1) : le voile `Alpha` (`retour.appui-voile`) sur `cible`, l'`Id` posé ICI
+        /// (G14). Même règle de classe que `AttacherRetourAppui` (place réservée) ; pas une bascule, donc `BasculesVoile` inchangé.</summary>
+        public Handle AttacherVoileDAppui(RectTransform cible)
+        {
+            return Creer(EntreeDAppui(CatalogueHud.IdRetourAppuiVoile), cible, Reglage.Defaut, false, 0f, 0f, null, true);
+        }
+
+        /// <summary>Résout une des deux entrées du retour d'appui dans `admises` (G1 : absente ⇒ lève, comme `VerifierAdmise`).</summary>
+        private Entree EntreeDAppui(string id)
+        {
+            if (!admises.TryGetValue(id, out Entree e)) throw new ArgumentException("Entree hors catalogue (G1) : " + id);
+            return e;
+        }
+
         /// <summary>Les `Attacher` faits sans régie (hôte nu) : le compteur est statique, `Courante` étant nul alors.</summary>
         public int SansRegie => RegieMouvement.SansRegie;
         public EtatDelestage Delestage => delestage;
@@ -506,6 +525,11 @@ namespace MafiaCleanCity.Mouvements
             MouvementDefini m = e.Mouvement;
             if (r.KDuree <= 0f) r = Reglage.AvecPhase(r.PhaseS);   // `default(Reglage)` : pas de réglage
 
+            // G14 (c) : les deux `Id` du retour d'appui ne se posent QUE par `AttacherRetourAppui` / `AttacherVoileDAppui` (`retourAppui`).
+            //    Le refus est dans `Creer`, donc il couvre toutes les voies (`Attacher`, `Transitionner`, et toute autre à venir).
+            if (!retourAppui && (e.Id == CatalogueHud.IdRetourAppui || e.Id == CatalogueHud.IdRetourAppuiVoile))
+                return Refuser(e, "G14 : retour d'appui hors AttacherRetourAppui / AttacherVoileDAppui");
+
             if (e.EstSansHote) return Refuser(e, "SansHote : " + e.RaisonSansHote);
 
             // G8 : une entrée bloquante plus longue que `T.ui.anim_max_block_ms` est refusée à l'attachement.
@@ -515,9 +539,9 @@ namespace MafiaCleanCity.Mouvements
             // §4 quotas réservés : 32 Ambiance / 16 Alerte-Retour-Transition
             bool amb = e.Genre == Genre.Ambiance;
             // ⛔ RÈGLE DE CLASSE (revue ⊥ du §17, B1) : UNE place non-`Ambiance` est RÉSERVÉE au retour d'appui. Les autres
-            //    Alerte/Retour/Transition s'arrêtent à 15 ; le retour d'appui passé par `AttacherRetourAppui` peut prendre la 16ᵉ.
+            //    Alerte/Retour/Transition s'arrêtent à 15 ; le retour d'appui passé par `AttacherRetourAppui` / `AttacherVoileDAppui` peut prendre la 16ᵉ.
             //    Sans cette réserve, 7 pistes tenues du chrome + 7 de ⑮ + shell + bandeau = 16 refusaient l'appui du joueur.
-            int plafondAutres = MouvementTunables.QuotaAlerteRetourTransition - (retourAppui ? 0 : MouvementTunables.PlacesReserveesRetourAppui);
+            int plafondAutres = MouvementTunables.QuotaAlerteRetourTransition - (retourAppui ? 0 : PlacesReserveesRetourAppui);
             // (deux `if` et non un ternaire à deux littéraux : la garde N3 des textes affichés compte ce motif, même dans un message de journal)
             if (amb && nAmbiance >= MouvementTunables.QuotaAmbiance) return Refuser(e, "quota Ambiance atteint");
             if (!amb && nAutres >= plafondAutres) return Refuser(e, "quota Alerte/Retour/Transition atteint");
@@ -526,10 +550,10 @@ namespace MafiaCleanCity.Mouvements
             bool melange = false;
             for (int ci = 0; ci < m.Canaux.Length; ci++) if (m.Canaux[ci].P == Propriete.Melange) melange = true;
             if (melange && amb) { RefusMelange++; return Refuser(e, "Melange interdit aux Ambiance (E0 : l'Alpha d'abord)"); }
-            if (melange && nMelange >= MouvementTunables.PistesMelangeMax)
+            if (melange && nMelange >= PistesMelangeMax)
             {
                 RefusMelange++;
-                return Refuser(e, "quota Melange atteint (" + MouvementTunables.PistesMelangeMax + " pistes vivantes, E0)");
+                return Refuser(e, "quota Melange atteint (" + PistesMelangeMax + " pistes vivantes, E0)");
             }
 
             int slot = -1;
