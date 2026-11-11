@@ -296,6 +296,17 @@ namespace MafiaCleanCity.Operational
             IsAuthenticated = !string.IsNullOrEmpty(token);
         }
 
+        /// <summary>Crochet de test (patron `RendrePourTest`) : pose un portefeuille et une chaleur FABRIQUÉS puis appelle le MÊME `Render()` que
+        /// `LoadDashboard()`, sans réseau — ce qui fait naître les boutons « Aller à » (`AddNavButton`). Ne prouve jamais que le back sert ces
+        /// corps, seulement ce que l'écran en fait. Synchrone : `Start()` (qui signe) ne tourne pas tant qu'aucune frame ne passe.</summary>
+        public void RendrePourTest(WalletDto portefeuille, DistrictHeatDto chaleur = null)
+        {
+            EnsureInitialized();
+            CurrentWallet = portefeuille;
+            CurrentHeat = chaleur;
+            Render();
+        }
+
         /// <summary>Fetch + render the dashboard: wallet band (headline), citywide heat band +
         /// escalation, the optional /v1/me header, then the derived alerts line.</summary>
         public IEnumerator LoadDashboard()

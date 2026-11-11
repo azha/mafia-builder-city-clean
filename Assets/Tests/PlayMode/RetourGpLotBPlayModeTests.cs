@@ -27,11 +27,9 @@ namespace MafiaCleanCity.Tests
     //   · l'anti-vacuité : N pressables relevés > 0, N LU du relevé (jamais écrit à une valeur devinée) et journalisé.
     // Écrans montés : Exceptions (détail ⑩ ; file ⑨ avec son tampon), panneau de file du shell (liste ; ligne de l'Accueil), Revue du jour,
     // HomeChrome, TopBar, Réglages, Carte à fort levier (3 états), Bandeau éphémère, Décision ⑤ (après-geste), Écran d'échec de démarrage,
-    // La suite, PiedDEcran (le geste), Tutoriel, Compression, et le VRAI shell (Accueil sans carte / avec carte ; menu Plus).
+    // La suite, PiedDEcran (le geste), Tutoriel, Compression, Dashboard (les « Aller à »), et le VRAI shell (Accueil sans carte / avec carte ; menu Plus).
     //
     // NON MONTÉ — le relevé n'invente rien ; la ligne « couverture sites k / N » (`PublicationGp`) nommera les sites que ces écrans portent :
-    // // NON MONTÉ : Operational/Dashboard/DashboardController (AddNavButton, :797) — les boutons « Aller à » ne naissent que dans `Render()`,
-    //    privé, appelé par `LoadDashboard()` seul (réseau + authentification) ; aucune couture `…PourTest`. Monté sous le shell il reste sans bouton.
     // // NON MONTÉ : CitySim/Inspection/InspectionScreenController (« DÉPOSER », :474) — le bouton est posé `interactable = false` et ne devient
     //    pressable que si `Cible` (setter privé, posée par la lecture réseau du registre) ET le jeton sont là : monté hors réseau, il est
     //    NON PRESSABLE, donc jamais jugé sur l'effet (un site non exercé n'est pas prouvé).
@@ -585,6 +583,24 @@ namespace MafiaCleanCity.Tests
             }
             finally { DetruireMontes(); }
             Verifier("Compression/un problème, budget restant", lignes);
+            yield break;
+        }
+
+        // ------------------------------------------------------------------------------ Dashboard : les boutons « Aller à »
+        [UnityTest]
+        public IEnumerator GP_Dashboard_AllerA()
+        {
+            List<LigneGp> lignes;
+            try
+            {
+                var ecran = MonterSousCanvas<DashboardController>("DashboardGp", out Canvas canvas);
+                // la couture rend un portefeuille fabriqué par le MÊME `Render()` que `LoadDashboard()` : les quatre « Aller à » (:797) naissent
+                ecran.RendrePourTest(new WalletDto { wallet_band = "MODERATE" });
+                // le fond, la feuille et le bandeau sont sous le canvas (pas sous l'hôte) : on relève le canvas entier
+                lignes = Relever("Dashboard", "portefeuille servi, boutons Aller à", canvas.gameObject, canvas);
+            }
+            finally { DetruireMontes(); }
+            Verifier("Dashboard/portefeuille servi, boutons Aller à", lignes);
             yield break;
         }
 
