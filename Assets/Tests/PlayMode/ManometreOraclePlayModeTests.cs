@@ -760,74 +760,46 @@ namespace MafiaCleanCity.Shell.Tests
 
         // (`ArcRadiusRatio` a été retiré : le rayon se MESURE désormais sur `ArcTrack`. Voir `RayonMesure`.)
         private const float ArcSectorWidthDeg = 20f;
-        // Référence à 270° (plein sud, hémicycle bas) : MÊME rayon que l'échantillon testé, sur la
-        // MÊME image — jamais une couleur de fond EXTERNE (la face du cadran est un DÉGRADÉ radial,
-        // `hudGaugeFaceInner`→`hudGaugeFaceOuter` : sa teinte varie avec le rayon, donc la comparer
-        // à un point de fond plat pris HORS du disque produit un delta non nul même sans piste
-        // parasite — mesuré : c'est CE défaut de méthode, pas un vrai résidu, qui faisait rougir la
-        // 1ère version de cet oracle). 270° reste vide dans les DEUX états visés (rien n'y est
-        // jamais peint, ni track ni cold/hot) — c'est la référence "disque nu" la plus sûre au même rayon.
-        private const float LowerReferenceAngleDeg = 270f;
+        // TD-951 — la BANDE est CENTRÉE sur la piste mesurée, et le fond de référence est un SECOND RENDU.
+        // La piste occupe [arcR − 5, arcR] (`ArcThicknessPx` = 5, bord extérieur à `arcR`, frange d'anti-crénelage de
+        // 1,5 px à l'extérieur) : la bande [arcR − 4, arcR − 1] en est le cœur plein. L'ancienne bande `arcR ± 2,5`
+        // recouvrait [arcR, arcR + 2,5], où vit l'encre qui n'est PAS la piste (lunette) : MESURÉ run4, l'écart maximal
+        // des secteurs restait à 0,10-0,33 piste masquée — l'absence ne se voyait pas.
+        // Le fond n'est plus lu « ailleurs sur la même image » : la boîte des libellés (36,5 × 23 px) couvre le bas du
+        // cadran jusqu'à r ≈ 20,4 (MESURÉ : 4 rayons sur 6 avaient un fond, 76 paires jugeables pour un plancher de 100) —
+        // une bande centrée sur la piste (r < 20,4) n'a donc AUCUN fond hors du texte. Le fond est le MÊME point du MÊME
+        // rendu, pris sans les trois arcs (`CapturerSansArcs`) : texte, lunette, filet et dégradé radial s'annulent, il ne
+        // reste que l'encre des arcs. Les seuils (`ArcInkEpsilon`, secteurs de 20°, plancher de 100) sont INCHANGÉS.
         private const float ArcInkEpsilon = 0.05f;
+        private const float ArcBandInnerBelowOuterPx = 4f;
+        private const float ArcBandOuterBelowOuterPx = 1f;
 
-        /// <summary>Un angle de l'hémicycle INFÉRIEUR, au rayon `r`, dont le point ne tombe PAS
-        /// dans la boîte des libellés.
-        ///
-        /// ⚠️ POURQUOI CETTE FONCTION EXISTE — et c'est le défaut le plus instructif de cet oracle.
-        /// La ligne de base était prise à **270° en dur**, c'est-à-dire DROIT EN BAS, au même rayon
-        /// que l'échantillon. Or à ce rayon, droit en bas, on est **au milieu de `GaugeCaption`**.
-        /// Avec « HEAT » (4 lettres) le centre du mot tombait dans un BLANC entre deux lettres, et
-        /// la ligne de base valait « fond ». Avec « CHALEUR » (7 lettres) il tombe **sur une
-        /// lettre** : la ligne de base est devenue de l'ENCRE, et tout point réellement vide s'est
-        /// mis à « différer de la base » — l'oracle accusait le vide d'être un résidu d'arc.
-        ///
-        /// Mesuré : base = RGBA(0,416 0,392 0,337) — du crème, pas du fond. Le point incriminé
-        /// valait RGBA(0,075 0,094 0,133), c'est-à-dire exactement le bleu nuit du disque.
-        ///
-        /// ⇒ **Une référence « fond » prise à un angle FIXE n'est une référence que tant que rien
-        /// n'est dessiné à cet angle.** Le rendre dépendant de la boîte réelle du texte le répare
-        /// pour toute longueur de libellé future, dans n'importe quelle langue.</summary>
-        /// <summary>⚠️ LA BASE DOIT ÊTRE AU MÊME RAYON, et c'est ce qui rend l'échec possible.
-        /// Le disque porte un dégradé RADIAL : comparer un échantillon à une base prise à un autre
-        /// rayon mesurerait le dégradé, pas l'encre. Or MESURÉ — à `arcR − 2,5`, la boîte des
-        /// libellés (51,6 × 21,6 px, centrée sous le pivot) recouvre **tout** l'hémicycle inférieur
-        /// à ce rayon. Il n'existe alors AUCUN fond auquel se comparer, et la réponse honnête est
-        /// de déclarer le rayon NON JUGEABLE — pas d'inventer une référence ailleurs.</summary>
-        private static bool TryAngleDeBaseHorsTexte(Geo g, float r, out float angle)
+        /// <summary>L'écart de couleur entre le rendu complet et le rendu SANS les trois arcs, au même point polaire :
+        /// 0 s'il n'y a pas d'encre d'arc là, la distance de l'encre au fond sinon.</summary>
+        private static float EncreDArc(Texture2D avec, Texture2D sansArcs, Geo g, float r, float angleDeg)
+            => ColorDistance(SamplePolar(avec, g.Cx, g.Cy, r, angleDeg), SamplePolar(sansArcs, g.Cx, g.Cy, r, angleDeg));
+
+        /// <summary>Le rendu sans `ArcTrack`, `ArcCold`, `ArcHot` (témoin à un facteur de l'ENCRE d'arc). Chaque arc
+        /// retrouve l'état qu'il avait : un arc déjà masqué par une mutation reste masqué.</summary>
+        private Texture2D CapturerSansArcs(TopBarController topBar)
         {
-            for (float delta = 0f; delta <= 80f; delta += 2f)
+            var arcs = new List<GameObject>();
+            foreach (string nom in new[] { "ArcTrack", "ArcCold", "ArcHot" })
             {
-                angle = LowerReferenceAngleDeg - delta;
-                if (!DansLaZoneDeTexte(g, r, angle)) return true;
-                angle = LowerReferenceAngleDeg + delta;
-                if (!DansLaZoneDeTexte(g, r, angle)) return true;
+                Transform t = topBar.transform.Find("Manometre/" + nom);
+                Assert.IsNotNull(t, $"{nom} doit exister sous Manometre");
+                arcs.Add(t.gameObject);
             }
-            angle = LowerReferenceAngleDeg;
-            return false;
+            var etats = arcs.Select(g => g.activeSelf).ToList();
+            foreach (var g in arcs) g.SetActive(false);
+            Texture2D sans = Capturer();
+            for (int i = 0; i < arcs.Count; i++) arcs[i].SetActive(etats[i]);
+            return sans;
         }
 
-        private static bool DiffersFromRadialBaseline(Texture2D tex, Geo g, float r, float angleDeg)
-        {
-            float aBase;
-            if (!TryAngleDeBaseHorsTexte(g, r, out aBase)) return false;  // rayon non jugeable
-            Color sample = SamplePolar(tex, g.Cx, g.Cy, r, angleDeg);
-            Color baseline = SamplePolar(tex, g.Cx, g.Cy, r, aBase);
-            return ColorDistance(sample, baseline) > ArcInkEpsilon;
-        }
-
-        // ⛔ [Ignore] (TD-951, ruling f2 11/11) — et la raison est qu'Oracle3 est AVEUGLE, pas seulement bloquée :
-        //   (a) sa bande `arcR ± 2,5` (arcR = rayon EXTÉRIEUR de la piste) contient de l'encre qui n'est PAS la piste
-        //       (arcs cold/hot, lunette) : `Mutation_M2` (piste masquée) garde un écart de 0,10 à 0,33 dans les
-        //       secteurs du haut pour un seuil de 0,05 — l'absence de la piste ne se voit pas ;
-        //   (b) l'hémicycle du bas n'offre que 76 paires jugeables (plancher 100) à l'échelle 1 : la boîte des
-        //       libellés « CHALEUR » (36,5 × 23 px) le couvre presque en entier.
-        //   Un oracle qui ne discrimine pas vaut moins que pas d'oracle. La mesure sur planches (`rayon-cadran.py`)
-        //   reste le juge de l'arc d'ici là. DÉTECTEUR : `Mutation_M2` doit rougir pour la BONNE raison (un secteur
-        //   du haut sous le seuil) AVANT qu'on retire ces deux [Ignore].
+        // TD-951 (11/11) — les deux [Ignore] sont retirés : voir `VerdictArc` (bande centrée sur la piste, fond = rendu sans
+        // arcs) et `Mutation_M2` / `Mutation_M4` (la piste masquée, puis décalée, rougissent POUR LA BONNE RAISON).
         [UnityTest]
-        [Ignore("TD-951 : Oracle3 ne voit pas la piste (bande trop large : l'encre hors piste garde 0,10-0,33 quand " +
-                "ArcTrack est masqué ; bas sous la boîte CHALEUR à l'échelle 1 : 76 paires < 100). " +
-                "Retirer quand Mutation_M2 rougit pour la bonne raison.")]
         public IEnumerator Oracle3_ArcCoversEveryUpperSector_AbsentInLowerHalf()
         {
             var (topBar, topBarSlot) = BuildScaffold();
@@ -838,166 +810,117 @@ namespace MafiaCleanCity.Shell.Tests
             Geo geo = MeasureGeo(rendCam, topBar, topBarSlot);
             Texture2D tex = Capturer();
             Texture2D sans = CapturerSansManometre(topBar);
+            Texture2D sansArcs = CapturerSansArcs(topBar);
             try
             {
                 GardesInstrument("Oracle3", geo, tex, sans);
-                VerdictArc(topBar, geo, tex);
+                VerdictArc(geo, tex, sansArcs);
             }
-            finally { Object.Destroy(tex); Object.Destroy(sans); }
+            finally { Object.Destroy(tex); Object.Destroy(sans); Object.Destroy(sansArcs); }
         }
 
-        /// <summary>Le VERDICT d'Oracle3 : SYNCHRONE (voir `VerdictRing`).</summary>
-        private static void VerdictArc(TopBarController topBar, Geo geo, Texture2D tex)
+        /// <summary>Le VERDICT d'Oracle3 : SYNCHRONE (voir `VerdictRing`). `tex` = le rendu complet, `sansArcs` = le MÊME
+        /// rendu sans `ArcTrack`/`ArcCold`/`ArcHot` : l'encre d'arc en un point est leur écart (voir `EncreDArc`).</summary>
+        private static void VerdictArc(Geo geo, Texture2D tex, Texture2D sansArcs)
         {
+            float arcR = geo.ArcRadius;
+            float rMin = arcR - ArcBandInnerBelowOuterPx, rMax = arcR - ArcBandOuterBelowOuterPx;
+
+            // D3 — garde d'EFFET de l'instrument : le rendu sans arcs doit DIFFÉRER du rendu complet sur le demi-cercle
+            // supérieur (sinon les arcs n'ont pas été retirés, ou rien ne se dessine : aucun verdict ne vaut quoi que ce soit).
+            // ⚠️ Phrase DISTINCTE de celle du verdict : un instrument aveugle ne doit jamais passer pour « un trou dans l'arc ».
+            int echantillonsEncre = 0;
+            for (float a = 0f; a < 180f; a += 2f)
+                for (float r = rMin; r <= rMax; r += 0.5f)
+                    if (EncreDArc(tex, sansArcs, geo, r, a) > ArcInkEpsilon) echantillonsEncre++;
+            Debug.Log($"[Oracle3] bande [{rMin:F1},{rMax:F1}] (arcR={arcR:F1}) : {echantillonsEncre} échantillons du demi-cercle " +
+                      $"supérieur diffèrent sans les arcs (minimum {MinPixelsTemoin})");
+            Assert.GreaterOrEqual(echantillonsEncre, MinPixelsTemoin,
+                $"INSTRUMENT : seuls {echantillonsEncre} échantillons de la bande d'arc diffèrent quand on retire les trois arcs " +
+                $"(minimum {MinPixelsTemoin}) — le rendu sans arcs est identique au rendu complet : l'oracle est aveugle.");
+
+            // Marge collée : le PROFIL angulaire (max sur la bande, ×100, pas de 2°) — un trou étroit ne se voit pas dans un max de secteur.
+            var profil = new System.Text.StringBuilder();
+            for (float a = 0f; a < 180f; a += 2f)
             {
-                float arcR = geo.ArcRadius;
-
-                var emptyUpperSectors = new List<string>();
-                // ⚠️ « NON JUGEABLE » N'EST PAS « PAS D'ENCRE ». Un rayon dont l'hémicycle inférieur
-                // est entièrement couvert par la boîte des libellés n'a AUCUN fond de référence à ce
-                // rayon (le disque porte un dégradé radial : une base prise à un autre rayon
-                // mesurerait le dégradé). Confondre les deux a produit un verdict UNIFORME — les 9
-                // secteurs déclarés vides d'un coup — c'est-à-dire la signature d'un instrument qui
-                // mesure autre chose. Ici on COMPTE les rayons jugeables et on ne conclut que sur eux.
-                Transform geoSource = topBar.transform.Find("Manometre");
-                int rayonsJugeables = 0;
-                for (float rr = arcR - 2.5f; rr <= arcR + 2.5f; rr += 1f)
-                {
-                    float ig;
-                    if (TryAngleDeBaseHorsTexte(geo, rr, out ig)) rayonsJugeables++;
-                }
-                Debug.Log($"[Oracle3] hémicycle supérieur : {rayonsJugeables} rayons sur 6 " +
-                          $"disposent d'un fond de référence (arcR={arcR:F1}, boîte texte={geo.TextZone})");
-                foreach (string nomT in new[] { "GaugeValue", "GaugeCaption" })
-                {
-                    Transform tt = null;
-                    foreach (Transform c in geoSource.GetComponentsInChildren<Transform>(true))
-                        if (c.name == nomT) { tt = c; break; }
-                    if (tt == null) continue;
-                    var tmpT = tt.GetComponent<TMPro.TextMeshProUGUI>();
-                    Debug.Log($"[Oracle3-TXT] {nomT} «{(tmpT != null ? tmpT.text : "?")}» " +
-                              $"boite={((RectTransform)tt).rect.width:F1} encre={(tmpT != null ? tmpT.preferredWidth : -1f):F1}");
-                }
-                Assert.Greater(rayonsJugeables, 0,
-                    "aucun rayon de la bande d'arc n'a de fond de référence : la boîte des libellés " +
-                    "couvre tout l'hémicycle inférieur à TOUS ces rayons. L'oracle ne peut plus rien " +
-                    "juger — c'est un défaut de DESIGN (le libellé est trop large pour ce cadran), " +
-                    "pas un défaut de l'arc.");
-
-                for (float sectorStart = 0f; sectorStart < 180f; sectorStart += ArcSectorWidthDeg)
-                {
-                    // TD-884 : pas RADIAL de 0,5 (et non 1) — l'encre de la piste (5 px, bord extérieur à arcR,
-                    // anti-crénelage de 1,5 px) n'est jugeable qu'aux rayons ≥ ~20,4 (en dessous, la boîte des
-                    // libellés couvre tout le bas : pas de fond de référence). Un pas de 1 ne posait qu'UN
-                    // échantillon dans cette frange. La BANDE (arcR ± 2,5) et le seuil (ArcInkEpsilon) sont inchangés.
-                    float meilleure = 0f;
-                    for (float a = sectorStart; a < sectorStart + ArcSectorWidthDeg; a += 2f)
-                        for (float r = arcR - 2.5f; r <= arcR + 2.5f; r += 0.5f)
-                        {
-                            float ig2;
-                            if (!TryAngleDeBaseHorsTexte(geo, r, out ig2)) continue;
-                            float aBase = ig2;
-                            Color vu = SamplePolar(tex, geo.Cx, geo.Cy, r, a);
-                            Color fondRef = SamplePolar(tex, geo.Cx, geo.Cy, r, aBase);
-                            meilleure = Mathf.Max(meilleure, ColorDistance(vu, fondRef));
-                        }
-                    Debug.Log($"[Oracle3] secteur [{sectorStart:F0},{sectorStart + ArcSectorWidthDeg:F0}] : écart maximal à la référence {meilleure:F3} (seuil {ArcInkEpsilon})");
-                    if (!(meilleure > ArcInkEpsilon)) emptyUpperSectors.Add($"[{sectorStart:F0},{sectorStart + ArcSectorWidthDeg:F0}]");
-                }
-                Assert.IsEmpty(emptyUpperSectors,
-                    "trou dans l'arc du demi-cercle SUPÉRIEUR (aucune encre track/cold/hot trouvée, comparé " +
-                    "au fond du MÊME rayon pris hors de la boîte des libellés) — secteurs : "
-                    + string.Join(", ", emptyUpperSectors));
-
-                // Zone morte "texte" (`DansLaZoneDeTexte` — boîte RÉELLE des libellés, pas un coin figé)
-                // — même angle mort que CHECK 1.
-                var offendingLowerSectors = new List<string>();
-                int paires = 0, paiuresTexte = 0, paireNonJugeable = 0;
-                for (float a = 185f; a < 355f; a += 2f) // évite 355-360/0-5 (chevauchement cold/hot mesuré au sommet) et 265-275 (la référence elle-même)
-                {
-                    if (a > 265f && a < 275f) continue;
-                    for (float r = arcR - 2.5f; r <= arcR + 2.5f; r += 1f)
-                    {
-                        if (DansLaZoneDeTexte(geo, r, a)) { paiuresTexte++; continue; }
-                        float ignore;
-                        if (!TryAngleDeBaseHorsTexte(geo, r, out ignore)) { paireNonJugeable++; continue; }
-                        paires++;
-                        if (DiffersFromRadialBaseline(tex, geo, r, a))
-                        {
-                            // ★ « Un compte nu ne dit pas ce qu'il compte » : l'angle seul ne
-                            // permet pas de savoir si le pixel trouvé est un vrai résidu d'arc, la
-                            // frange d'un bout d'arc, ou un ornement légitime. On rapporte donc la
-                            // COULEUR trouvée, celle du fond auquel elle a été comparée, et l'angle
-                            // de ce fond.
-                            float aB2; TryAngleDeBaseHorsTexte(geo, r, out aB2);
-                            Color vu = SamplePolar(tex, geo.Cx, geo.Cy, r, a);
-                            Color fond = SamplePolar(tex, geo.Cx, geo.Cy, r, aB2);
-                            offendingLowerSectors.Add(
-                                $"ang={a:F0} r={r - arcR:F1} vu={vu} fond={fond}@{aB2:F0}° " +
-                                $"d={ColorDistance(vu, fond):F3}");
-                        }
-                    }
-                }
-
-                // ⛔ ANTI-VACUITÉ. Deux raisons LÉGITIMES d'ignorer un point — il est sous le texte,
-                // ou son rayon n'a aucun fond de référence — et toutes deux grandissent quand les
-                // libellés s'allongent. Sans ce compte, une traduction plus verbeuse rendrait la
-                // garde VERTE en ne jugeant plus rien, et le compteur de la suite ne le dirait pas.
-                Debug.Log($"[Oracle3] hémicycle inférieur : {paires} paires jugées, " +
-                          $"{paiuresTexte} sous le texte, {paireNonJugeable} sans fond de référence");
-                Assert.Greater(paires, 100,
-                    $"seules {paires} paires (angle, rayon) ont pu être jugées dans l'hémicycle " +
-                    $"inférieur ({paiuresTexte} sous le texte, {paireNonJugeable} sans fond) — " +
-                    "la garde ne couvre plus assez de surface pour valoir quelque chose.");
-                Assert.IsEmpty(offendingLowerSectors,
-                    "piste parasite détectée dans le demi-cercle INFÉRIEUR (devrait être aussi vide que la " +
-                    "référence à 270°, même rayon — le track ne couvre QUE l'hémicycle supérieur) : " +
-                    string.Join("; ", offendingLowerSectors.Take(10)));
-
-                // CONTRÔLE POSITIF (upper) — écraser un secteur du haut avec EXACTEMENT la couleur de
-                // la référence 270° (même rayon) DOIT le faire ressortir "vide" par CE détecteur.
-                for (float a = 80f; a <= 100f; a += 1f)
-                    for (float r = arcR - 2.5f; r <= arcR + 2.5f; r += 1f)
-                    {
-                        float aB; TryAngleDeBaseHorsTexte(geo, r, out aB);
-                        Color baseline = SamplePolar(tex, geo.Cx, geo.Cy, r, aB);
-                        var (px, py) = IndexPx(geo.Cx, geo.Cy, r, a);
-                        if (px >= 0 && py >= 0 && px < tex.width && py < tex.height) tex.SetPixel(px, py, baseline);
-                    }
-                tex.Apply();
-                bool sector80to100StillHasInk = false;
-                for (float a = 80f; a < 100f; a += 2f)
-                    for (float r = arcR - 2.5f; r <= arcR + 2.5f; r += 1f)
-                        if (DiffersFromRadialBaseline(tex, geo, r, a)) sector80to100StillHasInk = true;
-                Assert.IsFalse(sector80to100StillHasInk,
-                    "CONTRÔLE POSITIF : un secteur forcé à la couleur de référence (80°-100°) doit être vu comme VIDE");
-
-                // CONTRÔLE POSITIF (lower) — peindre une piste grise sur le bas (couleur du track réel,
-                // mesurée en amont dans l'hémicycle SUPÉRIEUR à un rayon voisin) DOIT être détecté.
-                // Plantée à 340°-350° — hors de la zone d'exclusion texte [210°,330°] ET hors de la
-                // zone d'exclusion référence [265°,275°], pour ne prouver QUE la sonde du bas.
-                // MESURÉ (2026-08-21, en construisant ce test) : `arcR` EXACT est le rayon EXTÉRIEUR
-                // du sprite `Ring` (`ArcDiameterPx/2`) — son anti-crénelage y vaut alpha=0 PAR
-                // CONSTRUCTION (`ProceduralUI.Ring` : `outerFade=(rOuter-dist)/1.5`, nul à
-                // `dist=rOuter`). Échantillonner à `arcR` pile rend donc du FOND, pas de l'encre —
-                // `arcInkR` (2px plus petit) reste À L'INTÉRIEUR de la bande solide de l'anneau.
-                const float LowerProbeStartDeg = 340f, LowerProbeEndDeg = 350f;
-                float arcInkR = arcR - 2f;
-                Color trackColorObserved = SamplePolar(tex, geo.Cx, geo.Cy, arcInkR, 150f); // secteur upper connu peint
-                for (float a = LowerProbeStartDeg; a <= LowerProbeEndDeg; a += 1f)
-                {
-                    var (px, py) = IndexPx(geo.Cx, geo.Cy, arcInkR, a);
-                    if (px >= 0 && py >= 0 && px < tex.width && py < tex.height) tex.SetPixel(px, py, trackColorObserved);
-                }
-                tex.Apply();
-                bool lowerProbeSeen = false;
-                for (float a = LowerProbeStartDeg; a < LowerProbeEndDeg; a += 2f)
-                    if (DiffersFromRadialBaseline(tex, geo, arcInkR, a)) lowerProbeSeen = true;
-                Assert.IsTrue(lowerProbeSeen,
-                    $"CONTRÔLE POSITIF : une piste plantée sur le bas ({LowerProbeStartDeg:F0}°-{LowerProbeEndDeg:F0}°, " +
-                    "couleur de l'arc réel) DOIT être détectée par la sonde du demi-cercle inférieur — sinon le " +
-                    "'vide' mesuré plus haut ne prouve rien");
+                float m = 0f;
+                for (float r = rMin; r <= rMax; r += 0.5f) m = Mathf.Max(m, EncreDArc(tex, sansArcs, geo, r, a));
+                profil.Append(Mathf.RoundToInt(m * 100f)).Append(' ');
             }
+            Debug.Log($"[Oracle3-PROFIL] 0..178° pas 2° (encre ×100) : {profil}");
+            var emptyUpperSectors = new List<string>();
+            for (float sectorStart = 0f; sectorStart < 180f; sectorStart += ArcSectorWidthDeg)
+            {
+                // « L'arc COUVRE le secteur » = CHAQUE angle échantillonné du secteur porte de l'encre dans la bande (le plus faible
+                // des angles, chacun pris à son meilleur rayon). Le MAX du secteur laissait passer un trou de 28° (64°-90°, piste
+                // masquée ou décalée) dès qu'un seul angle du secteur de 20° était couvert par cold/hot — MESURÉ run2, profil ci-dessus.
+                float meilleure = float.MaxValue;
+                for (float a = sectorStart; a < sectorStart + ArcSectorWidthDeg; a += 2f)
+                {
+                    float m = 0f;
+                    for (float r = rMin; r <= rMax; r += 0.5f) m = Mathf.Max(m, EncreDArc(tex, sansArcs, geo, r, a));
+                    meilleure = Mathf.Min(meilleure, m);
+                }
+                Debug.Log($"[Oracle3] secteur [{sectorStart:F0},{sectorStart + ArcSectorWidthDeg:F0}] : encre d'arc au plus faible des angles {meilleure:F3} (seuil {ArcInkEpsilon})");
+                if (!(meilleure > ArcInkEpsilon)) emptyUpperSectors.Add($"[{sectorStart:F0},{sectorStart + ArcSectorWidthDeg:F0}]");
+            }
+            Assert.IsEmpty(emptyUpperSectors,
+                "trou dans l'arc du demi-cercle SUPÉRIEUR (aucune encre track/cold/hot dans la bande centrée sur la piste, " +
+                $"comparé au MÊME rendu sans les trois arcs, r ∈ [{rMin:F1},{rMax:F1}]) — secteurs : "
+                + string.Join(", ", emptyUpperSectors));
+
+            // Hémicycle INFÉRIEUR : aucune encre d'arc (le track ne couvre QUE l'hémicycle supérieur). On évite 355-360/0-5
+            // (chevauchement cold/hot mesuré au sommet). Le texte et la lunette s'annulent dans la différence : plus de zone
+            // « sous le texte », donc plus de paires perdues sous la boîte des libellés.
+            var offendingLowerSectors = new List<string>();
+            int paires = 0;
+            for (float a = 185f; a < 355f; a += 2f)
+                for (float r = rMin; r <= rMax; r += 1f)
+                {
+                    paires++;
+                    float d = EncreDArc(tex, sansArcs, geo, r, a);
+                    if (d > ArcInkEpsilon) offendingLowerSectors.Add($"ang={a:F0} r={r - arcR:F1} d={d:F3}");
+                }
+            // ⛔ ANTI-VACUITÉ (plancher INCHANGÉ : 100).
+            Debug.Log($"[Oracle3] hémicycle inférieur : {paires} paires jugées (plancher 100), {offendingLowerSectors.Count} avec de l'encre d'arc");
+            Assert.Greater(paires, 100,
+                $"seules {paires} paires (angle, rayon) ont pu être jugées dans l'hémicycle inférieur — la garde ne couvre plus assez de surface.");
+            Assert.IsEmpty(offendingLowerSectors,
+                "piste parasite détectée dans le demi-cercle INFÉRIEUR (le track ne couvre QUE l'hémicycle supérieur) : "
+                + string.Join("; ", offendingLowerSectors.Take(10)));
+
+            // CONTRÔLE POSITIF (upper) — remplacer un secteur du haut par le pixel du rendu SANS arcs DOIT le faire voir vide.
+            for (float a = 80f; a <= 100f; a += 1f)
+                for (float r = rMin; r <= rMax; r += 1f)
+                {
+                    var (px, py) = IndexPx(geo.Cx, geo.Cy, r, a);
+                    if (px >= 0 && py >= 0 && px < tex.width && py < tex.height) tex.SetPixel(px, py, sansArcs.GetPixel(px, py));
+                }
+            tex.Apply();
+            bool sector80to100StillHasInk = false;
+            for (float a = 80f; a < 100f; a += 2f)
+                for (float r = rMin; r <= rMax; r += 1f)
+                    if (EncreDArc(tex, sansArcs, geo, r, a) > ArcInkEpsilon) sector80to100StillHasInk = true;
+            Assert.IsFalse(sector80to100StillHasInk,
+                "CONTRÔLE POSITIF : un secteur remplacé par le rendu sans arcs (80°-100°) doit être vu comme VIDE");
+
+            // CONTRÔLE POSITIF (lower) — peindre l'encre de l'arc (couleur observée à 150°, hémicycle supérieur) sur 340°-350°
+            // DOIT être détecté par la sonde du demi-cercle inférieur. `arcInkR` reste dans la bande solide de la piste.
+            const float LowerProbeStartDeg = 340f, LowerProbeEndDeg = 350f;
+            float arcInkR = arcR - 2f;
+            Color trackColorObserved = SamplePolar(tex, geo.Cx, geo.Cy, arcInkR, 150f);
+            for (float a = LowerProbeStartDeg; a <= LowerProbeEndDeg; a += 1f)
+            {
+                var (px, py) = IndexPx(geo.Cx, geo.Cy, arcInkR, a);
+                if (px >= 0 && py >= 0 && px < tex.width && py < tex.height) tex.SetPixel(px, py, trackColorObserved);
+            }
+            tex.Apply();
+            bool lowerProbeSeen = false;
+            for (float a = LowerProbeStartDeg; a < LowerProbeEndDeg; a += 2f)
+                if (EncreDArc(tex, sansArcs, geo, arcInkR, a) > ArcInkEpsilon) lowerProbeSeen = true;
+            Assert.IsTrue(lowerProbeSeen,
+                $"CONTRÔLE POSITIF : une encre d'arc plantée sur le bas ({LowerProbeStartDeg:F0}°-{LowerProbeEndDeg:F0}°) DOIT être " +
+                "détectée par la sonde du demi-cercle inférieur — sinon le 'vide' mesuré plus haut ne prouve rien");
         }
 
         // ══════════════════════════════════════════════════════════════════════════════════════
@@ -1114,12 +1037,14 @@ namespace MafiaCleanCity.Shell.Tests
         // Ces tests PASSENT quand l'assertion visée tombe.
         // ══════════════════════════════════════════════════════════════════════════════════════
 
-        private static void ExigerRougeParCetteAssertion(System.Action verdict, string phraseVisee)
+        private static void ExigerRougeParCetteAssertion(System.Action verdict, string phraseVisee, params string[] aussi)
         {
             var ex = Assert.Throws<AssertionException>(() => verdict(),
                 "la scène fautive doit être REFUSÉE par le verdict — il l'a laissée passer");
             StringAssert.Contains(phraseVisee, ex.Message,
                 "le verdict a rougi, mais PAS par l'assertion visée (« rouge pour la mauvaise raison »)");
+            foreach (string p in aussi)
+                StringAssert.Contains(p, ex.Message, $"le verdict a rougi par la bonne assertion, mais PAS sur le secteur visé « {p} »");
         }
 
         /// <summary>M1 — `BoitierRing` forcé à `accentDanger` BRUT sous alarme : la propriété 1 (l'anneau
@@ -1136,9 +1061,6 @@ namespace MafiaCleanCity.Shell.Tests
         /// <summary>M2 — `ArcTrack` masqué : le fond radial reste, l'ABSENCE de la piste rougit les secteurs
         /// du demi-cercle supérieur.</summary>
         [UnityTest]
-        [Ignore("TD-951 : M2 ne discrimine pas tant que la bande d'Oracle3 contient de l'encre hors piste — il rougit par " +
-                "le plancher du bas (76 paires < 100), pas par un secteur du haut. DÉTECTEUR de la dette : retirer " +
-                "cet [Ignore] (et celui d'Oracle3) seulement quand M2 rougit par « trou dans l'arc du demi-cercle SUPÉRIEUR ».")]
         public IEnumerator Mutation_M2_ArcTrackMasque_RougitLesSecteursSuperieurs()
         {
             var (topBar, topBarSlot) = BuildScaffold();
@@ -1152,14 +1074,43 @@ namespace MafiaCleanCity.Shell.Tests
             trackT.gameObject.SetActive(false);
             Texture2D tex = Capturer();
             Texture2D sans = CapturerSansManometre(topBar);
+            Texture2D sansArcs = CapturerSansArcs(topBar);   // ArcTrack reste masqué : la référence ne le rétablit pas
             try
             {
                 GardesInstrument("Mutation_M2", geo, tex, sans);
-                ExigerRougeParCetteAssertion(() => VerdictArc(topBar, geo, tex),
-                    "trou dans l'arc du demi-cercle SUPÉRIEUR");
+                ExigerRougeParCetteAssertion(() => VerdictArc(geo, tex, sansArcs),
+                    "trou dans l'arc du demi-cercle SUPÉRIEUR", "[60,80]", "[80,100]");   // le trou mesuré : 64°-90°
             }
-            finally { Object.Destroy(tex); Object.Destroy(sans); }
+            finally { Object.Destroy(tex); Object.Destroy(sans); Object.Destroy(sansArcs); }
         }
+
+        /// <summary>M4 — `ArcTrack` DÉCALÉ de 6 px vers le haut (le pivot de la piste n'est plus celui du médaillon) : sa
+        /// piste existe encore, mais plus dans la bande centrée sur la piste mesurée. Le verdict doit tomber par le trou
+        /// dans l'arc (jamais par la garde d'instrument : cold/hot sont toujours là).</summary>
+        [UnityTest]
+        public IEnumerator Mutation_M4_ArcTrackDecale_RougitLesSecteursSuperieurs()
+        {
+            var (topBar, topBarSlot) = BuildScaffold();
+            BuildRendu();
+            topBar.SetCitywideHeatBucket("WARM");
+            yield return null;
+
+            Geo geo = MeasureGeo(rendCam, topBar, topBarSlot);   // mesuré AVANT la faute
+            var trackRect = (RectTransform)topBar.transform.Find("Manometre/ArcTrack");
+            Assert.IsNotNull(trackRect, "ArcTrack doit exister sous Manometre");
+            trackRect.anchoredPosition += new Vector2(0f, ArcTrackDecalagePx);
+            Texture2D tex = Capturer();
+            Texture2D sans = CapturerSansManometre(topBar);
+            Texture2D sansArcs = CapturerSansArcs(topBar);
+            try
+            {
+                GardesInstrument("Mutation_M4", geo, tex, sans);
+                ExigerRougeParCetteAssertion(() => VerdictArc(geo, tex, sansArcs),
+                    "trou dans l'arc du demi-cercle SUPÉRIEUR", "[60,80]", "[80,100]");   // le trou mesuré : 64°-90°
+            }
+            finally { Object.Destroy(tex); Object.Destroy(sans); Object.Destroy(sansArcs); }
+        }
+        private const float ArcTrackDecalagePx = 6f;
 
         /// <summary>M3 — `GaugeValue` à la couleur du fond local : DEUX passes (le fond local n'est connu
         /// qu'après une 1ʳᵉ capture). Le contraste minimum doit tomber.</summary>

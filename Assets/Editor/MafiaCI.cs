@@ -319,6 +319,7 @@ public static class MafiaCI
         // CLIENT-1 du 26/09 (pile 256de0f8), vertes — EtatDuShell après de887d7d (S1 avait vu, à raison, un statique mutable de B5).
         // ManometreOracle est INSCRITE le 11/11/2026 (TD-884, décision f2) : réécrite sur RenderTexture + caméra, plus de gel
         // (Oracle1 0,07 s), 6 verts + 2 [Ignore] nommés (Oracle3 et M2 : TD-951, bande aveugle) — run5 passed=6 failed=0 skipped=2, VERDICT 0.
+        // TD-951 (11/11) : les 2 [Ignore] sont RETIRÉS (Oracle3 voyant, M2 discriminant, + M4) — 9 tests, passed=9 failed=0 skipped=0 (Logs/td951/run3.log).
         "ManometreOracle",
         "CeQuiArrive", "ChaineSilencieuse", "CommissariatDuJoueur", "EtatDuShell", "FicheLabo", "GestesDeVente", "HorizonAuMontage",
         "HoteDeRecrutement", "LocuteurReel", "MenuPlus", "ProfilEnMots", "RevueSansRoutine", "SansRelais", "SessionAuRetour", "VariablesDeRefus",
