@@ -1,0 +1,37 @@
+# Comparaison A L'OCTET des 8 mots de bande — juge donnees ⊥ ㉚ — 2026-11-11
+# gauche : services/game-back/src/i18n/string_table.ts @ lot/chaine-bandes f9d92251 (bloc FR, l.3655-3662)
+# droite : mesures/cadre30-source.html (maquette ec35deec, cadre 154 en 0-based)
+
+CLES_LUES = 8   ETATS_DU_CADRE = 8
+
+appro.pression.silent    FR='Rien ne bloque'
+                         codepoints=['0x52', '0x69', '0x65', '0x6e', '0x20', '0x6e', '0x65', '0x20', '0x62', '0x6c', '0x6f', '0x71', '0x75', '0x65']
+                         dans_le_cadre=True  couleur=#8fb59a  EN='Nothing is backing up'
+appro.pression.mild      FR='Ça commence à s’accumuler'
+                         codepoints=['0xc7', '0x61', '0x20', '0x63', '0x6f', '0x6d', '0x6d', '0x65', '0x6e', '0x63', '0x65', '0x20', '0xe0', '0x20', '0x73', '0x2019', '0x61', '0x63', '0x63', '0x75', '0x6d', '0x75', '0x6c', '0x65', '0x72']
+                         dans_le_cadre=True  couleur=#d9ab4e  EN='Starting to back up'
+appro.pression.warm      FR='Engorgé'
+                         codepoints=['0x45', '0x6e', '0x67', '0x6f', '0x72', '0x67', '0xe9']
+                         dans_le_cadre=True  couleur=#e08a4a  EN='Congested'
+appro.pression.critical  FR='Ne livre plus'
+                         codepoints=['0x4e', '0x65', '0x20', '0x6c', '0x69', '0x76', '0x72', '0x65', '0x20', '0x70', '0x6c', '0x75', '0x73']
+                         dans_le_cadre=True  couleur=#d97a6a  EN='Delivering nothing'
+appro.dette.fresh        FR='Entretenu'
+                         codepoints=['0x45', '0x6e', '0x74', '0x72', '0x65', '0x74', '0x65', '0x6e', '0x75']
+                         dans_le_cadre=True  couleur=#8fb59a  EN='Well kept'
+appro.dette.accruing     FR='L’entretien prend du retard'
+                         codepoints=['0x4c', '0x2019', '0x65', '0x6e', '0x74', '0x72', '0x65', '0x74', '0x69', '0x65', '0x6e', '0x20', '0x70', '0x72', '0x65', '0x6e', '0x64', '0x20', '0x64', '0x75', '0x20', '0x72', '0x65', '0x74', '0x61', '0x72', '0x64']
+                         dans_le_cadre=True  couleur=#d9ab4e  EN='Upkeep falling behind'
+appro.dette.stressed     FR='Tient à peine'
+                         codepoints=['0x54', '0x69', '0x65', '0x6e', '0x74', '0x20', '0xe0', '0x20', '0x70', '0x65', '0x69', '0x6e', '0x65']
+                         dans_le_cadre=True  couleur=#e08a4a  EN='Barely holding'
+appro.dette.fractured    FR='Rompu'
+                         codepoints=['0x52', '0x6f', '0x6d', '0x70', '0x75']
+                         dans_le_cadre=True  couleur=#d97a6a  EN='Broken down'
+
+MOTS_SERVIS_PRESENTS_DANS_LE_CADRE = 8 / 8
+ETATS_CADRE_NON_COUVERTS = []
+
+# Et la pile ? les cles NE SONT PAS dans string_table.ts au build servi :
+  @35bdd6cb : rc=1 sortie=''  (rc=1 + sortie vide => 0 occurrence)
+  @6040a213 : rc=1 sortie=''  (rc=1 + sortie vide => 0 occurrence)

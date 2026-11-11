@@ -1,0 +1,72 @@
+{
+    "response_meta": {
+        "request_id_echo": "47b4e2a8-c9b5-4e3d-9b84-38694ee3cc0c",
+        "server_processed_at": "2026-11-11T17:24:56.280Z",
+        "api_version": 1,
+        "correlation_id_echo": null,
+        "server_build_ref": {
+            "git_sha": "35bdd6cb",
+            "built_at": "2026-11-11T04:53:08Z"
+        }
+    },
+    "payload": {
+        "data": {
+            "nodes": [
+                {
+                    "building_id": "cf5c00a5-6ad9-4b34-8bbd-623e11c4b78b",
+                    "bucket": "warm",
+                    "has_arrow": false,
+                    "arrow_to_building_id": null
+                },
+                {
+                    "building_id": "89acce10-4e82-405c-849f-0bff9e2c41e2",
+                    "bucket": "warm",
+                    "has_arrow": false,
+                    "arrow_to_building_id": null
+                },
+                {
+                    "building_id": "3addd2b3-5ee7-40d7-bc82-cb4e6f1923da",
+                    "bucket": "warm",
+                    "has_arrow": true,
+                    "arrow_to_building_id": "cf5c00a5-6ad9-4b34-8bbd-623e11c4b78b"
+                },
+                {
+                    "building_id": "1c7fba73-da7d-4f96-b6d0-713e101c51b2",
+                    "bucket": "silent",
+                    "has_arrow": false,
+                    "arrow_to_building_id": null
+                },
+                {
+                    "building_id": "b2681989-9802-4441-8224-1c6a4f5ac7b3",
+                    "bucket": "silent",
+                    "has_arrow": false,
+                    "arrow_to_building_id": null
+                }
+            ],
+            "legs": [
+                {
+                    "leg_id": "294e03c9-2e1c-461b-a179-52c8d81dbea1",
+                    "origin_building_id": "cf5c00a5-6ad9-4b34-8bbd-623e11c4b78b",
+                    "destination_building_id": "89acce10-4e82-405c-849f-0bff9e2c41e2",
+                    "debt_bucket": "fractured",
+                    "bypassed": false
+                },
+                {
+                    "leg_id": "057b74e9-deda-4b7c-a6c7-a977b5a84fc9",
+                    "origin_building_id": "89acce10-4e82-405c-849f-0bff9e2c41e2",
+                    "destination_building_id": "1c7fba73-da7d-4f96-b6d0-713e101c51b2",
+                    "debt_bucket": "fractured",
+                    "bypassed": false
+                },
+                {
+                    "leg_id": "cb9b1704-8252-4797-8dfe-4d364585863c",
+                    "origin_building_id": "3addd2b3-5ee7-40d7-bc82-cb4e6f1923da",
+                    "destination_building_id": "cf5c00a5-6ad9-4b34-8bbd-623e11c4b78b",
+                    "debt_bucket": "accruing",
+                    "bypassed": true
+                }
+            ],
+            "routes": []
+        }
+    }
+}

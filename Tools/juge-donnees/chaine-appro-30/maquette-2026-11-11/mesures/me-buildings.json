@@ -1,0 +1,111 @@
+{
+  "response_meta": {
+    "request_id_echo": "b9033eb8-47ef-44e7-8f3a-cd3bcc593544",
+    "server_processed_at": "2026-11-11T17:23:38.361Z",
+    "api_version": 1,
+    "correlation_id_echo": null,
+    "server_build_ref": {
+      "git_sha": "35bdd6cb",
+      "built_at": "2026-11-11T04:53:08Z"
+    }
+  },
+  "payload": {
+    "data": {
+      "buildings": [
+        {
+          "building": "3addd2b3-5ee7-40d7-bc82-cb4e6f1923da",
+          "block_id": 1501,
+          "district_id": 16,
+          "district_name": "La Lisière",
+          "operational_type": "lab",
+          "purchased_type": "lab",
+          "convertible_types": [],
+          "name_i18n": {
+            "key": "game.fiction.building.name",
+            "params": {
+              "enseigne": "Soudure Varne",
+              "district": "La Lisière",
+              "block": "1501"
+            }
+          },
+          "lieutenant_ids": [
+            "01a1cba1-c09d-79ad-85a9-bcf589515eb6",
+            "01a1cba1-c09e-7710-8f03-febf8c57fdd1"
+          ]
+        },
+        {
+          "building": "cf5c00a5-6ad9-4b34-8bbd-623e11c4b78b",
+          "block_id": 1502,
+          "district_id": 16,
+          "district_name": "La Lisière",
+          "operational_type": "stash",
+          "purchased_type": "stash",
+          "convertible_types": [],
+          "name_i18n": {
+            "key": "game.fiction.building.name",
+            "params": {
+              "enseigne": "Réserve Nock",
+              "district": "La Lisière",
+              "block": "1502"
+            }
+          },
+          "lieutenant_ids": []
+        },
+        {
+          "building": "89acce10-4e82-405c-849f-0bff9e2c41e2",
+          "block_id": 1503,
+          "district_id": 16,
+          "district_name": "La Lisière",
+          "operational_type": "front_shop",
+          "purchased_type": "front_shop",
+          "convertible_types": [],
+          "name_i18n": {
+            "key": "game.fiction.building.name",
+            "params": {
+              "enseigne": "Clés-Minute Rook",
+              "district": "La Lisière",
+              "block": "1503"
+            }
+          },
+          "lieutenant_ids": []
+        },
+        {
+          "building": "1c7fba73-da7d-4f96-b6d0-713e101c51b2",
+          "block_id": 1504,
+          "district_id": 16,
+          "district_name": "La Lisière",
+          "operational_type": "cash_safehouse",
+          "purchased_type": "cash_safehouse",
+          "convertible_types": [],
+          "name_i18n": {
+            "key": "game.fiction.building.name",
+            "params": {
+              "enseigne": "Consigne de la Threnny",
+              "district": "La Lisière",
+              "block": "1504"
+            }
+          },
+          "lieutenant_ids": []
+        },
+        {
+          "building": "b2681989-9802-4441-8224-1c6a4f5ac7b3",
+          "block_id": 1505,
+          "district_id": 16,
+          "district_name": "La Lisière",
+          "operational_type": "dealer_spot_front",
+          "purchased_type": "dealer_spot_front",
+          "convertible_types": [],
+          "name_i18n": {
+            "key": "game.fiction.building.name",
+            "params": {
+              "enseigne": "Billard Marr",
+              "district": "La Lisière",
+              "block": "1505"
+            }
+          },
+          "lieutenant_ids": []
+        }
+      ]
+    }
+  }
+}
