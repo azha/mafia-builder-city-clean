@@ -279,6 +279,20 @@ namespace MafiaCleanCity.Operational.Tests
         private static GetForensicResponseDto Bandes(string audit, string effluent, string lifestyle) =>
             new GetForensicResponseDto { audit_risk_bucket = audit, effluent_visibility_bucket = effluent, lifestyle_alarm_bucket = lifestyle };
 
+        /// <summary>« NN/M » : les pistes chaudes sur les pistes VIVANTES, COMPTÉES SUR LE CORPS (11/11, TD-881 : plus de littéral « /1 »). Indépendant de `PistesChaudes` : une piste est vivante si
+        /// elle n'est pas dans `PistesConstantes`, chaude si sa bande servie est dans son échelle ET au-dessus du premier cran.</summary>
+        private static string Fraction(GetForensicResponseDto d)
+        {
+            int vivantes = 0, chaudes = 0;
+            foreach (DossierCalculs.Piste p in DossierCalculs.Pistes)
+            {
+                if (System.Array.IndexOf(DossierCalculs.PistesConstantes, p.Cle) >= 0) continue;
+                vivantes++;
+                if (System.Array.IndexOf(p.Echelle, DossierCalculs.BandeDe(d, p.Cle)) > 0) chaudes++;
+            }
+            return $"{chaudes:00}/{vivantes}";
+        }
+
         private static ActeurDto Acteur(string type, string statut, string reference) =>
             new ActeurDto { actorType = type, status = statut, actorRef = reference };
 
@@ -315,7 +329,7 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), RosterDe4());
             yield return null; yield return null;
             Assert.AreEqual(VueDossier.Pistes, ecran.Vue);
-            Assert.AreEqual("01/1", Compteur(0), "pistes chaudes : l'effluent seul est vivant, hors de son premier cran");
+            Assert.AreEqual(Fraction(Bandes("clean", "visible", "quiet")), Compteur(0), "pistes chaudes : l'effluent seul est hors de son premier cran, sur les pistes vivantes du corps");
             Assert.AreEqual("00", Compteur(1), "franchies : aucune piste vivante au dernier cran");
             Assert.AreEqual("01/4", Compteur(2), "acteurs qui tiennent : 1 `steady` sur 4 servis");
             Assert.IsTrue(Sous("Elast/Contenu/Pistes").gameObject.activeSelf && !Sous("Elast/Contenu/Acteurs").gameObject.activeSelf && !Sous("Elast/Rien").gameObject.activeSelf);
@@ -334,6 +348,12 @@ namespace MafiaCleanCity.Operational.Tests
                     Assert.IsTrue(Meme(Sous("Elast/Contenu/Pistes/Piste1/Crans/Cran3").GetComponent<Image>().color, vide), "le plus haut cran reste éteint");
                     Assert.AreEqual(ForensicResolvers.Phrase("visible"), Texte("Elast/Contenu/Pistes/Piste1/Mot"));
                     Assert.AreEqual("visible", Texte("Elast/Contenu/Pistes/Piste1/Cle"), "la clé servie, brute");
+                }
+                else if (i == 2)
+                {
+                    Assert.AreEqual(1, allumes, "train de vie VIVANT (TD-881 : plus constante), « quiet » = le premier cran : un cran allumé");
+                    Assert.AreEqual(ForensicResolvers.Phrase("quiet"), Texte("Elast/Contenu/Pistes/Piste2/Mot"));
+                    Assert.AreEqual("quiet", Texte("Elast/Contenu/Pistes/Piste2/Cle"), "la clé servie, brute");
                 }
                 else
                 {
@@ -364,7 +384,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(VueDossier.Acteurs, ecran.Vue);
             Assert.AreEqual("04", Compteur(0), "acteurs connus : tous les servis, `gone` compris");
             Assert.AreEqual("01", Compteur(1), "qui ont peur : 1 `nervous`");
-            Assert.AreEqual("01/1", Compteur(2), "la porte montre le MÊME compte de pistes chaudes que la vue pistes");
+            Assert.AreEqual(Fraction(Bandes("clean", "visible", "quiet")), Compteur(2), "la porte montre le MÊME compte de pistes chaudes que la vue pistes");
             Assert.IsTrue(!Sous("Elast/Contenu/Pistes").gameObject.activeSelf && Sous("Elast/Contenu/Acteurs").gameObject.activeSelf);
             Assert.IsTrue(Sous("Pied").gameObject.activeSelf && !Sous("Pied/BoutonAcheter").gameObject.activeSelf, "en vue acteurs, le pied n'est que sa note");
 
@@ -403,7 +423,7 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.RendrePourTest(Bandes("clean", "clear", "quiet"), new ActeurDto[0]);
             yield return null; yield return null;
             Assert.AreEqual(VueDossier.Vide, ecran.Vue);
-            Assert.AreEqual("00/1", Compteur(0)); Assert.AreEqual("00", Compteur(1)); Assert.AreEqual("00", Compteur(2));
+            Assert.AreEqual(Fraction(Bandes("clean", "clear", "quiet")), Compteur(0)); Assert.AreEqual("00", Compteur(1)); Assert.AreEqual("00", Compteur(2));
             Assert.IsTrue(Sous("Elast/Rien").gameObject.activeSelf && !Sous("Elast/Contenu/Pistes").gameObject.activeSelf && !Sous("Elast/Contenu/Acteurs").gameObject.activeSelf);
             Assert.IsFalse(Sous("Pied").gameObject.activeSelf, "135 n'a pas de pied");
             Button porte = Sous("Compteurs/Fenetre2").GetComponent<Button>();
@@ -419,7 +439,7 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.RendrePourTest(Bandes("clean", "faint", "quiet"), new ActeurDto[0]);
             yield return null;
             Assert.AreEqual(VueDossier.Pistes, ecran.Vue);
-            Assert.AreEqual("01/1", Compteur(0));
+            Assert.AreEqual(Fraction(Bandes("clean", "faint", "quiet")), Compteur(0));
             ecran.Basculer();
             yield return null;
             Assert.AreEqual("00", Compteur(0)); Assert.AreEqual(0, Sous("Elast/Contenu/Acteurs").childCount);
@@ -439,12 +459,12 @@ namespace MafiaCleanCity.Operational.Tests
             ForensicScreenController ecran = MonterEcran();
             ecran.RendrePourTest(Bandes("clean", "visible", "quiet"), null);   // roster en erreur
             yield return null;
-            Assert.AreEqual("01/1", Compteur(0), "les pistes restent lisibles");
+            Assert.AreEqual(Fraction(Bandes("clean", "visible", "quiet")), Compteur(0), "les pistes restent lisibles");
             Assert.AreEqual("—", Compteur(2), "les acteurs qui tiennent : « — », pas « 00/0 »");
             ecran.Basculer();
             yield return null;
             Assert.AreEqual("—", Compteur(0)); Assert.AreEqual("—", Compteur(1));
-            Assert.AreEqual("01/1", Compteur(2), "la porte vers les pistes garde son compte");
+            Assert.AreEqual(Fraction(Bandes("clean", "visible", "quiet")), Compteur(2), "la porte vers les pistes garde son compte");
             ecran.Basculer();
 
             ecran.RendrePourTest(null, RosterDe4());   // bandes en erreur
@@ -530,11 +550,13 @@ namespace MafiaCleanCity.Operational.Tests
                 Assert.AreEqual(-1, DossierCalculs.CranDe(p, "smouldering"), "un mot inconnu n'a pas de cran");
                 Assert.AreEqual(-1, DossierCalculs.CranDe(p, null));
             }
-            CollectionAssert.AreEqual(new[] { "audit_risk_bucket", "lifestyle_alarm_bucket" }, DossierCalculs.PistesConstantes, "les deux pistes constantes (TD-881)");
-            Assert.AreEqual(1, DossierCalculs.PistesVivantes());
+            CollectionAssert.AreEqual(new[] { "audit_risk_bucket" }, DossierCalculs.PistesConstantes, "une seule piste constante : la comptabilité (TD-881, partie lifestyle fermée le 11/11 sur un corps réel : ScreenB7Q5d)");
+            Assert.AreEqual(DossierCalculs.Pistes.Length - DossierCalculs.PistesConstantes.Length, DossierCalculs.PistesVivantes(), "les pistes vivantes = les pistes moins les constantes");
             // la vivacité ne dépend QUE de PistesConstantes : une bande « chaude » d'une piste constante ne compte pas
-            Assert.AreEqual(0, DossierCalculs.PistesChaudes(Bandes("audited", "clear", "subpoenaed")), "les constantes ne chauffent pas le compteur");
-            Assert.AreEqual(0, DossierCalculs.PistesFranchies(Bandes("audited", "clear", "subpoenaed")));
+            Assert.AreEqual(0, DossierCalculs.PistesChaudes(Bandes("audited", "clear", "quiet")), "les constantes ne chauffent pas le compteur");
+            Assert.AreEqual(0, DossierCalculs.PistesFranchies(Bandes("audited", "clear", "quiet")));
+            Assert.AreEqual(1, DossierCalculs.PistesChaudes(Bandes("clean", "clear", "watched")), "le train de vie, VIVANT, chauffe le compteur");
+            Assert.AreEqual(1, DossierCalculs.PistesFranchies(Bandes("clean", "clear", "subpoenaed")), "le train de vie au dernier cran est franchi");
             Assert.AreEqual(1, DossierCalculs.PistesFranchies(Bandes("clean", "glaring", "quiet")));
             Assert.AreEqual(0, DossierCalculs.PistesChaudes(Bandes("clean", "smouldering", "quiet")), "une bande inconnue n'est pas « chaude »");
             Assert.IsTrue(DossierCalculs.EtatVide(Bandes("clean", "clear", "quiet"), new ActeurDto[0]));
@@ -660,7 +682,7 @@ namespace MafiaCleanCity.Operational.Tests
                     {
                         Vector2Int px = banc.Pixel((RectTransform)Sous($"Elast/Contenu/Pistes/Piste{i}/Crans/Cran{c}"), 0.5f, 0.5f);
                         Color vu = t.GetPixel(px.x, px.y);
-                        Color attendu = (i == 1 && c <= 2) ? orange : vide;
+                        Color attendu = (i == 1 && c <= 2) ? orange : (i == 2 && c == 0) ? ForensicResolvers.CouleurPour(ForensicResolvers.NiveauDe("quiet")) : vide;   // train de vie VIVANT (TD-881) : « quiet » allume le premier cran
                         Assert.LessOrEqual(Ecart(vu, attendu), 8f, $"cran {c} de la piste {i} : pixel {vu} au lieu de {attendu}");
                     }
 
@@ -923,6 +945,73 @@ namespace MafiaCleanCity.Operational.Tests
 
         private static string TitreDeMaquette(DossierCalculs.Piste p) => MafiaCleanCity.I18n.Libelle.De("forensic", "bloc", p.Titre);
 
+        // ── GARDE D'ARRIVÉE (11/11, TD-881 partie lifestyle) — un corps RÉEL de la pile, pas une bande fabriquée ──
+        // Corps de `GET /v1/me/forensic` @X-Server-Build 8d0184a4, compte JETABLE dont la ligne `lifestyle_audit_state` du lieutenant « Lt. Ilm » a été passée par UPDATE SQL à
+        // consecutive_flag_months=2 / last_gap=15000 / tail_ramp_stage='passive' (état POSÉ par SQL, DÉCLARÉ ; l'atteinte réelle passe par le tick standing-gap-heat) ; copie de
+        // `Logs/td-pile-8d0184a4/10-forensic-watched-sql.json` (`payload.data` seul).
+        private const string CorpsForensicWatchedReel = "{\"payload\":{\"data\":{\"audit_risk_bucket\":\"clean\",\"effluent_visibility_bucket\":\"clear\",\"lifestyle_alarm_bucket\":\"watched\",\"lifestyle_lieutenant_name\":\"Lt. Ilm\",\"audit_risk_label_key\":\"forensic.cran.rien_a_signaler\",\"effluent_visibility_label_key\":\"forensic.cran.invisible\",\"lifestyle_alarm_label_key\":\"forensic.gravite.on_vous_regarde\"}}}";
+
+        /// <summary>La garde : bande du train de vie AU-DESSUS du premier cran ET nom servi ⇒ la piste est VIVANTE et son titre porte le nom. Prend la liste des pistes en paramètre pour que son contrôle positif
+        /// (la piste remise en constante) puisse la faire rougir sans toucher au code de production.</summary>
+        private static bool ArriveeDeLaPisteNommee(DossierCalculs.Piste[] pistes, GetForensicResponseDto d)
+        {
+            foreach (DossierCalculs.Piste p in pistes)
+            {
+                if (p.Cle != DossierCalculs.CleDeLaPisteNommee) continue;
+                bool hors = System.Array.IndexOf(p.Echelle, d.lifestyle_alarm_bucket) > 0;
+                return hors && p.Vivante && ForensicScreenController.TitreAffiche(p, d).Contains(d.lifestyle_lieutenant_name.Trim());
+            }
+            return false;
+        }
+
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7Q5d_Arrivee_BandeDuTrainDeVieHorsPremierCran_PisteVivante_NomPose_ControlePositif()
+        {
+            GetForensicResponseDto d = JsonUtility.FromJson<GetForensicEnvelope>(CorpsForensicWatchedReel).payload.data;
+            Assert.AreEqual("watched", d.lifestyle_alarm_bucket, "le corps réel collé porte la bande visée");
+            Assert.AreEqual("Lt. Ilm", d.lifestyle_lieutenant_name, "…et le nom servi");
+            Assert.AreEqual("forensic.gravite.on_vous_regarde", d.lifestyle_alarm_label_key, "…et la clé servie du mot (déclarée par le DTO)");
+            Assert.IsTrue(ArriveeDeLaPisteNommee(DossierCalculs.Pistes, d), "bande ≠ premier cran + nom servi ⇒ piste vivante ET nom posé");
+            // CONTRÔLE POSITIF : la piste remise en CONSTANTE (le bug d'avant 11/11) DOIT faire rougir la garde
+            var enConstante = new List<DossierCalculs.Piste>();
+            foreach (DossierCalculs.Piste p in DossierCalculs.Pistes)
+                enConstante.Add(p.Cle == DossierCalculs.CleDeLaPisteNommee ? new DossierCalculs.Piste(p.Cle, p.Titre, false, p.Echelle) : p);
+            Assert.IsFalse(ArriveeDeLaPisteNommee(enConstante.ToArray(), d), "CONTRÔLE POSITIF : une piste du train de vie tenue pour constante ne pose JAMAIS le nom — la garde doit le voir");
+            // et l'écran RENDU, sur ce même corps
+            ForensicScreenController ecran = MonterEcran();
+            ecran.RendrePourTest(d, RosterDe4());
+            yield return null; yield return null;
+            StringAssert.Contains("Lt. Ilm", Texte("Elast/Contenu/Pistes/Piste2/Titre"), "le titre nommé est RENDU");
+            Assert.AreEqual(ForensicResolvers.Phrase("watched"), Texte("Elast/Contenu/Pistes/Piste2/Mot"), "le mot de la bande (« On vous regarde »), pas « — »");
+            Assert.AreEqual("watched", Texte("Elast/Contenu/Pistes/Piste2/Cle"));
+        }
+
+        /// <summary>V20 : la CLÉ servie du mot (`lifestyle_alarm_label_key`) est lue quand elle est là ET connue du catalogue ; inconnue ou absente ⇒ le mot de la bande.</summary>
+        [UnityTest]
+        [Category("ScreenB7")]
+        public IEnumerator ScreenB7Q5e_LeMotServi_EstLu_SinonLeMotDeLaBande()
+        {
+            GetForensicResponseDto d = JsonUtility.FromJson<GetForensicEnvelope>(CorpsForensicWatchedReel).payload.data;
+            ForensicScreenController ecran = MonterEcran();
+            try
+            {
+                MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { [d.lifestyle_alarm_label_key] = "MOT SERVI" });
+                ecran.RendrePourTest(d, RosterDe4());
+                yield return null; yield return null;
+                Assert.AreEqual("MOT SERVI", Texte("Elast/Contenu/Pistes/Piste2/Mot"), "clé servie connue ⇒ son texte");
+                MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { ["autre.cle"] = "x" });
+                ecran.RendrePourTest(d, RosterDe4());
+                yield return null; yield return null;
+                Assert.AreEqual(ForensicResolvers.Phrase("watched"), Texte("Elast/Contenu/Pistes/Piste2/Mot"), "clé servie inconnue du catalogue ⇒ le mot de la bande");
+                d.lifestyle_alarm_label_key = null;
+                ecran.RendrePourTest(d, RosterDe4());
+                yield return null; yield return null;
+                Assert.AreEqual(ForensicResolvers.Phrase("watched"), Texte("Elast/Contenu/Pistes/Piste2/Mot"), "clé servie absente ⇒ le mot de la bande");
+            }
+            finally { MafiaCleanCity.I18n.I18nCatalog.Oublier(); }
+        }
+
         /// <summary>Q5 : piste VIVANTE + bande au-dessus du premier cran + nom servi ⇒ la phrase ENTIÈRE à trou porte le nom de la pool réelle (« Lt. Marrek »).</summary>
         [Test]
         [Category("ScreenB7")]
@@ -963,17 +1052,20 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(sans.payload.data.lifestyle_lieutenant_name);
         }
 
-        /// <summary>Q5, RENDU : aujourd'hui la piste du train de vie est une constante ÉTEINTE (TD-881) — même avec un nom servi, l'écran garde le titre de la maquette.</summary>
+        /// <summary>Q5, RENDU (réécrit le 11/11 : TD-881 partie lifestyle fermée) : avec un nom servi, la piste du train de vie (VIVANTE) porte le nom ; la piste de la comptabilité (seule CONSTANTE) reste éteinte
+        /// et garde le titre de la maquette — le nom ne perce que la piste du train de vie.</summary>
         [UnityTest]
         [Category("ScreenB7")]
-        public IEnumerator ScreenB7Q5d_PisteConstanteEteinte_LEcranNeNommePersonne()
+        public IEnumerator ScreenB7Q5f_LaPisteDuTrainDeVieNomme_LaComptabiliteConstanteNeNommePersonne()
         {
             ForensicScreenController ecran = MonterEcran();
             ecran.RendrePourTest(CorpsNomme("watched", "Lt. Marrek"), RosterDe4());
             yield return null; yield return null;
-            string titre = Nu(Texte("Elast/Contenu/Pistes/Piste2/Titre"));
-            StringAssert.DoesNotContain("Marrek", titre);
-            Assert.AreEqual(Nu(TitreDeMaquette(DossierCalculs.Pistes[2])), titre, "le titre de la maquette, rendu tel quel");
+            StringAssert.Contains("Marrek", Nu(Texte("Elast/Contenu/Pistes/Piste2/Titre")), "le train de vie (vivant) porte le nom servi");
+            string audit = Nu(Texte("Elast/Contenu/Pistes/Piste0/Titre"));
+            StringAssert.DoesNotContain("Marrek", audit);
+            Assert.AreEqual(Nu(TitreDeMaquette(DossierCalculs.Pistes[0])), audit, "la comptabilité, constante : le titre de la maquette, rendu tel quel");
+            Assert.AreEqual("—", Texte("Elast/Contenu/Pistes/Piste0/Mot"), "la comptabilité reste éteinte");
         }
 
         // MÉTIER ICI — ajouter ici les tests de PARCOURS (signup → session/open → la route) et
