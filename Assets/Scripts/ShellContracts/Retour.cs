@@ -100,6 +100,7 @@ namespace MafiaCleanCity.Shell
                 surface = null;
             }
             Button b = hote.AddComponent<Button>();
+            b.transition = Selectable.Transition.None;   // le retour d'appui EST le retour : jamais la teinte `ColorTint` d'Unity en plus (design §1.6 ; revue ⊥ du lot, 11/11)
             RetourAppui ra = hote.GetComponent<RetourAppui>();
             if (ra == null) ra = hote.AddComponent<RetourAppui>();
             ra.Init(b, surface, membre, ligne);

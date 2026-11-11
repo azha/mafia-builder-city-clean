@@ -97,11 +97,12 @@ namespace MafiaCleanCity.Tests
             foreach (Button b in racine.GetComponentsInChildren<Button>(true))
             {
                 string chemin = RetourReleveHelper.Chemin(b.transform);
+                string statique = GardesStatiquesGp.Statique(ecran, chemin, b);   // la configuration du bouton : jugée pressable ou non
                 if (!(b.gameObject.activeInHierarchy && b.IsInteractable()))
                 {
                     RetourAppui inerte = b.GetComponent<RetourAppui>();
                     lignes.Add(new LigneGp { Ecran = ecran, Etat = etat, Chemin = chemin, Pressable = false, Cas = CasRetour.Aucun,
-                                             NomCible = "", Id = null, Pixels = -1,
+                                             NomCible = "", Id = null, Pixels = -1, Verdict = statique,
                                              SiteMembre = inerte != null ? inerte.SiteMembre : "", SiteLigne = inerte != null ? inerte.SiteLigne : 0 });
                     continue;
                 }
@@ -121,6 +122,7 @@ namespace MafiaCleanCity.Tests
                     lg.Verdict = "GP-RECOUVERT : " + ecran + "/" + chemin + " — le centre du bouton est recouvert par « " + couvreur
                                  + " » (raycastTarget, dessiné au-dessus) : un bouton actif que personne ne peut toucher ni voir";
                 }
+                if (statique != null) lg.Verdict = lg.Verdict == null ? statique : lg.Verdict + " | " + statique;
                 lignes.Add(lg);
                 if (regie.PistesVivantes != pistesAEntree) ambiance = true;   // le bouton a laissé la régie autrement : le repos partagé n'est plus sûr
             }
@@ -380,6 +382,27 @@ namespace MafiaCleanCity.Tests
             int n = 0;
             for (int i = 0; i < lignes.Count; i++) if (lignes[i].Pressable) n++;
             return n;
+        }
+    }
+
+    /// <summary>Gardes STATIQUES d'un bouton du guichet (revue ⊥ du lot, 11/11), jugées sur sa configuration, pressable ou non : (1) AUCUN `ColorTint` (ni aucune
+    /// transition d'Unity) : le retour d'appui est le retour, la teinte par défaut se cumulerait à lui (design §1.6) ; (2) le `targetGraphic` vit dans le
+    /// SOUS-ARBRE du bouton (la contrainte du guichet, §5 B1 : un cas 2 sur un Graphic extérieur rendrait un handle non nul sur 0 pixel). Nul = vert.</summary>
+    public static class GardesStatiquesGp
+    {
+        public static string Statique(string ecran, string chemin, Button b)
+        {
+            string v = null;
+            if (b.transition != Selectable.Transition.None)
+                v = "GP-COLORTINT : " + ecran + "/" + chemin + " — le bouton du guichet garde Transition." + b.transition
+                    + " : la teinte d'Unity se cumule au retour d'appui (jamais deux retours)";
+            if (b.targetGraphic != null && !b.targetGraphic.transform.IsChildOf(b.transform))
+            {
+                string t = "GP-TARGETGRAPHIC : " + ecran + "/" + chemin + " — le targetGraphic « " + b.targetGraphic.name
+                           + " » est HORS du sous-arbre du bouton : la bascule du cas 2 pourrait être attachée sans pixel";
+                v = v == null ? t : v + " | " + t;
+            }
+            return v;
         }
     }
 
