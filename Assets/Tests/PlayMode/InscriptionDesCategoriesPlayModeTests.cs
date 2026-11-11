@@ -43,9 +43,8 @@ namespace MafiaCleanCity.Tests
         internal static readonly HashSet<string> NonInscritesConnues = new HashSet<string>
         {
             // 16 → 1 le 26/09 (créneau CLIENT-1, pile 256de0f8) : les 15 autres lancées et inscrites vertes (EtatDuShell verte après
-            // de887d7d). Reste ManometreOracle : Oracle1_Ring_… GÈLE le fil principal (reproduit au même créneau : RC=5, 180 s de journal
-            // muet) — la forme exacte que SondeGelVolontaire imite. Elle sortira de la dette quand le gel sera corrigé.
-            "ManometreOracle",
+            // de887d7d). ManometreOracle est SORTIE de la dette le 11/11/2026 (TD-884, CLIENT-2) : réécrite sur RenderTexture + caméra, le
+            // gel d'Oracle1 est mort (0,07 s) ; 6 verts + 2 [Ignore] (TD-951) au créneau ; inscrite au filtre de MafiaCI. La dette est VIDE.
             // DecorDeScene (CLIENT-2) est SORTIE de la dette le 08/10 : verte 38/38 seule à son créneau, inscrite au filtre de MafiaCI.
             // ClientHttp (CLIENT-2, TD-767) est SORTIE de la dette le 07/10 : verte 4/4 au créneau de CLIENT-1 (HEAD 2de97eb4), inscrite au filtre de MafiaCI.
             // CanvasRacine (CLIENT-2, 07/10) est SORTIE de la dette le 07/10 : verte 5/5 au créneau de CLIENT-1, inscrite au filtre de MafiaCI.
@@ -65,11 +64,14 @@ namespace MafiaCleanCity.Tests
         }
 
         /// <summary>Les catégories déclarées que RIEN ne couvre (ni le filtre, ni une exclusion nommée, ni la dette). Pure.</summary>
-        internal static List<string> NonCouvertes(IEnumerable<string> declarees, List<string> inscrites)
+        /// <summary>`dette` : la dette à opposer (défaut : la vraie). Le contrôle I0 en passe une SYNTHÉTIQUE, parce que la vraie est
+        /// vide depuis le 11/11 (ManometreOracle inscrite) — sans cela il n'aurait plus de dette à ne pas voir.</summary>
+        internal static List<string> NonCouvertes(IEnumerable<string> declarees, List<string> inscrites, ISet<string> dette = null)
         {
+            dette = dette ?? NonInscritesConnues;
             bool Prise(string c) => inscrites.Any(p => Regex.IsMatch(c, p));
             bool Exclue(string c) => FamillesExclues.Keys.Any(f => c.StartsWith(f, System.StringComparison.Ordinal)) || SondesExclues.ContainsKey(c);
-            return declarees.Distinct().Where(c => !Prise(c) && !Exclue(c) && !NonInscritesConnues.Contains(c)).OrderBy(c => c).ToList();
+            return declarees.Distinct().Where(c => !Prise(c) && !Exclue(c) && !dette.Contains(c)).OrderBy(c => c).ToList();
         }
 
         private static IEnumerable<string> Declarees(string source) =>
@@ -79,7 +81,7 @@ namespace MafiaCleanCity.Tests
         public void I0_ControlePositif_UneCategorieNeuveEstVue_UneExclueNon()
         {
             var inscrites = new List<string> { "EcranFile" };
-            CollectionAssert.AreEqual(new[] { "ZzzNeuve" }, NonCouvertes(new[] { "ZzzNeuve", "EcranFile", "CaptureZzz", "SondeGelVolontaire", "ManometreOracle" }, inscrites),
+            CollectionAssert.AreEqual(new[] { "ZzzNeuve" }, NonCouvertes(new[] { "ZzzNeuve", "EcranFile", "CaptureZzz", "SondeGelVolontaire", "ZzzEnDette" }, inscrites, new HashSet<string> { "ZzzEnDette" }),
                 "la neuve est VUE ; l'inscrite, la famille exclue, la sonde et la dette ne le sont pas");
             Assert.IsEmpty(NonCouvertes(new[] { "EcranFileN5" }, inscrites), "règle d'Unity : préfixe NON ancré — « EcranFile » prend « EcranFileN5 »");
             Assert.AreEqual(3, Declarees("[Category(\"A\")] x; // [Category(\"B\")]\n[UnityTest, Category(\"C\")] [Category(\"D\")]").Count(),
