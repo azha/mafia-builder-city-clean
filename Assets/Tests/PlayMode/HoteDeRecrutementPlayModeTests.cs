@@ -169,6 +169,42 @@ namespace MafiaCleanCity.CityMap.Tests
             ExigerEtat(ecran, BlocageRecrutement.Aucun);   // rouvert quand la réponse manque : le back tranche
         }
 
+        // ---- TD-1092 (12/11) — host-eligibility sert `roster_room_label_key` (back lot/equipe-pleine @ff076d49) : le DTO la DÉCLARE (forme G), la phrase « équipe au complet » la LIT, le mot ratifié est le repli compté.
+        private const string CorpsAvecCle = "{\"payload\":{\"data\":{\"archetypes\":[],\"structural_budget_band\":\"AVAILABLE\",\"roster_room_band\":\"FULL\",\"roster_room_label_key\":\"famille.rosterroom.votre_equipe_est_au_complet\"}}}";
+
+        [Test]
+        public void H12a_LeDtoDeclareLaCleDuLibelleDeLaBande()
+        {
+            HostEligibiliteData d = HostEligibilite.LireCorps(CorpsAvecCle);
+            Assert.AreEqual(HostBlocage.CleEquipePleine, d.roster_room_label_key, "forme G : la clé servie est lue, pas jetée par JsonUtility");
+            Assert.AreEqual("FULL", d.roster_room_band);
+            Assert.IsNull(HostEligibilite.LireCorps(Bandes("AVAILABLE", "FULL")).roster_room_label_key, "clé non servie (back d'avant le lot) ⇒ null, la phrase retombe sur le repli");
+        }
+
+        [Test]
+        public void H12b_LaPhraseLitLaCleServie_EtLeMotRatifieEstLeRepliCompte()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { HostBlocage.CleEquipePleine, "VALEUR SERVIE DU COMPLET" } });
+            Assert.AreEqual("VALEUR SERVIE DU COMPLET", LieutenantScreenController.PhraseDeBlocage(BlocageRecrutement.EquipeComplete, HostBlocage.CleEquipePleine), "la valeur servie l'emporte");
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
+            Assert.AreEqual("Votre équipe est au complet.", LieutenantScreenController.PhraseDeBlocage(BlocageRecrutement.EquipeComplete, HostBlocage.CleEquipePleine), "clé annoncée, valeur non servie ⇒ le mot ratifié");
+            CollectionAssert.Contains(MafiaCleanCity.I18n.Libelle.ClesEnRepli, HostBlocage.CleEquipePleine, "le repli est COMPTÉ sous la clé servie (la garde zéro-repli le voit)");
+            Assert.AreEqual("Votre équipe est au complet.", LieutenantScreenController.PhraseDeBlocage(BlocageRecrutement.EquipeComplete, null), "clé absente ⇒ le mot ratifié");
+        }
+
+        [UnityTest]
+        public IEnumerator H12c_LEcran_AfficheLaPhraseDeLaCleServie()
+        {
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new Dictionary<string, string> { { HostBlocage.CleEquipePleine, "VALEUR SERVIE DU COMPLET" } });
+            hote = new GameObject("LieutenantScreenController_CleServie");
+            LieutenantScreenController ecran = hote.AddComponent<LieutenantScreenController>();
+            yield return null;
+            yield return null;
+            ecran.AppliquerHostEligibilite(HostEligibilite.LireCorps(CorpsAvecCle));
+            ExigerEtat(ecran, BlocageRecrutement.EquipeComplete, "VALEUR SERVIE DU COMPLET");
+        }
+
         [UnityTest]
         public IEnumerator H8b_SansPhraseServie_LeRepliEstLeMotFrancais()
         {

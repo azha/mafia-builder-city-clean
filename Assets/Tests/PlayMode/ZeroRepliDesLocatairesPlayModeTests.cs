@@ -65,6 +65,9 @@ namespace MafiaCleanCity.Operational.Tests
             // (8d0184a4) ; repli = « votre grande décision du jour », octet pour octet le texte ratifié (maquette r2 `01-inventaire-M-b2ceebeb.txt` L803/809, é = U+00E9 NFC). LEVÉE : la clé est servie sur la pile
             // (lot/couts-30 de BACK-1 @87820327, tranche suivante) — la règle (2) rougit alors et la retire d'ici.
             "accueil.jeton.votre_grande_decision_du_jour",
+            // TD-1092 (12/11) : la phrase « équipe au complet » de ③ (LieutenantScreenController.PhraseDeBlocage) lit `roster_room_label_key` SERVIE ; sa valeur n'est pas encore servie sur la pile dev (back lot/equipe-pleine @ff076d49,
+            // fusion au cumul back 11/14 puis service). Repli = « Votre équipe est au complet. », ratifié f2 11/11 (le même mot que la valeur FR du back). LEVÉE : la clé est servie sur la pile — la règle (2) rougit et la retire.
+            "famille.rosterroom.votre_equipe_est_au_complet",
             // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : une clé restante, non servie à la pile du 08/10 (les 15 autres le sont : retirées ci-dessus). Les statuts et types d'acteur
             // sont lus par la VALEUR servie (`forensic.statut.*`, `forensic.acteur.lawyer|clerk`).
             "forensic.enseigne.rien_a_votre_nom",   // le sous-titre de l'enseigne du cadre 135 (sans point) : son rôle propre, la clé bloc.* est celle du texte `.rien`
