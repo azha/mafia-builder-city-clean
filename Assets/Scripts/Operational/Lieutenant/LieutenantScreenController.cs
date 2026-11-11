@@ -1601,12 +1601,15 @@ namespace MafiaCleanCity.Operational.Lieutenant
         /// retour du système (`IRetourDuShell` → `AppShell.Depiler`) : la Famille à la racine de son onglet revient à la carte ; montée
         /// en surimpression (Conflit › Recruter), elle revient à l'écran d'en dessous. Aucun changement visuel : transition nulle, la
         /// cible de toucher est le disque déjà dessiné. Hors shell (aucun `IRetourDuShell` vivant), le toucher ne fait rien.</summary>
-        public static Button BrancherRetourDuShell(GameObject retour, Graphic cible)
+        public static Button BrancherRetourDuShell(GameObject retour, Graphic cible, Graphic graphicDuBouton = null)
         {
             cible.raycastTarget = true;
             Button b = Retour.NouveauBouton(retour);
             b.transition = Selectable.Transition.None;
-            b.targetGraphic = cible;
+            // GP (11/11) : le disque est un VOILE à 3 % (#ffffff08) dont `color` est blanche : le classement (paramètres) le tenait pour une matière
+            // (cas 2) alors que son rendu ne bouge que 11 px (< 12). `graphicDuBouton` = un Graphic qui n'est pas une matière (le chevron, un texte)
+            // ⇒ le classement tombe sur le voile du bouton (cas 3), seul retour visible ici. Le toucher reste le disque (`cible.raycastTarget`).
+            b.targetGraphic = graphicDuBouton != null ? graphicDuBouton : cible;
             b.onClick.AddListener(() => MafiaCleanCity.Shell.RetourDuShellLocator.Find()?.Depiler());
             return b;
         }
@@ -1725,7 +1728,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TextMeshProUGUI chevron = NewText("Chevron", retour.transform, "\u2039", FX(28), TextAlignmentOptions.Center);
             chevron.color = DesignTokens.Current.hudCremeSecondary;
             Stretch((RectTransform)chevron.transform);
-            BrancherRetourDuShell(retour, disque);   // G3 : le « ‹ » n'est plus décoratif
+            BrancherRetourDuShell(retour, disque, chevron);   // G3 : le « ‹ » n'est plus décoratif
 
             // Le bloc titre + sous-titre.
             GameObject bloc = NewUI("Titres", tete.transform);
