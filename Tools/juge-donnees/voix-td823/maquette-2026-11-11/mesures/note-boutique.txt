@@ -1,0 +1,57 @@
+㉗ La boutique — la vitrine|
+  |
+    |Les articles sont des objets, pas des lignes| : une plaque émaillée pour les couleurs de nom, une carte encadrée pour le thème, une |clé numérotée| pour chaque dossier, un pli cacheté pour le soutien au studio, et des |piles de jetons dont la hauteur dit la taille du pack|. |Une seule monnaie : les Marks| (mesuré par BACK-1 : |economy_states.marks| ; « jeton » n’est pas une monnaie — c’est l’objet dessiné, la pièce de laiton). Les Marks se voient, ils ne se lisent pas comme un nombre nu.|
+    |Le défaut de couverture est corrigé| : le pack de soutien accordait |500 Marks| et c’était le seul des cinq à ne pas dire ce qu’il donne — le joueur ne pouvait pas le savoir. Il est écrit sur l’objet.|
+    |« +20 % » ne se lit plus « 600 + 20 % »| : |bonus_pct| compare le |ratio Marks/euro| au pack de base, il ne s’ajoute pas à la quantité. L’étiquette dit maintenant « |+20 % de Marks par euro| ».|
+    |Aucun prix en euros n’est écrit|, et c’est le canon : le corps ne porte que |price_store_product_id|, le magasin de la plateforme donne le prix. L’étiquette « prix du magasin » |exige| que le client passe cet identifiant au SDK.|
+    |⛔ |Le troisième cadre n’est pas un cas limite : c’est l’état terminal de tout joueur non payeur.| Les |3| écrivains de |economy_states.marks| sont le don de bienvenue (|50|, une fois), un reçu vérifié et une subvention staff. Le don vaut |exactement| le prix du seul article atteignable : un achat, et les trois autres sont hors d’atteinte |pour toujours|. Et les cinq « acheter » |n’aboutissent dans aucun environnement| — aucun vérificateur de reçu n’est câblé.|
+    |⚠️ |Deux ASSUMÉS consignés|, tous deux contre la convention du lot 0 : |display_name| est servi en |littéral anglais| et le bundle i18n ne porte |aucune clé produit| (67 messages, tous |error.*|) — le nom réellement servi est écrit sous chaque objet ; et les |sous-titres descriptifs n’ont aucune source|, aucun champ de projection ne porte de description.|
+  |
+|
+|
+|
+|
+/* ═══ SÉRIE 6 — ㉑ LE MARCHÉ (2026-08-27) — préfixé .mar6, STATIQUE ═══ */
+@keyframes mk-lampe{0%,100%{opacity:.82}50%{opacity:1}}
+@keyframes mk-buee{0%{opacity:0;transform:translateY(4px) scaleX(.9)}
+  28%{opacity:.55}100%{opacity:0;transform:translateY(-16px) scaleX(1.25)}}
+@keyframes mk-eclat{0%,72%,100%{opacity:.16}82%{opacity:.85}}
+@keyframes mk-veille{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+@keyframes mk-scan{0%{transform:translateY(-6px);opacity:0}
+  12%{opacity:.5}88%{opacity:.5}100%{transform:translateY(184px);opacity:0}}
+.mar6{position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden;
+  font-family:'DejaVu Sans',sans-serif;color:#eae0c8}
+/* le verre laqué du backglass : noir profond, halo de la lampe derrière */
+.mar6{background:
+  radial-gradient(72% 40% at 50% 22%, rgba(217,171,78,.15), rgba(0,0,0,0) 66%),
+  radial-gradient(90% 60% at 50% 96%, rgba(127,212,217,.07), rgba(0,0,0,0) 70%),
+  linear-gradient(178deg,#111823 0%,#0b1016 54%,#0d0f10 100%)}
+.mar6 *{box-sizing:border-box}
+.mar6 .cerne{position:absolute;inset:5px;border:1px solid #b08d3e;border-radius:3px;
+  box-shadow:inset 0 0 0 1px #0b1016, 0 0 12px #b08d3e26;pointer-events:none;z-index:6}
+/* ── le bandeau émaillé : l'objet porte un nom (planche de bookmaker) ── */
+.mar6 .enseigne{flex:none;margin:13px 13px 0;position:relative;z-index:2;
+  background:linear-gradient(178deg,rgba(11,17,27,.91),rgba(13,19,30,.85));
+  border:1px solid #2a3648;border-bottom:2px solid #b08d3e;
+  box-shadow:inset 0 1px 0 #ffffff0f;padding:7px 11px 8px;text-align:center}
+.mar6 .enseigne b{display:block;font:700 17px/1 'DejaVu Serif';letter-spacing:.2em;color:#f2c96b;
+  text-shadow:none}
+.mar6 .enseigne i{display:block;font:700 6.4px/1 'DejaVu Sans';font-style:normal;letter-spacing:.34em;
+  color:#b9ad92;margin-top:5px;text-transform:uppercase}
+/* ── les fenêtres à chiffres (compteurs de flipper) ── */
+.mar6 .compteurs{flex:none;display:flex;gap:6px;margin:9px 13px 0;position:relative;z-index:2}
+.mar6 .fen{flex:1;background:#0a0e16;border:1px solid #2a3648;box-shadow:inset 0 0 10px #7fd4d91f;
+  padding:4px 4px 3px;text-align:center}
+.mar6 .fen b{display:block;font:700 14px/1 'DejaVu Sans';color:#7fd4d9;font-variant-numeric:tabular-nums;
+  letter-spacing:.06em;text-shadow:0 0 8px #7fd4d999}
+.mar6 .fen b span{display:inline;font-size:9px;letter-spacing:0}
+.mar6 .fen>span{display:block;font:700 5.4px/1.1 'DejaVu Sans';letter-spacing:.16em;color:#8a979c;
+  margin-top:3px;text-transform:uppercase}
+/* ── le damier des 72 voyants : LE graphe de couverture ── */
+.mar6 .tablo.court{flex:none;height:186px}
+.mar6 .tablo{overflow:hidden}
+.mar6 .tablo::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,#7fd4d9,transparent);
+  animation:mk-scan 7.5s linear infinite;animation-delay:-2.6s;pointer-events:none}
+.mar6 .tablo{flex:1;min-height:0;margin:9px 13px 0;position:relative;z-index:2;
+  backgr

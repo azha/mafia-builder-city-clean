@@ -1,0 +1,45 @@
+##### brut-friction-state.json
+  racine: ['payload', 'response_meta']
+  payload: ['data']
+  payload.data (clés triées): ['friction_bucket', 'friction_node_count', 'last_evaluated_tick', 'penalty_active', 'perimeter_site_count']
+    - friction_bucket: str = "light"
+    - friction_node_count: int = 0
+    - last_evaluated_tick: NoneType = null
+    - penalty_active: bool = false
+    - perimeter_site_count: int = 0
+
+##### brut-iap-catalogue.json
+  racine: ['payload', 'response_meta']
+  payload: ['data']
+  payload.data (clés triées): ['skus']
+    - skus: list = [{"sku_id": "marks_pack_small", "display_name": "Pack — 100 Marks", "kind": "MARKS_PACK", "price_store_product_id": "marks_pack_small", "marks_granted": 100}, {"sku_id": "marks_pack_med", "display_name": "Pack — 600 Mark
+
+##### brut-lieutenants.json
+  racine: ['payload', 'response_meta']
+  payload: ['data']
+  payload.data (clés triées): ['lieutenants']
+    - lieutenants: list = [{"lieutenant_id": "01a1cc2f-3667-74dd-93f0-5500aa407819", "name": "Lt. Tovah", "archetype": "COOK", "op_state_band": "IDLE", "rule_count_band": "NONE", "tenure_bucket": "FRESH", "precursor_stock_band": "LOW"}, {"lieuten
+
+##### brut-me-iap-balance.json
+  racine: ['payload', 'response_meta']
+  payload: ['data']
+  payload.data (clés triées): ['marks_balance']
+    - marks_balance: int = 50
+
+##### brut-me-iap-entitlements.json
+  racine: ['payload', 'response_meta']
+  payload: ['data']
+  payload.data (clés triées): ['skus']
+    - skus: list = []
+
+##### brut-me-legal.json
+  racine: ['payload', 'response_meta']
+  payload: ['data']
+  payload.data (clés triées): ['activeCases', 'lawyerRoster']
+    - activeCases: list = []
+    - lawyerRoster: list = []
+
+##### 02-session-open.json
+  racine: ['payload', 'response_meta']
+  payload: ['error']
+
