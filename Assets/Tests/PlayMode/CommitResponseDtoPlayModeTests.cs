@@ -262,10 +262,12 @@ namespace MafiaCleanCity.Shell.Tests
                 ApresGesteHl.VueApres ec = ApresGesteHl.Vue(Refus("error.core_loops.structural_cap_exhausted", "Votre décision du jour est déjà prise."), 2, 0, null);
                 Assert.AreEqual(ApresGesteHl.Issue.CarteReste, ec.Issue);
                 Assert.AreEqual("La carte reste sur la table", ec.Grave);
-                Assert.AreEqual("Votre décision du jour est déjà prise.", ec.Mot); Assert.IsTrue(ec.MotRouge);
+                // F7 (juge ⊥ 11/11) : « Rien n’est parti : » (mot de CHROME, U+00A0 avant le deux-points) en AMORCE, puis la phrase SERVIE du refus
+                Assert.AreEqual("Rien n’est parti\u00A0: Votre décision du jour est déjà prise.", ec.Mot); Assert.IsTrue(ec.MotRouge);
+                Assert.AreEqual(ApresGesteHl.AmorceDuRefus, "Rien n’est parti\u00A0:", "l'espace avant « : » est l'U+00A0 de `partial_stop`");
                 Assert.IsFalse(ec.Tampon); Assert.IsFalse(ec.CarteTranchee);
                 Assert.AreEqual("La carte vous attend encore.", ec.SousLigne);
-                // sans phrase servie (clé générique) : la phrase EXISTANTE de la carte, jamais « Rien n'est parti : … »
+                // sans phrase servie (clé générique) : la phrase EXISTANTE de la carte, SANS amorce (« Rien n’est parti : » annoncerait une raison qui n'est pas servie)
                 Assert.AreEqual("La décision n’a pas été prise.", ApresGesteHl.Vue(Refus("error.resource.state_conflict", null), 2, 0, null).Mot);
             }
             finally { I18nCatalog.Oublier(); }

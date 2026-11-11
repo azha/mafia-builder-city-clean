@@ -161,13 +161,18 @@ namespace MafiaCleanCity.Shell
                 default:                // l'échec de la 1ʳᵉ cible (cadre 7) : la phrase SERVIE de la route, sinon la phrase existante de la carte ; la carte reste à vous
                     return new VueApres
                     {
-                        Issue = Issue.CarteReste, Grave = Lib("carte", "La carte reste sur la table"), Mot = phrase ?? repli, MotRouge = true,
+                        Issue = Issue.CarteReste, Grave = Lib("carte", "La carte reste sur la table"), Mot = phrase != null ? Lib("carte", AmorceDuRefus) + " " + phrase : repli, MotRouge = true,
                         CarteTranchee = false, Tampon = false, Deja = false,
                         Action = Lib("carte", "Retour à l’accueil"), SousLigne = Lib("carte", "La carte vous attend encore."),
                         Jeton = Jeton(budget, false),
                     };
             }
         }
+
+        /// <summary>L'AMORCE du mot rouge du cadre 7 : « Rien n’est parti : » (U+00A0 avant le deux-points, comme `partial_stop`), un mot de CHROME au même régime que « Vous avez tranché » (clé dérivée
+        /// `accueil.carte.*`, repli compté en TD-938) ; elle précède la phrase SERVIE du refus. Le repli « ça n’a pas pu se faire pour l’instant. » reste RETIRÉ : il remplacerait une raison qui doit être servie
+        /// (f2 11/11). Sans phrase servie, le mot rouge est la phrase existante de la carte, sans amorce.</summary>
+        public const string AmorceDuRefus = "Rien n’est parti\u00A0:";
 
         /// <summary>Les trois codes `HL_CARD_*` du back, par leur clé servie (`error.hl_card.*`).</summary>
         public const string CleIntrouvable = "error.hl_card.not_found", CleDejaTranchee = "error.hl_card.already_resolved", CleRienAFaire = "error.hl_card.nothing_to_act_on";

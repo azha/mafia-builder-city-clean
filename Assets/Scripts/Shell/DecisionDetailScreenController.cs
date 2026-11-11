@@ -96,7 +96,7 @@ namespace MafiaCleanCity.Shell
         // ⑤ F7 (juge d'ensemble r2, 08/10) — LE GESTE PRINCIPAL N'EST PLUS UNE PLAQUE CRÈME : la série 4 (`.tampon`, crème / brique) a été remplacée par la série 6, dont le cadre 5 ne porte que la
         // `.plaque-laiton` (`ecrans-brennar-6.html:263-264`) : `linear-gradient(180deg,#e8c87a,#b08d3e 55%,#8a6a22)`, bord 1 px `#6b4a12` rayon 6 (POSÉ par `Filets`, recette `PlaqueLaiton`), encre `#3a2a0a`,
         // `small` en `#3a2a0acc`. `PiedDEcran.PlaqueCreme` reste, pour ⑮ DÉPOSER.
-        /// <summary>La matière de la carte : REF (219,206,171). Aplat opaque (aucune conversion sRGB → linéaire).</summary>
+        /// <summary>La matière MOYENNE mesurée une fois sur un autre cadre : REF (219,206,171). N'est PLUS le papier de la carte (dégradé, `PoserLePapier`) : elle reste pour ses lecteurs historiques.</summary>
         public static Color MatiereDeLaCarte => new Color32(219, 206, 171, 255);
         /// <summary>`.plaque-laiton` : les trois arrêts du dégradé vertical (180°) — clair `#e8c87a` à 0 %, le laiton du jeton `hudHairlineGold` (`#b08d3e`, = le remplissage médian mesuré (173,138,60)) à 55 %, sombre `#8a6a22` à 100 %.
         /// Des pixels OPAQUES cuits dans le sprite : aucune opacité à convertir pour le mélange linéaire.</summary>
@@ -119,7 +119,8 @@ namespace MafiaCleanCity.Shell
         }
         /// <summary>L'encre sombre sur la matière crème (le titre) et sa version affaiblie (les libellés) — l'encre de la carte de la maquette.</summary>
         private static Color Encre => Hex("#2a1c12");
-        private static Color EncreFaible => Hex("#6f5f4d");
+        /// <summary>`.carte-or .bande span{color:#5a4629}` (F5 : #6f5f4d rendait PORTÉE/URGENCE à 3,91:1 sur le papier, la maquette à 6,02:1).</summary>
+        private static Color EncreFaible => Hex("#5a4629");
 
         private static Color Hex(string h)
         {
@@ -165,6 +166,11 @@ namespace MafiaCleanCity.Shell
         private Button ligneOr;
         private GameObject tamponDiag, deja;
         private Image carteFond;
+        /// <summary>Le papier de la carte : un dégradé `linear-gradient(170deg,#fbf3dc,#e6d8b3 60%,#d6c69a)` (F5/F6, juge ⊥ 11/11), en deux sprites — normal et `.tranchee{filter:saturate(.8)}`.</summary>
+        private Image papierDegrade;
+        private Sprite papierNormal, papierTranchee;
+        /// <summary>Le cachet de cire : un élément de l'écran AVANT le geste ; les cadres 6-7 de la maquette ne le dessinent pas (F2-F4, juge ⊥ 11/11).</summary>
+        private GameObject cachetDeCire;
 
         private void Awake() => Init();
 
@@ -403,7 +409,8 @@ namespace MafiaCleanCity.Shell
             if (vue.Deja) dejaMot.text = MafiaCleanCity.I18n.Libelle.De("accueil", "carte", "Déjà tranchée");
             tamponDiag.SetActive(vue.Tampon);
             deja.SetActive(vue.Deja);
-            carteFond.color = vue.CarteTranchee ? Desaturee(MatiereDeLaCarte, 0.8f) : MatiereDeLaCarte;   // `.carte-or.tranchee{filter:saturate(.8)}`
+            papierDegrade.sprite = vue.CarteTranchee ? papierTranchee : papierNormal;   // `.carte-or.tranchee{filter:saturate(.8)}`
+            cachetDeCire.SetActive(false);   // F2-F4 : le cachet n'existe pas dans les cadres 6-7
             // le jeton : trois états, AUCUN chiffre ; son petit texte dit « votre grande décision du jour »
             jetonChiffre.gameObject.SetActive(false);
             jetonEtat.text = ApresGesteHl.MotDuJeton(vue.Jeton);
@@ -428,7 +435,8 @@ namespace MafiaCleanCity.Shell
             ligneOr.gameObject.SetActive(false);
             tamponDiag.SetActive(false);
             deja.SetActive(false);
-            carteFond.color = MatiereDeLaCarte;
+            papierDegrade.sprite = papierNormal;
+            cachetDeCire.SetActive(true);
             jetonChiffre.gameObject.SetActive(true);
             jetonSous.text = "votre décision structurelle de la session";
         }
@@ -561,11 +569,12 @@ namespace MafiaCleanCity.Shell
             //    bouger deux choses à la fois, et plus rien ne départagerait laquelle a agi.
             // ⑤ F4 : la MATIÈRE crème d'abord (surface pleine), puis le bord d'or-brun et le filet rouge intérieur de la maquette, en enfants hors mise en page
             fond.sprite = ProceduralUI.RoundedRectMask((int)Px(14f));
-            fond.color = MatiereDeLaCarte;
+            fond.color = Color.clear;   // le papier est son enfant `Papier` (dégradé masqué par le rectangle arrondi)
             fond.type = Image.Type.Sliced;
             carteFond = fond;
             Cerner(carte.transform, "BordCarte", (int)Px(14f), Px(1.5f), Hex("#8a6a2c"), 0f);
             Cerner(carte.transform, "FiletCarte", (int)Px(11f), Px(1f), FiletDeLaCarte, Px(3f));
+            PoserLePapier(carte.transform);
             VerticalLayoutGroup cv = carte.GetComponent<VerticalLayoutGroup>();
             cv.padding = new RectOffset((int)Px(12f), (int)Px(12f), (int)Px(10f), (int)Px(12f));
             // ⛔ F13 (a) — LA CARTE EST UN PORTRAIT : `.carte-or{width:176px;min-height:212px}`. Elle prenait toute la largeur que le jeton lui laissait
@@ -608,7 +617,7 @@ namespace MafiaCleanCity.Shell
             ressortLe.preferredWidth = 0f;
             ressortLe.flexibleWidth = 1f;
             pipsUrgence = BandeDePips(bandes.transform, "Urgence", out urgenceLibelle);
-            Filets.Poser((RectTransform)bandes.transform, DecorsDeScene.Filets.DecisionDetail.Bandes, MatiereDeLaCarte);
+            Filets.Poser((RectTransform)bandes.transform, DecorsDeScene.Filets.DecisionDetail.Bandes, PapierEn(0.85f));
 
             PoserLesElementsDeLApres(carte.transform);
 
@@ -733,6 +742,40 @@ namespace MafiaCleanCity.Shell
             ligne.SetActive(false);
         }
 
+        /// <summary>F5/F6 — LE PAPIER : `.carte-or{background:linear-gradient(170deg,#fbf3dc,#e6d8b3 60%,#d6c69a)}` (atelier épinglé 8f59cf94, l.245), pas l'aplat (219,206,171) mesuré une fois sur un autre cadre.
+        /// Un enfant `Papier` (rectangle arrondi qui MASQUE, hors mise en page, au PREMIER rang : sous le cerne et le filet) porte le dégradé ; la carte elle-même ne masque pas (le cachet de cire déborde de son coin).
+        /// Pixels OPAQUES cuits dans le sprite : aucune opacité à convertir pour le mélange linéaire. `.tranchee{filter:saturate(.8)}` = le même dégradé aux arrêts désaturés (second sprite).</summary>
+        /// <summary>Le papier à `t` (0 = haut, 1 = bas du dégradé) : le FOND CONNU sous un filet translucide posé à cette hauteur de la carte (`Filets.Poser(…, fondConnu)` en tire l'opaque exact).</summary>
+        private static Color PapierEn(float t)
+        {
+            Color c = ProceduralUI.EchantillonDeDegrade(new (float pos, Color c)[] { (0f, Hex("#fbf3dc")), (0.6f, Hex("#e6d8b3")), (1f, Hex("#d6c69a")) }, t);
+            c.a = 1f;
+            return c;
+        }
+
+        private void PoserLePapier(Transform carte)
+        {
+            var arrets = new (float pos, Color c)[] { (0f, Hex("#fbf3dc")), (0.6f, Hex("#e6d8b3")), (1f, Hex("#d6c69a")) };
+            var desat = new (float pos, Color c)[] { (0f, Desaturee(arrets[0].c, 0.8f)), (0.6f, Desaturee(arrets[1].c, 0.8f)), (1f, Desaturee(arrets[2].c, 0.8f)) };
+            papierNormal = ProceduralUI.DegradeLineaire(170f, arrets, Px(176f), Px(212f));
+            papierTranchee = ProceduralUI.DegradeLineaire(170f, desat, Px(176f), Px(212f));
+
+            GameObject go = new GameObject("Papier", typeof(RectTransform), typeof(CanvasRenderer));
+            go.transform.SetParent(carte, false);
+            go.transform.SetAsFirstSibling();
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+            Image masque = go.AddComponent<Image>();
+            masque.sprite = ProceduralUI.RoundedRectMask((int)Px(14f));
+            masque.type = Image.Type.Sliced;
+            masque.raycastTarget = false;
+            go.AddComponent<Mask>().showMaskGraphic = false;   // seul le canal ALPHA du rectangle sert de stencil
+            papierDegrade = NouvelleImage("Degrade", go.transform);
+            papierDegrade.sprite = papierNormal;
+            Etirer((RectTransform)papierDegrade.transform);
+        }
+
         /// <summary>Dans la CARTE, hors mise en page : la pastille `.deja` (« Déjà tranchée », tiretée) et le TAMPON `.tampon-diag` « TRANCHÉE » (centré, tourné de −18° CSS = +18° Unity, 19 CSS, `.22em`, 800,
         /// `#93402c`, trait de 3 CSS posé par `Filets` (recette `TamponDiag`), fond `#efe4c6aa` — l'OPAQUE que le navigateur produit sur la matière de la carte —, halo `0 0 0 2px #efe4c6`).</summary>
         private void PoserLesElementsDeLApres(Transform carte)
@@ -748,7 +791,7 @@ namespace MafiaCleanCity.Shell
             djTexte.fontStyle |= FontStyles.UpperCase;
             djTexte.characterSpacing = 12f;
             dejaMot = djTexte;
-            Filets.Poser((RectTransform)dj.transform, DecorsDeScene.Filets.DecisionDetail.Deja, MatiereDeLaCarte);
+            Filets.Poser((RectTransform)dj.transform, DecorsDeScene.Filets.DecisionDetail.Deja, PapierEn(0.88f));
             deja = dj;
             dj.SetActive(false);
 
@@ -760,9 +803,10 @@ namespace MafiaCleanCity.Shell
             ht.anchoredPosition = Vector2.zero;
             ht.localRotation = Quaternion.Euler(0f, 0f, 18f);
             Image haloImg = halo.AddComponent<Image>();
-            haloImg.sprite = ProceduralUI.RoundedRectMask((int)Px(8f));
+            // le halo `0 0 0 2px #efe4c6` est un ANNEAU de 2 CSS AUTOUR de la boîte (une ombre extérieure n'est jamais dessinée sous l'élément) : un contour creux, pas un aplat — sinon il
+            // rendrait la plaque opaque sous elle (F1 : 2,9 % de pixels de titre sous la plaque, 32 % dans la maquette).
+            haloImg.sprite = ProceduralUI.RoundedRectOutline((int)Px(8f), Px(2f), Hex("#efe4c6"));
             haloImg.type = Image.Type.Sliced;
-            haloImg.color = Hex("#efe4c6");   // le halo `0 0 0 2px #efe4c6` (plein) : un cadre de 2 CSS autour du tampon
             haloImg.raycastTarget = false;
             HorizontalLayoutGroup hh = halo.AddComponent<HorizontalLayoutGroup>();
             hh.padding = new RectOffset((int)Px(2f), (int)Px(2f), (int)Px(2f), (int)Px(2f));
@@ -776,8 +820,11 @@ namespace MafiaCleanCity.Shell
             Image corpsImg = corps.AddComponent<Image>();
             corpsImg.sprite = ProceduralUI.RoundedRectMask((int)Px(6f));
             corpsImg.type = Image.Type.Sliced;
-            Color sur = Color.Lerp(MatiereDeLaCarte, Hex("#efe4c6"), 0.667f); sur.a = 1f;   // `#efe4c6aa` sur la crème de la carte (mélange sRGB, fond uniforme)
-            corpsImg.color = sur;
+            // F1 — `background:#efe4c6aa` : la plaque est TRANSLUCIDE (170/255 = 0,667) et le titre se lit à travers. L'alpha CSS recopié en alpha uGUI donnerait un mélange LINÉAIRE trop opaque ; l'alpha
+            // uGUI est celui qui redonne, en linéaire, ce que le navigateur produit (mélange sRGB) là où ça compte — la plaque sur l'ENCRE du titre ; sur le papier, plaque et fond sont presque de la même teinte.
+            Color plaque = Hex("#efe4c6");
+            plaque.a = ProceduralUI.AlphaSrgbVersLineaire(plaque, Encre, 170f / 255f);
+            corpsImg.color = plaque;
             corpsImg.raycastTarget = false;
             HorizontalLayoutGroup ch = corps.AddComponent<HorizontalLayoutGroup>();
             ch.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(4f), (int)Px(4f));
@@ -789,7 +836,7 @@ namespace MafiaCleanCity.Shell
             mot.characterSpacing = 22f;
             mot.raycastTarget = false;
             tamponMot = mot;
-            Filets.Poser((RectTransform)corps.transform, DecorsDeScene.Filets.DecisionDetail.TamponDiag, sur);
+            Filets.Poser((RectTransform)corps.transform, DecorsDeScene.Filets.DecisionDetail.TamponDiag);   // trait de 3 CSS opaque : aucun fond à connaître
             tamponDiag = halo;
             halo.SetActive(false);
         }
@@ -801,6 +848,7 @@ namespace MafiaCleanCity.Shell
         private void PoserLeCachetDeCire(Transform carte)
         {
             GameObject go = new GameObject("CachetDeCire", typeof(RectTransform));
+            cachetDeCire = go;
             go.transform.SetParent(carte, false);
             go.AddComponent<LayoutElement>().ignoreLayout = true;
             RectTransform rt = (RectTransform)go.transform;
@@ -886,7 +934,9 @@ namespace MafiaCleanCity.Shell
             // URGENCE, LIBRE), mais les VALEURS sont en bas de casse (« modérée », « faible »).
             // *Une cause unique ne veut pas dire une population unique* — j'ai failli fermer le
             // finding en en créant un autre, et seule l'image l'a montré.
-            libelle = Texte(bande.transform, "Val", "—", Px(7.5f), Encre, DesignTokens.Current.primaryFont,
+            // F9 — `.carte-or .bande em{font-family:Georgia,serif;font-size:9px;font-style:normal}` : les VALEURS (modérée, majeure, faible…) sont en SÉRIF ; les libellés (PORTÉE, URGENCE) restent en linéale
+            // (la maquette les hérite de `Segoe UI`) — lu sur le crop `ref7_pied.png` du juge.
+            libelle = Texte(bande.transform, "Val", "—", Px(9f), Encre, DesignTokens.Current.hudSerifFont,
                             TextAlignmentOptions.Center);
             return (RectTransform)pips.transform;
         }
