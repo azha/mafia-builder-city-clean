@@ -268,6 +268,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (progression != null) progression.BaseUrl = url;
             if (autonomyClient != null) autonomyClient.BaseUrl = url;
             if (mesBatiments != null) mesBatiments.BaseUrl = url;
+            if (hostEligibilite != null) hostEligibilite.BaseUrl = url;
         }
 
         private readonly List<string> renderedTexts = new List<string>();
@@ -316,7 +317,8 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
         private AuthClient auth;
         private LieutenantClient client;
-        private MafiaCleanCity.Shell.MesBatimentsClient mesBatiments;   // B7 — le bâtiment d'un recrutement, tiré des bâtiments servis
+        private MafiaCleanCity.Shell.MesBatimentsClient mesBatiments;   // B7 — les bâtiments possédés (les autres lecteurs de l'écran)
+        private HostEligibiliteClient hostEligibilite;                  // TD-877 — l'hôte ET la cible d'un recrutement, SERVIS par `lieutenants/host-eligibility`
         private ProgressionClient progression;
         private AutonomyClient autonomyClient; // Phase-21 — budget bands + ceiling decisions
 
@@ -403,6 +405,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             progression = new ProgressionClient { BaseUrl = baseUrl };
             autonomyClient = new AutonomyClient { BaseUrl = baseUrl };
             mesBatiments = new MafiaCleanCity.Shell.MesBatimentsClient { BaseUrl = baseUrl };
+            hostEligibilite = new HostEligibiliteClient { BaseUrl = baseUrl };
             BuildLayout();
             EnsureEventSystem();
         }
@@ -477,16 +480,16 @@ namespace MafiaCleanCity.Operational.Lieutenant
             // A 2-building archetype sends its target_building_id; a single-building archetype omits it (pass null).
             string target = RuleModel.NeedsTarget(archetype) ? targetBuildingId : null;
             string affecte = assignedBuildingId;
-            // B7 (passe UX 2026-09-24) — le shell monte cet écran par `AddComponent` : `assignedBuildingId` y est VIDE, et le back
-            // rendait 422 « must be a UUID (got "") » à tout joueur. Un bâtiment posé (test, appelant) reste prioritaire ; sinon
-            // on le tire de `me/buildings` pour CET archétype (`HoteDeRecrutement`), cible comprise.
+            // B7 (passe UX 2026-09-24) — le shell monte cet écran par `AddComponent` : `assignedBuildingId` y est VIDE, et le back rendait 422 « must be a UUID
+            // (got "") » à tout joueur. Un bâtiment posé (test, appelant) reste prioritaire ; sinon l'hôte ET la cible sont LUS de la réponse du back
+            // (`GET lieutenants/host-eligibility`, TD-877) : le client ne devine plus ni le type d'hôte ni la cible (la table `HoteDeRecrutement` est retirée).
             if (string.IsNullOrEmpty(affecte) || (RuleModel.NeedsTarget(archetype) && string.IsNullOrEmpty(target)))
             {
-                MafiaCleanCity.Shell.BatimentPossedeDto[] possedes = null;
-                yield return mesBatiments.Lire(Token, b => possedes = b,
-                    (c, m) => Debug.LogWarning($"[Lieutenant] me/buildings indisponible ({c}) : {m}"));
+                HostEligibiliteData servie = null;
+                yield return hostEligibilite.Lire(Token, d => servie = d,
+                    (c, m) => Debug.LogWarning($"[Lieutenant] host-eligibility indisponible ({c}) : {m}"));
                 if (Destroyed) yield break;
-                (string hote, string cible) = HoteDeRecrutement.Choisir(archetype, possedes);
+                (string hote, string cible) = HostEligibilite.Choisir(archetype, servie);
                 if (string.IsNullOrEmpty(affecte)) affecte = hote;
                 if (RuleModel.NeedsTarget(archetype) && string.IsNullOrEmpty(target)) target = cible;
                 if (string.IsNullOrEmpty(affecte))
