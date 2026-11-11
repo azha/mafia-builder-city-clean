@@ -110,9 +110,9 @@ namespace MafiaCleanCity.Operational
         public IReadOnlyList<string> RenderedTexts => renderedTexts;
         private readonly List<string> renderedTexts = new List<string>();
 
-        /// <summary>㉚ « Les deux gestes » — LE POINT D'INJECTION UNIQUE DES COÛTS par mode (TD-1046). Aucun coût n'est servi aujourd'hui, et son NOM sur le fil est inconnu : le
-        /// client n'en lit aucun (`CoutsNonServis` ⇒ chaque mode est ÉTEINT, règle (3) de f2). BACK-1 servira les coûts ; l'adaptation au corps servi se fait ICI (une
-        /// implémentation de `ICoutsParMode`), pas dans la feuille. Les tests PlayMode injectent des coûts pour prouver le chemin actif (garde G-D1).</summary>
+        /// <summary>㉚ « Les deux gestes » — LE POINT D'INJECTION UNIQUE DES COÛTS par mode (TD-1046). Lu du fil par `RelireLesCouts` (`GET /v1/supply-chain/upkeep-costs`, BACK-1 `lot/couts-30` @87820327, pas encore
+        /// servi sur la pile) : `CoutsServis` quand la route répond, `CoutsNonServis` sinon (⇒ chaque mode est ÉTEINT, règle (3) de f2). Un `Couts` posé par un test (ni l'un ni l'autre) n'est JAMAIS écrasé : les tests PlayMode
+        /// injectent des coûts pour prouver le chemin actif (garde G-D1).</summary>
         public ICoutsParMode Couts = CoutsNonServis.Instance;
         private ChaineDApproFeuille feuille;
         /// <summary>La feuille des gestes (voile + panneau) — crochet de test ; null tant qu'aucun geste n'a été ouvert.</summary>
@@ -315,6 +315,8 @@ namespace MafiaCleanCity.Operational
 
         private IEnumerator RechargerChaine()
         {
+            // ㉚ V15 : les coûts AVANT le graphe (la feuille les lit à l'ouverture), et relus avec lui après chaque geste
+            yield return RelireLesCouts();
             GetSupplyChainGraphResponseDto graphe = null;
             yield return client.GetSupplyChainGraph(token,
                 dto => graphe = dto,
@@ -324,6 +326,24 @@ namespace MafiaCleanCity.Operational
             if (renduExpliciteDemande) yield break;   // un test a rendu pendant l'attente : on n'écrase pas
             DernierGraphe = graphe;
             AppliquerChaine(graphe);
+        }
+
+        /// <summary>Le `Couts` qui suit une lecture : un `Couts` INJECTÉ (ni `CoutsNonServis` ni `CoutsServis`) est gardé ; sinon les coûts lus, ou `CoutsNonServis` quand la lecture a échoué (`lus` null).
+        /// Pure : la garde G-V5 la joue sans réseau.</summary>
+        public static ICoutsParMode CoutsApresLecture(ICoutsParMode courants, CoutsServis lus)
+        {
+            if (courants != null && !(courants is CoutsNonServis) && !(courants is CoutsServis)) return courants;
+            return lus != null ? (ICoutsParMode)lus : CoutsNonServis.Instance;
+        }
+
+        /// <summary>㉚ V15 — lit `GET /v1/supply-chain/upkeep-costs` et pose `Couts` (`CoutsApresLecture`). SILENCIEUX : ni `DerniereErreur`, ni `PhraseDuRefus`, ni état indisponible — la route est absente (404) sur la pile
+        /// d'avant BACK-1, et une route absente n'est pas une panne de l'écran : les modes sont éteints, voilà tout. Un `Couts` injecté par un test n'est pas lu du tout (pas de réseau).</summary>
+        private IEnumerator RelireLesCouts()
+        {
+            if (Couts != null && !(Couts is CoutsNonServis) && !(Couts is CoutsServis)) yield break;
+            CoutsServis lus = null;
+            yield return client.GetSupplyChainUpkeepCosts(token, c => lus = c, (code, msg) => { /* silencieux : voir ci-dessus */ });
+            Couts = CoutsApresLecture(Couts, lus);   // relu APRÈS l'attente : un test qui a injecté pendant ce temps garde son injection
         }
 
         /// <summary>Rend un corps FABRIQUÉ, sans réseau — réservé aux tests (patron ㊲,
@@ -1095,7 +1115,8 @@ namespace MafiaCleanCity.Operational
         }
 
         /// <summary>Un refus n'est QUE la phrase servie (`RefusServi.Phrase`, lue par le client) : `responseCode == 0` (réseau, corps vide) n'est PAS un refus — la feuille reste ouverte, sans phrase (G-D5).
-        /// Aucune phrase du client à la place : le « pas assez d'argent » n'est pas servi (TD-1046), la feuille se tait.</summary>
+        /// Aucune phrase du client à la place : le manque d'argent est un 409 `INSUFFICIENT_FUNDS` dont la clé `error.funds.insufficient` est servie par BACK-1 (`lot/couts-30` @87820327, pas encore sur la pile) — sa phrase
+        /// vient du corps (`RefusServi.Phrase`), comme toute autre ; tant que la clé n'est pas servie, la feuille se tait.</summary>
         public static string PhraseDeRefusAMontrer(long code, string phraseServie)
         {
             if (code == 0) return null;
@@ -1120,6 +1141,12 @@ namespace MafiaCleanCity.Operational
             if (!PeutChoisir(mode)) yield break;
             yield return GesteCoroutine(feuille.SpecOuverte, mode, feuille.CibleOuverte);
         }
+
+        /// <summary>Relit les coûts comme `RechargerChaine` (la lecture silencieuse, SANS le graphe) et ATTEND — awaitable : la garde G-V5 la joue sur un port fermé, puis sur la pile.</summary>
+        public IEnumerator RelireLesCoutsPourTest() { EnsureInitialized(); yield return RelireLesCouts(); }
+
+        /// <summary>Change l'adresse du back de CET écran (client compris) — la garde G-V5 la pose sur un port fermé ; `null` rend la source unique.</summary>
+        public void PoserLAdresseDuBackPourTest(string url) { baseUrl = url; EnsureInitialized(); client.BaseUrl = baseUrl; }
 
         /// <summary>Un geste a ÉCHOUÉ avec `code` et le corps d'erreur brut `corpsBrut` : la phrase servie de ce corps passe par la même règle que celle du vrai POST.</summary>
         public void RefuserPourTest(long code, string corpsBrut) =>

@@ -1,39 +1,45 @@
+using System.Collections.Generic;
 using System.Globalization;
+using MafiaCleanCity.I18n;
 using MafiaCleanCity.Shell;
 
 namespace MafiaCleanCity.Operational
 {
     // ㉚ « Les deux gestes » — entretenir une liaison, reconstruire une route (design `Tools/gestes-30/DESIGN.md`). Données PURES, sans uGUI :
-    // testables sans rendu. Mots RATIFIÉS par f2 le 11/11 (`atelier3d-mafia-C1/poser-chaine-gestes.py`, `ENTRETIEN` / `RECONSTRUCTION`).
+    // testables sans rendu. Mots RATIFIÉS par f2 le 11/11 (`atelier3d-mafia-C1/poser-chaine-gestes.py`, `ENTRETIEN` / `RECONSTRUCTION`), SERVIS par BACK-1 (`lot/couts-30` @87820327) sous les clés `appro.titre|etiquette|consequence|sous_titre.*` ;
+    // les coûts et les bandes de durée viennent de `GET /v1/supply-chain/upkeep-costs` (design `Tools/couts-30-v15/DESIGN.md`).
 
-    /// <summary>Un mode d'un geste. `Id` = la valeur SERVIE par le back dans le corps du POST (`{mode}`) — jamais affichée. Libellé et sous-titre :
-    /// clé DÉRIVÉE (`appro.mode.*` / `appro.mode_sous.*`, non servies — TD-1048) + repli = le mot RATIFIÉ du poseur. `Structurel` = la décision
-    /// consomme la « grande décision du jour » (le jeton de ④).</summary>
+    /// <summary>Un mode d'un geste. `Id` = la valeur SERVIE par le back dans le corps du POST (`{mode}`) — jamais affichée. Libellé : `De("appro", "etiquette", RepliLibelle)` — la clé dérivée
+    /// du mot EST la clé servie par BACK-1 (`appro.etiquette.<suffixe>`, contrat ㉚ §1.5 @87820327). Conséquence (la phrase sous le libellé) : `Gabarit("appro.consequence.<suffixe>", repli)` —
+    /// sa valeur n'est pas son slug, donc une clé EXPLICITE. Les deux replis sont le FR servi à l'octet. `Structurel` = la décision consomme la « grande décision du jour » (le jeton de ④).</summary>
     public sealed class ModeDeGeste
     {
         public readonly string Id;
-        public readonly string CleLibelle, RepliLibelle, CleSousTitre, RepliSousTitre;
+        public readonly string RepliLibelle, CleConsequence, RepliConsequence;
         public readonly bool Structurel;
 
-        public ModeDeGeste(string id, string suffixe, string repliLibelle, string repliSousTitre, bool structurel = false)
+        public ModeDeGeste(string id, string suffixe, string repliLibelle, string repliConsequence, bool structurel = false)
         {
             Id = id;
-            CleLibelle = "appro.mode." + suffixe; RepliLibelle = repliLibelle;
-            CleSousTitre = "appro.mode_sous." + suffixe; RepliSousTitre = repliSousTitre;
+            RepliLibelle = repliLibelle;
+            CleConsequence = "appro.consequence." + suffixe; RepliConsequence = repliConsequence;
             Structurel = structurel;
         }
     }
 
-    /// <summary>Un geste : son titre, la phrase COMMUNE à tous ses modes (null si aucune), ses modes dans l'ordre du cadre (trois pour entretenir, DEUX pour reconstruire).</summary>
+    /// <summary>Un geste : son titre (`De("appro", "titre", RepliTitre)`), la phrase COMMUNE à tous ses modes (`De("appro", "sous_titre", RepliCommun)` ; null si aucune), ses modes dans l'ordre du cadre
+    /// (trois pour entretenir, DEUX pour reconstruire). `DitLaBande` : le sous-titre d'un mode commence par le mot de SA bande de durée servie (entretien) ; faux pour reconstruire, dont la durée est dite
+    /// par la phrase commune (`rebuild[].duration_band` est identique sur les trois lignes : il ne discrimine rien).</summary>
     public sealed class SpecDeGeste
     {
         public readonly string Id;   // « maintain » (une liaison) | « rebuild » (une route) — nom de la route du back
-        public readonly string CleTitre, RepliTitre, CleCommun, RepliCommun;
+        public readonly string RepliTitre, RepliCommun;
+        public readonly bool DitLaBande;
         public readonly ModeDeGeste[] Modes;
 
-        public SpecDeGeste(string id, string cleTitre, string repliTitre, string cleCommun, string repliCommun, params ModeDeGeste[] modes)
+        public SpecDeGeste(string id, string repliTitre, string repliCommun, bool ditLaBande, params ModeDeGeste[] modes)
         {
-            Id = id; CleTitre = cleTitre; RepliTitre = repliTitre; CleCommun = cleCommun; RepliCommun = repliCommun; Modes = modes;
+            Id = id; RepliTitre = repliTitre; RepliCommun = repliCommun; DitLaBande = ditLaBande; Modes = modes;
         }
     }
 
@@ -43,20 +49,39 @@ namespace MafiaCleanCity.Operational
         public string Id, Origine, Destination;
     }
 
-    /// <summary>LE POINT D'INJECTION UNIQUE DES COÛTS (TD-1046). Aucun coût n'est servi avant le geste, donc son NOM sur le fil est inconnu : le client n'en
-    /// invente AUCUN. `CentimesServis(modeId)` rend les centimes SERVIS (chaîne BigInt, comme `Argent.DepuisCentimes`), ou null = absent = non servi.
-    /// ⚠️ Quand BACK-1 servira les coûts, UNE implémentation lit le corps servi ici — la feuille et les gardes ne bougent pas. Jamais les valeurs du poseur
-    /// (50 / 300 / 50 €, 100 / 400 / 1 000 €) : ce sont des défauts de tunables du back, pas des données du client.</summary>
+    /// <summary>LE POINT D'INJECTION UNIQUE DES COÛTS (TD-1046). `CentimesServis(modeId)` rend les centimes SERVIS (chaîne BigInt, comme `Argent.DepuisCentimes`), ou null = absent = non servi ;
+    /// `BandeServie(modeId)` rend la bande de durée SERVIE (`immediate` | `brief` | `extended`), ou null = non servie. Le fil : `GET /v1/supply-chain/upkeep-costs` (BACK-1, `lot/couts-30` @87820327,
+    /// `upkeep-costs-view.ts`) — `CoutsServis` le lit, la feuille et les gardes ne bougent pas. Jamais les valeurs du poseur (50 / 300 / 50 €, 100 / 400 / 1 000 €) ni celles du contrat (illustrations) :
+    /// ce sont des défauts de tunables du back, pas des données du client.</summary>
     public interface ICoutsParMode
     {
         string CentimesServis(string modeId);
+        string BandeServie(string modeId);
     }
 
-    /// <summary>Le régime d'AUJOURD'HUI : aucun coût servi ⇒ chaque mode est éteint (règle (3) de f2, 11/11 : coût absent ⇒ mode éteint).</summary>
+    /// <summary>Le régime sans coûts lus : la route n'est pas servie (404 sur la pile d'avant BACK-1), le réseau a coupé, le corps est illisible ⇒ chaque mode est éteint (règle (3) de f2, 11/11 : coût absent ⇒ mode éteint).</summary>
     public sealed class CoutsNonServis : ICoutsParMode
     {
         public static readonly CoutsNonServis Instance = new CoutsNonServis();
         public string CentimesServis(string modeId) => null;
+        public string BandeServie(string modeId) => null;
+    }
+
+    /// <summary>Les coûts LUS du fil (`ChaineDApproClient.LireCouts`) : par `mode` servi, ses centimes (chaîne BigInt) et sa bande. Un mode absent, dont la ligne n'a pas de `cost_cents` entier, ou servi en double ⇒ null
+    /// (on ne choisit pas). Aucune valeur n'est codée ici : tout vient du corps.</summary>
+    public sealed class CoutsServis : ICoutsParMode
+    {
+        private readonly Dictionary<string, string> centimes;
+        private readonly Dictionary<string, string> bandes;
+
+        internal CoutsServis(Dictionary<string, string> centimes, Dictionary<string, string> bandes)
+        {
+            this.centimes = centimes ?? new Dictionary<string, string>();
+            this.bandes = bandes ?? new Dictionary<string, string>();
+        }
+
+        public string CentimesServis(string modeId) => modeId != null && centimes.TryGetValue(modeId, out string c) ? c : null;
+        public string BandeServie(string modeId) => modeId != null && bandes.TryGetValue(modeId, out string b) ? b : null;
     }
 
     public static class ChaineDApproGestes
@@ -70,20 +95,22 @@ namespace MafiaCleanCity.Operational
         public const string CleRefusDuCap = "error.core_loops.structural_cap_exhausted";
 
         /// <summary>`POST /v1/supply-chain/legs/:legId/maintain {mode}` — quick_patch / structural_reinforce (STRUCTURELLE) / reroute_bypass
-        /// (`leg-maintenance.service.ts:13-20`, V15 @74c5a0b0, lu par le poseur).</summary>
+        /// (`leg-maintenance.service.ts:13-20`, V15 @74c5a0b0, lu par le poseur). Mots : FR servi par BACK-1 à l'octet (`lot/couts-30` @87820327, `string_table.ts` bloc « Lot ㉚ ») ;
+        /// `appro.consequence.contourner` porte U+00A0 devant « : » (écrit en clair), les apostrophes sont U+2019.</summary>
         public static readonly SpecDeGeste Entretien = new SpecDeGeste("maintain",
-            "appro.geste.entretenir_la_liaison", "Entretenir la liaison", null, null,
-            new ModeDeGeste("quick_patch", "rafistoler", "Rafistoler", "quelques minutes · l’usure retombe, sans disparaître"),
-            new ModeDeGeste("structural_reinforce", "renforcer", "Renforcer", "plus longtemps · l’usure est effacée", structurel: true),
-            new ModeDeGeste("reroute_bypass", "contourner", "Contourner", "tout de suite · la liaison se repose : plus rien n’y passe tant qu’elle n’a pas récupéré"));
+            "Entretenir la liaison", null, ditLaBande: true,
+            new ModeDeGeste("quick_patch", "rafistoler", "Rafistoler", "l’usure retombe, sans disparaître"),
+            new ModeDeGeste("structural_reinforce", "renforcer", "Renforcer", "l’usure est effacée", structurel: true),
+            new ModeDeGeste("reroute_bypass", "contourner", "Contourner", "la liaison se repose : plus rien n’y passe tant qu’elle n’a pas récupéré"));
 
         /// <summary>`POST /v1/operational/routes/:id/rebuild {mode}` — MINIMAL_REROUTE / FULL_GEOMETRIC_RESET (STRUCTURELLE)
         /// (`route.controller.ts:193`, `route-rebuild.service.ts:18-20`). La durée est dite en MOTS : jamais un tick (R2.2).
         /// ⚠️ DEUX modes seulement (revue ⊥ B1, ruling f2 11/11, `poser-chaine-gestes.py:56-58,166-167`) : `MODERATE_RESTRUCTURE` (« Remaniement ») est RETIRÉ de la feuille — au back il fait EXACTEMENT le même
-        /// recalcul que `MINIMAL_REROUTE`, seul le coût diffère : un choix plus cher sans effet de plus est un piège. Le back continue de la servir dans `rebuild[]` : une ligne de coût qui ne répond à aucun mode de la feuille est IGNORÉE.</summary>
+        /// recalcul que `MINIMAL_REROUTE`, seul le coût diffère : un choix plus cher sans effet de plus est un piège. Le back continue de la servir dans `rebuild[]` (toujours 3 lignes, contrat ㉚ §1.1 : le retrait
+        /// est PUREMENT CLIENT) : une ligne de coût qui ne répond à aucun mode de la feuille est lue et IGNORÉE.</summary>
         public static readonly SpecDeGeste Reconstruction = new SpecDeGeste("rebuild",
-            "appro.geste.reconstruire_la_route", "Reconstruire la route",
-            "appro.bloc.pendant_les_travaux_plus_rien_ne_passe_sur_cette_route", "Pendant les travaux, plus rien ne passe sur cette route.",
+            "Reconstruire la route",
+            "Pendant les travaux, plus rien ne passe sur cette route.", ditLaBande: false,
             new ModeDeGeste("MINIMAL_REROUTE", "petit_detour", "Petit détour", "on contourne ce qui gêne, au plus près"),
             new ModeDeGeste("FULL_GEOMETRIC_RESET", "remise_a_plat", "Remise à plat", "on repart d’un trajet droit, sans tenir compte de l’usure", structurel: true));
 
@@ -102,6 +129,31 @@ namespace MafiaCleanCity.Operational
             if (string.IsNullOrEmpty(c)) return null;
             if (!decimal.TryParse(c, NumberStyles.Integer | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out _)) return null;
             return c;
+        }
+
+        /// <summary>Le séparateur du mot de bande et de la conséquence (`poser-chaine-gestes.py:50-52`) : espace, U+00B7, espace.</summary>
+        public const string SeparateurDeBande = " · ";
+
+        /// <summary>Le mot d'une bande de durée SERVIE (contrat ㉚ §1.2) : `immediate` → « tout de suite », `brief` → « quelques minutes », `extended` → « plus longtemps ». La bande n'entre JAMAIS dans l'espace i18n :
+        /// le client fait le switch et passe le LITTÉRAL à `Libelle.De` (clé `appro.etiquette.<slug du mot>`). Une bande hors de l'union (ou null) ⇒ null : on ne devine pas une durée.</summary>
+        public static string MotDeLaBande(string bande)
+        {
+            switch (bande)
+            {
+                case "immediate": return Libelle.De("appro", "etiquette", "tout de suite");
+                case "brief": return Libelle.De("appro", "etiquette", "quelques minutes");
+                case "extended": return Libelle.De("appro", "etiquette", "plus longtemps");
+                default: return null;
+            }
+        }
+
+        /// <summary>Le sous-titre d'un mode : `<mot de la bande servie> · <conséquence>` pour un mode d'ENTRETIEN (`DitLaBande`), la conséquence SEULE sinon — et quand la bande n'est pas servie (le mode est alors éteint de toute façon).
+        /// La conséquence est LA valeur servie (`appro.consequence.<suffixe>`), ou son repli.</summary>
+        public static string SousTitreDuMode(SpecDeGeste spec, ModeDeGeste mode, ICoutsParMode couts)
+        {
+            string consequence = Libelle.Gabarit(mode.CleConsequence, mode.RepliConsequence);
+            string mot = spec != null && spec.DitLaBande && couts != null ? MotDeLaBande(couts.BandeServie(mode.Id)) : null;
+            return string.IsNullOrEmpty(mot) ? consequence : mot + SeparateurDeBande + consequence;
         }
 
         /// <summary>LA SEULE RÈGLE D'EXTINCTION d'un mode : il agit si et seulement si son coût est SERVI (règle (3) de f2) ET, quand il est structurel, si le jeton est libre.</summary>

@@ -16,7 +16,7 @@ namespace MafiaCleanCity.Operational
     /// ⛔ OÙ ELLE VIT : DIRECTEMENT sous la racine d'écran, HORS de la fenêtre `RectMask2D` de la chaîne, et EN DERNIERS enfants (voile puis panneau) — sinon la feuille est
     /// rognée par la fenêtre, ou recouverte par le pied. Hors mise en page (`ignoreLayout`) : la racine est une pile, la feuille la survole.
     /// ⛔ TOUT `Graphic` naît avec son `CanvasRenderer` (`AjouterImage` / `Texte`) : `AddComponent` à l'exécution n'honore pas `[RequireComponent]`.
-    /// Les textes passent TOUS par `Libelle` (clés dérivées non servies — TD-1048 ; REUSE de `accueil.jeton.*`, `appro.bouton.*`, `game.ui_common.cancel_button`).</summary>
+    /// Les textes passent TOUS par `Libelle` (clés `appro.titre|etiquette|consequence|sous_titre.*` et `accueil.jeton.*` servies par BACK-1 — `lot/couts-30` @87820327, pas encore sur la pile : TD-1048 ; REUSE de `appro.bouton.*`, `game.ui_common.cancel_button`).</summary>
     public sealed class ChaineDApproFeuille
     {
         public const string NomVoile = "FeuilleVoile";
@@ -88,21 +88,21 @@ namespace MafiaCleanCity.Operational
             v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             panneau.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            Texte(panneau.transform, "Titre", Libelle.Gabarit(spec.CleTitre, spec.RepliTitre), 12f, ChaineDApproScreenController.EncreTitreChaine, true, true);
+            Texte(panneau.transform, "Titre", Libelle.De("appro", "titre", spec.RepliTitre), 12f, ChaineDApproScreenController.EncreTitreChaine, true, true);
             Espace(3f);
             TextMeshProUGUI lieu = Texte(panneau.transform, "Cible", cible.Origine + " → " + cible.Destination, 7f, ChaineDApproScreenController.EncreSousTitreChaine, false);
             lieu.enableWordWrapping = true;
-            if (spec.CleCommun != null)
+            if (spec.RepliCommun != null)
             {
                 Espace(5f);
-                TextMeshProUGUI commun = Texte(panneau.transform, "Commun", Libelle.Gabarit(spec.CleCommun, spec.RepliCommun), 7f, ChaineDApproScreenController.EncreNomLiaison, false);
+                TextMeshProUGUI commun = Texte(panneau.transform, "Commun", Libelle.De("appro", "sous_titre", spec.RepliCommun), 7f, ChaineDApproScreenController.EncreNomLiaison, false);
                 commun.enableWordWrapping = true;
             }
             ConstruireLaZoneDeRefus();
             foreach (ModeDeGeste m in spec.Modes)
             {
                 Espace(6f);
-                ConstruireUnMode(m, couts, jetonDisponible);
+                ConstruireUnMode(spec, m, couts, jetonDisponible);
             }
             Espace(6f);
             TextMeshProUGUI legende = Texte(panneau.transform, "Legende", Libelle.De("appro", "bouton", "ça part du compte tout de suite"), 6.5f, ChaineDApproScreenController.EncreSousTitreChaine, false);
@@ -173,9 +173,9 @@ namespace MafiaCleanCity.Operational
             zoneDeRefus.SetActive(false);
         }
 
-        /// <summary>`.gr30-fch` : un mode — son nom, son sous-titre, la marque du jeton (structurel ET libre), son coût (ou « on ne sait pas encore combien »). ÉTEINT (`.eteint`) quand
+        /// <summary>`.gr30-fch` : un mode — son nom, son sous-titre, la marque du jeton (structurel ET libre), son coût (ou « On ne sait pas encore combien. »). ÉTEINT (`.eteint`) quand
         /// `Actionnable` dit non : coût absent, ou jeton pris pour un mode structurel (le sous-titre dit alors la phrase SERVIE du cap).</summary>
-        private void ConstruireUnMode(ModeDeGeste mode, ICoutsParMode couts, bool jetonDisponible)
+        private void ConstruireUnMode(SpecDeGeste spec, ModeDeGeste mode, ICoutsParMode couts, bool jetonDisponible)
         {
             string centimes = ChaineDApproGestes.CentimesLisibles(couts, mode.Id);   // illisible = non servi
             string locale = LocaleDArgent();
@@ -209,17 +209,17 @@ namespace MafiaCleanCity.Operational
             ln.flexibleWidth = 1f; ln.minWidth = 0f;
 
             Color encreDuNom = actionnable ? ChaineDApproScreenController.EncreNomMaillon : ChaineDApproScreenController.EncreFleche;
-            TextMeshProUGUI nom = Texte(n.transform, "Nom", Libelle.Gabarit(mode.CleLibelle, mode.RepliLibelle), 9f, encreDuNom, true, true);
+            TextMeshProUGUI nom = Texte(n.transform, "Nom", Libelle.De("appro", "etiquette", mode.RepliLibelle), 9f, encreDuNom, true, true);
             nom.enableWordWrapping = true;
-            // le sous-titre : la phrase SERVIE du cap quand le jeton est pris (jamais une phrase du client) ; à défaut de phrase servie, la description du mode
+            // le sous-titre : la phrase SERVIE du cap quand le jeton est pris (jamais une phrase du client) ; à défaut de phrase servie, `<mot de la bande servie> · <conséquence>` (entretien) ou la conséquence seule
             string sous = null;
             if (jetonPris) sous = RefusServi.PhraseDeLaCle(ChaineDApproGestes.CleRefusDuCap);
-            if (string.IsNullOrEmpty(sous)) sous = Libelle.Gabarit(mode.CleSousTitre, mode.RepliSousTitre);
+            if (string.IsNullOrEmpty(sous)) sous = ChaineDApproGestes.SousTitreDuMode(spec, mode, couts);
             TextMeshProUGUI st = Texte(n.transform, "Sous", sous, 6.6f, ChaineDApproScreenController.EncreFleche, false);
             st.enableWordWrapping = true;
             if (mode.Structurel && ChaineDApproGestes.MarqueDuJeton)
             {
-                // `.gr30-fmarque` : le mot du jeton de ④ (`accueil.jeton.votre_grande_decision_du_jour`, servi) — le même mot partout
+                // `.gr30-fmarque` : le mot du jeton de ④ (`accueil.jeton.votre_grande_decision_du_jour`, servi par BACK-1 au lot ㉚, pas encore sur la pile) — le même mot partout
                 GameObject marque = Nouveau("Marque", n.transform);
                 HorizontalLayoutGroup vm = marque.AddComponent<HorizontalLayoutGroup>();   // `display:inline-block;margin-top:4px` : la boîte prend la largeur de son mot
                 vm.padding = new RectOffset(0, 0, pxTrait(4f), 0);
@@ -237,9 +237,9 @@ namespace MafiaCleanCity.Operational
                 mot.enableWordWrapping = false;
             }
 
-            // le coût : le montant SERVI (`Argent`, le seul formateur d'argent du client) ; absent ⇒ « on ne sait pas encore combien » — jamais un montant du poseur
+            // le coût : le montant SERVI (`Argent`, le seul formateur d'argent du client) ; absent ⇒ « On ne sait pas encore combien. » — jamais un montant du poseur
             string cout;
-            if (string.IsNullOrEmpty(centimes)) cout = Libelle.Gabarit("appro.cout.on_ne_sait_pas_encore_combien", "on ne sait pas encore combien");
+            if (string.IsNullOrEmpty(centimes)) cout = Libelle.De("appro", "cout", "On ne sait pas encore combien.");
             else cout = Argent.DepuisCentimes(centimes, locale);
             Color encreDuCout = actionnable ? DesignTokens.Current.hudMoneyUnderlineGold : ChaineDApproScreenController.EncreFleche;
             TextMeshProUGUI c = Texte(ligne.transform, "Cout", cout, 8.4f, encreDuCout, true);

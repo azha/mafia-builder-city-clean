@@ -73,18 +73,23 @@ namespace MafiaCleanCity.Operational.Tests
             "appro.titre.la_chaine", "appro.sous_titre.chaque_maillon_sa_pression_chaque_liaison_son_entretien",
             "appro.titre.les_maillons", "appro.titre.les_liaisons", "appro.etiquette.refoule_vers", "appro.etiquette.contournee",
             "appro.etiquette.un_batiment_detruit",
-            // ㉚ « LES DEUX GESTES » (11/11, CLIENT-1, `Tools/gestes-30/DESIGN.md` §6 ; TD-1048) : 20 clés DÉRIVÉES, mot RATIFIÉ du poseur en repli, 0 servie à ce jour — à BACK-1 / f2.
-            // Les REUSE ne sont PAS ici : `accueil.jeton.*`, `appro.bouton.ca_part_du_compte_tout_de_suite`, `game.ui_common.cancel_button` (servis), `appro.sinuosite.*` / `appro.effondrement.*` (servis au cumul 74c5a0b0).
-            "appro.geste.entretenir_la_liaison", "appro.geste.reconstruire_la_route",
-            "appro.mode.rafistoler", "appro.mode.renforcer", "appro.mode.contourner",
-            "appro.mode.petit_detour", "appro.mode.remise_a_plat",
-            "appro.mode_sous.rafistoler", "appro.mode_sous.renforcer", "appro.mode_sous.contourner",
-            "appro.mode_sous.petit_detour", "appro.mode_sous.remise_a_plat",
-            "appro.bloc.pendant_les_travaux_plus_rien_ne_passe_sur_cette_route",
-            "appro.cout.on_ne_sait_pas_encore_combien",   // le mode éteint (§1) — à faire ratifier par f2
+            // ㉚ « LES DEUX GESTES » (11/11, CLIENT-1, `Tools/gestes-30/DESIGN.md` §6 ; TD-1048) puis V15 « COÛTS PAR MODE » (`Tools/couts-30-v15/DESIGN.md` §2, branche lot/client1-couts-30-v15-2026-11-11) : 24 clés, 0 servie à ce jour
+            // sur la pile — les 17 du lot BACK-1 `lot/couts-30` @87820327 (clés RENOMMÉES aux noms SERVIS, FR à l'octet ; pas encore sur la pile : back main 51cece7d, 0/22) et 7 NEUVES du lot précédent. Elles partent au fil du service.
+            // Les REUSE ne sont PAS ici : `appro.bouton.ca_part_du_compte_tout_de_suite`, `game.ui_common.cancel_button` (servis), `appro.sinuosite.*` / `appro.effondrement.*` (servis au cumul 74c5a0b0).
+            // ⚠️ `accueil.jeton.votre_grande_decision_du_jour` n'est PAS un REUSE servi (0 à back main 51cece7d et au cumul 74c5a0b0 : le lot BACK-1 l'ajoute) — elle est ICI.
+            // Retirées (13 noms disparus du code) : `appro.geste.*` ×2, `appro.mode.*` ×5, `appro.mode_sous.*` ×5, `appro.bloc.pendant_les_travaux_…` ×1. Non lues par le client : `appro.etiquette.remaniement`,
+            // `appro.consequence.remaniement`, `error.funds.insufficient` (par la clé du corps du refus).
+            "appro.titre.entretenir_la_liaison", "appro.titre.reconstruire_la_route",
+            "appro.etiquette.rafistoler", "appro.etiquette.renforcer", "appro.etiquette.contourner",
+            "appro.etiquette.petit_detour", "appro.etiquette.remise_a_plat",
+            "appro.etiquette.quelques_minutes", "appro.etiquette.plus_longtemps", "appro.etiquette.tout_de_suite",
+            "appro.consequence.rafistoler", "appro.consequence.renforcer", "appro.consequence.contourner",
+            "appro.consequence.petit_detour", "appro.consequence.remise_a_plat",
+            "appro.sous_titre.pendant_les_travaux_plus_rien_ne_passe_sur_cette_route",
+            "accueil.jeton.votre_grande_decision_du_jour",
+            "appro.cout.on_ne_sait_pas_encore_combien",
             "appro.etiquette.en_entretien", "appro.titre.les_routes",
             "appro.etat.active", "appro.etat.saturated", "appro.etat.severed", "appro.etat.en_reconstruction",
-
 
 
 

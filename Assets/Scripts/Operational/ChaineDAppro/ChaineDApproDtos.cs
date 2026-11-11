@@ -127,6 +127,18 @@ namespace MafiaCleanCity.Operational
     [Serializable] public class GetSupplyChainGraphPayload { public GetSupplyChainGraphResponseDto data; }
     [Serializable] public class GetSupplyChainGraphEnvelope { public GetSupplyChainGraphPayload payload; }
 
+    /// <summary>`GET /v1/supply-chain/upkeep-costs` — `{maintenance[3], rebuild[3]}`, ligne `{mode, cost_cents, duration_band}` (contrat ㉚ §1.1, `lot/couts-30` @87820327, `upkeep-costs-view.ts`). VIDE, déclaré tel :
+    /// `JsonUtility` ne distingue pas l'absent de 0 et ne porte pas un montant en centimes sans le tronquer — les lignes se lisent dans le corps BRUT, ligne par ligne, par `ChaineDApproClient.LireCouts`
+    /// (patron `LireGraphe`). Cette classe ne sert qu'à reconnaître l'enveloppe `payload.data`.</summary>
+    [Serializable]
+    public class GetSupplyChainUpkeepCostsResponseDto
+    {
+        // VIDE, déclaré tel — voir ci-dessus.
+    }
+
+    [Serializable] public class GetSupplyChainUpkeepCostsPayload { public GetSupplyChainUpkeepCostsResponseDto data; }
+    [Serializable] public class GetSupplyChainUpkeepCostsEnvelope { public GetSupplyChainUpkeepCostsPayload payload; }
+
     /// <summary>`POST /v1/supply-chain/legs/:id/maintain` — réponse JAMAIS MESURÉE (TD-1049) : le juge ne l'a appelée que sur un `legId` inexistant
     /// (`mesures/00-commandes.sh:49-50`). Elle reste donc VIDE et déclarée telle : l'après-geste vient de la RELECTURE du graphe, jamais de ce corps
     /// (juge ㉚ E2). Un 2xx est un succès, quel que soit son corps.</summary>
