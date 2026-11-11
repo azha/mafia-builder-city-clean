@@ -1,0 +1,23 @@
+# Point 1 — QUI CREE une ligne lifestyle_audit_state, et qui l'appelle (back @7807d6c8)
+# toutes les commandes : git grep sur l'objet de commit, sans changer de branche
+
+## (a) ecrivains SQL de la table, dans src/ (hors tests)
+services/game-back/src/operational/forensic/forensic.repository.ts:534:      .insert(lifestyleAuditState)
+services/game-back/src/operational/forensic/standing-gap-heat.service.ts:250:        .insert(lifestyleAuditState)
+
+## (b) le seul insert hors _test est standing-gap-heat.service.ts:250, DANS populateLifestyleState (214-285)
+## (c) appelants de populateLifestyleState dans src/ — COMPTES
+fichiers src/ qui appellent populateLifestyleState : 1
+services/game-back/src/operational/forensic/forensic-test.controller.ts:2034:    await this.standingGapHeat.populateLifestyleState(
+services/game-back/src/operational/forensic/forensic-test.controller.ts:2688:    await this.standingGapHeat.populateLifestyleState(playerId, lieutenantId, declaredCutCents, visibleStandardIndex);
+=> appelants HORS fichier *-test.controller.ts : 0
+
+## (d) appelants de seedLifestyleState (repository.ts:534)
+services/game-back/src/operational/forensic/forensic-test.controller.ts:984:    await this.forensicRepository.seedLifestyleState({
+=> appelants HORS *-test.controller.ts : 0
+
+## (e) le chemin de PROD (NIGHTLY) appelle bien runMonthlyTick/advanceTailRamp :
+services/game-back/src/operational/forensic/forensic.module.ts:222:        await this.standingGapHeat.runMonthlyTick(ctx, monthId);
+services/game-back/src/operational/forensic/forensic.module.ts:226:        await this.standingGapHeat.advanceTailRamp(ctx, dayId);
+## mais les deux NO-OP si 0 ligne : sgh.ts:321-328 et sgh.ts:471-479 (selects + 'return')
+## et AUCUN des deux n'insere (seul insert du fichier = ligne 250, dans populateLifestyleState).

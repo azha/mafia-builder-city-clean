@@ -1,0 +1,24 @@
+# 06 — constat B1 : le 409 d'already_resolved couvre superseded — 2026-11-11
+
+$ grep -n "superseded" <design 464defd1>
+118:| **E9** | `requireActionable` (`:427`) | statut déjà terminal (`committed`/`superseded`) | 409 `RESOURCE_STATE_CONFLICT` | **OUI** → `HL_CARD_ALREADY_RESOLVED` *(variante 8)* |
+compte = 1 (la seule occurrence est la ligne E9, qui nomme les DEUX statuts et route sur UN texte)
+
+$ sed -n "280,282p" <design>   # §3.1, la clé et son texte
+| `HL_CARD_NOT_FOUND` | E8 (`hl-card.service.ts:424`) + `skip` (`:382`) — **2 sites** | 404 | `NEVER` | `error.hl_card.not_found` | `Cette carte n’est plus là.` | `This card is gone.` |
+| `HL_CARD_ALREADY_RESOLVED` | E9 (`:427`), E11 **et** E14 (`:400`, un seul site atteint par deux appelants) — **2 sites** | 409 | `AFTER_USER_ACTION` | `error.hl_card.already_resolved` | `C’était déjà tranché` | `Already 
+| `HL_CARD_NOTHING_TO_ACT_ON` | E12 **et** E13 (`:270`, un seul site) — **1 site** | 409 | `AFTER_USER_ACTION` | `error.hl_card.nothing_to_act_on` | `Plus rien à faire sur cette carte.` | `Nothing left to do on this card.` |
+
+## Les 3 sites qui refusent 'superseded' avec ce 409
+  private async claimOrConflict(cardId: string): Promise<HlCardOriginStatus> {
+    const origin = await this.repo.markCommitted(cardId);
+    if (origin === null) {
+      throw new ApiError('RESOURCE_STATE_CONFLICT', { message: `HighestLeverageCard ${cardId} is no longer actionable (claimed or superseded).` });
+    }
+    if (card.status !== 'active' && card.status !== 'skipped') {
+      throw new ApiError('RESOURCE_STATE_CONFLICT', { message: `HighestLeverageCard ${cardId} is already '${card.status}'.` });
+    }
+         AND prev.status IN ('active', 'skipped')
+
+## Le texte ratifié qui dirait cette issue existe déjà, mais n'est câblé que sur le 404
+404 : la carte n’existe plus (N8, ARBITRÉ f2 11/11 ; clé distincte servie par le back) · (aucun grave : la carte a disparu) · Cette carte n’est plus là. · Retour à l’accueil · — | This card is gone. | Back to the home screen

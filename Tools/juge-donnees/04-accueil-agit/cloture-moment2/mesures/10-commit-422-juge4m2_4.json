@@ -1,0 +1,17 @@
+### scénario 4 (juge4m2_4) — les deux refus de CORPS de commit (le corps est validé AVANT toute résolution de joueur, hl-card.controller.ts:57-59)
+# carte tirée : b882c825-756b-4bbd-bc18-39123bb50361
+
+$ rtk proxy curl -s -X POST .../hl-card/b882c825-756b-4bbd-bc18-39123bb50361/commit -d '{"chosen_option":2}'
+{"code": "VALIDATION_FAILED", "http_status": 422, "user_facing_i18n_key": "error.validation.failed", "details": {"param": "chosen_option"}, "message": "chosen_option must be 0 or 1, got 2."}
+
+$ rtk proxy curl -s -X POST .../hl-card/b882c825-756b-4bbd-bc18-39123bb50361/commit -d '{"chosen_option":"0"}'
+{"code": "VALIDATION_FAILED", "http_status": 422, "user_facing_i18n_key": "error.validation.failed", "details": {"param": "chosen_option"}, "message": "chosen_option must be an integer (got \"0\")."}
+
+$ rtk proxy curl -s -X POST .../hl-card/b882c825-756b-4bbd-bc18-39123bb50361/commit -d '{"option":0}'
+{"code": "VALIDATION_FAILED", "http_status": 422, "user_facing_i18n_key": "error.validation.failed", "details": {"param": "option"}, "message": "unknown field 'option' (allowed: chosen_option)."}
+
+$ rtk proxy curl -s -X POST .../hl-card/b882c825-756b-4bbd-bc18-39123bb50361/commit -d '{}'
+{"code": "HL_CARD_NOT_FOUND", "http_status": 404, "user_facing_i18n_key": "error.hl_card.not_found", "details": null, "message": "No such HighestLeverageCard for this player: b882c825-756b-4bbd-bc18-39123bb50361."}
+
+$ rtk proxy curl -s -X POST .../hl-card/b882c825-756b-4bbd-bc18-39123bb50361/commit -d 'null'
+{"code": "JSON_PARSE_ERROR", "http_status": 400, "user_facing_i18n_key": "error.envelope.json_parse_error", "details": null, "message": "Unexpected token 'n', \"null\" is not valid JSON"}

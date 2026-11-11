@@ -1,0 +1,41 @@
+# B DÉDUIT du source — cumul back gate/cumul-2026-10-10 @ 7807d6c8 (aucune pile montée, ruling f2 11/11)
+## 0. ancrage
+rev-parse gate/cumul-2026-10-10 = 0cfa6a7d83894aa74c421940d923b2cc41ef5838
+branche checkoutée (NON changée) = main
+
+## 1. clés de hl_card (projection joueur) — hl-card-projection.ts
+export function projectHlCard(row: HighestLeverageCardRow): HighestLeverageCardProjection {
+  return {
+    card_id: row.card_id,
+    decision_type_key: decisionTypeKeyFor(row.decision_type),
+    impact_bucket: impactBucket(row.impact_internal),
+    urgency_bucket: urgencyBucket(row.urgency_internal),
+    options: (row.options as DecisionOption[]) ?? [],
+    structural: catalogueStructuralEntryFor(row.decision_type) !== undefined,
+    target_count: targetCountFor(row.decision_type, row.target_ref),
+  };
+}
+NB_CLES_PROJECTION = 7
+pin E2E de l'ensemble (hl_card.spec.ts:970) :
+    expect(Object.keys(hlCard!).sort()).toEqual(
+      ['card_id', 'decision_type_key', 'impact_bucket', 'urgency_bucket', 'options', 'structural', 'target_count'].sort(),
+    );
+pin E2E (core_loops_bo.spec.ts:554) :
+    ).toEqual(['card_id', 'decision_type_key', 'impact_bucket', 'options', 'structural', 'target_count', 'urgency_bucket'].sort());
+
+## 2. clés de la réponse de commit — hl-card-types.ts:125-139 + pin parcours:51
+const CLES_COMMIT = ['committed', 'executed_ids', 'navigate_ids', 'navigate_screen', 'outcome', 'stopped_at_error', 'stopped_at_id', 'structural'];
+NB_CLES_COMMIT (compte des champs de l'interface) = 8
+outcome : domaine fermé
+export type HlCommitOutcome = 'executed' | 'navigate' | 'noted';
+
+## 3. réponse de skip
+  /** `POST /v1/session/hl-card/:id/skip` — carry semantics (design §8). Returns `{ skipped: true }`.
+   *  404 not owned/found; 409 not `active` (already skipped/committed/superseded). */
+  @Post('session/hl-card/:id/skip')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  async skip(@Param('id', UuidParam) id: string, @Req() req: RequestWithAccount): Promise<{ skipped: true }> {
+    const playerId = await this.resolvePlayerId(req.account!.account_id);
+    return this.hlCards.skip(playerId, id);
+  }

@@ -1,0 +1,21 @@
+# Vocabulaire de bande disponible dans string_table.ts @7807d6c8 (locale FR)
+# la locale FR est le second bloc : on ne compte que les cles dont la VALEUR est francaise.
+forensic.cran.*   : 18 entrees (2 locales)
+forensic.gravite.*: 6 entrees (2 locales)
+
+-- bloc FR (lignes > 3000) --
+cran FR = 9 ; gravite FR = 3 ; TOTAL mots de bande FR = 12
+   3223  forensic.cran.un_dossier_est_ouvert           = Un dossier est ouvert
+   3227  forensic.gravite.ca_se_voit_de_loin           = Ça se voit de loin
+   3228  forensic.gravite.on_vous_regarde              = On vous regarde
+   3229  forensic.gravite.rien_ne_depasse              = Rien ne dépasse
+   4522  forensic.cran.on_regarde                      = on regarde
+   4526  forensic.cran.discret                         = discret
+   4547  forensic.cran.invisible                       = invisible
+   4548  forensic.cran.des_traces                      = des traces
+   4549  forensic.cran.remarque                        = remarqué
+   4550  forensic.cran.suivi                           = suivi
+   4551  forensic.cran.rien_a_signaler                 = rien à signaler
+   4552  forensic.cran.ca_se_voit                      = ça se voit
+
+3 bandes x 4 valeurs = 12 etats a nommer.

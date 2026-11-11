@@ -1,0 +1,8 @@
+==========================================================================================
+## b2ceebeb (r2, EPINGLE)
+  cadre 152 : 33 noeud(s) texte dans .ecran ; valeurs brutes affichees = 0 
+  cadre 153 : 33 noeud(s) texte dans .ecran ; valeurs brutes affichees = 0 
+==========================================================================================
+## 9fa533b5 (r1, temoin)
+  cadre 152 : 37 noeud(s) texte dans .ecran ; valeurs brutes affichees = 2 [('watched', 'watched'), ('visible', 'visible')]
+  cadre 153 : 37 noeud(s) texte dans .ecran ; valeurs brutes affichees = 2 [('watched', 'watched'), ('visible', 'visible')]

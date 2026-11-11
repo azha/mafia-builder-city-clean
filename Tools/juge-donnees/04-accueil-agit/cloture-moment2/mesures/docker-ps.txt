@@ -1,0 +1,7 @@
+mafia-clean-city-game-back-1	mafia-clean-city-game-back	Up 51 minutes (healthy)	3000/tcp
+mafia-clean-city-traefik-1	traefik:v3.5	Up 16 hours	0.0.0.0:80->80/tcp, [::]:80->80/tcp
+mafia-clean-city-docker-socket-shim-1	nginx:alpine	Up 16 hours	80/tcp
+mafia-clean-city-bo-back-1	mafia-clean-city-bo-back	Up 16 hours (healthy)	3000/tcp
+mafia-clean-city-bo-front-1	mafia-clean-city-bo-front	Up 16 hours (healthy)	8080/tcp
+mafia-clean-city-pg-1	postgres:16	Up 16 hours (healthy)	5432/tcp
+mafia-clean-city-redis-1	redis:7-alpine	Up 16 hours (healthy)	6379/tcp

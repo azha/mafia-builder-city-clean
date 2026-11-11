@@ -1,0 +1,28 @@
+### signup juge4m2_1 (Idempotency-Key: 974435a3-6e54-4630-a11b-89d2f3be7902)
+$ curl -s -X POST http://localhost/v1/auth/signup -H 'Content-Type: application/json' -H "Idempotency-Key: $KEY" -d '{"callsign":"juge4m2_1","password":"<REDACTED>"}'
+{
+    "response_meta": {
+        "request_id_echo": "71b9dd35-23d6-4e7e-9754-60a754cab3af",
+        "server_processed_at": "2026-11-11T05:49:45.528Z",
+        "api_version": 1,
+        "correlation_id_echo": null,
+        "server_build_ref": {
+            "git_sha": "35bdd6cb",
+            "built_at": "2026-11-11T04:53:08Z"
+        }
+    },
+    "payload": {
+        "data": {
+            "access_token": "<REDACTED>",
+            "token_type": "Bearer",
+            "account_kind": "PLAYER",
+            "session_id": "01a1c927-b6e1-7a3b-b0fc-6661080e3bbe",
+            "expires_in_s": 900,
+            "refresh_token": "<REDACTED>",
+            "refresh_expires_in_s": 2592000,
+            "game_back_access_token": null,
+            "game_back_session_id": null
+        }
+    }
+}
+### token len: 423

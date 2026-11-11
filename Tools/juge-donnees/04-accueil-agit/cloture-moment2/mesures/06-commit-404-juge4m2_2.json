@@ -1,0 +1,33 @@
+### scénario 2 (juge4m2_2) — commit sur une carte INCONNUE : la 404 réelle et sa clé servie
+# carte tirée : 691705be-415d-403f-8235-a85475e4faa1
+$ rtk proxy curl -s -X POST http://localhost/v1/session/hl-card/691705be-415d-403f-8235-a85475e4faa1/commit -H 'Authorization: Bearer <T>' -H 'Content-Type: application/json' -d '{"chosen_option":0}'
+{
+    "response_meta": {
+        "request_id_echo": "9fa67a8f-e760-4c71-9dc0-ed2414532fd8",
+        "server_processed_at": "2026-11-11T05:54:15.722Z",
+        "api_version": 1,
+        "correlation_id_echo": null,
+        "server_build_ref": {
+            "git_sha": "35bdd6cb",
+            "built_at": "2026-11-11T04:53:08Z"
+        }
+    },
+    "payload": {
+        "error": {
+            "code": "HL_CARD_NOT_FOUND",
+            "http_status": 404,
+            "user_facing_i18n_key": "error.hl_card.not_found",
+            "payload_vars": null,
+            "details": null,
+            "message": "No such HighestLeverageCard for this player: 691705be-415d-403f-8235-a85475e4faa1.",
+            "trace": {
+                "request_id_echo": "9fa67a8f-e760-4c71-9dc0-ed2414532fd8",
+                "correlation_id": null,
+                "trace_id": null,
+                "server_emitted_at": "2026-11-11T05:54:15.722Z"
+            },
+            "retryable_class": "NEVER",
+            "retry_after_s": null
+        }
+    }
+}

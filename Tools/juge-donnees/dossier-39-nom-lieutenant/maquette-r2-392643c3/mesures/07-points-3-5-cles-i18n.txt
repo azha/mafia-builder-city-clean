@@ -1,0 +1,26 @@
+# Points 3 et 5 — les textes de l'ecran ont-ils une cle servie ? (string_table.ts @7807d6c8)
+# methode : recherche par VALEUR servie (jamais par slug devine) ; controle positif = 7 valeurs/8 trouvees.
+
+--- valeur cherchee : [personne ne regarde par là]
+services/game-back/src/i18n/string_table.ts:3244:  'forensic.bloc.les_livres_et_le_train_de_vie_personne_ne_regarde_par_la_pour_l_instant': 'Les livres et le train de vie : personne ne regarde par l�
+--- valeur cherchee : [On vous regarde]
+services/game-back/src/i18n/string_table.ts:3228:  'forensic.gravite.on_vous_regarde': 'On vous regarde',
+--- valeur cherchee : [Ça se remarque]
+--- valeur cherchee : [rien à signaler]
+services/game-back/src/i18n/string_table.ts:4551:  'forensic.cran.rien_a_signaler': 'rien à signaler',
+--- valeur cherchee : [ça se voit]
+services/game-back/src/i18n/string_table.ts:4552:  'forensic.cran.ca_se_voit': 'ça se voit',
+--- valeur cherchee : [pas encore sur la table]
+services/game-back/src/i18n/string_table.ts:3247:  'forensic.bloc.pas_encore_sur_la_table': 'pas encore sur la table',
+--- valeur cherchee : [pistes chaudes]
+services/game-back/src/i18n/string_table.ts:4519:  'forensic.bloc.pistes_chaudes': 'pistes chaudes',
+--- valeur cherchee : [acteurs qui tiennent]
+services/game-back/src/i18n/string_table.ts:3237:  'forensic.bloc.acteurs_qui_tiennent': 'acteurs qui tiennent',
+
+## insensible a la casse, 'se remarque' :
+   => 0 ligne : « Ça se remarque » n'a AUCUNE cle.
+
+## la note du 152/153 est « Les livres : … » ; la table ne sert que « Les livres ET LE TRAIN DE VIE : … » :
+services/game-back/src/i18n/string_table.ts:307:  'forensic.bloc.les_livres_et_le_train_de_vie_personne_ne_regarde_par_la_pour_l_instant': 'The books and the lifestyle: nobody\'s looking that way. For now.',
+services/game-back/src/i18n/string_table.ts:3244:  'forensic.bloc.les_livres_et_le_train_de_vie_personne_ne_regarde_par_la_pour_l_instant': 'Les livres et le train de vie : personne ne regarde par là. Pour l�
+   => 0 ligne pour « Les livres : » : la note DESSINEE n'a pas de cle ; la cle existante dit l'inverse du 152/153 (le train de vie y est CHAUD).

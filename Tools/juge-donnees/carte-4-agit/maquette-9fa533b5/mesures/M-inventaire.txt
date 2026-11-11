@@ -1,0 +1,36 @@
+# M — inventaire des éléments PORTEURS D'INFORMATION, cadres 1, 5 et 6
+# Source : ecrans-brennar-accueil.html @ 8b79f946 (== 9fa533b5, md5 a4a52036…, 569 800 octets)
+# Les numéros de ligne sont ceux de ce fichier (une ligne porte un cadre entier).
+
+## Cadre 1 (l. 783-785) — AVANT le geste · et cadre 5 (l. 794-796), même carte, même gabarit
+M01  l.785  .verre .titre        « Un local à remettre en état »            → l'identité de la carte du jour
+M02  l.785  .niveaux span[1]     « Portée » + « modérée »                   → la portée, en mot
+M03  l.785  .niveaux span[2]     « Urgence » + « faible »                   → l'urgence, en mot
+M04  l.785  .sur                 « Ce qu'on peut faire »                    → libellé d'écran STATIQUE (exclu du compte, cf. rapport)
+M05  l.785  .gestes .g.or        « Mettre en réparation »                   → le libellé de l'option qui AGIT
+M06  l.785  .gestes .g           « Laisser en l'état »                      → le libellé de l'option qui n'agit pas
+M07  l.785  .csq4-rang .csq4[1]  « Chaque réparation se paie tout de suite, tant que l'argent suit ; les travaux finis, l'activité reprend. »
+M08  l.785  .csq4-rang .csq4[2]  « Rien n'est payé, mais ce qui est endommagé reste à l'arrêt, et le manque à gagner court. »
+(hors domaine, servis par d'AUTRES clés de la même route : .suivant « Lt. Quist attend vos ordres / grave / trancher » ;
+ cadre 5 y ajoute « Plusieurs attendent encore » + la réplique ; la barre ARGENT/CHALEUR/JOUR ; le dock 4 onglets)
+
+## Cadre 6 (l. 798-803) — APRÈS le geste, outcome « executed »
+M12  l.803  .grave               « Vous avez tranché »                      → le geste a été pris en compte
+M13  l.801  .carte-or .coin      « ♦ » + « tactique »                       → la carte n'était pas structurelle
+M14  l.801  .carte-or .titre     « Un local à remettre en état »            → idem M01
+M15  l.801  .bande[1]            « Portée » + 3 pips (2 allumés) + « modérée »
+M16  l.801  .bande[2]            « Urgence » + 3 pips (1 allumé) + « faible »
+M17  l.803  .tampon-diag         « TRANCHÉE »                               → la carte est consommée
+M18  l.803  .jeton-or .piece     « 1 »                                      → le RESTE du budget structurel
+M19  l.803  .jeton-or span       « libre »                                  → le budget n'est pas pris
+M20  l.803  .jeton-or small      « votre décision structurelle de la session » → libellé STATIQUE (exclu du compte)
+M21  l.803  .mot-or              « Les travaux sont lancés et payés. L'activité reprend à la fin du chantier. » → CE QUE LE GESTE A FAIT
+M22  l.803  .ligne-or            « Retour à l'accueil »                     → CTA (traité en section Actions)
+M23  l.803  .ligne-or small      « Rien d'autre à trancher pour l'instant. » → l'affirmation « plus rien n'attend »
+
+## Classes dessinées dans la FEUILLE mais JAMAIS instanciées (comptées dans le corps, hors <style>) : 0 usage chacune
+.carte-or .cachet (l.247)        — sceau rouge
+.carte-or .deja   (l.253)        — pastille « déjà … »
+.jeton-or.pris    (l.257-258)    — budget structurel PRIS (pièce éteinte, « pris » en rouge)
+.mot-or.rouge     (l.260)        — mot d'après-geste en ROUGE italique (l'échec)
+⇒ quatre états ont leur matière en CSS et AUCUN cadre : ce sont exactement les issues que la liste du dossier omet.

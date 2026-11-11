@@ -1,0 +1,37 @@
+# PIÈGE RENCONTRÉ LE 11/11 PENDANT CE JUGEMENT — `rtk curl` RÉSUME LE JSON
+#
+# Le hook réécrit `curl` en `rtk curl`, qui rend un SCHÉMA au lieu du corps. Première tentative de
+# mesure de `POST /v1/session/open` (compte juge4m2_1), sortie BRUTE telle que reçue :
+#
+#   $ curl -s -X POST http://localhost/v1/session/open -H 'Authorization: Bearer <T>' \
+#       -H 'Content-Type: application/json' -d '{"client_version":"juge-donnees"}'
+#   {
+#     payload:
+#     {
+#       data:
+#       {
+#         backlog_badge: bool,
+#         compression_glance:
+#         {
+#           forced: bool,
+#           stress_bucket: string,
+#           week_state: string
+#         }
+#         day_phase: string,
+#         family_day: int,
+#         flag_review:
+#         {
+#           auto_open: bool,
+#           pending_review_count: int
+#         }
+#         ...
+#         hl_card: null,
+#         ...
+#
+# Ce n'est PAS un corps : c'est le schéma des clés avec leurs TYPES. Les valeurs (buckets, libellés
+# d'options, clés i18n, ids) ont disparu — un juge qui mesure là-dessus asserte des types, pas des
+# valeurs. Le `hl_card: null` est le seul fait qui a survécu, par coïncidence (null est sa propre
+# valeur ET son propre type).
+#
+# ⇒ TOUTES les mesures de ce dossier passent par `rtk proxy curl`. Vérifiable : chaque fichier de
+#   mesure colle la commande, et elle commence par `rtk proxy curl`.

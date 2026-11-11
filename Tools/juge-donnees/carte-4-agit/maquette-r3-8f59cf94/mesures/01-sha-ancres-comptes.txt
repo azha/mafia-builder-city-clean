@@ -1,0 +1,144 @@
+# 01 — SHA, ancres, comptes — juge données ⊥ ④ r3 — 2026-11-11
+
+## Épingles
+atelier maquette : 8f59cf9409546bc9a078dbb91ca48f91be68da95 (ecrans-brennar-accueil.html, 811 l / 572991 o)
+design           : 464defd1d209a2d1f24f3074d9a5228acc44a84d (…-hl-card-apres-geste-servi-design.md, 1186 l / 108844 o)
+back (dossier)   : 7807d6c8   | base du design : 0cfa6a7d | sommet gate/cumul-2026-10-10 : 5734e7b2
+
+$ git merge-base --is-ancestor 7807d6c8 0cfa6a7d ; echo rc=$?
+rc=0  (0 = 0cfa6a7d est un DESCENDANT de l'épingle du dossier)
+
+$ git diff --name-only 7807d6c8 0cfa6a7d
+back.md
+services/game-back/src/progression/loop10/hl-card.controller.ts
+tests/e2e/conventions/instruments_pins.spec.ts
+tests/e2e/conventions/p5_p6_instruments.spec.ts
+
+$ git diff --name-only 0cfa6a7d 5734e7b2   # 1 commit, le sommet du cumul
+tests/e2e/core_loops/hl_card_agit.engine.spec.ts
+tests/e2e/parcours/hl_card_agit.parcours.spec.ts
+
+## Générateur de l'atelier : byte-identique entre 1553464c (épingle du design) et 8f59cf94 (épingle du dossier)
+$ git -C ~/project/atelier3d-mafia-c2 rev-parse 1553464c:generateur-q5-apres-2026-10-11.py 8f59cf94…:…
+4fe3a374a85460f7e6ea907e7cbb3e6b2c732c28
+4fe3a374a85460f7e6ea907e7cbb3e6b2c732c28
+
+## Les 7 sites 'new ApiError(' de hl-card.service.ts @ 7807d6c8 — F2.1 somme = 7
+270:      throw new ApiError('RESOURCE_STATE_CONFLICT', { message: `HighestLeverageCard ${cardId}: ${plan.reason}.` });
+382:      throw new ApiError('RESOURCE_NOT_FOUND', { message: `No such HighestLeverageCard for this player: ${cardId}.` 
+385:      throw new ApiError('RESOURCE_STATE_CONFLICT', { message: `HighestLeverageCard ${cardId} is '${card.status}', n
+389:      throw new ApiError('RESOURCE_STATE_CONFLICT', { message: `HighestLeverageCard ${cardId} is no longer 'active' 
+400:      throw new ApiError('RESOURCE_STATE_CONFLICT', { message: `HighestLeverageCard ${cardId} is no longer actionabl
+424:      throw new ApiError('RESOURCE_NOT_FOUND', { message: `No such HighestLeverageCard for this player: ${cardId}.` 
+427:      throw new ApiError('RESOURCE_STATE_CONFLICT', { message: `HighestLeverageCard ${cardId} is already '${card.sta
+compte = 7
+
+## Le 409 d'E9 porte DEUX statuts (hl-card.service.ts:426-427)
+  private async requireActionable(playerId: string, cardId: string): Promise<HighestLeverageCardRow> {
+    const card = await this.repo.findOwned(playerId, cardId);
+    if (!card) {
+      throw new ApiError('RESOURCE_NOT_FOUND', { message: `No such HighestLeverageCard for this player: ${cardId}.` });
+    }
+    if (card.status !== 'active' && card.status !== 'skipped') {
+      throw new ApiError('RESOURCE_STATE_CONFLICT', { message: `HighestLeverageCard ${cardId} is already '${card.status}'.` });
+    }
+    return card;
+
+## pgEnum hl_card_status — 4 membres (db/schema/core_loops.ts:28-33)
+export const hlCardStatus = pgEnum('hl_card_status', [
+  'active',
+  'committed',
+  'skipped',
+  'superseded',
+]);
+
+## markCommitted : garde prev.status IN ('active','skipped') ⇒ 0 ligne sur committed ET sur superseded (hl-card.repository.ts:186-202)
+  async markCommitted(cardId: string): Promise<HlCardOriginStatus | null> {
+    const result = await this.db.execute(sql`
+      UPDATE highest_leverage_cards h
+         SET status = 'committed', resolved_at = now()
+        FROM (SELECT card_id, status FROM highest_leverage_cards WHERE card_id = ${cardId}::uuid FOR UPDATE) prev
+       WHERE h.card_id = prev.card_id
+         AND prev.status IN ('active', 'skipped')
+      RETURNING prev.status AS origin_status
+    `);
+    const row = rowsOf(result)[0];
+    if (!row) return null;
+
+## markSuperseded appelé sur le chemin ORDINAIRE de l'ouverture (hl-card.service.ts:193-213)
+    if (!winner) {
+      // GUARDED (design §3.5): 0 rows = the card was committed meanwhile, nothing to supersede.
+      if (carried) await this.repo.markSuperseded(carried.card_id);
+      return;
+
+    if (carried) await this.repo.markSuperseded(carried.card_id); // 0 rows = committed meanwhile: carry on, insert the winner
+    await this.repo.insertActive(playerId, sessionId, winner);
+
+## P-b : 'commitResponse' dans tests/ @ 7807d6c8 ⇒ 5, un seul fichier
+7807d6c8:tests/unit/progression/hl_card_contrat_reel_unit.spec.ts:233:  const emis = [...service.matchAll(/commitResponse\((true|f
+7807d6c8:tests/unit/progression/hl_card_contrat_reel_unit.spec.ts:236:  expect(branche('noted'), 'la branche « noted » rend note
+7807d6c8:tests/unit/progression/hl_card_contrat_reel_unit.spec.ts:237:  expect(branche('navigate'), 'la branche « navigate » ren
+7807d6c8:tests/unit/progression/hl_card_contrat_reel_unit.spec.ts:238:  expect(service, 'la sortie de la boucle d\'exécution rend
+7807d6c8:tests/unit/progression/hl_card_contrat_reel_unit.spec.ts:253:  expect(bloc, 'la branche structurelle rend « noted » que
+
+## structural_budget : les 2 champs qui portent les 3 états du jeton
+7807d6c8:services/game-back/src/session/session-open-sequence.service.ts:73://     `coreLoopsTunables.structuralCapForPlayer` (P3-A C1/D8 seam, REUSE unchanged) — `structural_budget
+7807d6c8:services/game-back/src/session/session-open-sequence.service.ts:240:  structural_budget: { used: number; cap_reached: boolean };
+7807d6c8:services/game-back/src/session/session-open-sequence.service.ts:361:      structural_budget: { used, cap_reached: used >= cap },
+
+## ERROR_TEXT_RATIFIED : 68 entrées fr / 68 en ⇒ bump F1.3 68→71 exact ; garde à typographie_fr_classe_unit.spec.ts:131
+// decode ces echappements en le caractere reel AVANT ecriture, ce qui casserait la string delimitante).
+const APOS = String.fromCharCode(0x27); // apostrophe droite
+const NBSP = String.fromCharCode(0xa0); // espace insecable
+  expect(nErr, 'ERROR_TEXT_RATIFIED.fr : exactement les 68 textes ratifiés (64 + 2 lot INJECT + 2 lot COLLECTE)').toBe(68);
+  expect(EXCLUSIONS.length, "liste d'exclusion — 0 aujourd'hui, mesuré (voir bandeau)").toBe(0);
+
+## occR2 exige U+00A0 (jamais U+202F) — typographie_fr_classe_unit.spec.ts:44-48
+function occR2(v: string): number {
+  let n = 0;
+  for (let i = 1; i < v.length; i++) if (v[i] === ':' && v[i - 1] !== NBSP) n++;
+  return n;
+}
+
+## renderError : la clé vient du REGISTRE, par code (envelope.interceptor.ts:157, :170-172)
+function renderError(
+  const spec = ERROR_CODES[code];
+  return {
+    code,
+    http_status: spec.http_status,
+    user_facing_i18n_key: spec.user_facing_i18n_key,
+    payload_vars: opts.payloadVars ?? null,
+    details: opts.details ?? null,
+
+## ResponseSuccessPayload : aucun payload_vars sur un 200 (envelope.ts:89-92)
+export interface ResponseSuccessPayload<T = unknown> {
+  data: T;
+  meta?: unknown | null;
+}
+
+## ApiError.code typé ErrorCode (api-error.ts:15) ⇒ lookup D7 TOTAL, aucun code brut sans clé
+import { ERROR_CODES, type ErrorCode } from './error-codes';
+
+export class ApiError extends Error {
+  readonly code: ErrorCode;
+  readonly payloadVars: Record<string, unknown> | null;
+  readonly details: unknown | null;
+    let stoppedAtError: string | null = null;
+        stoppedAtError = err instanceof ApiError ? err.code : 'INTERNAL_ERROR';
+
+## Les 9 clés du lot n'existent dans AUCUN registre aujourd'hui
+  hl.outcome.          occurrences dans string_table.ts = 0
+  hl.after_choice.     occurrences dans string_table.ts = 0
+  error.hl_card.       occurrences dans string_table.ts = 0
+
+## « maillon » déjà servi pour 107 : titre (:5185-5186) et conséquence d'option (:5484)
+  'decision.type.MYCELIAL_STRESSED_LEG':
+    '{n, plural, one {Un maillon sous tension} other {Des maillons sous tension}}',
+  'hl.option.mycelial_stressed_leg.maintain_now.projected_consequence': 'Un entretien rapide et peu coûteux, payé tout de suite pour chaque maillon, tant que l’argent suit : la tension retombe sa
+
+## Ancres CLIENT du design, re-mesurées dans l'arbre client
+25:        public static readonly string[] FamillesGeneriques =
+27:            "error.envelope.", "error.idempotency.", "error.http.", "error.internal.", "error.resource.", "error.validation.",
+25:        /// ⛔ RÉSERVÉ AUX PHRASES FERMÉES. Une valeur CALCULÉE ne doit jamais passer ici :
+212:                if (!long.TryParse(valeur, out n)) return "{" + corps + "}";
+8:    [Serializable] public class CommitResponseDto { public bool committed; public bool structural; }

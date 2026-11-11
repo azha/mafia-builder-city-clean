@@ -1,0 +1,5 @@
+### GET /v1/i18n/bundle?locale=fr-FR — les clés de l'après-geste et des refus, SERVIES ou non (compte: aucun jeton requis)
+$ rtk proxy curl -s 'http://localhost/v1/i18n/bundle?locale=fr-FR' > bundle-fr.json ; puis filtre python3
+--- code HTTP + taille
+HTTP/1.1 200 OK
+171258 /tmp/bundle-fr.json

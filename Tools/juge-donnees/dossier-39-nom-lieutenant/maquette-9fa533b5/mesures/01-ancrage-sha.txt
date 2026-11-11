@@ -1,0 +1,19 @@
+# 01 — ancrage des deux SHA (back et atelier) — 2026-11-11T02:16:03+01:00
+
+$ git rev-parse gate/cumul-2026-10-10   # (dans ~/project/mafia-clean-city, SANS checkout)
+0cfa6a7d83894aa74c421940d923b2cc41ef5838
+
+$ git log -1 --format="%H %ad %s" --date=short 7807d6c8   # le SHA ÉPINGLÉ par le dossier
+7807d6c859a2d6c99be5ec9fe36a477d29ccc9aa 2026-10-09 merge: lot/hl-card-agit (la carte de plus fort levier EXÉCUTE : P0, target_count, projected_consequence, 1a, 1b, falsifiables) dans le cumul du 10/10
+
+$ git rev-list --count 7807d6c8..gate/cumul-2026-10-10   # la branche a avancé depuis le dossier
+3
+
+$ git diff --stat 7807d6c8 gate/cumul-2026-10-10 -- <forensic> <internal_affairs> <i18n> <schema/forensic.ts> <schema/lieutenant.ts>   # VIDE = B identique à la tête
+(sortie vide ci-dessus = aucun écart)
+
+# atelier : les deux SHA (9fa533b5 du dossier, 8b79f946 relayé) donnent-ils la MÊME page ?
+$ git rev-parse 9fa533b5...:ecrans-brennar-6.html  /  8b79f946...:ecrans-brennar-6.html
+8faa80181be59547e75b8fdee141340d2784b9ed
+8faa80181be59547e75b8fdee141340d2784b9ed
+=> même blob 8faa8018…, 2 650 936 octets : le SHA relayé ne change rien à M.
