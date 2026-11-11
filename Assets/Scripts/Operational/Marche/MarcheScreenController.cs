@@ -29,8 +29,15 @@ namespace MafiaCleanCity.Operational.Marche
         public static readonly int[] OrdreDesRangees = { 1, 2, 3, 4, 5, 6, 7, 11, 12, 8, 9, 13, 10, 14, 16, 15, 17, 18 };
 
         /// <summary>La bande servie → son mot (aside ratifiée de l'atelier, `ecrans-brennar-6.html:5667`) — `LaneConfidenceBucket` exactement (`:38`).</summary>
-        public static readonly MafiaCleanCity.I18n.MotsDesEnumeres.Domaine BandeDeLane = new MafiaCleanCity.I18n.MotsDesEnumeres.Domaine("marche", "bande",
-            new Dictionary<string, string> { { "LOW", "ouï-dire" }, { "MODERATE", "recoupé" }, { "HIGH", "sûr" } });
+        /// Clés SERVIES par BACK-3 (`marche.confiance.*` suit le littéral FR, pas le nom de bande : l'appariement LOW ↔ oui_dire est tenu ICI).
+        public static readonly IReadOnlyDictionary<string, (string cle, string repli)> BandeDeLane = new Dictionary<string, (string, string)>
+        {
+            { "LOW", ("marche.confiance.oui_dire", "ouï-dire") }, { "MODERATE", ("marche.confiance.recoupe", "recoupé") }, { "HIGH", ("marche.confiance.sur", "sûr") },
+        };
+
+        /// <summary>Le mot d'une bande servie ; hors domaine ⇒ le repli de famille « état inconnu », jamais la valeur brute.</summary>
+        public static string MotDeBande(string bucket) =>
+            bucket != null && BandeDeLane.TryGetValue(bucket, out var m) ? M(m.cle, m.repli) : MafiaCleanCity.I18n.Repli.Etat(bucket);
 
         /// <summary>⏳ TD-1018 (ruling f2 11/11, (A)) : la colonne `ash` ne s'allume par AUCUN chemin joueur (TD-966, à inscrire par
         /// `lot/marche-ardoise-enumerateur`) — elle est présente, éteinte et NOMMÉE : son pied est « HORS DU TABLEAU ». Ne jamais « corriger » son
@@ -83,7 +90,10 @@ namespace MafiaCleanCity.Operational.Marche
         private static Color Or => DesignTokens.Current.accentGold;
         private static Color Creme => DesignTokens.Current.hudCreme;
 
-        private static string Lib(string role, string litteral) => MafiaCleanCity.I18n.Libelle.De("marche", role, litteral);
+        /// <summary>TD-1017 BASCULÉE (11/11) : chaque mot de ㉑ est lu par sa clé SERVIE `marche.*` (BACK-3, `lot/marche-mots` @163402f1, noms figés après sa
+        /// revue ⊥ ; recopiés de `string_table.ts` à ce SHA, V15) ; le repli est la valeur FR servie, à l'octet. Tant que ce lot n'est pas sur la pile, les clés
+        /// sont NON servies : elles sont dans la DetteDatee de `ZeroRepliDesLocatairesPlayModeTests`.</summary>
+        private static string M(string cle, string repli) => MafiaCleanCity.I18n.Libelle.Gabarit(cle, repli);
 
         private void Awake() => Init();
 
@@ -118,7 +128,7 @@ namespace MafiaCleanCity.Operational.Marche
             Init();
             EtatRendu = Etat.Chargement;
             DerniereErreur = null;
-            RendreLEtat(Lib("etat", "On interroge le tableau…"));
+            RendreLEtat(M("marche.etat.chargement", "On interroge le tableau…"));
             if (DistrictsPourTest != null) Districts = DistrictsPourTest;
             else yield return monde.GetDistricts(d => Districts = d, e => DerniereErreur = e);
             LaneConfidenceRowDto[] lues = null;
@@ -156,10 +166,10 @@ namespace MafiaCleanCity.Operational.Marche
         {
             switch (substance)
             {
-                case "brindle": return Lib("origine", "herbe des friches");
-                case "crick": return Lib("origine", "extrait de racine");
-                case "hush": return Lib("origine", "résine de lull");
-                case "ash": return Lib("origine", "lys de verre");
+                case "brindle": return M("marche.origine.herbe_des_friches", "herbe des friches");
+                case "crick": return M("marche.origine.extrait_de_racine", "extrait de racine");
+                case "hush": return M("marche.origine.resine_de_lull", "résine de lull");
+                case "ash": return M("marche.origine.lys_de_verre", "lys de verre");
                 default: return "—";
             }
         }
@@ -168,10 +178,10 @@ namespace MafiaCleanCity.Operational.Marche
         {
             switch (substance)
             {
-                case "brindle": return Lib("forme", "briques");
-                case "crick": return Lib("forme", "cristaux");
-                case "hush": return Lib("forme", "plaque");
-                case "ash": return Lib("forme", "prismes");
+                case "brindle": return M("marche.forme.briques", "briques");
+                case "crick": return M("marche.forme.cristaux", "cristaux");
+                case "hush": return M("marche.forme.plaque", "plaque");
+                case "ash": return M("marche.forme.prismes", "prismes");
                 default: return "—";
             }
         }
@@ -182,19 +192,19 @@ namespace MafiaCleanCity.Operational.Marche
         {
             string nom = NomDuQuartier(quartier).ToUpper(CultureInfo.GetCultureInfo("fr-FR"));
             if (substance == SubstanceHorsDuTableau)
-                return (nom + " · " + Lib("bande", "HORS DU TABLEAU"),
-                        Lib("pied", "la poudre grise ne se vend pas à un dealer : elle se place, au rendez-vous, chez ceux du Verre."));
+                return (nom + " · " + M("marche.titre.hors_du_tableau", "HORS DU TABLEAU"),
+                        M("marche.phrase.case_ash", "la poudre grise ne se vend pas à un dealer : elle se place, au rendez-vous, chez ceux du Verre."));
             LaneConfidenceRowDto l = Ligne(quartier, substance);
             if (l == null)
-                return (nom + " · " + Lib("bande", "voyant éteint").ToUpper(CultureInfo.GetCultureInfo("fr-FR")),
-                        Lib("pied", "aucun des nôtres n’a jamais rien écoulé là-bas. Ce n’est pas une ligne à zéro : c’est une ligne jamais ouverte. Elle s’allumera le jour où un de vos dealers y traitera."));
-            string mot = MafiaCleanCity.I18n.MotsDesEnumeres.Dire(BandeDeLane, l.lane_confidence_bucket);
+                return (nom + " · " + M("marche.titre.voyant_eteint", "voyant éteint").ToUpper(CultureInfo.GetCultureInfo("fr-FR")),
+                        M("marche.phrase.case_sans_ligne", "aucun des nôtres n’a jamais rien écoulé là-bas. Ce n’est pas une ligne à zéro : c’est une ligne jamais ouverte. Elle s’allumera le jour où un de vos dealers y traitera."));
+            string mot = MotDeBande(l.lane_confidence_bucket);
             string phrase;
             switch (l.lane_confidence_bucket)
             {
-                case "LOW": phrase = Lib("pied", "une seule source, jamais recoupée — un bruit de comptoir. On ne vous dira pas le prix : seulement qu’on en parle."); break;
-                case "MODERATE": phrase = Lib("pied", "deux sources concordantes — ni une rumeur, ni une certitude. On ne vous dira pas le prix, ni ce qui s’écoule : seulement à quel point on peut s’y fier."); break;
-                case "HIGH": phrase = Lib("pied", "plusieurs des nôtres y ont traité, les sources se tiennent. On ne vous dira toujours pas le prix : seulement que la ligne tient."); break;
+                case "LOW": phrase = M("marche.phrase.bande_low", "une seule source, jamais recoupée — un bruit de comptoir. On ne vous dira pas le prix : seulement qu’on en parle."); break;
+                case "MODERATE": phrase = M("marche.phrase.bande_moderate", "deux sources concordantes — ni une rumeur, ni une certitude. On ne vous dira pas le prix, ni ce qui s’écoule : seulement à quel point on peut s’y fier."); break;
+                case "HIGH": phrase = M("marche.phrase.bande_high", "plusieurs des nôtres y ont traité, les sources se tiennent. On ne vous dira toujours pas le prix : seulement que la ligne tient."); break;
                 default: phrase = "—"; break;
             }
             return (nom + " · " + mot.ToUpper(CultureInfo.GetCultureInfo("fr-FR")), phrase);
@@ -203,7 +213,7 @@ namespace MafiaCleanCity.Operational.Marche
         /// <summary>La phrase du bas, À TROU (ICU, ratifiée f2) : `n` et `total` en ENTIERS de chaîne (patron `ApresGesteHl.Parametres` : le résolveur
         /// rend l'accolade brute d'un `plural` dont le paramètre n'est pas un entier).</summary>
         public static string PhraseDuBasPour(int n, int total) =>
-            MafiaCleanCity.I18n.Libelle.Gabarit("marche.bas.lignes_sur_le_total",
+            MafiaCleanCity.I18n.Libelle.Gabarit("marche.phrase.bilan_lignes",
                 "{n, plural, =0 {Aucune ligne sur {total} : personne des nôtres n’a encore traité nulle part.} one {Une ligne sur {total}. Le reste, personne des nôtres n’y a jamais traité.} other {# lignes sur {total}. Le reste, personne des nôtres n’y a jamais traité.}}",
                 new Dictionary<string, string> { { "n", n.ToString(CultureInfo.InvariantCulture) }, { "total", total.ToString(CultureInfo.InvariantCulture) } });
 
@@ -224,7 +234,7 @@ namespace MafiaCleanCity.Operational.Marche
             if (Lanes == null || Districts == null || Districts.Count == 0)
             {
                 EtatRendu = Etat.Erreur;
-                RendreLEtat(client.DernierePhraseDeRefus ?? Lib("etat", "Le tableau ne répond pas."));
+                RendreLEtat(client.DernierePhraseDeRefus ?? M("marche.etat.echec", "Le tableau ne répond pas."));
                 basTexte.gameObject.SetActive(false);
                 LignesConnues = LignesSures = QuartiersNoirs = -1;
                 compteConnues.text = compteSures.text = compteNoirs.text = "—";
@@ -266,7 +276,7 @@ namespace MafiaCleanCity.Operational.Marche
             b.targetGraphic = fond;
             int q = quartier; string s = substance;
             b.onClick.AddListener(() => Toucher(q, s));
-            string mot = allumee ? MafiaCleanCity.I18n.MotsDesEnumeres.Dire(BandeDeLane, l.lane_confidence_bucket) : "·";
+            string mot = allumee ? MotDeBande(l.lane_confidence_bucket) : "·";
             TextMeshProUGUI t = Texte(c.transform, "Mot", mot, Px(6.5f), allumee ? Fond : EncreFaible, TextAlignmentOptions.Center);
             Etirer((RectTransform)t.transform);
             CasesRendues++;
@@ -280,7 +290,7 @@ namespace MafiaCleanCity.Operational.Marche
             pied.gameObject.SetActive(true);
             piedTitre.text = titre;
             piedPhrase.text = phrase;
-            piedLegende.text = Lib("substance", substance) + " · " + Origine(substance);
+            piedLegende.text = M("marche.substance." + substance, substance) + " · " + Origine(substance);
         }
 
         // ═══ Construction ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -300,23 +310,23 @@ namespace MafiaCleanCity.Operational.Marche
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandWidth = true; v.childForceExpandHeight = false;
 
             // l'enseigne (cadre 106)
-            TextMeshProUGUI enseigne = Texte(racine, "Enseigne", Lib("enseigne", "LE MARCHÉ"), Px(13f), Or, TextAlignmentOptions.Center, DesignTokens.Current.hudSerifFont);
+            TextMeshProUGUI enseigne = Texte(racine, "Enseigne", M("marche.titre.le_marche", "LE MARCHÉ"), Px(13f), Or, TextAlignmentOptions.Center, DesignTokens.Current.hudSerifFont);
             enseigne.characterSpacing = 18f;
-            Texte(racine, "SousEnseigne", Lib("enseigne", "tableau du Verge d’Or"), Px(8f), Creme, TextAlignmentOptions.Center);
+            Texte(racine, "SousEnseigne", M("marche.sous_titre.tableau_du_verge_d_or", "tableau du Verge d’Or"), Px(8f), Creme, TextAlignmentOptions.Center);
 
             // les trois compteurs (cadre 106) — DÉRIVÉS (TD-1019)
             GameObject compteurs = Rangee(racine, "Compteurs");
-            compteConnues = Compteur(compteurs.transform, "LignesConnues", Lib("compteur", "lignes connues"));
-            compteSures = Compteur(compteurs.transform, "Sures", Lib("compteur", "sûres"));
-            compteNoirs = Compteur(compteurs.transform, "QuartiersNoirs", Lib("compteur", "quartiers noirs"));
+            compteConnues = Compteur(compteurs.transform, "LignesConnues", M("marche.compteur.lignes_connues", "lignes connues"));
+            compteSures = Compteur(compteurs.transform, "Sures", M("marche.compteur.sures", "sûres"));
+            compteNoirs = Compteur(compteurs.transform, "QuartiersNoirs", M("marche.compteur.quartiers_noirs", "quartiers noirs"));
 
             // l'en-tête de la grille : quartier | brindle | crick | hush | ash, chaque substance avec sa forme
             GameObject entete = Rangee(racine, "EnTete");
-            TextMeshProUGUI q = Texte(entete.transform, "Quartier", Lib("entete", "quartier"), Px(6.5f), EncreFaible, TextAlignmentOptions.Left);
+            TextMeshProUGUI q = Texte(entete.transform, "Quartier", M("marche.colonne.quartier", "quartier"), Px(6.5f), EncreFaible, TextAlignmentOptions.Left);
             Largeur(q.gameObject, 0f, 1.6f);
             foreach (string s in Substances)
             {
-                TextMeshProUGUI h = Texte(entete.transform, "H_" + s, Lib("substance", s) + "\n" + Forme(s), Px(6.5f), EncreFaible, TextAlignmentOptions.Center);
+                TextMeshProUGUI h = Texte(entete.transform, "H_" + s, M("marche.substance." + s, s) + "\n" + Forme(s), Px(6.5f), EncreFaible, TextAlignmentOptions.Center);
                 h.textWrappingMode = TextWrappingModes.Normal;
                 Largeur(h.gameObject, 0f, 1f);
             }

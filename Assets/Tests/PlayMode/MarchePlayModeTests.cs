@@ -157,7 +157,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(72, Courant.CasesRendues, "anti-vacuité : la grille porte ses 72 cases avant qu'on compte les allumées");
             Assert.AreEqual(1, Courant.CasesAllumees, "une ligne servie ⇒ UNE case allumée, 71 éteintes");
             Transform cas = Racine().GetComponentsInChildren<Transform>(false).First(t => t.name == "R_12").Find("C_crick");
-            string mot = MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MarcheScreenController.BandeDeLane, "HIGH");
+            string mot = MarcheScreenController.MotDeBande("HIGH");
             Assert.AreEqual(mot, cas.Find("Mot").GetComponent<TextMeshProUGUI>().text, "la case (Dépôt-Est × crick) dit le mot de la bande SERVIE");
             Transform eteinte = Racine().GetComponentsInChildren<Transform>(false).First(t => t.name == "R_13").Find("C_crick");
             Assert.AreNotEqual(mot, eteinte.Find("Mot").GetComponent<TextMeshProUGUI>().text, "cible INERTE : une case voisine reste éteinte");
@@ -170,9 +170,9 @@ namespace MafiaCleanCity.Operational.Tests
         {
             string[] bandesDuBack = { "LOW", "MODERATE", "HIGH" };                    // `LaneConfidenceBucket`, market-projection.service.ts:38
             string[] substancesDuBack = { "brindle", "crick", "hush", "ash" };       // `SubstanceTypeValue`, lane-collapse-pricing.service.ts:59
-            CollectionAssert.AreEquivalent(bandesDuBack, MarcheScreenController.BandeDeLane.Mots.Keys.ToArray(), "chaque bande servie a son mot, aucune de plus");
+            CollectionAssert.AreEquivalent(bandesDuBack, MarcheScreenController.BandeDeLane.Keys.ToArray(), "chaque bande servie a son mot, aucune de plus");
             CollectionAssert.AreEqual(substancesDuBack, MarcheScreenController.Substances, "les 4 colonnes, dans l'ordre de l'en-tête du cadre 106");
-            CollectionAssert.AreNotEquivalent(bandesDuBack.Take(2).ToArray(), MarcheScreenController.BandeDeLane.Mots.Keys.ToArray(), "CONTRÔLE : un domaine amputé est vu");
+            CollectionAssert.AreNotEquivalent(bandesDuBack.Take(2).ToArray(), MarcheScreenController.BandeDeLane.Keys.ToArray(), "CONTRÔLE : un domaine amputé est vu");
         }
 
         // ═══ G5 — les compteurs du cadre 106 ════════════════════════════════════════════════════════════════════════════
@@ -207,7 +207,7 @@ namespace MafiaCleanCity.Operational.Tests
             yield return Monter(() => (500, "{\"payload\":{\"error\":{\"code\":\"INTERNAL_ERROR\",\"message\":\"boom\"}}}"));
             Assert.AreEqual(MarcheScreenController.Etat.Erreur, Courant.EtatRendu, "CONTRÔLE : un 500 est une erreur");
             Assert.AreEqual(0, Courant.CasesRendues, "CONTRÔLE : aucune case sur une erreur");
-            Assert.AreEqual(MafiaCleanCity.I18n.Libelle.De("marche", "etat", "Le tableau ne répond pas."), Courant.TexteDeLEtat);
+            Assert.AreEqual(MafiaCleanCity.I18n.Libelle.Gabarit("marche.etat.echec", "Le tableau ne répond pas."), Courant.TexteDeLEtat);
         }
 
         [UnityTest]
@@ -246,14 +246,14 @@ namespace MafiaCleanCity.Operational.Tests
         {
             yield return Monter(() => (200, Corps((12, "crick", "MODERATE"))));
             Courant.Toucher(15, "hush");
-            StringAssert.EndsWith(MafiaCleanCity.I18n.Libelle.De("marche", "bande", "voyant éteint").ToUpper(System.Globalization.CultureInfo.GetCultureInfo("fr-FR")),
+            StringAssert.EndsWith(MafiaCleanCity.I18n.Libelle.Gabarit("marche.titre.voyant_eteint", "voyant éteint").ToUpper(System.Globalization.CultureInfo.GetCultureInfo("fr-FR")),
                 Courant.TitreDuPied, "une case sans ligne : « voyant éteint » (cadre 108)");
             StringAssert.StartsWith("LA CHANCELLERIE", Courant.TitreDuPied);
             Courant.Toucher(13, "ash");
-            StringAssert.EndsWith(MafiaCleanCity.I18n.Libelle.De("marche", "bande", "HORS DU TABLEAU"), Courant.TitreDuPied, "toute case ash : « HORS DU TABLEAU » (ruling A)");
+            StringAssert.EndsWith(MafiaCleanCity.I18n.Libelle.Gabarit("marche.titre.hors_du_tableau", "HORS DU TABLEAU"), Courant.TitreDuPied, "toute case ash : « HORS DU TABLEAU » (ruling A)");
             StringAssert.DoesNotContain("tient", Courant.PhraseDuPied, "la 2ᵉ phrase du cadre 151 est retirée (ash ne s'allume jamais)");
             Courant.Toucher(12, "crick");
-            StringAssert.EndsWith(MafiaCleanCity.I18n.MotsDesEnumeres.Dire(MarcheScreenController.BandeDeLane, "MODERATE").ToUpper(System.Globalization.CultureInfo.GetCultureInfo("fr-FR")),
+            StringAssert.EndsWith(MarcheScreenController.MotDeBande("MODERATE").ToUpper(System.Globalization.CultureInfo.GetCultureInfo("fr-FR")),
                 Courant.TitreDuPied, "une case servie : le mot de la bande SERVIE (cadre 107 : DÉPÔT-EST · RECOUPÉ)");
             StringAssert.StartsWith("DÉPÔT-EST", Courant.TitreDuPied);
         }
