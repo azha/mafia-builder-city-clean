@@ -61,8 +61,14 @@ namespace MafiaCleanCity.Shell
         public bool CapReached { get; private set; }
         public int CommitRequestCount { get; private set; }
         public int SkipRequestCount { get; private set; }
-        /// <summary>Crochet de test : combien de décisions ACCEPTÉES ont levé `OnDecisionTranchee`.</summary>
+        /// <summary>Crochet de test : combien de décisions le back a ACCEPTÉES (200 `committed`), quelle que soit leur suite — l'après-geste de ⑤,
+        /// une navigation (`OnNavigate`) ou la remontée de l'Accueil (`OnDecisionTranchee`). (TD-938 : la suite n'est plus toujours `OnDecisionTranchee`.)</summary>
         public int DecisionsTranchees { get; private set; }
+        /// <summary>TD-938 (a) — le back a répondu `outcome: "navigate"` : la carte ANNONCE l'écran servi (`navigate_screen` brut) et ses ids, le shell
+        /// classe (`NavigationApresGeste`) et monte. Levé À LA PLACE de `OnDecisionTranchee` (sinon le shell remonterait l'Accueil par-dessus l'écran).</summary>
+        public event System.Action<string, string[]> OnNavigate;
+        /// <summary>Crochet de test : combien de décisions acceptées ont levé `OnNavigate`.</summary>
+        public int NavigationsSuivies { get; private set; }
         public bool? LastCommitCommitted { get; private set; }
         public bool? LastSkipSkipped { get; private set; }
         public string LastCommitError { get; private set; }
@@ -125,7 +131,8 @@ namespace MafiaCleanCity.Shell
         public int FileEnAttente { get; set; }
         private StructuralBudgetDto budgetServi;
         private readonly List<string> optionsRendues = new List<string>();
-        /// <summary>Crochet de test : « Lire maintenant » a-t-il ouvert les rapports ?</summary>
+        /// <summary>Crochet de test : le REPLI de « Lire maintenant » (commit refusé ou en échec) a-t-il ouvert les rapports lui-même ? Sur le chemin
+        /// heureux (TD-938), c'est le shell qui les monte sur `OnNavigate` : ce drapeau reste faux.</summary>
         public bool RapportsOuverts { get; private set; }
         /// <summary>Crochet de test : le nom du lieutenant du 1ᵉʳ rapport ouvert (lu par `AutonomyClient.GetReports`), null sinon.</summary>
         public string NomDuRapport { get; private set; }
@@ -176,14 +183,39 @@ namespace MafiaCleanCity.Shell
             if (EstCarteDesRapports && !string.IsNullOrEmpty(token) && isActiveAndEnabled) StartCoroutine(ChargerLeNomDuRapport());
         }
 
-        /// <summary>④ [Lire maintenant] : OUVRE les rapports, comme le « lire » du bandeau — navigation réelle, AUCUN tampon (table 45).</summary>
+        /// <summary>④ [Lire maintenant] — TD-938, ruling f2 11/11 (Q1) : la lecture PASSE PAR `commit(0)`. Le back sert `navigate`/`autonomy_reports`
+        /// ET réclame la carte : elle disparaît une fois lue (avant : les rapports s'ouvraient sans commit, la carte revenait à chaque ouverture — une
+        /// boucle). Le shell monte les rapports sur `OnNavigate`. Refus ou échec : les rapports s'ouvrent QUAND MÊME (le joueur a demandé à lire), la
+        /// carte reste, et la phrase SERVIE du refus y est affichée (`AnnoncerUnRefus`).</summary>
         public void OuvrirLesRapports()
         {
             if (!EstCarteDesRapports) return;
+            StartCoroutine(LireLesRapports());
+        }
+
+        /// <summary>Le corps de [Lire maintenant], awaitable pour les tests.</summary>
+        public IEnumerator LireLesRapports()
+        {
+            if (!EstCarteDesRapports) yield break;
+            yield return Commettre(HlCardClient.OptionAgir, leverLApresSurRefus: false);
+            if (this == null) yield break;
+            bool mene = LastCommitError == null && LastCommitCommitted == true && NavigationApresGeste.EstUneNavigation(DerniereReponse);
+            if (!mene) MonterLesRapports(client.DernierePhraseDeRefus);
+        }
+
+        /// <summary>Le repli de [Lire maintenant] : monte les rapports par le navigateur du shell et leur annonce la phrase SERVIE du refus
+        /// (`client.DernierePhraseDeRefus`, null ⇒ rien n'est posé) — jamais `RefusRendu`, qui retombe sur une phrase du client.</summary>
+        private void MonterLesRapports(string phraseServie)
+        {
             IShellNavigator nav = ShellNavigatorLocator.Find();
-            if (nav != null) nav.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Autonomy.AutonomyInboxController>();
+            MafiaCleanCity.Operational.Autonomy.AutonomyInboxController rapports =
+                nav != null ? nav.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Autonomy.AutonomyInboxController>() : null;
+            if (rapports != null) rapports.AnnoncerUnRefus(phraseServie);
             RapportsOuverts = true;
         }
+
+        /// <summary>⛔ Réservé aux tests hors réseau : le client de la carte, pour lui poser `HlCardClient.ReponsePourTest`.</summary>
+        public HlCardClient ClientPourTest { get { EnsureInitialized(); return client; } }
 
         private IEnumerator ChargerLeNomDuRapport()
         {
@@ -201,7 +233,11 @@ namespace MafiaCleanCity.Shell
         /// against the server, which would ALSO 409 STRUCTURAL_CAP_EXHAUSTED).
         /// `option` : 0 = AGIR, 1 = laisser (`HlCardClient.OptionAgir/OptionLaisser`) — TOUJOURS posée (TD-724 : un `{}` ferait « n'agit pas »
         /// derrière un geste qui dit « agir »).</summary>
-        public IEnumerator RequestCommit(int option)
+        public IEnumerator RequestCommit(int option) => Commettre(option, leverLApresSurRefus: true);
+
+        /// <summary>Le corps de `RequestCommit`. `leverLApresSurRefus` faux : [Lire maintenant] ouvre les rapports sur un refus, il ne monte pas
+        /// AUSSI la table feutre de ⑤ sous eux (deux écrans pour un geste) — un drapeau d'appel, jamais un second chemin réseau.</summary>
+        private IEnumerator Commettre(int option, bool leverLApresSurRefus)
         {
             EnsureInitialized();
             if (RenderedState != CardState.Available || CurrentCard == null) yield break; // CapBlocked/NoCard -> refused, zero requests
@@ -222,16 +258,19 @@ namespace MafiaCleanCity.Shell
                          ?? MafiaCleanCity.I18n.Libelle.Gabarit("accueil.carte.la_decision_n_a_pas_ete_prise", "La décision n\u2019a pas été prise.");
             if (stateText != null) { stateText.text = RefusRendu; Track(RefusRendu); Visibilites(); }
             // le back a SERVI la clé du refus : c'est un cadre d'après-geste (carte qui reste, déjà tranchée, disparue, rien à agir) — le shell le monte dans ⑤
-            LeverLApres(new ApresGesteHl.IssueDuGeste { Carte = CurrentCard, CleDeRefus = client.DerniereCleDeRefus, PhraseDeRefus = client.DernierePhraseDeRefus });
+            if (leverLApresSurRefus) LeverLApres(new ApresGesteHl.IssueDuGeste { Carte = CurrentCard, CleDeRefus = client.DerniereCleDeRefus, PhraseDeRefus = client.DernierePhraseDeRefus });
         }
 
         /// <summary>La décision est ACCEPTÉE par le back : on le compte. ⚠️ L'ANNONCE ATTEND L'APRÈS-GESTE quand le back en sert le mot : la carte tranchée dit CE QUI S'EST PASSÉ
         /// (`ApresGesteHl.Vue`, clés servies, jamais dérivées) — ④ lève `OnApresGeste`, le shell monte ⑤ en mode après, et c'est ⑤ qui annonce au « Retour à l'accueil ». Sans mot
-        /// (`navigate`, ou clé que le back ne sert pas encore) il n'y a rien à lire : la carte remonte tout de suite, comme avant (plus de geste mort ; TD-938 : `navigate_screen` non suivi).</summary>
+        /// (clé que le back ne sert pas encore) il n'y a rien à lire : la carte remonte tout de suite, comme avant (plus de geste mort). Sur `navigate` (aucun mot servi, D6), la carte
+        /// lève `OnNavigate` et le shell mène à l'écran servi (TD-938 (a), `NavigationApresGeste`).</summary>
         private void TrancheePourDeBon(CommitResponseDto reponse = null)
         {
             DecisionsTranchees++;
             if (LeverLApres(new ApresGesteHl.IssueDuGeste { Carte = CurrentCard, Reponse = reponse })) return;
+            // TD-938 (a) : `navigate` n'a aucun mot servi (D6) — la suite est l'écran servi, jamais la remontée de l'Accueil par-dessus lui
+            if (NavigationApresGeste.EstUneNavigation(reponse)) { NavigationsSuivies++; OnNavigate?.Invoke(reponse.navigate_screen, reponse.navigate_ids); return; }
             OnDecisionTranchee?.Invoke();
         }
 

@@ -74,8 +74,22 @@ namespace MafiaCleanCity.Shell
                 onErr);
         }
 
+        /// <summary>⛔ RÉSERVÉ AUX TESTS hors réseau (TD-938) : rend (statut, corps) à la place du back, pour un chemin donné. Le corps passe par le
+        /// MÊME chemin de lecture que la réponse réseau (`JsonUtility` du succès, `RefusServi` du refus) — seul le transport est remplacé.</summary>
+        public Func<string, (long statut, string corps)> ReponsePourTest;
+
         private IEnumerator Post(string path, string bearer, string corps, Action<string> onOk, Action<long, string> onErr)
         {
+            if (ReponsePourTest != null)
+            {
+                (long statut, string texte) = ReponsePourTest(path);
+                bool succes = statut >= 200 && statut < 300;
+                DernierePhraseDeRefus = MafiaCleanCity.I18n.RefusServi.Phrase(succes ? null : texte);
+                DerniereCleDeRefus = MafiaCleanCity.I18n.RefusServi.Cle(succes ? null : texte);
+                if (succes) onOk?.Invoke(texte);
+                else onErr?.Invoke(statut, $"{path} failed ({statut}) (réponse de test)");
+                yield break;
+            }
             string url = BaseUrl.TrimEnd('/') + path;
             using (var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
             {

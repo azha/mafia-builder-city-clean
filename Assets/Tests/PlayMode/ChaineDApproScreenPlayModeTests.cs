@@ -395,6 +395,38 @@ namespace MafiaCleanCity.Operational.Tests
                 "un cran de la maquette d'enquête a été fabriqué alors qu'aucune donnée ne le porte");
         }
 
+        /// <summary>⛔ DÉTECTEUR TD-985 (classe A/B, f2 11/11, relevé par CLIENT-1 en instruisant TD-938) : la section chaîne SE TAIT dès qu'un nœud
+        /// servi n'est pas `silent` — précisément quand il y a quelque chose à voir (`AppliquerChaine` : le titre, puis un message `null`). Ce test
+        /// ASSERTE LE TROU tel qu'il est : il ROUGIT le jour où les nœuds non silencieux seront rendus (ticket suivant) — alors le remplacer par la
+        /// garde d'EFFET du rendu, et mener la carte 106 (`supply_chain_trace`) à ㉚ (fermeture de TD-981).</summary>
+        [UnityTest]
+        public IEnumerator EcranApproTD985_Detecteur_UnNoeudNonSilencieux_LaSectionChaineNeMontreQueSonTitre()
+        {
+            var ecran = MonterEcran();
+            ecran.RendrePourTestChaine(new GetSupplyChainGraphResponseDto
+            {
+                nodes = new[] { new SupplyChainNodeDto { building_id = "b-critique", bucket = "critical" } },
+                legs = new SupplyChainLegDto[0],
+                routes = new SupplyChainRouteDto[0],
+            });
+            yield return null;   // `ViderEnfants` détruit en fin d'image
+            Transform chaine = null;
+            foreach (Transform t in hostGo.GetComponentsInChildren<Transform>(true)) if (t.name == "Chaine") { chaine = t; break; }
+            Assert.IsNotNull(chaine, "anti-vacuité : la section « Chaine » existe sous l'écran");
+            Assert.AreEqual(1, chaine.childCount,
+                "TD-985 SE FERME : un nœud `critical` rend désormais autre chose que le seul titre — remplacer ce détecteur par la garde d'effet du rendu, mener 106 à ㉚");
+
+            // CONTRÔLE POSITIF : tout `silent` ⇒ le titre ET son message (« rien ne circule encore ») — le compte d'enfants voit bien un message
+            ecran.RendrePourTestChaine(new GetSupplyChainGraphResponseDto
+            {
+                nodes = new[] { new SupplyChainNodeDto { building_id = "b-calme", bucket = "silent" } },
+                legs = new SupplyChainLegDto[0],
+                routes = new SupplyChainRouteDto[0],
+            });
+            yield return null;
+            Assert.AreEqual(2, chaine.childCount, "CONTRÔLE : tout silencieux ⇒ titre + message");
+        }
+
         // ═══ R — Résolveurs : domaine FERMÉ annoncé, contrôle positif ET négatif ═══════════════
         //
         // `supplier_pressure_bucket` est le SEUL des trois domaines de ㉚ confirmé fermé (message
