@@ -1,0 +1,30 @@
+{
+ "response_meta": {
+  "request_id_echo": "8b14c7ee-38b0-4dcd-ac46-f322b4108816",
+  "server_processed_at": "2026-11-11T18:53:46.081Z",
+  "api_version": 1,
+  "correlation_id_echo": null,
+  "server_build_ref": {
+   "git_sha": "8d0184a4",
+   "built_at": "2026-11-11T18:17:52Z"
+  }
+ },
+ "payload": {
+  "error": {
+   "code": "RESOURCE_STATE_CONFLICT",
+   "http_status": 409,
+   "user_facing_i18n_key": "error.resource.state_conflict",
+   "payload_vars": null,
+   "details": null,
+   "message": "Ambient micro-event 4735c094-7fe3-42ee-8c20-ee8828201884 is no longer live (already attended, expired, or a concurrent attend won).",
+   "trace": {
+    "request_id_echo": "8b14c7ee-38b0-4dcd-ac46-f322b4108816",
+    "correlation_id": null,
+    "trace_id": null,
+    "server_emitted_at": "2026-11-11T18:53:46.081Z"
+   },
+   "retryable_class": "AFTER_USER_ACTION",
+   "retry_after_s": null
+  }
+ }
+}

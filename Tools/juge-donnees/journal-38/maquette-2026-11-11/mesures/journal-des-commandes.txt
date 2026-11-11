@@ -1,0 +1,51 @@
+# Mesure B — ecran ㊳ Le journal — un SEUL compte jetable, une SEULE sequence
+# jeton masque partout : 'Bearer ***'
+
+$ curl -s -D - -o /dev/null http://localhost/v1/healthz   # X-Server-Build AVANT
+X-Server-Build: 8d0184a4
+
+CALLSIGN=jd3-1794423683
+$ curl -s -X POST http://localhost/v1/auth/signup -H 'Content-Type: application/json' -H 'Idempotency-Key: <uuid>' -d '{"callsign":"jd3-1794423683","password":"***"}'
+  -> account sub=01a1cbfc-7909-7d91-a49f-352b38694802 session_id=01a1cbfc-7912-7ab4-9dc2-515057be58f7 iat=1794423683
+
+$ curl -s -X POST http://localhost/v1/session/open -H 'Authorization: Bearer ***' -H 'Content-Type: application/json' -d '{"client_version":"jd3-juge-donnees"}'
+  -> cles data = ['backlog_badge', 'compression_glance', 'day_phase', 'family_day', 'flag_review', 'friction_glance', 'hl_card', 'onboarding', 'opened_family_day', 'opened_game_day', 'opened_game_minute', 'queue', 'queue_pressure_band', 'session_id', 'settling_glance', 'structural_budget']
+
+$ curl -s -H 'Authorization: Bearer ***' http://localhost/v1/ambient/feed   # AVANT le geste
+  -> total=0 limit=20 offset=0  NB_events=0
+  -> FEED VIDE
+
+# DIMENSIONNEMENT du feed vide : quelle garde ferme ? (batiments possedes vs events live)
+$ curl -s -H 'Authorization: Bearer ***' http://localhost/v1/me/buildings
+  -> cles data=['buildings']
+  -> NB_BATIMENTS=5
+  -> cles batiment=['block_id', 'building', 'convertible_types', 'district_id', 'district_name', 'lieutenant_ids', 'name_i18n', 'operational_type', 'purchased_type']
+  -> districts possedes={'16': 5}
+  -> ownership={'None': 5}
+  -> district_name SERVI par me/buildings = 'La Lisière' (district_id=16)
+
+# Le feed est VIDE sur ce compte neuf : la garde qui ferme n'est PAS les batiments
+#   (5 batiments, district 16) mais le status='live' — les 2 events live city-global du
+#   district 16 ont ete consommes par les 2 attends de ce meme run (events = contenu de VILLE,
+#   ambient_micro_event n'a pas de player_id). Cf ambient-micro-event.repository.ts:184-209.
+
+$ curl -s -H 'Authorization: Bearer ***' http://localhost/v1/news/feed
+  -> NB_BEATS=16 nextCursor=None
+  -> cles item (9) = ['beat_id', 'category', 'district', 'frame_tag_i18n_key', 'headline_i18n_key', 'headline_params', 'headline_params_fields', 'outlet_i18n_key', 'recency_band']
+  -> categories={'arts': 3, 'brennar_local': 9, 'business': 2, 'national': 2}
+  -> recency_band={'settling': 16}
+  -> frame_tag_i18n_key non-null=6/16 ; valeurs=['news_beat.frame_tag.human_interest', 'news_beat.frame_tag.scandal', 'news_beat.frame_tag.thematic']
+  -> districts=['district-13', 'district-14', 'district-17', 'district-2', 'district-3', 'district-6', 'district-8', 'district-9']
+
+$ curl -s -H 'Authorization: Bearer ***' http://localhost/v1/world/districts
+  -> NB=18 ; cles=['bank_side', 'block_count', 'control_state', 'id', 'index', 'name', 'name_canonical', 'openable_types', 'precinct_id', 'profile']
+     id=9   name='Marne-Basse'      name_canonical='Lattice-B'
+     id=11  name='Les Entrepôts'    name_canonical='Stack-1'
+     id=12  name='Dépôt-Est'        name_canonical='Stack-2'
+     id=16  name='La Lisière'       name_canonical='Verge-A'
+
+$ curl -s -H 'Authorization: Bearer ***' http://localhost/v1/random-world/active
+  -> cles=['events'] ; NB_events=0
+
+$ curl -s -D - -o /dev/null http://localhost/v1/healthz   # X-Server-Build APRES
+X-Server-Build: 8d0184a4

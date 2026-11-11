@@ -1,0 +1,376 @@
+{
+ "response_meta": {
+  "request_id_echo": "ec772bff-7ef5-4711-897e-0edddbf72b44",
+  "server_processed_at": "2026-11-11T19:02:46.742Z",
+  "api_version": 1,
+  "correlation_id_echo": null,
+  "server_build_ref": {
+   "git_sha": "8d0184a4",
+   "built_at": "2026-11-11T18:17:52Z"
+  }
+ },
+ "payload": {
+  "data": {
+   "districts": [
+    {
+     "id": 1,
+     "profile": "tidewater",
+     "index": "1",
+     "name_canonical": "Tidewater-1",
+     "block_count": 37,
+     "bank_side": "north",
+     "control_state": "UNCONTESTED",
+     "name": "Les Bassins",
+     "precinct_id": 1,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab",
+      "distribution_hub"
+     ]
+    },
+    {
+     "id": 2,
+     "profile": "tidewater",
+     "index": "2",
+     "name_canonical": "Tidewater-2",
+     "block_count": 44,
+     "bank_side": "north",
+     "control_state": "UNCONTESTED",
+     "name": "Quai-Nord",
+     "precinct_id": 1,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab",
+      "distribution_hub"
+     ]
+    },
+    {
+     "id": 3,
+     "profile": "tidewater",
+     "index": "3",
+     "name_canonical": "Tidewater-3",
+     "block_count": 51,
+     "bank_side": "north",
+     "control_state": "UNCONTESTED",
+     "name": "Sarnes",
+     "precinct_id": 1,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab",
+      "distribution_hub"
+     ]
+    },
+    {
+     "id": 4,
+     "profile": "spine",
+     "index": "a",
+     "name_canonical": "Spine-A",
+     "block_count": 58,
+     "bank_side": "north",
+     "control_state": "UNCONTESTED",
+     "name": "La Colonne",
+     "precinct_id": 2,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab",
+      "grow_house"
+     ]
+    },
+    {
+     "id": 5,
+     "profile": "spine",
+     "index": "b",
+     "name_canonical": "Spine-B",
+     "block_count": 65,
+     "bank_side": "north",
+     "control_state": "UNCONTESTED",
+     "name": "Hautes-Marches",
+     "precinct_id": 2,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab",
+      "grow_house"
+     ]
+    },
+    {
+     "id": 6,
+     "profile": "spine",
+     "index": "c",
+     "name_canonical": "Spine-C",
+     "block_count": 72,
+     "bank_side": "north",
+     "control_state": "UNCONTESTED",
+     "name": "Verrier",
+     "precinct_id": 2,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab",
+      "grow_house"
+     ]
+    },
+    {
+     "id": 7,
+     "profile": "spine",
+     "index": "d",
+     "name_canonical": "Spine-D",
+     "block_count": 79,
+     "bank_side": "north",
+     "control_state": "UNCONTESTED",
+     "name": "Saint-Brand",
+     "precinct_id": 3,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab",
+      "grow_house"
+     ]
+    },
+    {
+     "id": 8,
+     "profile": "lattice",
+     "index": "a",
+     "name_canonical": "Lattice-A",
+     "block_count": 35,
+     "bank_side": "south",
+     "control_state": "UNCONTESTED",
+     "name": "Le Treillis",
+     "precinct_id": 3,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab"
+     ]
+    },
+    {
+     "id": 9,
+     "profile": "lattice",
+     "index": "b",
+     "name_canonical": "Lattice-B",
+     "block_count": 42,
+     "bank_side": "south",
+     "control_state": "UNCONTESTED",
+     "name": "Marne-Basse",
+     "precinct_id": 3,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab"
+     ]
+    },
+    {
+     "id": 10,
+     "profile": "lattice",
+     "index": "c",
+     "name_canonical": "Lattice-C",
+     "block_count": 49,
+     "bank_side": "south",
+     "control_state": "UNCONTESTED",
+     "name": "Orsel",
+     "precinct_id": 4,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab"
+     ]
+    },
+    {
+     "id": 11,
+     "profile": "stack",
+     "index": "1",
+     "name_canonical": "Stack-1",
+     "block_count": 56,
+     "bank_side": "north",
+     "control_state": "UNCONTESTED",
+     "name": "Les Entrepôts",
+     "precinct_id": 4,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "refinery",
+      "press_house",
+      "specialized_lab",
+      "distribution_hub"
+     ]
+    },
+    {
+     "id": 12,
+     "profile": "stack",
+     "index": "2",
+     "name_canonical": "Stack-2",
+     "block_count": 63,
+     "bank_side": "north",
+     "control_state": "UNCONTESTED",
+     "name": "Dépôt-Est",
+     "precinct_id": 4,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "refinery",
+      "press_house",
+      "specialized_lab",
+      "distribution_hub"
+     ]
+    },
+    {
+     "id": 13,
+     "profile": "glass",
+     "index": "1",
+     "name_canonical": "Glass-1",
+     "block_count": 70,
+     "bank_side": "south",
+     "control_state": "UNCONTESTED",
+     "name": "Le Verre",
+     "precinct_id": 5,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "dealer_spot_front",
+      "specialized_lab",
+      "money_holding"
+     ]
+    },
+    {
+     "id": 14,
+     "profile": "glass",
+     "index": "2",
+     "name_canonical": "Glass-2",
+     "block_count": 77,
+     "bank_side": "south",
+     "control_state": "UNCONTESTED",
+     "name": "Place des Comptes",
+     "precinct_id": 5,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "dealer_spot_front",
+      "specialized_lab",
+      "money_holding"
+     ]
+    },
+    {
+     "id": 15,
+     "profile": "glass",
+     "index": "3",
+     "name_canonical": "Glass-3",
+     "block_count": 33,
+     "bank_side": "south",
+     "control_state": "UNCONTESTED",
+     "name": "La Chancellerie",
+     "precinct_id": 5,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "dealer_spot_front",
+      "specialized_lab",
+      "money_holding"
+     ]
+    },
+    {
+     "id": 16,
+     "profile": "verge",
+     "index": "a",
+     "name_canonical": "Verge-A",
+     "block_count": 40,
+     "bank_side": "south",
+     "control_state": "UNCONTESTED",
+     "name": "La Lisière",
+     "precinct_id": 6,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab",
+      "grow_house"
+     ]
+    },
+    {
+     "id": 17,
+     "profile": "verge",
+     "index": "b",
+     "name_canonical": "Verge-B",
+     "block_count": 47,
+     "bank_side": "south",
+     "control_state": "UNCONTESTED",
+     "name": "Les Friches",
+     "precinct_id": 6,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab",
+      "grow_house"
+     ]
+    },
+    {
+     "id": 18,
+     "profile": "verge",
+     "index": "c",
+     "name_canonical": "Verge-C",
+     "block_count": 54,
+     "bank_side": "south",
+     "control_state": "UNCONTESTED",
+     "name": "Pont-Gris",
+     "precinct_id": 6,
+     "openable_types": [
+      "lab",
+      "stash",
+      "front_shop",
+      "cash_safehouse",
+      "dealer_spot_front",
+      "specialized_lab",
+      "grow_house"
+     ]
+    }
+   ]
+  }
+ }
+}
