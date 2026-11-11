@@ -8,6 +8,7 @@ using UnityEngine.UI;
 using MafiaCleanCity.I18n;
 using MafiaCleanCity.Mouvements;
 using MafiaCleanCity.Operational;
+using MafiaCleanCity.Operational.Autonomy;
 using MafiaCleanCity.Operational.Lieutenant;
 using MafiaCleanCity.Operational.Selling;
 using MafiaCleanCity.Operational.Tests;   // AdresseDuBackPlayModeTests.Racines
@@ -28,11 +29,10 @@ namespace MafiaCleanCity.Tests
     //   Conflit (3) : table + hommes + axes, sans gros bras, envoi en route, dernier retour, ordre prêt ; Distribution (3) : repos, aucun relais ;
     //   Loi (3) : roster vide, avocat sous rétention ; Delegation (1) : tableau, confier, reprendre, réserve ; Demolition (1) : global, fiche,
     //   confirmation, parcelle ; Filiere (1) : planque nominale ; Forensic (1) : la porte des pistes ;
-    //   Selling (2) : un dealer avec planque (RAMASSER) et un point de vente sans dealer (Poster un dealer).
+    //   Selling (2) : un dealer avec planque (RAMASSER) et un point de vente sans dealer (Poster un dealer) ;
+    //   Autonomy (1) : un rapport à une question ouverte (Choose A / Choose B).
     //
     // NON MONTÉ — le relevé n'invente rien ; la ligne « couverture sites k / N » (`PublicationGp`) nommera les sites que ces écrans portent :
-    // // NON MONTÉ : Operational/Autonomy/AutonomyInboxController (`Btn_A` / `Btn_B`, :370) — le bouton « Choose » naît dans `Render()`, privé, appelé
-    //    par `LoadReports()` seul (réseau + authentification) ; `Reports` a un setter privé ; aucune couture `…PourTest`.
     // // NON COUVRABLE : Operational/Reputation/ReputationScreenController (`CtaDonnerRegle`, :1429) — `interactable = false` par construction
     //    (arbitrage Q1 du 24/09 : aucun listener, le catalogue des règles n'est pas servi) ; aucun chemin du code ne le rallume. Monté et relevé NON
     //    PRESSABLE (`GP_Reputation_CtaEteint`), jamais « couvert ».
@@ -720,6 +720,40 @@ namespace MafiaCleanCity.Tests
             }
             finally { DetruireMontes(); }
             Verifier("Selling/un dealer avec planque, un point de vente sans dealer", lignes);
+            yield break;
+        }
+
+        // ================================================================================ Autonomy
+        [UnityTest]
+        public IEnumerator GP_Autonomy_ChooseAB()
+        {
+            List<LigneGp> lignes;
+            try
+            {
+                var ecran = MonterSousCanvas<AutonomyInboxController>("AutonomyGp", out Canvas canvas);
+                // un rapport, une question ouverte (non décidée) à deux options : « Choose A » et « Choose B » (:370) naissent par le MÊME `Render()`
+                ecran.RendrePourTest(new[]
+                {
+                    new AutonomyReportDto
+                    {
+                        report_id = "r-1", lieutenant_id = "lt-1", backlog_age_cycles = 2,
+                        issues = new[]
+                        {
+                            new AutonomyIssueDto
+                            {
+                                issue_id = "i-1", category = "cook", refused_action = "cook_now", decided = "",
+                                option_a = new AutonomyOptionDto { label_key = "autonomy.cook.now", effect_kind = "a", projected_outcome = "TRADEOFF" },
+                                option_b = new AutonomyOptionDto { label_key = "autonomy.cook.later", effect_kind = "b", projected_outcome = "MINIMAL" },
+                            },
+                        },
+                    },
+                });
+                Monte(canvas, "un rapport ouvert", "Choose A (:370)", b => b.name == "Btn_A" && b.interactable);
+                Monte(canvas, "un rapport ouvert", "Choose B (:370)", b => b.name == "Btn_B" && b.interactable);
+                lignes = Relever("Autonomy", "un rapport, une question ouverte", canvas);
+            }
+            finally { DetruireMontes(); }
+            Verifier("Autonomy/un rapport, une question ouverte", lignes);
             yield break;
         }
 

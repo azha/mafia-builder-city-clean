@@ -147,6 +147,17 @@ namespace MafiaCleanCity.Operational.Autonomy
             IsAuthenticated = !string.IsNullOrEmpty(token);
         }
 
+        /// <summary>Crochet de test (patron `RendrePourTest`) : pose des rapports FABRIQUÉS puis appelle le MÊME `Render()` que `LoadReports()`, sans
+        /// réseau — ce qui fait naître les boutons « Choose A » / « Choose B » (`Btn_A` / `Btn_B`, :370). Ne prouve jamais que le back sert ces
+        /// corps. Synchrone : `Start()` (qui signe) ne tourne pas tant qu'aucune frame ne passe.</summary>
+        public void RendrePourTest(AutonomyReportDto[] rapports)
+        {
+            EnsureInitialized();
+            Reports = rapports ?? Array.Empty<AutonomyReportDto>();
+            ReportsLoaded = true;
+            Render();
+        }
+
         /// <summary>Fetch pending autonomy reports + render the rows (EmptyState when none). Re-entrancy is SERIALIZED
         /// (the DashboardController.LoadDashboard precedent): a Boot() self-load racing a test-driven load on the
         /// shared Reports/ReportsError fields is the documented intermittent-flake shape — a second caller WAITS for
