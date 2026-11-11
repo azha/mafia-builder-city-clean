@@ -260,7 +260,7 @@ namespace MafiaCleanCity.Operational
             // TD-891 (ruling f2 11/11) : prix SERVI ⇒ les deux notes « le prix n'est pas servi » sont FAUSSES : retirées, rien d'inventé à leur place
             // (le montant et sa note attendent le cadre du lot « acheter du renseignement », TD-988). Le geste reste éteint.
             bool noteVraie = !PrixDuRenseignementCents.HasValue;
-            pied.gameObject.SetActive(Vue != VueDossier.Vide && (Vue == VueDossier.Pistes || noteVraie));
+            pied.gameObject.SetActive(Vue != VueDossier.Vide);   // le pied reste tel quel (f2 : aucun masquage non demandé) ; seule la note fausse part
             boutonAcheter.gameObject.SetActive(Vue == VueDossier.Pistes);
             note6.gameObject.SetActive(noteVraie);
             note6.text = !noteVraie ? "" : Vue == VueDossier.Acteurs
