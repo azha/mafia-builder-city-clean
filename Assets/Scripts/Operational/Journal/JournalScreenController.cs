@@ -135,7 +135,7 @@ namespace MafiaCleanCity.Operational
             {
                 case "full": repli = "On vous a vu. La rue s’en souviendra."; break;
                 case "reduced": repli = "On vous a vu, mais vous étiez déjà passé aujourd’hui."; break;
-                case "minimal": repli = "Encore vous\u00A0? La rue n’y prête plus guère attention aujourd’hui."; break;
+                case "minimal": repli = "Encore vous\u202F? La rue n’y prête plus guère attention aujourd’hui."; break;
                 case "none": repli = "Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte."; break;
                 default: return null;
             }
