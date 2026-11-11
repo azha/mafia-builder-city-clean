@@ -58,17 +58,12 @@ namespace MafiaCleanCity.Operational.Tests
             // ⚠️ COUPE du 2026-10-08 (créneau CLIENT-2, pile dev avec le lot de mots de f2) : la règle (2) a rougi, 28 clés de la dette SONT servies — retirées : COLLECTE `vente.caisse.bande.*` (6),
             // ㉓ VITRINE `boutique.bloc.*` (2), ⑭ `compression.tension.calm` / `compression.semaine.none`, ㉛ `loi.bouton.lui_trouver_un_avocat` / `loi.bloc.le_commis_d_office_fait_ce_qu_il_peut`,
             // ㉚ `appro.bouton.ca_part_du_compte_tout_de_suite`, et 15 clés `forensic.bloc.*` de ㊴. Restent, non servies : celles ci-dessous.
-            // ⑭ LA JAUGE DE TENSION (CLIENT-2, 08/10 ; juge d'ensemble r1, F3 : l'élément héros était absent) : l'onglet « TENSION » et la légende du cadre calme (`.lampe-rouge`, cadres 14-19 de la
-            // série 6) — clés dérivées par `Libelle.De("semaine", "bloc", …)`, NON servies à la pile du 08/10 ; f2 les fait servir (FR « Tension » / « vos affaires respirent »). 2 entrées.
-            "semaine.bloc.tension", "semaine.bloc.vos_affaires_respirent",
+            // ⚠️ COUPE du 2026-10-11 (CLIENT-2, cumul back `gate/cumul-2026-10-10` @14ba96b3, `string_table.ts`, fr ET en) : SERVIES, donc retirées — ⑭ `semaine.bloc.tension` / `semaine.bloc.vos_affaires_respirent` et ㊴ Q5 `forensic.bloc.le_train_de_vie_de_nom` (fr `le train de vie de {nom}` · en `{nom}’s lifestyle`, égales au gabarit du client ; le nom lui-même vient de `lifestyle_lieutenant_name`, lot Q5 @d64941bd). Restent, non servies : `journal.bouton.y_preter_attention`, `forensic.enseigne.rien_a_votre_nom`.
             // ㊳ le pied éteint (CAUSES 3 ET 4, CLIENT-1) : mot de la maquette, clé dérivée, non servie. 1 entrée.
             "journal.bouton.y_preter_attention",
             // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : une clé restante, non servie à la pile du 08/10 (les 15 autres le sont : retirées ci-dessus). Les statuts et types d'acteur
             // sont lus par la VALEUR servie (`forensic.statut.*`, `forensic.acteur.lawyer|clerk`).
             "forensic.enseigne.rien_a_votre_nom",   // le sous-titre de l'enseigne du cadre 135 (sans point) : son rôle propre, la clé bloc.* est celle du texte `.rien`
-            // ㊴ Q5 (CLIENT-2, 08/10 ; décision f2 « fr littéral client, en généré ») : la phrase à trou du titre de la piste du train de vie quand le back sert le nom
-            // du lieutenant (`lifestyle_lieutenant_name`) — fr `le train de vie de {nom}` · en `{nom}’s lifestyle` ; f2 la fait servir. NE SE RENDRA qu'avec la clé du back.
-            "forensic.bloc.le_train_de_vie_de_nom",
 
 
 
