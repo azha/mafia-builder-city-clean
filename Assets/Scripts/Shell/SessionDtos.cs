@@ -16,6 +16,10 @@ namespace MafiaCleanCity.Shell
     public class DecisionOptionDto
     {
         public string label;
+        /// <summary>V20 — la CLÉ SERVIE de la conséquence de l'option (`<label>.projected_consequence` au back, `hl-option-table.ts`). Elle était servie PUIS JETÉE (le DTO ne la déclarait pas) et le client la
+        /// reconstruisait par concaténation (identique 16/16 le 11/11, mais deux sources d'une même vérité) : on lit désormais la clé servie ; la concaténation ne reste que pour une réponse qui ne porte pas
+        /// le champ (back plus ancien, fixtures).</summary>
+        public string projected_consequence;
     }
 
     // HighestLeverageCardProjection (`hl-card-projection.ts:114-121`).

@@ -134,6 +134,35 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual("", Texte("AlternativeConsequence").text);
         }
 
+        /// <summary>V20 (juge-données moment 2, 11/11) — `options[].projected_consequence` est servi : le DTO le DÉCLARE (JsonUtility ne remplit que ce qui est déclaré) et le client lit la clé SERVIE, jamais
+        /// la concaténation. DÉTECTEUR : une clé servie qui DIFFÈRE de `<label>.projected_consequence` doit gagner (avec la concaténation seule, la phrase de la clé reconstruite s'afficherait) ; le CONTRÔLE POSITIF
+        /// (sans le champ) retombe sur la concaténation — sinon le détecteur ne distinguerait rien.</summary>
+        [Test]
+        public void V20_LaCleServieDeLaConsequence_GagneSurLaCleReconstruite()
+        {
+            string cleA = "hl.option.damaged_building.repair_via_queue", cleB = "hl.option.damaged_building.leave_damaged";
+            string servieA = "hl.option.damaged_building.repair_via_queue.autre_consequence";
+            const string phraseServie = "La phrase de la clé SERVIE.", phraseReconstruite = "La phrase de la clé RECONSTRUITE.";
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", new System.Collections.Generic.Dictionary<string, string>
+            {
+                { cleA, "Mettre en réparation" }, { cleB, "Laisser en l’état" },
+                { cleA + ".projected_consequence", phraseReconstruite }, { servieA, phraseServie },
+            });
+            // le DTO déclare le champ : un corps réel le remplit (sinon la clé servie est jetée, la faute d'origine)
+            var dto = JsonUtility.FromJson<DecisionOptionDto>("{\"label\":\"" + cleA + "\",\"projected_consequence\":\"" + servieA + "\"}");
+            Assert.AreEqual(servieA, dto.projected_consequence, "le champ servi est LU par le DTO");
+            var hl = Monter<HighestLeverageCardController>();
+            HlCardDto carte = Carte("DAMAGED_BUILDING_REPAIR", cleA, cleB);
+            carte.options[0].projected_consequence = servieA;
+            hl.SetPayload(null, carte, null);
+            TMPro.TextMeshProUGUI Texte(string nom) => hl.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).First(t => t.name == nom);
+            Assert.AreEqual(phraseServie, Texte("RecommandationConsequence").text, "la clé SERVIE gagne sur la clé reconstruite");
+            // CONTRÔLE POSITIF : sans le champ, la concaténation reste le repli (le détecteur distingue les deux sources)
+            carte.options[0].projected_consequence = null;
+            hl.SetPayload(null, carte, null);
+            Assert.AreEqual(phraseReconstruite, Texte("RecommandationConsequence").text, "sans champ servi : la clé reconstruite (compatibilité)");
+        }
+
         [Test]
         public void Etat3_LaCarteDesRapportsEstReconnue()
         {

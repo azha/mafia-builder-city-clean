@@ -379,8 +379,8 @@ namespace MafiaCleanCity.Shell
                     if (surtitreText != null) surtitreText.text = Lib("carte", "Ce qu’on peut faire");
                     if (agirLabel != null) agirLabel.text = agir;
                     if (laisserLabel != null) laisserLabel.text = laisser;
-                    if (consequenceRecommandationText != null) consequenceRecommandationText.text = ConsequenceDe(o[0].label);
-                    if (consequenceAlternativeText != null) consequenceAlternativeText.text = ConsequenceDe(o[1].label);
+                    if (consequenceRecommandationText != null) consequenceRecommandationText.text = ConsequenceDe(o[0]);
+                    if (consequenceAlternativeText != null) consequenceAlternativeText.text = ConsequenceDe(o[1]);
                     Track(consequenceRecommandationText != null ? consequenceRecommandationText.text : null);
                     Track(consequenceAlternativeText != null ? consequenceAlternativeText.text : null);
                     Track(surtitreText != null ? surtitreText.text : null);
@@ -645,11 +645,14 @@ namespace MafiaCleanCity.Shell
             return consequence;
         }
 
-        /// <summary>LA CONSÉQUENCE servie d'une option : la clé `<label>.projected_consequence` si le catalogue la SERT, sinon rien (jamais un repli inventé : une conséquence fausse vaut moins qu'une absence).</summary>
-        private static string ConsequenceDe(string labelCle)
+        /// <summary>LA CONSÉQUENCE servie d'une option : la clé SERVIE `projected_consequence` (à défaut `<label>.projected_consequence`) si le catalogue la SERT, sinon rien (jamais un repli inventé : une conséquence fausse vaut moins qu'une absence).</summary>
+        private static string ConsequenceDe(DecisionOptionDto option)
         {
-            if (string.IsNullOrEmpty(labelCle)) return "";
-            string cle = labelCle + ".projected_consequence";
+            if (option == null) return "";
+            // V20 : la clé SERVIE (`projected_consequence`) ; la concaténation `<label>.projected_consequence` ne sert que si la réponse ne porte pas le champ
+            string cle = !string.IsNullOrEmpty(option.projected_consequence) ? option.projected_consequence
+                : string.IsNullOrEmpty(option.label) ? null : option.label + ".projected_consequence";
+            if (string.IsNullOrEmpty(cle)) return "";
             if (!MafiaCleanCity.I18n.Libelle.EstServie(cle)) return "";
             return MafiaCleanCity.I18n.Libelle.Gabarit(cle, "");
         }
