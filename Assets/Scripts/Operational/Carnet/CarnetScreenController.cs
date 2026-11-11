@@ -842,21 +842,34 @@ namespace MafiaCleanCity.Operational
         // ═══ TD-882 — LA VOIX DU LIEUTENANT EN PIED (`.cn-dit`, cadre « Cinq ordres. On peut en mettre trois de plus, ou partir comme ça. ») ═══
         /// <summary>La ligne de voix de la bande basse (crochet de test) ; null tant que l'écran n'est pas construit.</summary>
         public TextMeshProUGUI VoixDuPied { get; private set; }
-        // ⛔ JAMAIS DE NOM NON SERVI (ruling f2 11/11) : le carnet n'est lié à aucun lieutenant (`CarnetCourantDto` n'en porte pas) ; choisir un locuteur par POSITION dans le roster serait une inférence sans auteur,
-        //    et le joueur lirait un nom faux. La voix se dit donc SANS NOM tant que le back ne sert pas le locuteur (TD-952). Ce contrôleur ne lit PAS le roster (garde V2).
+        // ⛔ JAMAIS DE NOM NON SERVI (ruling f2 11/11) : le nom vient de `speaker.name` (TD-952, servi par le back) et de lui seul ; sans locuteur lisible
+        //    (`speaker` null/vide) la voix se dit SANS NOM, comme avant. Ce contrôleur ne lit PAS le roster (garde V2) : choisir un locuteur par POSITION serait une inférence sans auteur.
 
-        /// <summary>La voix du pied : la phrase SERVIE (`carnet.bloc.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca`, pluriel ICU `n`, `reste` = places restantes) quand le brouillon PEUT partir
-        /// (4 à 8 ordres) — en dessous, « partir comme ça » serait faux (le composeur dit déjà « Encore n ordres à poser ») et rien n'est rendu. Le nom en gras DROIT, la réplique en italique (`.cn-dit b{font-style:normal}`).</summary>
+        /// <summary>La voix du pied : la phrase SERVIE, pluriel ICU `n`, `reste` = places restantes, quand le brouillon PEUT partir (4 à 8 ordres) — en dessous, « partir comme ça » serait faux (le composeur
+        /// dit déjà « Encore n ordres à poser ») et rien n'est rendu. Avec un locuteur servi : `carnet.dit.…` (le gabarit d'attribution `{nom} : « … »`, le client pose le trou, ne concatène jamais) ;
+        /// sans : `carnet.bloc.…` (sans nom). Le nom, jusqu'aux deux-points, en gras DROIT ; la réplique en italique (`.cn-dit b{font-style:normal}`).</summary>
         private void RendreLaVoix(bool composer)
         {
             if (VoixDuPied == null) return;
             bool dit = composer && Brouillon.PeutLancer;
             VoixDuPied.gameObject.SetActive(dit);
             if (!dit) return;
-            string phrase = MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca",
-                "« {n, plural, one {Un ordre} other {# ordres}}. On peut en mettre {reste} de plus, ou partir comme ça. »",
-                new Dictionary<string, string> { { "n", Brouillon.Compte.ToString() }, { "reste", (ComposeurDuCarnet.Maximum - Brouillon.Compte).ToString() } });
-            VoixDuPied.text = "<i>" + phrase + "</i>";
+            var parametres = new Dictionary<string, string> { { "n", Brouillon.Compte.ToString() }, { "reste", (ComposeurDuCarnet.Maximum - Brouillon.Compte).ToString() } };
+            string nom = DernierChargement?.Nom;
+            VoixDuPied.text = nom == null
+                ? "<i>" + MafiaCleanCity.I18n.Libelle.Gabarit("carnet.bloc.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca",
+                    "« {n, plural, one {Un ordre} other {# ordres}}. On peut en mettre {reste} de plus, ou partir comme ça. »", parametres) + "</i>"
+                : MettreEnForme(MafiaCleanCity.I18n.Libelle.Gabarit("carnet.dit.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca",
+                    "{nom}\u00A0: «\u00A0{n, plural, one {Un ordre} other {# ordres}}. On peut en mettre {reste} de plus, ou partir comme ça.\u00A0»",
+                    new Dictionary<string, string>(parametres) { { "nom", nom } }));
+        }
+
+        /// <summary>« Nom : réplique » → `<b>Nom :</b> <i>réplique</i>` : coupé à la PREMIÈRE guillemet ouvrante (« FR, “ EN), ce qui précède (le nom et ses deux-points) en gras. Sans guillemet : tout en italique.</summary>
+        private static string MettreEnForme(string phrase)
+        {
+            int g = phrase.IndexOfAny(new[] { '«', '\u201C' });
+            if (g <= 0) return "<i>" + phrase + "</i>";
+            return "<b>" + phrase.Substring(0, g).TrimEnd() + "</b> <i>" + phrase.Substring(g) + "</i>";
         }
 
         private void BuildLayout()
