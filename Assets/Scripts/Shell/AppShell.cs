@@ -311,11 +311,7 @@ namespace MafiaCleanCity.Shell
                 case Tab.Empire:
                     MountTenant<CityMapController>();
                     CityMapController cityMap = MountedTenantGameObject.GetComponent<CityMapController>();
-                    if (cityMap != null)
-                    {
-                        cityMap.OnEnterDistrict += EnterDistrict; // §3.3 — subscribed at mount time
-                        cityMap.MasquerLePiedALAccueil();         // GP (11/11) : le toggle Chaleur est sous la plaque de la file, hors maquette
-                    }
+                    if (cityMap != null) cityMap.OnEnterDistrict += EnterDistrict; // §3.3 — subscribed at mount time
                     break;
                 case Tab.Org: MountTenant<LieutenantScreenController>(); break;
                 case Tab.Pipeline: MountTenant<FiliereScreenController>(); break;   // ㊵ porte la filière (ruling de f2, 2026-09-23) ; ⑪ et ⑫ sortent du chemin joueur
@@ -606,8 +602,18 @@ namespace MafiaCleanCity.Shell
             return "racine";
         }
 
+        /// <summary>Le pied de la carte (bascule « Chaleur ») n'est montré que sur la carte NUE : une surimpression (l'Accueil, un détail) le recouvre sans le
+        /// remplacer — actif, ni visible ni atteignable (revue ⊥ du lot, 11/11 : le masquer à l'ouverture de l'onglet le retirait aussi de la carte nue).</summary>
+        private void SynchroniserLePiedDeLaCarte()
+        {
+            if (MountedTenantType != typeof(CityMapController) || MountedTenantGameObject == null) return;
+            CityMapController carte = MountedTenantGameObject.GetComponent<CityMapController>();
+            if (carte != null) carte.MontrerLePied(!SurimpressionOuverte);
+        }
+
         private void Update()
         {
+            SynchroniserLePiedDeLaCarte();
             // Le retour du système Android arrive en `Escape` (Input System) ; `Escape` au clavier dans l'éditeur.
             var clavier = UnityEngine.InputSystem.Keyboard.current;
             if (clavier != null && clavier.escapeKey.wasPressedThisFrame) Depiler();

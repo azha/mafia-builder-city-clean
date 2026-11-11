@@ -64,12 +64,13 @@ namespace MafiaCleanCity.CityMap
         private GameObject piedRoot;
         private bool piedMasque;
 
-        /// <summary>À l'Accueil (Empire = la carte), le pied de la ville peinte (bascule « Chaleur : … ») tombe SOUS la plaque de la file : un
-        /// bouton actif, ni visible ni atteignable ; la maquette ne le montre pas. Le shell le masque (appelable AVANT `Start`, qui bâtit la mise en page).</summary>
-        public void MasquerLePiedALAccueil()
+        /// <summary>Le pied de la ville peinte (bascule « Chaleur : … ») : visible sur la carte NUE (sa seule porte), masqué quand une surimpression — l'Accueil —
+        /// le recouvre (il tombait SOUS la plaque de la file : actif, ni visible ni atteignable ; la maquette de l'Accueil ne le montre pas). Appelée par le
+        /// shell à chaque changement d'état, AVANT comme APRÈS `Start` (qui bâtit la mise en page).</summary>
+        public void MontrerLePied(bool visible)
         {
-            piedMasque = true;
-            if (piedRoot != null) piedRoot.SetActive(false);
+            piedMasque = !visible;
+            if (piedRoot != null && piedRoot.activeSelf != visible) piedRoot.SetActive(visible);
         }
         private TMP_FontAsset font;
 

@@ -742,6 +742,29 @@ namespace MafiaCleanCity.Tests
             yield break;
         }
 
+        private Transform PiedDeLaCarte() =>
+            shell.ContentSlot.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "Pied" && t.parent != null && t.parent.name == "ZoneLibre");
+
+        // Revue ⊥ du lot (11/11) : le Pied de la carte (bascule « Chaleur ») est masqué sous l'Accueil (il tombait sous la plaque) MAIS reste la porte de la
+        // bascule sur la carte NUE — qu'on retrouve en refermant l'Accueil. Le masquer à l'ouverture de l'onglet l'en retirait aussi.
+        [UnityTest]
+        public IEnumerator GP_AppShell_CarteNue_LePiedDeLaCarteReste_SousLAccueilIlSeMasque()
+        {
+            yield return MonterLAccueil(Session(null, "e-1", "e-2"));
+            Transform pied = PiedDeLaCarte();
+            Assert.IsNotNull(pied, "précondition : le Pied de la ville peinte est dans l'arbre (activé ou non)");
+            yield return Attendre();
+            Assert.IsFalse(pied.gameObject.activeSelf, "Accueil ouvert : le Pied est masqué (il serait sous la plaque de la file)");
+            Assert.AreEqual("surimpression", shell.Depiler());   // referme l'Accueil : la carte NUE
+            yield return Attendre();
+            Assert.IsFalse(shell.SurimpressionOuverte, "précondition : plus de surimpression");
+            Assert.IsTrue(PiedDeLaCarte().gameObject.activeSelf, "carte nue : le Pied (la porte de la bascule « Chaleur ») est visible");
+            RemplacerLaRegieDuShell();
+            List<LigneGp> lignes = Relever("AppShell", "carte nue", shell.ShellCanvas.gameObject, shell.ShellCanvas);
+            Assert.IsTrue(lignes.Any(l => l.Chemin.EndsWith("/HeatToggle") && l.Pressable), "la bascule « Chaleur » est pressable sur la carte nue");
+            Verifier("AppShell/carte nue", lignes);
+        }
+
         [UnityTest]
         public IEnumerator GP_AppShell_MenuPlus()
         {
