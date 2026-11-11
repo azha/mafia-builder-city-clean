@@ -1,0 +1,97 @@
+=== meta-market-read.service.ts : en-tete 1-40 ===
+// IMPLEMENTS: docs/superpowers/plans/2026-07-03-04d-C-meta-market-plan.md C6 (read API + sample-floor)
+//             docs/superpowers/plans/2026-07-03-04d-C-meta-market-plan.md C8 (visibility toggle integration)
+//             Canon: docs/tech/04d_meta_market_lawyer_and_internal_affairs/async_meta_market.md §1 (getSignal, sample_floor)
+//             Plan §C6 — MetaMarketReadService.getSignal (clear aggregate OR 'insufficient_signal' < sample_floor)
+//               + trend computation from 7-day window (2+ rows: oldest vs latest median).
+//             Plan §C8 — getSignalWithVisibility: per-player visibility toggle gate (mig 0105).
+//               NULL = use tunable default (effective ON) → proceed with getSignal.
+//               FALSE = opted out → return 'insufficient_signal' immediately (privacy wall).
+//               TRUE = opted in → proceed with getSignal.
+//             R2.3: sample_floor via MetaMarketTunables.sampleFloor (never inlined).
+//             R2.2/P5: raw sample_count is NEVER exposed to the caller; only the aggregate OR 'insufficient_signal'.
+//             Determinism: NO Math.random(), NO Date.now() in the mechanic (7d window uses DB NOW()).
+//             Zero-regression: purely ADDITIVE — reads only meta_market_signals + player; no writes.
+//             — 04d-C C6 — 2026-07-03
+//             — 04d-C C8 — 2026-07-03 (getSignalWithVisibility added)
+//
+// `MetaMarketReadService` — the public read API for the async meta-market signal.
+//
+// `getSignal(regionId, substance, districtProfile)`:
+//   1. Query `meta_market_signals` for the most recent row matching the key (ORDER BY aggregated_at DESC LIMIT 1).
+//   2. If no row → return 'insufficient_signal'.
+//   3. If `sample_count < sample_floor` (default 5) → return 'insufficient_signal'.
+//      R2.2: NEVER surface partial data; the sample_floor is the privacy wall.
+//   4. Otherwise: compute the trend from the 7-day window (oldest vs latest median).
+//      7d window: raw SQL SELECT median_price_cents FROM meta_market_signals WHERE key AND aggregated_at >= NOW()-7d
+//               ORDER BY aggregated_at ASC.
+//      - <2 rows → 'stable'
+//      - latest.median > oldest.median → 'up'
+//      - latest.median < oldest.median → 'down'
+//      - otherwise → 'stable'
+//   5. Return MetaMarketSignalView (medianCents, p10Cents, p90Cents, sampleCount, lastAggregatedAt, trend).
+//
+// Privacy note: MetaMarketSignalView includes sampleCount (an aggregate count) for internal/BO use.
+//   C7 (privacy wall) will gate what is exposed to untrusted callers. C6 is the internal read API.
+
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { desc, and, eq, sql } from 'drizzle-orm';
+
+import type { DrizzleClient } from '../../db';
+import { DB } from '../../db/db.module';
+
+=== le mur de visibilite + insufficient_signal ===
+1:// IMPLEMENTS: docs/superpowers/plans/2026-07-03-04d-C-meta-market-plan.md C6 (read API + sample-floor)
+2://             docs/superpowers/plans/2026-07-03-04d-C-meta-market-plan.md C8 (visibility toggle integration)
+3://             Canon: docs/tech/04d_meta_market_lawyer_and_internal_affairs/async_meta_market.md §1 (getSignal, sample_floor)
+4://             Plan §C6 — MetaMarketReadService.getSignal (clear aggregate OR 'insufficient_signal' < sample_floor)
+5://               + trend computation from 7-day window (2+ rows: oldest vs latest median).
+6://             Plan §C8 — getSignalWithVisibility: per-player visibility toggle gate (mig 0105).
+8://               FALSE = opted out → return 'insufficient_signal' immediately (privacy wall).
+10://             R2.3: sample_floor via MetaMarketTunables.sampleFloor (never inlined).
+11://             R2.2/P5: raw sample_count is NEVER exposed to the caller; only the aggregate OR 'insufficient_signal'.
+21://   2. If no row → return 'insufficient_signal'.
+22://   3. If `sample_count < sample_floor` (default 5) → return 'insufficient_signal'.
+23://      R2.2: NEVER surface partial data; the sample_floor is the privacy wall.
+24://   4. Otherwise: compute the trend from the 7-day window (oldest vs latest median).
+31://   5. Return MetaMarketSignalView (medianCents, p10Cents, p90Cents, sampleCount, lastAggregatedAt, trend).
+33:// Privacy note: MetaMarketSignalView includes sampleCount (an aggregate count) for internal/BO use.
+44:import { isMetaMarketVisible } from './meta-market-visibility';
+46:/** The resolved signal view returned by MetaMarketReadService.getSignal when the sample floor is met. */
+54:  /** Number of distinct contributors in the bucket (= sample_count from DB; BO-visible only). */
+55:  readonly sampleCount: number;
+64:  readonly trend: 'up' | 'stable' | 'down';
+79:   * Returns `'insufficient_signal'` when:
+81:   *   - The most recent signal has `sample_count < sampleFloor` (privacy wall, R2.3 via tunables).
+83:   * Otherwise returns a `MetaMarketSignalView` with the aggregate + 7-day trend.
+86:   * R2.3: sample_floor is read from `this.tunables.sampleFloor` (never inlined as a literal).
+96:  ): Promise<MetaMarketSignalView | 'insufficient_signal'> {
+111:    // ── Step 2: no row → insufficient_signal ────────────────────────────────────────────────────
+114:        `getSignal(${regionId}, ${substance}, ${districtProfile}): no signal row → insufficient_signal`,
+116:      return 'insufficient_signal';
+121:    // ── Step 3: sample_floor gate (privacy wall) ─────────────────────────────────────────────────
+122:    // R2.3: read the floor from tunables (never inline the literal 5).
+123:    // R2.2/P5: NEVER surface partial data — if below floor, return insufficient_signal.
+124:    const floor = this.tunables.sampleFloor;
+125:    if (latest.sample_count < floor) {
+128:        `sample_count=${latest.sample_count} < floor=${floor} → insufficient_signal`,
+130:      return 'insufficient_signal';
+133:    // ── Step 4: compute trend from the 7-day window ──────────────────────────────────────────────
+136:    const trendResult = await this.db.execute<{ median_price_cents: string }>(sql`
+146:    const trendRows = trendResult.rows ?? (trendResult as unknown as { median_price_cents: string }[]);
+147:    const trend = this._computeTrend(trendRows as { median_price_cents: string }[]);
+154:      sampleCount:      latest.sample_count,
+156:      trend,
+161:   * Compute the trend direction from an ordered (ASC by aggregated_at) list of signal rows.
+183:   * Per-player visibility-gated signal read (C8 — mig 0105 toggle integration).
+185:   * Checks `player.meta_market_visibility_enabled` for the given playerId:
+186:   *   - FALSE (explicitly opted out)   → return 'insufficient_signal' immediately (privacy wall).
+197:   * @param playerId        — UUID of the player (used to look up visibility preference)
+207:  ): Promise<MetaMarketSignalView | 'insufficient_signal'> {
+208:    // ── Step 1: read per-player visibility toggle from DB ─────────────────────────────────────────
+210:      .select({ meta_market_visibility_enabled: player.meta_market_visibility_enabled })
+216:      const visibilityEnabled = playerRows[0]!.meta_market_visibility_enabled;
+218:      // La règle vit dans `meta-market-visibility.ts` (PRODUCTEUR UNIQUE) pour que la projection
+220:      if (!isMetaMarketVisible(visibilityEnabled)) {
+222:          `getSignalWithVisibility(playerId=${playerId}): visibility_enabled=false → insufficient_signal (privacy wall)`,
+224:        return 'insufficient_signal';

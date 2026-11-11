@@ -1,0 +1,43 @@
+==== cadre 101 ====
+  lignes rg: 18
+  cellules vy totales: 72
+  allumées (3):
+      ('Les Entrepôts', 'crick', '0.54', '#7fd4d9')
+      ('Dépôt-Est', 'crick', '0.75', '#7fd4d9')
+      ('La Lisière', 'brindle', '1.00', '#f2c96b')
+==== cadre 102 ====
+  lignes rg: 18
+  cellules vy totales: 72
+  allumées (3):
+      ('Les Entrepôts', 'crick', '0.54', '#7fd4d9')
+      ('Dépôt-Est', 'crick', '0.75', '#7fd4d9')
+      ('La Lisière', 'brindle', '1.00', '#f2c96b')
+==== cadre 103 ====
+  lignes rg: 18
+  cellules vy totales: 72
+  allumées (3):
+      ('Les Entrepôts', 'crick', '0.54', '#7fd4d9')
+      ('Dépôt-Est', 'crick', '0.75', '#7fd4d9')
+      ('La Lisière', 'brindle', '1.00', '#f2c96b')
+==== cadre 104 ====
+  lignes rg: 6
+  cellules vy totales: 24
+  allumées (3):
+      ('stack', 'crick', '-', '#43e0c0')
+      ('glass', 'ash', '-', '#ff5a4d')
+      ('verge', 'brindle', '-', '#ffd23f')
+==== cadre 105 ====
+  lignes rg: 6
+  cellules vy totales: 24
+  allumées (0):
+==== cadre 106 ====
+  lignes rg: 0
+  cellules vy totales: 0
+  allumées (0):
+==== cadre 146 ====
+  lignes rg: 18
+  cellules vy totales: 72
+  allumées (3):
+      ('Le Verre', 'ash', '1.00', '#efe9da')
+      ('Place des Comptes', 'ash', '0.75', '#efe9da')
+      ('La Lisière', 'ash', '0.54', '#efe9da')

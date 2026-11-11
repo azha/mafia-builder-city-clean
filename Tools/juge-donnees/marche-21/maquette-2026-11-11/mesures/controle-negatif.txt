@@ -1,0 +1,6 @@
+|B| (cles projetees, DEDUIT)      = 54
+|M non apparies|                  = 17
+somme                             = 71
+nombre de lignes de la table      = 72
+IDENTITE ROUGE
+(controle negatif : une ligne sans B ni M a ete injectee — ROUGE attendu)

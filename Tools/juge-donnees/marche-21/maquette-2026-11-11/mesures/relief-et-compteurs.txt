@@ -1,0 +1,41 @@
+######## blocs porteurs de texte long + balises de RELIEF ########
+==== cadre 101 ====
+  [bulle] reliefs:
+      <em> 'personne des nôtres n’y a jamais traité.'
+==== cadre 102 ====
+  [pann pp] reliefs:
+      <b> 'DÉPÔT-EST · RECOUPÉ'
+      <u> 'pas le prix'
+==== cadre 103 ====
+  [pann pp] reliefs:
+      <b> 'LA CHANCELLERIE · VOYANT ÉTEINT'
+      <u> 'à zéro'
+      <u> 'jamais ouverte'
+==== cadre 104 ====
+  [pann] reliefs:
+      <b> 'Six genres d’endroit, pas dix-huit quartiers'
+      <u> 'genre'
+==== cadre 105 ====
+==== cadre 106 ====
+==== cadre 146 ====
+  [pann pp] reliefs:
+      <b> 'LE VERRE · UNE LIGNE QUI TIENT'
+      <u> 'tient'
+
+######## compteurs (.fen) verbatim ########
+cadre 101 : 3 fenetres
+    '03|/72|||lignes connues'
+    '01||sûres'
+    '15||quartiers noirs'
+cadre 104 : 3 fenetres
+    '03|/24|||signaux de région'
+    '06||genres d’endroit'
+    '04||substances'
+cadre 105 : 3 fenetres
+    '00|/24|||signaux de région'
+    '✕||vous ne dites rien'
+    '✕||on ne dit rien'
+cadre 106 : 3 fenetres
+    '03|/72|||lignes connues'
+    '01||sûres'
+    '15||quartiers noirs'

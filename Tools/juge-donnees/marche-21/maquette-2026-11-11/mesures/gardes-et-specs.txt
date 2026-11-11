@@ -1,0 +1,45 @@
+=== p10/p90 de meta_market_signals ===
+17://     median/p10/p90_price_cents: bigint (price in cents, unsigned semantics, PG bigint 8B).
+131:     * p10_price_cents — 10th percentile sell price in cents (bigint, post-trim).
+132:     * Together with p90_price_cents, forms the "90% range" displayed to the player.
+133:     * Canon: async_meta_market.md :57 "p10_price_cents bigint".
+
+=== JwtAuthGuard sur les 4 routes joueur ===
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market.controller.ts:76:  @Get('me/meta-market/signal')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market.controller.ts-77-  @UseGuards(JwtAuthGuard)
+--
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market.controller.ts:113:  @Put('me/meta-market/visibility')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market.controller.ts-114-  @UseGuards(JwtAuthGuard)
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market.controller.ts:60:  @Get('me/market/lanes/:districtId/:substanceType')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market.controller.ts-61-  @UseGuards(JwtAuthGuard)
+--
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market.controller.ts:104:  @Get('me/market/lanes')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market.controller.ts-105-  @UseGuards(JwtAuthGuard)
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/citysim/world/world.controller.ts:39:  @Get('world/districts')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/citysim/world/world.controller.ts-40-  async districts(): Promise<DistrictsResponse> {
+
+=== E2E / spec touchant me/market/lanes ===
+/home/erutheone/project/mafia-lot-mots/services/game-back/../../tests/e2e/conventions/_authz-population-oracle.py
+/home/erutheone/project/mafia-lot-mots/services/game-back/../../tests/e2e/conventions/instruments_pins.spec.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/../../tests/e2e/conventions/param_pipes_runtime.engine.spec.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/../../tests/e2e/conventions/param_pipes_structural.spec.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/../../tests/e2e/operational/marche_ardoise_enumerateur.engine.spec.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/../../tests/e2e/operational/market_lane_confidence_route.spec.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/../../tests/e2e/parcours_horloge/marche_ardoise_horloge.parcours.spec.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/../../tests/e2e/parcours/marche_ardoise.parcours.spec.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/../../tests/unit/e2e_infra/marche_ardoise_suite_unit.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/e2e/conventions/_authz-population-oracle.py
+/home/erutheone/project/mafia-lot-mots/tests/e2e/conventions/instruments_pins.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/e2e/conventions/param_pipes_runtime.engine.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/e2e/conventions/param_pipes_structural.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/e2e/operational/marche_ardoise_enumerateur.engine.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/e2e/operational/market_lane_confidence_route.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/e2e/parcours_horloge/marche_ardoise_horloge.parcours.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/e2e/parcours/marche_ardoise.parcours.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/unit/e2e_infra/marche_ardoise_suite_unit.spec.ts
+--- specs unitaires marche.* ---
+
+=== E2E meta-market/signal ===
+/home/erutheone/project/mafia-lot-mots/tests/e2e/conventions/param_pipes_runtime.engine.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/e2e/conventions/param_pipes_structural.spec.ts
+/home/erutheone/project/mafia-lot-mots/tests/e2e/operational/meta_market/meta_market_player_signal.spec.ts

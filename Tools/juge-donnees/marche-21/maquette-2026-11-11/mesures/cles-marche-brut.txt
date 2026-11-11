@@ -1,0 +1,4 @@
+=== compte des clés marche.* dans string_table.ts ===
+occurrences 'marche.' : 66
+
+=== les clés marche.* avec leur ligne et leur valeur ===
