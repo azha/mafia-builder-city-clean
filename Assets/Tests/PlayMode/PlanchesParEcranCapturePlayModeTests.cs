@@ -251,17 +251,18 @@ namespace MafiaCleanCity.Capture.Tests
             string comptes = System.Environment.GetEnvironmentVariable(VariableComptesDossier);
             Assert.IsFalse(string.IsNullOrWhiteSpace(comptes), $"{VariableComptesDossier} est exigé : « quiet,noticed,watched » (callsigns de comptes jetables préparés)");
             string[] cs = comptes.Split(',');
-            Assert.AreEqual(3, cs.Length, $"{VariableComptesDossier} : trois comptes (quiet, noticed, watched)");
-            string[] etats = { "quiet", "noticed", "watched" };
+            Assert.IsTrue(cs.Length == 3 || cs.Length == 4, $"{VariableComptesDossier} : trois comptes (quiet, noticed, watched) ou quatre (+ visible : effluent « visible », FR seul)");
+            string[] etats = { "quiet", "noticed", "watched", "visible" };
             string[] poses =
             {
                 "état NATUREL du compte (ligne lifestyle_audit_state écrite par le recrutement, à zéro) — RIEN posé",
                 "état POSÉ PAR SQL : UPDATE de la ligne du premier lieutenant du compte (last_gap 15000, consecutive_flag_months 1, tail_ramp_stage none) — l'atteinte réelle passe par le tick standing-gap-heat",
                 "état POSÉ PAR SQL : UPDATE de la ligne du premier lieutenant du compte (last_gap 15000, consecutive_flag_months 2, tail_ramp_stage passive) — l'atteinte réelle passe par le tick standing-gap-heat",
+                "état POSÉ PAR SQL : INSERT d'UNE ligne block_effluent_register pour ce compte jetable (last_deviation 2.0, soit ≥ σ 1,5 et < 3,0 ⇒ effluent « visible » ; train de vie quiet, rien posé) — l'atteinte réelle passe par le scan d'inspecteur",
             };
             bool signe = false;
-            for (int k = 0; k < 3; k++)
-                foreach (string langue in new[] { "fr", "en" })
+            for (int k = 0; k < cs.Length; k++)
+                foreach (string langue in k == 3 ? new[] { "fr" } : new[] { "fr", "en" })
                 {
                     // L'ANGLAIS se pose AVANT le shell : le shell code le français (ruling fiction) et ne se re-rend pas quand le catalogue change (le HUD resterait « Aube » : la garde d'encre du banc le refuse).
                     // On charge donc le bundle EN SERVI (`GET /v1/i18n/bundle?locale=en`, route publique) ; l'amorçage du shell devient un no-op (`Amorcer` sort si `Charge`) et tout l'écran naît en anglais.
@@ -282,11 +283,37 @@ namespace MafiaCleanCity.Capture.Tests
                     for (float f = Time.realtimeSinceStartup + 25f; ecran.DernierChargement == null && Time.realtimeSinceStartup < f;) yield return null;
                     Assert.IsNotNull(ecran.DernierChargement, $"㊴ ({etats[k]} {langue}) : `GET /v1/me/forensic` n'a rien rendu — la pile répond-elle ?");
                     for (int i = 0; i < 30; i++) yield return null;
-                    Assert.AreEqual(etats[k], ecran.DernierChargement.lifestyle_alarm_bucket, $"㊴ ({etats[k]}) : la pile sert une autre bande — l'état n'est pas celui annoncé");
                     string nom = ecran.DernierChargement.lifestyle_lieutenant_name;
-                    if (k == 0) Assert.IsTrue(string.IsNullOrEmpty(nom), "quiet : aucun nom servi"); else Assert.IsFalse(string.IsNullOrEmpty(nom), $"{etats[k]} : un nom devrait être servi");
+                    if (k == 3)
+                    {
+                        Assert.AreEqual("visible", ecran.DernierChargement.effluent_visibility_bucket, "㊴ (visible) : la pile sert une autre bande d'effluent — l'état n'est pas celui annoncé");
+                        Assert.AreEqual("quiet", ecran.DernierChargement.lifestyle_alarm_bucket, "㊴ (visible) : le train de vie reste naturel");
+                    }
+                    else
+                    {
+                        Assert.AreEqual(etats[k], ecran.DernierChargement.lifestyle_alarm_bucket, $"㊴ ({etats[k]}) : la pile sert une autre bande — l'état n'est pas celui annoncé");
+                        if (k == 0) Assert.IsTrue(string.IsNullOrEmpty(nom), "quiet : aucun nom servi"); else Assert.IsFalse(string.IsNullOrEmpty(nom), $"{etats[k]} : un nom devrait être servi");
+                    }
                     foreach ((int largeur, int hauteur) in Resolutions)
                         yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"E13_Dossier_{etats[k]}_{langue}_{largeur}x{hauteur}.png"), false, null);
+                    // juge-visuel ㊴ (11/11) : à 1080×1920 le bas des cartes est effacé par le fondu de la fenêtre défilante. La planche « _bas » (watched, FR) montre la fenêtre des pistes DÉFILÉE JUSQU'EN BAS, et
+                    // le journal MESURE la course dans le régime de capture (la liste déborde-t-elle ? le contenu atteint-il son bout ?) — même méthode que `Photographier` (`ListeQuiDeborde` + `DefilerJusquAuBout`).
+                    if (k == 2 && langue == "fr")
+                        foreach ((int largeur, int hauteur) in Resolutions)
+                        {
+                            ListeDefilante liste = null;
+                            MafiaCleanCity.CityMap.Tests.ListeDefilantePlayModeTests.Course course = default;
+                            yield return CaptureSousShell.CapturerLeShell(shell, largeur, hauteur, Path.Combine(dossier, $"E13_Dossier_{etats[k]}_fr_bas_{largeur}x{hauteur}.png"), false, () =>
+                            {
+                                liste = ListeQuiDeborde(shell.ContentSlot);
+                                if (liste != null) course = MafiaCleanCity.CityMap.Tests.ListeDefilantePlayModeTests.DefilerJusquAuBout(liste, null);
+                            });
+                            string mesure = liste == null
+                                ? "la fenêtre des pistes NE DÉBORDE PAS dans le régime de capture (contenu − fenêtre < 12 u) : rien à défiler, la planche _bas montre le même état"
+                                : $"la fenêtre des pistes DÉBORDE (fenêtre {course.Fenetre:0.#} u, contenu {course.Contenu:0.#} u, course attendue {course.Attendue:0.#} u, remontée {course.Remontee:0.#} u) et {(course.AtteintLeBout ? "ATTEINT son bout" : "N'ATTEINT PAS son bout")}";
+                            Noter("E13", $"㊴ Le dossier — {etats[k]} — FR — défilé jusqu'en bas — {largeur}x{hauteur}", mesure, "Tools/juge-visuel/39-dossier-nom-lieutenant/fin-ecran-2026-11-11/rapport.md (cartes effacées à 1080×1920)");
+                            if (liste != null && !course.AtteintLeBout) echecsNotes.Add($"㊴ {largeur}x{hauteur} : la liste déborde sans atteindre son bout (contenu inatteignable) : {mesure}");
+                        }
                     var d = ecran.DernierChargement;
                     Noter("E13", $"㊴ Le dossier — {etats[k]} — {langue.ToUpperInvariant()}",
                           $"ForensicScreenController · vue {ecran.Vue} · SERVI par la pile (vrai shell, compte jetable {DemoIdentityResolver.Empreinte(cs[k].Trim())}, bundle {langue} servi posé AVANT le shell) : audit {d.audit_risk_bucket} · effluent {d.effluent_visibility_bucket} · train de vie {d.lifestyle_alarm_bucket} · nom « {d.lifestyle_lieutenant_name} » · clé du mot {d.lifestyle_alarm_label_key} — {poses[k]}",

@@ -284,7 +284,7 @@ namespace MafiaCleanCity.Operational
                 else
                 {
                     piMot[i].text = ForensicResolvers.MotDeLaPiste(DernierChargement, piste.Cle, bande); piMot[i].color = encre;
-                    piCle[i].text = ForensicResolvers.CleDeLaPiste(piste.Cle, bande);   // JAMAIS la bande brute (« watched », « visible » : l'énumération du back, B2 du juge r1) : la maquette r2 n'y met que « Ça se remarque »
+                    piCle[i].text = ForensicResolvers.CleDeLaPiste(DernierChargement, piste.Cle, bande);   // JAMAIS la bande brute (« watched », « visible » : l'énumération du back, B2 du juge r1) : la maquette r2 n'y met que « Ça se remarque »
                 }
                 SpecFilet[] recette = eteinte ? DecorsDeScene.Filets.Forensic.PiEteinte
                                     : auBout ? DecorsDeScene.Filets.Forensic.PiBout
@@ -1189,15 +1189,21 @@ namespace MafiaCleanCity.Operational
         /// servie lue sous son nom `…_key`) —, sinon le mot de la bande (`Phrase`).</summary>
         /// <summary>La petite ligne sous le mot d'une piste VIVANTE (`.cle`). ⛔ Jamais la bande brute du back (« clear », « visible », « watched » : l'énumération, lue par le juge r1 comme B2 « en clair au joueur »).
         /// La maquette r2 ratifiée (atelier b2ceebeb, cadres 152-153) ne la porte QUE sous la piste des cuves à `visible` : « Ça se remarque » (gravité SERVIE `forensic.gravite.ca_se_remarque`). Ailleurs : rien.</summary>
-        public static string CleDeLaPiste(string cle, string bande)
+        /// <summary>⛔ D2 (juge-données ㊴ clôture, 11/11) : le MOT et la LIGNE ne sont JAMAIS la même chaîne — le cadre 152 dessine deux textes. À `visible`, le mot est le CRAN servi `forensic.cran.ca_se_voit`
+        /// (« ça se voit », `MotDeLaPiste`) et la ligne est la GRAVITÉ servie (`effluent_visibility_label_key` = `forensic.gravite.ca_se_remarque`, lue quand elle est connue ; sinon le littéral de repli).</summary>
+        public static string CleDeLaPiste(GetForensicResponseDto d, string cle, string bande)
         {
-            if (cle == "effluent_visibility_bucket" && !string.IsNullOrEmpty(bande) && bande.Trim().ToLowerInvariant() == "visible")
-                return MafiaCleanCity.I18n.Libelle.De("forensic", "gravite", "Ça se remarque");
-            return "";
+            if (cle != "effluent_visibility_bucket" || string.IsNullOrEmpty(bande) || bande.Trim().ToLowerInvariant() != "visible") return "";
+            string gravite = d != null && !string.IsNullOrEmpty(d.effluent_visibility_label_key) && MafiaCleanCity.I18n.I18nCatalog.Connait(d.effluent_visibility_label_key)
+                ? MafiaCleanCity.I18n.I18nCatalog.Traduire(d.effluent_visibility_label_key)
+                : MafiaCleanCity.I18n.Libelle.De("forensic", "gravite", "Ça se remarque");
+            return gravite == Phrase(bande) ? "" : gravite;   // jamais la même chaîne que le mot : pas de ligne plutôt qu'un doublon
         }
 
         public static string MotDeLaPiste(GetForensicResponseDto d, string cle, string bande)
         {
+            // D2 : à `visible` la clé servie de l'effluent est la GRAVITÉ (`forensic.gravite.ca_se_remarque`) — c'est la LIGNE sous le mot (`CleDeLaPiste`) ; le MOT est le cran « ça se voit » (`Phrase`).
+            if (cle == "effluent_visibility_bucket" && !string.IsNullOrEmpty(bande) && bande.Trim().ToLowerInvariant() == "visible") return Phrase(bande);
             if (d != null)
                 switch (cle)
                 {
