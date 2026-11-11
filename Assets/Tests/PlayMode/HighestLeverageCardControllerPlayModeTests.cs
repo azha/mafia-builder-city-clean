@@ -194,6 +194,8 @@ namespace MafiaCleanCity.Shell.Tests
 
                 var ctrl = NewBareController();
                 ctrl.SetPayload(tokenA, payloadA.hl_card, payloadA.structural_budget);
+                Assert.AreEqual(2, payloadA.hl_card.options.Length, "la carte réelle sert deux options");
+                Assert.AreEqual(2, ctrl.LibellesDesBoutons.Count, "DEUX gestes (agir, laisser) sur une carte de décision à deux options (TD-724 livré)");
                 yield return ctrl.RequestCommit(HlCardClient.OptionAgir);
                 Assert.IsNull(ctrl.LastCommitError, $"commit errored: {ctrl.LastCommitError}");
                 CommitResponseDto d = ctrl.DerniereReponse;

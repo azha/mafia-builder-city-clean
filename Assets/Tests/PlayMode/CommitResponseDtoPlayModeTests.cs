@@ -214,7 +214,7 @@ namespace MafiaCleanCity.Shell.Tests
                 Assert.AreEqual("Plusieurs attendent encore", ApresGesteHl.Vue(Ok(d), 2, 3, null).SousLigne, "file non vide : un MOT, jamais un chiffre");
                 // arrêt partiel : le préfixe servi (+ la phrase servie de l'erreur) ; y compris sans phrase servie : le préfixe SEUL, sans « : »
                 var p = Reponse("executed", "hl.after_choice.partial_stop", 1, "t1", "error.hl_card.not_found");
-                Assert.AreEqual("Fait pour 1 sur 2 : Cette carte n’est plus là.", ApresGesteHl.Vue(Ok(p), 2, 0, null).Mot);
+                Assert.AreEqual("Fait pour 1 sur 2\u00a0: Cette carte n’est plus là.", ApresGesteHl.Vue(Ok(p), 2, 0, null).Mot, "le préfixe servi porte son U+00A0 devant le deux-points");
                 p.stopped_at_i18n_key = "";
                 Assert.AreEqual("Fait pour 1 sur 2", ApresGesteHl.Vue(Ok(p), 2, 0, null).Mot);
             }

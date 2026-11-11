@@ -767,6 +767,7 @@ namespace MafiaCleanCity.Shell
             HorizontalLayoutGroup hh = halo.AddComponent<HorizontalLayoutGroup>();
             hh.padding = new RectOffset((int)Px(2f), (int)Px(2f), (int)Px(2f), (int)Px(2f));
             hh.childControlWidth = true; hh.childControlHeight = true;
+            hh.childForceExpandWidth = false; hh.childForceExpandHeight = false;   // un groupe horizontal qui force sa hauteur rend sa hauteur flexible à la pile (garde F12)
             ContentSizeFitter hf = halo.AddComponent<ContentSizeFitter>();
             hf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize; hf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -781,6 +782,7 @@ namespace MafiaCleanCity.Shell
             HorizontalLayoutGroup ch = corps.AddComponent<HorizontalLayoutGroup>();
             ch.padding = new RectOffset((int)Px(10f), (int)Px(10f), (int)Px(4f), (int)Px(4f));
             ch.childControlWidth = true; ch.childControlHeight = true;
+            ch.childForceExpandWidth = false; ch.childForceExpandHeight = false;
             TextMeshProUGUI mot = Texte(corps.transform, "Mot", "", Px(19f), Rouge,
                                         DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             mot.fontStyle = FontStyles.Bold;

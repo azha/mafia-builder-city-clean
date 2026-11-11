@@ -133,8 +133,9 @@ namespace MafiaCleanCity.Shell.Tests
             VerifierGeometrie(quand, (RectTransform)tete.transform, (RectTransform)file.transform);
 
             Assert.AreEqual(HighestLeverageCardController.CardState.NoCard, tete.RenderedState, $"{quand} : précondition, pas de carte (hors réseau)");
+            // (chunk 3c, 11/11) « RetourButton » est RETIRÉ de ④ : l'après-geste (cadres 6-7) est rendu par ⑤ (`ligne-or`), plus par la carte de tête — chercher ce nom ferait échouer l'anti-vacuité sur un objet qui n'existe plus, exprès.
             // (chunk 3) les deux gestes de décision s'appellent AgirButton / LaisserButton : l'ancien nom « CommitButton » ne désignerait plus RIEN et la garde passerait à vide
-            foreach (string geste in new[] { "AgirButton", "LaisserButton", "RetourButton", "SkipButton", "TypedConfirmRow" })
+            foreach (string geste in new[] { "AgirButton", "LaisserButton", "SkipButton", "TypedConfirmRow" })
             {
                 var trouves = tete.GetComponentsInChildren<Transform>(true).Where(x => x.name == geste).ToList();
                 if (geste != "SkipButton") Assert.IsNotEmpty(trouves, $"{quand} : anti-vacuité — « {geste} » existe (caché), sinon la garde ne défend rien");
@@ -486,7 +487,10 @@ namespace MafiaCleanCity.Shell.Tests
             HighestLeverageCardController tete = Tete();
             Assert.AreEqual(HighestLeverageCardController.CardState.Available, tete.RenderedState, "précondition : une carte est montrée");
             Assert.IsNull(tete.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "SkipButton"), "« Pas maintenant » n'existe plus (geste mort)");
-            Assert.AreEqual(2, tete.LibellesDesBoutons.Count, "deux gestes : agir et laisser (TD-724 livré, chunk 3 ; la propriété « un seul bouton » n'était vraie que sans option à poster)");
+            // La carte du banc (`AvecCarte`) est celle des RAPPORTS (`AUTONOMY_REPORTS_PENDING`) : elle se LIT, elle ne se tranche pas. Son SEUL geste est [Lire maintenant] ; ni agir ni laisser (ils n'existent que sur une carte
+            // de décision à deux options : prouvé contre le vrai back dans `ChosenOption0_Agit…`, W3U1). « Un seul geste » reste donc vrai ici — la lecture 11/11 (« deux gestes ») confondait les deux cartes.
+            Assert.IsNotNull(tete.LibelleLire, "la carte des rapports porte son geste [Lire maintenant]");
+            Assert.AreEqual(0, tete.LibellesDesBoutons.Count, "la carte des rapports ne porte ni AGIR ni LAISSER");
             int relectures = shell.RelecturesApresDecision, ouvertures = transport.Ouvertures;
             yield return TrancherPuisAttendre(() => tete.DecisionAccepteePourTest(), ouvertures);
             Assert.AreEqual(relectures + 1, shell.RelecturesApresDecision, "la décision acceptée a fait relire l'Accueil");
