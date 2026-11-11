@@ -89,7 +89,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             bool consomme = false;
             if (surTap != null)
             {
-                r.Tap = t.AddComponent<Button>();
+                r.Tap = Retour.NouveauBouton(t);
                 r.Tap.targetGraphic = papier;
                 r.Tap.onClick.AddListener(() =>
                 {

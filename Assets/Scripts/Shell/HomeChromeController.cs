@@ -235,7 +235,7 @@ namespace MafiaCleanCity.Shell
             dailyReviewGo.transform.SetParent(shortcuts.transform, false);
             Image drImg = dailyReviewGo.AddComponent<Image>();
             drImg.color = DesignTokens.Current.surfaceRow;
-            shortcutDailyReview = dailyReviewGo.AddComponent<Button>();
+            shortcutDailyReview = Retour.NouveauBouton(dailyReviewGo);
             shortcutDailyReview.targetGraphic = drImg;
             shortcutDailyReview.onClick.AddListener(ClickDailyReviewShortcut);
             TextMeshProUGUI drLabel = new GameObject("Label", typeof(RectTransform)).AddComponent<TextMeshProUGUI>();
@@ -249,7 +249,7 @@ namespace MafiaCleanCity.Shell
             secondGo.transform.SetParent(shortcuts.transform, false);
             Image secImg = secondGo.AddComponent<Image>();
             secImg.color = DesignTokens.Current.surfaceRow;
-            shortcutSecond = secondGo.AddComponent<Button>();
+            shortcutSecond = Retour.NouveauBouton(secondGo);
             shortcutSecond.targetGraphic = secImg;
             shortcutSecond.onClick.AddListener(ClickExceptionsShortcut);
             TextMeshProUGUI secLabel = new GameObject("Label", typeof(RectTransform)).AddComponent<TextMeshProUGUI>();

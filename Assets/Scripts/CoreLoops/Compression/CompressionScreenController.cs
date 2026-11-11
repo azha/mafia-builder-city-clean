@@ -332,7 +332,7 @@ namespace MafiaCleanCity.CoreLoops.Compression
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 10f;
 
             if (!budget) return;
-            Button bouton = b.AddComponent<Button>();
+            Button bouton = Retour.NouveauBouton(b);
             string id = problemeId, c = choix;
             bouton.onClick.AddListener(() => StartCoroutine(Decider(id, c)));
         }

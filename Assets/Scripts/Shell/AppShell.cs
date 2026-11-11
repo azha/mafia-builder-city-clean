@@ -1485,7 +1485,7 @@ namespace MafiaCleanCity.Shell
             fond.color = DesignTokens.Current.ficheGlassTop;                        // `#0c1320e6`
             LayoutElement le = entree.AddComponent<LayoutElement>();
             le.flexibleWidth = 1f;
-            Button b = entree.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(entree);
             b.targetGraphic = fond;
             System.Action geste = monter;   // capture par valeur : sinon les N entrées montent la DERNIÈRE
             b.onClick.AddListener(() => MonterUneEntreeDuMenu(geste));
@@ -1644,7 +1644,7 @@ namespace MafiaCleanCity.Shell
                                               DesignTokens.Current.hudMoneyUnderlineGold, geste.transform);
             l.fontStyle = FontStyles.UpperCase;
             l.characterSpacing = 10f;
-            Button b = geste.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(geste);
             b.targetGraphic = cadre;
             b.onClick.AddListener(RouvrirLeCoffre);
         }
@@ -2499,7 +2499,7 @@ namespace MafiaCleanCity.Shell
             pile.childControlWidth = true; pile.childControlHeight = true;
             pile.childForceExpandWidth = false; pile.childForceExpandHeight = false;
 
-            Button b = btn.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(btn);
             b.targetGraphic = img;
             b.onClick.AddListener(() => ToucherLOnglet(tab));   // G1 : sur la carte, EMPIRE rouvre l'Accueil
 

@@ -53,7 +53,7 @@ namespace MafiaCleanCity.Shell
                 LaSuitePanelController.Lisere(b.transform, LaSuitePanelController.RayonGeste, DesignTokens.Current.ficheCtaOrBord);
                 var le = b.AddComponent<LayoutElement>();
                 le.minHeight = le.preferredHeight = 100f;
-                e.BoutonReessayer = b.AddComponent<Button>();
+                e.BoutonReessayer = Retour.NouveauBouton(b);
                 e.BoutonReessayer.targetGraphic = im;
                 e.BoutonReessayer.onClick.AddListener(() => reessayer());
                 var mot = Texte(b.transform, "Mot", Libelle.Gabarit("demarrage.echec.reessayer", "Réessayer").ToUpperInvariant(), 28,

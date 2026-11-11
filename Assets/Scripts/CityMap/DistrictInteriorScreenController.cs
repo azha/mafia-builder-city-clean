@@ -690,7 +690,7 @@ namespace MafiaCleanCity.CityMap
                     Color invisible = Color.white; invisible.a = 0f;
                     zone.color = invisible;
                     zone.raycastTarget = true;
-                    Button tap = cell.AddComponent<Button>();
+                    Button tap = Retour.NouveauBouton(cell);
                     tap.transition = Selectable.Transition.None;
                     tap.targetGraphic = zone;
                     tap.onClick.AddListener(() => ToucherBatiment(capture));   // G2 (a) : re-toucher le bâtiment ouvert referme
@@ -2316,7 +2316,7 @@ namespace MafiaCleanCity.CityMap
             Stretch((RectTransform)t.transform, Vector2.zero, Vector2.zero);
             t.raycastTarget = false;
 
-            Button b = go.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(go, fondPeint);
             b.transition = Selectable.Transition.None;
             b.targetGraphic = fond;
             b.onClick.AddListener(action);

@@ -740,7 +740,7 @@ namespace MafiaCleanCity.Shell
             if (ligne.GetComponent<CanvasRenderer>() == null) ligne.AddComponent<CanvasRenderer>();   // `AddComponent` à l'exécution n'honore pas `[RequireComponent]`
             Image cible = ligne.AddComponent<Image>();   // la cible du toucher (transparente)
             cible.color = Color.clear;
-            ligneOr = ligne.AddComponent<Button>();
+            ligneOr = Retour.NouveauBouton(ligne);
             ligneOr.transition = Selectable.Transition.None;
             ligneOr.onClick.AddListener(RetourALAccueil);
             ligneOrLibelle = Texte(ligne.transform, "Libelle", "", Px(9.5f), OrVif, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);

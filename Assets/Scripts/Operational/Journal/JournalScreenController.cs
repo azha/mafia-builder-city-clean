@@ -920,7 +920,7 @@ namespace MafiaCleanCity.Operational
 
             GameObject bouton = NouveauUI("BoutonAssister", pied.transform);
             AjouterImage(bouton);
-            Button b = bouton.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(bouton);
             b.targetGraphic = bouton.GetComponent<Image>();
             b.interactable = false;
             var h = bouton.AddComponent<HorizontalLayoutGroup>();

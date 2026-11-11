@@ -318,7 +318,7 @@ namespace MafiaCleanCity.Onboarding
                   DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
             l.characterSpacing = 12f;
             l.fontStyle = FontStyles.UpperCase;   // la casse est au RENDU, le mot du catalogue reste « Compris »
-            b.AddComponent<Button>().onClick.AddListener(action);
+            Retour.NouveauBouton(b).onClick.AddListener(action);
         }
 
         /// <summary>« On vous explique encore » — la bascule du Profil (série 6, cadres 95-96, RATIFIÉE), dans le sens du joueur.
@@ -362,7 +362,7 @@ namespace MafiaCleanCity.Onboarding
             rond.color = Creme;
             rond.raycastTarget = false;
 
-            Button b = ligne.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(ligne);
             Image zone = ligne.AddComponent<Image>();
             Color transparent = Color.white; transparent.a = 0f;
             zone.color = transparent;

@@ -280,7 +280,7 @@ namespace MafiaCleanCity.Account.Settings
             Image zone = ligne.AddComponent<Image>();
             Color transparent = Color.white; transparent.a = 0f;
             zone.color = transparent;
-            Button b = ligne.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(ligne);
             b.targetGraphic = zone;
             b.onClick.AddListener(geste);
         }
@@ -299,7 +299,7 @@ namespace MafiaCleanCity.Account.Settings
             l.characterSpacing = 10f;
             l.fontStyle = FontStyles.UpperCase;
             Texte(b.transform, "R", sous, Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
-            b.AddComponent<Button>().onClick.AddListener(action);
+            Retour.NouveauBouton(b).onClick.AddListener(action);
         }
 
         private IEnumerator DefinirOptOut(bool optOut)
@@ -371,7 +371,7 @@ namespace MafiaCleanCity.Account.Settings
                   DesignTokens.Current.hudSerifFont);
 
             if (active) return;
-            Button b = r.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(r);
             string c = code;
             b.onClick.AddListener(() => StartCoroutine(Changer(c)));
         }

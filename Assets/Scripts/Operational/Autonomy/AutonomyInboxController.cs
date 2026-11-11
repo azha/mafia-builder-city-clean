@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
+using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -367,7 +368,7 @@ namespace MafiaCleanCity.Operational.Autonomy
             GameObject btn = NewUI("Btn_" + choice, optBlock.transform);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
-            Button b = btn.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(btn);
             b.targetGraphic = img;
             string capturedChoice = choice;
             AutonomyReportDto capturedReport = report;

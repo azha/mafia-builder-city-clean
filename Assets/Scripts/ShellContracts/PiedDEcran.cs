@@ -149,7 +149,7 @@ namespace MafiaCleanCity.Shell
             GameObject go = new GameObject("Geste", typeof(RectTransform));
             go.transform.SetParent(bande, false);
             Image fond = go.AddComponent<Image>();
-            Button b = go.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(go);
             b.targetGraphic = fond;
             b.interactable = etat != Etat.Mort && surClic != null;
             if (surClic != null) b.onClick.AddListener(() => surClic());

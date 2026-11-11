@@ -993,7 +993,7 @@ namespace MafiaCleanCity.Shell
             // que soit sa surface.
             Color leadingFond = DesignTokens.Current.surfaceRow; leadingFond.a = 0f;
             leadingImg.color = leadingFond;
-            Button leadingBtn = leadingGo.AddComponent<Button>();
+            Button leadingBtn = Retour.NouveauBouton(leadingGo);
             leadingBtn.targetGraphic = leadingImg;
             leadingBtn.onClick.AddListener(() => leadingOnClick?.Invoke());
 

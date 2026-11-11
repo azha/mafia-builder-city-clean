@@ -502,7 +502,7 @@ namespace MafiaCleanCity.Operational
 
             // LA PORTE : la 3ᵉ fenêtre est un BOUTON (bascule locale, aucune requête). Sa flèche est posée en haut à droite, hors mise en page.
             GameObject porte = go.transform.Find("Fenetre2").gameObject;
-            fenPorte = porte.AddComponent<Button>();
+            fenPorte = Retour.NouveauBouton(porte);
             fenPorte.targetGraphic = fenetreFond[2];
             fenPorte.transition = Selectable.Transition.None;
             fenPorte.onClick.AddListener(Basculer);

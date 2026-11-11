@@ -471,7 +471,7 @@ namespace MafiaCleanCity.CitySim.Inspection
                 fim.sprite = ProceduralUI.RoundedRectOutline((int)Px(5f), Px(epaisseur), rougeDuDepot);
                 fim.type = Image.Type.Sliced; fim.raycastTarget = false;
             }
-            deposerBouton = bGo.AddComponent<Button>();
+            deposerBouton = Retour.NouveauBouton(bGo);
             deposerBouton.targetGraphic = fondBouton;
             deposerBouton.interactable = false;
             deposerBouton.onClick.AddListener(Deposer);

@@ -217,6 +217,7 @@ namespace MafiaCleanCity.Shell
             // ficheCtaOrBas (mesuré (232,196,106) → (205,159,61) sur le cadre 4) la remplit ; bord ficheCtaOrBord. Les suivants : fond nuit
             // à peine levé (19,25,35), bord (58,63,72).
             Arrondir(im, RayonGeste, premierGeste ? DesignTokens.Current.ficheCtaOrBas : FondGesteSombre);
+            Image degrade = null;
             if (premierGeste)
             {
                 geste.AddComponent<Mask>().showMaskGraphic = false;
@@ -225,12 +226,12 @@ namespace MafiaCleanCity.Shell
                 lustre.AddComponent<LayoutElement>().ignoreLayout = true;
                 RectTransform drt = (RectTransform)lustre.transform;
                 drt.anchorMin = Vector2.zero; drt.anchorMax = Vector2.one; drt.offsetMin = drt.offsetMax = Vector2.zero;
-                Image degrade = lustre.AddComponent<Image>();
+                degrade = lustre.AddComponent<Image>();
                 degrade.sprite = ProceduralUI.VerticalGradient(64, DesignTokens.Current.ficheCtaOrHaut, DesignTokens.Current.ficheCtaOrBas);
                 degrade.raycastTarget = false;
             }
             Lisere(geste.transform, RayonGeste, premierGeste ? DesignTokens.Current.ficheCtaOrBord : BordDeGesteSombre);
-            Button b = geste.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(geste, degrade);
             b.targetGraphic = im;
             GesteDeLaSuite g = l.Geste;
             b.onClick.AddListener(() => Ouvrir(g));

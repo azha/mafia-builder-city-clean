@@ -715,7 +715,7 @@ namespace MafiaCleanCity.Operational
             // — pis-aller de véhicule fixé à "bike" (aucun sélecteur dans la maquette).
             GameObject boutonAchat = NouveauUI("BoutonAcheterVehicule", couriersRoot);
             AjouterFond(boutonAchat, DesignTokens.Current.surfaceRaised);
-            Button ba = boutonAchat.AddComponent<Button>();
+            Button ba = Retour.NouveauBouton(boutonAchat);
             ba.targetGraphic = boutonAchat.GetComponent<Image>();
             ba.onClick.AddListener(AcheterVehicule);
             HorizontalLayoutGroup hba = boutonAchat.AddComponent<HorizontalLayoutGroup>();
@@ -824,7 +824,7 @@ namespace MafiaCleanCity.Operational
 
             GameObject bouton = NouveauUI("BoutonEnvoyer", piedRoot);
             AjouterFond(bouton, Or);
-            Button b = bouton.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(bouton);
             b.targetGraphic = bouton.GetComponent<Image>();
             b.onClick.AddListener(EnvoyerCeSoir);
             HorizontalLayoutGroup hb = bouton.AddComponent<HorizontalLayoutGroup>();
@@ -919,7 +919,7 @@ namespace MafiaCleanCity.Operational
 
             GameObject bouton = NouveauUI("BoutonAcheterRelais", piedRoot);
             AjouterFond(bouton, DesignTokens.Current.surfaceRaised);
-            Button b = bouton.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(bouton);
             b.targetGraphic = bouton.GetComponent<Image>();
             b.onClick.AddListener(() => StartCoroutine(AcheterUnRelais()));
             HorizontalLayoutGroup h = bouton.AddComponent<HorizontalLayoutGroup>();

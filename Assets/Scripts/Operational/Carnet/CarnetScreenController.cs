@@ -576,7 +576,7 @@ namespace MafiaCleanCity.Operational
             GameObject go = NouveauUI("Bouton" + nom, parent);
             Image fond = AjouterImage(go);
             fond.color = principal ? CouleurEncre : CouleurPapierFonce;
-            var b = go.AddComponent<Button>();
+            var b = Retour.NouveauBouton(go);
             b.targetGraphic = fond;
             b.onClick.AddListener(action);
             var le = go.AddComponent<LayoutElement>();
@@ -604,7 +604,7 @@ namespace MafiaCleanCity.Operational
             GameObject go = NouveauUI("Bouton" + nom, parent);
             Image fond = AjouterFond(go, new Color(0f, 0f, 0f, 0f));
             fond.raycastTarget = true;   // toute la puce reçoit le toucher
-            var b = go.AddComponent<Button>();
+            var b = Retour.NouveauBouton(go);
             b.targetGraphic = fond;
             b.onClick.AddListener(action);
             var h = go.AddComponent<HorizontalLayoutGroup>();
@@ -646,7 +646,7 @@ namespace MafiaCleanCity.Operational
             Image img = ligne.GetComponent<Image>();
             if (img == null) img = AjouterFond(ligne, new Color(0f, 0f, 0f, 0f));
             img.raycastTarget = true;
-            var b = ligne.AddComponent<Button>();
+            var b = Retour.NouveauBouton(ligne);
             b.targetGraphic = img;
             b.onClick.AddListener(action);
         }

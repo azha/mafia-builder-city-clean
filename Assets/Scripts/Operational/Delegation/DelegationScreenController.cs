@@ -1525,7 +1525,7 @@ namespace MafiaCleanCity.Operational
             Image cible = AjouterImage(zone);
             cible.color = new Color(0f, 0f, 0f, 0f);
             cible.raycastTarget = true;
-            Button b = zone.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(zone);
             b.transition = Selectable.Transition.None;
             b.onClick.AddListener(() => action());
         }

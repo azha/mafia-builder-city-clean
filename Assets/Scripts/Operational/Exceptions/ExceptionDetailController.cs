@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -394,7 +395,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 talonImg.color = AccentSevere;
                 // ⑩-1b — le talon se DÉPLIE au toucher (D09 a) : sans lui, les issues hors des trois rôles sont des routes
                 // mortes (mesuré : `lay_low` de la carte de chaleur).
-                talonBouton = talon.AddComponent<Button>();
+                talonBouton = Retour.NouveauBouton(talon);
                 talonBouton.targetGraphic = talonImg;
                 talonBouton.onClick.AddListener(() => { talonDeplie = !talonDeplie; Render(); });
                 AddLayoutElement(talon, minWidth: PxD(CssTalonL), preferredWidth: PxD(CssTalonL),
@@ -566,7 +567,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             // ⑩-1b — une carte se CHOISIT au toucher (D09) : le tampon la dit et l'enverra.
             if (a != null)
             {
-                Button choix = carte.AddComponent<Button>();
+                Button choix = Retour.NouveauBouton(carte, verreImg);
                 choix.targetGraphic = fondCarte;
                 CandidateActionDto capture = a;
                 bool escaladeCapture = escalade;
@@ -679,7 +680,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             GameObject btn = NewUI("Btn_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
-            Button b = btn.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(btn);
             b.targetGraphic = img;
             b.onClick.AddListener(onClick);
             AddLayoutElement(btn, minHeight: 44, flexibleHeight: 0); // ≥44dp tap target (F2)

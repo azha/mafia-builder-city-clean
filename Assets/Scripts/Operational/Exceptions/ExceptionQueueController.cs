@@ -602,7 +602,7 @@ namespace MafiaCleanCity.Operational.Exceptions
                 // ⛔ CHAQUE ATTENDANT OUVRE SA PROPRE CARTE — c'est LE chemin joueur vers ⑩ (capture par valeur).
                 Image fondA = a.AddComponent<Image>();
                 fondA.color = new Color(0f, 0f, 0f, 0f);   // cible de toucher, invisible
-                Button ba = a.AddComponent<Button>();
+                Button ba = Retour.NouveauBouton(a);
                 ba.targetGraphic = fondA;
                 ExceptionCardDto carteDeCetAttendant = c;
                 ba.onClick.AddListener(() => OpenDetail(carteDeCetAttendant));

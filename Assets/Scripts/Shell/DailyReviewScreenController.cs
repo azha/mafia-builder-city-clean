@@ -587,7 +587,7 @@ namespace MafiaCleanCity.Shell
                 consomme = true;
                 StartCoroutine(DismissFlag(card.flag_id));
             };
-            Button rendre = jeton.AddComponent<Button>();
+            Button rendre = Retour.NouveauBouton(jeton);
             rendre.targetGraphic = jetonImg;
             rendre.onClick.AddListener(() =>
             {
@@ -1098,7 +1098,7 @@ namespace MafiaCleanCity.Shell
             emptyStateText.characterSpacing = 4f;
             emptyStateText.enableWordWrapping = true;
             // ⑯ → ⑧ (table 63 v2) : la phrase « donnez-leur une première règle » se TOUCHE ; éteinte dans tous les autres états
-            versLaFamille = emptyStateText.gameObject.AddComponent<Button>();
+            versLaFamille = Retour.NouveauBouton(emptyStateText.gameObject);
             versLaFamille.transition = Selectable.Transition.None;
             versLaFamille.interactable = false;
             versLaFamille.onClick.AddListener(OuvrirLaFamille);

@@ -253,7 +253,7 @@ namespace MafiaCleanCity.Shell
             Texte.enableWordWrapping = true;
             Texte.raycastTarget = false;
 
-            var bouton = gameObject.AddComponent<Button>();
+            var bouton = Retour.NouveauBouton(gameObject);
             bouton.targetGraphic = fond;
             bouton.transition = Selectable.Transition.None;
             bouton.onClick.AddListener(Toucher);

@@ -8,6 +8,7 @@ using UnityEngine.UI;
 using MafiaCleanCity.CityMap; // REUSE AuthClient (signin → Bearer)
 using MafiaCleanCity.Operational.Exceptions; // ProgressionClient / ProgressionDto (Phase-20)
 using MafiaCleanCity.Operational.Autonomy; // AutonomyClient — budget bands + ceiling decisions (Phase-21)
+using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -1603,7 +1604,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
         public static Button BrancherRetourDuShell(GameObject retour, Graphic cible)
         {
             cible.raycastTarget = true;
-            Button b = retour.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(retour);
             b.transition = Selectable.Transition.None;
             b.targetGraphic = cible;
             b.onClick.AddListener(() => MafiaCleanCity.Shell.RetourDuShellLocator.Find()?.Depiler());
@@ -2729,7 +2730,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             TrackText(etatLbl, etatLibelle);
 
             string id = row.lieutenant_id;
-            Button b = rang.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(rang);
             b.transition = Selectable.Transition.None;
             b.onClick.AddListener(() => OpenLieutenant(id));
         }
@@ -2843,7 +2844,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             if (auRepos)
             {
                 img.raycastTarget = true;
-                Button versAppro = vide.AddComponent<Button>();
+                Button versAppro = Retour.NouveauBouton(vide);
                 versAppro.transition = Selectable.Transition.None;
                 versAppro.targetGraphic = img;
                 versAppro.onClick.AddListener(OuvrirLaChaineDAppro);
@@ -2884,7 +2885,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
 
             // Le CTA DÉPLIE le panneau de recrutement. Sans ce câblage il serait un décor : un
             // bouton qui ne fait rien est pire qu'un bouton absent — il promet une action.
-            Button b = cta.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(cta);
             b.transition = Selectable.Transition.None;
             b.targetGraphic = img;
             b.onClick.AddListener(BasculerRecrutement);
@@ -3975,7 +3976,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             GameObject btn = NewUI("Cycle_" + tag, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
-            Button b = btn.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(btn);
             b.targetGraphic = img;
             AddLayoutElement(btn, minHeight: 28, minWidth: 96, flexibleWidth: 1);
 
@@ -3996,7 +3997,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             GameObject btn = NewUI("Compact_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
-            Button b = btn.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(btn);
             b.targetGraphic = img;
             b.onClick.AddListener(onClick);
             AddLayoutElement(btn, minHeight: 28, minWidth: 34, preferredWidth: 34, flexibleWidth: 0);
@@ -4129,7 +4130,7 @@ namespace MafiaCleanCity.Operational.Lieutenant
             GameObject btn = NewUI("Action_" + idStable, parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
-            Button b = btn.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(btn);
             b.targetGraphic = img;
             b.onClick.AddListener(onClick);
             AddLayoutElement(btn, minHeight: 34, flexibleHeight: 0);

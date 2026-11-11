@@ -247,7 +247,7 @@ namespace MafiaCleanCity.Shell
             Image zone = trancherGo.AddComponent<Image>();
             Color invisible = DesignTokens.Current.surfaceRow; invisible.a = 0f;
             zone.color = invisible;                                   // une zone de toucher, pas un aplat
-            Button b = trancherGo.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(trancherGo);
             b.transition = Selectable.Transition.None;
             b.targetGraphic = zone;
             ExceptionCardDto carte = card;
@@ -339,7 +339,7 @@ namespace MafiaCleanCity.Shell
             Image zone = trancherGo.AddComponent<Image>();
             Color invisible = DesignTokens.Current.surfaceCard; invisible.a = 0f;
             zone.color = invisible;
-            Button b = trancherGo.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(trancherGo);
             b.transition = Selectable.Transition.None;
             b.targetGraphic = zone;
             ExceptionCardDto carte = card;
@@ -523,7 +523,7 @@ namespace MafiaCleanCity.Shell
             viewAllGo.transform.SetParent(transform, false);
             Image vaImg = viewAllGo.AddComponent<Image>();
             vaImg.color = DesignTokens.Current.surfaceRow;
-            Button vaBtn = viewAllGo.AddComponent<Button>();
+            Button vaBtn = Retour.NouveauBouton(viewAllGo);
             vaBtn.targetGraphic = vaImg;
             vaBtn.onClick.AddListener(() => StartCoroutine(ViewAll()));
             LayoutElement vaLe = viewAllGo.AddComponent<LayoutElement>();

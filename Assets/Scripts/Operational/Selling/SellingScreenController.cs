@@ -438,7 +438,7 @@ namespace MafiaCleanCity.Operational.Selling
             //      préservée quelle que soit la largeur. C'est le précédent maison, déjà employé
             //      par `LieutenantScreenController:2641,2675` — je ne l'invente pas, je l'adopte.
             rf.type = Image.Type.Tiled;
-            Button bouton = ramasser.AddComponent<Button>();
+            Button bouton = Retour.NouveauBouton(ramasser);
             bouton.targetGraphic = rf;
             bouton.interactable = actionPossible;
             if (actionPossible)
@@ -500,7 +500,7 @@ namespace MafiaCleanCity.Operational.Selling
             Image img = g.AddComponent<Image>();
             img.sprite = ProceduralUI.RoundedRectDashedOutline((int)Px(9f), Px(1f), (int)Px(4f), (int)Px(3f), Or);
             img.type = Image.Type.Tiled;
-            Button b = g.AddComponent<Button>();
+            Button b = Retour.NouveauBouton(g);
             b.targetGraphic = img;
             b.onClick.AddListener(action);
             TextMeshProUGUI lib = Texte(g.transform, "Lib", libelle, Px(9f), Or, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);

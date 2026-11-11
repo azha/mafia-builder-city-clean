@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using TMPro;
 
@@ -583,7 +584,7 @@ namespace MafiaCleanCity.CityMap
             GameObject btn = NewUI("HeatToggle", parent);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.mapChipBg;
-            Button button = btn.AddComponent<Button>();
+            Button button = Retour.NouveauBouton(btn);
             button.targetGraphic = img;
             AddLayoutElement(btn, minHeight: 36, flexibleHeight: 0, minWidth: 210, preferredWidth: 210);
 
@@ -686,7 +687,7 @@ namespace MafiaCleanCity.CityMap
             view.AttachHeatBadge(badge, badgeBg, badgeLabel);
 
             // The whole cell is a button → opens the district detail panel.
-            Button cellButton = cell.AddComponent<Button>();
+            Button cellButton = Retour.NouveauBouton(cell);
             cellButton.targetGraphic = bg;
             cellButton.onClick.AddListener(() => SelectDistrict(view.Model.id));
 
@@ -891,7 +892,7 @@ namespace MafiaCleanCity.CityMap
             DistrictCellView view = cell.AddComponent<DistrictCellView>();
             view.AttachHeatBadge(badge, badgeBg, badgeLabel);
             view.AttachPresence(sol, presence);
-            Button cellButton = cell.AddComponent<Button>();
+            Button cellButton = Retour.NouveauBouton(cell, halo);
             cellButton.targetGraphic = hit;
             cellButton.onClick.AddListener(() => SelectDistrict(view.Model.id));
             return view;
@@ -1028,7 +1029,7 @@ namespace MafiaCleanCity.CityMap
             GameObject closeBtn = NewUI("Close", header.transform);
             Image closeImg = closeBtn.AddComponent<Image>();
             closeImg.color = DesignTokens.Current.mapCloseButtonBg;
-            Button cb = closeBtn.AddComponent<Button>();
+            Button cb = Retour.NouveauBouton(closeBtn);
             cb.targetGraphic = closeImg;
             cb.onClick.AddListener(HideDetail);
             AddLayoutElement(closeBtn, minHeight: 26, flexibleHeight: 0, minWidth: 30, preferredWidth: 30);
@@ -1065,7 +1066,7 @@ namespace MafiaCleanCity.CityMap
             GameObject enterGo = NewUI("EnterButton", footer.transform);
             Image enterImg = enterGo.AddComponent<Image>();
             enterImg.color = DesignTokens.Current.mapChipBg; // REUSE — même token que HeatToggle (pas accentGold : allowlist C5F2 fermée)
-            enterButton = enterGo.AddComponent<Button>();
+            enterButton = Retour.NouveauBouton(enterGo);
             enterButton.targetGraphic = enterImg;
             enterButton.interactable = false; // aucun jeton au démarrage (nav-F3)
             enterButton.onClick.AddListener(() => OnEnterDistrict?.Invoke(SelectedDistrictId));
