@@ -36,9 +36,9 @@ comme contraintes (§3.4, §4, §5).
 
 | # | décision | si elle bouge |
 |---|---|---|
-| **D1** | **Guichet unique de création** : les 69 sites `AddComponent<Button>()` passent par `Retour.NouveauBouton(...)`, et une garde de SOURCE interdit le motif ailleurs (§3.4, GS1) | sans elle, il n'existe aucune structure qui ferme la classe : ni fabrique de `Button` (mesuré : `ProceduralUI.cs` ⇒ **0** occurrence de `Button`), ni crochet « après le premier rendu » (mesuré : `AppShell.cs:40-42` — le locataire construit sa mise en page dans son `Start()`, **différé d'une frame** après `AddComponent`). Le repli serait un balayage par frame ou un appel à la main par site : plus de sites, et aucun signal de CI |
+| **D1** | **Guichet unique de création** : les 69 sites `AddComponent<Button>()` passent par `Retour.NouveauBouton(...)`, et une garde de SOURCE interdit le motif ailleurs (§3.4, GS1) | sans elle, il n'existe aucune structure qui ferme la classe : ni fabrique de `Button` (mesuré : `ProceduralUI.cs` ⇒ **0** occurrence de `Button`), ni crochet « après le premier rendu » (le locataire construit sa mise en page dans son `Start()`, différé d'une frame après `AddComponent` — énoncé par le **commentaire** `AppShell.cs:36-42`, **non mesuré** : m2 ; l'argument qui porte seul est §3.4 (ii), un site produit n instances plus tard). Le repli serait un balayage par frame ou un appel à la main par site : plus de sites, et aucun signal de CI |
 | **D2** | **Le relâchement n'est pas animé** : l'appui monte en 90 ms puis **TIENT** ; le relâchement est la **restitution** de `Detacher`, donc immédiate. Les **140 ms** promis par le §8 et par `catalogue-mouvements.md:422` **tombent** → dette 32 (§3.5, preuve mesurée) | si f2 veut les 140 ms : il faut **deux entrées de plus** (une par genre de canal) et une **3ᵉ méthode** de régie passant `retourAppui: true` — donc rouvrir « deux `Id` seulement » et la décision B1. Prix écrit en §3.5 |
-| **D3** | **Le cas 5 n'est plus une issue, c'est un ROUGE** : tout bouton reçoit EXACTEMENT UN attachement ; un bouton dont rien ne peut s'assombrir fait rougir la garde de population jusqu'à ce qu'une `surface` soit nommée (§3.1, GP) | la v4.8 comptait un `SansRetour` silencieux. Avec le `SansRetour`, « jamais refusé » n'était pas tenu : il était seulement *compté* |
+| **D3** | **Le cas 5 n'est plus une issue, c'est un ROUGE** : tout bouton reçoit EXACTEMENT UN attachement **dont l'effet franchit le plancher** ; un bouton dont rien ne peut s'assombrir — ou **trop peu** (arbitrage f2 du 11/11 : *un retour invisible est un retour refusé*) — fait rougir la garde de population jusqu'à ce qu'une `surface` soit nommée (§3.1, GP) | la v4.8 comptait un `SansRetour` silencieux ; la v5 n°1 gardait le **handle** et pas l'**effet**. Dans les deux cas « jamais refusé » n'était pas tenu : il était seulement *compté*, puis seulement *attaché* |
 | **D4** | **N se mesure à chaque lot** : N = 69 à `9b48b2ac`, 68 à `b7c522a7`, 67 au 08/10 (§1.3). Aucune garde, aucun test, aucun texte ne porte un littéral `67`/`69` | un littéral gelé ⇒ la garde de population devient verte sur un arbre qui a grossi : exactement la classe de défaut que ce lot doit fermer |
 
 ---
@@ -68,7 +68,7 @@ nomme `Button`.) ⇒ **aucun bouton ne vient d'un asset** : tous sont construits
 | `Slider` | **1** (`LieutenantScreenController.cs:4055`) | pas un appui de bouton (un glissement) |
 | `TMP_InputField` | **3** (`ShopScreenController.cs:395`, `LieutenantScreenController.cs:4020`, `HighestLeverageCardController.cs:534`) | la saisie a son propre retour (le curseur) |
 | `LongPressButton` | **7** sites (`ShopScreenController.cs:341`, `TamponAuComptoir.cs:102`, `DecisionDetailScreenController.cs:717`, `HighestLeverageCardController.cs:498` et `:501`, `DailyReviewScreenController.cs:583` et `:1276`) | ce n'est pas un `Selectable` : c'est un `MonoBehaviour` détecteur (`ShellContracts/LongPressButton.cs:15`). Là où il **partage** le GameObject d'un `Button` (mesuré : `TamponAuComptoir.cs:92` `Button` et `:102` `LongPressButton` sur le même `t`), le bouton est déjà compté ; là où il est seul, l'appui long n'a pas de retour de teinte — dette 33 |
-| les `Button` de `Assets/Tests` | **3** | ce sont des montages de test. **Jamais** dans N, **jamais** dans l'inventaire — y compris le montage synthétique du contrôle positif de GS/GE (contrainte f2 B2) |
+| les `Button` de `Assets/Tests` | **3 lignes nomment le motif, 1 monte un `Button`** (revue n°1, I4) | mesuré : `ReputationScreenPlayModeTests.cs:907` `var temoin = temoinGo.AddComponent<Button>();` **monte** ; `VitrinePlayModeTests.cs:66` et `:69` sont des `StringAssert.DoesNotContain("AddComponent<Button>", …)` — des **chaînes de caractères**, pas des boutons. (Le motif de l'inventaire, avec parenthèses, en compte **2** dans `Assets/Tests` ; la commande ne lit que `Assets/Scripts`, donc N est intact.) Montages de test : **jamais** dans N, **jamais** dans l'inventaire, **jamais** dans GS2/GP — y compris le montage synthétique de GE4 (contrainte f2 B2) |
 
 ### 1.2 La commande, et sa sortie collée
 
@@ -191,7 +191,9 @@ rouge par bruit. Les deux comptes sont donc **nommés séparément** partout dan
 
 - `Selectable.Transition.None` : **17** lignes, dont **16 sur un `Button`** (types vérifiés un par
   un : `fenPorte` `ForensicScreenController.cs:394`, `versLaFamille` `DailyReviewScreenController.cs:55`,
-  `versAppro` `:2846`, `SurfaceButton` `HighestLeverageCardController.cs:58`, `ligneOr`
+  `versAppro` **`LieutenantScreenController.cs:2846`** (`Transition.None` à `:2847` ; corrigé — revue n°1,
+  m1 : un `:N` nu désignait le fichier précédent, qui n'a pas de ligne 2846), `SurfaceButton`
+  `HighestLeverageCardController.cs:58`, `ligneOr`
   `DecisionDetailScreenController.cs:166`) et **1 sur la `Scrollbar`** (`ReputationScreenController.cs:964`).
   ⇒ **69 − 16 = 53** boutons perdent leur tintement `ColorTint` par défaut en adoptant le retour
   d'appui, 16 n'avaient déjà rien. (Le « 53 » du §8 était juste par un autre chemin — 67 − 14 — ; il
@@ -212,9 +214,16 @@ rouge par bruit. Les deux comptes sont donc **nommés séparément** partout dan
 
 > **P1 — le geste change quelque chose de VISIBLE, et c'est rendu au relâchement.** Pour tout bouton
 > monté, actif et `interactable` : entre le rendu au **repos** et le rendu **sous le doigt** (les deux
-> pris à la même phase, horloge `Figee`), au moins **12 pixels** du rect de la cible diffèrent de
+> pris à la même phase, horloge `Figee`), au moins **12 pixels** du rect de **la cible** diffèrent de
 > **≥ 3/255** sur le plus grand canal R/G/B ; et après le relâchement, le rendu **redevient** celui du
 > repos (mêmes pixels, à l'epsilon d'écriture près).
+> **« La cible » est nommée sans ambiguïté** (revue ⊥ n°1, B2) : pour un `Melange`, la **surface
+> peinte** (cas 1-2) ; pour un voile, le **GameObject qui porte le `CanvasGroup`** — `b` en cas 3,
+> **`q` en cas 4**, jamais « le rect du bouton » (en cas 4 l'encre vit chez `q`, et rien n'oblige
+> l'encre de `q` à tomber dans le rect de `b`).
+> **Un effet sous ce plancher est un REFUS** (arbitrage f2, §3.1) : P1 et P2 ne sont pas deux
+> propriétés séparées que l'on pourrait satisfaire l'une sans l'autre — un handle non nul dont les
+> pixels ne bougent pas viole **P2 autant que P1**.
 > *Les deux seuils sont des REUSE, pas des inventions* : `3/255` = `MouvementTunables.SeuilCouleurRendue`
 > (`MouvementTunables.cs:76`, `3f / 255f`), le seuil de perception par propriété du design §6.2 ;
 > `12 pixels` = le plancher d'anti-vacuité du design §6.3. **Mesuré sur les pixels RENDUS**, jamais sur
@@ -224,7 +233,8 @@ rouge par bruit. Les deux comptes sont donc **nommés séparément** partout dan
 > tombe juste.
 
 > **P2 — jamais refusé par la régie.** Au `PointerDown` d'un bouton monté, actif et `interactable`,
-> `Retour` obtient **exactement un** handle **non nul**, et l'entrée de ce handle est l'un des **deux**
+> `Retour` obtient **exactement un** handle **non nul**, **dont l'effet franchit le plancher de P1**,
+> et l'entrée de ce handle est l'un des **deux**
 > `Id` (`retour.appui` ou `retour.appui-voile`) — **y compris** sous un ancêtre `ContentSizeFitter` /
 > dans une liste défilante, **y compris** quota non-`Ambiance` plein, **y compris** plafond `Melange`
 > plein. Aucune piste vivante n'est évincée, `Refus` est **inchangé**.
@@ -289,6 +299,33 @@ mutable — un `targetGraphic` opaque à la construction peut être forcé à α
 | **4** | le **parent direct** `q` du bouton | `retour.appui-voile` | `Peint(q)` vrai **et** aire(`q`) ≤ 2 × aire(`b`) |
 | ~~5~~ | — | — | **supprimé** : voir D3 |
 
+**RÈGLE DE CLASSEMENT — un retour d'appui INVISIBLE est un retour REFUSÉ** (arbitrage f2 du 11/11 ;
+revue ⊥ n°1 du v5, B1). Ce n'est pas un risque : c'est la règle qui décide, et elle a trois marches.
+
+1. **Le cas 1-2 n'est retenu que si son effet franchit le plancher** — magnitude ≥ `3f/255f` **et**
+   étendue ≥ 12 pixels (le plancher est défini une fois, en §3.2, et il est le **même** pour le
+   prédicat qui décide à l'exécution et pour la garde qui mesure les pixels).
+2. **Sous le plancher, le bouton BASCULE sur le voile** : `Retour` appelle `AttacherVoileDAppui`
+   (cas 3-4) au lieu d'accepter un `Melange` que personne ne voit. La bascule est **comptée**.
+3. **Si le voile non plus ne franchit rien, c'est un ROUGE**, levé en nommant une `surface` au site
+   (c'est l'échelle de D3, étendue du cas structurel « rien ne peint » au cas perceptuel « trop peu
+   peint »).
+
+**L'amplitude `× 0,85` et le seuil `3f/255f` ne bougent JAMAIS vers le bas.** Un effet qu'on ne voit
+pas ne se répare pas en abaissant la barre de ce qui compte comme vu : il se répare au **site**, en
+nommant une matière qui peint. (C'est pourquoi le « correctif par un `k` plus bas » que la v5 listait
+en risque est **retiré** du document : il est interdit.)
+
+**Qui décide, et qui a raison.** À l'exécution, c'est le **prédicat** du §3.2 qui décide, parce qu'il
+est le seul calculable au `PointerDown` — il travaille sur une arithmétique de `Color`, donc c'est un
+**majorant** : il peut accepter une surface dont l'encre rendue, composée en **linéaire**, fait moins
+que le plancher. C'est la **mesure de pixels** du relevé qui a raison, et son rôle est de **CALIBRER**
+le prédicat : l'écart « le prédicat a dit cas 1-2, les pixels disent non » est **compté, publié écran
+par écran** (GP) et **doit valoir 0 au gate**. Chaque écart se ferme **au site** — jamais par un
+abaissement de seuil, jamais par une table d'exceptions par site (ce serait une garde par site, ce que
+ce lot refuse). La règle est donc : *le prédicat décide, les pixels jugent, l'écart est une dette
+chiffrée qui se solde avant le gate.*
+
 **Le cas 5 de la v4.8 (« aucun retour, compté `SansRetour` ») est RETIRÉ.** Un bouton pressable dont
 rien, ni lui ni son parent direct, ne peut s'assombrir **n'est pas un cas de la régie : c'est un défaut
 d'écran** (le joueur touche une matière qui n'existe pas). Le design le traite donc comme un **ROUGE de
@@ -316,6 +353,20 @@ nue qui ne peint pas) :
 | `DistrictInteriorScreenController.cs:2319` | `Remplissage` (`:2272` `NewUI("Remplissage", go.transform)`) | `:2312` | **périmée** (`:2312` = un `NewText`) |
 | `LaSuitePanelController.cs:233` | `Degrade` (`:223` `new GameObject("Degrade", …)`), **seulement `if (premierGeste)`** (`:220`) | `:223` | `:223` est le `Degrade`, le `Button` est à **`:233`** |
 
+**Contrainte du guichet sur une `surface` nommée : elle est DANS le sous-arbre de son bouton**
+(revue ⊥ n°1, I5). *Pourquoi* : si la surface d'un cas 1 est hors du sous-arbre, la bascule du cas 0
+(plafond `Melange` plein) pose le voile sur le bouton, dont le sous-arbre peut ne rien peindre — handle
+non nul, **0 pixel**. `RegieInterne.cs:106` (`default: return true`) prouve seulement qu'un `Alpha` est
+**attachable**, jamais qu'il **peint** : l'argument de la v5 (« la bascule est toujours possible ») est
+**corrigé ici**, il ne portait que sur l'attachabilité.
+*Mesuré à HEAD, les trois sites la respectent déjà* : `Verre` (`ExceptionDetailController.cs:540`) ⊂
+`face` (`:527`) ⊂ `carte` (`:523`), et le `Button` est sur `carte` (`:569`) · `Remplissage`
+(`DistrictInteriorScreenController.cs:2272`) ⊂ `go`, `Button` sur `go` (`:2319`) · `Degrade`
+(`LaSuitePanelController.cs:223-224`) ⊂ `geste`, `Button` sur `geste` (`:233`). **Aucune instance
+fautive aujourd'hui** ⇒ la contrainte est une garde de non-régression, pas un correctif.
+`Retour.NouveauBouton` la vérifie à la pose ; GP relève **la bascule du cas 0 site par site**, avec ses
+pixels (GE2) ; un site qui la viole est un **rouge déclaré**, pas un `SansRetour` silencieux.
+
 ### 3.2 Les deux prédicats — REUSE du §17, avec ce qui est NEUF marqué
 
 `RendSurface(g)` et `Peint(t)` sont **repris du §17 v4.8** (ils ont tenu cinq revues ⊥ ; la n°5 les a
@@ -330,6 +381,24 @@ relus sans finding) ; je ne les réécris pas, je les cite et je re-mesure ce do
   (`TMP_Text` non vide), `enabled`, actif, hors `Mask` invisible, dont l'écart rendu du voile
   (0,20 × max(R,G,B) × `color.a` × alphas cumulés) atteint `3f/255f`.
 
+**LE PLANCHER — une seule définition, pour le prédicat ET pour la garde** (revue ⊥ n°1, I2). La v5
+mettait le compte de pixels dans la garde et la seule magnitude dans le prédicat : une surface qui
+franchit `3f/255f` sur **1 à 11** pixels (un liséré fin, un glyphe isolé) était alors classée cas 1-2
+**à bon droit** par le mécanisme et faisait **rougir GE1** — un rouge pour la mauvaise raison. Le
+plancher est donc **un seul critère à deux facteurs**, écrit ici une fois :
+
+> **magnitude** ≥ `MouvementTunables.SeuilCouleurRendue` (`3f/255f`, `MouvementTunables.cs:76`)
+> **ET étendue** ≥ **12 pixels d'écran** (le plancher d'anti-vacuité du design §6.3).
+
+- **Dans le prédicat** (`RendSurface`, `Peint`), l'étendue est l'aire du rect de la cible **convertie
+  en pixels d'écran** par le `scaleFactor` du `Canvas` — un calcul d'un rect, pas un rendu : il tient
+  au `PointerDown`. C'est un **majorant** (un rect de 400 px peut ne porter que 6 px d'encre).
+- **Dans la garde** (GE1/GE2), l'étendue est le **compte réel** de pixels qui franchissent la
+  magnitude, mesuré sur deux rendus.
+- **L'intervalle 1-11 a donc une règle écrite** : prédicat en dessous ⇒ **bascule sur le voile**
+  (§3.1, marche 2) ; prédicat au-dessus et pixels en dessous ⇒ **écart compté, publié, soldé au site**
+  (§3.1, « qui décide, et qui a raison »). Dans les deux cas, le plancher ne bouge pas.
+
 **NEUF, et c'est le piège** : ce prédicat **n'est aucune** des deux branches de
 `Gardes.FranchitLeSeuil` — re-mesuré à HEAD : la branche `Melange` (`Gardes.cs:272`,
 `return amp * Couleurs.EcartRvb(a, b) >= MouvementTunables.SeuilCouleurRendue;`) ne porte **aucun**
@@ -338,8 +407,15 @@ couleur, et son `amp` est l'amplitude des images clés, pas un alpha de `Graphic
 `Couleurs.EcartRvb` (`Couleurs.cs:32-35`) est bien le « plus grand canal » (un `Mathf.Max` imbriqué,
 alpha exclu). ⇒ les deux prédicats sont **du code neuf**, dans
 `Assets/Scripts/ShellContracts/Retour.cs`. Réutiliser `FranchitLeSeuil` en n'y ajoutant que le
-`CanvasGroup` donnerait 0,15 × 0,851 = 0,128 ≥ 3/255 là où le prédicat veut
-0,15 × 0,851 × 0,18 = 0,023 — et classerait presque tout en cas 2.
+`CanvasGroup` classerait presque tout en cas 2 : il rend **0,15 × 0,851 = 0,128**, soit 11 fois le
+seuil (`3/255 = 0,01176`), **quel que soit l'alpha de la cible**. Exemple qui le montre — corrigé
+(revue ⊥ n°1, m4 : l'exemple de la v5, à α 0,18, donnait 0,023 > 0,01176, donc les deux formules
+classaient **pareil** et n'illustraient rien) : à **α 0,039**, le prédicat complet rend
+**0,15 × 0,851 × 0,039 = 0,0050 < 0,01176** ⇒ **cas 3** (voile), là où `FranchitLeSeuil` + `CanvasGroup`
+rendrait toujours 0,128 ⇒ cas 2, c'est-à-dire un `Melange` que personne ne voit. *(α 0,039 est la
+valeur que le §17 v4.8 donne à la variante `.btn.ligne` de `DistrictInteriorScreenController` ; sa
+citation `:2282` est **périmée** à HEAD — annexe A — donc la valeur est reprise comme **exemple
+arithmétique**, à re-relever au relevé, pas comme un fait d'écran.)*
 
 **Trous mesurés à 0 et nommés** (re-mesurés à HEAD, `Assets/Scripts`) : `ignoreParentGroups` ⇒ **0**
 (le jour où un `CanvasGroup` le pose, les deux prédicats deviennent faux **par excès** et doivent
@@ -385,17 +461,24 @@ Retour.NouveauBouton(GameObject hote, Graphic surface = null) -> Button
 Il crée le `Button`, **et** y pose le composant `RetourAppui` (un `MonoBehaviour`
 `IPointerDownHandler` / `IPointerUpHandler` / `IPointerExitHandler`), en mémorisant la `surface`
 nommée. Les 69 sites changent d'**une expression** chacun (`x.AddComponent<Button>()` →
-`Retour.NouveauBouton(x)`) : **une seule édition, répétée 69 fois**, pas 69 décisions — et les 3 sites
-du §3.1 passent leur `surface` en second argument.
+`Retour.NouveauBouton(x)`) : **une seule édition, répétée 68 fois**, pas 68 décisions — et les 3 sites
+du §3.1 passent leur `surface` en second argument. **Le 69ᵉ n'est pas une substitution d'expression**
+(revue ⊥ n°1, m3) : à `LaSuitePanelController.cs:233`, la surface à passer (`degrade`, `:228`) est une
+locale **du bloc `if (premierGeste)`** (`:220-231`) et n'est pas dans la portée du `Button` (`:233`) —
+mesuré. Ce site demande en plus une **sortie de portée** (hisser la locale). ⇒ **68 substitutions + 1
+site à reprendre**, pas « 69 expressions ».
 
 **Ce qui ferme la classe**, et c'est une garde de SOURCE sur un motif qui **existe** (69 occurrences
 aujourd'hui, contrairement au motif impossible de G14 v4.7) : **GS1** — `AddComponent<Button>` ⇒ 0
 occurrence dans `Assets/Scripts` hors `Retour.cs`. Un bouton neuf écrit à l'ancienne fait **rougir**,
 au lieu de naître sans retour d'appui.
 
-**Pourquoi pas un balayage** (`GetComponentsInChildren<Button>` au montage), mesuré :
-(i) le locataire construit sa mise en page dans son `Start()`, **différé d'une frame** après son
-`AddComponent` (`AppShell.cs:40-42`) ⇒ un balayage au montage passe **avant** les boutons ;
+**Pourquoi pas un balayage** (`GetComponentsInChildren<Button>` au montage) :
+(i) le locataire construit sa mise en page dans son `Start()`, différé d'une frame après son
+`AddComponent` ⇒ un balayage au montage passe **avant** les boutons. ⚠️ **Statut de cette
+affirmation** (revue ⊥ n°1, m2) : `AppShell.cs:36-42` est un **COMMENTAIRE de code**, pas du code ; le
+fait relève de la sémantique Unity, il n'est **pas mesuré** dans ce dépôt. Il n'est pas load-bearing :
+l'argument (ii) ci-dessous suffit à écarter le balayage à lui seul ;
 (ii) un site produit n instances **plus tard** (§1.5 : les rangées de liste) ⇒ il faudrait un balayage
 par frame (coût non mesuré, et un scan par frame sur chaque `Selectable`) ou un appel à la main à
 **chaque** site de construction paresseuse — plus de sites que les 69 éditions, et aucun d'eux visible
@@ -459,12 +542,25 @@ une version fautive qui doit rougir **pour la bonne raison**, avec le **message 
 | **GS0** structurelle uGUI | pour chaque cible résolue au relevé : `GetComponent<CanvasRenderer>() != null` ; si un ancêtre porte un `Mask`, la cible est un `MaskableGraphic` avec `maskable` vrai ; l'ordre de fratrie de la cible est inchangé par l'attachement | une surface montée **sans** `CanvasRenderer` (posée par `AddComponent` à l'exécution, qui n'honore pas `[RequireComponent]`) | `GS0 : <chemin> — surface sans CanvasRenderer : rien ne sera dessiné` |
 | **GS1** source, ferme la classe | 0 occurrence de `AddComponent<Button>` dans `Assets/Scripts` hors `Retour.cs`. Le scan est une **fonction pure** de (chemin, contenu) — c'est ce qui le rend contrôlable | un contenu synthétique portant le motif, passé au scan dans le test | `GS1 : <chemin>:<ligne> crée un Button hors Retour.NouveauBouton` |
 | **GS2** composant | pour chaque écran monté, chaque `Button` de `GetComponentsInChildren<Button>(true)` porte **exactement un** `RetourAppui` (0 ⇒ rouge ; 2 ⇒ rouge) | un `Button` monté par `AddComponent<Button>` direct **dans le montage de test** | `GS2 : <chemin> porte <n> RetourAppui, attendu 1` |
-| **GP** population (contrainte f2 B1) | **l'invariant P2**, sur la population RÉELLE : pour chaque bouton monté, actif et `interactable`, un `PointerDown` simulé rend **exactement un** handle **non nul** d'`Id` ∈ {`retour.appui`, `retour.appui-voile`} ; relève **par bouton** : le cas retenu, la cible, l'`Id`, le handle. Rouge sur 0 attachement, sur 2, sur un handle **nul**. Compte et **publie** : boutons montés, pressables, non pressables, **et sites de l'inventaire non couverts par aucun état monté** (un site non exercé n'est **pas** prouvé) | un bouton sans attachement : dans le même montage de test, un `Button` dont le `RetourAppui` est retiré avant l'appui | `GP : <chemin> — 0 attachement (cas <k>, cible <nom>) : le retour d'appui est perdu en silence` |
+| **GP** population (contrainte f2 B1) | **l'invariant P2 ENTIER**, sur la population RÉELLE, **un seul relevé et un seul verdict par bouton** : pour chaque bouton monté, actif et `interactable`, un `PointerDown` simulé rend **exactement un** handle **non nul** d'`Id` ∈ {`retour.appui`, `retour.appui-voile`} **ET l'effet de cet attachement franchit le plancher sur les pixels** (GE1 pour un `Melange`, GE2 pour un voile). **Rouge** sur 0 attachement, sur 2, sur un handle **nul**, **et sur un handle non nul à effet sous le plancher** — avec son chemin. Relève par bouton : écran, chemin, cas retenu, cible, `Id`, handle, **pixels mesurés**. **Publie, écran par écran** : montés · pressables · non pressables · **basculés sur le voile** (§3.1 marche 2) · **écarts prédicat ↔ pixels** (le prédicat a dit cas 1-2, les pixels disent non — doit valoir **0 au gate**) · **sites de l'inventaire non couverts par aucun état monté** (un site non exercé n'est **pas** prouvé) · bascules du cas 0 relevées site par site (§3.1, contrainte du guichet) | **deux** contrôles, dans le même montage de test : (a) un `Button` dont le `RetourAppui` est retiré avant l'appui ⇒ 0 attachement ; (b) un `Button` **cas 1** dont la surface est peinte à `Cible × 1,00` ⇒ **un** attachement, **effet nul** | (a) `GP : <ecran>/<chemin> — 0 attachement (cas <k>, cible <nom>) : le retour d'appui est perdu en silence` · (b) `GP : <ecran>/<chemin> — attachement <Id> à effet NUL (<n> px ≥ 3/255, plancher 12) : un retour invisible est un retour refusé` |
 | **GE1** effet du mélange | **rend** et **compte les pixels** : repos vs sous le doigt, même phase (horloge `Figee`, piste évaluée à t = 0,09 s) ⇒ ≥ **12** pixels du rect de la cible diffèrent de ≥ **3/255** sur le plus grand canal ; puis après `Detacher`, retour aux pixels du repos | `CouleurB = Cible × 1,00` — un réglage **valide et non nul** qui ne produit **aucun** pixel | `GE1 : <chemin> — <n> pixels franchissent 3/255, attendu ≥ 12 : réglage valide, effet nul` |
-| **GE2** effet du voile | idem sur le rect du bouton, pour `Alpha` 1 → 0,80 | un voile posé sur un sous-arbre qui **ne peint rien** (0 pixel) — c'est l'ancien « cas 5 » devenu rouge | `GE2 : <chemin> — voile sans encre : 0 pixel` |
-| **GE3** jamais refusé, **par l'effet** | quota non-`Ambiance` rempli à 15 **et** plafond `Melange` rempli à 10, puis un appui : handle non nul, **GE1 ou GE2 vert sur les pixels**, `Refus` inchangé, aucune piste tenue évincée, `BasculesVoile` + 1 | `PlacesReserveesRetourAppui = 0` (mutation) ⇒ l'appui est refusé ⇒ rouge. **Second** contrôle : retirer la bascule du `Regie.cs:94` ⇒ rouge | `GE3 : appui refusé (<raison de la régie>) alors que la règle de classe l'interdit` |
+| **GE2** effet du voile | idem, pour `Alpha` 1 → 0,80, sur le rect du **GameObject qui porte le `CanvasGroup`** — `b` en cas 3, **`q` en cas 4** (revue ⊥ n°1, B2 : « le rect du bouton » rendait la garde **rouge sur un voile qui marche** dès que l'encre de `q` tombe hors du rect de `b` ; rien ne l'interdit — `Peint(q)` n'impose aucune position, et la seule contrainte, aire(`q`) ≤ 2 × aire(`b`), ne la donne pas. Le cas mesuré de ㉜ n'y échappe que par l'`Etirer` de son site, un accident, pas une règle) | un voile posé sur un sous-arbre qui **ne peint rien** (0 pixel) — c'est l'ancien « cas 5 » devenu rouge | `GE2 : <chemin> — voile sans encre sur <nom de la cible du voile> : 0 pixel` |
+| **GE3** jamais refusé, **par l'effet** | quota non-`Ambiance` rempli à 15 **et** plafond `Melange` rempli, puis un appui : handle non nul, **GE1 ou GE2 vert sur les pixels**, `Refus` inchangé, aucune piste tenue évincée, `BasculesVoile` + 1 | **par une COUTURE, pas par une mutation** (revue ⊥ n°1, I3) : (a) `regie.PlacesReserveesRetourAppui = 0` ⇒ l'appui **doit** être refusé (la sensibilité de l'assertion est prouvée **en CI**, sans toucher au code livré) ; (b) `regie.PistesMelangeMax = 0` ⇒ tout `Melange` est refusé, donc **la bascule doit tirer** : handle non nul, pixels de GE2, `Refus` inchangé — une régie **sans** la bascule rend ici un handle nul et `Refus` + 1, donc ce test **rougit sur sa disparition**, et il le refait à chaque CI | `GE3 : appui refusé (<raison de la régie>) alors que la règle de classe l'interdit` |
 | **GE4** sous `ContentSizeFitter` (contrainte f2 B2) | un **montage de test synthétique** : ancêtre `ContentSizeFitter`, `Image` **opaque** sur le GameObject du `Button` ⇒ cas 2, handle **non nul**, `Refus` inchangé, GE1 vert. **Ce montage n'est JAMAIS compté** : ni dans N, ni dans l'inventaire, ni dans GS2/GP — il ne sert qu'à prouver que la garde **peut** rougir | rendre à `retour.appui` un canal `Echelle` ⇒ G11 (`Gardes.cs:211`) refuse l'entrée entière ⇒ rouge | `GE4 : handle nul sous un ContentSizeFitter ancêtre — <raison>` |
 | **GD1** donnée | les deux entrées neuves portent **exactement** : `retour.appui` → 1 canal `Melange` `Absolu` ; `retour.appui-voile` → 1 canal `Alpha` `Multiplicatif`, **sans `PoseDeReposS`** (sinon le voile gèle sous `Reduit`, `PolitiqueMouvement.cs:30`) ; durées ≤ 250 ms (G8, `Gardes.cs:183-184` ; 90 + 0 = 90 ms après D2) | ajouter un canal (quel qu'il soit) ou une `PoseDeReposS` au voile | `GD1 <Id> : canaux attendus <…>, trouvés <…>` |
+
+**La COUTURE que GE3 exige, et pourquoi elle est nécessaire** (revue ⊥ n°1, I3). Mesuré :
+`MouvementTunables.PlacesReserveesRetourAppui` (`MouvementTunables.cs:20`) et `PistesMelangeMax`
+(`:26`) sont des `public const int` — une `const` C# est **inlinée à la compilation**, donc **aucun
+test ne peut la poser à 0** ; et `Regie.cs:520` et `:529` les lisent directement. « Muter la const » et
+« retirer la bascule de `Regie.cs:94` », que la v5 donnait comme contrôles, sont des **éditions de
+source jouées à la main** : elles ne vivent pas en CI et rien ne les rejoue. ⇒ **deux propriétés
+d'instance sur `Regie`**, `PlacesReserveesRetourAppui` et `PistesMelangeMax`, **initialisées depuis les
+`const`** (comportement de production **inchangé**, les `const` restent la valeur par défaut et la
+source de vérité du canon) et lues par `Creer` à la place des `const`. Le test les pose ; la
+production, jamais. C'est la même idée que la **fonction pure** de GS1 : ce qui rend un contrôle
+positif **écrivable**, c'est une couture, pas un commentaire disant « à muter à la main ».
+⚠️ Cela **touche du code livré** (`Regie.cs:520`, `:529`) : déclaré au gate, étape E-R3.
 
 **Le bouton de ㉜ n'est le porteur d'aucun contrôle.** `DelegationScreenController.cs:1528` est cité
 **uniquement comme exemple de cas 4** pour le relevé : mesuré à HEAD, `:1522` crée la zone, `:1525`
@@ -485,7 +581,7 @@ avant de mesurer ne prouverait rien).
 
 | finding | comment ce design le ferme |
 |---|---|
-| **B1** la signature à 2 arguments rend les cas 3-4 inatteignables (`surface == null` ⇒ `Creer` lève, `Regie.cs:505`) | **décision f2** appliquée : **deux méthodes publiques**, chacune posant son `Id` elle-même, **aucun `null` à convention** — `AttacherRetourAppui(RectTransform surface, RectTransform cibleVoile)` pour les cas 1-2 **et** la bascule interne du cas 0 ; `AttacherVoileDAppui(RectTransform cible)` pour les cas 3-4. En cas 1-2, `cibleVoile` = le `RectTransform` **du bouton** : jamais nul, et l'`Alpha` y est toujours réalisable (`RegieInterne.cs:106`), donc la bascule du cas 0 est **toujours** possible. Les trois levées devenues mortes sont **retirées** : `Regie.cs:88` (`appui == null`), `:89` (`appui.Genre != Genre.Retour`), `:96` (`voile.Genre`) — re-mesurées à HEAD, les entrées résolues dans `admises` sont `Retour` par construction et `VerifierAdmise` (`:473-478`) garde G1. **Ce que devient le cas 0** : il reste **à l'intérieur** de `AttacherRetourAppui` (`Regie.cs:94-100`), inchangé dans son effet (bascule comptée **après** un handle non nul) ; la clause « `voile` ou `cibleVoile` nuls ⇒ refus ordinaire » **disparaît** avec les paramètres `Entree`. **Condition f2 tenue** : c'est **GP** (§4), garde de population avec contrôle positif, qui tient « jamais refusé » — plus aucune affirmation sans garde |
+| **B1** la signature à 2 arguments rend les cas 3-4 inatteignables (`surface == null` ⇒ `Creer` lève, `Regie.cs:505`) | **décision f2** appliquée : **deux méthodes publiques**, chacune posant son `Id` elle-même, **aucun `null` à convention** — `AttacherRetourAppui(RectTransform surface, RectTransform cibleVoile)` pour les cas 1-2 **et** la bascule interne du cas 0 ; `AttacherVoileDAppui(RectTransform cible)` pour les cas 3-4. En cas 1-2, `cibleVoile` = le `RectTransform` **du bouton** : jamais nul, et l'`Alpha` y est toujours **attachable** (`RegieInterne.cs:106`, `default: return true`). ⚠️ **Attachable n'est pas peint** (revue ⊥ n°1, I5) : la bascule du cas 0 n'est garantie **visible** que par la contrainte du guichet — une `surface` nommée vit **dans le sous-arbre de son bouton** (§3.1 ; les 3 sites existants la respectent, mesuré) — et par GP, qui relève **la bascule du cas 0 site par site, avec ses pixels**. Sans cette contrainte, le cas 0 d'un site à surface extérieure rendrait un handle non nul sur **0 pixel**. Les trois levées devenues mortes sont **retirées** : `Regie.cs:88` (`appui == null`), `:89` (`appui.Genre != Genre.Retour`), `:96` (`voile.Genre`) — re-mesurées à HEAD, les entrées résolues dans `admises` sont `Retour` par construction et `VerifierAdmise` (`:473-478`) garde G1. **Ce que devient le cas 0** : il reste **à l'intérieur** de `AttacherRetourAppui` (`Regie.cs:94-100`), inchangé dans son effet (bascule comptée **après** un handle non nul) ; la clause « `voile` ou `cibleVoile` nuls ⇒ refus ordinaire » **disparaît** avec les paramètres `Entree`. **Condition f2 tenue** : c'est **GP** (§4) qui tient « jamais refusé » — et GP garde l'**effet**, pas le paramètre : un attachement **et** ses pixels, par bouton (revue ⊥ n°1, B1 : la v5 faisait porter « jamais refusé » à une garde qui ne regardait que le handle, donc **verte exactement sur le cas que f2 appelle un refus**). Plus aucune affirmation sans garde, et plus aucune garde de paramètre présentée comme une garde d'effet |
 | **B2** le contrôle positif était nommé sur un bouton que le code classe en cas 4 | **GE4** est un **montage de test synthétique** (ancêtre `ContentSizeFitter` + `Image` opaque ⇒ cas 2), explicitement **hors de N et hors de l'inventaire** ; le bouton de ㉜ n'est plus qu'un **exemple de cas 4**, avec ses 5 citations re-mesurées à HEAD. La garde, elle, court sur la population **réelle** (GP) |
 | **B3** `Echelle` encore vivante dans le catalogue | **amendement du catalogue**, avec son contrôle mesuré : annexe B. Deux cellules : `catalogue-mouvements.md:422` (clause `Echelle` de l'**appui** ET du **relâchement**) et `:292` (`retour.appui` retiré de la liste des échelles restantes de §I.2.9), **renvoyées à la dette 29 en paraphrase**. Comptes **inchangés** (une `Entree` = une piste ; la colonne `Pistes` reste 1, §V intact). Je n'édite pas le catalogue : c'est l'étape E-R0 du plan |
 | **I1** le contrôle négatif de la réserve devient vide après G14 (c) | le test `E0_RetourDAppui_JamaisRefuse_QuotaNonAmbiancePlein` (`MouvementsRegiePlayModeTests.cs:151-153`, re-lu à HEAD : `Assert.IsTrue(regie.Attacher(voile, …).EstNul, "hors AttacherRetourAppui, pas de réserve")`) est **réécrit** : son entrée devient une entrée `Retour` **synthétique** dont l'`Id` n'est **ni** `retour.appui` **ni** `retour.appui-voile`, et l'assertion porte sur la **raison** du refus (le quota), pas sur sa seule nullité. Il **rejoint la dette 30** avec les cinq autres : **6** tests déjà verts touchés, à déclarer au gate |
@@ -506,19 +602,22 @@ avant de mesurer ne prouverait rien).
 | étape | contenu | pourquoi là | créneau |
 |---|---|---|---|
 | **E-R0** | **amendement des documents** : `catalogue-mouvements.md` `:422` + `:292` (B3) et Q6 `:1066`/`:1076` (I4) ; §17 de la v4.8 marqué PÉRIMÉ, renvoyant ici ; dettes 32 (140 ms), 33 (`LongPressButton` seul) ouvertes, dette 30 portée à 6 tests | aucun code ne doit lire deux consignes opposées. 0 `.cs` touché | non |
-| **E-R1** | **la mesure qui porte tout** : un test de 2 assertions — deux `IPointerDownHandler` sur un même GameObject (`Button` + sonde) reçoivent-ils **tous deux** le `PointerDown` ? | si non, D1 tombe (§3.4) : inutile d'écrire les 69 éditions | **OUI** |
+| **E-R1** | **la mesure qui porte tout** : un test de 2 assertions — deux `IPointerDownHandler` sur un même GameObject (`Button` + sonde) reçoivent-ils **tous deux** le `PointerDown` ? | si non, D1 tombe (§3.4) : inutile d'écrire les 68 éditions et la reprise de portée | **OUI** |
 | **E-R2** | les **deux `Entree`** dans `CatalogueHud` (à **CRÉER** : mesuré, `appui`/`Appui` ⇒ 0 ligne dans `CatalogueHud.cs`, dont les 10 entrées sont `Pouls, Tremble, Gyrophare, FiletVirage, AnneauVirage, AiguilleBalayage, BandeauSortie, Neon, Fumee, Scintillement`, `:52-143`, listées `:149`), **sans champ public à leur nom** ; les constantes `CatalogueHud.IdRetourAppui` / `IdRetourAppuiVoile` ; `Gardes.cs:183` **consomme** ces constantes (sinon G8 devient muette sur un `Id` renommé) ; GD1 | donnée d'abord : tout le reste s'y résout par `Id` | non (typecheck) |
-| **E-R3** | `Regie` : les **deux méthodes** de B1, les trois levées mortes retirées, le contrôle positif de G14 (c) dans `Creer` (`Regie.cs:503`, drapeau `retourAppui` déjà présent) ; réécriture des **6** tests verts (dette 30 + I1) | la régie avant l'appelant | **OUI** |
+| **E-R3** | `Regie` : les **deux méthodes** de B1, les trois levées mortes retirées, le contrôle positif de G14 (c) dans `Creer` (`Regie.cs:503`, drapeau `retourAppui` déjà présent), **les deux coutures de GE3** (`PlacesReserveesRetourAppui` et `PistesMelangeMax` en propriétés d'instance initialisées depuis les `const`, lues par `Creer` à `:520` et `:529`) ; réécriture des **6** tests verts (dette 30 + I1) | la régie avant l'appelant ; sans les coutures, les contrôles positifs de GE3 ne sont pas écrivables (I3) | **OUI** |
 | **E-R4** | `ShellContracts/Retour.cs` : `RendSurface`, `Peint`, `RetourAppui`, `Retour.NouveauBouton`, le scan de GS1 comme **fonction pure** | — | non (typecheck) |
-| **E-R5** | les **69 éditions** d'un site + les 3 `surface` nommées + les 2 ex-cas 5 ; GS0, GS1, GS2 | mécanique, une fois E-R4 vert | non (typecheck) |
-| **E-R6** | **GP** (relevé complet, tous états montables), **GE1-GE4** (rendre et compter les pixels), contrôles positifs, mutations vérifiées | les planches et les mutations coûtent un créneau groupé | **OUI**, groupé |
+| **E-R5** | les **68 substitutions + la sortie de portée** de `LaSuitePanelController.cs:233` + les 3 `surface` nommées (dans le sous-arbre de leur bouton, §3.1) + les 2 ex-cas 5 ; GS0, GS1, GS2 | mécanique, une fois E-R4 vert | non (typecheck) |
+| **E-R6** | **GP** (relevé complet, tous états montables, **publication écran par écran** : montés / pressables / non pressables / **basculés** / **écarts prédicat ↔ pixels** / sites non couverts), **GE1-GE4** (rendre et compter les pixels), les contrôles positifs **par couture** (I3) | les planches coûtent un créneau groupé ; c'est **ici seulement** que le volume des bascules et des écarts se connaît (§6.3 #2) | **OUI**, groupé |
 
 ### 6.2 Coût
 
 - **Fichiers neufs** : 1 (`Assets/Scripts/ShellContracts/Retour.cs`, + son `.meta` à la main, format
   minimal du dépôt, GUID neuf — dette 19).
-- **Fichiers touchés** : `CatalogueHud.cs`, `Gardes.cs` (une ligne, `:183`), `Regie.cs` ; **35**
-  fichiers d'écran à une expression chacun (69 expressions) ; 2 fichiers de test existants
+- **Fichiers touchés** : `CatalogueHud.cs`, `Gardes.cs` (une ligne, `:183`), `Regie.cs` (les deux
+  méthodes de B1, les 3 levées mortes, la garde G14 (c), **et les deux coutures de GE3** —
+  `Regie.cs:520` et `:529` lisent des propriétés d'instance au lieu des `const`) ; **35**
+  fichiers d'écran : **68 substitutions d'expression + 1 sortie de portée**
+  (`LaSuitePanelController.cs:233`, m3) ; 2 fichiers de test existants
   (`MouvementsRegiePlayModeTests.cs`, le relevé des gardes) ; 2 documents (`catalogue-mouvements.md`,
   `dettes-design-mouvement.md`).
 - **Mélange** : **+1 piste au plus par doigt posé**, et **0** quand le plafond est atteint (bascule
@@ -533,11 +632,13 @@ avant de mesurer ne prouverait rien).
 
 1. **E-R1 répond non** (un seul `IPointerDownHandler` servi par GameObject) ⇒ D1 tombe, le guichet
    devient un `Button` dérivé et les 69 éditions changent de nature.
-2. **Les pixels de GE1 ne franchissent pas 3/255 sur les boutons sombres.** `Cible × 0,85` sur une
-   encre déjà sombre, composée en **linéaire**, peut rendre moins d'un niveau : alors le cas 1-2 est
-   *techniquement* attaché et *perceptuellement* nul — et c'est GE1, pas la régie, qui le dit. Le
-   correctif serait un `k` plus bas, ou la bascule sur le voile ; **non tranché ici** (il faut la
-   mesure, écran par écran).
+2. **Le VOLUME des bascules, et celui des écarts prédicat ↔ pixels.** L'issue, elle, n'est plus un
+   risque : elle est **tranchée** en §3.1 (sous le plancher ⇒ voile ; voile sans encre ⇒ rouge ; le
+   seuil et l'amplitude ne baissent jamais — **le « `k` plus bas » de la v5 est retiré du document**,
+   f2 l'interdit). Ce qui reste inconnu est un **nombre** : combien de boutons basculent, et sur
+   combien le prédicat (arithmétique de `Color`) se sépare des pixels (composés en **linéaire**). Si
+   ce nombre est grand, le lot ne devient pas faux — il devient **long** : chaque écart se solde au
+   site, un par un. Il ne se mesure qu'écran par écran, à E-R6, et GP le publie.
 3. **Un site produit une instance que le relevé ne monte jamais** ⇒ GP publie un **compte de sites non
    couverts** ; si ce compte est élevé, la couverture réelle du lot est plus faible que N le suggère.
 4. **Le relâchement sans fondue** (D2) peut être jugé A/B par un juge visuel, pas C. Le ruling du 07/10
@@ -642,11 +743,83 @@ TOTAL B = 2
   rangée de table d'une réponse de revue, sur `retour.appui-long`). Le vrai, `:292`, part. ⇒ **1 → 0
   dans le paragraphe de §I.2.9.**
 
+**Le grep NU, et son vrai compte** (corrigé — revue ⊥ n°1, I1 : la v5 annonçait « 4 après » en
+oubliant `:423`, c'est-à-dire **la ligne que la même annexe dit devoir survivre** ; qui aurait joué le
+contrôle aurait lu 5, cru à un échec, et n'aurait pu atteindre 4 qu'en effaçant la négation de `:423`).
+Mesuré :
+
+```
+$ python3 -c "L=open('Tools/conformite-anim-2026-10-07/catalogue-mouvements.md',encoding='utf-8').read().split('\n')
+             n=0
+             for i,l in enumerate(L):
+                 if 'retour.appui' in l and 'Echelle' in l: n+=1; print('%4d | %s'%(i+1,l[:90]))
+             print('TOTAL =',n)"
+ 333 | > La ligne **`retour.appui`** perd son canal **`Echelle` Mult (sous condition)**  (la note du 08/10)
+ 422 | | `retour.appui` | …                                                   (les 2 clauses à RETIRER)
+ 423 | | `retour.appui-voile` | …                                             (« Pas d'`Echelle`. »)
+ 494 | | `decision.cachet` | …                                                (autre entrée)
+ 542 | | `revue.cachet` | …                                                   (autre entrée)
+1337 | | **B2-3** … `retour.appui` n'a d'`Echelle` que sans `ContentSizeFitter`  (archive)
+TOTAL = 6
+```
+
 Un `grep -n Echelle` **nu** restreint aux lignes qui nomment `retour.appui` ne peut **pas** valoir 0
-après l'amendement : il vaut **6 avant** et **4 après**, parce que le fichier **enregistre** le retrait
-(`:333`, la note du 08/10) et le commente (`:1337`, `:494`, `:542`). Effacer ces quatre lignes
-effacerait l'historique de la décision : je ne le propose pas, et je ne maquille pas le 4 en 0.
+après l'amendement : il vaut **6 avant** et **5 après** — `:333`, **`:423`**, `:494`, `:542`, `:1337` —,
+et **6 après** si la paraphrase de renvoi à la dette 29 nomme elle-même l'`Echelle` sur la ligne
+amendée. Les cinq survivants sont nommés un par un ci-dessus : le fichier **enregistre** le retrait
+(`:333`), le **nie** correctement (`:423`, « Pas d'`Echelle`. », qui **doit rester**), et le commente
+(`:494`, `:542`, `:1337`). Effacer ces lignes effacerait l'historique de la décision — ou, pour `:423`,
+la seule phrase qui dit la règle en vigueur : je ne le propose pas, et je ne maquille ni le 5 en 4 ni
+le 4 en 0. **Le contrôle qui vaut 0 est le contrôle mécanique A/B ci-dessus, pas le grep nu.**
 `:1337` (« `retour.appui` n'a d'`Echelle` que sans `ContentSizeFitter` d'ancêtre ») est une cellule
 d'**archive** dont le texte énonce pourtant une règle au présent : **hors du mandat f2** (qui nomme
 `:422` et `:292`), je la signale comme **troisième cellule candidate**, à trancher par f2, et je ne
 l'amende pas de ma propre autorité.
+
+## Annexe C — PREUVES DES CORRECTIFS (revue ⊥ n°1 : 2 BLOCKING, 5 IMPORTANT, 4 mineurs)
+
+Cette annexe existe parce qu'il n'y aura **pas de revue de vérification** : c'est le correctif
+lui-même qui est vérifié, donc la preuve est dans le texte. **AVANT** = numéro de ligne dans la version
+relue par la revue n°1 (le commit immédiatement antérieur à celui-ci, 653 lignes) ; **APRÈS** = numéro
+de ligne dans **ce fichier tel qu'il est commité** (778 lignes avant cette annexe), relu à la fin.
+Les deux défauts sûrs BLOCKING sont ceux que **f2 a ratifiés** le 11/11.
+
+| finding | AVANT (ligne + citation) | APRÈS (ligne) | ce qui le prouve |
+|---|---|---|---|
+| **B1** la règle de classement était un RISQUE, et GP ne gardait que le handle | `:462` GP — « rend **exactement un** handle **non nul** […] Rouge sur 0 attachement, sur 2, sur un handle **nul** » · `:488` §5 — « c'est **GP** […] qui tient « jamais refusé » » · `:536` §6.3 #2 — « Le correctif serait un `k` plus bas […] **non tranché ici** » | **règle** `:302-325` (§3.1, 3 marches : plancher → bascule → rouge ; « qui décide, qui a raison ») · **GP** `:545` · **§5** `:584` · **§6.3 #2** `:635` · **D3** `:41` · **P2** `:236` | GP dit désormais « un attachement **ET** l'effet franchit le plancher », mesuré : `grep -n "ET l'effet de cet attachement franchit le plancher"` ⇒ **1** (`:545`). Le remède interdit n'existe plus comme remède : `grep -n "plus bas"` ⇒ **2** (`:316`, `:637`), les deux disant qu'il est **retiré / interdit**. GP publie les **basculés** et les **écarts prédicat ↔ pixels** écran par écran (`:545`) |
+| **B2** GE2 mesurait le rect du bouton, pas celui de la cible du voile | `:464` — « idem sur **le rect du bouton**, pour `Alpha` 1 → 0,80 » | **GE2** `:547` · **P1** `:220-222` | `grep -n "rect du bouton"` ⇒ **2** (`:222`, `:547`), et les deux disent **« jamais le rect du bouton »** / « sur le rect du **GameObject qui porte le `CanvasGroup`** — `b` en cas 3, `q` en cas 4 ». P1 et GE1 nommaient déjà « le rect de la cible » : les trois sont maintenant alignés |
+| **I1** « 4 après » faux (5), et la ligne oubliée est `:423` | `:646` — « il vaut **6 avant** et **4 après** […] et le commente (`:1337`, `:494`, `:542`) » | `:746-773` | `grep -n "4 après"` ⇒ **1** (`:746`, et c'est la **citation de l'erreur**) · `grep -n "5 après"` ⇒ **1** (`:767`). Les **5** survivants sont nommés un par un, `:423` en tête, avec la sortie du grep (6 lignes) collée `:751-764`. Le « 6 après » (paraphrase nommant l'`Echelle`) est dit aussi |
+| **I2** le plancher de 12 px était dans la garde, absent du prédicat | `:215` P1 (« au moins **12 pixels** ») sans contrepartie dans `RendSurface` (`:324-328`) ni `Peint` (`:329-331`), qui n'imposaient qu'une magnitude (« atteint `3f/255f` ») | **bloc PLANCHER** `:384-400` | une seule définition, à deux facteurs (magnitude **et** étendue), explicitement « pour le prédicat ET pour la garde » ; l'étendue du prédicat est un **rect converti en pixels** (calculable au `PointerDown`), celle de la garde un **compte de pixels** ; et **l'intervalle 1-11 a sa règle écrite** (bascule, ou écart soldé au site) |
+| **I3** les contrôles de GE3 n'étaient pas écrivables (`const` inlinée, édition de source) | `:465` — « `PlacesReserveesRetourAppui = 0` (**mutation**) […] **Second** contrôle : **retirer la bascule** du `Regie.cs:94` » · `:514` E-R6 « mutations vérifiées » | **GE3** `:548` · **couture** `:552-563` · **E-R3** `:607` · **E-R6** `:610` · **coût** `:619` | `grep -n "mutations vérifiées"` ⇒ **0**. Les contrôles passent par **deux propriétés d'instance** (`PlacesReserveesRetourAppui`, `PistesMelangeMax`) initialisées depuis les `const` et lues par `Creer` (`Regie.cs:520`, `:529`) : le test les pose, la production jamais, et le test **rougit en CI** si la réserve ou la bascule disparaît. Le fait qui le rend nécessaire est mesuré : `MouvementTunables.cs:20` et `:26` sont des `public const int` |
+| **I4** « 3 `Button` de `Assets/Tests` » : 2 des 3 sont des chaînes | `:71` — « les `Button` de `Assets/Tests` \| **3** \| ce sont des montages de test » | `:71` | re-mesuré, sortie collée dans la cellule : `ReputationScreenPlayModeTests.cs:907` **monte**, `VitrinePlayModeTests.cs:66` et `:69` sont des `StringAssert.DoesNotContain` ⇒ **3 lignes, 1 montage** (`grep -n "3 lignes nomment le motif"` ⇒ **1**, `:71`). N intact : la commande ne lit que `Assets/Scripts` |
+| **I5** « la bascule du cas 0 est toujours possible » : argument de `Realisable`, pas de pixels | `:488` — « l'`Alpha` y est toujours **réalisable** (`RegieInterne.cs:106`), donc la bascule du cas 0 est **toujours** possible » | **contrainte du guichet** `:356-368` · **§5** `:584` | `grep -n "toujours réalisable"` ⇒ **0** ; le mot est devenu **attachable**, avec « ⚠️ attachable n'est pas peint ». La contrainte neuve (« une `surface` nommée vit **dans le sous-arbre de son bouton** ») est **mesurée sur les 3 sites existants** : `Verre` `ExceptionDetailController.cs:540` ⊂ `face` `:527` ⊂ `carte` `:523`, `Button` sur `carte` `:569` · `Remplissage` `DistrictInteriorScreenController.cs:2272` ⊂ `go`, `Button` `:2319` · `Degrade` `LaSuitePanelController.cs:223-224` ⊂ `geste`, `Button` `:233` ⇒ **0 instance fautive**, la contrainte est une garde de non-régression. GP relève la bascule du cas 0 **site par site**, avec ses pixels |
+| **m1** `versAppro` `:2846` désignait un fichier de 1335 lignes | `:194` — « `versAppro` `:2846` » | `:194-195` | `grep -n "LieutenantScreenController.cs:2846"` ⇒ **1** (`:194`), avec `Transition.None` à `:2847`. Mesuré : `Button versAppro = vide.AddComponent<Button>();` y est bien |
+| **m2** « mesuré : `AppShell.cs:40-42` » était la lecture d'un **commentaire** | `:39` (D1) et `:398` (§3.4 (i)) — « (**mesuré** : `AppShell.cs:40-42`…) » | `:39` · `:477-481` | `grep -n "AppShell.cs:40-42"` ⇒ **0** ; remplacé par `AppShell.cs:36-42` **nommé comme commentaire** et **« non mesuré »**, avec la phrase qui dit que l'argument (ii) porte seul |
+| **m3** « une seule édition, répétée 69 fois » : 1 site demande une sortie de portée | `:388` — « **une seule édition, répétée 69 fois** » · `:521` coût — « 69 expressions » | `:464-469` · coût `:619` · **E-R5** `:609` | `grep -n "69 expressions"` ⇒ **1** (`:469`, et c'est la **négation** : « pas « 69 expressions » »). Mesuré : `LaSuitePanelController.cs:228` `Image degrade = …` est dans le bloc `if (premierGeste)` `:220-231`, le `Button` est à `:233` ⇒ **68 substitutions + 1 sortie de portée** |
+| **m4** l'illustration n'illustrait pas (les deux formules classaient pareil) | `:341-343` — « donnerait 0,15 × 0,851 = 0,128 ≥ 3/255 là où le prédicat veut 0,15 × 0,851 × **0,18** = 0,023 — et classerait presque tout en cas 2 » | `:409-418` | l'exemple est passé **sous** le seuil : à **α 0,039**, `0,15 × 0,851 × 0,039 = 0,0050 < 0,01176` ⇒ **cas 3**, contre `0,128` ⇒ cas 2 pour `FranchitLeSeuil` — les deux formules classent enfin **différemment**. La provenance de 0,039 est marquée comme **exemple arithmétique** (sa citation d'écran `:2282` est périmée, annexe A) |
+
+**Commandes de vérification, sorties collées** (toutes jouées sur ce fichier) :
+
+```
+$ for p in "plus bas" "rect du bouton" "4 après" "5 après" "toujours réalisable" \
+           "AppShell.cs:40-42" "69 expressions" "mutations vérifiées" \
+           "3 lignes nomment le motif" "LieutenantScreenController.cs:2846" ; do
+      echo -n "$p : " ; rtk proxy grep -c -F "$p" design-retour-appui-v5.md ; done
+plus bas : 2                         (les deux disent « retiré » / « interdit »)
+rect du bouton : 2                   (les deux disent « jamais le rect du bouton »)
+4 après : 1                          (la citation de l'erreur corrigée)
+5 après : 1
+toujours réalisable : 0
+AppShell.cs:40-42 : 0
+69 expressions : 1                   (dans « pas « 69 expressions » »)
+mutations vérifiées : 0
+3 lignes nomment le motif : 1
+LieutenantScreenController.cs:2846 : 1
+```
+
+**Ce que ce correctif ne prétend pas** : aucun run Unity, aucun pixel rendu, aucun typecheck — les
+deux BLOCKING étaient **textuels** (ce qu'une garde énonce contre ce qu'une propriété exige) et leur
+correctif l'est aussi. Ce qui reste à **mesurer** est inchangé et nommé : E-R1 (la livraison de
+l'événement à deux handlers), puis E-R6 (le **volume** des bascules et des écarts prédicat ↔ pixels,
+§6.3 #2). Les trous déclarés de la v5 restent ouverts et non maquillés : dettes 32 et 33, la troisième
+cellule candidate `:1337` du catalogue, le trou multi-touch (§6.3 #5).
