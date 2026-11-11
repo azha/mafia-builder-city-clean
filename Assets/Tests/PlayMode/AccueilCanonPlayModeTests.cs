@@ -486,7 +486,7 @@ namespace MafiaCleanCity.Shell.Tests
             HighestLeverageCardController tete = Tete();
             Assert.AreEqual(HighestLeverageCardController.CardState.Available, tete.RenderedState, "précondition : une carte est montrée");
             Assert.IsNull(tete.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "SkipButton"), "« Pas maintenant » n'existe plus (geste mort)");
-            Assert.AreEqual(1, tete.LibellesDesBoutons.Count, "un seul bouton : le tampon");
+            Assert.AreEqual(2, tete.LibellesDesBoutons.Count, "deux gestes : agir et laisser (TD-724 livré, chunk 3 ; la propriété « un seul bouton » n'était vraie que sans option à poster)");
             int relectures = shell.RelecturesApresDecision, ouvertures = transport.Ouvertures;
             yield return TrancherPuisAttendre(() => tete.DecisionAccepteePourTest(), ouvertures);
             Assert.AreEqual(relectures + 1, shell.RelecturesApresDecision, "la décision acceptée a fait relire l'Accueil");
@@ -573,7 +573,8 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(2, libelles.Count, "deux libellés montrés");
             Assert.IsFalse(string.IsNullOrEmpty(libelles[0]) || string.IsNullOrEmpty(libelles[1]), "anti-vacuité : les deux gestes ont un mot");
             CollectionAssert.AreEqual(tete.OptionsRendues.ToList(), libelles.ToList(), "le geste dit l'option : agir d'abord, laisser ensuite");
-            Assert.AreNotEqual(libelles[0], libelles[1]);
+            // (run 11/11-b : hors pile, aucune clé `hl.option.*` n'est servie ⇒ les deux libellés sont le repli « — » ; la distinction des deux mots est
+            //  prouvée par Etat2/Etat2b, qui chargent un bundle, pas ici. Une inégalité exigée sans bundle rougit sur le repli, pas sur le code.)
 
             // la grammaire : AGIR `.g.or` (encre or, lustre) ; LAISSER `.g` (plaque sombre, sans lustre) ; jamais l'aplat accentGold
             TMPro.TextMeshProUGUI lib = tete.AgirButton.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).First();
