@@ -284,7 +284,7 @@ namespace MafiaCleanCity.Operational
                 else
                 {
                     piMot[i].text = ForensicResolvers.MotDeLaPiste(DernierChargement, piste.Cle, bande); piMot[i].color = encre;
-                    piCle[i].text = string.IsNullOrEmpty(bande) ? "" : bande;
+                    piCle[i].text = ForensicResolvers.CleDeLaPiste(piste.Cle, bande);   // JAMAIS la bande brute (« watched », « visible » : l'énumération du back, B2 du juge r1) : la maquette r2 n'y met que « Ça se remarque »
                 }
                 SpecFilet[] recette = eteinte ? DecorsDeScene.Filets.Forensic.PiEteinte
                                     : auBout ? DecorsDeScene.Filets.Forensic.PiBout
@@ -1187,6 +1187,15 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le mot de la bande d'une piste : la CLÉ i18n SERVIE (`*_label_key` de `GET /v1/me/forensic`, lot écrivain-lifestyle du back ; mesuré @8d0184a4 : `forensic.cran.rien_a_signaler`,
         /// `forensic.cran.invisible`, `forensic.gravite.on_vous_regarde`) quand elle est là ET connue du catalogue — UNE ligne par clé (V20 ; la garde `I18nHorsLibelle` L2 ne reconnaît qu'une référence
         /// servie lue sous son nom `…_key`) —, sinon le mot de la bande (`Phrase`).</summary>
+        /// <summary>La petite ligne sous le mot d'une piste VIVANTE (`.cle`). ⛔ Jamais la bande brute du back (« clear », « visible », « watched » : l'énumération, lue par le juge r1 comme B2 « en clair au joueur »).
+        /// La maquette r2 ratifiée (atelier b2ceebeb, cadres 152-153) ne la porte QUE sous la piste des cuves à `visible` : « Ça se remarque » (gravité SERVIE `forensic.gravite.ca_se_remarque`). Ailleurs : rien.</summary>
+        public static string CleDeLaPiste(string cle, string bande)
+        {
+            if (cle == "effluent_visibility_bucket" && !string.IsNullOrEmpty(bande) && bande.Trim().ToLowerInvariant() == "visible")
+                return MafiaCleanCity.I18n.Libelle.De("forensic", "gravite", "Ça se remarque");
+            return "";
+        }
+
         public static string MotDeLaPiste(GetForensicResponseDto d, string cle, string bande)
         {
             if (d != null)
