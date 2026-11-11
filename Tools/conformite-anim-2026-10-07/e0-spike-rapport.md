@@ -1,5 +1,8 @@
 # E0 — spike des inconnues d'uGUI (design §4) — rapport du créneau du 08/10/2026 (CLIENT-3)
 
+> ⚠️ **MISE À JOUR DU 11/11/2026** (passe de mise à jour documentaire, CLIENT-1 ; le texte d'origine est LAISSÉ tel quel, ces lignes disent ce qui est périmé et où est l'autorité — rien n'est inventé, chaque correction cite sa source).
+> - Ligne :50 (« au plus **8** pistes `Melange` ») : le plafond est **10** (`MouvementTunables.cs:26`, `PistesMelangeMax = 10` ; `design-couche-mouvement.md:375`, m1).
+
 Test : `Assets/Tests/PlayMode/E0SpikeUguiPlayModeTests.cs` (catégorie `SpikeE0`), batchmode Unity 6000.4.6f1 sur
 `~/project/mafia-unity-anim`. Données brutes : `e0-spike-2026-10-08.tsv` (même dossier). 48 cibles animées par la VRAIE
 régie (E1), 15 images de chauffe puis 90 mesurées, 60 images/s simulées.

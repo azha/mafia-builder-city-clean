@@ -1,5 +1,8 @@
 # Notes d'implémentation — CLIENT-3, couche de mouvement (journal lu par le reviewer)
 
+> ⚠️ **MISE À JOUR DU 11/11/2026** (passe de mise à jour documentaire, CLIENT-1 ; le texte d'origine est LAISSÉ tel quel, ces lignes disent ce qui est périmé et où est l'autorité — rien n'est inventé, chaque correction cite sa source).
+> - Ligne :22 (« les 46 entrées d'écran du catalogue ») : le catalogue compte **44** `Entree` (`catalogue-mouvements.md:396`) ; « 46 » est le compte de la v3 (`revue-catalogue-n3.md:7`).
+
 Une déviation CONSIGNÉE est le fonctionnement normal ; une déviation muette est une faute. Chaque ligne : quoi / pourquoi / ce que la spec disait.
 
 ## E2a (08/10/2026) — Deviations
