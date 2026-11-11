@@ -156,14 +156,21 @@ namespace MafiaCleanCity.Shell.Tests
         // ci-dessous qui ferme la boucle en comptant les clés du CORPS BRUT et en les comparant à
         // CE compte — les deux ENSEMBLE forment la parité que le design décrit (`design:760-762`).
         [Test]
-        public void C3F2_ClientDtoFieldCount_EqualsServerInterfaceKeyCount_Fourteen()
+        public void C3F2_ClientDtoKeyCount_EqualsServerInterfaceKeyCount_Sixteen()
         {
-            var fields = typeof(SessionOpenDto).GetFields(
-                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);
-            Assert.AreEqual(14, fields.Length,
-                $"SessionOpenDto must declare EXACTLY the 14 keys `session-open-sequence.service.ts` declares " +
-                $"(11 + opened_game_day W3.U1 C2/D3 + opened_game_minute, day_phase F14 back f4883b7c) — found {fields.Length}: " +
-                string.Join(", ", fields.Select(f => f.Name)));
+            // 16 = 14 champs publics + les DEUX propriétés nullables `family_day` / `opened_family_day` (L1, `session-open-sequence.service.ts:262,266`),
+            // comptées par `SessionOpenDto.ClesPortees` — jamais deux champs `int` (JsonUtility rend 0 pour un null servi : « jour 0 » ≠ « pas d'ancre »).
+            string[] cles = SessionOpenDto.ClesPortees();
+            Assert.AreEqual(16, cles.Length,
+                $"SessionOpenDto must carry EXACTLY the 16 keys `session-open-sequence.service.ts` declares " +
+                $"(11 + opened_game_day W3.U1 C2/D3 + opened_game_minute, day_phase F14 back f4883b7c + family_day, opened_family_day L1) — found {cles.Length}: " +
+                string.Join(", ", cles));
+            Assert.AreEqual(cles.Length, cles.Distinct().Count(), "aucune clé portée deux fois");
+            CollectionAssert.Contains(cles, "family_day");
+            CollectionAssert.Contains(cles, "opened_family_day");
+            Assert.AreEqual(14, typeof(SessionOpenDto).GetFields(
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly).Length,
+                "les 14 clés lues par JsonUtility restent des CHAMPS ; les deux jours de la famille restent des PROPRIÉTÉS nullables");
         }
 
         /// <summary>Count the top-level (depth-1) `"key":` occurrences inside the FIRST JSON object
@@ -173,16 +180,19 @@ namespace MafiaCleanCity.Shell.Tests
         /// Used by C3-F3 to compare the REAL response body's key count to the DTO's — the ONLY way to
         /// genuinely see a server-side add/remove (design:760-762, "événement de donnée que le
         /// compilateur C# ne verra jamais").</summary>
-        private static int CountTopLevelObjectKeys(string json, string marker)
+        private static int CountTopLevelObjectKeys(string json, string marker) => TopLevelObjectKeys(json, marker)?.Count ?? -1;
+
+        /// <summary>Les NOMS des clés de premier niveau de l'objet qui suit `marker` (même scan que `CountTopLevelObjectKeys`, qui en est le compte) ; null si le marqueur ou l'objet manque.</summary>
+        private static System.Collections.Generic.List<string> TopLevelObjectKeys(string json, string marker)
         {
             int markerIdx = json.IndexOf(marker, StringComparison.Ordinal);
-            if (markerIdx < 0) return -1;
+            if (markerIdx < 0) return null;
             int braceStart = json.IndexOf('{', markerIdx);
-            if (braceStart < 0) return -1;
+            if (braceStart < 0) return null;
 
             int depth = 0;
             bool inString = false, escaped = false;
-            int keyCount = 0;
+            var cles = new System.Collections.Generic.List<string>();
             for (int i = braceStart; i < json.Length; i++)
             {
                 char c = json[i];
@@ -211,7 +221,7 @@ namespace MafiaCleanCity.Shell.Tests
                         }
                         int k = j + 1;
                         while (k < json.Length && char.IsWhiteSpace(json[k])) k++;
-                        if (k < json.Length && json[k] == ':') keyCount++;
+                        if (k < json.Length && json[k] == ':') cles.Add(json.Substring(i + 1, j - i - 1));
                     }
                     continue;
                 }
@@ -222,7 +232,34 @@ namespace MafiaCleanCity.Shell.Tests
                     if (depth == 0) break;
                 }
             }
-            return keyCount;
+            return cles;
+        }
+
+        /// <summary>La parité par NOM entre les clés portées par le DTO et celles du corps brut : (servies non portées, portées non servies).</summary>
+        private static (string[] servieNonPortee, string[] porteeNonServie) EcartsDeParite(string[] portees, System.Collections.Generic.IEnumerable<string> servies)
+        {
+            var s = new System.Collections.Generic.HashSet<string>(servies);
+            return (s.Except(portees).OrderBy(n => n, StringComparer.Ordinal).ToArray(), portees.Except(s).OrderBy(n => n, StringComparer.Ordinal).ToArray());
+        }
+
+        /// <summary>★ CONTRÔLE POSITIF de la parité par nom (L1) : sur le corps de la forme du back (16 clés), la parité est nette ; une clé portée RETIRÉE du DTO
+        /// (le défaut que C3F3 doit attraper : `family_day` servie et non déclarée) ou une clé servie de plus fait rougir, des DEUX côtés.</summary>
+        [Test]
+        public void ControlePositif_UneCleRetireeOuAjoutee_FaitRougirLaParite()
+        {
+            string[] portees = SessionOpenDto.ClesPortees();
+            string corps = "{\"payload\":{\"data\":{" + string.Join(",", portees.Select(n => "\"" + n + "\":null")) + "}}}";
+            var servies = TopLevelObjectKeys(corps, "\"data\":");
+            Assert.AreEqual(16, servies.Count, "le corps synthétique porte les 16 clés");
+            var net = EcartsDeParite(portees, servies);
+            Assert.IsEmpty(net.servieNonPortee); Assert.IsEmpty(net.porteeNonServie);
+
+            var sansFamilyDay = EcartsDeParite(portees.Where(n => n != "family_day").ToArray(), servies);
+            CollectionAssert.AreEqual(new[] { "family_day" }, sansFamilyDay.servieNonPortee, "un champ retiré du DTO : la clé servie reste, et rougit");
+            var uneDePlus = EcartsDeParite(portees, servies.Concat(new[] { "une_cle_neuve" }));
+            CollectionAssert.AreEqual(new[] { "une_cle_neuve" }, uneDePlus.servieNonPortee, "une clé servie de plus rougit");
+            var uneDeMoins = EcartsDeParite(portees, servies.Where(n => n != "day_phase"));
+            CollectionAssert.AreEqual(new[] { "day_phase" }, uneDeMoins.porteeNonServie, "une clé retirée du back rougit aussi");
         }
 
         // Contrôle du contrôle : l'oracle lui-même doit savoir compter — vérifié sur un mini-JSON
@@ -294,12 +331,15 @@ namespace MafiaCleanCity.Shell.Tests
                 //   (3) passer C3-F2 de 14 à 16. Ne JAMAIS faire reverdir en retirant les clés du compte.
                 int rawDataKeyCount = CountTopLevelObjectKeys(raw, "\"data\":");
                 Assert.AreNotEqual(-1, rawDataKeyCount, "the raw body actually contains a payload.data object");
-                var fields = typeof(SessionOpenDto).GetFields(
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);
-                Assert.AreEqual(fields.Length, rawDataKeyCount,
-                    $"the REAL response body's payload.data carries {rawDataKeyCount} top-level keys, the client DTO declares " +
-                    $"{fields.Length} — a server-side add/remove would move rawDataKeyCount and leave this failing, which is " +
+                string[] portees = SessionOpenDto.ClesPortees();
+                Assert.AreEqual(portees.Length, rawDataKeyCount,
+                    $"the REAL response body's payload.data carries {rawDataKeyCount} top-level keys, the client DTO carries " +
+                    $"{portees.Length} — a server-side add/remove would move rawDataKeyCount and leave this failing, which is " +
                     "exactly the event the compiler can never see (design:760-762).");
+                // L1 (11/11) : la parité va au NOM, plus seulement au compte — 0 clé servie non portée, 0 clé portée non servie.
+                var ecarts = EcartsDeParite(portees, TopLevelObjectKeys(raw, "\"data\":"));
+                CollectionAssert.IsEmpty(ecarts.servieNonPortee, "clés SERVIES que le DTO ne porte pas (forme G : JsonUtility les jette)");
+                CollectionAssert.IsEmpty(ecarts.porteeNonServie, "clés PORTÉES que le back ne sert pas");
             }
         }
     }
