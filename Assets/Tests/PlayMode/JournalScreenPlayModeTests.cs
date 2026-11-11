@@ -590,5 +590,43 @@ namespace MafiaCleanCity.Operational.Tests
             yield return MettreEnPage();
             Assert.IsFalse(BoutonAssister().interactable, "sans jeton : éteint, jamais un geste qui partirait sans identité");
         }
+
+        // ── TD-822 : les MOTS de residue_band (ratifiés f2 11/11) REMPLACENT la note après un geste réussi ; bande inconnue = la note reste ; sortie de l'écran = la note revient. ──
+        private TMPro.TextMeshProUGUI Note() => hostGo.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).First(t => t.name == "Note");
+
+        [UnityTest]
+        public IEnumerator T4_LaNote_PorteLaPhraseDeLaBande_PuisRevientALaSortie()
+        {
+            JournalScreenController ecran = MonterEcran();
+            ecran.SetToken("jeton-de-test");
+            ecran.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt("e-1") } });
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+            string maquette = Note().text;
+            StringAssert.Contains("c’est le seul geste que la rue accepte", maquette, "avant tout geste : la note de la maquette (cadre 131)");
+
+            var attendus = new[]
+            {
+                ("full", "On vous a vu. La rue s’en souviendra."),
+                ("reduced", "On vous a vu, mais vous étiez déjà passé aujourd’hui."),
+                ("minimal", "Encore vous\u00A0? La rue n’y prête plus guère attention aujourd’hui."),
+                ("none", "Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte."),
+            };
+            foreach (var (bande, phrase) in attendus)
+            {
+                ecran.PoserAssistancePourTest(new PostAmbientAttendResponseDto { event_id = "e-1", district = "district-1", status = "attended", residue_band = bande });
+                Assert.AreEqual(phrase, Note().text, "bande « " + bande + " » : la phrase ratifiée REMPLACE la note");
+            }
+
+            ecran.PoserAssistancePourTest(new PostAmbientAttendResponseDto { event_id = "e-1", status = "attended", residue_band = "huge" });
+            Assert.AreEqual(maquette, Note().text, "une bande inconnue (le domaine s'élargirait) : la note reste, jamais une phrase inventée");
+
+            ecran.PoserAssistancePourTest(new PostAmbientAttendResponseDto { event_id = "e-1", status = "attended", residue_band = "full" });
+            hostGo.SetActive(false);
+            hostGo.SetActive(true);
+            yield return null;
+            Assert.AreEqual(maquette, Note().text, "sortie de l'écran : la note de la maquette revient");
+            Assert.IsNull(ecran.DerniereAssistance, "et la réponse gardée est oubliée");
+        }
     }
 }

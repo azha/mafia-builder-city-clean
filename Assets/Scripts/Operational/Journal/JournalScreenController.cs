@@ -122,6 +122,36 @@ namespace MafiaCleanCity.Operational
         public bool AssistanceEnCours { get; private set; }
         private Button boutonAssister;
         private TextMeshProUGUI libelleAssister;
+        private TextMeshProUGUI noteDuPied;
+        private string noteParDefaut;
+
+        // TD-822 — LES MOTS de `residue_band` (ratifiés par f2 le 11/11, une phrase par bande, FR ici / EN servi par BACK-2, domaine `ambient`) : la phrase REMPLACE la note sous le bouton après un geste RÉUSSI,
+        // jusqu'au prochain geste ou à la sortie de l'écran. 404/409 : rien ne change. Bande inconnue (le back élargirait le domaine) : la note reste — jamais une phrase inventée.
+        // Rôle de clé `attend` : à confirmer par BACK-2 (clé dérivée tant que rien n'est servi : le repli FR se COMPTE).
+        private static string PhraseDeLaBande(string bande)
+        {
+            switch (bande)
+            {
+                case "full": return MafiaCleanCity.I18n.Libelle.De("ambient", "attend", "On vous a vu. La rue s’en souviendra.");
+                case "reduced": return MafiaCleanCity.I18n.Libelle.De("ambient", "attend", "On vous a vu, mais vous étiez déjà passé aujourd’hui.");
+                case "minimal": return MafiaCleanCity.I18n.Libelle.De("ambient", "attend", "Encore vous\u00A0? La rue n’y prête plus guère attention aujourd’hui.");
+                case "none": return MafiaCleanCity.I18n.Libelle.De("ambient", "attend", "Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte.");
+                default: return null;
+            }
+        }
+
+        /// <summary>La note du pied : la phrase de la dernière assistance réussie, sinon la note de la maquette.</summary>
+        private void RendreLaNote()
+        {
+            if (noteDuPied == null) return;
+            string phrase = DerniereAssistance == null ? null : PhraseDeLaBande(DerniereAssistance.residue_band);
+            noteDuPied.text = phrase ?? noteParDefaut;
+        }
+
+        private void OnDisable() { DerniereAssistance = null; RendreLaNote(); }
+
+        /// <summary>Crochet de test : pose la réponse d'une assistance réussie SANS réseau et rend la note (le POST réel se joue contre le back).</summary>
+        public void PoserAssistancePourTest(PostAmbientAttendResponseDto reponse) { DerniereAssistance = reponse; RendreLaNote(); }
 
         /// <summary>Le pied suit l'état : allumé et pressable s'il y a un événement à attendre ET un jeton ET pas de geste en vol ; éteint sinon.</summary>
         private void MettreAJourLePied()
@@ -130,6 +160,7 @@ namespace MafiaCleanCity.Operational
             bool peut = !string.IsNullOrEmpty(token) && !AssistanceEnCours && ProchainAAssister != null;
             boutonAssister.interactable = peut;
             PiedDEcran.StylerLeBouton(boutonAssister.gameObject, libelleAssister, PiedDEcran.Forme.Cta6, peut ? PiedDEcran.Etat.Allume : PiedDEcran.Etat.Eteint);
+            RendreLaNote();
         }
 
         /// <summary>Attend l'événement `ProchainAAssister`, puis relit la rue (l'événement attendu n'est plus `live`). Un échec laisse l'écran tel quel.</summary>
@@ -985,12 +1016,14 @@ namespace MafiaCleanCity.Operational
 
             // `.note6` : 6,4 px, centrée, #8a979c ; le mot « assister » en or vif gras
             string phrase = MafiaCleanCity.I18n.Libelle.De("journal", "bloc", "on peut assister à ce qui se passe — c’est le seul geste que la rue accepte");
+            // `#f2c96b` EST hudMoneyGold et `#8a979c` EST onSurfaceSecondary (garde Palette) : les jetons, dans la balise aussi
+            noteParDefaut = phrase.Replace("assister", "<b><color=#" + ColorUtility.ToHtmlStringRGB(DesignTokens.Current.hudMoneyGold) + ">assister</color></b>");
             TextMeshProUGUI note = NouveauTexte(pied.transform, "Note",
-                // `#f2c96b` EST hudMoneyGold et `#8a979c` EST onSurfaceSecondary (garde Palette) : les jetons, dans la balise aussi
-                phrase.Replace("assister", "<b><color=#" + ColorUtility.ToHtmlStringRGB(DesignTokens.Current.hudMoneyGold) + ">assister</color></b>"), Px(6.4f),
+                noteParDefaut, Px(6.4f),
                 DesignTokens.Current.onSurfaceSecondary, DesignTokens.Current.primaryFont);
             note.alignment = TextAlignmentOptions.Center;
             note.enableWordWrapping = true;
+            noteDuPied = note;
         }
 
         /// <summary>Un contour, en QUATRE BANDES d'un pixel — jamais un enfant plein rect.
