@@ -18,10 +18,11 @@ namespace MafiaCleanCity.Shell.Tests
     /// <summary>TD-938 (a) — un AGIR que le back répond `outcome: "navigate"` MÈNE à l'écran servi (design `Tools/td-938-navigate/DESIGN.md` v3,
     /// approuvé, revue ⊥ ×3 ; rulings f2 11/11). Vrai shell hors réseau (port fermé + transport témoin, patron d'`AccueilCanon` A13) ; la réponse de
     /// `commit` passe par le MÊME chemin que le réseau (`HlCardClient.ReponsePourTest` ne remplace que le transport).
-    ///   G1  la table client CLASSE les 4 valeurs du back (3 menées + 1 inconnue assumée, TD-981) — contrôle positif : liste amputée ⇒ rouge
+    ///   G1  la table client CLASSE les 4 valeurs du back (4 menées, 0 inconnue assumée depuis TD-981 fermée) — contrôle positif : liste amputée ⇒ rouge
     ///   G2  EFFET : `exceptions_queue` / `exceptions_escalations` ⇒ ⑨ monté, `autonomy_reports` ⇒ c7 monté ; ④ refermé, l'Accueil NON relu par-dessus,
     ///       aucun `session/open` ; anti-vacuité sur la cible INERTE `ExceptionQueuePanelController` (la ligne de l'Accueil)
-    ///   G3  INCONNU (`supply_chain_trace`, hors table, null, vide) ⇒ rien de monté, compté, journalisé, Accueil relu — contrôle : écran CONNU ⇒ 0 inconnu
+    ///   G2d 106 `supply_chain_trace` ⇒ ㉚ monté (TD-981 fermée, f2 11/11), mêmes assertions que G2 ; contrôle : avant le geste, ㉚ n'est pas là
+    ///   G3  INCONNU (hors table, null, vide) ⇒ rien de monté, compté, journalisé, Accueil relu — contrôle : écran CONNU ⇒ 0 inconnu
     ///   G4  DÉTECTEUR TD-983 : ⑤ poste `{}` (le back lit « n'agit pas ») ⇒ sa branche navigate est dormante
     ///   G5  [Lire maintenant] (Q1) : (a) 200 navigate ⇒ UN commit(0), c7 monté par le shell ; (b) refus servi ⇒ c7 monté QUAND MÊME avec la phrase
     ///       SERVIE, jamais ⑤ ; (b') refus muet ⇒ aucune phrase, jamais le littéral du client ; (c) EFFET du puits : la ligne `Error` de c7 porte la phrase.
@@ -83,12 +84,13 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         [Test]
-        public void G1_LaTableClasseLesQuatreValeursDuBack_TroisMeneesUneInconnueAssumee()
+        public void G1_LaTableClasseLesQuatreValeursDuBack_QuatreMenees()
         {
             var ecarts = EcartsDeClassement(NavigationApresGeste.EcransServis, NavigationApresGeste.EcransMenes, NavigationApresGeste.EcransInconnusAssumes, ServisParLeBack);
             Assert.IsEmpty(ecarts, string.Join(" · ", ecarts));
-            Assert.AreEqual(3, NavigationApresGeste.EcransMenes.Count, "3 menées (ruling f2 : 103 et 108 → ⑨, 104 → c7)");
-            Assert.AreEqual(1, NavigationApresGeste.EcransInconnusAssumes.Count, "1 inconnue assumée (106, TD-981)");
+            Assert.AreEqual(4, NavigationApresGeste.EcransMenes.Count, "4 menées (ruling f2 : 103 et 108 → ⑨, 104 → c7, 106 → ㉚)");
+            Assert.AreEqual(0, NavigationApresGeste.EcransInconnusAssumes.Count, "0 inconnue assumée (TD-981 fermée le 11/11)");
+            Assert.AreEqual(NavigationApresGeste.Cible.ChaineDAppro, NavigationApresGeste.Pour("supply_chain_trace"), "106 → ㉚, qui montre la chaîne servie");
             Assert.AreEqual(NavigationApresGeste.Cible.FileDesExceptions, NavigationApresGeste.Pour("exceptions_escalations"), "103 → ⑨, qui porte le total des escalades");
             Assert.AreEqual(NavigationApresGeste.Cible.Aucune, NavigationApresGeste.Pour(null));
             Assert.AreEqual(NavigationApresGeste.Cible.Aucune, NavigationApresGeste.Pour(""));
@@ -96,8 +98,10 @@ namespace MafiaCleanCity.Shell.Tests
             // CONTRÔLE POSITIF : le même corps rougit sur une table amputée d'une valeur, et sur une inconnue assumée oubliée
             Assert.IsNotEmpty(EcartsDeClassement(NavigationApresGeste.EcransServis.Skip(1).ToList(), NavigationApresGeste.EcransMenes,
                 NavigationApresGeste.EcransInconnusAssumes, ServisParLeBack), "CONTRÔLE POSITIF : une valeur du back retirée de la table est VUE");
-            Assert.IsNotEmpty(EcartsDeClassement(NavigationApresGeste.EcransServis, NavigationApresGeste.EcransMenes, new string[0], ServisParLeBack),
-                "CONTRÔLE POSITIF : `supply_chain_trace` non classée est VUE");
+            Assert.IsNotEmpty(EcartsDeClassement(NavigationApresGeste.EcransServis, NavigationApresGeste.EcransMenes.Where(v => v != "supply_chain_trace").ToList(),
+                NavigationApresGeste.EcransInconnusAssumes, ServisParLeBack), "CONTRÔLE POSITIF : `supply_chain_trace` retirée des menées (non classée) est VUE");
+            Assert.IsNotEmpty(EcartsDeClassement(NavigationApresGeste.EcransServis, NavigationApresGeste.EcransMenes, new[] { "supply_chain_trace" }, ServisParLeBack),
+                "CONTRÔLE POSITIF : `supply_chain_trace` à la fois menée et inconnue assumée est VUE");
         }
 
         [Test]
@@ -140,6 +144,12 @@ namespace MafiaCleanCity.Shell.Tests
         public IEnumerator G2c_NavigateRapports_LaBoiteDesRapportsEstMontee() =>
             Mener("AppShell_G2c", "AUTONOMY_REPORTS_PENDING", "autonomy_reports", () => Montes<AutonomyInboxController>());
 
+        /// <summary>TD-981 FERMÉE (f2 11/11) : 106 `supply_chain_trace` mène à ㉚, qui montre la chaîne servie (cadre 154). Les `navigate_ids` restent
+        /// ignorés (TD-1015 : ㉚ découvre son propre bâtiment). Hors réseau, ㉚ monté tombe sur son état indisponible : c'est son MONTAGE qu'on mesure.</summary>
+        [UnityTest]
+        public IEnumerator G2d_NavigateTrace_LaChaineDApproEstMontee() =>
+            Mener("AppShell_G2d", "BACKPRESSURE_CRITICAL_TRACE", "supply_chain_trace", () => Montes<MafiaCleanCity.Operational.ChaineDApproScreenController>());
+
         private IEnumerator Mener(string nom, string typeDeCarte, string ecran, Func<int> compteDeLaCible)
         {
             yield return MonterLeShellAvecUneCarte(nom, typeDeCarte);
@@ -168,7 +178,7 @@ namespace MafiaCleanCity.Shell.Tests
         public IEnumerator G3_EcranInconnu_RienDeMonte_CompteJournaliseEtAccueilRelu_ControleEcranConnu()
         {
             yield return MonterLeShellAvecUneCarte("AppShell_G3", "BACKPRESSURE_CRITICAL_TRACE");
-            foreach (string ecran in new[] { "supply_chain_trace", "ecran_qui_n_existe_pas", null, "" })
+            foreach (string ecran in new[] { "ecran_qui_n_existe_pas", null, "" })
             {
                 HighestLeverageCardController tete = Tete();
                 Assert.IsNotNull(tete != null ? tete.CurrentCard : null, $"précondition « {ecran ?? "null"} » : une carte est montrée");
@@ -182,6 +192,7 @@ namespace MafiaCleanCity.Shell.Tests
                 Assert.AreEqual(relectures + 1, shell.RelecturesApresDecision, $"« {ecran ?? "null"} » : l'Accueil est relu (comportement d'avant)");
                 Assert.AreEqual(0, Montes<ExceptionQueueController>(), $"« {ecran ?? "null"} » : aucune file devinée");
                 Assert.AreEqual(0, Montes<AutonomyInboxController>(), $"« {ecran ?? "null"} » : aucune boîte devinée");
+                Assert.AreEqual(0, Montes<MafiaCleanCity.Operational.ChaineDApproScreenController>(), $"« {ecran ?? "null"} » : aucune chaîne devinée");
             }
 
             // CONTRÔLE POSITIF (B3) : un écran CONNU ⇒ AUCUNE inconnue, et sa cible montée

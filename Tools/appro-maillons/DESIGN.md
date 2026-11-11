@@ -53,4 +53,4 @@ graphe est servi, les mots des bandes aussi (BACK-1), les noms aussi (`me/buildi
 ## Statiques avant commit
 `--frais Operational` puis `--tout` (17/17), `--controle` sur le contrôleur et le test, cliquet des chaînes (population mesurée, pas crue),
 TD-612 (distance des couleurs neuves aux jetons : mesurée, 1 recopie → jeton). Hors lot : routes (dette du cadre, clés `appro.sinuosite.*` /
-`appro.effondrement.*` à câbler quand TD-1013 sera rendu) ; mener 106 `supply_chain_trace` à ㉚ (TD-981) : à décider par f2.
+`appro.effondrement.*` à câbler quand TD-1013 sera rendu) ; mener 106 `supply_chain_trace` à ㉚ (TD-981) : ~~à décider par f2~~ DÉCIDÉ et fait le 11/11 (`lot/client1-106-appro`, TD-981 fermée).

@@ -582,7 +582,7 @@ namespace MafiaCleanCity.Shell
 
         /// <summary>TD-938 (a) — un AGIR que le back a répondu `navigate` (④ ou ⑤ lèvent `OnNavigate`) : le shell referme ④/⑤ et MÈNE à l'écran
         /// servi (`NavigationApresGeste`). Aucun `session/open` ici : toute réouverture de l'Accueil le relit déjà, la carte tranchée n'y sera plus.
-        /// Écran INCONNU (null, vide, `supply_chain_trace` TD-981, hors table) : comportement d'avant — l'Accueil relu — compté et journalisé, jamais un
+        /// Écran INCONNU (null, vide, hors table ; `supply_chain_trace` mène à ㉚ depuis TD-981 fermée) : comportement d'avant — l'Accueil relu — compté et journalisé, jamais un
         /// écran deviné. Les `ids` ne sont lus par aucun écran mené (TD-982).</summary>
         public void SuivreLaNavigation(string ecranServi, string[] ids) { if (this != null) StartCoroutine(SuivreLaNavigationCo(ecranServi)); }
 
@@ -604,9 +604,12 @@ namespace MafiaCleanCity.Shell
                 case NavigationApresGeste.Cible.BoiteDesRapports:
                     MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Autonomy.AutonomyInboxController>();
                     break;
+                case NavigationApresGeste.Cible.ChaineDAppro:   // 106 `supply_chain_trace` (TD-981 fermée) : ㉚ découvre son propre bâtiment (TD-1015)
+                    MonterLocataireEnSurimpression<MafiaCleanCity.Operational.ChaineDApproScreenController>();
+                    break;
                 default:
                     NavigationsInconnues++;
-                    Debug.LogWarning($"[AppShell] navigate_screen « {ecranServi ?? "null"} » : aucun écran client ne le montre — l'Accueil est relu (TD-938, TD-981)");
+                    Debug.LogWarning($"[AppShell] navigate_screen « {ecranServi ?? "null"} » : aucun écran client ne le montre — l'Accueil est relu (TD-938)");
                     RelireLAccueilApresUneDecision();
                     break;
             }

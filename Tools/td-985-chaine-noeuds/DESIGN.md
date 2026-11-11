@@ -113,6 +113,7 @@ positif** (tout `silent` ⇒ titre **et** message, `:420-425`). ⇒ **il ne se r
   **étendue** aux quatre noms de fiction mesurés au §2 (« Atelier Vesk », « Réserve Nock », « Le quai 4 », « Le fournisseur »)
   et aux quatre mots de bande (« à sec », « engorgé », « bloqué depuis trois jours », « ne livre plus ») : une garde
   structurelle contre l'invention, qui vaut quel que soit le rendu futur.
+- ⚠️ *PÉRIMÉ le 11/11 : 106 mène à ㉚ depuis `lot/client1-106-appro-2026-11-11` (TD-981 fermée) — énoncé conservé pour l'histoire.*
 - **Carte 106 — l'effet de bord est NUL dans ce lot, et c'est à écrire** : `supply_chain_trace` reste dans
   `EcransInconnusAssumes` de `NavigationApresGeste` (design TD-938 §4), puisque ㉚ ne rend toujours aucun maillon. La **G1 de
   TD-938** (bijection : les 4 valeurs du back **classées**, 3 menées + 1 assumée) **reste verte sans retouche** — elle ne

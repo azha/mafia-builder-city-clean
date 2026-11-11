@@ -13,11 +13,12 @@ namespace MafiaCleanCity.Shell
     ///   · `exceptions_queue` → ⑨ la file des exceptions ;
     ///   · `exceptions_escalations` → ⑨ aussi : il PORTE le total des escalades (pied inerte : aucune liste des escalades n'existe) ;
     ///   · `autonomy_reports` → c7 la boîte des rapports ;
-    ///   · `supply_chain_trace` → INCONNU ASSUMÉ (TD-981) : aucun écran de trace ; ㉚ en sera l'hôte quand il rendra les nœuds non silencieux (TD-985).
-    /// Les `navigate_ids` ne sont lus par aucun écran mené (TD-982).</summary>
+    ///   · `supply_chain_trace` → ㉚ la chaîne d'appro (TD-981 FERMÉE, f2 11/11) : depuis le cadre 154 (TD-985 fermée), ㉚ MONTRE la chaîne servie —
+    ///     maillons et liaisons, leur pression et leur entretien. Ce n'est pas une trace pas à pas : c'est l'écran existant le plus proche qui montre l'objet.
+    /// Les `navigate_ids` ne sont lus par aucun écran mené (TD-982 ; pour ㉚, TD-1015 : il découvre son propre bâtiment).</summary>
     public static class NavigationApresGeste
     {
-        public enum Cible { FileDesExceptions, BoiteDesRapports, Aucune }
+        public enum Cible { FileDesExceptions, BoiteDesRapports, ChaineDAppro, Aucune }
 
         public const string FileDesExceptionsServie = "exceptions_queue";
         public const string EscaladesServies = "exceptions_escalations";
@@ -28,12 +29,12 @@ namespace MafiaCleanCity.Shell
         public static readonly IReadOnlyList<string> EcransServis = new[] { EscaladesServies, RapportsServis, TraceServie, FileDesExceptionsServie };
 
         /// <summary>Celles qui mènent à un écran du client.</summary>
-        public static readonly IReadOnlyList<string> EcransMenes = new[] { FileDesExceptionsServie, EscaladesServies, RapportsServis };
+        public static readonly IReadOnlyList<string> EcransMenes = new[] { FileDesExceptionsServie, EscaladesServies, RapportsServis, TraceServie };
 
         /// <summary>Celles qui tombent DÉLIBÉRÉMENT dans la branche inconnue, chacune avec sa dette.</summary>
-        public static readonly IReadOnlyList<string> EcransInconnusAssumes = new[] { TraceServie };   // TD-981
+        public static readonly IReadOnlyList<string> EcransInconnusAssumes = new string[0];   // vide depuis le 11/11 (TD-981 fermée : 106 → ㉚)
 
-        /// <summary>L'écran client pour une valeur servie ; `Aucune` pour null, vide, `supply_chain_trace` ou toute valeur hors table.</summary>
+        /// <summary>L'écran client pour une valeur servie ; `Aucune` pour null, vide ou toute valeur hors table.</summary>
         public static Cible Pour(string ecranServi)
         {
             switch (ecranServi)
@@ -43,6 +44,8 @@ namespace MafiaCleanCity.Shell
                     return Cible.FileDesExceptions;
                 case RapportsServis:
                     return Cible.BoiteDesRapports;
+                case TraceServie:
+                    return Cible.ChaineDAppro;
                 default:
                     return Cible.Aucune;
             }
