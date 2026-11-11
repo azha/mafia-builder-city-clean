@@ -187,7 +187,7 @@ namespace MafiaCleanCity.Operational
             fond.color = actionnable ? ChaineDApproScreenController.FondMaillon : ChaineDApproScreenController.FondLiaison;
             fond.raycastTarget = true;
             Filets.Poser((RectTransform)ligne.transform, actionnable ? DecorsDeScene.Filets.ChaineDAppro.Noeud : ChaineDApproScreenController.FiletLiaison);
-            Button b = ligne.AddComponent<Button>();
+            Button b = MafiaCleanCity.Shell.Retour.NouveauBouton(ligne, fond);
             b.targetGraphic = fond;
             b.transition = Selectable.Transition.None;   // la teinte de `disabledColor` éclaircirait/voilerait le fond : l'extinction se dit par les couleurs du cadre
             b.interactable = actionnable;
@@ -257,7 +257,7 @@ namespace MafiaCleanCity.Operational
             fond.color = Color.clear;   // un fond transparent qui reste une CIBLE de clic
             fond.raycastTarget = true;
             Filets.Poser((RectTransform)go.transform, new SpecFilet(Cotes.Tous, 1f, StyleFilet.Plein, Teinte.Hex("#3a352c"), rayon: 3f));
-            Button b = go.AddComponent<Button>();
+            Button b = MafiaCleanCity.Shell.Retour.NouveauBouton(go, fond);
             b.targetGraphic = fond;
             b.transition = Selectable.Transition.None;
             b.onClick.AddListener(() => { if (surAnnuler != null) surAnnuler(); });

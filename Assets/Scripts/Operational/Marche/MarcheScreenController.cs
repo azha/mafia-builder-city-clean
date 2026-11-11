@@ -272,7 +272,7 @@ namespace MafiaCleanCity.Operational.Marche
             Image fond = c.AddComponent<Image>();
             fond.color = allumee ? Creme : FondCase;
             Largeur(c, 0f, 1f);
-            Button b = c.AddComponent<Button>();
+            Button b = MafiaCleanCity.Shell.Retour.NouveauBouton(c, fond);
             b.targetGraphic = fond;
             int q = quartier; string s = substance;
             b.onClick.AddListener(() => Toucher(q, s));

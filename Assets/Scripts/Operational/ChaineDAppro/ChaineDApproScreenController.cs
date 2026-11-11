@@ -992,7 +992,7 @@ namespace MafiaCleanCity.Operational
         private void PoserLeGeste(GameObject ligne, Image fond, SpecDeGeste spec, CibleDeGeste cible, bool interactable)
         {
             fond.raycastTarget = true;
-            Button b = ligne.AddComponent<Button>();
+            Button b = MafiaCleanCity.Shell.Retour.NouveauBouton(ligne, fond);
             b.targetGraphic = fond;
             b.transition = Selectable.Transition.None;
             b.interactable = interactable;
