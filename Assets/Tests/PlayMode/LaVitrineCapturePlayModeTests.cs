@@ -23,6 +23,7 @@ namespace MafiaCleanCity.Shell.Tests
     // ⚠️ Pas de préfixe `Capture` : cette catégorie EXISTE, le filtre d'Unity matche par
     // PRÉFIXE, et la demander emporterait celle-ci — or `Capture` fait SIGSEGV (Mesa).
     [Category("PhotoVitrine")]
+    [MafiaCleanCity.Tests.PhotoSansEntree]
     public class LaVitrineCapturePlayModeTests
     {
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un

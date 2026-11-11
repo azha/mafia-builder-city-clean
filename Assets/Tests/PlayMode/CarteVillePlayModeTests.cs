@@ -19,6 +19,7 @@ namespace MafiaCleanCity.Shell.Tests
     ///     pas un fond uni.</summary>
     // `ScreenCarte` (la catégorie de l'écran ③, chantier C, 2026-09-02) est posée TEST PAR TEST depuis le 2026-09-24 : sur la classe,
     // elle emportait la CAPTURE `Capture_CarteVille_1080x2400` (une planche du juge, qui porte désormais `ClicheCarte`).
+    [MafiaCleanCity.Tests.PhotoSansEntree]
     public class CarteVillePlayModeTests
     {
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — `Capture_CarteVille_1080x2400` charge la scène du BUILD par son chemin ; son

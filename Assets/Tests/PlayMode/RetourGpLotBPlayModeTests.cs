@@ -36,6 +36,7 @@ namespace MafiaCleanCity.Tests
     //
     // Les tests rendent par `RenderTexture` à la résolution des vrais écrans : ils exigent un périphérique graphique (pas `-nographics`).
     [Category("RetourAppui")]
+    [MafiaCleanCity.Tests.PhotoSansEntree]
     public class RetourGpLotBPlayModeTests
     {
         /// <summary>La résolution à laquelle les vrais écrans se rendent (les captures de contrôle sont à 1080 × 1920).</summary>

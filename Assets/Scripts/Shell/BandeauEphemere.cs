@@ -191,6 +191,11 @@ namespace MafiaCleanCity.Shell
         // MINUTERIE (l'attente n'est pas une animation). Le délégué de fin est mis en cache, une fois : pas d'allocation par fondu.
         private Handle fondu = Handle.Nul;
         private Action<Handle> surFonduFini;
+        // L1 (design Tools/anim-l1/design-l1.md) : `bandeau.entree`, l'annonce DESCEND de 10 unités et apparaît (200 ms). Une piste de la régie sur le bandeau lui-même ;
+        // détachée avant la sortie (même `CanvasGroup`, même canal `Alpha` : deux pistes ne l'écrivent pas ensemble) et à l'effacement.
+        private Handle entree = Handle.Nul;
+        /// <summary>Test hook : la piste de `bandeau.entree` de la dernière annonce (nulle sans régie ou si refusée).</summary>
+        public Handle EntreePourTest => entree;
 
         public static BandeauEphemere Construire(Transform parent)
         {
@@ -276,7 +281,11 @@ namespace MafiaCleanCity.Shell
             // appellerait `Effacer` : l'annonce serait signée, jamais vue. `Detacher` prend le rôle de l'ancien `StopCoroutine`.
             RegieMouvement.Detacher(fondu);
             fondu = Handle.Nul;
+            RegieMouvement.Detacher(entree);   // l'entrée de l'annonce précédente rend position et opacité AVANT que la base soit relue ci-dessous
+            entree = Handle.Nul;
             groupe.alpha = 1f;
+            // L1 : la base de la régie = l'état au repos (opacité 1, position ancrée) ; refus ou sans régie ⇒ handle nul, l'annonce paraît d'un coup comme avant.
+            entree = RegieMouvement.Attacher(CatalogueHud.BandeauEntree, rt, Reglage.Defaut);
             if (minuterie != null) StopCoroutine(minuterie);
             // Une barre inactive (un écran sans chrome) ne lance pas de coroutine : le bandeau attend alors le toucher.
             minuterie = gameObject.activeInHierarchy ? StartCoroutine(Effacement(dureeS)) : null;
@@ -289,6 +298,8 @@ namespace MafiaCleanCity.Shell
             if (minuterie != null) { StopCoroutine(minuterie); minuterie = null; }
             RegieMouvement.Detacher(fondu);   // un toucher pendant le fondu l'annule, comme avant ; `Detacher` rend l'opacité (1)
             fondu = Handle.Nul;
+            RegieMouvement.Detacher(entree);   // un toucher pendant l'entrée l'annule aussi : le bandeau repart à sa position de repos
+            entree = Handle.Nul;
             surToucher = null;
             gameObject.SetActive(false);
             ChangerVisibilite(false);
@@ -306,6 +317,8 @@ namespace MafiaCleanCity.Shell
         {
             yield return new WaitForSecondsRealtime(Mathf.Max(0f, dureeS));
             minuterie = null;
+            RegieMouvement.Detacher(entree);   // l'entrée (200 ms) est finie sauf `dureeS` très court : jamais deux pistes sur l'`Alpha` du bandeau
+            entree = Handle.Nul;
             // Le fondu (0,4 s linéaire) : une `Transitionner` de la régie, qui efface à sa fin. Sans régie (hôte nu) ou si elle refuse,
             // l'annonce s'efface sans fondu : elle ne reste jamais à l'écran.
             fondu = RegieMouvement.Transitionner(CatalogueHud.BandeauSortie, rt, 1f, 0f, surFonduFini);

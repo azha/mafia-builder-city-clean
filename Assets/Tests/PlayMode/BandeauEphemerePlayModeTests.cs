@@ -173,10 +173,12 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         /// <summary>Attend (temps réel) que la minuterie ait passé la main à la régie : le fondu est une piste vivante.</summary>
-        private static IEnumerator AttendreLeFondu(Regie regie)
+        private static IEnumerator AttendreLeFondu(Regie regie, BandeauEphemere bandeau)
         {
+            // L1 : `Annoncer` pose AUSSI `bandeau.entree` — « une piste vivante » ne dit plus que la minuterie a fini ; la sortie détache l'entrée
+            // avant de partir : on attend que l'entrée ne soit plus vivante.
             float fin = Time.realtimeSinceStartup + 3f;
-            while (regie.PistesVivantes == 0 && Time.realtimeSinceStartup < fin) yield return null;
+            while ((RegieMouvement.EstVivant(bandeau.EntreePourTest) || regie.PistesVivantes == 0) && Time.realtimeSinceStartup < fin) yield return null;
             Assert.AreEqual(1, regie.PistesVivantes, "la minuterie est finie : le fondu est UNE piste de la régie");
         }
 
@@ -189,7 +191,7 @@ namespace MafiaCleanCity.CityMap.Tests
             AnnonceDuBandeau a = AnnonceDuBandeau.Choisir(false, null, "HOT", null, null);
             Assert.IsTrue(bandeau.Annoncer(a, null, 0.05f));
             Assert.AreEqual(1f, groupe.alpha, "annoncé : alpha réel 1");
-            yield return AttendreLeFondu(regie);
+            yield return AttendreLeFondu(regie, bandeau);
 
             // le fondu court sur la régie, pas sur une coroutine : 0,2 s sur 0,4 (linéaire) ⇒ alpha réel .5
             Avancer(regie, horloge, 101f);     // première évaluation de la piste (âge 0)
@@ -213,7 +215,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.AreEqual(1f, groupe.alpha, 1e-4f, "`groupe.alpha` RÉEL après un nouvel `Annoncer`");
             Assert.IsTrue(bandeau.Visible);
             Assert.AreEqual(1f, bandeau.Opacite);
-            Assert.AreEqual(0, regie.PistesVivantes);
+            Assert.AreEqual(1, regie.PistesVivantes, "L1 : la seule piste est l'ENTRÉE de la nouvelle annonce (le fondu de l'ancienne est détaché)");
         }
 
         [UnityTest]
@@ -225,7 +227,7 @@ namespace MafiaCleanCity.CityMap.Tests
             var vus = new List<bool>();
             bandeau.VisibiliteChangee += v => vus.Add(v);
             bandeau.Annoncer(AnnonceDuBandeau.Choisir(false, null, "HOT", null, null), null, 0.05f);
-            yield return AttendreLeFondu(regie);
+            yield return AttendreLeFondu(regie, bandeau);
 
             Avancer(regie, horloge, 101f);
             Avancer(regie, horloge, 101.39f);
@@ -249,7 +251,7 @@ namespace MafiaCleanCity.CityMap.Tests
             while (bandeau.Visible && Time.realtimeSinceStartup < fin) yield return null;
             Assert.IsFalse(bandeau.Visible, "sans régie, la minuterie efface");
             Assert.AreEqual(1f, bandeau.GetComponent<CanvasGroup>().alpha, 1e-4f);
-            Assert.AreEqual(1, RegieMouvement.SansRegie, "et le fondu manquant est COMPTÉ, pas perdu en silence");
+            Assert.AreEqual(2, RegieMouvement.SansRegie, "et les mouvements manquants sont COMPTÉS, pas perdus en silence : l'entrée (L1) ET le fondu");
         }
 
         [UnityTest]
@@ -268,7 +270,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNotNull(AnnonceDuBandeau.Suivante(new[] { descente }, bandeau.DejaAnnoncee, carte), "la Descente est admise par-dessus la Carte à l'écran");
 
             Assert.IsTrue(bandeau.Annoncer(carte, null, 0.05f));
-            yield return AttendreLeFondu(regie);
+            yield return AttendreLeFondu(regie, bandeau);
             Avancer(regie, horloge, 101f);
             Avancer(regie, horloge, 101.2f);
             Assert.AreEqual(0.5f, groupe.alpha, 0.02f, "CONTRÔLE : en plein fondu l'alpha réel n'est pas 1");
@@ -279,7 +281,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsTrue(bandeau.Visible);
             Assert.AreSame(descente, bandeau.Courante, "le bandeau porte la Descente");
             Assert.AreEqual(descente.Phrase, bandeau.TexteAffiche);
-            Assert.AreEqual(0, regie.PistesVivantes, "la piste de la Carte est détachée");
+            Assert.AreEqual(1, regie.PistesVivantes, "la piste de la Carte est détachée : reste l'ENTRÉE (L1) de la Descente");
 
             // la régie continue de tourner bien au-delà de la fin du fondu de la Carte : rien ne revient
             Avancer(regie, horloge, 102f);

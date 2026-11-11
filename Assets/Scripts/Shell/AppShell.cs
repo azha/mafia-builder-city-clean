@@ -410,6 +410,7 @@ namespace MafiaCleanCity.Shell
             DistrictInteriorScreenController tenant = ConstruireLocataire<DistrictInteriorScreenController>(out GameObject host);
             MountedTenantGameObject = host;
             MountedTenantType = typeof(DistrictInteriorScreenController);
+            AnimerEntreeDeLOnglet();   // L1 : shell.entree (un district est une racine d'onglet : l'écran d'avant est démonté)
 
             CityTabDistrictId = districtId;
             // §3.4 — AMENDÉ (2026-08-21, frontière avec le lot manomètre) : `TopBarSlot.rect.
@@ -1480,6 +1481,26 @@ namespace MafiaCleanCity.Shell
                     }
                 }
             }
+            AnimerEntreeDeLOnglet();   // L1 : shell.entree
+        }
+
+        // ---- L1 (design Tools/anim-l1/design-l1.md, ratifié f2 11/11) : `shell.entree`, le fondu d'entrée d'un écran d'ONGLET.
+        // Cible = `ContentSlot` (le locataire est un hôte sans RectTransform, son UI naît au `Start()` suivant). Appelée à la fin des TROIS chemins qui
+        // démontent d'abord (`MountTenant<T>`, `EnterDistrict`, `MonterMenuPlus`) : une SURIMPRESSION monte par-dessus l'écran visible sans le détruire,
+        // un fondu de `ContentSlot` le ferait repartir de 0 (hors L1, dette). Le PREMIER montage est sauté (F4 : pas d'animation au cold-open) ; le
+        // cold-open monte Empire (sauté) puis l'Accueil EN SURIMPRESSION (non animé). Sans régie, ou refus de quota : handle nul, comportement d'avant.
+        private bool premierMontageFait;
+        private Handle entreeOnglet = Handle.Nul;
+        /// <summary>Test hook : la piste de `shell.entree` du dernier montage d'onglet (nul si sautée, refusée ou sans régie).</summary>
+        public Handle EntreeOngletPourTest => entreeOnglet;
+
+        private void AnimerEntreeDeLOnglet()
+        {
+            RegieMouvement.Detacher(entreeOnglet);   // un onglet ouvert pendant le fondu du précédent : la piste périmée rend l'opacité avant la nouvelle
+            entreeOnglet = Handle.Nul;
+            if (!premierMontageFait) { premierMontageFait = true; return; }
+            if (ContentSlot == null) return;
+            entreeOnglet = RegieMouvement.Attacher(CatalogueHud.ShellEntree, ContentSlot, Reglage.Defaut);
         }
 
         /// <summary>`.e5{padding:7px 6px;font:8px/1.2}` : 7 + 8 × 1,2 + 7 = 23,6 px CSS.</summary>
@@ -1564,6 +1585,7 @@ namespace MafiaCleanCity.Shell
             T tenant = ConstruireLocataire<T>(out GameObject host);
             MountedTenantGameObject = host;
             MountedTenantType = typeof(T);
+            AnimerEntreeDeLOnglet();   // L1 : shell.entree
         }
 
         /// <summary>`IShellNavigator` (item 0.4, charpente-item0-4-design.md §2.1/§2.2) — monte `T`
@@ -1668,6 +1690,7 @@ namespace MafiaCleanCity.Shell
             panneauCoffreFerme = null;
             ActiverBarreDOnglets(true);
             relanceApresFermeture = true;
+            premierMontageFait = false;   // L1 : la relance après fermeture est un cold-open (F4) — son premier onglet ne s'anime pas
             StartCoroutine(AcquireSessionThenActivateHome());
         }
 

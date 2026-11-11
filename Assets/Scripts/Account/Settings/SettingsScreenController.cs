@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using MafiaCleanCity.Mouvements;
@@ -163,11 +164,12 @@ namespace MafiaCleanCity.Account.Settings
         {
             bool reduit = MouvementReduit.ReglageDuJoueur;
             BasculeMouvementReduitAffichee = reduit;
+            // Le canon : rien n'anime la ligne « Mouvement réduit » (elle doit rester utilisable sous le réglage lui-même) ⇒ pas de course (`course: false`).
             Bascule("Bascule_MouvementReduit", Lib("Mouvement réduit"), null, reduit, () =>
             {
                 MouvementReduit.PoserReglageDuJoueur(!reduit);
                 Rendre();
-            });
+            }, course: false);
         }
 
         private void Rendre()
@@ -241,9 +243,20 @@ namespace MafiaCleanCity.Account.Settings
             t.fontStyle = FontStyles.UpperCase;   // la casse est au RENDU : le catalogue garde « La langue de la maison »
         }
 
+        // L1 `bascule.course` : l'état allumé de chaque bascule au DERNIER rendu, et la bascule que le joueur vient de toucher (CAT:1225 : une entrée
+        // d'écran suit un geste). Au rendu qui suit le geste, si l'état d'arrivée diffère de l'état rendu avant ⇒ le curseur COURT ; sinon il est posé.
+        private readonly Dictionary<string, bool> basculesRendues = new Dictionary<string, bool>();
+        private string basculeEnVol;
+        /// <summary>Test hook : la piste de la dernière course lancée (nulle si aucune, ou sans régie).</summary>
+        public Handle DerniereCourseDeBascule { get; private set; } = Handle.Nul;
+
         /// <summary>Une bascule du tiroir « Le jeu » : libellé, sous-ligne, interrupteur (allumé : or, curseur à droite).</summary>
-        private void Bascule(string nom, string libelle, string sous, bool allumee, UnityEngine.Events.UnityAction geste)
+        private void Bascule(string nom, string libelle, string sous, bool allumee, UnityEngine.Events.UnityAction geste, bool course = true)
         {
+            UnityEngine.Events.UnityAction gesteNote = () => { basculeEnVol = nom; geste(); };
+            bool court = course && basculeEnVol == nom && basculesRendues.TryGetValue(nom, out bool avant) && avant != allumee;
+            basculesRendues[nom] = allumee;
+            if (basculeEnVol == nom) basculeEnVol = null;   // la note ne sert qu'au rendu qui suit le geste
             GameObject ligne = Bloc(nom, corps, true, Px(8f));
             var h = ligne.GetComponent<HorizontalLayoutGroup>();
             h.childAlignment = TextAnchor.MiddleLeft;
@@ -276,13 +289,14 @@ namespace MafiaCleanCity.Account.Settings
             rond.type = Image.Type.Sliced;
             rond.color = Creme;
             rond.raycastTarget = false;
+            if (court) DerniereCourseDeBascule = CourseDeBascule.Lancer(crt, fond, allumee, allumee ? Eteint : Or, allumee ? Or : Eteint, Px(10f));
 
             Image zone = ligne.AddComponent<Image>();
             Color transparent = Color.white; transparent.a = 0f;
             zone.color = transparent;
             Button b = Retour.NouveauBouton(ligne);
             b.targetGraphic = zone;
-            b.onClick.AddListener(geste);
+            b.onClick.AddListener(gesteNote);
         }
 
         /// <summary>Un geste VIVANT de la porte (« Fermer le coffre ») : contour or, libellé, sous-ligne.</summary>

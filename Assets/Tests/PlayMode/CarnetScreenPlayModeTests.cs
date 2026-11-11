@@ -26,6 +26,7 @@ namespace MafiaCleanCity.Operational.Tests
     /// réellement comme précondition.</summary>
     // ⛔ `ScreenC3` est posée TEST PAR TEST, pas sur la classe (lot de classe du 2026-09-24) : posée sur la classe, elle emportait la
     // capture (Cliche…) avec l'écran — une capture exige l'identité de capture et écrit des PNG. La capture ne porte que sa catégorie.
+    [MafiaCleanCity.Tests.PhotoSansEntree]
     public class CarnetScreenPlayModeTests
     {
         // ⛔ TD-576, CLASSE « CATALOGUE » (2026-09-23) — cette classe charge le catalogue i18n (directement, ou en montant un

@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using MafiaCleanCity.Mouvements;
 using MafiaCleanCity.Shell;
 using MafiaCleanCity.Theme;
 using TMPro;
@@ -321,11 +322,20 @@ namespace MafiaCleanCity.Onboarding
             Retour.NouveauBouton(b).onClick.AddListener(action);
         }
 
+        // L1 `bascule.course` : l'état rendu au dernier rendu et le geste en vol (voir SettingsScreenController.Bascule).
+        private bool? basculeRendue;
+        private bool basculeEnVol;
+        /// <summary>Test hook : la piste de la dernière course lancée (nulle si aucune, ou sans régie).</summary>
+        public Handle DerniereCourseDeBascule { get; private set; } = Handle.Nul;
+
         /// <summary>« On vous explique encore » — la bascule du Profil (série 6, cadres 95-96, RATIFIÉE), dans le sens du joueur.
         /// Allumée ⇔ `tutorials_opt_out` faux. Le toucher la bascule et envoie l'opt-out INVERSE (`RefusPourBascule`).</summary>
         private void Bascule()
         {
             bool allumee = BasculeTutoriels.Allumee(Etat.tutorials_opt_out);   // le SEUL lieu de l'inversion (ShellContracts), partagé avec ⑲
+            bool court = basculeEnVol && basculeRendue.HasValue && basculeRendue.Value != allumee;
+            basculeRendue = allumee;
+            basculeEnVol = false;   // la note ne sert qu'au rendu qui suit le geste
             BasculeAffichee = allumee;
             GameObject ligne = Bloc("Bascule", corps, true, Px(8f));
             var h = ligne.GetComponent<HorizontalLayoutGroup>();
@@ -361,13 +371,14 @@ namespace MafiaCleanCity.Onboarding
             rond.type = Image.Type.Sliced;
             rond.color = Creme;
             rond.raycastTarget = false;
+            if (court) DerniereCourseDeBascule = CourseDeBascule.Lancer(brt, fond, allumee, allumee ? Eteint : Or, allumee ? Or : Eteint, Px(10f));
 
             Button b = Retour.NouveauBouton(ligne);
             Image zone = ligne.AddComponent<Image>();
             Color transparent = Color.white; transparent.a = 0f;
             zone.color = transparent;
             b.targetGraphic = zone;
-            b.onClick.AddListener(() => StartCoroutine(Refuser(BasculeTutoriels.OptOutPour(!allumee))));
+            b.onClick.AddListener(() => { basculeEnVol = true; StartCoroutine(Refuser(BasculeTutoriels.OptOutPour(!allumee))); });
         }
 
         /// <summary>⛔ Le SEUL écrivain de `shown_tutorial_ids`. Sans cet appel, le même overlay

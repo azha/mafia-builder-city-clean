@@ -55,6 +55,7 @@ namespace MafiaCleanCity.Capture.Tests
     // ⚠️ Catégorie PROPRE, seule, de la famille capture (`ClicheParcours` : ni contenue dans une autre ni en contenant une — K0 de
     // `CategoriesDeCapturePlayModeTests`, balayé sur les 108 catégories du dépôt). Hors du filtre MafiaCI, comme toute capture :
     // elle se lance nommément, sur la pile dev, et crée un compte à chaque exécution.
+    [MafiaCleanCity.Tests.PhotoSansEntree]
     public class ParcoursJoueurNeufCapturePlayModeTests
     {
         private const string MotDePasse = "parcours-neuf-pw";
