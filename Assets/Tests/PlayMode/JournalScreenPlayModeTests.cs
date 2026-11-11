@@ -628,5 +628,92 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(maquette, Note().text, "sortie de l'écran : la note de la maquette revient");
             Assert.IsNull(ecran.DerniereAssistance, "et la réponse gardée est oubliée");
         }
+
+        // ── 12/11 (f2) : D1 un attend REFUSÉ (404 / 409) écarte l'événement pour la durée de l'écran ; E8 la brève visée est MARQUÉE ; E5 « dans la rue » lit `total`. ──
+        private List<Transform> BrevesRendues()
+        {
+            var l = new List<Transform>();
+            foreach (Transform t in RacineEcran().transform.GetComponentsInChildren<Transform>(true)) if (t.name == "Breve") l.Add(t);
+            return l;
+        }
+
+        [UnityTest]
+        [Category("ScreenC1")]
+        public IEnumerator T5_UnAttendRefuse409_EcarteLEvenement_EtLeBoutonViseLaBreveSuivante()
+        {
+            JournalScreenController ecran = MonterEcran();
+            ecran.SetToken("jeton-de-test");
+            // le cas le plus dur : l'événement refusé reste SERVI (expiré non balayé) — la rue relue est la MÊME
+            ecran.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt("e-1"), Evt("e-2") }, total = 2 });
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+            Assert.AreEqual("e-1", ecran.ProchainAAssister.event_id);
+
+            Assert.IsFalse(ecran.EcarterApresRefus(500, "e-1"), "une panne (5xx) n'écarte rien : le geste peut être retenté");
+            Assert.IsFalse(ecran.EcarterApresRefus(0, "e-1"), "un échec réseau non plus");
+            Assert.AreEqual("e-1", ecran.ProchainAAssister.event_id);
+
+            Assert.IsTrue(ecran.EcarterApresRefus(409, "e-1"), "409 : déjà assisté, pris, ou expiré — écarté");
+            yield return MettreEnPage();
+            Assert.AreEqual("e-2", ecran.ProchainAAssister.event_id, "le bouton ne re-vise pas l'événement refusé, même s'il est encore servi");
+            Assert.IsTrue(BoutonAssister().interactable, "il reste une brève à attendre : allumé");
+            Assert.AreEqual(2, BrevesRendues().Count, "la brève refusée reste AFFICHÉE tant que le back la sert : le client ne cache rien");
+
+            Assert.IsTrue(ecran.EcarterApresRefus(404, "e-2"), "404 : inconnu — écarté aussi");
+            yield return MettreEnPage();
+            Assert.IsNull(ecran.ProchainAAssister, "plus rien à attendre");
+            Assert.IsFalse(BoutonAssister().interactable, "éteint : aucun événement attendable");
+
+            hostGo.SetActive(false);
+            hostGo.SetActive(true);
+            yield return null;
+            Assert.AreEqual("e-1", ecran.ProchainAAssister.event_id, "sortie de l'écran : les refus sont oubliés (durée de l'écran, pas plus)");
+        }
+
+        [UnityTest]
+        [Category("ScreenC1")]
+        public IEnumerator T6_LaBreveVisee_EstMarquee_EtElleSeule()
+        {
+            JournalScreenController ecran = MonterEcran();
+            ecran.SetToken("jeton-de-test");
+            ecran.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt("e-1"), Evt("e-2"), Evt("e-3") }, total = 3 });
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+            List<Transform> b = BrevesRendues();
+            Assert.AreEqual(3, b.Count);
+            Assert.IsNotNull(b[0].Find("Lisere"), "la brève la plus récente est celle que le bouton vise : marquée (cadre 125, `.brv.visee`)");
+            Assert.AreEqual(4, b[0].Cast<Transform>().Count(t => t.name == "Bord"), "et cernée de laiton (4 bandes)");
+            Image lisere = b[0].Find("Lisere").GetComponent<Image>();
+            Assert.IsNotNull(lisere.GetComponent<CanvasRenderer>(), "un Graphic sans CanvasRenderer ne dessine rien");
+            Assert.Greater(((RectTransform)lisere.transform).rect.width, 0f, "le liseré a une largeur : il dessine");
+            Assert.Greater(((RectTransform)lisere.transform).rect.height, 0f, "et une hauteur");
+            Assert.IsNull(b[1].Find("Lisere"), "une seule brève visée");
+            Assert.IsNull(b[2].Find("Lisere"));
+
+            ecran.EcarterApresRefus(409, "e-1");
+            yield return MettreEnPage();
+            b = BrevesRendues();
+            Assert.IsNull(b[0].Find("Lisere"), "la brève refusée n'est plus visée");
+            Assert.IsNotNull(b[1].Find("Lisere"), "la marque passe à la suivante");
+
+            Object.DestroyImmediate(hostGo);
+            hostGo = null;
+            JournalScreenController sansJeton = MonterEcran();
+            sansJeton.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt("e-1") }, total = 1 });
+            sansJeton.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+            Assert.IsNull(BrevesRendues()[0].Find("Lisere"), "sans jeton le bouton est éteint : pas de cible marquée");
+        }
+
+        [Test]
+        public void T7_DansLaRue_CompteLeTotalServi_JamaisMoinsQueLaPage()
+        {
+            Assert.AreEqual(35, JournalScreenController.CompteDeLaRue(new GetAmbientFeedResponseDto { total = 35 }, 20), "`total` servi : le fil entier, pas la page");
+            Assert.AreEqual(3, JournalScreenController.CompteDeLaRue(new GetAmbientFeedResponseDto { total = 0 }, 3), "`total` absent (0) : ce qui est rendu");
+            Assert.AreEqual(2, JournalScreenController.CompteDeLaRue(null, 2), "pas de fil : ce qui est rendu");
+            Assert.IsTrue(JournalScreenController.EstUnRefusDefinitif(409));
+            Assert.IsTrue(JournalScreenController.EstUnRefusDefinitif(404));
+            Assert.IsFalse(JournalScreenController.EstUnRefusDefinitif(401), "401 : le jeton, pas l'événement");
+        }
     }
 }
