@@ -27,13 +27,19 @@ namespace MafiaCleanCity.CityMap.Tests
 
         private float hautAvant, basAvant;
 
+        // TD-950 (détecteur) : le dernier test passé par ce TearDown, pour situer une fuite d'inset publié.
+        private static string testPrecedent = "(aucun : premier test de la classe, la fuite vient d'une autre classe)";
+
         /// <summary>⛔ HERMÉTIQUE AUX INSETS (11/11) : `CompressionScreenController` lit `ShellChrome.BottomInsetPx` (STATIQUE) pour la marge basse de sa pile. Seule, la catégorie part d'un process neuf (insets à 0) et
         /// passe 9/9 ; dans un run complet, la valeur laissée par un test précédent peut écraser la fenêtre de la pile et la jauge ne dessine plus rien (J3 : 0 pixel d'or, J6 : aucun filet). Le banc pose donc
-        /// ses insets (0, 0) — la condition sous laquelle ses cotes ont été mesurées — et rend ceux qu'il a trouvés.</summary>
+        /// ses insets (0, 0) — la condition sous laquelle ses cotes ont été mesurées — et rend ceux qu'il a trouvés.
+        /// TD-950 : AVANT de les remettre à 0, un inset trouvé non nul est NOMMÉ au journal avec le test qui l'a laissé (il ne rougit pas : l'hermétique le neutralise, ce serait défaire le correctif).</summary>
         [SetUp]
         public void SetUp()
         {
             hautAvant = ShellChrome.TopInsetPx; basAvant = ShellChrome.BottomInsetPx;
+            if (basAvant != 0f)
+                TestContext.Progress.WriteLine($"TD-950 : ShellChrome.BottomInsetPx={basAvant:F1} trouvé non nul au début de « {TestContext.CurrentContext.Test.Name} » — dernier test de la classe passé : {testPrecedent} (le TearDown restitue la valeur trouvée : le PREMIER message du process désigne la fuite, venue d'une autre classe si « aucun »)");
             ShellChrome.PublierInsets(0f, 0f);
             MotsDesEnumeres.OublierLesManquants(); I18nCatalog.Oublier();
         }
@@ -41,6 +47,7 @@ namespace MafiaCleanCity.CityMap.Tests
         [TearDown]
         public void TearDown()
         {
+            testPrecedent = TestContext.CurrentContext.Test.FullName;
             ShellChrome.PublierInsets(hautAvant, basAvant);
             if (hote != null) Object.DestroyImmediate(hote);
             hote = null;
