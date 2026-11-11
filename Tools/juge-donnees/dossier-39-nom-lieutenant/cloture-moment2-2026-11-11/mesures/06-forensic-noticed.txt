@@ -1,0 +1,36 @@
+# GET /v1/me/forensic — compte JETABLE jd4-1794423905, état POSÉ PAR SQL : noticed (gap=12345, consecutive=1, stage=none sur Lt. Marrek)
+## SQL (borné au player_id du jetable) :
+UPDATE lifestyle_audit_state SET last_gap = 12345, consecutive_flag_months = 1
+ WHERE player_id = '01a1cbff-dbea-7bf3-9136-260fea5d8ace' AND lieutenant_id = '01a1cbff-dc03-727b-810c-5769c48bfee4';
+## lignes lifestyle_audit_state après l'UPDATE :
+    name    | last_gap | consecutive_flag_months | tail_ramp_stage 
+------------+----------+-------------------------+-----------------
+ Lt. Dorne  |          |                       0 | none
+ Lt. Marrek |    12345 |                       1 | none
+(2 rows)
+
+$ curl -s -H 'Authorization: Bearer ***' http://localhost/v1/me/forensic | python3 -m json.tool
+## X-Server-Build: 8d0184a4
+{
+    "response_meta": {
+        "request_id_echo": "c202599f-3816-430d-9641-185afd6f94af",
+        "server_processed_at": "2026-11-11T19:06:13.176Z",
+        "api_version": 1,
+        "correlation_id_echo": null,
+        "server_build_ref": {
+            "git_sha": "8d0184a4",
+            "built_at": "2026-11-11T18:17:52Z"
+        }
+    },
+    "payload": {
+        "data": {
+            "audit_risk_bucket": "clean",
+            "effluent_visibility_bucket": "clear",
+            "lifestyle_alarm_bucket": "noticed",
+            "lifestyle_lieutenant_name": "Lt. Marrek",
+            "audit_risk_label_key": "forensic.cran.rien_a_signaler",
+            "effluent_visibility_label_key": "forensic.cran.invisible",
+            "lifestyle_alarm_label_key": "forensic.cran.remarque"
+        }
+    }
+}

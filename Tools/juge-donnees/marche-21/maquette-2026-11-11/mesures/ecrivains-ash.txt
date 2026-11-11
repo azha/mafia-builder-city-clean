@@ -1,0 +1,59 @@
+=== qui ECRIT lane_pricing_state (insert/upsert/ensureLane) ? ===
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/insurance/insurance-test.controller.ts:4391:    await this.db.insert(lanePricingState).values({
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/insurance/insurance-test.controller.ts:4399:      target: [lanePricingState.district_id, lanePricingState.substance_type],
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:244:      .update(lanePricingState)
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:252:          eq(lanePricingState.district_id, districtId),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:253:          eq(lanePricingState.substance_type, substanceType),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:268:      .from(lanePricingState)
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:271:          eq(lanePricingState.district_id, districtId),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:272:          eq(lanePricingState.substance_type, substanceType),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:289:      .from(lanePricingState)
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:290:      .orderBy(asc(lanePricingState.district_id), asc(lanePricingState.substance_type));
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:302:      .insert(lanePricingState)
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:311:      .onConflictDoNothing({ target: [lanePricingState.district_id, lanePricingState.substance_type] });
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:343:    const allRows = await this.db.select().from(lanePricingState);
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:351:          .update(lanePricingState)
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:355:              eq(lanePricingState.district_id, district_id),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:356:              eq(lanePricingState.substance_type, substance_type),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:379:          .update(lanePricingState)
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:383:              eq(lanePricingState.district_id, district_id),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:384:              eq(lanePricingState.substance_type, substance_type),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:404:      .update(lanePricingState)
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:411:          eq(lanePricingState.district_id, districtId),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:412:          eq(lanePricingState.substance_type, substanceType),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:422:      .from(lanePricingState)
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:425:          eq(lanePricingState.district_id, districtId),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:426:          eq(lanePricingState.substance_type, substanceType),
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling.repository.ts:667:          select lp.c from ${lanePricingState} lp
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling.repository.ts:674:          select lp.t_refractory_minutes from ${lanePricingState} lp
+
+=== signature et appelants de ensureLane / processDeal ===
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/db/schema/market_lane_pricing_state.ts:42:     * silently hardcoded — see LaneCollapsePricingService.ensureLane().
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-clearing-zone.ts:21: *    un seul écrivain de production, l'INSERT de graine (`ensureLane`, `onConflictDoNothing`), et
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:141:   * while priceDealt for processDealAttempt remains p_cents (in-lane → c rises, per canon rule).
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:143:   * FRESH LANE GUARD: if no lane row exists yet (before processDealAttempt / ensureLane), returns
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:148:   * the 13 selling E2E tests even after the lane row is created by the first tick's ensureLane call.
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:163:    // processDealAttempt (called next in SellingSellService) will ensureLane.
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:206:  async processDealAttempt(
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:212:    await this.ensureLane(districtId, substanceType);
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:217:      throw new Error(`LaneCollapsePricingService: lane row missing after ensureLane for district=${districtId} substance=${substanceType}`);
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:263:   * Returns null if no row exists (before first processDealAttempt / ensureLane).
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:296:   * Called by processDealAttempt to ensure the row exists before the update-rule.
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:298:  async ensureLane(districtId: number, substanceType: SubstanceTypeValue): Promise<void> {
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/lane-collapse-pricing.service.ts:397:   * The lane row MUST exist before this is called (caller must ensureLane first).
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-admin.controller.ts:233:   * Ensures the lane row exists (ensureLane), then sets t_refractory_minutes to the
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-admin.controller.ts:254:    await this.laneCollapse.ensureLane(dId, substanceType);
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/lek-open-selection.ts:32://     `getRealisedPriceCents`/`getLanePriceForDeal`) and WRITES (:217, `processDealAttempt` — the lane
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling.repository.ts:361:        // processDealAttempt without a separate per-dealer DB round-trip (stays batched / one query).
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling.repository.ts:75:   * Added by D1b C6 to route the sell through LaneCollapsePricingService.processDealAttempt
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:107:        'LaneCollapsePricingService.processDealAttempt per district — DD11 realized; in-lane deal at p_cents; ' +
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:144:    // ensureLane always seeds at this value, so the fallback is effectively never hit post-C6; kept for defensive
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:193:      //   Step 2: getLanePriceForDeal (ensureLane + getLaneRow) → get modal p_cents for priceDealt.
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:194:      //     processDealAttempt(district, substance, p_cents) → in-lane deal → c ← c + α·(1−c) (c RISES).
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:203:      // C6 BLOCKING A1 FIX: get the REALISED (scattered) price BEFORE calling processDealAttempt.
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:214:      // The priceDealt for processDealAttempt is ALWAYS the modal p_cents (in-lane deal → c rises).
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:217:      await this.laneCollapse.processDealAttempt(
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:404:   * If no lane row exists yet, ensureLane seeds it at `fallbackCents` (= brindleDealValueCentsPerGram).
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:407:   * Called once per dealer per tick to determine the priceDealt for processDealAttempt, ensuring
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:418:    await this.laneCollapse.ensureLane(districtId, substanceType);
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/selling/selling-sell.service.ts:421:    // The ensureLane above guarantees the row exists; the fallback here is purely defensive.

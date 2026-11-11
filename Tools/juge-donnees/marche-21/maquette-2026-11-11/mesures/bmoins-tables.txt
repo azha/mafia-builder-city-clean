@@ -1,0 +1,26 @@
+=== fichiers de schema du domaine marche ===
+market_buyer_roster_entry.ts
+market_district_capacity_state.ts
+market_lane_pricing_state.ts
+market_wear_mark.ts
+meta_market.ts
+precursor_market_state.ts
+
+=== tables et colonnes (pgTable) de ces fichiers ===
+---- market_buyer_roster_entry.ts
+   table buyer_roster_entry                 16 colonnes: player_id, region_id, slot_index, buyer_tier, attributed_at_tick, created_at, updated_at, pk, slot_index_chk, buyer_tier_chk, player_id, region_id, q_inferred, last_day_id, updated_at, pk
+   table buyer_roster_daily_state            6 colonnes: player_id, region_id, q_inferred, last_day_id, updated_at, pk
+---- market_district_capacity_state.ts
+   table district_capacity_state            10 colonnes: district_id, k_baseline, k_current, q_total, t_over, has_civic_investment, created_at, updated_at, k_current_non_negative_chk, t_over_non_negative_chk
+---- market_lane_pricing_state.ts
+   table lane_pricing_state                 11 colonnes: district_id, substance_type, p_cents, w_cents, c, t_refractory_minutes, created_at, updated_at, pk, c_range_chk, t_refractory_non_negative_chk
+---- market_wear_mark.ts
+   table lot_handling_vector                24 colonnes: player_id, storage_id, hop_count, transit_days, repackaging_count, courier_diversity, origin_age_days, wear_flag_mask, pristine_flag, created_at, updated_at, pk, hop_count_chk, transit_days_chk, repackaging_count_chk, pristine_flag_chk, district_id, cautious_share, pristine_share, created_at, updated_at, shares_sum_chk, cautious_share_range_chk, pristine_share_range_chk
+   table district_wear_mark_demographics     8 colonnes: district_id, cautious_share, pristine_share, created_at, updated_at, shares_sum_chk, cautious_share_range_chk, pristine_share_range_chk
+---- meta_market.ts
+   table meta_market_signals                17 colonnes: region_id, substance, district_profile, aggregated_at, sample_count, median_price_cents, p10_price_cents, p90_price_cents, pk, lookup_idx, contribution_id, contributor_hash, region_id, substance, district_profile, price_cents, contributed_at
+   table meta_market_contributions          15 colonnes: contribution_id, contributor_hash, region_id, substance, district_profile, price_cents, contributed_at, bucket_hour, aggregation_idx, rate_limit_idx, flag_id, region_id, substance, district_profile, flagged_pattern
+   table meta_market_cohort_flags            8 colonnes: flag_id, region_id, substance, district_profile, flagged_pattern, cohort_size, detected_at, region_substance_idx
+---- precursor_market_state.ts
+   table precursor_market_state              7 colonnes: player_id, supplier_id, pressure_counter, created_at, updated_at, pk, player_id_idx
+   table precursor_supplier_pressure         7 colonnes: player_id, supplier_id, pressure_counter, created_at, updated_at, pk, player_id_idx

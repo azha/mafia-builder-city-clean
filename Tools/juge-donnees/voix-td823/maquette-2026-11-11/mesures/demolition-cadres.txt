@@ -1,0 +1,34 @@
+===== cadre#79 L5067  etq=« L’organisation frotte »
+|L’organisation frotte|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|L’organisation frotte|Plus vous tenez de choses, plus elles se gênent entre elles.|7|Ça grince partout|7 endroits se gênent entre eux. Chacun coûte un peu de ce que les autres rapportent.|Tout produit moins en ce moment.| Tant que ça grince, chaque site rend en dessous de ce qu’il devrait. Ça s’arrête quand on allège.|Lt. Rin :| « On a trop de choses au même endroit. Il va falloir en enlever une. »|VOIR CE QUI COÛTE LE PLUS|site par site|
+
+===== cadre#80 L5069  etq=« Ce bâtiment vous coûte »
+|Ce bâtiment vous coûte|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|Ce bâtiment vous coûte|Ce qu’il rapporte, ce qu’il gêne, et ce qu’il coûterait de le raser.|Imprimerie Skeld — Les Friches, îlot 1604|fiche du site|ce qu’il rapporte|presque rien|ce qu’il gêne autour|ça grince partout|au total|il coûte plus qu’il ne rapporte|le raser coûterait|raisonnable|voisins touchés|3|Il vous coûte plus qu’il ne vous rapporte.|Le garder, c’est payer pour gêner les autres.|Lt. Rin :| « Celui-là, on le garde par habitude. Il gêne les trois d’à côté et il ne rend presque rien. »|LE RASER|c’est votre décision du jour|
+
+===== cadre#81 L5071  etq=« Le raser — confirmer »
+|Le raser — confirmer|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|Le raser|La parcelle sera libre. Les voisins le sentiront.|Imprimerie Skeld — Les Friches, îlot 1604|fiche du site|ce qu’il rapporte|presque rien|ce qu’il gêne autour|ça grince partout|au total|il coûte plus qu’il ne rapporte|le raser coûterait|raisonnable|voisins touchés|3|Il vous coûte plus qu’il ne vous rapporte.|Le garder, c’est payer pour gêner les autres.|Une fois rasé, |on ne le remet pas|. La parcelle restera libre le temps de choisir quoi y mettre.|CONFIRMER — LE RASER|et libérer la parcelle|
+
+===== cadre#82 L5073  etq=« Vous avez déjà tranché aujourd’hui »
+|Vous avez déjà tranché aujourd’hui|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|Le raser|La parcelle sera libre. Les voisins le sentiront.|Imprimerie Skeld — Les Friches, îlot 1604|fiche du site|ce qu’il rapporte|presque rien|ce qu’il gêne autour|ça grince partout|au total|il coûte plus qu’il ne rapporte|le raser coûterait|raisonnable|voisins touchés|3|Il vous coûte plus qu’il ne vous rapporte.|Le garder, c’est payer pour gêner les autres.|Vous avez déjà tranché une chose de structure aujourd’hui.|CONFIRMER — LE RASER|plus de décision aujourd’hui|Raser un site compte comme |la décision de structure du jour|, au même titre que confier ou reprendre une charge. Ce sera pour demain.|
+
+===== cadre#83 L5075  etq=« La parcelle est libre »
+|La parcelle est libre|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|La parcelle est libre|Deux offres, classées. Elles ne restent pas ouvertes longtemps.|Parcelle libre — Les Friches, îlot 1604|ce qu’il y avait là n’y est plus. 3 voisins ont respiré.|Ce qu’on peut y mettre|1|Un entrepôt|proche des routes déjà tenues — peu de friction|LE MIEUX PLACÉ|2|Une façade|plus discret, mais loin de tout|AUTRE OPTION|Lt. Rin :| « Deux propositions. La première est mieux placée. Elles ne resteront pas sur la table. »|PRENDRE LA PREMIÈRE|l’entrepôt, près des routes tenues|
+
+===== cadre#84 L5077  etq=« L’offre s’est fermée »
+|L’offre s’est fermée|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|Cette offre est fermée|On a trop attendu, ou quelqu’un l’a prise avant.|Parcelle libre — Les Friches, îlot 1604|ce qu’il y avait là n’y est plus. 3 voisins ont respiré.|Ce qu’on peut y mettre|1|Un entrepôt|proche des routes déjà tenues — peu de friction|DÉJÀ PRISE|2|Une façade|plus discret, mais loin de tout|AUTRE OPTION|Lt. Rin :| « Trop tard pour celle-là. »|PRENDRE L’AUTRE|tant qu’elle est encore là|Une offre de remplacement |se ferme| — prise, expirée, ou retirée. Ce n’est pas une liste qui attend.|
+|㉝ Raser un site — la fiche et la parcelle libérée|
+  |
+    |★★★ |La friction est le prix de posséder beaucoup.| |GET /v1/friction/state| rend |friction_bucket| (|ça tourne rond · ça tient · ça force · |ça grince partout|) et un |penalty_active| booléen : quand ça grince, |tout produit moins|. L’écran le dit ainsi — jamais « -12 % de rendement », qui n’est pas servi.|
+    |La fiche d’un site tient en quatre mesures| : ce qu’il rapporte (|output_value_bucket|, very_low→very_high), ce qu’il gêne autour (|friction_load_bucket|), le rapport des deux (|output_to_friction_ratio_bucket| — |poor|·fair·good·excellent) et ce que le raser coûterait (|decommission_cost_bucket|). Quand le rapport est |po
+

@@ -1,0 +1,38 @@
+variantes de cadre:
+Counter({'cadre': 170, 'cadre-b': 5})
+
+=== toutes les ouvertures de guillemet « dans le document, par classe de parent ===
+   136  (sans classe)
+    22  dit
+    13  etiquette
+     7  rangee
+     6  pl-dit
+     6  pann
+     5  dm-dit
+     5  etat
+     4  cn-dit
+     4  panneau
+     3  qui
+     3  av
+     2  hh
+     2  nom
+     2  lgn manque
+     1  page
+     1  tampon-plan
+     1  rien
+     1  sv-dit
+     1  cn-geste
+     1  lev rouge
+     1  lot
+     1  sc
+     1  note6
+
+=== classes portant un <b>…:</b> suivi de « (forme locuteur) ===
+     6  pl-dit
+     5  dit
+     5  dm-dit
+     4  cn-dit
+     1  sv-dit
+
+=== bustes utilisés (use href=#buste-*) ===
+Counter({'buste-casquette': 23, 'buste-homburg': 14, 'buste-fedora': 7, 'buste-don': 1, 'buste-lieutenant': 1, 'buste-homme': 1})

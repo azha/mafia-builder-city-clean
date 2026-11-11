@@ -1,0 +1,20 @@
+=== spec i18n : compte et gardes ===
+1:// IMPLEMENTS: lot marche-mots (écran ㉑ « Le marché ») — les 31 clés `marche.*` servies EN et FR, épinglées PAIRE par PAIRE.
+5:import { test, expect } from '@playwright/test';
+9:/** [clé, FR, EN] — 31 entrées ; les 4 substances sont `en == fr` (NOM_PROPRE, `_en-egal-fr-classement.txt`). */
+52:test('㉑ marche.* — 31 paires (FR, EN) servies à l’octet, et aucune clé marche.* en plus', () => {
+53:  expect(ATTENDU.length, 'anti-vacuité : 31 paires attendues').toBe(31);
+54:  expect(new Set(ATTENDU.map(([k]) => k)).size, '31 clés distinctes').toBe(31);
+55:  expect(marche(FR_MESSAGES), 'FR : exactement les clés attendues').toEqual(ATTENDU.map(([k]) => k).sort());
+56:  expect(marche(EN_MESSAGES), 'EN : exactement les clés attendues').toEqual(ATTENDU.map(([k]) => k).sort());
+57:  expect(ecarts(ATTENDU, FR_MESSAGES, EN_MESSAGES), 'valeurs servies == attendues').toEqual([]);
+60:test('㉑ marche.* — contrôle positif : une valeur altérée, une locale qui perd la clé, un U+00A0 devenu espace DOIVENT rougir', () => {
+64:  expect(ecarts(ATTENDU, fr, en), 'copie intacte : rien').toEqual([]);
+66:  expect(ecarts(ATTENDU, fr, en), 'EN recopié depuis FR').toEqual([cle]);
+69:  expect(FR_MESSAGES[cle], 'témoin : la valeur porte bien un U+00A0').toContain('\u00a0');
+70:  expect(ecarts(ATTENDU, fr, en), 'U+00A0 -> espace ordinaire').toEqual([cle]);
+73:  expect(ecarts(ATTENDU, fr, en), 'clé absente de EN').toEqual(['marche.titre.le_marche']);
+
+=== MOTS-MARCHE-21.md : existe ? ===
+-rw-rw-r-- 1 erutheone erutheone 3924 Nov 11 13:13 /home/erutheone/project/mafia-clean-city/scratchpad/MOTS-MARCHE-21.md
+lignes: 33

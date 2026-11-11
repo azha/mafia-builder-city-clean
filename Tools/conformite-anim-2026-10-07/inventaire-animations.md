@@ -1,5 +1,8 @@
 # Inventaire des animations — maquettes ↔ Unity (CLIENT-3, 07/10/2026)
 
+> ⚠️ **MISE À JOUR DU 11/11/2026** (passe de mise à jour documentaire, CLIENT-1 ; le texte d'origine est LAISSÉ tel quel, ces lignes disent ce qui est périmé et où est l'autorité — rien n'est inventé, chaque correction cite sa source).
+> - Ligne :81 (« 15 sites `Transition.None` sur 67 créations de `Button` ; aucune animation d'appui écrite ») : **périmée** — N = **69** (`design-retour-appui-v5.md:44`) et le retour d'appui est **écrit et fusionné** (`d5dbe22e`). Les lignes :48-60 et :84 (chrome « absente ») datent d'**avant E2a** (chrome ① câblé, `d4ba8a31`).
+
 Méthode : chaque maquette est chargée dans Chromium (Playwright) ; `document.getAnimations()` énumère les animations RÉELLES, rattachées à leur cadre (`.cadre`). Rien n'est lu à l'œil. Unité = une paire (écran, `@keyframes`) appliquée à ≥ 1 élément ; « instances » = éléments animés, tous cadres de l'écran réunis.
 
 ## A. ecrans-brennar-6.html (atelier, 147 cadres) — 529 animations réelles mesurées

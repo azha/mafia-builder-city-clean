@@ -1,0 +1,13 @@
+--- bornes ㉑ dans le fichier ---
+2375028 | ㉑ LE MARCHÉ (2026-08-27)
+2594806 | ㉑ LE MARCHÉ — LA TUILE ASH (2026-10-07)
+
+REGION <!-- ═══ ㉑ LE MARCHÉ (2026-08-27) ═══ --> -> offsets 2375028 2425759 octets 51302
+  cadres (0-based): [101, 102, 103, 104, 105, 106]
+  nb cadres: 6
+  <aside> dans la region: 1
+
+REGION <!-- ═══ ㉑ LE MARCHÉ — LA TUILE ASH (2026-10-07) ═══ --> -> offsets 2594806 2611331 octets 16683
+  cadres (0-based): [146]
+  nb cadres: 1
+  <aside> dans la region: 0

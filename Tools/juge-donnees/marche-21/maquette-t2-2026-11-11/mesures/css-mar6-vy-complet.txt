@@ -1,0 +1,35 @@
+nb blocs <style> : 70 tailles: [15082, 525549, 5480, 5480, 5480, 5480, 8975, 8987, 8987, 9458, 9458, 9458, 9458, 9458, 9458, 9458, 9458, 9458, 9458, 9460, 9468, 9477, 9477, 9477, 9477, 9477, 9477, 1323, 1323, 1323, 1323, 1323, 1323, 1323, 1323, 1323, 3198, 3198, 3198, 3198, 3198, 3198, 7577, 4233, 5247, 5084, 4450, 4254, 4950, 5594, 2765, 2765, 2765, 9098, 5739, 8159, 4780, 5021, 5417, 5965, 5056, 5153, 5623, 5412, 7018, 7789, 4362, 859, 951, 1689]
+nb regles CSS total : 4887
+--- regles dont le selecteur contient .vy : 8
+  SEL '.mar6 .vy'
+      DECL 'height:100%;min-height:7px;border-radius:1.5px;background:#16191b;\n  box-shadow:inset 0 0 0 1px #232a2d'
+  SEL '.mar6 .vy.on'
+      DECL 'box-shadow:inset 0 0 0 1px #0b101688;animation:mk-veille 3.2s ease-in-out infinite'
+  SEL '.mar6 .vy.on:nth-child(3)'
+      DECL 'animation-delay:.9s'
+  SEL '.mar6 .vy.on:nth-child(4)'
+      DECL 'animation-delay:1.8s'
+  SEL '.mar6 .vy'
+      DECL 'height:100%;min-height:7px;border-radius:1.5px;background:#16191b;\n  box-shadow:inset 0 0 0 1px #232a2d'
+  SEL '.mar6 .vy.on'
+      DECL 'box-shadow:inset 0 0 0 1px #0b101688;animation:mk-veille 3.2s ease-in-out infinite'
+  SEL '.mar6 .vy.on:nth-child(3)'
+      DECL 'animation-delay:.9s'
+  SEL '.mar6 .vy.on:nth-child(4)'
+      DECL 'animation-delay:1.8s'
+--- regles .mar6 avec nth-child / last-child ---
+  SEL '.mar6 .entete span:first-child'
+      DECL 'text-align:left;color:#8a979c;border-bottom-color:#2a3648'
+  SEL '.mar6 .vy.on:nth-child(3)'
+      DECL 'animation-delay:.9s'
+  SEL '.mar6 .vy.on:nth-child(4)'
+      DECL 'animation-delay:1.8s'
+  SEL '.mar6 .entete span:first-child'
+      DECL 'text-align:left;color:#8a979c;border-bottom-color:#2a3648'
+  SEL '.mar6 .vy.on:nth-child(3)'
+      DECL 'animation-delay:.9s'
+  SEL '.mar6 .vy.on:nth-child(4)'
+      DECL 'animation-delay:1.8s'
+--- animation mk-veille ---
+  @keyframes mk-veille{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+  @keyframes mk-veille{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}

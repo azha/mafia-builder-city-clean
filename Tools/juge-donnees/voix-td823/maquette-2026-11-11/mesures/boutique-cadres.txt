@@ -1,0 +1,43 @@
+===== cadre#97 L5448  etq=« Le compte — avec les lots back »
+|Le compte — avec les lots back|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|Ruggiero|JOUR 26 · VOTRE COFFRE|24 850 €|ARGENT|0|MARKS|1|EXTRAS|1|PALIER|Le compte|Le nom qu’on vous donne|en changer|L7|Ruggiero|›|L’adresse au dossier|la corriger|L7|r•••@•••.fr|›|Le jeu|Dire mes prix au marché|sans ça, le marché de région ne vous dit rien non plus|L1|La langue de la maison|français · anglais|L8|Français|›|Depuis ce matin|12 décisions · 4 exceptions tranchées · 1 engagement pris|L5|FERMER PARTOUT|toutes les sessions ouvertes · L11|TOUT EFFACER|et ne plus jamais revenir · L10|
+|㉖ Le compte — le coffre|
+  |
+    |Une ligne a été RETIRÉE, et c’est le principal apport du juge| : « compte actif » (|lifecycle_state|) vaut |ACTIVE| pour |100 % des joueurs, pour toujours| — un seul INSERT (|auth.service.ts:333|), |zéro UPDATE|, et le garde d’authentification ne la lit même pas. Elle occupait |deux| emplacements. |Une ligne qui ne peut pas varier n’est pas une information : c’est du décor qui prend la place d’une vraie.|
+    |Deux cas que la maquette ne spécifiait pas|, tous deux atteignables aujourd’hui : une |adresse présente| (le back la sert |en clair| — le masquage est un choix de rendu, pas un lot back) ; et « |en cours| », la troisième valeur de |progress_to_next|, atteignable dès la première exception résolue et qui n’avait |aucun libellé| — le front l’aurait inventée.|
+    |La langue affichée est celle que le back a vraiment enregistrée.| Le défaut au signup est |en|, pas |fr| (|auth.service.ts:328|) : « Français » suppose que le client envoie |locale|, une exigence qui n’était écrite nulle part. Le cadre canon montre donc |English|.|
+    |L’inversion de l’interrupteur est écrite sur l’écran| : la clé est un opt-|OUT| (|tutorials_opt_out|), l’interrupt
+--- onglets/classes actives: []
+
+===== cadre#98 L5465  etq=« La vitrine — les extras »
+|La vitrine — les extras|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|La Vitrine|50|MARKS|Les extras — payés en Marks|Couleurs de nom|Callsign Color Pack|50|Thème « Nuit au sodium »|Theme: Sodium Night|80|hors d’atteinte|2|Deuxième dossier|Extra Save Slot|100|hors d’atteinte|3|Troisième dossier|Third Save Slot|200|hors d’atteinte|Wexler|derrière le comptoir|« Ce qui est là est à vendre. Ce qui est trop cher pour vous, je le laisse en vitrine — ça vous fera un but. »|
+--- onglets/classes actives: []
+
+===== cadre#99 L5468  etq=« La caisse — les Marks »
+|La caisse — les Marks|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|La Vitrine|50|MARKS|Les Marks — payés au magasin|100 Marks|Pack — 100 Marks|+ 100 Marks|PRIX DU MAGASIN|+20 %|de Marks|par euro|600 Marks|Pack — 600 Marks|+ 600 Marks|PRIX DU MAGASIN|+40 %|de Marks|par euro|1 400 Marks|Pack — 1400 Marks|+ 1 400 Marks|PRIX DU MAGASIN|+75 %|de Marks|par euro|3 500 Marks|Pack — 3500 Marks|+ 3 500 Marks|PRIX DU MAGASIN|B|Soutenir le studio|Studio Support Pack|+ 500 Marks|PRIX DU MAGASIN|Wexler|derrière le comptoir|« Les Marks, c’est dehors qu’on les achète. Moi je vous les compte, je ne les vends pas. »|
+--- onglets/classes actives: []
+
+===== cadre#100 L5471  etq=« Zéro Mark — l’état terminal »
+|Zéro Mark — l’état terminal|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|La Vitrine|0|MARKS|Les extras — payés en Marks|ACQUIS|Couleurs de nom|Callsign Color Pack|Thème « Nuit au sodium »|Theme: Sodium Night|80|hors d’atteinte|2|Deuxième dossier|Extra Save Slot|100|hors d’atteinte|3|Troisième dossier|Third Save Slot|200|hors d’atteinte|Wexler|derrière le comptoir|« Vous avez tout claqué d’un coup. Ce qui reste au mur, vous ne l’aurez pas avec de la bonne volonté. »|
+|㉗ La boutique — la vitrine|
+  |
+    |Les articles sont des objets, pas des lignes| : une plaque émaillée pour les couleurs de nom, une carte encadrée pour le thème, une |clé numérotée| pour chaque dossier, un pli cacheté pour le soutien au studio, et des |piles de jetons dont la hauteur dit la taille du pack|. |Une seule monnaie : les Marks| (mesuré par BACK-1 : |economy_states.marks| ; « jeton » n’est pas une monnaie — c’est l’objet dessiné, la pièce de laiton). Les Marks se voient, ils ne se lisent pas comme un nombre nu.|
+    |Le défaut de couverture est corrigé| : le pack de soutien accordait |500 Marks| et c’était le seul des cinq à ne pas dire ce qu’il donne — le joueur ne pouvait pas le savoir. Il est écrit sur l’objet.|
+    |« +20 % » ne se lit plus « 600 + 20 % »| : |bonus_pct| compare le |ratio Marks/euro| au pack de base, il ne s’ajoute pas à la quantité. L’étiquette dit maintenant « |+20 % de Marks par euro| ».|
+    |Aucun prix en euros n’est écrit|, et c’est le canon : le corps ne porte que |price_store_product_id|, le magasin de la plateforme donne le prix. L’étiquette « prix du magasin » |exige| que le client passe cet identifiant au SDK.|
+    |⛔ |Le troisième cadre n’est pas un cas limite : c’est l’état terminal de tout joueur non payeur.| Les |3| écrivains de |econo
+--- onglets/classes actives: []
+
+===== cadre#101 L5647  etq=« Le tableau — trois voyants sur soixante-douze »
+|Le tableau — trois voyants sur soixante-douze|ARGENT|24 850 €|
+        |Tiède|CHALEUR|
+        |JOUR 12|Plein jour|LE MARCHÉ|tableau du Verge d’Or|03|/72|lignes connues|01|sûres|15|quartiers noirs|quartier|brindle|crick|hush|ash|Les Bassins|Quai-Nord|Sarnes|La Colonne|Hautes-Marches|Verrier|Saint-Brand|Les Entrepôts|Dépôt-Est|Le Treillis|Marne-Basse|Le Verre|Orsel|Place des Comptes|La Lisière|La Chancellerie|Les Friches|Pont-Gris|crick · extrait de racine|3 lignes sur 72. Le reste, |personne des nôtres n’y a jamais traité.|brindle|briques|crick|cristaux|hush|plaque|ash|prismes|
+--- onglets/classes actives: ['tablo', 'onglets']
+

@@ -1,0 +1,117 @@
+=== compte total de *.controller.ts (hors _test) ===
+tous: 149
+hors -test/_test/admin: 80
+
+=== controleurs portant market|marche|lane|meta-market (nom de fichier) ===
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts
+
+=== grep -lEi 'market' dans TOUS les controleurs ===
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/auth/auth.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/core_loops/core-loops-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/ambient/ambient-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/conflict/rival/rival-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/effect_engine/effect-engine-test.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/forensic/forensic.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/forensic/forensic-test.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/insurance/insurance.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/insurance/insurance-test.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/internal_affairs/ia-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/internal_affairs/internal-affairs.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/legal/legal-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/legal/legal.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/liveops/live-ops-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/liveops/live-ops-test.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/maintenance/maintenance-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/political/political-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/reputation/reputation-admin.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/reputation/reputation.controller.ts
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/reputation/reputation-test.controller.ts
+
+=== routes @Get/@Post dont le CHEMIN porte market (tous controleurs) ===
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-admin.controller.ts:129:  @Get('market/lane-pricing/:districtId/:substance')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-admin.controller.ts:159:  @Get('market/composition-telegraph/:regionId/:playerId')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-admin.controller.ts:190:  @Get('market/wearmark/:storageId')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-admin.controller.ts:210:  @Get('market/carrying-capacity/:districtId')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-admin.controller.ts:241:  @Post('market/force-lane-jam')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-admin.controller.ts:277:  @Put('tunables/market')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market.controller.ts:104:  @Get('me/market/lanes')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market.controller.ts:60:  @Get('me/market/lanes/:districtId/:substanceType')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:199:  @Get('_test/market/projection-probe')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:230:  @Get('_test/market/rng-probe')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:258:  @Post('_test/market/lane-collapse/process-deal')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:284:  @Get('_test/market/lane-collapse/projection')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:316:  @Post('_test/market/lane-collapse/init-lane')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:343:  @Post('_test/market/composition-telegraph/record-attribution')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:372:  @Post('_test/market/composition-telegraph/run-inference-tick')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:397:  @Get('_test/market/composition-telegraph/roster-entries')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:428:  @Post('_test/market/wear-mark/mutate-lot-vector')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:457:  @Post('_test/market/wear-mark/seed-district-demographics')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:480:  @Post('_test/market/wear-mark/compute-realised-price')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:502:  @Get('_test/market/wear-mark/lot-vector')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:542:  @Post('_test/market/carrying-capacity/ensure-district')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:557:  @Post('_test/market/carrying-capacity/add-throughput')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:571:  @Post('_test/market/carrying-capacity/apply-tick')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:586:  @Post('_test/market/carrying-capacity/civic-investment')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:602:  @Get('_test/market/carrying-capacity/haze-projection')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/market/market-test.controller.ts:620:  @Get('_test/market/carrying-capacity/capacity-row')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-admin.controller.ts:131:  @Get('meta-market/anti-cheat-cluster-flags')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-admin.controller.ts:159:  @Get('meta-market/storage-metrics')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-admin.controller.ts:196:  @Post('meta-market/force-purge')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-admin.controller.ts:232:  @Put('tunables/meta_market')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-admin.controller.ts:94:  @Get('meta-market/region/:regionId/signals')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market.controller.ts:113:  @Put('me/meta-market/visibility')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market.controller.ts:76:  @Get('me/meta-market/signal')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:1007:  @Post('_test/meta-market/run-retention')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:1036:  @Post('_test/meta-market/compute-stats')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:1075:  @Get('_test/meta-market/get-signal')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:1118:  @Post('_test/meta-market/detect-cohort')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:1136:  @Get('_test/meta-market/list-cohort-flags')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:1174:  @Post('_test/meta-market/clear-contributions')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:1192:  @Post('_test/meta-market/clear-cohort-flags')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:1219:  @Post('_test/meta-market/set-visibility')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:1254:  @Get('_test/meta-market/get-signal-with-visibility')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:220:  @Get('_test/meta-market/ping')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:241:  @Get('_test/meta-market/geoip-lookup')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:268:  @Get('_test/meta-market/forwarded-for')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:288:  @Post('_test/meta-market/seed-player')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:334:  @Post('_test/meta-market/assign-region')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:373:  @Get('_test/meta-market/get-region')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:393:  @Post('_test/meta-market/delete-player')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:444:  @Post('_test/meta-market/seed-signal')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:542:  @Post('_test/meta-market/seed-contribution')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:617:  @Post('_test/meta-market/seed-cohort-flag')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:677:  @Get('_test/meta-market/list-contribution-columns')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:710:  @Get('_test/meta-market/read-tunables')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:743:  @Post('_test/meta-market/probe-clamp')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:797:  @Post('_test/meta-market/record-deal')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:848:  @Get('_test/meta-market/hash-player')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:878:  @Get('_test/meta-market/count-contributions-for-bucket')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:926:  @Post('_test/meta-market/run-aggregation')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/meta_market/meta-market-test.controller.ts:955:  @Get('_test/meta-market/list-signals')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-admin.controller.ts:95:  @Get('precursors/market-state')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts:144:  @Get('_test/precursor-market/projection-probe')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts:168:  @Get('_test/precursor-market/rng-probe')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts:191:  @Post('_test/precursor-market/ensure-market-state')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts:210:  @Get('_test/precursor-market/market-state-row')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts:246:  @Post('_test/precursor-market/upsert-supplier-pressure')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts:271:  @Post('_test/precursor-market/record-demand')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts:299:  @Post('_test/precursor-market/run-inference-tick')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts:335:  @Post('_test/precursor-market/trigger-disruption')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts:361:  @Get('_test/precursor-market/scarcity-state')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts:409:  @Post('_test/precursor-market/record-supplier-order')
+/home/erutheone/project/mafia-lot-mots/services/game-back/src/operational/precursors/precursor-market-test.controller.ts:439:  @Get('_test/precursor-market/supplier-pressure-bucket')

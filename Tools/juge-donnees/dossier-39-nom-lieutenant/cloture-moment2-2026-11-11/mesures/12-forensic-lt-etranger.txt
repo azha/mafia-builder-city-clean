@@ -1,0 +1,37 @@
+# CONTRÔLE NÉGATIF M2 — la ligne la plus grave du joueur A pointe vers le lieutenant du jetable B
+## le lieutenant de B s'appelle « Lt. Brasse » : ce nom ne doit JAMAIS sortir sur le corps de A
+## SQL (borné au player_id de A) :
+UPDATE lifestyle_audit_state SET lieutenant_id = '01a1cc06-7e9c-7723-86d5-0ac840240b7a'
+ WHERE player_id = '01a1cbff-dbea-7bf3-9136-260fea5d8ace' AND lieutenant_id = '01a1cbff-dc03-727b-810c-5769c48bfee4';
+## lignes de A après l'UPDATE (lt_appartient_a = le joueur propriétaire du lieutenant joint) :
+            lieutenant_id             |           lt_appartient_a            |    name    | last_gap | consecutive_flag_months | tail_ramp_stage 
+--------------------------------------+--------------------------------------+------------+----------+-------------------------+-----------------
+ 01a1cbff-dc03-727b-810c-5769c48bfee4 | 01a1cbff-dbea-7bf3-9136-260fea5d8ace | Lt. Marrek |    99999 |                       1 | subpoena
+ 01a1cbff-dc06-7c46-9c8a-a68bb33aae68 | 01a1cbff-dbea-7bf3-9136-260fea5d8ace | Lt. Dorne  |    12345 |                       1 | passive
+(2 rows)
+
+$ curl -s -H 'Authorization: Bearer ***' http://localhost/v1/me/forensic | python3 -m json.tool
+## X-Server-Build: 8d0184a4
+{
+    "response_meta": {
+        "request_id_echo": "654f86fe-f5a6-45a6-94c7-472ce3ce4359",
+        "server_processed_at": "2026-11-11T19:12:20.626Z",
+        "api_version": 1,
+        "correlation_id_echo": null,
+        "server_build_ref": {
+            "git_sha": "8d0184a4",
+            "built_at": "2026-11-11T18:17:52Z"
+        }
+    },
+    "payload": {
+        "data": {
+            "audit_risk_bucket": "clean",
+            "effluent_visibility_bucket": "clear",
+            "lifestyle_alarm_bucket": "subpoenaed",
+            "lifestyle_lieutenant_name": "Lt. Marrek",
+            "audit_risk_label_key": "forensic.cran.rien_a_signaler",
+            "effluent_visibility_label_key": "forensic.cran.invisible",
+            "lifestyle_alarm_label_key": "forensic.evenement.convocation_recue"
+        }
+    }
+}

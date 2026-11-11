@@ -1,0 +1,28 @@
+# Écrivains de route.state en PRODUCTION (cumul back 74c5a0b0) — hors *.spec.ts et hors *-test.controller.ts
+# Motif : une affectation/UPDATE qui POSE la valeur, pas une déclaration de type ni un comparateur.
+state='draft' : 0 site(s) d'écriture
+state='active' : 8 site(s) d'écriture
+state='saturated' : 2 site(s) d'écriture
+state='severed' : 10 site(s) d'écriture
+
+# Détail (contrôle positif : 'severed' et 'active' DOIVENT sortir) :
+services/game-back/src/core_loops/compression/compression-board.repository.ts:77:        .set({ state: 'active', fired_at_tick: gameMinute })
+services/game-back/src/core_loops/compression/compression-board.repository.ts:95:        .set({ state: 'active', fired_at_tick: gameMinute, forced: true })
+services/game-back/src/core_loops/compression/compression-board.repository.ts:120:        .set({ state: 'active', fired_at_tick: gameMinute, severity_multiplier_applied: true })
+services/game-back/src/core_loops/demolition/decommission.repository.ts:244:        UPDATE route SET state = 'severed'
+services/game-back/src/core_loops/supply_chain/supply-chain-admin.controller.ts:92://   route SET state='severed' WHERE route_id=$id AND state != 'severed' RETURNING`), never edits that
+services/game-back/src/core_loops/supply_chain/supply-chain-admin.controller.ts:472:   * exactly-once transition — `UPDATE route SET state='severed' WHERE route_id=$id AND state != 'severed'
+services/game-back/src/core_loops/supply_chain/supply-chain-admin.controller.ts:506:      .set({ state: 'severed' })
+services/game-back/src/operational/distribution/route-lifecycle.repository.ts:174:      .set({ version: newVersion, state: 'active' })
+services/game-back/src/operational/distribution/route-lifecycle.repository.ts:314:   * I6 — the exactly-once collapse transition (design §7.3/D10): `UPDATE route SET state='severed'
+services/game-back/src/operational/distribution/route-lifecycle.repository.ts:324:      .set({ state: 'severed' })
+services/game-back/src/operational/distribution/route.service.ts:340:      newState = 'severed';
+services/game-back/src/operational/distribution/route.service.ts:342:      newState = 'saturated';
+services/game-back/src/operational/distribution/route.service.ts:344:      newState = 'active';
+services/game-back/src/operational/distribution/route.service.ts:472:        newState = 'severed';
+services/game-back/src/operational/distribution/route.service.ts:474:        newState = 'saturated';
+services/game-back/src/operational/distribution/route.service.ts:476:        newState = 'active';
+
+# Mesure vivante : une route créée par POST /v1/operational/routes sort en 'active'
+#   -> 06-graph-apres-creation.json : "state": "active"
+# Défaut de colonne : operational_chain.ts:299  state: routeState('state').notNull().default('active')

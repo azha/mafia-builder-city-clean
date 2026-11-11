@@ -1,0 +1,16 @@
+# Build QUI TOURNE (8d0184a4) vs cumul back (74c5a0b0) — depot /home/erutheone/project/mafia-clean-city
+
+$ git diff --name-only 8d0184a4 74c5a0b0 -- services/game-back/src/operational/ambient/
+(sortie VIDE => module ambient/ IDENTIQUE entre les deux)
+
+$ git diff --name-only 8d0184a4 74c5a0b0   # total, 4 fichiers
+docs_int/tech_debt_inventory.md
+services/game-back/src/i18n/string_table.ts
+tests/e2e/conventions/_en-egal-fr.py
+tests/unit/i18n/table_structure_mots_unit.spec.ts
+
+# CONTROLE POSITIF : string_table.ts est bien DANS la liste ci-dessus (il differe : cles appro.*)
+# Les 8 lignes de cles apres_assister sont-elles identiques entre les deux builds ?
+$ diff <(grep apres_assister ST@8d0184a4) <(grep apres_assister ST@74c5a0b0)
+[ok] Files are identical
+DIFF_RC=0 (0 + vide => identiques : la pile sert bien les mots du cumul)

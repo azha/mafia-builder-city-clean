@@ -1,0 +1,221 @@
+######## /home/erutheone/project/mafia-builder-city-clean/Tools/juge-donnees/marche-21/maquette-2026-11-11/mesures/cadre-143.html
+<div class='cadre'
+  <div class='etiquette'
+    | Les douze crans, tous
+  </div>
+  <div class='tel'
+    <div class='scene district' style='background-position:center 50%;filter:brightness(.24)'
+    </div>
+    <div class='voile-scene'
+    </div>
+    <div class='ecran'
+      <div class='barre'
+        <div class='aile'
+          <span class='lib'
+            | ARGENT
+          </span>
+          <span class='val'
+            | 24 850 €
+          </span>
+        </div>
+        <div class='mano'
+          <svg 
+          </svg> (5 enfants)
+          <span class='val'
+            | Tiède
+          </span>
+          <span class='lib'
+            | CHALEUR
+          </span>
+        </div>
+        <div class='aile droite'
+          <span class='lib'
+            | JOUR 12
+          </span>
+          <span class='val'
+            | Plein jour
+          </span>
+        </div>
+      </div>
+      <div class='panneau'
+        <div class='dos6' style='height:462px'
+          <div class='cerne'
+          </div>
+          <div class='enseigne'
+            <b 
+              | Le dossier
+            </b>
+            <i 
+              | les douze crans, tous
+            </i>
+          </div>
+          <div class='compteurs'
+            <div class='fen'
+              <b 
+                | 03
+              </b>
+              <span 
+                | pistes
+              </span>
+            </div>
+            <div class='fen'
+              <b 
+                | 12
+              </b>
+              <span 
+                | crans
+              </span>
+            </div>
+            <div class='fen'
+              <b 
+                | 00
+              </b>
+              <span 
+                | moyennés
+              </span>
+            </div>
+          </div>
+          <div class='elast'
+            <div class='voc'
+              <div class='piste'
+                <div class='ptitre'
+                  | la comptabilité
+                </div>
+                <div class='pcle'
+                  | audit_risk_bucket
+                </div>
+                <div class='cran'
+                  <span class='cval'
+                    | clean
+                  </span>
+                  <span class='clib'
+                    | rien à signaler
+                  </span>
+                </div>
+                <div class='cran'
+                  <span class='cval'
+                    | watched
+                  </span>
+                  <span class='clib'
+                    | On vous regarde
+                  </span>
+                </div>
+                <div class='cran'
+                  <span class='cval'
+                    | flagged
+                  </span>
+                  <span class='clib'
+                    | un dossier est ouvert
+                  </span>
+                </div>
+                <div class='cran dernier'
+                  <span class='cval'
+                    | audited
+                  </span>
+                  <span class='clib'
+                    | ils sont venus
+                  </span>
+                </div>
+              </div>
+              <div class='piste'
+                <div class='ptitre'
+                  | ce qui sort des cuves
+                </div>
+                <div class='pcle'
+                  | effluent_visibility_bucket
+                </div>
+                <div class='cran'
+                  <span class='cval'
+                    | clear
+                  </span>
+                  <span class='clib'
+                    | invisible
+                  </span>
+                </div>
+                <div class='cran'
+                  <span class='cval'
+                    | faint
+                  </span>
+                  <span class='clib'
+                    | des traces
+                  </span>
+                </div>
+                <div class='cran'
+                  <span class='cval'
+                    | visible
+                  </span>
+                  <span class='clib'
+                    | ça se voit
+                  </span>
+                </div>
+                <div class='cran dernier'
+                  <span class='cval'
+                    | glaring
+                  </span>
+                  <span class='clib'
+                    | ça saute aux yeux
+                  </span>
+                </div>
+              </div>
+              <div class='piste'
+                <div class='ptitre'
+                  | le train de vie d’un lieutenant
+                </div>
+                <div class='pcle'
+                  | lifestyle_alarm_bucket
+                </div>
+                <div class='cran'
+                  <span class='cval'
+                    | quiet
+                  </span>
+                  <span class='clib'
+                    | discret
+                  </span>
+                </div>
+                <div class='cran'
+                  <span class='cval'
+                    | noticed
+                  </span>
+                  <span class='clib'
+                    | remarqué
+                  </span>
+                </div>
+                <div class='cran'
+                  <span class='cval'
+                    | watched
+                  </span>
+                  <span class='clib'
+                    | suivi
+                  </span>
+                </div>
+                <div class='cran dernier'
+                  <span class='cval'
+                    | subpoenaed
+                  </span>
+                  <span class='clib'
+                    | convoqué
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class='pann'
+            <i 
+              | pourquoi tous les crans
+            </i>
+            <b style='color:#ff9e3d'
+              | Le dernier de chaque piste est un événement, pas un cran de plus
+            </b>
+            <small 
+              | ils sont venus · ça saute aux yeux · convoqué — on ne vous surveille plus. L’écran les montre
+              <u 
+                | tous
+              </u>
+              | pour qu’aucune valeur servie ne soit sans dessin.
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

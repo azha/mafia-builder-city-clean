@@ -1,0 +1,178 @@
+cadres(count)= 175
+etiquettes(count)= 176
+0	L697	Revue du jour — le registre : trois jetons
+1	L709	Revue du jour — le registre : rien à signaler
+2	L715	Revue du jour — le registre : après vos verdicts
+3	L727	Revue du jour — le registre : avec les lots back
+4	L740	Décision du jour — la table : la carte distribuée
+5	L745	Décision du jour — la table : rien ne se détache
+6	L748	Décision du jour — la table : le budget est pris
+7	L753	Décision du jour — la table : après le tampon
+8	L758	Décision du jour — la table : avec les lots back
+9	L764	Exceptions — l’ardoise : ils attendent
+10	L767	Exception — l’ardoise : sa main
+11	L770	Exceptions — l’ardoise : personne
+12	L773	Exceptions — l’ardoise : le suivant s’avance
+13	L776	Exceptions — l’ardoise : avec les lots back
+14	L780	Compression — la chaufferie : la semaine s’annonce
+15	L784	TENSION
+16	L784	Compression — la chaufferie : ouverte toute seule
+17	L788	TENSION
+18	L788	Compression — la chaufferie : un problème en révèle un autre
+19	L792	TENSION
+20	L792	Compression — la chaufferie : la semaine est close
+21	L796	TENSION
+22	L796	Compression — la chaufferie : au calme
+23	L800	TENSION
+24	L800	Compression — la chaufferie : avec les lots back
+25	L804	TENSION
+26	L808	Le Bureau — tout le reste (semaine annoncée)
+27	L816	Le Bureau — semaine en cours
+28	L846	La Carte — Brennar la nuit
+29	L875	La Carte — un quartier touché
+30	L904	La Carte — approcher : chez vous
+31	L954	Autonomie — le burner : deux messages
+32	L966	Autonomie — un message : tapez 1 ou 2
+33	L978	Autonomie — la même personne, chaque cycle
+34	L990	Autonomie — OPTIONS : traiter la cause
+35	L1002	Autonomie — après votre réponse
+36	L1014	Autonomie — aucun message
+37	L1043	La police — le tableau : ce qu’ils savent
+38	L1080	La police — le registre de dispatch
+39	L1090	La police — déposer un signalement
+40	L1103	La police — le retour de bâton
+41	L1115	La police — avec les lots back
+42	L4383	La chambre de pousse
+43	L4386	Trois bases, trois graines
+44	L4389	Une chambre qui décroche
+45	L4404	Le labo — charger
+46	L4407	Le labo — prêt à lancer
+47	L4410	Le labo — en cuisson
+48	L4413	Le labo — affinage, trois passes
+49	L4416	Le labo — prête
+50	L4419	Le labo — le geste ne vous appartient plus
+51	L4520	Le fourneau — en cuisson
+52	L4520	Affinage — trois passes
+53	L4520	La descente
+54	L4583	Commander — et il n’y a plus rien
+55	L4585	La commande est en route
+56	L4587	Ça coince — un cran remonté
+57	L4589	Ça coince — deux crans remontés
+58	L4591	On a trouvé où ça coince
+59	L4593	Commander ne vous appartient plus
+60	L4684	Envoyer — la ficelle à tendre
+61	L4686	En route — ça serpente
+62	L4688	Livré — mais la route s’use
+63	L4690	La route est coupée
+64	L4692	Ils ont pris Lt. Tull
+65	L4784	Le premier coup — on n’a jamais croisé personne — réplique sans orateur (arbitrage (5) du 23/09)
+66	L4786	Le septième coup — la vendetta est visible — réplique sans orateur (arbitrage (5) du 23/09)
+67	L4788	Deux choses ne collent pas — état INATTEIGNABLE côté client (décision L4 : seuls les gros bras sont proposés) 
+68	L4790	Ce qui est en cours
+69	L4792	Ce qui est rentré — réplique sans orateur (arbitrage (5) du 23/09)
+70	L4794	Ce qu’on ne peut pas faire
+71	L4812	v1 — la table du fond
+72	L4814	v1 — il est rentré
+73	L4888	Ils ont arrêté un de vos coursiers
+74	L4890	Lui trouver un avocat
+75	L4892	Il commence à parler
+76	L4894	Il a tout dit
+77	L4896	Il y a un arrangement
+78	L4898	Votre avocat est nerveux
+79	L4971	Tout est encore à vous
+80	L4973	Confier l’approvisionnement
+81	L4975	Deux charges confiées
+82	L4977	Reprendre — ce que ça coûterait
+83	L4979	Vous avez déjà tranché aujourd’hui
+84	L4981	Les huit qui n’existent pas encore — RETIRÉ du client (pas un écran joueur) ; gardé pour la numérotation de la
+85	L5067	L’organisation frotte
+86	L5069	Ce bâtiment vous coûte
+87	L5071	Le raser — confirmer
+88	L5073	Vous avez déjà tranché aujourd’hui
+89	L5075	La parcelle est libre
+90	L5077	L’offre s’est fermée
+91	L5171	Les ordres de ce soir
+92	L5173	Deux ordres s’attendent
+93	L5175	Un endroit n’a pas fini de se poser
+94	L5177	Rejouer une soirée — pas encore
+95	L5179	Rejouer une soirée
+96	L5181	Ce qui s’est passé en ville
+97	L5183	Ce qui arrive
+98	L5198	Ash — rendez-vous réservé
+99	L5201	Ash — honoré
+100	L5204	Ash — le rendez-vous est passé
+101	L5442	Le compte — ce que le back sert
+102	L5445	Le compte — avec une adresse
+103	L5448	Le compte — avec les lots back
+104	L5465	La vitrine — les extras
+105	L5468	La caisse — les Marks
+106	L5471	Zéro Mark — l’état terminal
+107	L5647	Le tableau — trois voyants sur soixante-douze
+108	L5650	Une ligne recoupée — Dépôt-Est × crick
+109	L5653	Voyant éteint — et c’est un renseignement
+110	L5656	Le tableau de région — six genres d’endroit <span class="m21-hors-lot">hors lot, à venir · TD-1040</span>
+111	L5659	Le mur — vous ne dites rien, on ne dit rien <span class="m21-hors-lot">hors lot, à venir · TD-1040</span>
+112	L5662	Ce qui manque encore
+113	L5753	La vente — qui vend et ce qu’il y a dans la caisse
+114	L5756	La caisse de Oskar — pleine à ras
+115	L5759	Ramasser — nulle part où la porter
+116	L5762	Ilse s’est fait prendre
+117	L5765	Aucun dealer — rien ne rentre
+118	L5768	Ce qui manque encore
+119	L5855	L’horizon — ce qui s’ouvre
+120	L5858	Le rabatteur a reculé
+121	L5861	Prendre le second couteau
+122	L5864	Sans les textes — l’écran tel qu’il s’affiche aujourd’hui
+123	L5867	Rien à l’horizon
+124	L5870	Ce qui manque encore
+125	L5968	Le miroir — ce qu’il a pris de vous se voit sur lui
+126	L5971	Rien n’a encore déteint
+127	L5974	Vous vous écartez de vos propres règles
+128	L5977	Les règles que vous avez données
+129	L5980	Un rappelé — on demande des gages (avec lots back)
+130	L5983	Ce qui manque encore
+131	L6079	Le journal — ce qui se dit ce matin
+132	L6082	Ce qui arrive à la ville
+133	L6085	La rivière ne se retirera pas
+134	L6088	Ce que vous avez compris
+135	L6091	Rien ce matin
+136	L6094	Ce qui manque encore
+137	L6181	Le dossier — trois pistes qui ne se mélangent pas
+138	L6184	Ils sont venus
+139	L6187	Qui parle, et qui a peur
+140	L6190	Il ne reviendra pas
+141	L6193	Rien à votre nom
+142	L6196	Ce qui manque encore
+143	L6283	La filière — où en est chaque étape
+144	L6286	La filière s’écarte de son profil
+145	L6289	Ce qui est tenu, ce qui reste flou
+146	L6292	Vous n’avez pas encore de filière
+147	L6295	Aucune filière montée
+148	L6298	Où en est chaque maillon
+149	L6394	Les douze crans, tous
+150	L6484	Il a pris, pas encore de quoi le lire
+151	L6596	Les onze crans, tous
+152	L6722	㉑ · la tuile Ash — l'éclat des prismes
+153	L6795	⑲ · les réglages — mouvement réduit éteint
+154	L6798	⑲ · les réglages — mouvement réduit allumé
+155	L6824	Vos 4 sites — la liste qui mène à la fiche
+156	L6850	㊴ · les pistes — la fenêtre des acteurs mène à eux ; deux pistes éteintes, « pas encore sur la table » (PROPOS
+157	L6853	㊴ · les acteurs — le renseignement par ligne, éteint ; la fenêtre des pistes ramène ; « ceux qui ne sont pas s
+158	L6862	㊴ · les pistes — « le train de vie de Lt. Marrek » : le back sert le NOM (lifestyle_lieutenant_name), piste vi
+159	L6865	㊴ · les pistes — le nom n’est PAS servi (null : aucune ligne unique ne porte les trois maxima, option B) : la 
+160	L6892	㉚ La chaîne vue du graphe — GET /v1/supply-chain/graph + GET /v1/me/buildings (graphe + bâtiments du joueur), 
+161	L6909	Le journal — après « Y PRÊTER ATTENTION » · bande full
+162	L6912	Le journal — après « Y PRÊTER ATTENTION » · bande reduced
+163	L6915	Le journal — après « Y PRÊTER ATTENTION » · bande minimal
+164	L6918	Le journal — après « Y PRÊTER ATTENTION » · bande none
+165	L6951	㉚ La chaîne — les routes (la liste défilée jusqu’aux routes) — GET /v1/supply-chain/graph routes[] + GET /v1/m
+166	L6998	㉚ Entretenir une liaison — la feuille (la grande décision du jour est libre)
+167	L7001	㉚ Entretenir une liaison — la feuille (la grande décision du jour est prise)
+168	L7004	㉚ Entretenir une liaison — refusé : pas assez d’argent
+169	L7007	㉚ Entretenir une liaison — refusé : un entretien est déjà en cours
+170	L7010	㉚ Entretenir une liaison — après le geste : « en entretien »
+171	L7013	㉚ Reconstruire une route — la feuille (la grande décision du jour est libre)
+172	L7016	㉚ Reconstruire une route — la feuille (la grande décision du jour est prise)
+173	L7019	㉚ Reconstruire une route — refusé : une reconstruction est déjà en cours
+174	L7022	㉚ Reconstruire une route — refusé : la catégorie est confiée à un lieutenant
+175	L7025	㉚ Reconstruire une route — après le geste : « En reconstruction »

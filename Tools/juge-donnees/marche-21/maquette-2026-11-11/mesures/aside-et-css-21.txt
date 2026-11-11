@@ -1,0 +1,47 @@
+===== CSS .vy / .qn / .tablo de .mar6 =====
+.mar6 .fen{flex:1;background:#0a0e16;border:1px solid #2a3648;box-shadow:inset 0 0 10px #7fd4d91f;
+  padding:4px 4px 3px;text-align:center}
+.mar6 .fen b{display:block;font:700 14px/1 'DejaVu Sans';color:#7fd4d9;font-variant-numeric:tabular-nums;
+  letter-spacing:.06em;text-shadow:0 0 8px #7fd4d999}
+.mar6 .fen b span{display:inline;font-size:9px;letter-spacing:0}
+.mar6 .fen>span{display:block;font:700 5.4px/1.1 'DejaVu Sans';letter-spacing:.16em;color:#8a979c;
+  margin-top:3px;text-transform:uppercase}
+.mar6 .qn{font:700 5.9px/1 'DejaVu Sans';color:#7a838d;letter-spacing:.02em;white-space:nowrap}
+.mar6 .qn.on{color:#eae0c8}
+.mar6 .vy{height:100%;min-height:7px;border-radius:1.5px;background:#16191b;
+  box-shadow:inset 0 0 0 1px #232a2d}
+.mar6 .vy.on{box-shadow:inset 0 0 0 1px #0b101688;animation:mk-veille 3.2s ease-in-out infinite}
+.mar6 .vy.on:nth-child(3){animation-delay:.9s}
+.mar6 .vy.on:nth-child(4){animation-delay:1.8s}
+.mar6 .bulle{flex:1;background:#eae0c8;border:1px solid #b08d3e;padding:6px 8px 7px;
+  position:relative;box-shadow:0 3px 10px #00000066}
+.mar6 .bulle::before{content:"";position:absolute;left:-9px;bottom:12px;
+  border-top:6px solid transparent;border-bottom:6px solid transparent;border-right:9px solid #b08d3e}
+.mar6 .bulle p{margin:0;font:700 7.6px/1.35 'DejaVu Serif';color:#1a1a1a}
+.mar6 .bulle p em{font-style:normal;background:#f2c96b;padding:0 2px;box-decoration-break:clone}
+.mar6 .bulle i{display:block;font:700 5.4px/1 'DejaVu Sans';font-style:normal;letter-spacing:.16em;
+  color:#5d636c;text-transform:uppercase;margin-bottom:4px}
+.mar6 .pann.pp{display:flex;gap:9px;align-items:center}
+.mar6 .pann.pp .pt{flex:1;min-width:0}
+.mar6 .og{flex:1;border:1px solid #2a3648;background:#111823;padding:4px 2px 4px;
+  text-align:center;opacity:.42}
+.mar6 .og .im{display:block;line-height:0;margin-bottom:3px}
+.mar6 .og b{display:block;font:700 6.6px/1 'DejaVu Sans';letter-spacing:.1em;text-transform:uppercase}
+.mar6 .og small{display:block;font:5.6px/1 'DejaVu Sans';color:#8a979c;margin-top:2px}
+.mar6 .og.pris{opacity:1;border-color:#b08d3e;background:#16191b;
+  box-shadow:0 0 12px #b08d3e33, inset 0 1px 0 #ffffff0d}
+.mar6 .pann{flex:none;margin:9px 13px 0;position:relative;z-index:2;padding:8px 10px 9px;
+  background:#111823;border:1px solid #2a3648;box-shadow:inset 0 0 18px #00000066}
+.mar6 .pann i{display:block;font:700 5.6px/1 'DejaVu Sans';font-style:normal;letter-spacing:.19em;
+  color:#8a979c;text-transform:uppercase}
+.mar6 .pann b{display:block;font:700 13px/1.15 'DejaVu Serif';margin-top:5px;color:#eae0c8}
+.mar6 .pann small{display:block;font:6.6px/1.4 'DejaVu Sans';color:#b9ad92;margin-top:4px}
+.mar6 .pann small u{text-decoration:none;color:#f2c96b;font-weight:700}
+
+===== ASIDE (documentation de l atelier, non dessinee a l ecran) =====
+ | ㉑ Le marché — l’ardoise du courtier | ⛔⛔ | Cet écran REMPLACE la maquette de la série 2, réfutée par le juge données ⊥ | ( | Tools/juge-donnees/marche/maquette-2026-08-25/rapport.md | ) : | 5 informations sourcées sur 18 | , | 13 dessinées sans aucune source | — dont | la liste elle-même | , la taxonomie « Matières / Services / Influence », les noms de fiction et les | prix en dollars | — et | zéro action | . Verdict de nature : le canon veut une | lecture d’inférence par quartier × substance, en buckets | ; la série 2 dessinait un | catalogue d’achat | . Deux écrans différents. | ★★★ | UNE CASE VIDE EST UN RENSEIGNEMENT, PAS UN TROU. | Le contrôleur l’écrit noir sur blanc : une ligne jamais « ensured » — | aucun dealer n’a jamais traité ce quartier × cette substance | — | n’a pas de ligne en base | et rend | 404 | , jamais un bucket neutre fabriqué. L’ardoise nue est donc de l’information : | personne n’y va | . C’est le cadre 3. | ⛔ | Trois mots, et rien d’autre. | La route rend | exactement 3 clés | — | district_id | , | substance_type | , | lane_confidence_bucket | ∈ | LOW|MODERATE|HIGH | → | ouï-dire · recoupé · sûr | . Le mur R2.2 est verbatim dans le contrôleur (« | no p_cents, c, t_refractory, k_current, q_total ever leaves | ») et le canon interdit deux fois la courbe de bourse. | Aucun prix, aucun pourcentage, aucun graphe | sur cet écran — et le trait de craie porte la même information que le mot, jamais le mot seul. | ⛔ | AUCUN ÉNUMÉRATEUR — et c’est pour ça que l’écran demande ligne par ligne. | Sur | 163 | routes joueur, | 3 | portent | market | dans leur chemin et | aucune ne LISTE | : la route exige le couple | :districtId/:substanceType | . Dessiner une ardoise servie d’un coup serait refaire exactement la faute de la série 2. L’attente est diégétique (« on fait vérifier une ligne ») et le maillon manquant est le | lot L1 | du dernier cadre. | ★★★ | LE MUR DE RÉCIPROCITÉ — le plus beau mécanisme du domaine, et il n’avait jamais été dessiné. | meta-market-read.service.ts:8 | : visibilité à | FALSE | ⇒ | insufficient_signal | immédiatement | , « privacy wall ». | Celui qui ne dit pas ses prix n’entend rien. | Et l’interrupteur qui décide de ça est | déjà dessiné dans ㉖ Le Coffre | ( | PUT /v1/me/meta-market/visibility | ) : | deux écrans, un seul jeton | — même patron que la décision de structure partagée par ㉜ / ㉝. Second silence, distinct : | sample_count | sous le plancher (défaut 5). | ⚠️ | Contradiction mesurée, non tranchée | : le commentaire | meta-market-read.service.ts:11 | affirme que | sample_count | n’est | jamais | exposé — et le contrôleur | :99 | le renvoie. La prose et le code se contredisent dans le même domaine. L’écran n’imprime pas le nombre ; il dit « assez de maisons ont parlé ». | ⚠️ | ARBITRAGE USER OUVERT | : | GET /me/meta-market/signal | rend | medianCents | , | p10Cents | , | p90Cents | — des | scalaires en cents | . Le canon de b1 interdit d’afficher le prix modal. Cet écran ne montre donc que | trend | ( | monte · tient · descend | ). Montrer les prix de région serait une | décision produit | , pas un lot technique — c’est le lot L4. | ⚠️ | Ce qui n’est PAS dans cet écran, et pourquoi | : les | dealers | et les | précurseurs | figurent dans le domaine « marché » du rapport du juge, mais ce sont deux autres écrans — | la vente | (aucune maquette : le plus gros trou mesuré du corpus) et | ㉚ la chaîne d’appro | (déjà dessinée). Les fondre ici referait le fourre-tout réfuté. | ✅ | Balayage anti-collision passé avant livraison | : 30 classes vérifiées contre les | 3 493 | règles du document, | 2 collisions trouvées et corrigées | — | .lg | portait une règle | nue | avec une grille à 5 colonnes fixes | et | un fond crème en | :nth-child(odd) | (l’ardoise aurait été repeinte et recadrée), | .mur | trois règles SVG | fill | . Renommées | .lign | / | .refus | . Balayeur reconstruit : | balayer_collisions.py | (découpe sur | } | , jamais sur les retours à la ligne). | ⛔ | STATIQUE | — aucune règle d’animation CSS, ruling user du 2026-08-27 13h42. (Le contrôle est dans le poseur, sur la feuille de style ; il ne peut pas être satisfait par une mention en prose.) | 
+
+===== commentaires HTML de la region =====
+ * ═══ ㉑ LE MARCHÉ (2026-08-27) ═══
+ * SÉRIE 6 · ㉑ LE MARCHÉ (screen_b1) : le tableau du Verge d’Or (backglass). STATIQUE. Générateur : generateur-marche.py + geo_brennar.py (la ville de ③, RÉUTILISÉE). REMPLACE la v2 (catalogue) ET la v3 (table d’admic). Réfutations : juge données 2026-08-25 (5 infos sur 18) + ruling user « ça fait pas très jeu ».
+ * ㉑ cadre « Ce qui manque encore » corrigé le 2026-11-11 (demande f2) : L1 (l’énumérateur des lignes) et L3 (les quartiers portent un nom) sont LIVRÉS, ils ne sont plus des maillons manquants. L1 : `GET /v1/me/market/lanes`, market.controller.ts:90 (BACK-3, lot/marche-ardoise-enumerateur, revue ⊥ 49f10ab4 — pas encore sur main). L3 : `nomDeDistrict`, citysim/world/district-names.ts:40 (18 noms), ser

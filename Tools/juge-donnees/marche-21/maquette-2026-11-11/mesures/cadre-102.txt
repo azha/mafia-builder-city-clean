@@ -1,0 +1,390 @@
+######## /home/erutheone/project/mafia-builder-city-clean/Tools/juge-donnees/marche-21/maquette-2026-11-11/mesures/cadre-102.html
+<div class='cadre'
+  <div class='etiquette'
+    | Une ligne recoupée — Dépôt-Est × crick
+  </div>
+  <div class='tel'
+    <div class='scene district' style='background-position:center 50%;filter:brightness(.24)'
+    </div>
+    <div class='voile-scene'
+    </div>
+    <div class='ecran'
+      <div class='barre'
+        <div class='aile'
+          <span class='lib'
+            | ARGENT
+          </span>
+          <span class='val'
+            | 24 850 €
+          </span>
+        </div>
+        <div class='mano'
+          <svg 
+          </svg> (5 enfants)
+          <span class='val'
+            | Tiède
+          </span>
+          <span class='lib'
+            | CHALEUR
+          </span>
+        </div>
+        <div class='aile droite'
+          <span class='lib'
+            | JOUR 12
+          </span>
+          <span class='val'
+            | Plein jour
+          </span>
+        </div>
+      </div>
+      <div class='panneau'
+        <div class='mar6' style='height:462px'
+          <div class='cerne'
+          </div>
+          <div class='enseigne'
+            <b 
+              | LE MARCHÉ
+            </b>
+            <i 
+              | tableau du Verge d’Or
+            </i>
+          </div>
+          <div class='tablo'
+            <div class='entete'
+              <span 
+                | quartier
+              </span>
+              <span style='color:#f2c96b;border-bottom-color:#f2c96b'
+                <svg class='pas'
+                </svg> (2 enfants)
+                | brindle
+              </span>
+              <span style='color:#7fd4d9;border-bottom-color:#7fd4d9'
+                <svg class='pas'
+                </svg> (2 enfants)
+                | crick
+              </span>
+              <span style='color:#c9a8e0;border-bottom-color:#c9a8e0'
+                <svg class='pas'
+                </svg> (2 enfants)
+                | hush
+              </span>
+              <span style='color:#efe9da;border-bottom-color:#efe9da'
+                <svg class='pas'
+                </svg> (2 enfants)
+                | ash
+              </span>
+            </div>
+            <div class='grid'
+              <div class='rg'
+                <span class='qn'
+                  | Les Bassins
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Quai-Nord
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Sarnes
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | La Colonne
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Hautes-Marches
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Verrier
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Saint-Brand
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn on'
+                  | Les Entrepôts
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy on' style='background:#7fd4d9;opacity:0.54;box-shadow:0 0 5px #7fd4d999,inset 0 0 0 1px #0b101688'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn on'
+                  | Dépôt-Est
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy on' style='background:#7fd4d9;opacity:0.75;box-shadow:0 0 7px #7fd4d999,inset 0 0 0 1px #0b101688'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Le Treillis
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Marne-Basse
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Le Verre
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Orsel
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Place des Comptes
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn on'
+                  | La Lisière
+                </span>
+                <div class='vy on' style='background:#f2c96b;opacity:1.00;box-shadow:0 0 10px #f2c96b99,inset 0 0 0 1px #0b101688'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | La Chancellerie
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Les Friches
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+              <div class='rg'
+                <span class='qn'
+                  | Pont-Gris
+                </span>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+                <div class='vy'
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class='pann pp'
+            <div class='ecrin petit'
+              <svg class='prod'
+              </svg> (19 enfants)
+            </div>
+            <div class='pt'
+              <i 
+                | crick · extrait de racine
+              </i>
+              <b style='color:#7fd4d9'
+                | DÉPÔT-EST · RECOUPÉ
+              </b>
+              <small 
+                | deux sources concordantes — ni une rumeur, ni une certitude. On ne vous dira
+                <u 
+                  | pas le prix
+                </u>
+                | , ni ce qui s’écoule : seulement à quel point on peut s’y fier.
+              </small>
+            </div>
+          </div>
+          <div class='onglets'
+            <div class='og'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#f2c96b'
+                | brindle
+              </b>
+              <small 
+                | briques
+              </small>
+            </div>
+            <div class='og pris'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#7fd4d9'
+                | crick
+              </b>
+              <small 
+                | cristaux
+              </small>
+            </div>
+            <div class='og'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#c9a8e0'
+                | hush
+              </b>
+              <small 
+                | plaque
+              </small>
+            </div>
+            <div class='og'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#efe9da'
+                | ash
+              </b>
+              <small 
+                | prismes
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

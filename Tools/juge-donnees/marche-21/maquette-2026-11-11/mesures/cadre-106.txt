@@ -1,0 +1,164 @@
+######## /home/erutheone/project/mafia-builder-city-clean/Tools/juge-donnees/marche-21/maquette-2026-11-11/mesures/cadre-106.html
+<div class='cadre'
+  <div class='etiquette'
+    | Ce qui manque encore
+  </div>
+  <div class='tel'
+    <div class='scene district' style='background-position:center 50%;filter:brightness(.24)'
+    </div>
+    <div class='voile-scene'
+    </div>
+    <div class='ecran'
+      <div class='barre'
+        <div class='aile'
+          <span class='lib'
+            | ARGENT
+          </span>
+          <span class='val'
+            | 24 850 €
+          </span>
+        </div>
+        <div class='mano'
+          <svg 
+          </svg> (5 enfants)
+          <span class='val'
+            | Tiède
+          </span>
+          <span class='lib'
+            | CHALEUR
+          </span>
+        </div>
+        <div class='aile droite'
+          <span class='lib'
+            | JOUR 12
+          </span>
+          <span class='val'
+            | Plein jour
+          </span>
+        </div>
+      </div>
+      <div class='panneau'
+        | <!-- ㉑ cadre « Ce qui manque encore » corrigé le 2026-11-11 (demande f2) : L1 (l’énumérateur des lignes) et L3 (les quartiers portent un nom) sont LIVRÉS, ils ne sont plus des maillons manquants. L1 : `GET /v1/me/market/lanes`, market.controller.ts:90 (BACK-3, lot/marche-ardoise-enumerateur, revue ⊥ 49f10ab4 — pas encore sur main). L3 : `nomDeDistrict`, citysim/world/district-names.ts:40 (18 noms), servi par district-interior.controller.ts:50 et player-buildings.controller.ts:45. Restent L2 et L4, inchangés. -->
+        <div class='mar6' style='height:462px'
+          <div class='cerne'
+          </div>
+          <div class='enseigne'
+            <b 
+              | LE MARCHÉ
+            </b>
+            <i 
+              | tableau du Verge d’Or
+            </i>
+          </div>
+          <div class='compteurs'
+            <div class='fen'
+              <b 
+                | 03
+                <span style='color:#8a979c'
+                  | /72
+                </span>
+              </b>
+              <span 
+                | lignes connues
+              </span>
+            </div>
+            <div class='fen'
+              <b 
+                | 01
+              </b>
+              <span 
+                | sûres
+              </span>
+            </div>
+            <div class='fen'
+              <b 
+                | 15
+              </b>
+              <span 
+                | quartiers noirs
+              </span>
+            </div>
+          </div>
+          <div class='pann' style='margin-top:7px;padding:7px 10px 8px'
+            <span class='lot'
+              | L2
+            </span>
+            <i 
+              | maillon manquant
+            </i>
+            <b style='font-size:10.5px'
+              | Ce qui s’écoule, et si ça bouchonne
+            </b>
+            <small 
+              | trois mesures de plus existent en projection et rien ne les alimente
+            </small>
+          </div>
+          <div class='pann' style='margin-top:7px;padding:7px 10px 8px'
+            <span class='lot'
+              | L4
+            </span>
+            <i 
+              | maillon manquant
+            </i>
+            <b style='font-size:10.5px'
+              | La région dit un prix
+            </b>
+            <small 
+              | elle en connaît un, et cet écran a le droit de ne pas le montrer — ça, c’est vous qui le tranchez
+            </small>
+          </div>
+          <div class='onglets'
+            <div class='og'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#f2c96b'
+                | brindle
+              </b>
+              <small 
+                | briques
+              </small>
+            </div>
+            <div class='og pris'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#7fd4d9'
+                | crick
+              </b>
+              <small 
+                | cristaux
+              </small>
+            </div>
+            <div class='og'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#c9a8e0'
+                | hush
+              </b>
+              <small 
+                | plaque
+              </small>
+            </div>
+            <div class='og'
+              <span class='im'
+                <svg class='pas'
+                </svg> (2 enfants)
+              </span>
+              <b style='color:#efe9da'
+                | ash
+              </b>
+              <small 
+                | prismes
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
