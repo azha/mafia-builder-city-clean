@@ -1,5 +1,11 @@
 # Catalogue des mouvements diégétiques — écrans montés du client Unity (CLIENT-3, 07-08/10/2026) — v5
 
+> ⚠️ **MISE À JOUR DU 11/11/2026** (passe de mise à jour documentaire, CLIENT-1 ; le texte d'origine est LAISSÉ tel quel, ces lignes disent ce qui est périmé et où est l'autorité — rien n'est inventé, chaque correction cite sa source).
+> - **Retour d'appui** : `Echelle` (0,97) est **RETIRÉE** (arbitrage f2 08/10, dette 29 ; `design-retour-appui-v5.md:29-31`) ⇒ teinte + opacité seules ; le relâchement n'est **pas animé** (restitution immédiate, les 140 ms sont la dette 32 ; `design-retour-appui-v5.md` D2). Périmés par là : lignes **:292, :351, :422** et **Q6 (:1066)**. L'autorité est `design-retour-appui-v5.md`, **fusionné** au cumul client (`d5dbe22e`, E-R1 à E-R6).
+> - **Nombre de boutons** : « 67 sites » (:351, :422) est périmé ; N est **mesuré à chaque lot** (D4) : **69** à `9b48b2ac` (`design-retour-appui-v5.md:44`) ; la garde de couverture de la fusion lit « 67 / 69 » (deux sites non couvrables, nommés dans `d5dbe22e`).
+> - **`ContentSizeFitter`** (:294, « 20 poses ») : **27** poses, 77 lignes, 22 fichiers à `9b48b2ac` (`design-retour-appui-v5.md:203-205`).
+> - **Entrées** : **44** `Entree` pour 41 lignes (:396, recompté) ; tout « 46 » (v3) ou « 42 » (v1) est périmé.
+
 > **v5 (08/10)** : réponse à la revue ⊥ n°4 (NON APPROUVÉ : 3 BLOCKING, tous dans le design §17 ; 5 MAJOR, 8 mineurs ; les 8 BLOCKING de la n°3 vérifiés fermés, tous les comptes justes). Table en §XI. La cible du retour d'appui se décide AU `PointerDown` (deux prédicats, `RendSurface` et `Peint`), le voile ne remonte que d'un cran et jamais sur plus grand que deux fois le bouton, et aucun compte n'est affirmé avant le relevé de G9. Revue suivante : ciblée sur §17 (décision f2).
 
 > **v4 (08/10)** : réponse à la revue ⊥ n°3 (NON APPROUVÉ : 8 BLOCKING, 6 MAJOR, 9 mineurs ; comptes de la v3 vérifiés justes). Table en §X. Trois lignes de plus retirées ou réduites parce que leurs deux bouts sont le même état dans le code (`accueil.carte-suivante`, l'`Objet` de ㉓, la moitié sortante de ㉕) ; `conflit.envoi` recalé sur le CHOIX de la famille ; les cachets perdent leur échelle (G11) ; la cible du retour d'appui suit un prédicat « rend » calculable et une surface nommée (design v4.4 §17) ; G11 a son prédicat exact ; §I.4 et §V sont désormais CALCULÉS l'un de l'autre.

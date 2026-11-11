@@ -1,5 +1,8 @@
 # Design — le RETOUR D'APPUI des boutons du client (**v5**) — document AUTONOME
 
+> ⚠️ **MISE À JOUR DU 11/11/2026** (passe de mise à jour documentaire, CLIENT-1 ; le texte d'origine est LAISSÉ tel quel, ces lignes disent ce qui est périmé et où est l'autorité — rien n'est inventé, chaque correction cite sa source).
+> - **Le code EXISTE** : l'en-tête ci-dessous (« Aucun code n'existe ») est périmé. Les lots E-R1 à E-R6 sont **fusionnés au cumul client** (`d5dbe22e`) : les 69 boutons passent par `Retour.NouveauBouton`, jugés sur effet réel (rendu + comptage de pixels) ; garde GP « couverture sites : **67 / 69** » (`Journal:923` et `Reputation:1429` non couvrables, `interactable=false`, nommés dans le commit).
+
 > **STATUT — APPROUVÉ PAR ARBITRAGE (f2, 11/11/2026), sans seconde revue.** Texte relu par la revue ⊥ n°1 à `327b6afc` (`revue-v5-n1.md` : NOT_APPROVED, 2 BLOCKING + 5 IMPORTANT + 4 mineurs) ; correctifs de l'auteur au commit **`bf014613`**, ratifiés par f2 (« correctif vérifié par l'auteur » : les preuves avant/après sont à l'**annexe C**). Décisions de f2 portées : relâchement qui saute d'une frame (dette 32, classe C), règle de classement « effet mesuré < plancher ⇒ voile, jamais de k plus bas », E-R1 avant tout code. **N = 69** (mesuré, le 67 est périmé). **Aucun code n'existe** : la session suivante commence par E-R1 (§6), puis le code.
 
 **Ce document REMPLACE le §17 de `design-couche-mouvement.md` v4.8.** Le §17 (et la partie « retour
