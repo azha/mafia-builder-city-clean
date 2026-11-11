@@ -125,26 +125,30 @@ namespace MafiaCleanCity.Operational
         private TextMeshProUGUI noteDuPied;
         private string noteParDefaut;
 
-        // TD-822 — LES MOTS de `residue_band` (ratifiés par f2 le 11/11, une phrase par bande, FR ici / EN servi par BACK-2, domaine `ambient`) : la phrase REMPLACE la note sous le bouton après un geste RÉUSSI,
-        // jusqu'au prochain geste ou à la sortie de l'écran. 404/409 : rien ne change. Bande inconnue (le back élargirait le domaine) : la note reste — jamais une phrase inventée.
-        // Rôle de clé `attend` : à confirmer par BACK-2 (clé dérivée tant que rien n'est servi : le repli FR se COMPTE).
-        private static string PhraseDeLaBande(string bande)
+        // TD-822 — LES MOTS de `residue_band` (ratifiés par f2 le 11/11, une phrase par bande, FR ici / EN servi par BACK-2) : la phrase REMPLACE la note sous le bouton après un geste RÉUSSI,
+        // jusqu'au prochain geste réussi ou à la sortie de l'écran. 404/409 : rien ne change. Bande inconnue (le back élargirait le domaine) : la note reste — jamais une phrase inventée.
+        // LA CLÉ : celle que le back SERT (`residue_i18n_key`) quand elle est là ; sinon, en repli, dérivée de la bande (`ambient.apres_assister.<bande>`, ruling f2 11/11) — le repli FR se COMPTE.
+        private static string PhraseDeLaBande(PostAmbientAttendResponseDto reponse)
         {
-            switch (bande)
+            string repli;
+            switch (reponse.residue_band)
             {
-                case "full": return MafiaCleanCity.I18n.Libelle.De("ambient", "attend", "On vous a vu. La rue s’en souviendra.");
-                case "reduced": return MafiaCleanCity.I18n.Libelle.De("ambient", "attend", "On vous a vu, mais vous étiez déjà passé aujourd’hui.");
-                case "minimal": return MafiaCleanCity.I18n.Libelle.De("ambient", "attend", "Encore vous\u00A0? La rue n’y prête plus guère attention aujourd’hui.");
-                case "none": return MafiaCleanCity.I18n.Libelle.De("ambient", "attend", "Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte.");
+                case "full": repli = "On vous a vu. La rue s’en souviendra."; break;
+                case "reduced": repli = "On vous a vu, mais vous étiez déjà passé aujourd’hui."; break;
+                case "minimal": repli = "Encore vous\u00A0? La rue n’y prête plus guère attention aujourd’hui."; break;
+                case "none": repli = "Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte."; break;
                 default: return null;
             }
+            if (!string.IsNullOrEmpty(reponse.residue_i18n_key) && MafiaCleanCity.I18n.I18nCatalog.Connait(reponse.residue_i18n_key))
+                return MafiaCleanCity.I18n.I18nCatalog.Traduire(reponse.residue_i18n_key);
+            return MafiaCleanCity.I18n.Libelle.ParValeur("ambient", "apres_assister", reponse.residue_band, repli);
         }
 
         /// <summary>La note du pied : la phrase de la dernière assistance réussie, sinon la note de la maquette.</summary>
         private void RendreLaNote()
         {
             if (noteDuPied == null) return;
-            string phrase = DerniereAssistance == null ? null : PhraseDeLaBande(DerniereAssistance.residue_band);
+            string phrase = DerniereAssistance == null ? null : PhraseDeLaBande(DerniereAssistance);
             noteDuPied.text = phrase ?? noteParDefaut;
         }
 
