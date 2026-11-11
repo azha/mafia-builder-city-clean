@@ -61,7 +61,11 @@ namespace MafiaCleanCity.CityMap.Tests
             if (ecran.ScreenRoot != null) montes.Add(ecran.ScreenRoot.gameObject);
             ecran.OuvrirFiche(b);
             TextMeshProUGUI titre = ecran.ScreenRoot.GetComponentsInChildren<TextMeshProUGUI>(true).First(t => t.gameObject.name == "Titre"
-                && t.transform.parent != null && t.transform.parent.name == "Corps");
+                // RE-PIN (E-R5, décision f2 du 11/11) : le titre est désormais l'ENFANT de `Tete_OuvrirFiche` (et non plus son frère sous `Corps`),
+                // pour que le bouton de la tête ait quelque chose qui peigne dans son sous-arbre (`Retour.Decider`, cas 3). Cause écrite ici : ce
+                // n'est pas un test qui suit le code, la position à l'écran est gardée par `FicheTeteGeometriePlayModeTests` (coordonnées monde).
+                && t.transform.parent != null && t.transform.parent.name == "Tete_OuvrirFiche"
+                && t.transform.parent.parent != null && t.transform.parent.parent.name == "Corps");
             Assert.AreEqual("Transit Marrek", titre.text);
             Assert.IsTrue((titre.fontStyle & FontStyles.UpperCase) != 0, "la maquette écrit le titre en capitales (r2 m5)");
         }
