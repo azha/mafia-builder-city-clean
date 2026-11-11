@@ -16,7 +16,17 @@ namespace MafiaCleanCity.Operational
         public string state;
         public string committed_at;
         public CueSlotDto[] slots;
+        /// <summary>TD-952 — le locuteur SERVI (`CueStackView.speaker`, back lot/carnet-locuteur @bdf99d3f, additif) : `{ id, name } | null`.
+        /// ⚠️ `JsonUtility` ne distingue pas `null` d'un objet vide (il rend un objet dont les champs sont null) : un locuteur n'existe
+        /// QUE si `name` est servi non vide — voir <see cref="Nom"/>.</summary>
+        public LocuteurDto speaker;
+
+        /// <summary>Le nom du locuteur servi, ou null : null (ou `name` vide) = « pas de locuteur lisible » ⇒ la phrase reste SANS NOM.</summary>
+        public string Nom => string.IsNullOrWhiteSpace(speaker?.name) ? null : speaker.name;
     }
+
+    /// <summary>`CueStackView.speaker` — recopié au contrat de BACK-1 : un objet à 2 champs snake_case.</summary>
+    [Serializable] public class LocuteurDto { public string id; public string name; }
 
     [Serializable] public class CueCibleDto { public string kind; public string id; }   // route | building | candidate
 

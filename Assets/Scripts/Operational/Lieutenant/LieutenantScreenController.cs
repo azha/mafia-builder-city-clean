@@ -494,7 +494,10 @@ namespace MafiaCleanCity.Operational.Lieutenant
                 if (RuleModel.NeedsTarget(archetype) && string.IsNullOrEmpty(target)) target = cible;
                 if (string.IsNullOrEmpty(affecte))
                 {
-                    SetOutcome(Lib("Échec du recrutement."), AccentSevere);
+                    // TD-877 : sans hôte éligible, la phrase SERVIE du premier hôte refusé (`blocked_reason_i18n`, clé `famille.refus.*`) ; ni éligible ni refusé, ou clé non servie : la phrase actuelle.
+                    HostBloqueDto refus = HostRefus.Premier(archetype, servie);
+                    string dit = refus != null && MafiaCleanCity.I18n.I18nCatalog.Connait(refus.blocked_reason_key) ? MafiaCleanCity.I18n.I18nCatalog.Traduire(refus.blocked_reason_key) : null;
+                    SetOutcome(!string.IsNullOrWhiteSpace(dit) ? dit : Lib("Échec du recrutement."), AccentSevere);
                     yield break;
                 }
                 LastRecruitBuildingId = affecte;

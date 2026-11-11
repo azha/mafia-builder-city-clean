@@ -379,7 +379,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(4, ecran.Brouillon.Compte);
             Assert.IsTrue(voix.gameObject.activeSelf, "4 ordres : la voix parle");
             Assert.AreEqual("<i>\u00ab 4 ordres. On peut en mettre 4 de plus, ou partir comme \u00e7a. \u00bb</i>", voix.text,
-                "la phrase servie en italique, SANS nom (le locuteur n'est pas servi : TD-952) ; `reste` = 8 \u2212 4");
+                "la phrase servie en italique, SANS nom (aucun locuteur servi dans ce corps : voir V3 pour le locuteur servi) ; `reste` = 8 \u2212 4");
             Assert.Greater(((RectTransform)voix.transform).rect.height, 1f, "rendue : une hauteur non nulle (un r\u00e9glage valide peut ne produire aucun pixel)");
             Assert.Greater(voix.preferredHeight, 1f);
             Transform bas = ecran.GesteDuPied.transform.parent;
@@ -391,6 +391,42 @@ namespace MafiaCleanCity.Operational.Tests
             ecran.FermerLeComposeur();
             yield return null;
             StringAssert.Contains("5 ordres. On peut en mettre 3 de plus", voix.text, "5 ordres : la phrase suit le compte");
+        }
+
+        // ── TD-952 : le locuteur SERVI (`speaker`, back lot/carnet-locuteur @bdf99d3f). Nom servi ⇒ `<b>Nom :</b>` puis la réplique ; `null` (ou objet vide : JsonUtility ne distingue pas) ⇒ SANS nom. ──
+        [UnityTest]
+        public IEnumerator V3_LaVoixDuPied_PorteLeLocuteurServi_EtSeDitSansNomQuandIlNEstPas()
+        {
+            var cibles = CinqCibles();
+            yield return Monter(cibles, e =>
+            {
+                foreach (CibleDuCarnet c in cibles[ComposeurDuCarnet.Entretien].Take(3)) e.Brouillon.Poser(c);
+                e.Brouillon.Poser(cibles[ComposeurDuCarnet.Ardoise][0]);
+                e.FermerLeComposeur();
+            });
+            TextMeshProUGUI voix = ecran.VoixDuPied;
+            Assert.IsTrue(voix.gameObject.activeSelf, "4 ordres : la voix parle");
+            StringAssert.DoesNotContain("<b>", voix.text, "AVANT le locuteur servi : sans nom (rien d'inféré)");
+
+            ecran.RendrePourTest(new CarnetCourantDto { slots = new CueSlotDto[0], speaker = new LocuteurDto { id = "lt-1", name = "Nestor" } });
+            yield return null;
+            Assert.AreEqual("<b>Nestor\u00A0:</b> <i>\u00AB\u00A04 ordres. On peut en mettre 4 de plus, ou partir comme \u00E7a.\u00A0\u00BB</i>", voix.text,
+                "le nom servi en gras jusqu'aux deux-points (insécable), la réplique en italique ; le client pose `{nom}`, ne concatène pas");
+
+            ecran.RendrePourTest(new CarnetCourantDto { slots = new CueSlotDto[0], speaker = new LocuteurDto { id = "", name = "" } });
+            yield return null;
+            StringAssert.DoesNotContain("<b>", voix.text, "un objet vide (ce que JsonUtility rend pour `null`) n'est PAS un locuteur");
+        }
+
+        [Test]
+        public void V4_LeLocuteur_SeLitDuCorpsServi_NullEtAbsentDonnentSansNom()
+        {
+            string avec = "{\"cue_stack_id\":null,\"state\":null,\"committed_at\":null,\"slots\":[],\"speaker\":{\"id\":\"lt-7\",\"name\":\"Hara\"}}";
+            string nul = "{\"cue_stack_id\":null,\"state\":null,\"committed_at\":null,\"slots\":[],\"speaker\":null}";
+            string absent = "{\"cue_stack_id\":null,\"state\":null,\"committed_at\":null,\"slots\":[]}";
+            Assert.AreEqual("Hara", JsonUtility.FromJson<CarnetCourantDto>(avec).Nom);
+            Assert.IsNull(JsonUtility.FromJson<CarnetCourantDto>(nul).Nom, "speaker: null ⇒ pas de locuteur lisible ⇒ phrase actuelle");
+            Assert.IsNull(JsonUtility.FromJson<CarnetCourantDto>(absent).Nom, "champ absent (back non rebasé) ⇒ idem : le client ne casse pas");
         }
 
         // ── TD-882/TD-952 : JAMAIS DE NOM NON SERVI — le carnet ne lit pas le roster pour nommer un locuteur (ruling f2 11/11). Garde de SOURCE (la structure qui ferme la classe) + contrôle positif. ──

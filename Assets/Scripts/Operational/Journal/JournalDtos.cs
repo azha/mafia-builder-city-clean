@@ -114,7 +114,7 @@ namespace MafiaCleanCity.Operational
     /// <summary>`POST /v1/ambient/attend/:id` — réponse (TD-822, 11/11). Recopié au CODE de BACK-2 (V15) : `ambient.projection.service.ts`, `AmbientAttendView`
     /// `{ event_id, district: "district-<n>", status: 'attended', residue_band }` ; `status` vaut TOUJOURS `attended` sur un succès (404 id inconnu, 409 déjà
     /// attendu / expiré / course perdue : le contrôleur lève avant). `residue_band` ∈ { full, reduced, minimal, none } (bande close : `none` quand la cohésion
-    /// n'a pas été appliquée) — JAMAIS un scalaire (R2.2). Les MOTS de `residue_band` passent par f2 : l'écran ne les affiche pas encore.</summary>
+    /// n'a pas été appliquée) — JAMAIS un scalaire (R2.2). Les MOTS de `residue_band` : ratifiés par f2 (voir `JournalScreenController.PhraseDeLaBande`).</summary>
     [Serializable]
     public class PostAmbientAttendResponseDto
     {
@@ -122,6 +122,8 @@ namespace MafiaCleanCity.Operational
         public string district;
         public string status;
         public string residue_band;
+        /// <summary>La CLÉ i18n de la phrase de la bande, SERVIE par BACK-2 (`ambient.apres_assister.<bande>`) : lue quand elle est là ; sinon dérivée de `residue_band` (repli).</summary>
+        public string residue_i18n_key;
     }
 
     [Serializable] public class PostAmbientAttendPayload { public PostAmbientAttendResponseDto data; }
