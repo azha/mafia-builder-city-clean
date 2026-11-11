@@ -28,13 +28,11 @@ namespace MafiaCleanCity.Tests
     //   · l'anti-vacuité : N pressables relevés > 0, N LU du relevé (jamais écrit à une valeur devinée) et journalisé.
     // Écrans montés : Exceptions (détail ⑩ ; file ⑨ avec son tampon), panneau de file du shell (liste ; ligne de l'Accueil), Revue du jour,
     // HomeChrome, TopBar, Réglages, Carte à fort levier (3 états), Bandeau éphémère, Décision ⑤ (après-geste), Écran d'échec de démarrage,
-    // La suite, PiedDEcran (le geste), Tutoriel, Compression, Dashboard (les « Aller à »), Inspection (le registre, « DÉPOSER » pressable), et le VRAI shell (Accueil sans carte / avec carte ; menu Plus).
+    // La suite, PiedDEcran (le geste), Tutoriel, Compression, Dashboard (les « Aller à »), Inspection (le registre, « DÉPOSER » pressable), et le VRAI shell (Accueil sans carte / avec carte ; menu Plus ; coffre fermé : « Rouvrir le coffre »).
     //
     // NON MONTÉ — le relevé n'invente rien ; la ligne « couverture sites k / N » (`PublicationGp`) nommera les sites que ces écrans portent :
     // // NON COUVRABLE : Operational/Journal/JournalScreenController (BoutonAssister, :923) — `interactable = false` par construction
     //    (TD-848, aucune route « assister »). Monté et relevé NON PRESSABLE (`GP_Journal_PiedNonPressable`), jamais « couvert ».
-    // // NON MONTÉ : Shell/AppShell.cs:1647 (« Rouvrir le coffre ») — le panneau n'existe qu'après une sortie CONFIRMÉE par le back
-    //    (`CoffreFermeAffiche`) ; aucune couture hors réseau.
     //
     // Les tests rendent par `RenderTexture` à la résolution des vrais écrans : ils exigent un périphérique graphique (pas `-nographics`).
     [Category("RetourAppui")]
@@ -719,6 +717,29 @@ namespace MafiaCleanCity.Tests
             RemplacerLaRegieDuShell();
             List<LigneGp> lignes = Relever("AppShell", "Accueil avec carte de tête et file", shell.ShellCanvas.gameObject, shell.ShellCanvas);
             Verifier("AppShell/Accueil avec carte de tête et file", lignes);
+        }
+
+        [UnityTest]
+        public IEnumerator GP_AppShell_CoffreFerme()
+        {
+            List<LigneGp> lignes;
+            try
+            {
+                // AUCUNE couture neuve : `CoffreFerme()` est public et ne touche pas le réseau (c'est `SettingsScreenController` qui l'appelle après la sortie
+                // confirmée ; `CoffrePlayModeTests.K1` le joue de même). Synchrone, dans la frame de création : `Start()` (qui signe) ne tourne jamais.
+                shellGo = new GameObject("AppShell_GpCoffre");
+                shell = shellGo.AddComponent<AppShell>();
+                shell.CoffreFerme();
+                Assert.IsTrue(shell.CoffreFermeAffiche, "précondition : le coffre est fermé");
+                Transform panneau = shell.ContentSlot.Find("CoffreFerme");
+                Assert.IsNotNull(panneau, "le panneau du coffre fermé n'est pas monté");
+                Assert.IsNotNull(panneau.Find("RouvrirLeCoffre"), "précondition : « Rouvrir le coffre » (:1647) est monté");
+                RemplacerLaRegieDuShell();
+                lignes = Relever("AppShell", "coffre fermé", panneau.gameObject, shell.ShellCanvas);
+            }
+            finally { DetruireLeShell(); }
+            Verifier("AppShell/coffre fermé", lignes);
+            yield break;
         }
 
         [UnityTest]
