@@ -1,0 +1,28 @@
+--- P2 : les textes RETIRÉS par les mots ratifiés sont-ils absents de TOUTE la maquette ? ---
+  'UNE LIGNE QUI TIENT'                            occurrences dans ecrans-brennar-6.html @e364496 = 0
+  'une ligne qui tient'                            occurrences dans ecrans-brennar-6.html @e364496 = 0
+  'Le tableau dit seulement si la ligne'           occurrences dans ecrans-brennar-6.html @e364496 = 0
+  'jamais ce qu’elle vaut'                         occurrences dans ecrans-brennar-6.html @e364496 = 0
+  'Trois lignes sur soixante-douze'                occurrences dans ecrans-brennar-6.html @e364496 = 0
+  'HORS DU TABLEAU'                                occurrences dans ecrans-brennar-6.html @e364496 = 1
+  'OFF THE BOARD'                                  occurrences dans ecrans-brennar-6.html @e364496 = 0
+
+--- .qn on (quartier marqué) par cadre du périmètre ---
+  cadre 101 : 3 quartiers/genres marqués .qn.on sur 18 rangées -> ['Les Entrepôts', 'Dépôt-Est', 'La Lisière']
+  cadre 102 : 3 quartiers/genres marqués .qn.on sur 18 rangées -> ['Les Entrepôts', 'Dépôt-Est', 'La Lisière']
+  cadre 103 : 3 quartiers/genres marqués .qn.on sur 18 rangées -> ['Les Entrepôts', 'Dépôt-Est', 'La Lisière']
+  cadre 104 : 6 quartiers/genres marqués .qn.on sur 6 rangées -> ['tidewater', 'spine', 'stack', 'lattice', 'glass', 'verge']
+  cadre 105 : 0 quartiers/genres marqués .qn.on sur 6 rangées -> []
+  cadre 106 : 0 quartiers/genres marqués .qn.on sur 0 rangées -> []
+  cadre 146 : 0 quartiers/genres marqués .qn.on sur 18 rangées -> []
+
+--- P4 : étiquette exacte des cadres 104 et 105 ---
+  cadre 104 : 'Le tableau de région — six genres d’endroit <span class="m21-hors-lot">hors lot, à venir · TD-1040</span>'
+  cadre 105 : 'Le mur — vous ne dites rien, on ne dit rien <span class="m21-hors-lot">hors lot, à venir · TD-1040</span>'
+
+--- P4 : le marqueur hors-lot apparaît-il AILLEURS dans le périmètre (101,102,103,106,146) ? ---
+  cadre 101 : m21-hors-lot=0 · "TD-1040"=0 · "hors lot"=0
+  cadre 102 : m21-hors-lot=0 · "TD-1040"=0 · "hors lot"=0
+  cadre 103 : m21-hors-lot=0 · "TD-1040"=0 · "hors lot"=0
+  cadre 106 : m21-hors-lot=0 · "TD-1040"=0 · "hors lot"=0
+  cadre 146 : m21-hors-lot=0 · "TD-1040"=0 · "hors lot"=0

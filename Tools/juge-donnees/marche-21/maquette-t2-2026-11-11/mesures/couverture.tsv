@@ -1,0 +1,31 @@
+#id	information	B	M	statut	classe	preuve
+R01	les lignes qui EXISTENT (absence = jamais observée) ; cardinal ≤ 72	lanes	M03 « 03/72 » · M12 3 cases allumées · M14 3 quartiers marqués	●●	ok	market.controller.ts:104-116 (DÉDUIT) · mesure-ash.txt (11 .vy.on dont 0 ash)
+R02	le quartier d'une ligne	lanes[].district_id	M11 rangée + M12 position	●●	ok	market.controller.ts:111 (DÉDUIT) · cadre-101.html rangées .rg (18)
+R03	la substance d'une ligne (+ sa forme, son origine, sa matière)	lanes[].substance_type	M10 en-têtes · M12 colonne · M13 couleur · M15 · M17 · M19	●●	ok	market.controller.ts:112 ; enum operational_chain.ts:40 ['brindle','crick','hush','ash'] (DÉDUIT)
+R04	la confiance de la ligne (bande)	lanes[].lane_confidence_bucket	M12 opacité (0,54/0,75/1,00) · M05 « 01 sûres » · M20 · M21 · M22 · M23	●●	ok	market.controller.ts:113 ; market-projection.service.ts:38 'LOW'|'MODERATE'|'HIGH', seuils :137-140 (DÉDUIT)
+R05	les 18 quartiers (collection)	districts	M11 18 rangées · M07 « 15 quartiers noirs »	●●	ok	world.controller.ts:39-43 (DÉDUIT) · 18 .rg mesurées par cadre
+R06	le nom de fiction du quartier	districts[].name	M11 noms dessinés	●●	ok	world-geography.repository.ts:45 + :99 (DÉDUIT)
+R07	l'id du quartier	districts[].id	-	●--	question (hors tour)	world-geography.repository.ts:36
+R08	l'index du quartier	districts[].index	-	●--	question (hors tour)	world-geography.repository.ts:38
+R09	le profil du quartier	districts[].profile	-	●--	question (hors tour)	world-geography.repository.ts:37 ; dessiné en cadre 104 = HORS LOT
+R10	le nombre de blocs	districts[].block_count	-	●--	question (hors tour)	world-geography.repository.ts:40
+R11	la rive	districts[].bank_side	-	●--	question (hors tour)	world-geography.repository.ts:41
+R12	l'état de contrôle	districts[].control_state	-	●--	question (hors tour)	world-geography.repository.ts:42, :58
+R13	le nom canonique (identité de travail)	districts[].name_canonical	-	●--	question (hors tour)	world-geography.repository.ts:39
+R14	le precinct BPD	districts[].precinct_id	-	●--	question (hors tour)	world-geography.repository.ts:49
+R15	les types ouvrables	districts[].openable_types	-	●--	question (hors tour)	world-geography.repository.ts:54
+R16	le titre de l'écran	-	M01 « LE MARCHÉ »	-●	libellé statique, source = clé	string_table.ts:3332 / :362 ; compare-mots.txt OK
+R17	le sous-titre	-	M02 « tableau du Verge d'Or »	-●	libellé statique, source = clé	string_table.ts:3326 / :356 ; compare-mots.txt OK
+R18	le libellé du compteur 1	-	M04 « lignes connues »	-●	libellé statique, source = clé	string_table.ts:3304 / :334
+R19	le libellé du compteur 2	-	M06 « sûres »	-●	libellé statique, source = clé	string_table.ts:3306 / :336
+R20	le libellé du compteur 3	-	M08 « quartiers noirs »	-●	libellé statique, source = clé	string_table.ts:3305 / :335
+R21	l'en-tête de la colonne des quartiers	-	M09 « quartier »	-●	libellé statique, source = clé	string_table.ts:3303 / :333
+R22	la phrase de bilan (n sur total)	-	M16 « 3 lignes sur 72. Le reste… »	-●	clé ICU ; n et total DÉRIVÉS du cardinal de lanes et de la borne 18x4	string_table.ts:3323 / :353 ; market.controller.ts:98 ; compare-mots.txt OK
+R23	la substance choisie (onglet actif)	-	M18 .og.pris	-●	état d'interface, aucune source back	cadre-101.html .og.pris (1 sur 4)
+R24	le traitement de la colonne ash (« HORS DU TABLEAU » + sa phrase)	-	M24 · M25	-●	ÉCART ASSUMÉ (TD-966) ; clés i18n, aucune clé B ne le dit	string_table.ts:3331/:361 et :3324/:354 ; mesure-ash.txt 0/84 ash allumée
+R25	le numéro de lot d'un maillon manquant	-	M26 « L2 » / « L4 »	-●	ASSUMÉ à consigner : aucune clé, aucune donnée	cadre-106.html span.lot ; sonde 'hors lot' absente des 31 clés
+R26	l'étiquette « maillon manquant »	-	M27 (x2)	-●	ASSUMÉ à consigner : aucune clé	cadre-106.html div.pann > i ; sonde 'maillon manquant' absente des 31 clés
+R27	le titre du maillon L2	-	M28 « Ce qui s'écoule, et si ça bouchonne »	-●	ASSUMÉ à consigner : aucune clé	cadre-106.html div.pann > b
+R28	la glose du maillon L2 (« trois mesures de plus »)	-	M29	-●	ASSUMÉ à consigner : aucune clé ; nombre EN LETTRES qu'aucune clé ne rend	cadre-106.html div.pann > small ; sonde 'mesures de plus' absente des 31 clés
+R29	le titre du maillon L4	-	M30 « La région dit un prix »	-●	ASSUMÉ à consigner : aucune clé	cadre-106.html div.pann > b
+R30	la glose du maillon L4	-	M31 « elle en connaît un… »	-●	ASSUMÉ à consigner : aucune clé	cadre-106.html div.pann > small

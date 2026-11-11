@@ -1,0 +1,439 @@
+===== CADRE 101 — svg retires=10 restants=0 — 50 noeuds de texte =====
+  [div.cadre > div.etiquette]
+     'Le tableau — trois voyants sur soixante-douze'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile > span.lib]
+     'ARGENT'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile > span.val]
+     '24\u202f850\u202f€'
+  [div.cadre > div.tel > div.ecran > div.barre > div.mano > span.val]
+     'Tiède'
+  [div.cadre > div.tel > div.ecran > div.barre > div.mano > span.lib]
+     'CHALEUR'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile.droite > span.lib]
+     'JOUR 12'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile.droite > span.val]
+     'Plein jour'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.enseigne > b]
+     'LE MARCHÉ'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.enseigne > i]
+     'tableau du Verge d’Or'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > b]
+     '03'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > b > span]
+     '/72'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > span]
+     'lignes connues'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > b]
+     '01'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > span]
+     'sûres'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > b]
+     '15'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > span]
+     'quartiers noirs'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'quartier'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'brindle'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'crick'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'hush'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'ash'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Les Bassins'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Quai-Nord'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Sarnes'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'La Colonne'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Hautes-Marches'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Verrier'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Saint-Brand'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn.on]
+     'Les Entrepôts'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn.on]
+     'Dépôt-Est'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Le Treillis'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Marne-Basse'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Le Verre'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Orsel'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Place des Comptes'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn.on]
+     'La Lisière'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'La Chancellerie'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Les Friches'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Pont-Gris'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.scene-o > div.bulle > i]
+     'crick · extrait de racine'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.scene-o > div.bulle > p]
+     '3 lignes sur 72. Le reste,'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.scene-o > div.bulle > p > em]
+     'personne des nôtres n’y a jamais traité.'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'brindle'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'briques'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og.pris > b]
+     'crick'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og.pris > small]
+     'cristaux'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'hush'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'plaque'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'ash'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'prismes'
+===== CADRE 102 — svg retires=10 restants=0 — 45 noeuds de texte =====
+  [div.cadre > div.etiquette]
+     'Une ligne recoupée — Dépôt-Est × crick'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile > span.lib]
+     'ARGENT'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile > span.val]
+     '24\u202f850\u202f€'
+  [div.cadre > div.tel > div.ecran > div.barre > div.mano > span.val]
+     'Tiède'
+  [div.cadre > div.tel > div.ecran > div.barre > div.mano > span.lib]
+     'CHALEUR'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile.droite > span.lib]
+     'JOUR 12'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile.droite > span.val]
+     'Plein jour'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.enseigne > b]
+     'LE MARCHÉ'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.enseigne > i]
+     'tableau du Verge d’Or'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'quartier'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'brindle'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'crick'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'hush'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'ash'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Les Bassins'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Quai-Nord'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Sarnes'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'La Colonne'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Hautes-Marches'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Verrier'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Saint-Brand'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn.on]
+     'Les Entrepôts'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn.on]
+     'Dépôt-Est'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Le Treillis'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Marne-Basse'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Le Verre'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Orsel'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Place des Comptes'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn.on]
+     'La Lisière'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'La Chancellerie'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Les Friches'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Pont-Gris'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > i]
+     'crick · extrait de racine'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > b]
+     'DÉPÔT-EST · RECOUPÉ'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > small]
+     'deux sources concordantes — ni une rumeur, ni une certitude. On ne vous dira'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > small > u]
+     'pas le prix'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > small]
+     ', ni ce qui s’écoule : seulement à quel point on peut s’y fier.'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'brindle'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'briques'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og.pris > b]
+     'crick'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og.pris > small]
+     'cristaux'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'hush'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'plaque'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'ash'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'prismes'
+===== CADRE 103 — svg retires=10 restants=0 — 47 noeuds de texte =====
+  [div.cadre > div.etiquette]
+     'Voyant éteint — et c’est un renseignement'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile > span.lib]
+     'ARGENT'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile > span.val]
+     '24\u202f850\u202f€'
+  [div.cadre > div.tel > div.ecran > div.barre > div.mano > span.val]
+     'Tiède'
+  [div.cadre > div.tel > div.ecran > div.barre > div.mano > span.lib]
+     'CHALEUR'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile.droite > span.lib]
+     'JOUR 12'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile.droite > span.val]
+     'Plein jour'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.enseigne > b]
+     'LE MARCHÉ'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.enseigne > i]
+     'tableau du Verge d’Or'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'quartier'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'brindle'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'crick'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'hush'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'ash'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Les Bassins'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Quai-Nord'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Sarnes'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'La Colonne'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Hautes-Marches'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Verrier'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Saint-Brand'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn.on]
+     'Les Entrepôts'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn.on]
+     'Dépôt-Est'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Le Treillis'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Marne-Basse'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Le Verre'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Orsel'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Place des Comptes'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn.on]
+     'La Lisière'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'La Chancellerie'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Les Friches'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Pont-Gris'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > i]
+     'hush · résine de lull'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > b]
+     'LA CHANCELLERIE · VOYANT ÉTEINT'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > small]
+     'aucun des nôtres n’a jamais rien écoulé là-bas. Ce n’est pas une ligne'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > small > u]
+     'à zéro'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > small]
+     ': c’est une ligne'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > small > u]
+     'jamais ouverte'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > small]
+     '. Elle s’allumera le jour où un de vos dealers y traitera.'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'brindle'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'briques'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'crick'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'cristaux'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og.pris > b]
+     'hush'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og.pris > small]
+     'plaque'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'ash'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'prismes'
+===== CADRE 106 — svg retires=5 restants=0 — 32 noeuds de texte =====
+  [div.cadre > div.etiquette]
+     'Ce qui manque encore'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile > span.lib]
+     'ARGENT'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile > span.val]
+     '24\u202f850\u202f€'
+  [div.cadre > div.tel > div.ecran > div.barre > div.mano > span.val]
+     'Tiède'
+  [div.cadre > div.tel > div.ecran > div.barre > div.mano > span.lib]
+     'CHALEUR'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile.droite > span.lib]
+     'JOUR 12'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile.droite > span.val]
+     'Plein jour'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.enseigne > b]
+     'LE MARCHÉ'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.enseigne > i]
+     'tableau du Verge d’Or'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > b]
+     '03'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > b > span]
+     '/72'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > span]
+     'lignes connues'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > b]
+     '01'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > span]
+     'sûres'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > b]
+     '15'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.compteurs > div.fen > span]
+     'quartiers noirs'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann > span.lot]
+     'L2'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann > i]
+     'maillon manquant'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann > b]
+     'Ce qui s’écoule, et si ça bouchonne'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann > small]
+     'trois mesures de plus existent en projection et rien ne les alimente'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann > span.lot]
+     'L4'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann > i]
+     'maillon manquant'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann > b]
+     'La région dit un prix'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann > small]
+     'elle en connaît un, et cet écran a le droit de ne pas le montrer — ça, c’est vous qui le tranchez'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'brindle'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'briques'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og.pris > b]
+     'crick'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og.pris > small]
+     'cristaux'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'hush'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'plaque'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'ash'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'prismes'
+===== CADRE 146 — svg retires=10 restants=0 — 43 noeuds de texte =====
+  [div.cadre > div.etiquette]
+     "㉑ · la tuile Ash — l'éclat des prismes"
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile > span.lib]
+     'ARGENT'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile > span.val]
+     '24\u202f850\u202f€'
+  [div.cadre > div.tel > div.ecran > div.barre > div.mano > span.val]
+     'Tiède'
+  [div.cadre > div.tel > div.ecran > div.barre > div.mano > span.lib]
+     'CHALEUR'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile.droite > span.lib]
+     'JOUR 12'
+  [div.cadre > div.tel > div.ecran > div.barre > div.aile.droite > span.val]
+     'Plein jour'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.enseigne > b]
+     'LE MARCHÉ'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.enseigne > i]
+     'tableau du Verge d’Or'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'quartier'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'brindle'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'crick'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'hush'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.entete > span]
+     'ash'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Les Bassins'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Quai-Nord'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Sarnes'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'La Colonne'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Hautes-Marches'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Verrier'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Saint-Brand'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Les Entrepôts'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Dépôt-Est'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Le Treillis'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Marne-Basse'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Le Verre'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Orsel'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Place des Comptes'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'La Lisière'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'La Chancellerie'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Les Friches'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.tablo > div.grid > div.rg > span.qn]
+     'Pont-Gris'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > i]
+     'ash · lys de verre'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > b]
+     'LE VERRE · HORS DU TABLEAU'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.pann.pp > div.pt > small]
+     'la poudre grise ne se vend pas à un dealer\xa0: elle se place, au rendez-vous, chez ceux du Verre.'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'brindle'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'briques'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'crick'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'cristaux'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > b]
+     'hush'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og > small]
+     'plaque'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og.pris > b]
+     'ash'
+  [div.cadre > div.tel > div.ecran > div.panneau > div.mar6 > div.onglets > div.og.pris > small]
+     'prismes'
