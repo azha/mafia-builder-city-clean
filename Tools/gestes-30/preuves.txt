@@ -1,0 +1,92 @@
+# ㉚ gestes — preuves STATIQUES, 2e passe (après revue ⊥ NOT_APPROVED : B1, M1, M2, m1-m6) — aucun Unity, aucune porte — worktree mafia-unity-C1 @d886738a + lot non commité
+# date: 2026-11-11T21:33:44+01:00
+
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts --frais Operational --frais CitySim --frais Shell CityMap.PlayMode.Tests.csproj Assets/Tests/PlayMode/ChaineDApproGestesPlayModeTests.cs
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Operational.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] CitySim.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Shell.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+CityMap.PlayMode.Tests.csproj: 251 sources (+2 hors .csproj) · 281 refs · EXIT=0 · 0 erreur(s)
+EXIT=0
+
+$ python3 Tools/typecheck-hors-porte.py --tout
+AssetLint.csproj: 6 sources · 297 refs · EXIT=0 · 0 erreur(s)
+I18n.csproj: 12 sources · 286 refs · EXIT=0 · 0 erreur(s)
+MCPForUnity.Runtime.csproj: 8 sources · 286 refs · EXIT=0 · 0 erreur(s)
+Theme.csproj: 1 sources · 287 refs · EXIT=0 · 0 erreur(s)
+MCPForUnity.Editor.csproj: 256 sources · 283 refs · EXIT=0 · 0 erreur(s)
+ShellContracts.csproj: 58 sources · 289 refs · EXIT=0 · 0 erreur(s)
+CityMap.csproj: 23 sources · 291 refs · EXIT=0 · 0 erreur(s)
+CoreLoops.csproj: 3 sources · 291 refs · EXIT=0 · 0 erreur(s)
+Economy.csproj: 4 sources · 291 refs · EXIT=0 · 0 erreur(s)
+Onboarding.csproj: 3 sources · 291 refs · EXIT=0 · 0 erreur(s)
+Account.csproj: 5 sources · 292 refs · EXIT=0 · 0 erreur(s)
+CitySim.csproj: 7 sources · 292 refs · EXIT=0 · 0 erreur(s)
+Operational.csproj: 72 sources (+2 hors .csproj) · 292 refs · EXIT=0 · 0 erreur(s)
+Shell.csproj: 26 sources (+1 hors .csproj) · 298 refs · EXIT=0 · 0 erreur(s)
+Assembly-CSharp.csproj: 1 sources · 343 refs · EXIT=0 · 0 erreur(s)
+CityMap.PlayMode.Tests.csproj: 251 sources (+2 hors .csproj) · 281 refs · EXIT=0 · 0 erreur(s)
+Assembly-CSharp-Editor.csproj: 6 sources · 370 refs · EXIT=0 · 0 erreur(s)
+EXIT=0
+
+$ python3 Tools/chaines-joueur-classer.py --verifier
+127 motifs · 109 témoins de source · 0 écart(s) · population 1450
+EXIT=0
+$ python3 Tools/apparier-litteraux-aux-tokens.py --bilan   (TD-612)
+palette : 75 tokens lus sur DesignTokens.asset
+621 littéraux actifs dans 40 fichiers · 0 à moins de 4 d'un token, dans 0 fichiers
+EXIT=0
+# N3 : aucun ternaire à deux littéraux chaîne ajouté (relu). CoutureHorsTests absente de la branche : occurrences *PourTest( de Assets/Scripts :
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:348:        public void RendrePourTest(GetOperationalPrecursorsResponseDto dto)
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:1115:        public void OuvrirLaFeuillePourTest(SpecDeGeste spec, CibleDeGeste cible) => OuvrirLaFeuille(spec, cible);
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:1118:        public IEnumerator ChoisirPourTest(ModeDeGeste mode)
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:1125:        public void RefuserPourTest(long code, string corpsBrut) =>
+Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs:1129:        public void ReussirPourTest(GetSupplyChainGraphResponseDto relu, ModeDeGeste mode = null)
+# (toutes des déclarations)
+
+# --controle sur CHAQUE fichier touché : une faute injectée DOIT rougir, dans ce fichier (fichier restauré ensuite)
+$ python3 Tools/typecheck-hors-porte.py ShellContracts.csproj Assets/Scripts/ShellContracts/JetonDeStructure.cs --controle
+ShellContracts.csproj: 58 sources · 289 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Scripts/ShellContracts/JetonDeStructure.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+EXIT=0 (JetonDeStructure)
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts Operational.csproj Assets/Scripts/Operational/ChaineDAppro/ChaineDApproClient.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+Operational.csproj: 72 sources (+2 hors .csproj) · 292 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Scripts/Operational/ChaineDAppro/ChaineDApproClient.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+EXIT=0 (ChaineDApproClient)
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts Operational.csproj Assets/Scripts/Operational/ChaineDAppro/ChaineDApproDtos.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+Operational.csproj: 72 sources (+2 hors .csproj) · 292 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Scripts/Operational/ChaineDAppro/ChaineDApproDtos.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+EXIT=0 (ChaineDApproDtos)
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts Operational.csproj Assets/Scripts/Operational/ChaineDAppro/ChaineDApproFeuille.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+Operational.csproj: 72 sources (+2 hors .csproj) · 292 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Scripts/Operational/ChaineDAppro/ChaineDApproFeuille.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+EXIT=0 (ChaineDApproFeuille)
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts Operational.csproj Assets/Scripts/Operational/ChaineDAppro/ChaineDApproGestes.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+Operational.csproj: 72 sources (+2 hors .csproj) · 292 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Scripts/Operational/ChaineDAppro/ChaineDApproGestes.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+EXIT=0 (ChaineDApproGestes)
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts Operational.csproj Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+Operational.csproj: 72 sources (+2 hors .csproj) · 292 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Scripts/Operational/ChaineDAppro/ChaineDApproScreenController.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+EXIT=0 (ChaineDApproScreenController)
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts --frais Operational --frais CitySim --frais Shell CityMap.PlayMode.Tests.csproj Assets/Tests/PlayMode/ChaineDApproGestesPlayModeTests.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Operational.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] CitySim.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Shell.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+CityMap.PlayMode.Tests.csproj: 251 sources (+2 hors .csproj) · 281 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Tests/PlayMode/ChaineDApproGestesPlayModeTests.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+EXIT=0 (ChaineDApproGestesPlayModeTests)
+$ python3 Tools/typecheck-hors-porte.py --frais ShellContracts --frais Operational --frais CitySim --frais Shell CityMap.PlayMode.Tests.csproj Assets/Tests/PlayMode/ZeroRepliDesLocatairesPlayModeTests.cs --controle
+[frais] ShellContracts.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Operational.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] CitySim.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+[frais] Shell.dll recompilée depuis les sources ⇒ les dépendantes pointent dessus
+CityMap.PlayMode.Tests.csproj: 251 sources (+2 hors .csproj) · 281 refs · EXIT=0 · 0 erreur(s)
+[contrôle positif] faute injectée dans Assets/Tests/PlayMode/ZeroRepliDesLocatairesPlayModeTests.cs ⇒ EXIT=1, 1 erreur(s), citée dans ce fichier : OUI
+EXIT=0 (ZeroRepliDesLocatairesPlayModeTests)

@@ -672,6 +672,40 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsEmpty(horsDette, "clé non servie hors de la DetteDatee : " + string.Join(" · ", horsDette));
         }
 
+        // ═══ TD-1013 — les 7 clés d'une route servie (forme G fermée) ═══════════════════════════════
+
+        /// <summary>Les 7 clés SERVIES d'une route, écrites ICI à la main (anti-tautologie), recopiées de `supply-chain.controller.ts:92-99` (back main 6040a213).</summary>
+        private static readonly string[] ClesDUneRouteServie =
+            { "route_id", "origin_building_id", "destination_building_id", "sinuosity_stress_bucket", "time_to_collapse_bucket", "state", "rebuilding" };
+
+        private static List<string> Ecarts(IEnumerable<string> champs, IEnumerable<string> servies)
+        {
+            var e = new List<string>();
+            var c = new HashSet<string>(champs); var s = new HashSet<string>(servies);
+            foreach (string k in s) if (!c.Contains(k)) e.Add("servie mais non déclarée : " + k);
+            foreach (string k in c) if (!s.Contains(k)) e.Add("déclarée mais non servie : " + k);
+            return e;
+        }
+
+        [Test]
+        public void EcranApproTD1013_RouteDto_EpingleDesSeptCles_ControlePositif()
+        {
+            string[] champs = System.Array.ConvertAll(typeof(SupplyChainRouteDto).GetFields(), f => f.Name);
+            Assert.IsEmpty(Ecarts(champs, ClesDUneRouteServie), "le DTO déclare EXACTEMENT les 7 clés servies (sinon JsonUtility en jette : forme G)");
+            var g = JsonUtility.FromJson<GetSupplyChainGraphEnvelope>("{\"payload\":{\"data\":{\"nodes\":[],\"legs\":[],\"routes\":[{\"route_id\":\"r-1\","
+                + "\"origin_building_id\":\"b-1\",\"destination_building_id\":\"b-2\",\"sinuosity_stress_bucket\":\"stressed\",\"time_to_collapse_bucket\":\"imminent\","
+                + "\"state\":\"saturated\",\"rebuilding\":true}]}}}").payload.data;
+            SupplyChainRouteDto r = g.routes[0];
+            Assert.AreEqual("r-1", r.route_id); Assert.AreEqual("b-1", r.origin_building_id); Assert.AreEqual("b-2", r.destination_building_id);
+            Assert.AreEqual("stressed", r.sinuosity_stress_bucket); Assert.AreEqual("imminent", r.time_to_collapse_bucket);
+            Assert.AreEqual("saturated", r.state); Assert.IsTrue(r.rebuilding, "chaque clé servie arrive à sa valeur (dont le booléen)");
+            // CONTRÔLE POSITIF : un champ retiré côté client est NOMMÉ, et une 8ᵉ clé servie aussi
+            var ampute = new List<string>(champs); ampute.Remove("time_to_collapse_bucket");
+            CollectionAssert.Contains(Ecarts(ampute, ClesDUneRouteServie), "servie mais non déclarée : time_to_collapse_bucket", "CONTRÔLE POSITIF : la clé retirée est vue");
+            var huit = new List<string>(ClesDUneRouteServie) { "sinuosity_index" };
+            CollectionAssert.Contains(Ecarts(champs, huit), "servie mais non déclarée : sinuosity_index", "CONTRÔLE POSITIF : une clé de trop au corps est vue");
+        }
+
         // ═══ R — Résolveurs : domaine FERMÉ annoncé, contrôle positif ET négatif ═══════════════
         //
         // `supplier_pressure_bucket` est le SEUL des trois domaines de ㉚ confirmé fermé (message
