@@ -163,10 +163,13 @@ namespace MafiaCleanCity.Tests
         }
 
         [Test]
-        public void Inventaire_ArbreReel_69Sites_ChacunUnMembre_EtUniqueParMembreEtLigne()
+        public void Inventaire_ArbreReel_73Sites_ChacunUnMembre_EtUniqueParMembreEtLigne()
         {
             List<SiteInventorie> inv = RetourSites.Inventaire();
-            Assert.AreEqual(69, inv.Count, "N = 69 sites (design §1, bijection E-R5) : " + string.Join(" ; ", inv));
+            // ÉPINGLE D'INVENTAIRE : 69 (design §1, bijection E-R5) + 4 le 12/11 (intégration CLIENT-1, oui f2) — quatre `Button` nés hors guichet dans les lots ㉚ et ㉑,
+            // ramenés à `Retour.NouveauBouton` (GS1) : ChaineDApproFeuille.cs:ConstruireUnMode (ligne d'un mode) et :ConstruireAnnuler, ChaineDApproScreenController.cs:PoserLeGeste
+            // (ligne de route / liaison), MarcheScreenController.cs:Case (case du tableau). GP les NOMME « non couverts » tant qu'aucun relevé ne les monte.
+            Assert.AreEqual(73, inv.Count, "N = 73 sites (69 du design §1, bijection E-R5, + 4 de ㉚/㉑ le 12/11) : " + string.Join(" ; ", inv));
             var sansMembre = inv.FindAll(s => string.IsNullOrEmpty(s.Membre));
             Assert.IsEmpty(sansMembre, "un site sans membre ne se résoudra jamais : " + string.Join(" ; ", sansMembre));
             foreach (SiteInventorie s in inv)
