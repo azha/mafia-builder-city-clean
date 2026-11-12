@@ -305,7 +305,7 @@ namespace MafiaCleanCity.Operational.Exceptions
             string r = ExceptionQueueController.RepliqueDuPremier(c);
             const string fin = " »";
             if (!ExceptionBandes.ParleUnLieutenant(c) || r == null || !r.StartsWith("« ") || !r.EndsWith(fin)) return r;
-            return r.Substring(0, r.Length - fin.Length) + " <i>" + Lib("Je fais quoi ?") + "</i>" + fin;
+            return r.Substring(0, r.Length - fin.Length) + " <i>" + Lib("Je fais quoi\u202F?") + "</i>" + fin;
         }
 
         // ── ⑩ : les constantes de la maquette, lues à la source (série 4, largeur 300) ──

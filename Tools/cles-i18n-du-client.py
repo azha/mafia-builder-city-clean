@@ -38,7 +38,7 @@ def slug(s: str) -> str:
     for c in unicodedata.normalize('NFD', s):
         if unicodedata.category(c) == 'Mn':
             continue
-        if c.isalnum():
+        if unicodedata.category(c) in ('Lu', 'Ll', 'Lt', 'Lm', 'Lo', 'Nd'):   # = char.IsLetterOrDigit de C# (`isalnum()` y ajoute No/Nl : « ① », « ² » — revue ⊥ tour 2, m3)
             out.append(c.lower())
         elif out and out[-1] != '_':
             out.append('_')
@@ -46,7 +46,7 @@ def slug(s: str) -> str:
 
 
 APPEL_DIRECT = re.compile(
-    r'Libelle\.De\(\s*"([^"]*)"\s*,\s*"([^"]*)"\s*,\s*"([^"\\]{1,400})"\s*\)')
+    r'Libelle\.De\(\s*"([^"]*)"\s*,\s*"([^"]*)"\s*,\s*"((?:[^"\\]|\\.){1,400})"\s*\)')
 # le helper local : `private static string Lib(string x) => …Libelle.De("d", "r", x);`
 HELPER = re.compile(
     r'string\s+(\w+)\s*\(\s*string\s+\w+\s*\)\s*=>\s*[\w.]*Libelle\.De\(\s*"([^"]*)"\s*,\s*"([^"]*)"')
@@ -95,7 +95,7 @@ def gabarits_du_fichier(src: str):
 # ⇒ C'est exactement le mode d'échec que l'en-tête de ce fichier annonce pour `Slug` — sauf que
 #   la divergence n'était pas dans la normalisation, mais dans la RECONSTRUCTION DE L'ARGUMENT.
 #   *Reproduire la règle ne suffit pas : il faut aussi reproduire ce qu'on lui donne à manger.*
-CONCAT = re.compile(r'"([^"\\]*)"\s*\+\s*"([^"\\]*)"', re.S)
+CONCAT = re.compile(r'"((?:[^"\\]|\\.)*)"\s*\+\s*"((?:[^"\\]|\\.)*)"', re.S)   # échappements admis (`\u00A0`) : sinon une phrase à insécable coupée sur deux lignes disparaît
 
 
 # ⛔⛔ TD-694 (2026-09-23) — LES COMMENTAIRES SONT RETIRÉS AVANT TOUTE EXTRACTION, LES CHAÎNES PRÉSERVÉES. Mesuré par le
@@ -150,6 +150,13 @@ def controles() -> list:
         if k not in vus: echecs.append(f"contrôle POSITIF rouge : « {k} » (dans une chaîne) n'est pas vue")
     for k in ("sonde.bloc.cachee_en_commentaire", "sonde.bloc.cachee_en_bloc"):
         if k in vus: echecs.append(f"contrôle NÉGATIF rouge : « {k} » (dans un commentaire) est comptée")
+    if slug('Niveau ①') != 'niveau' or slug('Surface 50 m²') != 'surface_50_m' or slug('Café 2') != 'cafe_2':
+        echecs.append(f"contrôle POSITIF rouge : slug diverge de Libelle.Slug (IsLetterOrDigit) : {slug('Niveau ①')!r} {slug('Surface 50 m²')!r} {slug('Café 2')!r}")
+    # Un littéral à échappement (`\\u00A0`, `\\u2019`, `\\"`) est VU et DÉCODÉ : sa clé est celle que le runtime calcule (jamais « u00a0 »).
+    esc = 'var a = Libelle.De("sonde", "bloc", "«\\u00A0Vu avec l\\u2019insécable\\u00A0»");\nvar b = Libelle.De("sonde", "bloc", "Un \\"mot\\" cité");\n' + 'var c = Libelle.De("sonde", "bloc", "Coupée\\u00A0: sur "\n + "deux lignes");\n'
+    vus2 = {f"{d}.{r}.{slug(l)}" for d, r, l in cles_du_fichier(recoller(sans_commentaires(esc)))}
+    for k in ("sonde.bloc.vu_avec_l_insecable", "sonde.bloc.un_mot_cite", "sonde.bloc.coupee_sur_deux_lignes"):
+        if k not in vus2: echecs.append(f"contrôle POSITIF rouge : « {k} » (littéral à échappement) n'est pas vue — {sorted(vus2)}")
     # TD-1068 — la forme `Libelle.Gabarit` : la clé explicite est VUE telle quelle (jamais slugée), celle d'un commentaire ne l'est
     # pas, et un premier argument non littéral est COMPTÉ (ni pris pour une clé, ni oublié).
     gab = ('var t = Libelle.Gabarit("sonde.titre.Cle_Explicite", "Repli \\"cité\\" à l’octet");\n'
@@ -177,33 +184,36 @@ def recoller(src: str) -> str:
     return src
 
 
+def decode(lit: str) -> str:
+    """Le littéral C# tel que le RUNTIME le voit : `\u00A0` est une espace insécable, pas les six lettres « u00a0 ». Sans ça, la clé dérivée
+    d'une phrase à `\u00A0`/`\u2019`/`\"` n'est pas celle que `Libelle.Slug` calcule (mesuré le 12/11 : 3 `boutique.dit.*`, invisibles)."""
+    lit = re.sub(r'\\u([0-9a-fA-F]{4})', lambda u: chr(int(u.group(1), 16)), lit)
+    return lit.replace('\\"', '"').replace("\\'", "'").replace('\\n', '\n').replace('\\t', '\t').replace('\\\\', '\\')
+
+
 def cles_du_fichier(src: str):
-    """Rend {(domaine, role, litteral)} — la clé se dérive ensuite."""
+    """Rend {(domaine, role, litteral DÉCODÉ)} — la clé se dérive ensuite."""
     trouves = set()
     for m in APPEL_DIRECT.finditer(src):
-        trouves.add((m.group(1), m.group(2), m.group(3)))
+        trouves.add((m.group(1), m.group(2), decode(m.group(3))))
     for h in HELPER.finditer(src):
         nom, dom, role = h.group(1), h.group(2), h.group(3)
         # ⚠️ On exige le nom EXACT du helper, jamais un `\w+\(` générique : `Lib(` et `Libelle.De(`
         # partagent un préfixe, et un motif large compterait deux fois le même appel.
-        appel = re.compile(r'(?<![\w.])' + re.escape(nom) + r'\(\s*(?:\$?)"([^"\\]{1,400})"')
+        appel = re.compile(r'(?<![\w.])' + re.escape(nom) + r'\(\s*(?:\$?)"((?:[^"\\]|\\.){1,400})"')
         for m in appel.finditer(src):
-            trouves.add((dom, role, m.group(1)))
+            trouves.add((dom, role, decode(m.group(1))))
     for h in HELPER2.finditer(src):
         nom, dom = h.group(1), h.group(2)
-        appel = re.compile(r'(?<![\w.])' + re.escape(nom) + r'\(\s*"([^"\\]{1,60})"\s*,\s*(?:\$?)"([^"\\]{1,400})"')
+        appel = re.compile(r'(?<![\w.])' + re.escape(nom) + r'\(\s*"([^"\\]{1,60})"\s*,\s*(?:\$?)"((?:[^"\\]|\\.){1,400})"')
         for m in appel.finditer(src):
-            trouves.add((dom, m.group(1), m.group(2)))
+            trouves.add((dom, m.group(1), decode(m.group(2))))
     return trouves
 
 
-def main() -> int:
-    echecs = controles()
-    if echecs:
-        for e in echecs: print("⛔ " + e, file=sys.stderr)
-        return 2
-    racine = Path(sys.argv[1] if len(sys.argv) > 1 else 'Assets/Scripts')
-    detail = '--liste' in sys.argv
+def population(racine: Path):
+    """La population lue UNE fois — `main` l'imprime, `Tools/garde-population-cles.py` l'IMPORTE (jamais de seconde dérivation,
+    jamais de seconde `slug`). Rend (total {clé: littéral}, par_fichier, detail_fichier, cles_gabarit)."""
     total = {}
     par_fichier = {}
     detail_fichier = {}   # fichier → (clés dérivées `De`, clés explicites `Gabarit`, appels `Gabarit`, dont 1er argument NON littéral)
@@ -214,7 +224,7 @@ def main() -> int:
             continue
         src = recoller(sans_commentaires(src))   # commentaires retirés (TD-694), puis recollage — AVANT toute extraction.
         trouves = cles_du_fichier(src)
-        derivees = {f"{dom}.{role}.{slug(lit)}": lit for dom, role, lit in trouves}
+        derivees = {f"{dom}.{role}.{slug(lit)}": lit for dom, role, lit in sorted(trouves)}   # sorted : `trouves` est un set — sans tri, le littéral affiché d'une clé à deux casses (famille.ecran.etat : ÉTAT/État) change d'un lancement à l'autre (mesuré 3/4)
         explicites, appels_gabarit, non_litteraux = gabarits_du_fichier(src)   # TD-1068
         par_fichier[str(f)] = len(set(derivees) | set(explicites))
         detail_fichier[str(f)] = (len(derivees), len(explicites), appels_gabarit, non_litteraux)
@@ -223,6 +233,17 @@ def main() -> int:
             if cle not in total or not total[cle]:
                 total[cle] = repli
             cles_gabarit.add(cle)
+    return total, par_fichier, detail_fichier, cles_gabarit
+
+
+def main() -> int:
+    echecs = controles()
+    if echecs:
+        for e in echecs: print("⛔ " + e, file=sys.stderr)
+        return 2
+    racine = Path(sys.argv[1] if len(sys.argv) > 1 else 'Assets/Scripts')
+    detail = '--liste' in sys.argv
+    total, par_fichier, detail_fichier, cles_gabarit = population(racine)
     # ⛔⛔ UNE POPULATION VIDE EST UNE ERREUR, JAMAIS UN VERT — défaut mesuré par la session B
     # dans CET outil. Sur un chemin inexistant il rendait `0 clé` et sortait **0** : exactement la
     # même sortie que « tout est déjà servi ». C'est la classe que ce dépôt nomme ailleurs — le run

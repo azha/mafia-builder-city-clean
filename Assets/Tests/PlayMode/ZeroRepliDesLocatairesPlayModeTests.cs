@@ -102,9 +102,7 @@ namespace MafiaCleanCity.Operational.Tests
             "appro.cout.on_ne_sait_pas_encore_combien",
             "appro.etiquette.en_entretien", "appro.titre.les_routes",
             "appro.etat_route.active", "appro.etat_route.saturated", "appro.etat_route.severed", "appro.etiquette.en_reconstruction",
-            // TD-1035 (12/11, CLIENT-1, ordre f2) : le mot de la CAUSE du bouchon de ㉚ — « C’est ici que ça bouche » (U+2019), servi par BACK-6 `lot/td-1035-cause-bouchon`
-            // @ba55e828 (pas encore sur la pile). Inscrit AVANT son lecteur : le dessin (2ᵉ ligne du maillon-cause, cadre 154) attend la spec client. À RETIRER au service.
-            "appro.etiquette.c_est_ici_que_ca_bouche",
+            // (TD-1035 : « appro.etiquette.c_est_ici_que_ca_bouche » RETIRÉE de la dette le 12/11, ruling f2 — aucun code n'affiche ce texte ; CLIENT-1 la réinscrit avec son lecteur, la garde de population l'y force.)
             // ⚠️ COUPE du 12/11 (créneau CLIENT-1, run 2 contre la pile de dev 8d0184a4) : la règle (2) a rougi, 42 clés SONT servies — retirées : les 11 bandes de ㉚
             // (`appro.pression.*`, `appro.dette.*`, `appro.fournisseur.*`) et les 31 `marche.*` de ㉑. Restent ci-dessous l'entrée du menu Plus et les clés des lots d'après.
             // ㉑ LE MARCHÉ (CLIENT-1, 11/11 ; TD-1017 BASCULÉE) : les 31 clés `marche.*` SERVIES par BACK-3 sous leurs noms FIGÉS (`lot/marche-mots` @163402f1,
@@ -120,21 +118,52 @@ namespace MafiaCleanCity.Operational.Tests
             "boutique.dit.vous_avez_tout_claque_d_un_coup_ce_qui_reste_au_mur_vous_ne_l_aurez_pas_avec_de_la_bonne_volonte",
             "boutique.dit.ce_qui_est_la_est_a_vendre_ce_qui_est_trop_cher_pour_vous_je_le_laisse_en_vitrine_ca_vous_fera_un_but",
             "boutique.dit.les_marks_c_est_dehors_qu_on_les_achete_moi_je_vous_les_compte_je_ne_les_vends_pas",
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            // GARDE STATIQUE DE POPULATION (Tools/garde-population-cles.py, 12/11, décision f2) : clés AFFICHABLES aujourd'hui, non servies à 8d0184a4 (back déployé), que la garde a trouvées HORS de la dette.
+            // 17 textes RATIFIÉS par f2 (FR à l'octet du code, EN ratifié : Tools/garde-population-cles/textes-a-servir-2026-11-12.tsv), servis par le lot de mots de BACK-2 — accueil.carte.* (après-geste), accueil.jeton.*, ㊵ Filière (écart actif) :
+            "accueil.carte.c_est_note",
+            "accueil.carte.deja_tranchee",
+            "accueil.carte.la_carte_reste_sur_la_table",
+            "accueil.carte.la_carte_vous_attend_encore",
+            "accueil.carte.lire_maintenant",
+            "accueil.carte.retour_a_l_accueil",
+            "accueil.carte.rien_d_autre_a_trancher_pour_l_instant",
+            "accueil.carte.tranchee",
+            "accueil.carte.vous_avez_tranche",
+            "accueil.jeton.fermee_aujourd_hui",
+            "accueil.jeton.libre",
+            "accueil.jeton.pris",
+            "filiere.bloc.ecart",
+            "filiere.bloc.la_filiere_s_ecarte_de_son_profil",
+            "filiere.bloc.on_vous_dit_oui_ou_non_jamais_de_combien_ni_pourquoi_c_est_le_seul_signal_d_alerte_de_la_filiere_et_il_ne_se_mesure_pas",
+            "filiere.bloc.un_seul_voyant",
+            "filiere.sous_titre.la_filiere_s_ecarte_de_son_profil",
+            // 4 clés du Journal (spec du Journal back, lot/journal-38 de BACK-4) : panneau « sans texte » et quartier sans nom — DetteDatee, levée au service (ruling f2 12/11).
+            "journal.bloc.0_breves_sont_arrivees_sans_leur_texte",
+            "journal.bloc.leur_cle_est_montree_a_la_place_du_titre_le_reste_du_journal_est_ecrit",
+            "journal.bloc.quartier_0",
+            "journal.bloc.une_breve_est_arrivee_sans_son_texte",
+            // Écran Loi (LoiResolvers.TexteBoutonRetainer) : « LIBÉRER », bouton d'un avocat sous rétention — AFFICHÉ, ni servi ni en dette (trouvé par la garde de population, B1). Mot RATIFIÉ par f2 le 12/11 : FR = le littéral du code à l'octet,
+            // EN « RELEASE » (symétrique de « PUT ON RETAINER » / « METTRE SOUS RÉTENTION », majuscules) ; versé au lot de mots du back. DetteDatee, levée au service sur la pile.
+            "loi.bouton.liberer",
+            // ㉔ (CLIENT-2) : 17 textes RÉELS de la boîte d'autonomie (en-tête « votre lieutenant », état « Décidé », phrases de résultat), affichables dès qu'un rapport est monté — trouvés par la garde statique de population,
+            // servis par BACK-2 dans lot/mots-a-servir (approuvé 34e2ea45, ni fusionné ni déployé). Ruling f2 12/11 : DetteDatee ; LEVÉE au SERVICE SUR LA PILE (pas au SHA de BACK-2).
+            "autonomie.entete.votre_lieutenant",
+            "autonomie.etat.decide",
+            "autonomie.resultat.argent_injecte",
+            "autonomie.resultat.argent_injecte_prudemment",
+            "autonomie.resultat.c_est_fait",
+            "autonomie.resultat.cuisson_affinee",
+            "autonomie.resultat.cuisson_lancee",
+            "autonomie.resultat.depose",
+            "autonomie.resultat.depose_en_reserve",
+            "autonomie.resultat.envoi_parti",
+            "autonomie.resultat.laisse_tel_quel",
+            "autonomie.resultat.mis_en_attente",
+            "autonomie.resultat.prefixe",
+            "autonomie.resultat.ramassage_fait",
+            "autonomie.resultat.repare",
+            "autonomie.resultat.reporte",
+            "autonomie.resultat.rien_n_a_change",
         };
 
         /// <summary>REPLI VOULU (décision f2 du 12/11/2026, TD-1068) — des clés dont le repli FR est l'état NORMAL et définitif, pas une dette :
@@ -146,6 +175,11 @@ namespace MafiaCleanCity.Operational.Tests
             { "demarrage.echec.la_partie_n_a_pas_pu_commencer", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
             { "demarrage.echec.la_ville_ne_repond_pas_verifiez_votre_connexion_puis_reessayez", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
             { "demarrage.echec.reessayer", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
+            // Repli DÉFENSIF d'une clé servie ailleurs (ruling f2 12/11, BACK-2 a pris la même décision côté back) : la phrase affichée est celle de `roster_room_label_key` / du registre d'erreurs ; ce littéral ne sert que si cette clé manque.
+            { "famille.ecran.votre_equipe_est_au_complet", "repli défensif de PhraseDeBlocage : la phrase servie vient de roster_room_label_key" },
+            { "famille.ecran.votre_decision_de_structure_d_aujourd_hui_est_prise_reprenez_demain", "repli défensif de PhraseDeBlocage : la phrase servie vient du registre d'erreurs (HostBlocage.CleBudgetDepense)" },
+            // Repli COMPTÉ de « Réaffecter… » en ON_COOLDOWN (TD-954, ruling f2 12/11) : la phrase servie arrive par `reassign_availability_label_key`, une clé `famille.reaffectation.*` NOMMÉE PAR LE BACK ; cette clé `famille.ecran.*` n'est que le repli du client, personne ne la servira.
+            { "famille.ecran.trop_tot_pour_le_deplacer_a_nouveau", "repli défensif de PhraseDeIndisponibilite : la phrase servie vient de reassign_availability_label_key (clé famille.reaffectation.* nommée par le back)" },
         };
 
         /// <summary>Un repli sur cette clé ne rougit pas : dette datée (provisoire) OU repli voulu (définitif, motivé). Une seule lecture pour les gardes « hors dette ».</summary>
