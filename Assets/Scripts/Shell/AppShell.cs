@@ -615,6 +615,8 @@ namespace MafiaCleanCity.Shell
         private void Update()
         {
             SynchroniserLePiedDeLaCarte();
+            // TD-956, le filet : la piste de `shell.entree` a disparu par un autre chemin (détachée, libérée hors champ) sans `quandFini` ⇒ ContentSlot ne reste JAMAIS sourd.
+            if (appuisBloques && !RegieMouvement.EstVivant(entreeOnglet)) RendreLesAppuisAuContenu();
             // Le retour du système Android arrive en `Escape` (Input System) ; `Escape` au clavier dans l'éditeur.
             var clavier = UnityEngine.InputSystem.Keyboard.current;
             if (clavier != null && clavier.escapeKey.wasPressedThisFrame) Depiler();
@@ -1498,10 +1500,44 @@ namespace MafiaCleanCity.Shell
         {
             RegieMouvement.Detacher(entreeOnglet);   // un onglet ouvert pendant le fondu du précédent : la piste périmée rend l'opacité avant la nouvelle
             entreeOnglet = Handle.Nul;
+            RendreLesAppuisAuContenu();               // TD-956 : le montage suivant ne reçoit jamais le « sourd » de l'ancien
             if (!premierMontageFait) { premierMontageFait = true; return; }
             if (ContentSlot == null) return;
-            entreeOnglet = RegieMouvement.Attacher(CatalogueHud.ShellEntree, ContentSlot, Reglage.Defaut);
+            entreeOnglet = RegieMouvement.Attacher(CatalogueHud.ShellEntree, ContentSlot, Reglage.Defaut, FinDeLEntreeDeLOnglet);
+            BloquerLesAppuisPendantLEntree();
         }
+
+        // ---- TD-956 (design Tools/anim-l1/design-td956.md) : pendant `shell.entree`, ContentSlot est à α ≈ 0 mais touchable — la régie n'écrit jamais `blocksRaycasts` (G8). Le shell, propriétaire de la piste,
+        // le coupe tant que la piste vit, SOUS `Plein` seulement (sous `Reduit` le canal est gelé, l'écran visible reste touchable : inchangé). Pas de seuil d'α : la fenêtre (160 ms) est sous `AnimMaxBlockMs`.
+        private bool appuisBloques;
+
+        private void BloquerLesAppuisPendantLEntree()
+        {
+            if (!RegieMouvement.EstVivant(entreeOnglet)) return;   // refusée / sans régie : rien n'est fondu, rien n'est bloqué
+            if (RegieMouvement.Courante == null || RegieMouvement.Courante.Politique != PolitiqueMouvement.Plein) return;
+            CanvasGroup g = ContentSlot.GetComponent<CanvasGroup>();   // posé par la régie à l'attache
+            if (g == null) return;
+            g.blocksRaycasts = false;
+            appuisBloques = true;
+        }
+
+        private void RendreLesAppuisAuContenu()
+        {
+            if (!appuisBloques) return;
+            appuisBloques = false;
+            if (ContentSlot == null) return;
+            CanvasGroup g = ContentSlot.GetComponent<CanvasGroup>();
+            if (g != null) g.blocksRaycasts = true;
+        }
+
+        /// <summary>`quandFini` de `shell.entree` : rend les appuis si c'est bien la piste COURANTE qui finit (une piste périmée ne rend rien).</summary>
+        private void FinDeLEntreeDeLOnglet(Handle fini)
+        {
+            if (fini.Equals(entreeOnglet)) RendreLesAppuisAuContenu();   // `Handle` est un struct de (Slot, Gen) : l'égalité de valeur
+        }
+
+        /// <summary>Test hook : `ContentSlot` est-il sourd aux appuis à cause de `shell.entree` ?</summary>
+        public bool AppuisBloquesParLEntreeDeLOnglet => appuisBloques;
 
         /// <summary>`.e5{padding:7px 6px;font:8px/1.2}` : 7 + 8 × 1,2 + 7 = 23,6 px CSS.</summary>
         private const float HauteurEntreePlusCss = 23.6f;
