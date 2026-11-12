@@ -47,10 +47,7 @@ namespace MafiaCleanCity.Operational.Tests
             // — retirées. Restent 6 clés, non servies à 256de0f8 (7 avec E2a, ci-dessous) :
             "filiere.bloc.blanchir",       // le mot du bouton de ㊵ (clé dérivée) — demandé à l'atelier
             "building.action.blanchir",
-            // B5 (table 79 @f81ad7cb) : l'écran d'échec de démarrage et la ligne de ㉒.
-            "demarrage.echec.la_partie_n_a_pas_pu_commencer",
-            "demarrage.echec.la_ville_ne_repond_pas_verifiez_votre_connexion_puis_reessayez",
-            "demarrage.echec.reessayer",
+            // B5 (table 79 @f81ad7cb) : la ligne de ㉒. (Les trois `demarrage.echec.*` de l'écran d'échec de démarrage ne sont plus une dette : `RepliVoulu`, 12/11.)
             "reglages.bloc.votre_partie_vit_sur_cet_appareil_desinstaller_l_appli_l_efface",
             // E2a (08/10) : la ligne « Mouvement réduit » de ⑲ (REUSE du canon `screen_14`, mot du canon « Mouvement réduit ») — clé dérivée,
             // non servie à 83b4f291 ; voir `Tools/juge-donnees/i18n/cles-neuves-e2a-2026-10-08.md`.
@@ -159,6 +156,35 @@ namespace MafiaCleanCity.Operational.Tests
 
 
         };
+
+        /// <summary>REPLI VOULU (décision f2 du 12/11/2026, TD-1068) — des clés dont le repli FR est l'état NORMAL et définitif, pas une dette :
+        /// elles ne « partiront » jamais avec le service. Chaque entrée porte sa RAISON. Ce n'est pas un second tiroir de dette : une clé n'y
+        /// entre que si elle ne PEUT pas être servie, et une entrée que le catalogue se met à servir rougit (règle (4) : la raison est caduque).</summary>
+        internal static readonly Dictionary<string, string> RepliVoulu = new Dictionary<string, string>
+        {
+            // `EcranEchecDeDemarrage` s'affiche quand le serveur ne répond PAS : le catalogue i18n, qui vient du même serveur, n'a pas pu être chargé.
+            { "demarrage.echec.la_partie_n_a_pas_pu_commencer", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
+            { "demarrage.echec.la_ville_ne_repond_pas_verifiez_votre_connexion_puis_reessayez", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
+            { "demarrage.echec.reessayer", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
+        };
+
+        /// <summary>Un repli sur cette clé ne rougit pas : dette datée (provisoire) OU repli voulu (définitif, motivé). Une seule lecture pour les gardes « hors dette ».</summary>
+        internal static bool Toleree(string cle) => cle != null && (DetteDatee.Contains(cle) || RepliVoulu.ContainsKey(cle));
+
+        [Test]
+        public void RepliVoulu_ChaqueEntreeASaRaison_NEstPasAussiUneDette_EtUneCleInventeeNEstPasToleree()
+        {
+            Assert.IsNotEmpty(RepliVoulu, "anti-vacuité");
+            foreach (KeyValuePair<string, string> kv in RepliVoulu)
+            {
+                Assert.IsFalse(string.IsNullOrWhiteSpace(kv.Value), kv.Key + " : un repli voulu sans raison est une dette qui ne dit pas son nom");
+                Assert.IsFalse(DetteDatee.Contains(kv.Key), kv.Key + " : repli voulu OU dette datée, jamais les deux");
+                Assert.IsTrue(Toleree(kv.Key));
+            }
+            // CONTRÔLE POSITIF : une clé ni due ni voulue n'est pas tolérée (la garde « hors dette » la verrait)
+            Assert.IsFalse(Toleree("sonde.repli.cette_cle_n_est_nulle_part"));
+            Assert.IsFalse(Toleree(null));
+        }
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
         /// repli ne les voit. La règle (3) rougit le jour où l'une est servie. Source : le résolveur qui les nomme, jamais recopiées.</summary>
@@ -272,7 +298,7 @@ namespace MafiaCleanCity.Operational.Tests
                 while (Time.realtimeSinceStartup - t < 3f) yield return null;   // construction + premier chargement réseau
                 appelsParEcran[nom] = Libelle.NbAppels;
                 foreach (string cle in Libelle.ClesEnRepli)
-                    if (!DetteDatee.Contains(cle)) horsDette.Add($"{cle} ({nom})");
+                    if (!Toleree(cle)) horsDette.Add($"{cle} ({nom})");
                 if (locataire != null) Object.DestroyImmediate(locataire.gameObject);
                 yield return null;
             }
@@ -289,6 +315,9 @@ namespace MafiaCleanCity.Operational.Tests
             var devenuesServies = DetteDatee.Where(I18nCatalog.Connait).ToList();
             Assert.IsEmpty(devenuesServies, $"{devenuesServies.Count} clé(s) de la dette SONT servies désormais — les retirer de " +
                 "DetteDatee : " + string.Join(" · ", devenuesServies));
+            // (4) un REPLI VOULU que le catalogue sert : sa raison (« ne peut pas être servie ») est caduque — le sortir de RepliVoulu, ou trancher.
+            var voulusServis = RepliVoulu.Keys.Where(I18nCatalog.Connait).ToList();
+            Assert.IsEmpty(voulusServis, $"{voulusServis.Count} clé(s) de RepliVoulu SONT servies — la raison ne tient plus : " + string.Join(" · ", voulusServis));
             // (3) une clé ATTENDUE que le code ne demande pas encore (arbitrage : rien d'affiché tant qu'elle manque) et que le back
             // sert désormais : la BRANCHER. Aujourd'hui : l'initiale des écussons de ㉙ (2026-09-24).
             var attenduesServies = CleesAttenduesNonBranchees.Where(I18nCatalog.Connait).ToList();

@@ -121,7 +121,7 @@ namespace MafiaCleanCity.Operational.Tests
             // ⛔ ZÉRO repli HORS DE LA DETTE DATÉE — la MÊME que `ZeroRepliDesLocatairesPlayModeTests.DetteDatee` (une seule source) :
             //    les clés de ⑦ encore non servies (mesurées contre e7f52351, 23/09) y sont inscrites et datées ; toute AUTRE clé en
             //    repli rougit, nommée. Avant ⑦, cet écran ne demandait que des clés servies, d'où le zéro strict d'origine.
-            var horsDette = Libelle.ClesEnRepli.Where(k => !ZeroRepliDesLocatairesPlayModeTests.DetteDatee.Contains(k)).OrderBy(k => k).ToList();
+            var horsDette = Libelle.ClesEnRepli.Where(k => !ZeroRepliDesLocatairesPlayModeTests.Toleree(k)).OrderBy(k => k).ToList();
             Assert.IsEmpty(horsDette,
                 $"{horsDette.Count} clé(s) hors de la dette datée sont retombées sur leur littéral (sur {Libelle.NbAppels} demandées) : " +
                 string.Join(" · ", horsDette) + ". Le back ne les sert pas, et l'écran l'affiche en français sans que rien ne rougisse.");
@@ -144,7 +144,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("Cette clé n'existe pas et ne doit jamais exister", rendu,
                 "le repli doit rendre le littéral — c'est le contrat de `Libelle`");
             Assert.IsNotNull(Libelle.DernierRepli, "le rouge doit NOMMER la clé, pas seulement les compter");
-            Assert.IsFalse(ZeroRepliDesLocatairesPlayModeTests.DetteDatee.Contains(Libelle.DernierRepli),
+            Assert.IsFalse(ZeroRepliDesLocatairesPlayModeTests.Toleree(Libelle.DernierRepli),
                 "la clé inventée n'est pas dans la dette : la garde « hors dette » la verrait rougir");
             yield return null;
         }
