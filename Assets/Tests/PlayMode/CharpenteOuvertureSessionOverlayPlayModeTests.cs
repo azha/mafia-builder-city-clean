@@ -334,10 +334,26 @@ namespace MafiaCleanCity.Shell.Tests
             Transform lire = TrouverDescendant(tete.transform, "LireButton");
             Assert.IsNotNull(lire, "« Lire maintenant » existe sur la carte des rapports");
             Assert.IsTrue(lire.gameObject.activeInHierarchy, "la carte seedée est celle des rapports (AUTONOMY_REPORTS_PENDING) : « Lire maintenant » est montré");
+            // TD-938 (a), 1d16d52b (ruling f2 11/11) : « Lire maintenant » PASSE PAR `commit(0)` — un aller-retour RÉSEAU, puis
+            // `OnNavigate` → `AppShell.SuivreLaNavigationCo` (2 frames) monte la boîte servie ; le repli (refus/échec) la monte aussi.
+            // L'ancienne lecture « 1 frame après le clic » datait du geste synchrone : elle ne pouvait plus voir l'écran (tri de la suite
+            // complète, 12/11, rouge SEUL). On attend donc l'écran, borné, et on MESURE le délai : au-delà de 2 s, un joueur verrait un
+            // geste mort — c'est le PRODUIT qui rougit, pas le test.
+            string ecranServi = null;
+            tete.OnNavigate += (ecran, ids) => ecranServi = ecran;
             ProductionClickSupport.Click(lire.GetComponent<Button>()); // ⛔ LE GESTE DE PRODUCTION
-            yield return null;
-            Assert.IsNotNull(shell.ContentSlot.GetComponentInChildren<AutonomyInboxController>(false),
-                "« Lire maintenant » doit atteindre AutonomyInboxController (clic réel)");
+            AutonomyInboxController boite = null;
+            float attenteBoite = 0f;
+            while (attenteBoite < 10f && (boite = shell.ContentSlot.GetComponentInChildren<AutonomyInboxController>(false)) == null)
+            {
+                attenteBoite += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            bool parLaNavigationServie = ecranServi != null;
+            Debug.Log($"[BLOQUANT2] « Lire maintenant » → AutonomyInboxController en {attenteBoite:0.000} s · chemin = " +
+                      (parLaNavigationServie ? $"navigate servi « {ecranServi} » (TD-938 a)" : "repli (refus/échec du commit)"));
+            Assert.IsNotNull(boite, "« Lire maintenant » doit atteindre AutonomyInboxController (clic réel) — rien en 10 s");
+            Assert.Less(attenteBoite, 2f, $"« Lire maintenant » atteint la boîte en {attenteBoite:0.000} s : trop tard pour un joueur");
             ecransAtteints.Add(nameof(AutonomyInboxController));
 
             // ㊵ — le dock.
