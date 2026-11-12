@@ -102,7 +102,8 @@ namespace MafiaCleanCity.Operational.Tests
             "appro.cout.on_ne_sait_pas_encore_combien",
             "appro.etiquette.en_entretien", "appro.titre.les_routes",
             "appro.etat_route.active", "appro.etat_route.saturated", "appro.etat_route.severed", "appro.etiquette.en_reconstruction",
-            // (TD-1035 : « appro.etiquette.c_est_ici_que_ca_bouche » RETIRÉE de la dette le 12/11, ruling f2 — aucun code n'affiche ce texte ; CLIENT-1 la réinscrit avec son lecteur, la garde de population l'y force.)
+            // TD-1035 (12/11, ruling f2) : « appro.etiquette.c_est_ici_que_ca_bouche » RÉINSCRITE avec son lecteur (la 2ᵉ ligne du maillon de ㉚, `ConstruireMaillon`) — la garde de population l'a réclamée (HORS_DES_TROIS : 1). NON servie sur le back déployé 8d0184a4 ; servie par le cumul de la tranche (`string_table.ts`) ⇒ la règle (2) rougira alors : la RETIRER.
+            "appro.etiquette.c_est_ici_que_ca_bouche",
             // ⚠️ COUPE du 12/11 (créneau CLIENT-1, run 2 contre la pile de dev 8d0184a4) : la règle (2) a rougi, 42 clés SONT servies — retirées : les 11 bandes de ㉚
             // (`appro.pression.*`, `appro.dette.*`, `appro.fournisseur.*`) et les 31 `marche.*` de ㉑. Restent ci-dessous l'entrée du menu Plus et les clés des lots d'après.
             // ㉑ LE MARCHÉ (CLIENT-1, 11/11 ; TD-1017 BASCULÉE) : les 31 clés `marche.*` SERVIES par BACK-3 sous leurs noms FIGÉS (`lot/marche-mots` @163402f1,
