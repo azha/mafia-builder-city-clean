@@ -535,7 +535,7 @@ namespace MafiaCleanCity.Operational.Tests
             "appro.sous_titre.pendant_les_travaux_plus_rien_ne_passe_sur_cette_route", "accueil.jeton.votre_grande_decision_du_jour",
             "appro.cout.on_ne_sait_pas_encore_combien",
             "appro.etiquette.en_entretien", "appro.titre.les_routes",
-            "appro.etat.active", "appro.etat.saturated", "appro.etat.severed", "appro.etat.en_reconstruction",
+            "appro.etat_route.active", "appro.etat_route.saturated", "appro.etat_route.severed", "appro.etiquette.en_reconstruction",
         };
 
         /// <summary>Les REUSE : servis (hors DetteDatee). Un repli y est compté mais jamais une dette de ce lot ; `appro.sinuosite.*` / `appro.effondrement.*` sont servis au cumul `74c5a0b0`, pas sur la pile.
@@ -739,13 +739,13 @@ namespace MafiaCleanCity.Operational.Tests
                 new[] { Nom("Soudure Varne", "1501"), Nom("Clés-Minute Rook", "1503"), Nom("Consigne de la Threnny", "1504"), Nom("Réserve Nock", "1502"), Nom("Billard Marr", "1505") },
                 lignes.ConvertAll(l => TexteDe(l, "Origine")), "l'ordre ratifié : state, puis effondrement, puis origine");
             CollectionAssert.AreEqual(
-                new[] { ValeurAttendue.Cle("appro.etat.severed", "Coupée"), ValeurAttendue.Cle("appro.etat.saturated", "Saturée"), ValeurAttendue.Cle("appro.etat.active", "Ouverte"),
-                        ValeurAttendue.Cle("appro.etat.active", "Ouverte"), ValeurAttendue.Cle("appro.etat.active", "Ouverte") },
+                new[] { ValeurAttendue.Cle("appro.etat_route.severed", "Coupée"), ValeurAttendue.Cle("appro.etat_route.saturated", "Saturée"), ValeurAttendue.Cle("appro.etat_route.active", "Ouverte"),
+                        ValeurAttendue.Cle("appro.etat_route.active", "Ouverte"), ValeurAttendue.Cle("appro.etat_route.active", "Ouverte") },
                 lignes.ConvertAll(l => TexteDe(l, "Mot")), "chaque route dit son état, par la clé de sa VALEUR servie");
 
             // « En reconstruction » = `rebuilding` SERVI, sur la seule route qui l'est ; la ligne n'est pas interactable (la seule extinction côté ligne)
             Assert.AreEqual("RouteEnReconstruction", lignes[0].name);
-            Assert.AreEqual(ValeurAttendue.Cle("appro.etat.en_reconstruction", "En reconstruction"), TexteDe(lignes[0], "EnReconstruction"));
+            Assert.AreEqual(ValeurAttendue.Cle("appro.etiquette.en_reconstruction", "En reconstruction"), TexteDe(lignes[0], "EnReconstruction"));
             for (int i = 1; i < lignes.Count; i++) Assert.IsNull(Trouver(lignes[i], "EnReconstruction"), "seule la route qui reconstruit le dit");
             Assert.IsFalse(lignes[0].GetComponent<Button>().interactable, "une route en reconstruction : pas de second geste");
             for (int i = 1; i < lignes.Count; i++) Assert.IsTrue(lignes[i].GetComponent<Button>().interactable, "les autres routes s'ouvrent");

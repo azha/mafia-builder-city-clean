@@ -980,7 +980,7 @@ namespace MafiaCleanCity.Operational
             if (r.EnReconstruction)
             {
                 // `.gr30-rec{font:italic 7px;color:#91876e}` — `routes[].rebuilding` (SERVI, qualitatif : jamais un compte à rebours) ; l'état reste « Ouverte » à côté
-                TextMeshProUGUI rec = NouveauTexteFiche(dr.transform, "EnReconstruction", Libelle.Gabarit("appro.etat.en_reconstruction", "En reconstruction"), 7f, EncreFleche, false);
+                TextMeshProUGUI rec = NouveauTexteFiche(dr.transform, "EnReconstruction", Libelle.Gabarit("appro.etiquette.en_reconstruction", "En reconstruction"), 7f, EncreFleche, false);
                 rec.fontStyle = FontStyles.Italic;
                 rec.enableWordWrapping = false;
                 TrackText(rec.text);
@@ -1780,14 +1780,14 @@ namespace MafiaCleanCity.Operational
             }
         }
 
-        /// <summary>Le mot d'un état de route : clé = la VALEUR servie (`appro.etat.active|saturated|severed`, NEUFS ratifiés f2 11/11 — TD-1048, non servis) ; hors domaine ⇒ le mot générique.</summary>
+        /// <summary>Le mot d'un état de route : clé = la VALEUR servie `routes[].state` (`appro.etat_route.active|saturated|severed`, noms recopiés du CODE de BACK-1 `lot/td-1038-etat-route` @3d627b2b, V15 — pas encore sur la pile, TD-1048 ; jamais `appro.sinuosite.severed`, pas de `draft`) ; hors domaine ⇒ le mot générique.</summary>
         public static string MotEtatDeRoute(string state)
         {
             switch (state)
             {
-                case "active": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "etat", "active", "Ouverte");
-                case "saturated": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "etat", "saturated", "Saturée");
-                case "severed": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "etat", "severed", "Coupée");
+                case "active": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "etat_route", "active", "Ouverte");
+                case "saturated": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "etat_route", "saturated", "Saturée");
+                case "severed": return MafiaCleanCity.I18n.Libelle.ParValeur("appro", "etat_route", "severed", "Coupée");
                 default: return MafiaCleanCity.I18n.Repli.Etat(state);
             }
         }
