@@ -104,7 +104,7 @@ namespace MafiaCleanCity.Capture.Tests
         {
             // AVANT TOUT : sans la paire, rien ne s'écrit (patron `CapturerLocataire`).
             var (identiteAnnoncee, _) = MafiaCleanCity.Shell.Tests.CaptureSousShell.IdentiteDeCaptureOuEchoue("screen_1_district_sous_chrome");
-            // 1. compte FRAIS : session/open octroie le kit de départ (4 bâtiments J0).
+            // 1. compte FRAIS : session/open octroie le kit de départ (5 bâtiments J0 depuis le back f3d22243).
             // ⛔ LE PRÉAMBULE « signer un compte frais puis ouvrir sa session » EST PARTI AVEC
             //    `SetIdentity` — il n'avait de sens que pour LUI. Il ouvrait une session sur un
             //    compte que le shell n'utilise plus : une vérification de disponibilité du back
@@ -654,7 +654,8 @@ namespace MafiaCleanCity.Capture.Tests
         {
             // ⛔ UN COMPTE SEMÉ, PAS UN SIGNUP FRAIS. ⚠️ Le fait qui justifiait ce choix est PÉRIMÉ :
             // « `GET /v1/me/buildings` rend une liste vide sur un compte neuf » — mesuré le 2026-09-22,
-            // un signup frais y porte 4 bâtiments (lab, stash, front_shop, cash_safehouse, La Lisière).
+            // un signup frais y porte 4 bâtiments (lab, stash, front_shop, cash_safehouse, La Lisière) — 5 depuis
+            // le back f3d22243 (L2 C1, + dealer_spot_front ; relevé daté conservé).
             // Le choix tient pour une autre raison : le compte semé montre une fiche RICHE, et c'est
             // lui que le juge compare aux corps réels.
             // ⚠️ On se CONNECTE au compte de démo, on ne le RESEEDE pas : le seeder remet son monde

@@ -260,14 +260,37 @@ namespace MafiaCleanCity.CityMap.Tests
             yield return null;
         }
 
-        // ── C9-F3 — le J0 n'allume rien de faux, avec garde de capacité obligatoire ─────────────────
+        // ── C9-F3 — le J0 n'allume RIEN DE FAUX : exactement ce que ses bandes commandent ─────────
+        // ⚠️ REFONDU (12/11, tri de la suite CLIENT-1) — l'ancienne prémisse « J0 = zéro néon, zéro fumée »
+        // est devenue FAUSSE côté back : f3d22243 (L2 C1) ajoute au kit un 5ᵉ bâtiment, `dealer_spot_front`,
+        // et la boucle d'argent L2 le sert VIVANT dès le J0. Mesuré sur la pile 8d0184a4 (compte frais,
+        // GET /v1/city/district/16/interior) : lab/stash/front_shop/cash_safehouse = UNWIRED/IDLE/IDLE,
+        // dealer_spot_front = WIRED/EARNING/ACTIVE. La propriété qui survit est celle que le titre portait
+        // (rien de FAUX) : 1 néon et 1 fumée, tous deux sur la cellule du coin de vente, 0 ailleurs.
+        // Les deux polarités sont exercées par la MÊME sonde (éteindre le dealer ⇒ 0/0 ; allumer un autre
+        // bâtiment ⇒ la lumière le suit), sinon un compteur figé à 1 passerait.
 
         [UnityTest]
-        public IEnumerator C9F3_J0RendersZeroNeonZeroSmoke_AndTheSameProbeFindsSomeOnADimensionedPayload()
+        public IEnumerator C9F3_J0LightsExactlyWhatItsBandsCommand_DealerOnly_BothPolarities()
         {
             DistrictInteriorDto dto = null;
             yield return FetchInterior("c9a", d => dto = d);
-            Assert.AreEqual(4, dto.buildings.Length, "starter kit J0 — scénario dimensionné (prémisse §3)");
+            Assert.AreEqual(5, dto.buildings.Length, "starter kit J0 — scénario dimensionné (prémisse §3 ; 5ᵉ = dealer_spot_front, back f3d22243 L2 C1)");
+
+            // Prémisse MESURÉE sur le fetch réel — pas supposée.
+            DistrictInteriorBuildingDto dealer = Array.Find(dto.buildings, b => b.operational_type == "dealer_spot_front");
+            Assert.IsNotNull(dealer, "prémisse — le kit J0 porte un dealer_spot_front (back f3d22243 L2 C1)");
+            Assert.AreEqual("WIRED", dealer.revenue_chain, "prémisse — le coin de vente est câblé au J0 (L2)");
+            Assert.AreEqual("EARNING", dealer.revenue_band, "prémisse — le coin de vente rapporte au J0 (L2)");
+            Assert.AreEqual("ACTIVE", dealer.activity_band, "prémisse — le coin de vente opère au J0 (L2)");
+            DistrictInteriorBuildingDto[] autres = Array.FindAll(dto.buildings, b => b != dealer);
+            Assert.AreEqual(4, autres.Length, "prémisse — 4 bâtiments hors coin de vente");
+            foreach (DistrictInteriorBuildingDto b in autres)
+            {
+                Assert.AreNotEqual("EARNING", b.revenue_band,
+                    $"prémisse — {b.operational_type} ne rapporte pas au J0 (aucun front_shop/cash_safehouse ne peut rapporter, TD-358)");
+                Assert.AreNotEqual("ACTIVE", b.activity_band, $"prémisse — {b.operational_type} n'opère pas au J0");
+            }
 
             // ⚠️ MESURÉ (juge réel — cause RÉELLE du rouge de la garde de capacité, PAS un défaut de
             // bande D3) : `day_phase` d'un fetch RÉEL suit `city_sim_clock.game_minute`, seedé au
@@ -283,25 +306,52 @@ namespace MafiaCleanCity.CityMap.Tests
             var diorama = bareHostGo.AddComponent<DistrictInteriorScreenController>();
             diorama.Render(dto);
 
-            // Anti-vacuité RENFORCÉE : les 4 bâtiments ont bien été traités par BuildBuildingCell — le
-            // "0" ci-dessous vient des BANDES (IDLE partout au J0), pas d'un repli qui aurait shortcut
-            // tout le monde (la classe de faux-négatif exacte que ce fetch non forcé a produite au run réel).
+            // Anti-vacuité RENFORCÉE : les 5 bâtiments ont bien été traités par BuildBuildingCell — un
+            // repli qui aurait court-circuité tout le monde rendrait 0 partout pour la MAUVAISE raison.
             Assert.AreEqual(DioramaArtPhase.NightHero, diorama.LastArtPhase, "day_phase forcé — l'art de nuit tourne réellement");
-            Assert.AreEqual(4, diorama.RenderedBuildingCount, "les 4 bâtiments sont bien passés par BuildBuildingCell, pas le repli");
+            Assert.AreEqual(5, diorama.RenderedBuildingCount, "les 5 bâtiments sont bien passés par BuildBuildingCell, pas le repli");
 
-            Assert.AreEqual(0, diorama.RenderedNeonGlowCount,
-                "J0 — aucune chaîne de revenu vivante (§1.5 lignes 3/3b : aucun front_shop/cash_safehouse ne peut rapporter, TD-358)");
-            Assert.AreEqual(0, diorama.RenderedSmokeCount, "J0 — aucune opération en cours au J0");
+            Assert.AreEqual(1, diorama.RenderedNeonGlowCount, "J0 — une seule chaîne de revenu vivante : le coin de vente");
+            Assert.AreEqual(1, diorama.RenderedSmokeCount, "J0 — une seule opération en cours : le coin de vente");
 
-            // ⚠️ Garde de capacité OBLIGATOIRE (socle : un zéro sans garde ne prouve que l'impuissance
-            // de la sonde) — LA MÊME sonde doit trouver quelque chose sur un payload dimensionné.
-            dto.buildings[0].revenue_chain = "WIRED";
-            dto.buildings[0].revenue_band = "EARNING";
-            dto.buildings[1].activity_band = "ACTIVE";
+            // OÙ : la lumière est sur LA cellule du coin de vente, et nulle part ailleurs (un néon posé sur la
+            // mauvaise cellule satisferait les deux comptes ci-dessus).
+            // ⚠️ ORDRE : ce comptage par descendants doit PRÉCÉDER tout re-Render — `ClearContent` détruit par `Destroy` (différé), les
+            //    anciennes cellules survivent jusqu'à la fin de la frame et doubleraient les comptes (revue ⊥ du 12/11, MINOR-2).
+            Transform scene = diorama.ScreenRoot.Find("DistrictScene");
+            foreach (DistrictInteriorBuildingDto b in dto.buildings)
+            {
+                DistrictInteriorBlockDto block = Array.Find(dto.blocks, k => k.block_id == b.block_id);
+                Assert.IsNotNull(block, $"le bâtiment {b.operational_type} référence un bloc réel (D2)");
+                Transform cell = scene.Find($"DistrictCells/Cell_{block.x}_{block.y}");
+                Assert.IsNotNull(cell, $"la cellule de {b.operational_type} existe");
+                int attendu = b == dealer ? 1 : 0;
+                Assert.AreEqual(attendu, DescendantsNommes(cell, "RevenueSign"), $"néon sous la cellule de {b.operational_type}");
+                Assert.AreEqual(attendu, DescendantsNommes(cell, "ActivitySmoke"), $"fumée sous la cellule de {b.operational_type}");
+            }
+
+            // Polarité ÉTEINTE — la même sonde suit les bandes : le coin de vente au repos ⇒ plus rien.
+            dealer.revenue_band = "IDLE";
+            dealer.activity_band = "IDLE";
             diorama.Render(dto);
+            Assert.AreEqual(0, diorama.RenderedNeonGlowCount, "polarité éteinte — dealer IDLE : aucun néon");
+            Assert.AreEqual(0, diorama.RenderedSmokeCount, "polarité éteinte — dealer IDLE : aucune fumée");
 
-            Assert.Greater(diorama.RenderedNeonGlowCount, 0, "garde de capacité — la sonde néon TROUVE sur un payload dimensionné");
-            Assert.Greater(diorama.RenderedSmokeCount, 0, "garde de capacité — la sonde fumée TROUVE sur un payload dimensionné");
+            // Polarité ALLUMÉE ailleurs (garde de capacité) — la sonde TROUVE sur un autre bâtiment.
+            autres[0].revenue_chain = "WIRED";
+            autres[0].revenue_band = "EARNING";
+            autres[0].activity_band = "ACTIVE";
+            diorama.Render(dto);
+            Assert.AreEqual(1, diorama.RenderedNeonGlowCount, $"garde de capacité — la sonde néon TROUVE sur {autres[0].operational_type}");
+            Assert.AreEqual(1, diorama.RenderedSmokeCount, $"garde de capacité — la sonde fumée TROUVE sur {autres[0].operational_type}");
+        }
+
+        private static int DescendantsNommes(Transform racine, string nom)
+        {
+            int n = 0;
+            foreach (Transform t in racine.GetComponentsInChildren<Transform>(true))
+                if (t != racine && t.name == nom) n++;
+            return n;
         }
     }
 }

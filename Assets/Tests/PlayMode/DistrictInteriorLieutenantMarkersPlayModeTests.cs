@@ -201,7 +201,7 @@ namespace MafiaCleanCity.CityMap.Tests
         }
 
         [UnityTest]
-        public IEnumerator C10F1_J0Real_LabHasExactlyTwoLieutenantMarkers_OtherThreeHaveZero()
+        public IEnumerator C10F1_J0Real_LabHasExactlyTwoLieutenantMarkers_OtherFourHaveZero()
         {
             string token = null;
             yield return SignUpAndOpenSession("c10f1", t => token = t);
@@ -211,7 +211,7 @@ namespace MafiaCleanCity.CityMap.Tests
             yield return client.Interior(VergeADistrictId, token, d => dto = d, code => errCode = code);
             Assert.AreEqual(-1, errCode, $"interior fetch must succeed, got code {errCode}");
             Assert.IsNotNull(dto, "parsed via payload.data");
-            Assert.AreEqual(4, dto.buildings.Length, "starter kit J0 — scénario dimensionné (prémisse §3)");
+            Assert.AreEqual(5, dto.buildings.Length, "starter kit J0 — scénario dimensionné (prémisse §3 ; 5ᵉ = dealer_spot_front, back f3d22243 L2 C1)");
 
             // Précondition MESURÉE sur le fetch réel — pas supposée : le lab est le SEUL bâtiment à
             // porter des lieutenant_ids sur ce monde (D10, onboarding-grant.service.ts:362-392).
@@ -220,7 +220,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsNotNull(lab.lieutenant_ids, "D10 — [] jamais null côté back");
             Assert.AreEqual(2, lab.lieutenant_ids.Length, "D10/prémisse §3 — le lab porte exactement 2 affectations au J0");
             int buildingsWithLieutenants = dto.buildings.Count(b => b.lieutenant_ids != null && b.lieutenant_ids.Length > 0);
-            Assert.AreEqual(1, buildingsWithLieutenants, "les 3 AUTRES bâtiments du J0 portent 0 affectation");
+            Assert.AreEqual(1, buildingsWithLieutenants, "les 4 AUTRES bâtiments du J0 portent 0 affectation");
 
             // ⚠️ MESURÉ (juge réel — le rouge n'était PAS l'accumulation, un seul Render() ici) : le
             // `day_phase` d'un fetch RÉEL dépend de `city_sim_clock.game_minute`, lui-même seedé au

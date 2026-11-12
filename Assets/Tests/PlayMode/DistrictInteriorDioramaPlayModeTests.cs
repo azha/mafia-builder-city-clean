@@ -16,7 +16,7 @@ namespace MafiaCleanCity.CityMap.Tests
 {
     // W3.U2 C8 (design §3 C8, D8 — U-9/U-15) — l'écran. Confinement (C8-F1), la grille = les blocs
     // reçus + jointure bâtiment->cellule (C8-F2), la garde R2.2 dimensionnée (C8-F3), le J0 tient à 40
-    // cellules dont 36 muettes (C8-F4), et le mapping EXPLICITE day_phase -> repli déclaré / art de nuit
+    // cellules dont 35 muettes (C8-F4), et le mapping EXPLICITE day_phase -> repli déclaré / art de nuit
     // (C8-F5). C8-F5 (et, pour éviter de dépendre du quart RÉEL du J0 — DAWN, horloge à 0, D8 §1.6 —
     // C8-F2/F4 aussi) nourrissent l'écran avec le payload RÉEL du starter kit, `day_phase` réécrit
     // côté test : forme du design lui-même pour C8-F5 (« nourrie par des payloads fabriqués par le
@@ -145,19 +145,19 @@ namespace MafiaCleanCity.CityMap.Tests
         // §P3/§3, gate ⊥ APPROVED 2026-08-20) — raison NOMMÉE : la grille procédurale et la
         // "silhouette sourde" des blocs vides n'existent plus. Le sol/les rues/l'ambiant sont
         // désormais BAQUÉS dans le fond pré-rendu (§3 du design : "Unity dessine par-dessus, et RIEN
-        // D'AUTRE") — il n'y a donc plus AUCUN objet Unity pour les 36 blocs non possédés du J0.
-        // `RenderedCellCount` (unité=le bloc, 40 cellules dont 36 muettes) est RETIRÉE de
+        // D'AUTRE") — il n'y a donc plus AUCUN objet Unity pour les 35 blocs non possédés du J0 (36 avant le 5ᵉ bâtiment, back f3d22243).
+        // `RenderedCellCount` (unité=le bloc, 40 cellules dont 35 muettes) est RETIRÉE de
         // DistrictInteriorScreenController — voir implementation-notes.md § Deviations. Ce qui
         // SURVIT, inchangé dans sa FORME : chaque bâtiment est rendu sur SA cellule (ancrée par nom
         // `Cell_x_y`, avec BuildingSprite + Socle) — vérifié via `RenderedBuildingCount`. Ce qui est
         // NEUF : l'absence positive d'objet pour tout bloc non possédé (C8-F4 amendée).
 
         [UnityTest]
-        public IEnumerator C8F2_EachBuildingAnchoredOnOwnBlock_J0Renders4Buildings_NoEmptyBlockObjects()
+        public IEnumerator C8F2_EachBuildingAnchoredOnOwnBlock_J0Renders5Buildings_NoEmptyBlockObjects()
         {
             DistrictInteriorDto dto = null;
             yield return FetchInterior("c8a", d => dto = d);
-            Assert.AreEqual(4, dto.buildings.Length, "starter kit J0 — scénario dimensionné");
+            Assert.AreEqual(5, dto.buildings.Length, "starter kit J0 — scénario dimensionné (5ᵉ = dealer_spot_front, back f3d22243 L2 C1)");
             Assert.AreEqual(40, dto.blocks.Length, "district 16 (verge-a) — 30 + (16*7 mod 51) = 40, scénario dimensionné");
             dto.day_phase = "NIGHT"; // le quart RÉEL au J0 est DAWN (D8, horloge à 0) — forcé pour exercer le palier héros
 
@@ -183,8 +183,8 @@ namespace MafiaCleanCity.CityMap.Tests
 
             // C8-F4 (amendée) — "36 en silhouette sourde" n'a plus d'objet à compter (§3 : plus de
             // rendu Unity pour un bloc non possédé, baqué dans le fond). La propriété qui survit :
-            // AUCUN Cell_x_y n'existe pour un bloc SANS bâtiment — vérifié positivement sur les 36
-            // blocs non possédés du J0 (anti-vacuité : le compte doit être exactement 36, pas 0).
+            // AUCUN Cell_x_y n'existe pour un bloc SANS bâtiment — vérifié positivement sur les 35
+            // blocs non possédés du J0 (anti-vacuité : le compte doit être exactement 35 = 40 − 5, pas 0).
             var ownedBlockIds = new HashSet<int>(dto.buildings.Select(b => b.block_id));
             int uncheckedEmpty = 0;
             foreach (DistrictInteriorBlockDto b in dto.blocks)
@@ -199,7 +199,7 @@ namespace MafiaCleanCity.CityMap.Tests
                     $"C8-F4 (amendée) — le bloc non possédé ({b.x},{b.y}) n'a AUCUN objet Unity (silhouette baquée dans le fond)");
                 uncheckedEmpty++;
             }
-            Assert.AreEqual(36, uncheckedEmpty, "C8-F4 (amendée) — 36 blocs non possédés au J0, tous sans objet Unity");
+            Assert.AreEqual(35, uncheckedEmpty, "C8-F4 (amendée) — 35 blocs non possédés au J0 (40 − 5), tous sans objet Unity");
         }
 
         // ── C8-F3 — garde R2.2, scénario dimensionné (l'écran rend BIEN du texte) ──

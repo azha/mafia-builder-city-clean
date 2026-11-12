@@ -67,7 +67,11 @@ namespace MafiaCleanCity.Shell.Tests
                 // `\s*` entre le nom et le chevron : la forme trouvée dans l'arbre est collée, mais
                 // un reformatage la séparerait et le motif rendrait ZÉRO EN SILENCE — le mode
                 // d'échec le plus courant de ce dépôt.
-                foreach (Match m in Regex.Matches(texte, Regex.Escape(forme) + @"\s*<\s*([A-Za-z_][A-Za-z0-9_]*)\s*>"))
+                // ⛔ NOM QUALIFIÉ (tri de la suite, 12/11) : `MountTenant<MafiaCleanCity.Operational.Marche.MarcheScreenController>()`
+                //    (AppShell, entrée ㉑ « le_marche ») rendait ZÉRO — le motif s'arrêtait au premier point et déclarait le marché
+                //    SANS PORTE alors qu'il en a une. Le type est le DERNIER segment (`global::` et espaces de noms sautés).
+                foreach (Match m in Regex.Matches(texte, Regex.Escape(forme) +
+                             @"\s*<\s*(?:global\s*::\s*)?(?:[A-Za-z_][A-Za-z0-9_]*\s*\.\s*)*([A-Za-z_][A-Za-z0-9_]*)\s*>"))
                     cibles.Add(m.Groups[1].Value);
             }
             return cibles;
@@ -199,6 +203,11 @@ namespace MafiaCleanCity.Shell.Tests
                 "MountTenant<UnA>(); ConstruireLocataire<UnB>(); MonterLocataireEnSurimpression<UnC>();");
             CollectionAssert.AreEquivalent(new[] { "UnA", "UnB", "UnC" }, vues,
                 "le balayage ne reconnaît pas les trois formes de montage mesurées dans l'arbre");
+
+            // Le nom QUALIFIÉ (forme mesurée dans AppShell, entrée ㉑) : le type est le dernier segment, jamais l'espace de noms.
+            CollectionAssert.AreEquivalent(new[] { "UnE", "UnF" },
+                CiblesMontees("MountTenant<Mafia.Operational.Marche.UnE>(); MountTenant< global::Mafia . UnF >();"),
+                "le balayage ne lit pas un nom de type QUALIFIÉ — il déclarerait sans porte un écran monté par son nom complet");
 
             // Et il ne doit PAS compter le repli hors shell : sinon un écran que seul un test
             // instancie passerait pour joignable.

@@ -87,7 +87,9 @@ namespace MafiaCleanCity.Operational.Marche
         private static Color FondCase => DesignTokens.Current.surfaceRow;
         private static Color Encre => DesignTokens.Current.onSurfacePrimary;
         private static Color EncreFaible => DesignTokens.Current.onSurfaceMuted;
-        private static Color Or => DesignTokens.Current.accentGold;
+        // L'or de la maquette (cadre 106 : `.mar6 .enseigne b`, `.pann small u` = #f2c96b, `--or-vif`) est `hudMoneyGold`, jamais `accentGold` (#ffd23f, le
+        // jaune vif que la garde C5-F2 chasse de l'arbre) — même confrontation que Carnet, Journal, Filière et Loi (tri de la suite, 12/11).
+        private static Color Or => DesignTokens.Current.hudMoneyGold;
         private static Color Creme => DesignTokens.Current.hudCreme;
 
         // TD-1017 BASCULÉE (11/11) : chaque mot de ㉑ est lu par sa clé SERVIE `marche.*` (BACK-3, `lot/marche-mots` @163402f1, noms figés après sa
@@ -347,6 +349,7 @@ namespace MafiaCleanCity.Operational.Marche
             vg.spacing = Px(1.5f); vg.childControlWidth = true; vg.childControlHeight = true; vg.childForceExpandWidth = true; vg.childForceExpandHeight = false;
             contenu.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             sr.content = grille; sr.viewport = (RectTransform)vue.transform;
+            MafiaCleanCity.Shell.ListeDefilante.Indiquer(sr, Fond);   // cause 7 (f2 07/10) : 18 rangées dans une fenêtre masquée ⇒ fondu en fin de course + ascenseur, sinon la suite est invisible
 
             // la phrase du bas (ICU), l'état (chargement / erreur), le pied d'une case touchée
             basTexte = Texte(racine, "PhraseDuBas", "", Px(7f), Creme, TextAlignmentOptions.Center);
@@ -375,6 +378,7 @@ namespace MafiaCleanCity.Operational.Marche
             var v = b.AddComponent<VerticalLayoutGroup>();
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             Largeur(b, 0f, 1f);
+            // ⛔ TD-1323 : la maquette (cadre 106, `.mar6 .fen b`) dessine ces chiffres en cyan #7fd4d9 (DejaVu Sans, halo), pas en or serif — à reprendre au juge visuel de ㉑ (f2 12/11).
             TextMeshProUGUI chiffre = Texte(b.transform, "Chiffre", "—", Px(11f), Or, TextAlignmentOptions.Center, DesignTokens.Current.hudSerifFont);
             Texte(b.transform, "Libelle", libelle, Px(6f), EncreFaible, TextAlignmentOptions.Center);
             return chiffre;

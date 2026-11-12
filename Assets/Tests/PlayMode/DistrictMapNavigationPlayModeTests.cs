@@ -14,7 +14,7 @@ using Object = UnityEngine.Object;
 namespace MafiaCleanCity.CityMap.Tests
 {
     // nav-district (pan+zoom) — pièce manquante mesurée : le fond fait 1080×1920, la fenêtre n'en
-    // montre que 720px de haut sans AUCUN mécanisme de défilement, et les 4 bâtiments du starter kit
+    // montre que 720px de haut sans AUCUN mécanisme de défilement, et les 5 bâtiments du starter kit
     // tombent hors de cette bande (Tools/district-v2-reimport-implementation-notes.md §6, Défaut 2 —
     // preuve : Assets/Screenshots/district_v2_starter_kit_4buildings.png). Ce fichier porte les
     // falsifiables demandées : (a) pan borné, (b) bit-exactité à l'échelle de référence encore
@@ -312,7 +312,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 sum += ((RectTransform)cell.transform).anchoredPosition;
                 n++;
             }
-            Assert.AreEqual(4, n, "starter kit J0 — scénario dimensionné, les 4 bâtiments comptés");
+            Assert.AreEqual(5, n, "starter kit J0 — scénario dimensionné, les 5 bâtiments comptés (5ᵉ = dealer_spot_front, back f3d22243 L2 C1)");
             Vector2 expectedFocus = sum / n;
 
             RectTransform rootRt = (RectTransform)diorama.ScreenRoot;
@@ -442,9 +442,9 @@ namespace MafiaCleanCity.CityMap.Tests
             yield return FetchInterior("navd10", d => dto = d);
             var diorama = RenderFresh("DistrictMapNav_D10", dto);
 
-            // Anti-vacuité (le mandat le nomme explicitement) : le payload J0 rend bien 4 bâtiments,
+            // Anti-vacuité (le mandat le nomme explicitement) : le payload J0 rend bien 5 bâtiments,
             // dont lab ET stash — un monde où RIEN n'est rendu satisferait "aucun WindowLight" à vide.
-            Assert.AreEqual(4, diorama.RenderedBuildingCount, "anti-vacuité — les 4 bâtiments J0 sont rendus");
+            Assert.AreEqual(5, diorama.RenderedBuildingCount, "anti-vacuité — les 5 bâtiments J0 sont rendus (5ᵉ = dealer_spot_front, back f3d22243 L2 C1)");
 
             DistrictInteriorBlockDto labBlock = null, stashBlock = null, cashSafehouseBlock = null;
             foreach (DistrictInteriorBuildingDto b in dto.buildings)
@@ -492,8 +492,8 @@ namespace MafiaCleanCity.CityMap.Tests
             // Le FAIT (binding 1+2) reste compté même sans objet — C9-F2 (DistrictInteriorLighting…)
             // mesure cette égalité ailleurs ; ici on prouve juste qu'exempter la REPRÉSENTATION
             // n'a pas aussi supprimé le compteur (qui resterait alors faux pour C9-F2/C9F1).
-            Assert.AreEqual(4, diorama.RenderedWindowLightCount,
-                "nav-district-F10 — les 4 bâtiments J0 sont condition_band SOUND : le COMPTE reste 4 même si 2 n'ont aucun objet visuel");
+            Assert.AreEqual(5, diorama.RenderedWindowLightCount,
+                "nav-district-F10 — les 5 bâtiments J0 sont condition_band SOUND (mesuré 12/11, pile 8d0184a4) : le COMPTE reste 5 même si 2 n'ont aucun objet visuel");
         }
 
         // ══════════════════════════════════════════════════════════════════════════════════════

@@ -14,13 +14,13 @@ namespace MafiaCleanCity.CityMap.Tests
     // W3.U2 C7 (design §3 C7, D1/D2, U-7) — C7-F1 : le CLIENT (CityProjectionsClient.Interior) parse
     // une vraie réponse de GET /v1/city/district/:id/interior, corps de succès EXIGÉ (une requête
     // indépendante sert de ground truth), et rend la grille + les bâtiments — scénario dimensionné
-    // sur les 4 bâtiments du starter kit J0 (onboarding-grant.service.ts, VERGE_A_DISTRICT_ID=16),
+    // sur les 5 bâtiments du starter kit J0 (onboarding-grant.service.ts, VERGE_A_DISTRICT_ID=16),
     // avec la jointure building.block_id ⊆ blocks[].block_id vérifiée.
     [Category("W3U2")]
     public class DistrictInteriorClientPlayModeTests
     {
         private static string BaseUrl => MafiaCleanCity.AdresseDuBack.Url;   // la source du shell (garde de classe, 26/09)
-        private const int VergeADistrictId = 16; // onboarding-grant.service.ts:112 — les 4 bâtiments starter-kit
+        private const int VergeADistrictId = 16; // onboarding-grant.service.ts:112 — les 5 bâtiments starter-kit
         private static int callsignSeq;
 
         private static IEnumerator SignUpAndOpenSession(Action<string> onToken)
@@ -58,7 +58,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 live = JsonUtility.FromJson<DistrictInteriorEnvelope>(req.downloadHandler.text)?.payload?.data;
             }
             Assert.IsNotNull(live, "ground-truth interior parsed through payload.data");
-            Assert.AreEqual(4, live.buildings?.Length ?? -1, "J0 starter kit grants exactly 4 buildings — scénario dimensionné");
+            Assert.AreEqual(5, live.buildings?.Length ?? -1, "J0 starter kit grants exactly 5 buildings (5th = dealer_spot_front, back f3d22243 L2 C1) — scénario dimensionné");
 
             // The client under test.
             var client = new CityProjectionsClient { BaseUrl = BaseUrl };
