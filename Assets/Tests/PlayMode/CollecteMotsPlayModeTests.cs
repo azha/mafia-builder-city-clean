@@ -26,7 +26,13 @@ namespace MafiaCleanCity.CityMap.Tests
         private const string Nbsp = " ";
 
         [SetUp]
-        public void SansCatalogue() => Libelle.RemettreLesCompteurs();
+        public void SansCatalogue()
+        {
+            // SANS catalogue, pour de vrai : un bundle laissé chargé par une suite voisine servirait les clés et plus aucun repli ne se compterait
+            // (revue ⊥ t2 I1 ; même porte que `ZeroRepliDesLocatairesPlayModeTests.SetUp`)
+            I18nCatalog.Oublier();
+            Libelle.RemettreLesCompteurs();
+        }
 
         [Test]
         public void C1_LesCinqMotsDeBande_ParLaValeurServie()
@@ -437,10 +443,10 @@ namespace MafiaCleanCity.CityMap.Tests
             }
             finally { UnityEngine.Object.DestroyImmediate(racine); }
 
+            Libelle.RemettreLesCompteurs();
             var (racine2, ecran2) = MonterLaVente();
             try
             {
-                Libelle.RemettreLesCompteurs();
                 ecran2.RendrePourTest(new[]
                 {
                     new DealerDto { dealer = "d-plein", dealer_spot_id = "b-1", activity_band = "WORKING", cash_band = "HIGH", substance = "BRINDLE", margin_band = "STANDARD" },

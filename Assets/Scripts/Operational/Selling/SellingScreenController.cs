@@ -610,7 +610,7 @@ namespace MafiaCleanCity.Operational.Selling
         {
             switch (substance)
             {
-                case "CRICK": return (Hex("#7fd4d9"), Hex("#1f6a72"));
+                case "CRICK": return (DesignTokens.Current.hudGaugeArcCold, Hex("#1f6a72"));   // `#7fd4d9` EST le jeton `hudGaugeArcCold` (garde des littéraux de couleur)
                 case "HUSH": return (Hex("#c9a8e0"), Hex("#5a2f7a"));
                 case "ASH": return (Hex("#efe9da"), Hex("#8a8474"));
                 default: return (Or, Hex("#7a5a14"));
@@ -640,7 +640,7 @@ namespace MafiaCleanCity.Operational.Selling
         /// comme inconnue, pas se déguiser en mot anglais plausible.</summary>
         private static string Caisse(string b) => MafiaCleanCity.I18n.CollecteMots.Bande(b);
 
-        /// <summary>La marge, en français. Domaine LU À L'ANCRE : `selling.projection.service.ts:59`
+        /// <summary>La marge, en français. Domaine LU À L'ANCRE : `selling.projection.service.ts:70`
         /// — `DealerMarginBand = 'STANDARD' | 'ELEVATED' | 'PREMIUM' | 'HIGH_PREMIUM'`.
         ///
         /// ⚠️ TROIS DES QUATRE MOTS VIENNENT DE LA MAQUETTE, LE QUATRIÈME EST DÉRIVÉ ET JE LE DIS.
@@ -656,7 +656,7 @@ namespace MafiaCleanCity.Operational.Selling
             b == "WORKING" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "au travail") : b == "IDLE" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "au repos")
             : b == "ABSENT" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "pas là") : b == "COMPROMISED" ? MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "grillé") : "—";
 
-        /// <summary>Le NOM PROPRE d'une substance (`DealerSubstanceLabel` = `BRINDLE | CRICK | HUSH | ASH`, `selling.projection.service.ts:89`) : une marque de la fiction, pas un mot à traduire —
+        /// <summary>Le NOM PROPRE d'une substance (`DealerSubstanceLabel` = `BRINDLE | CRICK | HUSH | ASH`, `selling.projection.service.ts:90`) : une marque de la fiction, pas un mot à traduire —
         /// « Brindle », « Crick ». Ce n'est PAS un énuméré à mots (cause 4) : la garde de classe le nomme en exception.</summary>
         private static string NomDeSubstance(string v)
         {
@@ -717,7 +717,7 @@ namespace MafiaCleanCity.Operational.Selling
             // ⚠️ Le sous-titre vient de la maquette VERBATIM (`.enseigne > i`). Le juge a mesuré
             //    « 0 sous-titre » en jeu — il manquait, il n'était pas mal rendu.
             Texte(enseigne.transform, "SousTitre", MafiaCleanCity.I18n.Libelle.Gabarit("vente.sous_titre.qui_vend_et_ce_qu_il_y_a_dans_la_caisse", "qui vend, et ce qu’il y a dans la caisse"),
-                  Px(7.5f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+                  Px(7.5f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).fontStyle = FontStyles.UpperCase;   // `.enseigne i{text-transform:uppercase}` : les capitales sont du STYLE
 
             // LES COMPTEURS — trois fenêtres, comme la maquette (`.compteurs > .fen` ×3).
             compteurs = (RectTransform)Bloc("Compteurs", transform, true, Px(6f)).transform;
@@ -778,7 +778,7 @@ namespace MafiaCleanCity.Operational.Selling
             Texte(f.transform, "Val", valeur, Px(12f), Or,
                   DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             Texte(f.transform, "Lib", libelle, Px(6.5f), Creme2,
-                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).fontStyle = FontStyles.UpperCase;   // `.fen>span{text-transform:uppercase}`
         }
 
         private static GameObject NewUI(string nom, Transform parent)
