@@ -262,13 +262,11 @@ namespace MafiaCleanCity.CitySim.Inspection
                 // table 63 v2 : la phrase de la police, PUIS l'état. Addendum 63 (client 33b422c5, 26/09) : « Rien à faire ici tant
                 // qu'aucune file n'est ouverte » était FAUX au-dessus d'un DÉPOSER actif (D3) — REMPLACÉE par une phrase vraie avec le
                 // dépôt offert. (Le dépôt reste tel que D3 le prévoit — décision de registre du 22/09, rappelée par f2 le 26/09.)
-                // ⏳ ÉNONCÉ DATÉ (TD-879, ruling f2 11/11) : au 2026-11-11, sur le back servi `main` 2ed39589, un compte frais reçoit 18 × 404 et
-                // ⑮ dit ici la phrase de la police. Le back de BACK-2 sert 200 EMPTY : la ville vide devient le registre de 18 lignes « VIDE » et
-                // cette phrase devient inatteignable — à RETIRER alors. Détecteur : `InspectionScreenPlayModeTests.EtatVide_SurUn404DeFile_…`
-                // (`FilesVides == 0` sur un compte frais réel) rougit le jour où la pile sert 200 EMPTY.
+                // TD-879, énoncé daté LEVÉ le 12/11 (créneau, pile de dev 8d0184a4) : un compte frais reçoit désormais 18 × 200 EMPTY (mesuré : `FilesVides == 18`), la
+                // ville vide est le registre de 18 lignes « VIDE ». La phrase « La police n'a pas encore ouvert ses files… » est RETIRÉE (ruling f2 11/11) : cette branche
+                // n'est plus atteinte que par des 404 dont la cause n'est pas dite (TD-1010), et l'écran n'en affirme plus rien.
                 videTexte.text = DerniereErreur == null
-                    ? "La police n'a pas encore ouvert ses files — elle les ouvre sur les 18 districts à la fois."
-                      + "\n" + MafiaCleanCity.I18n.Libelle.Gabarit("inspection.vide.aucune_inspection_en_cours", "Aucune inspection en cours.")
+                    ? MafiaCleanCity.I18n.Libelle.Gabarit("inspection.vide.aucune_inspection_en_cours", "Aucune inspection en cours.")
                     : "La file n'a pas répondu.";
                 RendreDepot();
                 RendusEffectues++;

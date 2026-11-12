@@ -181,24 +181,37 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
             Assert.AreEqual(InspectionScreenController.NombreDeDistricts, charges.Count(c => c == vide), $"18 lignes disent « {vide} » (le cadre 32 : VIDE)");
         }
 
-        /// <summary>(ii) — le 404 du back SERVI (compte frais réel) ⇒ l'état vide d'aujourd'hui, inchangé (fiche + phrase de la police).
-        /// ⏳ DÉTECTEUR de l'énoncé daté de `InspectionScreenController.Rendre` : `FilesVides == 0` rougit le jour où la pile sert 200 EMPTY.</summary>
+        /// <summary>(ii) — le back SERVI, compte frais réel : depuis le 12/11 (pile de dev 8d0184a4) il sert 18 × 200 EMPTY ⇒ le registre de 18 lignes « VIDE », aucune fiche
+        /// d'état vide. (Jusqu'au 11/11 il servait 18 × 404 et ce test était le DÉTECTEUR de l'énoncé daté TD-879 : il a rougi au créneau du 12/11, la phrase de la
+        /// police est retirée.) Si la pile resservait des 404 ici, `Files404 == 0` le dirait.</summary>
         [UnityTest]
-        public IEnumerator EtatVide_SurUn404DeFile_DitLaPhraseDeLaPolice()
+        public IEnumerator CompteFrais_SurLaPile_DixHuitFilesVidesServies_LeRegistre_PasLEtatVide()
         {
             yield return OuvrirUnCompteFrais();
             var ecran = Monter();
             ecran.SetToken(token);
             yield return AttendreLeRendu(ecran);
 
-            Assert.AreEqual(0, ecran.FilesVides,
-                "TD-879 : la pile sert désormais 200 EMPTY sur un compte frais — retirer la phrase de la police (InspectionScreenController.Rendre, " +
-                "branche EtatVide, « La police n'a pas encore ouvert ses files ») et cet énoncé daté");
-            Assert.IsNull(ecran.DerniereErreur, $"un 404 est un ÉTAT, pas une panne — et l'écran a enregistré : {ecran.DerniereErreur}");
-            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.Files404, "un compte frais : 18 × 404 sur le back servi");
-            Assert.IsTrue(ecran.EtatVide, "0 file ouverte : l'état vide d'aujourd'hui");
-            Assert.AreEqual(0, ecran.LignesRendues, "un 404 n'est jamais traduit en ligne « VIDE » (TD-1010)");
-            StringAssert.StartsWith("La police n'a pas encore ouvert", ecran.TexteDuVide);
+            Assert.IsNull(ecran.DerniereErreur, $"une ville vide n'est pas une panne — et l'écran a enregistré : {ecran.DerniereErreur}");
+            Assert.AreEqual(0, ecran.Files404, "un compte frais ne reçoit plus de 404 sur le back servi (TD-879)");
+            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.FilesVides, "un compte frais : 18 × 200 EMPTY sur le back servi");
+            Assert.IsFalse(ecran.EtatVide, "une ville vide servie en 200 n'est pas « rien nulle part »");
+            Assert.AreEqual(InspectionScreenController.NombreDeDistricts, ecran.LignesRendues, "le registre a ses 18 lignes");
+            Assert.AreEqual("", ecran.TexteDuVide, "aucune fiche d'état vide au-dessus du registre");
+        }
+
+        /// <summary>(iii) — l'état vide (18 × 404 fabriqués, cause non dite : TD-1010) ne parle PLUS de la police (phrase retirée le 12/11) : il dit seulement qu'aucune
+        /// inspection n'est en cours. CONTRÔLE : une panne (500) dit autre chose.</summary>
+        [UnityTest]
+        public IEnumerator EtatVide_SurDes404_NeParlePlusDeLaPolice_ControleLaPanne()
+        {
+            yield return MonterAvecDesFiles(_ => (404, Corps404FilePasSemee));
+            Assert.IsTrue(ecranCourant.EtatVide);
+            Assert.AreEqual(MafiaCleanCity.Tests.ValeurAttendue.Cle("inspection.vide.aucune_inspection_en_cours", "Aucune inspection en cours."), ecranCourant.TexteDuVide);
+            StringAssert.DoesNotContain("police", ecranCourant.TexteDuVide);
+            Nettoyer();
+            yield return MonterAvecDesFiles(_ => (500, Corps500));
+            Assert.AreNotEqual(MafiaCleanCity.Tests.ValeurAttendue.Cle("inspection.vide.aucune_inspection_en_cours", "Aucune inspection en cours."), ecranCourant.TexteDuVide, "CONTRÔLE : une panne n'est pas l'état vide");
         }
 
         /// <summary>G1 — un 404 n'est JAMAIS traduit en file vide, quelle que soit sa cause (les deux corps sont indiscernables : TD-1010) ; 404 ≠ 500.
@@ -363,7 +376,7 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
         {
             float hautAvant = ShellChrome.TopInsetPx, basAvant = ShellChrome.BottomInsetPx;
             const float dockCss = 61f;   // le dock mesuré par le juge r2 : l'encre du bas commence à 219 px de l'image de 2400 = 61 px CSS
-            yield return OuvrirUnCompteFrais();
+            // 12/11 : un compte frais RÉEL ne donne plus l'état vide (la pile sert 18 × 200 EMPTY, TD-879) ⇒ l'état vide est monté sur 18 × 404 fabriqués
             foreach (int hauteur in new[] { 960, 1200 })
             {
                 var banc = new BancVide(hauteur);
@@ -376,10 +389,11 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
                     var rt = (RectTransform)host.transform;
                     rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
                     var ecran = host.AddComponent<InspectionScreenController>();
-                    ecran.SetToken(token);
+                    ecran.ClientPourTest.ReponsePourTest = _ => (404, Corps404FilePasSemee);
+                    ecran.SetToken("jeton-de-test");
                     yield return AttendreLeRendu(ecran);
                     yield return null; yield return null;
-                    Assert.IsTrue(ecran.EtatVide, "prémisse : un compte frais n'a aucune file ouverte");
+                    Assert.IsTrue(ecran.EtatVide, "prémisse : 18 × 404 ⇒ aucune file ouverte, l'état vide");
 
                     var support = (RectTransform)host.transform.Find("Decor/Support");
                     var fiche = (RectTransform)host.transform.Find("Fiche");
@@ -390,7 +404,9 @@ namespace MafiaCleanCity.CitySim.Inspection.Tests
                     float ficheBas = banc.YDepuisLeBas(cf[0]), dock = dockCss * pxParCss;
                     Assert.AreEqual(DecorsDeScene.HauteurSupportInspectionVideCss * pxParCss, supportHaut - supportBas, 3f, $"{hauteur} : le liège est borné à 400 px CSS (pas à une fraction de la page)");
                     float trou = ficheBas - dock - supportBas;
-                    Assert.LessOrEqual(trou / hauteur, 0.25f, $"{hauteur} : le liège nu sous la fiche, jusqu'au dock, fait {trou / hauteur:P1} de la hauteur ({trou / pxParCss:0} px CSS ; la maquette : 145 px CSS = 24,8 %)");
+                    // TD-1081 (12/11) : la fiche a perdu une ligne (phrase de la police retirée, TD-879) ⇒ mesuré au créneau 26,1 % à 960 (la maquette, AVEC la phrase : 24,8 %).
+                    // Borne relevée de 25 % à 27 % : écart de classe C, consigné ; la maquette de cet état sans la phrase n'existe pas.
+                    Assert.LessOrEqual(trou / hauteur, 0.27f, $"{hauteur} : le liège nu sous la fiche, jusqu'au dock, fait {trou / hauteur:P1} de la hauteur ({trou / pxParCss:0} px CSS ; la maquette, avec la phrase de la police : 24,8 %)");
 
                     t = banc.Rendre();
                     // ⚠️ `EstDuLiege` est calibré à 960 : le dégradé radial du liège change de ton avec la hauteur de la page, la sonde de COULEUR n'est donc posée qu'à 960 (mesuré au créneau du 08/10 :
