@@ -75,8 +75,9 @@ namespace MafiaCleanCity.Operational.Tests
 
         // ═══ G0 — structurelles AVANT l'effet ═══════════════════════════════════════════════════════════════════════════
 
-        private static List<string> GraphicsSansRenderer(Transform racine) =>
-            racine.GetComponentsInChildren<Graphic>(true).Where(g => g.GetComponent<CanvasRenderer>() == null).Select(g => g.name).ToList();
+        /// <summary>`aSonRenderer` : le prédicat de la garde, substituable par le contrôle positif (patron `DefautsDeStructure` de ㉚).</summary>
+        private static List<string> GraphicsSansRenderer(Transform racine, System.Func<Graphic, bool> aSonRenderer = null) =>
+            racine.GetComponentsInChildren<Graphic>(true).Where(g => !(aSonRenderer ?? (x => x.GetComponent<CanvasRenderer>() != null))(g)).Select(g => g.name).ToList();
 
         [UnityTest]
         public IEnumerator G0a_ToutGraphicPorteSonCanvasRenderer_ControlePositif()
@@ -85,12 +86,15 @@ namespace MafiaCleanCity.Operational.Tests
             Transform racine = Racine();
             Assert.Greater(racine.GetComponentsInChildren<Graphic>(true).Length, 72, "anti-vacuité : la grille (72 cases) et le chrome sont bâtis");
             Assert.IsEmpty(GraphicsSansRenderer(racine), "un Graphic sans CanvasRenderer ne dessine rien, et la console est muette");
-            // CONTRÔLE POSITIF : un Image ajouté sur un objet SANS CanvasRenderer est VU par la garde
+            // CONTRÔLE POSITIF : un Graphic jugé SANS CanvasRenderer est NOMMÉ par la garde. ⚠️ Mesuré au créneau du 12/11 : on ne peut pas
+            // FABRIQUER un Image nu ici (`AddComponent<Image>` pose le renderer, et `DestroyImmediate` le refuse tant que l'Image en dépend :
+            // le contrôle d'origine rendait une liste vide) ⇒ le contrôle substitue le PRÉDICAT pour un seul objet, patron de ㉚ (GestesS1).
             var nu = new GameObject("ImageNue", typeof(RectTransform));
             nu.transform.SetParent(racine, false);
             nu.AddComponent<Image>();
-            Object.DestroyImmediate(nu.GetComponent<CanvasRenderer>());
-            CollectionAssert.Contains(GraphicsSansRenderer(racine), "ImageNue", "CONTRÔLE POSITIF : la garde voit un Graphic nu");
+            CollectionAssert.DoesNotContain(GraphicsSansRenderer(racine), "ImageNue", "cible inerte : avec son renderer, l'Image ajoutée n'est pas nommée");
+            CollectionAssert.AreEqual(new[] { "ImageNue" }, GraphicsSansRenderer(racine, g => g.name != "ImageNue" && g.GetComponent<CanvasRenderer>() != null),
+                "CONTRÔLE POSITIF : la garde nomme le Graphic jugé nu, et lui seul");
         }
 
         [UnityTest]
@@ -274,26 +278,47 @@ namespace MafiaCleanCity.Operational.Tests
         // Le site `Case` (ramené au guichet `Retour.NouveauBouton`, GS1, intégration du 12/11). ÉCRIT SANS ÊTRE JOUÉ : seule la compilation est prouvée.
         // Catégorie `RetourAppui` EN PLUS d'`EcranMarche` : la couverture des sites est CUMULÉE sur le run de GP. Le relevé porte sur UNE rangée
         // (Dépôt-Est : une case allumée, deux éteintes, la case `ash` hors du tableau) : les 72 cases naissent du même site, 4 le couvrent.
+        // ⚠️ MESURÉ au créneau du 12/11 (runs 1 et 3) : sur le banc nu des gardes G* (`BancMarche`, un Canvas de 100 × 100), les cases ont une
+        // largeur NULLE (rect 0 × 46,93) ⇒ aucun prédicat de `Retour` ne peut les retenir (« 0 attachement ») : un rouge du BANC, pas de l'écran.
+        // GP relève donc l'écran monté comme le shell le monte : un hôte SANS Canvas parent, l'écran résout son propre Canvas racine.
         [UnityTest, Category("RetourAppui")]
         public IEnumerator GP_Marche_UneRangee_CaseAllumee_CasesEteintes()
         {
+            var racinesAvant = new HashSet<GameObject>(AdresseDuBackPlayModeTests.Racines());
             MafiaCleanCity.Mouvements.RegieMouvement.Oublier();
             MafiaCleanCity.Mouvements.Regie regie = MafiaCleanCity.Mouvements.RegieMouvement.PourTest();   // AVANT le montage
             try
             {
-                IEnumerator montage = Monter(() => (200, Corps((12, "crick", "HIGH"))));
-                while (montage.MoveNext()) yield return montage.Current;
-                Assert.AreEqual(72, Courant.CasesRendues, "précondition GP : la grille porte ses 72 cases");
-                Transform rangee = Racine().GetComponentsInChildren<Transform>(false).First(t => t.name == "R_12");
-                Canvas canvas = bancGo.GetComponent<Canvas>().rootCanvas;
+                LogAssert.ignoreFailingMessages = true;   // comme `Monter` : rien d'attendu au journal
+                var hote = new GameObject("MarcheHoteGp", typeof(RectTransform));
+                var ecran = hote.AddComponent<MarcheScreenController>();
+                ecran.DistrictsPourTest = Quartiers();
+                ecran.ClientPourTest.ReponsePourTest = () => (200, Corps((12, "crick", "HIGH")));
+                yield return ecran.Charger();
+                yield return null;
+                Assert.AreEqual(72, ecran.CasesRendues, "précondition GP : la grille porte ses 72 cases");
+                Transform racine = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None).First(t => t.name == "MarcheRoot");
+                Transform rangee = racine.GetComponentsInChildren<Transform>(false).First(t => t.name == "R_12");
+                Canvas canvas = racine.GetComponentInParent<Canvas>();
+                Assert.IsNotNull(canvas, "précondition GP : l'écran a résolu un Canvas racine");
+                canvas = canvas.rootCanvas;
+                Button[] cases = rangee.GetComponentsInChildren<Button>(true);
+                // ANTI-VACUITÉ de la géométrie (la cause du rouge du 12/11) : une case sans largeur ne peut porter aucun retour d'appui
+                foreach (Button b in cases)
+                {
+                    Rect r = ((RectTransform)b.transform).rect;
+                    Assert.Greater(r.width * r.height, 12f, "précondition GP : la case " + b.name + " a une aire (" + r.width + " × " + r.height + ")");
+                }
                 List<LigneGp> lignes = RetourGpReleve.Relever("Marche", "rangée Dépôt-Est", rangee.gameObject, canvas, regie, 1080, 1920);
-                Assert.AreEqual(rangee.GetComponentsInChildren<Button>(true).Length, lignes.Count, "Marche — chaque case de la rangée est relevée");
+                Assert.AreEqual(cases.Length, lignes.Count, "Marche — chaque case de la rangée est relevée");
                 ChaineDApproGestesPlayModeTests.VerdictGp("Marche/rangée Dépôt-Est", lignes);
                 ChaineDApproGestesPlayModeTests.SiteCouvert(lignes, "Case", "Marche/rangée Dépôt-Est");
             }
             finally
             {
                 MafiaCleanCity.Mouvements.RegieMouvement.Oublier();   // la régie est un global statique : rendue même si le test a rougi
+                foreach (GameObject g in AdresseDuBackPlayModeTests.Racines().Where(g => g != null && !racinesAvant.Contains(g)).ToList())
+                    Object.DestroyImmediate(g);   // l'hôte, le Canvas et l'EventSystem créés par l'écran nu
             }
         }
     }
