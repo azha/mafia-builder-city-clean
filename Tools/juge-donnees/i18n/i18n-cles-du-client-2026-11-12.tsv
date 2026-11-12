@@ -1,0 +1,956 @@
+# Clés i18n que le client demande — générées le 2026-11-12 par Tools/cles-i18n-du-client.py (branche lot/client1-extracteur-cles-2026-11-12, TD-1068).
+# Source LUE : Assets/Scripts de integration/client1-2026-11-12 @a29d4c6dd08da21223051e5aa7984038186895a7 (arbre propre, NON joué sous Unity).
+# Commande : python3 Tools/cles-i18n-du-client.py <arbre>/Assets/Scripts --liste
+# `Libelle.Gabarit` : 312 appel(s), 256 clé(s) explicite(s) distincte(s), 38 appel(s) à 1er argument NON littéral (clé illisible dans la source : comptés, pas listés)
+# K_client (clés distinctes : dérivées de `Libelle.De` + explicites de `Libelle.Gabarit`) : 950
+# Colonnes : clé <TAB> littéral FR (repli). Lignes « # » = en-tête. Hors liste : Libelle.ParValeur (clé née d'une valeur servie) et les Gabarit à 1er argument non littéral.
+  accueil.bandeau.la_chaufferie_etat	La chaufferie — {etat}
+  accueil.carte.aucune_decision_en_attente	Aucune décision en attente
+  accueil.carte.c_est_note	C’est noté
+  accueil.carte.ce_qu_on_peut_faire	Ce qu’on peut faire
+  accueil.carte.deja_tranchee	Déjà tranchée
+  accueil.carte.la_carte_reste_sur_la_table	La carte reste sur la table
+  accueil.carte.la_carte_vous_attend_encore	La carte vous attend encore.
+  accueil.carte.la_decision_n_a_pas_ete_prise	La décision n’a pas été prise.
+  accueil.carte.limite_de_structure_atteinte	Limite de structure atteinte
+  accueil.carte.lire_maintenant	Lire maintenant
+  accueil.carte.portee	Portée
+  accueil.carte.prendre_acte	Prendre acte
+  accueil.carte.retour_a_l_accueil	Retour à l’accueil
+  accueil.carte.rien_a_signaler	Rien à signaler
+  accueil.carte.rien_d_autre_a_trancher_pour_l_instant	Rien d’autre à trancher pour l’instant.
+  accueil.carte.tapez_mot	tapez {mot}
+  accueil.carte.tranchee	TRANCHÉE
+  accueil.carte.urgence	Urgence
+  accueil.carte.vous_avez_tranche	Vous avez tranché
+  accueil.chrome.la_revue_du_jour	La revue du jour
+  accueil.chrome.les_exceptions	Les exceptions
+  accueil.etat.a_flot	À flot
+  accueil.etat.confortable	Confortable
+  accueil.etat.correct	Correct
+  accueil.etat.en_cours	En cours
+  accueil.etat.fauche	Fauché
+  accueil.etat.inconnu	Inconnu
+  accueil.etat.juste	Juste
+  accueil.etat.ouvert	Ouvert
+  accueil.etat.verrouille	Verrouillé
+  accueil.file.aucune_exception_en_attente	Aucune exception en attente
+  accueil.file.d_autres_attendent_au_dela_de_ce_que_la_file_montre	d’autres attendent au-delà de ce que la file montre
+  accueil.file.plusieurs_attendent_encore	Plusieurs attendent encore
+  accueil.jeton.fermee_aujourd_hui	fermée aujourd’hui
+  accueil.jeton.libre	libre
+  accueil.jeton.pris	pris
+  accueil.jeton.votre_grande_decision_du_jour	votre grande décision du jour
+  accueil.suite.a_son_arrivee_lancez_la_cuisson	À son arrivée, lancez la cuisson.
+  accueil.suite.blanchir	Blanchir
+  accueil.suite.blanchissez_le_il_ne_rapporte_rien_tant_qu_il_dort	Blanchissez-le : il ne rapporte rien tant qu’il dort.
+  accueil.suite.blanchissez_sinon_la_caisse_des_dealers_ne_peut_plus_s_y_vider	Blanchissez : sinon, la caisse des dealers ne peut plus s’y vider.
+  accueil.suite.commander	Commander
+  accueil.suite.cuire	Cuire
+  accueil.suite.de_l_argent_attend_dans_la_planque	De l’argent attend dans la planque
+  accueil.suite.ecrire_une_regle	Écrire une règle
+  accueil.suite.la_caisse_de_prenom_se_remplit	La caisse de {prenom} se remplit
+  accueil.suite.la_planque_est_pleine	La planque est pleine
+  accueil.suite.la_suite	La suite
+  accueil.suite.lancez_la_cuisson	Lancez la cuisson.
+  accueil.suite.le_labo_attend_du_precurseur	Le labo attend du {precurseur}
+  accueil.suite.le_precurseur_est_en_route	Le {precurseur} est en route
+  accueil.suite.le_precurseur_est_la	Le {precurseur} est là
+  accueil.suite.personne_ne_vend_encore	Personne ne vend encore
+  accueil.suite.ramasser	Ramasser
+  accueil.suite.ramassez_la_elle_rejoint_la_planque	Ramassez-la : elle rejoint la planque.
+  accueil.suite.sans_lui_rien_ne_cuit	Sans lui, rien ne cuit.
+  accueil.suite.un_dealer_sur_un_coin_de_vente_et_la_marchandise_part	Un dealer sur un coin de vente, et la marchandise part.
+  accueil.suite.une_premiere_regle_et_ils_tiennent_sans_vous	Une première règle, et ils tiennent sans vous.
+  accueil.suite.voir_la_vente	Voir la vente
+  accueil.suite.vos_lieutenants_attendent_une_consigne	Vos lieutenants attendent une consigne
+  accueil.vitals.cohesion_pas_encore_mesuree	Cohésion : pas encore mesurée
+  appro.bloc.bon_de_commande	BON DE COMMANDE
+  appro.bloc.il_en_reste	il en reste
+  appro.bloc.il_en_reste_peu	il en reste peu
+  appro.bloc.il_n_y_a_plus_rien	il n’y a plus rien
+  appro.bloc.il_y_a_une_penurie_en_ville	Il y a une pénurie en ville
+  appro.bloc.il_y_en_a_assez	il y en a assez
+  appro.bloc.la_commande_est_payee_et_partie	La commande est payée et partie.
+  appro.bloc.le_prix_baisse	le prix baisse
+  appro.bloc.le_prix_monte	le prix monte
+  appro.bloc.le_prix_ne_bouge_pas	le prix ne bouge pas
+  appro.bloc.livraison_receptionnee	Livraison réceptionnée.
+  appro.bloc.rien_a_faire_de_plus_on_ne_l_accelere_pas_elle_arrivera_quand_le_fournisseur_l_aura_decide	Rien à faire de plus. On ne l'accélère pas — elle arrivera quand le fournisseur l'aura décidé.
+  appro.bloc.rien_a_remonter_pour_l_instant_la_chaine_ne_connait_aucun_maillon_sur_ce_compte	Rien à remonter pour l’instant — la chaîne ne connaît aucun maillon sur ce compte.
+  appro.bloc.tout_le_monde_en_cherche_en_meme_temps_ca_se_paiera_plus_cher_et_plus_tard	Tout le monde en cherche en même temps. Ça se paiera plus cher, et plus tard.
+  appro.bloc.votre_lieutenant_on_en_a_besoin_et_il_n_y_en_a_plus	Votre lieutenant : « On en a besoin, et il n'y en a plus. »
+  appro.bouton.ca_part_du_compte_tout_de_suite	ça part du compte tout de suite
+  appro.bouton.en_commander	EN COMMANDER
+  appro.cout.on_ne_sait_pas_encore_combien	On ne sait pas encore combien.
+  appro.etat.rien_a_commander_vous_ne_tenez_pas_encore_de_labo	Rien à commander — vous ne tenez pas encore de labo.
+  appro.etat.vous_ne_tenez_encore_aucun_site	Vous ne tenez encore aucun site.
+  appro.etiquette.contournee	contournée
+  appro.etiquette.en_entretien	en entretien
+  appro.etiquette.en_reconstruction	En reconstruction
+  appro.etiquette.plus_longtemps	plus longtemps
+  appro.etiquette.quelques_minutes	quelques minutes
+  appro.etiquette.refoule_vers	refoule vers
+  appro.etiquette.tout_de_suite	tout de suite
+  appro.etiquette.un_batiment_detruit	un bâtiment détruit
+  appro.sous_titre.chaque_maillon_sa_pression_chaque_liaison_son_entretien	Chaque maillon, sa pression ; chaque liaison, son entretien.
+  appro.sous_titre.reessayez_dans_un_instant	Réessayez dans un instant.
+  appro.titre.la_chaine	La chaîne
+  appro.titre.la_chaine_d_appro_n_a_pas_repondu	La chaîne d'appro n'a pas répondu
+  appro.titre.les_liaisons	Les liaisons
+  appro.titre.les_maillons	Les maillons
+  appro.titre.les_routes	Les routes
+  autonomie.etat.consequence_minime	conséquence minime
+  autonomie.etat.inconnu	Inconnu
+  autonomie.etat.on_laisse_passer_quelque_chose	on laisse passer quelque chose
+  autonomie.etat.on_s_expose	on s'expose
+  autonomie.etat.un_compromis	un compromis
+  autonomie.refus.votre_choix_n_a_pas_ete_enregistre_reessayez	Votre choix n’a pas été enregistré. Réessayez.
+  autonomie.vide.aucun_rapport_pour_l_instant_il_en_viendra_quand_vous_aurez_confie_une_tache_a_un_lieutenant	Aucun rapport pour l’instant : il en viendra quand vous aurez confié une tâche à un lieutenant.
+  blanchiment.raison.connexion_expiree	La connexion a expiré.
+  blanchiment.raison.fonds_ou_place	Il manque de l’argent ou de la place.
+  blanchiment.raison.indisponible	La filière ne répond pas pour l’instant.
+  blanchiment.raison.lot_refuse	Ce lot n’est pas accepté.
+  blanchiment.raison.reponse_illisible	La réponse est illisible.
+  blanchiment.raison.reponse_vide	La réponse est arrivée vide.
+  boutique.bloc.acheter	ACHETER
+  boutique.bloc.bientot	Bientôt
+  boutique.bloc.bonus_de_marks_par_euro	+{bonus} % de Marks par euro
+  boutique.bloc.donne_n_marks	donne {n, plural, one {# Mark} other {# Marks}}
+  boutique.bloc.jetons	— Marks
+  boutique.bloc.les_extras_payes_en_marks	Les extras — payés en Marks
+  boutique.bloc.les_marks_payes_au_magasin	Les Marks — payés au magasin
+  boutique.bloc.n_marks	{n, plural, one {# Mark} other {# Marks}}
+  boutique.bloc.pas_assez_de_marks	pas assez de Marks
+  boutique.bloc.plus_aucun_mark_et_rien_n_en_redonne	plus aucun Mark, et rien n’en redonne
+  boutique.bloc.tapez_mot	tapez {mot}
+  boutique.locuteur.nom	Wexler
+  boutique.locuteur.role	derrière le comptoir
+  boutique.sku.	
+  building.action.allumer_le_feu	Allumer le feu
+  building.action.blanchir	Blanchir
+  building.action.faire_sortir_la_marchandise	Faire sortir la marchandise
+  building.bloc.ca_consomme_un_lot_de_lys_de_verre	ça consomme un lot de lys de verre
+  building.bloc.il_en_faut_avant_de_rallumer	il en faut avant de rallumer
+  building.bloc.la_marchandise_est_partie_le_client_a_paye	La marchandise est partie, le client a payé.
+  building.bloc.le_rendez_vous_est_honore	Le rendez-vous est honoré
+  building.bloc.le_rendez_vous_est_passe	Le rendez-vous est passé
+  building.bloc.passes_compte	
+  building.bloc.personne_n_y_est_alle_il_faudra_en_reprendre_un	Personne n’y est allé. Il faudra en reprendre un.
+  building.bloc.repassez_quand_ce_sera_tire	Repassez quand ce sera tiré
+  building.bloc.reprendre_la_main_se_fait_depuis_la_famille_pas_depuis_le_labo	Reprendre la main se fait depuis la Famille, pas depuis le labo.
+  building.bloc.rien_a_faire_ici	Rien à faire ici.
+  building.bloc.un_client_du_district_du_verre_vous_attend	Un client du district du Verre vous attend.
+  building.bloc.un_rendez_vous_est_pris	Un rendez-vous est pris
+  building.bloc.vers_les_coursiers	vers les coursiers
+  building.bloc.vous_ne_passez_plus_les_commandes_vous_meme	Vous ne passez plus les commandes vous-même.
+  building.cover.none	None
+  building.cover.standard	Standard
+  building.cover.strong	Strong
+  building.cover.weak	Weak
+  building.raid_risk.elevated	Elevated
+  building.raid_risk.high	High
+  building.raid_risk.imminent	Imminent
+  building.raid_risk.low	Low
+  building.replique.et_ne_me_lancez_pas_une_deuxieme_cuve_tant_que_celle_la_tourne	— et ne me lancez pas une deuxième cuve tant que celle-là tourne.
+  building.row.passes	Passes
+  building.row.rendez_vous	Rendez-vous
+  building.setup.in_setup	In setup
+  building.setup.not_converted	Not converted
+  building.setup.operational	Operational
+  building.structural.damaged	Damaged
+  building.structural.failed	Failed
+  building.structural.intact	Intact
+  building.structural.repairing	Repairing
+  building.substance.	—
+  building.substance.ash	Ash
+  building.substance.brindle	Brindle
+  building.substance.crick	Crick
+  building.substance.hush	Hush
+  building.temperature.hot	Hot
+  building.temperature.optimal_cold	Optimal (cold)
+  building.temperature.warming	Warming
+  building.vide.rien_a_blanchir_la_planque_est_vide	Rien à blanchir : la planque est vide.
+  carnet.bloc.a_batiment_quartier	à {batiment} ({quartier})
+  carnet.bloc.annonce	à venir
+  carnet.bloc.aucun_ordre_pose_entre_quatre_et_huit_dans_l_ordre_ou_ils_partiront	aucun ordre posé — entre quatre et huit, dans l'ordre où ils partiront
+  carnet.bloc.carnet_du_soir	Carnet du soir
+  carnet.bloc.ce_n_est_ni_aucun_ordre_ni_pas_de_reponse_c_est_pas_encore	ce n'est ni « aucun ordre » ni « pas de réponse », c'est « pas encore ».
+  carnet.bloc.ce_qu_on_sait_pour_l_instant	CE QU'ON SAIT POUR L'INSTANT
+  carnet.bloc.ce_qu_on_sait_vraiment	CE QU'ON SAIT VRAIMENT
+  carnet.bloc.ce_qu_on_y_a_change_n_a_pas_encore_pris	Ce qu’on y a changé n’a pas encore pris.
+  carnet.bloc.ce_que_la_ville_prepare	Ce que la ville prépare
+  carnet.bloc.ce_qui_arrive	Ce qui arrive
+  carnet.bloc.ce_qui_s_ouvrira_plus_tard	CE QUI S'OUVRIRA PLUS TARD
+  carnet.bloc.deux_ordres_s_attendent_l_un_l_autre	Deux ordres s’attendent l’un l’autre
+  carnet.bloc.en_cours	en cours
+  carnet.bloc.entre_quatre_et_huit_gestes_dans_l_ordre_ou_ils_partiront	entre quatre et huit gestes, dans l'ordre où ils partiront
+  carnet.bloc.j_assume_le_site_qui_bouge_encore	j’assume le site qui bouge encore
+  carnet.bloc.lancer_la_soiree	LANCER LA SOIRÉE
+  carnet.bloc.le_calendrier_n_a_pas_repondu	Le calendrier n’a pas répondu.
+  carnet.bloc.le_carnet_n_a_pas_encore_ete_ouvert	le carnet n'a pas encore été ouvert
+  carnet.bloc.le_carnet_n_a_pas_repondu	le carnet n'a pas répondu
+  carnet.bloc.les_ordres_de_ce_soir	Les ordres à lancer
+  carnet.bloc.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca	« {n, plural, one {Un ordre} other {# ordres}}. On peut en mettre {reste} de plus, ou partir comme ça. »
+  carnet.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_la_soiree_est_vide_c_est_on_ne_sait_pas_ce_qui_est_prevu	on n'a pas eu de réponse. Ce n'est pas « la soirée est vide » : c'est « on ne sait pas ce qui est prévu ».
+  carnet.bloc.ordres_sur_8	 ORDRES SUR 8
+  carnet.bloc.pas_de_reponse	Pas de réponse
+  carnet.bloc.rejouer_une_soiree_verrouille	Rejouer une soirée — verrouillé
+  carnet.bloc.rien	— rien —
+  carnet.bloc.rien_n_a_encore_ete_demande	Rien n'a encore été demandé
+  carnet.bloc.rien_n_est_annonce	Rien n’est annoncé.
+  carnet.bloc.un_endroit_n_a_pas_fini_de_se_poser	Un endroit n’a pas fini de se poser
+  carnet.bloc.une_fois_partie_on_ne_la_reprend_pas	une fois partie, on ne la reprend pas
+  carnet.bloc.une_suite_d_ordres_qu_on_met_de_cote_et_qu_on_relance_d_un_geste_cette_facon_de_faire_s_ouvre_plus_tard_il_faut_d_abord_monter_d_un_palier	une suite d'ordres qu'on met de côté et qu'on relance d'un geste. Cette façon de faire s'ouvre plus tard — il faut d'abord monter d'un palier.
+  carnet.bloc.vers_batiment_quartier	vers {batiment} ({quartier})
+  carnet.bloc.y_aller_quand_meme	Y aller quand même
+  carnet.composeur.appui_long_pour_deplacer	appui long pour déplacer
+  carnet.composeur.choisir	Choisir
+  carnet.composeur.deja_dans_le_carnet	déjà dans le carnet
+  carnet.composeur.encore_n_ordres_a_poser	{n, plural, one {Encore un ordre à poser} other {Encore # ordres à poser}}
+  carnet.composeur.poser_un_ordre	Poser un ordre
+  carnet.composeur.quel_ordre	Quel ordre ?
+  carnet.composeur.retirer	Retirer
+  carnet.composeur.rien_a_viser_pour_l_instant	rien à viser pour l’instant
+  carnet.composeur.sur_quoi	Sur quoi ?
+  carnet.dit.n_ordres_on_peut_en_mettre_reste_de_plus_ou_partir_comme_ca	{nom} : « {n, plural, one {Un ordre} other {# ordres}}. On peut en mettre {reste} de plus, ou partir comme ça. »
+  carnet.ordre.distribution_run	Envoyer un coursier
+  carnet.ordre.exception_batch_resolution	Régler l’ardoise
+  carnet.ordre.maintenance_batch	Faire l’entretien
+  carnet.ordre.recruitment_step	Recruter
+  carnet.refus.cet_ordre_n_existe_pas_encore	Cet ordre n’existe pas encore.
+  carnet.refus.cette_cible_ne_tient_plus_choisissez_en_une_autre	Cette cible ne tient plus : choisissez-en une autre.
+  carnet.refus.une_soiree_est_deja_en_route	Une soirée est déjà en route : elle finit avant qu’on en compose une autre.
+  carnet.vide.il_faut_au_moins_quatre_ordres_pour_une_soiree	Il faut au moins quatre ordres pour une soirée.
+  carnet.vide.n_cibles	{n, plural, one {# cible} other {# cibles}}
+  carnet.vide.pas_encore_de_quoi_remplir_une_soiree	Pas encore de quoi remplir une soirée : il faudra d’autres locaux, des itinéraires ou des candidats.
+  carnet.vide.vous_pouvez_deja_poser	Vous pouvez déjà poser
+  carte.bloc.a_vous	À vous
+  carte.bloc.carte_de_la_ville_districts	CARTE DE LA VILLE — Districts
+  carte.bloc.chaleur_affichee	Chaleur : affichée
+  carte.bloc.chaleur_masquee	Chaleur : masquée
+  carte.bloc.dispute	Disputé
+  carte.bloc.libre	Libre
+  carte.bloc.nord	nord
+  carte.bloc.rival	Rival
+  carte.bloc.rive_nord	Rive nord
+  carte.bloc.rive_sud	Rive sud
+  carte.bloc.sud	sud
+  carte.tissu.avenue	Avenue
+  carte.tissu.cheminees	Cheminées
+  carte.tissu.damier	Damier
+  carte.tissu.faubourgs	Faubourgs
+  carte.tissu.l_avenue	l’avenue
+  carte.tissu.le_damier	le damier
+  carte.tissu.le_port	le port
+  carte.tissu.les_cheminees	les cheminées
+  carte.tissu.les_faubourgs	les faubourgs
+  carte.tissu.les_tours	les tours
+  carte.tissu.port	Port
+  carte.tissu.tours	Tours
+  chrome.bandeau.attend_vos_ordres	{nom} attend vos ordres
+  chrome.bandeau.brigade_quadrille	La brigade quadrille le quartier — planquez la caisse
+  chrome.bandeau.la_ville_attend_vos_ordres	La ville attend vos ordres
+  chrome.bandeau.les_indics_parlent	Les indics parlent : la brigade s’agite
+  chrome.bandeau.lire	lire
+  chrome.bandeau.rapport	{nom} a un rapport pour vous
+  chrome.bandeau.trancher	trancher
+  chrome.medaillon.descente	Descente
+  chrome.phase.aube	Aube
+  chrome.phase.nuit	Nuit
+  chrome.phase.plein_jour	Plein jour
+  chrome.phase.soiree	Soirée
+  commun.repli.etat_inconnu	état inconnu
+  commun.repli.le_batiment	le bâtiment
+  commun.repli.type_inconnu	type inconnu
+  commun.repli.un_batiment	Un bâtiment
+  conflit.bloc.aucun_de_vos_lieutenants_n_est_du_genre_gros_bras	Aucun de vos lieutenants n’est du genre Gros bras.
+  conflit.bloc.autre_famille_autre_cible	autre famille, autre cible
+  conflit.bloc.c_est_lui_qui_part_la_nuit_il_vous_en_manque_un_ce_n_est_pas_casse_vous_n_en_avez_tout_simplement_pas_encore	C’est le gros bras qui part la nuit. Il vous en manque un — ce n’est pas cassé, vous n’en avez tout simplement pas encore.
+  conflit.bloc.ca_nous_a_coute	ça nous a coûté
+  conflit.bloc.ce_que_chaque_homme_a_rapporte_et_ce_que_ca_nous_a_coute	Ce que chaque envoi a rapporté, et ce que ça nous a coûté.
+  conflit.bloc.ce_qui_est_en_cours	Ce qui est en cours
+  conflit.bloc.ce_qui_est_rentre	Ce qui est rentré
+  conflit.bloc.ce_soir	En cours
+  conflit.bloc.coup_n_n	Coup n°{n}
+  conflit.bloc.deja_rentres	Déjà de retour
+  conflit.bloc.depuis_le_debut_chez_famille	Depuis le début, chez {famille}
+  conflit.bloc.derniere_fois_chez_eux	La dernière fois là-bas : {issue}, et la ville a chauffé {chaleur}.
+  conflit.bloc.dites_moi_qui_j_envoie_et_sur_quoi_je_pars_ce_soir_on_saura_demain	« Dites-moi seulement chez qui. J’y vais, on saura demain. »
+  conflit.bloc.en_envoyer_un_autre	Envoyer quelqu’un d’autre
+  conflit.bloc.etait_chez_famille	était chez {famille}
+  conflit.bloc.fois_chez_eux	{n, plural, =0 {jamais} one {# fois} other {# fois}}
+  conflit.bloc.gorge_de_fer	Gorge-de-Fer
+  conflit.bloc.hommes_dehors	{n, plural, one {Une personne dehors.} other {# personnes dehors.}}
+  conflit.bloc.il_est_rentre	De retour
+  conflit.bloc.l_envoyer_ce_soir	L’envoyer
+  conflit.bloc.la_coil	La Coil
+  conflit.bloc.la_ligne_de_sel_a_l_est	la ligne de sel, à l’est
+  conflit.bloc.la_ville_a_chauffe	la ville a chauffé
+  conflit.bloc.le_compte_des_envois_precedents_n_a_pas_repondu	Le compte des envois précédents n’a pas répondu.
+  conflit.bloc.le_coup_de_ce_soir	Le prochain coup
+  conflit.bloc.le_port_et_ce_qui_y_entre	le port, et ce qui y entre
+  conflit.bloc.les_docks_du_nord	les docks du nord
+  conflit.bloc.les_ferrailleurs_de_spine	la ferraille, à Spine
+  conflit.bloc.les_hommes_qu_on_a_envoyes_et_qui_ne_sont_pas_encore_rentres	Ce qu’on a envoyé et qui n’est pas encore rentré.
+  conflit.bloc.les_quatre_familles	Les quatre familles de Brennar
+  conflit.bloc.meme_famille_autre_cible	même famille, autre cible
+  conflit.bloc.on_choisit_une_famille_on_choisit_un_homme_et_on_l_envoie_on_saura_demain	On choisit une famille, on choisit qui y envoyer. On saura demain.
+  conflit.bloc.on_envoie_nom_chez_famille_sur_axe	On envoie {nom} chez {famille}, sur {axe}.
+  conflit.bloc.on_est_alles_chez_eux	on leur a rendu visite
+  conflit.bloc.on_ne_les_a_pas_croises	on n’a jamais croisé leur route
+  conflit.bloc.on_ne_les_rappelle_pas_on_saura_demain_matin	On ne les rappelle pas — on saura demain matin.
+  conflit.bloc.on_ne_peut_plus_le_rappeler	plus de rappel possible
+  conflit.bloc.on_ne_pourra_plus_le_rappeler	pas de rappel possible
+  conflit.bloc.parti_chez_famille	en route vers {famille}
+  conflit.bloc.partis_pas_encore_rentres	En route, pas encore de retour
+  conflit.bloc.saltline	Saltline
+  conflit.bloc.tarcum	Tarcum
+  conflit.bloc.un_homme_envoye	un envoi
+  conflit.bloc.voila_ce_que_ca_a_donne_a_vous_de_dire_si_on_y_retourne	« Voilà ce que ça a donné. À vous de dire si on y retourne. »
+  conflit.refus.ce_coup_ne_tient_plus_reprenez_depuis_la_liste	Ce coup ne tient plus. Reprenez depuis la liste.
+  conflit.refus.l_ordre_n_est_pas_parti_il_etait_mal_forme_reessayez	L’ordre n’est pas parti : il était mal formé. Réessayez.
+  conflit.refus.la_ligne_a_coupe_on_ne_sait_pas_si_l_ordre_est_parti_reessayez_il_ne_partira_pas_deux_fois	La ligne a coupé : on ne sait pas si l’ordre est parti. Réessayez, il ne partira pas deux fois.
+  conflit.sous_titre.reessayez_dans_un_instant	Réessayez dans un instant.
+  conflit.titre.le_conflit_n_a_pas_repondu	Le conflit n'a pas répondu
+  decision.portee.majeure	majeure
+  decision.portee.mineure	mineure
+  decision.portee.moderee	modérée
+  decision.type.	
+  decision.urgence.elevee	élevée
+  decision.urgence.faible	faible
+  decision.urgence.pressante	pressante
+  delegation.bloc.rien_derriere	rien derrière
+  delegation.bloc.rien_n_a_ete_change	Rien n’a été changé.
+  delegation.bloc.si_vous_reprenez_maintenant	Si vous reprenez maintenant
+  delegation.bloc.vous_avez_deja_confie_charge_aujourd_hui	Vous avez déjà confié {charge} aujourd’hui.
+  delegation.refus.la_charge_n_est_plus_a_vous	la charge n’est plus à vous
+  delegation.refus.la_charge_n_est_plus_confiee	la charge n’est plus confiée
+  delegation.refus.un_changement_est_deja_en_cours_sur_cette_charge	un changement est déjà en cours sur cette charge
+  demarrage.echec.la_partie_n_a_pas_pu_commencer	La partie n’a pas pu commencer
+  demarrage.echec.la_ville_ne_repond_pas_verifiez_votre_connexion_puis_reessayez	La ville ne répond pas. Vérifiez votre connexion, puis réessayez.
+  demarrage.echec.reessayer	Réessayer
+  demolition.ecran.ce_qu_on_peut_y_mettre	CE QU'ON PEUT Y METTRE
+  demolition.ecran.fiche_du_site	FICHE DU SITE
+  demolition.ecran.il_vous_coute_plus_qu_il_ne_vous_rapporte	Il vous coûte plus qu'il ne vous rapporte.
+  demolition.ecran.le_garder_c_est_payer_pour_gener_les_autres	Le garder, c'est payer pour gêner les autres.
+  demolition.ecran.n_endroits_se_genent	{n, plural, =0 {Aucun endroit ne se gêne.} one {Un endroit en gêne un autre.} other {# endroits se gênent entre eux.}}
+  demolition.ecran.un_coin_de_vente	Un coin de vente
+  demolition.ecran.un_commerce_ecran	Un commerce-écran
+  demolition.ecran.un_labo	Un labo
+  demolition.ecran.un_labo_specialise	Un labo spécialisé
+  demolition.ecran.un_relais	Un relais
+  demolition.ecran.une_agence	Une agence
+  demolition.ecran.une_banque	Une banque
+  demolition.ecran.une_imprimerie	Une imprimerie
+  demolition.ecran.une_planque	Une planque
+  demolition.ecran.une_raffinerie	Une raffinerie
+  demolition.ecran.une_reserve	Une réserve
+  demolition.ecran.une_serre	Une serre
+  demolition.vide.rien_a_raser_pour_l_instant	Rien à raser pour l’instant.
+  demolition.vide.rien_ne_se_gene_vos_sites_tournent_sans_se_marcher_dessus	Rien ne se gêne : vos sites tournent sans se marcher dessus.
+  distribution.bloc.a_destination	à destination
+  distribution.bloc.a_pied	à pied
+  distribution.bloc.a_pied_ca_vide_le_stock_du_labo	à pied · ça vide le stock du labo
+  distribution.bloc.a_velo	à vélo
+  distribution.bloc.aucun_courrier_pour_l_instant	Aucun courrier pour l'instant.
+  distribution.bloc.aucune_destination_connue_pour_l_envoi_de_ce_soir	Aucune destination connue pour le prochain envoi.
+  distribution.bloc.aucune_riviere	aucune rivière
+  distribution.bloc.aucune_route_tendue_pour_l_instant	Aucune route tendue pour l’instant.
+  distribution.bloc.ca_serpente_plus_long_plus_discret	ça serpente — plus long, plus discret
+  distribution.bloc.coupee	coupée
+  distribution.bloc.destination_a_determiner	destination à déterminer
+  distribution.bloc.disponible	disponible
+  distribution.bloc.droit_le_plus_court	droit — le plus court
+  distribution.bloc.en_camion_refrigere	en camion réfrigéré
+  distribution.bloc.en_chemin	en chemin
+  distribution.bloc.en_voiture	en voiture
+  distribution.bloc.il_est_en_chemin_on_ne_le_rappelle_pas_on_saura_a_l_arrivee	Il est en chemin. On ne le rappelle pas — on saura à l’arrivée.
+  distribution.bloc.il_est_parti_a_la_nuit_ca_serpente_mais_c_est_la_seule_qui_evite_le_pont_du_threnny	Il est en route. Ça serpente, mais c’est la seule qui évite le pont du Threnny.
+  distribution.bloc.l_agence	l’agence
+  distribution.bloc.l_imprimerie	l’imprimerie
+  distribution.bloc.la_banque	la banque
+  distribution.bloc.la_marchandise_est_prete_au_labo_dites_moi_qui_part_et_par_ou_et_je_l_enverrai_ce_soir	La marchandise est prête au labo. Dites-moi qui part et par où, et je l’envoie tout de suite.
+  distribution.bloc.la_planque	la planque
+  distribution.bloc.la_raffinerie	la raffinerie
+  distribution.bloc.la_regulation	LA RÉGULATION
+  distribution.bloc.la_reserve	la réserve
+  distribution.bloc.la_serre	la serre
+  distribution.bloc.le_coin_de_vente	le coin de vente
+  distribution.bloc.le_commerce_ecran	le commerce-écran
+  distribution.bloc.le_labo	le labo
+  distribution.bloc.le_labo_specialise	le labo spécialisé
+  distribution.bloc.le_relais	le relais
+  distribution.bloc.pas_encore_tendue	pas encore tendue
+  distribution.bloc.plusieurs_ponts	plusieurs ponts
+  distribution.bloc.saturee	saturée
+  distribution.bloc.tient	tient
+  distribution.bloc.tordu_beaucoup_de_detours	tordu — beaucoup de détours
+  distribution.bloc.un_pont	un pont
+  distribution.bloc.vos_courriers	VOS COURRIERS
+  distribution.bouton.acheter_un_velo	ACHETER UN VÉLO
+  distribution.bouton.envoyer_ce_soir	ENVOYER MAINTENANT
+  distribution.bouton.tendre_une_autre_ficelle	TENDRE UNE AUTRE FICELLE
+  distribution.geste.acheter_un_relais	Acheter un relais
+  distribution.geste.coute_de_l_argent_et_votre_decision_de_structure_du_jour_il_s_ouvre_ensuite_depuis_sa_fiche_sur_le_port_ou_dans_les_cheminees_seulement_et_en_demandera_une_autre_demain	Coûte de l’argent et votre décision de structure du jour ; il s’ouvre ensuite depuis sa fiche — sur le port ou dans les cheminées seulement — et en demandera une autre, demain.
+  distribution.geste.l_achat_n_a_pas_abouti	L’achat n’a pas abouti
+  distribution.geste.relais_achete_reste_a_l_ouvrir_depuis_sa_fiche	Relais acheté. Reste à l’ouvrir, depuis sa fiche.
+  distribution.sous_titre.reessayez_dans_un_instant	Réessayez dans un instant.
+  distribution.titre.l_envoi_de_ce_soir	Le prochain envoi
+  distribution.titre.la_distribution_n_a_pas_repondu	La distribution n'a pas répondu
+  distribution.vide.pas_encore_de_relais	Pas encore de relais.
+  distribution.vide.sans_relais_rien_ne_part_c_est_de_la_que_vos_coursiers_livrent	Sans relais, rien ne part : c’est de là que vos coursiers livrent.
+  distribution.vide.un_relais_s_achete_sur_un_bloc_libre_puis_s_ouvre_depuis_sa_fiche	Un relais s’achète sur un bloc libre, puis s’ouvre depuis sa fiche, sur le port ou dans les cheminées seulement — de l’argent et deux décisions de structure, sur deux jours.
+  district.fiche.a_collecter	À COLLECTER
+  district.fiche.blanchiment_choisissez_un_commerce_de_facade	Pour blanchir, choisissez d’abord un commerce de façade.
+  district.fiche.blanchiment_indisponible_aucune_planque	Blanchiment impossible : vous n’avez aucune planque.
+  district.fiche.blanchiment_indisponible_raison	Blanchiment refusé. {raison}
+  district.fiche.blanchiment_indisponible_session_absente	Blanchiment impossible : la connexion au jeu est perdue.
+  district.fiche.chaleur_locale	CHALEUR LOCALE
+  district.fiche.collecte_choisissez_un_point_de_vente	Pour ramasser, choisissez d’abord un point de vente.
+  district.fiche.collecte_indisponible_raison	Collecte refusée. {raison}
+  district.fiche.collecte_indisponible_session_absente	Collecte impossible : la connexion au jeu est perdue.
+  district.fiche.petit_lot_confie_a_la_filiere	Un petit lot est confié à la filière.
+  district.fiche.recherche_de_la_planque	On cherche la planque…
+  district.fiche.recherche_du_dealer_et_de_la_planque	On cherche le dealer et la planque…
+  district.fiche.reponse_absente	Aucune réponse n’est arrivée.
+  district.fiche.revenus	REVENUS
+  district.fiche.rien_a_ramasser_personne_ne_tient_ce_point_de_vente	Rien à ramasser : personne ne tient ce point de vente.
+  district.fiche.type_lieu	{type} · {district}, îlot {block}
+  district.fiche.type_lieu.rang	{type} · {district}, îlot {block}, n° {rang}
+  district.type_batiment.terrain_vague	Terrain vague
+  error.engagements.muscle_lieutenant_required	Seul un lieutenant du genre Gros bras peut partir sur ce coup. Envoyez-en un, ou recrutez-en un.
+  exception_detail.bloc.appui_long_la_carte_se_ferme	appui long — la carte se ferme
+  exception_detail.bloc.appui_long_la_carte_se_ferme_le_batiment_lui_se_repare_avec_le_temps	appui long — la carte se ferme ; le bâtiment, lui, se répare avec le temps
+  exception_detail.bloc.back	Back
+  exception_detail.bloc.escalate	Escalader
+  exception_detail.bloc.je_fais_quoi	Je fais quoi ?
+  exception_detail.bloc.lui_apprendre	Lui apprendre
+  exception_detail.bloc.risque	Risqué
+  exception_detail.bloc.sans_suite	Sans suite
+  exception_detail.bloc.suggere	Suggéré
+  exception_detail.refus.votre_decision_n_a_pas_ete_enregistree_reessayez	Votre décision n’a pas été enregistrée. Réessayez.
+  exceptions.bloc.a_relire_a_tete_reposee	à relire à tête reposée
+  exceptions.bloc.au_batiment_touche	au bâtiment touché
+  exceptions.bloc.autre_issue	autre issue
+  exceptions.bloc.autres_issues	autres issues
+  exceptions.bloc.escalades_archivees	Escalades archivées
+  exceptions.bloc.il_attend_une_consigne	il attend une consigne
+  exceptions.bloc.le_comptoir_n_a_pas_repondu	Le comptoir n'a pas répondu.
+  exceptions.bloc.ouvrir_sa_main	OUVRIR SA MAIN
+  exceptions.bloc.patron	Patron
+  exceptions.bloc.rien_a_relire	rien à relire
+  exceptions.bloc.suggere_appui_long_sa_main	suggéré · appui long — sa main
+  exceptions.bloc.toute_la_ville	toute la ville
+  exceptions.categorie.conflit	CONFLIT
+  exceptions.categorie.diplomatie	DIPLOMATIE
+  exceptions.categorie.renseignement	RENSEIGNEMENT
+  exceptions.categorie.reputation	RÉPUTATION
+  exceptions.locuteur.la_ville	La ville
+  exceptions.locuteur.votre_lieutenant	Votre lieutenant
+  exceptions.nombre.cinq	Cinq
+  exceptions.nombre.deux	Deux
+  exceptions.nombre.plusieurs	Plusieurs
+  exceptions.nombre.quatre	Quatre
+  exceptions.nombre.six	Six
+  exceptions.nombre.trois	Trois
+  famille.anciennete.de_la_vieille_garde	De la vieille garde
+  famille.anciennete.depuis_peu	Depuis peu
+  famille.anciennete.depuis_un_moment	Depuis un moment
+  famille.anciennete.du_metier	Du métier
+  famille.anciennete.fait_partie_des_murs	Fait partie des murs
+  famille.archetype.blanchiment	Blanchiment
+  famille.archetype.comptable	Comptable
+  famille.archetype.cuisinier	Cuisinier
+  famille.archetype.distribution	Distribution
+  famille.archetype.gros_bras	Gros bras
+  famille.archetype.inconnu	Inconnu
+  famille.archetype.intendant	Intendant
+  famille.archetype.logistique	Logistique
+  famille.archetype.renseignement	Renseignement
+  famille.archetype.securite	Sécurité
+  famille.band.bas	Bas
+  famille.band.epuise	Épuisé
+  famille.band.inconnu	Inconnu
+  famille.band.normal	Normal
+  famille.band.plein	Plein
+  famille.category.audit_comptable	Audit comptable
+  famille.category.categorie_inconnue	Catégorie inconnue
+  famille.category.envoi_de_distribution	Envoi de distribution
+  famille.category.flux_de_blanchiment	Flux de blanchiment
+  famille.category.incident_transversal	Incident transversal
+  famille.category.operations_de_production	Opérations de production
+  famille.category.reponse_securite	Réponse sécurité
+  famille.category.routage_logistique	Routage logistique
+  famille.disruption.s_installe_lentement	S'installe lentement
+  famille.disruption.s_installe_normalement	S'installe normalement
+  famille.disruption.s_installe_tres_lentement	S'installe très lentement
+  famille.disruption.s_installe_vite	S'installe vite
+  famille.ecran.actions	Actions
+  famille.ecran.ajouter_une_regle	+ Ajouter une règle
+  famille.ecran.anciennete	Ancienneté
+  famille.ecran.archetype	Archétype
+  famille.ecran.attache	Attaché ✓
+  famille.ecran.attacher	Attacher
+  famille.ecran.aucun_budget_d_autonomie_pour_l_instant	Aucun budget d'autonomie pour l'instant
+  famille.ecran.aucun_lieutenant_recrute	Aucun lieutenant recruté
+  famille.ecran.aucun_script_pour_l_instant	(aucun script pour l'instant)
+  famille.ecran.aucune_equipe_rattachee	Aucune équipe rattachée
+  famille.ecran.aucune_regle_touchez_ajouter_une_regle	(aucune règle — touchez « + Ajouter une règle »)
+  famille.ecran.batiment_affecte	Bâtiment affecté
+  famille.ecran.batiment_cible_destination_planque	Bâtiment cible (destination / planque)
+  famille.ecran.brouiller_un_repere	Brouiller un repère
+  famille.ecran.choisissez_un_batiment_de_destination	Choisissez un bâtiment de destination.
+  famille.ecran.combinateur	Combinateur
+  famille.ecran.confirmer_la_reaffectation	Confirmer la réaffectation
+  famille.ecran.connectez_vous_d_abord	Connectez-vous d'abord.
+  famille.ecran.cout_de_reecriture	Coût de réécriture
+  famille.ecran.decision_appliquee	Décision appliquée ✓
+  famille.ecran.declencheurs	Déclencheurs
+  famille.ecran.diagnostics	Diagnostics
+  famille.ecran.donner_un_ordre	Donner un ordre
+  famille.ecran.echec_de_l_etat	Échec de l'état.
+  famille.ecran.echec_de_la_decision	Échec de la décision.
+  famille.ecran.echec_de_la_reaffectation	Échec de la réaffectation.
+  famille.ecran.echec_du_chargement_de_la_famille	Échec du chargement de la famille.
+  famille.ecran.echec_du_recrutement	Échec du recrutement.
+  famille.ecran.editeur_de_regles_ecrire_un_script_de_conduite	ÉDITEUR DE RÈGLES — écrire un script de conduite
+  famille.ecran.en_faire_la_regle	En faire la règle
+  famille.ecran.et_quand_il_expire	Et quand il expire
+  famille.ecran.etat	État
+  famille.ecran.etat_lieutenant_delegue	ÉTAT — lieutenant délégué
+  famille.ecran.gain_de_rendement	Gain de rendement
+  famille.ecran.garder_l_anciennete_annuler	Garder l'ancienneté (annuler)
+  famille.ecran.la_famille	LA FAMILLE
+  famille.ecran.laisser_passer_celle_ci	Laisser passer celle-ci
+  famille.ecran.le_don	LE DON
+  famille.ecran.lui_elargir_sa_marge	Lui élargir sa marge
+  famille.ecran.lui_rendre_sa_marge	Lui rendre sa marge
+  famille.ecran.mode	Mode
+  famille.ecran.nom	Nom
+  famille.ecran.nom_ecoute_autre_chose_que_vos_ordres	{nom} écoute autre chose que vos ordres
+  famille.ecran.nouveau_batiment	Nouveau bâtiment
+  famille.ecran.nouveau_batiment_cible_destination_planque	Nouveau bâtiment cible (destination / planque)
+  famille.ecran.nouvelle_recrue_archetype	Nouvelle recrue : {archetype}.
+  famille.ecran.ordre_permanent	Ordre permanent
+  famille.ecran.ouvrir	Ouvrir
+  famille.ecran.palier_de_vocabulaire_1_conditions_verrouillees_resolvez_des_exceptions_et_enseignez_des_regles_pour_debloquer	Palier de vocabulaire 1 — conditions verrouillées 🔒 (résolvez des exceptions et enseignez des règles pour débloquer)
+  famille.ecran.pour_une_duree_fixe	pour une durée fixe
+  famille.ecran.rafraichir	Rafraîchir
+  famille.ecran.rappeler_l_ordre_direct	Rappeler l’ordre direct
+  famille.ecran.reaffecte_anciennete_remise_a_zero_periode_de_stabilisation	Réaffecté — ancienneté remise à zéro, période de stabilisation.
+  famille.ecran.reaffecter	Réaffecter…
+  famille.ecran.reaffecter_deplacer_ce_lieutenant_remet_l_anciennete_a_zero	RÉAFFECTER — déplacer ce lieutenant (remet l'ancienneté à zéro)
+  famille.ecran.recruter_archetype	Recruter — {archetype}
+  famille.ecran.recruter_choisir_un_role_et_affecter	RECRUTER — choisir un rôle et affecter
+  famille.ecran.recruter_un_nouveau_lieutenant	Recruter un nouveau lieutenant
+  famille.ecran.recrutez_d_abord_un_lieutenant	Recrutez d'abord un lieutenant.
+  famille.ecran.recrutez_ou_ouvrez_d_abord_un_lieutenant	Recrutez ou ouvrez d'abord un lieutenant.
+  famille.ecran.regles	Règles
+  famille.ecran.remettre_l_ecoute_a_zero	Remettre l’écoute à zéro
+  famille.ecran.renouveler	Renouveler
+  famille.ecran.retirer	Retirer
+  famille.ecran.role	Rôle
+  famille.ecran.script_de_conduite	Script de conduite
+  famille.ecran.script_valide	Script valide ✓
+  famille.ecran.signal	Signal
+  famille.ecran.signer_l_ordre	Signer l’ordre
+  famille.ecran.son_ordre_du_moment_a_tenu_vous_pouvez_le_renouveler_le_retirer_ou_en_faire_sa_regle_par_defaut	Son ordre du moment a tenu. Vous pouvez le renouveler, le retirer, ou en faire sa règle par défaut.
+  famille.ecran.stabilisation_apres_transfert	Stabilisation après transfert
+  famille.ecran.valider	Valider
+  famille.ecran.verrouille_se_debloque_avec_la_progression	🔒 Verrouillé — se débloque avec la progression
+  famille.ecran.votre_decision_de_structure_d_aujourd_hui_est_prise_reprenez_demain	Votre décision de structure d’aujourd’hui est prise. Reprenez demain.
+  famille.ecran.votre_equipe_est_au_complet	Votre équipe est au complet.
+  famille.efficiencybonus.aucun_gain_de_rendement	Aucun gain de rendement
+  famille.efficiencybonus.bon_gain_de_rendement	Bon gain de rendement
+  famille.efficiencybonus.gain_de_rendement_maximal	Gain de rendement maximal
+  famille.efficiencybonus.petit_gain_de_rendement	Petit gain de rendement
+  famille.fiabilite.a_moitie_fiable	à moitié fiable
+  famille.fiabilite.decisif	décisif
+  famille.fiabilite.en_sommeil	en sommeil
+  famille.fiabilite.fiable	fiable
+  famille.grantedrole.chef_de_groupe	Chef de groupe
+  famille.grantedrole.conseil	Conseil
+  famille.grantedrole.executant	Exécutant
+  famille.grantedrole.responsable_delegue	Responsable délégué
+  famille.lapse.l_ordre_continue	l’ordre continue
+  famille.lapse.on_vous_demande	on vous demande
+  famille.lapse.retour_a_la_routine	retour à la routine
+  famille.mode.delegue	Délégué
+  famille.mode.missionne	Missionné
+  famille.mode.mode_inconnu	Mode inconnu
+  famille.opstate.actif	Actif
+  famille.opstate.au_repos	Au repos
+  famille.opstate.en_pause	En pause
+  famille.opstate.prend_ses_marques	Prend ses marques
+  famille.ordre.aucun_ordre	aucun ordre
+  famille.ordre.echu	échu
+  famille.ordre.en_cours	en cours
+  famille.ordre.expire_bientot	expire bientôt
+  famille.refus.aucun_ordre_en_cours	aucun ordre en cours
+  famille.refus.ce_geste_n_est_pas_reconnu	ce geste n’est pas reconnu
+  famille.refus.cet_ordre_n_a_pas_encore_fait_ses_preuves	cet ordre n’a pas encore fait ses preuves
+  famille.refus.trop_tot_pour_refaire_ce_geste	trop tôt pour refaire ce geste
+  famille.regle.comme_d_habitude	Comme d’habitude
+  famille.regle.dans_mon_batiment	dans mon bâtiment
+  famille.regle.faire_comme_d_habitude	faire comme d’habitude
+  famille.regle.suspendre	Suspendre
+  famille.regle.suspendre_les_operations	suspendre les opérations
+  famille.repere.ce_qu_il_reste	ce qu’il reste
+  famille.repere.ce_que_font_les_autres	ce que font les autres
+  famille.repere.l_etat_du_terrain	l’état du terrain
+  famille.repere.l_heure	l’heure
+  famille.revisioncost.reecrire_coute_cher	Réécrire coûte cher
+  famille.revisioncost.reecrire_coute_enormement	Réécrire coûte énormément
+  famille.revisioncost.reecrire_coute_peu	Réécrire coûte peu
+  famille.revisioncost.reecrire_coute_tres_cher	Réécrire coûte très cher
+  famille.rulecount.aucune_regle	Aucune règle
+  famille.rulecount.beaucoup_de_regles	Beaucoup de règles
+  famille.rulecount.quelques_regles	Quelques règles
+  famille.signal.a_l_ecoute	à l’écoute
+  famille.signal.derive	dérive
+  famille.signal.n_ecoute_que_le_terrain	n’écoute que le terrain
+  famille.signal.se_recale	se recale
+  famille.vide.au_repos_rien_a_cuire_pour_l_instant	Au repos : rien à cuire pour l’instant.
+  famille.vide.commandez_de_la_matiere_depuis_la_chaine_d_appro	Commandez de la matière depuis la chaîne d’appro.
+  filiere.bloc.aucun_nœud_pour_vous	AUCUN NŒUD POUR VOUS
+  filiere.bloc.blanchir	Blanchir
+  filiere.bloc.ce_n_est_ni_elle_est_vide_ni_elle_ne_repond_pas_c_est_pas_encore	ce n'est ni « elle est vide » ni « elle ne répond pas », c'est « pas encore ».
+  filiere.bloc.ce_n_est_pas_une_panne_c_est_un_etat_il_n_y_a_rien_a_montrer_tant_qu_il_n_y_a_rien_de_monte_il_faut_une_planque_pour_que_la_filiere_commence_quelque_part	ce n'est pas une panne, c'est un état : il n'y a rien à montrer tant qu'il n'y a rien de monté. Il faut une planque pour que la filière commence quelque part.
+  filiere.bloc.ce_qu_on_sait_pour_l_instant	CE QU'ON SAIT POUR L'INSTANT
+  filiere.bloc.ce_qu_on_sait_vraiment	CE QU'ON SAIT VRAIMENT
+  filiere.bloc.ce_que_la_chaine_fait_de_votre_argent	CE QUE LA CHAÎNE FAIT DE VOTRE ARGENT
+  filiere.bloc.ce_que_la_filiere_ne_dit_pas	CE QUE LA FILIÈRE NE DIT PAS
+  filiere.bloc.chaque_etape_rend_l_argent_un_peu_plus_propre_que_la_precedente_seule_la_derniere_credite_le_portefeuille_tant_qu_il_n_y_a_pas_de_sortie_il_n_y_a_pas_d_argent_seulement_une_file_d_attente	chaque étape rend l'argent un peu plus propre que la précédente. Seule la DERNIÈRE crédite le portefeuille — tant qu'il n'y a pas de sortie, il n'y a pas d'argent, seulement une file d'attente.
+  filiere.bloc.de_l_argent_attend_a_cette_etape	de l'argent attend à cette étape
+  filiere.bloc.ecart	écart
+  filiere.bloc.ecarts	ÉCARTS
+  filiere.bloc.elle_le_lave_par_paliers_pas_d_un_coup	Elle le lave par paliers, pas d'un coup
+  filiere.bloc.en_attente	EN ATTENTE
+  filiere.bloc.etape	ÉTAPE
+  filiere.bloc.etapes	ÉTAPES
+  filiere.bloc.la_chaine_de_la_tete_a_la_sortie	LA CHAÎNE, DE LA TÊTE À LA SORTIE
+  filiere.bloc.la_filiere	La filière
+  filiere.bloc.la_filiere_n_a_pas_encore_ete_interrogee	La filière n'a pas encore été interrogée
+  filiere.bloc.la_filiere_n_a_pas_repondu	LA FILIÈRE N'A PAS RÉPONDU
+  filiere.bloc.la_filiere_s_ecarte_de_son_profil	La filière s’écarte de son profil
+  filiere.bloc.la_sortie	LA SORTIE
+  filiere.bloc.le_premier_maillon_sans_elle_rien_n_entre_dans_la_filiere_et_rien_ne_se_ramasse_chez_les_dealers_non_plus	le premier maillon : sans elle, rien n'entre dans la filière — et rien ne se ramasse chez les dealers non plus.
+  filiere.bloc.obtenir_une_planque	Obtenir une planque
+  filiere.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_la_filiere_est_vide_c_est_on_ne_sait_pas_ou_elle_en_est	on n'a pas eu de réponse. Ce n'est pas « la filière est vide » : c'est « on ne sait pas où elle en est ».
+  filiere.bloc.on_ne_vous_dira_que_si_c_est_propre_ni_combien_ni_depuis_quand_ni_a_quel_prix_c_est_voulu	on ne vous dira que si c'est propre : ni combien, ni depuis quand, ni à quel prix. C'est voulu.
+  filiere.bloc.on_vous_dit_oui_ou_non_jamais_de_combien_ni_pourquoi_c_est_le_seul_signal_d_alerte_de_la_filiere_et_il_ne_se_mesure_pas	on vous dit oui ou non : jamais de combien, ni pourquoi. C’est le seul signal d’alerte de la filière — et il ne se mesure pas.
+  filiere.bloc.pas_de_reponse	Pas de réponse
+  filiere.bloc.propres	PROPRES
+  filiere.bloc.rien_n_attend_a_cette_etape	rien n'attend à cette étape
+  filiere.bloc.un_seul_voyant	un seul voyant
+  filiere.bloc.vous_n_avez_encore_aucun_nœud	Vous n'avez encore aucun nœud
+  filiere.etat.a_blanchir_la_planque_est_pleine	À blanchir : la planque est pleine.
+  filiere.etat.l_argent_passe_de_la_planque_a_la_filiere	l’argent passe de la planque à la filière
+  filiere.etat.votre_planque_enseigne_tient_de_quoi_blanchir	Votre planque, {enseigne}, tient de quoi blanchir.
+  filiere.etat.votre_planque_tient_de_quoi_blanchir	Votre planque tient de quoi blanchir.
+  filiere.sous_titre.la_filiere_s_ecarte_de_son_profil	la filière s’écarte de son profil
+  filiere.vide.l_argent_y_entre_quand_vous_ramassez_la_caisse_d_un_dealer	L’argent y entre quand vous ramassez la caisse d’un dealer.
+  filiere.vide.votre_planque_enseigne_est_vide	Votre planque, {enseigne}, est vide.
+  forensic.bloc.acheter_du_renseignement	Acheter du renseignement
+  forensic.bloc.acteurs_connus	acteurs connus
+  forensic.bloc.acteurs_qui_tiennent	acteurs qui tiennent
+  forensic.bloc.c_est_juste_une_nouvelle	C’est juste une nouvelle
+  forensic.bloc.ce_n_est_pas_une_bonne_nouvelle	ce n’est pas une bonne nouvelle
+  forensic.bloc.ce_qu_on_sait_vraiment	CE QU'ON SAIT VRAIMENT
+  forensic.bloc.ceux_qui_ne_sont_pas_sur_la_liste	ceux qui ne sont pas sur la liste
+  forensic.bloc.d_autres_parlent_et_vous_ne_les_voyez_pas	D’autres parlent, et vous ne les voyez pas
+  forensic.bloc.franchies	franchies
+  forensic.bloc.le_dossier	Le dossier
+  forensic.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_tout_va_bien_c_est_on_ne_sait_pas	on n'a pas eu de réponse. Ce n'est pas « tout va bien » : c'est « on ne sait pas ».
+  forensic.bloc.on_peut_etre_propre_sur_deux_et_pris_sur_la_troisieme	On peut être propre sur deux et pris sur la troisième
+  forensic.bloc.pas_de_reponse	Pas de réponse
+  forensic.bloc.pas_encore_sur_la_table	pas encore sur la table
+  forensic.bloc.personne_n_a_encore_eu_de_raison_de_vous_ouvrir_un_dossier	Personne n’a encore eu de raison de vous ouvrir un dossier.
+  forensic.bloc.pistes_chaudes	pistes chaudes
+  forensic.bloc.pourquoi_trois_colonnes	pourquoi trois colonnes
+  forensic.bloc.qui_ont_peur	qui ont peur
+  forensic.bloc.qui_parle_et_qui_a_peur	qui parle, et qui a peur
+  forensic.bloc.renseignement	renseignement
+  forensic.bloc.rien_a_votre_nom	Rien à votre nom.
+  forensic.bloc.trois_pistes_et_elles_ne_se_melangent_pas	trois pistes, et elles ne se mélangent pas
+  forensic.cran.ca_se_voit	ça se voit
+  forensic.cran.des_traces	des traces
+  forensic.cran.invisible	invisible
+  forensic.cran.un_dossier_est_ouvert	Un dossier est ouvert
+  forensic.enseigne.rien_a_votre_nom	rien à votre nom
+  forensic.evenement.ca_saute_aux_yeux	Ça saute aux yeux
+  forensic.evenement.convocation_recue	Convocation reçue
+  forensic.evenement.ils_sont_venus	Ils sont venus
+  forensic.gravite.ca_se_remarque	Ça se remarque
+  forensic.gravite.ca_se_voit_de_loin	Ça se voit de loin
+  forensic.gravite.on_vous_regarde	On vous regarde
+  forensic.gravite.rien_ne_depasse	Rien ne dépasse
+  game.ui_common.cancel_button	Annuler
+  horizon.bloc.a_portee	À PORTÉE
+  horizon.bloc.aucune_de_ces_cartes_n_a_encore_de_nom	Aucune de ces cartes n'a encore de nom
+  horizon.bloc.c_etait_a_portee_ca_s_est_eloigne	C'était à portée. Ça s'est éloigné.
+  horizon.bloc.ce_palier_est_acquis	ce palier est acquis
+  horizon.bloc.ce_qu_on_sait_vraiment	CE QU'ON SAIT VRAIMENT
+  horizon.bloc.ce_qui_manque_encore	ce qui manque encore
+  horizon.bloc.deja_prises	DÉJÀ PRISES
+  horizon.bloc.etat_inconnu	état inconnu
+  horizon.bloc.indisponible	indisponible
+  horizon.bloc.l_horizon	L'horizon
+  horizon.bloc.l_horizon_se_remplit_en_jouant	L'horizon se remplit en jouant.
+  horizon.bloc.les_cartes_viennent_du_monde_pas_du_menu	Les cartes viennent du monde, pas du menu
+  horizon.bloc.on_ne_sait_pas_encore_ce_qui_manque_pour_y_arriver	on ne sait pas encore ce qui manque pour y arriver
+  horizon.bloc.ont_recule	ONT RECULÉ
+  horizon.bloc.palier	Palier 
+  horizon.bloc.pourquoi_c_est_vide	pourquoi c'est vide
+  horizon.bloc.rien_a_l_horizon	rien à l'horizon
+  horizon.bloc.rien_ne_s_ouvre_pour_l_instant	Rien ne s'ouvre pour l'instant.
+  horizon.bloc.vous_avez_commence	vous avez commencé
+  horizon.bloc.vous_n_avez_encore_rien_engage	vous n'avez encore rien engagé
+  inspection.vide.aucune_inspection_en_cours	Aucune inspection en cours.
+  journal.bloc.0_breves_sont_arrivees_sans_leur_texte	{0} brèves sont arrivées sans leur texte
+  journal.bloc.a_la_une	À LA UNE
+  journal.bloc.ca_commence	ÇA COMMENCE
+  journal.bloc.ca_ne_partira_pas	ÇA NE PARTIRA PAS
+  journal.bloc.ca_retombe	ÇA RETOMBE
+  journal.bloc.ca_se_deploie	ÇA SE DÉPLOIE
+  journal.bloc.ca_traine	ÇA TRAÎNE
+  journal.bloc.ce_qu_on_sait_pour_l_instant	CE QU'ON SAIT POUR L'INSTANT
+  journal.bloc.ce_qu_on_sait_vraiment	CE QU'ON SAIT VRAIMENT
+  journal.bloc.ces_trois_listes_se_remplissent_avec_ce_que_la_ville_fait_aucune_ne_depend_de_vos_gestes	ces trois listes se remplissent avec ce que la ville fait. Aucune ne dépend de vos gestes.
+  journal.bloc.dans_la_rue	DANS LA RUE
+  journal.bloc.en_attente_du_matin	EN ATTENTE DU MATIN
+  journal.bloc.en_cours	EN COURS
+  journal.bloc.le_journal	Le journal
+  journal.bloc.le_journal_n_a_pas_encore_ete_ouvert	Le journal n'a pas encore été ouvert
+  journal.bloc.le_journal_n_est_pas_arrive	LE JOURNAL N'EST PAS ARRIVÉ
+  journal.bloc.le_journal_suit_le_monde_pas_vous	Le journal suit le monde, pas vous
+  journal.bloc.les_trois_listes_n_ont_pas_ete_demandees_ce_n_est_ni_rien_ne_bouge_ni_pas_de_reponse_c_est_pas_encore	les trois listes n'ont pas été demandées — ce n'est ni « rien ne bouge » ni « pas de réponse », c'est « pas encore ».
+  journal.bloc.leur_cle_est_montree_a_la_place_du_titre_le_reste_du_journal_est_ecrit	leur clé est montrée à la place du titre. Le reste du journal est écrit.
+  journal.bloc.on_n_a_pas_eu_de_reponse_ce_n_est_pas_la_ville_est_calme_c_est_on_ne_sait_pas_ce_qu_elle_a_fait_cette_nuit	on n’a pas eu de réponse. Ce n’est pas « la ville est calme » : c’est « on ne sait pas ce qu’elle a fait ».
+  journal.bloc.on_peut_assister_a_ce_qui_se_passe_c_est_le_seul_geste_que_la_rue_accepte	on peut assister à ce qui se passe — c’est le seul geste que la rue accepte
+  journal.bloc.pas_de_reponse	Pas de réponse
+  journal.bloc.phase_inconnue	PHASE INCONNUE
+  journal.bloc.pourquoi_c_est_vide	POURQUOI C'EST VIDE
+  journal.bloc.quartier_0	quartier {0}
+  journal.bloc.rien_ne_bouge	RIEN NE BOUGE
+  journal.bloc.une_breve_est_arrivee_sans_son_texte	Une brève est arrivée sans son texte
+  journal.bouton.y_preter_attention	Y PRÊTER ATTENTION
+  journal.fraicheur.fading	la semaine passée
+  journal.fraicheur.fresh	ce matin
+  journal.fraicheur.settling	hier
+  lieutenant.editeur.ces_regles_ne_passent_pas	Ces règles ne passent pas.
+  lieutenant.editeur.ligne_colonne_message	Ligne {ligne}, colonne {colonne} — {message}
+  loi.bloc.affaires_en_cours	AFFAIRES EN COURS
+  loi.bloc.aucune_affaire_en_cours	Aucune affaire en cours.
+  loi.bloc.cabinet	cabinet
+  loi.bloc.commis_d_office	Commis d’office
+  loi.bloc.filiere	filière
+  loi.bloc.la_filiere_fait_classer_une_affaire_sans_proces_mais_elle_se_sert_de_gens_qui_un_jour_peuvent_parler_a_leur_tour	La filière fait classer une affaire sans procès — mais elle se sert de gens qui, un jour, peuvent parler à leur tour.
+  loi.bloc.le_commis_d_office_fait_ce_qu_il_peut	le commis d’office fait ce qu’il peut
+  loi.bloc.qui_peut_vous_defendre	QUI PEUT VOUS DÉFENDRE
+  loi.bloc.une_affaire_nait_d_une_descente_rien_ici_n_en_cree	Une affaire naît d'une descente — rien ici n'en crée.
+  loi.bloc.vos_avocats	VOS AVOCATS
+  loi.bloc.vous_n_avez_encore_engage_personne	Vous n’avez encore engagé personne.
+  loi.bouton.lui_trouver_un_avocat	LUI TROUVER UN AVOCAT
+  loi.refus.l_embauche_n_a_pas_abouti_reessayez_plus_tard	L’embauche n’a pas abouti. Réessayez plus tard.
+  loi.refus.la_retention_n_a_pas_change_reessayez_plus_tard	La rétention n’a pas changé. Réessayez plus tard.
+  loi.sous_titre.reessayez_dans_un_instant	Réessayez dans un instant.
+  loi.sous_titre.vos_avocats_et_ce_qu_ils_peuvent_faire_pour_vous	Vos avocats, et ce qu'ils peuvent faire pour vous.
+  loi.titre.le_parloir	Le parloir
+  loi.titre.le_parloir_n_a_pas_repondu	Le parloir n'a pas répondu
+  marche.colonne.quartier	quartier
+  marche.compteur.lignes_connues	lignes connues
+  marche.compteur.quartiers_noirs	quartiers noirs
+  marche.compteur.sures	sûres
+  marche.etat.chargement	On interroge le tableau…
+  marche.etat.echec	Le tableau ne répond pas.
+  marche.forme.briques	briques
+  marche.forme.cristaux	cristaux
+  marche.forme.plaque	plaque
+  marche.forme.prismes	prismes
+  marche.origine.extrait_de_racine	extrait de racine
+  marche.origine.herbe_des_friches	herbe des friches
+  marche.origine.lys_de_verre	lys de verre
+  marche.origine.resine_de_lull	résine de lull
+  marche.phrase.bande_high	plusieurs des nôtres y ont traité, les sources se tiennent. On ne vous dira toujours pas le prix : seulement que la ligne tient.
+  marche.phrase.bande_low	une seule source, jamais recoupée — un bruit de comptoir. On ne vous dira pas le prix : seulement qu’on en parle.
+  marche.phrase.bande_moderate	deux sources concordantes — ni une rumeur, ni une certitude. On ne vous dira pas le prix, ni ce qui s’écoule : seulement à quel point on peut s’y fier.
+  marche.phrase.bilan_lignes	{n, plural, =0 {Aucune ligne sur {total} : personne des nôtres n’a encore traité nulle part.} one {Une ligne sur {total}. Le reste, personne des nôtres n’y a jamais traité.} other {# lignes sur {total}. Le reste, personne des nôtres n’y a jamais traité.}}
+  marche.phrase.case_ash	la poudre grise ne se vend pas à un dealer : elle se place, au rendez-vous, chez ceux du Verre.
+  marche.phrase.case_sans_ligne	aucun des nôtres n’a jamais rien écoulé là-bas. Ce n’est pas une ligne à zéro : c’est une ligne jamais ouverte. Elle s’allumera le jour où un de vos dealers y traitera.
+  marche.sous_titre.tableau_du_verge_d_or	tableau du Verge d’Or
+  marche.substance.	
+  marche.titre.hors_du_tableau	HORS DU TABLEAU
+  marche.titre.le_marche	LE MARCHÉ
+  marche.titre.voyant_eteint	voyant éteint
+  plus.entree.ce_que_vous_avez_confie	Ce que vous avez confié
+  plus.entree.l_horizon_des_possibles	L’horizon des possibles
+  plus.entree.la_chaine_d_appro	La chaîne d’appro
+  plus.entree.la_distribution	La distribution
+  plus.entree.la_loi	La loi
+  plus.entree.la_premiere_fois	La première fois
+  plus.entree.la_reputation	La réputation
+  plus.entree.la_revue_du_jour	La revue du jour
+  plus.entree.la_semaine	La semaine
+  plus.entree.la_vente	La vente
+  plus.entree.la_vitrine	La vitrine
+  plus.entree.le_commissariat	Le commissariat
+  plus.entree.le_conflit	Le conflit
+  plus.entree.le_dossier	Le dossier
+  plus.entree.le_journal_la_rue	Le journal & la rue
+  plus.entree.le_marche	Le marché
+  plus.entree.les_inspections	Les inspections
+  plus.entree.les_ordres_du_soir	Les ordres du soir
+  plus.entree.les_reglages	Les réglages
+  plus.entree.raser_un_site	Raser un site
+  plus.entree.votre_profil	Votre profil
+  plus.groupe.ce_qui_se_dit	Ce qui se dit
+  plus.groupe.ce_qui_vous_guette	Ce qui vous guette
+  plus.groupe.vos_affaires	Vos affaires
+  plus.groupe.vos_journees	Vos journées
+  plus.groupe.vous	Vous
+  police.bloc.clairsemee	Clairsemée
+  police.bloc.en_chasse	EN CHASSE
+  police.bloc.en_sommeil	EN SOMMEIL
+  police.bloc.en_veille	EN VEILLE
+  police.bloc.partout	Partout
+  police.bloc.presente	Présente
+  police.bloc.rien_dans_les_rues	Rien dans les rues
+  police.bloc.soupcon	SOUPÇON
+  police.vide.le_commissariat_n_a_encore_rien_sur_vous	Le commissariat n’a encore rien sur vous.
+  police.vide.tant_que_vous_ne_faites_pas_de_bruit_ca_peut_durer	Tant que vous ne faites pas de bruit, ça peut durer.
+  profil.bloc.aucun_profil	Aucun profil.
+  profil.bloc.le_profil_n_a_pas_repondu	Le profil n'a pas répondu.
+  reglages.bloc.aucun_reglage	Aucun réglage.
+  reglages.bloc.ce_qui_ne_s_ouvre_pas_encore	Ce qui ne s’ouvre pas encore
+  reglages.bloc.cette_session_seulement	cette session seulement
+  reglages.bloc.decochez_le_jour_ou_vous_n_avez_plus_besoin_qu_on_vous_tienne_la_main	décochez le jour où vous n’avez plus besoin qu’on vous tienne la main
+  reglages.bloc.dire_mes_prix_au_marche	Dire mes prix au marché
+  reglages.bloc.fermer_le_coffre	Fermer le coffre
+  reglages.bloc.fermer_partout	Fermer partout
+  reglages.bloc.la_langue_de_la_maison	La langue de la maison
+  reglages.bloc.le_coffre_est_ferme	Le coffre est fermé.
+  reglages.bloc.le_jeu	Le jeu
+  reglages.bloc.les_reglages_n_ont_pas_repondu	Les réglages n'ont pas répondu.
+  reglages.bloc.mouvement_reduit	Mouvement réduit
+  reglages.bloc.on_vous_explique_encore	On vous explique encore
+  reglages.bloc.rouvrir_le_coffre	Rouvrir le coffre
+  reglages.bloc.sans_ca_le_marche_de_region_ne_vous_dit_rien_non_plus	sans ça, le marché de région ne vous dit rien non plus
+  reglages.bloc.tout_effacer	Tout effacer
+  reglages.bloc.votre_partie_vit_sur_cet_appareil_desinstaller_l_appli_l_efface	Votre partie vit sur cet appareil : désinstaller l’appli l’efface.
+  reputation.bloc.absorbees	absorbées
+  reputation.bloc.ce_qu_il_a_absorbe_de_vos_regles	ce qu’il a absorbé de vos règles
+  reputation.bloc.ce_qu_il_a_pris_de_vous_se_voit_sur_lui	ce qu’il a pris de vous se voit sur lui
+  reputation.bloc.ce_qui_a_change	ce qui a changé
+  reputation.bloc.chaque_vertu_qu_il_vous_voit_tenir_finit_sur_sa_tenue_col_manches_montre_gants	chaque vertu qu’il vous voit tenir finit sur sa tenue — col, manches, montre, gants.
+  reputation.bloc.donner_une_premiere_regle	Donner une première règle
+  reputation.bloc.donner_une_regle	DONNER UNE RÈGLE
+  reputation.bloc.il_a_deja_pris_de_vous_pas_encore_de_quoi_le_lire	il a déjà pris de vous, pas encore de quoi le lire
+  reputation.bloc.la_regle_du_jeu	la règle du jeu
+  reputation.bloc.le_miroir	Le miroir
+  reputation.bloc.n_vertus_sur_lui_pas_encore_un_verdict	{n, plural, one {Une vertu sur lui} other {# vertus sur lui}}, pas encore un verdict
+  reputation.bloc.ni_l_un_ni_l_autre	ni l’un ni l’autre
+  reputation.bloc.nom_votre_lieutenant	{nom}, votre lieutenant
+  reputation.bloc.regles_donnees	règles données
+  reputation.bloc.rien_n_a_encore_deteint	Rien n’a encore déteint
+  reputation.bloc.un_lieutenant_neuf_n_a_encore_rien_absorbe	un lieutenant neuf n’a encore rien absorbé
+  reputation.bloc.vous_vous_ecartez_de_vos_propres_regles	vous vous écartez de vos propres règles
+  reputation.bloc.vous_vous_lisez_sur_lui	Vous vous lisez sur lui
+  reputation.etat.coherence_inconnue	Cohérence inconnue
+  reputation.etat.il_se_ferme	Il se ferme
+  reputation.etat.il_se_tient_a_carreau	Il se tient à carreau
+  reputation.etat.il_vous_ecoute	Il vous écoute
+  reputation.etat.il_vous_en_veut	Il vous en veut
+  reputation.etat.la_comptabilite_tenue	la comptabilité tenue
+  reputation.etat.la_discretion_devant_les_civils	la discrétion devant les civils
+  reputation.etat.la_justice_envers_les_siens	la justice envers les siens
+  reputation.etat.la_ponctualite	la ponctualité
+  reputation.etat.offre_inconnue	Offre inconnue
+  reputation.etat.on_demande_des_gages	On demande des gages
+  reputation.etat.on_vient_sans_garantie	On vient sans garantie
+  reputation.etat.pas_encore_jugeable	Pas encore jugeable
+  reputation.etat.posture_inconnue	Posture inconnue
+  reputation.etat.vous_vous_en_ecartez	Vous vous en écartez
+  reputation.etat.vous_vous_y_tenez	Vous vous y tenez
+  revue.bloc.appui_long_rien_d_autre_ne_vous_attend	appui long — rien d’autre ne vous attend
+  revue.bloc.confirmer_la_routine	CONFIRMER LA ROUTINE · 
+  revue.bloc.d_un_seul_appui_le_registre_est_clos_pour_aujourd_hui	d’un seul appui — le registre est clos pour aujourd’hui
+  revue.bloc.routines_signees	 ROUTINES SIGNÉES
+  revue.bloc.vos_lieutenants_ont_tenu_la_ligne_rien_ne_reclame_votre_parole	Vos lieutenants ont tenu la ligne — rien ne réclame votre parole
+  revue.chip.signale_rarement	signale rarement
+  revue.chip.signale_souvent	signale souvent
+  revue.phrase.il_etait_plus_charge_ou_plus_regarde_que_d_habitude	— il était plus chargé, ou plus regardé, que d’habitude.
+  revue.phrase.il_passe_plus_d_argent_par_la_caisse_que_la_facade_ne_peut_en_justifier	— il passe plus d’argent par la caisse que la façade ne peut en justifier.
+  revue.phrase.j_ai_allege_le_stock	J’ai allégé le stock
+  revue.phrase.j_ai_fait_tourner_le_coin_de_vente	J’ai fait tourner le coin de vente
+  revue.phrase.j_ai_passe_la_commande_de_precurseurs	J’ai passé la commande de précurseurs
+  revue.phrase.j_ai_rapproche_les_comptes_de_la_facade	J’ai rapproché les comptes de la façade
+  revue.phrase.j_ai_rapproche_les_comptes_de_sujet	J’ai rapproché les comptes de {sujet}
+  revue.phrase.j_ai_reachemine_la_tournee_sujet	J’ai réacheminé la tournée {sujet}
+  revue.phrase.j_ai_replanifie_la_tournee_des_coursiers	J’ai replanifié la tournée des coursiers
+  revue.phrase.j_ai_replanifie_la_tournee_sujet	J’ai replanifié la tournée {sujet}
+  revue.phrase.j_ai_suivi_la_routine	J’ai suivi la routine
+  revue.phrase.l_ancien_trajet_ne_passait_plus_sature_ou_coupe	— l’ancien trajet ne passait plus : saturé, ou coupé.
+  revue.phrase.l_horaire_habituel_n_a_pas_ete_tenu	— l’horaire habituel n’a pas été tenu.
+  revue.phrase.la_caisse_declaree_s_ecarte_de_l_habitude	— la caisse déclarée s’écarte de l’habitude.
+  revue.phrase.la_facade_est_epinglee_pour_un_controle	— la façade est épinglée pour un contrôle.
+  revue.phrase.le_lek_tournait_hors_du_rythme_convenu	— le Lek tournait hors du rythme convenu.
+  revue.phrase.le_marche_est_plus_tendu_que_d_habitude	— le marché est plus tendu que d’habitude.
+  revue.phrase.le_trajet_fait_plus_de_detours_que_d_habitude	— le trajet fait plus de détours que d’habitude.
+  revue.phrase.quelque_chose_s_ecartait_de_l_habitude	— quelque chose s’écartait de l’habitude.
+  revue.reserve.elevee	ÉLEVÉE
+  revue.reserve.faible	FAIBLE
+  revue.reserve.normale	NORMALE
+  revue.verdict.il_garde_sa_confiance	il garde sa confiance
+  revue.verdict.jusqu_a_la_remise_hebdomadaire	jusqu’à la remise hebdomadaire
+  revue.verdict.perdu	PERDU
+  revue.verdict.remise_demain	remise demain
+  revue.verdict.rendu	RENDU
+  revue.vide.vos_lieutenants_n_ont_encore_rien_a_tenir_donnez_leur_une_premiere_regle	Vos lieutenants n’ont encore rien à tenir : donnez-leur une première règle.
+  semaine.bloc.un_autre_probleme_vient_d_apparaitre	un autre problème vient d'apparaître
+  semaine.bloc.vos_affaires_respirent	vos affaires respirent
+  tutoriel.ecran.a_decouvrir	À découvrir
+  tutoriel.ecran.compris	Compris
+  tutoriel.ecran.decochez_le_jour_ou_vous_n_avez_plus_besoin_qu_on_vous_tienne_la_main	décochez le jour où vous n’avez plus besoin qu’on vous tienne la main
+  tutoriel.ecran.on_vous_explique_encore	On vous explique encore
+  tutoriel.ecran.rien_de_nouveau_pour_aujourd_hui	Rien de nouveau pour aujourd’hui.
+  tutoriel.ecran.vous_avez_demande_qu_on_vous_laisse_tranquille	Vous avez demandé qu’on vous laisse tranquille.
+  tutoriel.ecran.vous_avez_tout_vu	Vous avez tout vu.
+  tutoriel.vide.une_premiere_lecon_vous_attend	Une première leçon vous attend.
+  vente.bloc.au_dessus	AU-DESSUS
+  vente.bloc.au_repos	au repos
+  vente.bloc.au_tarif	AU TARIF
+  vente.bloc.au_travail	au travail
+  vente.bloc.cher	CHER
+  vente.bloc.grille	grillé
+  vente.bloc.pas_la	pas là
+  vente.bloc.tres_cher	TRÈS CHER
+  vente.caisse.bande.full_il_ne_vend_plus_tant_qu_on_ne_ramasse_pas	il ne vend plus tant qu’on ne ramasse pas
+  vente.geste.acheter_un_point_de_vente	Acheter un coin de vente
+  vente.geste.aucun_bloc_libre_dans_votre_quartier	Aucun bloc libre dans votre quartier.
+  vente.geste.coute_de_l_argent_et_la_decision_de_structure_de_cette_session_il_faudra_ensuite_l_ouvrir_depuis_sa_fiche	Coûte de l’argent et votre décision de structure du jour ; l’ouvrir ensuite, depuis sa fiche, en demandera une autre, demain.
+  vente.geste.l_achat_n_a_pas_abouti	L’achat n’a pas abouti
+  vente.geste.la_caisse_a_rejoint_votre_planque	La caisse a rejoint votre planque.
+  vente.geste.le_dealer_n_a_pas_ete_poste	Le poste n’a pas pu être pourvu
+  vente.geste.point_de_vente_achete_ouvrez_le_depuis_sa_fiche	Coin de vente acheté. Reste à l’ouvrir, depuis sa fiche.
+  vente.geste.point_de_vente_sans_dealer	Coin de vente sans dealer
+  vente.geste.poster_un_dealer	Poster un dealer
+  vente.geste.ramasse_collecte_encore_chez_le_dealer_reste	Ramassé : {collecte}. Encore chez le dealer : {reste}.
+  vente.geste.ramasse_collecte_encore_chez_prenom_reste	Ramassé : {collecte}. Encore chez {prenom} : {reste}.
+  vente.geste.tout_est_ramasse_collecte	Tout est ramassé : {collecte}.
+  vente.geste.un_dealer_tient_ce_point_de_vente	Un dealer tient ce coin de vente.
+  vente.geste.vous_n_avez_aucun_point_de_vente	Vous n’avez aucun coin de vente
+  vente.raison.collecte_non_acceptee	Cette collecte n’est pas acceptée.
+  vente.raison.connexion_expiree	La connexion a expiré.
+  vente.raison.indisponible	Le point de vente ne répond pas pour l’instant.
+  vente.raison.reponse_illisible	La réponse est illisible.
+  vente.raison.reponse_vide	La réponse est arrivée vide.
+  vente.refus.collecte_impossible_aucune_planque	Collecte impossible : vous n’avez aucune planque.
+  vente.refus.la_caisse_de_prenom_est_vide	La caisse de {prenom} est vide.
+  vente.refus.la_caisse_du_dealer_est_vide	La caisse du dealer est vide.
+  vente.refus.la_collecte_n_a_pas_abouti	La collecte n’a pas abouti.
+  vente.refus.la_planque_est_pleine_blanchissez_d_abord_pour_faire_de_la_place	La planque est pleine : blanchissez d’abord, pour faire de la place.
+  vente.vide.aucun_coin_de_vente	Aucun coin de vente.
+  vente.vide.aucun_dealer_au_travail	Aucun dealer au travail.
+  vente.vide.les_coins_de_vente_n_ont_pas_repondu	Les coins de vente n’ont pas répondu.
