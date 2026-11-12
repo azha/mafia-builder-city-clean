@@ -1,0 +1,65 @@
+<style>
+/* ═══ SÉRIE 6 — LA VENTE (screen NEUF) ═══ */
+
+.vnt6{position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden;
+  font-family:'DejaVu Sans',sans-serif;color:#eae0c8;background:
+  radial-gradient(72% 40% at 50% 22%, rgba(217,171,78,.15), rgba(0,0,0,0) 66%),
+  radial-gradient(90% 60% at 50% 96%, rgba(127,212,217,.07), rgba(0,0,0,0) 70%),
+  linear-gradient(178deg,#111823 0%,#0b1016 54%,#0d0f10 100%)}
+.vnt6 *{box-sizing:border-box}
+.vnt6 .cerne{position:absolute;inset:5px;border:1px solid #b08d3e;border-radius:3px;
+  box-shadow:inset 0 0 0 1px #0b1016, 0 0 12px #b08d3e26;pointer-events:none;z-index:6}
+.vnt6 .enseigne{flex:none;margin:13px 13px 0;position:relative;z-index:2;text-align:center;
+  background:linear-gradient(178deg,rgba(11,17,27,.91),rgba(13,19,30,.85));
+  border:1px solid #2a3648;border-bottom:2px solid #b08d3e;
+  box-shadow:inset 0 1px 0 #ffffff0f;padding:7px 11px 8px}
+.vnt6 .enseigne b{display:block;font:700 17px/1 'DejaVu Serif';letter-spacing:.2em;color:#f2c96b}
+.vnt6 .enseigne i{display:block;font:700 6.4px/1 'DejaVu Sans';font-style:normal;
+  letter-spacing:.34em;color:#b9ad92;margin-top:5px;text-transform:uppercase}
+.vnt6 .compteurs{flex:none;display:flex;gap:6px;margin:9px 13px 0;position:relative;z-index:2}
+.vnt6 .fen{flex:1;background:#0a0e16;border:1px solid #2a3648;padding:4px 4px 3px;
+  text-align:center;box-shadow:inset 0 0 10px #7fd4d91f}
+.vnt6 .fen b{display:block;font:700 14px/1 'DejaVu Sans';color:#7fd4d9;
+  font-variant-numeric:tabular-nums;letter-spacing:.06em;text-shadow:0 0 8px #7fd4d999}
+.vnt6 .fen b span{display:inline;font-size:9px;letter-spacing:0}
+.vnt6 .fen>span{display:block;font:700 5.4px/1.1 'DejaVu Sans';letter-spacing:.16em;
+  color:#8a979c;margin-top:3px;text-transform:uppercase}
+.vnt6 .elast{flex:1;min-height:0;overflow:hidden;margin:9px 13px 0;position:relative;z-index:2;
+  background:#0d0f10;border:1px solid #2a3648;padding:7px 8px;
+  display:flex;flex-direction:column;box-shadow:inset 0 0 22px #00000099}
+.bln6 .elast>*{position:relative;z-index:1}.dos6 .elast>*{position:relative;z-index:1}.hrz6 .elast>*{position:relative;z-index:1}.jrn6 .elast>*{position:relative;z-index:1}.rep6 .elast>*{position:relative;z-index:1}.vnt6 .elast>*{position:relative;z-index:1}.vnt6 .pann{flex:none;margin:9px 13px 0;position:relative;z-index:2;padding:8px 10px 9px;
+  background:#111823;border:1px solid #2a3648;box-shadow:inset 0 0 18px #00000066}
+.vnt6 .pann i{display:block;font:700 5.6px/1 'DejaVu Sans';font-style:normal;
+  letter-spacing:.19em;color:#8a979c;text-transform:uppercase}
+.vnt6 .pann b{display:block;font:700 13px/1.15 'DejaVu Serif';margin-top:5px;color:#eae0c8}
+.vnt6 .pann small{display:block;font:6.6px/1.4 'DejaVu Sans';color:#b9ad92;margin-top:4px}
+.vnt6 .pann small u{text-decoration:none;color:#f2c96b;font-weight:700}
+.vnt6 .lot{float:right;font:700 6px/1 'DejaVu Sans';color:#7fd4d9;letter-spacing:.09em}
+.vnt6 .pied{flex:none;padding:9px 13px 14px;position:relative;z-index:2}
+.vnt6 .cta6{display:block;text-align:center;padding:8px;border:1px solid #b08d3e;
+  background:#16191b;font:700 8.5px/1 'DejaVu Sans';letter-spacing:.11em;color:#f2c96b;
+  text-transform:uppercase}
+.vnt6 .cta6.eteint{border-color:#2a3648;color:#7a838d;background:#111823}
+
+.vnt6 .liste{display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.vnt6 .dl{display:grid;grid-template-columns:19px 1fr auto;gap:8px;align-items:center;
+  padding:4px 8px;background:#111823;border:1px solid #2a3648}
+.vnt6 .dl.pris{border-color:#b08d3e;background:#16191b;box-shadow:0 0 10px #b08d3e26}
+.vnt6 .dl.mort{opacity:.5}
+.vnt6 .dl .qui b{display:block;font:700 9px/1.2 'DejaVu Sans';color:#eae0c8}
+.vnt6 .dl .qui small{display:block;font:6.4px/1.25 'DejaVu Sans';color:#8a979c;margin-top:2px}
+.vnt6 .dl .dr{text-align:right}
+.vnt6 .dl .et{display:block;font:700 6.2px/1 'DejaVu Sans';letter-spacing:.1em;text-transform:uppercase}
+.vnt6 .jg{display:inline-flex;gap:1.5px;margin-top:3px}
+.vnt6 .jg i{flex:1;height:5px;border-radius:1px}
+.vnt6 .marge{display:inline-flex;gap:1.5px;margin-left:5px;vertical-align:1px}
+.vnt6 .marge u{width:3px;height:7px;background:#d9ab4e;text-decoration:none;border-radius:1px}
+.vnt6 .marge u.off{background:#2a3648}
+.vnt6 .fiche{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+.vnt6 .fiche .gd{width:58px;height:58px;display:flex;align-items:center;justify-content:center;
+  background:#0a0e16;border:1px solid #2a3648}
+.vnt6 .note6{margin-top:5px;font:6.4px/1.4 'DejaVu Sans';color:#8a979c;text-align:center}
+.vnt6 .note6 u{text-decoration:none;color:#f2c96b;font-weight:700}
+.vnt6 .rien{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
+  font:italic 8px/1.5 'DejaVu Serif';color:#7a838d;padding:0 22px}
+</style>

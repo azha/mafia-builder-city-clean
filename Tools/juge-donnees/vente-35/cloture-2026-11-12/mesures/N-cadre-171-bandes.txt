@@ -1,0 +1,27 @@
+RANGEES=6
+  Oskar   suite='ça part vite'
+  Mira    suite='ça s’écoule · des habitués'
+  Joran   suite='ça part vite · clientèle accrochée'
+  Tamsin  suite='ça se disperse · clientèle neuve'
+  Ilse    suite='ça se disperse · resté à sec\xa0: la clientèle a décroché'
+        (porte <span class="perdue">)
+  Dov     suite=ABSENTE
+
+SEGMENTS DISTINCTS = 7
+   - clientèle accrochée
+   - clientèle neuve
+   - des habitués
+   - resté à sec : la clientèle a décroché
+   - ça part vite
+   - ça se disperse
+   - ça s’écoule
+
+NB small.suite = 5 ; nb span.perdue = 1
+
+=== icones par rangee (fill de la 1re forme SVG) ===
+  Oskar   fill=#b08d3e
+  Mira    fill=#c9a8e0
+  Joran   fill=#c9a8e0
+  Tamsin  fill=#c9a8e0
+  Ilse    fill=#c9a8e0
+  Dov     fill=#f2c96b

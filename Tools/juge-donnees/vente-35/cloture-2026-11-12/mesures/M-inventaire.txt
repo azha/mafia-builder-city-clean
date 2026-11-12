@@ -1,0 +1,68 @@
+
+===== cadre 107 — La vente — qui vend et ce qu’il y a dans la caisse
+  enseigne : | La vente |  | qui vend, et ce qu’il y a dans la caisse |  |
+  compteurs (3) : 03/6 = au travail ; 03 = caisses pleines ; 01 = grillés
+  rangees .dl : 6
+    [dl           ] Oskar   | La Lisière · coin animé · cher                   | etat=au travail | marge 3/4 | jauge 4/4 (teintes #f2c96b)
+    [dl           ] Mira    | Dépôt-Est · du passage · au-dessus               | etat=au travail | marge 2/4 | jauge 2/4 (teintes #2a3648,#d9ab4e)
+    [dl           ] Joran   | Les Entrepôts · du passage · au tarif            | etat=au repos  | marge 1/4 | jauge 1/4 (teintes #2a3648,#d9ab4e)
+    [dl           ] Tamsin  | Place des Comptes · coin animé · très cher       | etat=au travail | marge 4/4 | jauge 3/4 (teintes #2a3648,#f2c96b)
+    [dl mort      ] Ilse    | Orsel · coin mort · au tarif                     | etat=grillé    | marge 1/4 | jauge 3/4 (teintes #2a3648,#f2c96b)
+    [dl mort      ] Dov     | Les Friches · pas de coin ici · au tarif         | etat=pas là    | marge 1/4 | jauge 0/4 (teintes #2a3648)
+    CTA  : [cta6] AFFECTER UN DEALER
+    NOTE : deux caisses sont déjà en haut de l’échelle — et rien ne les vide
+    BARRE(shell) : ARGENT | 24 850 € | Tiède | CHALEUR | JOUR 12 | Plein jour
+
+===== cadre 108 — La caisse de Oskar — pleine à ras
+  enseigne : | La vente |  | la caisse de Oskar |  |
+  compteurs (3) : 03/6 = au travail ; 03 = caisses pleines ; 01 = grillés
+  rangees .dl : 4
+    [dl pris      ] Oskar   | La Lisière · coin animé · cher                   | etat=au travail | marge 3/4 | jauge 4/4 (teintes #f2c96b)
+    [dl           ] Mira    | Dépôt-Est · du passage · au-dessus               | etat=au travail | marge 2/4 | jauge 2/4 (teintes #2a3648,#d9ab4e)
+    [dl           ] Joran   | Les Entrepôts · du passage · au tarif            | etat=au repos  | marge 1/4 | jauge 1/4 (teintes #2a3648,#d9ab4e)
+    [dl           ] Tamsin  | Place des Comptes · coin animé · très cher       | etat=au travail | marge 4/4 | jauge 3/4 (teintes #2a3648,#f2c96b)
+    PANN : ¶ ¶ ¶ ¶ ¶ ¶ ¶ ¶ ¶ ¶ Oskar · La Lisière · coin animé ¶ ¶ Caisse pleine à ras ¶ ¶ il vend ¶ brindle ¶ sur un coin animé, ¶ cher ¶ , et il travaille. Sa caisse est au dernier palier — au-delà, la bande ne monte plus. ¶ ¶ ¶ ¶
+    CTA  : [cta6] RAMASSER LA CAISSE
+    BARRE(shell) : ARGENT | 24 850 € | Tiède | CHALEUR | JOUR 12 | Plein jour
+
+===== cadre 109 — Ramasser — nulle part où la porter
+  enseigne : | La vente |  | le ramassage |  |
+  compteurs (3) : 03/6 = au travail ; 03 = caisses pleines ; 01 = grillés
+  rangees .dl : 4
+    [dl pris      ] Oskar   | La Lisière · coin animé · cher                   | etat=au travail | marge 3/4 | jauge 4/4 (teintes #f2c96b)
+    [dl           ] Mira    | Dépôt-Est · du passage · au-dessus               | etat=au travail | marge 2/4 | jauge 2/4 (teintes #2a3648,#d9ab4e)
+    [dl           ] Joran   | Les Entrepôts · du passage · au tarif            | etat=au repos  | marge 1/4 | jauge 1/4 (teintes #2a3648,#d9ab4e)
+    [dl           ] Tamsin  | Place des Comptes · coin animé · très cher       | etat=au travail | marge 4/4 | jauge 3/4 (teintes #2a3648,#f2c96b)
+    PANN : ¶ ¶ le ramassage ¶ ¶ Nulle part où la porter ¶ ¶ ramasser une caisse veut dire la déposer dans une ¶ planque ¶ — et vous n’en avez aucune. Il n’existe aujourd’hui ¶ aucun moyen d’en obtenir une ¶ : l’argent reste chez le dealer. ¶ ¶
+    CTA  : [cta6 eteint] RAMASSER — IMPOSSIBLE
+    BARRE(shell) : ARGENT | 24 850 € | Tiède | CHALEUR | JOUR 12 | Plein jour
+
+===== cadre 110 — Ilse s’est fait prendre
+  enseigne : | La vente |  | Ilse s’est fait prendre |  |
+  compteurs (3) : 03/6 = au travail ; 03 = caisses pleines ; 01 = grillés
+  rangees .dl : 6
+    [dl           ] Oskar   | La Lisière · coin animé · cher                   | etat=au travail | marge 3/4 | jauge 4/4 (teintes #f2c96b)
+    [dl           ] Mira    | Dépôt-Est · du passage · au-dessus               | etat=au travail | marge 2/4 | jauge 2/4 (teintes #2a3648,#d9ab4e)
+    [dl           ] Joran   | Les Entrepôts · du passage · au tarif            | etat=au repos  | marge 1/4 | jauge 1/4 (teintes #2a3648,#d9ab4e)
+    [dl           ] Tamsin  | Place des Comptes · coin animé · très cher       | etat=au travail | marge 4/4 | jauge 3/4 (teintes #2a3648,#f2c96b)
+    [dl pris mort ] Ilse    | Orsel · coin mort · au tarif                     | etat=grillé    | marge 1/4 | jauge 3/4 (teintes #2a3648,#f2c96b)
+    [dl mort      ] Dov     | Les Friches · pas de coin ici · au tarif         | etat=pas là    | marge 1/4 | jauge 0/4 (teintes #2a3648)
+    PANN : ¶ ¶ ¶ ¶ ¶ ¶ ¶ ¶ ¶ ¶ Ilse · Orsel · coin mort ¶ ¶ Grillé, et il s’est retiré ¶ ¶ sa caisse était ¶ bien remplie ¶ quand il a décroché. La bande ne dit pas ce qu’il en a fait. ¶ ¶ ¶ ¶
+    BARRE(shell) : ARGENT | 24 850 € | Tiède | CHALEUR | JOUR 12 | Plein jour
+
+===== cadre 111 — Aucun dealer — rien ne rentre
+  enseigne : | La vente |  | personne sur les points de vente |  |
+  compteurs (3) : 00/0 = au travail ; 00 = caisses pleines ; 00 = grillés
+  rangees .dl : 0
+    PANN : ¶ ¶ par où commencer ¶ ¶ Il faut poser quelqu’un quelque part ¶ ¶ affecter un dealer demande ¶ un point de vente ¶ et ¶ la case qu’il couvre ¶ . Les deux se choisissent sur la carte du quartier. ¶ ¶
+    RIEN : Aucun dealer sur un point de vente. Rien ne rentre.
+    CTA  : [cta6] AFFECTER UN DEALER
+    BARRE(shell) : ARGENT | 24 850 € | Tiède | CHALEUR | JOUR 12 | Plein jour
+
+===== cadre 112 — Ce qui manque encore
+  enseigne : | La vente |  | ce qu’on saurait, si le back le disait |  |
+  compteurs (3) : 03/6 = au travail ; 03 = caisses pleines ; 01 = grillés
+  rangees .dl : 0
+    PANN : ¶ ¶ L2 ¶ ¶ maillon manquant ¶ ¶ Savoir combien il y a dans la caisse ¶ ¶ la bande dit « pleine à ras » et s’arrête là ; rien ne dit ce que ça vaut ¶ ¶
+    PANN : ¶ ¶ L4 ¶ ¶ maillon manquant ¶ ¶ Ce que devient la caisse d’un dealer grillé ¶ ¶ la projection se tait, et le joueur n’a aucun moyen de savoir ¶ ¶
+    BARRE(shell) : ARGENT | 24 850 € | Tiède | CHALEUR | JOUR 12 | Plein jour

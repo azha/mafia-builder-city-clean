@@ -1,0 +1,16 @@
+# X-Server-Build releve par le juge ⊥ ㉟, 2026-11-12
+## AVANT les mesures
+(voir 01-signup.json : x_server_build)
+01-signup.json               8d0184a4  status=201  len=995/995  conforme=True
+02-session-open.json         8d0184a4  status=200  len=2417/2417  conforme=True
+03-dealers-compte-frais.json 8d0184a4  status=200  len=666/666  conforme=True
+04-dealers-apres-session.json 8d0184a4  status=200  len=666/666  conforme=True
+05-dealer-un.json            8d0184a4  status=200  len=652/652  conforme=True
+06-world-districts.json      8d0184a4  status=200  len=5428/5428  conforme=True
+07-me-buildings.json         8d0184a4  status=200  len=2098/2098  conforme=True
+08-stash-d16.json            8d0184a4  status=200  len=563/563  conforme=True
+09-collect-refus.json        8d0184a4  status=409  len=688/688  conforme=True
+10-assign.json               8d0184a4  status=201  len=316/316  conforme=True
+11-dealers-deux.json         8d0184a4  status=200  len=1056/1056  conforme=True
+## APRES les mesures
+X-Server-Build: 8d0184a4
