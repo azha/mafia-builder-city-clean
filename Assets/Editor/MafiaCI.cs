@@ -257,6 +257,10 @@ public static class MafiaCI
         // du 2026-09-24 (tête 92bfb1ba, pile 66060cc1, déclarés 115 = comptés 115, Assets/Screenshots propre après le run). Statique,
         // sans réseau. Aucune relation de préfixe (K0 elle-même). Validé par l'orchestrateur.
         "GardeCategories",
+        // Le second guetteur de la garde de population (12/11, CLIENT-2) : rouge si `typecheck-hors-porte.py --tout` n'appelle plus
+        // `Tools/garde-population-cles.py`. Statique (texte seul), sans réseau. Catégorie NEUVE inscrite le jour où elle naît (garde I1) ;
+        // PAS ENCORE JOUÉE : verte au créneau, jamais déclarée verte avant. Aucune relation de préfixe avec une autre catégorie (K0).
+        "GardePopulation",
         // L'URL du back, UNE source (9667532b, 2026-09-24) : A1 contrôles de l'instrument, A2 0 URL littérale hors AdresseDuBack.cs, A3 aucune
         // ressource d'URL laissée, A4 l'EFFET (un écouteur HTTP local devient la source ; le shell y signe, Loi/Conflit/Distribution/Réputation
         // montés par le shell y envoient leurs requêtes). 4/4 vert DANS le run large du créneau du 2026-09-24 (tête e7a71a52, pile 66060cc1,

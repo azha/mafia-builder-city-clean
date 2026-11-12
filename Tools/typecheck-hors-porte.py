@@ -157,6 +157,12 @@ def main():
                     print(f"   ⚠️ {os.path.splitext(q)[0]} est ROUGE ⇒ "
                           f"{', '.join(os.path.splitext(k)[0] for k in aval)} "
                           "sont vérifiées contre la DLL PÉRIMÉE — leur vert ne vaut rien ici.")
+        # ⛔ L'APPELANT RÉEL de la garde STATIQUE de population des clés i18n (12/11/2026, ordre f2) : une garde que personne ne lance n'existe
+        #    pas (côté back : 0 invocation, 5 erreurs installées). `--tout` est ce que chaque session lance avant une fusion ⇒ elle tourne ici.
+        #    Deux guetteurs : `GardePopulationAppeleePlayModeTests` rougit si CET appel disparaît ; la garde rougit si ce test disparaît.
+        rg = subprocess.run([sys.executable, 'Tools/garde-population-cles.py'], capture_output=True, text=True).returncode
+        print(f"[garde-population-cles] rc={rg} (0 vert · 1 rouge · 2 instrument en panne) — détail : python3 Tools/garde-population-cles.py")
+        rc |= rg
         sys.exit(rc)
 
     proj, extra = a[0], a[1:]

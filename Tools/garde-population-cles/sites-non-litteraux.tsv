@@ -1,0 +1,25 @@
+# fichier (sous Assets/Scripts)	appels `Libelle.Gabarit` à 1er argument NON littéral (ÉPINGLE : cliquet)	classes	clés énumérées (explicites)	note
+# Classes : SERVI_PAR_LE_BACK = la clé est la réponse du serveur, hors population du client (comptée) · ENUMEREE = clés littérales du fichier, ajoutées à K_client par la garde · PREFIXE = préfixe composé avec un id servi, valide si le registre sert une clé dessous.
+# Mesuré le 12/11 : 38 appels dans 22 fichiers (l'extracteur les compte). Ajouter un appel non littéral SANS ligne ici, ou changer ce nombre, ROUGIT la garde.
+CityMap/CityMapController.cs	1	ENUMEREE		clé `carte.presence.batiments` (const) ; héberge aussi les littéraux `carte.panneau.*` que `MotsDuPanneau.Etiquette` reçoit
+CityMap/MotsDuPanneau.cs	1	ENUMEREE		`Etiquette(cle)` : les appelants passent des littéraux, lus dans CityMapController.cs (ligne ci-dessus)
+I18n/Moment.cs	2	ENUMEREE	decision.moment.vide.dawn,decision.moment.vide.day,decision.moment.vide.dusk,decision.moment.vide.night,decision.moment.vide.inconnu,exceptions.moment.dawn,exceptions.moment.day,exceptions.moment.dusk,exceptions.moment.night,exceptions.moment.inconnu,journal.moment.titre.dawn,journal.moment.titre.day,journal.moment.titre.dusk,journal.moment.titre.night,journal.moment.titre.inconnu,journal.moment.vide.dawn,journal.moment.vide.day,journal.moment.vide.dusk,journal.moment.vide.night,journal.moment.vide.inconnu	4 préfixes × 4 phases + inconnu : liste EXPLICITE (les 5 appels `Moment.Dire`, lus le 12/11)
+I18n/RefusServi.cs	2	SERVI_PAR_LE_BACK		la clé du refus vient du corps de la réponse
+I18n/VariablesDeRefus.cs	1	SERVI_PAR_LE_BACK		`kv.Value` : une clé de variable servie dans `payload_vars`
+Onboarding/TutorialScreenController.cs	2	SERVI_PAR_LE_BACK		`next_tutorial_id` EST la clé (le back la sert)
+Operational/BuildingCard/BuildingCardController.cs	2	SERVI_PAR_LE_BACK,ENUMEREE		738 : `CleI18n` du refus servi ; 2165 : `cleDuLibelle` littéral (`building.row.taille_du_labo`)
+Operational/Carnet/CarnetScreenController.cs	1	PREFIXE		`political.event.` + id d'événement servi
+Operational/Carnet/ComposeurDuCarnet.cs	1	SERVI_PAR_LE_BACK		`RefusServi.Cle(corps)`
+Operational/ChaineDAppro/ChaineDApproGestes.cs	1	ENUMEREE		`mode.CleConsequence` : littéraux de la table des modes
+Operational/ChaineDAppro/ChaineDApproScreenController.cs	1	ENUMEREE		`CleRepliqueNestor` (const)
+Operational/Conflit/ConflitScreenController.cs	6	ENUMEREE		`axe.key`, `nom.key` : `conflit.axe.*` / `conflit.nom.*` littéraux
+Operational/Delegation/DelegationScreenController.cs	1	SERVI_PAR_LE_BACK		`refus.cle`
+Operational/Demolition/DemolitionScreenController.cs	1	ENUMEREE		`Dit(parent, cle, …)` : appelants à littéral dans ce fichier
+Operational/Exceptions/ExceptionBandes.cs	3	ENUMEREE		`CleCartePreparee`, `cle` des bandes : littéraux du fichier
+Operational/Forensic/ForensicScreenController.cs	1	ENUMEREE		`DossierCalculs.CleDuTitreNomme` (const)
+Operational/Journal/JournalScreenController.cs	4	ENUMEREE,SERVI_PAR_LE_BACK		`cle` des Ligne/Titre/Texte : littéraux du fichier ; `frame_tag_i18n_key` servi
+Operational/Lieutenant/LieutenantScreenController.cs	1	SERVI_PAR_LE_BACK		`cleEquipePleine` = `roster_room_label_key`
+Operational/Loi/LoiScreenController.cs	1	ENUMEREE		`replique.Value.cle` : table de répliques à littéraux
+Operational/Marche/MarcheScreenController.cs	1	ENUMEREE		`BandeDeLane[bucket].cle` : table à littéraux
+Shell/ApresGesteHl.cs	1	SERVI_PAR_LE_BACK		`outcome_i18n_key`
+Shell/HighestLeverageCardController.cs	3	SERVI_PAR_LE_BACK		`option.label` / `projected_consequence` servis ; `<label>.projected_consequence` composé sur un label servi

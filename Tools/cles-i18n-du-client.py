@@ -197,13 +197,9 @@ def cles_du_fichier(src: str):
     return trouves
 
 
-def main() -> int:
-    echecs = controles()
-    if echecs:
-        for e in echecs: print("⛔ " + e, file=sys.stderr)
-        return 2
-    racine = Path(sys.argv[1] if len(sys.argv) > 1 else 'Assets/Scripts')
-    detail = '--liste' in sys.argv
+def population(racine: Path):
+    """La population lue UNE fois — `main` l'imprime, `Tools/garde-population-cles.py` l'IMPORTE (jamais de seconde dérivation,
+    jamais de seconde `slug`). Rend (total {clé: littéral}, par_fichier, detail_fichier, cles_gabarit)."""
     total = {}
     par_fichier = {}
     detail_fichier = {}   # fichier → (clés dérivées `De`, clés explicites `Gabarit`, appels `Gabarit`, dont 1er argument NON littéral)
@@ -214,7 +210,7 @@ def main() -> int:
             continue
         src = recoller(sans_commentaires(src))   # commentaires retirés (TD-694), puis recollage — AVANT toute extraction.
         trouves = cles_du_fichier(src)
-        derivees = {f"{dom}.{role}.{slug(lit)}": lit for dom, role, lit in trouves}
+        derivees = {f"{dom}.{role}.{slug(lit)}": lit for dom, role, lit in sorted(trouves)}   # sorted : `trouves` est un set — sans tri, le littéral affiché d'une clé à deux casses (famille.ecran.etat : ÉTAT/État) change d'un lancement à l'autre (mesuré 3/4)
         explicites, appels_gabarit, non_litteraux = gabarits_du_fichier(src)   # TD-1068
         par_fichier[str(f)] = len(set(derivees) | set(explicites))
         detail_fichier[str(f)] = (len(derivees), len(explicites), appels_gabarit, non_litteraux)
@@ -223,6 +219,17 @@ def main() -> int:
             if cle not in total or not total[cle]:
                 total[cle] = repli
             cles_gabarit.add(cle)
+    return total, par_fichier, detail_fichier, cles_gabarit
+
+
+def main() -> int:
+    echecs = controles()
+    if echecs:
+        for e in echecs: print("⛔ " + e, file=sys.stderr)
+        return 2
+    racine = Path(sys.argv[1] if len(sys.argv) > 1 else 'Assets/Scripts')
+    detail = '--liste' in sys.argv
+    total, par_fichier, detail_fichier, cles_gabarit = population(racine)
     # ⛔⛔ UNE POPULATION VIDE EST UNE ERREUR, JAMAIS UN VERT — défaut mesuré par la session B
     # dans CET outil. Sur un chemin inexistant il rendait `0 clé` et sortait **0** : exactement la
     # même sortie que « tout est déjà servi ». C'est la classe que ce dépôt nomme ailleurs — le run
