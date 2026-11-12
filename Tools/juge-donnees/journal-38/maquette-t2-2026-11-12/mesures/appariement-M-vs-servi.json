@@ -1,0 +1,222 @@
+[
+ {
+  "element": "M04 enseigne b",
+  "dessine": "Le journal",
+  "cle": "journal.bloc.le_journal",
+  "servi_FR": "Le journal",
+  "css_uppercase": false,
+  "ancre_css": ".jrn6 .enseigne b (pas de text-transform)",
+  "verdict": "EGAL",
+  "servi_EN": "The paper"
+ },
+ {
+  "element": "M05 enseigne i",
+  "dessine": "ce qui se dit ce matin",
+  "cle": "journal.bloc.ce_qui_se_dit_ce_matin",
+  "servi_FR": "CE QUI SE DIT CE MATIN",
+  "css_uppercase": true,
+  "ancre_css": ".jrn6 .enseigne i{...text-transform:uppercase}",
+  "verdict": "EGAL/CSS",
+  "servi_EN": "WHAT'S BEING SAID THIS MORNING"
+ },
+ {
+  "element": "M05b enseigne i (alt)",
+  "dessine": "ce qui se dit ce matin",
+  "cle": "journal.moment.titre.dawn",
+  "servi_FR": "Ce qui se dit ce matin",
+  "css_uppercase": true,
+  "ancre_css": "idem",
+  "verdict": "EGAL/CSS",
+  "servi_EN": "What’s being said this morning"
+ },
+ {
+  "element": "M07 libelle compteur",
+  "dessine": "à la une",
+  "cle": "journal.bloc.a_la_une",
+  "servi_FR": "À LA UNE",
+  "css_uppercase": true,
+  "ancre_css": ".jrn6 .fen>span{...text-transform:uppercase}",
+  "verdict": "EGAL/CSS",
+  "servi_EN": "FRONT PAGE"
+ },
+ {
+  "element": "M09 libelle compteur",
+  "dessine": "dans la rue",
+  "cle": "journal.bloc.dans_la_rue",
+  "servi_FR": "DANS LA RUE",
+  "css_uppercase": true,
+  "ancre_css": "idem",
+  "verdict": "EGAL/CSS",
+  "servi_EN": "ON THE STREET"
+ },
+ {
+  "element": "M11 libelle compteur",
+  "dessine": "en cours",
+  "cle": "journal.bloc.en_cours",
+  "servi_FR": "EN COURS",
+  "css_uppercase": true,
+  "ancre_css": "idem",
+  "verdict": "EGAL/CSS",
+  "servi_EN": "UNDER WAY"
+ },
+ {
+  "element": "M12 une: journal",
+  "dessine": "LE CLAIRON DE BRENNAR",
+  "cle": "press.outlet.brennar_daily_star.name",
+  "servi_FR": "Le Clairon de Brennar",
+  "css_uppercase": true,
+  "ancre_css": ".jrn6 .une .jrn b{...text-transform:uppercase}",
+  "verdict": "EGAL/CSS",
+  "servi_EN": "Brennar Daily Star"
+ },
+ {
+  "element": "M13 une: fraicheur",
+  "dessine": "ce matin",
+  "cle": "journal.fraicheur.fresh",
+  "servi_FR": "ce matin",
+  "css_uppercase": true,
+  "ancre_css": ".jrn6 .une .jrn span{...text-transform:uppercase}",
+  "verdict": "EGAL",
+  "servi_EN": "this morning"
+ },
+ {
+  "element": "M16 une: angle",
+  "dessine": "angle accident",
+  "cle": "news_beat.frame_tag.accident",
+  "servi_FR": "angle accident",
+  "css_uppercase": true,
+  "ancre_css": ".jrn6 .une .angle{...text-transform:uppercase}",
+  "verdict": "EGAL",
+  "servi_EN": "Accident angle"
+ },
+ {
+  "element": "M18 breve a",
+  "dessine": "Un tramway en panne",
+  "cle": "ambient.micro_event.stalled_tram",
+  "servi_FR": "un tramway en panne",
+  "css_uppercase": false,
+  "ancre_css": ".jrn6 .brv b (pas de text-transform)",
+  "verdict": "DIFFERENT",
+  "servi_EN": "a stalled tram"
+ },
+ {
+  "element": "M18 breve b",
+  "dessine": "Une livraison en retard",
+  "cle": "ambient.micro_event.delayed_shipment",
+  "servi_FR": "une livraison en retard",
+  "css_uppercase": false,
+  "ancre_css": "idem",
+  "verdict": "DIFFERENT",
+  "servi_EN": "a delayed shipment"
+ },
+ {
+  "element": "M18 breve c",
+  "dessine": "Une rumeur de comptoir",
+  "cle": "ambient.micro_event.bar_rumor",
+  "servi_FR": "une rumeur de comptoir",
+  "css_uppercase": false,
+  "ancre_css": "idem",
+  "verdict": "DIFFERENT",
+  "servi_EN": "a rumor in a bar"
+ },
+ {
+  "element": "M20 qd fresh",
+  "dessine": "ce matin",
+  "cle": "journal.fraicheur.fresh",
+  "servi_FR": "ce matin",
+  "css_uppercase": true,
+  "ancre_css": ".jrn6 .brv .qd{...text-transform:uppercase}",
+  "verdict": "EGAL",
+  "servi_EN": "this morning"
+ },
+ {
+  "element": "M20 qd settling",
+  "dessine": "hier",
+  "cle": "journal.fraicheur.settling",
+  "servi_FR": "hier",
+  "css_uppercase": true,
+  "ancre_css": "idem",
+  "verdict": "EGAL",
+  "servi_EN": "yesterday"
+ },
+ {
+  "element": "M20 qd fading",
+  "dessine": "la semaine passée",
+  "cle": "journal.fraicheur.fading",
+  "servi_FR": "la semaine passée",
+  "css_uppercase": true,
+  "ancre_css": "idem",
+  "verdict": "EGAL",
+  "servi_EN": "last week"
+ },
+ {
+  "element": "M23 CTA",
+  "dessine": "Y PRÊTER ATTENTION",
+  "cle": "journal.bloc.y_preter_attention",
+  "servi_FR": "Y prêter attention",
+  "css_uppercase": true,
+  "ancre_css": ".jrn6 .cta6{...text-transform:uppercase}",
+  "verdict": "EGAL/CSS",
+  "servi_EN": "Pay attention to it"
+ },
+ {
+  "element": "M24 note avant geste",
+  "dessine": "on peut assister à ce qui se passe — c’est le seul geste que la rue accepte",
+  "cle": "journal.bloc.on_peut_assister_a_ce_qui_se_passe_c_est_le_seul_geste_que_la_rue_accepte",
+  "servi_FR": "on peut assister à ce qui se passe — c’est le seul geste que la rue accepte",
+  "css_uppercase": false,
+  "ancre_css": ".jrn6 .note6 (pas de text-transform)",
+  "verdict": "EGAL",
+  "servi_EN": "you can witness what’s happening — it’s the only move the street accepts"
+ },
+ {
+  "element": "M24 note full",
+  "dessine": "On vous a vu. La rue s’en souviendra.",
+  "cle": "ambient.apres_assister.full",
+  "servi_FR": "On vous a vu. La rue s’en souviendra.",
+  "css_uppercase": false,
+  "ancre_css": "idem",
+  "verdict": "EGAL",
+  "servi_EN": "You were seen. The street will remember."
+ },
+ {
+  "element": "M24 note reduced",
+  "dessine": "On vous a vu, mais vous étiez déjà passé aujourd’hui.",
+  "cle": "ambient.apres_assister.reduced",
+  "servi_FR": "On vous a vu, mais vous étiez déjà passé aujourd’hui.",
+  "css_uppercase": false,
+  "ancre_css": "idem",
+  "verdict": "EGAL",
+  "servi_EN": "You were seen, but you’d already been round today."
+ },
+ {
+  "element": "M24 note minimal",
+  "dessine": "Encore vous ? La rue n’y prête plus guère attention aujourd’hui.",
+  "cle": "ambient.apres_assister.minimal",
+  "servi_FR": "Encore vous ? La rue n’y prête plus guère attention aujourd’hui.",
+  "css_uppercase": false,
+  "ancre_css": "idem",
+  "verdict": "EGAL",
+  "servi_EN": "You again? The street barely notices today."
+ },
+ {
+  "element": "M24 note none",
+  "dessine": "Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte.",
+  "cle": "ambient.apres_assister.none",
+  "servi_FR": "Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte.",
+  "css_uppercase": false,
+  "ancre_css": "idem",
+  "verdict": "EGAL",
+  "servi_EN": "You were there. Nobody here knows each other well enough yet for it to count."
+ },
+ {
+  "element": "M14 une: titre",
+  "dessine": "Un enchaînement de circonstances à {district}, actuellement à l’étude",
+  "cle": "news_beat.cooper_affair.accident.brennar_daily_star.headline",
+  "servi_FR": "Un enchaînement de circonstances à {district}, actuellement à l’étude",
+  "css_uppercase": false,
+  "ancre_css": ".jrn6 .une h5 (pas de text-transform)",
+  "verdict": "EGAL",
+  "servi_EN": "A sequence of circumstances in {district}, currently under study"
+ }
+]

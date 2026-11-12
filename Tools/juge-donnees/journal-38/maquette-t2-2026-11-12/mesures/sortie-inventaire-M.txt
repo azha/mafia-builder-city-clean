@@ -1,0 +1,93 @@
+====================================================================================================
+
+--- CADRE 125 : Le journal — ce qui se dit ce matin
+  enseigne        : 'Le journal' / 'ce qui se dit ce matin'
+  compteurs       : [('01', 'à la une'), ('03', 'dans la rue'), ('00', 'en cours')]
+  rendus          : une=1  breves=3  evt=0
+  une             : outlet='LE CLAIRON DE BRENNAR' fraicheur=('#f2c96b', 'ce matin') titre='Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude'
+                    cle='Dépôt-Est' angle='angle accident'
+  breve VISEE : pt=#f2c96b 'Un tramway en panne'        quartier='La Lisière'     qd=#f2c96b 'ce matin'
+  breve       : pt=#f2c96b 'Une livraison en retard'    quartier='Les Entrepôts'  qd=#f2c96b 'ce matin'
+  breve       : pt=#b9ad92 'Une rumeur de comptoir'     quartier='Marne-Basse'    qd=#b9ad92 'hier'
+  CTA             : 'Y PRÊTER ATTENTION' (classes supplementaires: '')
+  note            : 'on peut assister à ce qui se passe — c’est le seul geste que la rue accepte'
+
+--- CADRE 155 : Le journal — après « Y PRÊTER ATTENTION » · bande full
+  enseigne        : 'Le journal' / 'ce qui se dit ce matin'
+  compteurs       : [('01', 'à la une'), ('02', 'dans la rue'), ('00', 'en cours')]
+  rendus          : une=1  breves=2  evt=0
+  une             : outlet='LE CLAIRON DE BRENNAR' fraicheur=('#f2c96b', 'ce matin') titre='Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude'
+                    cle='Dépôt-Est' angle='angle accident'
+  breve VISEE : pt=#f2c96b 'Une livraison en retard'    quartier='Les Entrepôts'  qd=#f2c96b 'ce matin'
+  breve       : pt=#b9ad92 'Une rumeur de comptoir'     quartier='Marne-Basse'    qd=#b9ad92 'hier'
+  CTA             : 'Y PRÊTER ATTENTION' (classes supplementaires: '')
+  note            : 'On vous a vu. La rue s’en souviendra.'
+
+--- CADRE 156 : Le journal — après « Y PRÊTER ATTENTION » · bande reduced
+  enseigne        : 'Le journal' / 'ce qui se dit ce matin'
+  compteurs       : [('01', 'à la une'), ('02', 'dans la rue'), ('00', 'en cours')]
+  rendus          : une=1  breves=2  evt=0
+  une             : outlet='LE CLAIRON DE BRENNAR' fraicheur=('#f2c96b', 'ce matin') titre='Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude'
+                    cle='Dépôt-Est' angle='angle accident'
+  breve VISEE : pt=#f2c96b 'Une livraison en retard'    quartier='Les Entrepôts'  qd=#f2c96b 'ce matin'
+  breve       : pt=#b9ad92 'Une rumeur de comptoir'     quartier='Marne-Basse'    qd=#b9ad92 'hier'
+  CTA             : 'Y PRÊTER ATTENTION' (classes supplementaires: '')
+  note            : 'On vous a vu, mais vous étiez déjà passé aujourd’hui.'
+
+--- CADRE 157 : Le journal — après « Y PRÊTER ATTENTION » · bande minimal
+  enseigne        : 'Le journal' / 'ce qui se dit ce matin'
+  compteurs       : [('01', 'à la une'), ('02', 'dans la rue'), ('00', 'en cours')]
+  rendus          : une=1  breves=2  evt=0
+  une             : outlet='LE CLAIRON DE BRENNAR' fraicheur=('#f2c96b', 'ce matin') titre='Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude'
+                    cle='Dépôt-Est' angle='angle accident'
+  breve VISEE : pt=#f2c96b 'Une livraison en retard'    quartier='Les Entrepôts'  qd=#f2c96b 'ce matin'
+  breve       : pt=#b9ad92 'Une rumeur de comptoir'     quartier='Marne-Basse'    qd=#b9ad92 'hier'
+  CTA             : 'Y PRÊTER ATTENTION' (classes supplementaires: '')
+  note            : 'Encore vous\u202f? La rue n’y prête plus guère attention aujourd’hui.'
+
+--- CADRE 158 : Le journal — après « Y PRÊTER ATTENTION » · bande none
+  enseigne        : 'Le journal' / 'ce qui se dit ce matin'
+  compteurs       : [('01', 'à la une'), ('02', 'dans la rue'), ('00', 'en cours')]
+  rendus          : une=1  breves=2  evt=0
+  une             : outlet='LE CLAIRON DE BRENNAR' fraicheur=('#f2c96b', 'ce matin') titre='Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude'
+                    cle='Dépôt-Est' angle='angle accident'
+  breve VISEE : pt=#f2c96b 'Une livraison en retard'    quartier='Les Entrepôts'  qd=#f2c96b 'ce matin'
+  breve       : pt=#b9ad92 'Une rumeur de comptoir'     quartier='Marne-Basse'    qd=#b9ad92 'hier'
+  CTA             : 'Y PRÊTER ATTENTION' (classes supplementaires: '')
+  note            : 'Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte.'
+
+--- CADRE 170 : Le journal — les trois fraîcheurs
+  enseigne        : 'Le journal' / 'ce qui se dit ce matin'
+  compteurs       : [('01', 'à la une'), ('03', 'dans la rue'), ('00', 'en cours')]
+  rendus          : une=1  breves=3  evt=0
+  une             : outlet='LE CLAIRON DE BRENNAR' fraicheur=('#f2c96b', 'ce matin') titre='Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude'
+                    cle='Dépôt-Est' angle='angle accident'
+  breve VISEE : pt=#f2c96b 'Un tramway en panne'        quartier='La Lisière'     qd=#f2c96b 'ce matin'
+  breve       : pt=#b9ad92 'Une livraison en retard'    quartier='Les Entrepôts'  qd=#b9ad92 'hier'
+  breve       : pt=#b9ad92 'Une rumeur de comptoir'     quartier='Marne-Basse'    qd=#b9ad92 'la semaine passée'
+  CTA             : 'Y PRÊTER ATTENTION' (classes supplementaires: '')
+  note            : 'on peut assister à ce qui se passe — c’est le seul geste que la rue accepte'
+
+====================================================================================================
+APPARIEMENT pastille x mot de fraicheur, sur les 14 breves des six cadres :
+  mot 'ce matin'           -> teintes de pastille ['#f2c96b']
+  mot 'hier'               -> teintes de pastille ['#b9ad92']
+  mot 'la semaine passée'  -> teintes de pastille ['#b9ad92']
+  => 3 mots de fraicheur dessines, 2 teintes de pastille distinctes
+  COULEUR DU MOT (qd) par mot :
+    'ce matin'           -> ['#f2c96b']
+    'hier'               -> ['#b9ad92']
+    'la semaine passée'  -> ['#b9ad92']
+
+CONTROLE E5 (compteur vs rendus, par cadre) :
+  cadre 125 : a la une 01 vs 1 OK | dans la rue 03 vs 3 OK | en cours 00 vs 0 OK
+  cadre 155 : a la une 01 vs 1 OK | dans la rue 02 vs 2 OK | en cours 00 vs 0 OK
+  cadre 156 : a la une 01 vs 1 OK | dans la rue 02 vs 2 OK | en cours 00 vs 0 OK
+  cadre 157 : a la une 01 vs 1 OK | dans la rue 02 vs 2 OK | en cours 00 vs 0 OK
+  cadre 158 : a la une 01 vs 1 OK | dans la rue 02 vs 2 OK | en cours 00 vs 0 OK
+  cadre 170 : a la une 01 vs 1 OK | dans la rue 03 vs 3 OK | en cours 00 vs 0 OK
+
+CLASSE `visee` : 6 breves marquees ; regle CSS `.jrn6 .brv.visee` presente : True
+  regle : border-color:#b08d3e;box-shadow:inset 2px 0 0 #f2c96b
+
+-> inventaire-M.json ecrit

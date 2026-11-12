@@ -1,0 +1,27 @@
+{
+ "Content-Length_header": "280",
+ "X-Server-Build": "8d0184a4",
+ "auth": "Bearer ***",
+ "body": {
+  "payload": {
+   "data": {
+    "couplings": []
+   }
+  },
+  "response_meta": {
+   "api_version": 1,
+   "correlation_id_echo": null,
+   "request_id_echo": "14a5ca7e-5ae4-4079-80dc-be76f11887f9",
+   "server_build_ref": {
+    "built_at": "2026-11-11T18:17:52Z",
+    "git_sha": "8d0184a4"
+   },
+   "server_processed_at": "2026-11-12T00:27:32.527Z"
+  }
+ },
+ "bytes_read": 280,
+ "label": "/v1/random-world/known-couplings",
+ "length_match": true,
+ "request": "GET http://localhost/v1/random-world/known-couplings",
+ "status": 200
+}

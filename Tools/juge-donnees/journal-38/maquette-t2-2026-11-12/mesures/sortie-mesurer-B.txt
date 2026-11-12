@@ -1,0 +1,10 @@
+[auth/signup] status=201 CL=995 bytes=995 match=True build=8d0184a4 -> 00-signup.json
+[session/open] status=200 CL=2416 bytes=2416 match=True build=8d0184a4 -> 01-session-open.json
+[/v1/ambient/feed] status=200 CL=949 bytes=949 match=True build=8d0184a4 -> 02-ambient-feed.json
+[/v1/news/feed] status=200 CL=11783 bytes=11783 match=True build=8d0184a4 -> 03-news-feed.json
+[/v1/random-world/active] status=200 CL=277 bytes=277 match=True build=8d0184a4 -> 04-random-world-active.json
+[/v1/random-world/known-couplings] status=200 CL=280 bytes=280 match=True build=8d0184a4 -> 05-random-world-known-couplings.json
+[/v1/news/feed?limit=100] status=200 CL=12223 bytes=12223 match=True build=8d0184a4 -> 06-news-feed-limit100.json
+[/v1/ambient/feed?limit=100] status=200 CL=950 bytes=950 match=True build=8d0184a4 -> 07-ambient-feed-limit100.json
+[/v1/news/feed?category=brennar_local] status=200 CL=6562 bytes=6562 match=True build=8d0184a4 -> 08-news-feed-brennar-local.json
+callsign jetable utilise : jd3-1794443252 (mot de passe NON ecrit)

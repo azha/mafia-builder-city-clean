@@ -1,0 +1,35 @@
+{
+ "Content-Length_header": "995",
+ "X-Server-Build": "8d0184a4",
+ "auth": null,
+ "body": {
+  "payload": {
+   "data": {
+    "access_token": "***",
+    "account_kind": "PLAYER",
+    "expires_in_s": 900,
+    "game_back_access_token": "***",
+    "game_back_session_id": null,
+    "refresh_expires_in_s": "***",
+    "refresh_token": "***",
+    "session_id": "01a1cd27-1308-714e-a9c9-b3c161146bd8",
+    "token_type": "***"
+   }
+  },
+  "response_meta": {
+   "api_version": 1,
+   "correlation_id_echo": null,
+   "request_id_echo": "3beea1e9-0513-467b-a9c8-04e5bef3eb1d",
+   "server_build_ref": {
+    "built_at": "2026-11-11T18:17:52Z",
+    "git_sha": "8d0184a4"
+   },
+   "server_processed_at": "2026-11-12T00:27:32.455Z"
+  }
+ },
+ "bytes_read": 995,
+ "label": "auth/signup",
+ "length_match": true,
+ "request": "POST http://localhost/v1/auth/signup",
+ "status": 201
+}

@@ -1,0 +1,27 @@
+{
+ "Content-Length_header": "277",
+ "X-Server-Build": "8d0184a4",
+ "auth": "Bearer ***",
+ "body": {
+  "payload": {
+   "data": {
+    "events": []
+   }
+  },
+  "response_meta": {
+   "api_version": 1,
+   "correlation_id_echo": null,
+   "request_id_echo": "2d25389b-703e-4ef2-9c4d-3daacd8f2b09",
+   "server_build_ref": {
+    "built_at": "2026-11-11T18:17:52Z",
+    "git_sha": "8d0184a4"
+   },
+   "server_processed_at": "2026-11-12T00:27:32.524Z"
+  }
+ },
+ "bytes_read": 277,
+ "label": "/v1/random-world/active",
+ "length_match": true,
+ "request": "GET http://localhost/v1/random-world/active",
+ "status": 200
+}

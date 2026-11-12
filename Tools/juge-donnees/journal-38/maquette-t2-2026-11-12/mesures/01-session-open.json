@@ -1,0 +1,127 @@
+{
+ "Content-Length_header": "2416",
+ "X-Server-Build": "8d0184a4",
+ "auth": "Bearer ***",
+ "body": {
+  "payload": {
+   "data": {
+    "backlog_badge": false,
+    "compression_glance": {
+     "forced": false,
+     "stress_bucket": "calm",
+     "week_state": "none"
+    },
+    "day_phase": "DAWN",
+    "family_day": 1,
+    "flag_review": {
+     "auto_open": false,
+     "pending_review_count": 0
+    },
+    "friction_glance": {
+     "friction_bucket": "light",
+     "penalty_active": false
+    },
+    "hl_card": null,
+    "onboarding": {
+     "first_decision_recorded": false,
+     "funnel_step": "HOME_FIRST"
+    },
+    "opened_family_day": 1,
+    "opened_game_day": 1,
+    "opened_game_minute": 1500,
+    "queue": [
+     {
+      "building": null,
+      "candidate_actions": [
+       {
+        "add_rule_dsl": null,
+        "id": "acknowledge",
+        "label": "Acknowledge the lab status",
+        "label_i18n": {
+         "key": "exception.onboarding_preseed.acknowledge.label",
+         "params": {}
+        },
+        "method": "ONE_TIME",
+        "projected_consequence": "You note it; no automatic action is taken.",
+        "projected_consequence_i18n": {
+         "key": "exception.onboarding_preseed.acknowledge.consequence",
+         "params": {}
+        }
+       },
+       {
+        "add_rule_dsl": null,
+        "id": "escalate",
+        "label": "Escalate for review",
+        "label_i18n": {
+         "key": "exception.onboarding_preseed.escalate.label",
+         "params": {}
+        },
+        "method": "ESCALATE",
+        "projected_consequence": "The card is archived for later review.",
+        "projected_consequence_i18n": {
+         "key": "exception.onboarding_preseed.escalate.consequence",
+         "params": {}
+        }
+       }
+      ],
+      "confidence_band": "confident",
+      "event_descriptor": "onboarding.preseed_exception.card",
+      "event_descriptor_i18n": {
+       "key": "onboarding.preseed_exception.card",
+       "params": {}
+      },
+      "exception_id": "4d3ffb28-e92a-45c9-8a2a-e5f800f20734",
+      "lieutenant": {
+       "id": "01a1cd27-130d-7f66-906c-c489d36e65e2",
+       "name": "Lt. Tull"
+      },
+      "lieutenant_id": "01a1cd27-130d-7f66-906c-c489d36e65e2",
+      "priority_band": "watching",
+      "resolution_status": "pending",
+      "severity_band": "MILD",
+      "suggested_action": {
+       "add_rule_dsl": null,
+       "id": "acknowledge",
+       "label": "Acknowledge the lab status",
+       "label_i18n": {
+        "key": "exception.onboarding_preseed.acknowledge.label",
+        "params": {}
+       },
+       "method": "ONE_TIME",
+       "projected_consequence": "You note it; no automatic action is taken.",
+       "projected_consequence_i18n": {
+        "key": "exception.onboarding_preseed.acknowledge.consequence",
+        "params": {}
+       }
+      }
+     }
+    ],
+    "queue_pressure_band": "normal",
+    "session_id": "57279eea-d21f-4c78-9e90-1580b4b409ec",
+    "settling_glance": {
+     "all_clear": true,
+     "settling_count": 0
+    },
+    "structural_budget": {
+     "cap_reached": false,
+     "used": 0
+    }
+   }
+  },
+  "response_meta": {
+   "api_version": 1,
+   "correlation_id_echo": null,
+   "request_id_echo": "d9d50f26-dcc4-4d8f-a685-225125328da9",
+   "server_build_ref": {
+    "built_at": "2026-11-11T18:17:52Z",
+    "git_sha": "8d0184a4"
+   },
+   "server_processed_at": "2026-11-12T00:27:32.499Z"
+  }
+ },
+ "bytes_read": 2416,
+ "label": "session/open",
+ "length_match": true,
+ "request": "POST http://localhost/v1/session/open",
+ "status": 200
+}
