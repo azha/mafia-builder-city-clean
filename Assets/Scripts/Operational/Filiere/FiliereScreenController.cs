@@ -496,7 +496,7 @@ namespace MafiaCleanCity.Operational
                     Lib("La filière s’écarte de son profil"),
                     // Mots de l'atelier (4b, 02374169) : la note de maquette (« le serveur dit… du domaine ») parlait au juge ; le
                     // panneau parle au joueur.
-                    Lib("on vous dit oui ou non : jamais de combien, ni pourquoi. C’est le seul signal d’alerte de la filière — "
+                    Lib("on vous dit oui ou non\u00A0: jamais de combien, ni pourquoi. C’est le seul signal d’alerte de la filière — "
                         + "et il ne se mesure pas."));
             else
                 MajPanneau(Lib("CE QUE LA CHAÎNE FAIT DE VOTRE ARGENT"),
