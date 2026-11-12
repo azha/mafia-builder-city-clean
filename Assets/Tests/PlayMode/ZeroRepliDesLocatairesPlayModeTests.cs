@@ -102,9 +102,7 @@ namespace MafiaCleanCity.Operational.Tests
             "appro.cout.on_ne_sait_pas_encore_combien",
             "appro.etiquette.en_entretien", "appro.titre.les_routes",
             "appro.etat_route.active", "appro.etat_route.saturated", "appro.etat_route.severed", "appro.etiquette.en_reconstruction",
-            // TD-1035 (12/11, CLIENT-1, ordre f2) : le mot de la CAUSE du bouchon de ㉚ — « C’est ici que ça bouche » (U+2019), servi par BACK-6 `lot/td-1035-cause-bouchon`
-            // @ba55e828 (pas encore sur la pile). Inscrit AVANT son lecteur : le dessin (2ᵉ ligne du maillon-cause, cadre 154) attend la spec client. À RETIRER au service.
-            "appro.etiquette.c_est_ici_que_ca_bouche",
+            // (TD-1035 : « appro.etiquette.c_est_ici_que_ca_bouche » RETIRÉE de la dette le 12/11, ruling f2 — aucun code n'affiche ce texte ; CLIENT-1 la réinscrit avec son lecteur, la garde de population l'y force.)
             // ⚠️ COUPE du 12/11 (créneau CLIENT-1, run 2 contre la pile de dev 8d0184a4) : la règle (2) a rougi, 42 clés SONT servies — retirées : les 11 bandes de ㉚
             // (`appro.pression.*`, `appro.dette.*`, `appro.fournisseur.*`) et les 31 `marche.*` de ㉑. Restent ci-dessous l'entrée du menu Plus et les clés des lots d'après.
             // ㉑ LE MARCHÉ (CLIENT-1, 11/11 ; TD-1017 BASCULÉE) : les 31 clés `marche.*` SERVIES par BACK-3 sous leurs noms FIGÉS (`lot/marche-mots` @163402f1,
@@ -159,6 +157,9 @@ namespace MafiaCleanCity.Operational.Tests
             "journal.bloc.leur_cle_est_montree_a_la_place_du_titre_le_reste_du_journal_est_ecrit",
             "journal.bloc.quartier_0",
             "journal.bloc.une_breve_est_arrivee_sans_son_texte",
+            // Écran Loi (LoiResolvers.TexteBoutonRetainer) : « LIBÉRER », bouton d'un avocat sous rétention — AFFICHÉ, ni servi ni en dette (trouvé par la garde de population, B1). Mot RATIFIÉ par f2 le 12/11 : FR = le littéral du code à l'octet,
+            // EN « RELEASE » (symétrique de « PUT ON RETAINER » / « METTRE SOUS RÉTENTION », majuscules) ; versé au lot de mots du back. DetteDatee, levée au service sur la pile.
+            "loi.bouton.liberer",
             // ㉔ (CLIENT-2) : 17 textes RÉELS de la boîte d'autonomie (en-tête « votre lieutenant », état « Décidé », phrases de résultat), affichables dès qu'un rapport est monté — trouvés par la garde statique de population,
             // servis par BACK-2 dans lot/mots-a-servir (approuvé 34e2ea45, ni fusionné ni déployé). Ruling f2 12/11 : DetteDatee ; LEVÉE au SERVICE SUR LA PILE (pas au SHA de BACK-2).
             "autonomie.entete.votre_lieutenant",
