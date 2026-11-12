@@ -1688,7 +1688,7 @@ namespace MafiaCleanCity.Capture.Tests
         ///   l'image ne pouvait pas le dire (un écran non chargé et un compte vide donnent la
         ///   même photo). C'est en exigeant que le chargement ait EU LIEU qu'on le voit.</summary>
         [Category("CaptureJournal")]
-        [Timeout(420000)]   // le semis (jusqu'à 3 pas de 2 ticks + relectures) s'ajoute au chemin de capture ; 180 s par défaut ne suffiraient pas
+        [Timeout(720000)]   // pire cas du semis : 9 appels × 45 s + 5 relectures de 3 fils (≈ 555 s), plus le chemin de capture ; 180 s par défaut ne suffiraient pas
         public IEnumerator Capture_LeJournal_SousChrome()
         {
             // AVANT TOUT : sans la paire, rien ne s'écrit (patron `CapturerLocataire`).
@@ -1721,7 +1721,7 @@ namespace MafiaCleanCity.Capture.Tests
             // vide, par les seams ville-globaux, sans muter le compte de capture (gelé) : voir l'en-tête de `SemisDuJournal`. AVANT d'ouvrir l'écran.
             var semis = new MafiaCleanCity.Operational.Tests.SemisDuJournal.Etat();
             yield return MafiaCleanCity.Operational.Tests.SemisDuJournal.PeuplerSiVide(BaseUrl, shell.Token, semis);
-            Debug.Log("[CAPTURE-JOURNAL] semis : " + semis.Journal);
+            Debug.Log("[CAPTURE-JOURNAL] semis, récapitulatif : " + semis.Journal);   // chaque ligne a déjà été journalisée au fil de l'eau
 
             shell.ActivateTab(AppShell.Tab.More);
             for (int i = 0; i < 90; i++) yield return null;

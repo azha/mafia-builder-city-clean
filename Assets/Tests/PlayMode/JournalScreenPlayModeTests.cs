@@ -736,6 +736,9 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(false, SemisDuJournal.Reclame("{\"gameDay\":12,\"claimed\":false}"));
             Assert.AreEqual(true, SemisDuJournal.Reclame("{\"claimed\": true}"));
             Assert.IsNull(SemisDuJournal.Reclame("{}"));
+            Assert.AreEqual(1440L, SemisDuJournal.EntierServi("{\"game_minute\":17280,\"in_game_day_length_minutes\":1440}", "in_game_day_length_minutes"));
+            Assert.IsNull(SemisDuJournal.EntierServi("{\"in_game_day_length_minutes\":0}", "in_game_day_length_minutes"), "0 ne divise rien : traité comme absent");
+            Assert.IsNull(SemisDuJournal.EntierServi("{\"game_minute\":17280}", "in_game_day_length_minutes"), "absent : on ne suppose pas 1440");
 
             Assert.IsNull(SemisDuJournal.Refus(1, 2, 0), "« en cours » peut rester vide : la planche se prend");
             Assert.IsNull(SemisDuJournal.Refus(0, 1, 0), "la rue suffit");
@@ -759,18 +762,19 @@ namespace MafiaCleanCity.Operational.Tests
     ///   2. `POST /v1/_test/news/run-daily-tick {gameDay}` — la presse du MÊME jour (sa matière sûre est l'ambient de ce jour) : jusqu'à 5 brèves,
     ///      visibles par tous les joueurs pendant 48 h réelles.
     ///   3. `POST /v1/_test/effect-engine/seed-random-world-event-active {templateId, districtId, startedAtGameDay, expiresAtGameDay}` — UNE ligne
-    ///      random-world SEMÉE, PAS UNE ACTIVATION : aucun effet de jeu, sévérité `faint`, phase `lingering`. Le tick random-world n'est PAS appelé
-    ///      (≈ 0,56 % par jour pour un district donné, et des effets sur tous les joueurs du district).
+    ///      random-world SEMÉE, PAS UNE ACTIVATION : ni modificateur de district ni baisse de cohésion, sévérité `faint`, phase `lingering`. ⚠️ Elle
+    ///      n'est pas sans trace : elle consomme le cooldown de 30 jours de ce district et compte dans le plafond global de 6 événements, et aucun
+    ///      seam ne la supprime. Le tick random-world n'est PAS appelé (≈ 0,56 % par jour pour un district donné, effets sur tous ses joueurs).
     ///
     /// ⛔ CE QU'IL NE FAIT PAS : aucune mutation du compte de capture (il est GELÉ : `SeederSupport.RefuserMutationSurCompteGele` ; son horloge n'est
     /// pas avancée, elle est seulement LUE par `GET /v1/me/clock`), aucun jeton staff, aucune route `/v1/admin`.
-    /// SEMER SEULEMENT SI VIDE : rien n'est écrit quand la rue sert déjà une brève — deux captures de suite ne font pas dériver la pile.
+    /// SEMER SEULEMENT SI VIDE : rien n'est écrit quand la rue sert déjà une brève, et la boucle s'arrête DÈS qu'elle en sert une — deux captures de
+    /// suite ne font pas dériver la pile. Un compte sans bâtiment n'est pas semé du tout (son fil ne lui montrerait rien).
     /// ⚠️ Écart assumé à la lettre « si les TROIS fils sont vides » : le déclencheur est la RUE vide. La presse vit 48 h réelles ; avec une une
     /// encore servie et une rue vide, attendre les trois vides bloquerait la capture deux jours, puisqu'une planche sans rue est refusée.</summary>
     public static class SemisDuJournal
     {
         public const string GabaritSeme = "halgren_tannery_hailstorm";   // forçable, résolu par la phase 1 du tick grâce à `expiresAtGameDay` (BACK-2)
-        public const int MinutesParJour = 1440;
         /// <summary>k = 0 … PasMax : chaque pas rejoue ambient un jour plus loin, et son balayage expire davantage de brèves des autres comptes.</summary>
         public const int PasMax = 2;
         public const string MentionMonde = "ligne random-world semée, pas une activation";
@@ -781,7 +785,8 @@ namespace MafiaCleanCity.Operational.Tests
             public bool LectureEchouee;
             public bool MondeSeme;
             public string Journal = "";
-            public void Noter(string ligne) { Journal += (Journal.Length > 0 ? " | " : "") + ligne; }
+            /// <summary>Chaque ligne part AUSSI au journal du run tout de suite : une interruption ne perd pas la trace de ce qui a été écrit dans la pile.</summary>
+            public void Noter(string ligne) { Journal += (Journal.Length > 0 ? " | " : "") + ligne; Debug.Log("[CAPTURE-JOURNAL] semis · " + ligne); }
         }
 
         /// <summary>`game_minute` de `GET /v1/me/clock`, partie entière ; null si la clé manque ou vaut null (jamais un 0 par défaut).</summary>
@@ -789,6 +794,14 @@ namespace MafiaCleanCity.Operational.Tests
         {
             var m = System.Text.RegularExpressions.Regex.Match(corps ?? "", "\"game_minute\"\\s*:\\s*(\\d+)");
             return m.Success && long.TryParse(m.Groups[1].Value, out long v) ? v : (long?)null;
+        }
+
+        /// <summary>Un entier positif SERVI sous cette clé (`in_game_day_length_minutes` de `GET /v1/me/clock` : la durée du jour est un réglage du back,
+        /// jamais un 1440 supposé) ; null si la clé manque, vaut null ou 0.</summary>
+        public static long? EntierServi(string corps, string cle)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(corps ?? "", "\"" + System.Text.RegularExpressions.Regex.Escape(cle) + "\"\\s*:\\s*(\\d+)");
+            return m.Success && long.TryParse(m.Groups[1].Value, out long v) && v > 0 ? v : (long?)null;
         }
 
         /// <summary>Les `district_id` de `GET /v1/me/buildings`, distincts, dans l'ordre servi.</summary>
@@ -836,14 +849,16 @@ namespace MafiaCleanCity.Operational.Tests
                 if (json != null) req.uploadHandler = new UnityEngine.Networking.UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
                 req.downloadHandler = new UnityEngine.Networking.DownloadHandlerBuffer();
                 MafiaCleanCity.ClientHttp.Json(req);
-                if (verbe == "POST") MafiaCleanCity.ClientHttp.Idempotent(req);   // les seams `_test` l'exigent ; ils n'ont pas d'authentification
+                if (verbe == "POST") MafiaCleanCity.ClientHttp.Idempotent(req);   // non exigée par les seams `_test` (sans authentification non plus), inoffensive
                 if (!string.IsNullOrEmpty(jeton)) MafiaCleanCity.ClientHttp.Authentifier(req, jeton);
-                MafiaCleanCity.ClientHttp.Delai(req, 120);
+                MafiaCleanCity.ClientHttp.Delai(req, DelaiParAppelS);
                 yield return req.SendWebRequest();
                 fin(req.responseCode, req.downloadHandler != null ? req.downloadHandler.text : "");
             }
         }
 
+        /// <summary>Pire cas du semis : 2 lectures + 3 pas de 2 ticks + 1 insertion = 9 appels × 45 s, plus les relectures — sous le [Timeout] de la capture.</summary>
+        public const int DelaiParAppelS = 45;
         private static bool Ok(long code) => code >= 200 && code < 300;
 
         /// <summary>Lit les trois fils ; si la rue est vide, sème (voir l'en-tête de la classe) ; relit. Ne lève rien : le verdict est `Refus`, posé par la
@@ -859,16 +874,20 @@ namespace MafiaCleanCity.Operational.Tests
             long code = 0; string corps = "";
             yield return Appeler("GET", racine + "/v1/me/clock", null, jeton, (c, t) => { code = c; corps = t; });
             long? minute = Ok(code) ? MinuteDeJeu(corps) : null;
-            if (minute == null) { e.Noter($"rien semé : `game_minute` illisible sur /v1/me/clock ({code})"); yield break; }
+            long? duJour = Ok(code) ? EntierServi(corps, "in_game_day_length_minutes") : null;
+            if (minute == null || duJour == null)
+            { e.Noter($"rien semé : `game_minute` ou `in_game_day_length_minutes` illisible sur /v1/me/clock ({code})"); yield break; }
+            long minutesParJour = duJour.Value;
             yield return Appeler("GET", racine + "/v1/me/buildings", null, jeton, (c, t) => { code = c; corps = t; });
             int[] districts = Ok(code) ? Districts(corps) : new int[0];
-            e.Noter($"horloge du compte LUE (non avancée) : minute {minute}, jour {minute / MinutesParJour} ; districts du compte : [{string.Join(", ", districts)}]");
-            if (districts.Length == 0) e.Noter("⚠️ le compte ne possède aucun bâtiment : le fil de la rue ne lui montrera rien, quoi qu'on sème");
+            e.Noter($"horloge du compte LUE (non avancée) : minute {minute}, jour {minute.Value / minutesParJour} ({minutesParJour} min par jour, servi) ; districts du compte : [{string.Join(", ", districts)}]");
+            if (districts.Length == 0)
+            { e.Noter($"rien semé : le compte ne possède aucun bâtiment (/v1/me/buildings {code}) — le fil de la rue ne lui montrerait rien, quoi qu'on sème"); yield break; }
 
             for (int k = 0; k <= PasMax; k++)
             {
-                long gm = minute.Value + (long)MinutesParJour * k;
-                long jour = gm / MinutesParJour;
+                long gm = minute.Value + minutesParJour * k;
+                long jour = gm / minutesParJour;
                 yield return Appeler("POST", racine + "/v1/_test/ambient/run-daily-tick", "{\"gameMinute\":" + gm + "}", null, (c, t) => { code = c; corps = t; });
                 e.Noter($"k={k} tick ambient gameMinute={gm} → {code} (balaie aussi les brèves échues des autres comptes)");
                 yield return Appeler("POST", racine + "/v1/_test/news/run-daily-tick", "{\"gameDay\":" + jour + "}", null, (c, t) => { code = c; corps = t; });
@@ -876,14 +895,15 @@ namespace MafiaCleanCity.Operational.Tests
                 e.Noter($"k={k} tick presse gameDay={jour} → {code}, claimed={(reclame.HasValue ? (reclame.Value ? "true" : "false") : "?")}");
                 yield return Lire(racine, jeton, e);
                 e.Noter($"k={k} relu : à la une {e.Une} · dans la rue {e.Rue} · en cours {e.Monde}");
-                if (e.LectureEchouee) yield break;
-                // on s'arrête dès que la rue est servie, sauf si la presse de ce jour était déjà réclamée et la une vide : le jour suivant pour les DEUX seams
-                if (e.Rue > 0 && (e.Une > 0 || reclame != false)) break;
+                if (e.LectureEchouee) { e.Noter($"k={k} : une relecture a ÉCHOUÉ, arrêt du semis (les comptes ci-dessus ne valent rien)"); yield break; }
+                // ⛔ ON S'ARRÊTE DÈS QUE LA RUE EST SERVIE : la planche est prenable (`Refus`), et un pas de plus coûterait à toute la ville un balayage
+                // et un jour de presse réclamé pour de bon. Une une restée vide (presse de ce jour déjà réclamée) n'est PAS une raison de continuer.
+                if (e.Rue > 0) break;
             }
 
-            if (e.Monde == 0 && districts.Length > 0)
+            if (e.Monde == 0)
             {
-                long jour0 = minute.Value / MinutesParJour;
+                long jour0 = minute.Value / minutesParJour;
                 string json = "{\"templateId\":\"" + GabaritSeme + "\",\"districtId\":" + districts[0] + ",\"startedAtGameDay\":" + jour0
                             + ",\"expiresAtGameDay\":" + (jour0 + 3) + "}";
                 yield return Appeler("POST", racine + "/v1/_test/effect-engine/seed-random-world-event-active", json, null, (c, t) => { code = c; corps = t; });
