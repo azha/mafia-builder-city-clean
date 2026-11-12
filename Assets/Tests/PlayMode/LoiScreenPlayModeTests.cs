@@ -564,5 +564,102 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
             Assert.IsNull(ecran.RepliqueRendue, "CONTRÔLE : aucune affaire ⇒ aucune voix (l'état vide a déjà ses mots)");
         }
+
+        // ═══ LB-1 / LB-4 (㉛, BACK-3 `lot/loi-31` @70ea6e07 ; design `Tools/loi-31-client/DESIGN.md`) ═══════════════════════════════════════
+
+        private const string CleLaPlanque = "loi.element.la_planque";
+        private const string PhraseQuiNomme = "Lt. Rin : « Il a donné la planque. Ce qui est sorti ne rentrera pas. »";
+
+        private static LegalCaseDto AffaireQuiADonne(string leak, string cleElement)
+        {
+            LegalCaseDto a = Affaire(leak);
+            a.leakedItemI18n = new ElementFuiteI18nDto { key = cleElement };   // `null` servi = instance VIDE (JsonUtility) : `key` null
+            a.pleaOffer = "offered";
+            return a;
+        }
+
+        private static void ServirLeCatalogue(bool avecLaPhrase)
+        {
+            var m = new System.Collections.Generic.Dictionary<string, string> { { CleLaPlanque, "la planque" }, { "loi.element.votre_nom", "votre nom" } };
+            if (avecLaPhrase) m[LoiResolvers.RepliqueQuiNommeLElement.cle] = "{nom} : « Il a donné {element}. Ce qui est sorti ne rentrera pas. »";
+            MafiaCleanCity.I18n.I18nCatalog.ChargerPourTest("fr", m);
+        }
+
+        /// <summary>LB-1 (pur, catalogue injecté) : l'élément nommé est le TEXTE SERVI de la clé servie, pour la pire bande `low`/`significant` seulement.
+        /// CONTRÔLES ⇒ null : `full_dump`, `silent`, clé inconnue du catalogue, `null` servi, élément d'une affaire qui n'est pas à la pire bande.</summary>
+        [Test]
+        public void EcranLoiLB1_ElementDonne_LeTexteServiDeLaPireBande_SinonRien()
+        {
+            ServirLeCatalogue(avecLaPhrase: false);
+            Assert.AreEqual("la planque", LoiResolvers.ElementDonne(new[] { AffaireQuiADonne("significant", CleLaPlanque) }, "significant"));
+            Assert.AreEqual("la planque", LoiResolvers.ElementDonne(new[] { AffaireQuiADonne("low", CleLaPlanque) }, "low"));
+            Assert.AreEqual("votre nom", LoiResolvers.ElementDonne(
+                new[] { AffaireQuiADonne("significant", null), AffaireQuiADonne("significant", "loi.element.votre_nom"), AffaireQuiADonne("significant", CleLaPlanque) },
+                "significant"), "deux affaires à la pire bande : la PREMIÈRE qui porte un élément, dans l'ordre servi");
+            Assert.IsNull(LoiResolvers.ElementDonne(new[] { AffaireQuiADonne("full_dump", CleLaPlanque) }, "full_dump"), "CONTRÔLE : `full_dump` garde sa phrase");
+            Assert.IsNull(LoiResolvers.ElementDonne(new[] { AffaireQuiADonne("silent", CleLaPlanque) }, "silent"), "CONTRÔLE : `silent` garde sa phrase");
+            Assert.IsNull(LoiResolvers.ElementDonne(new[] { AffaireQuiADonne("low", "loi.element.un_neuvieme_type") }, "low"),
+                "CONTRÔLE : une clé que le bundle ne connaît pas ⇒ rien, jamais la clé affichée");
+            Assert.IsNull(LoiResolvers.ElementDonne(new[] { AffaireQuiADonne("low", null) }, "low"), "CONTRÔLE : `leakedItemI18n: null` ⇒ rien");
+            Assert.IsNull(LoiResolvers.ElementDonne(new[] { AffaireQuiADonne("low", CleLaPlanque), AffaireQuiADonne("significant", null) }, "significant"),
+                "CONTRÔLE : l'élément d'une affaire `low` ne parle pas pour la pire, `significant`");
+            Assert.IsNull(LoiResolvers.ElementDonne(null, "low"));
+
+            MafiaCleanCity.I18n.I18nCatalog.Oublier();
+            Assert.IsNull(LoiResolvers.ElementDonne(new[] { AffaireQuiADonne("low", CleLaPlanque) }, "low"), "CONTRÔLE : sans catalogue, aucun mot client pour un élément");
+            StringAssert.StartsWith("{nom} : « Il a donné {element}.", LoiResolvers.RepliqueQuiNommeLElement.repli);
+            StringAssert.EndsWith(" »", LoiResolvers.RepliqueQuiNommeLElement.repli);
+        }
+
+        /// <summary>LB-1 / LB-4 (forme G) : un corps à la forme servie par 70ea6e07 (7 clés par affaire, `leakedItemI18n` objet puis `null`) passe par
+        /// `JsonUtility` — les 2 clés neuves sont LUES, et `null` se lit `key` vide. CONTRÔLE : le même corps sans les 2 clés ne les invente pas.</summary>
+        [Test]
+        public void EcranLoiLB1_CorpsReel_LesDeuxClesNeuvesSontLues()
+        {
+            const string corps = "{\"payload\":{\"data\":{\"activeCases\":["
+                + "{\"caseId\":\"c1\",\"defendantLabel\":\"Courier #3\",\"chargeSeverity\":\"felony_low\",\"daysRemaining\":5,\"leak\":\"low\","
+                + "\"leakedItemI18n\":{\"key\":\"loi.element.la_planque\",\"params\":{}},\"pleaOffer\":\"offered\"},"
+                + "{\"caseId\":\"c2\",\"defendantLabel\":\"Lt. Tull\",\"chargeSeverity\":\"misdemeanor\",\"daysRemaining\":9,\"leak\":\"silent\","
+                + "\"leakedItemI18n\":null,\"pleaOffer\":\"offered\"}],\"lawyerRoster\":[],\"speaker\":null}}}";
+            LegalCaseDto[] lues = JsonUtility.FromJson<GetLegalEnvelope>(corps).payload.data.activeCases;
+            Assert.AreEqual(2, lues.Length);
+            Assert.AreEqual(CleLaPlanque, lues[0].leakedItemI18n.key);
+            Assert.AreEqual("offered", lues[0].pleaOffer);
+            Assert.IsTrue(lues[1].leakedItemI18n == null || string.IsNullOrEmpty(lues[1].leakedItemI18n.key), "`null` servi ⇒ `key` vide (instance vide ou null)");
+            Assert.AreEqual("offered", lues[1].pleaOffer);
+
+            LegalCaseDto sans = JsonUtility.FromJson<GetLegalEnvelope>(
+                "{\"payload\":{\"data\":{\"activeCases\":[{\"caseId\":\"c1\",\"leak\":\"low\"}],\"lawyerRoster\":[]}}}").payload.data.activeCases[0];
+            Assert.IsTrue(sans.leakedItemI18n == null || string.IsNullOrEmpty(sans.leakedItemI18n.key), "CONTRÔLE : un back d'avant le lot ⇒ aucun élément");
+            Assert.IsTrue(string.IsNullOrEmpty(sans.pleaOffer), "CONTRÔLE : un back d'avant le lot ⇒ aucune bande d'accord inventée");
+            ServirLeCatalogue(avecLaPhrase: false);
+            Assert.IsNull(LoiResolvers.ElementDonne(new[] { sans }, "low"));
+            Assert.AreEqual("la planque", LoiResolvers.ElementDonne(lues, "low"), "le corps LU nomme son élément");
+        }
+
+        /// <summary>LB-1 (EFFET) : une affaire qui a donné la planque + `speaker` servi ⇒ la bande dit la phrase qui NOMME l'élément, à l'octet (3 × U+00A0),
+        /// que la clé n°9 soit servie ou en repli. CONTRÔLE : la même affaire sans élément ⇒ la phrase appauvrie de TD-823, inchangée.</summary>
+        [UnityTest]
+        public IEnumerator EcranLoiLB1_LaVoixNommeLElement()
+        {
+            var ecran = MonterEcran();
+            var rin = new LocuteurServiDto { id = "r", name = "Lt. Rin" };
+            foreach (bool servie in new[] { true, false })
+            {
+                ServirLeCatalogue(avecLaPhrase: servie);
+                ecran.RendrePourTest(new GetLegalResponseDto { lawyerRoster = new LawyerDto[0], activeCases = new[] { AffaireQuiADonne("significant", CleLaPlanque) }, speaker = rin });
+                yield return null;
+                Assert.AreEqual(PhraseQuiNomme, ecran.RepliqueRendue, servie ? "clé n°9 SERVIE" : "clé n°9 en REPLI : même phrase, à l'octet");
+            }
+
+            ecran.RendrePourTest(new GetLegalResponseDto { lawyerRoster = new LawyerDto[0], activeCases = new[] { AffaireQuiADonne("significant", null) }, speaker = rin });
+            yield return null;
+            StringAssert.Contains("Il a commencé à parler.", ecran.RepliqueRendue, "CONTRÔLE : sans élément servi, la phrase appauvrie reste");
+            Assert.IsFalse(ecran.RepliqueRendue.Contains("{element}"), "jamais un trou rendu tel quel");
+
+            ecran.RendrePourTest(new GetLegalResponseDto { lawyerRoster = new LawyerDto[0], activeCases = new[] { AffaireQuiADonne("full_dump", CleLaPlanque) }, speaker = rin });
+            yield return null;
+            StringAssert.Contains("Il a tout vidé.", ecran.RepliqueRendue, "CONTRÔLE : `full_dump` garde sa phrase, élément servi ou non");
+        }
     }
 }

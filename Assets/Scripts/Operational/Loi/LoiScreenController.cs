@@ -288,8 +288,13 @@ namespace MafiaCleanCity.Operational
             var replique = LoiResolvers.RepliqueDeFuite(fuite);
             if (replique == null) return;
             const string Marque = "\u241E";
-            string t = Libelle.GabaritExigeant(replique.Value.cle, replique.Value.repli,
-                new System.Collections.Generic.Dictionary<string, string> { { "nom", Marque } }, "nom");
+            var parametres = new System.Collections.Generic.Dictionary<string, string> { { "nom", Marque } };
+            (string cle, string repli) dite = replique.Value;
+            // LB-1 : l'élément fuité SERVI (texte du catalogue) ⇒ la phrase qui le nomme remplace l'appauvrie ; sinon rien ne change.
+            string element = LoiResolvers.ElementDonne(dto?.activeCases, fuite);
+            if (element != null) { dite = LoiResolvers.RepliqueQuiNommeLElement; parametres["element"] = element; }
+            // EXIGEANT sur le trou propre à la phrase : une valeur servie du n°9 sans `{element}` tairait l'élément ⇒ elle compte comme non servie (revue ⊥ m1).
+            string t = Libelle.GabaritExigeant(dite.cle, dite.repli, parametres, element != null ? "element" : "nom");
             int i = t.IndexOf(Marque, System.StringComparison.Ordinal);
             string avant = i < 0 ? t : t.Substring(0, i), apres = i < 0 ? "" : t.Substring(i + Marque.Length), gras = i < 0 ? "" : nom;
             TextMeshProUGUI dit = NouveauTexteFiche(basRoot, "Dit",
@@ -926,7 +931,7 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>TD-823 — la réplique d'une bande (design BACK-2 §6.2, mots RATIFIÉS) : clé `loi.dit.*` et repli FR, gabarit `{nom}` + U+00A0 +
         /// « : « » + U+00A0 + phrase + U+00A0 + « » » (recette §6.1, 3 × U+00A0). `low` et `significant` disent la même phrase (la variante qui
-        /// nomme l'élément fuité n'est pas servie). null hors domaine. Pure.</summary>
+        /// nomme l'élément fuité : `RepliqueQuiNommeLElement`, LB-1). null hors domaine. Pure.</summary>
         public static (string cle, string repli)? RepliqueDeFuite(string leak)
         {
             switch (leak)
@@ -944,6 +949,32 @@ namespace MafiaCleanCity.Operational
                 default:
                     return null;
             }
+        }
+
+        /// <summary>LB-1 (spec back `loi-31-lots` §4 n°9, mots RATIFIÉS, FR recopié à l'octet de `string_table.ts` @70ea6e07 : 3 × U+00A0) — la phrase
+        /// qui NOMME l'élément fuité. Elle remplace celle de `low`/`significant` (« Il a commencé à parler… ») quand un élément est servi, et elle seule.</summary>
+        public static (string cle, string repli) RepliqueQuiNommeLElement =>
+            ("loi.dit.il_a_donne_ce_qui_est_sorti_ne_rentrera_pas",
+             "{nom}\u00A0: «\u00A0Il a donné {element}. Ce qui est sorti ne rentrera pas.\u00A0»");
+
+        /// <summary>LB-1 — le TEXTE servi de l'élément que la voix nomme, ou null. Seulement quand la pire bande est `low` ou `significant` (`silent`
+        /// et `full_dump` gardent leur phrase) ; parmi les affaires À CETTE BANDE, la première (ordre servi) dont `leakedItemI18n.key` est connue du
+        /// catalogue. La clé est une RÉFÉRENCE SERVIE : aucun `switch` sur les 8 types, aucun repli client — une clé absente du bundle ⇒ null (la phrase
+        /// appauvrie reste), jamais une clé affichée ni un mot inventé.
+        /// ÉNONCÉ DATÉ (spec back §4 recos (9), revue ⊥ m2) : `silent` avec un élément fuité n'existe que si le tunable `lawyer.leak_band_cut_silent`
+        /// dépasse 0,2 (défaut 0,10, plage ratifiée jusqu'à 0,30) ; ce jour-là la voix dirait « il n'a rien dit » sur une affaire qui a donné un élément :
+        /// la règle se revoit alors. Plusieurs affaires à la pire bande : UN élément est nommé, celui de la première (la phrase est au singulier).</summary>
+        public static string ElementDonne(LegalCaseDto[] affaires, string pire)
+        {
+            if (affaires == null || (pire != "low" && pire != "significant")) return null;
+            foreach (LegalCaseDto a in affaires)
+            {
+                if (a == null || a.leak != pire || a.leakedItemI18n == null || string.IsNullOrEmpty(a.leakedItemI18n.key)) continue;
+                if (!I18nCatalog.Connait(a.leakedItemI18n.key)) continue;
+                string texte = I18nCatalog.Traduire(a.leakedItemI18n.key);
+                if (!string.IsNullOrWhiteSpace(texte)) return texte;
+            }
+            return null;
         }
 
         /// <summary>TD-823 — le nom SERVI du locuteur (`speaker.name`, « Lt. » compris) ; null si `speaker` est null (JsonUtility : instance vide). Pure.</summary>

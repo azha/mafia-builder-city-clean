@@ -161,11 +161,24 @@
   "140": "Vous n’avez pas encore de filière",
   "141": "Aucune filière montée",
   "142": "Où en est chaque maillon",
+  "154": "㉚ La chaîne vue du graphe — GET /v1/supply-chain/graph + GET /v1/me/buildings (graphe + bâtiments du joueur), sans rang ni progression",
   "155": "Le journal — après « Y PRÊTER ATTENTION » · bande full",
   "156": "Le journal — après « Y PRÊTER ATTENTION » · bande reduced",
   "157": "Le journal — après « Y PRÊTER ATTENTION » · bande minimal",
   "158": "Le journal — après « Y PRÊTER ATTENTION » · bande none",
+  "159": "㉚ La chaîne — les routes (la liste défilée jusqu’aux routes) — GET /v1/supply-chain/graph routes[] + GET /v1/me/buildings",
+  "160": "㉚ Entretenir une liaison — la feuille (la grande décision du jour est libre)",
+  "161": "㉚ Entretenir une liaison — la feuille (la grande décision du jour est prise)",
+  "162": "㉚ Entretenir une liaison — refusé : pas assez d’argent",
+  "163": "㉚ Entretenir une liaison — refusé : un entretien est déjà en cours",
+  "164": "㉚ Entretenir une liaison — après le geste : « en entretien »",
+  "165": "㉚ Reconstruire une route — la feuille (la grande décision du jour est libre)",
+  "166": "㉚ Reconstruire une route — la feuille (la grande décision du jour est prise)",
+  "167": "㉚ Reconstruire une route — refusé : une reconstruction est déjà en cours",
+  "168": "㉚ Reconstruire une route — refusé : la catégorie est confiée à un lieutenant",
+  "169": "㉚ Reconstruire une route — après le geste : « En reconstruction »",
   "170": "Le journal — les trois fraîcheurs",
-  "171": "La vente — l’écoulement et la clientèle"
+  "171": "La vente — l’écoulement et la clientèle",
+  "172": "㉚ La chaîne vue du graphe — la CAUSE du bouchon (is_blocked_output)"
  }
 }

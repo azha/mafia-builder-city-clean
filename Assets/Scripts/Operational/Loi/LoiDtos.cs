@@ -47,11 +47,11 @@ namespace MafiaCleanCity.Operational
         public int activeCaseCount;
     }
 
-    /// <summary>Une affaire — `ActiveCaseView`, 5 clés, RECOPIÉES du CODE (V15) : `legal.types.ts:147-167` (back main) — `caseId`,
+    /// <summary>Une affaire — `ActiveCaseView`, 7 clés (5 de TD-823 + 2 de LB-1/LB-4, plus bas), RECOPIÉES du CODE (V15) : `legal.types.ts:147-167` (back main) — `caseId`,
     /// `defendantLabel`, `chargeSeverity` (misdemeanor | felony_low | felony_high | major_crime, `:41`), `daysRemaining`, `leak`
     /// (`LeakBandBucket` = silent | low | significant | full_dump, `:63`). Déclarées pour TD-823 (f2 11/11) : la voix du lieutenant de ㉛
     /// se choisit sur le `leak` de la PIRE affaire active. Toujours AUCUN corps non vide mesuré (une affaire naît d'une descente) : la forme
-    /// vient du code, et le contrôleur ne lit que `leak`. Forme G : les 5 clés servies sont déclarées, aucune n'est jetée.</summary>
+    /// vient du code, et le contrôleur ne lit que `leak` et `leakedItemI18n`. Forme G : les 7 clés servies sont déclarées, aucune n'est jetée.</summary>
     [Serializable]
     public class LegalCaseDto
     {
@@ -60,7 +60,17 @@ namespace MafiaCleanCity.Operational
         public string chargeSeverity;
         public int daysRemaining;
         public string leak;
+        /// <summary>LB-1 (㉛, BACK-3 `lot/loi-31`, V15 @70ea6e07 `legal.types.ts:182`) — ADDITIVE : la clé i18n du TYPE du DERNIER élément fuité
+        /// (`loi.element.*`, 8 valeurs portées par le BACK : aucun `switch` client), ou `null`. ⚠️ JsonUtility rend une INSTANCE VIDE pour `null` :
+        /// l'absence se lit `key` vide.</summary>
+        public ElementFuiteI18nDto leakedItemI18n;
+        /// <summary>LB-4 (`legal.types.ts:187`) — ADDITIVE : `offered` | `unavailable`. DÉCLARÉE, NON LUE (TD-1082) : elle vaut `offered` sur TOUTE
+        /// affaire active tant que le back n'a pas de vraie offre (TD-383 du back) ; le geste « ACCEPTER L’ACCORD » n'est pas rendu.</summary>
+        public string pleaOffer;
     }
+
+    /// <summary>LB-1 — la référence servie de l'élément fuité : `{key, params: {}}`. `params` est un objet VIDE (aucun trou) : non déclaré.</summary>
+    [Serializable] public class ElementFuiteI18nDto { public string key; }
 
     /// <summary>TD-823 (BACK-2, design dette/b2 @949e5613 §4) — QUI parle : `speaker {id, name} | null`, à la RACINE de `GET /v1/me/legal` et de
     /// `GET /v1/friction/state`. Le bras droit (règle O2′ : le plus ancien primaire ; null si aucun, ex æquo, ou placeholder). `name` porte déjà
