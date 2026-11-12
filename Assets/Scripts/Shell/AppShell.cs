@@ -1530,10 +1530,11 @@ namespace MafiaCleanCity.Shell
             if (g != null) g.blocksRaycasts = true;
         }
 
-        /// <summary>`quandFini` de `shell.entree` : rend les appuis si c'est bien la piste COURANTE qui finit (une piste périmée ne rend rien).</summary>
+        /// <summary>`quandFini` de `shell.entree` : rend les appuis. Pas de comparaison de handle (un `Equals` sur ce struct boxe, et ce rappel part DANS le `Tick` : « 0 octet alloué par `Tick` ») : la régie ne notifie que
+        /// les pistes vivantes de leur génération (`NotifierFins`), et la piste précédente est détachée AVANT l'attache suivante ; une piste périmée ne notifie donc jamais.</summary>
         private void FinDeLEntreeDeLOnglet(Handle fini)
         {
-            if (fini.Equals(entreeOnglet)) RendreLesAppuisAuContenu();   // `Handle` est un struct de (Slot, Gen) : l'égalité de valeur
+            RendreLesAppuisAuContenu();
         }
 
         /// <summary>Test hook : `ContentSlot` est-il sourd aux appuis à cause de `shell.entree` ?</summary>

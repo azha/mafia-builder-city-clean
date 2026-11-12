@@ -5,7 +5,7 @@
 
 ## Règle
 Tant que la piste `shell.entree` du dernier montage d'onglet est vivante ET que la politique de mouvement est `Plein`, le `CanvasGroup` de `ContentSlot` a `blocksRaycasts = false`. Rendu dès que la piste finit, est détachée ou libérée, et en tout cas jamais gardé faux au-delà.
-- **Pas de seuil d'α.** Un seuil serait un chiffre inventé ; la fenêtre entière dure 160 ms < `AnimMaxBlockMs` (250 ms, G8). Un appui perdu pendant le fondu = comportement ordinaire d'une transition. Le blocage couvre exactement la vie de la piste (T1 le mesure).
+- **Pas de seuil d'α.** Un seuil serait un chiffre inventé ; la fenêtre entière dure 160 ms, du même ordre que `AnimMaxBlockMs` (250 ms) ; G8 ne s'applique pas (`shell.entree` est `bloquante: false`) : la borne des 160 ms est celle de la piste elle-même, tenue par `quandFini` et le filet. Un appui perdu pendant le fondu = comportement ordinaire d'une transition. Le blocage couvre exactement la vie de la piste (T1 le mesure).
 - **`Reduit` inchangé** : `GelDeMouvement` gèle le canal, ContentSlot reste à α = 1 (harnais L1 « reduit-shell-entree » : 1). On ne pose le blocage QUE sous `Plein` : sous `Reduit` (et `Aucun`) l'écran visible reste touchable, aucun appui perdu.
 - **Cold-open / surimpression** : pas de piste (`premierMontageFait`, surimpression) ⇒ pas de blocage. Inchangé.
 

@@ -920,6 +920,10 @@ namespace MafiaCleanCity.Shell.Tests
             var gestes = Tete().GetComponentsInChildren<Transform>(false)
                 .Where(t => t.name == "AgirButton" || t.name == "LaisserButton" || t.name == "SkipButton" || t.name == "LireButton" || t.name == "TypedConfirmButton").ToList();
             Assert.IsNotEmpty(gestes, "anti-vacuité : avec une carte, la tête montre des gestes");
+            // TD-956 : pendant les 160 ms de `shell.entree` ContentSlot est volontairement sourd ; cette garde mesure le RECOUVREMENT, pas l'entrée : on attend la fin du fondu (horloge réelle, borné).
+            float tEntree = Time.realtimeSinceStartup;
+            while (shell.AppuisBloquesParLEntreeDeLOnglet && Time.realtimeSinceStartup - tEntree < 3f) yield return null;
+            Assert.IsFalse(shell.AppuisBloquesParLEntreeDeLOnglet, "l'entrée de l'onglet a fini (sinon le toucher mesuré serait celui d'un écran sourd)");
             foreach (Transform g in gestes)
             {
                 var rt = (RectTransform)g;

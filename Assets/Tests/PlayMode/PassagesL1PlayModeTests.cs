@@ -393,7 +393,7 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         [UnityTest]
-        public IEnumerator P3f_PendantLEntree_ContentSlotNeRecoitAucunAppui_PuisLesRecoit()
+        public IEnumerator P3i_PendantLEntree_ContentSlotNeRecoitAucunAppui_PuisLesRecoit()
         {
             yield return MonterLeShellEtAttendreEmpire();
             Regie r = shell.RegieDeMouvement;
@@ -416,7 +416,7 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         [UnityTest]
-        public IEnumerator P3g_SousReduit_LEcranResteTouchable_DesLePremierInstant()
+        public IEnumerator P3j_SousReduit_LEcranResteTouchable_DesLePremierInstant()
         {
             yield return MonterLeShellEtAttendreEmpire();
             Regie r = shell.RegieDeMouvement;
@@ -432,7 +432,7 @@ namespace MafiaCleanCity.Shell.Tests
         }
 
         [UnityTest]
-        public IEnumerator P3h_Filet_UnePisteDetacheeAilleurs_NeLaisseJamaisContentSlotSourd_EtDeuxMontagesEnchaines()
+        public IEnumerator P3k_Filet_UnePisteDetacheeAilleurs_NeLaisseJamaisContentSlotSourd_EtDeuxMontagesEnchaines()
         {
             yield return MonterLeShellEtAttendreEmpire();
             Regie r = shell.RegieDeMouvement;
@@ -453,6 +453,7 @@ namespace MafiaCleanCity.Shell.Tests
             yield return null;
             A(r, 100.03f);
             Assert.IsTrue(shell.AppuisBloquesParLEntreeDeLOnglet, "le second montage rebloque");
+            Assert.AreEqual(0, RayonsSurLeContenu().coups, "le second montage rebloque : aucun rayon n'atteint le contenu (l'EFFET, pas le drapeau)");
             A(r, 100.5f);
             Assert.IsFalse(shell.AppuisBloquesParLEntreeDeLOnglet, "la fin du second rend les appuis : jamais coincé à faux");
             Assert.Greater(RayonsSurLeContenu().coups, 0);
