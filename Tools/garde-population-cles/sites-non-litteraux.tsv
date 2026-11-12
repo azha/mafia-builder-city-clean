@@ -6,6 +6,7 @@ CityMap/MotsDuPanneau.cs	1	ENUMEREE		`Etiquette(cle)` : les appelants passent de
 I18n/Moment.cs	2	ENUMEREE	decision.moment.vide.dawn,decision.moment.vide.day,decision.moment.vide.dusk,decision.moment.vide.night,decision.moment.vide.inconnu,exceptions.moment.dawn,exceptions.moment.day,exceptions.moment.dusk,exceptions.moment.night,exceptions.moment.inconnu,journal.moment.titre.dawn,journal.moment.titre.day,journal.moment.titre.dusk,journal.moment.titre.night,journal.moment.titre.inconnu,journal.moment.vide.dawn,journal.moment.vide.day,journal.moment.vide.dusk,journal.moment.vide.night,journal.moment.vide.inconnu	4 préfixes × 4 phases + inconnu : liste EXPLICITE (les 5 appels `Moment.Dire`, lus le 12/11)
 I18n/RefusServi.cs	2	SERVI_PAR_LE_BACK		la clé du refus vient du corps de la réponse
 I18n/VariablesDeRefus.cs	1	SERVI_PAR_LE_BACK		`kv.Value` : une clé de variable servie dans `payload_vars`
+I18n/VenteMots.cs	1	ENUMEREE		`ClePerdue` (const `vente.clientele.perdue`, littéral du fichier)
 Onboarding/TutorialScreenController.cs	2	SERVI_PAR_LE_BACK		`next_tutorial_id` EST la clé (le back la sert)
 Operational/BuildingCard/BuildingCardController.cs	2	SERVI_PAR_LE_BACK,ENUMEREE		738 : `CleI18n` du refus servi ; 2165 : `cleDuLibelle` littéral (`building.row.taille_du_labo`)
 Operational/Carnet/CarnetScreenController.cs	1	PREFIXE		`political.event.` + id d'événement servi
