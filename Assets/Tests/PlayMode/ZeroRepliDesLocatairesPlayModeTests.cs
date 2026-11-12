@@ -135,6 +135,30 @@ namespace MafiaCleanCity.Operational.Tests
 
 
 
+            // GARDE STATIQUE DE POPULATION (Tools/garde-population-cles.py, 12/11, décision f2) : clés AFFICHABLES aujourd'hui, non servies à 8d0184a4 (back déployé), que la garde a trouvées HORS de la dette.
+            // 17 textes RATIFIÉS par f2 (FR à l'octet du code, EN ratifié : Tools/garde-population-cles/textes-a-servir-2026-11-12.tsv), servis par le lot de mots de BACK-2 — accueil.carte.* (après-geste), accueil.jeton.*, ㊵ Filière (écart actif) :
+            "accueil.carte.c_est_note",
+            "accueil.carte.deja_tranchee",
+            "accueil.carte.la_carte_reste_sur_la_table",
+            "accueil.carte.la_carte_vous_attend_encore",
+            "accueil.carte.lire_maintenant",
+            "accueil.carte.retour_a_l_accueil",
+            "accueil.carte.rien_d_autre_a_trancher_pour_l_instant",
+            "accueil.carte.tranchee",
+            "accueil.carte.vous_avez_tranche",
+            "accueil.jeton.fermee_aujourd_hui",
+            "accueil.jeton.libre",
+            "accueil.jeton.pris",
+            "filiere.bloc.ecart",
+            "filiere.bloc.la_filiere_s_ecarte_de_son_profil",
+            "filiere.bloc.on_vous_dit_oui_ou_non_jamais_de_combien_ni_pourquoi_c_est_le_seul_signal_d_alerte_de_la_filiere_et_il_ne_se_mesure_pas",
+            "filiere.bloc.un_seul_voyant",
+            "filiere.sous_titre.la_filiere_s_ecarte_de_son_profil",
+            // 4 clés du Journal (spec du Journal back, lot/journal-38 de BACK-4) : panneau « sans texte » et quartier sans nom — DetteDatee, levée au service (ruling f2 12/11).
+            "journal.bloc.0_breves_sont_arrivees_sans_leur_texte",
+            "journal.bloc.leur_cle_est_montree_a_la_place_du_titre_le_reste_du_journal_est_ecrit",
+            "journal.bloc.quartier_0",
+            "journal.bloc.une_breve_est_arrivee_sans_son_texte",
         };
 
         /// <summary>REPLI VOULU (décision f2 du 12/11/2026, TD-1068) — des clés dont le repli FR est l'état NORMAL et définitif, pas une dette :
@@ -146,6 +170,9 @@ namespace MafiaCleanCity.Operational.Tests
             { "demarrage.echec.la_partie_n_a_pas_pu_commencer", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
             { "demarrage.echec.la_ville_ne_repond_pas_verifiez_votre_connexion_puis_reessayez", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
             { "demarrage.echec.reessayer", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
+            // Repli DÉFENSIF d'une clé servie ailleurs (ruling f2 12/11, BACK-2 a pris la même décision côté back) : la phrase affichée est celle de `roster_room_label_key` / du registre d'erreurs ; ce littéral ne sert que si cette clé manque.
+            { "famille.ecran.votre_equipe_est_au_complet", "repli défensif de PhraseDeBlocage : la phrase servie vient de roster_room_label_key" },
+            { "famille.ecran.votre_decision_de_structure_d_aujourd_hui_est_prise_reprenez_demain", "repli défensif de PhraseDeBlocage : la phrase servie vient du registre d'erreurs (HostBlocage.CleBudgetDepense)" },
         };
 
         /// <summary>Un repli sur cette clé ne rougit pas : dette datée (provisoire) OU repli voulu (définitif, motivé). Une seule lecture pour les gardes « hors dette ».</summary>
