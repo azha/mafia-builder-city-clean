@@ -68,8 +68,7 @@ namespace MafiaCleanCity.Operational
     /// `NOT NULL DEFAULT false` en base, donc jamais `null` ; clé absente du corps ⇒ `false`, et l'écran se tait — son silence ne
     /// distingue alors pas « aucun bouchon » de « la pile ne sert pas encore la clé ».
     /// ⛔ ÉNONCÉ DATÉ, propriété d'un compte à une date et non de la forme : `nodes` était VIDE sur le compte de démo au 2026-09-03
-    /// (mesuré — voir `ChaineDApproScreenController.AppliquerChaine`) ; l'affirmer au présent (« est VIDE sur le compte de démo »)
-    /// demande de le re-mesurer.</summary>
+    /// (mesuré — voir `ChaineDApproScreenController.AppliquerChaine`) ; l'affirmer au présent demande de le re-mesurer.</summary>
     [Serializable]
     public class SupplyChainNodeDto
     {
