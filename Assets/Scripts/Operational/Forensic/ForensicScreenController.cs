@@ -246,7 +246,7 @@ namespace MafiaCleanCity.Operational
                     if (DernierChargement == null && DerniereErreur != null)
                         // Repli NOMMÉ sur échec réseau : « on ne sait pas » n'est pas « tout va bien » (patron ㊲).
                         MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"), Lib("Pas de réponse"),
-                            Lib("on n'a pas eu de réponse. Ce n'est pas « tout va bien » : c'est « on ne sait pas »."), DesignTokens.Current.hudCreme);
+                            Lib("on n'a pas eu de réponse. Ce n'est pas « tout va bien »\u00A0: c'est « on ne sait pas »."), DesignTokens.Current.hudCreme);
                     else
                         MajPanneau(Lib("pourquoi trois colonnes"), Lib("On peut être propre sur deux et pris sur la troisième"),
                             Riche("la comptabilité, les rejets et le train de vie {ne se mélangent pas}. Pour voir {qui parle}, la fenêtre des acteurs, en haut à droite."),

@@ -661,7 +661,7 @@ namespace MafiaCleanCity.Operational
             MajCompteur(1, 0, Lib("PROPRES"));
             MajCompteur(2, 0, Lib("ÉCARTS"));
             MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"), Lib("Pas de réponse"),
-                Lib("on n'a pas eu de réponse. Ce n'est pas « la filière est vide » : c'est « on "
+                Lib("on n'a pas eu de réponse. Ce n'est pas « la filière est vide »\u00A0: c'est « on "
                     + "ne sait pas où elle en est »."));
         }
 
@@ -728,7 +728,7 @@ namespace MafiaCleanCity.Operational
                 DireLaChaineVide(entree);   // vide, enseigne non servie : on ne la nomme pas, on n'en invente pas
             else
                 DireLaChaineVide(Lib("Obtenir une planque") + "\n"
-                    + Lib("le premier maillon : sans elle, rien n'entre dans la filière — et rien ne se "
+                    + Lib("le premier maillon\u00A0: sans elle, rien n'entre dans la filière — et rien ne se "
                         + "ramasse chez les dealers non plus."));
             // ㊵ A3 : le geste vit au PIED, sous le panneau — le dernier bloc lu (cadres 137, 138, 140).
             if (PlanqueTrouvee && GesteBlanchirOffert(ChargeDeLaPlanque, FacadeId, SafehouseIdDeLaPlanque))
@@ -739,8 +739,8 @@ namespace MafiaCleanCity.Operational
             MajPanneau(Lib("CE QUE LA FILIÈRE NE DIT PAS"),
                 Lib("Vous n'avez encore aucun nœud"),
                 PlanqueTrouvee
-                ? Lib("on ne vous dira que si c'est propre : ni combien, ni depuis quand, ni à quel prix. C'est voulu.")
-                : Lib("ce n'est pas une panne, c'est un état : il n'y a rien à montrer tant qu'il n'y a "
+                ? Lib("on ne vous dira que si c'est propre\u00A0: ni combien, ni depuis quand, ni à quel prix. C'est voulu.")
+                : Lib("ce n'est pas une panne, c'est un état\u00A0: il n'y a rien à montrer tant qu'il n'y a "
                     + "rien de monté. Il faut une planque pour que la filière commence quelque part."));
         }
 
