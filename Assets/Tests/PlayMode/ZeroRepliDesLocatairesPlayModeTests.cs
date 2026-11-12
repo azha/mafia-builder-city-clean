@@ -118,21 +118,6 @@ namespace MafiaCleanCity.Operational.Tests
             "boutique.dit.vous_avez_tout_claque_d_un_coup_ce_qui_reste_au_mur_vous_ne_l_aurez_pas_avec_de_la_bonne_volonte",
             "boutique.dit.ce_qui_est_la_est_a_vendre_ce_qui_est_trop_cher_pour_vous_je_le_laisse_en_vitrine_ca_vous_fera_un_but",
             "boutique.dit.les_marks_c_est_dehors_qu_on_les_achete_moi_je_vous_les_compte_je_ne_les_vends_pas",
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             // GARDE STATIQUE DE POPULATION (Tools/garde-population-cles.py, 12/11, décision f2) : clés AFFICHABLES aujourd'hui, non servies à 8d0184a4 (back déployé), que la garde a trouvées HORS de la dette.
             // 17 textes RATIFIÉS par f2 (FR à l'octet du code, EN ratifié : Tools/garde-population-cles/textes-a-servir-2026-11-12.tsv), servis par le lot de mots de BACK-2 — accueil.carte.* (après-geste), accueil.jeton.*, ㊵ Filière (écart actif) :
             "accueil.carte.c_est_note",
