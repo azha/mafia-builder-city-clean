@@ -96,6 +96,9 @@ namespace MafiaCleanCity.Operational.Tests
             "appro.cout.on_ne_sait_pas_encore_combien",
             "appro.etiquette.en_entretien", "appro.titre.les_routes",
             "appro.etat_route.active", "appro.etat_route.saturated", "appro.etat_route.severed", "appro.etiquette.en_reconstruction",
+            // TD-1035 (12/11, CLIENT-1, ordre f2) : le mot de la CAUSE du bouchon de ㉚ — « C’est ici que ça bouche » (U+2019), servi par BACK-6 `lot/td-1035-cause-bouchon`
+            // @ba55e828 (pas encore sur la pile). Inscrit AVANT son lecteur : le dessin (2ᵉ ligne du maillon-cause, cadre 154) attend la spec client. À RETIRER au service.
+            "appro.etiquette.c_est_ici_que_ca_bouche",
             // ㉑ LE MARCHÉ (CLIENT-1, 11/11 ; TD-1017 BASCULÉE) : les 31 clés `marche.*` SERVIES par BACK-3 sous leurs noms FIGÉS (`lot/marche-mots` @163402f1,
             // recopiées de string_table.ts à ce SHA, V15) — NON servies sur le back `main` tant que ce lot n'y est pas fusionné : la règle (2) rougira le jour
             // où la pile les sert ⇒ les retirer alors. + l'entrée du menu Plus (non servie).

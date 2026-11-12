@@ -74,6 +74,9 @@ namespace MafiaCleanCity.Operational
         public string bucket;                 // silent | mild | warm | critical (BackpressureBucket)
         public bool has_arrow;
         public string arrow_to_building_id;
+        // TD-1035 (12/11, BACK-6 `lot/td-1035-cause-bouchon` @ba55e828, `supply-chain.controller.ts:138`, V15) : booléen servi, jamais null ; true = ce nœud est
+        // une CAUSE du bouchon (non dérivable des autres clés). DÉCLARÉ pour ne pas être jeté par JsonUtility (forme G) ; PAS ENCORE DESSINÉ (spec client en cours).
+        public bool is_blocked_output;
     }
 
     /// <summary>Un tronçon de la chaîne — mesuré (2026-09-03) : `leg_id`, `origin_building_id`,

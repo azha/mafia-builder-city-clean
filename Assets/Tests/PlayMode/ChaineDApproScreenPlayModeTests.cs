@@ -687,6 +687,28 @@ namespace MafiaCleanCity.Operational.Tests
             return e;
         }
 
+        /// <summary>TD-1035 — les 5 clés d'un nœud SERVIES par `GET /v1/supply-chain/graph` (BACK-6 `lot/td-1035-cause-bouchon` @ba55e828, `supply-chain.controller.ts:133-139`, recopiées au code).</summary>
+        private static readonly string[] ClesDUnNoeudServi = { "building_id", "bucket", "has_arrow", "arrow_to_building_id", "is_blocked_output" };
+
+        [Test]
+        public void EcranApproTD1035_NodeDto_EpingleDesCinqCles_DontIsBlockedOutput_ControlePositif()
+        {
+            string[] champs = System.Array.ConvertAll(typeof(SupplyChainNodeDto).GetFields(), f => f.Name);
+            Assert.IsEmpty(Ecarts(champs, ClesDUnNoeudServi), "le DTO déclare EXACTEMENT les 5 clés servies (sinon JsonUtility en jette : forme G)");
+            var g = JsonUtility.FromJson<GetSupplyChainGraphEnvelope>("{\"payload\":{\"data\":{\"nodes\":[{\"building_id\":\"b-1\",\"bucket\":\"critical\",\"has_arrow\":false,"
+                + "\"arrow_to_building_id\":null,\"is_blocked_output\":true},{\"building_id\":\"b-2\",\"bucket\":\"warm\",\"has_arrow\":true,\"arrow_to_building_id\":\"b-1\","
+                + "\"is_blocked_output\":false}],\"legs\":[],\"routes\":[]}}}").payload.data;
+            Assert.AreEqual(2, g.nodes.Length);
+            Assert.IsTrue(g.nodes[0].is_blocked_output, "la cause du bouchon ARRIVE (true servi ⇒ true lu)");
+            Assert.IsFalse(g.nodes[1].is_blocked_output, "cible inerte : un nœud qui refoule sans être la cause reste false");
+            Assert.AreEqual("b-1", g.nodes[1].arrow_to_building_id); Assert.IsTrue(g.nodes[1].has_arrow);
+            // CONTRÔLE POSITIF : sans le champ, la clé servie est NOMMÉE perdue ; une 6ᵉ clé au corps aussi
+            var ampute = new List<string>(champs); ampute.Remove("is_blocked_output");
+            CollectionAssert.Contains(Ecarts(ampute, ClesDUnNoeudServi), "servie mais non déclarée : is_blocked_output", "CONTRÔLE POSITIF : la clé retirée est vue");
+            var six = new List<string>(ClesDUnNoeudServi) { "backpressure_index" };
+            CollectionAssert.Contains(Ecarts(champs, six), "servie mais non déclarée : backpressure_index", "CONTRÔLE POSITIF : une clé de trop au corps est vue");
+        }
+
         [Test]
         public void EcranApproTD1013_RouteDto_EpingleDesSeptCles_ControlePositif()
         {
