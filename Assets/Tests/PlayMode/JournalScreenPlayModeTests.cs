@@ -710,6 +710,7 @@ namespace MafiaCleanCity.Operational.Tests
         }
 
         [Test]
+        [Category("ScreenC1")]   // sans catégorie, le filtre du gate ne le prendrait jamais
         public void T7_DansLaRue_CompteLeTotalServi_JamaisMoinsQueLaPage()
         {
             Assert.AreEqual(35, JournalScreenController.CompteDeLaRue(new GetAmbientFeedResponseDto { total = 35 }, 20), "`total` servi : le fil entier, pas la page");

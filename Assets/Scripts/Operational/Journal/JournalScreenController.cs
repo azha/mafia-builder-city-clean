@@ -133,7 +133,7 @@ namespace MafiaCleanCity.Operational
             refuses.Add(eventId);
             return true;
         }
-        /// <summary>Crochet de test (le POST réel se joue contre le back) : écarte comme `Assister` le fait après un refus, puis re-rend. Rend vrai si écarté.</summary>
+        /// <summary>Crochet de test (le POST réel se joue contre le back) : écarte par la même décision qu'`Assister` (`Ecarter`), puis re-rend SANS relire la rue (`Assister`, lui, la relit). Rend vrai si écarté.</summary>
         public bool EcarterApresRefus(long code, string eventId)
         {
             if (!Ecarter(code, eventId)) return false;
