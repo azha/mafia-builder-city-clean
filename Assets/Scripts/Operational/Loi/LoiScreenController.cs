@@ -293,7 +293,8 @@ namespace MafiaCleanCity.Operational
             // LB-1 : l'élément fuité SERVI (texte du catalogue) ⇒ la phrase qui le nomme remplace l'appauvrie ; sinon rien ne change.
             string element = LoiResolvers.ElementDonne(dto?.activeCases, fuite);
             if (element != null) { dite = LoiResolvers.RepliqueQuiNommeLElement; parametres["element"] = element; }
-            string t = Libelle.GabaritExigeant(dite.cle, dite.repli, parametres, "nom");
+            // EXIGEANT sur le trou propre à la phrase : une valeur servie du n°9 sans `{element}` tairait l'élément ⇒ elle compte comme non servie (revue ⊥ m1).
+            string t = Libelle.GabaritExigeant(dite.cle, dite.repli, parametres, element != null ? "element" : "nom");
             int i = t.IndexOf(Marque, System.StringComparison.Ordinal);
             string avant = i < 0 ? t : t.Substring(0, i), apres = i < 0 ? "" : t.Substring(i + Marque.Length), gras = i < 0 ? "" : nom;
             TextMeshProUGUI dit = NouveauTexteFiche(basRoot, "Dit",
@@ -959,7 +960,10 @@ namespace MafiaCleanCity.Operational
         /// <summary>LB-1 — le TEXTE servi de l'élément que la voix nomme, ou null. Seulement quand la pire bande est `low` ou `significant` (`silent`
         /// et `full_dump` gardent leur phrase) ; parmi les affaires À CETTE BANDE, la première (ordre servi) dont `leakedItemI18n.key` est connue du
         /// catalogue. La clé est une RÉFÉRENCE SERVIE : aucun `switch` sur les 8 types, aucun repli client — une clé absente du bundle ⇒ null (la phrase
-        /// appauvrie reste), jamais une clé affichée ni un mot inventé.</summary>
+        /// appauvrie reste), jamais une clé affichée ni un mot inventé.
+        /// ÉNONCÉ DATÉ (spec back §4 recos (9), revue ⊥ m2) : `silent` avec un élément fuité n'existe que si le tunable `lawyer.leak_band_cut_silent`
+        /// dépasse 0,2 (défaut 0,10, plage ratifiée jusqu'à 0,30) ; ce jour-là la voix dirait « il n'a rien dit » sur une affaire qui a donné un élément :
+        /// la règle se revoit alors. Plusieurs affaires à la pire bande : UN élément est nommé, celui de la première (la phrase est au singulier).</summary>
         public static string ElementDonne(LegalCaseDto[] affaires, string pire)
         {
             if (affaires == null || (pire != "low" && pire != "significant")) return null;

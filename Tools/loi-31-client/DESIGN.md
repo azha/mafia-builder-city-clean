@@ -16,7 +16,7 @@
    `pleaOffer` (chaîne, domaine serveur). `JsonUtility` rend une instance VIDE pour `null` : l'absence se lit `key` vide.
 2. **`LoiScreenController.cs`** — `LoiResolvers.ElementDonne(affaires, pire)` (pure, hors lecture du catalogue) : rend le TEXTE servi de l'élément,
    ou null. Règle : seulement si la pire bande est `low` ou `significant` (la clé n°9 remplace la phrase appauvrie « Il a commencé à parler… », et
-   elle seule ; `silent` et `full_dump` gardent la leur — spec §4 recos (9)) ; parmi les affaires À CETTE BANDE, la première, dans l'ordre servi,
+   elle seule — spec §4 recos (9) ; `silent` et `full_dump` gardent la leur : choix de CE design, daté pour `silent`, voir « Revue ⊥ » en bas) ; parmi les affaires À CETTE BANDE, la première, dans l'ordre servi,
    dont `leakedItemI18n.key` est non vide ET connue du catalogue. La clé est une RÉFÉRENCE SERVIE (`I18nCatalog.Traduire(a.leakedItemI18n.key)`,
    forme admise par la garde L2 de `I18nHorsLibelle`) : **aucun `switch` client sur les 8 types, aucun repli client pour un élément** — une clé
    que le bundle ne connaît pas ⇒ la phrase appauvrie, jamais une clé affichée ni un mot inventé.
@@ -45,3 +45,10 @@ Statique (hors porte) : typecheck `--frais Operational` + tests, `--controle` su
 - `EcranLoiLB1_LaVoixNommeLElement` (EFFET) : rendu == `Lt. Rin : « Il a donné la planque. Ce qui est sorti ne rentrera pas. »`,
   avec le n°9 servi ET en repli (même texte) ; CONTRÔLE : sans élément ⇒ « Il a commencé à parler… », le test TD-823 existant reste vert.
 NON mesurable ici : un vrai corps avec fuite (≥ 8 jours de jeu en espérance, spec back §2) ; le parcours back épingle `null`.
+
+## Revue ⊥ 1 (12/11) — APPROVED, 0 BLOCKING, 0 MAJOR, 6 MINOR
+Corrigés : **m1** `GabaritExigeant` exige `{element}` quand la phrase le nomme ; **m2** énoncé daté écrit au résolveur (`silent` + élément fuité
+n'existe que si `lawyer.leak_band_cut_silent` > 0,2 ; défaut 0,10, plage ≤ 0,30) et **m5** (plusieurs affaires à la pire bande : un seul élément nommé).
+Consignés, sans correctif : **m3** `params: {}` servi et non déclaré (16 valeurs `loi.element.*`, 0 accolade : le jour où une valeur gagne un trou,
+déclarer `params` et le passer à `Traduire`) ; **m4** les 3 U+00A0 du n°9 sont épinglés contre un littéral du lot, la V15 reste une mesure manuelle
+(faite : identique à l'octet à 70ea6e07) ; **m6** le test du corps réel accepte « instance vide OU null » pour `leakedItemI18n: null`.
