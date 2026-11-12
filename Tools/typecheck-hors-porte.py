@@ -109,9 +109,9 @@ def compile_un(proj, extra=(), out=None, subst=None, muet=False):
     return p.returncode, err, out
 
 
-def appeler_garde(commande=None):
-    """Lance `Tools/garde-population-cles.py` (stdout/stderr VISIBLES) et rend son rc. `commande` : pour le contrôle de la garde."""
-    rg = subprocess.run(commande or [sys.executable, 'Tools/garde-population-cles.py']).returncode
+def appeler_garde():
+    """Lance `Tools/garde-population-cles.py` (stdout/stderr VISIBLES) et rend son rc. AUCUN paramètre de commande remplaçable (une commande passée à l'appel neutraliserait la garde ; revue ⊥ tour 3, M2)."""
+    rg = subprocess.run([sys.executable, 'Tools/garde-population-cles.py']).returncode
     print(f"[garde-population-cles] rc={rg} (0 vert · 1 rouge · 2 instrument en panne)")
     return rg
 

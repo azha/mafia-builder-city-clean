@@ -210,7 +210,10 @@ def lire_instantane():
     return f, ent.get('back-sha', ''), ent.get('date', ''), ent.get('back-ref', ''), cles
 
 
-def avertissement_age(sha, date, ref):
+_LIRE = object()
+
+
+def avertissement_age(sha, date, ref, deploye=_LIRE):
     """Imprime l'âge et le SHA à CHAQUE lancement. Rend 'ok' (à jour), 'perime' (le back déployé est AUTRE : rouge nommé) ou 'inconnu'
     (/health illisible : avertissement nommé, la fraîcheur n'est pas vérifiée — ce n'est pas « à jour »)."""
     try:
@@ -218,7 +221,8 @@ def avertissement_age(sha, date, ref):
     except ValueError:
         age = None
     print(f"instantané « servi » : back {sha[:8]} ({ref}), du {date}, âge {age if age is not None else '?'} j")
-    deploye = build_deploye()
+    if deploye is _LIRE:
+        deploye = build_deploye()
     if deploye is None:
         print(f"⚠️ INSTANTANÉ : le back DÉPLOYÉ est ILLISIBLE ({HEALTH_URL}) — fraîcheur NON vérifiée, ce n'est pas « à jour ».")
         return 'inconnu'
@@ -273,6 +277,19 @@ def verifier_sites(detail_fichier, table):
 # méthode, valeur servie) est COMPTÉ par fichier, ÉPINGLÉ dans `sites-de-texte-non-litteraux.tsv`, et sa classe dit pourquoi : SERVI_PAR_LE_BACK
 # (la clé ou la valeur vient du serveur) ou ENUMEREE (clés écrites à la main dans le tsv, chacune sous TÉMOIN DE SOURCE — jamais une liste de foi).
 LITS = re.compile(r'\$?"((?:[^"\\]|\\.)*)"')
+LITS_NU = re.compile(r'"((?:[^"\\]|\\.)*)"')              # un littéral PUR : sans `$`
+LIT_QUELCONQUE = re.compile(r'([$@]*)"((?:[^"\\]|\\.)*)"')  # `$"…"`, `@"…"`, `$@"…"` : le préfixe est capturé
+PLAFOND_EXTRACTEUR = 400       # `APPEL_DIRECT`/`HELPER`/`GABARIT` de l'extracteur ne lisent que `{1,400}` caractères
+
+
+def trop_long(expr):
+    return any(len(m.group(2)) > PLAFOND_EXTRACTEUR for m in LIT_QUELCONQUE.finditer(expr))
+
+
+def forme_non_lue(expr):
+    """M3 (revue ⊥ tour 3) : une forme que l'extracteur NE LIT PAS dans un appel direct — littéral interpolé `$"…"` / verbatim `@"…"`, ou littéral de plus
+    de 400 caractères. Elle ne crée ni clé, ni compte, ni ligne : ici elle devient un site NON RÉSOLU (rouge nommé tant qu'elle n'est pas épinglée)."""
+    return trop_long(expr) or any(m.group(1) for m in LIT_QUELCONQUE.finditer(expr))
 ENT = re.compile(r'([\w<>\[\],.?]+)\s+(\w+)\s*\(([^()]*)\)\s*(?:\{|=>)')
 MOTS_C = {'if', 'while', 'for', 'foreach', 'switch', 'return', 'new', 'else', 'using', 'lock', 'catch', 'nameof', 'typeof', 'await', 'throw', 'yield', 'when', 'fixed'}
 
@@ -385,6 +402,8 @@ def resoudre(src, pos, expr, vus=None):
     appelants du fichier ; variable locale de la méthode englobante ⇒ toutes ses affectations (aucune forme `+=`, `??=`, `out`, `ref`)."""
     vus = vus or set()
     e = expr.strip()
+    if forme_non_lue(e):
+        return set(), False
     if purement_litteral(e):
         return set(LITS.findall(e)), True
     br = branches_ternaire(e)
@@ -452,7 +471,7 @@ def sites_de_texte(src, ex):
     decl = list(ex.HELPER.finditer(src)) + list(ex.HELPER2.finditer(src))
     spans = [(m.start(), m.end()) for m in decl]
     ligne = lambda p: src.count('\n', 0, p) + 1
-    litt = lambda x: (LITS.fullmatch(x).group(1) if LITS.fullmatch(x) else None)
+    litt = lambda x: (LITS_NU.fullmatch(x).group(1) if LITS_NU.fullmatch(x) else None)
 
     def ajouter(pos, dom, role, expr, repli=None):
         lits, ok = resoudre(src, pos, expr)
@@ -462,26 +481,30 @@ def sites_de_texte(src, ex):
         if any(a <= m.start() < b for a, b in spans):
             continue
         a = args_at(src, m.end())
-        if len(a) >= 3 and not LITS.fullmatch(a[2]):
+        if len(a) >= 3:
             d, r = litt(a[0]), litt(a[1])
-            if d is None or r is None:
+            if d is None or r is None:      # M3 : domaine ou rôle non littéral — même avec un texte littéral, l'extracteur ne lit rien
                 out.append({'ligne': ligne(m.start()), 'dom': '?', 'role': '?', 'expr': a[2][:50], 'cles': {}, 'complet': False})
-            else:
+            elif not (LITS_NU.fullmatch(a[2]) and not forme_non_lue(a[2])):     # `$"…"` et littéral > 400 : `resoudre` les rend NON résolus
                 ajouter(m.start(), d, r, a[2])
     for h in ex.HELPER.finditer(src):
         for m in re.finditer(r'(?<![\w.])' + re.escape(h.group(1)) + r'\(', src):
             if re.search(r'string\s+$', src[max(0, m.start() - 12):m.start()]):
                 continue
             a = args_at(src, m.end())
-            if a and not LITS.fullmatch(a[0]):
+            if a and not (LITS.fullmatch(a[0]) and not trop_long(a[0])):
                 ajouter(m.start(), h.group(2), h.group(3), a[0])
     for h in ex.HELPER2.finditer(src):
         for m in re.finditer(r'(?<![\w.])' + re.escape(h.group(1)) + r'\(', src):
             if re.search(r'string\s+$', src[max(0, m.start() - 12):m.start()]):
                 continue
             a = args_at(src, m.end())
-            if len(a) >= 2 and litt(a[0]) is not None and not LITS.fullmatch(a[1]):
-                ajouter(m.start(), h.group(2), litt(a[0]), a[1])
+            if len(a) >= 2:
+                role = litt(a[0])
+                if role is None or len(role) > 60:      # M3 : le rôle n'est pas un littéral lisible (l'extracteur : `{1,60}`)
+                    out.append({'ligne': ligne(m.start()), 'dom': h.group(2), 'role': '?', 'expr': a[1][:50], 'cles': {}, 'complet': False})
+                elif not (LITS.fullmatch(a[1]) and not trop_long(a[1])):
+                    ajouter(m.start(), h.group(2), role, a[1])
     for m in re.finditer(r'Libelle\.ParValeur\(', src):
         a = args_at(src, m.end())
         if len(a) < 4:
@@ -533,16 +556,16 @@ def cle_explicite_admise(cle, roles, litteraux, slug):
     return '.'.join(cle.split('.')[:2]) in roles and temoin_de_source(cle, litteraux, slug)
 
 
-def analyser_textes(ex, table):
-    """(cles {clé: (texte, fichier)}, rouges, nb_resolus, nb_non_resolus)."""
+def analyser_textes(ex, table, racine=Path('Assets/Scripts')):
+    """(cles {clé: (texte, fichier)}, rouges, nb_resolus, nb_non_resolus). `racine` : l'arbre lu (un arbre FABRIQUÉ pour les contrôles de lancement)."""
     cles, rouges, nres, nnon = {}, [], 0, 0
     reel = {}
-    for f in sorted(Path('Assets/Scripts').rglob('*.cs')):
+    for f in sorted(racine.rglob('*.cs')):
         brut = f.read_text(encoding='utf-8')
         if 'Libelle' not in brut:
             continue
         src = ex.recoller(ex.sans_commentaires(brut))
-        rel = str(f).replace('Assets/Scripts/', '')
+        rel = f.relative_to(racine).as_posix()
         sites = sites_de_texte(src, ex)
         for st in sites:
             for k, t in st['cles'].items():
@@ -568,7 +591,7 @@ def analyser_textes(ex, table):
             continue
         lits = set()
         for fich in (rel,) + temoins:
-            fp = Path('Assets/Scripts') / fich
+            fp = racine / fich
             if not fp.exists():
                 rouges.append(f"{rel} : fichier témoin absent : {fich}")
                 continue
@@ -690,7 +713,12 @@ def controles(extracteur) -> list:
         e.append("contrôle rouge : un typecheck sain fabriqué n'est pas reconnu comme appelant")
     for nom, faux in (("rc |= retiré", FAUX_TYPECHECK_SAIN.replace("rc |= appeler_garde()", "appeler_garde()")),
                       ("nom dans un print", FAUX_TYPECHECK_SAIN.replace("    rc |= appeler_garde()\n", "    print('Tools/garde-population-cles.py')\n")),
-                      ("rc non rendu", FAUX_TYPECHECK_SAIN.replace("    return rg\n", "    pass\n"))):
+                      ("rc non rendu", FAUX_TYPECHECK_SAIN.replace("    return rg\n", "    pass\n")),
+                      ("appel remplacé : appeler_garde(['true'])", FAUX_TYPECHECK_SAIN.replace("rc |= appeler_garde()", "rc |= appeler_garde(['true'])")),
+                      ("commande remplaçable en paramètre", FAUX_TYPECHECK_SAIN.replace("def appeler_garde():", "def appeler_garde(commande=None):").replace("subprocess.run([sys.executable, 'Tools/garde-population-cles.py'])", "subprocess.run(commande or [sys.executable, 'Tools/garde-population-cles.py'])")),
+                      ("paramètre de commande présent (même inutilisé)", FAUX_TYPECHECK_SAIN.replace("def appeler_garde():", "def appeler_garde(commande=None):")),
+                      ("le script n'est plus dans la commande", FAUX_TYPECHECK_SAIN.replace("'Tools/garde-population-cles.py'", "'true'") + "# garde-population-cles.py"),
+                      ("rc de la garde jeté", FAUX_TYPECHECK_SAIN.replace("rg = subprocess.run([sys.executable, 'Tools/garde-population-cles.py']).returncode", "rg = 0; subprocess.run([sys.executable, 'Tools/garde-population-cles.py'])"))):
         if appelant_present(faux):
             e.append(f"contrôle rouge : un typecheck neutralisé ({nom}) est pris pour un appelant")
     # `population()` EXERCÉE sur un arbre fabriqué (revue ⊥ I4) : une clé `Libelle.De` y est lue, une en commentaire non
@@ -744,6 +772,96 @@ def controles(extracteur) -> list:
     if (not cle_explicite_admise('sonde.bloc.un_mot', {'sonde.bloc'}, {'Un mot'}, extracteur.slug) or cle_explicite_admise('sonde.bloc.autre', {'sonde.bloc'}, {'Un mot'}, extracteur.slug)
             or cle_explicite_admise('sonde.badge.un_mot', {'sonde.bloc'}, {'Un mot'}, extracteur.slug)):
         e.append("contrôle rouge : le témoin d'une clé explicite (présente / absente / domaine.rôle substitué) se trompe")
+    e += controles_de_lancement(extracteur)
+    return e
+
+
+def controles_de_lancement(extracteur) -> list:
+    """Revue ⊥ tour 3, M1 : CHAQUE chemin qui fait le rouge est exercé, à chaque lancement, sur des données FABRIQUÉES — `verifier_sites`, la boucle rouge d'`analyser_textes`
+    (cliquet, ligne obsolète, clé écartée, témoin), `verifier_appelants`, `avertissement_age('perime')`, `code_de_sortie`, les trois formes d'appel non lues (M3) et les
+    appelants neutralisés (M2). Saboté sur copie, chacun fait rendre rc ≠ 0 à la garde (comptes dans design.md §7)."""
+    import contextlib
+    import io
+    import tempfile
+    e = []
+    ex = extracteur
+    # l'extracteur a SES contrôles (positif / commentaires) : la garde les EXÉCUTE (jamais appelés jusqu'ici)
+    e += [f"extracteur : {x}" for x in ex.controles()]
+    # verifier_sites : fichier absent de la table, compte différent, ligne obsolète ⇒ 3 rouges ; l'état sain ⇒ aucun
+    detail = {'Assets/Scripts/A.cs': (0, 0, 0, 2), 'Assets/Scripts/B.cs': (0, 0, 0, 1), 'Assets/Scripts/Z.cs': (0, 0, 0, 0)}
+    sain = {'A.cs': (2, ('SERVI_PAR_LE_BACK',), ()), 'B.cs': (1, ('SERVI_PAR_LE_BACK',), ())}
+    if verifier_sites(detail, sain):
+        e.append(f"contrôle NÉGATIF rouge : verifier_sites rougit un état sain ({verifier_sites(detail, sain)})")
+    rs = verifier_sites(detail, {'A.cs': (3, ('ENUMEREE',), ()), 'C.cs': (1, ('ENUMEREE',), ())})
+    if len(rs) != 3 or not any('NON CLASSÉ' in x and 'B.cs' in x for x in rs) or not any('A.cs' in x and 'cliquet' in x for x in rs) or not any('C.cs' in x and 'retirer' in x for x in rs):
+        e.append(f"contrôle POSITIF rouge : verifier_sites (non classé / compte / ligne obsolète) = {rs}")
+    # analyser_textes sur un ARBRE fabriqué : une source avec UN appel non résolu (champ) et un mot littéral
+    with tempfile.TemporaryDirectory() as td:
+        racine = Path(td)
+        (racine / 'A.cs').write_text('class A { void M(Spec s) { var c = Libelle.De("sonde", "champ", s.Repli); var d = "Mot"; } }', encoding='utf-8')
+        (racine / 'B.cs').write_text('class B { }', encoding='utf-8')
+        un = ('SERVI_PAR_LE_BACK',)
+
+        def lancer(table):
+            return analyser_textes(ex, table, racine)
+        _, r0, nres, nnon = lancer({'A.cs': (1, un, (), (), ())})
+        if r0 or nnon != 1:
+            e.append(f"contrôle NÉGATIF rouge : analyser_textes rougit un état sain ou compte {nnon} non résolu(s) au lieu de 1 ({r0})")
+        cas = (("site non résolu NON CLASSÉ", {}, 'NON RÉSOLU et NON CLASSÉ'),
+               ("cliquet (2 épinglés pour 1 lu)", {'A.cs': (2, un, (), (), ())}, 'reclasser'),
+               ("ligne obsolète (fichier sans appel)", {'A.cs': (1, un, (), (), ()), 'B.cs': (1, un, (), (), ())}, 'retirer la ligne'),
+               ("clé écartée que le flux ne produit pas", {'A.cs': (1, un, (), (), ('sonde.champ.fantome',))}, 'clé écartée'),
+               ("clé explicite sans témoin", {'A.cs': (1, un, ('sonde.champ.sans_source',), (), ())}, 'SANS TÉMOIN'),
+               ("fichier témoin absent", {'A.cs': (1, un, ('sonde.champ.mot',), ('Absent.cs',), ())}, 'fichier témoin absent'))
+        for nom, table, attendu in cas:
+            rr = lancer(table)[1]
+            if not any(attendu in x for x in rr):
+                e.append(f"contrôle POSITIF rouge : analyser_textes ne rougit pas « {nom} » (attendu « {attendu} », lu {rr})")
+        if lancer({'A.cs': (1, un, ('sonde.champ.mot',), (), ())})[1]:
+            e.append("contrôle NÉGATIF rouge : une clé explicite AVEC témoin de source (« Mot ») rougit")
+    # M3 : les trois formes que l'extracteur ne lit pas deviennent des sites NON RÉSOLUS (aucune clé, aucun compte silencieux)
+    for nom, src_f in (("domaine non littéral + texte littéral", 'class F { void M(string d) { var a = Libelle.De(d, "bloc", "Texte lu"); } }'),
+                       ("rôle non littéral + texte littéral", 'class F { void M(string r) { var a = Libelle.De("sonde", r, "Texte lu"); } }'),
+                       ("texte interpolé $\"…\"", 'class F { void M(int n) { var a = Libelle.De("sonde", "bloc", $"Texte {n}"); } }'),
+                       ("texte verbatim @\"…\"", 'class F { void M() { var a = Libelle.De("sonde", "bloc", @"Texte verbatim"); } }'),
+                       ("texte littéral de plus de 400 caractères", 'class F { void M() { var a = Libelle.De("sonde", "bloc", "' + 'x' * 401 + '"); } }'),
+                       ("helper : littéral de plus de 400 caractères", 'class F { static string Lib(string t) => Libelle.De("sonde", "aide", t); void M() { var a = Lib("' + 'x' * 401 + '"); } }'),
+                       ("helper à rôle non littéral", 'class F { static string Lib2(string r, string t) => Libelle.De("sonde", r, t); void M(string q) { var a = Lib2(q, "Texte"); } }')):
+        st = sites_de_texte(ex.recoller(ex.sans_commentaires(src_f)), ex)
+        if not (len(st) == 1 and not st[0]['complet'] and not st[0]['cles']):
+            e.append(f"contrôle POSITIF rouge : la forme « {nom} » n'est pas relevée comme site NON RÉSOLU (lu {st})")
+    sain_f = sites_de_texte(ex.recoller(ex.sans_commentaires('class F { void M() { var a = Libelle.De("sonde", "bloc", "Texte lu"); var b = Libelle.De("sonde", "bloc", "x".PadLeft(3)); } }')), ex)
+    if len(sain_f) != 1 or sain_f[0]['complet']:
+        e.append(f"contrôle NÉGATIF rouge : un littéral direct lu par l'extracteur est pris pour un site non littéral, ou l'appel de méthode n'est pas compté (lu {sain_f})")
+    # verifier_appelants : trois chemins rouges, état sain vert
+    with tempfile.TemporaryDirectory() as td:
+        d = Path(td)
+        tc, te, ci = d / 'typecheck.py', d / 'Test.cs', d / 'MafiaCI.cs'
+        tc.write_text(FAUX_TYPECHECK_SAIN, encoding='utf-8')
+        te.write_text('// test', encoding='utf-8')
+        ci.write_text(f'"{CATEGORIE_APPELANT}"', encoding='utf-8')
+        if verifier_appelants(tc, te, ci):
+            e.append(f"contrôle NÉGATIF rouge : verifier_appelants rougit un état sain ({verifier_appelants(tc, te, ci)})")
+        te.unlink()
+        ci.write_text('"Autre"', encoding='utf-8')
+        tc.write_text(FAUX_TYPECHECK_SAIN.replace("rc |= appeler_garde()", "pass"), encoding='utf-8')
+        ra = verifier_appelants(tc, te, ci)
+        if len(ra) != 3 or not all('APPELANT DISPARU' in x for x in ra):
+            e.append(f"contrôle POSITIF rouge : verifier_appelants ne rougit pas les trois disparitions (typecheck neutralisé, test absent, catégorie absente) : {ra}")
+        if len(verifier_appelants(d / 'absent.py', d / 'absent.cs', d / 'absent2.cs')) != 3:
+            e.append("contrôle POSITIF rouge : verifier_appelants ne rougit pas trois fichiers absents")
+    # avertissement_age : périmé ⇒ 'perime' (rouge), à jour ⇒ 'ok', /health illisible ⇒ 'inconnu' (avertissement, jamais « à jour »)
+    with contextlib.redirect_stdout(io.StringIO()):
+        age = {nom: avertissement_age('aaaaaaaa1111', '2026-01-01', 'sonde', deploye=dep) for nom, dep in (('perime', 'bbbbbbbb'), ('ok', 'aaaaaaaa'), ('inconnu', None))}
+    if age != {'perime': 'perime', 'ok': 'ok', 'inconnu': 'inconnu'}:
+        e.append(f"contrôle POSITIF rouge : avertissement_age (back déployé autre / même / illisible) = {age}")
+    # le code de sortie : chaque faute SEULE le fait passer à 1 ; un instantané périmé aussi ; le sain et l'« inconnu » : 0
+    if code_de_sortie([], [], [], [], 'ok') != 0 or code_de_sortie([], [], [], [], 'inconnu') != 0:
+        e.append("contrôle NÉGATIF rouge : code_de_sortie ≠ 0 sur un état sain")
+    for nom, args in (('population', ([('x', ['k'])], [], [], [], 'ok')), ('sites', ([], ['s'], [], [], 'ok')), ('appelants', ([], [], ['a'], [], 'ok')),
+                      ('textes', ([], [], [], ['t'], 'ok')), ('périmé', ([], [], [], [], 'perime'))):
+        if code_de_sortie(*args) != 1:
+            e.append(f"contrôle POSITIF rouge : code_de_sortie ne rend pas 1 pour la faute « {nom} »")
     return e
 
 
@@ -759,32 +877,48 @@ def appelant_present(texte_typecheck: str) -> bool:
     main, garde = fonctions.get('main'), fonctions.get('appeler_garde')
     if main is None or garde is None:
         return False
+    # M2 (revue ⊥ tour 3) : `rc |= appeler_garde(['true'])` ou un paramètre `commande` remplaçable neutralisaient la garde en gardant tous les textes.
+    # ⇒ l'appel n'a AUCUN argument, la fonction n'a AUCUN paramètre, et le `subprocess.run` reçoit une LISTE LITTÉRALE qui nomme le script.
     appelle = any(isinstance(n, ast.AugAssign) and isinstance(n.op, ast.BitOr) and isinstance(n.target, ast.Name) and n.target.id == 'rc'
                   and isinstance(n.value, ast.Call) and isinstance(n.value.func, ast.Name) and n.value.func.id == 'appeler_garde'
+                  and not n.value.args and not n.value.keywords
                   for n in ast.walk(main))
-    lance = any(isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == 'run' for n in ast.walk(garde)) \
-        and 'garde-population-cles.py' in ast.get_source_segment(texte_typecheck, garde) \
-        and any(isinstance(n, ast.Return) for n in ast.walk(garde))
-    return appelle and lance
+    p = garde.args
+    sans_parametre = not (p.posonlyargs or p.args or p.vararg or p.kwonlyargs or p.kwarg)
+
+    def run_du_script(n):
+        return (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == 'run'
+                and isinstance(n.func.value, ast.Name) and n.func.value.id == 'subprocess'
+                and n.args and isinstance(n.args[0], ast.List)
+                and any(isinstance(x, ast.Constant) and isinstance(x.value, str) and x.value.endswith('Tools/garde-population-cles.py') for x in n.args[0].elts))
+    lance = any(run_du_script(n) for n in ast.walk(garde)) \
+        and any(isinstance(n, ast.Attribute) and n.attr == 'returncode' and run_du_script(n.value) for n in ast.walk(garde)) \
+        and any(isinstance(n, ast.Return) and n.value is not None for n in ast.walk(garde))
+    return appelle and sans_parametre and lance
 
 
 FAUX_TYPECHECK_SAIN = (
     "import subprocess, sys\n"
-    "def appeler_garde(commande=None):\n"
-    "    rg = subprocess.run(commande or [sys.executable, 'Tools/garde-population-cles.py']).returncode\n"
+    "def appeler_garde():\n"
+    "    rg = subprocess.run([sys.executable, 'Tools/garde-population-cles.py']).returncode\n"
     "    return rg\n"
     "def main():\n    rc = 0\n    rc |= appeler_garde()\n    sys.exit(rc)\n")
 
 
-def verifier_appelants() -> list:
+def verifier_appelants(typecheck=TYPECHECK, test=TEST_APPELANT, ci=MAFIA_CI) -> list:
     rouges = []
-    if not TYPECHECK.exists() or not appelant_present(TYPECHECK.read_text(encoding='utf-8')):
-        rouges.append(f"APPELANT DISPARU : {TYPECHECK} (`--tout`) n'appelle plus garde-population-cles.py par `rc |= appeler_garde()` — la garde ne tourne plus nulle part")
-    if not TEST_APPELANT.exists():
-        rouges.append(f"APPELANT DISPARU : {TEST_APPELANT} (le second guetteur, rouge si le typecheck n'appelle plus la garde) n'existe plus")
-    if not MAFIA_CI.exists() or f'"{CATEGORIE_APPELANT}"' not in MAFIA_CI.read_text(encoding='utf-8'):
-        rouges.append(f"APPELANT DISPARU : la catégorie {CATEGORIE_APPELANT} n'est plus inscrite dans {MAFIA_CI} (I1)")
+    if not typecheck.exists() or not appelant_present(typecheck.read_text(encoding='utf-8')):
+        rouges.append(f"APPELANT DISPARU : {typecheck} (`--tout`) n'appelle plus garde-population-cles.py par `rc |= appeler_garde()` (sans argument, sans commande remplaçable) — la garde ne tourne plus nulle part")
+    if not test.exists():
+        rouges.append(f"APPELANT DISPARU : {test} (le second guetteur, rouge si le typecheck n'appelle plus la garde) n'existe plus")
+    if not ci.exists() or f'"{CATEGORIE_APPELANT}"' not in ci.read_text(encoding='utf-8'):
+        rouges.append(f"APPELANT DISPARU : la catégorie {CATEGORIE_APPELANT} n'est plus inscrite dans {ci} (I1)")
     return rouges
+
+
+def code_de_sortie(rouges, sites, appelants, rouges_t, fraicheur) -> int:
+    """Pur : le code de sortie du verdict (1 si une faute, ou si l'instantané est PÉRIMÉ)."""
+    return 1 if (rouges or sites or appelants or rouges_t or fraicheur == 'perime') else 0
 
 
 def main() -> int:
@@ -852,7 +986,7 @@ def main() -> int:
     nouvelles_t = {k: v for k, v in cles_t.items() if k not in K_dict}
     K = set(K_dict) | enumerees | set(nouvelles_t)
     nl = sum(d[3] for d in detail_fichier.values())
-    print(f"K_client : {len(K_dict)} clés lues + {len(enumerees)} énumérées = {len(K)} · servies {len(servies)} · dette {len(dette)} · repli voulu {len(repli)} · "
+    print(f"K_client : {len(K)} = {len(K_dict)} lues + {len(K) - len(K_dict)} ajoutées (énumérées {len(enumerees)}, flux {len(nouvelles_t)} : elles se recoupent, le total est l'union) · servies {len(servies)} · dette {len(dette)} · repli voulu {len(repli)} · "
           f"appels Gabarit non littéraux {nl} (classés : {sum(t[0] for t in table.values())}) · appels de texte (De, helpers, ParValeur) à argument non littéral : {n_res} RÉSOLUS (+{len(nouvelles_t)} clés), {n_non} non résolus (épinglés : {sum(t[0] for t in table_t.values())}) · `Libelle.ParValeur` : {nb_parvaleur} appel(s) au total")
 
     rouges = []
@@ -872,7 +1006,7 @@ def main() -> int:
     if fraicheur == 'inconnu' and '--strict-instantane' in a:
         print("⛔ --strict-instantane : fraîcheur non vérifiée.")
         return 1
-    return 1 if (rouges or sites or appelants or rouges_t or fraicheur == 'perime') else 0
+    return code_de_sortie(rouges, sites, appelants, rouges_t, fraicheur)
 
 
 if __name__ == '__main__':
