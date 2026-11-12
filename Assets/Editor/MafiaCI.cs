@@ -370,6 +370,12 @@ public static class MafiaCI
         // RetourAppui (lot du retour d'appui v5, CLIENT-2) : E-R1, la mesure « plusieurs IPointerDownHandler sur un même GameObject » — verte 2/2 AVANT inscription
         // (créneau groupé du 11/11, pile 35bdd6cb, par noms). Les mesures et gardes suivantes du lot (GP, GE1-GE4, GS) y entrent avec leur compte vert.
         "RetourAppui",
+        // PassagesL1 (CLIENT-2, L1 + TD-956) : les trois entrées de passage (shell.entree, bandeau.entree, bascule.course) et, depuis TD-956, ContentSlot sourd aux appuis pendant le fondu. Verte 49/49 à ae48c8dc
+        // (run11, avec AccueilCanon, VERDICT 0, déclarés = comptés) — déclarée depuis L1 et jamais inscrite : la garde I1 rougissait (mesuré par CLIENT-1 sur son intégration, base c70d6040).
+        "PassagesL1",
+        // MotsAutonomie (CLIENT-2, TD-847, 12/11) : ㉔ la boîte d'autonomie — le NOM servi à la place de l'UUID, les mots par le catalogue, jamais le jeton brut du back ; 9 tests hors réseau. Inscrite le jour où
+        // elle naît (garde I1) ; verte au run du 12/11 (voir le commit TD-847). Nom choisi pour K0 : `EcranAutonomyMots` aurait CONTENU `EcranAutonomy`.
+        "MotsAutonomie",
     };
     // ⚠️ UNION AU MERGE (3e fois sur cette ligne le 2026-09-03) — et la règle est
     // toujours la même : on unit ce qui est PORTÉ, jamais les deux listes. Une entrée

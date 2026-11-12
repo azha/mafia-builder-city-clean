@@ -89,22 +89,11 @@ namespace MafiaCleanCity.CityMap.Tests
                 string code = string.Join("\n", File.ReadAllLines(f).Select(l => { int c = l.IndexOf("//"); return c >= 0 ? l.Substring(0, c) : l; }));   // le code, sans ses commentaires
                 // (a) une fonction de dé-slug `Lisible(` — seule exception : LibellesDecision (domaine OUVERT `decision.type.*`, servi par le back ; le test de ⑤ exige « jamais la clé machine »)
                 if (nom != "LibellesDecision.cs" && Regex.IsMatch(code, @"(?<![A-Za-z.])Lisible\s*\(")) fautifs.Add(nom + " : définit ou appelle `Lisible(` (dé-slug)");
-                // (b) la liste noire : un libellé AFFICHÉ en anglais (chaîne littérale entière), hors ㉔ (dette DATÉE, M4b)
-                if (nom == "AutonomyInboxController.cs") continue;
+                // (b) la liste noire : un libellé AFFICHÉ en anglais (chaîne littérale entière) — ㉔ n'est plus exempté depuis TD-847 (12/11)
                 foreach (Match m in Regex.Matches(code, "\"(Moderate|Backlogged|Saturated|Nominal|Calm|Mounting|Crushing|Minor|Critical|Heavy|Surge|Warning|Oldest|Choose)\""))
                     fautifs.Add(nom + " : libellé anglais " + m.Value);
             }
             CollectionAssert.IsEmpty(fautifs, "cause 4 : l'énuméré se dit par `MotsDesEnumeres` (mot de l'atelier, « — » sinon) :\n" + string.Join("\n", fautifs));
-        }
-
-        [Test]
-        public void M4b_DetteDatee_AutonomyInbox_LesLitterauxAnglaisRestentDeclares()
-        {
-            // ㉔ (CLIENT-3 : « Lt <id> • Oldest: n cycles », « Issue : », « Choose A ») : les MOTS attendent les templates de l'atelier. TD datée 07/10. Si ce test rougit, un littéral a été
-            // remplacé : RETIRER la ligne correspondante de `dettes-client1.md` et de ce test.
-            string src = File.ReadAllText(Path.Combine(RacineScripts, "Operational", "Autonomy", "AutonomyInboxController.cs"));
-            foreach (string litteral in new[] { "\"Issue : \"", "Oldest: ", "\"Choose \"" })
-                StringAssert.Contains(litteral, src, "㉔ : dette datée 07/10 — littéral encore posé, à remplacer par les templates de l'atelier");
         }
     }
 }
