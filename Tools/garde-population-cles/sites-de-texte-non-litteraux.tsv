@@ -1,0 +1,25 @@
+# fichier (sous Assets/Scripts)	appels de TEXTE à argument non littéral NON RÉSOLUS par le flux (ÉPINGLE : cliquet)	classes	clés énumérées (chacune sous TÉMOIN de source)	fichiers témoins (en plus du fichier)	clés ÉCARTÉES (sur-approximation du flux)	note
+# B1 (revue ⊥ tour 1) : `Libelle.De`, helpers (`Lib`, `Cle`…) et `Libelle.ParValeur` dont l'argument de TEXTE n'est pas un littéral. La garde RÉSOUT d'abord (paramètre ⇒ arguments des appelants du fichier ; variable locale ⇒ ses affectations ; ternaire de littéraux) : ces clés entrent dans K.
+# Ce qui reste est ICI. SERVI_PAR_LE_BACK = la valeur/clé vient du serveur (jamais énumérable côté client : comptée, pas devinée). ENUMEREE = clés écrites ici, chacune doit naître d'un littéral du fichier ou d'un témoin (sinon rouge).
+# Un site NEUF non résolu sans ligne, ou un nombre qui change, ROUGIT la garde.
+Account/Profile/ProfileScreenController.cs	2	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+CityMap/DistrictInteriorScreenController.cs	2	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+CityMap/LibellesBatiment.cs	1	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+CityMap/MotsDuPanneau.cs	1	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+CoreLoops/Compression/CompressionScreenController.cs	1	ENUMEREE	semaine.bloc.tension	I18n/MotsDesEnumeres.cs		`Lib(MotsDesEnumeres.NomTension)` : UN littéral const « Tension » (MotsDesEnumeres.cs)
+I18n/CollecteMots.cs	1	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+I18n/MotsDesEnumeres.cs	2	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+Operational/BuildingCard/BuildingCardController.cs	1	SERVI_PAR_LE_BACK			building.row.l_atelier	ParValeur sur une valeur servie. ÉCARTÉE : `Cle("row", label)` reçoit « L’atelier » par la table des lignes, mais cet appel porte TOUJOURS `cleDuLibelle` (`taille_du_labo`) donc passe par `Gabarit(cleDuLibelle, …)`, jamais par `Cle`
+Operational/Carnet/ComposeurDuCarnet.cs	3	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+Operational/ChaineDAppro/ChaineDApproFeuille.cs	3	ENUMEREE	appro.titre.entretenir_la_liaison,appro.titre.reconstruire_la_route,appro.sous_titre.pendant_les_travaux_plus_rien_ne_passe_sur_cette_route,appro.etiquette.rafistoler,appro.etiquette.renforcer,appro.etiquette.contourner,appro.etiquette.petit_detour,appro.etiquette.remise_a_plat	Operational/ChaineDAppro/ChaineDApproGestes.cs		`spec.RepliTitre`, `spec.RepliCommun`, `mode.RepliLibelle` : champs des tables `SpecDeGeste`/`ModeDeGeste` (littéraux du constructeur, ChaineDApproGestes.cs)
+Operational/Conflit/ConflitScreenController.cs	14	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+Operational/Exceptions/ExceptionBandes.cs	3	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+Operational/Forensic/ForensicScreenController.cs	3	SERVI_PAR_LE_BACK,ENUMEREE	forensic.bloc.la_comptabilite,forensic.bloc.ce_qui_sort_des_cuves,forensic.bloc.le_train_de_vie_d_un_lieutenant			`piste.Titre` : 3 littéraux de la table `Pistes` du même fichier ; `statut`, `type` = valeurs servies
+Operational/Journal/JournalScreenController.cs	1	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+Operational/Laundering/PureteResolvers.cs	4	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+Operational/Lieutenant/LieutenantScreenController.cs	2	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+Operational/Loi/LoiScreenController.cs	1	ENUMEREE	loi.bouton.liberer,loi.bouton.mettre_sous_retention			`LoiResolvers.TexteBoutonRetainer(bool)` : 2 littéraux (« LIBÉRER », « METTRE SOUS RÉTENTION »), même fichier
+Operational/Reputation/ReputationResolvers.cs	8	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+Shell/HomeChromeController.cs	1	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+Shell/LaSuite.cs	1	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client
+ShellContracts/HeatBucketResolver.cs	1	SERVI_PAR_LE_BACK				valeur ou clé servie par le back (enum du serveur) : la clé naît de la valeur, hors population du client

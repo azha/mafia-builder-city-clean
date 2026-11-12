@@ -35,6 +35,7 @@ RACINE = Path(__file__).resolve().parent.parent
 os.chdir(RACINE)
 DOSSIER_INSTANTANES = Path('Tools/juge-donnees/i18n')
 TABLE_SITES = Path('Tools/garde-population-cles/sites-non-litteraux.tsv')
+TABLE_TEXTES = Path('Tools/garde-population-cles/sites-de-texte-non-litteraux.tsv')
 SOURCE_ZERO_REPLI = Path('Assets/Tests/PlayMode/ZeroRepliDesLocatairesPlayModeTests.cs')
 TYPECHECK = Path('Tools/typecheck-hors-porte.py')
 TEST_APPELANT = Path('Assets/Tests/PlayMode/GardePopulationAppeleePlayModeTests.cs')
@@ -262,6 +263,248 @@ def verifier_sites(detail_fichier, table):
     return rouges
 
 
+# ───────────────────────── B1 : les appels de TEXTE (`Libelle.De`, helpers, `ParValeur`) à argument non littéral ─────────────────────────
+# L'extracteur ne lit que `De("d","r","littéral")`. Un appel dont le 3ᵉ argument est une variable, un paramètre, un champ, un appel de méthode,
+# n'était NI compté NI épinglé (revue ⊥ tour 1, B1) : ses clés n'entraient pas dans K, donc une clé non servie affichée par là passait.
+# Ici : (1) un argument purement littéral (ternaire de littéraux inclus) est LU ; (2) un identifiant est RÉSOLU — paramètre d'une méthode ⇒ les
+# arguments des appelants du fichier ; variable locale ⇒ ses affectations dans la méthode ; (3) ce qui reste (champ d'une table, appel de
+# méthode, valeur servie) est COMPTÉ par fichier, ÉPINGLÉ dans `sites-de-texte-non-litteraux.tsv`, et sa classe dit pourquoi : SERVI_PAR_LE_BACK
+# (la clé ou la valeur vient du serveur) ou ENUMEREE (clés écrites à la main dans le tsv, chacune sous TÉMOIN DE SOURCE — jamais une liste de foi).
+LITS = re.compile(r'\$?"((?:[^"\\]|\\.)*)"')
+ENT = re.compile(r'([\w<>\[\],.?]+)\s+(\w+)\s*\(([^()]*)\)\s*(?:\{|=>)')
+MOTS_C = {'if', 'while', 'for', 'foreach', 'switch', 'return', 'new', 'else', 'using', 'lock', 'catch', 'nameof', 'typeof', 'await', 'throw', 'yield', 'when', 'fixed'}
+
+
+def entetes(src, debut=0, fin=None):
+    return [m for m in ENT.finditer(src, debut, len(src) if fin is None else fin) if m.group(1) not in MOTS_C and m.group(2) not in MOTS_C]
+
+
+def args_at(src, i):
+    """Arguments (texte brut) de l'appel dont la parenthèse ouvrante précède `i` ; chaînes et imbrication respectées."""
+    prof, a, cur, k, n = 0, [], i, i, len(src)
+    while k < n:
+        c = src[k]
+        if c == '"':
+            k += 1
+            while k < n and src[k] != '"':
+                k += 2 if src[k] == '\\' else 1
+        elif c in '([{':
+            prof += 1
+        elif c in ')]}':
+            if prof == 0:
+                a.append(src[cur:k].strip())
+                return a
+            prof -= 1
+        elif c == ',' and prof == 0:
+            a.append(src[cur:k].strip())
+            cur = k + 1
+        k += 1
+    return a
+
+
+def branches_ternaire(e):
+    """[vrai, faux] d'une expression `cond ? vrai : faux` de plus haut niveau (chaînes et imbrication respectées), sinon None."""
+    prof, k, n, q = 0, 0, len(e), None
+    while k < n:
+        ch = e[k]
+        if ch == '"':
+            k += 1
+            while k < n and e[k] != '"':
+                k += 2 if e[k] == '\\' else 1
+        elif ch in '([{':
+            prof += 1
+        elif ch in ')]}':
+            prof -= 1
+        elif ch == '?' and prof == 0 and q is None and not e.startswith('??', k) and not e.startswith('?.', k) and not (k > 0 and e[k - 1] == '?'):
+            q = k
+        elif ch == ':' and prof == 0 and q is not None:
+            return [e[q + 1:k].strip(), e[k + 1:].strip()]
+        k += 1
+    return None
+
+
+def purement_litteral(expr):
+    return re.sub(r'\bnull\b|[?:()\s+]', '', LITS.sub('', expr)) == ''
+
+
+def resoudre(src, pos, expr, vus=None):
+    """(littéraux, complet) : tout ce que `expr` (placée en `pos`) peut valoir, tant que cela vient de littéraux de CE fichier."""
+    vus = vus or set()
+    e = expr.strip()
+    if purement_litteral(e):
+        return set(LITS.findall(e)), True
+    br = branches_ternaire(e)
+    if br is not None:      # `cond ? a : b` : seules les BRANCHES produisent du texte (la condition n'en produit pas)
+        out, complet = set(), True
+        for b_ in br:
+            l, c = resoudre(src, pos, b_, vus)
+            out |= l
+            complet &= c
+        return out, complet
+    if not re.fullmatch(r'\w+', e):
+        return set(), False
+    if (e, pos) in vus:
+        return set(), False
+    vus = vus | {(e, pos)}
+    for m in reversed(entetes(src, 0, pos)):
+        params = [x.strip() for x in m.group(3).split(',')]
+        idx = [i for i, x in enumerate(params) if re.search(r'\b' + e + r'(\s*=.*)?$', x)]
+        if not idx:
+            continue
+        i, out, complet, n = idx[0], set(), True, 0
+        for c in re.finditer(r'(?<![\w.])' + re.escape(m.group(2)) + r'\(', src):
+            if c.start() == m.start(2) or re.search(r'\b(string|void|bool|int|float|IEnumerator|static|public|private|internal)\s+$', src[max(0, c.start() - 20):c.start()]):
+                continue
+            a = args_at(src, c.end())
+            n += 1
+            if len(a) <= i or re.match(r'\w+\s*:', a[i]):
+                complet = False
+                continue
+            l, cc = resoudre(src, c.start(), a[i], vus)
+            out |= l
+            complet &= cc
+        return out, complet and n > 0
+    av, ap = entetes(src, 0, pos), entetes(src, pos + 1)
+    d, f = (av[-1].start() if av else 0), (ap[0].start() if ap else len(src))
+    out, complet, n = set(), True, 0
+    for m in re.finditer(r'(?<![\w.])' + e + r'\s*=\s*([^;]+);', src[d:f]):
+        n += 1
+        l, cc = resoudre(src, d + m.start(), m.group(1), vus)
+        out |= l
+        complet &= cc
+    return out, complet and n > 0
+
+
+def sites_de_texte(src, ex):
+    """[{ligne, dom, role, expr, cles:{clé: texte affiché}, complet}] pour chaque appel de TEXTE à argument non littéral (De, helpers à 1 ou 2
+    arguments, ParValeur). Les CORPS de helpers (3ᵉ argument = paramètre du helper) sont exclus : ce sont leurs appelants qui comptent."""
+    out = []
+    decl = list(ex.HELPER.finditer(src)) + list(ex.HELPER2.finditer(src))
+    spans = [(m.start(), m.end()) for m in decl]
+    ligne = lambda p: src.count('\n', 0, p) + 1
+    litt = lambda x: (LITS.fullmatch(x).group(1) if LITS.fullmatch(x) else None)
+
+    def ajouter(pos, dom, role, expr, repli=None):
+        lits, ok = resoudre(src, pos, expr)
+        cles = {f"{dom}.{role}.{ex.slug(ex.decode(l))}": ex.decode(repli if repli is not None else l) for l in lits if ex.slug(ex.decode(l))}
+        out.append({'ligne': ligne(pos), 'dom': dom, 'role': role, 'expr': expr[:50], 'cles': cles, 'complet': ok})
+    for m in re.finditer(r'Libelle\.De\(', src):
+        if any(a <= m.start() < b for a, b in spans):
+            continue
+        a = args_at(src, m.end())
+        if len(a) >= 3 and not LITS.fullmatch(a[2]):
+            d, r = litt(a[0]), litt(a[1])
+            if d is None or r is None:
+                out.append({'ligne': ligne(m.start()), 'dom': '?', 'role': '?', 'expr': a[2][:50], 'cles': {}, 'complet': False})
+            else:
+                ajouter(m.start(), d, r, a[2])
+    for h in ex.HELPER.finditer(src):
+        for m in re.finditer(r'(?<![\w.])' + re.escape(h.group(1)) + r'\(', src):
+            if re.search(r'string\s+$', src[max(0, m.start() - 12):m.start()]):
+                continue
+            a = args_at(src, m.end())
+            if a and not LITS.fullmatch(a[0]):
+                ajouter(m.start(), h.group(2), h.group(3), a[0])
+    for h in ex.HELPER2.finditer(src):
+        for m in re.finditer(r'(?<![\w.])' + re.escape(h.group(1)) + r'\(', src):
+            if re.search(r'string\s+$', src[max(0, m.start() - 12):m.start()]):
+                continue
+            a = args_at(src, m.end())
+            if len(a) >= 2 and litt(a[0]) is not None and not LITS.fullmatch(a[1]):
+                ajouter(m.start(), h.group(2), litt(a[0]), a[1])
+    for m in re.finditer(r'Libelle\.ParValeur\(', src):
+        a = args_at(src, m.end())
+        if len(a) < 4:
+            continue
+        d, r = litt(a[0]), litt(a[1])
+        if d is not None and r is not None:
+            ajouter(m.start(), d, r, a[2], repli=(litt(a[3]) or None))
+        else:
+            out.append({'ligne': ligne(m.start()), 'dom': '?', 'role': '?', 'expr': a[2][:50], 'cles': {}, 'complet': False})
+    return out
+
+
+def lire_table_textes():
+    """{fichier: (nb_non_resolus, classes, cles_explicites, fichiers_temoins, cles_ecartees)} ou None si illisible."""
+    if not TABLE_TEXTES.exists():
+        return None
+    out = {}
+    for l in TABLE_TEXTES.read_text(encoding='utf-8').split('\n'):
+        if not l.strip() or l.startswith('#'):
+            continue
+        c = l.split('\n')[0].split('\t')
+        if len(c) < 3:
+            return None
+        classes = tuple(x.strip() for x in c[2].split(','))
+        if not set(classes) <= {'SERVI_PAR_LE_BACK', 'ENUMEREE'}:
+            return None
+        cles = tuple(x.strip() for x in (c[3] if len(c) > 3 else '').split(',') if x.strip())
+        temoins = tuple(x.strip() for x in (c[4] if len(c) > 4 else '').split(',') if x.strip())
+        ecartees = tuple(x.strip() for x in (c[5] if len(c) > 5 else '').split(',') if x.strip())
+        out[c[0]] = (int(c[1]), classes, cles, temoins, ecartees)
+    return out
+
+
+def temoin_de_source(cle, litteraux, slug):
+    """Une clé écrite à la main dans le tsv doit se LIRE dans la source : `dom.role.slug(L)` pour un littéral L, ou un préfixe littéral + un
+    suffixe littéral (`"appro.consequence." + suffixe`)."""
+    p = cle.split('.', 2)
+    if len(p) == 3 and any(slug(l) == p[2] for l in litteraux):
+        return True
+    if any(cle.startswith(a) and cle[len(a):] in litteraux for a in litteraux if a.endswith('.')):
+        return True
+    # clé COMPOSÉE de deux littéraux : « préfixe » + « . » + « suffixe » (`Moment.Dire("decision.moment.vide", …)` + « dawn »)
+    return any(cle[:i] in litteraux and cle[i + 1:] in litteraux for i in range(len(cle)) if cle[i] == '.')
+
+
+def analyser_textes(ex, table):
+    """(cles {clé: (texte, fichier)}, rouges, nb_resolus, nb_non_resolus)."""
+    cles, rouges, nres, nnon = {}, [], 0, 0
+    reel = {}
+    for f in sorted(Path('Assets/Scripts').rglob('*.cs')):
+        brut = f.read_text(encoding='utf-8')
+        if 'Libelle' not in brut:
+            continue
+        src = ex.recoller(ex.sans_commentaires(brut))
+        rel = str(f).replace('Assets/Scripts/', '')
+        sites = sites_de_texte(src, ex)
+        for st in sites:
+            for k, t in st['cles'].items():
+                cles.setdefault(k, (t, rel))
+        non = [st for st in sites if not st['complet']]
+        nres += len(sites) - len(non)
+        nnon += len(non)
+        if non:
+            reel[rel] = non
+    for rel, non in sorted(reel.items()):
+        if rel not in table:
+            rouges.append(f"appel de texte NON RÉSOLU et NON CLASSÉ : {rel} ({len(non)} : " + ' ; '.join(f"l.{st['ligne']} {st['dom']}.{st['role']}←{st['expr']}" for st in non) + f") — l'ajouter à {TABLE_TEXTES}")
+        elif table[rel][0] != len(non):
+            rouges.append(f"{rel} : {len(non)} appel(s) de texte non résolu(s) lu(s), {table[rel][0]} épinglé(s) — reclasser (cliquet) : " + ' ; '.join(f"l.{st['ligne']} {st['dom']}.{st['role']}←{st['expr']}" for st in non))
+    for rel in sorted(set(table) - set(reel)):
+        rouges.append(f"{rel} : épinglé dans {TABLE_TEXTES.name} mais plus aucun appel de texte non résolu — retirer la ligne")
+    for rel, (_, classes, explicites, temoins, ecartees) in table.items():
+        for k in ecartees:      # sur-approximation du flux, écartée À LA MAIN : elle doit EXISTER (sinon la ligne ment) et rester nommée
+            if k not in cles:
+                rouges.append(f"{rel} : clé écartée « {k} » que le flux ne produit pas (retirer de la colonne « écartées »)")
+            cles.pop(k, None)
+        if not explicites:
+            continue
+        lits = set()
+        for fich in (rel,) + temoins:
+            fp = Path('Assets/Scripts') / fich
+            if not fp.exists():
+                rouges.append(f"{rel} : fichier témoin absent : {fich}")
+                continue
+            lits |= {ex.decode(x) for x in LITS.findall(ex.recoller(ex.sans_commentaires(fp.read_text(encoding='utf-8'))))}
+        for k in explicites:
+            if not temoin_de_source(k, lits, ex.slug):
+                rouges.append(f"{rel} : clé explicite SANS TÉMOIN de source (aucun littéral de {rel}{''.join(' / ' + t for t in temoins)} ne la fait naître) : {k}")
+            else:
+                cles.setdefault(k, ('', rel))
+    return cles, rouges, nres, nnon
+
+
 FORME_CLE = re.compile(r'^[a-z][a-z0-9_]*(\.[a-z0-9_]+){2,}$')
 FORME_PREFIXE = re.compile(r'^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+\.$')
 
@@ -301,6 +544,22 @@ def verdict(K, servies, dette, repli):
         'DETTE_NON_DEMANDEE (ni dans le code, ni servie)': sorted(k for k in dette if k not in K and k not in servies),
         'REPLI_NON_DEMANDE': sorted(k for k in repli if k not in K and k not in servies),
     }
+
+
+SEUIL_VERSEMENT_EN_BLOC = 10
+
+
+def delta_de_dette(dette, extracteur):
+    """I2 (revue ⊥ tour 1) : « pas de versement en bloc ». Compare la DetteDatee de l'arbre de travail à celle de HEAD (git, jamais un état caché) : rend
+    (ajoutées, retirées), ou None si HEAD est illisible. `main` les imprime et AVERTIT quand SEUIL_VERSEMENT_EN_BLOC entrées ou plus sont versées d'un coup."""
+    try:
+        src = subprocess.run(['git', 'show', f'HEAD:{SOURCE_ZERO_REPLI}'], capture_output=True, text=True, check=True).stdout
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+    lu = lire_ensembles(src, extracteur.sans_commentaires)
+    if lu is None:
+        return None
+    return sorted(dette - lu[0]), sorted(lu[0] - dette)
 
 
 def controles(extracteur) -> list:
@@ -349,6 +608,28 @@ def controles(extracteur) -> list:
         K, pf, _, _ = extracteur.population(Path(td))
         if 'sonde.bloc.lue_par_population' not in K or 'sonde.bloc.cachee' in K or len(pf) != 1:
             e.append(f"contrôle rouge : population() sur arbre fabriqué = {sorted(K)}")
+    # B1 : le résolveur de flux, sur une source FABRIQUÉE — un paramètre de wrapper se résout par les arguments des appelants, une variable locale par ses
+    # affectations, un champ ou un appel de méthode reste NON résolu (compté), un ParValeur à littéraux donne sa clé ; un corps de helper n'est pas un site.
+    fab = ('class X {\n'
+           '  static string Lib(string t) => Libelle.De("sonde", "aide", t);\n'
+           '  void Poser(string titre) { var a = Libelle.De("sonde", "param", titre); }\n'
+           '  void Appel() { Poser("Premier mot"); Poser(ok ? "Second mot" : "Troisieme mot"); }\n'
+           '  void Local() { string l; if (c) l = "Valeur locale"; else l = "Autre locale"; var b = Libelle.De("sonde", "local", l); }\n'
+           '  void Champ(Spec spec) { var c = Libelle.De("sonde", "champ", spec.Repli); var d = Lib(Methode()); var e = Lib("Litteral direct"); }\n'
+           '  void Valeur(string v) { var f = Libelle.ParValeur("sonde", "enum", "active", "Ouverte"); var g = Libelle.ParValeur("sonde", "enum", v, "x"); }\n'
+           '}\n')
+    st = sites_de_texte(extracteur.recoller(extracteur.sans_commentaires(fab)), extracteur)
+    cles_fab = {k for x in st if x['complet'] for k in x['cles']}
+    attendu = {'sonde.param.premier_mot', 'sonde.param.second_mot', 'sonde.param.troisieme_mot', 'sonde.local.valeur_locale', 'sonde.local.autre_locale', 'sonde.enum.active'}
+    if not attendu <= cles_fab:
+        e.append(f"contrôle POSITIF rouge : le flux ne résout pas {sorted(attendu - cles_fab)} (lu {sorted(cles_fab)})")
+    non = sorted((x['dom'] + '.' + x['role']) for x in st if not x['complet'])
+    if non != ['sonde.aide', 'sonde.champ', 'sonde.enum']:
+        e.append(f"contrôle POSITIF rouge : les sites non résolus attendus (champ, appel de méthode, ParValeur sur valeur servie) sont {non}")
+    if any(x['dom'] == 'sonde' and x['role'] == 'aide' and x['complet'] for x in st) and any('litteral_direct' in k for k in cles_fab):
+        e.append("contrôle NÉGATIF rouge : un littéral direct d'un helper à 1 argument est pris pour un site non littéral")
+    if not temoin_de_source('sonde.bloc.un_mot', {'Un mot'}, extracteur.slug) or temoin_de_source('sonde.bloc.autre', {'Un mot'}, extracteur.slug):
+        e.append("contrôle rouge : le témoin de source d'une clé explicite (présente / absente) se trompe")
     return e
 
 
@@ -417,6 +698,10 @@ def main() -> int:
         return 2
     chemin, sha, date, ref, servies = inst
     table = lire_table_sites()
+    table_t = lire_table_textes()
+    if table_t is None:
+        print(f"⛔ table des appels de texte non résolus absente ou illisible : {TABLE_TEXTES}", file=sys.stderr)
+        return 2
     if table is None:
         print(f"⛔ table des sites non littéraux absente ou illisible : {TABLE_SITES}", file=sys.stderr)
         return 2
@@ -425,14 +710,34 @@ def main() -> int:
         return 2
 
     fraicheur = avertissement_age(sha, date, ref)
+    delta = delta_de_dette(dette, ex)
+    if delta is None:
+        print("⚠️ DELTA DE DETTE : la DetteDatee de HEAD est illisible — versement en bloc NON vérifié.")
+    else:
+        aj, re_ = delta
+        print(f"delta de dette vs HEAD : +{len(aj)} −{len(re_)} (dette {len(dette)})" + (f" · versées : {', '.join(aj[:6])}{' …' if len(aj) > 6 else ''}" if aj else '') + (f" · levées : {', '.join(re_[:6])}{' …' if len(re_) > 6 else ''}" if re_ else ''))
+        if len(aj) >= SEUIL_VERSEMENT_EN_BLOC:
+            print(f"⚠️ VERSEMENT EN BLOC : {len(aj)} entrées versées en dette d'un coup (seuil {SEUIL_VERSEMENT_EN_BLOC}) — chaque entrée doit avoir son texte réel, son propriétaire et sa levée (ruling f2).")
     nb_parvaleur = sum(len(re.findall(r'Libelle\.ParValeur\(', ex.sans_commentaires(f.read_text(encoding='utf-8')))) for f in Path('Assets/Scripts').rglob('*.cs'))
     domaines = {k.split('.')[0] for k in set(servies) | dette | repli | set(K_dict)}
     enum_src = cles_des_fichiers_classes(table, ex, domaines)
     enumerees = set(enum_src)
-    K = set(K_dict) | enumerees
+    cles_t, rouges_t, n_res, n_non = analyser_textes(ex, table_t)
+    # clés explicites de la table des `Gabarit` non littéraux : TÉMOIN de source dans le POOL de tous les littéraux du client (minuscules : une clé
+    # composée `préfixe + "." + phase.ToLowerInvariant()` a son préfixe chez l'appelant et son suffixe dans `"DAWN"`) — plus faible que le témoin par
+    # fichier de la table des appels de texte, mais jamais une liste de foi : une clé qui ne naît d'aucun littéral rougit.
+    pool = set()
+    for fp in Path('Assets/Scripts').rglob('*.cs'):
+        pool |= {ex.decode(x).lower() for x in LITTERAL.findall(ex.recoller(ex.sans_commentaires(fp.read_text(encoding='utf-8'))))}
+    for rel, (_, _, explicites) in table.items():
+        for k in explicites:
+            if not (k in pool or temoin_de_source(k, pool, ex.slug)):
+                rouges_t.append(f"{rel} : clé explicite SANS TÉMOIN de source (aucun littéral du client ne la fait naître) : {k}")
+    nouvelles_t = {k: v for k, v in cles_t.items() if k not in K_dict}
+    K = set(K_dict) | enumerees | set(nouvelles_t)
     nl = sum(d[3] for d in detail_fichier.values())
     print(f"K_client : {len(K_dict)} clés lues + {len(enumerees)} énumérées = {len(K)} · servies {len(servies)} · dette {len(dette)} · repli voulu {len(repli)} · "
-          f"appels Gabarit non littéraux {nl} (classés : {sum(t[0] for t in table.values())}) · `Libelle.ParValeur` : {nb_parvaleur} appel(s), NON listés (clé née d'une valeur servie)")
+          f"appels Gabarit non littéraux {nl} (classés : {sum(t[0] for t in table.values())}) · appels de texte (De, helpers, ParValeur) à argument non littéral : {n_res} RÉSOLUS (+{len(nouvelles_t)} clés), {n_non} non résolus (épinglés : {sum(t[0] for t in table_t.values())}) · `Libelle.ParValeur` : {nb_parvaleur} appel(s) au total")
 
     rouges = []
     for nom, ks in verdict(K, servies, dette, repli).items():
@@ -443,15 +748,15 @@ def main() -> int:
     for nom, ks in rouges:
         print(f"⛔ {nom} : {len(ks)}")
         for k in ks:
-            print(f"     {k}\t{K_dict.get(k, '') or ('énumérée par ' + enum_src[k] if k in enum_src else '')}")
-    for s in sites + appelants:
+            print(f"     {k}\t{K_dict.get(k, '') or ('énumérée par ' + enum_src[k] if k in enum_src else (nouvelles_t[k][0] + ' [flux, ' + nouvelles_t[k][1] + ']' if k in nouvelles_t else ''))}")
+    for s in sites + appelants + rouges_t:
         print('⛔ ' + s)
-    if not (rouges or sites or appelants):
+    if not (rouges or sites or appelants or rouges_t):
         print(f"✅ K_client ⊆ SERVIE ∪ DetteDatee ∪ RepliVoulu : « hors des trois : 0 » (K_client {len(K)} > 0, trois ensembles non vides).")
     if fraicheur == 'inconnu' and '--strict-instantane' in a:
         print("⛔ --strict-instantane : fraîcheur non vérifiée.")
         return 1
-    return 1 if (rouges or sites or appelants or fraicheur == 'perime') else 0
+    return 1 if (rouges or sites or appelants or rouges_t or fraicheur == 'perime') else 0
 
 
 if __name__ == '__main__':
