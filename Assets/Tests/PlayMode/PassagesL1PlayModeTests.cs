@@ -366,6 +366,99 @@ namespace MafiaCleanCity.Shell.Tests
             Assert.AreEqual(1f, AlphaDeContentSlot(), 1e-4f);
         }
 
+        // ---- TD-956 (design Tools/anim-l1/design-td956.md) — pendant `shell.entree`, ContentSlot est sourd aux appuis (sous `Plein`) ; garde d'EFFET : un VRAI lancer de rayon (GraphicRaycaster)
+        // au centre de chaque `Graphic` à `raycastTarget` de ContentSlot, pas la valeur de `blocksRaycasts`.
+        /// <summary>(candidats, coups) : parmi les `Graphic` à `raycastTarget` visibles de ContentSlot, combien existent et combien reçoivent un rayon lancé en leur centre (le coup doit tomber sous ContentSlot).</summary>
+        private (int candidats, int coups) RayonsSurLeContenu()
+        {
+            Canvas.ForceUpdateCanvases();
+            Canvas racine = shell.ContentSlot.GetComponentInParent<Canvas>().rootCanvas;
+            GraphicRaycaster gr = racine.GetComponent<GraphicRaycaster>();
+            Assert.IsNotNull(gr, "le canvas du shell porte son GraphicRaycaster");
+            Camera cam = racine.renderMode == RenderMode.ScreenSpaceOverlay ? null : racine.worldCamera;
+            int candidats = 0, coups = 0;
+            var res = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+            foreach (Graphic g in shell.ContentSlot.GetComponentsInChildren<Graphic>(false))
+            {
+                if (!g.raycastTarget || !g.gameObject.activeInHierarchy) continue;
+                Rect r = g.rectTransform.rect;
+                if (r.width < 2f || r.height < 2f) continue;
+                Vector2 sp = RectTransformUtility.WorldToScreenPoint(cam, g.rectTransform.TransformPoint(r.center));
+                candidats++;
+                res.Clear();
+                gr.Raycast(new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current) { position = sp }, res);
+                foreach (var c in res) if (c.gameObject != null && c.gameObject.transform.IsChildOf(shell.ContentSlot)) { coups++; break; }
+            }
+            return (candidats, coups);
+        }
+
+        [UnityTest]
+        public IEnumerator P3i_PendantLEntree_ContentSlotNeRecoitAucunAppui_PuisLesRecoit()
+        {
+            yield return MonterLeShellEtAttendreEmpire();
+            Regie r = shell.RegieDeMouvement;
+            r.Horloge = new HorlogeFigee(100f);
+            shell.ActivateTab(AppShell.Tab.Org);
+            yield return null;
+            A(r, 100f);
+            Assert.AreEqual(0f, AlphaDeContentSlot(), 1e-3f, "CONTRÔLE : on est bien au début du fondu (α = 0)");
+            Assert.IsTrue(shell.AppuisBloquesParLEntreeDeLOnglet);
+            var debut = RayonsSurLeContenu();
+            Assert.Greater(debut.candidats, 0, "CONTRÔLE : des Graphic touchables existent sous ContentSlot (sinon le zéro ne prouve rien)");
+            Assert.AreEqual(0, debut.coups, "t = 0 : aucun rayon n'atteint le contenu invisible");
+            A(r, 100.08f);
+            Assert.AreEqual(0, RayonsSurLeContenu().coups, "à 80 ms : toujours sourd");
+            A(r, 100.17f);
+            Assert.IsFalse(RegieMouvement.EstVivant(shell.EntreeOngletPourTest), "la piste est finie");
+            Assert.IsFalse(shell.AppuisBloquesParLEntreeDeLOnglet);
+            var fin = RayonsSurLeContenu();
+            Assert.Greater(fin.coups, 0, "à 170 ms : l'écran entier reçoit de nouveau les appuis");
+        }
+
+        [UnityTest]
+        public IEnumerator P3j_SousReduit_LEcranResteTouchable_DesLePremierInstant()
+        {
+            yield return MonterLeShellEtAttendreEmpire();
+            Regie r = shell.RegieDeMouvement;
+            r.Horloge = new HorlogeFigee(100f);
+            r.Politique = PolitiqueMouvement.Reduit;
+            shell.ActivateTab(AppShell.Tab.Org);
+            yield return null;
+            A(r, 100f);
+            Assert.IsFalse(shell.AppuisBloquesParLEntreeDeLOnglet, "Réduit : rien n'est coupé");
+            var c = RayonsSurLeContenu();
+            Assert.Greater(c.candidats, 0, "CONTRÔLE : des Graphic touchables existent");
+            Assert.Greater(c.coups, 0, "Réduit : l'écran visible est touchable dès t = 0 (comportement d'avant)");
+        }
+
+        [UnityTest]
+        public IEnumerator P3k_Filet_UnePisteDetacheeAilleurs_NeLaisseJamaisContentSlotSourd_EtDeuxMontagesEnchaines()
+        {
+            yield return MonterLeShellEtAttendreEmpire();
+            Regie r = shell.RegieDeMouvement;
+            r.Horloge = new HorlogeFigee(100f);
+            shell.ActivateTab(AppShell.Tab.Org);
+            yield return null;
+            A(r, 100f);
+            Assert.IsTrue(shell.AppuisBloquesParLEntreeDeLOnglet);
+            RegieMouvement.Detacher(shell.EntreeOngletPourTest);   // détachée HORS de `AnimerEntreeDeLOnglet`, sans `quandFini`
+            yield return null;                                    // un `Update` du shell
+            Assert.IsFalse(shell.AppuisBloquesParLEntreeDeLOnglet, "le filet de l'`Update` rend les appuis");
+            Assert.Greater(RayonsSurLeContenu().coups, 0, "aucune surdité résiduelle");
+            // deux montages d'onglet enchaînés DANS le fondu : le second rend puis rebloque ; à la fin du second, tout est rendu
+            shell.ActivateTab(AppShell.Tab.Pipeline);
+            yield return null;
+            A(r, 100.02f);
+            shell.ActivateTab(AppShell.Tab.Org);
+            yield return null;
+            A(r, 100.03f);
+            Assert.IsTrue(shell.AppuisBloquesParLEntreeDeLOnglet, "le second montage rebloque");
+            Assert.AreEqual(0, RayonsSurLeContenu().coups, "le second montage rebloque : aucun rayon n'atteint le contenu (l'EFFET, pas le drapeau)");
+            A(r, 100.5f);
+            Assert.IsFalse(shell.AppuisBloquesParLEntreeDeLOnglet, "la fin du second rend les appuis : jamais coincé à faux");
+            Assert.Greater(RayonsSurLeContenu().coups, 0);
+        }
+
         // DÉTECTEUR du refus de quota (ratifié f2 : « un refus possible sur ⑮ en alarme, avec un détecteur ») : 15 pistes non-Ambiance tenues ⇒ la 16ᵉ est refusée,
         // le montage reste ce qu'il était (α = 1), et le refus est COMPTÉ (`Regie.Refus`).
         [UnityTest]
