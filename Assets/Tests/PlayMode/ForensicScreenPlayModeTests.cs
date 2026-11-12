@@ -483,7 +483,7 @@ namespace MafiaCleanCity.Operational.Tests
         [Category("ScreenB7")]
         public IEnumerator ScreenB7D5_GestesEteints_AucuneRequete_CompteurMisALEpreuve()
         {
-            GameObject es = EventSystem.current == null ? new GameObject("fil_es", typeof(EventSystem), typeof(StandaloneInputModule)) : null;
+            GameObject es = EventSystem.current == null ? new GameObject("fil_es", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule))   /* 12/11 : jamais StandaloneInputModule — sous Input System il lève à chaque image et 78 tests rougissaient à sa suite (run 5) */ : null;
             try
             {
                 ForensicScreenController ecran = MonterEcran();
