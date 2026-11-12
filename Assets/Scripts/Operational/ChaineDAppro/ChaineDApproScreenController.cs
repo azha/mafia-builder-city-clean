@@ -841,6 +841,15 @@ namespace MafiaCleanCity.Operational
                 fl.enableWordWrapping = true;
                 TrackText("↳ " + Libelle.Gabarit("appro.etiquette.refoule_vers", "refoule vers") + " " + m.Vers);
             }
+            if (m.EstLaCause)
+            {
+                // TD-1035 (㉚, la CAUSE du bouchon) : la 2ᵉ ligne `i.gr30-fl`, au gabarit de « refoule vers » (même taille, même encre, `↳ ` = l'indentation). La ligne ne suit QUE
+                // `is_blocked_output`. `TrackText(c.text)` et non la forme de la ligne sœur : `c.text` est déjà la chaîne complète (`NouveauTexteFiche` fait `t.text = texte`) et
+                // l'appel à `Libelle` reste dans l'argument du vrai puits d'affichage ; `TrackText` n'affecte aucun `.text`.
+                TextMeshProUGUI c = NouveauTexteFiche(n.transform, "Cause", "↳ " + Libelle.Gabarit("appro.etiquette.c_est_ici_que_ca_bouche", "C’est ici que ça bouche"), 6.4f, EncreFleche, false);
+                c.enableWordWrapping = true;
+                TrackText(c.text);
+            }
             Etat(go.transform, m.Mot, m.Rang);
         }
 
@@ -1630,6 +1639,7 @@ namespace MafiaCleanCity.Operational
         {
             public string Id, Nom, Bande, Mot, Vers;
             public int Rang;
+            public bool EstLaCause;   // `is_blocked_output` RECOPIÉ, aucune dérivation (la règle « sans flèche ⇒ cause » est réfutée, contrat TD-1035 §1)
         }
 
         /// <summary>Une liaison telle qu'elle s'affiche. `Contournee` = `bypassed` (trait tireté + « contournée »). `EnEntretien` = « en entretien » : `legs[].maintaining`
@@ -1672,6 +1682,7 @@ namespace MafiaCleanCity.Operational
                     Mot = MotPression(n.bucket),
                     Rang = RangPression(n.bucket),
                     Vers = n.has_arrow ? NomDuBatiment(n.arrow_to_building_id, parId) : null,
+                    EstLaCause = n.is_blocked_output,
                 });
             }
             l.Sort((a, b) =>

@@ -61,11 +61,15 @@ namespace MafiaCleanCity.Operational
         public int quantity_units;
     }
 
-    /// <summary>Un nœud de la chaîne d'appro. ⛔⛔ FORME JAMAIS MESURÉE : `nodes` est VIDE sur le
-    /// compte de démo (mesuré 2026-09-03 — voir `ChaineDApproScreenController.AppliquerChaine`,
-    /// c'est le fait le plus important de cet écran). Ce type sert seulement à ce que
-    /// `JsonUtility` désérialise un `nodes: []` sans erreur ; ses champs sont à mesurer le jour où
-    /// un compte porte au moins un nœud. Jamais utilisé pour construire une UI cette passe.</summary>
+    /// <summary>Un nœud de la chaîne d'appro : les 5 clés SERVIES par `GET /v1/supply-chain/graph`, toutes lues par
+    /// `ChaineDApproGraphe.Maillons` (bande → mot et rang, `has_arrow` + `arrow_to_building_id` → « refoule vers »,
+    /// `is_blocked_output` → la ligne de cause). `is_blocked_output` dit que CE maillon est la cause du bouchon au DERNIER tick :
+    /// il se LIT, il ne se déduit d'aucune autre clé (la règle « non silencieux sans flèche ⇒ cause » est réfutée, contrat TD-1035 §1).
+    /// `NOT NULL DEFAULT false` en base, donc jamais `null` ; clé absente du corps ⇒ `false`, et l'écran se tait — son silence ne
+    /// distingue alors pas « aucun bouchon » de « la pile ne sert pas encore la clé ».
+    /// ⛔ ÉNONCÉ DATÉ, propriété d'un compte à une date et non de la forme : `nodes` était VIDE sur le compte de démo au 2026-09-03
+    /// (mesuré — voir `ChaineDApproScreenController.AppliquerChaine`) ; l'affirmer au présent (« est VIDE sur le compte de démo »)
+    /// demande de le re-mesurer.</summary>
     [Serializable]
     public class SupplyChainNodeDto
     {
@@ -75,7 +79,7 @@ namespace MafiaCleanCity.Operational
         public bool has_arrow;
         public string arrow_to_building_id;
         // TD-1035 (12/11, BACK-6 `lot/td-1035-cause-bouchon` @ba55e828, `supply-chain.controller.ts:138`, V15) : booléen servi, jamais null ; true = ce nœud est
-        // une CAUSE du bouchon (non dérivable des autres clés). DÉCLARÉ pour ne pas être jeté par JsonUtility (forme G) ; PAS ENCORE DESSINÉ (spec client en cours).
+        // une CAUSE du bouchon (non dérivable des autres clés). DÉCLARÉ pour ne pas être jeté par JsonUtility (forme G) ; DESSINÉ par `Maillon.EstLaCause` (la 2ᵉ ligne du maillon).
         public bool is_blocked_output;
     }
 

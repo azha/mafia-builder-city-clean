@@ -420,8 +420,8 @@ namespace MafiaCleanCity.Operational.Tests
             Batiment("b1504", "Consigne de la Threnny", "1504"), Batiment("b1505", "Billard Marr", "1505"),
         };
 
-        private static SupplyChainNodeDto Noeud(string id, string bucket, string vers = null) =>
-            new SupplyChainNodeDto { building_id = id, bucket = bucket, has_arrow = vers != null, arrow_to_building_id = vers };
+        private static SupplyChainNodeDto Noeud(string id, string bucket, string vers = null, bool cause = false) =>
+            new SupplyChainNodeDto { building_id = id, bucket = bucket, has_arrow = vers != null, arrow_to_building_id = vers, is_blocked_output = cause };
 
         private static SupplyChainLegDto Lien(string id, string de, string vers, string dette, bool contournee = false) =>
             new SupplyChainLegDto { leg_id = id, origin_building_id = de, destination_building_id = vers, debt_bucket = dette, bypassed = contournee };
@@ -682,6 +682,133 @@ namespace MafiaCleanCity.Operational.Tests
                 "CONTRÔLE POSITIF : une clé inventée ne passe par aucune des deux listes");
         }
 
+        // ═══ ㉚ — la CAUSE du bouchon (TD-1035, `is_blocked_output` ; design `Tools/chaine-cause-30/DESIGN.md` §4) ═══════════════════════════
+        //
+        // ⚠️ HORS GATE, et il faut le dire : ces gardes tournent sur un CORPS FIXE. Elles prouvent la projection et le rendu, JAMAIS l'atteignabilité —
+        // hors staging et voie horloge murale, aucun geste joueur ne porte un nœud à `true` (contrat §3, TD-1106). Aucune forme servie ne porte
+        // flèche ET cause (les 5 mutateurs de la pile écrivent les deux colonnes dans le même statement, en combinaisons qui s'excluent, §0.4) :
+        // l'ordre de fratrie `Refoule`/`Cause` n'est donc observable par AUCUNE garde (permuter les deux blocs de `ConstruireMaillon` ne rougit rien —
+        // limite ÉCRITE, détecteur TD-1186), et aucun corps ci-dessous ne porte les deux.
+
+        private const string CleDeLaCause = "appro.etiquette.c_est_ici_que_ca_bouche";
+        private const string RepliDeLaCause = "C’est ici que ça bouche";
+
+        /// <summary>Corps fixe de G-C1, **4** nœuds : l'homologue client des 4 nœuds du contrat §4 G2 — A la cause, B le couple tueur (même bande ET même
+        /// `has_arrow` que A, valeur opposée), C la cause la moins pressée (`silent` : décision de ce design, il faut une cause hors du groupe le plus pressé
+        /// pour exercer le tri — le `bucket` est posé, c'est la clé servie), D le symptôme. 2 `true`, 2 `false`, 1 flèche.</summary>
+        private static GetSupplyChainGraphResponseDto GrapheDeLaCause() => new GetSupplyChainGraphResponseDto
+        {
+            nodes = new[]
+            {
+                Noeud("b1501", "warm", cause: true),            // A — la cause
+                Noeud("b1505", "warm"),                         // B — le couple tueur
+                Noeud("b1502", "silent", cause: true),          // C — une cause peut être la moins pressée
+                Noeud("b1503", "warm", vers: "b1501"),          // D — le symptôme
+            },
+            legs = new SupplyChainLegDto[0],
+            routes = new SupplyChainRouteDto[0],
+        };
+
+        /// <summary>Corps fixe de G-C2, **2** nœuds (A + B) : la règle RÉFUTÉE « non silencieux + sans flèche ⇒ cause » — même bande, même absence de flèche,
+        /// un seul `true`.</summary>
+        private static GetSupplyChainGraphResponseDto CoupleTueur() => new GetSupplyChainGraphResponseDto
+        {
+            nodes = new[] { Noeud("b1501", "warm", cause: true), Noeud("b1505", "warm") },
+            legs = new SupplyChainLegDto[0],
+            routes = new SupplyChainRouteDto[0],
+        };
+
+        private static void InverserLesCauses(GetSupplyChainGraphResponseDto g)
+        {
+            foreach (SupplyChainNodeDto n in g.nodes) n.is_blocked_output = !n.is_blocked_output;
+        }
+
+        /// <summary>Les maillons qui portent un enfant `Cause`, dans l'ordre d'affichage (ceux de `ContenuChaine`, lignes actives seules : jamais un sous-arbre détruit).</summary>
+        private List<string> MaillonsPortantLaCause() =>
+            Enfants(ContenuDeLaChaine(), "Maillon").FindAll(m => Trouver(m, "Cause") != null).ConvertAll(m => TexteDe(m, "Nom"));
+
+        private static List<string> NomsDesEnfantsDuN(Transform maillon)
+        {
+            Transform n = Trouver(maillon, "N");
+            Assert.IsNotNull(n, "anti-vacuité : le maillon a son bloc N");
+            var l = new List<string>();
+            foreach (Transform t in n) l.Add(t.name);
+            return l;
+        }
+
+        /// <summary>G-C1 — la ligne de cause suit `is_blocked_output`, et lui seul : sur 4 maillons, EXACTEMENT les deux `true`, dans l'ordre d'affichage, avec le texte
+        /// rendu (EFFET lu sur le `TextMeshProUGUI`, glyphe compris) ; sous le `N` de chacun, les enfants exacts (la Cause APRÈS le Nom, rien d'autre).
+        /// CONTRÔLE : les 4 booléens inversés ⇒ la liste devient EXACTEMENT les deux autres (valeurs ABSOLUES : une inégalité A≠B survivrait à l'inversion).</summary>
+        [UnityTest]
+        public IEnumerator EcranApproCause1_LaLigneSuitIsBlockedOutput_TexteEtEnfantsExacts()
+        {
+            ServirLeNomDesBatiments();
+            var ecran = MonterEcran();
+            yield return null;
+            MafiaCleanCity.I18n.Libelle.RemettreLesCompteurs();
+            ecran.RendrePourTestChaine(GrapheDeLaCause(), BatimentsDuCadre());
+            yield return null;
+
+            // anti-vacuité EN AMONT du filtre : 4 maillons rendus, 1 seul « refoule vers » (D)
+            List<Transform> maillons = Enfants(ContenuDeLaChaine(), "Maillon");
+            Assert.AreEqual(4, maillons.Count, "anti-vacuité : les 4 maillons sont rendus");
+            Assert.AreEqual(1, maillons.FindAll(m => Trouver(m, "Refoule") != null).Count, "anti-vacuité : un seul « refoule vers » (D)");
+
+            CollectionAssert.AreEqual(new[] { Nom("Soudure Varne", "1501"), Nom("Réserve Nock", "1502") }, MaillonsPortantLaCause(),
+                "la ligne de cause sur les seuls `is_blocked_output: true`, dans l'ordre d'affichage (A warm, C silent)");
+            string attendu = "↳ " + ValeurAttendue.Cle(CleDeLaCause, RepliDeLaCause);
+            foreach (Transform m in maillons)
+                if (Trouver(m, "Cause") != null) Assert.AreEqual(attendu, TexteDe(m, "Cause"), "EFFET : le texte rendu, `↳ ` compris (" + TexteDe(m, "Nom") + ")");
+
+            // enfants sous le N, par nom et dans l'ordre : tout ce qui est observable de l'ordre de fratrie
+            var enfants = new Dictionary<string, List<string>>();
+            foreach (Transform m in maillons) enfants[TexteDe(m, "Nom")] = NomsDesEnfantsDuN(m);
+            CollectionAssert.AreEqual(new[] { "Nom", "Cause" }, enfants[Nom("Soudure Varne", "1501")], "A : Nom puis Cause");
+            CollectionAssert.AreEqual(new[] { "Nom" }, enfants[Nom("Billard Marr", "1505")], "B (le couple tueur) : Nom seul");
+            CollectionAssert.AreEqual(new[] { "Nom", "Cause" }, enfants[Nom("Réserve Nock", "1502")], "C : Nom puis Cause");
+            CollectionAssert.AreEqual(new[] { "Nom", "Refoule" }, enfants[Nom("Clés-Minute Rook", "1503")], "D (le symptôme) : Nom puis Refoule");
+
+            // anti-vacuité i18n (patron GestesD4) : DISPOSITIF CONDITIONNEL, il imprime lequel des deux régimes s'est activé
+            bool servie = MafiaCleanCity.I18n.I18nCatalog.Connait(CleDeLaCause);
+            var observees = new List<string>(MafiaCleanCity.I18n.Libelle.ClesEnRepli);
+            if (!servie) CollectionAssert.Contains(observees, CleDeLaCause, "clé non servie ⇒ elle est DEMANDÉE par l'écran (et retombe sur son repli), jamais un littéral");
+            else CollectionAssert.DoesNotContain(observees, CleDeLaCause, "clé servie ⇒ elle ne sort pas du repli");
+            Debug.Log("[Cause30] régime i18n de la clé de la cause : " + (servie ? "SERVIE (catalogue chargé)" : "REPLI (non servie ici, observée en repli)"));
+
+            // CONTRÔLE POSITIF : les 4 booléens inversés ⇒ les deux AUTRES maillons portent la ligne
+            GetSupplyChainGraphResponseDto inverse = GrapheDeLaCause();
+            InverserLesCauses(inverse);
+            ecran.RendrePourTestChaine(inverse, BatimentsDuCadre());
+            yield return null;
+            Assert.AreEqual(4, Enfants(ContenuDeLaChaine(), "Maillon").Count, "anti-vacuité : les 4 maillons sont rendus (2ᵉ rendu)");
+            CollectionAssert.AreEqual(new[] { Nom("Billard Marr", "1505"), Nom("Clés-Minute Rook", "1503") }, MaillonsPortantLaCause(),
+                "CONTRÔLE POSITIF : inversés, la ligne passe sur B et D — la garde de la liste exacte DOIT rougir sur l'autre jeu");
+        }
+
+        /// <summary>G-C2 — la règle RÉFUTÉE : deux maillons `warm` sans flèche, un seul `true` ⇒ UNE ligne de cause, sur A ; B (même bande, même absence de flèche) n'en a pas.
+        /// CONTRÔLE : les deux booléens échangés ⇒ la ligne passe sur B. Cible inerte : ni bande ni flèche ne bougent entre les deux rendus — une seule variable.</summary>
+        [UnityTest]
+        public IEnumerator EcranApproCause2_LeCoupleTueur_UnSeulPorteLaLigne_LaRegleReputeeEstRefutee()
+        {
+            ServirLeNomDesBatiments();
+            var ecran = MonterEcran();
+            ecran.RendrePourTestChaine(CoupleTueur(), BatimentsDuCadre());
+            yield return null;
+            Assert.AreEqual(2, Enfants(ContenuDeLaChaine(), "Maillon").Count, "anti-vacuité : les 2 maillons sont rendus");
+            Assert.AreEqual(0, Enfants(ContenuDeLaChaine(), "Maillon").FindAll(m => Trouver(m, "Refoule") != null).Count, "aucune flèche");
+            CollectionAssert.AreEqual(new[] { Nom("Soudure Varne", "1501") }, MaillonsPortantLaCause(),
+                "non silencieux + sans flèche + `false` ⇒ PAS de ligne : seule A (`true`) la porte");
+
+            GetSupplyChainGraphResponseDto echange = CoupleTueur();
+            InverserLesCauses(echange);
+            ecran.RendrePourTestChaine(echange, BatimentsDuCadre());
+            yield return null;
+            Assert.AreEqual(2, Enfants(ContenuDeLaChaine(), "Maillon").Count, "anti-vacuité : les 2 maillons sont rendus (2ᵉ rendu)");
+            Assert.AreEqual(0, Enfants(ContenuDeLaChaine(), "Maillon").FindAll(m => Trouver(m, "Refoule") != null).Count, "inerte : toujours aucune flèche");
+            CollectionAssert.AreEqual(new[] { Nom("Billard Marr", "1505") }, MaillonsPortantLaCause(),
+                "CONTRÔLE POSITIF : les booléens échangés, la ligne passe sur B — la valeur seule décide");
+        }
+
         // ═══ TD-1013 — les 7 clés d'une route servie (forme G fermée) ═══════════════════════════════
 
         /// <summary>Les 7 clés SERVIES d'une route, écrites ICI à la main (anti-tautologie), recopiées de `supply-chain.controller.ts:92-99` (back main 6040a213).</summary>
@@ -717,6 +844,11 @@ namespace MafiaCleanCity.Operational.Tests
             CollectionAssert.Contains(Ecarts(ampute, ClesDUnNoeudServi), "servie mais non déclarée : is_blocked_output", "CONTRÔLE POSITIF : la clé retirée est vue");
             var six = new List<string>(ClesDUnNoeudServi) { "backpressure_index" };
             CollectionAssert.Contains(Ecarts(champs, six), "servie mais non déclarée : backpressure_index", "CONTRÔLE POSITIF : une clé de trop au corps est vue");
+            // (c) ㉚ G-C3 : un corps SANS la clé ⇒ `false` (JsonUtility laisse le défaut) — la mesure de design §6 : clé absente et `false` servi sont indiscernables, l'écran se tait
+            var sans = JsonUtility.FromJson<GetSupplyChainGraphEnvelope>("{\"payload\":{\"data\":{\"nodes\":[{\"building_id\":\"b-3\",\"bucket\":\"warm\",\"has_arrow\":false,"
+                + "\"arrow_to_building_id\":null}],\"legs\":[],\"routes\":[]}}}").payload.data;
+            Assert.AreEqual(1, sans.nodes.Length, "anti-vacuité : le nœud sans la clé est lu");
+            Assert.IsFalse(sans.nodes[0].is_blocked_output, "CONTRÔLE (c) : clé absente du corps ⇒ false, jamais une cause fabriquée");
         }
 
         [Test]
