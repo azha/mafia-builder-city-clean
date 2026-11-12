@@ -289,6 +289,7 @@ namespace MafiaCleanCity.Operational
             if (replique == null) return;
             const string Marque = "\u241E";
             // Noms des TROUS du gabarit (`{nom}`, `{element}`) : des identifiants de paramètre, jamais un texte affiché.
+            // ⛔ TD-1324 : N3 ne voit pas un ternaire de constantes — ce site l'emprunte légitimement (décision f2 12/11) ; jamais pour un texte joueur.
             const string TrouNom = "nom", TrouElement = "element";
             var parametres = new System.Collections.Generic.Dictionary<string, string> { { TrouNom, Marque } };
             (string cle, string repli) dite = replique.Value;
