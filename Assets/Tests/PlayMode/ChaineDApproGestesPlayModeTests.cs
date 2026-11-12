@@ -545,9 +545,16 @@ namespace MafiaCleanCity.Operational.Tests
         internal static bool EstUnReuse(string cle) =>
             cle == "appro.bouton.ca_part_du_compte_tout_de_suite" || cle == "game.ui_common.cancel_button"
             || cle.StartsWith("appro.sinuosite.", StringComparison.Ordinal) || cle.StartsWith("appro.effondrement.", StringComparison.Ordinal)
-            || cle.StartsWith("appro.pression.", StringComparison.Ordinal) || cle.StartsWith("appro.dette.", StringComparison.Ordinal)
-            || cle.StartsWith("appro.fournisseur.", StringComparison.Ordinal)
+            || Array.IndexOf(BandesServiesLe12Novembre, cle) >= 0
             || cle == CleCap;
+
+        /// <summary>Les 11 bandes de ㉚ servies par la pile de dev 8d0184a4 (créneau du 12/11), par leur NOM — jamais par préfixe (revue ⊥ du 12/11 : un préfixe avalerait une clé future non servie).</summary>
+        private static readonly string[] BandesServiesLe12Novembre =
+        {
+            "appro.pression.silent", "appro.pression.mild", "appro.pression.warm", "appro.pression.critical",
+            "appro.dette.fresh", "appro.dette.accruing", "appro.dette.stressed", "appro.dette.fractured",
+            "appro.fournisseur.fresh", "appro.fournisseur.used", "appro.fournisseur.strained",
+        };
 
         private static List<string> HorsDette(IEnumerable<string> observees)
         {

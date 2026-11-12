@@ -600,9 +600,9 @@ namespace MafiaCleanCity.Operational.Tests
         }
 
         /// <summary>G5 — la liste DÉFILE (E2 du juge : N maillons, sans pagination) : 30 maillons ⇒ le contenu dépasse la fenêtre.
-        /// CONTRÔLE : 1 maillon ⇒ tout tient, ni fondu ni course.</summary>
+        /// CONTRÔLE : 1 maillon ⇒ un contenu au moins cinq fois plus court (la liste suit son contenu, elle n'a pas une hauteur fixe).</summary>
         [UnityTest]
-        public IEnumerator EcranApproG5_TrenteMaillons_DepassentLaFenetre_UnTient()
+        public IEnumerator EcranApproG5_TrenteMaillons_DepassentLaFenetre_UnMaillonEstBienPlusCourt()
         {
             ServirLeNomDesBatiments();
             var ecran = MonterEcran();
@@ -621,10 +621,10 @@ namespace MafiaCleanCity.Operational.Tests
             liste = Trouver(RacineEcran().transform, "FenetreChaine").GetComponent<MafiaCleanCity.Shell.ListeDefilante>();
             liste.Rafraichir();
             // MESURÉ au créneau du 12/11 : en batch l'écran fait 640 × 480 et la fenêtre 75 px de haut — UN maillon (titron 46,8 + maillon 136,2) la dépasse déjà.
-            // « Un maillon tient » dépendait donc de la résolution du banc, pas de l'écran. Le contrôle compare ce que la liste DIT à ce qui se MESURE,
-            // et exige que le contenu d'un maillon soit bien plus court que celui de trente.
-            float vue1 = ((RectTransform)liste.transform).rect.height, contenu1 = liste.Defilement.content.rect.height;
-            Assert.AreEqual(MafiaCleanCity.Shell.ListeDefilante.Depasse(contenu1, vue1), liste.ContenuDepasse, "CONTRÔLE : la liste dit « dépasse » si et seulement si le contenu (" + contenu1 + ") excède la fenêtre (" + vue1 + ")");
+            // « Un maillon tient » dépendait donc de la résolution du banc, pas de l'écran : ce test ne l'affirme plus. La branche « ne dépasse pas » d'une
+            // `ListeDefilante` réelle est gardée ailleurs (`ListeDefilantePlayModeTests`, liste courte). Revue ⊥ du 12/11 (MAJOR) : comparer `ContenuDepasse` à
+            // `Depasse(contenu, vue)` sur les mêmes rects était une tautologie — retirée. Reste le contrôle qui peut rougir : un maillon est bien plus court que trente.
+            float contenu1 = liste.Defilement.content.rect.height;
             Assert.Less(contenu1, contenu30 / 5f, "CONTRÔLE : un maillon (" + contenu1 + ") est bien plus court que trente (" + contenu30 + ")");
         }
 
