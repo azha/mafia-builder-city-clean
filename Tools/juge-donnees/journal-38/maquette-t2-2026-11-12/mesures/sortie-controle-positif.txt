@@ -1,0 +1,21 @@
+=== CONTRÔLE POSITIF — table de couverture ㊳ Le journal (maquette t2, 2026-11-12) ===
+|clés B|                  = 56
+|éléments M|              = 24   (dont appariés : 12)
+|éléments M non appariés| = 12
+SOMME = 56 + 12           = 68 lignes
+B appariés à un M : 16  |  B sans M (« passé à côté ? » ou plomberie) : 40
+M non appariés :
+   M01  barre : ARGENT « 24 850 € »                       HORS DOMAINE (barre commune)
+   M02  barre : CHALEUR « Tiède » + jauge                 HORS DOMAINE (barre commune)
+   M03  barre : « JOUR 12 » / « Plein jour »              HORS DOMAINE (barre commune)
+   M04  enseigne : « Le journal »                         COPIE STATIQUE — journal.bloc.le_journal
+   M05  enseigne : « ce qui se dit ce matin »             COPIE STATIQUE — journal.bloc.ce_qui_se_dit_ce_matin
+   M06  compteur « à la une » (01)                        ASSUMÉ (décision) — aucun total servi par news/feed
+   M07  libellé « à la une »                              COPIE STATIQUE — journal.bloc.a_la_une
+   M09  libellé « dans la rue »                           COPIE STATIQUE — journal.bloc.dans_la_rue
+   M10  compteur « en cours » (00)                        ÉCART NEUF — aucun total servi par random-world/active, aucune décision
+   M11  libellé « en cours »                              COPIE STATIQUE — journal.bloc.en_cours
+   M21  brève : marque « visée » (cerne + liseré)         ASSUMÉ (décision) — aucune clé ne désigne la brève
+   M23  CTA « Y PRÊTER ATTENTION »                        COPIE STATIQUE — journal.bloc.y_preter_attention ; geste = route 4
+
+VERT : 68 = 68  — table-couverture.json écrite

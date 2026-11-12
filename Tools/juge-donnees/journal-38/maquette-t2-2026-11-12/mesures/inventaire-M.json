@@ -1,0 +1,324 @@
+{
+ "125": {
+  "breves": [
+   {
+    "descripteur": "Un tramway en panne",
+    "pastille": "#f2c96b",
+    "qd_couleur": "#f2c96b",
+    "qd_mot": "ce matin",
+    "quartier": "La Lisière",
+    "visee": true
+   },
+   {
+    "descripteur": "Une livraison en retard",
+    "pastille": "#f2c96b",
+    "qd_couleur": "#f2c96b",
+    "qd_mot": "ce matin",
+    "quartier": "Les Entrepôts",
+    "visee": false
+   },
+   {
+    "descripteur": "Une rumeur de comptoir",
+    "pastille": "#b9ad92",
+    "qd_couleur": "#b9ad92",
+    "qd_mot": "hier",
+    "quartier": "Marne-Basse",
+    "visee": false
+   }
+  ],
+  "compteurs": [
+   [
+    "01",
+    "à la une"
+   ],
+   [
+    "03",
+    "dans la rue"
+   ],
+   [
+    "00",
+    "en cours"
+   ]
+  ],
+  "cta": "Y PRÊTER ATTENTION",
+  "cta_classes": "",
+  "enseigne_b": "Le journal",
+  "enseigne_i": "ce qui se dit ce matin",
+  "etiquette": "Le journal — ce qui se dit ce matin",
+  "nb_breves_rendues": 3,
+  "nb_evt_rendus": 0,
+  "nb_une_rendues": 1,
+  "note": "on peut assister à ce qui se passe — c’est le seul geste que la rue accepte",
+  "une_angle": "angle accident",
+  "une_cle": "Dépôt-Est",
+  "une_fraicheur": [
+   "#f2c96b",
+   "ce matin"
+  ],
+  "une_outlet": "LE CLAIRON DE BRENNAR",
+  "une_titre": "Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude"
+ },
+ "155": {
+  "breves": [
+   {
+    "descripteur": "Une livraison en retard",
+    "pastille": "#f2c96b",
+    "qd_couleur": "#f2c96b",
+    "qd_mot": "ce matin",
+    "quartier": "Les Entrepôts",
+    "visee": true
+   },
+   {
+    "descripteur": "Une rumeur de comptoir",
+    "pastille": "#b9ad92",
+    "qd_couleur": "#b9ad92",
+    "qd_mot": "hier",
+    "quartier": "Marne-Basse",
+    "visee": false
+   }
+  ],
+  "compteurs": [
+   [
+    "01",
+    "à la une"
+   ],
+   [
+    "02",
+    "dans la rue"
+   ],
+   [
+    "00",
+    "en cours"
+   ]
+  ],
+  "cta": "Y PRÊTER ATTENTION",
+  "cta_classes": "",
+  "enseigne_b": "Le journal",
+  "enseigne_i": "ce qui se dit ce matin",
+  "etiquette": "Le journal — après « Y PRÊTER ATTENTION » · bande full",
+  "nb_breves_rendues": 2,
+  "nb_evt_rendus": 0,
+  "nb_une_rendues": 1,
+  "note": "On vous a vu. La rue s’en souviendra.",
+  "une_angle": "angle accident",
+  "une_cle": "Dépôt-Est",
+  "une_fraicheur": [
+   "#f2c96b",
+   "ce matin"
+  ],
+  "une_outlet": "LE CLAIRON DE BRENNAR",
+  "une_titre": "Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude"
+ },
+ "156": {
+  "breves": [
+   {
+    "descripteur": "Une livraison en retard",
+    "pastille": "#f2c96b",
+    "qd_couleur": "#f2c96b",
+    "qd_mot": "ce matin",
+    "quartier": "Les Entrepôts",
+    "visee": true
+   },
+   {
+    "descripteur": "Une rumeur de comptoir",
+    "pastille": "#b9ad92",
+    "qd_couleur": "#b9ad92",
+    "qd_mot": "hier",
+    "quartier": "Marne-Basse",
+    "visee": false
+   }
+  ],
+  "compteurs": [
+   [
+    "01",
+    "à la une"
+   ],
+   [
+    "02",
+    "dans la rue"
+   ],
+   [
+    "00",
+    "en cours"
+   ]
+  ],
+  "cta": "Y PRÊTER ATTENTION",
+  "cta_classes": "",
+  "enseigne_b": "Le journal",
+  "enseigne_i": "ce qui se dit ce matin",
+  "etiquette": "Le journal — après « Y PRÊTER ATTENTION » · bande reduced",
+  "nb_breves_rendues": 2,
+  "nb_evt_rendus": 0,
+  "nb_une_rendues": 1,
+  "note": "On vous a vu, mais vous étiez déjà passé aujourd’hui.",
+  "une_angle": "angle accident",
+  "une_cle": "Dépôt-Est",
+  "une_fraicheur": [
+   "#f2c96b",
+   "ce matin"
+  ],
+  "une_outlet": "LE CLAIRON DE BRENNAR",
+  "une_titre": "Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude"
+ },
+ "157": {
+  "breves": [
+   {
+    "descripteur": "Une livraison en retard",
+    "pastille": "#f2c96b",
+    "qd_couleur": "#f2c96b",
+    "qd_mot": "ce matin",
+    "quartier": "Les Entrepôts",
+    "visee": true
+   },
+   {
+    "descripteur": "Une rumeur de comptoir",
+    "pastille": "#b9ad92",
+    "qd_couleur": "#b9ad92",
+    "qd_mot": "hier",
+    "quartier": "Marne-Basse",
+    "visee": false
+   }
+  ],
+  "compteurs": [
+   [
+    "01",
+    "à la une"
+   ],
+   [
+    "02",
+    "dans la rue"
+   ],
+   [
+    "00",
+    "en cours"
+   ]
+  ],
+  "cta": "Y PRÊTER ATTENTION",
+  "cta_classes": "",
+  "enseigne_b": "Le journal",
+  "enseigne_i": "ce qui se dit ce matin",
+  "etiquette": "Le journal — après « Y PRÊTER ATTENTION » · bande minimal",
+  "nb_breves_rendues": 2,
+  "nb_evt_rendus": 0,
+  "nb_une_rendues": 1,
+  "note": "Encore vous ? La rue n’y prête plus guère attention aujourd’hui.",
+  "une_angle": "angle accident",
+  "une_cle": "Dépôt-Est",
+  "une_fraicheur": [
+   "#f2c96b",
+   "ce matin"
+  ],
+  "une_outlet": "LE CLAIRON DE BRENNAR",
+  "une_titre": "Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude"
+ },
+ "158": {
+  "breves": [
+   {
+    "descripteur": "Une livraison en retard",
+    "pastille": "#f2c96b",
+    "qd_couleur": "#f2c96b",
+    "qd_mot": "ce matin",
+    "quartier": "Les Entrepôts",
+    "visee": true
+   },
+   {
+    "descripteur": "Une rumeur de comptoir",
+    "pastille": "#b9ad92",
+    "qd_couleur": "#b9ad92",
+    "qd_mot": "hier",
+    "quartier": "Marne-Basse",
+    "visee": false
+   }
+  ],
+  "compteurs": [
+   [
+    "01",
+    "à la une"
+   ],
+   [
+    "02",
+    "dans la rue"
+   ],
+   [
+    "00",
+    "en cours"
+   ]
+  ],
+  "cta": "Y PRÊTER ATTENTION",
+  "cta_classes": "",
+  "enseigne_b": "Le journal",
+  "enseigne_i": "ce qui se dit ce matin",
+  "etiquette": "Le journal — après « Y PRÊTER ATTENTION » · bande none",
+  "nb_breves_rendues": 2,
+  "nb_evt_rendus": 0,
+  "nb_une_rendues": 1,
+  "note": "Vous étiez là. Personne ici ne se connaît encore assez pour que ça compte.",
+  "une_angle": "angle accident",
+  "une_cle": "Dépôt-Est",
+  "une_fraicheur": [
+   "#f2c96b",
+   "ce matin"
+  ],
+  "une_outlet": "LE CLAIRON DE BRENNAR",
+  "une_titre": "Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude"
+ },
+ "170": {
+  "breves": [
+   {
+    "descripteur": "Un tramway en panne",
+    "pastille": "#f2c96b",
+    "qd_couleur": "#f2c96b",
+    "qd_mot": "ce matin",
+    "quartier": "La Lisière",
+    "visee": true
+   },
+   {
+    "descripteur": "Une livraison en retard",
+    "pastille": "#b9ad92",
+    "qd_couleur": "#b9ad92",
+    "qd_mot": "hier",
+    "quartier": "Les Entrepôts",
+    "visee": false
+   },
+   {
+    "descripteur": "Une rumeur de comptoir",
+    "pastille": "#b9ad92",
+    "qd_couleur": "#b9ad92",
+    "qd_mot": "la semaine passée",
+    "quartier": "Marne-Basse",
+    "visee": false
+   }
+  ],
+  "compteurs": [
+   [
+    "01",
+    "à la une"
+   ],
+   [
+    "03",
+    "dans la rue"
+   ],
+   [
+    "00",
+    "en cours"
+   ]
+  ],
+  "cta": "Y PRÊTER ATTENTION",
+  "cta_classes": "",
+  "enseigne_b": "Le journal",
+  "enseigne_i": "ce qui se dit ce matin",
+  "etiquette": "Le journal — les trois fraîcheurs",
+  "nb_breves_rendues": 3,
+  "nb_evt_rendus": 0,
+  "nb_une_rendues": 1,
+  "note": "on peut assister à ce qui se passe — c’est le seul geste que la rue accepte",
+  "une_angle": "angle accident",
+  "une_cle": "Dépôt-Est",
+  "une_fraicheur": [
+   "#f2c96b",
+   "ce matin"
+  ],
+  "une_outlet": "LE CLAIRON DE BRENNAR",
+  "une_titre": "Un enchaînement de circonstances à Dépôt-Est, actuellement à l’étude"
+ }
+}

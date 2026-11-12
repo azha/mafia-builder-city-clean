@@ -1,0 +1,34 @@
+element                  verdict   EN?     cle / detail
+----------------------------------------------------------------------------------------------------------------------
+M04 enseigne b           EGAL      oui     journal.bloc.le_journal
+M05 enseigne i           EGAL/CSS  oui     journal.bloc.ce_qui_se_dit_ce_matin
+M05b enseigne i (alt)    EGAL/CSS  oui     journal.moment.titre.dawn
+M07 libelle compteur     EGAL/CSS  oui     journal.bloc.a_la_une
+M09 libelle compteur     EGAL/CSS  oui     journal.bloc.dans_la_rue
+M11 libelle compteur     EGAL/CSS  oui     journal.bloc.en_cours
+M12 une: journal         EGAL/CSS  oui     press.outlet.brennar_daily_star.name
+M13 une: fraicheur       EGAL      oui     journal.fraicheur.fresh
+M16 une: angle           EGAL      oui     news_beat.frame_tag.accident
+M18 breve a              DIFFERENT oui     ambient.micro_event.stalled_tram
+                           dessine = 'Un tramway en panne'
+                           servi   = 'un tramway en panne'
+M18 breve b              DIFFERENT oui     ambient.micro_event.delayed_shipment
+                           dessine = 'Une livraison en retard'
+                           servi   = 'une livraison en retard'
+M18 breve c              DIFFERENT oui     ambient.micro_event.bar_rumor
+                           dessine = 'Une rumeur de comptoir'
+                           servi   = 'une rumeur de comptoir'
+M20 qd fresh             EGAL      oui     journal.fraicheur.fresh
+M20 qd settling          EGAL      oui     journal.fraicheur.settling
+M20 qd fading            EGAL      oui     journal.fraicheur.fading
+M23 CTA                  EGAL/CSS  oui     journal.bloc.y_preter_attention
+M24 note avant geste     EGAL      oui     journal.bloc.on_peut_assister_a_ce_qui_se_passe_c_est_le_seul_geste_que_la_rue_accepte
+M24 note full            EGAL      oui     ambient.apres_assister.full
+M24 note reduced         EGAL      oui     ambient.apres_assister.reduced
+M24 note minimal         EGAL      oui     ambient.apres_assister.minimal
+M24 note none            EGAL      oui     ambient.apres_assister.none
+M14 une: titre           EGAL      oui     news_beat.cooper_affair.accident.brennar_daily_star.headline
+----------------------------------------------------------------------------------------------------------------------
+EGAL=12  EGAL-apres-CSS-uppercase=7  DIFFERENT=3  CLE-ABSENTE=0  (total 22)
+controle negatif : 'journal.fraicheur.fresh' != 'demain' -> 'ce matin'  OK
+controle positif : les 2 cles temoins sont servies EN et FR

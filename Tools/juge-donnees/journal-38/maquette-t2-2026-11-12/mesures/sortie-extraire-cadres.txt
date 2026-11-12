@@ -1,0 +1,9 @@
+nb etiquettes dans la page = 171
+cadre 125  Le journal — ce qui se dit ce matin                             octets=  2445  libelle relu OK=True
+cadre 155  Le journal — après « Y PRÊTER ATTENTION » · bande full          octets=  2231  libelle relu OK=True
+cadre 156  Le journal — après « Y PRÊTER ATTENTION » · bande reduced       octets=  2250  libelle relu OK=True
+cadre 157  Le journal — après « Y PRÊTER ATTENTION » · bande minimal       octets=  2261  libelle relu OK=True
+cadre 158  Le journal — après « Y PRÊTER ATTENTION » · bande none          octets=  2268  libelle relu OK=True
+cadre 170  Le journal — les trois fraîcheurs                               octets=  2452  libelle relu OK=True
+controle negatif : libelle absent trouve 0 fois (attendu 0)
+indices extraits : [125, 155, 156, 157, 158, 170]

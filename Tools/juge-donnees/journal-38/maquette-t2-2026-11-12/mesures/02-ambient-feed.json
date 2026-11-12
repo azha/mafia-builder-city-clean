@@ -1,0 +1,55 @@
+{
+ "Content-Length_header": "949",
+ "X-Server-Build": "8d0184a4",
+ "auth": "Bearer ***",
+ "body": {
+  "payload": {
+   "data": {
+    "events": [
+     {
+      "channel": "trade_channel",
+      "descriptor_i18n_key": "ambient.micro_event.stalled_tram",
+      "district": "district-16",
+      "event_id": "1f6d8bd2-9421-4012-8afb-2808c402e3a5",
+      "kind": "stalled_tram",
+      "recency_band": "fresh"
+     },
+     {
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.building_inspection",
+      "district": "district-16",
+      "event_id": "6664185f-41be-40f8-ad24-4b3b0bd37ee6",
+      "kind": "building_inspection",
+      "recency_band": "fresh"
+     },
+     {
+      "channel": "constant_hum",
+      "descriptor_i18n_key": "ambient.micro_event.building_inspection",
+      "district": "district-16",
+      "event_id": "5cdb6a14-de6a-4308-b8b8-8998ee647d08",
+      "kind": "building_inspection",
+      "recency_band": "fresh"
+     }
+    ],
+    "limit": 20,
+    "offset": 0,
+    "total": 3
+   }
+  },
+  "response_meta": {
+   "api_version": 1,
+   "correlation_id_echo": null,
+   "request_id_echo": "e821c0d7-31c0-4205-b943-afc3153cd9f4",
+   "server_build_ref": {
+    "built_at": "2026-11-11T18:17:52Z",
+    "git_sha": "8d0184a4"
+   },
+   "server_processed_at": "2026-11-12T00:27:32.514Z"
+  }
+ },
+ "bytes_read": 949,
+ "label": "/v1/ambient/feed",
+ "length_match": true,
+ "request": "GET http://localhost/v1/ambient/feed",
+ "status": 200
+}

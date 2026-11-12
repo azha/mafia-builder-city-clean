@@ -1,0 +1,32 @@
+EN_MESSAGES lignes 53..3109 -> 2138 cles
+FR_MESSAGES lignes 3121..6139 -> 2138 cles
+controle positif  ambient.apres_assister.full        EN='You were seen. The street will remember | FR='On vous a vu. La rue s’en souviendra.'
+controle negatif  'ambient.apres_assister.inexistante' absent : OK
+
+===== prefixe 'ambient.' : 11 cles =====
+  ambient.apres_assister.full                          EN="'You were seen. The street will remember.'"   FR="'On vous a vu. La rue s’en souviendra.'"
+  ambient.apres_assister.minimal                       EN="'You again? The street barely notices today.' FR="'Encore vous\\u202f? La rue n’y prête plus guère attention aujourd’hu
+  ambient.apres_assister.none                          EN="'You were there. Nobody here knows each other FR="'Vous étiez là. Personne ici ne se connaît encore assez pour que ça c
+  ambient.apres_assister.reduced                       EN="'You were seen, but you’d already been round  FR="'On vous a vu, mais vous étiez déjà passé aujourd’hui.'"
+  ambient.micro_event.bar_rumor                        EN=" 'a rumor in a bar'"                          FR=" 'une rumeur de comptoir'"
+  ambient.micro_event.building_inspection              EN=" 'a building inspection'"                     FR=" 'une inspection d’immeuble'"
+  ambient.micro_event.corner_fight                     EN=" 'a corner fight'"                            FR=" 'une bagarre au coin de la rue'"
+  ambient.micro_event.delayed_shipment                 EN=" 'a delayed shipment'"                        FR=" 'une livraison en retard'"
+  ambient.micro_event.noisy_block                      EN=" 'a noisy block'"                             FR=" 'un pâté de maisons bruyant'"
+  ambient.micro_event.stalled_tram                     EN=" 'a stalled tram'"                            FR=" 'un tramway en panne'"
+  ambient.off_hours_drift.card                         EN=" 'Your operations during off-hours show eleva FR=" 'Vos opérations en dehors des heures ouvrées montrent une chaleur él
+
+===== prefixe 'news_beat.frame_tag.' : 8 cles =====
+  news_beat.frame_tag.accident                         EN=" 'Accident angle'"                            FR=" 'angle accident'"
+  news_beat.frame_tag.corruption                       EN=" 'Corruption angle'"                          FR=" 'angle corruption'"
+  news_beat.frame_tag.episodic                         EN=" 'Episodic angle'"                            FR=" 'angle cas isolé'"
+  news_beat.frame_tag.human_interest                   EN=" 'Human-interest angle'"                      FR=" 'angle humain'"
+  news_beat.frame_tag.neighborhood_failure             EN=" 'Neighborhood-failure angle'"                FR=" 'angle abandon du quartier'"
+  news_beat.frame_tag.organized_crime                  EN=" 'Organized-crime angle'"                     FR=" 'angle crime organisé'"
+  news_beat.frame_tag.scandal                          EN=" 'Scandal angle'"                             FR=" 'angle scandale'"
+  news_beat.frame_tag.thematic                         EN=" 'Thematic angle'"                            FR=" 'angle de fond'"
+
+===== prefixe 'press.outlet.' : 3 cles =====
+  press.outlet.brennar_daily_star.name                 EN=" 'Brennar Daily Star'"                        FR=" 'Le Clairon de Brennar'"
+  press.outlet.free_weekly.name                        EN=" 'The Free Weekly'"                           FR=" 'La Feuille libre'"
+  press.outlet.tilbey_weekly.name                      EN=" 'The Tilbey Weekly'"                         FR=" 'La Semaine de Tilbey'"

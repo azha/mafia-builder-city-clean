@@ -1,0 +1,3 @@
+=== CONTRÔLE NÉGATIF : on retire une ligne M non appariée, la somme annoncée (68) doit casser ===
+lignes recomptées = 67  |  annoncé dans le rapport = 68
+ROUGE comme attendu : le recompte (67) contredit le chiffre annoncé (68).

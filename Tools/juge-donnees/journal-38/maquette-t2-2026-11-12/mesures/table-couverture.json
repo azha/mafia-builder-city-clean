@@ -1,0 +1,604 @@
+{
+ "cles_B": [
+  {
+   "id": "B01",
+   "route": "ambient/feed",
+   "cle": "events[].event_id",
+   "mesure": "MESURÉE 02-ambient-feed.json",
+   "apparie_M": null,
+   "note": "id opaque — plomberie"
+  },
+  {
+   "id": "B02",
+   "route": "ambient/feed",
+   "cle": "events[].district",
+   "mesure": "MESURÉE 02-ambient-feed.json",
+   "apparie_M": "M19",
+   "note": "servi en SLUG « district-16 » ; M19 dessine le NOM"
+  },
+  {
+   "id": "B03",
+   "route": "ambient/feed",
+   "cle": "events[].kind",
+   "mesure": "MESURÉE 02-ambient-feed.json",
+   "apparie_M": "M18",
+   "note": "doublon de B05 (descriptor = ambient.micro_event.<kind>)"
+  },
+  {
+   "id": "B04",
+   "route": "ambient/feed",
+   "cle": "events[].channel",
+   "mesure": "MESURÉE 02-ambient-feed.json",
+   "apparie_M": null,
+   "note": "3 valeurs ; AUCUN libellé i18n servi"
+  },
+  {
+   "id": "B05",
+   "route": "ambient/feed",
+   "cle": "events[].descriptor_i18n_key",
+   "mesure": "MESURÉE 02-ambient-feed.json",
+   "apparie_M": "M18",
+   "note": ""
+  },
+  {
+   "id": "B06",
+   "route": "ambient/feed",
+   "cle": "events[].recency_band",
+   "mesure": "MESURÉE 02-ambient-feed.json",
+   "apparie_M": "M20",
+   "note": "aussi M17 (pastille) et M22"
+  },
+  {
+   "id": "B07",
+   "route": "ambient/feed",
+   "cle": "total",
+   "mesure": "MESURÉE 02-ambient-feed.json",
+   "apparie_M": "M08",
+   "note": "le SEUL total servi des trois listes"
+  },
+  {
+   "id": "B08",
+   "route": "ambient/feed",
+   "cle": "limit",
+   "mesure": "MESURÉE 02-ambient-feed.json",
+   "apparie_M": null,
+   "note": "pagination — plomberie"
+  },
+  {
+   "id": "B09",
+   "route": "ambient/feed",
+   "cle": "offset",
+   "mesure": "MESURÉE 02-ambient-feed.json",
+   "apparie_M": null,
+   "note": "pagination — plomberie"
+  },
+  {
+   "id": "B10",
+   "route": "news/feed",
+   "cle": "beats[].beat_id",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": null,
+   "note": "id opaque — plomberie (clé du GET détail)"
+  },
+  {
+   "id": "B11",
+   "route": "news/feed",
+   "cle": "beats[].headline_i18n_key",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": "M14",
+   "note": ""
+  },
+  {
+   "id": "B12",
+   "route": "news/feed",
+   "cle": "beats[].headline_params",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": "M14",
+   "note": "objet libre — doublon de B13..B16"
+  },
+  {
+   "id": "B13",
+   "route": "news/feed",
+   "cle": "beats[].headline_params_fields.district",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": "M14",
+   "note": "valeur mesurée « district-7 » : SLUG dans la fente ICU {district}"
+  },
+  {
+   "id": "B14",
+   "route": "news/feed",
+   "cle": "beats[].headline_params_fields.subject",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": null,
+   "note": "clé i18n du sujet ; absente sur cooper_affair"
+  },
+  {
+   "id": "B15",
+   "route": "news/feed",
+   "cle": "beats[].headline_params_fields.outlet",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": "M12",
+   "note": "doublon de B18"
+  },
+  {
+   "id": "B16",
+   "route": "news/feed",
+   "cle": "beats[].headline_params_fields.frame",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": "M16",
+   "note": "doublon (brut) de B19"
+  },
+  {
+   "id": "B17",
+   "route": "news/feed",
+   "cle": "beats[].category",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": null,
+   "note": "5 valeurs ; AUCUN libellé i18n servi"
+  },
+  {
+   "id": "B18",
+   "route": "news/feed",
+   "cle": "beats[].outlet_i18n_key",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": "M12",
+   "note": ""
+  },
+  {
+   "id": "B19",
+   "route": "news/feed",
+   "cle": "beats[].frame_tag_i18n_key",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": "M16",
+   "note": "null sur 15 des 20 beats mesurés"
+  },
+  {
+   "id": "B20",
+   "route": "news/feed",
+   "cle": "beats[].district",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": "M15",
+   "note": "servi en SLUG ; M15 dessine le NOM"
+  },
+  {
+   "id": "B21",
+   "route": "news/feed",
+   "cle": "beats[].recency_band",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": "M13",
+   "note": ""
+  },
+  {
+   "id": "B22",
+   "route": "news/feed",
+   "cle": "nextCursor",
+   "mesure": "MESURÉE 03-news-feed.json",
+   "apparie_M": null,
+   "note": "pagination — aucun geste de page dessiné"
+  },
+  {
+   "id": "B23",
+   "route": "random-world/active",
+   "cle": "events[].event_id",
+   "mesure": "DÉDUIT (corps mesuré VIDE sur compte frais — random-world.projection.service.ts:51-58)",
+   "apparie_M": null,
+   "note": "id opaque"
+  },
+  {
+   "id": "B24",
+   "route": "random-world/active",
+   "cle": "events[].template_i18n_key",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "14 clés random_world.template.* servies"
+  },
+  {
+   "id": "B25",
+   "route": "random-world/active",
+   "cle": "events[].district",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "slug"
+  },
+  {
+   "id": "B26",
+   "route": "random-world/active",
+   "cle": "events[].severity_band",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "journal.gravite.{faint,noticeable,heavy} DÉJÀ servis"
+  },
+  {
+   "id": "B27",
+   "route": "random-world/active",
+   "cle": "events[].phase_band",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "journal.bloc.{ca_commence,ca_se_deploie,ca_retombe,ca_traine,ca_ne_partira_pas} DÉJÀ servis"
+  },
+  {
+   "id": "B28",
+   "route": "random-world/active",
+   "cle": "events[].recency_band",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B29",
+   "route": "POST ambient/attend/:id",
+   "cle": "event_id",
+   "mesure": "DÉDUIT (POST interdit — ambient-attend-view.ts:13-19)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B30",
+   "route": "POST ambient/attend/:id",
+   "cle": "district",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "slug"
+  },
+  {
+   "id": "B31",
+   "route": "POST ambient/attend/:id",
+   "cle": "status",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "toujours 'attended'"
+  },
+  {
+   "id": "B32",
+   "route": "POST ambient/attend/:id",
+   "cle": "residue_band",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": "M24",
+   "note": "4 bandes = les 4 cadres 155-158"
+  },
+  {
+   "id": "B33",
+   "route": "POST ambient/attend/:id",
+   "cle": "residue_i18n_key",
+   "mesure": "DÉDUIT (ambient-attend-view.ts:24-29)",
+   "apparie_M": "M24",
+   "note": ""
+  },
+  {
+   "id": "B34",
+   "route": "news/beats/:id",
+   "cle": "beat_id",
+   "mesure": "DÉDUIT (route non exercée — news.projection.service.ts:137-170)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B35",
+   "route": "news/beats/:id",
+   "cle": "headline_i18n_key",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B36",
+   "route": "news/beats/:id",
+   "cle": "headline_params",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B37",
+   "route": "news/beats/:id",
+   "cle": "headline_params_fields.district",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B38",
+   "route": "news/beats/:id",
+   "cle": "headline_params_fields.subject",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B39",
+   "route": "news/beats/:id",
+   "cle": "headline_params_fields.outlet",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B40",
+   "route": "news/beats/:id",
+   "cle": "headline_params_fields.frame",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B41",
+   "route": "news/beats/:id",
+   "cle": "body_i18n_key",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "LE TEXTE de la une — rien ne l'ouvre dans les 6 cadres"
+  },
+  {
+   "id": "B42",
+   "route": "news/beats/:id",
+   "cle": "body_params",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B43",
+   "route": "news/beats/:id",
+   "cle": "category",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B44",
+   "route": "news/beats/:id",
+   "cle": "frame_tag_i18n_key",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B45",
+   "route": "news/beats/:id",
+   "cle": "district",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "slug"
+  },
+  {
+   "id": "B46",
+   "route": "news/beats/:id",
+   "cle": "outlet_i18n_key",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B47",
+   "route": "news/beats/:id",
+   "cle": "byline_i18n_key",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "le NOM du journaliste"
+  },
+  {
+   "id": "B48",
+   "route": "news/beats/:id",
+   "cle": "sourceless_badge",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "« sans source citée »"
+  },
+  {
+   "id": "B49",
+   "route": "news/beats/:id",
+   "cle": "wire_badge",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "« dépêche »"
+  },
+  {
+   "id": "B50",
+   "route": "news/beats/:id",
+   "cle": "subject_i18n_key",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B51",
+   "route": "random-world/known-couplings",
+   "cle": "couplings[].pair_i18n_key",
+   "mesure": "DÉDUIT (corps mesuré VIDE — 05-random-world-known-couplings.json)",
+   "apparie_M": null,
+   "note": "2 clés random_world.coupling.pair.* servies"
+  },
+  {
+   "id": "B52",
+   "route": "random-world/known-couplings",
+   "cle": "couplings[].source_system_label",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "⚠ libellé EN EN DUR côté back (R2.2/F1)"
+  },
+  {
+   "id": "B53",
+   "route": "random-world/known-couplings",
+   "cle": "couplings[].target_system_label",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "idem"
+  },
+  {
+   "id": "B54",
+   "route": "random-world/known-couplings",
+   "cle": "couplings[].discovered_recency_band",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B55",
+   "route": "POST random-world/hollow/:id/attend-funeral",
+   "cle": "event_id",
+   "mesure": "DÉDUIT (random-world.controller.ts:90-94)",
+   "apparie_M": null,
+   "note": ""
+  },
+  {
+   "id": "B56",
+   "route": "POST random-world/hollow/:id/attend-funeral",
+   "cle": "status",
+   "mesure": "DÉDUIT (idem)",
+   "apparie_M": null,
+   "note": "'attended'"
+  }
+ ],
+ "elements_M": [
+  {
+   "id": "M01",
+   "element": "barre : ARGENT « 24 850 € »",
+   "apparie_B": null,
+   "note": "HORS DOMAINE (barre commune)"
+  },
+  {
+   "id": "M02",
+   "element": "barre : CHALEUR « Tiède » + jauge",
+   "apparie_B": null,
+   "note": "HORS DOMAINE (barre commune)"
+  },
+  {
+   "id": "M03",
+   "element": "barre : « JOUR 12 » / « Plein jour »",
+   "apparie_B": null,
+   "note": "HORS DOMAINE (barre commune)"
+  },
+  {
+   "id": "M04",
+   "element": "enseigne : « Le journal »",
+   "apparie_B": null,
+   "note": "COPIE STATIQUE — journal.bloc.le_journal"
+  },
+  {
+   "id": "M05",
+   "element": "enseigne : « ce qui se dit ce matin »",
+   "apparie_B": null,
+   "note": "COPIE STATIQUE — journal.bloc.ce_qui_se_dit_ce_matin"
+  },
+  {
+   "id": "M06",
+   "element": "compteur « à la une » (01)",
+   "apparie_B": null,
+   "note": "ASSUMÉ (décision) — aucun total servi par news/feed"
+  },
+  {
+   "id": "M07",
+   "element": "libellé « à la une »",
+   "apparie_B": null,
+   "note": "COPIE STATIQUE — journal.bloc.a_la_une"
+  },
+  {
+   "id": "M08",
+   "element": "compteur « dans la rue » (03 / 02)",
+   "apparie_B": "B07",
+   "note": ""
+  },
+  {
+   "id": "M09",
+   "element": "libellé « dans la rue »",
+   "apparie_B": null,
+   "note": "COPIE STATIQUE — journal.bloc.dans_la_rue"
+  },
+  {
+   "id": "M10",
+   "element": "compteur « en cours » (00)",
+   "apparie_B": null,
+   "note": "ÉCART NEUF — aucun total servi par random-world/active, aucune décision"
+  },
+  {
+   "id": "M11",
+   "element": "libellé « en cours »",
+   "apparie_B": null,
+   "note": "COPIE STATIQUE — journal.bloc.en_cours"
+  },
+  {
+   "id": "M12",
+   "element": "une : nom du journal",
+   "apparie_B": "B18",
+   "note": ""
+  },
+  {
+   "id": "M13",
+   "element": "une : mot de fraîcheur + sa teinte",
+   "apparie_B": "B21",
+   "note": ""
+  },
+  {
+   "id": "M14",
+   "element": "une : titre (gabarit ICU rempli)",
+   "apparie_B": "B11",
+   "note": ""
+  },
+  {
+   "id": "M15",
+   "element": "une : NOM de quartier (.cle)",
+   "apparie_B": "B20",
+   "note": "servi en slug, dessiné en nom"
+  },
+  {
+   "id": "M16",
+   "element": "une : étiquette d'angle",
+   "apparie_B": "B19",
+   "note": ""
+  },
+  {
+   "id": "M17",
+   "element": "brève : pastille (teinte)",
+   "apparie_B": "B06",
+   "note": "2 teintes pour 3 bandes"
+  },
+  {
+   "id": "M18",
+   "element": "brève : descripteur",
+   "apparie_B": "B05",
+   "note": "capitale initiale ajoutée"
+  },
+  {
+   "id": "M19",
+   "element": "brève : NOM de quartier",
+   "apparie_B": "B02",
+   "note": "servi en slug, dessiné en nom"
+  },
+  {
+   "id": "M20",
+   "element": "brève : mot de fraîcheur + sa teinte",
+   "apparie_B": "B06",
+   "note": ""
+  },
+  {
+   "id": "M21",
+   "element": "brève : marque « visée » (cerne + liseré)",
+   "apparie_B": null,
+   "note": "ASSUMÉ (décision) — aucune clé ne désigne la brève"
+  },
+  {
+   "id": "M22",
+   "element": "cardinal de la liste des brèves (3 / 2)",
+   "apparie_B": "B07",
+   "note": ""
+  },
+  {
+   "id": "M23",
+   "element": "CTA « Y PRÊTER ATTENTION »",
+   "apparie_B": null,
+   "note": "COPIE STATIQUE — journal.bloc.y_preter_attention ; geste = route 4"
+  },
+  {
+   "id": "M24",
+   "element": "note de pied (1 avant geste + 4 bandes)",
+   "apparie_B": "B33",
+   "note": ""
+  }
+ ],
+ "comptes": {
+  "B": 56,
+  "M": 24,
+  "M_non_apparies": 12,
+  "lignes": 68
+ }
+}
