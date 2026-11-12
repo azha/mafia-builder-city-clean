@@ -150,11 +150,12 @@ namespace MafiaCleanCity.Operational.Autonomy
         /// <summary>Crochet de test (patron `RendrePourTest`) : pose des rapports FABRIQUÉS puis appelle le MÊME `Render()` que `LoadReports()`, sans
         /// réseau — ce qui fait naître les boutons « Choose A » / « Choose B » (`Btn_A` / `Btn_B`, :370). Ne prouve jamais que le back sert ces
         /// corps. Synchrone : `Start()` (qui signe) ne tourne pas tant qu'aucune frame ne passe.</summary>
-        public void RendrePourTest(AutonomyReportDto[] rapports)
+        public void RendrePourTest(AutonomyReportDto[] rapports, string resultat = null)
         {
             EnsureInitialized();
             Reports = rapports ?? Array.Empty<AutonomyReportDto>();
             ReportsLoaded = true;
+            LastOutcome = resultat;   // TD-847 : le jeton que `Resolve` poserait (ligne « Résultat : … »)
             Render();
         }
 
@@ -232,16 +233,16 @@ namespace MafiaCleanCity.Operational.Autonomy
         private void Render()
         {
             ClearRows();
-            headerText.text = "RAPPORTS D'AUTONOMIE";
+            headerText.text = TitreDeLEcran();
             TrackText(headerText, headerText.text);
 
             // Outcome line (CHROME — outcome is producer text, may carry any characters).
             if (!string.IsNullOrEmpty(LastOutcome))
             {
-                TextMeshProUGUI outcomeLine = NewText("Outcome", rowsArea, "Issue : " + LastOutcome, 13, TextAlignmentOptions.Left);
+                TextMeshProUGUI outcomeLine = NewText("Outcome", rowsArea, LigneDuResultat(LastOutcome), 13, TextAlignmentOptions.Left);
                 outcomeLine.color = AccentMild;
                 AddLayoutElement(outcomeLine.gameObject, minHeight: 20, flexibleHeight: 0);
-                // CHROME: not TrackText'd — outcome is producer free text
+                TrackText(outcomeLine, outcomeLine.text);   // TD-847 : le jeton brut du back n'est plus jamais montré, la phrase est fermée et sans chiffre
             }
 
             // Error line — la phrase du refus (servie, sinon celle de l'écran), jamais `LastError` (garde de classe des refus).
@@ -272,8 +273,8 @@ namespace MafiaCleanCity.Operational.Autonomy
         private void RenderError()
         {
             ClearRows();
-            headerText.text = "RAPPORTS D'AUTONOMIE";
-            TextMeshProUGUI err = NewText("Error", rowsArea, "La boîte n'a pas répondu.", 14, TextAlignmentOptions.Left);
+            headerText.text = TitreDeLEcran();
+            TextMeshProUGUI err = NewText("Error", rowsArea, MafiaCleanCity.I18n.Libelle.De("autonomie", "refus", "La boîte n’a pas répondu."), 14, TextAlignmentOptions.Left);
             err.color = AccentSevere;
             AddLayoutElement(err.gameObject, minHeight: 24, flexibleHeight: 0);
             TrackText(headerText, headerText.text);
@@ -293,8 +294,8 @@ namespace MafiaCleanCity.Operational.Autonomy
             AddLayoutElement(card, flexibleHeight: 0);
 
             // Report header line — CHROME (ids + digit count).
-            // "Lt <id>  •  Oldest: <n> cycles" — all CHROME: ids and counts carry digits.
-            string header = "Lt " + report.lieutenant_id + "  •  Oldest: " + report.backlog_age_cycles + " cycles";
+            // « De {nom} · {âge} » (TD-847) : le NOM servi (`lieutenant.name`), jamais l'identifiant ; l'âge porte un chiffre ⇒ CHROME.
+            string header = EnTeteDuRapport(report);
             TextMeshProUGUI headerLine = NewText("ReportHeader", card.transform, header, 14, TextAlignmentOptions.Left);
             headerLine.fontStyle = FontStyles.Bold;
             headerLine.color = TextPrimary;
@@ -328,7 +329,7 @@ namespace MafiaCleanCity.Operational.Autonomy
             if (!string.IsNullOrEmpty(issue.decided))
             {
                 // Already decided — show closed label (TRACKED, digit-free).
-                TextMeshProUGUI decided = NewText("Decided", block.transform, "✓ Décidé", 13, TextAlignmentOptions.Left);
+                TextMeshProUGUI decided = NewText("Decided", block.transform, "✓ " + MafiaCleanCity.I18n.Libelle.De("autonomie", "etat", "Décidé"), 13, TextAlignmentOptions.Left);
                 decided.color = AccentMild;
                 AddLayoutElement(decided.gameObject, minHeight: 18, flexibleHeight: 0);
                 TrackText(decided, decided.text);
@@ -375,7 +376,7 @@ namespace MafiaCleanCity.Operational.Autonomy
             TrackText(outcomeText, outcomeLabel);
 
             // Choose button (44dp, TRACKED caption, digit-free).
-            string caption = "Choose " + choice; // "Choose A" or "Choose B" — digit-free
+            string caption = LegendeDuBouton(choice);   // « Choisir A » / « Choisir B » — des LETTRES : la légende reste sans chiffre (ratifié f2 12/11)
             GameObject btn = NewUI("Btn_" + choice, optBlock.transform);
             Image img = btn.AddComponent<Image>();
             img.color = DesignTokens.Current.surfaceRaised;
@@ -390,6 +391,59 @@ namespace MafiaCleanCity.Operational.Autonomy
             bt.color = CtaColor;
             Stretch((RectTransform)bt.transform, new Vector2(10, 2), new Vector2(-10, -2));
             TrackText(bt, caption);
+        }
+
+        // ---- TD-847 (design Tools/autonomie-td847/design-td847.md, ratifié f2 12/11) : le nom servi, et des mots par le catalogue. Typographie des replis : apostrophe ’ (U+2019), U+00A0 avant « : ».
+        /// <summary>Le titre de l'écran (casse de phrase ; les capitales sont un style au rendu).</summary>
+        public static string TitreDeLEcran() => MafiaCleanCity.I18n.Libelle.De("autonomie", "titre", "Rapports d’autonomie");
+
+        /// <summary>« De {nom} · {âge} » : le nom SERVI (`lieutenant.name`, lot F) ; absent ou vide (JsonUtility rend une instance VIDE, jamais null ; back d'avant le lot) ⇒ « votre lieutenant » — JAMAIS l'identifiant.</summary>
+        public static string EnTeteDuRapport(AutonomyReportDto report)
+        {
+            string nom = report != null && report.lieutenant != null && !string.IsNullOrWhiteSpace(report.lieutenant.name)
+                ? report.lieutenant.name : null;
+            if (nom == null) nom = MafiaCleanCity.I18n.Libelle.De("autonomie", "entete", "votre lieutenant");
+            string age = AgeDuRapport(report != null ? report.backlog_age_cycles : 0);
+            return MafiaCleanCity.I18n.Libelle.Gabarit("autonomie.entete.de_nom_age", "De {nom} · {age}",
+                new Dictionary<string, string> { { "nom", nom }, { "age", age } });
+        }
+
+        /// <summary>L'âge d'un rapport en cycles : « Ce cycle » (0), « 1 cycle », « {n} cycles ».</summary>
+        public static string AgeDuRapport(int cycles) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("autonomie.age.cycles", "{n, plural, =0 {Ce cycle} one {# cycle} other {# cycles}}",
+                new Dictionary<string, string> { { "n", cycles.ToString(System.Globalization.CultureInfo.InvariantCulture) } });
+
+        /// <summary>La légende d'un bouton de choix : des lettres, jamais de chiffre.</summary>
+        public static string LegendeDuBouton(string choix)
+        {
+            if (choix == "B") return MafiaCleanCity.I18n.Libelle.De("autonomie", "bouton", "Choisir B");
+            return MafiaCleanCity.I18n.Libelle.De("autonomie", "bouton", "Choisir A");
+        }
+
+        /// <summary>La ligne du résultat d'un choix : « Résultat : {phrase} ». Le jeton fermé du back (`NOOP`, `DEFERRED`…) se dit en mots ; un jeton inconnu se dit « C’est fait. » — jamais le jeton brut.</summary>
+        public static string LigneDuResultat(string jeton) =>
+            MafiaCleanCity.I18n.Libelle.Gabarit("autonomie.resultat.prefixe", "Résultat\u00A0: {phrase}",
+                new Dictionary<string, string> { { "phrase", PhraseDuResultat(jeton) } });
+
+        public static string PhraseDuResultat(string jeton)
+        {
+            switch (jeton)
+            {
+                case "NOOP": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Rien n’a changé.");
+                case "COOK_STARTED": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Cuisson lancée.");
+                case "COOK_REFINED": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Cuisson affinée.");
+                case "COLLECTED": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Ramassage fait.");
+                case "DISPATCHED": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Envoi parti.");
+                case "INJECTED": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Argent injecté.");
+                case "INJECTED_CONSERVATIVE": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Argent injecté, prudemment.");
+                case "DEPOSITED": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Déposé.");
+                case "DEPOSITED_RESERVE": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Déposé en réserve.");
+                case "REPAIRED": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Réparé.");
+                case "HELD": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Mis en attente.");
+                case "DEFERRED": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Reporté.");
+                case "LEFT_TO_RIDE": return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "Laissé tel quel.");
+                default: return MafiaCleanCity.I18n.Libelle.De("autonomie", "resultat", "C’est fait.");
+            }
         }
 
         // Closed outcome band → a11y-safe shape+text label (digit-free — TRACKED).
@@ -458,9 +512,9 @@ namespace MafiaCleanCity.Operational.Autonomy
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
-            // Header — TRACKED ("RAPPORTS D'AUTONOMIE" is digit-free).
-            headerText = NewText("Header", card.transform, "RAPPORTS D'AUTONOMIE", 24, TextAlignmentOptions.Left);
-            headerText.fontStyle = FontStyles.Bold;
+            // Header — TRACKED (le titre est sans chiffre). Casse de phrase en donnée, capitales au RENDU (style TMP) : le rendu d'avant est gardé.
+            headerText = NewText("Header", card.transform, TitreDeLEcran(), 24, TextAlignmentOptions.Left);
+            headerText.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
             AddLayoutElement(headerText.gameObject, minHeight: 32, flexibleHeight: 0);
 
             // Rows area.

@@ -71,6 +71,15 @@ namespace MafiaCleanCity.Operational.Tests
             // TD-954 (12/11) : la raison de « Réaffecter… » en ON_COOLDOWN (LieutenantScreenController.PhraseDeIndisponibilite) lit `reassign_availability_label_key` SERVIE ; sa valeur n'est pas encore servie sur la pile dev
             // (back lot/td-954-reassign @ff5430b2, non fusionné). Repli = « Trop tôt pour le déplacer à nouveau. », ratifié f2 12/11 (le même mot que la valeur FR du back). LEVÉE : la clé est servie sur la pile — la règle (2) la retire.
             "famille.reaffectation.trop_tot_pour_le_deplacer_a_nouveau",
+            // TD-847 (12/11) : ㉔ AutonomyInboxController, états d'ARRIVÉE (sans rapport) : le titre et la phrase « la boîte n'a pas répondu » passent par le catalogue (replis ratifiés f2 12/11). Les 21 autres clés neuves de l'écran
+            // (`autonomie.entete.*`, `.age.cycles`, `.bouton.*`, `.resultat.*`, `.etat.decide`) ne se voient qu'avec un rapport : non servies non plus, listées dans la page `Tools/autonomie-td847/design-td847.md`. LEVÉE : servies sur la pile.
+            "autonomie.titre.rapports_d_autonomie",
+            "autonomie.refus.la_boite_n_a_pas_repondu",
+            // + les 4 que la garde VOIT à l'arrivée (un rapport monté : en-tête et deux boutons) — mesuré au run1 du 12/11 : `age.cycles`, `entete.de_nom_age`, `bouton.choisir_a`, `bouton.choisir_b`.
+            "autonomie.age.cycles",
+            "autonomie.entete.de_nom_age",
+            "autonomie.bouton.choisir_a",
+            "autonomie.bouton.choisir_b",
             // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : une clé restante, non servie à la pile du 08/10 (les 15 autres le sont : retirées ci-dessus). Les statuts et types d'acteur
             // sont lus par la VALEUR servie (`forensic.statut.*`, `forensic.acteur.lawyer|clerk`).
             "forensic.enseigne.rien_a_votre_nom",   // le sous-titre de l'enseigne du cadre 135 (sans point) : son rôle propre, la clé bloc.* est celle du texte `.rien`
