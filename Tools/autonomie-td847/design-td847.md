@@ -15,15 +15,15 @@ Servis aujourd'hui, déjà lus : les 18 `autonomy.*` (libellés d'option), `auto
 | nom absent | votre lieutenant | your lieutenant | PROPOSÉ |
 | bouton A / B | Choisir A · Choisir B | Choose A · Choose B | PROPOSÉ (lettres : la garde « pas de scalaire brut » compte les chiffres, la légende est « digit-free » ; l'atelier du téléphone dit « 1 / 2 » — à trancher) |
 | préfixe du résultat (`Issue :`) | Résultat : | Outcome: | PROPOSÉ. ⚠ pas « Problème » (contresens, voir ⑩-1 `ExceptionDetailController.cs:261`) |
-| titre de l'écran | Rapports d'autonomie | Autonomy reports | PROPOSÉ (littéral français en dur aujourd'hui, `:462`) |
+| titre de l'écran | Rapports d’autonomie | Autonomy reports | PROPOSÉ (littéral français en dur aujourd'hui, `:462`) |
 | déjà décidé | ✓ Décidé | ✓ Decided | PROPOSÉ (littéral français en dur, `:331`) |
-| boîte muette | La boîte n'a pas répondu. | The inbox didn't answer. | PROPOSÉ (littéral en dur, `:276`) |
+| boîte muette | La boîte n’a pas répondu. | The inbox didn’t answer. | PROPOSÉ (littéral en dur, `:276`) |
 
-**Résultat de `resolve`** — jeton fermé servi par le back (`option-handlers/*.ts`), jamais montré brut ; jeton inconnu ⇒ « C'est fait. » :
+**Résultat de `resolve`** — jeton fermé servi par le back (`option-handlers/*.ts`), jamais montré brut ; jeton inconnu ⇒ « C’est fait. » :
 
 | jeton | fr | en |
 |---|---|---|
-| NOOP | Rien n'a changé. | Nothing changed. |
+| NOOP | Rien n’a changé. | Nothing changed. |
 | COOK_STARTED / COOK_REFINED | Cuisson lancée. / Cuisson affinée. | Cooking started. / Batch refined. |
 | COLLECTED | Ramassage fait. | Collected. |
 | DISPATCHED | Envoi parti. | Dispatched. |
@@ -34,7 +34,7 @@ Servis aujourd'hui, déjà lus : les 18 `autonomy.*` (libellés d'option), `auto
 
 ## 3. Code et preuves
 - Un seul point d'entrée par mot (`Libelle.Gabarit(clé, repli)` ; clé neuve non servie ⇒ DetteDatee `ZeroRepli`). Clé = slug du français, domaine `autonomie` (comme `autonomie.vide.*`).
-- Tests : en-tête = le NOM servi, jamais l'id (corps réel avec `lieutenant.name`, sans lui, vide) ; âge 0/1/n ; chaque jeton de résultat → sa phrase, jeton inconnu → « C'est fait. », jamais le jeton brut ; `M4b` (littéraux anglais déclarés) retiré avec les littéraux ; `Btn_A`/`Btn_B` gardent leurs noms (`RetourGpLotC` les cherche).
+- Tests : en-tête = le NOM servi, jamais l'id (corps réel avec `lieutenant.name`, sans lui, vide) ; âge 0/1/n ; chaque jeton de résultat → sa phrase, jeton inconnu → « C’est fait. », jamais le jeton brut ; `M4b` (littéraux anglais déclarés) retiré avec les littéraux ; `Btn_A`/`Btn_B` gardent leurs noms (`RetourGpLotC` les cherche).
 - Rouge démontré : en-tête relu sur `lieutenant_id` ⇒ test du nom rouge.
 
 ## 4. Tranché par f2 (12/11)
