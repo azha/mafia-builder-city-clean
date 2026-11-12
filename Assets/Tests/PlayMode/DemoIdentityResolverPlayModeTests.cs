@@ -698,7 +698,14 @@ namespace MafiaCleanCity.CityMap.Tests
         //       de capture sont riches, et c'est précisément ce que ces planches ne doivent pas montrer).
         //       PlanchesParEcranCapturePlayModeTests.cs (1, P0/P1 — ajouté le 2026-11-11, chunk 3c b56d837e : le compte est
         //       INSCRIT par le test (`auth.SignUp`, SafeCallsign) juste avant `shell.SetIdentity` ; classe C, jamais le compte de démo).
-        //   ⇒ 9 appels sur 7 fichiers.
+        //       EntreesL1CapturePlayModeTests.cs (1, l.72 — ajouté le 2026-11-11, eebf0b71 L1 : `auth.SignUp` d'un SafeCallsign
+        //       « entrees » juste avant ; classe C).
+        //   D — compte JETABLE préparé HORS du test, nommé par l'environnement (tri de la suite, 12/11) :
+        //       PlanchesParEcranCapturePlayModeTests.cs (2ᵉ site, l.237 `OuvrirSous` — dc54fd02 ㊴, 11/11 : les trois callsigns
+        //       quiet / noticed / watched de MAFIA_DOSSIER_COMPTES, mot de passe dérivé ; l'état de chaque compte est POSÉ par SQL
+        //       avant le run). L'identité explicite y est VOULUE : la surcharge d'environnement remplacerait le compte préparé par
+        //       le compte de démo ou de capture, et la planche photographierait un autre état que celui qu'elle annonce.
+        //   ⇒ 11 appels sur 8 fichiers (recomptés au grep le 12/11, hors ce fichier).
         // Les 4 appels de VuePrincipaleCapturePlayModeTests ont été retirés volontairement : les
         // captures doivent photographier le compte servi, pas quatre comptes frais et vides. La
         // garde n'avait pas été rebasée sur ce retrait pourtant explicite (146e5198).
@@ -715,9 +722,10 @@ namespace MafiaCleanCity.CityMap.Tests
             "PlayMode/CoffrePlayModeTests.cs",
             "PlayMode/ParcoursJoueurNeufCapturePlayModeTests.cs",
             "PlayMode/PlanchesParEcranCapturePlayModeTests.cs",
+            "PlayMode/EntreesL1CapturePlayModeTests.cs",
         };
 
-        private const int ExpectedExplicitIdentityOverrideCount = 9;
+        private const int ExpectedExplicitIdentityOverrideCount = 11;
 
         // Chemin, relatif à Assets/Tests, du fichier hébergeant CE scanner et ses `[TestCase]`
         // fabriqués — voir ScanDirectoryExcludingFile ci-dessus.

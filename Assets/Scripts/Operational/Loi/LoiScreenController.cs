@@ -288,13 +288,15 @@ namespace MafiaCleanCity.Operational
             var replique = LoiResolvers.RepliqueDeFuite(fuite);
             if (replique == null) return;
             const string Marque = "\u241E";
-            var parametres = new System.Collections.Generic.Dictionary<string, string> { { "nom", Marque } };
+            // Noms des TROUS du gabarit (`{nom}`, `{element}`) : des identifiants de paramètre, jamais un texte affiché.
+            const string TrouNom = "nom", TrouElement = "element";
+            var parametres = new System.Collections.Generic.Dictionary<string, string> { { TrouNom, Marque } };
             (string cle, string repli) dite = replique.Value;
             // LB-1 : l'élément fuité SERVI (texte du catalogue) ⇒ la phrase qui le nomme remplace l'appauvrie ; sinon rien ne change.
             string element = LoiResolvers.ElementDonne(dto?.activeCases, fuite);
-            if (element != null) { dite = LoiResolvers.RepliqueQuiNommeLElement; parametres["element"] = element; }
+            if (element != null) { dite = LoiResolvers.RepliqueQuiNommeLElement; parametres[TrouElement] = element; }
             // EXIGEANT sur le trou propre à la phrase : une valeur servie du n°9 sans `{element}` tairait l'élément ⇒ elle compte comme non servie (revue ⊥ m1).
-            string t = Libelle.GabaritExigeant(dite.cle, dite.repli, parametres, element != null ? "element" : "nom");
+            string t = Libelle.GabaritExigeant(dite.cle, dite.repli, parametres, element != null ? TrouElement : TrouNom);
             int i = t.IndexOf(Marque, System.StringComparison.Ordinal);
             string avant = i < 0 ? t : t.Substring(0, i), apres = i < 0 ? "" : t.Substring(i + Marque.Length), gras = i < 0 ? "" : nom;
             TextMeshProUGUI dit = NouveauTexteFiche(basRoot, "Dit",

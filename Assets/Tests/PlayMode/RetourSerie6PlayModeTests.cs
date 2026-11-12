@@ -381,22 +381,23 @@ namespace MafiaCleanCity.Shell.Tests
         {
             NouveauShell();
             (string[] groupes, string[] destinations) = shell.IdsDuMenuPlusPourTest();
-            Assert.AreEqual(20, destinations.Length, "vingt destinations (maquette atelier 7380e10)");
+            Assert.AreEqual(21, destinations.Length, "vingt et une destinations : les vingt de la maquette atelier 7380e10 + ㉑ « le_marche » (ea1e609c, AppShell.DestinationsPlus)");
             CollectionAssert.AllItemsAreUnique(groupes, "une destination n'est que dans UN groupe");
             CollectionAssert.AreEquivalent(destinations, groupes, "chaque destination est dans un groupe, et aucun groupe ne nomme un absent");
             CollectionAssert.DoesNotContain(destinations, "la_filiere", "« La Filière » sort du menu : le dock la porte");
 
             shell.ActivateTab(AppShell.Tab.More);
-            Assert.AreEqual(20, shell.MenuPlusEntrees);
+            Assert.AreEqual(21, shell.MenuPlusEntrees);
             Transform contenu = MenuCourant().Find("MenuPlus_Contenu");
             var rangs = contenu.Cast<Transform>().Where(t => t.name == "MenuPlusRang").ToList();
             var titres = contenu.Cast<Transform>().Where(t => t.name.StartsWith("MenuPlusGroupe_", StringComparison.Ordinal)).ToList();
             Assert.AreEqual(5, titres.Count, "cinq titres de groupe");
-            Assert.AreEqual(11, rangs.Count, "deux colonnes : 2 + 2 + 2 + 2 + 3 rangées");
+            Assert.AreEqual(12, rangs.Count, "deux colonnes : 2 + 3 + 2 + 2 + 3 rangées (groupes de 4, 5, 3, 4, 5 entrées — « Vos affaires » porte le marché)");
             Assert.IsTrue(rangs.All(r => r.childCount >= 1 && r.childCount <= 2), "au plus deux entrées par rangée");
         }
 
-        /// <summary>Les 25 clés de la table 60 (atelier, 2026-09-26) — les libellés sont DÉRIVÉS (`Libelle.De`) : ce test prouve que la
+        /// <summary>Les 25 clés de la table 60 (atelier, 2026-09-26) + `plus.entree.le_marche` (㉑, hors table 60 : clé de BACK-3
+        /// `lot/marche-mots`, pas encore servie — TD-1017, DetteDatee de ZeroRepli) — les libellés sont DÉRIVÉS (`Libelle.De`) : ce test prouve que la
         /// clé dérivée de chaque repli EST la clé de la table, en servant une valeur marquée par clé.</summary>
         private static readonly string[] ClesTable60 =
         {
@@ -412,6 +413,7 @@ namespace MafiaCleanCity.Shell.Tests
             "plus.entree.la_chaine_d_appro",
             "plus.entree.la_distribution",
             "plus.entree.la_vente",
+            "plus.entree.le_marche",
             "plus.entree.raser_un_site",
             "plus.entree.le_journal_la_rue",
             "plus.entree.la_reputation",
@@ -448,7 +450,7 @@ namespace MafiaCleanCity.Shell.Tests
                 string lu = t.GetComponent<TMPro.TextMeshProUGUI>().text;
                 if (lu != "§" + cle) ecarts.Add($"{t.name} affiche « {lu} », attendu la valeur de {cle}");
             }
-            Assert.AreEqual(25, EntreesDuMenu().Count + 5, "anti-vacuité : 20 entrées + 5 titres lus");
+            Assert.AreEqual(26, EntreesDuMenu().Count + 5, "anti-vacuité : 21 entrées + 5 titres lus");
             Assert.IsEmpty(ecarts, string.Join("\n", ecarts));
         }
 

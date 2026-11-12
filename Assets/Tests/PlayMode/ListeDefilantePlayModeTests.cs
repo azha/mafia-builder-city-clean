@@ -150,7 +150,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsEmpty(perimees, "exception(s) devenue(s) inutile(s) (le fichier est équipé, ou n'a plus de masque) — les retirer : " + string.Join(", ", perimees));
             foreach (string equipe in new[] { "JournalScreenController.cs", "FiliereScreenController.cs", "CarnetScreenController.cs", "LoiScreenController.cs" })
                 Assert.IsTrue(sources.Any(s => s.Item1 == equipe && s.Item2.Contains("ListeDefilante.Equiper(")), equipe + " : la liste de l'écran est équipée");
-            foreach (string indique in new[] { "DemolitionScreenController.cs", "ShopScreenController.cs", "DelegationScreenController.cs", "ConflitScreenController.cs", "LieutenantScreenController.cs", "ReputationScreenController.cs", "AppShell.cs" })
+            foreach (string indique in new[] { "DemolitionScreenController.cs", "ShopScreenController.cs", "DelegationScreenController.cs", "ConflitScreenController.cs", "LieutenantScreenController.cs", "ReputationScreenController.cs", "AppShell.cs", "MarcheScreenController.cs" })
                 Assert.IsTrue(sources.Any(s => s.Item1 == indique && s.Item2.Contains("ListeDefilante.Indiquer(")), indique + " : le ScrollRect existant porte l'indice");
         }
 

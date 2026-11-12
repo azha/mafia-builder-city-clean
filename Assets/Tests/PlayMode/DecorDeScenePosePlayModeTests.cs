@@ -100,7 +100,8 @@ namespace MafiaCleanCity.Tests.PlayMode
             { "㉟", new[] { "Cta6", "Cta6Eteint", "Dl", "DlMort", "DlPris", "DlPrisMort", "Elast", "Gd", "Mano", "Pann", "Pann_2" } },
             // ㉚ (08/10) — L posée (les filets pointillés du bon). Le reste : en-tête (EnteteDEcran), pied (PiedDEcran), chaîne
             //   (nœuds, tuyaux, pics, états, gestes, rien, cadran) — blocs de CLIENT-1, à déléguer à Filets.
-            { "㉚", new[] { "Bas", "Entete", "Etat", "Etat_2", "Geste", "GesteMort", "Mano", "Noeud", "NoeudFlou", "NoeudTrouve", "Pic", "Pic_2", "Rien", "Tuyau", "TuyauRefoule" } },
+            //   12/11 (tri de la suite) : Entete et Noeud RETIRÉES — branchées par ㉚ (ed92bfab et suivants), D6b les dit posées.
+            { "㉚", new[] { "Bas", "Etat", "Etat_2", "Geste", "GesteMort", "Mano", "NoeudFlou", "NoeudTrouve", "Pic", "Pic_2", "Rien", "Tuyau", "TuyauRefoule" } },
             // ㊴ (08/10, DESIGN v5.2) — la vue pistes/acteurs/vide est construite d'après les cadres 150, 151 et 135 : toutes les recettes de
             //   `.dos6` sont posées SAUF deux. Cta6 : le pied « acheter du renseignement » ALLUMÉ des cadres 131-132, dessin ANCIEN (le pied
             //   qui fait foi est Cta6Eteint, 150 : le prix n'est pas servi). Mano : le cadran des cadres 131-134, que le client ne construit pas.

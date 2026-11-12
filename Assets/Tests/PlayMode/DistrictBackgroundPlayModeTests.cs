@@ -154,7 +154,7 @@ namespace MafiaCleanCity.CityMap.Tests
         // ── pp-F2 / F-calage — POUR CHAQUE bâtiment du payload, son pivot tombe sur pivot_px LU
         // dans le JSON (quantificateur vérifié par le geste 4 du round 2 ⊥ : ni pp-F2 ni pp-F3 ne
         // portent un singulier — la boucle ci-dessous couvre TOUS les `dto.buildings` du J0, avec
-        // anti-vacuité sur le compte exact (checkedBuildings == 4), jamais un seul bloc de test. ──
+        // anti-vacuité sur le compte exact (checkedBuildings == 5), jamais un seul bloc de test. ──
 
         [UnityTest]
         public IEnumerator PpF2_BuildingPivot_MatchesJsonPivotPx_WithinTwoPixels_AndGridSpacingIsUniform()
@@ -200,7 +200,7 @@ namespace MafiaCleanCity.CityMap.Tests
                     $"pp-F2/F-calage — bâtiment sur ({block.x},{block.y}) : écart au pivot JSON = {distPx:F2}px (≤2px exigé)");
                 checkedBuildings++;
             }
-            Assert.AreEqual(4, checkedBuildings, "starter kit J0 — scénario dimensionné, les 4 bâtiments calibrés");
+            Assert.AreEqual(5, checkedBuildings, "starter kit J0 — scénario dimensionné, les 5 bâtiments calibrés (5ᵉ = dealer_spot_front, back f3d22243 L2 C1)");
 
             // ⛔⛔ F-calage, SECOND VOLET — RETIRÉ ET REMPLACÉ LE 2026-08-22, avec sa raison.
             //
@@ -288,7 +288,7 @@ namespace MafiaCleanCity.CityMap.Tests
         // ── pp-F3 — zéro rescale, POUR CHACUN des sprites livrés ─────────────────────────────────
         // Deux volets (implementation-notes.md § Deviations explique la coupe) : (1) le facteur
         // 1,000 d'affichage n'est vérifiable QUE sur les sprites que le contrôleur rend RÉELLEMENT
-        // (une RectTransform n'existe que pour un sprite affiché) — les 4 bâtiments du J0, un par
+        // (une RectTransform n'existe que pour un sprite affiché) — les 5 bâtiments du J0, un par
         // operational_type WIRED ; (2) le ratio px/m déclaré (ppm_plan) est une propriété de la
         // PAIRE de fichiers livrés (ppm24.0 vs ppm56.471 du MÊME template) — vérifiable pour les
         // 54 sprites SANS rendu, en lisant les PNG bruts sur disque (§9 : « un sprite rendu au
@@ -328,7 +328,7 @@ namespace MafiaCleanCity.CityMap.Tests
                     $"pp-F3 — {building.operational_type} : hauteur affichée == hauteur native (facteur 1,000)");
                 checkedSprites++;
             }
-            Assert.AreEqual(4, checkedSprites, "starter kit J0 — scénario dimensionné, les 4 bâtiments vérifiés");
+            Assert.AreEqual(5, checkedSprites, "starter kit J0 — scénario dimensionné, les 5 bâtiments vérifiés (5ᵉ = dealer_spot_front, back f3d22243 L2 C1)");
         }
 
         // ⚠️ AMENDÉ (round 6, verdict ⊥) — la méthode précédente comparait les DIMENSIONS DE FICHIER

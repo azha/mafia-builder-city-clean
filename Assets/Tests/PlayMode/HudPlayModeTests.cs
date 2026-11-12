@@ -673,7 +673,12 @@ namespace MafiaCleanCity.Shell.Tests
         // accentDanger, `PARTIAL` → accentWarning) et le cerne et le mot de l'écart (`.dv`, accentWarning ×2). Sémantique de gravité, pas une correspondance
         // de bucket de chaleur (motif 2). Mesuré par la méthode de ce test (comptage d'occurrences) : 34 à ff5ec89a~1, 38 à ff5ec89a.
         // ★ Quatrième fois : ajouté par MOI dans un lot dont la garde (W3U2) n'était pas au créneau.
-        private const int ExpectedSeverityTokenTotal = 38;
+        // RE-AMENDÉ NOMMÉMENT 38 → 42 (2026-11-12, tri de la suite, CLIENT-1) : `Operational/Forensic/ForensicScreenController.cs` (déjà sur
+        // l'allowlist, l'ENSEMBLE ne change pas) passe de 2 à 6 accès à da91e55a (㊴ étape 3, 08/10 : l'écran d'après les cadres 150/151/135) —
+        // le dernier cran d'une piste en accentDanger (`auBout`, cadre 132), l'humeur d'un acteur (`nervous` → accentWarning, `gone` → accentDanger)
+        // et la gravité (`Criant`/`Franchi`). Sémantique de gravité, pas de bucket de chaleur. Mesuré par comptage d'occurrences : 2 à
+        // da91e55a~1, 6 à da91e55a et à la tête ; total de l'arbre 42.
+        private const int ExpectedSeverityTokenTotal = 42;
 
         // ── motif 2 — littéraux de bucket (ferme l'angle mort du motif 1, IMPORTANT-2) ──────
         private static readonly string[] BucketLiterals = { "\"COLD\"", "\"WARM\"", "\"HOT\"", "\"BURNING\"" };

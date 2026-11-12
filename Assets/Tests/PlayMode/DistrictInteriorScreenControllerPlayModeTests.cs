@@ -132,7 +132,7 @@ namespace MafiaCleanCity.CityMap.Tests
             Assert.IsTrue(diorama.LastFetchSucceeded,
                 $"le fetch via le porteur injecté a échoué (code {diorama.LastErrorCode})");
             Assert.IsNotNull(diorama.LastFetch, "parsé via payload.data");
-            Assert.AreEqual(4, diorama.LastFetch.buildings?.Length ?? -1, "starter kit J0 — scénario dimensionné");
+            Assert.AreEqual(5, diorama.LastFetch.buildings?.Length ?? -1, "starter kit J0 — scénario dimensionné (5ᵉ = dealer_spot_front, back f3d22243 L2 C1)");
         }
 
         /// <summary>⛔ UNE FALSIFIABLE PAR VALEUR SERVIE (22/09) : les 12 membres du pgEnum `building_operational_type` (back, en

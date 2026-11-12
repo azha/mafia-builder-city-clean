@@ -22,7 +22,10 @@ namespace MafiaCleanCity.Shell.Tests
     [Category("ChainesDev")]
     public class ChainesDeDeveloppeurPlayModeTests
     {
-        private static readonly Regex Commentaires = new Regex(@"(""(?:\\.|[^""\\\n])*"")|//[^\n]*|/\*[\s\S]*?\*/", RegexOptions.Compiled);
+        // ⛔ LE LITTÉRAL DE CARACTÈRE (tri de la suite, 12/11) : `'"'` était lu comme l'OUVERTURE d'une chaîne — le balayage appariait ce guillemet au
+        //    suivant et prenait le CODE entre les deux pour un texte (`b[0] != '"' || b[n] != '"'` ⇒ « [n » : Retour.cs, ChaineDApproClient.cs). Le
+        //    littéral de caractère est donc reconnu (groupe 2) et neutralisé AVANT l'appariement des chaînes ; contrôle dans C0.
+        private static readonly Regex Commentaires = new Regex(@"(""(?:\\.|[^""\\\n])*"")|('(?:\\.|[^'\\\n])')|//[^\n]*|/\*[\s\S]*?\*/", RegexOptions.Compiled);
         private static readonly Regex Litteral = new Regex(@"""((?:\\.|[^""\\\n])*)""", RegexOptions.Compiled);
         private static readonly Regex Crochet = new Regex(@"\[[^\W\d_]|\[\{", RegexOptions.Compiled);
         private static readonly Regex NomDeType = new Regex(@"GetType\(\)\.Name|typeof\([^)]*\)\.Name|nameof\(", RegexOptions.Compiled);
@@ -37,10 +40,12 @@ namespace MafiaCleanCity.Shell.Tests
                 "d'une réponse — jamais un texte, jamais rendu dans un TMP") },
             { "ComposeurDuCarnet.cs", (1, "`Regex CodeServi` : la classe de caractères `[A-Z_]` d'une EXPRESSION RÉGULIÈRE qui lit le code servi dans le corps " +
                 "d'une réponse — jamais un texte, jamais rendu dans un TMP") },
+            { "ChaineDApproClient.cs", (1, "`Regex LitteralNu` : la classe de caractères `[eE]` d'une EXPRESSION RÉGULIÈRE qui reconnaît un scalaire JSON nu " +
+                "(ed92bfab ㉚) — jamais un texte, jamais rendu dans un TMP") },
         };
 
         private static List<string> Instructions(string source) =>
-            Commentaires.Replace(source, m => m.Groups[1].Success ? m.Groups[1].Value : string.Empty).Split(';').ToList();
+            Commentaires.Replace(source, m => m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Success ? "' '" : string.Empty).Split(';').ToList();
 
         internal static List<string> SitesACrochet(string source) =>
             Instructions(source).Where(st => !Journal.IsMatch(st)
@@ -63,7 +68,8 @@ namespace MafiaCleanCity.Shell.Tests
                 "Debug.LogWarning($\"[FILIERE] ordre du serveur [{x}]\");\n" +
                 "// stateText.text = $\"[{CurrentState}]\"; en commentaire\n" +
                 "var go = new GameObject($\"Tenant_{typeof(T).Name}\");\n" +
-                "t.text = \"24 850 €\";\n";
+                "t.text = \"24 850 €\";\n" +
+                "if (b[0] != '\"' || b[n] != '\"') return null;\n";   // deux littéraux de caractère : du CODE entre eux, jamais un texte
             Assert.AreEqual(2, SitesACrochet(fabrique).Count, "les deux formes à crochets sont VUES ; le journal et le commentaire non");
             Assert.AreEqual(1, SitesNomDeType(fabrique).Count, "le nom de type vers un texte est VU ; le nom de GameObject non");
         }
