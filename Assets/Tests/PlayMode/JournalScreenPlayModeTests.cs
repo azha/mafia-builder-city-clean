@@ -644,10 +644,13 @@ namespace MafiaCleanCity.Operational.Tests
             JournalScreenController ecran = MonterEcran();
             ecran.SetToken("jeton-de-test");
             // le cas le plus dur : l'événement refusé reste SERVI (expiré non balayé) — la rue relue est la MÊME
-            ecran.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt("e-1"), Evt("e-2") }, total = 2 });
+            ecran.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt("e-1"), Evt("e-2") }, total = 35 });
             ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
             yield return MettreEnPage();
             Assert.AreEqual("e-1", ecran.ProchainAAssister.event_id);
+            // E5 — le compteur RENDU lit `total` (35), pas la page (2)
+            Assert.AreEqual("35", RacineEcran().transform.GetComponentsInChildren<Transform>(true).First(t => t.name == "Compteur1")
+                .Find("Nombre").GetComponent<TMPro.TextMeshProUGUI>().text, "« dans la rue » : le total servi, pas les 2 brèves de la page");
 
             Assert.IsFalse(ecran.EcarterApresRefus(500, "e-1"), "une panne (5xx) n'écarte rien : le geste peut être retenté");
             Assert.IsFalse(ecran.EcarterApresRefus(0, "e-1"), "un échec réseau non plus");
@@ -696,13 +699,14 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.IsNull(b[0].Find("Lisere"), "la brève refusée n'est plus visée");
             Assert.IsNotNull(b[1].Find("Lisere"), "la marque passe à la suivante");
 
-            Object.DestroyImmediate(hostGo);
-            hostGo = null;
-            JournalScreenController sansJeton = MonterEcran();
-            sansJeton.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt("e-1") }, total = 1 });
-            sansJeton.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            // sans jeton, sur le MÊME écran (un écran neuf laisserait l'ancienne racine sous le Canvas, et l'assertion lirait la mauvaise)
+            ecran.SetToken("");
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
             yield return MettreEnPage();
-            Assert.IsNull(BrevesRendues()[0].Find("Lisere"), "sans jeton le bouton est éteint : pas de cible marquée");
+            b = BrevesRendues();
+            Assert.AreEqual(3, b.Count, "les trois brèves sont toujours servies");
+            Assert.AreEqual(0, b.Count(t => t.Find("Lisere") != null), "sans jeton le bouton est éteint : aucune cible marquée");
+            Assert.IsFalse(BoutonAssister().interactable);
         }
 
         [Test]

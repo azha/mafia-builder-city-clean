@@ -118,17 +118,25 @@ namespace MafiaCleanCity.Operational
         public AmbientEventDto ProchainAAssister =>
             Rue?.FirstOrDefault(e => e != null && !string.IsNullOrEmpty(e.event_id) && !refuses.Contains(e.event_id));
 
-        // D1 (12/11, f2) — un attend REFUSÉ (404 / 409) ne dit pas que l'événement a quitté le fil : il peut être pris par un autre, déjà assisté par CE joueur
-        // (assistance par joueur, BACK-2), ou expiré sans être balayé (le fil ne filtre pas l'expiration, SPECS 12/11) — et dans ce dernier cas il reste SERVI.
-        // Le client écarte donc lui-même cet identifiant pour la durée de l'écran, puis relit la rue : le bouton vise la brève suivante dans les trois cas,
-        // au lieu de re-viser sans fin le même événement mort. Un échec d'une autre nature (réseau, 5xx) n'écarte rien : le geste peut être retenté.
+        // D1 (12/11, f2) — un attend REFUSÉ (404 / 409) ne dit pas que l'événement a quitté le fil. Aujourd'hui l'assistance est GLOBALE (le premier joueur
+        // prend l'événement) : le 409 dit « déjà pris » ou « expiré ». Le fil ne filtre que le STATUT : un événement expiré mais pas encore balayé (statut
+        // toujours `live`, balayage une fois par nuit de jeu) reste SERVI, et son attend rend 409 (SPECS 12/11). À venir (spec approuvée, BACK-2) : assistance
+        // PAR JOUEUR, où 409 dira « vous y avez déjà assisté ». Le client écarte donc lui-même cet identifiant pour la durée de l'écran, puis relit la rue :
+        // le bouton vise la brève suivante dans tous ces cas, au lieu de re-viser sans fin le même événement. Un événement ASSISTÉ est écarté de même (le
+        // succès est définitif) : si la relecture échoue, la marque ne reste pas dessus. Réseau, 5xx, 401 : rien n'est écarté, le geste peut être retenté.
         private readonly HashSet<string> refuses = new HashSet<string>();
         public static bool EstUnRefusDefinitif(long code) => code == 404 || code == 409;
-        /// <summary>Écarte l'événement refusé (404 / 409 seulement) ; rend vrai s'il a été écarté. Crochet de test aussi : le POST réel se joue contre le back.</summary>
-        public bool EcarterApresRefus(long code, string eventId)
+        /// <summary>Écarte l'événement si le refus est définitif (404 / 409) — SANS re-rendre. Le seul endroit qui décide : `Assister` et le crochet y passent.</summary>
+        private bool Ecarter(long code, string eventId)
         {
             if (!EstUnRefusDefinitif(code) || string.IsNullOrEmpty(eventId)) return false;
             refuses.Add(eventId);
+            return true;
+        }
+        /// <summary>Crochet de test (le POST réel se joue contre le back) : écarte comme `Assister` le fait après un refus, puis re-rend. Rend vrai si écarté.</summary>
+        public bool EcarterApresRefus(long code, string eventId)
+        {
+            if (!Ecarter(code, eventId)) return false;
             if (DernierChargement != null) AppliquerEtat(DernierChargement); else MettreAJourLePied();
             return true;
         }
@@ -194,10 +202,9 @@ namespace MafiaCleanCity.Operational
             yield return client.PostAmbientAttend(token, cible.event_id, new PostAmbientAttendBody(), d => reponse = d,
                 (code, msg) => { codeDuRefus = code; Debug.LogWarning($"[Journal] attend {cible.event_id} refusé ({code}) : {msg}"); });
             if (this == null) yield break;
-            if (reponse != null) DerniereAssistance = reponse;
-            // D1 — la rue se relit après un succès ET après un refus définitif (404 / 409) : dans les deux cas le fil a pu changer.
-            bool ecarte = reponse == null && EstUnRefusDefinitif(codeDuRefus);
-            if (ecarte) refuses.Add(cible.event_id);
+            // D1 — la rue se relit après un succès ET après un refus définitif (404 / 409) ; dans les deux cas l'événement est écarté (voir `refuses`).
+            bool ecarte = reponse == null && Ecarter(codeDuRefus, cible.event_id);
+            if (reponse != null) { DerniereAssistance = reponse; refuses.Add(cible.event_id); }
             if (reponse != null || ecarte)
             {
                 yield return client.GetAmbientFeed(token, dto => DernierAmbient = dto, (code, msg) => { });
@@ -337,6 +344,7 @@ namespace MafiaCleanCity.Operational
             //   repasse par un point où on peut le lui dire.* `StopCoroutine` ne le suppose pas.
             if (amorce != null) { StopCoroutine(amorce); amorce = null; }
             EnsureInitialized();
+            DernierChargement = dto;   // comme `Charger` : tout re-rendu (après un geste, après un refus) repart du dernier corps — sans quoi il ne se ferait pas sous test
             AppliquerEtat(dto);
         }
 
