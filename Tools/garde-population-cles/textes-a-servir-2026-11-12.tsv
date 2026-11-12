@@ -1,0 +1,20 @@
+# 17 textes réels AFFICHABLES aujourd’hui et non servis à 8d0184a4 (groupes A et B du rapport CLIENT-2 du 12/11). FR = à l’OCTET du littéral du code client (commit 062acda0 + ce lot) ; EN = RATIFIÉ par f2 le 12/11 (3 retouches : « Back to home », « deviating » ×2).
+# Colonnes : clé · FR (octet du code) · EN proposé · écran / état où le joueur le lit
+# Vocabulaire EN aligné sur le registre servi : « pipeline » (filière), « DEVIATIONS » (écarts), apostrophes U+2019.
+accueil.carte.c_est_note	C’est noté	Noted	Accueil — après un geste sur la carte (ApresGesteHl) / tampon du détail de décision / carte des rapports à moins de 2 options
+accueil.carte.deja_tranchee	Déjà tranchée	Already decided	Accueil — après un geste sur la carte (ApresGesteHl) / tampon du détail de décision / carte des rapports à moins de 2 options
+accueil.carte.la_carte_reste_sur_la_table	La carte reste sur la table	The card stays on the table	Accueil — après un geste sur la carte (ApresGesteHl) / tampon du détail de décision / carte des rapports à moins de 2 options
+accueil.carte.la_carte_vous_attend_encore	La carte vous attend encore.	The card is still waiting for you.	Accueil — après un geste sur la carte (ApresGesteHl) / tampon du détail de décision / carte des rapports à moins de 2 options
+accueil.carte.lire_maintenant	Lire maintenant	Read now	Accueil — après un geste sur la carte (ApresGesteHl) / tampon du détail de décision / carte des rapports à moins de 2 options
+accueil.carte.retour_a_l_accueil	Retour à l’accueil	Back to home	Accueil — après un geste sur la carte (ApresGesteHl) / tampon du détail de décision / carte des rapports à moins de 2 options
+accueil.carte.rien_d_autre_a_trancher_pour_l_instant	Rien d’autre à trancher pour l’instant.	Nothing else to decide for now.	Accueil — après un geste sur la carte (ApresGesteHl) / tampon du détail de décision / carte des rapports à moins de 2 options
+accueil.carte.tranchee	TRANCHÉE	DECIDED	Accueil — après un geste sur la carte (ApresGesteHl) / tampon du détail de décision / carte des rapports à moins de 2 options
+accueil.carte.vous_avez_tranche	Vous avez tranché	You decided	Accueil — après un geste sur la carte (ApresGesteHl) / tampon du détail de décision / carte des rapports à moins de 2 options
+accueil.jeton.fermee_aujourd_hui	fermée aujourd’hui	closed for today	Accueil — mot du jeton de la grande décision du jour
+accueil.jeton.libre	libre	free	Accueil — mot du jeton de la grande décision du jour
+accueil.jeton.pris	pris	taken	Accueil — mot du jeton de la grande décision du jour
+filiere.bloc.ecart	écart	deviation	㊵ Filière — état « écart actif » (un nœud s’écarte de son profil)
+filiere.bloc.la_filiere_s_ecarte_de_son_profil	La filière s’écarte de son profil	The pipeline is deviating from its profile	㊵ Filière — état « écart actif » (un nœud s’écarte de son profil)
+filiere.bloc.on_vous_dit_oui_ou_non_jamais_de_combien_ni_pourquoi_c_est_le_seul_signal_d_alerte_de_la_filiere_et_il_ne_se_mesure_pas	on vous dit oui ou non : jamais de combien, ni pourquoi. C’est le seul signal d’alerte de la filière — et il ne se mesure pas.	you’re told yes or no: never how much, never why. It’s the pipeline’s only warning signal — and it can’t be measured.	㊵ Filière — état « écart actif » (un nœud s’écarte de son profil)
+filiere.bloc.un_seul_voyant	un seul voyant	a single indicator	㊵ Filière — état « écart actif » (un nœud s’écarte de son profil)
+filiere.sous_titre.la_filiere_s_ecarte_de_son_profil	la filière s’écarte de son profil	the pipeline is deviating from its profile	㊵ Filière — état « écart actif » (un nœud s’écarte de son profil)
