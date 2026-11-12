@@ -1,0 +1,123 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "http://localhost/v1/me/buildings",
+    "body": null
+  },
+  "status": 200,
+  "x_server_build": "8d0184a4",
+  "content_length_header": "2098",
+  "octets_ecrits": 2098,
+  "taille_conforme": true,
+  "body": {
+    "response_meta": {
+      "request_id_echo": "61489716-51a2-46b0-bf77-4fc12490eab7",
+      "server_processed_at": "2026-11-12T00:49:44.839Z",
+      "api_version": 1,
+      "correlation_id_echo": null,
+      "server_build_ref": {
+        "git_sha": "8d0184a4",
+        "built_at": "2026-11-11T18:17:52Z"
+      }
+    },
+    "payload": {
+      "data": {
+        "buildings": [
+          {
+            "building": "a6e1d186-d8f0-47e8-af79-905b4a8ea891",
+            "block_id": 1501,
+            "district_id": 16,
+            "district_name": "La Lisière",
+            "operational_type": "lab",
+            "purchased_type": "lab",
+            "convertible_types": [],
+            "name_i18n": {
+              "key": "game.fiction.building.name",
+              "params": {
+                "enseigne": "Ferblanterie Tull",
+                "district": "La Lisière",
+                "block": "1501"
+              }
+            },
+            "lieutenant_ids": [
+              "01a1cd36-da13-7509-9a90-631a85547ed7",
+              "01a1cd36-da15-7194-a0bb-3796fb3da6a6"
+            ]
+          },
+          {
+            "building": "1c88d21d-17e0-4a89-a184-6a58922f8d39",
+            "block_id": 1502,
+            "district_id": 16,
+            "district_name": "La Lisière",
+            "operational_type": "stash",
+            "purchased_type": "stash",
+            "convertible_types": [],
+            "name_i18n": {
+              "key": "game.fiction.building.name",
+              "params": {
+                "enseigne": "Réserve Ferrand",
+                "district": "La Lisière",
+                "block": "1502"
+              }
+            },
+            "lieutenant_ids": []
+          },
+          {
+            "building": "d7803b2f-f4f6-407a-ad70-02e440d71520",
+            "block_id": 1503,
+            "district_id": 16,
+            "district_name": "La Lisière",
+            "operational_type": "front_shop",
+            "purchased_type": "front_shop",
+            "convertible_types": [],
+            "name_i18n": {
+              "key": "game.fiction.building.name",
+              "params": {
+                "enseigne": "Photo Ilm",
+                "district": "La Lisière",
+                "block": "1503"
+              }
+            },
+            "lieutenant_ids": []
+          },
+          {
+            "building": "4f5fe904-142d-4fb6-9719-d9565e30e4f0",
+            "block_id": 1504,
+            "district_id": 16,
+            "district_name": "La Lisière",
+            "operational_type": "cash_safehouse",
+            "purchased_type": "cash_safehouse",
+            "convertible_types": [],
+            "name_i18n": {
+              "key": "game.fiction.building.name",
+              "params": {
+                "enseigne": "Consigne de la Threnny",
+                "district": "La Lisière",
+                "block": "1504"
+              }
+            },
+            "lieutenant_ids": []
+          },
+          {
+            "building": "e3e6afc7-c956-4982-8be9-357b03a19c9a",
+            "block_id": 1505,
+            "district_id": 16,
+            "district_name": "La Lisière",
+            "operational_type": "dealer_spot_front",
+            "purchased_type": "dealer_spot_front",
+            "convertible_types": [],
+            "name_i18n": {
+              "key": "game.fiction.building.name",
+              "params": {
+                "enseigne": "Snack Ruel",
+                "district": "La Lisière",
+                "block": "1505"
+              }
+            },
+            "lieutenant_ids": []
+          }
+        ]
+      }
+    }
+  }
+}

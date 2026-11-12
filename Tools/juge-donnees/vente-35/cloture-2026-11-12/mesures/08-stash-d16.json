@@ -1,0 +1,41 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "http://localhost/v1/city/district/16/stash",
+    "body": null
+  },
+  "status": 200,
+  "x_server_build": "8d0184a4",
+  "content_length_header": "563",
+  "octets_ecrits": 563,
+  "taille_conforme": true,
+  "body": {
+    "response_meta": {
+      "request_id_echo": "a32da564-3364-4653-b9a4-73a38e0dc646",
+      "server_processed_at": "2026-11-12T00:49:51.412Z",
+      "api_version": 1,
+      "correlation_id_echo": null,
+      "server_build_ref": {
+        "git_sha": "8d0184a4",
+        "built_at": "2026-11-11T18:17:52Z"
+      }
+    },
+    "payload": {
+      "data": {
+        "district": "district-16",
+        "district_blocking_band": "LOW",
+        "any_high_blocking_alert": false,
+        "safehouses": [
+          {
+            "safehouse_id": "746804d9-75fd-421a-b3a1-7c56abdd9b72",
+            "building_id": "4f5fe904-142d-4fb6-9719-d9565e30e4f0",
+            "slot_count": 12,
+            "load_bucket": "LOW",
+            "blocking_band": "LOW",
+            "high_blocking_alert": false
+          }
+        ]
+      }
+    }
+  }
+}

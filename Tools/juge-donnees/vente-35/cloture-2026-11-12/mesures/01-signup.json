@@ -1,0 +1,40 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "http://localhost/v1/auth/signup",
+    "body": {
+      "callsign": "jd3-9ac333d0bf",
+      "password": "***MDP-MASQUE***"
+    }
+  },
+  "status": 201,
+  "x_server_build": "8d0184a4",
+  "content_length_header": "995",
+  "octets_ecrits": 995,
+  "taille_conforme": true,
+  "body": {
+    "response_meta": {
+      "request_id_echo": "00ff6bc5-e91e-4c67-944d-c35a7524570a",
+      "server_processed_at": "2026-11-12T00:44:46.433Z",
+      "api_version": 1,
+      "correlation_id_echo": null,
+      "server_build_ref": {
+        "git_sha": "8d0184a4",
+        "built_at": "2026-11-11T18:17:52Z"
+      }
+    },
+    "payload": {
+      "data": {
+        "access_token": "***JETON-MASQUE***",
+        "token_type": "Bearer",
+        "account_kind": "PLAYER",
+        "session_id": "01a1cd36-da09-751d-8416-72c32afb29ca",
+        "expires_in_s": 900,
+        "refresh_token": "2fbeddbf7fccdfe8b11466d583801d1093a5588fcbffc2c8f8d24684d09154f0",
+        "refresh_expires_in_s": 2592000,
+        "game_back_access_token": null,
+        "game_back_session_id": null
+      }
+    }
+  }
+}

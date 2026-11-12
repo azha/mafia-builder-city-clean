@@ -1,0 +1,44 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "http://localhost/v1/operational/dealer/917e277b-b3ef-4b53-8d2d-82bb7efdd4c1/collect",
+    "body": {
+      "safehouse_id": "746804d9-75fd-421a-b3a1-7c56abdd9b72"
+    }
+  },
+  "status": 409,
+  "x_server_build": "8d0184a4",
+  "content_length_header": "688",
+  "octets_ecrits": 688,
+  "taille_conforme": true,
+  "body": {
+    "response_meta": {
+      "request_id_echo": "40c7ff71-9280-443d-9492-be9fac91fbc0",
+      "server_processed_at": "2026-11-12T00:49:58.153Z",
+      "api_version": 1,
+      "correlation_id_echo": null,
+      "server_build_ref": {
+        "git_sha": "8d0184a4",
+        "built_at": "2026-11-11T18:17:52Z"
+      }
+    },
+    "payload": {
+      "error": {
+        "code": "SELLING_CASH_EMPTY",
+        "http_status": 409,
+        "user_facing_i18n_key": "error.selling.cash_empty",
+        "payload_vars": null,
+        "details": null,
+        "message": "dealer 917e277b-b3ef-4b53-8d2d-82bb7efdd4c1 has no cash to collect.",
+        "trace": {
+          "request_id_echo": "40c7ff71-9280-443d-9492-be9fac91fbc0",
+          "correlation_id": null,
+          "trace_id": null,
+          "server_emitted_at": "2026-11-12T00:49:58.153Z"
+        },
+        "retryable_class": "AFTER_USER_ACTION",
+        "retry_after_s": null
+      }
+    }
+  }
+}
