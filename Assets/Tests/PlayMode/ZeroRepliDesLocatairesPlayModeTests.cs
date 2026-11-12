@@ -114,6 +114,9 @@ namespace MafiaCleanCity.Operational.Tests
             "loi.dit.pour_l_instant_il_n_a_rien_dit_ca_ne_durera_pas_tout_seul",
             "loi.dit.il_a_commence_a_parler_ce_qui_est_sorti_ne_rentrera_pas",
             "loi.dit.il_a_tout_vide_il_n_y_a_plus_rien_a_sauver_de_ce_cote",
+            // LB-1 (12/11, CLIENT-1, file f2) : la phrase qui nomme l'élément fuité de ㉛ — servie par BACK-3 `lot/loi-31` (cumul back 11-15 @70ea6e07, V15),
+            // 0 servie sur la pile de dev 8d0184a4. Les 8 `loi.element.*` ne sont PAS ici : références SERVIES, jamais demandées par un littéral du client.
+            "loi.dit.il_a_donne_ce_qui_est_sorti_ne_rentrera_pas",
             "boutique.locuteur.nom", "boutique.locuteur.role",
             "boutique.dit.vous_avez_tout_claque_d_un_coup_ce_qui_reste_au_mur_vous_ne_l_aurez_pas_avec_de_la_bonne_volonte",
             "boutique.dit.ce_qui_est_la_est_a_vendre_ce_qui_est_trop_cher_pour_vous_je_le_laisse_en_vitrine_ca_vous_fera_un_but",
