@@ -194,6 +194,9 @@ public static class MafiaCI
         // `passed=4 failed=0 declares=4 comptes=4` avec CarteIcones, couverture 6/10,
         // zéro réseau, zéro écriture, zéro semis.
         "IconesArchetype",
+        // EcranMarche (CLIENT-1, ㉑ le marché) — verte SEULE au créneau du 12/11 sur integration/client1-2026-11-12 : `passed=14 failed=0 declares=14 comptes=14`,
+        // VERDICT code=0 (hors réseau ; son scénario GP porte aussi RetourAppui). Inscrite sur le oui de f2 du 12/11. Placée ici, pas en fin de liste : la fin est éditée par le cumul.
+        "EcranMarche",
         // Bloc partagé + châssis de ㉟ (2026-09-07) — verts AVANT inscription, dans le même
         // créneau : `passed=5 failed=0 declares=5 comptes=5`, catégories RÉELLEMENT exécutées
         // = [BlocPartage, ChassisVente]. Zéro réseau, zéro écriture, zéro semis : les deux

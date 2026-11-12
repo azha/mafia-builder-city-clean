@@ -16,12 +16,29 @@ namespace MafiaCleanCity.CitySim.Inspection
 
         private string Url(string leaf) => $"{BaseUrl.TrimEnd('/')}/v1/{leaf}";
 
+        /// <summary>⛔ RÉSERVÉ AUX TESTS hors réseau (TD-879, patron `HlCardClient.ReponsePourTest`) : (statut, corps) d'une file, par district, à
+        /// la place du back. Le corps passe par le MÊME chemin de lecture que la réponse réseau (`FromJson<FileEnvelope>`, mêmes deux refus) —
+        /// seul le transport est remplacé.</summary>
+        public Func<int, (long statut, string corps)> ReponsePourTest;
+
         /// <summary>GET /v1/city/district/:id/inspection — la file d'UN district.
-        /// 404 = « pas de file » : sur un compte qui n'a jamais vécu le tick de dispatch (12 h), c'est
-        /// l'état NORMAL des 18 districts à la fois (S12-d), pas une panne.</summary>
+        /// Au 2026-11-11 (back servi `main` 2ed39589) : un compte qui n'a pas vécu le tick de dispatch (12 h) reçoit un 404 sur les 18
+        /// districts — et un compte SANS profil reçoit un 404 indiscernable (même code, même clé servie : TD-1010). Le back de BACK-2
+        /// (TD-879) sert à la place une file VIDE en 200 (`queue_load: EMPTY`) : le client la rend en 18 lignes « VIDE ».</summary>
         public IEnumerator LireFile(int districtId, string bearer,
             Action<FileData> onOk, Action<long, string> onErr)
         {
+            if (ReponsePourTest != null)
+            {
+                (long statut, string texte) = ReponsePourTest(districtId);
+                if (statut < 200 || statut >= 300) { onErr?.Invoke(statut, $"inspection {districtId} failed ({statut}) (réponse de test)"); yield break; }
+                FileData dtoTest = null;
+                try { dtoTest = JsonUtility.FromJson<FileEnvelope>(texte)?.payload?.data; }
+                catch (Exception ex) { onErr?.Invoke(statut, "parse error: " + ex.Message); yield break; }
+                if (dtoTest == null) { onErr?.Invoke(statut, "corps sans `payload.data`"); yield break; }
+                onOk?.Invoke(dtoTest);
+                yield break;
+            }
             using (UnityWebRequest req = UnityWebRequest.Get(Url($"city/district/{districtId}/inspection")))
             {
                 MafiaCleanCity.ClientHttp.Delai(req, TimeoutSeconds);

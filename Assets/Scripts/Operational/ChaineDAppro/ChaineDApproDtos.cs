@@ -74,6 +74,9 @@ namespace MafiaCleanCity.Operational
         public string bucket;                 // silent | mild | warm | critical (BackpressureBucket)
         public bool has_arrow;
         public string arrow_to_building_id;
+        // TD-1035 (12/11, BACK-6 `lot/td-1035-cause-bouchon` @ba55e828, `supply-chain.controller.ts:138`, V15) : booléen servi, jamais null ; true = ce nœud est
+        // une CAUSE du bouchon (non dérivable des autres clés). DÉCLARÉ pour ne pas être jeté par JsonUtility (forme G) ; PAS ENCORE DESSINÉ (spec client en cours).
+        public bool is_blocked_output;
     }
 
     /// <summary>Un tronçon de la chaîne — mesuré (2026-09-03) : `leg_id`, `origin_building_id`,
@@ -89,13 +92,29 @@ namespace MafiaCleanCity.Operational
         public string destination_building_id;
         public string debt_bucket;
         public bool bypassed;
+        /// <summary>`legs[].maintaining` — ADDITIF, à servir par BACK-1 (TD-1047) ; nom FIXÉ. Définition sûre (juge ㉚ E3) : `maintenance_completes_at_tick IS NOT NULL`
+        /// (un patch ou un renfort EN COURS), PAS `maintenance_mode IS NOT NULL` — un contournement pose aussi `maintenance_mode`. ⚠️ JsonUtility ne distingue
+        /// pas l'absent du faux : lire `MaintainingServi`, jamais ce champ seul.</summary>
+        public bool maintaining;
+        /// <summary>La clé `maintaining` est-elle PRÉSENTE dans le corps brut de CETTE liaison ? Posé par `ChaineDApproClient.LireGraphe` (patron
+        /// `DelegationClient.LireTaskCategories`). Faux ⇒ rien n'est dessiné (règle (3) : on ne devine pas).</summary>
+        [NonSerialized] public bool MaintainingServi;
     }
 
-    /// <summary>Une route de la chaîne. ⛔ FORME JAMAIS MESURÉE, même traitement que
-    /// `SupplyChainNodeDto` — placeholder de désérialisation, pas une UI.</summary>
+    /// <summary>Une route de la chaîne — les 7 clés SERVIES, recopiées du code back (`supply-chain.controller.ts:92-99` et `:141-148`, main 6040a213 ;
+    /// TD-1013, 11/11 : le placeholder vide d'avant jetait les 7 clés, forme G). Que des bandes et des références (mur R2.2 du contrôleur, `:113-120` :
+    /// jamais `sinuosity_index`, `straight_line_distance`, `stress_streak`, `patch_count` ; et `rebuilding` n'est JAMAIS le compte à rebours brut
+    /// `rebuild_completes_at_tick` : doc de `RouteGraphView`, `supply-chain-graph.service.ts:70`). Lues par `ChaineDApproGraphe.Routes` (section « Les routes », ㉚ gestes) ; le point d'entrée de `rebuild`.</summary>
     [Serializable]
     public class SupplyChainRouteDto
     {
+        public string route_id;
+        public string origin_building_id;
+        public string destination_building_id;
+        public string sinuosity_stress_bucket;   // pristine | stressed | critical | severed (`sinuosity-stress-bucket.ts:34`)
+        public string time_to_collapse_bucket;   // distant | approaching | imminent | na (`time-to-collapse-bucket.ts:24`)
+        public string state;                     // draft | active | saturated | severed
+        public bool rebuilding;                  // l'arrêt de reconstruction, qualitatif (jamais le compte à rebours)
     }
 
     /// <summary>`GET /v1/supply-chain/graph` — réponse mesurée (2026-09-03) : `{nodes, legs,
@@ -111,24 +130,44 @@ namespace MafiaCleanCity.Operational
     [Serializable] public class GetSupplyChainGraphPayload { public GetSupplyChainGraphResponseDto data; }
     [Serializable] public class GetSupplyChainGraphEnvelope { public GetSupplyChainGraphPayload payload; }
 
-    /// <summary>`POST /v1/supply-chain/legs/:id/maintain` — corps et réponse NON REMPLIS. Cette
-    /// route agit sur un `leg_id` : elle appartient à la même famille que `backpressure` /
-    /// `trace-step` / `resolve` que le brief a écartées comme inatteignables (aucun nœud/tronçon
-    /// connu sur ce compte, `nodes` vide — voir `GetSupplyChainGraphResponseDto`). Ne pas remplir
-    /// une forme qu'aucun chemin de ce lot n'exerce : ce serait deviner un contrat, pas le
-    /// mesurer. // MÉTIER ICI le jour où un compte porte un tronçon exerçable.</summary>
+    /// <summary>`POST /v1/supply-chain/legs/:id/maintain` — réponse JAMAIS MESURÉE (TD-1049) : le juge ne l'a appelée que sur un `legId` inexistant
+    /// (`mesures/00-commandes.sh:49-50`). Elle reste donc VIDE et déclarée telle : l'après-geste vient de la RELECTURE du graphe, jamais de ce corps
+    /// (juge ㉚ E2). Un 2xx est un succès, quel que soit son corps.</summary>
     [Serializable]
     public class PostSupplyChainLegsMaintainResponseDto
     {
-        // MÉTIER ICI — route non câblée cette passe (inatteignable : aucun leg_id connu).
+        // VIDE, déclaré tel — voir ci-dessus.
     }
 
     [Serializable] public class PostSupplyChainLegsMaintainPayload { public PostSupplyChainLegsMaintainResponseDto data; }
     [Serializable] public class PostSupplyChainLegsMaintainEnvelope { public PostSupplyChainLegsMaintainPayload payload; }
 
+    /// <summary>Corps de `POST /v1/supply-chain/legs/:id/maintain` : `{mode}` (V15 @74c5a0b0, lu par le poseur) — quick_patch | structural_reinforce | reroute_bypass.</summary>
     [Serializable]
     public class PostSupplyChainLegsMaintainBody
     {
-        // MÉTIER ICI — route non câblée cette passe (inatteignable : aucun leg_id connu).
+        public string mode;
     }
+
+    /// <summary>Corps de `POST /v1/operational/routes/:id/rebuild` : `{mode}` — MINIMAL_REROUTE | MODERATE_RESTRUCTURE | FULL_GEOMETRIC_RESET.</summary>
+    [Serializable]
+    public class PostOperationalRoutesRebuildBody
+    {
+        public string mode;
+    }
+
+    /// <summary>Réponse MESURÉE de `rebuild` (`mesures/08-rebuild-MINIMAL_REROUTE.json`, back 8d0184a4) : **camelCase**, quatre clés.
+    /// ⛔ `rebuildCompletesAtTick` est un TICK BRUT : lu pour que JsonUtility ne le jette pas, JAMAIS affiché (R2.2, garde G-D3). L'état d'après-geste
+    /// se RELIT sur le graphe (E2) — ce corps ne dit rien que l'écran montre.</summary>
+    [Serializable]
+    public class PostOperationalRoutesRebuildResponseDto
+    {
+        public string routeId;
+        public string mode;
+        public int version;
+        public int rebuildCompletesAtTick;
+    }
+
+    [Serializable] public class PostOperationalRoutesRebuildPayload { public PostOperationalRoutesRebuildResponseDto data; }
+    [Serializable] public class PostOperationalRoutesRebuildEnvelope { public PostOperationalRoutesRebuildPayload payload; }
 }

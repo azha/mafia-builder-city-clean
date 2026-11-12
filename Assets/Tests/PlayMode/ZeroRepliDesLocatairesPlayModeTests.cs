@@ -47,10 +47,7 @@ namespace MafiaCleanCity.Operational.Tests
             // — retirées. Restent 6 clés, non servies à 256de0f8 (7 avec E2a, ci-dessous) :
             "filiere.bloc.blanchir",       // le mot du bouton de ㊵ (clé dérivée) — demandé à l'atelier
             "building.action.blanchir",
-            // B5 (table 79 @f81ad7cb) : l'écran d'échec de démarrage et la ligne de ㉒.
-            "demarrage.echec.la_partie_n_a_pas_pu_commencer",
-            "demarrage.echec.la_ville_ne_repond_pas_verifiez_votre_connexion_puis_reessayez",
-            "demarrage.echec.reessayer",
+            // B5 (table 79 @f81ad7cb) : la ligne de ㉒. (Les trois `demarrage.echec.*` de l'écran d'échec de démarrage ne sont plus une dette : `RepliVoulu`, 12/11.)
             "reglages.bloc.votre_partie_vit_sur_cet_appareil_desinstaller_l_appli_l_efface",
             // E2a (08/10) : la ligne « Mouvement réduit » de ⑲ (REUSE du canon `screen_14`, mot du canon « Mouvement réduit ») — clé dérivée,
             // non servie à 83b4f291 ; voir `Tools/juge-donnees/i18n/cles-neuves-e2a-2026-10-08.md`.
@@ -83,6 +80,46 @@ namespace MafiaCleanCity.Operational.Tests
             // ㊴ LE DOSSIER (CLIENT-2, 08/10 ; DESIGN v5.2, cadres 150-151-135) : une clé restante, non servie à la pile du 08/10 (les 15 autres le sont : retirées ci-dessus). Les statuts et types d'acteur
             // sont lus par la VALEUR servie (`forensic.statut.*`, `forensic.acteur.lawyer|clerk`).
             "forensic.enseigne.rien_a_votre_nom",   // le sous-titre de l'enseigne du cadre 135 (sans point) : son rôle propre, la clé bloc.* est celle du texte `.rien`
+            // ㉚ CADRE 154 « La chaîne vue du graphe » (11/11, CLIENT-1, décision f2) : 18 clés, 0 servie sur back main 6040a213 (mesuré dans
+            // `string_table.ts`). 11 sont servies par BACK-1 (`lot/chaine-bandes-2` @1845e0e8 : les 8 bandes et les 3 du fournisseur) ; les 7 de
+            // structure (noms FIGÉS par BACK-1, design a7df3592) ne le sont pas encore — code BACK-1 en cours. À RETIRER quand la règle (2) rougit.
+            "appro.titre.la_chaine", "appro.sous_titre.chaque_maillon_sa_pression_chaque_liaison_son_entretien",
+            "appro.titre.les_maillons", "appro.titre.les_liaisons", "appro.etiquette.refoule_vers", "appro.etiquette.contournee",
+            "appro.etiquette.un_batiment_detruit",
+            // ㉚ « LES DEUX GESTES » (11/11, CLIENT-1, `Tools/gestes-30/DESIGN.md` §6 ; TD-1048) puis V15 « COÛTS PAR MODE » (`Tools/couts-30-v15/DESIGN.md` §2, branche lot/client1-couts-30-v15-2026-11-11) : 24 clés, 0 servie à ce jour
+            // sur la pile — les 17 du lot BACK-1 `lot/couts-30` @87820327 (clés RENOMMÉES aux noms SERVIS, FR à l'octet ; pas encore sur la pile : back main 51cece7d, 0/22) et 7 NEUVES du lot précédent. Elles partent au fil du service.
+            // Les REUSE ne sont PAS ici : `appro.bouton.ca_part_du_compte_tout_de_suite`, `game.ui_common.cancel_button` (servis), `appro.sinuosite.*` / `appro.effondrement.*` (servis au cumul 74c5a0b0).
+            // ⚠️ `accueil.jeton.votre_grande_decision_du_jour` n'est PAS un REUSE servi (0 à back main 51cece7d et au cumul 74c5a0b0 : le lot BACK-1 l'ajoute) — elle est dans la dette, UNE fois : inscrite plus haut par le cumul (c5a66a6b, après-geste ④/⑤), donc retirée de ce bloc à l'intégration (23 entrées ici, la 24ᵉ là-haut).
+            // Retirées (13 noms disparus du code) : `appro.geste.*` ×2, `appro.mode.*` ×5, `appro.mode_sous.*` ×5, `appro.bloc.pendant_les_travaux_…` ×1. Non lues par le client : `appro.etiquette.remaniement`,
+            // `appro.consequence.remaniement`, `error.funds.insufficient` (par la clé du corps du refus).
+            "appro.titre.entretenir_la_liaison", "appro.titre.reconstruire_la_route",
+            "appro.etiquette.rafistoler", "appro.etiquette.renforcer", "appro.etiquette.contourner",
+            "appro.etiquette.petit_detour", "appro.etiquette.remise_a_plat",
+            "appro.etiquette.quelques_minutes", "appro.etiquette.plus_longtemps", "appro.etiquette.tout_de_suite",
+            "appro.consequence.rafistoler", "appro.consequence.renforcer", "appro.consequence.contourner",
+            "appro.consequence.petit_detour", "appro.consequence.remise_a_plat",
+            "appro.sous_titre.pendant_les_travaux_plus_rien_ne_passe_sur_cette_route",
+            "appro.cout.on_ne_sait_pas_encore_combien",
+            "appro.etiquette.en_entretien", "appro.titre.les_routes",
+            "appro.etat_route.active", "appro.etat_route.saturated", "appro.etat_route.severed", "appro.etiquette.en_reconstruction",
+            // TD-1035 (12/11, CLIENT-1, ordre f2) : le mot de la CAUSE du bouchon de ㉚ — « C’est ici que ça bouche » (U+2019), servi par BACK-6 `lot/td-1035-cause-bouchon`
+            // @ba55e828 (pas encore sur la pile). Inscrit AVANT son lecteur : le dessin (2ᵉ ligne du maillon-cause, cadre 154) attend la spec client. À RETIRER au service.
+            "appro.etiquette.c_est_ici_que_ca_bouche",
+            // ⚠️ COUPE du 12/11 (créneau CLIENT-1, run 2 contre la pile de dev 8d0184a4) : la règle (2) a rougi, 42 clés SONT servies — retirées : les 11 bandes de ㉚
+            // (`appro.pression.*`, `appro.dette.*`, `appro.fournisseur.*`) et les 31 `marche.*` de ㉑. Restent ci-dessous l'entrée du menu Plus et les clés des lots d'après.
+            // ㉑ LE MARCHÉ (CLIENT-1, 11/11 ; TD-1017 BASCULÉE) : les 31 clés `marche.*` SERVIES par BACK-3 sous leurs noms FIGÉS (`lot/marche-mots` @163402f1,
+            // recopiées de string_table.ts à ce SHA, V15) — NON servies sur le back `main` tant que ce lot n'y est pas fusionné : la règle (2) rougira le jour
+            // où la pile les sert ⇒ les retirer alors. + l'entrée du menu Plus (non servie).
+            "plus.entree.le_marche",
+            // TD-823 (11/11, CLIENT-1, décision f2) : la voix des lieutenants (㉛) et de Wexler (㉓) — 8 clés, 0 servie sur back main (mesuré dans
+            // `string_table.ts`). BACK-2 les sert sur `lot/td-823-voix` (noms à figer pour boutique.dit.* : clés DÉRIVÉES ici jusqu'à son SHA, puis V15).
+            "loi.dit.pour_l_instant_il_n_a_rien_dit_ca_ne_durera_pas_tout_seul",
+            "loi.dit.il_a_commence_a_parler_ce_qui_est_sorti_ne_rentrera_pas",
+            "loi.dit.il_a_tout_vide_il_n_y_a_plus_rien_a_sauver_de_ce_cote",
+            "boutique.locuteur.nom", "boutique.locuteur.role",
+            "boutique.dit.vous_avez_tout_claque_d_un_coup_ce_qui_reste_au_mur_vous_ne_l_aurez_pas_avec_de_la_bonne_volonte",
+            "boutique.dit.ce_qui_est_la_est_a_vendre_ce_qui_est_trop_cher_pour_vous_je_le_laisse_en_vitrine_ca_vous_fera_un_but",
+            "boutique.dit.les_marks_c_est_dehors_qu_on_les_achete_moi_je_vous_les_compte_je_ne_les_vends_pas",
 
 
 
@@ -99,6 +136,35 @@ namespace MafiaCleanCity.Operational.Tests
 
 
         };
+
+        /// <summary>REPLI VOULU (décision f2 du 12/11/2026, TD-1068) — des clés dont le repli FR est l'état NORMAL et définitif, pas une dette :
+        /// elles ne « partiront » jamais avec le service. Chaque entrée porte sa RAISON. Ce n'est pas un second tiroir de dette : une clé n'y
+        /// entre que si elle ne PEUT pas être servie, et une entrée que le catalogue se met à servir rougit (règle (4) : la raison est caduque).</summary>
+        internal static readonly Dictionary<string, string> RepliVoulu = new Dictionary<string, string>
+        {
+            // `EcranEchecDeDemarrage` s'affiche quand le serveur ne répond PAS : le catalogue i18n, qui vient du même serveur, n'a pas pu être chargé.
+            { "demarrage.echec.la_partie_n_a_pas_pu_commencer", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
+            { "demarrage.echec.la_ville_ne_repond_pas_verifiez_votre_connexion_puis_reessayez", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
+            { "demarrage.echec.reessayer", "écran d'échec de démarrage : le serveur ne répond pas, le catalogue n'est pas chargé" },
+        };
+
+        /// <summary>Un repli sur cette clé ne rougit pas : dette datée (provisoire) OU repli voulu (définitif, motivé). Une seule lecture pour les gardes « hors dette ».</summary>
+        internal static bool Toleree(string cle) => cle != null && (DetteDatee.Contains(cle) || RepliVoulu.ContainsKey(cle));
+
+        [Test]
+        public void RepliVoulu_ChaqueEntreeASaRaison_NEstPasAussiUneDette_EtUneCleInventeeNEstPasToleree()
+        {
+            Assert.IsNotEmpty(RepliVoulu, "anti-vacuité");
+            foreach (KeyValuePair<string, string> kv in RepliVoulu)
+            {
+                Assert.IsFalse(string.IsNullOrWhiteSpace(kv.Value), kv.Key + " : un repli voulu sans raison est une dette qui ne dit pas son nom");
+                Assert.IsFalse(DetteDatee.Contains(kv.Key), kv.Key + " : repli voulu OU dette datée, jamais les deux");
+                Assert.IsTrue(Toleree(kv.Key));
+            }
+            // CONTRÔLE POSITIF : une clé ni due ni voulue n'est pas tolérée (la garde « hors dette » la verrait)
+            Assert.IsFalse(Toleree("sonde.repli.cette_cle_n_est_nulle_part"));
+            Assert.IsFalse(Toleree(null));
+        }
 
         /// <summary>Clés que le client ATTEND sans les demander : l'écran n'affiche rien à leur place (arbitrage nommé), donc aucun
         /// repli ne les voit. La règle (3) rougit le jour où l'une est servie. Source : le résolveur qui les nomme, jamais recopiées.</summary>
@@ -139,6 +205,8 @@ namespace MafiaCleanCity.Operational.Tests
             // l'exclusion « aucun site Libelle » était PÉRIMÉE ; la garde doit maintenant les voir à 0 repli sur la pile.
             ("PrecinctScreenController",         s => s.MonterLocataireEnSurimpression<MafiaCleanCity.CitySim.Precinct.PrecinctScreenController>()),
             ("SellingScreenController",          s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Selling.SellingScreenController>()),
+            // ㉑ (CLIENT-1, 11/11) : MESURÉ — tous ses mots passent par `Libelle` ; tant que BACK-3 ne les sert pas, ses replis sont dans la DetteDatee ci-dessus.
+            ("MarcheScreenController",           s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Operational.Marche.MarcheScreenController>()),
             // MESURÉ depuis le 2026-09-23 : ses 7 clés `tutoriel.ecran.*` sont servies à e7f52351 (7/7) — l'épingle de son exclusion
             // datée était devenue PÉRIMÉE, comme elle le prévoyait.
             ("TutorialScreenController",         s => s.MonterLocataireEnSurimpression<MafiaCleanCity.Onboarding.TutorialScreenController>()),
@@ -210,7 +278,7 @@ namespace MafiaCleanCity.Operational.Tests
                 while (Time.realtimeSinceStartup - t < 3f) yield return null;   // construction + premier chargement réseau
                 appelsParEcran[nom] = Libelle.NbAppels;
                 foreach (string cle in Libelle.ClesEnRepli)
-                    if (!DetteDatee.Contains(cle)) horsDette.Add($"{cle} ({nom})");
+                    if (!Toleree(cle)) horsDette.Add($"{cle} ({nom})");
                 if (locataire != null) Object.DestroyImmediate(locataire.gameObject);
                 yield return null;
             }
@@ -227,6 +295,9 @@ namespace MafiaCleanCity.Operational.Tests
             var devenuesServies = DetteDatee.Where(I18nCatalog.Connait).ToList();
             Assert.IsEmpty(devenuesServies, $"{devenuesServies.Count} clé(s) de la dette SONT servies désormais — les retirer de " +
                 "DetteDatee : " + string.Join(" · ", devenuesServies));
+            // (4) un REPLI VOULU que le catalogue sert : sa raison (« ne peut pas être servie ») est caduque — le sortir de RepliVoulu, ou trancher.
+            var voulusServis = RepliVoulu.Keys.Where(I18nCatalog.Connait).ToList();
+            Assert.IsEmpty(voulusServis, $"{voulusServis.Count} clé(s) de RepliVoulu SONT servies — la raison ne tient plus : " + string.Join(" · ", voulusServis));
             // (3) une clé ATTENDUE que le code ne demande pas encore (arbitrage : rien d'affiché tant qu'elle manque) et que le back
             // sert désormais : la BRANCHER. Aujourd'hui : l'initiale des écussons de ㉙ (2026-09-24).
             var attenduesServies = CleesAttenduesNonBranchees.Where(I18nCatalog.Connait).ToList();

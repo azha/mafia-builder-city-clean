@@ -46,6 +46,11 @@ namespace MafiaCleanCity.Shell
         public event System.Action OnDecisionTranchee;
         /// <summary>Crochet de test : combien de décisions ACCEPTÉES ont levé `OnDecisionTranchee`.</summary>
         public int DecisionsTranchees { get; private set; }
+        /// <summary>TD-938 (a) — le back a répondu `outcome: "navigate"` : ⑤ ANNONCE l'écran servi et ses ids, le shell classe et monte (même contrat
+        /// que la carte de tête). Dormant tant que ⑤ poste `{}` (TD-983).</summary>
+        public event System.Action<string, string[]> OnNavigate;
+        /// <summary>Crochet de test : combien de décisions acceptées ont levé `OnNavigate`.</summary>
+        public int NavigationsSuivies { get; private set; }
         public LongPressButton BoutonLire { get; private set; }
 
         // ── le MODE « APRÈS-GESTE » (cadres 6-7 de l'atelier) : la même table feutre, la carte tranchée (ou qui reste), le tampon TRANCHÉE, le mot-or, la ligne-or ──────
@@ -358,6 +363,9 @@ namespace MafiaCleanCity.Shell
             if (this == null) yield break;
             if (DerniereErreur == null && reponse != null && reponse.committed)
             {
+                // TD-938 (a) : `navigate` (aucun mot servi, D6) ⇒ le shell mène à l'écran servi, jamais la remontée de l'Accueil. ⑤ poste `{}` (le back lit
+                // « n'agit pas » ⇒ `noted`) : branche DORMANTE aujourd'hui (TD-983), câblée pour qu'il n'existe qu'un chemin.
+                if (NavigationApresGeste.EstUneNavigation(reponse)) { NavigationsSuivies++; OnNavigate?.Invoke(reponse.navigate_screen, reponse.navigate_ids); yield break; }
                 // l'après-geste SERVI s'il y en a un (clés servies par le back) ; sinon, comme avant : l'annonce au shell, qui remonte l'Accueil
                 if (!PoserLApres(new ApresGesteHl.IssueDuGeste { Carte = CarteAffichee, Reponse = reponse })) TrancheePourDeBon();
                 yield break;

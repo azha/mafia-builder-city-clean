@@ -178,6 +178,10 @@ namespace MafiaCleanCity.Tests
             { "Scripts/Operational/Carnet/CarnetClient.cs", 1 },
             { "Scripts/Operational/Carnet/CarnetScreenController.cs", 1 },
             { "Scripts/Operational/Exceptions/ExceptionsClient.cs", 2 },
+            // 11/11, CLIENT-1, décision f2 (a) : +1 chacun — le substitut réseau des gardes TD-938 (carte HL), TD-879 (inspection) et ㉑ (marché), lu par le code de prod lui-même.
+            { "Scripts/Shell/HlCardClient.cs", 1 },
+            { "Scripts/CitySim/Inspection/InspectionClient.cs", 1 },
+            { "Scripts/Operational/Marche/MarcheClient.cs", 1 },
         };
 
         [Test]

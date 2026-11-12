@@ -511,7 +511,7 @@ namespace MafiaCleanCity.Operational
 
             // table 63 : à la bande light (rien ne se gêne), la réplique ne s'affiche pas
             if (!leger) Dit(pied, "demolition.dit.on_a_trop_de_choses_au_meme_endroit_il_va_falloir_en_enlever_une",
-                "{nom}\u00A0: «\u00A0On a trop de choses au même endroit. Il va falloir en enlever une.\u00A0»", Locuteur(Roster, null));
+                "{nom}\u00A0: «\u00A0On a trop de choses au même endroit. Il va falloir en enlever une.\u00A0»", Locuteur(Roster, null, DerniereFriction?.speaker));
             // ⛔ LE GESTE ET LA LISTE DOIVENT DIRE LA MÊME CHOSE. La première capture les a pris
             // en flagrant délit : le bouton annonçait « aucun site trouvé », ÉTEINT, pendant que
             // la liste au-dessus en affichait un. `batimentVise` n'était renseigné que par les
@@ -636,7 +636,7 @@ namespace MafiaCleanCity.Operational
             {
                 Dit(pied, "demolition.dit.celui_la_on_le_garde_par_habitude_il_gene_les_voisins_et_il_ne_rend_presque_rien",
                     "{nom}\u00A0: «\u00A0Celui-là, on le garde par habitude. Il gêne les voisins et il ne rend presque rien.\u00A0»",
-                    Locuteur(Roster, batimentVise != null ? batimentVise.lieutenant_ids : null));
+                    Locuteur(Roster, batimentVise != null ? batimentVise.lieutenant_ids : null, LocuteurServiDeLaFiche(DerniereFiche, DerniereFriction)));
                 ConstruireGeste(pied, "LE RASER",
                                 bloque ? "un lieutenant y travaille"
                                        : !JetonDisponible ? "plus de décision aujourd'hui"
@@ -847,7 +847,7 @@ namespace MafiaCleanCity.Operational
 
             if (fermee)
             {
-                Dit(pied, "demolition.dit.trop_tard_pour_celle_la", "{nom}\u00A0: «\u00A0Trop tard pour celle-là.\u00A0»", Locuteur(Roster, null));
+                Dit(pied, "demolition.dit.trop_tard_pour_celle_la", "{nom}\u00A0: «\u00A0Trop tard pour celle-là.\u00A0»", Locuteur(Roster, null, DerniereFriction?.speaker));
             // ⛔⛔⛔ D9 — LE GESTE EST ÉTEINT QUAND LE JETON EST DÉPENSÉ, ET CE N'EST PAS UNE
             //    PRUDENCE : sans ça, l'écran propose au joueur la SEULE séquence où il est CERTAIN
             //    de perdre. Mesuré par un juge ⊥ de bout en bout :
@@ -882,7 +882,7 @@ namespace MafiaCleanCity.Operational
             else
             {
                 Dit(pied, "demolition.dit.deux_propositions_la_premiere_est_mieux_placee_elles_ne_resteront_pas_sur_la_table",
-                    "{nom}\u00A0: «\u00A0Deux propositions. La première est mieux placée. Elles ne resteront pas sur la table.\u00A0»", Locuteur(Roster, null));
+                    "{nom}\u00A0: «\u00A0Deux propositions. La première est mieux placée. Elles ne resteront pas sur la table.\u00A0»", Locuteur(Roster, null, DerniereFriction?.speaker));
                 ReplacementOptionDto premiere = PremiereOffreOuverte(offres, 1);
                 ConstruireGeste(pied, "PRENDRE LA PREMIÈRE",
                                 jetonPris ? "votre jeton de structure est déjà dépensé aujourd'hui"
@@ -1235,17 +1235,25 @@ namespace MafiaCleanCity.Operational
         public static bool EstLeger(GetFrictionStateResponseDto f) =>
             f != null && f.friction_bucket == "light" && f.friction_node_count == 0 && !f.penalty_active;
 
-        /// <summary>Table 64 — QUI parle : le lieutenant du site dont il est question s'il y en a un au roster, sinon le premier du roster
-        /// servi ; personne ⇒ null, et la réplique ne s'affiche pas. Jamais un nom inventé (« Dima » était figé). Pure.</summary>
-        public static string Locuteur(MafiaCleanCity.Operational.Lieutenant.RosterRow[] roster, string[] lieutenantsDuSite)
+        /// <summary>QUI parle (table 64, puis TD-823 du 11/11) : le lieutenant du site dont il est question s'il est au roster (« celui qui y travaille
+        /// parle de ce bâtiment », `lieutenant_ids` servi — design TD-823 §5.1, gardé) ; SINON le locuteur SERVI par `friction/state`
+        /// (`speaker`, le bras droit, règle O2′ du back) ; personne ⇒ null, et la réplique ne s'affiche pas. ⛔ Plus de repli « premier du
+        /// roster » : une position de liste n'est pas une désignation. Jamais un nom inventé. Pure.</summary>
+        public static string Locuteur(MafiaCleanCity.Operational.Lieutenant.RosterRow[] roster, string[] lieutenantsDuSite, LocuteurServiDto servi)
         {
-            if (roster == null) return null;
-            if (lieutenantsDuSite != null)
+            if (roster != null && lieutenantsDuSite != null)
                 foreach (string id in lieutenantsDuSite)
                     foreach (MafiaCleanCity.Operational.Lieutenant.RosterRow r in roster)
                         if (r != null && r.lieutenant_id == id && !string.IsNullOrWhiteSpace(r.name)) return r.name;
-            foreach (MafiaCleanCity.Operational.Lieutenant.RosterRow r in roster) if (r != null && !string.IsNullOrWhiteSpace(r.name)) return r.name;
-            return null;
+            return servi != null && !string.IsNullOrWhiteSpace(servi.name) ? servi.name : null;
+        }
+
+        /// <summary>TD-823 (BACK-2 C2b) : le locuteur SERVI à opposer au lieutenant du site, sur la FICHE : le `speaker` de la fiche (`friction/nodes/:id`) s'il porte un nom ;
+        /// sinon celui de `friction/state` (même règle O2′ côté back) ; personne ⇒ null. Jamais une position de liste. Pure.</summary>
+        public static LocuteurServiDto LocuteurServiDeLaFiche(GetFrictionNodesResponseDto fiche, GetFrictionStateResponseDto etat)
+        {
+            if (fiche != null && fiche.speaker != null && !string.IsNullOrWhiteSpace(fiche.speaker.name)) return fiche.speaker;
+            return etat != null ? etat.speaker : null;
         }
 
         /// <summary>Une réplique SERVIE « {nom} : « … » » : le nom en gras DROIT, le reste en italique (`.dm-dit`). Le gabarit est

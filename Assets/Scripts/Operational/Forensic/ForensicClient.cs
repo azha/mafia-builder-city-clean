@@ -48,7 +48,8 @@ namespace MafiaCleanCity.Operational
 
         /// <summary>`GET /v1/me/internal-affairs/actors` → `payload.data.actors[]` (le roster du joueur : `actorRef`, `actorType`, `status`).
         /// Une liste VIDE est un succès (aucun acteur), pas une erreur.</summary>
-        public IEnumerator GetActeurs(string bearer, Action<ActeurDto[]> onOk, Action<long, string> onErr)
+        /// `onPrix` (TD-891) : le prix SERVI du renseignement (`intelCostCents`), null s'il ne l'est pas — appelé avant `onOk`.
+        public IEnumerator GetActeurs(string bearer, Action<ActeurDto[]> onOk, Action<long, string> onErr, Action<long?> onPrix = null)
         {
             using (UnityWebRequest req = UnityWebRequest.Get(BaseUrl.TrimEnd('/') + "/v1/me/internal-affairs/actors"))
             {
@@ -60,6 +61,7 @@ namespace MafiaCleanCity.Operational
                 {
                     GetActeursResponseDto dto = JsonUtility.FromJson<GetActeursEnvelope>(req.downloadHandler.text)?.payload?.data;
                     if (dto == null || dto.actors == null) { onErr?.Invoke(0, "corps sans `payload.data.actors` (GetActeurs)"); yield break; }
+                    onPrix?.Invoke(dto.PrixServiCents);
                     onOk?.Invoke(dto.actors);
                 }
                 else onErr?.Invoke(req.responseCode,

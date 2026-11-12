@@ -35,6 +35,10 @@ namespace MafiaCleanCity.Operational
         /// <summary>Le nombre d'endroits qui se gênent entre eux. SERVI et DESSINÉ : c'est le gros
         /// chiffre du cadre m-79.</summary>
         public int friction_node_count;
+
+        /// <summary>TD-823 (BACK-2) — le locuteur SERVI, à la racine (6ᵉ clé, additive) : `{id, name} | null`. Remplace le repli « premier du
+        /// roster » de `Locuteur` ; la préférence pour le lieutenant du site visé reste (design §5.1).</summary>
+        public LocuteurServiDto speaker;
     }
 
     [Serializable] public class GetFrictionStatePayload { public GetFrictionStateResponseDto data; }
@@ -64,6 +68,10 @@ namespace MafiaCleanCity.Operational
         /// <summary>⚠️ LE SEUL NOMBRE BRUT DE CET ÉCRAN, et il est servi tel quel. Tout le reste
         /// est en bandes fermées (R2.2) ; celui-ci se compte, donc il se montre.</summary>
         public int neighbor_count;
+        /// <summary>TD-823 (BACK-2 C2b, `c5837e39`) — le locuteur SERVI, à la RACINE de la fiche (6ᵉ clé, additive) : `{id, name} | null`, même règle O2′ que `friction/state`
+        /// (le bras droit du joueur). JsonUtility rend une instance VIDE pour `null` ou clé absente : « personne » = `name` vide, jamais l'objet nul. Sur la fiche, le
+        /// lieutenant du site visé (`lieutenant_ids`) garde la préférence ; ceci est le repli (`DemolitionScreenController.LocuteurServiDeLaFiche`).</summary>
+        public LocuteurServiDto speaker;
     }
 
     [Serializable] public class GetFrictionNodesPayload { public GetFrictionNodesResponseDto data; }

@@ -81,6 +81,47 @@ namespace MafiaCleanCity.Economy.Shop
         private static float LargeurDeCarte => (Px(300f) - 2f * Px(10f) - Px(8f)) / 2f;
 
         private static TMP_FontAsset Serif => DesignTokens.Current.hudSerifFont;
+        // `.vitr6 .voix b` #f0dfc4 · `.voix i` #8a7f6b · `.voix p` #d8cdb6 (aucune à moins de 4 d'un jeton, mesuré 11/11)
+        private static Color EncreNomVoix => new Color32(0xf0, 0xdf, 0xc4, 255);
+        private static Color EncreRoleVoix => new Color32(0x8a, 0x7f, 0x6b, 255);
+        private static Color EncreRepliqueVoix => new Color32(0xd8, 0xcd, 0xb6, 255);
+        private TextMeshProUGUI repliqueTexte;
+        /// <summary>La réplique de Wexler affichée (crochet de test) ; "" si aucune.</summary>
+        public string RepliqueAffichee => repliqueTexte != null && repliqueTexte.gameObject.activeSelf ? repliqueTexte.text : "";
+
+        /// <summary>TD-823 (RÈGLE FINALE de f2 du 11/11 — le juge a prouvé que la priorité « solde > 0 ⇒ à vendre » rendait « Marks dehors » inatteignable
+        /// pour un joueur neuf doté de 50 Marks devant un seul article à 50) : UNE réplique dans la bande `.voix`, par priorité : (1) solde = 0 ET au moins
+        /// un acquis ⇒ « Vous avez tout claqué d’un coup… » ; (2) sinon « Ce qui est là est à vendre… » si au moins un article est À PORTÉE (`aPortee` ≥ 1 :
+        /// prix ≤ solde, voir <see cref="ArticlesAPortee"/>) ; (3) sinon « Les Marks, c’est dehors qu’on les achète… ».
+        /// Rien n'est dit (null) quand on ne sait pas : solde NON LU (-1) ; solde 0 avec possessions NON LUES (`acquis` -1) — on ne sait pas s'il a « tout claqué » ;
+        /// solde > 0 avec catalogue NON LU (`aPortee` -1) — on ne sait pas si « à vendre » est vrai. À solde 0 aucun article n'est à portée (un prix est > 0).
+        /// Valeurs SANS {nom} (la bande dit qui parle), guillemets à U+00A0 ; clés dérivées jusqu'au SHA de BACK-2 (noms à figer). Pure.</summary>
+        public static string RepliqueDeWexler(int solde, int acquis, int aPortee)
+        {
+            if (solde < 0) return null;
+            if (solde == 0 && acquis < 0) return null;
+            if (solde == 0 && acquis >= 1)
+                return MafiaCleanCity.I18n.Libelle.De("boutique", "dit", "«\u00A0Vous avez tout claqué d’un coup. Ce qui reste au mur, vous ne l’aurez pas avec de la bonne volonté.\u00A0»");
+            if (solde > 0 && aPortee < 0) return null;
+            if (solde > 0 && aPortee >= 1)
+                return MafiaCleanCity.I18n.Libelle.De("boutique", "dit", "«\u00A0Ce qui est là est à vendre. Ce qui est trop cher pour vous, je le laisse en vitrine — ça vous fera un but.\u00A0»");
+            return MafiaCleanCity.I18n.Libelle.De("boutique", "dit", "«\u00A0Les Marks, c’est dehors qu’on les achète. Moi je vous les compte, je ne les vends pas.\u00A0»");
+        }
+
+        /// <summary>Combien d'articles du catalogue sont À PORTÉE du solde : la MÊME règle que la carte (`Article` : `abordable`) — ni monnaie réelle (MARKS_PACK, SUPPORT),
+        /// prix > 0, prix ≤ solde — et pas déjà possédé (on ne rachète pas). -1 si le catalogue n'est pas lu (null ou vide) : « aucun » ≠ « pas lu ». Pure.</summary>
+        public static int ArticlesAPortee(SkuDto[] catalogue, int solde, ICollection<string> possedes)
+        {
+            if (catalogue == null || catalogue.Length == 0) return -1;
+            int n = 0;
+            foreach (SkuDto s in catalogue)
+            {
+                bool argentReel = s.kind == "MARKS_PACK" || s.kind == "SUPPORT";
+                if (!argentReel && s.price_marks > 0 && solde >= s.price_marks && (possedes == null || !possedes.Contains(s.sku_id))) n++;
+            }
+            return n;
+        }
+
         private static TMP_FontAsset Sans => DesignTokens.Current.primaryFont;
 
         // ═══ La palette de ㉓, lue sur `.vitr6` (ecrans-brennar-6.html @7159e54) — aplats opaques posés tels quels (la maquette ne pose ici aucune opacité : rien à convertir). Les valeurs à moins de 4/255 d'un jeton
@@ -196,6 +237,12 @@ namespace MafiaCleanCity.Economy.Shop
             // gabarit ICU `boutique.bloc.n_marks` ; « — Marks » garde la clé `boutique.bloc.jetons` (valeur changée, clé gardée).
             soldeTexte.text = Solde < 0 ? SoldeInconnu() : NMarks(Solde);
             terminalBloc.SetActive(Solde == 0);
+            if (repliqueTexte != null)
+            {
+                string r = RepliqueDeWexler(Solde, Possedes == null ? -1 : Possedes.Length, ArticlesAPortee(Catalogue, Solde, Possedes));   // possessions / catalogue NON LUS ⇒ -1, jamais « aucun »
+                repliqueTexte.text = r ?? "";
+                repliqueTexte.gameObject.SetActive(r != null);
+            }
 
             var possedes = new HashSet<string>(Possedes ?? new string[0]);
 
@@ -642,6 +689,17 @@ namespace MafiaCleanCity.Economy.Shop
 
             GameObject colonne = Bloc("Voix", bas.transform, false, Px(3f));
             colonne.AddComponent<LayoutElement>().flexibleWidth = 1f;
+
+            // TD-823 (f2 11/11, design BACK-2 dette/b2 @949e5613 §6.3, D1 = Wexler PNJ FIXE) : `.voix b` le nom, `.voix i` le rôle, `.voix p` la réplique.
+            // Portrait `.av` toujours ABSENT (décision f2 du 08/10, aucun asset servi). La réplique se choisit à chaque rendu (`RepliqueDeWexler`).
+            Colonne(colonne.transform, "Nom", MafiaCleanCity.I18n.Libelle.Gabarit("boutique.locuteur.nom", "Wexler"),
+                    9.5f, EncreNomVoix, Serif, true, TextAlignmentOptions.Left);
+            TextMeshProUGUI role = Colonne(colonne.transform, "Role", MafiaCleanCity.I18n.Libelle.Gabarit("boutique.locuteur.role", "derrière le comptoir"),
+                    6.5f, EncreRoleVoix, Sans, false, TextAlignmentOptions.Left);
+            role.fontStyle = FontStyles.UpperCase;
+            role.characterSpacing = 0.9f / 6.5f * 100f;   // `letter-spacing:.9px` sur 6,5 px
+            repliqueTexte = Colonne(colonne.transform, "Replique", "", 8.5f, EncreRepliqueVoix, Serif, false, TextAlignmentOptions.Left);
+            repliqueTexte.fontStyle = FontStyles.Italic;
 
             // `.mort` : filet gauche rouge de 2 px, retrait de 6 px, encre rosée
             terminalBloc = Bloc("Terminal", colonne.transform, false, 0f);

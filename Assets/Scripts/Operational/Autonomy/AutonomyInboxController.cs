@@ -137,6 +137,17 @@ namespace MafiaCleanCity.Operational.Autonomy
             IsAuthenticated = true;
         }
 
+        /// <summary>TD-938, ruling f2 11/11 (Q1/Q4) : [Lire maintenant] de la carte de tête dont le commit est REFUSÉ ouvre quand même les rapports et y
+        /// AFFICHE la phrase SERVIE du refus — dans la ligne `Error` existante de `Render()` (aucun élément neuf). Vide ou null ⇒ RIEN (jamais effacer
+        /// une phrase posée, jamais un second repli : celui de `Resolve` est déjà celui de l'écran). Appelé dans la fenêtre synchrone du montage
+        /// (avant `Start()`) : le premier `Render()` de `LoadReports` la lit ; si la mise en page existe déjà (`initialized`), on re-rend.</summary>
+        public void AnnoncerUnRefus(string phraseServie)
+        {
+            if (string.IsNullOrWhiteSpace(phraseServie)) return;
+            PhraseDuRefus = phraseServie;
+            if (initialized) Render();
+        }
+
         /// <summary>IShellTenant token injection (B1, hud-session-arbitrages-design.md §1.2) — set
         /// directly by the shell BEFORE Start() runs (synchronous MountTenant<T> window). Mirrors
         /// DashboardController.SetToken; SignIn()'s own `if (IsAuthenticated) yield break;` guard
