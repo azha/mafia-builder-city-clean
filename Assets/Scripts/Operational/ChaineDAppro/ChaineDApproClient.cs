@@ -172,8 +172,11 @@ namespace MafiaCleanCity.Operational
         /// (le coût ne dépend que du mode : `GET /v1/supply-chain/upkeep-costs`, `LireCouts`). Null si le corps n'a pas `payload.data`.</summary>
         public static GetSupplyChainGraphResponseDto LireGraphe(string corps)
         {
+            // MESURÉ au créneau du 12/11 (GestesD6b) : `JsonUtility` INSTANCIE les objets imbriqués absents — `{"payload":{}}` rendait un graphe VIDE
+            // (« rien à montrer ») au lieu de null (« corps illisible »). La présence de `payload.data` se lit donc dans le corps BRUT, comme `LireCouts`.
+            if (string.IsNullOrEmpty(corps) || !PayloadData.IsMatch(corps)) return null;
             GetSupplyChainGraphResponseDto dto = null;
-            try { dto = JsonUtility.FromJson<GetSupplyChainGraphEnvelope>(corps ?? "")?.payload?.data; }
+            try { dto = JsonUtility.FromJson<GetSupplyChainGraphEnvelope>(corps)?.payload?.data; }
             catch (Exception) { return null; }
             if (dto == null) return null;
             List<string> liaisons = ObjetsDuTableau(corps, "legs");
