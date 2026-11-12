@@ -553,7 +553,10 @@ def temoin_de_source(cle, litteraux, slug):
 def cle_explicite_admise(cle, roles, litteraux, slug):
     """M1 (revue ⊥ tour 2) : le témoin porte sur la CLÉ ENTIÈRE — son `domaine.rôle` doit être celui d'un site non résolu du fichier (`roles`) ET son dernier
     segment doit naître d'un littéral. Une clé dont on a changé le domaine ou le rôle (servie, avec un mot qui existe dans le fichier) ne passe plus."""
-    return '.'.join(cle.split('.')[:2]) in roles and temoin_de_source(cle, litteraux, slug)
+    if '.'.join(cle.split('.')[:2]) in roles and temoin_de_source(cle, litteraux, slug):
+        return True
+    # rôle À POINT (㉟ `ParValeur("vente", "coin.bande", v, …)` ⇒ `vente.coin.bande.high`) : même exigence, le rôle ENTIER du site puis un littéral
+    return any(cle.startswith(r + '.') and any(slug(l) == cle[len(r) + 1:] for l in litteraux) for r in roles if r.count('.') >= 2)
 
 
 def analyser_textes(ex, table, racine=Path('Assets/Scripts')):

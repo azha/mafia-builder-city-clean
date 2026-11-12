@@ -1688,6 +1688,7 @@ namespace MafiaCleanCity.Capture.Tests
         ///   l'image ne pouvait pas le dire (un écran non chargé et un compte vide donnent la
         ///   même photo). C'est en exigeant que le chargement ait EU LIEU qu'on le voit.</summary>
         [Category("CaptureJournal")]
+        [Timeout(720000)]   // pire cas du semis : 9 appels × 45 s + 5 relectures de 3 fils (≈ 555 s), plus le chemin de capture ; 180 s par défaut ne suffiraient pas
         public IEnumerator Capture_LeJournal_SousChrome()
         {
             // AVANT TOUT : sans la paire, rien ne s'écrit (patron `CapturerLocataire`).
@@ -1715,6 +1716,12 @@ namespace MafiaCleanCity.Capture.Tests
             // réellement utilisé, confronté à l'identité annoncée, AVANT tout PNG. `[DemoIdentityResolver]` ne dit que ce que le résolveur a
             // appliqué, pas avec quoi le shell s'est connecté.
             yield return MafiaCleanCity.Shell.Tests.CaptureSousShell.ShellConnecteOuEchoue(shell, identiteAnnoncee, "screen_c1_journal_sous_chrome");
+
+            // LE SEMIS (f2 12/11) — la pile de dev ne fait tourner aucun tick nocturne : sans lui, ㊳ montre « rien ne bouge ». Il sème SEULEMENT si la rue est
+            // vide, par les seams ville-globaux, sans muter le compte de capture (gelé) : voir l'en-tête de `SemisDuJournal`. AVANT d'ouvrir l'écran.
+            var semis = new MafiaCleanCity.Operational.Tests.SemisDuJournal.Etat();
+            yield return MafiaCleanCity.Operational.Tests.SemisDuJournal.PeuplerSiVide(BaseUrl, shell.Token, semis);
+            Debug.Log("[CAPTURE-JOURNAL] semis, récapitulatif : " + semis.Journal);   // chaque ligne a déjà été journalisée au fil de l'eau
 
             shell.ActivateTab(AppShell.Tab.More);
             for (int i = 0; i < 90; i++) yield return null;
@@ -1828,6 +1835,16 @@ namespace MafiaCleanCity.Capture.Tests
                 $"qu'il sait. Textes vus : [{string.Join(" · ", sousTitres)}]");
 
             LisibiliteDuTexte(shell.ContentSlot.gameObject);
+
+            // ⛔ ANTI-VACUITÉ (f2 12/11) — sur ce que l'ÉCRAN montre, pas sur ce que le semis croit avoir écrit : la planche REFUSE de se prendre si les trois
+            // fils sont vides, ou si la rue l'est (aucune brève à viser). Le message dit lequel.
+            string refus = MafiaCleanCity.Operational.Tests.SemisDuJournal.Refus(ecran.Breves.Length, ecran.Rue.Length, ecran.Monde.Length);
+            Assert.IsNull(refus, refus + " Journal du semis : " + semis.Journal);
+            // LÉGENDE de la planche : une ligne « en cours » peut être semée (elle reste dans la pile d'un run à l'autre, rien ne la purge).
+            Debug.Log($"[CAPTURE-JOURNAL] légende : à la une {ecran.Breves.Length} · dans la rue {ecran.Rue.Length} · en cours {ecran.Monde.Length}"
+                      + (ecran.Monde.Length > 0 ? " — « en cours » : " + MafiaCleanCity.Operational.Tests.SemisDuJournal.MentionMonde
+                                                  + (semis.MondeSeme ? " (semée par ce run)" : " (possiblement semée par un run antérieur : le gabarit "
+                                                  + MafiaCleanCity.Operational.Tests.SemisDuJournal.GabaritSeme + " n'est jamais activé par la pile de dev)") : ""));
 
             yield return CapturerA(1080, 2400,
                 "Assets/Screenshots/screen_c1_journal_sous_chrome_1080x2400.png");

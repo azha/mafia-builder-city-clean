@@ -372,7 +372,8 @@ if __name__ == '__main__':
                    "On ne redessine pas la maison deux fois",      # Delegation, EcrireTete #2
                    "LA CHAÎNE, DE LA TÊTE À LA SORTIE",            # Filiere, .text = Lib(…)
                    "Connectez-vous d'abord.",                      # Lieutenant, SetOutcome
-                   "qui vend, et ce qu'il y a dans la caisse",     # Selling, Texte(…, valeur, …)
+                   "EFFET · une entrée de plus dans leur file",    # Inspection, Texte(…, valeur, …) — lu à InspectionScreenController.cs:462 (12/11 : le témoin
+                                                                   # d'avant, le sous-titre de ㉟, est passé par `Libelle.Gabarit` et son apostrophe est devenue ’)
                    "Coin de vente sans dealer"]                    # Selling, Texte(…, Libelle.Gabarit(clé, REPLI), …) — le repli reste compté
         # ⛔ ET LE CONTRÔLE NÉGATIF, qui est le seul à protéger du sens inverse : ces trois
         # chaînes sont des NOMS DE GAMEOBJECT passés en argument 2 des mêmes appels. Un

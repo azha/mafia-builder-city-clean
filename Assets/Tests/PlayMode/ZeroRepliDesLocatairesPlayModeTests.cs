@@ -65,6 +65,17 @@ namespace MafiaCleanCity.Operational.Tests
             // TD-1092 (12/11) : la phrase « équipe au complet » de ③ (LieutenantScreenController.PhraseDeBlocage) lit `roster_room_label_key` SERVIE ; sa valeur n'est pas encore servie sur la pile dev (back lot/equipe-pleine @ff076d49,
             // fusion au cumul back 11/14 puis service). Repli = « Votre équipe est au complet. », ratifié f2 11/11 (le même mot que la valeur FR du back). LEVÉE : la clé est servie sur la pile — la règle (2) rougit et la retire.
             "famille.rosterroom.votre_equipe_est_au_complet",
+            // ㉟ LA VENTE (CLIENT-3, 12/11) : le coin, l'écoulement et la clientèle d'un dealer (`VenteMots`, clés dérivées de la VALEUR servie de `lek_band`, `lane_band`,
+            // `addiction_loyalty_status`, plus `withdrawn`). 11 mots ratifiés f2 12/11 (atelier cadre 171 @73806af8), NON servis au back cumul @44a645a2 (`string_table.ts`, FR et EN).
+            // LEVÉE : f2 les fait servir à la tranche suivante — la règle (2) rougit alors et les retire d'ici.
+            "vente.coin.bande.absent", "vente.coin.bande.low", "vente.coin.bande.medium", "vente.coin.bande.high",
+            "vente.ecoulement.bande.fast", "vente.ecoulement.bande.steady", "vente.ecoulement.bande.scattered",
+            "vente.clientele.bande.low", "vente.clientele.bande.stable", "vente.clientele.bande.high",
+            "vente.clientele.perdue",
+            // ㉟ les LITTÉRAUX de l'écran passés par `Libelle` (D7 du juge données 12/11 ; table ratifiée f2 12/11) : 7 clés neuves, non servies à @44a645a2. Le titre et « Ramasser »
+            // réutilisent deux clés SERVIES (`plus.entree.la_vente`, `accueil.suite.ramasser`) et ne sont donc pas ici. LEVÉE : comme ci-dessus.
+            "vente.sous_titre.qui_vend_et_ce_qu_il_y_a_dans_la_caisse", "vente.compteur.caisses_pleines", "vente.compteur.grilles",
+            "vente.raison.caisse_vide", "vente.raison.aucune_planque_disponible", "vente.jauge.caisse", "vente.jauge.marge",
             // TD-954 (12/11) : la raison de « Réaffecter… » en ON_COOLDOWN (LieutenantScreenController.PhraseDeIndisponibilite) lit `reassign_availability_label_key` SERVIE ; sa valeur n'est pas encore servie sur la pile dev
             // (back lot/td-954-reassign @ff5430b2, non fusionné). Repli = « Trop tôt pour le déplacer à nouveau. », ratifié f2 12/11 (le même mot que la valeur FR du back). LEVÉE : la clé est servie sur la pile — la règle (2) la retire.
             "famille.reaffectation.trop_tot_pour_le_deplacer_a_nouveau",
