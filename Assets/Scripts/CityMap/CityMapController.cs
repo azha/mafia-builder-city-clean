@@ -625,7 +625,7 @@ namespace MafiaCleanCity.CityMap
         {
             if (toggleLabel != null)
             {
-                toggleLabel.text = heatOverlayOn ? Lib("Chaleur : affichée") : Lib("Chaleur : masquée");
+                toggleLabel.text = heatOverlayOn ? Lib("Chaleur\u00A0: affichée") : Lib("Chaleur\u00A0: masquée");
             }
         }
 

@@ -100,7 +100,7 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual("Grave", p.Find("Gravite/Lib").GetComponent<TextMeshProUGUI>().text);
             Assert.AreEqual("Critique", p.Find("Priorite/Lib").GetComponent<TextMeshProUGUI>().text);
             Assert.AreEqual("Il est sûr", p.Find("Confiance/Lib").GetComponent<TextMeshProUGUI>().text, "`.chip.conf` (⑨-5)");
-            StringAssert.EndsWith(" <i>Je fais quoi ?</i> »", bulle.Find("Replique").GetComponent<TextMeshProUGUI>().text);
+            StringAssert.EndsWith(" <i>Je fais quoi\u202F?</i> »", bulle.Find("Replique").GetComponent<TextMeshProUGUI>().text);
             StringAssert.StartsWith("« Patron — they turned", bulle.Find("Replique").GetComponent<TextMeshProUGUI>().text);
 
             var ville = Raid(); ville.lieutenant_id = ""; ville.lieutenant = new ExceptionLieutenantDto();
