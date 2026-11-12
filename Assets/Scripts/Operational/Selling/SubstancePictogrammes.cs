@@ -16,7 +16,8 @@ namespace MafiaCleanCity.Operational.Selling
     ///
     /// Le dessin est RASTERISÉ en une texture (polygones pleins, trait centré sur le bord comme `stroke`, suréchantillonné) : un cerf-volant ne
     /// se compose pas de rectangles uGUI. Aplats OPAQUES seulement : la facette de l'ash (`#ffffff` à .5 sur `#efe9da`) est mélangée à la main
-    /// en sRGB (`#f7f4ed`) — Unity compose en linéaire, recopier l'opacité changerait d'unité. Nuance consignée (C) : les `rx` de 1,5 et 2 des
+    /// en sRGB (`#f7f4ed`) — Unity compose en linéaire, recopier l'opacité changerait d'unité. Elle est posée EN APLAT par-dessus le trait du
+    /// cerf-volant, dont elle recouvre la moitié intérieure sur deux arêtes (le SVG la mêlerait au trait à .5). Nuance consignée (C) : les `rx` de 1,5 et 2 des
     /// rectangles ne sont pas arrondis. Les deux teintes égales à un jeton passent par le jeton (`#f2c96b` hudMoneyGold, `#7fd4d9`
     /// hudGaugeArcCold).</summary>
     public static class SubstancePictogrammes
@@ -24,7 +25,8 @@ namespace MafiaCleanCity.Operational.Selling
         public const float ViewBox = 24f;
 
         /// <summary>Les quatre valeurs de `DealerSubstanceLabel`, recopiées du back.</summary>
-        public static readonly string[] Substances = { "BRINDLE", "CRICK", "HUSH", "ASH" };
+        public static readonly System.Collections.ObjectModel.ReadOnlyCollection<string> Substances =
+            System.Array.AsReadOnly(new[] { "BRINDLE", "CRICK", "HUSH", "ASH" });
 
         /// <summary>Un polygone du dessin, en unités du viewBox (y vers le bas, comme le SVG). `EpaisseurTrait` 0 = pas de trait.</summary>
         public sealed class Couche
@@ -174,7 +176,7 @@ namespace MafiaCleanCity.Operational.Selling
         public static Sprite Dessin(string substance, int taille)
         {
             taille = Mathf.Max(8, taille);
-            string cle = (System.Array.IndexOf(Substances, substance) >= 0 ? substance : "?") + ":" + taille;
+            string cle = (Substances.Contains(substance) ? substance : "?") + ":" + taille;
             if (cache.TryGetValue(cle, out Sprite deja) && deja != null) return deja;
             Texture2D tex = new Texture2D(taille, taille, TextureFormat.RGBA32, false)
             {
@@ -183,6 +185,7 @@ namespace MafiaCleanCity.Operational.Selling
             tex.SetPixels32(Rasteriser(Couches(substance), taille));
             tex.Apply(false, false);
             Sprite sprite = Sprite.Create(tex, new Rect(0, 0, taille, taille), new Vector2(0.5f, 0.5f), 100f);
+            sprite.hideFlags = HideFlags.HideAndDontSave;   // comme sa texture : ni l'un ni l'autre ne part avec une scène
             cache[cle] = sprite;
             return sprite;
         }

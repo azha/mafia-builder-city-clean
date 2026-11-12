@@ -488,8 +488,8 @@ namespace MafiaCleanCity.CityMap.Tests
                 { Points = c.Points, EpaisseurTrait = c.EpaisseurTrait, Fond = new Color32(0xc9, 0xa8, 0xe0, 255), Trait = new Color32(0x5a, 0x2f, 0x7a, 255) }).ToArray();
             Assert.AreEqual(0, PixelsDifferents(SubstancePictogrammes.Forme(brindle, TailleDeMesure), SubstancePictogrammes.Forme(reteint, TailleDeMesure)),
                 "contrôle positif : une teinte différente sur la même forme ne compte pas comme une forme distincte");
-            Assert.IsTrue(Enumerable.Range(0, TailleDeMesure * TailleDeMesure).Any(i =>
-                    !SubstancePictogrammes.Rasteriser(brindle, TailleDeMesure)[i].Equals(SubstancePictogrammes.Rasteriser(reteint, TailleDeMesure)[i])),
+            Color32[] renduBrindle = SubstancePictogrammes.Rasteriser(brindle, TailleDeMesure), renduReteint = SubstancePictogrammes.Rasteriser(reteint, TailleDeMesure);
+            Assert.IsTrue(Enumerable.Range(0, TailleDeMesure * TailleDeMesure).Any(i => !renduBrindle[i].Equals(renduReteint[i])),
                 "…alors que les deux rendus en couleur, eux, diffèrent bien (le contrôle ne compare pas deux images égales)");
 
             // la garde : deux substances quelconques (et la valeur inconnue) diffèrent par la FORME
