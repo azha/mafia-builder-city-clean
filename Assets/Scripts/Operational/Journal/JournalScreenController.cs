@@ -116,7 +116,30 @@ namespace MafiaCleanCity.Operational
         /// <summary>La route existe (`POST /v1/ambient/attend/:id`, BACK-2) et l'identifiant est SERVI par `GET /v1/ambient/feed` : le geste est rallumé. Il attend
         /// l'événement le plus récent de la rue (le fil arrive « plus récent d'abord ») ; le back refuse un événement déjà attendu ou expiré (409).</summary>
         public AmbientEventDto ProchainAAssister =>
-            Rue?.FirstOrDefault(e => e != null && !string.IsNullOrEmpty(e.event_id));
+            Rue?.FirstOrDefault(e => e != null && !string.IsNullOrEmpty(e.event_id) && !refuses.Contains(e.event_id));
+
+        // D1 (12/11, f2) — un attend REFUSÉ (404 / 409) ne dit pas que l'événement a quitté le fil. Aujourd'hui l'assistance est GLOBALE (le premier joueur
+        // prend l'événement) : le 409 dit « déjà pris » ou « expiré ». Le fil ne filtre que le STATUT : un événement expiré mais pas encore balayé (statut
+        // toujours `live`, balayage une fois par nuit de jeu) reste SERVI, et son attend rend 409 (SPECS 12/11). À venir (spec approuvée, BACK-2) : assistance
+        // PAR JOUEUR, où 409 dira « vous y avez déjà assisté ». Le client écarte donc lui-même cet identifiant pour la durée de l'écran, puis relit la rue :
+        // le bouton vise la brève suivante dans tous ces cas, au lieu de re-viser sans fin le même événement. Un événement ASSISTÉ est écarté de même (le
+        // succès est définitif) : si la relecture échoue, la marque ne reste pas dessus. Réseau, 5xx, 401 : rien n'est écarté, le geste peut être retenté.
+        private readonly HashSet<string> refuses = new HashSet<string>();
+        public static bool EstUnRefusDefinitif(long code) => code == 404 || code == 409;
+        /// <summary>Écarte l'événement si le refus est définitif (404 / 409) — SANS re-rendre. Le seul endroit qui décide : `Assister` et le crochet y passent.</summary>
+        private bool Ecarter(long code, string eventId)
+        {
+            if (!EstUnRefusDefinitif(code) || string.IsNullOrEmpty(eventId)) return false;
+            refuses.Add(eventId);
+            return true;
+        }
+        /// <summary>Crochet de test (le POST réel se joue contre le back) : écarte par la même décision qu'`Assister` (`Ecarter`), puis re-rend SANS relire la rue (`Assister`, lui, la relit). Rend vrai si écarté.</summary>
+        public bool EcarterApresRefus(long code, string eventId)
+        {
+            if (!Ecarter(code, eventId)) return false;
+            if (DernierChargement != null) AppliquerEtat(DernierChargement); else MettreAJourLePied();
+            return true;
+        }
         /// <summary>La dernière réponse d'attend (null tant qu'aucun geste n'a abouti). Ses MOTS (`residue_band`) passent par f2 : non affichés.</summary>
         public PostAmbientAttendResponseDto DerniereAssistance { get; private set; }
         public bool AssistanceEnCours { get; private set; }
@@ -152,7 +175,7 @@ namespace MafiaCleanCity.Operational
             noteDuPied.text = phrase ?? noteParDefaut;
         }
 
-        private void OnDisable() { DerniereAssistance = null; RendreLaNote(); }
+        private void OnDisable() { DerniereAssistance = null; refuses.Clear(); RendreLaNote(); }
 
         /// <summary>Crochet de test : pose la réponse d'une assistance réussie SANS réseau et rend la note (le POST réel se joue contre le back).</summary>
         public void PoserAssistancePourTest(PostAmbientAttendResponseDto reponse) { DerniereAssistance = reponse; RendreLaNote(); }
@@ -175,12 +198,15 @@ namespace MafiaCleanCity.Operational
             AssistanceEnCours = true;
             MettreAJourLePied();
             PostAmbientAttendResponseDto reponse = null;
+            long codeDuRefus = 0;
             yield return client.PostAmbientAttend(token, cible.event_id, new PostAmbientAttendBody(), d => reponse = d,
-                (code, msg) => Debug.LogWarning($"[Journal] attend {cible.event_id} refusé ({code}) : {msg}"));
+                (code, msg) => { codeDuRefus = code; Debug.LogWarning($"[Journal] attend {cible.event_id} refusé ({code}) : {msg}"); });
             if (this == null) yield break;
-            if (reponse != null)
+            // D1 — la rue se relit après un succès ET après un refus définitif (404 / 409) ; dans les deux cas l'événement est écarté (voir `refuses`).
+            bool ecarte = reponse == null && Ecarter(codeDuRefus, cible.event_id);
+            if (reponse != null) { DerniereAssistance = reponse; refuses.Add(cible.event_id); }
+            if (reponse != null || ecarte)
             {
-                DerniereAssistance = reponse;
                 yield return client.GetAmbientFeed(token, dto => DernierAmbient = dto, (code, msg) => { });
                 if (this == null) yield break;
             }
@@ -318,6 +344,7 @@ namespace MafiaCleanCity.Operational
             //   repasse par un point où on peut le lui dire.* `StopCoroutine` ne le suppose pas.
             if (amorce != null) { StopCoroutine(amorce); amorce = null; }
             EnsureInitialized();
+            DernierChargement = dto;   // comme `Charger` : tout re-rendu (après un geste, après un refus) repart du dernier corps — sans quoi il ne se ferait pas sous test
             AppliquerEtat(dto);
         }
 
@@ -349,7 +376,7 @@ namespace MafiaCleanCity.Operational
                 }, "Ce qui se dit");
 
             MajCompteur(0, breves.Length, Lib("À LA UNE"));
-            MajCompteur(1, rue.Length,    Lib("DANS LA RUE"));
+            MajCompteur(1, CompteDeLaRue(DernierAmbient, rue.Length), Lib("DANS LA RUE"));
             MajCompteur(2, monde.Length,  Lib("EN COURS"));
 
             RendreListe(breves, rue, monde, rienNeBouge);
@@ -407,6 +434,11 @@ namespace MafiaCleanCity.Operational
                 Lib("les trois listes n'ont pas été demandées — ce n'est ni « rien ne bouge » ni "
                     + "« pas de réponse », c'est « pas encore »."));
         }
+
+        /// <summary>E5 (juge données 11/11) — « dans la rue » compte le fil ENTIER : `total` est SERVI par `GET /v1/ambient/feed` (le compte avant pagination,
+        /// défaut 20 par page). Compter la page disait « 20 » pour une rue de 35. Jamais moins que ce qui est rendu (un `total` absent se lit 0).</summary>
+        public static int CompteDeLaRue(GetAmbientFeedResponseDto fil, int rendues) =>
+            fil != null && fil.total > rendues ? fil.total : rendues;
 
         private void MajCompteur(int i, int valeur, string libelle)
         {
@@ -655,10 +687,14 @@ namespace MafiaCleanCity.Operational
             string quand = FraicheurEnMots(a.recency_band);
             string quartier = NomDuQuartier(a.district, Quartiers);
             Color encre = CouleurDeFraicheur(a.recency_band);
+            // E8 (f2 12/11, atelier cadre 125 `.brv.visee`) — le geste du pied est GLOBAL : la brève qu'il vise est MARQUÉE, sinon le joueur ne sait pas à quoi
+            // il prête attention. Marquée seulement quand le geste peut partir (un jeton) : pas de cible sans bouton.
+            bool visee = !string.IsNullOrEmpty(token) && ReferenceEquals(a, ProchainAAssister);
 
-            GameObject go = NouveauUI("Breve", listeRoot);
+            GameObject go = NouveauUI("Breve", listeRoot);   // même nom, visée ou non : la marque se lit à son enfant « Lisere »
             AjouterFond(go, FondBloc);
-            Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Journal.Evt);   // `.brv` : 1 px #2a3648
+            if (visee) MarquerLaVisee(go);
+            else Filets.Poser((RectTransform)go.transform, DecorsDeScene.Filets.Journal.Evt);   // `.brv` : 1 px #2a3648
             HorizontalLayoutGroup h = go.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset((int)Px(8f), (int)Px(8f), (int)Px(5f), (int)Px(5f));
             h.spacing = Px(7f);
@@ -702,6 +738,19 @@ namespace MafiaCleanCity.Operational
                 float largeur = horo.GetPreferredValues().x;
                 lq.minWidth = largeur; lq.preferredWidth = largeur; lq.flexibleWidth = 0f;
             }
+        }
+
+        /// <summary>`.jrn6 .brv.visee{border-color:#b08d3e;box-shadow:inset 2px 0 0 #f2c96b}` — le cerne laiton du bouton allumé (jeton `hudHairlineGold`) et un
+        /// liseré or de 2 px à gauche (jeton `hudMoneyGold`) : une FORME, pas la couleur seule. Le liseré est posé APRÈS le cerne (il le recouvre à gauche).</summary>
+        private void MarquerLaVisee(GameObject go)
+        {
+            Contour(go, DesignTokens.Current.hudHairlineGold);
+            GameObject lisere = NouveauUI("Lisere", go.transform);
+            AjouterFond(lisere, DesignTokens.Current.hudMoneyGold);
+            lisere.AddComponent<LayoutElement>().ignoreLayout = true;
+            RectTransform rt = (RectTransform)lisere.transform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = new Vector2(0f, 1f);
+            rt.offsetMin = Vector2.zero; rt.offsetMax = new Vector2(PxTrait(2f), 0f);
         }
 
         /// <summary>La phase, en mots — cadre 126 : « quatre passent, une seule reste ».

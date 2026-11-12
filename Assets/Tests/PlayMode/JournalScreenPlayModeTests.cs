@@ -628,5 +628,290 @@ namespace MafiaCleanCity.Operational.Tests
             Assert.AreEqual(maquette, Note().text, "sortie de l'écran : la note de la maquette revient");
             Assert.IsNull(ecran.DerniereAssistance, "et la réponse gardée est oubliée");
         }
+
+        // ── 12/11 (f2) : D1 un attend REFUSÉ (404 / 409) écarte l'événement pour la durée de l'écran ; E8 la brève visée est MARQUÉE ; E5 « dans la rue » lit `total`. ──
+        private List<Transform> BrevesRendues()
+        {
+            var l = new List<Transform>();
+            foreach (Transform t in RacineEcran().transform.GetComponentsInChildren<Transform>(true)) if (t.name == "Breve") l.Add(t);
+            return l;
+        }
+
+        [UnityTest]
+        [Category("ScreenC1")]
+        public IEnumerator T5_UnAttendRefuse409_EcarteLEvenement_EtLeBoutonViseLaBreveSuivante()
+        {
+            JournalScreenController ecran = MonterEcran();
+            ecran.SetToken("jeton-de-test");
+            // le cas le plus dur : l'événement refusé reste SERVI (expiré non balayé) — la rue relue est la MÊME
+            ecran.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt("e-1"), Evt("e-2") }, total = 35 });
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+            Assert.AreEqual("e-1", ecran.ProchainAAssister.event_id);
+            // E5 — le compteur RENDU lit `total` (35), pas la page (2)
+            Assert.AreEqual("35", RacineEcran().transform.GetComponentsInChildren<Transform>(true).First(t => t.name == "Compteur1")
+                .Find("Nombre").GetComponent<TMPro.TextMeshProUGUI>().text, "« dans la rue » : le total servi, pas les 2 brèves de la page");
+
+            Assert.IsFalse(ecran.EcarterApresRefus(500, "e-1"), "une panne (5xx) n'écarte rien : le geste peut être retenté");
+            Assert.IsFalse(ecran.EcarterApresRefus(0, "e-1"), "un échec réseau non plus");
+            Assert.AreEqual("e-1", ecran.ProchainAAssister.event_id);
+
+            Assert.IsTrue(ecran.EcarterApresRefus(409, "e-1"), "409 : déjà assisté, pris, ou expiré — écarté");
+            yield return MettreEnPage();
+            Assert.AreEqual("e-2", ecran.ProchainAAssister.event_id, "le bouton ne re-vise pas l'événement refusé, même s'il est encore servi");
+            Assert.IsTrue(BoutonAssister().interactable, "il reste une brève à attendre : allumé");
+            Assert.AreEqual(2, BrevesRendues().Count, "la brève refusée reste AFFICHÉE tant que le back la sert : le client ne cache rien");
+
+            Assert.IsTrue(ecran.EcarterApresRefus(404, "e-2"), "404 : inconnu — écarté aussi");
+            yield return MettreEnPage();
+            Assert.IsNull(ecran.ProchainAAssister, "plus rien à attendre");
+            Assert.IsFalse(BoutonAssister().interactable, "éteint : aucun événement attendable");
+
+            hostGo.SetActive(false);
+            hostGo.SetActive(true);
+            yield return null;
+            Assert.AreEqual("e-1", ecran.ProchainAAssister.event_id, "sortie de l'écran : les refus sont oubliés (durée de l'écran, pas plus)");
+        }
+
+        [UnityTest]
+        [Category("ScreenC1")]
+        public IEnumerator T6_LaBreveVisee_EstMarquee_EtElleSeule()
+        {
+            JournalScreenController ecran = MonterEcran();
+            ecran.SetToken("jeton-de-test");
+            ecran.PoserLaRuePourTest(new GetAmbientFeedResponseDto { events = new[] { Evt("e-1"), Evt("e-2"), Evt("e-3") }, total = 3 });
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+            List<Transform> b = BrevesRendues();
+            Assert.AreEqual(3, b.Count);
+            Assert.IsNotNull(b[0].Find("Lisere"), "la brève la plus récente est celle que le bouton vise : marquée (cadre 125, `.brv.visee`)");
+            Assert.AreEqual(4, b[0].Cast<Transform>().Count(t => t.name == "Bord"), "et cernée de laiton (4 bandes)");
+            Image lisere = b[0].Find("Lisere").GetComponent<Image>();
+            Assert.IsNotNull(lisere.GetComponent<CanvasRenderer>(), "un Graphic sans CanvasRenderer ne dessine rien");
+            Assert.Greater(((RectTransform)lisere.transform).rect.width, 0f, "le liseré a une largeur : il dessine");
+            Assert.Greater(((RectTransform)lisere.transform).rect.height, 0f, "et une hauteur");
+            Assert.IsNull(b[1].Find("Lisere"), "une seule brève visée");
+            Assert.IsNull(b[2].Find("Lisere"));
+
+            ecran.EcarterApresRefus(409, "e-1");
+            yield return MettreEnPage();
+            b = BrevesRendues();
+            Assert.IsNull(b[0].Find("Lisere"), "la brève refusée n'est plus visée");
+            Assert.IsNotNull(b[1].Find("Lisere"), "la marque passe à la suivante");
+
+            // sans jeton, sur le MÊME écran (un écran neuf laisserait l'ancienne racine sous le Canvas, et l'assertion lirait la mauvaise)
+            ecran.SetToken("");
+            ecran.RendrePourTest(new GetNewsFeedResponseDto { beats = new NewsBeatDto[0] });
+            yield return MettreEnPage();
+            b = BrevesRendues();
+            Assert.AreEqual(3, b.Count, "les trois brèves sont toujours servies");
+            Assert.AreEqual(0, b.Count(t => t.Find("Lisere") != null), "sans jeton le bouton est éteint : aucune cible marquée");
+            Assert.IsFalse(BoutonAssister().interactable);
+        }
+
+        [Test]
+        [Category("ScreenC1")]   // sans catégorie, le filtre du gate ne le prendrait jamais
+        public void T7_DansLaRue_CompteLeTotalServi_JamaisMoinsQueLaPage()
+        {
+            Assert.AreEqual(35, JournalScreenController.CompteDeLaRue(new GetAmbientFeedResponseDto { total = 35 }, 20), "`total` servi : le fil entier, pas la page");
+            Assert.AreEqual(3, JournalScreenController.CompteDeLaRue(new GetAmbientFeedResponseDto { total = 0 }, 3), "`total` absent (0) : ce qui est rendu");
+            Assert.AreEqual(2, JournalScreenController.CompteDeLaRue(null, 2), "pas de fil : ce qui est rendu");
+            Assert.IsTrue(JournalScreenController.EstUnRefusDefinitif(409));
+            Assert.IsTrue(JournalScreenController.EstUnRefusDefinitif(404));
+            Assert.IsFalse(JournalScreenController.EstUnRefusDefinitif(401), "401 : le jeton, pas l'événement");
+        }
+
+        // ── Le semis de capture (f2 12/11) : ses parties PURES. Le semis lui-même écrit dans la pile et ne se joue qu'au créneau, par la capture. ──
+        [Test]
+        [Category("ScreenC1")]
+        public void T8_LeSemisDeCapture_LitLHorloge_LesDistricts_EtRefuseUneRueVide()
+        {
+            Assert.AreEqual(17280L, SemisDuJournal.MinuteDeJeu("{\"payload\":{\"data\":{\"game_minute\":17280,\"game_day\":12}}}"));
+            Assert.AreEqual(17280L, SemisDuJournal.MinuteDeJeu("{\"game_minute\": 17280.75}"), "une minute fractionnaire : sa partie entière");
+            Assert.IsNull(SemisDuJournal.MinuteDeJeu("{\"game_minute\":null}"), "null n'est pas la minute 0");
+            Assert.IsNull(SemisDuJournal.MinuteDeJeu("{}"));
+            CollectionAssert.AreEqual(new[] { 16, 11 },
+                SemisDuJournal.Districts("{\"buildings\":[{\"district_id\":16},{\"district_id\":11},{\"district_id\":16}]}"), "distincts, dans l'ordre servi");
+            Assert.AreEqual(0, SemisDuJournal.Districts("{\"buildings\":[]}").Length);
+            Assert.AreEqual(false, SemisDuJournal.Reclame("{\"gameDay\":12,\"claimed\":false}"));
+            Assert.AreEqual(true, SemisDuJournal.Reclame("{\"claimed\": true}"));
+            Assert.IsNull(SemisDuJournal.Reclame("{}"));
+            Assert.AreEqual(1440L, SemisDuJournal.EntierServi("{\"game_minute\":17280,\"in_game_day_length_minutes\":1440}", "in_game_day_length_minutes"));
+            Assert.IsNull(SemisDuJournal.EntierServi("{\"in_game_day_length_minutes\":0}", "in_game_day_length_minutes"), "0 ne divise rien : traité comme absent");
+            Assert.IsNull(SemisDuJournal.EntierServi("{\"game_minute\":17280}", "in_game_day_length_minutes"), "absent : on ne suppose pas 1440");
+
+            Assert.IsNull(SemisDuJournal.Refus(1, 2, 0), "« en cours » peut rester vide : la planche se prend");
+            Assert.IsNull(SemisDuJournal.Refus(0, 1, 0), "la rue suffit");
+            StringAssert.Contains("les trois fils sont vides", SemisDuJournal.Refus(0, 0, 0));
+            string rueVide = SemisDuJournal.Refus(3, 0, 1);
+            StringAssert.Contains("la rue", rueVide, "une planche sans brève de la rue est refusée : c'est elle que la marque demande");
+            StringAssert.Contains("à la une 3 · dans la rue 0 · en cours 1", rueVide, "le refus dit LEQUEL des fils est vide");
+        }
+    }
+
+    /// <summary>LE SEMIS DE CAPTURE DE ㊳ (décision f2 du 12/11, recette de BACK-2 lue au code du cumul back 44a645a2 :
+    /// `scratchpad/relance-fraiche/back2-tri/RECETTE-SEAMS-JOURNAL-CAPTURE.md`, dépôt back).
+    ///
+    /// POURQUOI : sur la pile de dev les trois fils du Journal sont vides par construction (aucun tick nocturne n'y tourne), donc une capture de ㊳
+    /// montre « rien ne bouge » et jamais la rue ni la brève visée.
+    ///
+    /// ⛔ CE QUE CET OUTIL ÉCRIT DANS LA VILLE PARTAGÉE DE LA PILE DE DEV — il ne purge RIEN, tout reste :
+    ///   1. `POST /v1/_test/ambient/run-daily-tick {gameMinute}` — le VRAI tick ambient, ville-global : des brèves `live` dans les 18 districts pour
+    ///      ce jour de jeu (rien si le jour est déjà réclamé pour un district). ⚠️ Il commence par BALAYER : toute brève `live` échue à ce
+    ///      `gameMinute` passe à `expired`, pour TOUS les comptes (c'est ce que fait la production chaque nuit).
+    ///   2. `POST /v1/_test/news/run-daily-tick {gameDay}` — la presse du MÊME jour (sa matière sûre est l'ambient de ce jour) : jusqu'à 5 brèves,
+    ///      visibles par tous les joueurs pendant 48 h réelles.
+    ///   3. `POST /v1/_test/effect-engine/seed-random-world-event-active {templateId, districtId, startedAtGameDay, expiresAtGameDay}` — UNE ligne
+    ///      random-world SEMÉE, PAS UNE ACTIVATION : ni modificateur de district ni baisse de cohésion, sévérité `faint`, phase `lingering`. ⚠️ Elle
+    ///      n'est pas sans trace : elle consomme le cooldown de 30 jours de ce district et compte dans le plafond global de 6 événements, et aucun
+    ///      seam ne la supprime. Le tick random-world n'est PAS appelé (≈ 0,56 % par jour pour un district donné, effets sur tous ses joueurs).
+    ///
+    /// ⛔ CE QU'IL NE FAIT PAS : aucune mutation du compte de capture (il est GELÉ : `SeederSupport.RefuserMutationSurCompteGele` ; son horloge n'est
+    /// pas avancée, elle est seulement LUE par `GET /v1/me/clock`), aucun jeton staff, aucune route `/v1/admin`.
+    /// SEMER SEULEMENT SI VIDE : rien n'est écrit quand la rue sert déjà une brève, et la boucle s'arrête DÈS qu'elle en sert une — deux captures de
+    /// suite ne font pas dériver la pile. Un compte sans bâtiment n'est pas semé du tout (son fil ne lui montrerait rien).
+    /// ⚠️ Écart assumé à la lettre « si les TROIS fils sont vides » : le déclencheur est la RUE vide. La presse vit 48 h réelles ; avec une une
+    /// encore servie et une rue vide, attendre les trois vides bloquerait la capture deux jours, puisqu'une planche sans rue est refusée.</summary>
+    public static class SemisDuJournal
+    {
+        public const string GabaritSeme = "halgren_tannery_hailstorm";   // forçable, résolu par la phase 1 du tick grâce à `expiresAtGameDay` (BACK-2)
+        /// <summary>k = 0 … PasMax : chaque pas rejoue ambient un jour plus loin, et son balayage expire davantage de brèves des autres comptes.</summary>
+        public const int PasMax = 2;
+        public const string MentionMonde = "ligne random-world semée, pas une activation";
+
+        public sealed class Etat
+        {
+            public int Une, Rue, Monde;
+            public bool LectureEchouee;
+            public bool MondeSeme;
+            public string Journal = "";
+            /// <summary>Chaque ligne part AUSSI au journal du run tout de suite : une interruption ne perd pas la trace de ce qui a été écrit dans la pile.</summary>
+            public void Noter(string ligne) { Journal += (Journal.Length > 0 ? " | " : "") + ligne; Debug.Log("[CAPTURE-JOURNAL] semis · " + ligne); }
+        }
+
+        /// <summary>`game_minute` de `GET /v1/me/clock`, partie entière ; null si la clé manque ou vaut null (jamais un 0 par défaut).</summary>
+        public static long? MinuteDeJeu(string corps)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(corps ?? "", "\"game_minute\"\\s*:\\s*(\\d+)");
+            return m.Success && long.TryParse(m.Groups[1].Value, out long v) ? v : (long?)null;
+        }
+
+        /// <summary>Un entier positif SERVI sous cette clé (`in_game_day_length_minutes` de `GET /v1/me/clock` : la durée du jour est un réglage du back,
+        /// jamais un 1440 supposé) ; null si la clé manque, vaut null ou 0.</summary>
+        public static long? EntierServi(string corps, string cle)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(corps ?? "", "\"" + System.Text.RegularExpressions.Regex.Escape(cle) + "\"\\s*:\\s*(\\d+)");
+            return m.Success && long.TryParse(m.Groups[1].Value, out long v) && v > 0 ? v : (long?)null;
+        }
+
+        /// <summary>Les `district_id` de `GET /v1/me/buildings`, distincts, dans l'ordre servi.</summary>
+        public static int[] Districts(string corps)
+        {
+            var vus = new List<int>();
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(corps ?? "", "\"district_id\"\\s*:\\s*(\\d+)"))
+                if (int.TryParse(m.Groups[1].Value, out int d) && !vus.Contains(d)) vus.Add(d);
+            return vus.ToArray();
+        }
+
+        /// <summary>`claimed` de la réponse du tick de presse ; null si la clé manque.</summary>
+        public static bool? Reclame(string corps)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(corps ?? "", "\"claimed\"\\s*:\\s*(true|false)");
+            return m.Success ? m.Groups[1].Value == "true" : (bool?)null;
+        }
+
+        /// <summary>L'ANTI-VACUITÉ : null si la planche peut se prendre, sinon la raison du refus — qui dit LEQUEL des fils est vide. « En cours » peut
+        /// rester vide ; la rue non : c'est elle que la brève visée demande.</summary>
+        public static string Refus(int une, int rue, int monde)
+        {
+            string comptes = $"à la une {une} · dans la rue {rue} · en cours {monde}";
+            if (une == 0 && rue == 0 && monde == 0)
+                return $"CAPTURE REFUSÉE : les trois fils sont vides ({comptes}) — la planche montrerait « rien ne bouge » sous le nom du Journal.";
+            if (rue == 0)
+                return $"CAPTURE REFUSÉE : la rue (ambient) est vide ({comptes}) — aucune brève à viser, la marque ne peut pas être montrée.";
+            return null;
+        }
+
+        private static IEnumerator Lire(string baseUrl, string jeton, Etat e)
+        {
+            var client = new JournalClient { BaseUrl = baseUrl };
+            e.Une = e.Rue = e.Monde = 0;
+            e.LectureEchouee = false;
+            yield return client.GetNewsFeed(jeton, d => e.Une = d?.beats?.Length ?? 0, (c, m) => e.LectureEchouee = true);
+            yield return client.GetAmbientFeed(jeton, d => e.Rue = d?.events?.Length ?? 0, (c, m) => e.LectureEchouee = true);
+            yield return client.GetRandomWorldActive(jeton, d => e.Monde = d?.events?.Length ?? 0, (c, m) => e.LectureEchouee = true);
+        }
+
+        private static IEnumerator Appeler(string verbe, string url, string json, string jeton, System.Action<long, string> fin)
+        {
+            using (var req = new UnityEngine.Networking.UnityWebRequest(url, verbe))
+            {
+                if (json != null) req.uploadHandler = new UnityEngine.Networking.UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
+                req.downloadHandler = new UnityEngine.Networking.DownloadHandlerBuffer();
+                MafiaCleanCity.ClientHttp.Json(req);
+                if (verbe == "POST") MafiaCleanCity.ClientHttp.Idempotent(req);   // non exigée par les seams `_test` (sans authentification non plus), inoffensive
+                if (!string.IsNullOrEmpty(jeton)) MafiaCleanCity.ClientHttp.Authentifier(req, jeton);
+                MafiaCleanCity.ClientHttp.Delai(req, DelaiParAppelS);
+                yield return req.SendWebRequest();
+                fin(req.responseCode, req.downloadHandler != null ? req.downloadHandler.text : "");
+            }
+        }
+
+        /// <summary>Pire cas du semis : 2 lectures + 3 pas de 2 ticks + 1 insertion = 9 appels × 45 s, plus les relectures — sous le [Timeout] de la capture.</summary>
+        public const int DelaiParAppelS = 45;
+        private static bool Ok(long code) => code >= 200 && code < 300;
+
+        /// <summary>Lit les trois fils ; si la rue est vide, sème (voir l'en-tête de la classe) ; relit. Ne lève rien : le verdict est `Refus`, posé par la
+        /// capture sur ce que l'ÉCRAN montre. `e.Journal` dit tout ce qui a été lu et écrit.</summary>
+        public static IEnumerator PeuplerSiVide(string baseUrl, string jeton, Etat e)
+        {
+            string racine = baseUrl.TrimEnd('/');
+            yield return Lire(racine, jeton, e);
+            e.Noter($"avant : à la une {e.Une} · dans la rue {e.Rue} · en cours {e.Monde}" + (e.LectureEchouee ? " (une lecture a ÉCHOUÉ)" : ""));
+            if (e.LectureEchouee) { e.Noter("rien semé : on ne sème pas sur une lecture en échec"); yield break; }
+            if (e.Rue > 0) { e.Noter("rien semé : la rue sert déjà une brève"); yield break; }
+
+            long code = 0; string corps = "";
+            yield return Appeler("GET", racine + "/v1/me/clock", null, jeton, (c, t) => { code = c; corps = t; });
+            long? minute = Ok(code) ? MinuteDeJeu(corps) : null;
+            long? duJour = Ok(code) ? EntierServi(corps, "in_game_day_length_minutes") : null;
+            if (minute == null || duJour == null)
+            { e.Noter($"rien semé : `game_minute` ou `in_game_day_length_minutes` illisible sur /v1/me/clock ({code})"); yield break; }
+            long minutesParJour = duJour.Value;
+            yield return Appeler("GET", racine + "/v1/me/buildings", null, jeton, (c, t) => { code = c; corps = t; });
+            int[] districts = Ok(code) ? Districts(corps) : new int[0];
+            e.Noter($"horloge du compte LUE (non avancée) : minute {minute}, jour {minute.Value / minutesParJour} ({minutesParJour} min par jour, servi) ; districts du compte : [{string.Join(", ", districts)}]");
+            if (districts.Length == 0)
+            { e.Noter($"rien semé : le compte ne possède aucun bâtiment (/v1/me/buildings {code}) — le fil de la rue ne lui montrerait rien, quoi qu'on sème"); yield break; }
+
+            for (int k = 0; k <= PasMax; k++)
+            {
+                long gm = minute.Value + minutesParJour * k;
+                long jour = gm / minutesParJour;
+                yield return Appeler("POST", racine + "/v1/_test/ambient/run-daily-tick", "{\"gameMinute\":" + gm + "}", null, (c, t) => { code = c; corps = t; });
+                e.Noter($"k={k} tick ambient gameMinute={gm} → {code} (balaie aussi les brèves échues des autres comptes)");
+                yield return Appeler("POST", racine + "/v1/_test/news/run-daily-tick", "{\"gameDay\":" + jour + "}", null, (c, t) => { code = c; corps = t; });
+                bool? reclame = Ok(code) ? Reclame(corps) : null;
+                e.Noter($"k={k} tick presse gameDay={jour} → {code}, claimed={(reclame.HasValue ? (reclame.Value ? "true" : "false") : "?")}");
+                yield return Lire(racine, jeton, e);
+                e.Noter($"k={k} relu : à la une {e.Une} · dans la rue {e.Rue} · en cours {e.Monde}");
+                if (e.LectureEchouee) { e.Noter($"k={k} : une relecture a ÉCHOUÉ, arrêt du semis (les comptes ci-dessus ne valent rien)"); yield break; }
+                // ⛔ ON S'ARRÊTE DÈS QUE LA RUE EST SERVIE : la planche est prenable (`Refus`), et un pas de plus coûterait à toute la ville un balayage
+                // et un jour de presse réclamé pour de bon. Une une restée vide (presse de ce jour déjà réclamée) n'est PAS une raison de continuer.
+                if (e.Rue > 0) break;
+            }
+
+            if (e.Monde == 0)
+            {
+                long jour0 = minute.Value / minutesParJour;
+                string json = "{\"templateId\":\"" + GabaritSeme + "\",\"districtId\":" + districts[0] + ",\"startedAtGameDay\":" + jour0
+                            + ",\"expiresAtGameDay\":" + (jour0 + 3) + "}";
+                yield return Appeler("POST", racine + "/v1/_test/effect-engine/seed-random-world-event-active", json, null, (c, t) => { code = c; corps = t; });
+                e.MondeSeme = Ok(code);
+                e.Noter($"« en cours » : {MentionMonde} ({GabaritSeme}, district {districts[0]}, jour {jour0}) → {code}");
+                yield return Lire(racine, jeton, e);
+                e.Noter($"après : à la une {e.Une} · dans la rue {e.Rue} · en cours {e.Monde}");
+            }
+        }
     }
 }
