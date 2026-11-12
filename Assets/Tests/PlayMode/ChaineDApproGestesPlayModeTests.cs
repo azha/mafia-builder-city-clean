@@ -540,9 +540,13 @@ namespace MafiaCleanCity.Operational.Tests
 
         /// <summary>Les REUSE : servis (hors DetteDatee). Un repli y est compté mais jamais une dette de ce lot ; `appro.sinuosite.*` / `appro.effondrement.*` sont servis au cumul `74c5a0b0`, pas sur la pile.
         /// ⚠️ `accueil.jeton.votre_grande_decision_du_jour` n'en est PLUS un : elle n'est pas servie (0 à back main 51cece7d et au cumul 74c5a0b0 ; le lot BACK-1 l'ajoute) — elle est en DetteDatee.</summary>
-        private static bool EstUnReuse(string cle) =>
+        /// 12/11 (créneau, run 2) : les 11 bandes `appro.pression.*` / `appro.dette.*` / `appro.fournisseur.*` SONT servies par la pile de dev 8d0184a4 (règle (2) de ZeroRepli :
+        /// sorties de la DetteDatee) — hors réseau ce catalogue de test ne les connaît pas, elles sont donc des REUSE ici. `internal` : la garde G6 de l'écran lit la même liste.
+        internal static bool EstUnReuse(string cle) =>
             cle == "appro.bouton.ca_part_du_compte_tout_de_suite" || cle == "game.ui_common.cancel_button"
             || cle.StartsWith("appro.sinuosite.", StringComparison.Ordinal) || cle.StartsWith("appro.effondrement.", StringComparison.Ordinal)
+            || cle.StartsWith("appro.pression.", StringComparison.Ordinal) || cle.StartsWith("appro.dette.", StringComparison.Ordinal)
+            || cle.StartsWith("appro.fournisseur.", StringComparison.Ordinal)
             || cle == CleCap;
 
         private static List<string> HorsDette(IEnumerable<string> observees)

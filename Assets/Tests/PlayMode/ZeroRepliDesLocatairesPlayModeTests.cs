@@ -71,9 +71,6 @@ namespace MafiaCleanCity.Operational.Tests
             // ㉚ CADRE 154 « La chaîne vue du graphe » (11/11, CLIENT-1, décision f2) : 18 clés, 0 servie sur back main 6040a213 (mesuré dans
             // `string_table.ts`). 11 sont servies par BACK-1 (`lot/chaine-bandes-2` @1845e0e8 : les 8 bandes et les 3 du fournisseur) ; les 7 de
             // structure (noms FIGÉS par BACK-1, design a7df3592) ne le sont pas encore — code BACK-1 en cours. À RETIRER quand la règle (2) rougit.
-            "appro.pression.silent", "appro.pression.mild", "appro.pression.warm", "appro.pression.critical",
-            "appro.dette.fresh", "appro.dette.accruing", "appro.dette.stressed", "appro.dette.fractured",
-            "appro.fournisseur.fresh", "appro.fournisseur.used", "appro.fournisseur.strained",
             "appro.titre.la_chaine", "appro.sous_titre.chaque_maillon_sa_pression_chaque_liaison_son_entretien",
             "appro.titre.les_maillons", "appro.titre.les_liaisons", "appro.etiquette.refoule_vers", "appro.etiquette.contournee",
             "appro.etiquette.un_batiment_detruit",
@@ -96,40 +93,11 @@ namespace MafiaCleanCity.Operational.Tests
             // TD-1035 (12/11, CLIENT-1, ordre f2) : le mot de la CAUSE du bouchon de ㉚ — « C’est ici que ça bouche » (U+2019), servi par BACK-6 `lot/td-1035-cause-bouchon`
             // @ba55e828 (pas encore sur la pile). Inscrit AVANT son lecteur : le dessin (2ᵉ ligne du maillon-cause, cadre 154) attend la spec client. À RETIRER au service.
             "appro.etiquette.c_est_ici_que_ca_bouche",
+            // ⚠️ COUPE du 12/11 (créneau CLIENT-1, run 2 contre la pile de dev 8d0184a4) : la règle (2) a rougi, 42 clés SONT servies — retirées : les 11 bandes de ㉚
+            // (`appro.pression.*`, `appro.dette.*`, `appro.fournisseur.*`) et les 31 `marche.*` de ㉑. Restent ci-dessous l'entrée du menu Plus et les clés des lots d'après.
             // ㉑ LE MARCHÉ (CLIENT-1, 11/11 ; TD-1017 BASCULÉE) : les 31 clés `marche.*` SERVIES par BACK-3 sous leurs noms FIGÉS (`lot/marche-mots` @163402f1,
             // recopiées de string_table.ts à ce SHA, V15) — NON servies sur le back `main` tant que ce lot n'y est pas fusionné : la règle (2) rougira le jour
             // où la pile les sert ⇒ les retirer alors. + l'entrée du menu Plus (non servie).
-            "marche.colonne.quartier",
-            "marche.compteur.lignes_connues",
-            "marche.compteur.quartiers_noirs",
-            "marche.compteur.sures",
-            "marche.confiance.oui_dire",
-            "marche.confiance.recoupe",
-            "marche.confiance.sur",
-            "marche.etat.chargement",
-            "marche.etat.echec",
-            "marche.forme.briques",
-            "marche.forme.cristaux",
-            "marche.forme.plaque",
-            "marche.forme.prismes",
-            "marche.origine.extrait_de_racine",
-            "marche.origine.herbe_des_friches",
-            "marche.origine.lys_de_verre",
-            "marche.origine.resine_de_lull",
-            "marche.phrase.bande_high",
-            "marche.phrase.bande_low",
-            "marche.phrase.bande_moderate",
-            "marche.phrase.bilan_lignes",
-            "marche.phrase.case_ash",
-            "marche.phrase.case_sans_ligne",
-            "marche.sous_titre.tableau_du_verge_d_or",
-            "marche.substance.ash",
-            "marche.substance.brindle",
-            "marche.substance.crick",
-            "marche.substance.hush",
-            "marche.titre.hors_du_tableau",
-            "marche.titre.le_marche",
-            "marche.titre.voyant_eteint",
             "plus.entree.le_marche",
             // TD-823 (11/11, CLIENT-1, décision f2) : la voix des lieutenants (㉛) et de Wexler (㉓) — 8 clés, 0 servie sur back main (mesuré dans
             // `string_table.ts`). BACK-2 les sert sur `lot/td-823-voix` (noms à figer pour boutique.dit.* : clés DÉRIVÉES ici jusqu'à son SHA, puis V15).

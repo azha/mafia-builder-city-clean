@@ -139,8 +139,10 @@ namespace MafiaCleanCity.CityMap.Tests
                 Assert.IsNull(bas.Find("Portrait"), "PAS de cadre rond vide (décision de f2, 08/10 : il reviendra avec TD-823)");
                 Transform voix = bas.Find("Voix");
                 Assert.IsNotNull(voix);
-                Assert.AreEqual(0, voix.GetComponentsInChildren<TextMeshProUGUI>(false).Count(t => t.gameObject.activeInHierarchy && !string.IsNullOrEmpty(t.text) && t.name != "Note"),
-                                "SANS voix : aucun nom, aucune réplique posés à la place de TD-823");
+                // TD-823 (lot voix, 11/11) : la bande PORTE maintenant la voix de Wexler — nom, rôle, UNE réplique. L'assertion d'avant (« SANS voix : 0 texte »)
+                // était restée ; mesuré au créneau du 12/11 : 3 textes. Leur CONTENU est gardé par le test d'effet de TD-823, ici seulement leur nombre.
+                Assert.AreEqual(3, voix.GetComponentsInChildren<TextMeshProUGUI>(false).Count(t => t.gameObject.activeInHierarchy && !string.IsNullOrEmpty(t.text) && t.name != "Note"),
+                                "la voix : un nom, un rôle, une réplique — ni plus (deux répliques), ni moins");
                 Assert.IsFalse(voix.Find("Terminal").gameObject.activeSelf, "la note de l'état terminal ne se montre qu'à zéro Mark");
 
                 // B1 — les deux intitulés, dans l'ordre de la maquette (les extras ouvrent l'écran)

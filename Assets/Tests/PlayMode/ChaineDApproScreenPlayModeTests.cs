@@ -613,13 +613,19 @@ namespace MafiaCleanCity.Operational.Tests
             var liste = Trouver(RacineEcran().transform, "FenetreChaine").GetComponent<MafiaCleanCity.Shell.ListeDefilante>();
             liste.Rafraichir();
             Assert.IsTrue(liste.ContenuDepasse, "30 maillons : la liste dépasse sa fenêtre (elle défile)");
+            float contenu30 = liste.Defilement.content.rect.height;
 
             ecran.RendrePourTestChaine(new GetSupplyChainGraphResponseDto { nodes = new[] { Noeud("b1501", "mild") }, legs = new SupplyChainLegDto[0], routes = new SupplyChainRouteDto[0] },
                 BatimentsDuCadre());
             for (int f = 0; f < 3; f++) yield return null;
             liste = Trouver(RacineEcran().transform, "FenetreChaine").GetComponent<MafiaCleanCity.Shell.ListeDefilante>();
             liste.Rafraichir();
-            Assert.IsFalse(liste.ContenuDepasse, "CONTRÔLE : un maillon tient dans la fenêtre");
+            // MESURÉ au créneau du 12/11 : en batch l'écran fait 640 × 480 et la fenêtre 75 px de haut — UN maillon (titron 46,8 + maillon 136,2) la dépasse déjà.
+            // « Un maillon tient » dépendait donc de la résolution du banc, pas de l'écran. Le contrôle compare ce que la liste DIT à ce qui se MESURE,
+            // et exige que le contenu d'un maillon soit bien plus court que celui de trente.
+            float vue1 = ((RectTransform)liste.transform).rect.height, contenu1 = liste.Defilement.content.rect.height;
+            Assert.AreEqual(MafiaCleanCity.Shell.ListeDefilante.Depasse(contenu1, vue1), liste.ContenuDepasse, "CONTRÔLE : la liste dit « dépasse » si et seulement si le contenu (" + contenu1 + ") excède la fenêtre (" + vue1 + ")");
+            Assert.Less(contenu1, contenu30 / 5f, "CONTRÔLE : un maillon (" + contenu1 + ") est bien plus court que trente (" + contenu30 + ")");
         }
 
         /// <summary>G7 — une bande HORS DOMAINE (5ᵉ valeur inventée) : le mot GÉNÉRIQUE « état inconnu » (`Repli.Etat`, jamais la valeur brute) et le
@@ -667,9 +673,13 @@ namespace MafiaCleanCity.Operational.Tests
             yield return null;
             var observees = new List<string>(MafiaCleanCity.I18n.Libelle.ClesEnRepli);
             Assert.GreaterOrEqual(observees.Count, 18, "anti-vacuité : " + string.Join(" · ", observees));
-            var horsDette = observees.FindAll(k => !MafiaCleanCity.I18n.I18nCatalog.Connait(k)
+            // 12/11 : les 11 bandes sont SERVIES par la pile (sorties de la dette) ; hors réseau elles sont des REUSE nommés (`EstUnReuse`), les 7 de structure restent en dette
+            var horsDette = observees.FindAll(k => !MafiaCleanCity.I18n.I18nCatalog.Connait(k) && !ChaineDApproGestesPlayModeTests.EstUnReuse(k)
                                                    && !ZeroRepliDesLocatairesPlayModeTests.DetteDatee.Contains(k));
             Assert.IsEmpty(horsDette, "clé non servie hors de la DetteDatee : " + string.Join(" · ", horsDette));
+            // CONTRÔLE POSITIF : une clé de la chaîne ni servie, ni REUSE, ni due est NOMMÉE
+            Assert.IsFalse(ChaineDApproGestesPlayModeTests.EstUnReuse("appro.titre.cle_oubliee") || ZeroRepliDesLocatairesPlayModeTests.DetteDatee.Contains("appro.titre.cle_oubliee"),
+                "CONTRÔLE POSITIF : une clé inventée ne passe par aucune des deux listes");
         }
 
         // ═══ TD-1013 — les 7 clés d'une route servie (forme G fermée) ═══════════════════════════════
