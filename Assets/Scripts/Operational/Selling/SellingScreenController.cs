@@ -406,13 +406,27 @@ namespace MafiaCleanCity.Operational.Selling
             LayoutElement pl = pastille.AddComponent<LayoutElement>();
             pl.preferredWidth = Px(11f); pl.preferredHeight = Px(11f); pl.flexibleWidth = 0f;
 
-            Texte(tete.transform, "Nom", NomDeSubstance(d.substance), Px(11.5f), Creme,
+            // ㉟ (12/11, atelier cadre 171) : la tête est le PRÉNOM servi (`name_i18n.params.prenom`) ; la substance reste dite, en petit,
+            // à côté. Sans prénom servi (la forme SANS nom existe), la substance garde la tête, comme avant.
+            string prenom = d.Prenom;
+            Texte(tete.transform, "Nom", prenom ?? NomDeSubstance(d.substance), Px(11.5f), Creme,
                   DesignTokens.Current.hudSerifFont);
+            if (prenom != null)
+                Texte(tete.transform, "Substance", NomDeSubstance(d.substance), Px(7.5f), Creme2, DesignTokens.Current.primaryFont);
             GameObject espace = new GameObject("Espace", typeof(RectTransform));
             espace.transform.SetParent(tete.transform, false);
             espace.AddComponent<LayoutElement>().flexibleWidth = 1f;
             Texte(tete.transform, "Activite", Activite(d.activity_band), Px(7.5f),
                   d.activity_band == "COMPROMISED" ? Braise : Creme2, DesignTokens.Current.primaryFont);
+
+            // « lieu · coin · marge », puis « écoulement · clientèle » : chaque terme absent (null servi, valeur inconnue) est OMIS avec son
+            // séparateur ; une ligne sans terme n'est pas créée.
+            string lieu = LigneDuLieu(d);
+            if (lieu != null)
+                Texte(r.transform, "Lieu", lieu, Px(7.5f), Creme2, DesignTokens.Current.primaryFont).enableWordWrapping = true;
+            string suite = LigneDeSuite(d);
+            if (suite != null)
+                Texte(r.transform, "Suite", suite, Px(7.5f), Creme2, DesignTokens.Current.primaryFont).enableWordWrapping = true;
 
             // la caisse : cinq CRANS, jamais une barre continue
             Crans(r.transform, "Caisse", Caisse(d.cash_band), 5, CaisseRang(d.cash_band));
@@ -467,6 +481,36 @@ namespace MafiaCleanCity.Operational.Selling
                       Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
                     .enableWordWrapping = true;
             }
+        }
+
+        private const string Separateur = " · ";
+
+        private static string Joindre(params string[] termes)
+        {
+            List<string> dits = new List<string>();
+            foreach (string t in termes)
+                if (!string.IsNullOrWhiteSpace(t)) dits.Add(t);
+            return dits.Count == 0 ? null : string.Join(Separateur, dits);
+        }
+
+        /// <summary>« La Lisière · coin animé · au tarif » : `district_name` (nom de fiction servi), `lek_band`, `margin_band`. Le mot de marge
+        /// est servi en capitales pour sa jauge ; ici il se lit en bas de casse (la casse est du style, atelier cadre 171). Une marge
+        /// inconnue ne s'écrit pas dans cette ligne (la jauge garde son « — »).</summary>
+        private static string LigneDuLieu(DealerDto d)
+        {
+            string marge = MargeRang(d.margin_band) > 0 ? Marge(d.margin_band).ToLowerInvariant() : null;
+            return Joindre(d.district_name, MafiaCleanCity.I18n.VenteMots.Coin(d.lek_band), marge);
+        }
+
+        /// <summary>« ça s’écoule · des habitués » : `lane_band`, puis la clientèle d'un coin Hush (`addiction_loyalty_status`). `withdrawn`
+        /// REMPLACE le mot de clientèle par « resté à sec : la clientèle a décroché », en gras et en braise (une forme, pas la couleur
+        /// seule). `null` servi (aucune lane ; pas un coin Hush) ⇒ le terme est omis ; rien à dire ⇒ null, la ligne n'existe pas.</summary>
+        private static string LigneDeSuite(DealerDto d)
+        {
+            string clientele = d.withdrawn
+                ? "<b><color=#" + ColorUtility.ToHtmlStringRGB(Braise) + ">" + MafiaCleanCity.I18n.VenteMots.Perdue() + "</color></b>"
+                : MafiaCleanCity.I18n.VenteMots.Clientele(d.addiction_loyalty_status);
+            return Joindre(MafiaCleanCity.I18n.VenteMots.Ecoulement(d.lane_band), clientele);
         }
 
         /// <summary>B3 — un point de vente possédé, sans dealer : son nom de quartier et « POSTER UN DEALER ».</summary>

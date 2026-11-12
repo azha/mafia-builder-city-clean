@@ -241,5 +241,120 @@ namespace MafiaCleanCity.CityMap.Tests
                 StringAssert.DoesNotContain(mort, clientFiche);
             }
         }
+
+        // ── V — ㉟ le coin, l'écoulement, la clientèle (CLIENT-3, 12/11 ; 11 mots ratifiés f2, atelier cadre 171 @73806af8) ─────────────
+
+        private static (GameObject racine, SellingScreenController ecran) MonterLaVente()
+        {
+            GameObject racine = new GameObject("VenteMotsCanvas", typeof(RectTransform), typeof(Canvas));
+            GameObject hote = new GameObject("Vente", typeof(RectTransform));
+            hote.transform.SetParent(racine.transform, false);
+            return (racine, hote.AddComponent<SellingScreenController>());
+        }
+
+        /// <summary>Le texte du nœud `nom` de la rangée du dealer, ou null si le nœud n'existe pas.</summary>
+        private static string Dit(SellingScreenController ecran, string dealer, string nom)
+        {
+            TMPro.TextMeshProUGUI t = ecran.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true)
+                .FirstOrDefault(x => x.name == nom && x.GetComponentsInParent<Transform>(true).Any(p => p.name == "Dealer_" + dealer));
+            return t == null ? null : t.text;
+        }
+
+        [Test]
+        public void V1_LesOnzeMots_ParLaValeurServie_EtRienPourUneValeurInconnue()
+        {
+            CollectionAssert.AreEqual(new[] { "ABSENT", "LOW", "MEDIUM", "HIGH" }, VenteMots.Coins, "`DealerLekBand` (selling.projection.service.ts:88), recopié");
+            CollectionAssert.AreEqual(new[] { "FAST", "STEADY", "SCATTERED" }, VenteMots.Ecoulements, "`LaneClearingZone` (lane-clearing-zone.ts:31)");
+            CollectionAssert.AreEqual(new[] { "LOW", "STABLE", "HIGH" }, VenteMots.Clienteles, "`HushLoyaltyStatus` (hush-addiction.service.ts:31)");
+            CollectionAssert.AreEqual(new[] { "pas de coin ici", "coin mort", "du passage", "coin animé" }, VenteMots.Coins.Select(VenteMots.Coin).ToArray());
+            CollectionAssert.AreEqual(new[] { "ça part vite", "ça s’écoule", "ça se disperse" }, VenteMots.Ecoulements.Select(VenteMots.Ecoulement).ToArray(),
+                "« ça s’écoule » porte l'apostrophe typographique U+2019");
+            CollectionAssert.AreEqual(new[] { "clientèle neuve", "des habitués", "clientèle accrochée" }, VenteMots.Clienteles.Select(VenteMots.Clientele).ToArray());
+            Assert.AreEqual("resté à sec" + Nbsp + ": la clientèle a décroché", VenteMots.Perdue(), "U+00A0 avant « : »");
+
+            CollectionAssert.AreEquivalent(new[]
+            {
+                "vente.coin.bande.absent", "vente.coin.bande.low", "vente.coin.bande.medium", "vente.coin.bande.high",
+                "vente.ecoulement.bande.fast", "vente.ecoulement.bande.steady", "vente.ecoulement.bande.scattered",
+                "vente.clientele.bande.low", "vente.clientele.bande.stable", "vente.clientele.bande.high",
+                "vente.clientele.perdue",
+            }, Libelle.ClesEnRepli.ToArray(), "les 11 clés ratifiées, dérivées de la VALEUR servie, et aucune autre");
+
+            foreach (string inconnue in new[] { null, "", "VERY_HIGH", "high" })
+            {
+                Assert.IsNull(VenteMots.Coin(inconnue), "une valeur hors liste ne se déguise pas en mot");
+                Assert.IsNull(VenteMots.Ecoulement(inconnue));
+                Assert.IsNull(VenteMots.Clientele(inconnue));
+            }
+        }
+
+        [Test]
+        public void V2_LaRangee_DitLePrenom_LeLieu_LeCoin_LaMarge_LEcoulement_LaClientele()
+        {
+            var (racine, ecran) = MonterLaVente();
+            try
+            {
+                ecran.RendrePourTest(new[]
+                {
+                    new DealerDto
+                    {
+                        dealer = "d-1", dealer_spot_id = "b-1", activity_band = "WORKING", cash_band = "MODERATE", substance = "HUSH", margin_band = "ELEVATED",
+                        name_i18n = new DealerNomI18nDto { key = "game.fiction.dealer.name", @params = new DealerNomParamsDto { prenom = "Mira" } },
+                        district_name = "Dépôt-Est", lek_band = "MEDIUM", lane_band = "STEADY", addiction_loyalty_status = "STABLE", withdrawn = false,
+                    },
+                }, null, "s-1");
+                Assert.AreEqual("Mira", Dit(ecran, "d-1", "Nom"), "la tête de rangée est le prénom servi");
+                Assert.AreEqual("Hush", Dit(ecran, "d-1", "Substance"), "la substance reste dite à côté du prénom");
+                Assert.AreEqual("Dépôt-Est · du passage · au-dessus", Dit(ecran, "d-1", "Lieu"), "district_name · lek_band · margin_band, en bas de casse");
+                Assert.AreEqual("ça s’écoule · des habitués", Dit(ecran, "d-1", "Suite"), "lane_band · addiction_loyalty_status");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(racine); }
+        }
+
+        [Test]
+        public void V3_Withdrawn_RemplaceLaClientele_EtLesNullsNEcriventRien()
+        {
+            // le corps tel que le back le sert : `null` pour un coin qui n'est pas Hush et pour une lane jamais formée
+            const string corps = "{\"payload\":{\"data\":{\"dealers\":[" +
+                "{\"dealer\":\"d-sec\",\"dealer_spot_id\":\"b-1\",\"name_i18n\":{\"key\":\"game.fiction.dealer.name\",\"params\":{\"prenom\":\"Ilse\"}},\"activity_band\":\"IDLE\"," +
+                "\"cash_band\":\"LOW\",\"substance\":\"HUSH\",\"margin_band\":\"ELEVATED\",\"addiction_loyalty_status\":\"LOW\",\"withdrawn\":true," +
+                "\"district_name\":\"Orsel\",\"lek_band\":\"LOW\",\"lane_band\":\"SCATTERED\"}," +
+                "{\"dealer\":\"d-nul\",\"dealer_spot_id\":\"b-2\",\"name_i18n\":{\"key\":\"game.fiction.dealer.name\",\"params\":{\"prenom\":\"Dov\"}},\"activity_band\":\"ABSENT\"," +
+                "\"cash_band\":\"NONE\",\"substance\":\"BRINDLE\",\"margin_band\":\"STANDARD\",\"addiction_loyalty_status\":null,\"withdrawn\":false," +
+                "\"district_name\":\"Les Friches\",\"lek_band\":\"ABSENT\",\"lane_band\":null}," +
+                "{\"dealer\":\"d-nu\",\"dealer_spot_id\":\"b-3\",\"activity_band\":\"WORKING\",\"cash_band\":\"LOW\",\"substance\":\"BRINDLE\",\"margin_band\":\"NEUVE\"," +
+                "\"addiction_loyalty_status\":null,\"withdrawn\":false,\"district_name\":null,\"lek_band\":\"NEUVE\",\"lane_band\":null}]}}}";
+            DealerDto[] dealers = JsonUtility.FromJson<DealerListEnvelope>(corps).payload.data.dealers;
+            Assert.AreEqual(3, dealers.Length);
+
+            var (racine, ecran) = MonterLaVente();
+            try
+            {
+                ecran.RendrePourTest(dealers, null, "s-1");
+
+                string suite = Dit(ecran, "d-sec", "Suite");
+                StringAssert.StartsWith("ça se disperse · <b>", suite, "l'écoulement, puis la phrase en gras (une forme, pas la couleur seule)");
+                StringAssert.Contains("resté à sec" + Nbsp + ": la clientèle a décroché", suite);
+                StringAssert.DoesNotContain("clientèle neuve", suite, "`withdrawn` REMPLACE le mot de clientèle");
+                Assert.AreEqual("Orsel · coin mort · au-dessus", Dit(ecran, "d-sec", "Lieu"));
+
+                Assert.AreEqual("Les Friches · pas de coin ici · au tarif", Dit(ecran, "d-nul", "Lieu"));
+                Assert.IsNull(Dit(ecran, "d-nul", "Suite"), "lane_band null et coin non Hush : la seconde ligne n'existe pas");
+
+                Assert.AreEqual("Brindle", Dit(ecran, "d-nu", "Nom"), "sans prénom servi, la substance garde la tête");
+                Assert.IsNull(Dit(ecran, "d-nu", "Substance"), "…et n'est pas dite deux fois");
+                Assert.IsNull(Dit(ecran, "d-nu", "Lieu"), "ni lieu, ni coin connu, ni marge connue : la ligne n'existe pas");
+                Assert.IsNull(Dit(ecran, "d-nu", "Suite"));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(racine); }
+        }
+
+        [Test]
+        public void V4_GardeDeSource_LaRangeeLitLesChampsServis()
+        {
+            string vente = File.ReadAllText(Path.Combine(Application.dataPath, "Scripts", "Operational", "Selling", "SellingScreenController.cs"));
+            foreach (string champ in new[] { "d.district_name", "d.lek_band", "d.lane_band", "d.addiction_loyalty_status", "d.withdrawn", "d.Prenom" })
+                StringAssert.Contains(champ, vente, "servi, déclaré, et LU par l'écran (mesure du 12/11 : 0 lecteur)");
+        }
     }
 }
