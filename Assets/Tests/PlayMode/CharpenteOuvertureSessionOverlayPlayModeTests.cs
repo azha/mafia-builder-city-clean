@@ -354,6 +354,9 @@ namespace MafiaCleanCity.Shell.Tests
                       (parLaNavigationServie ? $"navigate servi « {ecranServi} » (TD-938 a)" : "repli (refus/échec du commit)"));
             Assert.IsNotNull(boite, "« Lire maintenant » doit atteindre AutonomyInboxController (clic réel) — rien en 10 s");
             Assert.Less(attenteBoite, 2f, $"« Lire maintenant » atteint la boîte en {attenteBoite:0.000} s : trop tard pour un joueur");
+            // Le repli monte la boîte AUSSI (HighestLeverageCardController : « les rapports s'ouvrent QUAND MÊME ») : sans cette ligne, le test
+            // resterait vert si TD-938 (a) régressait (revue ⊥ du 12/11, IMPORTANT-1). Mesuré au run du 12/11 : navigate servi « autonomy_reports ».
+            Assert.IsTrue(parLaNavigationServie, "« Lire maintenant » doit passer par la navigation SERVIE (TD-938 a), pas par le repli");
             ecransAtteints.Add(nameof(AutonomyInboxController));
 
             // ㊵ — le dock.

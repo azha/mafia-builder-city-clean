@@ -378,6 +378,7 @@ namespace MafiaCleanCity.Operational.Marche
             var v = b.AddComponent<VerticalLayoutGroup>();
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandWidth = true; v.childForceExpandHeight = false;
             Largeur(b, 0f, 1f);
+            // ⛔ TD-1323 : la maquette (cadre 106, `.mar6 .fen b`) dessine ces chiffres en cyan #7fd4d9 (DejaVu Sans, halo), pas en or serif — à reprendre au juge visuel de ㉑ (f2 12/11).
             TextMeshProUGUI chiffre = Texte(b.transform, "Chiffre", "—", Px(11f), Or, TextAlignmentOptions.Center, DesignTokens.Current.hudSerifFont);
             Texte(b.transform, "Libelle", libelle, Px(6f), EncreFaible, TextAlignmentOptions.Center);
             return chiffre;

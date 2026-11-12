@@ -316,10 +316,13 @@ namespace MafiaCleanCity.CityMap.Tests
 
             // OÙ : la lumière est sur LA cellule du coin de vente, et nulle part ailleurs (un néon posé sur la
             // mauvaise cellule satisferait les deux comptes ci-dessus).
+            // ⚠️ ORDRE : ce comptage par descendants doit PRÉCÉDER tout re-Render — `ClearContent` détruit par `Destroy` (différé), les
+            //    anciennes cellules survivent jusqu'à la fin de la frame et doubleraient les comptes (revue ⊥ du 12/11, MINOR-2).
             Transform scene = diorama.ScreenRoot.Find("DistrictScene");
             foreach (DistrictInteriorBuildingDto b in dto.buildings)
             {
                 DistrictInteriorBlockDto block = Array.Find(dto.blocks, k => k.block_id == b.block_id);
+                Assert.IsNotNull(block, $"le bâtiment {b.operational_type} référence un bloc réel (D2)");
                 Transform cell = scene.Find($"DistrictCells/Cell_{block.x}_{block.y}");
                 Assert.IsNotNull(cell, $"la cellule de {b.operational_type} existe");
                 int attendu = b == dealer ? 1 : 0;

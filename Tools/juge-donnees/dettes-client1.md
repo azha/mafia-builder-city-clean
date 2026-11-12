@@ -108,13 +108,14 @@ tant que BACK-1 n'a pas servi les coûts (règle (3) de f2 : coût absent ⇒ mo
 | **TD-1188** | **Re-mesurée** (le design disait « 40 des 51 ») : au 12/11 sur la base ee24d36e + ce lot, `DetteDatee` porte 94 clés distinctes, dont **48** sont servies par `string_table.ts` du cumul back @70ea6e07 et 0 par la pile 8d0184a4. Au déploiement du cumul, la règle (2) les nommera d'un coup. Mesure incidente, pas un geste de ce lot. | `ZeroRepliDesLocatairesPlayModeTests.cs` | La règle (2), qui imprime la liste ; le retrait revient à qui joue le premier run contre la pile redéployée. | OUVERTE |
 
 ## Rouges d'ENVIRONNEMENT de la suite complète du 12/11 (cumul 2d551538, pile 8d0184a4) — une ligne chacun, aucun code (ruling user 12/11 : « les dettes doivent être grosses pour être traitées »)
-Journaux : `~/project/mafia-builder-city-clean/Logs/suite-complete-2026-11-12/run1..4` ; tri : `scratchpad/relance-fraiche/TRI-SUITE-UNITY-CLIENT-2026-11-12.md` (dépôt back). N° TD à attribuer par f2.
+Journaux : `~/project/mafia-builder-city-clean/Logs/suite-complete-2026-11-12/run1..4` ; tri : `scratchpad/relance-fraiche/TRI-SUITE-UNITY-CLIENT-2026-11-12.md` (dépôt back). Plage TD-1320 à TD-1329 attribuée par f2 le 12/11.
 
 | Id | Test(s) | Cause mesurée | Pour la fermer |
 |---|---|---|---|
 | TD-1162 (+) | FicheCollecte, VenteRamassage ; **+ FicheBlanchiment `Blanchir_…`** | caisse du dealer semée vide ; Blanchir : sa précondition de collecte rend HTTP 409 (même racine probable) | semis back d'une caisse non vide pour le compte de test |
 | TD-957 (+) | `TopBarDoctrineV31.DA6_…PixelReal` | SIGSEGV rc=139 à 725 s en long run (run1, `GfxDeviceGLES::DrawBufferRanges`) ; PASSED seul (run2) | moteur : trancher la suite par catégories tant qu'il plante |
-| à attribuer | CityMapDetail `SelectDistrict_…` « cohesion populated » | `GET /v1/city/district/3/cohesion` → 404 « No district cohesion for this player yet » : rouge SEUL aussi (run3) ; la cohésion naît au tick nocturne, pas au signup | back : semer la cohésion au signup, ou le test attend un tick |
-| à attribuer | JaugeDeTension J3/J6 (0 px d'or) | co-tenance : rouges en run1 (filtre défaut complet, ordre des fixtures du journal, après ~1 300 feuilles), verts SEULS (run3, `ScreenCarte,JaugeDeTension`) | isoler l'état laissé par un locataire précédent (ordre exact : run1.log) |
-| à attribuer | ChaineDApproGestes `GP_Appro_Feuille` (effet NUL 0 px) | co-tenance : FAIL run1 (même ordre), PASSED run2 | idem |
+| TD-1320 | CityMapDetail `SelectDistrict_…` « cohesion populated » | `GET /v1/city/district/3/cohesion` → 404 « No district cohesion for this player yet » : rouge SEUL aussi (run3) ; la cohésion naît au tick nocturne, pas au signup | back : semer la cohésion au signup, ou le test attend un tick |
+| TD-1321 | JaugeDeTension J3/J6 (0 px d'or) | co-tenance : rouges en run1 (filtre défaut complet, ordre des fixtures du journal, après ~1 300 feuilles), verts SEULS (run3, `ScreenCarte,JaugeDeTension`) | isoler l'état laissé par un locataire précédent (ordre exact : run1.log) |
+| TD-1322 | ChaineDApproGestes `GP_Appro_Feuille` (effet NUL 0 px) | co-tenance : FAIL run1 (même ordre), PASSED run2 | idem |
 | TD-755 | 15 captures (VuePrincipale ×10, Famille ×3, ScreenB7C2, ScreenC6C2) | « capture refusée » : pas de `capture.env` | geste user : poser `~/.config/mafia/capture.env` |
+| TD-1323 | ㉑ Marché, `MarcheScreenController.Compteur` (« Chiffre ») | les chiffres des 3 compteurs sont rendus en or (`Or`, serif) ; la maquette cadre 106 les dessine en cyan `#7fd4d9` (`.mar6 .fen b`, DejaVu Sans, halo) — écart vu au tri du 12/11, pas corrigé (décision f2) | à reprendre au juge visuel de ㉑ |

@@ -60,7 +60,7 @@ namespace MafiaCleanCity.CityMap.Tests
     //
     // Préconditions dérivées PAR LECTURE du code back (jamais supposées) :
     //   - kit de départ : $10,000 (WELCOME_GRANT_CASH_CENTS = 1_000_000n, auth.service.ts:150),
-    //     accordé à un compte FRAIS via signup, ZÉRO debit (le kit de 4 bâtiments est gratuit — D6,
+    //     accordé à un compte FRAIS via signup, ZÉRO debit (le kit de 5 bâtiments, depuis le back f3d22243, est gratuit — D6,
     //     onboarding-grant.service.ts:323-324 : "no economy_states reference anywhere" — revue ⊥ m3,
     //     décalage d'un cran corrigé).
     //   - prix d'acquisition d'un type NON-lab/NON-refinery (multiplicateur 1.0,
@@ -244,7 +244,7 @@ namespace MafiaCleanCity.CityMap.Tests
                 dto => sessionDto = dto, (c, m) => sessionErr = $"{c}: {m}");
             Assert.IsNull(sessionErr, $"[{tag}] session/open failed: {sessionErr}");
             Assert.IsNotNull(sessionDto,
-                $"[{tag}] session/open must succeed — it also grants the starter kit (4 buildings + " +
+                $"[{tag}] session/open must succeed — it also grants the starter kit (5 buildings + " +
                 "$10,000, auth.service.ts:150) that the purchase below relies on.");
 
             var projections = new CityProjectionsClient { BaseUrl = BaseUrl };
