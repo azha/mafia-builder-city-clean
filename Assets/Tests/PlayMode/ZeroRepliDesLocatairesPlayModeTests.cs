@@ -72,6 +72,10 @@ namespace MafiaCleanCity.Operational.Tests
             "vente.ecoulement.bande.fast", "vente.ecoulement.bande.steady", "vente.ecoulement.bande.scattered",
             "vente.clientele.bande.low", "vente.clientele.bande.stable", "vente.clientele.bande.high",
             "vente.clientele.perdue",
+            // ㉟ les LITTÉRAUX de l'écran passés par `Libelle` (D7 du juge données 12/11 ; table ratifiée f2 12/11) : 7 clés neuves, non servies à @44a645a2. Le titre et « Ramasser »
+            // réutilisent deux clés SERVIES (`plus.entree.la_vente`, `accueil.suite.ramasser`) et ne sont donc pas ici. LEVÉE : comme ci-dessus.
+            "vente.sous_titre.qui_vend_et_ce_qu_il_y_a_dans_la_caisse", "vente.compteur.caisses_pleines", "vente.compteur.grilles",
+            "vente.raison.caisse_vide", "vente.raison.aucune_planque_disponible", "vente.jauge.caisse", "vente.jauge.marge",
             // TD-954 (12/11) : la raison de « Réaffecter… » en ON_COOLDOWN (LieutenantScreenController.PhraseDeIndisponibilite) lit `reassign_availability_label_key` SERVIE ; sa valeur n'est pas encore servie sur la pile dev
             // (back lot/td-954-reassign @ff5430b2, non fusionné). Repli = « Trop tôt pour le déplacer à nouveau. », ratifié f2 12/11 (le même mot que la valeur FR du back). LEVÉE : la clé est servie sur la pile — la règle (2) la retire.
             "famille.reaffectation.trop_tot_pour_le_deplacer_a_nouveau",

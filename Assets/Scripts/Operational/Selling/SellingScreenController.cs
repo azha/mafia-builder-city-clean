@@ -402,17 +402,15 @@ namespace MafiaCleanCity.Operational.Selling
             // la marchandise en pastille
             GameObject pastille = new GameObject("Substance", typeof(RectTransform));
             pastille.transform.SetParent(tete.transform, false);
-            pastille.AddComponent<Image>().sprite = ProceduralUI.RadialDisc((int)Px(11f), Or, Hex("#7a5a14"));
+            (Color coeur, Color bord) = TeinteDeSubstance(d.substance);
+            pastille.AddComponent<Image>().sprite = ProceduralUI.RadialDisc((int)Px(11f), coeur, bord);
             LayoutElement pl = pastille.AddComponent<LayoutElement>();
             pl.preferredWidth = Px(11f); pl.preferredHeight = Px(11f); pl.flexibleWidth = 0f;
 
-            // ㉟ (12/11, atelier cadre 171) : la tête est le PRÉNOM servi (`name_i18n.params.prenom`) ; la substance reste dite, en petit,
-            // à côté. Sans prénom servi (la forme SANS nom existe), la substance garde la tête, comme avant.
-            string prenom = d.Prenom;
-            Texte(tete.transform, "Nom", prenom ?? NomDeSubstance(d.substance), Px(11.5f), Creme,
+            // ㉟ (12/11, atelier cadre 171) : la tête est le PRÉNOM servi (`name_i18n.params.prenom`), SEUL — la substance se lit à la
+            // pastille, teintée comme la maquette. Sans prénom servi (la forme SANS nom existe), la substance garde la tête, comme avant.
+            Texte(tete.transform, "Nom", d.Prenom ?? NomDeSubstance(d.substance), Px(11.5f), Creme,
                   DesignTokens.Current.hudSerifFont);
-            if (prenom != null)
-                Texte(tete.transform, "Substance", NomDeSubstance(d.substance), Px(7.5f), Creme2, DesignTokens.Current.primaryFont);
             GameObject espace = new GameObject("Espace", typeof(RectTransform));
             espace.transform.SetParent(tete.transform, false);
             espace.AddComponent<LayoutElement>().flexibleWidth = 1f;
@@ -428,15 +426,15 @@ namespace MafiaCleanCity.Operational.Selling
             if (suite != null)
                 Texte(r.transform, "Suite", suite, Px(7.5f), Creme2, DesignTokens.Current.primaryFont).enableWordWrapping = true;
 
-            // la caisse : cinq CRANS, jamais une barre continue
-            Crans(r.transform, "Caisse", Caisse(d.cash_band), 5, CaisseRang(d.cash_band));
+            // la caisse : QUATRE crans pour cinq valeurs (NONE n'en allume aucun), jamais une barre continue — maquette et f2 12/11
+            Crans(r.transform, "Caisse", MafiaCleanCity.I18n.Libelle.Gabarit("vente.jauge.caisse", "Caisse"), Caisse(d.cash_band), CransDeCaisse, CaisseRang(d.cash_band));
             // table 75, B-plafond : au PLAFOND (FULL) le dealer cesse de vendre — la fiche le dit, sous la jauge, dans la même ligne de style
             // que la raison du bouton éteint
             if (d.cash_band == "FULL")
                 Texte(r.transform, "Plafond", MafiaCleanCity.I18n.CollecteMots.DitLePlafond(),
                       Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).enableWordWrapping = true;
-            // la marge : quatre traits
-            Crans(r.transform, "Marge", Marge(d.margin_band), 4, MargeRang(d.margin_band));
+            // la marge : quatre traits ; son MOT se dit dans la sous-ligne « lieu · coin · marge », comme la maquette (f2 12/11), plus ici
+            Crans(r.transform, "Marge", MafiaCleanCity.I18n.Libelle.Gabarit("vente.jauge.marge", "Marge"), null, 4, MargeRang(d.margin_band));
 
             // Le geste réel. Une caisse vide reste visible mais éteinte ; sans planque, la raison
             // nomme le maillon manquant. Dans les autres états, le bouton appelle le vrai POST.
@@ -472,11 +470,15 @@ namespace MafiaCleanCity.Operational.Selling
                 string dealerId = d.dealer;
                 bouton.onClick.AddListener(() => StartCoroutine(Collecter(dealerId)));
             }
-            Texte(ramasser.transform, "Lib", "RAMASSER", Px(9f), teinteAction,
-                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center).characterSpacing = 14f;
+            // « Ramasser » : REUSE de la clé servie `accueil.suite.ramasser` (f2 12/11) ; les capitales sont du STYLE
+            TextMeshProUGUI libRamasser = Texte(ramasser.transform, "Lib", MafiaCleanCity.I18n.Libelle.Gabarit("accueil.suite.ramasser", "Ramasser"), Px(9f), teinteAction,
+                  DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
+            libRamasser.characterSpacing = 14f;
+            libRamasser.fontStyle = FontStyles.UpperCase;
             if (!actionPossible)
             {
-                string raison = caisseVide ? "caisse vide" : "aucune planque disponible";
+                string raison = caisseVide ? MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.caisse_vide", "caisse vide")
+                                           : MafiaCleanCity.I18n.Libelle.Gabarit("vente.raison.aucune_planque_disponible", "aucune planque disponible");
                 Texte(ramasser.transform, "Raison", raison,
                       Px(6.8f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center)
                     .enableWordWrapping = true;
@@ -494,11 +496,11 @@ namespace MafiaCleanCity.Operational.Selling
         }
 
         /// <summary>« La Lisière · coin animé · au tarif » : `district_name` (nom de fiction servi), `lek_band`, `margin_band`. Le mot de marge
-        /// est servi en capitales pour sa jauge ; ici il se lit en bas de casse (la casse est du style, atelier cadre 171). Une marge
-        /// inconnue ne s'écrit pas dans cette ligne (la jauge garde son « — »).</summary>
+        /// est servi en capitales ; ici il se lit en bas de casse par une balise de STYLE (`<lowercase>` de TMP, atelier cadre 171) : le texte
+        /// servi n'est jamais transformé. Une marge inconnue ne s'écrit pas (la jauge reste, éteinte).</summary>
         private static string LigneDuLieu(DealerDto d)
         {
-            string marge = MargeRang(d.margin_band) > 0 ? Marge(d.margin_band).ToLowerInvariant() : null;
+            string marge = MargeRang(d.margin_band) > 0 ? "<lowercase>" + Marge(d.margin_band) + "</lowercase>" : null;
             return Joindre(d.district_name, MafiaCleanCity.I18n.VenteMots.Coin(d.lek_band), marge);
         }
 
@@ -570,17 +572,17 @@ namespace MafiaCleanCity.Operational.Selling
         /// <summary>Une jauge à CRANS — un cran par palier servi, allumé ou non. Pas une barre :
         /// la donnée est discrète et une barre continue prétendrait une précision qui n'existe
         /// pas.</summary>
-        private void Crans(Transform parent, string nom, string bande, int total, int allumes)
+        private void Crans(Transform parent, string nom, string libelle, string bande, int total, int allumes)
         {
             GameObject l = Bloc(nom, parent, true, Px(5f));
             l.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
             l.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
-            Texte(l.transform, "Lib", nom, Px(7.5f), Creme2, DesignTokens.Current.primaryFont);
+            Texte(l.transform, "Lib", libelle, Px(7.5f), Creme2, DesignTokens.Current.primaryFont);
             GameObject g = Bloc("Crans", l.transform, true, Px(2f));
             g.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
             for (int i = 0; i < total; i++)
             {
-                GameObject c = new GameObject("C" + i, typeof(RectTransform));
+                GameObject c = new GameObject(i < allumes ? "CranAllume" : "CranEteint", typeof(RectTransform));
                 c.transform.SetParent(g.transform, false);
                 Image im = c.AddComponent<Image>();
                 im.sprite = ProceduralUI.RoundedRectOutline((int)Px(2f), Px(1f), i < allumes ? Or : Eteint);
@@ -591,11 +593,29 @@ namespace MafiaCleanCity.Operational.Selling
             }
             // ⛔ `bande` est désormais un libellé DÉJÀ RÉSOLU par l'appelant, pas une valeur
             //    d'enum : `Lisible()` ici rendait « Moderate » et « Standard » au joueur.
-            Texte(l.transform, "Val", bande, Px(7f), Creme, DesignTokens.Current.primaryFont);
+            if (!string.IsNullOrEmpty(bande))
+                Texte(l.transform, "Val", bande, Px(7f), Creme, DesignTokens.Current.primaryFont);
         }
 
+        /// <summary>Le barème de la jauge de caisse (f2 12/11, maquette) : UN cran par palier au-dessus de NONE — NONE 0, LOW 1, MODERATE 2,
+        /// HIGH 3, FULL 4, sur QUATRE crans. L'ancien barème (0, 2, 3, 4, 5 sur cinq crans) sautait de 0 à 2 : le cran 1 ne s'allumait jamais.
+        /// Épinglé par valeur de bande : `CollecteMotsPlayModeTests` V5.</summary>
+        private const int CransDeCaisse = 4;
         private static int CaisseRang(string b) =>
-            b == "FULL" ? 5 : b == "HIGH" ? 4 : b == "MODERATE" ? 3 : b == "LOW" ? 2 : b == "NONE" ? 0 : 0;
+            b == "FULL" ? 4 : b == "HIGH" ? 3 : b == "MODERATE" ? 2 : b == "LOW" ? 1 : 0;
+
+        /// <summary>La pastille d'une substance, aux teintes de la maquette (`ecrans-brennar-6.html`, pictogrammes de `.dl`) : brindle or,
+        /// crick cyan, hush mauve, ash blanc cassé. Une substance inconnue garde l'or d'avant.</summary>
+        private static (Color coeur, Color bord) TeinteDeSubstance(string substance)
+        {
+            switch (substance)
+            {
+                case "CRICK": return (Hex("#7fd4d9"), Hex("#1f6a72"));
+                case "HUSH": return (Hex("#c9a8e0"), Hex("#5a2f7a"));
+                case "ASH": return (Hex("#efe9da"), Hex("#8a8474"));
+                default: return (Or, Hex("#7a5a14"));
+            }
+        }
 
         private static int MargeRang(string b) =>
             b == "HIGH_PREMIUM" ? 4 : b == "PREMIUM" ? 3 : b == "ELEVATED" ? 2 : b == "STANDARD" ? 1 : 0;
@@ -690,12 +710,13 @@ namespace MafiaCleanCity.Operational.Selling
             // `.enseigne` : plaque 178° translucide, bord 1 px #2a3648, filet bas 2 px laiton, liseré blanc — la recette MESURÉE de ㉟,
             // posée par le décor (l'ancien aplat de plaque attendait « quelqu'un qui mesure la conversion » : c'est fait).
             DecorDeScene.HabillerEnseigne((RectTransform)enseigne.transform, DecorsDeScene.Filets.Selling.Enseigne, DecorsDeScene.Selling);
-            TextMeshProUGUI titre = Texte(enseigne.transform, "Titre", "LES POINTS DE VENTE", Px(13f), Or,
+            // le titre de la maquette, « La vente » : REUSE de la clé servie `plus.entree.la_vente` (f2 12/11)
+            TextMeshProUGUI titre = Texte(enseigne.transform, "Titre", MafiaCleanCity.I18n.Libelle.Gabarit("plus.entree.la_vente", "La vente"), Px(13f), Or,
                                           DesignTokens.Current.hudSerifFont, TextAlignmentOptions.Center);
             titre.characterSpacing = 18f;
             // ⚠️ Le sous-titre vient de la maquette VERBATIM (`.enseigne > i`). Le juge a mesuré
             //    « 0 sous-titre » en jeu — il manquait, il n'était pas mal rendu.
-            Texte(enseigne.transform, "SousTitre", "qui vend, et ce qu'il y a dans la caisse",
+            Texte(enseigne.transform, "SousTitre", MafiaCleanCity.I18n.Libelle.Gabarit("vente.sous_titre.qui_vend_et_ce_qu_il_y_a_dans_la_caisse", "qui vend, et ce qu’il y a dans la caisse"),
                   Px(7.5f), Creme2, DesignTokens.Current.primaryFont, TextAlignmentOptions.Center);
 
             // LES COMPTEURS — trois fenêtres, comme la maquette (`.compteurs > .fen` ×3).
@@ -744,9 +765,9 @@ namespace MafiaCleanCity.Operational.Selling
                     if (d.cash_band == "FULL") pleines++;
                     if (d.activity_band == "COMPROMISED") grilles++;
                 }
-            Fenetre(su ? $"{auTravail:00}/{total}" : "—", "au travail");
-            Fenetre(su ? $"{pleines:00}" : "—", "caisses pleines");
-            Fenetre(su ? $"{grilles:00}" : "—", "grillés");
+            Fenetre(su ? $"{auTravail:00}/{total}" : "—", MafiaCleanCity.I18n.Libelle.De("vente", "bloc", "au travail"));
+            Fenetre(su ? $"{pleines:00}" : "—", MafiaCleanCity.I18n.Libelle.Gabarit("vente.compteur.caisses_pleines", "caisses pleines"));
+            Fenetre(su ? $"{grilles:00}" : "—", MafiaCleanCity.I18n.Libelle.Gabarit("vente.compteur.grilles", "grillés"));
         }
 
         private void Fenetre(string valeur, string libelle)

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -249,7 +250,18 @@ namespace MafiaCleanCity.CityMap.Tests
             GameObject racine = new GameObject("VenteMotsCanvas", typeof(RectTransform), typeof(Canvas));
             GameObject hote = new GameObject("Vente", typeof(RectTransform));
             hote.transform.SetParent(racine.transform, false);
+            RectTransform rt = (RectTransform)hote.transform;   // étiré sous le Canvas, comme les montages éprouvés (revue ⊥ m4)
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
             return (racine, hote.AddComponent<SellingScreenController>());
+        }
+
+        /// <summary>Le texte du nœud `nom` placé sous le nœud `sous` de la rangée du dealer (« Caisse »/« Marge » → « Lib », « Val »), ou null.</summary>
+        private static string DitSous(SellingScreenController ecran, string dealer, string sous, string nom)
+        {
+            TMPro.TextMeshProUGUI t = ecran.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true)
+                .FirstOrDefault(x => x.name == nom && x.transform.parent != null && x.transform.parent.name == sous
+                                     && x.GetComponentsInParent<Transform>(true).Any(p => p.name == "Dealer_" + dealer));
+            return t == null ? null : t.text;
         }
 
         /// <summary>Le texte du nœud `nom` de la rangée du dealer, ou null si le nœud n'existe pas.</summary>
@@ -263,7 +275,7 @@ namespace MafiaCleanCity.CityMap.Tests
         [Test]
         public void V1_LesOnzeMots_ParLaValeurServie_EtRienPourUneValeurInconnue()
         {
-            CollectionAssert.AreEqual(new[] { "ABSENT", "LOW", "MEDIUM", "HIGH" }, VenteMots.Coins, "`DealerLekBand` (selling.projection.service.ts:88), recopié");
+            CollectionAssert.AreEqual(new[] { "ABSENT", "LOW", "MEDIUM", "HIGH" }, VenteMots.Coins, "`DealerLekBand` (selling.projection.service.ts:87), recopié");
             CollectionAssert.AreEqual(new[] { "FAST", "STEADY", "SCATTERED" }, VenteMots.Ecoulements, "`LaneClearingZone` (lane-clearing-zone.ts:31)");
             CollectionAssert.AreEqual(new[] { "LOW", "STABLE", "HIGH" }, VenteMots.Clienteles, "`HushLoyaltyStatus` (hush-addiction.service.ts:31)");
             CollectionAssert.AreEqual(new[] { "pas de coin ici", "coin mort", "du passage", "coin animé" }, VenteMots.Coins.Select(VenteMots.Coin).ToArray());
@@ -303,9 +315,12 @@ namespace MafiaCleanCity.CityMap.Tests
                         district_name = "Dépôt-Est", lek_band = "MEDIUM", lane_band = "STEADY", addiction_loyalty_status = "STABLE", withdrawn = false,
                     },
                 }, null, "s-1");
-                Assert.AreEqual("Mira", Dit(ecran, "d-1", "Nom"), "la tête de rangée est le prénom servi");
-                Assert.AreEqual("Hush", Dit(ecran, "d-1", "Substance"), "la substance reste dite à côté du prénom");
-                Assert.AreEqual("Dépôt-Est · du passage · au-dessus", Dit(ecran, "d-1", "Lieu"), "district_name · lek_band · margin_band, en bas de casse");
+                Assert.AreEqual("Mira", Dit(ecran, "d-1", "Nom"), "la tête de rangée est le prénom servi, SEUL (cadre 171 : la substance se lit à la pastille)");
+                Assert.IsNull(Dit(ecran, "d-1", "Substance"), "aucun mot de substance à côté du prénom");
+                Assert.AreEqual("Dépôt-Est · du passage · <lowercase>AU-DESSUS</lowercase>", Dit(ecran, "d-1", "Lieu"),
+                    "district_name · lek_band · margin_band ; le mot de marge garde SA casse servie, le bas de casse est une balise de style");
+                Assert.IsNull(DitSous(ecran, "d-1", "Marge", "Val"), "le mot de marge ne se dit plus dans la ligne de jauge");
+                Assert.IsNotNull(DitSous(ecran, "d-1", "Caisse", "Val"), "la caisse garde son mot");
                 Assert.AreEqual("ça s’écoule · des habitués", Dit(ecran, "d-1", "Suite"), "lane_band · addiction_loyalty_status");
             }
             finally { UnityEngine.Object.DestroyImmediate(racine); }
@@ -336,9 +351,9 @@ namespace MafiaCleanCity.CityMap.Tests
                 StringAssert.StartsWith("ça se disperse · <b>", suite, "l'écoulement, puis la phrase en gras (une forme, pas la couleur seule)");
                 StringAssert.Contains("resté à sec" + Nbsp + ": la clientèle a décroché", suite);
                 StringAssert.DoesNotContain("clientèle neuve", suite, "`withdrawn` REMPLACE le mot de clientèle");
-                Assert.AreEqual("Orsel · coin mort · au-dessus", Dit(ecran, "d-sec", "Lieu"));
+                Assert.AreEqual("Orsel · coin mort · <lowercase>AU-DESSUS</lowercase>", Dit(ecran, "d-sec", "Lieu"));
 
-                Assert.AreEqual("Les Friches · pas de coin ici · au tarif", Dit(ecran, "d-nul", "Lieu"));
+                Assert.AreEqual("Les Friches · pas de coin ici · <lowercase>AU TARIF</lowercase>", Dit(ecran, "d-nul", "Lieu"));
                 Assert.IsNull(Dit(ecran, "d-nul", "Suite"), "lane_band null et coin non Hush : la seconde ligne n'existe pas");
 
                 Assert.AreEqual("Brindle", Dit(ecran, "d-nu", "Nom"), "sans prénom servi, la substance garde la tête");
@@ -352,9 +367,88 @@ namespace MafiaCleanCity.CityMap.Tests
         [Test]
         public void V4_GardeDeSource_LaRangeeLitLesChampsServis()
         {
-            string vente = File.ReadAllText(Path.Combine(Application.dataPath, "Scripts", "Operational", "Selling", "SellingScreenController.cs"));
+            // le CODE seul : une ligne de commentaire qui nommerait le champ ne compte pas (revue ⊥ m3)
+            string Code(string source) => string.Join("\n", source.Split('\n').Where(l => !l.TrimStart().StartsWith("//")));
+            Assert.IsFalse(Code("    // d.lek_band\n    /// d.lek_band").Contains("d.lek_band"), "contrôle positif : un champ seulement commenté n'est pas vu");
+            string vente = Code(File.ReadAllText(Path.Combine(Application.dataPath, "Scripts", "Operational", "Selling", "SellingScreenController.cs")));
             foreach (string champ in new[] { "d.district_name", "d.lek_band", "d.lane_band", "d.addiction_loyalty_status", "d.withdrawn", "d.Prenom" })
                 StringAssert.Contains(champ, vente, "servi, déclaré, et LU par l'écran (mesure du 12/11 : 0 lecteur)");
+        }
+
+        [Test]
+        public void V5_LaJaugeDeCaisse_QuatreCrans_UnParPalierAuDessusDeNone()
+        {
+            // le barème ATTENDU, écrit à la main par valeur de bande (f2 12/11, maquette) : NONE 0, LOW 1, MODERATE 2, HIGH 3, FULL 4
+            var attendu = new Dictionary<string, int> { { "NONE", 0 }, { "LOW", 1 }, { "MODERATE", 2 }, { "HIGH", 3 }, { "FULL", 4 } };
+            CollectionAssert.AreEquivalent(CollecteMots.Bandes, attendu.Keys, "les cinq valeurs de `DealerCashBand`, toutes");
+            // contrôle positif de la propriété : l'ANCIEN barème (0, 2, 3, 4, 5 sur cinq crans) la viole — il sautait de 0 à 2
+            Assert.IsFalse(MonteDUnCranParPalier(new[] { 0, 2, 3, 4, 5 }), "l'ancien barème saute un cran : la propriété doit le refuser");
+            Assert.IsTrue(MonteDUnCranParPalier(CollecteMots.Bandes.Select(b => attendu[b]).ToArray()));
+
+            var (racine, ecran) = MonterLaVente();
+            try
+            {
+                DealerDto[] dealers = CollecteMots.Bandes.Concat(new[] { "OVERFLOW" })
+                    .Select(b => new DealerDto { dealer = "d-" + b, dealer_spot_id = "b-" + b, activity_band = "WORKING", cash_band = b, substance = "BRINDLE", margin_band = "STANDARD" })
+                    .ToArray();
+                ecran.RendrePourTest(dealers, null, "s-1");
+                var allumes = new List<int>();
+                foreach (string b in CollecteMots.Bandes)
+                {
+                    Transform crans = Crans(ecran, "d-" + b, "Caisse");
+                    Assert.AreEqual(4, crans.childCount, "quatre crans, pas cinq (" + b + ")");
+                    int n = crans.Cast<Transform>().Count(c => c.name == "CranAllume");
+                    Assert.AreEqual(attendu[b], n, "crans allumés pour " + b);
+                    allumes.Add(n);
+                }
+                Assert.IsTrue(MonteDUnCranParPalier(allumes.ToArray()), "le barème RENDU monte d'un cran par palier, de 0 au dernier cran");
+                Assert.AreEqual(0, Crans(ecran, "d-OVERFLOW", "Caisse").Cast<Transform>().Count(c => c.name == "CranAllume"), "une valeur inconnue n'allume rien");
+                Assert.AreEqual(4, Crans(ecran, "d-FULL", "Marge").childCount, "la marge garde ses quatre traits");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(racine); }
+        }
+
+        private static bool MonteDUnCranParPalier(int[] rangs) =>
+            rangs.Length > 0 && rangs[0] == 0 && Enumerable.Range(1, rangs.Length - 1).All(i => rangs[i] == rangs[i - 1] + 1);
+
+        private static Transform Crans(SellingScreenController ecran, string dealer, string jauge) =>
+            ecran.GetComponentsInChildren<Transform>(true).First(t => t.name == "Crans" && t.parent.name == jauge && t.parent.parent.name == "Dealer_" + dealer);
+
+        [Test]
+        public void V6_LesLitterauxDeLEcran_PassentParLibelle()
+        {
+            var (racine, ecran) = MonterLaVente();
+            try
+            {
+                ecran.RendrePourTest(new[]
+                {
+                    new DealerDto { dealer = "d-vide", dealer_spot_id = "b-1", activity_band = "WORKING", cash_band = "NONE", substance = "BRINDLE", margin_band = "STANDARD" },
+                }, null, null);
+                string[] dits = ecran.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).Select(t => t.text).ToArray();
+                foreach (string mot in new[] { "La vente", "qui vend, et ce qu’il y a dans la caisse", "au travail", "caisses pleines", "grillés", "Ramasser", "caisse vide", "Caisse", "Marge" })
+                    CollectionAssert.Contains(dits, mot, "le repli ratifié (f2 12/11), à l'octet");
+                CollectionAssert.DoesNotContain(dits, "LES POINTS DE VENTE", "le titre est celui de la maquette");
+                CollectionAssert.IsSubsetOf(new[]
+                {
+                    "plus.entree.la_vente", "accueil.suite.ramasser",   // REUSE de deux clés servies
+                    "vente.sous_titre.qui_vend_et_ce_qu_il_y_a_dans_la_caisse", "vente.compteur.caisses_pleines", "vente.compteur.grilles",
+                    "vente.raison.caisse_vide", "vente.jauge.caisse", "vente.jauge.marge", "vente.bloc.au_travail",
+                }, Libelle.ClesEnRepli.ToArray(), "chaque mot est demandé au catalogue par sa clé");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(racine); }
+
+            var (racine2, ecran2) = MonterLaVente();
+            try
+            {
+                Libelle.RemettreLesCompteurs();
+                ecran2.RendrePourTest(new[]
+                {
+                    new DealerDto { dealer = "d-plein", dealer_spot_id = "b-1", activity_band = "WORKING", cash_band = "HIGH", substance = "BRINDLE", margin_band = "STANDARD" },
+                }, null, null);
+                CollectionAssert.Contains(ecran2.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).Select(t => t.text).ToArray(), "aucune planque disponible");
+                CollectionAssert.Contains(Libelle.ClesEnRepli.ToArray(), "vente.raison.aucune_planque_disponible");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(racine2); }
         }
     }
 }

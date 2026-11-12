@@ -5,7 +5,7 @@ namespace MafiaCleanCity.I18n
     /// se compte (dette datée).
     ///
     /// Domaines RECOPIÉS du back (`GET /v1/operational/dealers`, `selling.projection.service.ts`) :
-    ///   · `lek_band`  `ABSENT|LOW|MEDIUM|HIGH` (:88)                                  ⇒ `vente.coin.bande.<valeur>`
+    ///   · `lek_band`  `ABSENT|LOW|MEDIUM|HIGH` (:87)                                  ⇒ `vente.coin.bande.<valeur>`
     ///   · `lane_band` `FAST|STEADY|SCATTERED` ou null (`lane-clearing-zone.ts:31`)     ⇒ `vente.ecoulement.bande.<valeur>`
     ///   · `addiction_loyalty_status` `LOW|STABLE|HIGH` ou null (`hush-addiction.service.ts:31`) ⇒ `vente.clientele.bande.<valeur>`
     ///   · `withdrawn` booléen : un coin Hush resté à sec, sa clientèle a décroché        ⇒ `vente.clientele.perdue`
