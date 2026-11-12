@@ -15,7 +15,8 @@ les sert, et le repli continue — un lot back entier livré à côté, avec des
 Règle, verbatim : NFD, on jette les marques combinantes, lettres et chiffres en minuscules,
 tout le reste devient `_` (jamais deux de suite), on rogne les `_` aux bords.
 
-⚠️ CE QUE CET OUTIL NE VOIT PAS, ET C'EST DÉCLARÉ PARCE QU'UN ZÉRO S'Y CACHE. Il connaît deux
+⚠️ CE QUE CET OUTIL NE VOIT PAS, ET C'EST DÉCLARÉ PARCE QU'UN ZÉRO S'Y CACHE. (Depuis TD-1068 il lit aussi la clé EXPLICITE de
+`Libelle.Gabarit("cle", …)` ; il ne lit toujours PAS `Libelle.ParValeur`, dont la clé naît d'une valeur servie.) Il connaît deux
 formes d'appel : `Libelle.De("d", "r", "…")` en direct, et un helper local
 `Lib(string litteral) => Libelle.De("d", "r", litteral)` suivi de `Lib("…")`. Un écran qui
 poserait ses textes par une TROISIÈME forme (un helper à deux arguments, une table de
@@ -59,6 +60,27 @@ HELPER = re.compile(
 HELPER2 = re.compile(
     r'string\s+(\w+)\s*\(\s*string\s+\w+\s*,\s*string\s+\w+\s*\)\s*=>\s*'
     r'[\w.]*Libelle\.De\(\s*"([^"]*)"\s*,\s*(\w+)\s*,')
+
+# ⛔ LA QUATRIÈME FORME (TD-1068, 12/11/2026, demandée par le back) : `Libelle.Gabarit("cle.explicite", "repli", …)`. Ici la clé n'est
+# PAS dérivée : elle est écrite en clair au site d'appel, et prise TELLE QUELLE (aucun `Slug`). L'outil ne la voyait pas du tout :
+# mesuré par le back le 12/11, 253 clés distinctes de cette forme sur l'arbre d'intégration, dont 250 absentes de la liste du 11/11.
+# `Libelle.GabaritExigeant("cle", …)` porte sa clé de la même façon : même motif.
+# ⚠️ Un appel dont le PREMIER argument n'est pas un littéral (une variable, une expression, une clé servie par le back) n'a pas de
+#   clé lisible dans la source : il est COMPTÉ et imprimé par fichier, jamais tu — c'est un « je ne sais pas lire », pas un zéro.
+GABARIT = re.compile(r'Libelle\.Gabarit(?:Exigeant)?\(\s*"([^"\\]{1,400})"\s*(?:,\s*"((?:[^"\\]|\\.)*)")?')
+GABARIT_TOUS = re.compile(r'Libelle\.Gabarit(?:Exigeant)?\(\s*(.)')
+
+
+def gabarits_du_fichier(src: str):
+    """Rend ({cle: repli littéral ou ''}, nombre d'appels, nombre d'appels à premier argument NON littéral)."""
+    cles = {}
+    for m in GABARIT.finditer(src):
+        repli = m.group(2) or ''
+        repli = re.sub(r'\\u([0-9a-fA-F]{4})', lambda u: chr(int(u.group(1), 16)), repli).replace('\\"', '"').replace('\\\\', '\\')
+        if m.group(1) not in cles or not cles[m.group(1)]:
+            cles[m.group(1)] = repli
+    tous = GABARIT_TOUS.findall(src)
+    return cles, len(tous), sum(1 for c in tous if c != '"')
 
 
 # ⛔⛔ LA CONCATÉNATION SE RECOLLE AVANT TOUTE LECTURE — ET SANS ÇA L'OUTIL PRODUIT DES CLÉS
@@ -128,6 +150,21 @@ def controles() -> list:
         if k not in vus: echecs.append(f"contrôle POSITIF rouge : « {k} » (dans une chaîne) n'est pas vue")
     for k in ("sonde.bloc.cachee_en_commentaire", "sonde.bloc.cachee_en_bloc"):
         if k in vus: echecs.append(f"contrôle NÉGATIF rouge : « {k} » (dans un commentaire) est comptée")
+    # TD-1068 — la forme `Libelle.Gabarit` : la clé explicite est VUE telle quelle (jamais slugée), celle d'un commentaire ne l'est
+    # pas, et un premier argument non littéral est COMPTÉ (ni pris pour une clé, ni oublié).
+    gab = ('var t = Libelle.Gabarit("sonde.titre.Cle_Explicite", "Repli \\"cité\\" à l’octet");\n'
+           'var v = Libelle.Gabarit(cleServie, "repli");\nvar w = Libelle.Gabarit(dto.cle ?? "x.y.z", "repli");\n'
+           '// Libelle.Gabarit("sonde.titre.cachee", "non")\n'
+           'var e = Libelle.GabaritExigeant(\n    "sonde.titre.exigeante", "Repli {n}", p, "n");\n')
+    cles, appels, non_litteraux = gabarits_du_fichier(recoller(sans_commentaires(gab)))
+    if cles.get("sonde.titre.Cle_Explicite") != 'Repli "cité" à l’octet':
+        echecs.append(f"contrôle POSITIF rouge : la clé explicite de `Libelle.Gabarit` ou son repli n'est pas lu tel quel ({cles})")
+    if "sonde.titre.cachee" in cles: echecs.append("contrôle NÉGATIF rouge : une clé `Gabarit` en commentaire est comptée")
+    if cles.get("sonde.titre.exigeante") != 'Repli {n}':
+        echecs.append("contrôle POSITIF rouge : la clé de `Libelle.GabaritExigeant` (après un saut de ligne) n'est pas vue")
+    if (appels, non_litteraux) != (4, 2):
+        echecs.append(f"contrôle POSITIF rouge : attendu 4 appels `Gabarit` dont 2 non littéraux, lu {appels} / {non_litteraux}")
+    if "x.y.z" in cles: echecs.append("contrôle NÉGATIF rouge : un littéral DANS une expression est pris pour la clé de l'appel")
     return echecs
 
 
@@ -169,15 +206,23 @@ def main() -> int:
     detail = '--liste' in sys.argv
     total = {}
     par_fichier = {}
+    detail_fichier = {}   # fichier → (clés dérivées `De`, clés explicites `Gabarit`, appels `Gabarit`, dont 1er argument NON littéral)
+    cles_gabarit = set()
     for f in sorted(racine.rglob('*.cs')):
         src = f.read_text(encoding='utf-8')
         if 'Libelle' not in src:
             continue
         src = recoller(sans_commentaires(src))   # commentaires retirés (TD-694), puis recollage — AVANT toute extraction.
         trouves = cles_du_fichier(src)
-        par_fichier[str(f)] = len(trouves)
-        for dom, role, lit in trouves:
-            total[f"{dom}.{role}.{slug(lit)}"] = lit
+        derivees = {f"{dom}.{role}.{slug(lit)}": lit for dom, role, lit in trouves}
+        explicites, appels_gabarit, non_litteraux = gabarits_du_fichier(src)   # TD-1068
+        par_fichier[str(f)] = len(set(derivees) | set(explicites))
+        detail_fichier[str(f)] = (len(derivees), len(explicites), appels_gabarit, non_litteraux)
+        total.update(derivees)
+        for cle, repli in explicites.items():
+            if cle not in total or not total[cle]:
+                total[cle] = repli
+            cles_gabarit.add(cle)
     # ⛔⛔ UNE POPULATION VIDE EST UNE ERREUR, JAMAIS UN VERT — défaut mesuré par la session B
     # dans CET outil. Sur un chemin inexistant il rendait `0 clé` et sortait **0** : exactement la
     # même sortie que « tout est déjà servi ». C'est la classe que ce dépôt nomme ailleurs — le run
@@ -201,8 +246,12 @@ def main() -> int:
     print(f"fichiers qui mentionnent `Libelle` : {len(par_fichier)}")
     for f, n in sorted(par_fichier.items(), key=lambda kv: -kv[1]):
         marque = '  ⚠️ ZÉRO — trou d instrument ou fichier sans littéral' if n == 0 else ''
-        print(f"  {n:4d}  {f}{marque}")
-    print(f"\nK_client (clés distinctes dérivées) : {len(total)}")
+        de, gab, appels, nl = detail_fichier[f]
+        print(f"  {n:4d}  {f}  [De {de} · Gabarit {gab} clé(s), {appels} appel(s), {nl} à 1er argument non littéral]{marque}")
+    appels_total = sum(d[2] for d in detail_fichier.values()); nl_total = sum(d[3] for d in detail_fichier.values())
+    print(f"\n`Libelle.Gabarit` : {appels_total} appel(s), {len(cles_gabarit)} clé(s) explicite(s) distincte(s), "
+          f"{nl_total} appel(s) à 1er argument NON littéral (clé illisible dans la source : comptés, pas listés)")
+    print(f"K_client (clés distinctes : dérivées de `Libelle.De` + explicites de `Libelle.Gabarit`) : {len(total)}")
     if detail:
         for cle in sorted(total):
             print(f"  {cle}\t{total[cle]}")
