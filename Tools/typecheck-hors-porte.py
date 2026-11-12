@@ -109,6 +109,13 @@ def compile_un(proj, extra=(), out=None, subst=None, muet=False):
     return p.returncode, err, out
 
 
+def appeler_garde(commande=None):
+    """Lance `Tools/garde-population-cles.py` (stdout/stderr VISIBLES) et rend son rc. `commande` : pour le contrôle de la garde."""
+    rg = subprocess.run(commande or [sys.executable, 'Tools/garde-population-cles.py']).returncode
+    print(f"[garde-population-cles] rc={rg} (0 vert · 1 rouge · 2 instrument en panne)")
+    return rg
+
+
 def main():
     a = sys.argv[1:]
     controle = '--controle' in a
@@ -158,11 +165,10 @@ def main():
                           f"{', '.join(os.path.splitext(k)[0] for k in aval)} "
                           "sont vérifiées contre la DLL PÉRIMÉE — leur vert ne vaut rien ici.")
         # ⛔ L'APPELANT RÉEL de la garde STATIQUE de population des clés i18n (12/11/2026, ordre f2) : une garde que personne ne lance n'existe
-        #    pas (côté back : 0 invocation, 5 erreurs installées). `--tout` est ce que chaque session lance avant une fusion ⇒ elle tourne ici.
-        #    Deux guetteurs : `GardePopulationAppeleePlayModeTests` rougit si CET appel disparaît ; la garde rougit si ce test disparaît.
-        rg = subprocess.run([sys.executable, 'Tools/garde-population-cles.py'], capture_output=True, text=True).returncode
-        print(f"[garde-population-cles] rc={rg} (0 vert · 1 rouge · 2 instrument en panne) — détail : python3 Tools/garde-population-cles.py")
-        rc |= rg
+        #    pas (côté back : 0 invocation, 5 erreurs installées). `--tout` est ce que chaque session lance avant une fusion ⇒ elle tourne ici,
+        #    sa sortie N'EST PAS jetée (l'avertissement de péremption s'y imprime) et son rc entre dans le rc. Deux guetteurs de forces
+        #    différentes : la garde lit CE fichier en AST (`rc |= appeler_garde()` dans `main`) ; `GardePopulationAppeleePlayModeTests` en texte.
+        rc |= appeler_garde()
         sys.exit(rc)
 
     proj, extra = a[0], a[1:]

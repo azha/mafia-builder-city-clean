@@ -2,8 +2,8 @@
 """GARDE STATIQUE DE POPULATION — toute clé i18n que le client PEUT afficher est SERVIE, en DETTE DATÉE ou en REPLI VOULU.
 
     python3 Tools/garde-population-cles.py                 # la garde (rc 0 vert · 1 rouge · 2 instrument en panne)
-    python3 Tools/garde-population-cles.py --rafraichir    # RAFRAÎCHIT l'instantané « servi » (f2, à chaque gate back)
-    python3 Tools/garde-population-cles.py --rafraichir gate/cumul-2026-11-15     # …sur un ref nommé
+    python3 Tools/garde-population-cles.py --rafraichir    # RAFRAÎCHIT l'instantané « servi » au back DÉPLOYÉ (X-Server-Build de /v1/health) — f2, à chaque DÉPLOIEMENT
+    python3 Tools/garde-population-cles.py --rafraichir 8d0184a4                   # …ou à un SHA / ref nommé du back
 
 ⛔ POURQUOI. `ZeroRepliDesLocatairesPlayModeTests` ne voit que les états d'ARRIVÉE des écrans : une clé non servie affichée dans un état
 non atteint n'est ni en dette ni vue (« 17 clés invisibles », revue de ㉔). C'est une CLASSE. Ici, sans rendu et sans porte :
@@ -132,24 +132,31 @@ def servies_depuis_ts(ts: str):
     return servies, {'EN': len(en), 'FR': len(fr), 'ERR_EN': len(sous['en']), 'ERR_FR': len(sous['fr']), 'servies_FR_ET_EN': len(servies)}
 
 
-def ref_cumul_back_recent():
-    """(ref, sha complet) du dernier `gate/cumul-*` du back (date de commit la plus récente), ou None."""
+HEALTH_URL = os.environ.get('MAFIA_HEALTH_URL', 'http://localhost/v1/health')
+
+
+def build_deploye():
+    """SHA du back DÉPLOYÉ sur la pile de dev (en-tête `X-Server-Build` de /v1/health), ou None. Ruling f2 12/11 : c'est LUI qui fait foi,
+    la même vérité que la règle (2) de ZeroRepli — une dette ne se lève que quand le joueur reçoit la clé."""
+    import urllib.request, urllib.error
     try:
-        out = subprocess.run(['git', '-C', str(BACK), 'for-each-ref', '--sort=-committerdate',
-                              '--format=%(refname:short) %(objectname)', 'refs/heads/gate/cumul-*'],
-                             capture_output=True, text=True, check=True).stdout.split('\n')[0].split()
-        return (out[0], out[1]) if len(out) == 2 else None
-    except (subprocess.CalledProcessError, FileNotFoundError, IndexError):
+        req = urllib.request.Request(HEALTH_URL, method='GET')
+        try:
+            with urllib.request.urlopen(req, timeout=3) as r:
+                return (r.headers.get('X-Server-Build') or '').strip() or None
+        except urllib.error.HTTPError as e:      # un 404 porte quand même l'en-tête (mesuré : /v1/health → 404 + X-Server-Build)
+            return (e.headers.get('X-Server-Build') or '').strip() or None
+    except Exception:
         return None
 
 
 def ecrire_instantane(ref):
     if ref is None:
-        r = ref_cumul_back_recent()
-        if r is None:
-            print(f"⛔ aucun gate/cumul-* lisible dans {BACK} (MAFIA_BACK) — rien rafraîchi.", file=sys.stderr)
+        ref = build_deploye()
+        if ref is None:
+            print(f"⛔ aucun SHA donné et {HEALTH_URL} illisible (X-Server-Build) — rien rafraîchi : `--rafraichir <sha>`.", file=sys.stderr)
             return 2
-        ref = r[0]
+        print(f"SHA lu sur {HEALTH_URL} : {ref}")
     try:
         sha = subprocess.run(['git', '-C', str(BACK), 'rev-parse', ref], capture_output=True, text=True, check=True).stdout.strip()
         date = subprocess.run(['git', '-C', str(BACK), 'log', '-1', '--format=%cs', sha], capture_output=True, text=True, check=True).stdout.strip()
@@ -201,28 +208,23 @@ def lire_instantane():
 
 
 def avertissement_age(sha, date, ref):
-    """Imprime l'âge et le SHA à CHAQUE lancement ; renvoie True s'il y a un avertissement nommé de péremption."""
+    """Imprime l'âge et le SHA à CHAQUE lancement. Rend 'ok' (à jour), 'perime' (le back déployé est AUTRE : rouge nommé) ou 'inconnu'
+    (/health illisible : avertissement nommé, la fraîcheur n'est pas vérifiée — ce n'est pas « à jour »)."""
     try:
         age = (datetime.date.today() - datetime.date.fromisoformat(date)).days
     except ValueError:
         age = None
     print(f"instantané « servi » : back {sha[:8]} ({ref}), du {date}, âge {age if age is not None else '?'} j")
-    recent = ref_cumul_back_recent()
-    if recent is None:
-        print(f"⚠️ INSTANTANÉ : dernier cumul back gaté ILLISIBLE (MAFIA_BACK={BACK}) — fraîcheur NON vérifiée, ce n'est pas « à jour ».")
-        return True
-    rref, rsha = recent
-    if rsha == sha:
-        print(f"   à jour : c'est la tête de {rref}.")
-        return False
-    try:
-        devant = subprocess.run(['git', '-C', str(BACK), 'rev-list', '--count', f'{sha}..{rsha}'], capture_output=True, text=True, check=True).stdout.strip()
-        retard = f"{devant} commit(s) de retard"
-    except subprocess.CalledProcessError:
-        retard = "SHA de l'instantané inconnu du back (autre histoire)"
-    print(f"⚠️ INSTANTANÉ PÉRIMÉ : le dernier cumul back est {rref} @ {rsha[:8]} — {retard}. Rafraîchir : "
-          f"`python3 Tools/garde-population-cles.py --rafraichir` (f2, à chaque gate back).")
-    return True
+    deploye = build_deploye()
+    if deploye is None:
+        print(f"⚠️ INSTANTANÉ : le back DÉPLOYÉ est ILLISIBLE ({HEALTH_URL}) — fraîcheur NON vérifiée, ce n'est pas « à jour ».")
+        return 'inconnu'
+    if sha.startswith(deploye) or deploye.startswith(sha[:len(deploye)]):
+        print(f"   à jour : c'est le back déployé ({deploye}).")
+        return 'ok'
+    print(f"⛔ INSTANTANÉ PÉRIMÉ : le back déployé est {deploye}, l'instantané est à {sha[:8]}. Rafraîchir (f2, à chaque DÉPLOIEMENT) : "
+          f"`python3 Tools/garde-population-cles.py --rafraichir` puis `git add` du fichier.")
+    return 'perime'
 
 
 # ───────────────────────── table des sites non littéraux ─────────────────────────
@@ -332,20 +334,57 @@ def controles(extracteur) -> list:
     r = servies_depuis_ts(ts)
     if r is None or r[0] != {'a.b', 'error.e'}:
         e.append(f"contrôle rouge : lecture d'un string_table fabriqué (attendu a.b + error.e, FR ET EN) = {r}")
-    # l'appelant
-    if appelant_present("rien à voir") or not appelant_present("rc |= garde_population()  # Tools/garde-population-cles.py"):
-        e.append("contrôle rouge : la détection de l'appelant se trompe sur du texte fabriqué")
+    # l'appelant (AST) : le sain passe ; le nom dans un print, ou le `rc |=` retiré, ou la fonction sans rc rendu : refusés
+    if not appelant_present(FAUX_TYPECHECK_SAIN):
+        e.append("contrôle rouge : un typecheck sain fabriqué n'est pas reconnu comme appelant")
+    for nom, faux in (("rc |= retiré", FAUX_TYPECHECK_SAIN.replace("rc |= appeler_garde()", "appeler_garde()")),
+                      ("nom dans un print", FAUX_TYPECHECK_SAIN.replace("    rc |= appeler_garde()\n", "    print('Tools/garde-population-cles.py')\n")),
+                      ("rc non rendu", FAUX_TYPECHECK_SAIN.replace("    return rg\n", "    pass\n"))):
+        if appelant_present(faux):
+            e.append(f"contrôle rouge : un typecheck neutralisé ({nom}) est pris pour un appelant")
+    # `population()` EXERCÉE sur un arbre fabriqué (revue ⊥ I4) : une clé `Libelle.De` y est lue, une en commentaire non
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        (Path(td) / 'X.cs').write_text('class X { string a = Libelle.De("sonde", "bloc", "Lue par population"); // Libelle.De("sonde", "bloc", "Cachée")\n}', encoding='utf-8')
+        K, pf, _, _ = extracteur.population(Path(td))
+        if 'sonde.bloc.lue_par_population' not in K or 'sonde.bloc.cachee' in K or len(pf) != 1:
+            e.append(f"contrôle rouge : population() sur arbre fabriqué = {sorted(K)}")
     return e
 
 
 def appelant_present(texte_typecheck: str) -> bool:
-    return 'garde-population-cles.py' in texte_typecheck
+    """AST, pas une chaîne : `main` contient `rc |= appeler_garde(...)` ET `appeler_garde` lance ce script par `subprocess.run` et REND son rc.
+    Un `print`/un commentaire qui nomme le script, ou un `rc |= rg` retiré, ne passent plus (revue ⊥ B2)."""
+    import ast
+    try:
+        arbre = ast.parse(texte_typecheck)
+    except SyntaxError:
+        return False
+    fonctions = {n.name: n for n in ast.walk(arbre) if isinstance(n, ast.FunctionDef)}
+    main, garde = fonctions.get('main'), fonctions.get('appeler_garde')
+    if main is None or garde is None:
+        return False
+    appelle = any(isinstance(n, ast.AugAssign) and isinstance(n.op, ast.BitOr) and isinstance(n.target, ast.Name) and n.target.id == 'rc'
+                  and isinstance(n.value, ast.Call) and isinstance(n.value.func, ast.Name) and n.value.func.id == 'appeler_garde'
+                  for n in ast.walk(main))
+    lance = any(isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == 'run' for n in ast.walk(garde)) \
+        and 'garde-population-cles.py' in ast.get_source_segment(texte_typecheck, garde) \
+        and any(isinstance(n, ast.Return) for n in ast.walk(garde))
+    return appelle and lance
+
+
+FAUX_TYPECHECK_SAIN = (
+    "import subprocess, sys\n"
+    "def appeler_garde(commande=None):\n"
+    "    rg = subprocess.run(commande or [sys.executable, 'Tools/garde-population-cles.py']).returncode\n"
+    "    return rg\n"
+    "def main():\n    rc = 0\n    rc |= appeler_garde()\n    sys.exit(rc)\n")
 
 
 def verifier_appelants() -> list:
     rouges = []
     if not TYPECHECK.exists() or not appelant_present(TYPECHECK.read_text(encoding='utf-8')):
-        rouges.append(f"APPELANT DISPARU : {TYPECHECK} (`--tout`) n'appelle plus garde-population-cles.py — la garde ne tourne plus nulle part")
+        rouges.append(f"APPELANT DISPARU : {TYPECHECK} (`--tout`) n'appelle plus garde-population-cles.py par `rc |= appeler_garde()` — la garde ne tourne plus nulle part")
     if not TEST_APPELANT.exists():
         rouges.append(f"APPELANT DISPARU : {TEST_APPELANT} (le second guetteur, rouge si le typecheck n'appelle plus la garde) n'existe plus")
     if not MAFIA_CI.exists() or f'"{CATEGORIE_APPELANT}"' not in MAFIA_CI.read_text(encoding='utf-8'):
@@ -385,14 +424,15 @@ def main() -> int:
         print("⛔ K_client VIDE — rien regardé.", file=sys.stderr)
         return 2
 
-    perime = avertissement_age(sha, date, ref)
+    fraicheur = avertissement_age(sha, date, ref)
+    nb_parvaleur = sum(len(re.findall(r'Libelle\.ParValeur\(', ex.sans_commentaires(f.read_text(encoding='utf-8')))) for f in Path('Assets/Scripts').rglob('*.cs'))
     domaines = {k.split('.')[0] for k in set(servies) | dette | repli | set(K_dict)}
     enum_src = cles_des_fichiers_classes(table, ex, domaines)
     enumerees = set(enum_src)
     K = set(K_dict) | enumerees
     nl = sum(d[3] for d in detail_fichier.values())
     print(f"K_client : {len(K_dict)} clés lues + {len(enumerees)} énumérées = {len(K)} · servies {len(servies)} · dette {len(dette)} · repli voulu {len(repli)} · "
-          f"appels Gabarit non littéraux {nl} (classés : {sum(t[0] for t in table.values())}) · ParValeur non listés (clé née d'une valeur servie)")
+          f"appels Gabarit non littéraux {nl} (classés : {sum(t[0] for t in table.values())}) · `Libelle.ParValeur` : {nb_parvaleur} appel(s), NON listés (clé née d'une valeur servie)")
 
     rouges = []
     for nom, ks in verdict(K, servies, dette, repli).items():
@@ -408,10 +448,10 @@ def main() -> int:
         print('⛔ ' + s)
     if not (rouges or sites or appelants):
         print(f"✅ K_client ⊆ SERVIE ∪ DetteDatee ∪ RepliVoulu : « hors des trois : 0 » (K_client {len(K)} > 0, trois ensembles non vides).")
-    if perime and '--strict-instantane' in a:
-        print("⛔ --strict-instantane : instantané périmé ou fraîcheur non vérifiée.")
+    if fraicheur == 'inconnu' and '--strict-instantane' in a:
+        print("⛔ --strict-instantane : fraîcheur non vérifiée.")
         return 1
-    return 1 if (rouges or sites or appelants) else 0
+    return 1 if (rouges or sites or appelants or fraicheur == 'perime') else 0
 
 
 if __name__ == '__main__':

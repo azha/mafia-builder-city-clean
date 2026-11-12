@@ -19,7 +19,8 @@ namespace MafiaCleanCity.Operational.Tests
 
         /// <summary>Le typecheck APPELLE-t-il la garde ? (un `subprocess` ou une ligne de commande qui nomme le script)</summary>
         internal static bool AppelleLaGarde(string sourceDuTypecheck) =>
-            sourceDuTypecheck != null && sourceDuTypecheck.Contains(Garde) && sourceDuTypecheck.Contains("subprocess");
+            sourceDuTypecheck != null && sourceDuTypecheck.Contains(Garde) && sourceDuTypecheck.Contains("subprocess.run")
+            && sourceDuTypecheck.Contains("rc |= appeler_garde(");   // l'instruction qui fait ENTRER le rc de la garde dans celui du typecheck (revue ⊥ B2) ; la garde le relit en AST
 
         [Test]
         public void TypecheckHorsPorte_AppelleLaGardeDePopulation()
@@ -35,8 +36,9 @@ namespace MafiaCleanCity.Operational.Tests
         {
             Assert.IsFalse(AppelleLaGarde("import subprocess\n# rien\n"), "un typecheck qui ne nomme pas la garde doit être refusé");
             Assert.IsFalse(AppelleLaGarde("python3 Tools/" + Garde), "le nom seul, sans lancement (subprocess), ne vaut pas appel");
+            Assert.IsFalse(AppelleLaGarde("subprocess.run(['Tools/" + Garde + "'])\nprint('rc')"), "lancer sans faire entrer le rc ne vaut pas appel (rc |= retiré)");
             Assert.IsFalse(AppelleLaGarde(null));
-            Assert.IsTrue(AppelleLaGarde("subprocess.run(['python3', 'Tools/" + Garde + "'])"));
+            Assert.IsTrue(AppelleLaGarde("subprocess.run(['python3', 'Tools/" + Garde + "'])\n        rc |= appeler_garde()"));
         }
 
         [Test]

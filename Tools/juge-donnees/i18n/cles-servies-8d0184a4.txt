@@ -1,10 +1,10 @@
-# back-ref: gate/cumul-2026-11-15
-# back-sha: bb8b9f102df72979d41bef94934541c974b10617
-# date: 2026-11-12
+# back-ref: 8d0184a4
+# back-sha: 8d0184a4ef177e58b8dac58518d9bf98ff1682ee
+# date: 2026-11-11
 # source: services/game-back/src/i18n/string_table.ts (registre FR ET EN, + ERROR_TEXT_RATIFIED par locale)
-# comptes: EN=2147 FR=2147 ERR_EN=76 ERR_FR=76 servies_FR_ET_EN=2223
-# compte: 2223
-# régénéré par : python3 Tools/garde-population-cles.py --rafraichir gate/cumul-2026-11-15
+# comptes: EN=2100 FR=2100 ERR_EN=72 ERR_FR=72 servies_FR_ET_EN=2172
+# compte: 2172
+# régénéré par : python3 Tools/garde-population-cles.py --rafraichir 8d0184a4
 accueil.bandeau.la_chaufferie
 accueil.bandeau.la_chaufferie_etat
 accueil.carte.aucune_decision_en_attente
@@ -42,7 +42,6 @@ accueil.etat.verrouille
 accueil.file.aucune_exception_en_attente
 accueil.file.d_autres_attendent_au_dela_de_ce_que_la_file_montre
 accueil.file.plusieurs_attendent_encore
-accueil.jeton.votre_grande_decision_du_jour
 accueil.suite.a_son_arrivee_lancez_la_cuisson
 accueil.suite.blanchir
 accueil.suite.blanchissez_le_il_ne_rapporte_rien_tant_qu_il_dort
@@ -109,13 +108,6 @@ appro.bloc.tout_le_monde_en_cherche_en_meme_temps_ca_se_paiera_plus_cher_et_plus
 appro.bloc.votre_lieutenant_on_en_a_besoin_et_il_n_y_en_a_plus
 appro.bouton.ca_part_du_compte_tout_de_suite
 appro.bouton.en_commander
-appro.consequence.contourner
-appro.consequence.petit_detour
-appro.consequence.rafistoler
-appro.consequence.remaniement
-appro.consequence.remise_a_plat
-appro.consequence.renforcer
-appro.cout.on_ne_sait_pas_encore_combien
 appro.dette.accruing
 appro.dette.fractured
 appro.dette.fresh
@@ -126,24 +118,6 @@ appro.effondrement.imminent
 appro.effondrement.na
 appro.etat.rien_a_commander_vous_ne_tenez_pas_encore_de_labo
 appro.etat.vous_ne_tenez_encore_aucun_site
-appro.etat_route.active
-appro.etat_route.saturated
-appro.etat_route.severed
-appro.etiquette.c_est_ici_que_ca_bouche
-appro.etiquette.contournee
-appro.etiquette.contourner
-appro.etiquette.en_entretien
-appro.etiquette.en_reconstruction
-appro.etiquette.petit_detour
-appro.etiquette.plus_longtemps
-appro.etiquette.quelques_minutes
-appro.etiquette.rafistoler
-appro.etiquette.refoule_vers
-appro.etiquette.remaniement
-appro.etiquette.remise_a_plat
-appro.etiquette.renforcer
-appro.etiquette.tout_de_suite
-appro.etiquette.un_batiment_detruit
 appro.fournisseur.fresh
 appro.fournisseur.strained
 appro.fournisseur.used
@@ -155,23 +129,15 @@ appro.sinuosite.critical
 appro.sinuosite.pristine
 appro.sinuosite.severed
 appro.sinuosite.stressed
-appro.sous_titre.chaque_maillon_sa_pression_chaque_liaison_son_entretien
 appro.sous_titre.elle_est_payee_et_partie_il_n_y_a_plus_qu_a_attendre
 appro.sous_titre.le_stock_est_reconstitue_vous_pouvez_commander_a_nouveau
-appro.sous_titre.pendant_les_travaux_plus_rien_ne_passe_sur_cette_route
 appro.sous_titre.reessayez_dans_un_instant
 appro.sous_titre.sans_elle_aucun_labo_ne_rallume_le_fournisseur_lui_a_ses_humeurs
 appro.titre.commander_de_la_matiere_premiere
-appro.titre.entretenir_la_liaison
-appro.titre.la_chaine
 appro.titre.la_chaine_d_appro_est_indisponible
 appro.titre.la_chaine_d_appro_n_a_pas_repondu
 appro.titre.la_commande_est_arrivee
 appro.titre.la_commande_est_en_route
-appro.titre.les_liaisons
-appro.titre.les_maillons
-appro.titre.les_routes
-appro.titre.reconstruire_la_route
 appro.vide.rien_ne_circule_encore_vos_maillons_attendent_une_premiere_commande
 autonomie.etat.consequence_minime
 autonomie.etat.inconnu
@@ -223,11 +189,6 @@ boutique.bloc.n_marks
 boutique.bloc.pas_assez_de_marks
 boutique.bloc.plus_aucun_mark_et_rien_n_en_redonne
 boutique.bloc.tapez_mot
-boutique.dit.ce_qui_est_la_est_a_vendre_ce_qui_est_trop_cher_pour_vous_je_le_laisse_en_vitrine_ca_vous_fera_un_but
-boutique.dit.les_marks_c_est_dehors_qu_on_les_achete_moi_je_vous_les_compte_je_ne_les_vends_pas
-boutique.dit.vous_avez_tout_claque_d_un_coup_ce_qui_reste_au_mur_vous_ne_l_aurez_pas_avec_de_la_bonne_volonte
-boutique.locuteur.nom
-boutique.locuteur.role
 boutique.sku.cosm_callsign_color
 boutique.sku.cosm_dashboard_theme_1
 boutique.sku.marks_pack_large
@@ -987,7 +948,6 @@ error.engagements.muscle_lieutenant_required
 error.envelope.json_parse_error
 error.envelope.payload_too_large
 error.envelope.request_id_missing
-error.funds.insufficient
 error.hl_card.already_resolved
 error.hl_card.not_found
 error.hl_card.nothing_to_act_on
@@ -1000,8 +960,6 @@ error.idempotency.request_in_flight
 error.internal.unexpected
 error.laundering.node_full
 error.laundering.safehouse_short
-error.lieutenant.roster_full
-error.marks.insufficient
 error.meta_progression.capability_not_dismissible
 error.meta_progression.category_delegated
 error.meta_progression.deviation_mode_not_available
@@ -1012,7 +970,6 @@ error.meta_progression.predicates_no_longer_met
 error.meta_progression.reanchor_quota_exhausted
 error.meta_progression.stability_counter_insufficient
 error.meta_progression.standing_order_not_owned
-error.money_holding.insufficient_held
 error.named_sequence.cap_reached
 error.named_sequence.name_taken
 error.named_sequence.unlock_required
@@ -1364,8 +1321,6 @@ famille.ordre.echu
 famille.ordre.en_cours
 famille.ordre.expire_bientot
 famille.question.en_faire_la_regle
-famille.reaffectation.ce_lieutenant_peut_etre_deplace
-famille.reaffectation.trop_tot_pour_le_deplacer_a_nouveau
 famille.refus.aucun_dealer_ne_tient_ce_point_de_vente
 famille.refus.aucun_ordre_en_cours
 famille.refus.ce_batiment_n_est_pas_pret_a_accueillir_quelqu_un
@@ -1390,8 +1345,6 @@ famille.revisioncost.reecrire_coute_cher
 famille.revisioncost.reecrire_coute_enormement
 famille.revisioncost.reecrire_coute_peu
 famille.revisioncost.reecrire_coute_tres_cher
-famille.rosterroom.il_reste_de_la_place_dans_l_equipe
-famille.rosterroom.votre_equipe_est_au_complet
 famille.rulecount.aucune_regle
 famille.rulecount.beaucoup_de_regles
 famille.rulecount.quelques_regles
@@ -1751,9 +1704,6 @@ loi.bloc.vos_avocats
 loi.bloc.vous_n_avez_encore_engage_personne
 loi.bouton.lui_trouver_un_avocat
 loi.bouton.mettre_sous_retention
-loi.dit.il_a_commence_a_parler_ce_qui_est_sorti_ne_rentrera_pas
-loi.dit.il_a_tout_vide_il_n_y_a_plus_rien_a_sauver_de_ce_cote
-loi.dit.pour_l_instant_il_n_a_rien_dit_ca_ne_durera_pas_tout_seul
 loi.refus.l_embauche_n_a_pas_abouti_reessayez_plus_tard
 loi.refus.la_retention_n_a_pas_change_reessayez_plus_tard
 loi.sous_titre.reessayez_dans_un_instant
@@ -2067,7 +2017,6 @@ reglages.bloc.pas_encore_toutes_les_sessions_ouvertes_n_ont_pas_encore_de_guiche
 reglages.bloc.rouvrir_le_coffre
 reglages.bloc.sans_ca_le_marche_de_region_ne_vous_dit_rien_non_plus
 reglages.bloc.tout_effacer
-reglages.bloc.votre_partie_vit_sur_cet_appareil_desinstaller_l_appli_l_efface
 reputation.bloc.absorbees
 reputation.bloc.ce_qu_il_a_absorbe_de_vos_regles
 reputation.bloc.ce_qu_il_a_pris_de_vous_se_voit_sur_lui
