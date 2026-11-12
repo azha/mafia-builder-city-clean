@@ -399,13 +399,14 @@ namespace MafiaCleanCity.Operational.Selling
             tete.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
             tete.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleLeft;
 
-            // la marchandise en pastille
+            // la marchandise en PICTOGRAMME : une forme par substance, pas la couleur seule (`SubstancePictogrammes`, `svg.pas` 19 px CSS)
             GameObject pastille = new GameObject("Substance", typeof(RectTransform));
             pastille.transform.SetParent(tete.transform, false);
-            (Color coeur, Color bord) = TeinteDeSubstance(d.substance);
-            pastille.AddComponent<Image>().sprite = ProceduralUI.RadialDisc((int)Px(11f), coeur, bord);
+            Image picto = pastille.AddComponent<Image>();
+            picto.sprite = SubstancePictogrammes.Dessin(d.substance, (int)Px(19f));
+            picto.raycastTarget = false;
             LayoutElement pl = pastille.AddComponent<LayoutElement>();
-            pl.preferredWidth = Px(11f); pl.preferredHeight = Px(11f); pl.flexibleWidth = 0f;
+            pl.preferredWidth = Px(19f); pl.preferredHeight = Px(19f); pl.flexibleWidth = 0f;
 
             // ㉟ (12/11, atelier cadre 171) : la tête est le PRÉNOM servi (`name_i18n.params.prenom`), SEUL — la substance se lit à la
             // pastille, teintée comme la maquette. Sans prénom servi (la forme SANS nom existe), la substance garde la tête, comme avant.
@@ -603,19 +604,6 @@ namespace MafiaCleanCity.Operational.Selling
         private const int CransDeCaisse = 4;
         private static int CaisseRang(string b) =>
             b == "FULL" ? 4 : b == "HIGH" ? 3 : b == "MODERATE" ? 2 : b == "LOW" ? 1 : 0;
-
-        /// <summary>La pastille d'une substance, aux teintes de la maquette (`ecrans-brennar-6.html`, pictogrammes de `.dl`) : brindle or,
-        /// crick cyan, hush mauve, ash blanc cassé. Une substance inconnue garde l'or d'avant.</summary>
-        private static (Color coeur, Color bord) TeinteDeSubstance(string substance)
-        {
-            switch (substance)
-            {
-                case "CRICK": return (DesignTokens.Current.hudGaugeArcCold, Hex("#1f6a72"));   // `#7fd4d9` EST le jeton `hudGaugeArcCold` (garde des littéraux de couleur)
-                case "HUSH": return (Hex("#c9a8e0"), Hex("#5a2f7a"));
-                case "ASH": return (Hex("#efe9da"), Hex("#8a8474"));
-                default: return (Or, Hex("#7a5a14"));
-            }
-        }
 
         private static int MargeRang(string b) =>
             b == "HIGH_PREMIUM" ? 4 : b == "PREMIUM" ? 3 : b == "ELEVATED" ? 2 : b == "STANDARD" ? 1 : 0;

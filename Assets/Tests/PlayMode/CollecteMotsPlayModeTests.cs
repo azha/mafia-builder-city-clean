@@ -456,5 +456,73 @@ namespace MafiaCleanCity.CityMap.Tests
             }
             finally { UnityEngine.Object.DestroyImmediate(racine2); }
         }
+
+        // ── V7 — ㉟ la substance se dit par une FORME, pas par la couleur seule (f2 12/11 ; ferme TD-1161) ───────────────────────────────
+
+        private const int TailleDeMesure = 48;
+
+        /// <summary>Le nombre de pixels où deux cartes de FORME diffèrent (vide / élément du dessin ; aucune couleur n'y entre).</summary>
+        private static int PixelsDifferents(int[] a, int[] b) => Enumerable.Range(0, a.Length).Count(i => a[i] != b[i]);
+
+        private static int[] Silhouette(string substance) => SubstancePictogrammes.Forme(SubstancePictogrammes.Couches(substance), TailleDeMesure);
+
+        [Test]
+        public void V7_ChaqueSubstance_ASaForme_PasSeulementSaTeinte()
+        {
+            CollectionAssert.AreEqual(new[] { "BRINDLE", "CRICK", "HUSH", "ASH" }, SubstancePictogrammes.Substances,
+                "`DealerSubstanceLabel` (selling.projection.service.ts:90), recopié");
+            string[] toutes = SubstancePictogrammes.Substances.Concat(new[] { "INCONNUE" }).ToArray();
+            int seuil = TailleDeMesure * TailleDeMesure / 20;   // 5 % du cadre : une vraie différence de forme, pas un bord d'anti-crénelage
+
+            // l'EFFET, pas le paramètre : chaque dessin produit des pixels, et n'emplit pas le cadre (un aplat plein ne serait pas une forme)
+            foreach (string s in toutes)
+            {
+                int couverts = Silhouette(s).Count(p => p != 0);
+                Assert.Greater(couverts, seuil, s + " : le dessin ne produit (presque) aucun pixel");
+                Assert.Less(couverts, TailleDeMesure * TailleDeMesure * 9 / 10, s + " : le dessin emplit le cadre");
+            }
+
+            // contrôle positif du comparateur : le MÊME dessin reteint (la faute d'avant : un disque, quatre teintes) est vu IDENTIQUE en forme
+            SubstancePictogrammes.Couche[] brindle = SubstancePictogrammes.Couches("BRINDLE");
+            SubstancePictogrammes.Couche[] reteint = brindle.Select(c => new SubstancePictogrammes.Couche
+                { Points = c.Points, EpaisseurTrait = c.EpaisseurTrait, Fond = new Color32(0xc9, 0xa8, 0xe0, 255), Trait = new Color32(0x5a, 0x2f, 0x7a, 255) }).ToArray();
+            Assert.AreEqual(0, PixelsDifferents(SubstancePictogrammes.Forme(brindle, TailleDeMesure), SubstancePictogrammes.Forme(reteint, TailleDeMesure)),
+                "contrôle positif : une teinte différente sur la même forme ne compte pas comme une forme distincte");
+            Assert.IsTrue(Enumerable.Range(0, TailleDeMesure * TailleDeMesure).Any(i =>
+                    !SubstancePictogrammes.Rasteriser(brindle, TailleDeMesure)[i].Equals(SubstancePictogrammes.Rasteriser(reteint, TailleDeMesure)[i])),
+                "…alors que les deux rendus en couleur, eux, diffèrent bien (le contrôle ne compare pas deux images égales)");
+
+            // la garde : deux substances quelconques (et la valeur inconnue) diffèrent par la FORME
+            for (int i = 0; i < toutes.Length; i++)
+                for (int j = i + 1; j < toutes.Length; j++)
+                    Assert.Greater(PixelsDifferents(Silhouette(toutes[i]), Silhouette(toutes[j])), seuil,
+                        toutes[i] + " et " + toutes[j] + " ont la même forme : la substance ne se lirait qu'à la couleur");
+        }
+
+        [Test]
+        public void V8_LaRangee_PorteLePictogrammeDeSaSubstance()
+        {
+            var (racine, ecran) = MonterLaVente();
+            try
+            {
+                DealerDto[] dealers = SubstancePictogrammes.Substances
+                    .Select(s => new DealerDto { dealer = "d-" + s, dealer_spot_id = "b-" + s, activity_band = "WORKING", cash_band = "LOW", substance = s, margin_band = "STANDARD" })
+                    .ToArray();
+                ecran.RendrePourTest(dealers, null, "s-1");
+                var sprites = new List<Sprite>();
+                foreach (string s in SubstancePictogrammes.Substances)
+                {
+                    UnityEngine.UI.Image image = ecran.GetComponentsInChildren<UnityEngine.UI.Image>(true)
+                        .First(im => im.name == "Substance" && im.GetComponentsInParent<Transform>(true).Any(p => p.name == "Dealer_d-" + s));
+                    Assert.IsNotNull(image.sprite, s + " : la rangée porte un dessin");
+                    Assert.IsNotNull(image.GetComponent<CanvasRenderer>(), "un Graphic sans CanvasRenderer ne dessine rien");
+                    Assert.AreSame(SubstancePictogrammes.Dessin(s, image.sprite.texture.width), image.sprite, s + " : c'est le pictogramme de CETTE substance");
+                    Assert.Greater(image.sprite.texture.GetPixels32().Count(p => p.a > 127), 0, s + " : la texture montée porte des pixels");
+                    sprites.Add(image.sprite);
+                }
+                Assert.AreEqual(4, sprites.Distinct().Count(), "quatre substances, quatre dessins");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(racine); }
+        }
     }
 }
