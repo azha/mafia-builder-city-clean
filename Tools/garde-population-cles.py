@@ -15,9 +15,11 @@ non atteint n'est ni en dette ni vue (« 17 clés invisibles », revue de ㉔). 
 - DetteDatee / RepliVoulu = lus dans la SOURCE de `ZeroRepliDesLocatairesPlayModeTests.cs` (commentaires retirés).
 - Une clé en `….` (préfixe composé : `decision.type.`) est valide si le registre sert au moins une clé SOUS ce préfixe.
 
-⚠️ CE QUE LA GARDE NE VOIT PAS (déclaré, compté, jamais deviné) : `Libelle.ParValeur` (clé née d'une valeur servie : comptés) et les
-appels `Libelle.Gabarit` à 1er argument non littéral : chacun est CLASSÉ dans `sites-non-litteraux.tsv` ; le nombre d'appels par
-fichier y est ÉPINGLÉ (cliquet : un site neuf non classé rougit).
+⚠️ CE QUE LA GARDE NE VOIT PAS (déclaré, compté, jamais deviné) : (1) les appels `Libelle.Gabarit` à 1er argument non littéral : chacun est CLASSÉ dans
+`sites-non-litteraux.tsv` ; (2) les appels de TEXTE (`Libelle.De`, helpers, `ParValeur`) à argument non littéral : RÉSOLUS par un flux minimal quand le fondement est
+entier, sinon ÉPINGLÉS par fichier dans `sites-de-texte-non-litteraux.tsv` (56 sites, 21 fichiers au 12/11 : valeurs/clés servies, ou clés ENUMEREE écrites sous
+témoin de source) ; dans les deux cas le nombre par fichier est le cliquet (un site neuf non classé rougit). Trous gardés ouverts, nommés dans design.md §7 : un helper
+appelé depuis un fichier sans « Libelle » ; le cliquet est un NOMBRE, pas l'identité des sites ; une clé « écartée » sans péremption ; un domaine entièrement neuf.
 
 ⛔ UN VERT N'EST LU QU'AVEC SES CONTRÔLES : à chaque lancement, sur données FABRIQUÉES, une clé inventée DOIT rougir en étant nommée, une
 dette périmée DOIT rougir, un repli voulu servi DOIT rougir, un instantané vide ou un ensemble vide DOIT être rc 2. Et la garde rougit
@@ -327,8 +329,60 @@ def purement_litteral(expr):
     return re.sub(r'\bnull\b|[?:()\s+]', '', LITS.sub('', expr)) == ''
 
 
+def fin_de_corps(src, m):
+    """Index où se TERMINE le corps de la méthode dont l'en-tête est `m` : accolade fermante appariée (chaînes et caractères respectés), ou le `;` d'un `=>`."""
+    n = len(src)
+    k = m.end()
+    if m.group(0).rstrip().endswith('{'):
+        prof, k = 1, m.end()
+        while k < n and prof:
+            c = src[k]
+            if c == '"':
+                k += 1
+                while k < n and src[k] != '"':
+                    k += 2 if src[k] == '\\' else 1
+            elif c == "'" and k + 2 < n:
+                k += 3 if src[k + 1] != '\\' else 4
+                continue
+            elif c == '{':
+                prof += 1
+            elif c == '}':
+                prof -= 1
+            k += 1
+        return k
+    prof = 0
+    while k < n:
+        c = src[k]
+        if c == '"':
+            k += 1
+            while k < n and src[k] != '"':
+                k += 2 if src[k] == '\\' else 1
+        elif c in '([{':
+            prof += 1
+        elif c in ')]}':
+            prof -= 1
+        elif c == ';' and prof <= 0:
+            return k
+        k += 1
+    return n
+
+
+def englobante(src, pos):
+    """(en-tête, fin de corps) de la méthode INNERMOST dont le corps CONTIENT `pos` (revue ⊥ tour 2, B1 : jamais « la dernière en-tête qui passe »), sinon None."""
+    for m in reversed(entetes(src, 0, pos)):
+        fin = fin_de_corps(src, m)
+        if m.end() <= pos < fin:
+            return m, fin
+    return None
+
+
+FORMES_OPAQUES = r'(?:\+=|-=|\?\?=|\*=|\+\+|--)'
+
+
 def resoudre(src, pos, expr, vus=None):
-    """(littéraux, complet) : tout ce que `expr` (placée en `pos`) peut valoir, tant que cela vient de littéraux de CE fichier."""
+    """(littéraux, complet) : tout ce que `expr` (placée en `pos`) peut valoir, tant que cela vient de littéraux de CE fichier.
+    `complet` n'est vrai QUE si le fondement est entier : paramètre de la méthode ENGLOBANTE (non surchargée, jamais réaffecté) ⇒ arguments de TOUS ses
+    appelants du fichier ; variable locale de la méthode englobante ⇒ toutes ses affectations (aucune forme `+=`, `??=`, `out`, `ref`)."""
     vus = vus or set()
     e = expr.strip()
     if purement_litteral(e):
@@ -346,11 +400,19 @@ def resoudre(src, pos, expr, vus=None):
     if (e, pos) in vus:
         return set(), False
     vus = vus | {(e, pos)}
-    for m in reversed(entetes(src, 0, pos)):
-        params = [x.strip() for x in m.group(3).split(',')]
-        idx = [i for i, x in enumerate(params) if re.search(r'\b' + e + r'(\s*=.*)?$', x)]
-        if not idx:
-            continue
+    enc = englobante(src, pos)
+    if enc is None:
+        return set(), False
+    m, fin = enc
+    corps = src[m.end():fin]
+    if re.search(r'(?<![\w.])' + e + r'\s*' + FORMES_OPAQUES, corps) or re.search(r'\b(?:out|ref)\s+(?:\w+\s+)?' + e + r'\b', corps):
+        return set(), False
+    params = [x.strip() for x in m.group(3).split(',')]
+    idx = [i for i, x in enumerate(params) if re.search(r'\b' + e + r'(\s*=.*)?$', x)]
+    affectations = list(re.finditer(r'(?<![\w.])' + e + r'\s*=(?!=)\s*([^;]+);', corps))
+    if idx:
+        if affectations or sum(1 for h in entetes(src) if h.group(2) == m.group(2)) > 1:
+            return set(), False         # paramètre réaffecté, ou méthode SURCHARGÉE : l'indice d'argument n'est plus fiable
         i, out, complet, n = idx[0], set(), True, 0
         for c in re.finditer(r'(?<![\w.])' + re.escape(m.group(2)) + r'\(', src):
             if c.start() == m.start(2) or re.search(r'\b(string|void|bool|int|float|IEnumerator|static|public|private|internal)\s+$', src[max(0, c.start() - 20):c.start()]):
@@ -364,15 +426,23 @@ def resoudre(src, pos, expr, vus=None):
             out |= l
             complet &= cc
         return out, complet and n > 0
-    av, ap = entetes(src, 0, pos), entetes(src, pos + 1)
-    d, f = (av[-1].start() if av else 0), (ap[0].start() if ap else len(src))
-    out, complet, n = set(), True, 0
-    for m in re.finditer(r'(?<![\w.])' + e + r'\s*=\s*([^;]+);', src[d:f]):
-        n += 1
-        l, cc = resoudre(src, d + m.start(), m.group(1), vus)
+    if not affectations:    # ni paramètre ni local : un CHAMP `const`/`static readonly string e = …;` du fichier, jamais réaffecté ailleurs
+        decl = list(re.finditer(r'\b(?:const|readonly)\s+string\s+' + e + r'\s*=\s*([^;]+);', src))
+        toutes = list(re.finditer(r'(?<![\w.])' + e + r'\s*=(?!=)', src))
+        if not decl or len(toutes) != len(decl):
+            return set(), False
+        out, complet = set(), True
+        for d in decl:
+            l, cc = resoudre(src, d.start(1), d.group(1), vus)
+            out |= l
+            complet &= cc
+        return out, complet
+    out, complet = set(), True
+    for a in affectations:
+        l, cc = resoudre(src, m.end() + a.start(), a.group(1), vus)
         out |= l
         complet &= cc
-    return out, complet and n > 0
+    return out, complet
 
 
 def sites_de_texte(src, ex):
@@ -457,6 +527,12 @@ def temoin_de_source(cle, litteraux, slug):
     return any(cle[:i] in litteraux and cle[i + 1:] in litteraux for i in range(len(cle)) if cle[i] == '.')
 
 
+def cle_explicite_admise(cle, roles, litteraux, slug):
+    """M1 (revue ⊥ tour 2) : le témoin porte sur la CLÉ ENTIÈRE — son `domaine.rôle` doit être celui d'un site non résolu du fichier (`roles`) ET son dernier
+    segment doit naître d'un littéral. Une clé dont on a changé le domaine ou le rôle (servie, avec un mot qui existe dans le fichier) ne passe plus."""
+    return '.'.join(cle.split('.')[:2]) in roles and temoin_de_source(cle, litteraux, slug)
+
+
 def analyser_textes(ex, table):
     """(cles {clé: (texte, fichier)}, rouges, nb_resolus, nb_non_resolus)."""
     cles, rouges, nres, nnon = {}, [], 0, 0
@@ -485,8 +561,8 @@ def analyser_textes(ex, table):
         rouges.append(f"{rel} : épinglé dans {TABLE_TEXTES.name} mais plus aucun appel de texte non résolu — retirer la ligne")
     for rel, (_, classes, explicites, temoins, ecartees) in table.items():
         for k in ecartees:      # sur-approximation du flux, écartée À LA MAIN : elle doit EXISTER (sinon la ligne ment) et rester nommée
-            if k not in cles:
-                rouges.append(f"{rel} : clé écartée « {k} » que le flux ne produit pas (retirer de la colonne « écartées »)")
+            if k not in cles or cles[k][1] != rel:     # m2 : écartée À SA LIGNE — la clé doit venir du flux de CE fichier
+                rouges.append(f"{rel} : clé écartée « {k} » que le flux de ce fichier ne produit pas (retirer de la colonne « écartées » ou la mettre sur la ligne du fichier qui la produit)")
             cles.pop(k, None)
         if not explicites:
             continue
@@ -497,9 +573,10 @@ def analyser_textes(ex, table):
                 rouges.append(f"{rel} : fichier témoin absent : {fich}")
                 continue
             lits |= {ex.decode(x) for x in LITS.findall(ex.recoller(ex.sans_commentaires(fp.read_text(encoding='utf-8'))))}
+        roles = {f"{st['dom']}.{st['role']}" for st in reel.get(rel, [])}
         for k in explicites:
-            if not temoin_de_source(k, lits, ex.slug):
-                rouges.append(f"{rel} : clé explicite SANS TÉMOIN de source (aucun littéral de {rel}{''.join(' / ' + t for t in temoins)} ne la fait naître) : {k}")
+            if not cle_explicite_admise(k, roles, lits, ex.slug):
+                rouges.append(f"{rel} : clé explicite SANS TÉMOIN de source (son domaine.rôle doit être celui d'un site non résolu du fichier {sorted(roles)} ET un littéral de {rel}{''.join(' / ' + t for t in temoins)} doit la faire naître) : {k}")
             else:
                 cles.setdefault(k, ('', rel))
     return cles, rouges, nres, nnon
@@ -547,19 +624,34 @@ def verdict(K, servies, dette, repli):
 
 
 SEUIL_VERSEMENT_EN_BLOC = 10
+BASE_DU_LOT = os.environ.get('MAFIA_BASE_LOT', 'gate/cumul-client-2026-09-22')   # le cumul client : le lot = tout ce que la branche verse depuis lui
 
 
-def delta_de_dette(dette, extracteur):
-    """I2 (revue ⊥ tour 1) : « pas de versement en bloc ». Compare la DetteDatee de l'arbre de travail à celle de HEAD (git, jamais un état caché) : rend
-    (ajoutées, retirées), ou None si HEAD est illisible. `main` les imprime et AVERTIT quand SEUIL_VERSEMENT_EN_BLOC entrées ou plus sont versées d'un coup."""
+def delta_entre(dette, base):
+    """(ajoutées, levées) — pur."""
+    return sorted(dette - base), sorted(base - dette)
+
+
+def en_bloc(ajoutees) -> bool:
+    return len(ajoutees) >= SEUIL_VERSEMENT_EN_BLOC
+
+
+def dette_a(rev, extracteur):
+    """La DetteDatee de `rev` (git, jamais un état caché), ou None si illisible."""
     try:
-        src = subprocess.run(['git', 'show', f'HEAD:{SOURCE_ZERO_REPLI}'], capture_output=True, text=True, check=True).stdout
+        src = subprocess.run(['git', 'show', f'{rev}:{SOURCE_ZERO_REPLI}'], capture_output=True, text=True, check=True).stdout
     except (subprocess.CalledProcessError, FileNotFoundError):
         return None
     lu = lire_ensembles(src, extracteur.sans_commentaires)
-    if lu is None:
+    return None if lu is None else lu[0]
+
+
+def base_du_lot():
+    """Le point de départ du lot : `git merge-base HEAD <cumul client>`, ou None."""
+    try:
+        return subprocess.run(['git', 'merge-base', 'HEAD', BASE_DU_LOT], capture_output=True, text=True, check=True).stdout.strip() or None
+    except (subprocess.CalledProcessError, FileNotFoundError):
         return None
-    return sorted(dette - lu[0]), sorted(lu[0] - dette)
 
 
 def controles(extracteur) -> list:
@@ -628,8 +720,30 @@ def controles(extracteur) -> list:
         e.append(f"contrôle POSITIF rouge : les sites non résolus attendus (champ, appel de méthode, ParValeur sur valeur servie) sont {non}")
     if any(x['dom'] == 'sonde' and x['role'] == 'aide' and x['complet'] for x in st) and any('litteral_direct' in k for k in cles_fab):
         e.append("contrôle NÉGATIF rouge : un littéral direct d'un helper à 1 argument est pris pour un site non littéral")
-    if not temoin_de_source('sonde.bloc.un_mot', {'Un mot'}, extracteur.slug) or temoin_de_source('sonde.bloc.autre', {'Un mot'}, extracteur.slug):
-        e.append("contrôle rouge : le témoin de source d'une clé explicite (présente / absente) se trompe")
+    # B1 (revue ⊥ tour 2) — un site MAL résolu doit RESTER non résolu : (a) paramètre homonyme d'une méthode antérieure, (b) fonction locale qui coupe la
+    # fenêtre d'une variable, (c) méthode surchargée, (d) `+=` / `??=`, (e) champ `const` : lu ; champ réaffecté : non lu.
+    fab2 = ('class Y {\n'
+            '  void A(string titre) { var u = Libelle.De("sonde", "a", titre); }\n'
+            '  void CallA() { A("Mot de A"); }\n'
+            '  void B(Spec s) { string titre = s.Champ; var v = Libelle.De("sonde", "b", titre); }\n'
+            '  void C(bool c) {\n    string t = "Avant la fonction locale";\n    string Aide(string x) => x.Trim();\n    if (c) t = "Apres la fonction locale";\n    var w = Libelle.De("sonde", "c", t);\n  }\n'
+            '  void D(string z) { var d = Libelle.De("sonde", "d", z); }\n  void D(string z, int n) { }\n  void CallD() { D("Mot de D"); }\n'
+            '  void E(bool c) { string q = "Debut"; q += "Fin"; var f = Libelle.De("sonde", "e", q); }\n'
+            '  const string Fixe = "Champ const";\n  void F() { var g = Libelle.De("sonde", "f", Fixe); }\n'
+            '  static string Mobile = "Champ mobile";\n  void G() { Mobile = Autre(); var h = Libelle.De("sonde", "g", Mobile); }\n'
+            '}\n')
+    st2 = {x['role']: x for x in sites_de_texte(extracteur.recoller(extracteur.sans_commentaires(fab2)), extracteur)}
+    attendu2 = {'a': True, 'b': False, 'c': True, 'd': False, 'e': False, 'f': True, 'g': False}
+    lu2 = {r: st2[r]['complet'] for r in attendu2 if r in st2}
+    if lu2 != attendu2 or 'sonde.b.mot_de_a' in st2['b']['cles'] or 'sonde.c.avant_la_fonction_locale' not in st2['c']['cles'] or 'sonde.c.apres_la_fonction_locale' not in st2['c']['cles']:
+        e.append(f"contrôle POSITIF rouge : résolution fabriquée (a homonyme, b fonction locale, d surcharge, e +=, f const, g champ mobile) : attendu complet={attendu2}, lu {lu2}")
+    # I2 : le delta de dette et son seuil sont EXERCÉS (revue ⊥ tour 2, M3)
+    aj, re_ = delta_entre({f'x.y.k{i}' for i in range(SEUIL_VERSEMENT_EN_BLOC + 1)}, {'x.y.ancien'})
+    if len(aj) != SEUIL_VERSEMENT_EN_BLOC + 1 or re_ != ['x.y.ancien'] or not en_bloc(aj) or en_bloc(aj[:SEUIL_VERSEMENT_EN_BLOC - 1]) or delta_entre({'a.b.c'}, {'a.b.c'}) != ([], []):
+        e.append(f"contrôle rouge : delta de dette / seuil de versement en bloc ({len(aj)} ajoutées, {re_} levées)")
+    if (not cle_explicite_admise('sonde.bloc.un_mot', {'sonde.bloc'}, {'Un mot'}, extracteur.slug) or cle_explicite_admise('sonde.bloc.autre', {'sonde.bloc'}, {'Un mot'}, extracteur.slug)
+            or cle_explicite_admise('sonde.badge.un_mot', {'sonde.bloc'}, {'Un mot'}, extracteur.slug)):
+        e.append("contrôle rouge : le témoin d'une clé explicite (présente / absente / domaine.rôle substitué) se trompe")
     return e
 
 
@@ -710,14 +824,16 @@ def main() -> int:
         return 2
 
     fraicheur = avertissement_age(sha, date, ref)
-    delta = delta_de_dette(dette, ex)
-    if delta is None:
-        print("⚠️ DELTA DE DETTE : la DetteDatee de HEAD est illisible — versement en bloc NON vérifié.")
-    else:
-        aj, re_ = delta
-        print(f"delta de dette vs HEAD : +{len(aj)} −{len(re_)} (dette {len(dette)})" + (f" · versées : {', '.join(aj[:6])}{' …' if len(aj) > 6 else ''}" if aj else '') + (f" · levées : {', '.join(re_[:6])}{' …' if len(re_) > 6 else ''}" if re_ else ''))
-        if len(aj) >= SEUIL_VERSEMENT_EN_BLOC:
-            print(f"⚠️ VERSEMENT EN BLOC : {len(aj)} entrées versées en dette d'un coup (seuil {SEUIL_VERSEMENT_EN_BLOC}) — chaque entrée doit avoir son texte réel, son propriétaire et sa levée (ruling f2).")
+    # I2 (revue ⊥ tour 2, M3) : le versement en bloc se lit CONTRE HEAD (le brouillon) ET contre la BASE DU LOT (tout ce que la branche verse, commits compris)
+    for nom, rev in (('HEAD', 'HEAD'), (f'base du lot {BASE_DU_LOT}', base_du_lot())):
+        base = dette_a(rev, ex) if rev else None
+        if base is None:
+            print(f"⚠️ DELTA DE DETTE vs {nom} : DetteDatee illisible — versement en bloc NON vérifié.")
+            continue
+        aj, re_ = delta_entre(dette, base)
+        print(f"delta de dette vs {nom} : +{len(aj)} −{len(re_)} (dette {len(dette)})" + (f" · versées : {', '.join(aj[:5])}{' …' if len(aj) > 5 else ''}" if aj else '') + (f" · levées : {', '.join(re_[:5])}{' …' if len(re_) > 5 else ''}" if re_ else ''))
+        if en_bloc(aj):
+            print(f"⚠️ VERSEMENT EN BLOC vs {nom} : {len(aj)} entrées versées en dette (seuil {SEUIL_VERSEMENT_EN_BLOC}) — chaque entrée doit avoir son texte réel, son propriétaire et sa levée (ruling f2).")
     nb_parvaleur = sum(len(re.findall(r'Libelle\.ParValeur\(', ex.sans_commentaires(f.read_text(encoding='utf-8')))) for f in Path('Assets/Scripts').rglob('*.cs'))
     domaines = {k.split('.')[0] for k in set(servies) | dette | repli | set(K_dict)}
     enum_src = cles_des_fichiers_classes(table, ex, domaines)
@@ -731,7 +847,7 @@ def main() -> int:
         pool |= {ex.decode(x).lower() for x in LITTERAL.findall(ex.recoller(ex.sans_commentaires(fp.read_text(encoding='utf-8'))))}
     for rel, (_, _, explicites) in table.items():
         for k in explicites:
-            if not (k in pool or temoin_de_source(k, pool, ex.slug)):
+            if not ((k in pool or temoin_de_source(k, pool, ex.slug)) and any(l.startswith('.'.join(k.split('.')[:2])) for l in pool)):
                 rouges_t.append(f"{rel} : clé explicite SANS TÉMOIN de source (aucun littéral du client ne la fait naître) : {k}")
     nouvelles_t = {k: v for k, v in cles_t.items() if k not in K_dict}
     K = set(K_dict) | enumerees | set(nouvelles_t)

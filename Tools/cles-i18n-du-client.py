@@ -38,7 +38,7 @@ def slug(s: str) -> str:
     for c in unicodedata.normalize('NFD', s):
         if unicodedata.category(c) == 'Mn':
             continue
-        if c.isalnum():
+        if unicodedata.category(c) in ('Lu', 'Ll', 'Lt', 'Lm', 'Lo', 'Nd'):   # = char.IsLetterOrDigit de C# (`isalnum()` y ajoute No/Nl : « ① », « ² » — revue ⊥ tour 2, m3)
             out.append(c.lower())
         elif out and out[-1] != '_':
             out.append('_')
@@ -150,6 +150,8 @@ def controles() -> list:
         if k not in vus: echecs.append(f"contrôle POSITIF rouge : « {k} » (dans une chaîne) n'est pas vue")
     for k in ("sonde.bloc.cachee_en_commentaire", "sonde.bloc.cachee_en_bloc"):
         if k in vus: echecs.append(f"contrôle NÉGATIF rouge : « {k} » (dans un commentaire) est comptée")
+    if slug('Niveau ①') != 'niveau' or slug('Surface 50 m²') != 'surface_50_m' or slug('Café 2') != 'cafe_2':
+        echecs.append(f"contrôle POSITIF rouge : slug diverge de Libelle.Slug (IsLetterOrDigit) : {slug('Niveau ①')!r} {slug('Surface 50 m²')!r} {slug('Café 2')!r}")
     # Un littéral à échappement (`\\u00A0`, `\\u2019`, `\\"`) est VU et DÉCODÉ : sa clé est celle que le runtime calcule (jamais « u00a0 »).
     esc = 'var a = Libelle.De("sonde", "bloc", "«\\u00A0Vu avec l\\u2019insécable\\u00A0»");\nvar b = Libelle.De("sonde", "bloc", "Un \\"mot\\" cité");\n' + 'var c = Libelle.De("sonde", "bloc", "Coupée\\u00A0: sur "\n + "deux lignes");\n'
     vus2 = {f"{d}.{r}.{slug(l)}" for d, r, l in cles_du_fichier(recoller(sans_commentaires(esc)))}
