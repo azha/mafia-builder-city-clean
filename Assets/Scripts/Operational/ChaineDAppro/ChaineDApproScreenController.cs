@@ -604,7 +604,7 @@ namespace MafiaCleanCity.Operational
                             new System.Collections.Generic.Dictionary<string, string> { { "nom", nom } }, "nom");
                 }
                 else
-                    replique = Libelle.De("appro", "bloc", "Votre lieutenant : « On en a besoin, et il n'y en a plus. »");
+                    replique = Libelle.De("appro", "bloc", "Votre lieutenant\u00A0: «\u00A0On en a besoin, et il n\u2019y en a plus.\u00A0»");   // repli = valeur FR servie, à l'octet (@70ea6e07) ; slug inchangé
                 if (replique != null)
                 {
                     TextMeshProUGUI q = NouveauTexteFiche(piedRoot, "Replique", replique, 9.5f, DesignTokens.Current.onSurfaceSecondary, false);

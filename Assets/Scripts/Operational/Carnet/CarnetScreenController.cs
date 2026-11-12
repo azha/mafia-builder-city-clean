@@ -387,8 +387,8 @@ namespace MafiaCleanCity.Operational
             ViderCreneaux();
             for (int i = 1; i <= 8; i++) Creneau(i, null, null);
             MajPanneau(Lib("CE QU'ON SAIT VRAIMENT"), Lib("Pas de réponse"),
-                Lib("on n'a pas eu de réponse. Ce n'est pas « la soirée est vide » : c'est « on ne "
-                    + "sait pas ce qui est prévu »."));
+                Lib("on n\u2019a pas eu de réponse. Ce n\u2019est pas «\u00A0la soirée est vide\u00A0»\u00A0: c\u2019est «\u00A0on ne "
+                    + "sait pas ce qui est prévu\u00A0»."));   // repli = valeur FR servie, à l'octet (string_table.ts @70ea6e07) ; slug inchangé
         }
 
         private void AppliquerEtat(CarnetCourantDto dto)
