@@ -159,6 +159,25 @@ namespace MafiaCleanCity.Operational.Tests
             "journal.bloc.leur_cle_est_montree_a_la_place_du_titre_le_reste_du_journal_est_ecrit",
             "journal.bloc.quartier_0",
             "journal.bloc.une_breve_est_arrivee_sans_son_texte",
+            // ㉔ (CLIENT-2) : 17 textes RÉELS de la boîte d'autonomie (en-tête « votre lieutenant », état « Décidé », phrases de résultat), affichables dès qu'un rapport est monté — trouvés par la garde statique de population,
+            // servis par BACK-2 dans lot/mots-a-servir (approuvé 34e2ea45, ni fusionné ni déployé). Ruling f2 12/11 : DetteDatee ; LEVÉE au SERVICE SUR LA PILE (pas au SHA de BACK-2).
+            "autonomie.entete.votre_lieutenant",
+            "autonomie.etat.decide",
+            "autonomie.resultat.argent_injecte",
+            "autonomie.resultat.argent_injecte_prudemment",
+            "autonomie.resultat.c_est_fait",
+            "autonomie.resultat.cuisson_affinee",
+            "autonomie.resultat.cuisson_lancee",
+            "autonomie.resultat.depose",
+            "autonomie.resultat.depose_en_reserve",
+            "autonomie.resultat.envoi_parti",
+            "autonomie.resultat.laisse_tel_quel",
+            "autonomie.resultat.mis_en_attente",
+            "autonomie.resultat.prefixe",
+            "autonomie.resultat.ramassage_fait",
+            "autonomie.resultat.repare",
+            "autonomie.resultat.reporte",
+            "autonomie.resultat.rien_n_a_change",
         };
 
         /// <summary>REPLI VOULU (décision f2 du 12/11/2026, TD-1068) — des clés dont le repli FR est l'état NORMAL et définitif, pas une dette :
@@ -173,6 +192,8 @@ namespace MafiaCleanCity.Operational.Tests
             // Repli DÉFENSIF d'une clé servie ailleurs (ruling f2 12/11, BACK-2 a pris la même décision côté back) : la phrase affichée est celle de `roster_room_label_key` / du registre d'erreurs ; ce littéral ne sert que si cette clé manque.
             { "famille.ecran.votre_equipe_est_au_complet", "repli défensif de PhraseDeBlocage : la phrase servie vient de roster_room_label_key" },
             { "famille.ecran.votre_decision_de_structure_d_aujourd_hui_est_prise_reprenez_demain", "repli défensif de PhraseDeBlocage : la phrase servie vient du registre d'erreurs (HostBlocage.CleBudgetDepense)" },
+            // Repli COMPTÉ de « Réaffecter… » en ON_COOLDOWN (TD-954, ruling f2 12/11) : la phrase servie arrive par `reassign_availability_label_key`, une clé `famille.reaffectation.*` NOMMÉE PAR LE BACK ; cette clé `famille.ecran.*` n'est que le repli du client, personne ne la servira.
+            { "famille.ecran.trop_tot_pour_le_deplacer_a_nouveau", "repli défensif de PhraseDeIndisponibilite : la phrase servie vient de reassign_availability_label_key (clé famille.reaffectation.* nommée par le back)" },
         };
 
         /// <summary>Un repli sur cette clé ne rougit pas : dette datée (provisoire) OU repli voulu (définitif, motivé). Une seule lecture pour les gardes « hors dette ».</summary>
